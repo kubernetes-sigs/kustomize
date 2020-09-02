@@ -452,3 +452,104 @@ spec:
         name: my-image
 `)
 }
+
+func TestImageTagTransformerArbitraryPath(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ImageTagTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: some.registry.io/my-image
+  newTag: "my-fixed-tag"
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: some.registry.io/my-image:old-tag
+        name: my-image
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: some.registry.io/my-image:my-fixed-tag
+        name: my-image
+`)
+}
+
+func TestImageTagTransformerInKustomization(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+resources:
+- resources.yaml
+images:
+- name: old-image-name
+  newName: new-image-name
+  newTag: new-tag
+`)
+
+	th.WriteF("/app/resources.yaml", `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  containers:
+  - image: old-image-name
+    name: my-image
+  initContainers:
+  - image: old-image-name
+    name: my-image
+  template:
+    spec:
+      containers:
+      - image: old-image-name
+        name: my-image
+      initContainers:
+      - image: old-image-name
+        name: my-image
+`)
+
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  containers:
+  - image: new-image-name:new-tag
+    name: my-image
+  initContainers:
+  - image: new-image-name:new-tag
+    name: my-image
+  template:
+    spec:
+      containers:
+      - image: new-image-name:new-tag
+        name: my-image
+      initContainers:
+      - image: new-image-name:new-tag
+        name: my-image
+`)
+}

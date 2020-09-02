@@ -35,14 +35,15 @@ func (p *plugin) Config(
 
 func (p *plugin) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
-		// If you're here because someone expected any field containing
-		// the string "containers" or "initContainers" to get an image
-		// update (not just spec/template/spec/containers[], etc.) then
-		// a code change is needed.  See api/filters/imagetag/legacy
-		// for the start of an implementation that won't use an
-		// allowlist like FsSlice, and instead walks the object looking
-		// for fields named containers or initContainers.
-		err := filtersutil.ApplyToJSON(imagetag.Filter{
+		// traverse all fields at first
+		err := filtersutil.ApplyToJSON(imagetag.LegacyFilter{
+			ImageTag: p.ImageTag,
+		}, r)
+		if err != nil {
+			return err
+		}
+		// then use user specified field specs
+		err = filtersutil.ApplyToJSON(imagetag.Filter{
 			ImageTag: p.ImageTag,
 			FsSlice:  p.FieldSpecs,
 		}, r)
