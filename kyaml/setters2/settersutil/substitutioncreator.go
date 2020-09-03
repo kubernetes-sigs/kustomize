@@ -138,7 +138,7 @@ func (c SubstitutionCreator) Create() error {
 	}
 
 	// Update the resources with the substitution reference
-	inout := &kio.LocalPackageReadWriter{PackagePath: c.ResourcesPath}
+	inout := &kio.LocalPackageReadWriter{PackagePath: c.ResourcesPath, PackageFileName: c.OpenAPIFileName}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
 		Filters: []kio.Filter{kio.FilterAll(a)},
@@ -147,7 +147,7 @@ func (c SubstitutionCreator) Create() error {
 
 	if a.Count == 0 {
 		fmt.Printf("substitution %s doesn't match any field value in resource configs, "+
-			"but creating substitution definition\n", c.Name)
+			"but creating substitution definition in package %q\n", c.Name, c.ResourcesPath)
 	}
 	return err
 }

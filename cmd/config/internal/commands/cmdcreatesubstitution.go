@@ -89,10 +89,10 @@ func (r *CreateSubstitutionRunner) runE(c *cobra.Command, args []string) error {
 				return err
 			} else {
 				// print error message and continue if there are multiple packages to set
-				fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n", err.Error(), r.CreateSubstitution.ResourcesPath)
+				fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n\n", err.Error(), r.CreateSubstitution.ResourcesPath)
 			}
 		} else {
-			fmt.Fprintf(c.OutOrStdout(), "created substitution %q in package %q\n", r.CreateSubstitution.Name, r.CreateSubstitution.ResourcesPath)
+			fmt.Fprintf(c.OutOrStdout(), "created substitution %q in package %q\n\n", r.CreateSubstitution.Name, r.CreateSubstitution.ResourcesPath)
 		}
 
 		// Delete schema present in openAPI file for current package

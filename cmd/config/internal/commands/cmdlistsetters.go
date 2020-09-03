@@ -37,6 +37,8 @@ func NewListSettersRunner(parent string) *ListSettersRunner {
 		"output as github markdown")
 	c.Flags().BoolVar(&r.IncludeSubst, "include-subst", false,
 		"include substitutions in the output")
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
+		"list setters recursively in all the nested subpackages")
 	fixDocs(parent, c)
 	r.Command = c
 	return r
@@ -47,11 +49,12 @@ func ListSettersCommand(parent string) *cobra.Command {
 }
 
 type ListSettersRunner struct {
-	Command      *cobra.Command
-	Lookup       setters.LookupSetters
-	List         setters2.List
-	Markdown     bool
-	IncludeSubst bool
+	Command            *cobra.Command
+	Lookup             setters.LookupSetters
+	List               setters2.List
+	Markdown           bool
+	IncludeSubst       bool
+	RecurseSubPackages bool
 }
 
 func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
@@ -71,7 +74,7 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 
-		resourcePaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, true)
+		resourcePaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.RecurseSubPackages)
 		if err != nil {
 			return err
 		}
@@ -86,7 +89,7 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 				OpenAPIFileName: openAPIFileName,
 			}
 			openAPIPath := filepath.Join(resourcePath, openAPIFileName)
-			fmt.Fprintf(c.OutOrStdout(), "%s\n", resourcePath)
+			fmt.Fprintf(c.OutOrStdout(), "\n%s/\n", resourcePath)
 			if err := r.ListSetters(c, openAPIPath, resourcePath); err != nil {
 				return err
 			}

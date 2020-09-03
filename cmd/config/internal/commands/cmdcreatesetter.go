@@ -214,7 +214,6 @@ func (r *CreateSetterRunner) set(c *cobra.Command, args []string) error {
 			if err := openapi.AddSchemaFromFile(r.CreateSetter.OpenAPIPath); err != nil {
 				return err
 			}
-
 			err := r.CreateSetter.Create()
 			if err != nil {
 				// return err if there is only package
@@ -222,10 +221,10 @@ func (r *CreateSetterRunner) set(c *cobra.Command, args []string) error {
 					return err
 				} else {
 					// print error message and continue if there are multiple packages to set
-					fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n", err.Error(), r.CreateSetter.ResourcesPath)
+					fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n\n", err.Error(), r.CreateSetter.ResourcesPath)
 				}
 			} else {
-				fmt.Fprintf(c.OutOrStdout(), "created setter %q in package %q\n", r.CreateSetter.Name, r.CreateSetter.ResourcesPath)
+				fmt.Fprintf(c.OutOrStdout(), "created setter %q in package %q\n\n", r.CreateSetter.Name, r.CreateSetter.ResourcesPath)
 			}
 
 			// Delete schema present in openAPI file for current package
