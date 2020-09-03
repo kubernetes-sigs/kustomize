@@ -474,7 +474,8 @@ func TestListSettersSubPackages(t *testing.T) {
 			dataset: "dataset-with-setters",
 			args:    []string{"--include-subst"},
 			expected: `
-test/testdata/dataset-with-setters/mysql
+
+test/testdata/dataset-with-setters/mysql/
     NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
   image       mysql                            1       No        
   namespace   myspace                          1       No        
@@ -482,11 +483,26 @@ test/testdata/dataset-with-setters/mysql
 --------------- ----------------- --------------
   SUBSTITUTION       PATTERN       REFERENCES   
   image-tag      ${image}:${tag}   [image,tag]  
-test/testdata/dataset-with-setters/mysql/nosetters
+
+test/testdata/dataset-with-setters/mysql/nosetters/
   NAME   VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
-test/testdata/dataset-with-setters/mysql/storage
+
+test/testdata/dataset-with-setters/mysql/storage/
     NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
   namespace   myspace                          1       No        
+`,
+		},
+		{
+			name:    "list-replicas",
+			dataset: "dataset-with-setters/mysql",
+			args:    []string{"--recurse-subpackages=false"},
+			expected: `
+
+test/testdata/dataset-with-setters/mysql/
+    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
+  image       mysql                            1       No        
+  namespace   myspace                          1       No        
+  tag         1.7.9                            1       No         
 `,
 		},
 	}

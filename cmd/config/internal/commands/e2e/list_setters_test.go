@@ -34,7 +34,7 @@ openAPI:
 `,
 			},
 			expectedStdOut: `
-.
+./
     NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
   replicas   3                              1       No
 `,
