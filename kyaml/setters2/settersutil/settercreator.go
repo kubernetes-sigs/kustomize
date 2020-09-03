@@ -87,7 +87,7 @@ func (c SetterCreator) Create() error {
 	}.Execute()
 	if a.Count == 0 {
 		fmt.Printf("setter %q doesn't match any field in resource configs, "+
-			"but creating setter definition\n", c.Name)
+			"but creating setter definition in package %q\n", c.Name, c.ResourcesPath)
 	}
 	if err != nil {
 		return err

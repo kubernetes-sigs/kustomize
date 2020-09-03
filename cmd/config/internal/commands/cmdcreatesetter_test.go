@@ -855,6 +855,7 @@ func TestCreateSetterSubPackages(t *testing.T) {
 			args:    []string{"namespace", "myspace", "-R"},
 			expected: `
 created setter "namespace" in package "${baseDir}/mysql"
+
 created setter "namespace" in package "${baseDir}/mysql/storage"
 `,
 		},
@@ -878,7 +879,9 @@ created setter "namespace" in package "${baseDir}/mysql/storage"
 			packagePath: "mysql",
 			args:        []string{"namespace", "myspace", "-R"},
 			expected: `setter with name "namespace" already exists, if you want to modify it, please delete the existing setter and recreate it in package "${baseDir}/mysql"
+
 created setter "namespace" in package "${baseDir}/mysql/nosetters"
+
 setter with name "namespace" already exists, if you want to modify it, please delete the existing setter and recreate it in package "${baseDir}/mysql/storage"`,
 		},
 	}
