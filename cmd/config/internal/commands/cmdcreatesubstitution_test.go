@@ -441,6 +441,7 @@ func TestCreateSubstSubPackages(t *testing.T) {
 			args:    []string{"image-tag", "--field-value", "mysql:1.7.9", "--pattern", "${image}:${tag}", "-R"},
 			expected: `
 created substitution "image-tag" in package "${baseDir}/mysql"
+
 created substitution "image-tag" in package "${baseDir}/mysql/storage"
 `,
 		},
@@ -464,7 +465,9 @@ created substitution "image-tag" in package "${baseDir}/mysql/storage"
 			packagePath: "mysql",
 			args:        []string{"image-tag", "--field-value", "mysql:1.7.9", "--pattern", "${image}:${tag}", "-R"},
 			expected: `substitution with name "image-tag" already exists in package "${baseDir}/mysql"
+
 created substitution "image-tag" in package "${baseDir}/mysql/nosetters"
+
 created substitution "image-tag" in package "${baseDir}/mysql/storage"`,
 		},
 	}
