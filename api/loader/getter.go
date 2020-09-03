@@ -20,6 +20,9 @@ type remoteTargetSpec struct {
 
 	// Dir is where the resource is saved
 	Dir filesys.ConfirmedDir
+
+	// TempDir is the directory created to hold all resources, including Dir
+	TempDir filesys.ConfirmedDir
 }
 
 // Getter is a function that can gets resource
@@ -31,7 +34,7 @@ func newLoaderAtGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader
 	}
 
 	cleaner := func() error {
-		return fSys.RemoveAll(rs.Dir.String())
+		return fSys.RemoveAll(rs.TempDir.String())
 	}
 
 	if err := getter(rs); err != nil {
@@ -55,12 +58,12 @@ func newLoaderAtGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader
 func getRemoteTarget(rs *remoteTargetSpec) error {
 	var err error
 
-	rs.Dir, err = filesys.NewTmpConfirmedDir()
+	rs.TempDir, err = filesys.NewTmpConfirmedDir()
 	if err != nil {
 		return err
 	}
 
-	rs.Dir = filesys.ConfirmedDir(rs.Dir.Join("repo"))
+	rs.Dir = filesys.ConfirmedDir(rs.TempDir.Join("repo"))
 
 	// Get the pwd
 	pwd, err := os.Getwd()
