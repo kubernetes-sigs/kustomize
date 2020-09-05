@@ -7,5 +7,5 @@ menu:
   main:
     weight: 20
 description: >
-    Reference for Kustomize CLI commands
+    Reference for Kustomize usage and best practices
 ---
