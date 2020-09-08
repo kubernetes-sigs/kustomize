@@ -135,18 +135,18 @@ func (dd DeleterDefinition) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	definitions, err := object.Pipe(yaml.Lookup(openapi.SupplementaryOpenAPIFieldName, "definitions"))
-	if err != nil || definitions == nil {
+	if err != nil {
 		return nil, err
 	}
 	// return error if the setter to be deleted doesn't exist
-	if definitions.Field(key) == nil {
-		return nil, errors.Errorf("%s with name %s does not exist", defType, dd.Name)
+	if definitions == nil || definitions.Field(key) == nil {
+		return nil, errors.Errorf("%s %q does not exist", defType, dd.Name)
 	}
 
 	subst := SubstReferringDefinition(definitions, key)
 
 	if subst != "" {
-		return nil, errors.Errorf("%s is used in substitution %s, please delete the parent substitution first", defType, subst)
+		return nil, errors.Errorf("%s %q is used in substitution %q, please delete the parent substitution first", defType, dd.Name, subst)
 	}
 
 	_, err = definitions.Pipe(yaml.FieldClearer{Name: key})

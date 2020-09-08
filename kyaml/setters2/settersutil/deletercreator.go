@@ -17,24 +17,34 @@ type DeleterCreator struct {
 
 	// DefinitionPrefix is the prefix of the OpenAPI definition type
 	DefinitionPrefix string
+
+	RecurseSubPackages bool
+
+	OpenAPIFileName string
+
+	// Path to openAPI file
+	OpenAPIPath string
+
+	// Path to resources folder
+	ResourcesPath string
 }
 
-func (d DeleterCreator) Delete(openAPIPath, resourcesPath string) error {
+func (d DeleterCreator) Delete() error {
 	dd := setters2.DeleterDefinition{
 		Name:             d.Name,
 		DefinitionPrefix: d.DefinitionPrefix,
 	}
-	if err := dd.DeleteFromFile(openAPIPath); err != nil {
+	if err := dd.DeleteFromFile(d.OpenAPIPath); err != nil {
 		return err
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	if err := openapi.AddSchemaFromFile(d.OpenAPIPath); err != nil {
 		return err
 	}
 
 	// Update the resources with the deleter reference
-	inout := &kio.LocalPackageReadWriter{PackagePath: resourcesPath}
+	inout := &kio.LocalPackageReadWriter{PackagePath: d.ResourcesPath, PackageFileName: d.OpenAPIFileName}
 	return kio.Pipeline{
 		Inputs: []kio.Reader{inout},
 		Filters: []kio.Filter{kio.FilterAll(
