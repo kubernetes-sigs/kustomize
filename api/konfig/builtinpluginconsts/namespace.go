@@ -8,6 +8,9 @@ const (
 namespace:
 - path: metadata/namespace
   create: true
+- path: metadata/name
+  kind: Namespace
+  create: true
 - path: subjects
   kind: RoleBinding
 - path: subjects
