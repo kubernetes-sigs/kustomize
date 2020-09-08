@@ -53,7 +53,7 @@ testfile.yaml
 				assert.FailNow(t, err.Error())
 			}
 
-			ignoreFilesMatcher := IgnoreFilesMatcher{}
+			ignoreFilesMatcher := ignoreFilesMatcher{}
 			err = ignoreFilesMatcher.readIgnoreFile(dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -163,6 +163,52 @@ a_test.yaml
 			},
 			expected: []string{
 				`b: b`,
+			},
+		},
+		{
+			name: "handles a combination of packages and directories",
+			directories: []string{
+				filepath.Join("a"),
+				filepath.Join("d", "e"),
+				filepath.Join("f"),
+			},
+			files: map[string][]byte{
+				filepath.Join("pkgFile"):                 {},
+				filepath.Join("d", "pkgFile"):            {},
+				filepath.Join("d", "e", "pkgFile"):       {},
+				filepath.Join("f", "pkgFile"):            {},
+				filepath.Join("manifest.yaml"):           []byte(`root: root`),
+				filepath.Join("a", "manifest.yaml"):      []byte(`a: a`),
+				filepath.Join("d", "manifest.yaml"):      []byte(`d: d`),
+				filepath.Join("d", "e", "manifest.yaml"): []byte(`e: e`),
+				filepath.Join("f", "manifest.yaml"):      []byte(`f: f`),
+				filepath.Join("d", ".krmignore"): []byte(`
+manifest.yaml
+`),
+			},
+			expected: []string{
+				`a: a`,
+				`e: e`,
+				`f: f`,
+				`root: root`,
+			},
+		},
+		{
+			name: "ignore file can exclude subpackages",
+			directories: []string{
+				filepath.Join("a"),
+			},
+			files: map[string][]byte{
+				filepath.Join("pkgFile"):            {},
+				filepath.Join("a", "pkgFile"):       {},
+				filepath.Join("manifest.yaml"):      []byte(`root: root`),
+				filepath.Join("a", "manifest.yaml"): []byte(`a: a`),
+				filepath.Join(".krmignore"): []byte(`
+a
+`),
+			},
+			expected: []string{
+				`root: root`,
 			},
 		},
 	}
