@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/ext"
 )
 
-// IgnoreFilesMatcher handles `.krmignore` files, which allows for ignoring
+// ignoreFilesMatcher handles `.krmignore` files, which allows for ignoring
 // files or folders in a package. The format of this file is a subset of the
 // gitignore format, with recursive patterns (like a/**/c) not supported. If a
 // file or folder matches any of the patterns in the .krmignore file for the
@@ -30,14 +30,15 @@ import (
 //   package contains a pattern that ignores the directory foo, if foo is a
 //   subpackage, it will still be included if the IncludeSubpackages property
 //   is set to true
-type IgnoreFilesMatcher struct {
+type ignoreFilesMatcher struct {
 	matchers []matcher
 }
 
 // readIgnoreFile checks whether there is a .krmignore file in the path, and
 // if it is, reads it in and turns it into a matcher. If we can't find a file,
 // we just add a matcher that match nothing.
-func (i *IgnoreFilesMatcher) readIgnoreFile(path string) error {
+func (i *ignoreFilesMatcher) readIgnoreFile(path string) error {
+	i.verifyPath(path)
 	m, err := gitignore.NewGitIgnore(filepath.Join(path, ext.GetIgnoreFileName()))
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -60,11 +61,11 @@ func (i *IgnoreFilesMatcher) readIgnoreFile(path string) error {
 // is correct for the provided filepath. Matchers are removed once
 // we encounter a filepath that is not a subpath of the basepath for
 // the matcher.
-func (i *IgnoreFilesMatcher) verifyPath(path string) {
+func (i *ignoreFilesMatcher) verifyPath(path string) {
 	for j := len(i.matchers) - 1; j >= 0; j-- {
 		matcher := i.matchers[j]
-		if !strings.HasPrefix(path, matcher.basePath) {
-			i.matchers = i.matchers[:j]
+		if strings.HasPrefix(path, matcher.basePath) || path == matcher.basePath {
+			i.matchers = i.matchers[:j+1]
 			return
 		}
 	}
@@ -72,17 +73,17 @@ func (i *IgnoreFilesMatcher) verifyPath(path string) {
 
 // matchFile checks whether the file given by the provided path matches
 // any of the patterns in the .krmignore file for the package.
-func (i *IgnoreFilesMatcher) matchFile(path string) bool {
+func (i *ignoreFilesMatcher) matchFile(path string) bool {
 	if len(i.matchers) == 0 {
 		return false
 	}
-	i.verifyPath(path)
+	i.verifyPath(filepath.Dir(path))
 	return i.matchers[len(i.matchers)-1].matcher.Match(path, false)
 }
 
 // matchFile checks whether the directory given by the provided path matches
 // any of the patterns in the .krmignore file for the package.
-func (i *IgnoreFilesMatcher) matchDir(path string) bool {
+func (i *ignoreFilesMatcher) matchDir(path string) bool {
 	if len(i.matchers) == 0 {
 		return false
 	}
