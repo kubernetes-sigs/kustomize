@@ -14,9 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
@@ -69,48 +67,51 @@ func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
 
 func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		openAPIFileName, err := ext.OpenAPIFileName()
-		if err != nil {
-			return err
+		e := executeCmdOnPkgs{
+			needOpenAPI:        true,
+			writer:             c.OutOrStdout(),
+			rootPkgPath:        args[0],
+			recurseSubPackages: r.RecurseSubPackages,
+			cmdRunner:          r,
 		}
 
-		resourcePaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.RecurseSubPackages)
+		err := e.execute()
 		if err != nil {
-			return err
-		}
-		if len(resourcePaths) == 0 {
-			return errors.Errorf("unable to find %s in package %s", openAPIFileName, args[0])
-		}
-
-		// list setters for all the subpackages with openAPI file paths
-		for _, resourcePath := range resourcePaths {
-			r.List = setters2.List{
-				Name:            r.List.Name,
-				OpenAPIFileName: openAPIFileName,
-			}
-			openAPIPath := filepath.Join(resourcePath, openAPIFileName)
-			fmt.Fprintf(c.OutOrStdout(), "\n%s/\n", resourcePath)
-			if err := r.ListSetters(c, openAPIPath, resourcePath); err != nil {
-				return err
-			}
-			if r.IncludeSubst {
-				if err := r.ListSubstitutions(c, openAPIPath); err != nil {
-					return err
-				}
-			}
+			return handleError(c, err)
 		}
 		return nil
 	}
-
 	return handleError(c, lookup(r.Lookup, c, args))
 }
 
-func (r *ListSettersRunner) ListSetters(c *cobra.Command, openAPIPath, resourcePath string) error {
+func (r *ListSettersRunner) executeCmd(w io.Writer, pkgPath string) error {
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+	r.List = setters2.List{
+		Name:            r.List.Name,
+		OpenAPIFileName: openAPIFileName,
+	}
+	openAPIPath := filepath.Join(pkgPath, openAPIFileName)
+	fmt.Fprintf(w, "\n%s/\n", pkgPath)
+	if err := r.ListSetters(w, openAPIPath, pkgPath); err != nil {
+		return err
+	}
+	if r.IncludeSubst {
+		if err := r.ListSubstitutions(w, openAPIPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *ListSettersRunner) ListSetters(w io.Writer, openAPIPath, resourcePath string) error {
 	// use setters v2
 	if err := r.List.ListSetters(openAPIPath, resourcePath); err != nil {
 		return err
 	}
-	table := newTable(c.OutOrStdout(), r.Markdown)
+	table := newTable(w, r.Markdown)
 	table.SetHeader([]string{"NAME", "VALUE", "SET BY", "DESCRIPTION", "COUNT", "REQUIRED"})
 	for i := range r.List.Setters {
 		s := r.List.Setters[i]
@@ -141,12 +142,12 @@ func (r *ListSettersRunner) ListSetters(c *cobra.Command, openAPIPath, resourceP
 	return nil
 }
 
-func (r *ListSettersRunner) ListSubstitutions(c *cobra.Command, openAPIPath string) error {
+func (r *ListSettersRunner) ListSubstitutions(w io.Writer, openAPIPath string) error {
 	// use setters v2
 	if err := r.List.ListSubst(openAPIPath); err != nil {
 		return err
 	}
-	table := newTable(c.OutOrStdout(), r.Markdown)
+	table := newTable(w, r.Markdown)
 	b := tablewriter.Border{Top: true}
 	table.SetBorders(b)
 
