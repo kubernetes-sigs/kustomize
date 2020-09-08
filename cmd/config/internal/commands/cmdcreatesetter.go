@@ -6,6 +6,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -16,8 +17,6 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -82,7 +81,7 @@ type CreateSetterRunner struct {
 }
 
 func (r *CreateSetterRunner) runE(c *cobra.Command, args []string) error {
-	return handleError(c, r.set(c, args))
+	return handleError(c, r.createSetter(c, args))
 }
 
 func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
@@ -178,59 +177,18 @@ func (r *CreateSetterRunner) processSchema() error {
 	return nil
 }
 
-func (r *CreateSetterRunner) set(c *cobra.Command, args []string) error {
+func (r *CreateSetterRunner) createSetter(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		openAPIFileName, err := ext.OpenAPIFileName()
+		e := executeCmdOnPkgs{
+			needOpenAPI:        true,
+			writer:             c.OutOrStdout(),
+			rootPkgPath:        args[0],
+			recurseSubPackages: r.CreateSetter.RecurseSubPackages,
+			cmdRunner:          r,
+		}
+		err := e.execute()
 		if err != nil {
-			return err
-		}
-
-		r.CreateSetter.OpenAPIFileName = openAPIFileName
-		resourcePackagesPaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.CreateSetter.RecurseSubPackages)
-		if err != nil {
-			return err
-		}
-
-		if len(resourcePackagesPaths) == 0 {
-			return errors.Errorf("unable to find %q in package %q", r.CreateSetter.OpenAPIFileName, args[0])
-		}
-		for _, resourcesPath := range resourcePackagesPaths {
-			r.CreateSetter = settersutil.SetterCreator{
-				Name:               r.CreateSetter.Name,
-				SetBy:              r.CreateSetter.SetBy,
-				Description:        r.CreateSetter.Description,
-				Type:               r.CreateSetter.Type,
-				Schema:             r.CreateSetter.Schema,
-				FieldName:          r.CreateSetter.FieldName,
-				FieldValue:         r.CreateSetter.FieldValue,
-				Required:           r.CreateSetter.Required,
-				RecurseSubPackages: r.CreateSetter.RecurseSubPackages,
-				OpenAPIFileName:    openAPIFileName,
-				OpenAPIPath:        filepath.Join(resourcesPath, openAPIFileName),
-				ResourcesPath:      resourcesPath,
-			}
-
-			// Add schema present in openAPI file for current package
-			if err := openapi.AddSchemaFromFile(r.CreateSetter.OpenAPIPath); err != nil {
-				return err
-			}
-			err := r.CreateSetter.Create()
-			if err != nil {
-				// return err if there is only package
-				if len(resourcePackagesPaths) == 1 {
-					return err
-				} else {
-					// print error message and continue if there are multiple packages to set
-					fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n\n", err.Error(), r.CreateSetter.ResourcesPath)
-				}
-			} else {
-				fmt.Fprintf(c.OutOrStdout(), "created setter %q in package %q\n\n", r.CreateSetter.Name, r.CreateSetter.ResourcesPath)
-			}
-
-			// Delete schema present in openAPI file for current package
-			if err := openapi.DeleteSchemaInFile(r.CreateSetter.OpenAPIPath); err != nil {
-				return err
-			}
+			return handleError(c, err)
 		}
 		return nil
 	}
@@ -242,6 +200,41 @@ func (r *CreateSetterRunner) set(c *cobra.Command, args []string) error {
 		Outputs: []kio.Writer{rw}}.Execute()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (r *CreateSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+	r.CreateSetter = settersutil.SetterCreator{
+		Name:               r.CreateSetter.Name,
+		SetBy:              r.CreateSetter.SetBy,
+		Description:        r.CreateSetter.Description,
+		Type:               r.CreateSetter.Type,
+		Schema:             r.CreateSetter.Schema,
+		FieldName:          r.CreateSetter.FieldName,
+		FieldValue:         r.CreateSetter.FieldValue,
+		Required:           r.CreateSetter.Required,
+		RecurseSubPackages: r.CreateSetter.RecurseSubPackages,
+		OpenAPIFileName:    openAPIFileName,
+		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		ResourcesPath:      pkgPath,
+	}
+
+	err = r.CreateSetter.Create()
+	if err != nil {
+		// return err if RecurseSubPackages is false
+		if !r.CreateSetter.RecurseSubPackages {
+			return err
+		} else {
+			// print error message and continue if RecurseSubPackages is true
+			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
+		}
+	} else {
+		fmt.Fprintf(w, "created setter %q in package %q\n\n", r.CreateSetter.Name, pkgPath)
 	}
 	return nil
 }

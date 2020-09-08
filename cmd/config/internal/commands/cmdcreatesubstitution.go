@@ -5,13 +5,11 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
-	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -51,54 +49,48 @@ type CreateSubstitutionRunner struct {
 }
 
 func (r *CreateSubstitutionRunner) runE(c *cobra.Command, args []string) error {
+	e := executeCmdOnPkgs{
+		needOpenAPI:        true,
+		writer:             c.OutOrStdout(),
+		rootPkgPath:        args[0],
+		recurseSubPackages: r.CreateSubstitution.RecurseSubPackages,
+		cmdRunner:          r,
+	}
+	err := e.execute()
+	if err != nil {
+		return handleError(c, err)
+	}
+
+	return nil
+}
+
+func (r *CreateSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error {
 	openAPIFileName, err := ext.OpenAPIFileName()
 	if err != nil {
 		return err
 	}
+	r.CreateSubstitution = settersutil.SubstitutionCreator{
+		Name:               r.CreateSubstitution.Name,
+		FieldName:          r.CreateSubstitution.FieldName,
+		FieldValue:         r.CreateSubstitution.FieldValue,
+		RecurseSubPackages: r.CreateSubstitution.RecurseSubPackages,
+		Pattern:            r.CreateSubstitution.Pattern,
+		OpenAPIFileName:    openAPIFileName,
+		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		ResourcesPath:      pkgPath,
+	}
 
-	r.CreateSubstitution.OpenAPIFileName = openAPIFileName
-	resourcePackagesPaths, err := pathutil.DirsWithFile(args[0], openAPIFileName, r.CreateSubstitution.RecurseSubPackages)
+	err = r.CreateSubstitution.Create()
 	if err != nil {
-		return err
-	}
-
-	if len(resourcePackagesPaths) == 0 {
-		return errors.Errorf("unable to find %q in package %q", r.CreateSubstitution.OpenAPIFileName, args[0])
-	}
-
-	for _, resourcesPath := range resourcePackagesPaths {
-		r.CreateSubstitution = settersutil.SubstitutionCreator{
-			Name:               r.CreateSubstitution.Name,
-			FieldName:          r.CreateSubstitution.FieldName,
-			FieldValue:         r.CreateSubstitution.FieldValue,
-			RecurseSubPackages: r.CreateSubstitution.RecurseSubPackages,
-			Pattern:            r.CreateSubstitution.Pattern,
-			OpenAPIFileName:    openAPIFileName,
-			OpenAPIPath:        filepath.Join(resourcesPath, openAPIFileName),
-			ResourcesPath:      resourcesPath,
-		}
-
-		// Add schema present in openAPI file for current package
-		if err := openapi.AddSchemaFromFile(r.CreateSubstitution.OpenAPIPath); err != nil {
+		// return err if RecurseSubPackages is false
+		if !r.CreateSubstitution.RecurseSubPackages {
 			return err
-		}
-		err := r.CreateSubstitution.Create()
-		if err != nil {
-			// return err if there is only package
-			if len(resourcePackagesPaths) == 1 {
-				return err
-			} else {
-				// print error message and continue if there are multiple packages to set
-				fmt.Fprintf(c.OutOrStdout(), "%s in package %q\n\n", err.Error(), r.CreateSubstitution.ResourcesPath)
-			}
 		} else {
-			fmt.Fprintf(c.OutOrStdout(), "created substitution %q in package %q\n\n", r.CreateSubstitution.Name, r.CreateSubstitution.ResourcesPath)
+			// print error message and continue if RecurseSubPackages is true
+			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
 		}
-
-		// Delete schema present in openAPI file for current package
-		if err := openapi.DeleteSchemaInFile(r.CreateSubstitution.OpenAPIPath); err != nil {
-			return err
-		}
+	} else {
+		fmt.Fprintf(w, "created substitution %q in package %q\n\n", r.CreateSubstitution.Name, pkgPath)
 	}
 	return nil
 }
