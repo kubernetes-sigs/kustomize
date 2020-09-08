@@ -5,9 +5,11 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"sort"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -17,18 +19,18 @@ import (
 func GetCountRunner(name string) *CountRunner {
 	r := &CountRunner{}
 	c := &cobra.Command{
-		Use:     "count DIR...",
+		Use:     "count [DIR]",
+		Args:    cobra.MaximumNArgs(1),
 		Short:   commands.CountShort,
 		Long:    commands.CountLong,
 		Example: commands.CountExamples,
 		RunE:    r.runE,
 	}
 	fixDocs(name, c)
-	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
-		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.Kind, "kind", true,
 		"count resources by kind.")
-
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
+		"prints count of resources recursively in all the nested subpackages")
 	r.Command = c
 	return r
 }
@@ -42,20 +44,57 @@ type CountRunner struct {
 	IncludeSubpackages bool
 	Kind               bool
 	Command            *cobra.Command
+	RecurseSubPackages bool
 }
 
 func (r *CountRunner) runE(c *cobra.Command, args []string) error {
-	var inputs []kio.Reader
-	for _, a := range args {
-		inputs = append(inputs, kio.LocalPackageReader{
-			PackagePath:        a,
-			IncludeSubpackages: r.IncludeSubpackages,
-		})
-	}
-	if len(inputs) == 0 {
-		inputs = append(inputs, &kio.ByteReader{Reader: c.InOrStdin()})
+	if len(args) == 0 {
+		input := &kio.ByteReader{Reader: c.InOrStdin()}
+
+		return handleError(c, kio.Pipeline{
+			Inputs:  []kio.Reader{input},
+			Outputs: r.out(c.OutOrStdout()),
+		}.Execute())
 	}
 
+	e := executeCmdOnPkgs{
+		writer:             c.OutOrStdout(),
+		needOpenAPI:        false,
+		recurseSubPackages: r.RecurseSubPackages,
+		cmdRunner:          r,
+		rootPkgPath:        args[0],
+	}
+
+	return e.execute()
+}
+
+func (r *CountRunner) executeCmd(w io.Writer, pkgPath string) error {
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+
+	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: openAPIFileName}
+
+	fmt.Fprintf(w, "%q:\n", pkgPath)
+	err = kio.Pipeline{
+		Inputs:  []kio.Reader{input},
+		Outputs: r.out(w),
+	}.Execute()
+
+	if err != nil {
+		// return err if there is only package
+		if !r.RecurseSubPackages {
+			return err
+		} else {
+			// print error message and continue if there are multiple packages to annotate
+			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+		}
+	}
+	return nil
+}
+
+func (r *CountRunner) out(w io.Writer) []kio.Writer {
 	var out []kio.Writer
 	if r.Kind {
 		out = append(out, kio.WriterFunc(func(nodes []*yaml.RNode) error {
@@ -69,20 +108,15 @@ func (r *CountRunner) runE(c *cobra.Command, args []string) error {
 			order := k.List()
 			sort.Strings(order)
 			for _, k := range order {
-				fmt.Fprintf(c.OutOrStdout(), "%s: %d\n", k, count[k])
+				fmt.Fprintf(w, "%s: %d\n", k, count[k])
 			}
-
 			return nil
 		}))
-
 	} else {
 		out = append(out, kio.WriterFunc(func(nodes []*yaml.RNode) error {
-			fmt.Fprintf(c.OutOrStdout(), "%d\n", len(nodes))
+			fmt.Fprintf(w, "%d\n", len(nodes))
 			return nil
 		}))
 	}
-	return handleError(c, kio.Pipeline{
-		Inputs:  inputs,
-		Outputs: out,
-	}.Execute())
+	return out
 }
