@@ -7,12 +7,15 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
@@ -162,4 +165,71 @@ func TestCmd_failFileContents(t *testing.T) {
 
 	// expect an error
 	assert.EqualError(t, err, "yaml: line 1: did not find expected node content")
+}
+
+func TestFmtSubPackages(t *testing.T) {
+	var tests = []struct {
+		name        string
+		dataset     string
+		packagePath string
+		args        []string
+		expected    string
+	}{
+		{
+			name:    "fmt-recurse-subpackages",
+			dataset: "dataset-with-setters",
+			args:    []string{"-R"},
+			expected: `
+formatted resource files in package "${baseDir}/mysql"
+formatted resource files in package "${baseDir}/mysql/nosetters"
+formatted resource files in package "${baseDir}/mysql/storage"
+`,
+		},
+		{
+			name:        "fmt-top-level-pkg-no-recurse-subpackages",
+			dataset:     "dataset-without-setters",
+			packagePath: "mysql",
+			expected:    `formatted resource files in package "${baseDir}/mysql"`,
+		},
+		{
+			name:        "fmt-nested-pkg-no-recurse-subpackages",
+			dataset:     "dataset-without-setters",
+			packagePath: "mysql/storage",
+			expected:    `formatted resource files in package "${baseDir}/mysql/storage"`,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+			sourceDir := filepath.Join("test", "testdata", test.dataset)
+			baseDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			copyutil.CopyDir(sourceDir, baseDir)
+			defer os.RemoveAll(baseDir)
+			runner := commands.GetFmtRunner("")
+			actual := &bytes.Buffer{}
+			runner.Command.SetOut(actual)
+			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
+			err = runner.Command.Execute()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// normalize path format for windows
+			actualNormalized := strings.Replace(
+				strings.Replace(actual.String(), "\\", "/", -1),
+				"//", "/", -1)
+
+			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
+			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
+			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+				t.FailNow()
+			}
+		})
+	}
 }
