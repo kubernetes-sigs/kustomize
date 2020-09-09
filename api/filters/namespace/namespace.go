@@ -69,7 +69,7 @@ func (ns Filter) hacks(obj *yaml.RNode) error {
 // metaNamespaceHack is a hack for implementing the namespace transform
 // for the metadata.namespace field on namespace scoped resources.
 // namespace scoped resources are determined by NOT being present
-// in a blacklist of cluster-scoped resource types (by apiVersion and kind).
+// in a hard-coded list of cluster-scoped resource types (by apiVersion and kind).
 //
 // This hack should be updated to allow individual resources to specify
 // if they are cluster scoped through either an annotation on the resources,
