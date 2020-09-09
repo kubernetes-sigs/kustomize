@@ -5,9 +5,11 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -19,15 +21,14 @@ import (
 func GetCatRunner(name string) *CatRunner {
 	r := &CatRunner{}
 	c := &cobra.Command{
-		Use:     "cat DIR...",
+		Use:     "cat DIR",
 		Short:   commands.CatShort,
 		Long:    commands.CatLong,
 		Example: commands.CatExamples,
 		RunE:    r.runE,
+		Args:    cobra.MaximumNArgs(1),
 	}
 	fixDocs(name, c)
-	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
-		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.Format, "format", true,
 		"format resource config yaml before printing.")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", false,
@@ -49,6 +50,8 @@ func GetCatRunner(name string) *CatRunner {
 		"if true, exclude non-local-config in the output.")
 	c.Flags().StringVar(&r.OutputDest, "dest", "",
 		"if specified, write output to a file rather than stdout")
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
+		"print resources recursively in all the nested subpackages")
 	r.Command = c
 	return r
 }
@@ -59,7 +62,6 @@ func CatCommand(name string) *cobra.Command {
 
 // CatRunner contains the run function
 type CatRunner struct {
-	IncludeSubpackages bool
 	Format             bool
 	KeepAnnotations    bool
 	WrapKind           string
@@ -71,54 +73,99 @@ type CatRunner struct {
 	IncludeLocal       bool
 	ExcludeNonLocal    bool
 	Command            *cobra.Command
+	RecurseSubPackages bool
 }
 
 func (r *CatRunner) runE(c *cobra.Command, args []string) error {
-	// if there is a function-config specified, emit it
+	var writer = c.OutOrStdout()
+	if r.OutputDest != "" {
+		o, err := os.Create(r.OutputDest)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		defer o.Close()
+		writer = o
+	}
+	if len(args) == 0 {
+		input := &kio.ByteReader{Reader: c.InOrStdin()}
+		// if there is a function-config specified, emit it
+		outputs, err := r.out(writer)
+		if err != nil {
+			return err
+		}
+		return handleError(c, kio.Pipeline{Inputs: []kio.Reader{input}, Filters: r.catFilters(), Outputs: outputs}.Execute())
+	}
+
+	e := executeCmdOnPkgs{
+		writer:             writer,
+		needOpenAPI:        false,
+		recurseSubPackages: r.RecurseSubPackages,
+		cmdRunner:          r,
+		rootPkgPath:        args[0],
+	}
+
+	return e.execute()
+}
+
+func (r *CatRunner) executeCmd(w io.Writer, pkgPath string) error {
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+
+	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: openAPIFileName}
+	outputs, err := r.out(w)
+	if err != nil {
+		return err
+	}
+	err = kio.Pipeline{
+		Inputs:  []kio.Reader{input},
+		Filters: r.catFilters(),
+		Outputs: outputs,
+	}.Execute()
+
+	if err != nil {
+		// return err if there is only package
+		if !r.RecurseSubPackages {
+			return err
+		} else {
+			// print error message and continue if there are multiple packages to annotate
+			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+		}
+	}
+	fmt.Fprintf(w, "---\n")
+	return nil
+}
+
+func (r *CatRunner) catFilters() []kio.Filter {
+	var fltrs []kio.Filter
+	// don't include reconcilers
+	fltrs = append(fltrs, &filters.IsLocalConfig{
+		IncludeLocalConfig:    r.IncludeLocal,
+		ExcludeNonLocalConfig: r.ExcludeNonLocal,
+	})
+	if r.Format {
+		fltrs = append(fltrs, filters.FormatFilter{})
+	}
+	if r.StripComments {
+		fltrs = append(fltrs, filters.StripCommentsFilter{})
+	}
+	return fltrs
+}
+
+func (r *CatRunner) out(w io.Writer) ([]kio.Writer, error) {
+	var outputs []kio.Writer
 	var functionConfig *yaml.RNode
 	if r.FunctionConfig != "" {
 		configs, err := kio.LocalPackageReader{PackagePath: r.FunctionConfig,
 			OmitReaderAnnotations: !r.KeepAnnotations}.Read()
 		if err != nil {
-			return err
+			return outputs, err
 		}
 		if len(configs) != 1 {
-			return fmt.Errorf("expected exactly 1 functionConfig, found %d", len(configs))
+			return outputs, fmt.Errorf("expected exactly 1 functionConfig, found %d", len(configs))
 		}
 		functionConfig = configs[0]
-	}
-
-	var inputs []kio.Reader
-	for _, a := range args {
-		inputs = append(inputs, kio.LocalPackageReader{
-			PackagePath:        a,
-			IncludeSubpackages: r.IncludeSubpackages,
-		})
-	}
-	if len(inputs) == 0 {
-		inputs = append(inputs, &kio.ByteReader{Reader: c.InOrStdin()})
-	}
-	var fltr []kio.Filter
-	// don't include reconcilers
-	fltr = append(fltr, &filters.IsLocalConfig{
-		IncludeLocalConfig:    r.IncludeLocal,
-		ExcludeNonLocalConfig: r.ExcludeNonLocal,
-	})
-	if r.Format {
-		fltr = append(fltr, filters.FormatFilter{})
-	}
-	if r.StripComments {
-		fltr = append(fltr, filters.StripCommentsFilter{})
-	}
-
-	var out = c.OutOrStdout()
-	if r.OutputDest != "" {
-		o, err := os.Create(r.OutputDest)
-		if err != nil {
-			return handleError(c, errors.Wrap(err))
-		}
-		defer o.Close()
-		out = o
 	}
 
 	// remove this annotation explicitly, the ByteWriter won't clear it by
@@ -128,9 +175,8 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		clear = nil
 	}
 
-	var outputs []kio.Writer
 	outputs = append(outputs, kio.ByteWriter{
-		Writer:                out,
+		Writer:                w,
 		KeepReaderAnnotations: r.KeepAnnotations,
 		WrappingKind:          r.WrapKind,
 		WrappingAPIVersion:    r.WrapApiVersion,
@@ -139,5 +185,5 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		ClearAnnotations:      clear,
 	})
 
-	return handleError(c, kio.Pipeline{Inputs: inputs, Filters: fltr, Outputs: outputs}.Execute())
+	return outputs, nil
 }
