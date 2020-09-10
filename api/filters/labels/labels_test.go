@@ -41,9 +41,11 @@ metadata:
     bean: cannellini
     clown: emmett kelley
     dragon: smaug
+    state: iowa
 `,
 			filter: Filter{
 				Labels: labelMap{
+					"state":  "iowa",
 					"clown":  "emmett kelley",
 					"auto":   "ford",
 					"dragon": "smaug",
