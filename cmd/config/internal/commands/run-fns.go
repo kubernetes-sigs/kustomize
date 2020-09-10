@@ -9,11 +9,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 )
 
 // GetCatRunner returns a RunFnRunner.
@@ -65,6 +67,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
+	r.Command.Flags().BoolVar(
+		&r.LogSteps, "log-steps", false, "log steps to stderr")
 	return r
 }
 
@@ -91,6 +95,7 @@ type RunFnRunner struct {
 	Network            bool
 	NetworkName        string
 	Mounts             []string
+	LogSteps           bool
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -305,6 +310,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		EnableExec:     r.EnableExec,
 		StorageMounts:  storageMounts,
 		ResultsDir:     r.ResultsDir,
+		LogSteps:       r.LogSteps,
 	}
 
 	// don't consider args for the function

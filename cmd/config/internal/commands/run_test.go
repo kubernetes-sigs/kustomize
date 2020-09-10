@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
@@ -283,6 +284,16 @@ apiVersion: v1
 			args: []string{"run", "dir", "--image", "foo:bar", "--", "a=b", "c", "e=f"},
 			err:  "must have keys and values separated by",
 		},
+		{
+			name: "log steps",
+			args: []string{"run", "dir", "--log-steps"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:        "dir",
+				NetworkName: "bridge",
+				LogSteps:    true,
+			},
+		},
 	}
 
 	for i := range tests {
@@ -385,5 +396,4 @@ apiVersion: v1
 
 		})
 	}
-
 }
