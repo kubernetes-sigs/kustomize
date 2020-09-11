@@ -31,6 +31,7 @@ type executeCmdOnPkgs struct {
 	needOpenAPI        bool
 	cmdRunner          cmdRunner
 	writer             io.Writer
+	skipPkgPathPrint   bool
 }
 
 // executeCmdOnPkgs takes the function definition for a command to be executed on single package, applies that definition
@@ -57,7 +58,8 @@ func (e executeCmdOnPkgs) execute() error {
 		pkgsPaths = []string{e.rootPkgPath}
 	}
 
-	for _, pkgPath := range pkgsPaths {
+	for i := range pkgsPaths {
+		pkgPath := pkgsPaths[i]
 		// Add schema present in openAPI file for current package
 		if e.needOpenAPI {
 			if err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, openAPIFileName)); err != nil {
@@ -65,9 +67,17 @@ func (e executeCmdOnPkgs) execute() error {
 			}
 		}
 
+		if !e.skipPkgPathPrint {
+			fmt.Fprintf(e.writer, "%s/\n", pkgPath)
+		}
+
 		err := e.cmdRunner.executeCmd(e.writer, pkgPath)
 		if err != nil {
 			return err
+		}
+
+		if i != len(pkgsPaths)-1 {
+			fmt.Fprint(e.writer, "\n")
 		}
 
 		// Delete schema present in openAPI file for current package

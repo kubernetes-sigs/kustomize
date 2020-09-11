@@ -114,10 +114,10 @@ func (r *FmtRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "formatted resource files in package %q\n", pkgPath)
+		fmt.Fprint(w, "formatted resource files in the package\n")
 	}
 	return nil
 }

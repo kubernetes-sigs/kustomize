@@ -44,7 +44,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "replicas" in package "${baseDir}"`,
+			out: `created setter "replicas"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -83,7 +83,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "replicas" in package "${baseDir}"`,
+			out: `created setter "replicas"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -162,7 +162,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "replicas" in package "${baseDir}"`,
+			out: `created setter "replicas"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -204,7 +204,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter replicas in package ${baseDir}`,
+			out: `created setter replicas`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -259,7 +259,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "list" in package "${baseDir}"`,
+			out: `created setter "list"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -360,7 +360,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter replicas in package ${baseDir}`,
+			out: `created setter replicas`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -407,7 +407,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "replicas" in package "${baseDir}"`,
+			out: `created setter "replicas"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -445,7 +445,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "foo.bar" in package "${baseDir}"`,
+			out: `created setter "foo.bar"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -596,7 +596,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "replicas" in package "${baseDir}"`,
+			out: `created setter "replicas"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -722,7 +722,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
 `,
-			out: `created setter "replicas" in package "${baseDir}"`,
+			out: `created setter "replicas"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -814,7 +814,7 @@ spec:
 				strings.Replace(out.String(), "\\", "/", -1),
 				"//", "/", -1)
 
-			if !assert.Equal(t, expectedNormalized, strings.TrimSpace(actualNormalized)) {
+			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
 			}
 
@@ -853,10 +853,11 @@ func TestCreateSetterSubPackages(t *testing.T) {
 			name:    "create-setter-recurse-subpackages",
 			dataset: "dataset-without-setters",
 			args:    []string{"namespace", "myspace", "-R"},
-			expected: `
-created setter "namespace" in package "${baseDir}/mysql"
+			expected: `${baseDir}/mysql/
+created setter "namespace"
 
-created setter "namespace" in package "${baseDir}/mysql/storage"
+${baseDir}/mysql/storage/
+created setter "namespace"
 `,
 		},
 		{
@@ -864,25 +865,33 @@ created setter "namespace" in package "${baseDir}/mysql/storage"
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql",
 			args:        []string{"namespace", "myspace"},
-			expected:    `created setter "namespace" in package "${baseDir}/mysql"`,
+			expected: `${baseDir}/mysql/
+created setter "namespace"
+`,
 		},
 		{
 			name:        "create-setter-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"namespace", "myspace"},
-			expected:    `created setter "namespace" in package "${baseDir}/mysql/storage"`,
+			expected: `${baseDir}/mysql/storage/
+created setter "namespace"
+`,
 		},
 		{
 			name:        "create-setter-already-exists",
 			dataset:     "dataset-with-setters",
 			packagePath: "mysql",
 			args:        []string{"namespace", "myspace", "-R"},
-			expected: `setter with name "namespace" already exists, if you want to modify it, please delete the existing setter and recreate it in package "${baseDir}/mysql"
+			expected: `${baseDir}/mysql/
+setter with name "namespace" already exists, if you want to modify it, please delete the existing setter and recreate it
 
-created setter "namespace" in package "${baseDir}/mysql/nosetters"
+${baseDir}/mysql/nosetters/
+created setter "namespace"
 
-setter with name "namespace" already exists, if you want to modify it, please delete the existing setter and recreate it in package "${baseDir}/mysql/storage"`,
+${baseDir}/mysql/storage/
+setter with name "namespace" already exists, if you want to modify it, please delete the existing setter and recreate it
+`,
 		},
 	}
 	for i := range tests {
@@ -914,7 +923,7 @@ setter with name "namespace" already exists, if you want to modify it, please de
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})
