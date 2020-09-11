@@ -31,7 +31,7 @@ var Filters = map[string]func() Filter{
 	"TeePiper":          func() Filter { return &TeePiper{} },
 }
 
-// YFilter wraps the GrepFilter interface so the filter can be represented as
+// YFilter wraps the Filter interface so the filter can be represented as
 // data and can be unmarshalled into a struct from a yaml config file.
 // This allows Pipelines to be expressed as data rather than code.
 type YFilter struct {
@@ -54,7 +54,7 @@ func (y *YFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			knownFilters = append(knownFilters, k)
 		}
 		sort.Strings(knownFilters)
-		return fmt.Errorf("unsupported GrepFilter Kind %s:  may be one of: [%s]",
+		return fmt.Errorf("unsupported Filter Kind %s:  may be one of: [%s]",
 			meta.Kind, strings.Join(knownFilters, ","))
 	}
 	y.Filter = filter()
