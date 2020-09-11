@@ -104,7 +104,7 @@ func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
 // Functions to run.
-func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, args, dataItems []string) (
+func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, dataItems []string) (
 	[]*yaml.RNode, error) {
 
 	if r.Image == "" && r.StarPath == "" && r.ExecPath == "" && r.StarURL == "" {
@@ -198,7 +198,7 @@ data: {}
 	}
 	err = rc.PipeE(
 		yaml.LookupCreate(yaml.MappingNode, "metadata", "annotations"),
-		yaml.SetField("config.kubernetes.io/function", yaml.NewScalarRNode(value)))
+		yaml.SetField(runtimeutil.FunctionAnnotationKey, yaml.NewScalarRNode(value)))
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
 	}
 
-	fns, err := r.getContainerFunctions(c, args, dataItems)
+	fns, err := r.getContainerFunctions(c, dataItems)
 	if err != nil {
 		return err
 	}
