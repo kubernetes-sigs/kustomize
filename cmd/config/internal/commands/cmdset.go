@@ -178,10 +178,10 @@ func (r *SetRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s in package %q\n", err.Error(), r.Set.ResourcesPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "set %d fields in package %q\n", count, r.Set.ResourcesPath)
+		fmt.Fprintf(w, "set %d field(s)\n", count)
 	}
 	return nil
 }

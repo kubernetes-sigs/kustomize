@@ -103,10 +103,10 @@ func (r *AnnotateRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if there are multiple packages to annotate
-			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "added annotations in package %q\n", pkgPath)
+		fmt.Fprint(w, "added annotations in the package\n")
 	}
 	return nil
 }

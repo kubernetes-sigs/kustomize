@@ -94,7 +94,6 @@ func (r *ListSettersRunner) executeCmd(w io.Writer, pkgPath string) error {
 		OpenAPIFileName: openAPIFileName,
 	}
 	openAPIPath := filepath.Join(pkgPath, openAPIFileName)
-	fmt.Fprintf(w, "\n%s/\n", pkgPath)
 	if err := r.ListSetters(w, openAPIPath, pkgPath); err != nil {
 		return err
 	}

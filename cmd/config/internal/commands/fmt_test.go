@@ -179,23 +179,31 @@ func TestFmtSubPackages(t *testing.T) {
 			name:    "fmt-recurse-subpackages",
 			dataset: "dataset-with-setters",
 			args:    []string{"-R"},
-			expected: `
-formatted resource files in package "${baseDir}/mysql"
-formatted resource files in package "${baseDir}/mysql/nosetters"
-formatted resource files in package "${baseDir}/mysql/storage"
+			expected: `${baseDir}/mysql/
+formatted resource files in the package
+
+${baseDir}/mysql/nosetters/
+formatted resource files in the package
+
+${baseDir}/mysql/storage/
+formatted resource files in the package
 `,
 		},
 		{
 			name:        "fmt-top-level-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql",
-			expected:    `formatted resource files in package "${baseDir}/mysql"`,
+			expected: `${baseDir}/mysql/
+formatted resource files in the package
+`,
 		},
 		{
 			name:        "fmt-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
-			expected:    `formatted resource files in package "${baseDir}/mysql/storage"`,
+			expected: `${baseDir}/mysql/storage/
+formatted resource files in the package
+`,
 		},
 	}
 	for i := range tests {

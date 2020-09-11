@@ -53,7 +53,7 @@ openAPI:
           value: "3"
           setBy: me
 `,
-			out: `deleted setter "replicas-setter" in package "${baseDir}"`,
+			out: `deleted setter "replicas-setter"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -97,7 +97,7 @@ openAPI:
           name: image
           value: nginx
 `,
-			out: `deleted setter "replicas-setter" in package "${baseDir}"`,
+			out: `deleted setter "replicas-setter"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -161,7 +161,7 @@ spec:
   - "b"
   - "c"
  `,
-			out: `deleted setter "list" in package "${baseDir}"`,
+			out: `deleted setter "list"`,
 			expectedResources: `
 apiVersion: example.com/v1beta1
 kind: Example1
@@ -347,7 +347,7 @@ kind: Deployment
 			expectedOut := strings.Replace(test.out, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expectedOut, "\\", "/", -1)
 
-			if !assert.Equal(t, expectedNormalized, strings.TrimSpace(actualNorm)) {
+			if !assert.Contains(t, strings.TrimSpace(actualNorm), expectedNormalized) {
 				t.FailNow()
 			}
 
@@ -386,12 +386,14 @@ func TestDeleteSetterSubPackages(t *testing.T) {
 			name:    "delete-setter-recurse-subpackages",
 			dataset: "dataset-with-setters",
 			args:    []string{"namespace", "-R"},
-			expected: `
-deleted setter "namespace" in package "${baseDir}/mysql"
+			expected: `${baseDir}/mysql/
+deleted setter "namespace"
 
-setter "namespace" does not exist in package "${baseDir}/mysql/nosetters"
+${baseDir}/mysql/nosetters/
+setter "namespace" does not exist
 
-deleted setter "namespace" in package "${baseDir}/mysql/storage"
+${baseDir}/mysql/storage/
+deleted setter "namespace"
 `,
 		},
 		{
@@ -399,14 +401,18 @@ deleted setter "namespace" in package "${baseDir}/mysql/storage"
 			dataset:     "dataset-with-setters",
 			packagePath: "mysql",
 			args:        []string{"namespace"},
-			expected:    `deleted setter "namespace" in package "${baseDir}/mysql"`,
+			expected: `${baseDir}/mysql/
+deleted setter "namespace"
+`,
 		},
 		{
 			name:        "delete-setter-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-with-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"namespace"},
-			expected:    `deleted setter "namespace" in package "${baseDir}/mysql/storage"`,
+			expected: `${baseDir}/mysql/storage/
+deleted setter "namespace"
+`,
 		},
 	}
 	for i := range tests {
@@ -438,7 +444,7 @@ deleted setter "namespace" in package "${baseDir}/mysql/storage"
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})

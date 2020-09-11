@@ -283,8 +283,7 @@ func TestGrepSubPackages(t *testing.T) {
 			name:    "grep-recurse-subpackages",
 			dataset: "dataset-without-setters",
 			args:    []string{"kind=Deployment"},
-			expected: `
-"${baseDir}/mysql":
+			expected: `${baseDir}/mysql/
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -303,7 +302,8 @@ spec:
       containers:
       - name: mysql
         image: mysql:1.7.9
-"${baseDir}/mysql/storage":
+
+${baseDir}/mysql/storage/
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -329,8 +329,7 @@ spec:
 			dataset:     "dataset-without-setters",
 			args:        []string{"kind=Deployment", "-R=false"},
 			packagePath: "mysql",
-			expected: `
-"${baseDir}/mysql":
+			expected: `${baseDir}/mysql/
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -348,15 +347,15 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: mysql:1.7.9`,
+        image: mysql:1.7.9
+`,
 		},
 		{
 			name:        "grep-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"kind=Deployment", "-R=false"},
-			expected: `
-"${baseDir}/mysql/storage":
+			expected: `${baseDir}/mysql/storage/
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -374,7 +373,8 @@ spec:
     spec:
       containers:
       - name: storage
-        image: storage:1.7.7`,
+        image: storage:1.7.7
+`,
 		},
 	}
 	for i := range tests {
@@ -403,7 +403,7 @@ spec:
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})

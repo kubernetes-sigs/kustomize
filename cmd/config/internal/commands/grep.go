@@ -137,7 +137,6 @@ func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
 
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: openAPIFileName}
 
-	fmt.Fprintf(w, "%q:\n", pkgPath)
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: []kio.Filter{r.GrepFilter},
@@ -153,7 +152,7 @@ func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if there are multiple packages to annotate
-			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	}
 	return nil

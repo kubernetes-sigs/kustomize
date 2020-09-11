@@ -95,10 +95,10 @@ func (r *DeleteSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "deleted setter %q in package %q\n\n", r.DeleteSetter.Name, pkgPath)
+		fmt.Fprintf(w, "deleted setter %q\n", r.DeleteSetter.Name)
 	}
 	return nil
 }
