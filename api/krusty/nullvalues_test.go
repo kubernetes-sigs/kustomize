@@ -4,12 +4,13 @@
 package krusty_test
 
 import (
+	"strings"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestNullValues(t *testing.T) {
+func TestNullValues1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("/app/deployment.yaml", `
 apiVersion: apps/v1
@@ -61,4 +62,32 @@ spec:
         image: image
         name: example
 `)
+}
+
+func TestNullValues2(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("deploy.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+spec:
+  template:
+    spec:      
+      containers:
+        - name: test
+      volumes: null
+`)
+	th.WriteK(".", `
+resources:
+- deploy.yaml
+`)
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	if err == nil {
+		t.Fatalf("expected trouble")
+	}
+	if !strings.Contains(
+		err.Error(), "expected sequence or mapping node") {
+		t.Fatalf("Unexpected err: %v", err)
+	}
 }
