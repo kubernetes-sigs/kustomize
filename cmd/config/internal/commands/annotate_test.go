@@ -501,9 +501,11 @@ func TestAnnotateSubPackages(t *testing.T) {
 			name:    "annotate-recurse-subpackages",
 			dataset: "dataset-without-setters",
 			args:    []string{"--kv", "foo=bar", "-R"},
-			expected: `
-added annotations in package "${baseDir}/mysql"
-added annotations in package "${baseDir}/mysql/storage"
+			expected: `${baseDir}/mysql/
+added annotations in the package
+
+${baseDir}/mysql/storage/
+added annotations in the package
 `,
 		},
 		{
@@ -511,14 +513,18 @@ added annotations in package "${baseDir}/mysql/storage"
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql",
 			args:        []string{"--kv", "foo=bar"},
-			expected:    `added annotations in package "${baseDir}/mysql"`,
+			expected: `${baseDir}/mysql/
+added annotations in the package
+`,
 		},
 		{
 			name:        "annotate-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"--kv", "foo=bar"},
-			expected:    `added annotations in package "${baseDir}/mysql/storage"`,
+			expected: `${baseDir}/mysql/storage/
+added annotations in the package
+`,
 		},
 	}
 	for i := range tests {
@@ -550,7 +556,7 @@ added annotations in package "${baseDir}/mysql/storage"
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})

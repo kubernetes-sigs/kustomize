@@ -87,10 +87,10 @@ func (r *CreateSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error
 			return err
 		} else {
 			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "created substitution %q in package %q\n\n", r.CreateSubstitution.Name, pkgPath)
+		fmt.Fprintf(w, "created substitution %q\n", r.CreateSubstitution.Name)
 	}
 	return nil
 }

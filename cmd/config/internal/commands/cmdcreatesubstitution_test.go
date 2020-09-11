@@ -63,7 +63,7 @@ openAPI:
           name: my-tag-setter
           value: "1.7.9"
  `,
-			out: `created substitution "my-image-subst" in package "${baseDir}"`,
+			out: `created substitution "my-image-subst"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -167,7 +167,7 @@ spec:
 apiVersion: v1alpha1
 kind: Example
  `,
-			out: `created substitution "my-image-subst" in package "${baseDir}"`,
+			out: `created substitution "my-image-subst"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -256,7 +256,7 @@ openAPI:
           - marker: ${my-tag-setter}
             ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
-			out: `created substitution "my-nested-subst" in package "${baseDir}"`,
+			out: `created substitution "my-nested-subst"`,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -400,7 +400,7 @@ spec:
 				strings.Replace(out.String(), "\\", "/", -1),
 				"//", "/", -1)
 
-			if !assert.Equal(t, expectedNormalized, strings.TrimSpace(actualNormalized)) {
+			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
 			}
 
@@ -439,10 +439,11 @@ func TestCreateSubstSubPackages(t *testing.T) {
 			name:    "create-subst-recurse-subpackages",
 			dataset: "dataset-without-setters",
 			args:    []string{"image-tag", "--field-value", "mysql:1.7.9", "--pattern", "${image}:${tag}", "-R"},
-			expected: `
-created substitution "image-tag" in package "${baseDir}/mysql"
+			expected: `${baseDir}/mysql/
+created substitution "image-tag"
 
-created substitution "image-tag" in package "${baseDir}/mysql/storage"
+${baseDir}/mysql/storage/
+created substitution "image-tag"
 `,
 		},
 		{
@@ -450,25 +451,30 @@ created substitution "image-tag" in package "${baseDir}/mysql/storage"
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql",
 			args:        []string{"image-tag", "--field-value", "mysql:1.7.9", "--pattern", "${image}:${tag}"},
-			expected:    `created substitution "image-tag" in package "${baseDir}/mysql"`,
+			expected: `${baseDir}/mysql/
+created substitution "image-tag"`,
 		},
 		{
 			name:        "create-subst-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"image-tag", "--field-value", "storage:1.7.9", "--pattern", "${image}:${tag}"},
-			expected:    `created substitution "image-tag" in package "${baseDir}/mysql/storage"`,
+			expected: `${baseDir}/mysql/storage/
+created substitution "image-tag"`,
 		},
 		{
 			name:        "create-subst-already-exists",
 			dataset:     "dataset-with-setters",
 			packagePath: "mysql",
 			args:        []string{"image-tag", "--field-value", "mysql:1.7.9", "--pattern", "${image}:${tag}", "-R"},
-			expected: `substitution with name "image-tag" already exists in package "${baseDir}/mysql"
+			expected: `${baseDir}/mysql/
+substitution with name "image-tag" already exists
 
-created substitution "image-tag" in package "${baseDir}/mysql/nosetters"
+${baseDir}/mysql/nosetters/
+created substitution "image-tag"
 
-created substitution "image-tag" in package "${baseDir}/mysql/storage"`,
+${baseDir}/mysql/storage/
+created substitution "image-tag"`,
 		},
 	}
 	for i := range tests {

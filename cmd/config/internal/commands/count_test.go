@@ -86,10 +86,10 @@ func TestCountSubPackages(t *testing.T) {
 		{
 			name:    "count-recurse-subpackages",
 			dataset: "dataset-without-setters",
-			expected: `
-"${baseDir}/mysql":
+			expected: `${baseDir}/mysql/
 Deployment: 1
-"${baseDir}/mysql/storage":
+
+${baseDir}/mysql/storage/
 Deployment: 1
 `,
 		},
@@ -98,16 +98,18 @@ Deployment: 1
 			dataset:     "dataset-without-setters",
 			args:        []string{"-R=false"},
 			packagePath: "mysql",
-			expected: `"${baseDir}/mysql":
-Deployment: 1`,
+			expected: `${baseDir}/mysql/
+Deployment: 1
+`,
 		},
 		{
 			name:        "count-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"-R=false"},
-			expected: `"${baseDir}/mysql/storage":
-Deployment: 1`,
+			expected: `${baseDir}/mysql/storage/
+Deployment: 1
+`,
 		},
 	}
 	for i := range tests {
@@ -139,7 +141,7 @@ Deployment: 1`,
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})

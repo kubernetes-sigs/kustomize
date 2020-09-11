@@ -147,7 +147,7 @@ func (c SubstitutionCreator) Create() error {
 
 	if a.Count == 0 {
 		fmt.Printf("substitution %s doesn't match any field value in resource configs, "+
-			"but creating substitution definition in package %q\n", c.Name, c.ResourcesPath)
+			"but creating substitution definition\n", c.Name)
 	}
 	return err
 }
