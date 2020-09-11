@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -50,10 +49,6 @@ func (r *DeleteSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 
 	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
 	if err != nil {
-		return err
-	}
-
-	if err := openapi.AddSchemaFromFile(r.OpenAPIFile); err != nil {
 		return err
 	}
 
@@ -96,10 +91,10 @@ func (r *DeleteSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error
 			return err
 		} else {
 			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "deleted substitution %q in package %q\n\n", r.DeleteSubstitution.Name, pkgPath)
+		fmt.Fprintf(w, "deleted substitution %q\n", r.DeleteSubstitution.Name)
 	}
 	return nil
 }

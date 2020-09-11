@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -35,23 +34,27 @@ func TestExecuteCmdOnPkgs(t *testing.T) {
 			recurse:     true,
 			needOpenAPI: false,
 			pkgPath:     "subpkg1/subdir1",
-			expectedOut: `${baseDir}/subpkg1/subdir1`,
+			expectedOut: `${baseDir}/subpkg1/subdir1/
+`,
 		},
 		{
 			name:        "executeCmd_returns_error",
 			recurse:     true,
 			needOpenAPI: false,
 			pkgPath:     "subpkg4",
-			errMsg:      `this command returns an error if package has error.txt file`,
+			expectedOut: `${baseDir}/subpkg4/
+`,
+			errMsg: `this command returns an error if package has error.txt file`,
 		},
 		{
 			name:        "executeCmd_prints_pkgpaths",
 			recurse:     true,
 			needOpenAPI: false,
 			pkgPath:     "subpkg2",
-			expectedOut: `
-${baseDir}/subpkg2
-${baseDir}/subpkg2/subpkg3`,
+			expectedOut: `${baseDir}/subpkg2/
+
+${baseDir}/subpkg2/subpkg3/
+`,
 		},
 	}
 
@@ -96,11 +99,11 @@ ${baseDir}/subpkg2/subpkg3`,
 				strings.Replace(actual.String(), "\\", "/", -1),
 				"//", "/", -1)
 
-			expected := strings.Replace(test.expectedOut, "${baseDir}", dir, -1)
+			expected := strings.Replace(test.expectedOut, "${baseDir}", dir+"/", -1)
 			expectedNormalized := strings.Replace(
 				strings.Replace(expected, "\\", "/", -1),
 				"//", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})
@@ -174,6 +177,5 @@ func (r *TestRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return errors.Errorf("this command returns an error if package has error.txt file")
 		}
 	}
-	fmt.Fprintf(w, "%s\n", pkgPath)
 	return nil
 }

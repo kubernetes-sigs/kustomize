@@ -115,8 +115,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----
-`, b.String()) {
+---`, b.String()) {
 		return
 	}
 }
@@ -172,8 +171,7 @@ metadata:
   annotations:
     app: nginx
 spec:
-  replicas: 3
-`), 0600)
+  replicas: 3`), 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -227,8 +225,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----
-`, b.String()) {
+---`, b.String()) {
 		return
 	}
 }
@@ -310,8 +307,7 @@ metadata:
       image: gcr.io/example/reconciler:v1
 spec:
   replicas: 3
----
-`, b.String()) {
+---`, b.String()) {
 		return
 	}
 }
@@ -368,8 +364,7 @@ metadata:
   annotations:
     app: nginx
 spec:
-  replicas: 3
-`), 0600)
+  replicas: 3`), 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -426,8 +421,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----
-`, string(actual)) {
+---`, string(actual)) {
 		return
 	}
 }
@@ -484,8 +478,7 @@ metadata:
   annotations:
     app: nginx
 spec:
-  replicas: 3
-`), 0600)
+  replicas: 3`), 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -543,8 +536,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----
-`, string(actual)) {
+---`, string(actual)) {
 		return
 	}
 }
@@ -560,8 +552,7 @@ func TestCatSubPackages(t *testing.T) {
 		{
 			name:    "cat-recurse-subpackages",
 			dataset: "dataset-without-setters",
-			expected: `
-# Copyright 2019 The Kubernetes Authors.
+			expected: `# Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apps/v1
@@ -592,16 +583,14 @@ spec:
       containers:
       - name: storage
         image: storage:1.7.7
----
-`,
+---`,
 		},
 		{
 			name:        "cat-top-level-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			args:        []string{"-R=false"},
 			packagePath: "mysql",
-			expected: `
-# Copyright 2019 The Kubernetes Authors.
+			expected: `# Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apps/v1
@@ -616,16 +605,14 @@ spec:
       containers:
       - name: mysql
         image: mysql:1.7.9
----
-`,
+---`,
 		},
 		{
 			name:        "cat-nested-pkg-no-recurse-subpackages",
 			dataset:     "dataset-without-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"-R=false"},
-			expected: `
-# Copyright 2019 The Kubernetes Authors.
+			expected: `# Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apps/v1
@@ -672,7 +659,7 @@ spec:
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})

@@ -231,10 +231,10 @@ func (r *CreateSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s in package %q\n\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "created setter %q in package %q\n\n", r.CreateSetter.Name, pkgPath)
+		fmt.Fprintf(w, "created setter %q\n", r.CreateSetter.Name)
 	}
 	return nil
 }

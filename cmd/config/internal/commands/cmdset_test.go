@@ -31,7 +31,7 @@ func TestSetCommand(t *testing.T) {
 		{
 			name: "set replicas",
 			args: []string{"replicas", "4", "--description", "hi there", "--set-by", "pw"},
-			out:  "set 1 fields\n",
+			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -127,7 +127,7 @@ spec:
 		{
 			name: "set replicas no description",
 			args: []string{"replicas", "4"},
-			out:  "set 1 fields\n",
+			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -175,7 +175,7 @@ spec:
 		{
 			name: "set image with value",
 			args: []string{"tag", "1.8.1"},
-			out:  "set 1 fields\n",
+			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -510,7 +510,7 @@ list in body should have at most 2 items`,
 		{
 			name: "set replicas with value set by flag",
 			args: []string{"replicas", "--values", "4", "--description", "hi there"},
-			out:  "set 1 fields\n",
+			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -606,7 +606,7 @@ spec:
 		{
 			name: "openAPI list values set by flag success",
 			args: []string{"list", "--values", "10", "--values", "11"},
-			out:  "set 1 fields\n",
+			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 kind: Kptfile
 openAPI:
@@ -710,7 +710,7 @@ list in body should have at most 2 items`,
 		{
 			name: "nested substitution",
 			args: []string{"my-image-setter", "ubuntu"},
-			out:  "set 2 fields\n",
+			out:  "set 2 field(s)\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
@@ -1093,10 +1093,14 @@ func TestSetSubPackages(t *testing.T) {
 			name:    "set-recurse-subpackages",
 			dataset: "dataset-with-setters",
 			args:    []string{"namespace", "otherspace", "-R"},
-			expected: `
-set 1 fields in package "${baseDir}/mysql"
-setter "namespace" is not found in package "${baseDir}/mysql/nosetters"
-set 1 fields in package "${baseDir}/mysql/storage"
+			expected: `${baseDir}/mysql/
+set 1 field(s)
+
+${baseDir}/mysql/nosetters/
+setter "namespace" is not found
+
+${baseDir}/mysql/storage/
+set 1 field(s)
 `,
 		},
 		{
@@ -1104,8 +1108,8 @@ set 1 fields in package "${baseDir}/mysql/storage"
 			dataset:     "dataset-with-setters",
 			packagePath: "mysql",
 			args:        []string{"namespace", "otherspace"},
-			expected: `
-set 1 fields in package "${baseDir}/mysql"
+			expected: `${baseDir}/mysql/
+set 1 field(s)
 `,
 		},
 		{
@@ -1113,8 +1117,8 @@ set 1 fields in package "${baseDir}/mysql"
 			dataset:     "dataset-with-setters",
 			packagePath: "mysql/storage",
 			args:        []string{"namespace", "otherspace"},
-			expected: `
-set 1 fields in package "${baseDir}/mysql/storage"
+			expected: `${baseDir}/mysql/storage/
+set 1 field(s)
 `,
 		},
 	}

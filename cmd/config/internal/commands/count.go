@@ -76,7 +76,6 @@ func (r *CountRunner) executeCmd(w io.Writer, pkgPath string) error {
 
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: openAPIFileName}
 
-	fmt.Fprintf(w, "%q:\n", pkgPath)
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Outputs: r.out(w),
@@ -88,7 +87,7 @@ func (r *CountRunner) executeCmd(w io.Writer, pkgPath string) error {
 			return err
 		} else {
 			// print error message and continue if there are multiple packages to annotate
-			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	}
 	return nil

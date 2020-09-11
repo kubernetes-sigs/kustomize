@@ -102,6 +102,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		recurseSubPackages: r.RecurseSubPackages,
 		cmdRunner:          r,
 		rootPkgPath:        args[0],
+		skipPkgPathPrint:   true,
 	}
 
 	return e.execute()
@@ -133,7 +134,7 @@ func (r *CatRunner) executeCmd(w io.Writer, pkgPath string) error {
 			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
 		}
 	}
-	fmt.Fprintf(w, "---\n")
+	fmt.Fprintf(w, "---")
 	return nil
 }
 
