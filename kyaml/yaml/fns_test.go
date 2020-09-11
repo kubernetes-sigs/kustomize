@@ -518,6 +518,11 @@ func TestSplitIndexNameValue(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "a", k)
 	assert.Equal(t, "b=c", v)
+
+	k, v, err = SplitIndexNameValue("=-jar")
+	assert.NoError(t, err)
+	assert.Equal(t, "", k)
+	assert.Equal(t, "-jar", v)
 }
 
 type filter struct {
