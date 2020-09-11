@@ -29,8 +29,6 @@ func GetGrepRunner(name string) *GrepRunner {
 		Args:    cobra.MaximumNArgs(2),
 	}
 	fixDocs(name, c)
-	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
-		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", true,
 		"annotate resources with their file origins.")
 	c.Flags().BoolVarP(&r.InvertMatch, "invert-match", "", false,
@@ -47,9 +45,8 @@ func GrepCommand(name string) *cobra.Command {
 
 // GrepRunner contains the run function
 type GrepRunner struct {
-	IncludeSubpackages bool
-	KeepAnnotations    bool
-	Command            *cobra.Command
+	KeepAnnotations bool
+	Command         *cobra.Command
 	filters.GrepFilter
 	Format             bool
 	RecurseSubPackages bool
