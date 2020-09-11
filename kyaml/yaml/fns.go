@@ -605,7 +605,7 @@ func IsListIndex(p string) bool {
 // SplitIndexNameValue splits a lookup part Val index into the field name
 // and field value to match.
 // e.g. splits [name=nginx] into (name, nginx)
-// e.g. splits [=-jar] into ("", jar)
+// e.g. splits [=-jar] into ("", -jar)
 func SplitIndexNameValue(p string) (string, string, error) {
 	elem := strings.TrimSuffix(p, "]")
 	elem = strings.TrimPrefix(elem, "[")
