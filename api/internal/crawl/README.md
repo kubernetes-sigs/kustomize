@@ -217,7 +217,7 @@ overview of each component with the following sections going into more details.
 
 The overall structure is outlined in the following figure:
 ![overview](
-https://sigs.k8s.io/kustomize/internal/tools/pictures/sys_arch.png)
+https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/crawl/pictures/token_config.png)
 
 #### Crawler
 The leftmost component consists of a crawler with an http cache of GitHub
