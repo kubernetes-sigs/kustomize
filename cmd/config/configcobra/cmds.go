@@ -39,7 +39,7 @@ var (
 	ExitOnError  = &commands.ExitOnError
 )
 
-// AddCommands adds the cfg, fn and live commands to kustomize.
+// AddCommands adds the cfg and fn commands to kustomize.
 func AddCommands(root *cobra.Command, name string) *cobra.Command {
 	commands.ExitOnError = true
 
@@ -48,7 +48,6 @@ func AddCommands(root *cobra.Command, name string) *cobra.Command {
 
 	root.AddCommand(GetCfg(name))
 	root.AddCommand(GetFn(name))
-	root.AddCommand(GetLive(name))
 
 	root.AddCommand(&cobra.Command{
 		Use:   "docs-merge",
