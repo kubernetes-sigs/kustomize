@@ -6,7 +6,6 @@ package kio_test
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -76,9 +75,9 @@ spec:
 └── foo-package
     ├── [f1.yaml]  Deployment default/foo
     ├── [f1.yaml]  Service default/foo
-    └── foo-package%s3
+    └── 3
         └── [f3.yaml]  Deployment default/foo
-`, string(filepath.Separator)), out.String()) {
+`), out.String()) {
 		t.FailNow()
 	}
 }

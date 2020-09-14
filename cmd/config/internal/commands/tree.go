@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 
@@ -26,8 +27,6 @@ func GetTreeRunner(name string) *TreeRunner {
 		Args:    cobra.MaximumNArgs(1),
 	}
 	fixDocs(name, c)
-	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
-		"also print resources from subpackages.")
 
 	// TODO(pwittrock): Figure out if these are the right things to expose, and consider making it
 	// a list of options instead of individual flags
@@ -59,29 +58,33 @@ func TreeCommand(name string) *cobra.Command {
 
 // TreeRunner contains the run function
 type TreeRunner struct {
-	IncludeSubpackages bool
-	Command            *cobra.Command
-	name               bool
-	resources          bool
-	ports              bool
-	images             bool
-	replicas           bool
-	all                bool
-	env                bool
-	args               bool
-	cmd                bool
-	fields             []string
-	includeLocal       bool
-	excludeNonLocal    bool
-	structure          string
+	Command         *cobra.Command
+	name            bool
+	resources       bool
+	ports           bool
+	images          bool
+	replicas        bool
+	all             bool
+	env             bool
+	args            bool
+	cmd             bool
+	fields          []string
+	includeLocal    bool
+	excludeNonLocal bool
+	structure       string
 }
 
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 	var input kio.Reader
 	var root = "."
+	openAPIFileName, err := ext.OpenAPIFileName()
+	if err != nil {
+		return err
+	}
+	matchFilesGlob := append([]string{openAPIFileName}, kio.DefaultMatch...)
 	if len(args) == 1 {
 		root = filepath.Clean(args[0])
-		input = kio.LocalPackageReader{PackagePath: args[0]}
+		input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: matchFilesGlob}
 	} else {
 		input = &kio.ByteReader{Reader: c.InOrStdin()}
 	}
@@ -159,7 +162,9 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 			Root:      root,
 			Writer:    c.OutOrStdout(),
 			Fields:    fields,
-			Structure: kio.TreeStructure(r.structure)}},
+			Structure: kio.TreeStructure(r.structure),
+			OpenAPIFileName: openAPIFileName,
+		}},
 	}.Execute())
 }
 
