@@ -433,7 +433,6 @@ spec:
 			SetValue:   filtersutil.SetScalar("bar"),
 			CreateKind: yaml.ScalarNode,
 		},
-		error: "obj '' at path 'spec/containers/image': expected sequence or mapping node",
 	},
 	{
 		name: "filedname with slash '/'",
