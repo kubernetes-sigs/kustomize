@@ -53,7 +53,7 @@ func GetLive(name string) *cobra.Command {
 
 	cmd.AddCommand(
 		applyCmd,
-		initcmd.NewCmdInit(ioStreams),
+		initcmd.NewCmdInit(f, ioStreams),
 		preview.GetPreviewRunner(f, ioStreams).Command,
 		diff.NewCmdDiff(f, ioStreams),
 		destroy.GetDestroyRunner(f, ioStreams).Command)
