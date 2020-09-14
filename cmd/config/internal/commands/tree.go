@@ -159,10 +159,10 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{kio.TreeWriter{
-			Root:      root,
-			Writer:    c.OutOrStdout(),
-			Fields:    fields,
-			Structure: kio.TreeStructure(r.structure),
+			Root:            root,
+			Writer:          c.OutOrStdout(),
+			Fields:          fields,
+			Structure:       kio.TreeStructure(r.structure),
 			OpenAPIFileName: openAPIFileName,
 		}},
 	}.Execute())
