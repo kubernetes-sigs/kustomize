@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"strings"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -73,7 +72,7 @@ metadata:
   name: test
 spec:
   template:
-    spec:      
+    spec:
       containers:
         - name: test
       volumes: null
@@ -82,12 +81,17 @@ spec:
 resources:
 - deploy.yaml
 `)
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	if err == nil {
-		t.Fatalf("expected trouble")
-	}
-	if !strings.Contains(
-		err.Error(), "expected sequence or mapping node") {
-		t.Fatalf("Unexpected err: %v", err)
-	}
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+      volumes: null
+`)
 }

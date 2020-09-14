@@ -188,6 +188,26 @@ data:
 				FieldSpec: types.FieldSpec{Path: "data/slice2"},
 			},
 		},
+		"null value": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+data:
+  FOO: null`,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+data:
+  FOO: null`,
+			filter: Filter{
+				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{}),
+				FieldSpec:   types.FieldSpec{Path: "data/FOO"},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -258,20 +278,6 @@ data:
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "data"},
-			},
-		},
-		"null input": {
-			input: `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dep
-data:
-  FOO: null`,
-			expectedError: "obj '' at path 'data/FOO': invalid type encountered 0",
-			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{}),
-				FieldSpec:   types.FieldSpec{Path: "data/FOO"},
 			},
 		},
 	}

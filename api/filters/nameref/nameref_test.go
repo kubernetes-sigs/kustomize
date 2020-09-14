@@ -178,6 +178,44 @@ map:
 				},
 			},
 		},
+		"null value": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+map:
+  name: null
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: NotSecret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", ""},
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+map:
+  name: null
+`,
+			filter: Filter{
+				FieldSpec: types.FieldSpec{Path: "map"},
+				Target: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -217,27 +255,6 @@ func TestNamerefFilterUnhappy(t *testing.T) {
 		filter        Filter
 		originalNames []string
 	}{
-		"invalid node type": {
-			input: `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dep
-ref:
-  name: null
-`,
-			candidates:    "",
-			originalNames: []string{},
-			expected:      "obj '' at path 'ref/name': node is expected to be either a string or a slice of string or a map of string",
-			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
-					Group:   "apps",
-					Version: "v1",
-					Kind:    "Secret",
-				},
-			},
-		},
 		"multiple match": {
 			input: `
 apiVersion: apps/v1
