@@ -109,12 +109,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *CatRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
-
-	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: openAPIFileName}
+	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
 	outputs, err := r.out(w)
 	if err != nil {
 		return err
