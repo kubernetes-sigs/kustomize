@@ -96,16 +96,11 @@ func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *FmtRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
-
 	rw := &kio.LocalPackageReadWriter{
 		NoDeleteFiles:         true,
 		PackagePath:           pkgPath,
-		KeepReaderAnnotations: r.KeepAnnotations, PackageFileName: openAPIFileName}
-	err = kio.Pipeline{
+		KeepReaderAnnotations: r.KeepAnnotations, PackageFileName: ext.KRMFileName()}
+	err := kio.Pipeline{
 		Inputs: []kio.Reader{rw}, Filters: r.fmtFilters(), Outputs: []kio.Writer{rw}}.Execute()
 
 	if err != nil {

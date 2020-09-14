@@ -85,14 +85,14 @@ func (r *AnnotateRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *AnnotateRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
+	rw := &kio.LocalPackageReadWriter{
+		PackagePath:     pkgPath,
+		NoDeleteFiles:   true,
+		PackageFileName: ext.KRMFileName(),
 	}
-	rw := &kio.LocalPackageReadWriter{PackagePath: pkgPath, NoDeleteFiles: true, PackageFileName: openAPIFileName}
 	input := []kio.Reader{rw}
 	output := []kio.Writer{rw}
-	err = kio.Pipeline{
+	err := kio.Pipeline{
 		Inputs:  input,
 		Filters: []kio.Filter{r},
 		Outputs: output,

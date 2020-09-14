@@ -205,10 +205,6 @@ func (r *CreateSetterRunner) createSetter(c *cobra.Command, args []string) error
 }
 
 func (r *CreateSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
 	r.CreateSetter = settersutil.SetterCreator{
 		Name:               r.CreateSetter.Name,
 		SetBy:              r.CreateSetter.SetBy,
@@ -219,12 +215,12 @@ func (r *CreateSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
 		FieldValue:         r.CreateSetter.FieldValue,
 		Required:           r.CreateSetter.Required,
 		RecurseSubPackages: r.CreateSetter.RecurseSubPackages,
-		OpenAPIFileName:    openAPIFileName,
-		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		OpenAPIFileName:    ext.KRMFileName(),
+		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
 	}
 
-	err = r.CreateSetter.Create()
+	err := r.CreateSetter.Create()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.CreateSetter.RecurseSubPackages {

@@ -37,12 +37,7 @@ type executeCmdOnPkgs struct {
 // executeCmdOnPkgs takes the function definition for a command to be executed on single package, applies that definition
 // recursively on all the subpackages present in rootPkgPath if recurseSubPackages is true, else applies the command on rootPkgPath only
 func (e executeCmdOnPkgs) execute() error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
-
-	pkgsPaths, err := pathutil.DirsWithFile(e.rootPkgPath, openAPIFileName, e.recurseSubPackages)
+	pkgsPaths, err := pathutil.DirsWithFile(e.rootPkgPath, ext.KRMFileName(), e.recurseSubPackages)
 	if err != nil {
 		return err
 	}
@@ -51,7 +46,7 @@ func (e executeCmdOnPkgs) execute() error {
 		// at this point, there are no openAPI files in the rootPkgPath
 		if e.needOpenAPI {
 			// few executions need openAPI file to be present(ex: setters commands), if true throw an error
-			return errors.Errorf("unable to find %q in package %q", openAPIFileName, e.rootPkgPath)
+			return errors.Errorf("unable to find %q in package %q", ext.KRMFileName(), e.rootPkgPath)
 		}
 
 		// add root path for commands which doesn't need openAPI(ex: annotate, fmt)
@@ -62,7 +57,7 @@ func (e executeCmdOnPkgs) execute() error {
 		pkgPath := pkgsPaths[i]
 		// Add schema present in openAPI file for current package
 		if e.needOpenAPI {
-			if err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, openAPIFileName)); err != nil {
+			if err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName())); err != nil {
 				return err
 			}
 		}
@@ -82,7 +77,7 @@ func (e executeCmdOnPkgs) execute() error {
 
 		// Delete schema present in openAPI file for current package
 		if e.needOpenAPI {
-			if err := openapi.DeleteSchemaInFile(filepath.Join(pkgPath, openAPIFileName)); err != nil {
+			if err := openapi.DeleteSchemaInFile(filepath.Join(pkgPath, ext.KRMFileName())); err != nil {
 				return err
 			}
 		}

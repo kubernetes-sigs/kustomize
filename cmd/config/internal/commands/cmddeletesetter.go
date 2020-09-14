@@ -47,14 +47,10 @@ type DeleteSetterRunner struct {
 }
 
 func (r *DeleteSetterRunner) preRunE(c *cobra.Command, args []string) error {
-	var err error
 	r.DeleteSetter.Name = args[1]
 	r.DeleteSetter.DefinitionPrefix = fieldmeta.SetterDefinitionPrefix
 
-	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
-	if err != nil {
-		return err
-	}
+	r.OpenAPIFile = filepath.Join(args[0], ext.KRMFileName())
 
 	return nil
 }
@@ -75,20 +71,17 @@ func (r *DeleteSetterRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *DeleteSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
+
 	r.DeleteSetter = settersutil.DeleterCreator{
 		Name:               r.DeleteSetter.Name,
 		DefinitionPrefix:   fieldmeta.SetterDefinitionPrefix,
 		RecurseSubPackages: r.RecurseSubPackages,
-		OpenAPIFileName:    openAPIFileName,
-		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		OpenAPIFileName:    ext.KRMFileName(),
+		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
 	}
 
-	err = r.DeleteSetter.Delete()
+	err := r.DeleteSetter.Delete()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.DeleteSetter.RecurseSubPackages {
