@@ -120,6 +120,7 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 		recurseSubPackages: r.RecurseSubPackages,
 		cmdRunner:          r,
 		rootPkgPath:        args[1],
+		skipPkgPathPrint:   true,
 	}
 
 	return e.execute()
@@ -152,5 +153,6 @@ func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
 			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	}
+	fmt.Fprintf(w, "---")
 	return nil
 }
