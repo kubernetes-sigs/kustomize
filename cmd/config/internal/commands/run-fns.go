@@ -69,6 +69,9 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		"a list of storage options read from the filesystem")
 	r.Command.Flags().BoolVar(
 		&r.LogSteps, "log-steps", false, "log steps to stderr")
+	r.Command.Flags().StringArrayVarP(
+		&r.Env, "env", "e", []string{},
+		"a list of environment variables to be used by functions")
 	return r
 }
 
@@ -96,6 +99,7 @@ type RunFnRunner struct {
 	NetworkName        string
 	Mounts             []string
 	LogSteps           bool
+	Env                []string
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -311,6 +315,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		StorageMounts:  storageMounts,
 		ResultsDir:     r.ResultsDir,
 		LogSteps:       r.LogSteps,
+		Env:            r.Env,
 	}
 
 	// don't consider args for the function
