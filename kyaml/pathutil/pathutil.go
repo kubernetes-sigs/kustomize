@@ -18,7 +18,7 @@ func DirsWithFile(root, fileName string, recurse bool) ([]string, error) {
 		// else return empty list
 		_, err := os.Stat(filepath.Join(root, fileName))
 		if !os.IsNotExist(err) {
-			res = append(res, root)
+			res = append(res, filepath.Clean(root))
 		}
 		return res, nil
 	}
