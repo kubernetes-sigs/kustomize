@@ -954,7 +954,7 @@ func initSchema(t *testing.T, s string) {
 	openapi.ResetOpenAPI()
 
 	// add the json schema to the global schema
-	_, err = openapi.AddSchema(j)
+	err = openapi.AddSchema(j)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
