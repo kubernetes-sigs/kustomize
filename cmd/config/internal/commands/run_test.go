@@ -204,6 +204,7 @@ apiVersion: v1
 				Path:           "dir",
 				NetworkName:    "bridge",
 				EnableStarlark: true,
+				Env:            []string{},
 			},
 		},
 		{
@@ -257,6 +258,7 @@ apiVersion: v1
 				Path:        "dir",
 				NetworkName: "bridge",
 				ResultsDir:  "foo/",
+				Env:         []string{},
 			},
 			expected: `
 metadata:
@@ -292,6 +294,17 @@ apiVersion: v1
 				Path:        "dir",
 				NetworkName: "bridge",
 				LogSteps:    true,
+				Env:         []string{},
+			},
+		},
+		{
+			name: "envs",
+			args: []string{"run", "dir", "--env", "FOO=BAR", "-e", "BAR"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:        "dir",
+				NetworkName: "bridge",
+				Env:         []string{"FOO=BAR", "BAR"},
 			},
 		},
 	}
