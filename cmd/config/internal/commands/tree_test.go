@@ -90,6 +90,53 @@ spec:
 	}
 }
 
+func TestTreeCommand_Kustomization(t *testing.T) {
+	d, err := ioutil.TempDir("", "kustomize-tree-test")
+	defer os.RemoveAll(d)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = ioutil.WriteFile(filepath.Join(d, "Kustomization"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- f2.yaml
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := commands.GetTreeRunner("")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, fmt.Sprintf(`%s
+├── [Kustomization]  Kustomization 
+└── [f2.yaml]  Deployment bar
+`, d), b.String()) {
+		return
+	}
+}
+
 func TestTreeCommand_subpkgs(t *testing.T) {
 	d, err := ioutil.TempDir("", "kustomize-tree-test")
 	defer os.RemoveAll(d)
