@@ -95,7 +95,7 @@ func openapiKustomizationapiSwaggerJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "openapi/kustomizationapi/swagger.json", size: 3127, mode: os.FileMode(420), modTime: time.Unix(1586844916, 0)}
+	info := bindataFileInfo{name: "openapi/kustomizationapi/swagger.json", size: 3127, mode: os.FileMode(420), modTime: time.Unix(1586909905, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

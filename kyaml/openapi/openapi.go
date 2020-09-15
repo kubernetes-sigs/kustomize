@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/go-openapi/spec"
@@ -23,10 +24,11 @@ var globalSchema openapiData
 // openapiData contains the parsed openapi state.  this is in a struct rather than
 // a list of vars so that it can be reset from tests.
 type openapiData struct {
-	setup                sync.Once
-	schema               spec.Schema
-	schemaByResourceType map[yaml.TypeMeta]*spec.Schema
-	noUseBuiltInSchema   bool
+	setup                          sync.Once
+	schema                         spec.Schema
+	schemaByResourceType           map[yaml.TypeMeta]*spec.Schema
+	namespaceabilityByResourceType map[yaml.TypeMeta]bool
+	noUseBuiltInSchema             bool
 }
 
 // ResourceSchema wraps the OpenAPI Schema.
@@ -144,7 +146,7 @@ func AddSchemaFromFileUsingField(path, field string) error {
 	}
 
 	// add the json schema to the global schema
-	_, err = AddSchema(j)
+	err = AddSchema(j)
 	if err != nil {
 		return err
 	}
@@ -152,7 +154,7 @@ func AddSchemaFromFileUsingField(path, field string) error {
 }
 
 // AddSchema parses s, and adds definitions from s to the global schema.
-func AddSchema(s []byte) (*spec.Schema, error) {
+func AddSchema(s []byte) error {
 	return parse(s)
 }
 
@@ -188,19 +190,27 @@ func AddDefinitions(definitions spec.Definitions) {
 		if !ok || len(exts) != 1 {
 			continue
 		}
-		m, ok := exts[0].(map[string]interface{})
+
+		typeMeta, ok := toTypeMeta(exts[0])
 		if !ok {
 			continue
 		}
-
-		// build the index key and save it
-		g := m[groupKey].(string)
-		apiVersion := m[versionKey].(string)
-		if g != "" {
-			apiVersion = g + "/" + apiVersion
-		}
-		globalSchema.schemaByResourceType[yaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}] = &d
+		globalSchema.schemaByResourceType[typeMeta] = &d
 	}
+}
+
+func toTypeMeta(ext interface{}) (yaml.TypeMeta, bool) {
+	m, ok := ext.(map[string]interface{})
+	if !ok {
+		return yaml.TypeMeta{}, false
+	}
+
+	g := m[groupKey].(string)
+	apiVersion := m[versionKey].(string)
+	if g != "" {
+		apiVersion = g + "/" + apiVersion
+	}
+	return yaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}, true
 }
 
 // Resolve resolves the reference against the global schema
@@ -229,6 +239,19 @@ func GetSchema(s string) (*ResourceSchema, error) {
 	}
 
 	return &ResourceSchema{Schema: &sc}, nil
+}
+
+// IsNamespaceScoped determines whether a resource is namespace or
+// cluster-scoped by looking at the information in the openapi schema.
+// The second return value tells whether the provided type could be found
+// in the openapi schema. If the value is false here, the scope of the
+// resource is not known. If the type if found, the first return value will
+// be true if the resource is namespace-scoped, and false if the type is
+// cluster-scoped.
+func IsNamespaceScoped(typeMeta yaml.TypeMeta) (bool, bool) {
+	initSchema()
+	isNamespaceScoped, found := globalSchema.namespaceabilityByResourceType[typeMeta]
+	return isNamespaceScoped, found
 }
 
 // SuppressBuiltInSchemaUse can be called to prevent using the built-in Kubernetes
@@ -368,12 +391,12 @@ func initSchema() {
 		}
 
 		// parse the swagger, this should never fail
-		if _, err := parse(kubernetesapi.MustAsset(kubernetesAPIAssetName)); err != nil {
+		if err := parse(kubernetesapi.MustAsset(kubernetesAPIAssetName)); err != nil {
 			// this should never happen
 			panic(err)
 		}
 
-		if _, err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
+		if err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
 			// this should never happen
 			panic(err)
 		}
@@ -381,14 +404,55 @@ func initSchema() {
 }
 
 // parse parses and indexes a single json schema
-func parse(b []byte) (*spec.Schema, error) {
-	var sc spec.Schema
+func parse(b []byte) error {
+	var swagger spec.Swagger
 
-	if err := sc.UnmarshalJSON(b); err != nil {
-		return nil, errors.Wrap(err)
+	if err := swagger.UnmarshalJSON(b); err != nil {
+		return errors.Wrap(err)
 	}
-	AddDefinitions(sc.Definitions)
-	return &sc, nil
+	AddDefinitions(swagger.Definitions)
+	findNamespaceability(swagger.Paths)
+
+	return nil
+}
+
+// findNamespaceability looks at the api paths for the resource to determine
+// if it is cluster-scoped or namespace-scoped. The gvk of the resource
+// for each path is found by looking at the x-kubernetes-group-version-kind
+// extension. If a path exists for the resource that contains a namespace path
+// parameter, the resource is namespace-scoped.
+func findNamespaceability(paths *spec.Paths) {
+	if globalSchema.namespaceabilityByResourceType == nil {
+		globalSchema.namespaceabilityByResourceType = make(map[yaml.TypeMeta]bool)
+	}
+
+	if paths == nil {
+		return
+	}
+
+	for path, pathInfo := range paths.Paths {
+		if pathInfo.Get == nil {
+			continue
+		}
+		gvk, found := pathInfo.Get.VendorExtensible.Extensions[kubernetesGVKExtensionKey]
+		if !found {
+			continue
+		}
+		typeMeta, found := toTypeMeta(gvk)
+		if !found {
+			continue
+		}
+
+		if strings.Contains(path, "namespaces/{namespace}") {
+			// if we find a namespace path parameter, we just update the map
+			// directly
+			globalSchema.namespaceabilityByResourceType[typeMeta] = true
+		} else if _, found := globalSchema.namespaceabilityByResourceType[typeMeta]; !found {
+			// if the resource doesn't have the namespace path parameter, we
+			// only add it to the map if it doesn't already exist.
+			globalSchema.namespaceabilityByResourceType[typeMeta] = false
+		}
+	}
 }
 
 func resolve(root interface{}, ref *spec.Ref) (*spec.Schema, error) {
