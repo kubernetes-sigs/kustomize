@@ -91,6 +91,11 @@ func newCmdAddSecret(
 		"namespace",
 		"",
 		"Specify the namespace of the secret")
+	cmd.Flags().BoolVar(
+		&flags.DisableNameSuffixHash,
+		"disableNameSuffixHash",
+		false,
+		"Disable the name suffix for the secret")
 
 	return cmd
 }
@@ -138,5 +143,10 @@ func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags flagsAndArgs) 
 	if flags.EnvFileSource != "" {
 		args.EnvSources = append(
 			args.EnvSources, flags.EnvFileSource)
+	}
+	if flags.DisableNameSuffixHash {
+		args.Options = &types.GeneratorOptions{
+			DisableNameSuffixHash: true,
+		}
 	}
 }

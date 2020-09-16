@@ -81,6 +81,11 @@ func newCmdAddConfigMap(
 		"from-env-file",
 		"",
 		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
+	cmd.Flags().BoolVar(
+		&flags.DisableNameSuffixHash,
+		"disableNameSuffixHash",
+		false,
+		"Disable the name suffix for the configmap")
 
 	return cmd
 }
@@ -125,5 +130,10 @@ func mergeFlagsIntoCmArgs(args *types.ConfigMapArgs, flags flagsAndArgs) {
 	if flags.EnvFileSource != "" {
 		args.EnvSources = append(
 			args.EnvSources, flags.EnvFileSource)
+	}
+	if flags.DisableNameSuffixHash {
+		args.Options = &types.GeneratorOptions{
+			DisableNameSuffixHash: true,
+		}
 	}
 }
