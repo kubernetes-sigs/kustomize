@@ -38,8 +38,8 @@ const (
 type ContainerNetworkName string
 
 const (
-	NetworkNameNone  ContainerNetworkName = "none"
-	NetworkNameEmpty ContainerNetworkName = ""
+	NetworkNameNone ContainerNetworkName = "none"
+	NetworkNameHost ContainerNetworkName = "host"
 )
 const defaultEnvValue string = "true"
 
@@ -166,7 +166,7 @@ type ContainerSpec struct {
 	Image string `json:"image,omitempty" yaml:"image,omitempty"`
 
 	// Network defines network specific configuration
-	Network ContainerNetwork `json:"network,omitempty" yaml:"network,omitempty"`
+	Network bool `json:"network,omitempty" yaml:"network,omitempty"`
 
 	// Mounts are the storage or directories to mount into the container
 	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
@@ -176,15 +176,6 @@ type ContainerSpec struct {
 
 	// Env is a slice of env string that will be exposed to container
 	Env []string `json:"envs,omitempty" yaml:"envs,omitempty"`
-}
-
-// ContainerNetwork
-type ContainerNetwork struct {
-	// Required specifies that function requires a network
-	Required bool `json:"required,omitempty" yaml:"required,omitempty"`
-
-	// Name is the name of the network to use from a container
-	Name ContainerNetworkName `json:"name,omitempty" yaml:"name,omitempty"`
 }
 
 // StarlarkSpec defines how to run a function as a starlark program
@@ -237,7 +228,6 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	}
 
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
-		fn.Container.Network.Name = NetworkNameEmpty
 		fn.StorageMounts = []StorageMount{}
 		return fn
 	}
