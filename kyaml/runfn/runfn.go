@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 	"sort"
@@ -83,7 +84,7 @@ type RunFns struct {
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
-		filter runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
+		filter runtimeutil.FunctionSpec, api *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error)
 
 	// AsCurrentUser is a boolean to indicate whether docker container should use
 	// the uid and gid that run the command
@@ -303,7 +304,7 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 		// merge envs from imperative and declarative
 		spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
 
-		c, err := r.functionFilterProvider(*spec, api)
+		c, err := r.functionFilterProvider(*spec, api, user.Current)
 		if err != nil {
 			return nil, err
 		}
@@ -395,8 +396,24 @@ func (r *RunFns) init() {
 	}
 }
 
+type currentUserFunc func() (*user.User, error)
+
+// getUIDGID will return "nobody" if asCurrentUser is false. Otherwise
+// return "uid:gid" according to the return from currentUser function.
+func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) {
+	if !asCurrentUser {
+		return "nobody", nil
+	}
+
+	u, err := currentUser()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
+}
+
 // ffp provides function filters
-func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error) {
+func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 	var resultsFile string
 	if r.ResultsDir != "" {
 		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
@@ -405,6 +422,10 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 	}
 	if !r.DisableContainers && spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
+		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
+		if err != nil {
+			return nil, err
+		}
 		c, err := container.NewContainer(
 			runtimeutil.ContainerSpec{
 				Image:         spec.Container.Image,
@@ -412,7 +433,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 				StorageMounts: r.StorageMounts,
 				Env:           spec.Container.Env,
 			},
-			r.AsCurrentUser,
+			uidgid,
 		)
 		if err != nil {
 			return nil, err

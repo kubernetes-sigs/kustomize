@@ -6,7 +6,6 @@ package container
 import (
 	"bytes"
 	"fmt"
-	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,16 +15,12 @@ import (
 )
 
 func TestFilter_setupExec(t *testing.T) {
-	u, err := user.Current()
-	if err != nil {
-		t.Fatal(err)
-	}
 	var tests = []struct {
 		name           string
 		functionConfig string
 		expectedArgs   []string
 		containerSpec  runtimeutil.ContainerSpec
-		asCurrentUser  bool
+		UIDGID         string
 	}{
 		{
 			name: "command",
@@ -45,6 +40,7 @@ metadata:
 			containerSpec: runtimeutil.ContainerSpec{
 				Image: "example.com:version",
 			},
+			UIDGID: "nobody",
 		},
 
 		{
@@ -62,12 +58,11 @@ metadata:
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
-			instance: NewContainer(
-				runtimeutil.ContainerSpec{
-					Image:   "example.com:version",
-					Network: true,
-				},
+			containerSpec: runtimeutil.ContainerSpec{
+				Image:   "example.com:version",
+				Network: true,
 			},
+			UIDGID: "nobody",
 		},
 
 		{
@@ -98,6 +93,7 @@ metadata:
 					{MountType: "tmpfs", Src: "", DstPath: "/local/"},
 				},
 			},
+			UIDGID: "nobody",
 		},
 		{
 			name: "as current user",
@@ -111,13 +107,13 @@ metadata:
 				"--rm",
 				"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
 				"--network", "none",
-				"--user", fmt.Sprintf("%s:%s", u.Uid, u.Gid),
+				"--user", "1:2",
 				"--security-opt=no-new-privileges",
 			},
 			containerSpec: runtimeutil.ContainerSpec{
 				Image: "example.com:version",
 			},
-			asCurrentUser: true,
+			UIDGID: "1:2",
 		},
 	}
 
@@ -129,7 +125,7 @@ metadata:
 				t.FailNow()
 			}
 
-			instance, err := NewContainer(tt.containerSpec, tt.asCurrentUser)
+			instance, err := NewContainer(tt.containerSpec, tt.UIDGID)
 			if err != nil {
 				t.Fatal(err)
 			}

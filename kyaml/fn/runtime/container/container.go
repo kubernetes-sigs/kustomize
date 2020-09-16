@@ -5,7 +5,6 @@ package container
 
 import (
 	"fmt"
-	"os/user"
 
 	runtimeexec "sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -185,28 +184,9 @@ func (c *Filter) getCommand() (string, []string) {
 	return "docker", a
 }
 
-// getUIDGID will return "nobody" if asCurrentUser is false. Otherwise
-// return "uid:gid" according to current user who runs the command.
-func getUIDGID(asCurrentUser bool) (string, error) {
-	if !asCurrentUser {
-		return "nobody", nil
-	}
-
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
-}
-
 // NewContainer returns a new container filter
-func NewContainer(spec runtimeutil.ContainerSpec, asCurrentUser bool) (Filter, error) {
-	f := Filter{ContainerSpec: spec}
-	u, err := getUIDGID(asCurrentUser)
-	if err != nil {
-		return f, err
-	}
-	f.UIDGID = u
+func NewContainer(spec runtimeutil.ContainerSpec, uidgid string) (Filter, error) {
+	f := Filter{ContainerSpec: spec, UIDGID: uidgid}
 
 	return f, nil
 }
