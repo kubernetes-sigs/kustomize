@@ -6,6 +6,7 @@ package container
 import (
 	"bytes"
 	"fmt"
+	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,11 +16,16 @@ import (
 )
 
 func TestFilter_setupExec(t *testing.T) {
+	u, err := user.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
 	var tests = []struct {
 		name           string
 		functionConfig string
 		expectedArgs   []string
-		instance       Filter
+		containerSpec  runtimeutil.ContainerSpec
+		asCurrentUser  bool
 	}{
 		{
 			name: "command",
@@ -36,12 +42,9 @@ metadata:
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
-			instance: NewContainer(
-				runtimeutil.ContainerSpec{
-					Image: "example.com:version",
-					User:  "nobody",
-				},
-			),
+			containerSpec: runtimeutil.ContainerSpec{
+				Image: "example.com:version",
+			},
 		},
 
 		{
@@ -63,9 +66,8 @@ metadata:
 				runtimeutil.ContainerSpec{
 					Image:   "example.com:version",
 					Network: true,
-					User:    "nobody",
 				},
-			),
+			},
 		},
 
 		{
@@ -87,21 +89,18 @@ metadata:
 				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "volume", "myvol", "/local/"),
 				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "tmpfs", "", "/local/"),
 			},
-			instance: NewContainer(
-				runtimeutil.ContainerSpec{
-					Image: "example.com:version",
-					StorageMounts: []runtimeutil.StorageMount{
-						{MountType: "bind", Src: "/mount/path", DstPath: "/local/"},
-						{MountType: "bind", Src: "/mount/pathrw", DstPath: "/localrw/", ReadWriteMode: true},
-						{MountType: "volume", Src: "myvol", DstPath: "/local/"},
-						{MountType: "tmpfs", Src: "", DstPath: "/local/"},
-					},
-					User: "nobody",
+			containerSpec: runtimeutil.ContainerSpec{
+				Image: "example.com:version",
+				StorageMounts: []runtimeutil.StorageMount{
+					{MountType: "bind", Src: "/mount/path", DstPath: "/local/"},
+					{MountType: "bind", Src: "/mount/pathrw", DstPath: "/localrw/", ReadWriteMode: true},
+					{MountType: "volume", Src: "myvol", DstPath: "/local/"},
+					{MountType: "tmpfs", Src: "", DstPath: "/local/"},
 				},
-			),
+			},
 		},
 		{
-			name: "root user",
+			name: "as current user",
 			functionConfig: `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -112,15 +111,13 @@ metadata:
 				"--rm",
 				"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
 				"--network", "none",
-				"--user", "root",
+				"--user", fmt.Sprintf("%s:%s", u.Uid, u.Gid),
 				"--security-opt=no-new-privileges",
 			},
-			instance: NewContainer(
-				runtimeutil.ContainerSpec{
-					Image: "example.com:version",
-					User:  "root",
-				},
-			),
+			containerSpec: runtimeutil.ContainerSpec{
+				Image: "example.com:version",
+			},
+			asCurrentUser: true,
 		},
 	}
 
@@ -131,18 +128,23 @@ metadata:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			tt.instance.Exec.FunctionConfig = cfg
-			tt.instance.Env = append(tt.instance.Env, "KYAML_TEST=FOO")
-			tt.instance.setupExec()
+
+			instance, err := NewContainer(tt.containerSpec, tt.asCurrentUser)
+			if err != nil {
+				t.Fatal(err)
+			}
+			instance.Exec.FunctionConfig = cfg
+			instance.Env = append(instance.Env, "KYAML_TEST=FOO")
+			instance.setupExec()
 
 			tt.expectedArgs = append(tt.expectedArgs,
-				runtimeutil.NewContainerEnvFromStringSlice(tt.instance.Env).GetDockerFlags()...)
-			tt.expectedArgs = append(tt.expectedArgs, tt.instance.Image)
+				runtimeutil.NewContainerEnvFromStringSlice(instance.Env).GetDockerFlags()...)
+			tt.expectedArgs = append(tt.expectedArgs, instance.Image)
 
-			if !assert.Equal(t, "docker", tt.instance.Exec.Path) {
+			if !assert.Equal(t, "docker", instance.Exec.Path) {
 				t.FailNow()
 			}
-			if !assert.Equal(t, tt.expectedArgs, tt.instance.Exec.Args) {
+			if !assert.Equal(t, tt.expectedArgs, instance.Exec.Args) {
 				t.FailNow()
 			}
 		})

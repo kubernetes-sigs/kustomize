@@ -85,8 +85,9 @@ type RunFns struct {
 	functionFilterProvider func(
 		filter runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter, error)
 
-	// User username used to run the application in container,
-	User runtimeutil.ContainerUser
+	// AsCurrentUser is a boolean to indicate whether docker container should use
+	// the uid and gid that run the command
+	AsCurrentUser bool
 
 	// Env contains environment variables that will be exported to container
 	Env []string
@@ -299,10 +300,7 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 			// TODO(eddiezane): Provide error info about which function needs the network
 			return fltrs, errors.Errorf("network required but not enabled with --network")
 		}
-		// command line username and envs has higher priority
-		if !r.User.IsEmpty() {
-			spec.Container.User = r.User
-		}
+		// merge envs from imperative and declarative
 		spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
 
 		c, err := r.functionFilterProvider(*spec, api)
@@ -407,13 +405,18 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode) (kio.Filter
 	}
 	if !r.DisableContainers && spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
-		c := container.NewContainer(runtimeutil.ContainerSpec{
-			Image:         spec.Container.Image,
-			Network:       spec.Container.Network,
-			StorageMounts: r.StorageMounts,
-			User:          spec.Container.User,
-			Env:           spec.Container.Env,
-		})
+		c, err := container.NewContainer(
+			runtimeutil.ContainerSpec{
+				Image:         spec.Container.Image,
+				Network:       spec.Container.Network,
+				StorageMounts: r.StorageMounts,
+				Env:           spec.Container.Env,
+			},
+			r.AsCurrentUser,
+		)
+		if err != nil {
+			return nil, err
+		}
 		cf := &c
 		cf.Exec.FunctionConfig = api
 		cf.Exec.GlobalScope = r.GlobalScope

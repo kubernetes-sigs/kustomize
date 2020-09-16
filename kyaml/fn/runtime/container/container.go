@@ -5,6 +5,7 @@ package container
 
 import (
 	"fmt"
+	"os/user"
 
 	runtimeexec "sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -124,6 +125,8 @@ type Filter struct {
 	runtimeutil.ContainerSpec `json:",inline" yaml:",inline"`
 
 	Exec runtimeexec.Filter
+
+	UIDGID string
 }
 
 func (c Filter) String() string {
@@ -167,7 +170,7 @@ func (c *Filter) getCommand() (string, []string) {
 		"--network", string(network),
 
 		// added security options
-		"--user", c.User.String(),
+		"--user", c.UIDGID,
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 		// note: don't make fs readonly because things like heredoc rely on writing tmp files
 	}
@@ -182,13 +185,28 @@ func (c *Filter) getCommand() (string, []string) {
 	return "docker", a
 }
 
-// NewContainer returns a new container filter
-func NewContainer(spec runtimeutil.ContainerSpec) Filter {
-	f := Filter{ContainerSpec: spec}
-	// default user is nobody
-	if f.ContainerSpec.User.IsEmpty() {
-		f.ContainerSpec.User = runtimeutil.UserNobody
+// getUIDGID will return "nobody" if asCurrentUser is false. Otherwise
+// return "uid:gid" according to current user who runs the command.
+func getUIDGID(asCurrentUser bool) (string, error) {
+	if !asCurrentUser {
+		return "nobody", nil
 	}
 
-	return f
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
+}
+
+// NewContainer returns a new container filter
+func NewContainer(spec runtimeutil.ContainerSpec, asCurrentUser bool) (Filter, error) {
+	f := Filter{ContainerSpec: spec}
+	u, err := getUIDGID(asCurrentUser)
+	if err != nil {
+		return f, err
+	}
+	f.UIDGID = u
+
+	return f, nil
 }
