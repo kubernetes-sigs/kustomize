@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -38,6 +39,13 @@ replace: StatefulSet
 `
 )
 
+func currentUser() (*user.User, error) {
+	return &user.User{
+		Uid: "1",
+		Gid: "2",
+	}, nil
+}
+
 func TestRunFns_init(t *testing.T) {
 	instance := RunFns{}
 	instance.init()
@@ -59,8 +67,41 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter, _ := instance.functionFilterProvider(spec, api)
-	c, err := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, false)
+	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
+	c, err := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cf := &c
+	cf.Exec.FunctionConfig = api
+	assert.Equal(t, cf, filter)
+}
+
+func TestRunFns_initAsCurrentUser(t *testing.T) {
+	instance := RunFns{
+		AsCurrentUser: true,
+	}
+	instance.init()
+	if !assert.Equal(t, instance.Input, os.Stdin) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, instance.Output, os.Stdout) {
+		t.FailNow()
+	}
+
+	api, err := yaml.Parse(`apiVersion: apps/v1
+kind: 
+`)
+	spec := runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "example.com:version",
+		},
+	}
+	if !assert.NoError(t, err) {
+		return
+	}
+	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
+	c, err := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "1:2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,8 +134,8 @@ kind:
 	if !assert.NoError(t, err) {
 		return
 	}
-	filter, _ := instance.functionFilterProvider(spec, api)
-	c, err := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, false)
+	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
+	c, err := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -869,7 +910,7 @@ replace: StatefulSet
 	var fltrs []*TestFilter
 	instance := RunFns{
 		Path: dir,
-		functionFilterProvider: func(f runtimeutil.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
+		functionFilterProvider: func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 			tf := &TestFilter{
 				Exit: errors.Errorf("message: %s", f.Container.Image),
 			}
@@ -1075,8 +1116,8 @@ func setupTest(t *testing.T) string {
 // getFilterProvider fakes the creation of a filter, replacing the ContainerFiler with
 // a filter to s/kind: Deployment/kind: StatefulSet/g.
 // this can be used to simulate running a filter.
-func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode) (kio.Filter, error) {
-	return func(f runtimeutil.FunctionSpec, node *yaml.RNode) (kio.Filter, error) {
+func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 		// parse the filter from the input
 		filter := yaml.YFilter{}
 		b := &bytes.Buffer{}
