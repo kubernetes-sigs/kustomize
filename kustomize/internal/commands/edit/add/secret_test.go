@@ -114,3 +114,14 @@ func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 		t.Fatalf("expected env2")
 	}
 }
+
+func TestMergeFlagsIntoSecretArgs_DisableNameSuffixHash(t *testing.T) {
+	k := &types.Kustomization{}
+	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
+	mergeFlagsIntoGeneratorArgs(
+		&args.GeneratorArgs,
+		flagsAndArgs{DisableNameSuffixHash: true})
+	if k.SecretGenerator[0].Options.DisableNameSuffixHash != true {
+		t.Fatalf("expected true")
+	}
+}
