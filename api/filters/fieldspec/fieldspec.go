@@ -51,6 +51,9 @@ func (fltr Filter) filter(obj *yaml.RNode) error {
 		// found the field -- set its value
 		return fltr.SetValue(obj)
 	}
+	if obj.IsTaggedNull() {
+		return nil
+	}
 	switch obj.YNode().Kind {
 	case yaml.SequenceNode:
 		return fltr.seq(obj)
@@ -67,7 +70,7 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 	// lookup the field matching the next path element
 	var lookupField yaml.Filter
 	var kind yaml.Kind
-	tag := "" // TODO: change to yaml.NodeTagEmpty
+	tag := yaml.NodeTagEmpty
 	switch {
 	case !fltr.FieldSpec.CreateIfNotPresent || fltr.CreateKind == 0 || isSeq:
 		// dont' create the field if we don't find it
@@ -95,9 +98,10 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 		return errors.WrapPrefixf(err, "fieldName: %s", fieldName)
 	}
 
-	// if the value exists, but is null, then change it to the creation type
+	// if the value exists, but is null and kind is set,
+	// then change it to the creation type
 	// TODO: update yaml.LookupCreate to support this
-	if field.YNode().Tag == yaml.NodeTagNull {
+	if field.YNode().Tag == yaml.NodeTagNull && yaml.IsCreate(kind) {
 		field.YNode().Kind = kind
 		field.YNode().Tag = tag
 	}

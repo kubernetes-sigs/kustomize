@@ -132,7 +132,7 @@ func TestRefVarTransformer(t *testing.T) {
 ' at path 'data/slice': invalid value type expect a string`,
 		},
 		{
-			description: "var replacement panic in nil",
+			description: "var replacement in nil",
 			given: given{
 				varMap: map[string]interface{}{},
 				fs: []types.FieldSpec{
@@ -150,7 +150,19 @@ func TestRefVarTransformer(t *testing.T) {
 							"nil": nil, // noticeably *not* a []string
 						}}).ResMap(),
 			},
-			errMessage: `obj '' at path 'data/nil': invalid type encountered 0`,
+			expected: expected{
+				res: resmaptest_test.NewRmBuilder(
+					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+					Add(map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": map[string]interface{}{
+							"name": "cm1",
+						},
+						"data": map[string]interface{}{
+							"nil": nil, // noticeably *not* a []string
+						}}).ResMap(),
+			},
 		},
 	}
 
