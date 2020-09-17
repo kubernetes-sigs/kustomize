@@ -78,6 +78,7 @@ func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
 			EnableStarlark: o.EnableStar,
 			EnableExec:     o.EnableExec,
 			StorageMounts:  toStorageMounts(o.Mounts),
+			Env:            o.Env,
 		},
 	}
 }

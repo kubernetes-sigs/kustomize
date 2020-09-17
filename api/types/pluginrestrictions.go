@@ -53,4 +53,6 @@ type FnPluginLoadingOptions struct {
 	NetworkName string
 	// list of mounts
 	Mounts []string
+	// list of env variables to pass to fn
+	Env []string
 }

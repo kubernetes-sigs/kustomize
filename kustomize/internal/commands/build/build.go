@@ -90,6 +90,9 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	cmd.Flags().StringArrayVar(
 		&o.fnOptions.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
+	cmd.Flags().StringArrayVarP(
+		&o.fnOptions.Env, "env", "e", []string{},
+		"a list of environment variables to be used by functions")
 
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())
