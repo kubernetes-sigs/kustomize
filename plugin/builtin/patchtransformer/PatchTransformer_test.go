@@ -508,6 +508,61 @@ spec:
 `)
 }
 
+func TestPatchTransformerWithPatchDelete(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+target:
+  name: myDeploy
+  kind: Deployment
+patch: |-
+  apiVersion: apps/v1
+  metadata:
+    name: myDeploy
+  kind: Deployment
+  $patch: delete
+`, someDeploymentResources, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 1
+  template:
+    metadata:
+      labels:
+        new-label: new-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
+
 const anIngressResource = `apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
