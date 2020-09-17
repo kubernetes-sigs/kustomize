@@ -164,6 +164,12 @@ func TestFindPatchTargets(t *testing.T) {
 			},
 			count: 2,
 		},
+		{
+			target: types.Selector{
+				Namespace: "foo",
+			},
+			count: 0,
+		},
 	}
 	for _, testcase := range testcases {
 		actual, err := rm.Select(testcase.target)

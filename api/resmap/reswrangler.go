@@ -530,7 +530,7 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 		// matches the namespace when namespace is not empty in the selector
 		// It first tries to match with the original namespace
 		// then matches with the current namespace
-		if r.GetNamespace() != "" {
+		if s.Namespace != "" {
 			matched := ns.MatchString(orgId.EffectiveNamespace())
 			if !matched {
 				matched = ns.MatchString(curId.EffectiveNamespace())
@@ -543,7 +543,7 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 		// matches the name when name is not empty in the selector
 		// It first tries to match with the original name
 		// then matches with the current name
-		if r.GetName() != "" {
+		if s.Name != "" {
 			matched := nm.MatchString(orgId.Name)
 			if !matched {
 				matched = nm.MatchString(curId.Name)
