@@ -244,6 +244,17 @@ metadata:
 			out: []string{"gcr.io/example.com/image:v1.0.0"},
 		},
 
+		{name: "no function spec",
+			in: []f{
+				{
+					explicitFunction: true,
+					value: `
+foo: bar
+`,
+				},
+			},
+		},
+
 		// Test
 		//
 		//
@@ -685,6 +696,98 @@ metadata:
 	}
 }
 
+func TestRunFns_network(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         string
+		network       bool
+		expectNetwork bool
+		error         string
+	}{
+		{
+			name: "imperative false, declarative false",
+			input: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: a
+        network: false
+`,
+			network:       false,
+			expectNetwork: false,
+		},
+		{
+			name: "imperative true, declarative false",
+			input: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: a
+        network: false
+`,
+			network:       true,
+			expectNetwork: false,
+		},
+		{
+			name: "imperative true, declarative true",
+			input: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: a
+        network: true
+`,
+			network:       true,
+			expectNetwork: true,
+		},
+		{
+			name: "imperative false, declarative true",
+			input: `
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: a
+        network: true
+`,
+			network: false,
+			error:   "network required but not enabled with --network",
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		fn := yaml.MustParse(tt.input)
+		t.Run(tt.name, func(t *testing.T) {
+			// init the instance
+			r := &RunFns{
+				Functions: []*yaml.RNode{fn},
+				Network:   tt.network,
+			}
+			r.init()
+
+			_, fltrs, _, err := r.getNodesAndFilters()
+			if tt.error != "" {
+				if !assert.EqualError(t, err, tt.error) {
+					t.FailNow()
+				}
+				return
+			}
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			fltr := fltrs[0].(*container.Filter)
+			if !assert.Equal(t, tt.expectNetwork, fltr.Network) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
 func TestCmd_Execute(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
@@ -987,7 +1090,7 @@ func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode)
 	}
 }
 
-func TestRunfns_mergeContainerEnv(t *testing.T) {
+func TestRunFns_mergeContainerEnv(t *testing.T) {
 	testcases := []struct {
 		name      string
 		instance  RunFns

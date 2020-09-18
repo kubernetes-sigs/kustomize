@@ -55,17 +55,15 @@ metadata:
 				"run",
 				"--rm",
 				"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
-				"--network", "test-1",
+				"--network", "host",
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
 			},
 			instance: NewContainer(
 				runtimeutil.ContainerSpec{
-					Image: "example.com:version",
-					Network: runtimeutil.ContainerNetwork{
-						Name: "test-1",
-					},
-					User: "nobody",
+					Image:   "example.com:version",
+					Network: true,
+					User:    "nobody",
 				},
 			),
 		},

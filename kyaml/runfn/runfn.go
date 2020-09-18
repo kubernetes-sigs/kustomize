@@ -294,12 +294,13 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 	for i := range fns {
 		api := fns[i]
 		spec := runtimeutil.GetFunctionSpec(api)
-		if spec.Container.Network.Required {
-			if !r.Network {
-				// TODO(eddiezane): Provide error info about which function needs the network
-				return fltrs, errors.Errorf("network required but not enabled with --network")
-			}
-			spec.Container.Network.Name = runtimeutil.ContainerNetworkName(r.NetworkName)
+		if spec == nil {
+			// resource doesn't have function spec
+			continue
+		}
+		if spec.Container.Network && !r.Network {
+			// TODO(eddiezane): Provide error info about which function needs the network
+			return fltrs, errors.Errorf("network required but not enabled with --network")
 		}
 		// command line username and envs has higher priority
 		if !r.User.IsEmpty() {

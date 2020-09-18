@@ -1208,14 +1208,12 @@ metadata:
     config.kubernetes.io/function: |-
       container:
         image: foo:v1.0.0
-        network:
-          required: true
+        network: true
 `,
 			expectedFn: `
 container:
     image: foo:v1.0.0
-    network:
-        required: true
+    network: true
 `,
 		},
 
@@ -1324,8 +1322,7 @@ metadata:
   configFn:
     container:
       image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
-      network:
-        required: true
+      network: true
 `,
 			required: true,
 		},
@@ -1337,8 +1334,7 @@ metadata:
   configFn:
     container:
       image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
-      network:
-        required: false
+      network: false
 `,
 			required: false,
 		},
@@ -1363,8 +1359,7 @@ metadata:
     config.kubernetes.io/function: |
       container:
         image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
-        network:
-          required: true
+        network: true
 `,
 			required: true,
 		},
@@ -1376,7 +1371,7 @@ metadata:
 			return
 		}
 		fn := GetFunctionSpec(cfg)
-		assert.Equal(t, tc.required, fn.Container.Network.Required)
+		assert.Equal(t, tc.required, fn.Container.Network)
 	}
 }
 

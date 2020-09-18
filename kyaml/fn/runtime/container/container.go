@@ -154,13 +154,17 @@ func (c *Filter) setupExec() {
 
 // getArgs returns the command + args to run to spawn the container
 func (c *Filter) getCommand() (string, []string) {
+	network := runtimeutil.NetworkNameNone
+	if c.ContainerSpec.Network {
+		network = runtimeutil.NetworkNameHost
+	}
 	// run the container using docker.  this is simpler than using the docker
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
 	args := []string{"run",
 		"--rm",                                              // delete the container afterward
 		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
-		"--network", string(c.ContainerSpec.Network.Name),
+		"--network", string(network),
 
 		// added security options
 		"--user", c.User.String(),
@@ -184,11 +188,6 @@ func NewContainer(spec runtimeutil.ContainerSpec) Filter {
 	// default user is nobody
 	if f.ContainerSpec.User.IsEmpty() {
 		f.ContainerSpec.User = runtimeutil.UserNobody
-	}
-
-	// default network name is none
-	if f.ContainerSpec.Network.Name == "" {
-		f.ContainerSpec.Network.Name = runtimeutil.NetworkNameNone
 	}
 
 	return f
