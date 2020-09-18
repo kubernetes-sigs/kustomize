@@ -14,6 +14,6 @@ require (
 	k8s.io/cli-runtime v0.17.3
 	k8s.io/client-go v0.17.3
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
-	sigs.k8s.io/cli-utils v0.20.1
+	sigs.k8s.io/cli-utils v0.20.2
 	sigs.k8s.io/kustomize/kyaml v0.8.1
 )
