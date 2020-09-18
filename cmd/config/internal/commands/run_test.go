@@ -29,7 +29,6 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		output         io.Writer
 		functionPaths  []string
 		network        bool
-		networkName    string
 		mount          []string
 	}{
 		{
@@ -95,34 +94,32 @@ apiVersion: v1
 `,
 		},
 		{
-			name:        "network enabled",
-			args:        []string{"run", "dir", "--image", "foo:bar", "--network"},
-			path:        "dir",
-			network:     true,
-			networkName: "bridge",
+			name:    "network enabled",
+			args:    []string{"run", "dir", "--image", "foo:bar", "--network"},
+			path:    "dir",
+			network: true,
 			expected: `
 metadata:
   name: function-input
   annotations:
     config.kubernetes.io/function: |
-      container: {image: 'foo:bar', network: {required: true}}
+      container: {image: 'foo:bar', network: true}
 data: {}
 kind: ConfigMap
 apiVersion: v1
 `,
 		},
 		{
-			name:        "with network name",
-			args:        []string{"run", "dir", "--image", "foo:bar", "--network", "--network-name", "foo"},
-			path:        "dir",
-			network:     true,
-			networkName: "foo",
+			name:    "with network name",
+			args:    []string{"run", "dir", "--image", "foo:bar", "--network"},
+			path:    "dir",
+			network: true,
 			expected: `
 metadata:
   name: function-input
   annotations:
     config.kubernetes.io/function: |
-      container: {image: 'foo:bar', network: {required: true}}
+      container: {image: 'foo:bar', network: true}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -202,7 +199,6 @@ apiVersion: v1
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:           "dir",
-				NetworkName:    "bridge",
 				EnableStarlark: true,
 				Env:            []string{},
 			},
@@ -255,10 +251,9 @@ apiVersion: v1
 			args: []string{"run", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:        "dir",
-				NetworkName: "bridge",
-				ResultsDir:  "foo/",
-				Env:         []string{},
+				Path:       "dir",
+				ResultsDir: "foo/",
+				Env:        []string{},
 			},
 			expected: `
 metadata:
@@ -291,10 +286,9 @@ apiVersion: v1
 			args: []string{"run", "dir", "--log-steps"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:        "dir",
-				NetworkName: "bridge",
-				LogSteps:    true,
-				Env:         []string{},
+				Path:     "dir",
+				LogSteps: true,
+				Env:      []string{},
 			},
 		},
 		{
@@ -302,9 +296,8 @@ apiVersion: v1
 			args: []string{"run", "dir", "--env", "FOO=BAR", "-e", "BAR"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:        "dir",
-				NetworkName: "bridge",
-				Env:         []string{"FOO=BAR", "BAR"},
+				Path: "dir",
+				Env:  []string{"FOO=BAR", "BAR"},
 			},
 		},
 	}
@@ -360,9 +353,6 @@ apiVersion: v1
 			// check if Network was set
 			if tt.network {
 				if !assert.Equal(t, tt.network, r.RunFns.Network) {
-					t.FailNow()
-				}
-				if !assert.Equal(t, tt.networkName, r.RunFns.NetworkName) {
 					t.FailNow()
 				}
 			} else {
