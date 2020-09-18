@@ -25,31 +25,33 @@ of one of the several [Go modules] in this repository.
 >
 > In commands this is roughly:
 >
->  - cd ~/gopath/src/sigs.k8s.io/kustomize
->  - git fetch upstream
->  - git co master
->  - git rebase upstream/master
->  - make prow-presubmit-check
->  - gorepomod release kyaml           # undraft the release
->  - cd ../cli-utils
->  - gorepomod pin kyaml
->  - merge the PR
->  - gorepomod release {top}
->  - cd ../kustomize
->  - # manually pin cmd/config/go.mod to the new cli-utils
->  - gorepomod pin kyaml
->  - # merge the PR
->  - gorepomod release cmd/config      # undraft the release
->  - gorepomod pin cmd/config
->  - # merge the PR
->  - gorepomod release api             # undraft the release
->  - gorepomod pin api
->  - # merge the PR
->  - gorepomod release kustomize       # undraft the release
->  - gorepomod unpin api
->  - gorepomod unpin cmd/config
->  - gorepomod unpin kyaml 
->  - # merge the PR
+> ```
+> cd ~/gopath/src/sigs.k8s.io/kustomize
+> git fetch upstream
+> git co master
+> git rebase upstream/master
+> make prow-presubmit-check
+> gorepomod release kyaml       # undraft the release
+> cd ../cli-utils
+> gorepomod pin kyaml
+> merge the PR
+> gorepomod release {top}
+> cd ../kustomize
+> # manually pin cmd/config/go.mod to the new cli-utils
+> gorepomod pin kyaml
+> # merge the PR
+> gorepomod release cmd/config  # undraft the release
+> gorepomod pin cmd/config
+> # merge the PR
+> gorepomod release api         # undraft the release
+> gorepomod pin api
+> # merge the PR
+> gorepomod release kustomize   # undraft the release
+> gorepomod unpin api
+> gorepomod unpin cmd/config
+> gorepomod unpin kyaml 
+> # merge the PR
+> ```
 
 Briefly:
 - The repo HEAD is in a clean state (all tests passing).
