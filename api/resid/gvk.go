@@ -99,6 +99,7 @@ var orderFirst = []string{
 	"ClusterRoleBinding",
 	"ConfigMap",
 	"Secret",
+	"Endpoints",
 	"Service",
 	"LimitRange",
 	"PriorityClass",
