@@ -65,8 +65,8 @@ func TestLoader(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, behavior := range []types.BuiltinPluginLoadingOptions{
-		types.BploUseStaticallyLinked,
-		types.BploLoadFromFileSys} {
+		/* types.BploUseStaticallyLinked,
+		types.BploLoadFromFileSys */} {
 		c, err := konfig.EnabledPluginConfig(behavior)
 		if err != nil {
 			t.Fatal(err)
