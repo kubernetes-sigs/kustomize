@@ -31,19 +31,25 @@ of one of the several [Go modules] in this repository.
 >  - git rebase upstream/master
 >  - make prow-presubmit-check
 >  - gorepomod release kyaml           # undraft the release
->  - cd ../cli-tuils
->  - gorepomod pin kyaml               # merge the PR
->  - gorepomod release cli-util        # merge the PR
+>  - cd ../cli-utils
+>  - gorepomod pin kyaml
+>  - merge the PR
+>  - gorepomod release {top}
 >  - cd ../kustomize
->  - gorepomod pin kyaml               # merge the PR
+>  - # manually pin cmd/config/go.mod to the new cli-utils
+>  - gorepomod pin kyaml
+>  - # merge the PR
 >  - gorepomod release cmd/config      # undraft the release
->  - gorepomod pin cmd/config          # merge the PR
+>  - gorepomod pin cmd/config
+>  - # merge the PR
 >  - gorepomod release api             # undraft the release
->  - gorepomod pin api                 # merge the PR
+>  - gorepomod pin api
+>  - # merge the PR
 >  - gorepomod release kustomize       # undraft the release
 >  - gorepomod unpin api
 >  - gorepomod unpin cmd/config
->  - gorepomod unpin kyaml             # merge the PR
+>  - gorepomod unpin kyaml 
+>  - # merge the PR
 
 Briefly:
 - The repo HEAD is in a clean state (all tests passing).
