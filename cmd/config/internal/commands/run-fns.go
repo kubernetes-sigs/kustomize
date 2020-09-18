@@ -62,8 +62,6 @@ func GetRunFnRunner(name string) *RunFnRunner {
 
 	r.Command.Flags().BoolVar(
 		&r.Network, "network", false, "enable network access for functions that declare it")
-	r.Command.Flags().StringVar(
-		&r.NetworkName, "network-name", "bridge", "the docker network to run the container in")
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
@@ -96,7 +94,6 @@ type RunFnRunner struct {
 	RunFns             runfn.RunFns
 	ResultsDir         string
 	Network            bool
-	NetworkName        string
 	Mounts             []string
 	LogSteps           bool
 	Env                []string
@@ -133,8 +130,8 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, dataItems []string
 		}
 		if r.Network {
 			err = fn.PipeE(
-				yaml.LookupCreate(yaml.MappingNode, "container", "network"),
-				yaml.SetField("required", yaml.NewScalarRNode("true")))
+				yaml.Lookup("container"),
+				yaml.SetField("network", yaml.NewScalarRNode("true")))
 			if err != nil {
 				return nil, err
 			}
@@ -309,7 +306,6 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Input:          input,
 		Path:           path,
 		Network:        r.Network,
-		NetworkName:    r.NetworkName,
 		EnableStarlark: r.EnableStar,
 		EnableExec:     r.EnableExec,
 		StorageMounts:  storageMounts,
