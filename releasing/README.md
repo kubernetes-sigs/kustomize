@@ -31,26 +31,31 @@ of one of the several [Go modules] in this repository.
 > git co master
 > git rebase upstream/master
 > make prow-presubmit-check
-> gorepomod release kyaml       # undraft the release
+> gorepomod release kyaml
+> # undraft the release at https://github.com/kubernetes-sigs/kustomize/releases
 > cd ../cli-utils
 > gorepomod pin kyaml
-> merge the PR
+> # merge these changes to upstream (make a PR, etc.)
 > gorepomod release {top}
 > cd ../kustomize
 > # manually pin cmd/config/go.mod to the new cli-utils
+> # merge these changes to upstream (make a PR, etc.)
 > gorepomod pin kyaml
-> # merge the PR
-> gorepomod release cmd/config  # undraft the release
+> # merge these changes
+> gorepomod release cmd/config
+> # undraft the release
 > gorepomod pin cmd/config
-> # merge the PR
-> gorepomod release api         # undraft the release
+> # merge these changes
+> gorepomod release api
+> # undraft the release
 > gorepomod pin api
-> # merge the PR
-> gorepomod release kustomize   # undraft the release
+> # merge these changes
+> gorepomod release kustomize
+> # undraft the release
 > gorepomod unpin api
 > gorepomod unpin cmd/config
 > gorepomod unpin kyaml 
-> # merge the PR
+> # merge these changes
 > ```
 
 Briefly:
