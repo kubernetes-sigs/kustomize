@@ -52,9 +52,6 @@ type RunFns struct {
 	// Network enables network access for functions that declare it
 	Network bool
 
-	// NetworkName is the name of the docker network to use for the container
-	NetworkName string
-
 	// Output can be set to write the result to Output rather than back to the directory
 	Output io.Writer
 
