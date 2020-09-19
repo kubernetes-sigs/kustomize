@@ -747,6 +747,8 @@ mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jC
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
 sigs.k8s.io/cli-utils v0.20.1 h1:S3IM4Rmely9oWNAeytx46PhngTwdRxsJ4ixtoGWPc3o=
 sigs.k8s.io/cli-utils v0.20.1/go.mod h1:fQkEMmLXduMNmUf1+dgQ5GRJa4OrrLMw3qzAN8YXAU8=
+sigs.k8s.io/cli-utils v0.20.2 h1:jNMu4ExtvFXlmKqZMDJqySqK55vGtVRqoLht6eIMffw=
+sigs.k8s.io/cli-utils v0.20.2/go.mod h1:uT5cVxMrOoRplL8umtrJx5R51ZWsIKD7lQfPtot80uA=
 sigs.k8s.io/controller-runtime v0.4.0 h1:wATM6/m+3w8lj8FXNaO6Fs/rq/vqoOjO1Q116Z9NPsg=
 sigs.k8s.io/controller-runtime v0.4.0/go.mod h1:ApC79lpY3PHW9xj/w9pj+lYkLgwAAUZwfXkME1Lajns=
 sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbLXqhyOyX0=
