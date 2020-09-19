@@ -13,18 +13,18 @@
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
 
-> This process doesn't describe or enforce a
-> particular module release sequence.
->
-> Recommended sequence (each stage depends on everything above it)
->  - sigs.k8s.io/kustomize/kyaml
->  - sigs.k8s.io/cli-utils
->  - sigs.k8s.io/kustomize/cmd/config
->  - sigs.k8s.io/kustomize/api
->  - sigs.k8s.io/kustomize/kustomize
->
-> In commands this is roughly:
->
+## Modules involved
+
+Recommended sequence (each stage depends on everything above it)
+
+ - `sigs.k8s.io/kustomize/kyaml` - doesn't have local dependencies.
+ - `sigs.k8s.io/cli-utils` - depends on `kyaml`
+ - `sigs.k8s.io/kustomize/cmd/config` - depends on `kyaml` and `cli-utils`
+ - `sigs.k8s.io/kustomize/api` - depends on `kyaml`
+ - `sigs.k8s.io/kustomize/kustomize` - depends on `cmd/config` and `api`
+
+### Rough sequence
+
 > ```
 > cd ~/gopath/src/sigs.k8s.io/kustomize
 > git fetch upstream
@@ -33,11 +33,13 @@ of one of the several [Go modules] in this repository.
 > make prow-presubmit-check
 > gorepomod release kyaml
 > # undraft the release at https://github.com/kubernetes-sigs/kustomize/releases
+>
 > cd ../cli-utils
 > gorepomod pin kyaml
 > # merge these changes to upstream (make a PR, etc.)
 > gorepomod release {top}
 > cd ../kustomize
+>
 > # manually pin cmd/config/go.mod to the new cli-utils
 > # merge these changes to upstream (make a PR, etc.)
 > gorepomod pin kyaml
