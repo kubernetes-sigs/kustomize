@@ -84,6 +84,7 @@ $(MYGOBIN)/kustomize:
 install-tools: \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
+	$(MYGOBIN)/gh \
 	$(MYGOBIN)/gorepomod \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
@@ -319,6 +320,18 @@ $(MYGOBIN)/kind:
         chmod +x ./kind; \
         mv ./kind $(MYGOBIN); \
         rm -rf $$d; \
+	)
+
+# linux only.
+$(MYGOBIN)/gh:
+	( \
+		set -e; \
+		d=$(shell mktemp -d); cd $$d; \
+		tgzFile=gh_1.0.0_linux_amd64.tar.gz; \
+		wget https://github.com/cli/cli/releases/download/v1.0.0/$$tgzFile; \
+		tar -xvzf $$tgzFile; \
+		mv gh_1.0.0_linux_amd64/bin/gh  $(MYGOBIN)/gh; \
+		rm -rf $$d \
 	)
 
 .PHONY: clean
