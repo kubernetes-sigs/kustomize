@@ -17,3 +17,5 @@ require (
 	sigs.k8s.io/cli-utils v0.20.2
 	sigs.k8s.io/kustomize/kyaml v0.8.1
 )
+
+replace sigs.k8s.io/kustomize/kyaml v0.8.1 => ../../kyaml
