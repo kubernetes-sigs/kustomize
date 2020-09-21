@@ -10,12 +10,9 @@
 #
 # Fails if the file already exists.
 
-if [ -z "$1" ]
-  then
-    echo "No version specified. Downloading the most recently released kustomize binary."
+if [ -z "$1" ]; then
     version=""
   else
-    echo "Downloading the kustomize binary version $1."
     version=$1
 fi
 
@@ -54,8 +51,7 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
   sort | tail -n 1 |\
   xargs curl -s -O -L
 
-if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]
-then
+if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
     tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
 else
     echo "Error: kustomize binary with the version $version does not exist!"
