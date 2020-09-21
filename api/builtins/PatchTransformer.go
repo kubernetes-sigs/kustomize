@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -101,7 +102,31 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 		patchCopy.SetGvk(res.GetGvk())
 		err := p.applySMPatch(res, patchCopy)
 		if err != nil {
-			return err
+			// Check for an error string from UnmarshalJSON that's indicative
+			// of an object that's missing basic KRM fields, and thus may have been
+			// entirely deleted (an acceptable outcome).  This error handling should
+			// be deleted along with use of ResMap and apimachinery functions like
+			// UnmarshalJSON.
+			if !strings.Contains(err.Error(), "Object 'Kind' is missing") {
+				// Some unknown error, let it through.
+				return err
+			}
+			if len(res.Map()) != 0 {
+				return errors.Wrapf(
+					err, "with unexpectedly non-empty object map of size %d",
+					len(res.Map()))
+			}
+			// Fall through to handle deleted object.
+		}
+		if len(res.Map()) == 0 {
+			// This means all fields have been removed from the object.
+			// This can happen if a patch required deletion of the
+			// entire resource (not just a part of it).  This means
+			// the overall resmap must shrink by one.
+			err = m.Remove(res.CurId())
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
