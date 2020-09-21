@@ -40,7 +40,7 @@ spec:
 func TestIssue2896Base(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeIssueBase(th)
-	m := th.Run(".", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
