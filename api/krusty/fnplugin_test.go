@@ -464,3 +464,50 @@ metadata:
   name: another-namespace
 `)
 }
+
+func TestFnContainerEnvVars(t *testing.T) {
+	skipIfNoDocker(t)
+
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK("/app", `
+generators:
+- gener.yaml
+`)
+
+	// TODO: cheange image to gcr.io/kpt-functions/templater:stable
+	// when https://github.com/GoogleContainerTools/kpt-functions-catalog/pull/103
+	// is merged
+	th.WriteF("/app/gener.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: quay.io/aodinokov/kpt-templater:0.0.1
+        envs:
+        - TESTTEMPLATE=value
+data:
+  template: |
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: env
+    data:
+      value: '{{ env "TESTTEMPLATE" }}'
+`)
+	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  value: value
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/path: configmap_env.yaml
+  name: env
+`)
+}
