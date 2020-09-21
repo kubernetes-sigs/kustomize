@@ -68,9 +68,12 @@ cd ../kustomize
 # Pin to the most recent kyaml.
 gorepomod pin kyaml
 
-# Also, manually pin cmd/config/go.mod to the new cli-utils.
+# Pin cmd/config/go.mod to the new cli-utils, e.g.
+(cd cmd/config; go mod edit -require=sigs.k8s.io/cli-utils@v0.20.2)
+
 # Merge these changes to upstream (make a PR, etc.)
 
+# Release it.
 gorepomod release cmd/config
 ```
 
