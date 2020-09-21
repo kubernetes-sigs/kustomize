@@ -164,6 +164,18 @@ func TestFindPatchTargets(t *testing.T) {
 			},
 			count: 2,
 		},
+		{
+			target: types.Selector{
+				Namespace: "NotMatched",
+			},
+			count: 0,
+		},
+		{
+			target: types.Selector{
+				Namespace: "ns1",
+			},
+			count: 1,
+		},
 	}
 	for _, testcase := range testcases {
 		actual, err := rm.Select(testcase.target)
