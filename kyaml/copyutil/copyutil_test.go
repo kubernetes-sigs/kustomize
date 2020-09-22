@@ -154,6 +154,11 @@ func TestDiff_skipGitSrc(t *testing.T) {
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
+	// files that just happen to start with .git should not be ignored.
+	err = ioutil.WriteFile(
+		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
 	assert.NoError(t, err)
@@ -165,6 +170,10 @@ func TestDiff_skipGitSrc(t *testing.T) {
 	assert.NoError(t, err)
 	err = ioutil.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
+	err = ioutil.WriteFile(
+		filepath.Join(d, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	diff, err := Diff(s, d)
@@ -282,4 +291,100 @@ metadata:
 
 	assert.Contains(t, PrettyFileDiff(s1, s2), expectedLine1)
 	assert.Contains(t, PrettyFileDiff(s1, s2), expectedLine2)
+}
+
+func TestCopyDir(t *testing.T) {
+	s, err := ioutil.TempDir("", "copyutilsrc")
+	assert.NoError(t, err)
+	v, err := ioutil.TempDir("", "copyutilvalidate")
+	assert.NoError(t, err)
+
+	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(
+		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
+	// files that just happen to start with .git should not be ignored.
+	err = ioutil.WriteFile(
+		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
+	// git should be ignored
+	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(
+		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
+	err = os.Mkdir(filepath.Join(v, "a1"), 0700)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(
+		filepath.Join(v, "a1", "f.yaml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
+	err = ioutil.WriteFile(
+		filepath.Join(v, ".gitlab-ci.yml"), []byte(`a`), 0600)
+	assert.NoError(t, err)
+
+	d, err := ioutil.TempDir("", "copyutildestination")
+	assert.NoError(t, err)
+
+	err = CopyDir(s, d)
+	assert.NoError(t, err)
+
+	diff, err := Diff(d, v)
+	assert.NoError(t, err)
+	assert.Empty(t, diff.List())
+}
+
+func TestIsDotGitFolder(t *testing.T) {
+	testCases := []struct {
+		name           string
+		path           string
+		isDotGitFolder bool
+	}{
+		{
+			name:           ".git folder",
+			path:           "/foo/bar/.git",
+			isDotGitFolder: true,
+		},
+		{
+			name:           "subfolder of .git folder",
+			path:           "/foo/.git/bar/zoo",
+			isDotGitFolder: true,
+		},
+		{
+			name:           "subfolder of .gitignore folder",
+			path:           "/foo/.gitignore/bar",
+			isDotGitFolder: false,
+		},
+		{
+			name:           ".gitignore file",
+			path:           "foo/bar/.gitignore",
+			isDotGitFolder: false,
+		},
+		{
+			name:           ".gitlab-ci.yml under .git folder",
+			path:           "/foo/.git/bar/.gitignore",
+			isDotGitFolder: true,
+		},
+		{
+			name:           "windows path with .git folder",
+			path:           "c:/foo/.git/bar",
+			isDotGitFolder: true,
+		},
+		{
+			name:           "windows path with .gitignore file",
+			path:           "d:/foo/bar/.gitignore",
+			isDotGitFolder: false,
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.isDotGitFolder, IsDotGitFolder(test.path))
+		})
+	}
 }

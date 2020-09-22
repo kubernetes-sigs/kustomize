@@ -25,7 +25,7 @@ func CopyDir(src string, dst string) error {
 		// don't copy the .git dir
 		if path != src {
 			rel := strings.TrimPrefix(path, src)
-			if strings.HasPrefix(rel, string(filepath.Separator)+".git") {
+			if IsDotGitFolder(rel) {
 				return nil
 			}
 		}
@@ -67,7 +67,7 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 		}
 
 		// skip git repo if it exists
-		if strings.Contains(path, ".git") {
+		if IsDotGitFolder(path) {
 			return nil
 		}
 
@@ -86,7 +86,7 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 		}
 
 		// skip git repo if it exists
-		if strings.Contains(path, ".git") {
+		if IsDotGitFolder(path) {
 			return nil
 		}
 
@@ -127,6 +127,18 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 	}
 	// return the differing files
 	return diff, nil
+}
+
+// IsDotGitFolder checks if the provided path is either the .git folder or
+// a file underneath the .git folder.
+func IsDotGitFolder(path string) bool {
+	cleanPath := filepath.ToSlash(filepath.Clean(path))
+	for _, c := range strings.Split(cleanPath, "/") {
+		if c == ".git" {
+			return true
+		}
+	}
+	return false
 }
 
 // PrettyFileDiff takes the content of two files and returns the pretty diff
