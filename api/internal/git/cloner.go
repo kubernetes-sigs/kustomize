@@ -27,9 +27,6 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		return err
 	}
 
-	if repoSpec.Ref == "" {
-		repoSpec.Ref = "master"
-	}
 	cmd := exec.Command(
 		gitProgram,
 		"clone",
@@ -45,28 +42,30 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 			repoSpec.CloneSpec(), repoSpec.Dir.String())
 	}
 
-	cmd = exec.Command(
-		gitProgram,
-		"fetch",
-		"--depth=1",
-		"origin",
-		repoSpec.Ref)
-	cmd.Dir = repoSpec.Dir.String()
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error fetching ref: %s", out)
-		return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
-	}
+	if repoSpec.Ref != "" {
+		cmd = exec.Command(
+			gitProgram,
+			"fetch",
+			"--depth=1",
+			"origin",
+			repoSpec.Ref)
+		cmd.Dir = repoSpec.Dir.String()
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error fetching ref: %s", out)
+			return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
+		}
 
-	cmd = exec.Command(
-		gitProgram,
-		"checkout",
-		"FETCH_HEAD")
-	cmd.Dir = repoSpec.Dir.String()
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error checking out ref: %s", out)
-		return errors.Wrapf(err, "trouble checking out %s", repoSpec.Ref)
+		cmd = exec.Command(
+			gitProgram,
+			"checkout",
+			"FETCH_HEAD")
+		cmd.Dir = repoSpec.Dir.String()
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error checking out ref: %s", out)
+			return errors.Wrapf(err, "trouble checking out %s", repoSpec.Ref)
+		}
 	}
 
 	cmd = exec.Command(
