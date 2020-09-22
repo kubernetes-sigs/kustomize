@@ -85,15 +85,11 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *ListSettersRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
 	r.List = setters2.List{
 		Name:            r.List.Name,
-		OpenAPIFileName: openAPIFileName,
+		OpenAPIFileName: ext.KRMFileName(),
 	}
-	openAPIPath := filepath.Join(pkgPath, openAPIFileName)
+	openAPIPath := filepath.Join(pkgPath, ext.KRMFileName())
 	if err := r.ListSetters(w, openAPIPath, pkgPath); err != nil {
 		return err
 	}

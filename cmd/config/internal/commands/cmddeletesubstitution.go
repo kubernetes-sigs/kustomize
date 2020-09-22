@@ -43,14 +43,10 @@ type DeleteSubstitutionRunner struct {
 }
 
 func (r *DeleteSubstitutionRunner) preRunE(c *cobra.Command, args []string) error {
-	var err error
 	r.DeleteSubstitution.Name = args[1]
 	r.DeleteSubstitution.DefinitionPrefix = fieldmeta.SubstitutionDefinitionPrefix
 
-	r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
-	if err != nil {
-		return err
-	}
+	r.OpenAPIFile = filepath.Join(args[0], ext.KRMFileName())
 
 	return nil
 }
@@ -71,20 +67,16 @@ func (r *DeleteSubstitutionRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *DeleteSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
 	r.DeleteSubstitution = settersutil.DeleterCreator{
 		Name:               r.DeleteSubstitution.Name,
 		DefinitionPrefix:   fieldmeta.SubstitutionDefinitionPrefix,
 		RecurseSubPackages: r.RecurseSubPackages,
-		OpenAPIFileName:    openAPIFileName,
-		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		OpenAPIFileName:    ext.KRMFileName(),
+		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
 	}
 
-	err = r.DeleteSubstitution.Delete()
+	err := r.DeleteSubstitution.Delete()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.DeleteSubstitution.RecurseSubPackages {

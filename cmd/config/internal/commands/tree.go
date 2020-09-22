@@ -77,11 +77,7 @@ type TreeRunner struct {
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 	var input kio.Reader
 	var root = "."
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
-	matchFilesGlob := append([]string{openAPIFileName}, kio.DefaultMatch...)
+	matchFilesGlob := append([]string{ext.KRMFileName()}, kio.DefaultMatch...)
 	if len(args) == 1 {
 		root = filepath.Clean(args[0])
 		input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: matchFilesGlob}
@@ -163,7 +159,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 			Writer:          c.OutOrStdout(),
 			Fields:          fields,
 			Structure:       kio.TreeStructure(r.structure),
-			OpenAPIFileName: openAPIFileName,
+			OpenAPIFileName: ext.KRMFileName(),
 		}},
 	}.Execute())
 }
