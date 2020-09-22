@@ -39,7 +39,7 @@ type ignoreFilesMatcher struct {
 // we just add a matcher that match nothing.
 func (i *ignoreFilesMatcher) readIgnoreFile(path string) error {
 	i.verifyPath(path)
-	m, err := gitignore.NewGitIgnore(filepath.Join(path, ext.GetIgnoreFileName()))
+	m, err := gitignore.NewGitIgnore(filepath.Join(path, ext.IgnoreFileName()))
 	if err != nil {
 		if os.IsNotExist(err) {
 			i.matchers = append(i.matchers, matcher{

@@ -3,8 +3,8 @@
 
 package ext
 
-// GetIgnoreFileName returns the name for ignore files in
+// IgnoreFileName returns the name for ignore files in
 // packages. It can be overridden by tools using this library.
-var GetIgnoreFileName = func() string {
+var IgnoreFileName = func() string {
 	return ".krmignore"
 }
