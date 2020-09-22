@@ -108,7 +108,6 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 	}
 	if setterVersion == "v2" {
-		var err error
 		r.Set.Name = args[1]
 		if valueFlagSet {
 			r.Set.Value = r.Values[0]
@@ -125,10 +124,7 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 
 		r.Set.Description = r.Perform.Description
 		r.Set.SetBy = r.Perform.SetBy
-		r.OpenAPIFile, err = ext.GetOpenAPIFile(args)
-		if err != nil {
-			return err
-		}
+		r.OpenAPIFile = filepath.Join(args[0], ext.KRMFileName())
 	}
 	return nil
 }
@@ -155,10 +151,6 @@ func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *SetRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
 	r.Set = settersutil.FieldSetter{
 		Name:               r.Set.Name,
 		Value:              r.Set.Value,
@@ -166,8 +158,8 @@ func (r *SetRunner) executeCmd(w io.Writer, pkgPath string) error {
 		Description:        r.Set.Description,
 		SetBy:              r.Set.SetBy,
 		Count:              0,
-		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
-		OpenAPIFileName:    openAPIFileName,
+		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
+		OpenAPIFileName:    ext.KRMFileName(),
 		ResourcesPath:      pkgPath,
 		RecurseSubPackages: r.Set.RecurseSubPackages,
 	}

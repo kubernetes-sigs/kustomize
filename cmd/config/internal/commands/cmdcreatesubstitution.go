@@ -65,22 +65,18 @@ func (r *CreateSubstitutionRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *CreateSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
 	r.CreateSubstitution = settersutil.SubstitutionCreator{
 		Name:               r.CreateSubstitution.Name,
 		FieldName:          r.CreateSubstitution.FieldName,
 		FieldValue:         r.CreateSubstitution.FieldValue,
 		RecurseSubPackages: r.CreateSubstitution.RecurseSubPackages,
 		Pattern:            r.CreateSubstitution.Pattern,
-		OpenAPIFileName:    openAPIFileName,
-		OpenAPIPath:        filepath.Join(pkgPath, openAPIFileName),
+		OpenAPIFileName:    ext.KRMFileName(),
+		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
 	}
 
-	err = r.CreateSubstitution.Create()
+	err := r.CreateSubstitution.Create()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.CreateSubstitution.RecurseSubPackages {

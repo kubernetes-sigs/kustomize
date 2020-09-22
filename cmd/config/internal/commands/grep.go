@@ -128,14 +128,9 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
-	openAPIFileName, err := ext.OpenAPIFileName()
-	if err != nil {
-		return err
-	}
+	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
 
-	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: openAPIFileName}
-
-	err = kio.Pipeline{
+	err := kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: []kio.Filter{r.GrepFilter},
 		Outputs: []kio.Writer{kio.ByteWriter{
