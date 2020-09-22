@@ -6,6 +6,7 @@ package settersutil
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -99,16 +100,24 @@ func (fs FieldSetter) Set() (int, error) {
 	return s.Count, err
 }
 
-// SetAllSetterDefinitions reads all the Setter Definitions from the OpenAPI
-// file and sets all values in the provided directories.
-func SetAllSetterDefinitions(openAPIPath string, dirs ...string) error {
+// SetAllSetterDefinitions reads all the Setter Definitions from the input OpenAPI
+// file and sets all values for the resource configs in the provided destination directories.
+// If syncOpenAPI is true, the openAPI files in destination directories are also
+// updated with the setter values in the input openAPI file
+func SetAllSetterDefinitions(syncOpenAPI bool, openAPIPath string, dirs ...string) error {
 	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
 		return err
 	}
-
-	for _, dir := range dirs {
+	for _, destDir := range dirs {
+		if syncOpenAPI {
+			openAPIFileName := filepath.Base(openAPIPath)
+			err := syncOpenAPIValuesWithSchema(filepath.Join(destDir, openAPIFileName))
+			if err != nil {
+				return err
+			}
+		}
 		rw := &kio.LocalPackageReadWriter{
-			PackagePath: dir,
+			PackagePath: destDir,
 			// set output won't include resources from files which
 			//weren't modified.  make sure we don't delete them.
 			NoDeleteFiles: true,
@@ -122,6 +131,33 @@ func SetAllSetterDefinitions(openAPIPath string, dirs ...string) error {
 			Outputs: []kio.Writer{rw},
 		}.Execute()
 		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// syncOpenAPIValuesWithSchema syncs the setter values in global openAPI schema
+// with the ones in openAPIPath and writes them back
+func syncOpenAPIValuesWithSchema(openAPIPath string) error {
+	refs, err := openapi.DefinitionRefs(openAPIPath)
+	if err != nil {
+		return err
+	}
+	for _, ref := range refs {
+		sch := openapi.Schema().Definitions[ref]
+		cliExt, err := setters2.GetExtFromSchema(&sch)
+		if cliExt == nil || cliExt.Setter == nil || err != nil {
+			// if the ref doesn't exist in global schema or if it is not a setter
+			// continue, as there might be setters which are not present global schema
+			continue
+		}
+		soa := setters2.SetOpenAPI{
+			Name:       cliExt.Setter.Name,
+			Value:      cliExt.Setter.Value,
+			ListValues: cliExt.Setter.ListValues,
+		}
+		if err := soa.UpdateFile(openAPIPath); err != nil {
 			return err
 		}
 	}
