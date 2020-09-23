@@ -62,6 +62,8 @@ func SchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
 // supplementary OpenAPI definitions.
 const SupplementaryOpenAPIFieldName = "openAPI"
 
+const Definitions = "definitions"
+
 // AddSchemaFromFile reads the file at path and parses the OpenAPI definitions
 // from the field "openAPI"
 func AddSchemaFromFile(path string) error {
@@ -70,37 +72,40 @@ func AddSchemaFromFile(path string) error {
 
 // DeleteSchemaInFile reads the file at path and removes all the openAPI definitions
 // present in file from global schema
-func DeleteSchemaInFile(path string) error {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	object, err := yaml.Parse(string(b))
-	if err != nil {
-		return err
-	}
-
-	definitions, err := object.Pipe(yaml.Lookup(SupplementaryOpenAPIFieldName, "definitions"))
-	if definitions == nil {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	fields, err := definitions.Fields()
+func DeleteSchemaInFile(openAPIPath string) error {
+	fields, err := DefinitionRefs(openAPIPath)
 	if err != nil {
 		return err
 	}
 
 	for _, field := range fields {
-		_, ok := globalSchema.schema.Definitions[field]
-		if ok {
-			delete(globalSchema.schema.Definitions, field)
-		}
+		delete(globalSchema.schema.Definitions, field)
 	}
 	return nil
+}
+
+// DefinitionRefs returns the list of openAPI definition references present in the
+// input openAPIPath
+func DefinitionRefs(openAPIPath string) ([]string, error) {
+	b, err := ioutil.ReadFile(openAPIPath)
+	if err != nil {
+		return nil, err
+	}
+
+	object, err := yaml.Parse(string(b))
+	if err != nil {
+		return nil, err
+	}
+
+	definitions, err := object.Pipe(yaml.Lookup(SupplementaryOpenAPIFieldName, Definitions))
+	if definitions == nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return definitions.Fields()
 }
 
 // AddSchemaFromFileUsingField reads the file at path and parses the OpenAPI definitions
