@@ -7,6 +7,11 @@ labels:
 assignees: ""
 ---
 
+<!--
+Please read this page: https://kubernetes-sigs.github.io/kustomize/contributing/bugs/ before
+filing a bug
+-->
+
 <!-- Feel free to skip the sections if they are not applicable. -->
 
 **Describe the bug**
@@ -18,7 +23,7 @@ assignees: ""
 <!--
 We cannot figure out or fix the issue if we don't know how to reproduce. Please
 provide a minimum set of files that can reproduce the issue. You can paste the
-file contents here or provide a link to them.
+file contents here or provide a link to a tarball or git repo.
 
 Example:
 
