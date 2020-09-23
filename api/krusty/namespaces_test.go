@@ -197,6 +197,29 @@ subjects:
   name: default
   namespace: irrelevant
 ---
+kind: Deployment
+metadata:
+  name: example
+spec:
+  template:
+    metadata:
+      namespace: foo
+---
+kind: StatefulSet
+metadata:
+  name: example
+spec:
+  template:
+    metadata:
+      namespace: foo
+kind: DaemonSet
+metadata:
+  name: example
+spec:
+  template:
+    metadata:
+      namespace: foo
+---
 kind: PersistentVolume
 metadata:
   name: pv1
@@ -294,6 +317,29 @@ subjects:
 - kind: ServiceAccount
   name: default
   namespace: newnamespace
+---
+kind: Deployment
+metadata:
+  name: p1-example-s1
+spec:
+  template:
+    metadata:
+      namespace: newnamespace
+---
+kind: StatefulSet
+metadata:
+  name: p1-example-s1
+spec:
+  template:
+    metadata:
+      namespace: newnamespace
+kind: DaemonSet
+metadata:
+  name: p1-example-s1
+spec:
+  template:
+    metadata:
+      namespace: newnamespace
 ---
 kind: PersistentVolume
 metadata:
