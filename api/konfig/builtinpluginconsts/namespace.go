@@ -8,6 +8,12 @@ const (
 namespace:
 - path: metadata/namespace
   create: true
+- path: spec/template/metadata/namespace
+  kind: Deployment
+- path: spec/template/metadata/namespace
+  kind: StatefulSet
+- path: spec/template/metadata/namespace
+  kind: DaemonSet
 - path: metadata/name
   kind: Namespace
   create: true
