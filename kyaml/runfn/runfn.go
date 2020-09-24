@@ -426,7 +426,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 		if err != nil {
 			return nil, err
 		}
-		c, err := container.NewContainer(
+		c := container.NewContainer(
 			runtimeutil.ContainerSpec{
 				Image:         spec.Container.Image,
 				Network:       spec.Container.Network,
@@ -435,9 +435,6 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 			},
 			uidgid,
 		)
-		if err != nil {
-			return nil, err
-		}
 		cf := &c
 		cf.Exec.FunctionConfig = api
 		cf.Exec.GlobalScope = r.GlobalScope

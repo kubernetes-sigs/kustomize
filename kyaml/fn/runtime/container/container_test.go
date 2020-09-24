@@ -125,10 +125,7 @@ metadata:
 				t.FailNow()
 			}
 
-			instance, err := NewContainer(tt.containerSpec, tt.UIDGID)
-			if err != nil {
-				t.Fatal(err)
-			}
+			instance := NewContainer(tt.containerSpec, tt.UIDGID)
 			instance.Exec.FunctionConfig = cfg
 			instance.Env = append(instance.Env, "KYAML_TEST=FOO")
 			instance.setupExec()
