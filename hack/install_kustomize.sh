@@ -1,9 +1,20 @@
 #!/bin/bash
 
-# Downloads the most recently released kustomize binary
-# to your current working directory.
+# If no argument is given -> Downloads the most recently released
+# kustomize binary to your current working directory.
+# (e.g. 'install_kustomize.sh')
+#
+# If an argument is given -> Downloads the specified version of the
+# kustomize binary to your current working directory.
+# (e.g. 'install_kustomize.sh 3.8.2')
 #
 # Fails if the file already exists.
+
+if [ -z "$1" ]; then
+    version=""
+  else
+    version=$1
+fi
 
 where=$PWD
 if [ -f $where/kustomize ]; then
@@ -17,7 +28,7 @@ if [[ ! "$tmpDir" || ! -d "$tmpDir" ]]; then
   exit 1
 fi
 
-function cleanup {      
+function cleanup {
   rm -rf "$tmpDir"
 }
 
@@ -36,11 +47,16 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
   grep browser_download |\
   grep $opsys |\
   cut -d '"' -f 4 |\
-  grep /kustomize/v |\
+  grep /kustomize/v$version |\
   sort | tail -n 1 |\
   xargs curl -s -O -L
 
-tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
+if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
+    tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
+else
+    echo "Error: kustomize binary with the version $version does not exist!"
+    exit 1
+fi
 
 cp ./kustomize $where
 
