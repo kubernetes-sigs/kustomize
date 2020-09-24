@@ -185,8 +185,8 @@ func (c *Filter) getCommand() (string, []string) {
 }
 
 // NewContainer returns a new container filter
-func NewContainer(spec runtimeutil.ContainerSpec, uidgid string) (Filter, error) {
+func NewContainer(spec runtimeutil.ContainerSpec, uidgid string) Filter {
 	f := Filter{ContainerSpec: spec, UIDGID: uidgid}
 
-	return f, nil
+	return f
 }
