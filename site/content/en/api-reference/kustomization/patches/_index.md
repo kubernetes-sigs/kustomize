@@ -151,6 +151,6 @@ spec:
   replicas: 5
   template:
     containers:
-    - image: registry/conatiner:1.0.0
+    - image: registry/container:1.0.0
       name: the-container
 ```
