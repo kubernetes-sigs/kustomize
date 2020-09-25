@@ -139,11 +139,12 @@ func (p *PatchTransformerPlugin) applySMPatch(resource, patch *resource.Resource
 	if err != nil {
 		return err
 	}
-	n := resource.GetName()
+	n, ns := resource.GetName(), resource.GetNamespace()
 	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
 	resource.SetName(n)
+	resource.SetNamespace(ns)
 	return err
 }
 
