@@ -19,21 +19,6 @@ const (
 
 var functionAnnotationKeys = []string{FunctionAnnotationKey, oldFunctionAnnotationKey}
 
-// ContainerUser is a type for username/uid used in container
-type ContainerUser string
-
-func (u *ContainerUser) String() string {
-	return string(*u)
-}
-
-func (u *ContainerUser) IsEmpty() bool {
-	return string(*u) == ""
-}
-
-const (
-	UserNobody ContainerUser = "nobody"
-)
-
 // ContainerNetworkName is a type for network name used in container
 type ContainerNetworkName string
 
@@ -170,9 +155,6 @@ type ContainerSpec struct {
 
 	// Mounts are the storage or directories to mount into the container
 	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
-
-	// User is the username/uid that application runs as in continer
-	User ContainerUser `json:"user,omitempty" yaml:"user,omitempty"`
 
 	// Env is a slice of env string that will be exposed to container
 	Env []string `json:"envs,omitempty" yaml:"envs,omitempty"`
