@@ -124,6 +124,8 @@ type Filter struct {
 	runtimeutil.ContainerSpec `json:",inline" yaml:",inline"`
 
 	Exec runtimeexec.Filter
+
+	UIDGID string
 }
 
 func (c Filter) String() string {
@@ -167,7 +169,7 @@ func (c *Filter) getCommand() (string, []string) {
 		"--network", string(network),
 
 		// added security options
-		"--user", c.User.String(),
+		"--user", c.UIDGID,
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 		// note: don't make fs readonly because things like heredoc rely on writing tmp files
 	}
@@ -183,12 +185,8 @@ func (c *Filter) getCommand() (string, []string) {
 }
 
 // NewContainer returns a new container filter
-func NewContainer(spec runtimeutil.ContainerSpec) Filter {
-	f := Filter{ContainerSpec: spec}
-	// default user is nobody
-	if f.ContainerSpec.User.IsEmpty() {
-		f.ContainerSpec.User = runtimeutil.UserNobody
-	}
+func NewContainer(spec runtimeutil.ContainerSpec, uidgid string) Filter {
+	f := Filter{ContainerSpec: spec, UIDGID: uidgid}
 
 	return f
 }
