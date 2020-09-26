@@ -4,12 +4,15 @@
 package execplugin_test
 
 import (
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
@@ -87,5 +90,34 @@ metadata:
 		p.Args()[4] != "s/$BAR/bar baz/g" ||
 		p.Args()[5] != "\\ \\ \\ " {
 		t.Fatalf("unexpected arg array: %#v", p.Args())
+	}
+}
+
+func TestExecPlugin_ErrIfNotExecutable(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skipf("always returns nil on Windows")
+	}
+
+	srcRoot, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Test unexecutable plugin
+	unexecutablePlugin := filepath.Join(
+		srcRoot, "builtin", "", "secretgenerator", "SecretGenerator.so")
+	p := NewExecPlugin(unexecutablePlugin)
+	err = p.ErrIfNotExecutable()
+	if err == nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	// Test executable plugin
+	executablePlugin := filepath.Join(
+		srcRoot, "someteam.example.com", "v1", "bashedconfigmap", "BashedConfigMap")
+	p = NewExecPlugin(executablePlugin)
+	err = p.ErrIfNotExecutable()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
 	}
 }
