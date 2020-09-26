@@ -88,12 +88,20 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 
 func filterReferralCandidates(
 	referrer *resource.Resource,
-	matches []*resource.Resource) []*resource.Resource {
+	matches []*resource.Resource,
+	target resid.Gvk,
+) []*resource.Resource {
 	var ret []*resource.Resource
 	for _, m := range matches {
-		if referrer.PrefixesSuffixesEquals(m) {
-			ret = append(ret, m)
+		// If target kind is not ServiceAccount, we shouldn't consider condidates which
+		// doesn't have same namespace.
+		if target.Kind != "ServiceAccount" && m.GetNamespace() != referrer.GetNamespace() {
+			continue
 		}
+		if !referrer.PrefixesSuffixesEquals(m) {
+			continue
+		}
+		ret = append(ret, m)
 	}
 	return ret
 }
@@ -118,7 +126,7 @@ func selectReferral(
 			// If there's more than one match,
 			// filter the matches by prefix and suffix
 			if len(matches) > 1 {
-				filteredMatches := filterReferralCandidates(referrer, matches)
+				filteredMatches := filterReferralCandidates(referrer, matches, target)
 				if len(filteredMatches) > 1 {
 					return "", "", fmt.Errorf(
 						"multiple matches for %s:\n  %v",
