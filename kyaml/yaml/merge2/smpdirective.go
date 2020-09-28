@@ -42,9 +42,31 @@ func determineSmpDirective(patch *yaml.RNode) (smpDirective, error) {
 	}
 }
 
-// TODO: what should this do?
-func determineSequenceNodePatchStrategy(_ *yaml.RNode) (smpDirective, error) {
-	return smpMerge, nil
+func determineSequenceNodePatchStrategy(patch *yaml.RNode) (smpDirective, error) {
+	// get the $patch element
+	node, err := patch.Pipe(yaml.GetElementByKey(strategicMergePatchDirectiveKey))
+	// if there are more than 1 key/value pair in the map, then this $patch
+	// is not for the sequence
+	if err != nil || node == nil || node.YNode() == nil || len(node.Content()) > 2 {
+		return smpMerge, nil
+	}
+	// get the value
+	value, err := node.Pipe(yaml.Get(strategicMergePatchDirectiveKey))
+	if err != nil || value == nil || value.YNode() == nil {
+		return smpMerge, nil
+	}
+	v := value.YNode().Value
+	if v == smpDelete.String() {
+		return smpDelete, elideSequencePatchDirective(patch, v)
+	}
+	if v == smpReplace.String() {
+		return smpReplace, elideSequencePatchDirective(patch, v)
+	}
+	if v == smpMerge.String() {
+		return smpMerge, elideSequencePatchDirective(patch, v)
+	}
+	return smpUnknown, fmt.Errorf(
+		"unknown patch strategy '%s'", v)
 }
 
 func determineMappingNodePatchStrategy(patch *yaml.RNode) (smpDirective, error) {
@@ -54,18 +76,26 @@ func determineMappingNodePatchStrategy(patch *yaml.RNode) (smpDirective, error) 
 	}
 	v := node.YNode().Value
 	if v == smpDelete.String() {
-		return smpDelete, elidePatchDirective(patch)
+		return smpDelete, elideMappingPatchDirective(patch)
 	}
 	if v == smpReplace.String() {
-		return smpReplace, elidePatchDirective(patch)
+		return smpReplace, elideMappingPatchDirective(patch)
 	}
 	if v == smpMerge.String() {
-		return smpMerge, elidePatchDirective(patch)
+		return smpMerge, elideMappingPatchDirective(patch)
 	}
 	return smpUnknown, fmt.Errorf(
 		"unknown patch strategy '%s'", v)
 }
 
-func elidePatchDirective(patch *yaml.RNode) error {
+func elideMappingPatchDirective(patch *yaml.RNode) error {
 	return patch.PipeE(yaml.Clear(strategicMergePatchDirectiveKey))
+}
+
+func elideSequencePatchDirective(patch *yaml.RNode, value string) error {
+	return patch.PipeE(yaml.ElementSetter{
+		Element: nil,
+		Key:     strategicMergePatchDirectiveKey,
+		Value:   value,
+	})
 }

@@ -142,6 +142,109 @@ spec:
       - name: foo3
 `,
 	},
+	{description: `merge k8s deployment containers -- $patch directive`,
+		source: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+          - name: foo2
+          - name: foo3
+          - $patch: merge
+`,
+		dest: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo4
+          - name: foo5
+`,
+		expected: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+          - name: foo2
+          - name: foo3
+          - name: foo4
+          - name: foo5
+`,
+	},
+	{description: `replace k8s deployment containers -- $patch directive`,
+		source: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+          - name: foo2
+          - name: foo3
+          - $patch: replace
+`,
+		dest: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo4
+          - name: foo5
+`,
+		expected: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+          - name: foo2
+          - name: foo3
+`,
+	},
+	{description: `remove k8s deployment containers -- $patch directive`,
+		source: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+          - name: foo2
+          - name: foo3
+          - $patch: delete
+`,
+		dest: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo4
+          - name: foo5
+`,
+		expected: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec: {}
+`,
+	},
 
 	{description: `replace List -- different value in dest`,
 		source: `
