@@ -57,6 +57,47 @@ func TestAppend(t *testing.T) {
 	assert.Nil(t, rn)
 }
 
+func TestGetElementByKey(t *testing.T) {
+	node, err := Parse(`
+- b: c
+- i
+- d: e
+- f: g
+- f: h
+`)
+	assert.NoError(t, err)
+
+	rn, err := node.Pipe(GetElementByKey("b"))
+	assert.NoError(t, err)
+	assert.Equal(t, "b: c\n", assertNoErrorString(t)(rn.String()))
+
+	rn, err = node.Pipe(GetElementByKey("f"))
+	assert.NoError(t, err)
+	assert.Equal(t, "f: g\n", assertNoErrorString(t)(rn.String()))
+}
+
+func TestElementMatcherWithNoValue(t *testing.T) {
+	node, err := Parse(`
+- a: c
+- b: ""
+`)
+	assert.NoError(t, err)
+
+	rn, err := node.Pipe(ElementMatcher{FieldName: "b"})
+	assert.NoError(t, err)
+	assert.Equal(t, "b: \"\"\n", assertNoErrorString(t)(rn.String()))
+
+	rn, err = node.Pipe(ElementMatcher{FieldName: "a"})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+
+	rn, err = node.Pipe(ElementMatcher{FieldName: "a", MatchAnyValue: true})
+	assert.NoError(t, err)
+	assert.Equal(t, "a: c\n", assertNoErrorString(t)(rn.String()))
+
+	_, err = node.Pipe(ElementMatcher{FieldName: "a", FieldValue: "c", MatchAnyValue: true})
+	assert.Errorf(t, err, "FieldValue must be empty when NoValue is set to true")
+}
 func TestClearField_Fn(t *testing.T) {
 	node, err := Parse(NodeSampleData)
 	assert.NoError(t, err)
