@@ -36,8 +36,12 @@ type Walker struct {
 	// VisitKeysAsScalars if true will call VisitScalar on map entry keys,
 	// providing nil as the OpenAPI schema.
 	VisitKeysAsScalars bool
+
+	// MergeOptions is a struct to store options for merge
+	MergeOptions yaml.MergeOptions
 }
 
+// Kind returns the kind of the first non-null node in Sources.
 func (l Walker) Kind() yaml.Kind {
 	for _, s := range l.Sources {
 		if !yaml.IsMissingOrNull(s) {
@@ -47,7 +51,8 @@ func (l Walker) Kind() yaml.Kind {
 	return 0
 }
 
-// GrepFilter implements yaml.GrepFilter
+// Walk will recursively traverse every item in the Sources and perform corresponding
+// actions on them
 func (l Walker) Walk() (*yaml.RNode, error) {
 	l.Schema = l.GetSchema()
 
@@ -62,6 +67,8 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.SequenceNode, l.Sources...); err != nil {
 			return nil, err
 		}
+		// AssociativeSequence means the items in the sequence are associative. They can be merged
+		// according to merge key.
 		if schema.IsAssociative(l.Schema, l.Sources, l.InferAssociativeLists) {
 			return l.walkAssociativeSequence()
 		}
@@ -129,6 +136,8 @@ const (
 	UpdatedIndex
 )
 
+// Sources are a list of RNodes. First item is the dest node, followed by
+// multiple source nodes.
 type Sources []*yaml.RNode
 
 // Dest returns the destination node
@@ -174,30 +183,4 @@ func (s Sources) setDestNode(node *yaml.RNode, err error) (*yaml.RNode, error) {
 	}
 	s[0] = node
 	return node, nil
-}
-
-type FieldSources []*yaml.MapNode
-
-// Dest returns the destination node
-func (s FieldSources) Dest() *yaml.MapNode {
-	if len(s) <= DestIndex {
-		return nil
-	}
-	return s[DestIndex]
-}
-
-// Origin returns the origin node
-func (s FieldSources) Origin() *yaml.MapNode {
-	if len(s) <= OriginIndex {
-		return nil
-	}
-	return s[OriginIndex]
-}
-
-// Updated returns the updated node
-func (s FieldSources) Updated() *yaml.MapNode {
-	if len(s) <= UpdatedIndex {
-		return nil
-	}
-	return s[UpdatedIndex]
 }

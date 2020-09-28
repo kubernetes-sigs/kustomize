@@ -321,13 +321,13 @@ spec:
         old-label: old-value
     spec:
       containers:
-      - image: nginx
-        name: nginx
       - args:
         - proxy
         - sidecar
         image: docker.io/istio/proxyv2
         name: istio-proxy
+      - image: nginx
+        name: nginx
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -747,10 +747,7 @@ spec:
         name: test-deployment
         ports:
         - containerPort: 8080
-          name: take-over-the-world
-          protocol: TCP
-        - containerPort: 8080
-          name: take-over-the-world
+          name: disappearing-act
           protocol: TCP
 `)
 }

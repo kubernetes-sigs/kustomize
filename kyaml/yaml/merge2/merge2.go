@@ -12,12 +12,16 @@ import (
 )
 
 // Merge merges fields from src into dest.
-func Merge(src, dest *yaml.RNode) (*yaml.RNode, error) {
-	return walk.Walker{Sources: []*yaml.RNode{dest, src}, Visitor: Merger{}}.Walk()
+func Merge(src, dest *yaml.RNode, mergeOptions yaml.MergeOptions) (*yaml.RNode, error) {
+	return walk.Walker{
+		Sources:      []*yaml.RNode{dest, src},
+		Visitor:      Merger{},
+		MergeOptions: mergeOptions,
+	}.Walk()
 }
 
 // Merge parses the arguments, and merges fields from srcStr into destStr.
-func MergeStrings(srcStr, destStr string, infer bool) (string, error) {
+func MergeStrings(srcStr, destStr string, infer bool, mergeOptions yaml.MergeOptions) (string, error) {
 	src, err := yaml.Parse(srcStr)
 	if err != nil {
 		return "", err
@@ -31,6 +35,7 @@ func MergeStrings(srcStr, destStr string, infer bool) (string, error) {
 		Sources:               []*yaml.RNode{dest, src},
 		Visitor:               Merger{},
 		InferAssociativeLists: infer,
+		MergeOptions:          mergeOptions,
 	}.Walk()
 	if err != nil {
 		return "", err

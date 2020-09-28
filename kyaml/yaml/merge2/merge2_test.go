@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 	. "sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 )
 
@@ -20,7 +21,7 @@ func TestMerge(t *testing.T) {
 		for j := range testCases[i] {
 			tc := testCases[i][j]
 			t.Run(tc.description, func(t *testing.T) {
-				actual, err := MergeStrings(tc.source, tc.dest, tc.infer)
+				actual, err := MergeStrings(tc.source, tc.dest, tc.infer, tc.mergeOptions)
 				if !assert.NoError(t, err, tc.description) {
 					t.FailNow()
 				}
@@ -43,9 +44,10 @@ func TestMerge(t *testing.T) {
 }
 
 type testCase struct {
-	description string
-	source      string
-	dest        string
-	expected    string
-	infer       bool
+	description  string
+	source       string
+	dest         string
+	expected     string
+	infer        bool
+	mergeOptions yaml.MergeOptions
 }

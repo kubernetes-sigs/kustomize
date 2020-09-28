@@ -18,7 +18,12 @@ var _ kio.Filter = Filter{}
 func (pf Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	var result []*yaml.RNode
 	for i := range nodes {
-		r, err := merge2.Merge(pf.Patch, nodes[i])
+		r, err := merge2.Merge(
+			pf.Patch, nodes[i],
+			yaml.MergeOptions{
+				ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+			},
+		)
 		if err != nil {
 			return nil, err
 		}

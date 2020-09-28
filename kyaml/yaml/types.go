@@ -247,3 +247,18 @@ func String(node *yaml.Node, opts ...string) (string, error) {
 	}
 	return val, errors.Wrap(err)
 }
+
+// MergeOptionsListIncreaseDirection is the type of list growth in merge
+type MergeOptionsListIncreaseDirection int
+
+const (
+	MergeOptionsListAppend MergeOptionsListIncreaseDirection = iota
+	MergeOptionsListPrepend
+)
+
+// MergeOptions is a struct which contains the options for merge
+type MergeOptions struct {
+	// ListIncreaseDirection indicates should merge function prepend the items from
+	// source list to destination or append.
+	ListIncreaseDirection MergeOptionsListIncreaseDirection
+}

@@ -9,23 +9,23 @@ operation/target/value tuples in a particular
 syntax).
 
 A kustomize file lets one specify many
-patches.  Each patch must be associated with
+patches. Each patch must be associated with
 a _target selector_:
 
 [strategic merge patch]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
-[JSON patch]: jsonpatch.md
+[json patch]: jsonpatch.md
 
 > ```yaml
 > patches:
-> - path: <relative path to file containing patch>
->   target:
->     group: <optional group>
->     version: <optional version>
->     kind: <optional kind>
->     name: <optional name>
->     namespace: <optional namespace>
->     labelSelector: <optional label selector>
->     annotationSelector: <optional annotation selector>
+>   - path: <relative path to file containing patch>
+>     target:
+>       group: <optional group>
+>       version: <optional version>
+>       kind: <optional kind>
+>       name: <optional name>
+>       namespace: <optional namespace>
+>       labelSelector: <optional label selector>
+>       annotationSelector: <optional annotation selector>
 > ```
 
 E.g. select resources with _name_ matching `foo*`:
@@ -61,10 +61,10 @@ The example below shows how to inject a
 sidecar container for multiple Deployment
 resources.
 
-
 Make a place to work:
 
 <!-- @demoHome @testAgainstLatestRelease -->
+
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -72,6 +72,7 @@ DEMO_HOME=$(mktemp -d)
 Make a file describing two Deployments:
 
 <!-- @createDeployments @testAgainstLatestRelease -->
+
 ```
 cat <<EOF >$DEMO_HOME/deployments.yaml
 apiVersion: apps/v1
@@ -111,6 +112,7 @@ Declare a [strategic merge patch] file
 to inject a sidecar container:
 
 <!-- @definePatch @testAgainstLatestRelease -->
+
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -134,6 +136,7 @@ that specifies both a `patches` and `resources`
 entry:
 
 <!-- @createKustomization @testAgainstLatestRelease -->
+
 ```
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
@@ -149,6 +152,7 @@ EOF
 The expected result is:
 
 <!-- @definedExpectedOutput @testAgainstLatestRelease -->
+
 ```
 cat <<EOF >$DEMO_HOME/out_expected.yaml
 apiVersion: apps/v1
@@ -163,15 +167,15 @@ spec:
     spec:
       containers:
       - args:
-        - one
-        - two
-        image: nginx
-        name: nginx
-      - args:
         - proxy
         - sidecar
         image: docker.io/istio/proxyv2
         name: istio-proxy
+      - args:
+        - one
+        - two
+        image: nginx
+        name: nginx
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -184,18 +188,20 @@ spec:
         key: value
     spec:
       containers:
-      - image: busybox
-        name: busybox
       - args:
         - proxy
         - sidecar
         image: docker.io/istio/proxyv2
         name: istio-proxy
+      - image: busybox
+        name: busybox
 EOF
 ```
 
 Run the build:
+
 <!-- @runIt @testAgainstLatestRelease -->
+
 ```
 kustomize build $DEMO_HOME >$DEMO_HOME/out_actual.yaml
 ```
@@ -203,6 +209,7 @@ kustomize build $DEMO_HOME >$DEMO_HOME/out_actual.yaml
 Confirm expectations:
 
 <!-- @diffShouldExitZero @testAgainstLatestRelease -->
+
 ```
 diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
 ```

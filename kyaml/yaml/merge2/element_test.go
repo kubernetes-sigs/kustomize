@@ -3,6 +3,10 @@
 
 package merge2_test
 
+import (
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
 var elementTestCases = []testCase{
 	{description: `merge Element -- keep field in dest`,
 		source: `
@@ -37,6 +41,9 @@ spec:
         image: foo:v1
         command: ['run.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Element -- add field to dest`,
@@ -72,6 +79,9 @@ spec:
         image: foo:v1
         command: ['run.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Element -- add list, empty in dest`,
@@ -105,6 +115,9 @@ spec:
         image: foo:v1
         command: ['run.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Element -- add list, missing from dest`,
@@ -134,6 +147,9 @@ spec:
         image: foo:v1
         command: ['run.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Element -- add Element first`,
@@ -173,6 +189,9 @@ spec:
         image: bar:v1
         command: ['run2.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Element -- add Element second`,
@@ -212,7 +231,94 @@ spec:
         image: bar:v1
         command: ['run2.sh']
 `,
-	},
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+  },
+  
+  {description: `merge Element -- add Element third`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: bar
+        image: bar:v1
+        command: ['run2.sh']
+      - name: foo
+        image: foo:v1
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:v0
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: bar
+        image: bar:v1
+        command: ['run2.sh']
+      - name: foo
+        image: foo:v1
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+  },
+  
+  {description: `merge Element -- add Element fourth`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:v1
+      - name: bar
+        image: bar:v1
+        command: ['run2.sh']
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:v0
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: foo:v1
+      - name: bar
+        image: bar:v1
+        command: ['run2.sh']
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+  },
 
 	//
 	// Test Case
@@ -248,6 +354,9 @@ spec:
         image: bar:v1
         command: ['run2.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -290,6 +399,9 @@ spec:
         image: bar:v1
         command: ['run2.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -330,6 +442,9 @@ spec:
         image: bar:v1
         command: ['run2.sh']
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -364,6 +479,9 @@ spec:
   template:
     spec: {}
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -393,6 +511,9 @@ containers:
   command: ['run2.sh']
 `,
 		infer: true,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -431,6 +552,9 @@ spec:
         command: ['run2.sh']
 `,
 		infer: false,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -460,6 +584,9 @@ containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"t
   command: ['run2.sh']
 `,
 		infer: false,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge_primitive_finalizers`,
@@ -488,6 +615,9 @@ metadata:
   - c
   - a
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge_primitive_items`,
@@ -513,5 +643,8 @@ items:
 - c
 - a
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 }

@@ -386,11 +386,11 @@ spec:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
       - configMap:
-          name: staging-team-foo-configmap-in-base-hc6g9dk6g9
-        name: configmap-in-base
-      - configMap:
           name: staging-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
+      - configMap:
+          name: staging-team-foo-configmap-in-base-hc6g9dk6g9
+        name: configmap-in-base
 ---
 apiVersion: v1
 kind: Service
