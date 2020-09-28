@@ -57,6 +57,16 @@ type ElementSetter struct {
 	Value string `yaml:"value,omitempty"`
 }
 
+// isMappingNode returns whether node is a mapping node
+func (e ElementSetter) isMappingNode(node *RNode) bool {
+	return ErrorIfInvalid(node, yaml.MappingNode) == nil
+}
+
+// isMappingSetter returns is this setter intended to set a mapping node
+func (e ElementSetter) isMappingSetter() bool {
+	return e.Key != "" && e.Value != ""
+}
+
 func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	if err := ErrorIfInvalid(rn, SequenceNode); err != nil {
 		return nil, err
@@ -71,6 +81,11 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 
 		// empty elements are not valid -- they at least need an associative key
 		if IsMissingOrNull(newNode) || IsEmptyMap(newNode) {
+			continue
+		}
+		// keep non-mapping node in the Content when we want to match a mapping.
+		if !e.isMappingNode(newNode) && e.isMappingSetter() {
+			newContent = append(newContent, elem)
 			continue
 		}
 
@@ -165,8 +180,13 @@ func MatchElement(field, value string) ElementMatcher {
 	return ElementMatcher{FieldName: field, FieldValue: value}
 }
 
+func GetElementByKey(key string) ElementMatcher {
+	return ElementMatcher{FieldName: key, MatchAnyValue: true}
+}
+
 // ElementMatcher returns the first element from a Sequence matching the
-// specified field's value.
+// specified field's value. If there's no match, and no configuration error,
+// the matcher returns nil, nil.
 type ElementMatcher struct {
 	Kind string `yaml:"kind,omitempty"`
 
@@ -180,11 +200,19 @@ type ElementMatcher struct {
 
 	// Create will create the Element if it is not found
 	Create *RNode `yaml:"create,omitempty"`
+
+	// MatchAnyValue indicates that matcher should only consider the key and ignore
+	// the actual value in the list. FieldValue must be empty when NoValue is
+	// set to true.
+	MatchAnyValue bool `yaml:"noValue,omitempty"`
 }
 
 func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, err
+	}
+	if e.MatchAnyValue && e.FieldValue != "" {
+		return nil, fmt.Errorf("FieldValue must be empty when NoValue is set to true")
 	}
 
 	// SequenceNode Content is a slice of ScalarNodes.  Each ScalarNode has a
@@ -207,7 +235,18 @@ func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
 		// cast the entry to a RNode so we can operate on it
 		elem := NewRNode(rn.Content()[i])
 
-		field, err := elem.Pipe(MatchField(e.FieldName, e.FieldValue))
+		// only check mapping node
+		if err := ErrorIfInvalid(elem, yaml.MappingNode); err != nil {
+			continue
+		}
+
+		var field *RNode
+		var err error
+		if e.MatchAnyValue {
+			field, err = elem.Pipe(Get(e.FieldName))
+		} else {
+			field, err = elem.Pipe(MatchField(e.FieldName, e.FieldValue))
+		}
 		if IsFoundOrError(field, err) {
 			return elem, err
 		}
