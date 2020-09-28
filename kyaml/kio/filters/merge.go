@@ -67,7 +67,9 @@ func (c MergeFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 				// first resources, don't merge it
 				merged = resources[i]
 			} else {
-				merged, err = merge2.Merge(patch, merged)
+				merged, err = merge2.Merge(patch, merged, yaml.MergeOptions{
+					ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+				})
 				if err != nil {
 					return nil, err
 				}

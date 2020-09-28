@@ -67,10 +67,10 @@ spec:
   template:
     spec:
       containers:
+      - name: foo0
       - name: foo1
       - name: foo2
       - name: foo3
-      - name: foo0
 `,
 		},
 		"volumes patch": {
@@ -107,10 +107,10 @@ spec:
   template:
     spec:
       volumes:
+      - name: foo0
       - name: foo1
       - name: foo2
       - name: foo3
-      - name: foo0
 `,
 		},
 		"nested patch": {

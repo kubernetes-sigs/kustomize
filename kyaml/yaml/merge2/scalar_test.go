@@ -3,6 +3,10 @@
 
 package merge2_test
 
+import (
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
 var scalarTestCases = []testCase{
 	{description: `replace scalar -- different value in dest`,
 		source: `
@@ -17,6 +21,9 @@ field: value0
 kind: Deployment
 field: value1
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `replace scalar -- missing from dest`,
@@ -31,6 +38,9 @@ kind: Deployment
 kind: Deployment
 field: value1
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -49,6 +59,9 @@ field: value1
 kind: Deployment
 field: value1
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -66,6 +79,9 @@ field: value1
 kind: Deployment
 field: value1
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -83,6 +99,9 @@ field: value1
 		expected: `
 kind: Deployment
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -100,6 +119,9 @@ field: value1
 		expected: `
 kind: Deployment
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -116,6 +138,9 @@ kind: Deployment
 		expected: `
 kind: Deployment
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -133,5 +158,8 @@ kind: Deployment
 kind: Deployment
 field: {}
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 }

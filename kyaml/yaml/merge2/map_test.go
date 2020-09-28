@@ -3,6 +3,10 @@
 
 package merge2_test
 
+import (
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
 var mapTestCases = []testCase{
 
 	{description: `strategic merge patch delete 1`,
@@ -16,6 +20,9 @@ spec:
   foo: bar1
 `,
 		expected: ``,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `strategic merge patch delete 2`,
@@ -33,6 +40,9 @@ spec:
 		expected: `
 kind: Deployment
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `strategic merge patch delete 3`,
@@ -61,6 +71,9 @@ spec:
   metadata:
     name: wut
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `strategic merge patch delete 4`,
@@ -89,6 +102,9 @@ spec:
 `,
 		expected: `
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `strategic merge patch replace 1`,
@@ -111,6 +127,9 @@ spec:
   metal: heavy
   veggie: carrot
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Map -- update field in dest`,
@@ -131,6 +150,9 @@ spec:
   foo: bar1
   baz: buz
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Map -- add field to dest`,
@@ -151,6 +173,9 @@ spec:
   foo: bar1
   baz: buz
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Map -- add list, empty in dest`,
@@ -170,6 +195,9 @@ spec:
   baz: buz
   foo: bar1
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Map -- add list, missing from dest`,
@@ -188,6 +216,9 @@ spec:
   foo: bar1
   baz: buz
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Map -- add Map first`,
@@ -208,6 +239,9 @@ spec:
   foo: bar1
   baz: buz
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	{description: `merge Map -- add Map second`,
@@ -228,6 +262,9 @@ spec:
   foo: bar1
   baz: buz
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -249,6 +286,9 @@ spec:
   foo: bar1
   baz: buz
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -272,6 +312,9 @@ spec:
   baz: buz
 items: {}
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 
 	//
@@ -291,5 +334,8 @@ spec:
 		expected: `
 kind: Deployment
 `,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
 	},
 }

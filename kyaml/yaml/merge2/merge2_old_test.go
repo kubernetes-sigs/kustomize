@@ -55,7 +55,9 @@ metadata:
     m: n1
 `)
 
-	result, err := Merge(src, dest)
+	result, err := Merge(src, dest, yaml.MergeOptions{
+		ListIncreaseDirection: yaml.MergeOptionsListAppend,
+	})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -114,7 +116,9 @@ metadata:
   annotations: null
 `)
 
-	result, err := Merge(src, dest)
+	result, err := Merge(src, dest, yaml.MergeOptions{
+		ListIncreaseDirection: yaml.MergeOptionsListAppend,
+	})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -174,7 +178,9 @@ metadata:
     m: n1
 `)
 
-	result, err := Merge(dest, src)
+	result, err := Merge(dest, src, yaml.MergeOptions{
+		ListIncreaseDirection: yaml.MergeOptionsListAppend,
+	})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -241,7 +247,9 @@ spec:
           value: "Another Env Not In The Dest"
 `)
 
-	result, err := Merge(src, dest)
+	result, err := Merge(src, dest, yaml.MergeOptions{
+		ListIncreaseDirection: yaml.MergeOptionsListAppend,
+	})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -305,7 +313,9 @@ spec:
         args: ['e', 'd', 'f']
 `)
 
-	result, err := Merge(src, dest)
+	result, err := Merge(src, dest, yaml.MergeOptions{
+		ListIncreaseDirection: yaml.MergeOptionsListAppend,
+	})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -365,7 +375,9 @@ a:
   b:
     # header comment
     c: d
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -385,7 +397,9 @@ a:
   b:
     c: d
     # footer comment
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -404,7 +418,9 @@ a:
 a:
   b:
     c: d # line comment
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -426,7 +442,9 @@ a:
   b:
     # replace comment
     c: d
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -447,7 +465,9 @@ a:
   b:
     c: d
     # replace comment
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -466,7 +486,9 @@ a:
 a:
   b:
     c: d # replace comment
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -484,7 +506,9 @@ a:
 a:
   b:
     c: d # replace comment
-`, true)
+`, true, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
 	if !assert.NoError(t, err) {
 		return
 	}

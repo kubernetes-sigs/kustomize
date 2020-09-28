@@ -68,6 +68,7 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 			Visitor:               l,
 			Schema:                s,
 			Sources:               fv,
+			MergeOptions:          l.MergeOptions,
 			Path:                  append(l.Path, key)}.Walk()
 		if err != nil {
 			return nil, err

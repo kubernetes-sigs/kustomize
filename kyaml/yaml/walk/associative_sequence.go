@@ -12,92 +12,70 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
-	// may require initializing the dest node
-	dest, err := l.Sources.setDestNode(l.VisitList(l.Sources, l.Schema, AssociativeList))
-	if dest == nil || err != nil {
-		return nil, err
-	}
-
-	var key, strategy string
-	if l.Schema != nil {
-		strategy, key = l.Schema.PatchStrategyAndKey()
-	}
-	if strategy == "" && key == "" { // neither strategy nor not present in the schema -- infer the key
-		// find the list of elements we need to recursively walk
-		key, err = l.elementKey()
+// appendListNode will append the nodes from src to dst and return dst.
+// src and dst should be both sequence node. key is used to call ElementSetter.
+// ElementSetter will use key-value pair to find and set the element in sequence
+// node.
+func appendListNode(dst, src *yaml.RNode, key string) (*yaml.RNode, error) {
+	for _, elem := range src.Content() {
+		// If key is empty, we know this is a scalar value and we can directly set the
+		// node
+		if key == "" {
+			_, err := dst.Pipe(yaml.ElementSetter{Element: elem, Key: key, Value: elem.Value})
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		// we need to get the value for key so that we can find the element to set
+		// in sequence.
+		tmpNode := yaml.NewRNode(elem)
+		valueNode, err := tmpNode.Pipe(yaml.Get(key))
+		if err != nil {
+			return nil, err
+		}
+		if valueNode.IsNil() {
+			// no key found, directly append to dst
+			err = dst.PipeE(yaml.Append(elem))
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		v := valueNode.YNode().Value
+		// We use the key and value from elem to find the corresponding element in dst.
+		// Then we will use ElementSetter to replace the element with elem. If we cannot
+		// find the item, the element will be appended.
+		_, err = dst.Pipe(yaml.ElementSetter{Element: elem, Key: key, Value: v})
 		if err != nil {
 			return nil, err
 		}
 	}
+	return dst, nil
+}
 
-	// non-primitive associative list -- merge the elements
-	if key != "" {
-		values := l.elementValues(key)
-
-		// recursively set the elements in the list
-		var s *openapi.ResourceSchema
-		if l.Schema != nil {
-			s = l.Schema.Elements()
-		}
-		for _, value := range values {
-			val, err := Walker{
-				VisitKeysAsScalars:    l.VisitKeysAsScalars,
-				InferAssociativeLists: l.InferAssociativeLists,
-				Visitor:               l,
-				Schema:                s,
-				Sources:               l.elementValue(key, value),
-			}.Walk()
-			if err != nil {
-				return nil, err
-			}
-			if yaml.IsMissingOrNull(val) || yaml.IsEmptyMap(val) {
-				_, err = dest.Pipe(yaml.ElementSetter{Key: key, Value: value})
-				if err != nil {
-					return nil, err
-				}
-				continue
-			}
-
-			if val.Field(key) == nil {
-				// make sure the key is set on the field
-				_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(value)))
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			// this handles empty and non-empty values
-			_, err = dest.Pipe(yaml.ElementSetter{Element: val.YNode(), Key: key, Value: value})
-			if err != nil {
-				return nil, err
-			}
-		}
-		// field is empty
-		if yaml.IsMissingOrNull(dest) {
-			return nil, nil
-		}
-		return dest, nil
-	}
-
-	// primitive associative list -- merge the values
-	values := l.elementPrimitiveValues()
-	var s *openapi.ResourceSchema
+// setAssociativeSequenceElements recursively set the elements in the list
+func (l *Walker) setAssociativeSequenceElements(values []string, key string, dest *yaml.RNode) (*yaml.RNode, error) {
+	// itemsToBeAdded contains the items that will be added to dest
+	itemsToBeAdded := yaml.NewListRNode()
+	var schema *openapi.ResourceSchema
 	if l.Schema != nil {
-		s = l.Schema.Elements()
+		schema = l.Schema.Elements()
 	}
 	for _, value := range values {
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
 			Visitor:               l,
-			Schema:                s,
-			Sources:               l.elementValue(key /*empty key implies primitive*/, value),
+			Schema:                schema,
+			Sources:               l.elementValue(key, value),
+			MergeOptions:          l.MergeOptions,
 		}.Walk()
 		if err != nil {
 			return nil, err
 		}
-		if yaml.IsMissingOrNull(val) {
+		// delete the node from **dest** if it's null or empty
+		if yaml.IsMissingOrNull(val) || yaml.IsEmptyMap(val) {
 			_, err = dest.Pipe(yaml.ElementSetter{Key: key, Value: value})
 			if err != nil {
 				return nil, err
@@ -113,18 +91,60 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 			}
 		}
 
-		// this handles empty and non-empty values
-		_, err = dest.Pipe(yaml.ElementSetter{Element: val.YNode(), Key: key, Value: value})
+		// Add the val to the sequence. val will replace the item in the sequence if
+		// there is an item that matches the key-value pair. Otherwise val will be appended
+		// the the sequence.
+		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{Element: val.YNode(), Key: key, Value: value})
+		if err != nil {
+			return nil, err
+		}
+	}
+	var err error
+	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+		// items from patches are needed to be prepended. so we append the
+		// dest to itemsToBeAdded
+		dest, err = appendListNode(itemsToBeAdded, dest, key)
+	} else {
+		// append the items
+		dest, err = appendListNode(dest, itemsToBeAdded, key)
+	}
+	if err != nil {
+		return nil, err
+	}
+	// sequence is empty
+	if yaml.IsMissingOrNull(dest) {
+		return nil, nil
+	}
+	return dest, nil
+}
+
+func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
+	// may require initializing the dest node
+	dest, err := l.Sources.setDestNode(l.VisitList(l.Sources, l.Schema, AssociativeList))
+	if dest == nil || err != nil {
+		return nil, err
+	}
+
+	// get the merge key from schema
+	var key, strategy string
+	if l.Schema != nil {
+		strategy, key = l.Schema.PatchStrategyAndKey()
+	}
+	if strategy == "" && key == "" { // neither strategy nor not present in the schema -- infer the key
+		// find the list of elements we need to recursively walk
+		key, err = l.elementKey()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// field is empty
-	if yaml.IsMissingOrNull(dest) {
-		return nil, nil
+	if key != "" {
+		// non-primitive associative list -- merge the elements
+		return l.setAssociativeSequenceElements(l.elementValues(key), key, dest)
 	}
-	return dest, nil
+
+	// primitive associative list -- merge the values
+	return l.setAssociativeSequenceElements(l.elementPrimitiveValues(), key, dest)
 }
 
 // elementKey returns the merge key to use for the associative list
@@ -154,17 +174,23 @@ func (l Walker) elementKey() (string, error) {
 // elements missing from earlier sources appear later.
 func (l Walker) elementValues(key string) []string {
 	// use slice to to keep elements in the original order
-	// dest node must be first
 	var returnValues []string
 	seen := sets.String{}
+	// if we are doing append, dest node should be the first.
+	// otherwise dest node should be the last.
+	beginIdx := 0
+	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+		beginIdx = 1
+	}
 	for i := range l.Sources {
-		if l.Sources[i] == nil {
+		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+		if src == nil {
 			continue
 		}
 
 		// add the value of the field for each element
 		// don't check error, we know this is a list node
-		values, _ := l.Sources[i].ElementValues(key)
+		values, _ := src.ElementValues(key)
 		for _, s := range values {
 			if seen.Has(s) {
 				continue
@@ -177,21 +203,25 @@ func (l Walker) elementValues(key string) []string {
 }
 
 // elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
-// TODO: figure out the right order -- currently the order is deterministic but may be improved
-// upon.
 func (l Walker) elementPrimitiveValues() []string {
 	// use slice to to keep elements in the original order
-	// dest node must be first
 	var returnValues []string
 	seen := sets.String{}
+	// if we are doing append, dest node should be the first.
+	// otherwise dest node should be the last.
+	beginIdx := 0
+	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+		beginIdx = 1
+	}
 	for i := range l.Sources {
-		if l.Sources[i] == nil {
+		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+		if src == nil {
 			continue
 		}
 
 		// add the value of the field for each element
 		// don't check error, we know this is a list node
-		for _, item := range l.Sources[i].YNode().Content {
+		for _, item := range src.YNode().Content {
 			if seen.Has(item.Value) {
 				continue
 			}
