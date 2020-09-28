@@ -143,8 +143,10 @@ func (p *PatchTransformerPlugin) applySMPatch(resource, patch *resource.Resource
 	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
-	resource.SetName(n)
-	resource.SetNamespace(ns)
+	if resource.GetName() != "" {
+		resource.SetName(n)
+		resource.SetNamespace(ns)
+	}
 	return err
 }
 
