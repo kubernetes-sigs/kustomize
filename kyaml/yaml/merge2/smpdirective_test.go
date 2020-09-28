@@ -26,6 +26,45 @@ func Test_determineSmpDirective(t *testing.T) {
 - one
 - two
 - three
+- $patch: merge
+`,
+			expected: smpMerge,
+			elided: `- one
+- two
+- three
+`,
+		},
+		"list replace": {
+			patch: `
+- one
+- two
+- three
+- $patch: replace
+`,
+			expected: smpReplace,
+			elided: `- one
+- two
+- three
+`,
+		},
+		"list delete": {
+			patch: `
+- one
+- two
+- three
+- $patch: delete
+`,
+			expected: smpDelete,
+			elided: `- one
+- two
+- three
+`,
+		},
+		"list default": {
+			patch: `
+- one
+- two
+- three
 `,
 			expected: smpMerge,
 			elided: `- one
