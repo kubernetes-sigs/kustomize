@@ -143,9 +143,15 @@ func (p *plugin) applySMPatch(resource, patch *resource.Resource) error {
 	if err != nil {
 		return err
 	}
-	return filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+	n, ns := resource.GetName(), resource.GetNamespace()
+	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
+	if len(resource.Map()) != 0 {
+		resource.SetName(n)
+		resource.SetNamespace(ns)
+	}
+	return err
 }
 
 // transformJson6902 applies the provided json6902 patch
