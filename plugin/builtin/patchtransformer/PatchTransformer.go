@@ -115,14 +115,14 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap, patch *resource.Resour
 				// Some unknown error, let it through.
 				return err
 			}
-			if len(res.Map()) != 0 {
+			if !res.IsEmpty() {
 				return errors.Wrapf(
 					err, "with unexpectedly non-empty object map of size %d",
 					len(res.Map()))
 			}
 			// Fall through to handle deleted object.
 		}
-		if len(res.Map()) == 0 {
+		if res.IsEmpty() {
 			// This means all fields have been removed from the object.
 			// This can happen if a patch required deletion of the
 			// entire resource (not just a part of it).  This means
@@ -147,7 +147,7 @@ func (p *plugin) applySMPatch(resource, patch *resource.Resource) error {
 	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
-	if len(resource.Map()) != 0 {
+	if !resource.IsEmpty() {
 		resource.SetName(n)
 		resource.SetNamespace(ns)
 	}
