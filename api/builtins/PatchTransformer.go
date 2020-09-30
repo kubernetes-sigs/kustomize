@@ -143,7 +143,7 @@ func (p *PatchTransformerPlugin) applySMPatch(resource, patch *resource.Resource
 	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
-	if resource.GetName() != "" {
+	if len(resource.Map()) != 0 {
 		resource.SetName(n)
 		resource.SetNamespace(ns)
 	}
