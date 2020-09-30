@@ -1969,3 +1969,70 @@ spec:
     server: kustomized-nfs-server-service.default.srv.cluster.local
 `)
 }
+
+func TestDeploymentAnnotations(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+  - name: testConfigMap
+    envs:
+      - test.properties
+
+vars:
+  - name: FOO
+    objref:
+      kind: ConfigMap
+      name: testConfigMap
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.foo
+
+commonAnnotations:
+  foo: $(FOO)
+
+resources:
+  - deployment.yaml
+`)
+
+	th.WriteF("/app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+spec:
+  template:
+    spec:
+      containers:
+        - name: test
+`)
+	th.WriteF("/app/test.properties", `foo=bar`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    foo: bar
+  name: test
+spec:
+  template:
+    metadata:
+      annotations:
+        foo: bar
+    spec:
+      containers:
+      - name: test
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations:
+    foo: bar
+  name: testConfigMap-798k5k7g9f
+`)
+}

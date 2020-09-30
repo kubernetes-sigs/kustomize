@@ -87,6 +87,9 @@ varReference:
 - path: spec/template/spec/volumes/nfs/server
   kind: Deployment
 
+- path: spec/template/metadata/annotations
+  kind: Deployment
+
 - path: spec/rules/host
   kind: Ingress
 
