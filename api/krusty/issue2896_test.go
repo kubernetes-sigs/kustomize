@@ -88,7 +88,7 @@ patches:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: example
+  name: example-test-api
 spec:
   template:
     spec:
