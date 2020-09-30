@@ -147,7 +147,7 @@ func (p *plugin) applySMPatch(resource, patch *resource.Resource) error {
 	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
 		Patch: node,
 	}, resource)
-	if resource.GetName() != "" {
+	if len(resource.Map()) != 0 {
 		resource.SetName(n)
 		resource.SetNamespace(ns)
 	}
