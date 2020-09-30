@@ -68,6 +68,10 @@ func (r *Resource) GetString(p string) (string, error) {
 	return r.kunStr.GetString(p)
 }
 
+func (r *Resource) IsEmpty() bool {
+	return len(r.kunStr.Map()) == 0
+}
+
 func (r *Resource) Map() map[string]interface{} {
 	return r.kunStr.Map()
 }

@@ -94,14 +94,14 @@ func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error 
 				// Some unknown error, let it through.
 				return err
 			}
-			if len(target.Map()) != 0 {
+			if !target.IsEmpty() {
 				return errors.Wrapf(
 					err, "with unexpectedly non-empty object map of size %d",
 					len(target.Map()))
 			}
 			// Fall through to handle deleted object.
 		}
-		if len(target.Map()) == 0 {
+		if target.IsEmpty() {
 			// This means all fields have been removed from the object.
 			// This can happen if a patch required deletion of the
 			// entire resource (not just a part of it).  This means
