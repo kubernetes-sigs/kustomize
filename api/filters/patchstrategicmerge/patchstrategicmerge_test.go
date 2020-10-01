@@ -144,6 +144,234 @@ spec:
     - def
 `,
 		},
+		"remove mapping - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+        $patch: delete   
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers: []
+`,
+		},
+		"replace mapping - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      $patch: replace
+      containers:
+      - name: new
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: new
+`,
+		},
+		"merge mapping - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test1
+        $patch: merge   
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test1
+`,
+		},
+		"remove list - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - whatever
+      - $patch: delete
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec: {}
+`,
+		},
+		"replace list - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: replace
+        image: replace
+      - $patch: replace   
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: replace
+        image: replace
+`,
+		},
+		"merge list - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test2
+        image: test2
+      - $patch: merge   
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+      - name: test2
+        image: test2
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
