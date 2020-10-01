@@ -61,7 +61,7 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 		return walk.ClearNode, nil
 	}
 
-	ps, err := determineMappingNodePatchStrategy(nodes.Origin())
+	ps, err := determineSmpDirective(nodes.Origin())
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +115,20 @@ func (m Merger) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind wa
 	if nodes.Origin().IsTaggedNull() {
 		return walk.ClearNode, nil
 	}
-	// Recursively Merge dest
-	return nodes.Dest(), nil
+
+	ps, err := determineSmpDirective(nodes.Origin())
+	if err != nil {
+		return nil, err
+	}
+
+	switch ps {
+	case smpDelete:
+		return walk.ClearNode, nil
+	case smpReplace:
+		return nodes.Origin(), nil
+	default:
+		return nodes.Dest(), nil
+	}
 }
 
 func (m Merger) SetStyle(sources walk.Sources) error {
