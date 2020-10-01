@@ -28,7 +28,6 @@ const (
 	ReplicaCountTransformer
 	SecretGenerator
 	ValueAddTransformer
-	ChartHomeFullPath
 	EnvUpsert
 	FullPath
 	Gomplate
@@ -48,9 +47,6 @@ var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
 
 func init() {
 	stringToBuiltinPluginTypeMap = makeStringToBuiltinPluginTypeMap()
-
-	TransformerFactories[ChartHomeFullPath] = builtins_qlik.NewChartHomeFullPathPlugin
-	stringToBuiltinPluginTypeMap["ChartHomeFullPath"] = ChartHomeFullPath
 
 	TransformerFactories[EnvUpsert] = builtins_qlik.NewEnvUpsertPlugin
 	stringToBuiltinPluginTypeMap["EnvUpsert"] = EnvUpsert

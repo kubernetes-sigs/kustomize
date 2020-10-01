@@ -1,15 +1,17 @@
 package builtins_qlik
 
 import (
+	"encoding/json"
 	"log"
 
+	"github.com/imdario/mergo"
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
-
-	"github.com/imdario/mergo"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -20,20 +22,11 @@ type HelmValuesPlugin struct {
 	ReleaseNamespace string                 `json:"releaseNamespace,omitempty" yaml:"releaseNamespace,omitempty"`
 	FieldSpecs       []types.FieldSpec      `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 	Values           map[string]interface{} `json:"values,omitempty" yaml:"values,omitempty"`
-	ValuesName       string
 	logger           *log.Logger
 }
 
 func (p *HelmValuesPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
 	return yaml.Unmarshal(c, p)
-}
-
-func (p *HelmValuesPlugin) mutateReleaseNameSpace(in interface{}) (interface{}, error) {
-	return p.ReleaseNamespace, nil
-}
-
-func (p *HelmValuesPlugin) mutateReleaseName(in interface{}) (interface{}, error) {
-	return p.ReleaseName, nil
 }
 
 func (p *HelmValuesPlugin) mutateValues(in interface{}) (interface{}, error) {
@@ -49,11 +42,7 @@ func (p *HelmValuesPlugin) mutateValues(in interface{}) (interface{}, error) {
 	}
 
 	// second merge in new values then output
-	if p.ValuesName != "" {
-		mergeFrom["root"] = p.Values[p.ValuesName]
-	} else {
-		mergeFrom["root"] = p.Values
-	}
+	mergeFrom["root"] = p.Values
 	err = mergeValues(&mergedData, mergeFrom, p.Overwrite)
 	if err != nil {
 		p.logger.Printf("error executing mergeValues(), error: %v\n", err)
@@ -66,58 +55,55 @@ func (p *HelmValuesPlugin) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
 		if isHelmChart(r) {
 			if applyResources(r, p.Chart) {
-				pathToField := []string{"values"}
-				err := transform.MutateField(
-					r.Map(),
-					pathToField,
-					true,
-					p.mutateValues)
-				if err != nil {
-					p.logger.Printf("error executing MutateField for chart: %v, pathToField: %v, error: %v\n", p.Chart, pathToField, err)
+				if err := filtersutil.ApplyToJSON(kio.FilterFunc(func(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+					return kio.FilterAll(kyaml.FilterFunc(func(rn *kyaml.RNode) (*kyaml.RNode, error) {
+						if valuesRn, err := rn.Pipe(kyaml.FieldMatcher{Name: "values"}); err != nil {
+							return nil, err
+						} else {
+							valuesRnMap := make(map[string]interface{})
+
+							if valuesRn != nil {
+								if jsonBytes, err := valuesRn.MarshalJSON(); err != nil {
+									return nil, err
+								} else if err := json.Unmarshal(jsonBytes, &valuesRnMap); err != nil {
+									return nil, err
+								}
+							} else {
+								valuesRn = &kyaml.RNode{}
+							}
+
+							if newValuesRnMap, err := p.mutateValues(valuesRnMap); err != nil {
+								return nil, err
+							} else if newJsonBytes, err := json.Marshal(newValuesRnMap); err != nil {
+								return nil, err
+							} else if err := valuesRn.UnmarshalJSON(newJsonBytes); err != nil {
+								return nil, err
+							} else if err := rn.PipeE(kyaml.FieldSetter{Name: "values", Value: valuesRn}); err != nil {
+								return nil, err
+							}
+						}
+						return rn, nil
+					})).Filter(nodes)
+				}), r); err != nil {
 					return err
 				}
 			}
 		}
-		name, err := r.GetString("chartName")
-		if err != nil {
-			p.logger.Printf("error extracting chartName attribute for chart: %v, error: %v\n", p.Chart, err)
-		}
-
-		if p.Values[name] != nil && p.Values[name] != "null" {
-			p.ValuesName = name
-			pathToField := []string{"values", name}
-			err := transform.MutateField(
-				r.Map(),
-				pathToField,
-				true,
-				p.mutateValues)
-			if err != nil {
-				p.logger.Printf("error executing MutateField for chart: %v, pathToField: %v, error: %v\n", p.Chart, pathToField, err)
-				return err
-			}
-			p.ValuesName = ""
-		}
 		if len(p.ReleaseNamespace) > 0 && p.ReleaseNamespace != "null" {
-			pathToField := []string{"releaseNamespace"}
-			err := transform.MutateField(
-				r.Map(),
-				pathToField,
-				true,
-				p.mutateReleaseNameSpace)
-			if err != nil {
-				p.logger.Printf("error executing MutateField for chart: %v, pathToField: %v, error: %v\n", p.Chart, pathToField, err)
+			if err := filtersutil.ApplyToJSON(kio.FilterFunc(func(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+				return kio.FilterAll(kyaml.FilterFunc(func(rn *kyaml.RNode) (*kyaml.RNode, error) {
+					return rn.Pipe(kyaml.FieldSetter{Name: "releaseNamespace", StringValue: p.ReleaseNamespace})
+				})).Filter(nodes)
+			}), r); err != nil {
 				return err
 			}
 		}
 		if len(p.ReleaseName) > 0 && p.ReleaseName != "null" {
-			pathToField := []string{"releaseName"}
-			err := transform.MutateField(
-				r.Map(),
-				pathToField,
-				true,
-				p.mutateReleaseName)
-			if err != nil {
-				p.logger.Printf("error executing MutateField for chart: %v, pathToField: %v, error: %v\n", p.Chart, pathToField, err)
+			if err := filtersutil.ApplyToJSON(kio.FilterFunc(func(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+				return kio.FilterAll(kyaml.FilterFunc(func(rn *kyaml.RNode) (*kyaml.RNode, error) {
+					return rn.Pipe(kyaml.FieldSetter{Name: "releaseName", StringValue: p.ReleaseName})
+				})).Filter(nodes)
+			}), r); err != nil {
 				return err
 			}
 		}

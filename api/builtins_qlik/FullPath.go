@@ -1,14 +1,16 @@
 package builtins_qlik
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
+	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -33,13 +35,12 @@ func (p *FullPathPlugin) Transform(m resmap.ResMap) error {
 				continue
 			}
 
-			err := transform.MutateField(
-				r.Map(),
-				fieldSpec.PathSlice(),
-				fieldSpec.CreateIfNotPresent,
-				p.computePath)
+			err := filtersutil.ApplyToJSON(fullPathFilter{
+				rootDir: p.RootDir,
+				fsSlice: p.FieldSpecs,
+			}, r)
 			if err != nil {
-				p.logger.Printf("error executing transformers.MutateField(), error: %v\n", err)
+				p.logger.Printf("error updating path for root dir: %v, error: %v\n", p.RootDir, err)
 				return err
 			}
 		}
@@ -47,19 +48,30 @@ func (p *FullPathPlugin) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func (p *FullPathPlugin) computePath(in interface{}) (interface{}, error) {
-	relativePath, ok := in.(string)
-	if !ok {
-		return nil, fmt.Errorf("%#v is expected to be %T", in, relativePath)
-	}
-
-	if filepath.IsAbs(relativePath) {
-		return relativePath, nil
-	} else {
-		return filepath.Join(p.RootDir, relativePath), nil
-	}
-}
-
 func NewFullPathPlugin() resmap.TransformerPlugin {
 	return &FullPathPlugin{logger: utils.GetLogger("FullPathPlugin")}
+}
+
+type fullPathFilter struct {
+	fsSlice types.FsSlice
+	rootDir string
+}
+
+func (f fullPathFilter) Filter(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+	_, err := kio.FilterAll(kyaml.FilterFunc(
+		func(node *kyaml.RNode) (*kyaml.RNode, error) {
+			if err := node.PipeE(fsslice.Filter{
+				FsSlice: f.fsSlice,
+				SetValue: func(n *kyaml.RNode) error {
+					if !filepath.IsAbs(n.YNode().Value) {
+						n.YNode().Value = filepath.Join(f.rootDir, n.YNode().Value)
+					}
+					return nil
+				},
+			}); err != nil {
+				return nil, err
+			}
+			return node, nil
+		})).Filter(nodes)
+	return nodes, err
 }

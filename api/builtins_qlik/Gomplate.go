@@ -112,7 +112,11 @@ func (p *GomplatePlugin) Transform(m resmap.ResMap) error {
 				p.logger.Printf("error unmarshalling resource from bytes: %v\n", err)
 				return err
 			}
-			r.SetMap(res.Map())
+			if jsonBytes, err := res.MarshalJSON(); err != nil {
+				return err
+			} else if err := r.UnmarshalJSON(jsonBytes); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

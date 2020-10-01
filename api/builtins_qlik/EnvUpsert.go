@@ -1,13 +1,17 @@
 package builtins_qlik
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
+	"sigs.k8s.io/kustomize/api/filters/fieldspec"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -65,13 +69,12 @@ func (p *EnvUpsertPlugin) Transform(m resmap.ResMap) error {
 			return err
 		}
 		for _, r := range resources {
-			err := transform.MutateField(
-				r.Map(),
-				p.fieldSpec.PathSlice(),
-				false,
-				p.upsertEnvironmentVariables)
+			err := filtersutil.ApplyToJSON(envUpsertFilter{
+				envVars:   p.EnvVars,
+				fieldSpec: p.fieldSpec,
+			}, r)
 			if err != nil {
-				p.logger.Printf("error executing transformers.MutateField(), error: %v\n", err)
+				p.logger.Printf("error upserting env vars: %+v, error: %v\n", p.EnvVars, err)
 				return err
 			}
 		}
@@ -79,10 +82,52 @@ func (p *EnvUpsertPlugin) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func (p *EnvUpsertPlugin) upsertEnvironmentVariables(in interface{}) (interface{}, error) {
+func NewEnvUpsertPlugin() resmap.TransformerPlugin {
+	return &EnvUpsertPlugin{logger: utils.GetLogger("EnvUpsertPlugin")}
+}
+
+type envUpsertFilter struct {
+	fieldSpec types.FieldSpec
+	envVars   []EnvVarType
+}
+
+func (f envUpsertFilter) Filter(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+	_, err := kio.FilterAll(kyaml.FilterFunc(
+		func(node *kyaml.RNode) (*kyaml.RNode, error) {
+			if err := node.PipeE(fieldspec.Filter{
+				FieldSpec: f.fieldSpec,
+				SetValue:  f.set,
+			}); err != nil {
+				return nil, err
+			}
+			return node, nil
+		})).Filter(nodes)
+	return nodes, err
+}
+
+func (f *envUpsertFilter) set(node *kyaml.RNode) error {
+	var a []interface{}
+	if jsonBytes, err := node.MarshalJSON(); err != nil {
+		return err
+	} else if err := json.Unmarshal(jsonBytes, &a); err != nil {
+		return err
+	} else {
+		changed := f.upsertEnvironmentVariables(a)
+		//we need this because rnode.UnmarshalJSON() cannot unmarshal JSON arrays:
+		tempMap := map[string]interface{}{"tmp": changed}
+		if tempMapRNode, err := utils.NewKyamlRNode(tempMap); err != nil {
+			return err
+		} else {
+			node.SetYNode(tempMapRNode.Field("tmp").Value.YNode())
+		}
+	}
+	return nil
+}
+
+func (f *envUpsertFilter) upsertEnvironmentVariables(in interface{}) interface{} {
 	presentEnvVars, ok := in.([]interface{})
 	if ok {
-		for _, envVar := range p.EnvVars {
+		for _, envVar := range f.envVars {
 			foundMatching := false
 			for i := 0; i < len(presentEnvVars); i++ {
 				presentEnvVar, ok := presentEnvVars[i].(map[string]interface{})
@@ -97,7 +142,7 @@ func (p *EnvUpsertPlugin) upsertEnvironmentVariables(in interface{}) (interface{
 								i--
 							} else {
 								//update:
-								p.setEnvVar(presentEnvVar, envVar)
+								f.setEnvVar(presentEnvVar, envVar)
 							}
 							break
 						}
@@ -109,23 +154,19 @@ func (p *EnvUpsertPlugin) upsertEnvironmentVariables(in interface{}) (interface{
 				newEnvVar := map[string]interface{}{
 					"name": *envVar.Name,
 				}
-				p.setEnvVar(newEnvVar, envVar)
+				f.setEnvVar(newEnvVar, envVar)
 				presentEnvVars = append(presentEnvVars, newEnvVar)
 			}
 		}
-		return presentEnvVars, nil
+		return presentEnvVars
 	}
-	return in, nil
+	return in
 }
 
-func (p *EnvUpsertPlugin) setEnvVar(setEnvVar map[string]interface{}, fromEnvVar EnvVarType) {
+func (f *envUpsertFilter) setEnvVar(setEnvVar map[string]interface{}, fromEnvVar EnvVarType) {
 	if fromEnvVar.Value != nil {
 		setEnvVar["value"] = *fromEnvVar.Value
 	} else if fromEnvVar.ValueFrom != nil {
 		setEnvVar["valueFrom"] = fromEnvVar.ValueFrom
 	}
-}
-
-func NewEnvUpsertPlugin() resmap.TransformerPlugin {
-	return &EnvUpsertPlugin{logger: utils.GetLogger("EnvUpsertPlugin")}
 }

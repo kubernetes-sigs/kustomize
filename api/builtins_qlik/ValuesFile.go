@@ -1,6 +1,7 @@
 package builtins_qlik
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -140,7 +141,11 @@ func (p *ValuesFilePlugin) Transform(m resmap.ResMap) error {
 			p.logger.Printf("error executing mergeFiles(), error: %v\n", err)
 			return err
 		}
-		r.SetMap(mergedFile)
+		if jsonBytes, err := json.Marshal(mergedFile); err != nil {
+			return err
+		} else if err := r.UnmarshalJSON(jsonBytes); err != nil {
+			return err
+		}
 	}
 
 	return nil

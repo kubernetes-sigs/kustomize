@@ -19,7 +19,6 @@ import (
 
 	"github.com/mholt/archiver/v3"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -109,7 +108,7 @@ metadata:
 	plugin := GoGetterPlugin{logger: log.New(os.Stdout, "", log.LstdFlags|log.LUTC|log.Lmicroseconds), executableResolver: testExecutableResolver}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			resourceFactory := resmap.NewFactory(resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), transformer.NewFactoryImpl())
+			resourceFactory := resmap.NewFactory(resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 			tmpPluginHomeDir := filepath.Join(testCase.loaderRootDir, "plugin_home")
 			if err := os.Mkdir(tmpPluginHomeDir, os.ModePerm); err != nil {

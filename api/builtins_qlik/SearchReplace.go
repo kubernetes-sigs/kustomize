@@ -9,10 +9,14 @@ import (
 	"regexp"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/filters/fieldspec"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -102,23 +106,26 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 				return err
 			} else if newRootMap, newRootIsMap := newRoot.(map[string]interface{}); !newRootIsMap {
 				return errors.New("search/replace on root did not return a map[string]interface{}")
-			} else {
-				r.SetMap(newRootMap)
-			}
-		} else {
-			pathSlice := p.fieldSpec.PathSlice()
-			if err := transform.MutateField(
-				r.Map(),
-				pathSlice,
-				false,
-				func(in interface{}) (interface{}, error) {
-					return p.searchAndReplace(in, isSecretDataTarget(r, pathSlice))
-				}); err != nil {
-				p.logger.Printf("error executing transformers.MutateField(), error: %v\n", err)
+			} else if jsonBytes, err := json.Marshal(newRootMap); err != nil {
+				return err
+			} else if err := r.UnmarshalJSON(jsonBytes); err != nil {
 				return err
 			}
+		} else if err := filtersutil.ApplyToJSON(kio.FilterFunc(func(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+			return kio.FilterAll(kyaml.FilterFunc(func(rn *kyaml.RNode) (*kyaml.RNode, error) {
+				if err := rn.PipeE(fieldspec.Filter{
+					FieldSpec: p.fieldSpec,
+					SetValue: func(n *kyaml.RNode) error {
+						return p.searchAndReplaceRNode(n, isSecretDataTarget(r, p.fieldSpec.PathSlice()))
+					},
+				}); err != nil {
+					return nil, err
+				}
+				return rn, nil
+			})).Filter(nodes)
+		}), r); err != nil {
+			return err
 		}
-
 	}
 	return nil
 }
@@ -156,6 +163,36 @@ func (p *SearchReplacePlugin) matchesObjRef(res *resource.Resource) bool {
 		return true
 	}
 	return false
+}
+
+func (p *SearchReplacePlugin) searchAndReplaceRNode(node *kyaml.RNode, base64Encoded bool) error {
+	var in interface{}
+	if node.YNode().Kind == kyaml.ScalarNode {
+		in = node.YNode().Value
+	} else {
+		if jsonBytes, err := node.MarshalJSON(); err != nil {
+			return err
+		} else if err := json.Unmarshal(jsonBytes, &in); err != nil {
+			return err
+		}
+	}
+
+	changed, err := p.searchAndReplace(in, base64Encoded)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := changed.(string); ok {
+		node.YNode().Value = changed.(string)
+	} else {
+		tempMap := map[string]interface{}{"tmp": changed}
+		if tempMapRNode, err := utils.NewKyamlRNode(tempMap); err != nil {
+			return err
+		} else {
+			node.SetYNode(tempMapRNode.Field("tmp").Value.YNode())
+		}
+	}
+	return nil
 }
 
 func (p *SearchReplacePlugin) searchAndReplace(in interface{}, base64Encoded bool) (interface{}, error) {

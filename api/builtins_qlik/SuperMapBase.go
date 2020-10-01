@@ -2,15 +2,19 @@ package builtins_qlik
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
+
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/transform"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -181,25 +185,45 @@ func (b *SuperMapPluginBase) generateNameWithHash(res *resource.Resource) (strin
 }
 
 func (b *SuperMapPluginBase) appendData(res *resource.Resource, data map[string]string, straightCopy bool) error {
-	for k, v := range data {
-		pathToField := []string{"data", k}
-		err := transform.MutateField(
-			res.Map(),
-			pathToField,
-			true,
-			func(interface{}) (interface{}, error) {
-				var val string
-				if !straightCopy && b.Decorator.ShouldBase64EncodeConfigData() {
-					val = base64.StdEncoding.EncodeToString([]byte(v))
+	if err := filtersutil.ApplyToJSON(kio.FilterFunc(func(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+		return kio.FilterAll(kyaml.FilterFunc(func(rn *kyaml.RNode) (*kyaml.RNode, error) {
+			if dataRn, err := rn.Pipe(kyaml.FieldMatcher{Name: "data"}); err != nil {
+				return nil, err
+			} else {
+				dataRnMap := make(map[string]interface{})
+
+				if dataRn != nil {
+					if jsonBytes, err := dataRn.MarshalJSON(); err != nil {
+						return nil, err
+					} else if err := json.Unmarshal(jsonBytes, &dataRnMap); err != nil {
+						return nil, err
+					}
 				} else {
-					val = v
+					dataRn = &kyaml.RNode{}
 				}
-				return val, nil
-			})
-		if err != nil {
-			b.Decorator.GetLogger().Printf("error executing MutateField for resource: %v, pathToField: %v, error: %v\n", b.Decorator.GetName(), pathToField, err)
-			return err
-		}
+
+				for k, v := range data {
+					var val string
+					if !straightCopy && b.Decorator.ShouldBase64EncodeConfigData() {
+						val = base64.StdEncoding.EncodeToString([]byte(v))
+					} else {
+						val = v
+					}
+					dataRnMap[k] = val
+				}
+
+				if newJsonBytes, err := json.Marshal(dataRnMap); err != nil {
+					return nil, err
+				} else if err := dataRn.UnmarshalJSON(newJsonBytes); err != nil {
+					return nil, err
+				} else if err := rn.PipeE(kyaml.FieldSetter{Name: "data", Value: dataRn}); err != nil {
+					return nil, err
+				}
+			}
+			return rn, nil
+		})).Filter(nodes)
+	}), res); err != nil {
+		return err
 	}
 	return nil
 }

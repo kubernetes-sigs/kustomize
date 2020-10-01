@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/transformer"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -247,7 +246,7 @@ data:
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			resourceFactory := resmap.NewFactory(resource.NewFactory(
-				kunstruct.NewKunstructuredFactoryImpl()), transformer.NewFactoryImpl())
+				kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 			resMap, err := resourceFactory.NewResMapFromBytes([]byte(testCase.pluginInputResources))
 			if err != nil {
@@ -526,7 +525,7 @@ prefix: some-service-
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			resourceFactory := resmap.NewFactory(resource.NewFactory(
-				kunstruct.NewKunstructuredFactoryImpl()), transformer.NewFactoryImpl())
+				kunstruct.NewKunstructuredFactoryImpl()), nil)
 
 			resMap, err := resourceFactory.NewResMapFromBytes([]byte(testCase.pluginInputResources))
 			if err != nil {
