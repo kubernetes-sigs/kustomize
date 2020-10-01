@@ -5,6 +5,8 @@ package resid
 
 import (
 	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Gvk identifies a Kubernetes API type.
@@ -172,39 +174,22 @@ func (x Gvk) IsSelected(selector *Gvk) bool {
 	return true
 }
 
-var notNamespaceableKinds = []string{
-	"APIService",
-	"CSIDriver",
-	"CSINode",
-	"CertificateSigningRequest",
-	"Cluster",
-	"ClusterRole",
-	"ClusterRoleBinding",
-	"ComponentStatus",
-	"CustomResourceDefinition",
-	"MutatingWebhookConfiguration",
-	"Namespace",
-	"Node",
-	"PersistentVolume",
-	"PodSecurityPolicy",
-	"PriorityClass",
-	"RuntimeClass",
-	"SelfSubjectAccessReview",
-	"SelfSubjectRulesReview",
-	"StorageClass",
-	"SubjectAccessReview",
-	"TokenReview",
-	"ValidatingWebhookConfiguration",
-	"VolumeAttachment",
+// toKyamlTypeMeta returns a yaml.TypeMeta from x's information.
+func (x Gvk) toKyamlTypeMeta() yaml.TypeMeta {
+	var apiVersion strings.Builder
+	if x.Group != "" {
+		apiVersion.WriteString(x.Group)
+		apiVersion.WriteString("/")
+	}
+	apiVersion.WriteString(x.Version)
+	return yaml.TypeMeta{
+		APIVersion: apiVersion.String(),
+		Kind:       x.Kind,
+	}
 }
 
 // IsNamespaceableKind returns true if x is a namespaceable Gvk
 // Implements https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#not-all-objects-are-in-a-namespace
 func (x Gvk) IsNamespaceableKind() bool {
-	for _, k := range notNamespaceableKinds {
-		if k == x.Kind {
-			return false
-		}
-	}
-	return true
+	return x.toKyamlTypeMeta().IsNamespaceable()
 }
