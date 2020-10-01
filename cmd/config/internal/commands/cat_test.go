@@ -115,7 +115,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----`, b.String()) {
+`, b.String()) {
 		return
 	}
 }
@@ -225,7 +225,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----`, b.String()) {
+`, b.String()) {
 		return
 	}
 }
@@ -307,7 +307,7 @@ metadata:
       image: gcr.io/example/reconciler:v1
 spec:
   replicas: 3
----`, b.String()) {
+`, b.String()) {
 		return
 	}
 }
@@ -421,7 +421,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----`, string(actual)) {
+`, string(actual)) {
 		return
 	}
 }
@@ -536,7 +536,7 @@ metadata:
     app: nginx
 spec:
   replicas: 3
----`, string(actual)) {
+`, string(actual)) {
 		return
 	}
 }
@@ -552,7 +552,8 @@ func TestCatSubPackages(t *testing.T) {
 		{
 			name:    "cat-recurse-subpackages",
 			dataset: "dataset-without-setters",
-			expected: `# Copyright 2019 The Kubernetes Authors.
+			expected: `
+# Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: apps/v1
@@ -583,7 +584,7 @@ spec:
       containers:
       - name: storage
         image: storage:1.7.7
----`,
+`,
 		},
 		{
 			name:        "cat-top-level-pkg-no-recurse-subpackages",
@@ -605,7 +606,7 @@ spec:
       containers:
       - name: mysql
         image: mysql:1.7.9
----`,
+`,
 		},
 		{
 			name:        "cat-nested-pkg-no-recurse-subpackages",
@@ -627,7 +628,7 @@ spec:
       containers:
       - name: storage
         image: storage:1.7.7
----`,
+`,
 		},
 	}
 	for i := range tests {

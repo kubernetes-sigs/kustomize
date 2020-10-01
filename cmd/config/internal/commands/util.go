@@ -53,6 +53,12 @@ func (e executeCmdOnPkgs) execute() error {
 		pkgsPaths = []string{e.rootPkgPath}
 	}
 
+	// for commands which doesn't need openAPI file, make sure that the root package is
+	// included all the times
+	if !e.needOpenAPI && !containsString(pkgsPaths, e.rootPkgPath) {
+		pkgsPaths = append([]string{e.rootPkgPath}, pkgsPaths...)
+	}
+
 	for i := range pkgsPaths {
 		pkgPath := pkgsPaths[i]
 		// Add schema present in openAPI file for current package
@@ -144,4 +150,14 @@ func fixDocs(new string, c *cobra.Command) {
 	c.Short = strings.ReplaceAll(c.Short, cmdName, new)
 	c.Long = strings.ReplaceAll(c.Long, cmdName, new)
 	c.Example = strings.ReplaceAll(c.Example, cmdName, new)
+}
+
+// containsString returns true if slice contains s
+func containsString(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
 }
