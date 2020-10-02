@@ -6,18 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
-	"sigs.k8s.io/kustomize/api/filters/fieldspec"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
-
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
+	"sigs.k8s.io/kustomize/api/filters/fieldspec"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -30,6 +30,7 @@ type SearchReplacePlugin struct {
 	Path                    string                    `json:"path,omitempty" yaml:"path,omitempty"`
 	Search                  string                    `json:"search,omitempty" yaml:"search,omitempty"`
 	Replace                 string                    `json:"replace,omitempty" yaml:"replace,omitempty"`
+	ReplaceWithEnvVar       string                    `json:"replaceWithEnvVar,omitempty" yaml:"replaceWithEnvVar,omitempty"`
 	ReplaceWithObjRef       *types.Var                `json:"replaceWithObjRef,omitempty" yaml:"replaceWithObjRef,omitempty"`
 	ReplaceWithGitSemverTag *ReplaceWithGitSemverTagT `json:"replaceWithGitSemverTag,omitempty" yaml:"replaceWithGitSemverTag,omitempty"`
 	logger                  *log.Logger
@@ -43,6 +44,7 @@ func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err err
 	p.Path = ""
 	p.Search = ""
 	p.Replace = ""
+	p.ReplaceWithEnvVar = ""
 	p.ReplaceWithObjRef = nil
 	p.ReplaceWithGitSemverTag = nil
 	err = yaml.Unmarshal(c, p)
@@ -73,6 +75,7 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 		p.logger.Printf("error selecting resources based on the target selector, error: %v\n", err)
 		return err
 	}
+
 	if p.Replace == "" {
 		if p.ReplaceWithObjRef != nil {
 			var replaceEmpty bool
@@ -97,6 +100,8 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 			} else {
 				p.Replace = strings.TrimPrefix(gitVersionTag, "v")
 			}
+		} else if len(p.ReplaceWithEnvVar) > 0 {
+			p.Replace = os.Getenv(p.ReplaceWithEnvVar)
 		}
 	}
 	for _, r := range resources {
