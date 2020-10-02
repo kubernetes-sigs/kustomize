@@ -4,9 +4,11 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
@@ -96,8 +98,10 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		return handleError(c, kio.Pipeline{Inputs: []kio.Reader{input}, Filters: r.catFilters(), Outputs: outputs}.Execute())
 	}
 
+	out := &bytes.Buffer{}
+
 	e := executeCmdOnPkgs{
-		writer:             writer,
+		writer:             out,
 		needOpenAPI:        false,
 		recurseSubPackages: r.RecurseSubPackages,
 		cmdRunner:          r,
@@ -105,12 +109,21 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		skipPkgPathPrint:   true,
 	}
 
-	return e.execute()
+	err := e.execute()
+	if err != nil {
+		return err
+	}
+
+	res := strings.TrimSuffix(out.String(), "---")
+	fmt.Fprintf(writer, "%s", res)
+
+	return nil
 }
 
 func (r *CatRunner) executeCmd(w io.Writer, pkgPath string) error {
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
-	outputs, err := r.out(w)
+	out := &bytes.Buffer{}
+	outputs, err := r.out(out)
 	if err != nil {
 		return err
 	}
@@ -129,7 +142,10 @@ func (r *CatRunner) executeCmd(w io.Writer, pkgPath string) error {
 			fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
 		}
 	}
-	fmt.Fprintf(w, "---")
+	fmt.Fprint(w, out.String())
+	if out.String() != "" {
+		fmt.Fprint(w, "---")
+	}
 	return nil
 }
 

@@ -86,7 +86,9 @@ func TestCountSubPackages(t *testing.T) {
 		{
 			name:    "count-recurse-subpackages",
 			dataset: "dataset-without-setters",
-			expected: `${baseDir}/mysql/
+			expected: `${baseDir}/
+
+${baseDir}/mysql/
 Deployment: 1
 
 ${baseDir}/mysql/storage/
