@@ -234,9 +234,9 @@ spec:
 		mergeOptions: yaml.MergeOptions{
 			ListIncreaseDirection: yaml.MergeOptionsListAppend,
 		},
-  },
-  
-  {description: `merge Element -- add Element third`,
+	},
+
+	{description: `merge Element -- add Element third`,
 		source: `
 apiVersion: apps/v1
 kind: Deployment
@@ -276,9 +276,9 @@ spec:
 		mergeOptions: yaml.MergeOptions{
 			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
 		},
-  },
-  
-  {description: `merge Element -- add Element fourth`,
+	},
+
+	{description: `merge Element -- add Element fourth`,
 		source: `
 apiVersion: apps/v1
 kind: Deployment
@@ -318,7 +318,7 @@ spec:
 		mergeOptions: yaml.MergeOptions{
 			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
 		},
-  },
+	},
 
 	//
 	// Test Case
