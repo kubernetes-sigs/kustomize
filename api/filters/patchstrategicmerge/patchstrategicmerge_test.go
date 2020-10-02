@@ -366,10 +366,10 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
       - name: test2
         image: test2
+      - name: test
+        image: test
 `,
 		},
 	}
