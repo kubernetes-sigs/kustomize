@@ -501,7 +501,10 @@ func TestAnnotateSubPackages(t *testing.T) {
 			name:    "annotate-recurse-subpackages",
 			dataset: "dataset-without-setters",
 			args:    []string{"--kv", "foo=bar", "-R"},
-			expected: `${baseDir}/mysql/
+			expected: `${baseDir}/
+added annotations in the package
+
+${baseDir}/mysql/
 added annotations in the package
 
 ${baseDir}/mysql/storage/

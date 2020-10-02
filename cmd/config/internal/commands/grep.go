@@ -4,6 +4,7 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -114,8 +115,10 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 		}.Execute())
 	}
 
+	out := bytes.Buffer{}
+
 	e := executeCmdOnPkgs{
-		writer:             c.OutOrStdout(),
+		writer:             &out,
 		needOpenAPI:        false,
 		recurseSubPackages: r.RecurseSubPackages,
 		cmdRunner:          r,
@@ -123,18 +126,26 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 		skipPkgPathPrint:   true,
 	}
 
-	return e.execute()
+	err := e.execute()
+	if err != nil {
+		return err
+	}
+
+	res := strings.TrimSuffix(out.String(), "---")
+	fmt.Fprintf(c.OutOrStdout(), "%s", res)
+
+	return nil
 
 }
 
 func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
-
+	out := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: []kio.Filter{r.GrepFilter},
 		Outputs: []kio.Writer{kio.ByteWriter{
-			Writer:                w,
+			Writer:                out,
 			KeepReaderAnnotations: r.KeepAnnotations,
 		}},
 	}.Execute()
@@ -148,6 +159,9 @@ func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
 			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	}
-	fmt.Fprintf(w, "---")
+	fmt.Fprint(w, out.String())
+	if out.String() != "" {
+		fmt.Fprint(w, "---")
+	}
 	return nil
 }

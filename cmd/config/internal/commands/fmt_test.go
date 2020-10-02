@@ -179,7 +179,10 @@ func TestFmtSubPackages(t *testing.T) {
 			name:    "fmt-recurse-subpackages",
 			dataset: "dataset-with-setters",
 			args:    []string{"-R"},
-			expected: `${baseDir}/mysql/
+			expected: `${baseDir}/
+formatted resource files in the package
+
+${baseDir}/mysql/
 formatted resource files in the package
 
 ${baseDir}/mysql/nosetters/
