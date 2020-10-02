@@ -147,11 +147,11 @@ spec:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
       - configMap:
-          name: a-b-configmap-in-base-798k5k7g9f
-        name: configmap-in-base
-      - configMap:
           name: a-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
+      - configMap:
+          name: a-b-configmap-in-base-798k5k7g9f
+        name: configmap-in-base
 ---
 apiVersion: v1
 kind: Service
@@ -352,11 +352,11 @@ spec:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
       - configMap:
-          name: staging-team-foo-configmap-in-base-798k5k7g9f
-        name: configmap-in-base
-      - configMap:
           name: staging-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
+      - configMap:
+          name: staging-team-foo-configmap-in-base-798k5k7g9f
+        name: configmap-in-base
 ---
 apiVersion: v1
 kind: Service
