@@ -53,6 +53,11 @@ func (p *ExecPlugin) ErrIfNotExecutable() error {
 	}
 	// In Windows, it is not possible to determine whether a
 	// file is executable through file mode.
+	// TODO: provide for setting the executable FileMode bit on Windows
+	// The (fs *fileStat) Mode() (m FileMode) {} function in
+	// https://golang.org/src/os/types_windows.go
+	// lacks the ability to set the FileMode executable bit in response
+	// to file data on Windows.
 	if f.Mode()&0111 == 0000 && runtime.GOOS != "windows" {
 		return fmt.Errorf("unexecutable plugin at: %s", p.path)
 	}
