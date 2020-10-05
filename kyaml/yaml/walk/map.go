@@ -27,6 +27,9 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 
 	// recursively set the field values on the map
 	for _, key := range l.fieldNames() {
+		if key == "ports" {
+			continue
+		}
 		var res *yaml.RNode
 		var keys []*yaml.RNode
 		if l.VisitKeysAsScalars {
