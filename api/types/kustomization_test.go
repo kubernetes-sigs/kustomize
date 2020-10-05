@@ -141,6 +141,13 @@ func TestUnmarshal(t *testing.T) {
 	y := []byte(`
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+metadata:
+  name: kust
+  namespace: default
+  labels:
+    foo: bar
+  annotations:
+    foo: bar
 resources:
 - foo
 - bar
@@ -151,8 +158,20 @@ namePrefix: cat`)
 	if err != nil {
 		t.Fatal(err)
 	}
+	meta := ObjectMeta{
+		Name:      "kust",
+		Namespace: "default",
+		Labels: map[string]string{
+			"foo": "bar",
+		},
+		Annotations: map[string]string{
+			"foo": "bar",
+		},
+	}
 	if k.Kind != KustomizationKind || k.APIVersion != KustomizationVersion ||
-		len(k.Resources) != 2 || k.NamePrefix != "cat" || k.NameSuffix != "dog" {
+		len(k.Resources) != 2 || k.NamePrefix != "cat" || k.NameSuffix != "dog" ||
+		k.MetaData.Name != meta.Name || k.MetaData.Namespace != meta.Namespace ||
+		k.MetaData.Labels["foo"] != meta.Labels["foo"] || k.MetaData.Annotations["foo"] != meta.Annotations["foo"] {
 		t.Fatalf("wrong unmarshal result: %v", k)
 	}
 }
