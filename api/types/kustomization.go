@@ -22,6 +22,9 @@ const (
 type Kustomization struct {
 	TypeMeta `json:",inline" yaml:",inline"`
 
+	// MetaData is a pointer to avoid marshalling empty struct
+	MetaData *ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+
 	//
 	// Operators - what kustomize can do.
 	//
