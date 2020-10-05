@@ -161,7 +161,9 @@ nameReference:
 
 ## Customizing transformer configurations
 
-In addition to the default transformers, you can create custom transformer configurations. Save the default transformer configurations to a local directory by calling `kustomize config save -d`, and modify and use these configurations. This tutorial shows how to create custom transformer configurations:
+In addition to the default transformers, you can create custom transformer configurations.
+
+This tutorial shows how to create custom transformer configurations:
 
 - [support a CRD type](crd/README.md)
 - add extra fields for variable substitution
