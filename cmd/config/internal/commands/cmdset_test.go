@@ -1094,13 +1094,13 @@ func TestSetSubPackages(t *testing.T) {
 			dataset: "dataset-with-setters",
 			args:    []string{"namespace", "otherspace", "-R"},
 			expected: `${baseDir}/mysql/
-set 1 field(s)
+set 1 field(s) of setter "namespace" to value "otherspace"
 
 ${baseDir}/mysql/nosetters/
 setter "namespace" is not found
 
 ${baseDir}/mysql/storage/
-set 1 field(s)
+set 1 field(s) of setter "namespace" to value "otherspace"
 `,
 		},
 		{
@@ -1109,7 +1109,7 @@ set 1 field(s)
 			packagePath: "mysql",
 			args:        []string{"namespace", "otherspace"},
 			expected: `${baseDir}/mysql/
-set 1 field(s)
+set 1 field(s) of setter "namespace" to value "otherspace"
 `,
 		},
 		{
@@ -1118,7 +1118,7 @@ set 1 field(s)
 			packagePath: "mysql/storage",
 			args:        []string{"namespace", "otherspace"},
 			expected: `${baseDir}/mysql/storage/
-set 1 field(s)
+set 1 field(s) of setter "namespace" to value "otherspace"
 `,
 		},
 	}
