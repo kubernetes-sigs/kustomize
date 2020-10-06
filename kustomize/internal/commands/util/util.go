@@ -56,14 +56,20 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 	return result, nil
 }
 
-// ConvertToMap converts a slice of strings in the form of
-// `key:value` into a map.
+// ConvertToMap converts a string in the form of `key:value,key:value,...` into a map.
 func ConvertToMap(input string, kind string) (map[string]string, error) {
 	result := make(map[string]string)
 	if input == "" {
 		return result, nil
 	}
 	inputs := strings.Split(input, ",")
+	return ConvertSliceToMap(inputs, kind)
+}
+
+// ConvertSliceToMap converts a slice of strings in the form of
+// `key:value` into a map.
+func ConvertSliceToMap(inputs []string, kind string) (map[string]string, error) {
+	result := make(map[string]string)
 	for _, input := range inputs {
 		c := strings.Index(input, ":")
 		if c == 0 {

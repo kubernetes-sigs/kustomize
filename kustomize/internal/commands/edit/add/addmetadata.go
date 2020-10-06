@@ -50,7 +50,7 @@ func newCmdAddAnnotation(fSys filesys.FileSystem, v func(map[string]string) erro
 		Short: "Adds one or more commonAnnotations to " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
-		add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}`,
+		add annotation {annotationKey1:annotationValue1} {annotationKey2:annotationValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.runE(args, fSys, o.addAnnotations)
 		},
@@ -71,7 +71,7 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 		Short: "Adds one or more commonLabels to " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
-		add label {labelKey1:labelValue1},{labelKey2:labelValue2}`,
+		add label {labelKey1:labelValue1} {labelKey2:labelValue2}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.runE(args, fSys, o.addLabels)
 		},
@@ -108,10 +108,7 @@ func (o *addMetadataOptions) validateAndParse(args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("must specify %s", o.kind)
 	}
-	if len(args) > 1 {
-		return fmt.Errorf("%ss must be comma-separated, with no spaces", o.kind)
-	}
-	m, err := util.ConvertToMap(args[0], o.kind.String())
+	m, err := util.ConvertSliceToMap(args, o.kind.String())
 	if err != nil {
 		return err
 	}
