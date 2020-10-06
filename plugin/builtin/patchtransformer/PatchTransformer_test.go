@@ -639,7 +639,6 @@ spec:
           servicePort: 7702
         path: /test
 `)
-
 }
 func TestPatchTransformerJsonAsYaml(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
@@ -692,9 +691,6 @@ spec:
 `)
 }
 
-// test for https://github.com/kubernetes-sigs/kustomize/issues/2767
-// currently documents broken state.  resulting ports: should have both
-// take-over-the-world and disappearing-act on 8080
 func TestPatchTransformerSimilarArrays(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
