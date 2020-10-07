@@ -191,7 +191,7 @@ func writeIndividualFiles(
 }
 
 func fileName(res *resource.Resource) string {
-	return strings.ToLower(res.GetGvk().String()) +
+	return strings.ToLower(res.GetGvk().StringWoEmptyField()) +
 		"_" + strings.ToLower(res.GetName()) + ".yaml"
 }
 
