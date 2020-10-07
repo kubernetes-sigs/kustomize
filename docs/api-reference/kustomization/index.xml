@@ -855,7 +855,7 @@ resources.&lt;/p&gt;
 supported.  No ints, bools, arrays etc.  It&amp;rsquo;s not
 possible to, say, extract the name of the image in
 container number 2 of some pod template.&lt;/p&gt;
-&lt;p&gt;A variable reference, i.e. the string &amp;lsquo;$(FOO)&amp;rsquo;,
+&lt;p&gt;A variable reference, i.e. the string &amp;lsquo;$(FOO)&#39;,
 can only be placed in particular fields of
 particular objects as specified by kustomize&amp;rsquo;s
 configuration data.&lt;/p&gt;
