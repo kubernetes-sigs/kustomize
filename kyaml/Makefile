@@ -34,6 +34,9 @@ test:
 vet:
 	go vet ./...
 
+# sed command was added to resolve https://github.com/kubernetes-sigs/kustomize/issues/2767
+# it changes the ports merge key in kyaml/openapi/kubernetesapi/swagger.json
+# likely related to https://github.com/kubernetes/kubernetes/issues/39188
 openapi:
 	sed -i 's/"x-kubernetes-patch-merge-key": "containerPort"/"x-kubernetes-patch-merge-key": "name"/g' 'openapi/kubernetesapi/swagger.json'
 	(which $(GOPATH)/bin/go-bindata || go get -v github.com/go-bindata/go-bindata)
