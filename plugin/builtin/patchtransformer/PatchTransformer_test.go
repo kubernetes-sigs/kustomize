@@ -640,6 +640,7 @@ spec:
         path: /test
 `)
 }
+
 func TestPatchTransformerJsonAsYaml(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
@@ -691,6 +692,10 @@ spec:
 `)
 }
 
+// test for https://github.com/kubernetes-sigs/kustomize/issues/2767
+// resolved with a sed command in kyaml/Makefile that edits the file
+// kyaml/openapi/kubernetesapi/swagger.json to change the ports merge key
+// likely related to https://github.com/kubernetes/kubernetes/issues/39188
 func TestPatchTransformerSimilarArrays(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
