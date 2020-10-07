@@ -4,6 +4,7 @@
 package add
 
 import (
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -117,6 +118,29 @@ func TestAddAnnotationValueWithColon(t *testing.T) {
 	}
 }
 
+func TestAddAnnotationValueWithComma(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomization(fSys)
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdAddAnnotation(fSys, v.Validator)
+	value := "{\"k1\":\"v1\",\"k2\":\"v2\"}"
+	args := []string{"test:" + value}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+	b, err := fSys.ReadFile("/kustomization.yaml")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+	if !strings.Contains(string(b), value) {
+		t.Errorf(
+			"Modified file doesn't contain expected string.\nExpected string:\n%s\nActual:\n%s",
+			value, b)
+	}
+}
+
 func TestAddAnnotationNoKey(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	v := valtest_test.MakeHappyMapValidator(t)
@@ -165,12 +189,9 @@ func TestAddAnnotationMultipleArgs(t *testing.T) {
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"this:annotation", "has:spaces"}
 	err := cmd.RunE(cmd, args)
-	v.VerifyNoCall()
-	if err == nil {
-		t.Errorf("expected an error")
-	}
-	if err.Error() != "annotations must be comma-separated, with no spaces" {
-		t.Errorf("incorrect error: %v", err.Error())
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
 	}
 }
 
@@ -307,12 +328,9 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"this:input", "has:spaces"}
 	err := cmd.RunE(cmd, args)
-	v.VerifyNoCall()
-	if err == nil {
-		t.Errorf("expected an error")
-	}
-	if err.Error() != "labels must be comma-separated, with no spaces" {
-		t.Errorf("incorrect error: %v", err.Error())
+	v.VerifyCall()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
 	}
 }
 
