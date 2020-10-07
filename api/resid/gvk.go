@@ -79,6 +79,22 @@ func (x Gvk) String() string {
 	return strings.Join([]string{g, v, k}, fieldSep)
 }
 
+// StringWoEmptyField returns a string representation of the GVK. Non-exist
+// fields will be omitted.
+func (x Gvk) StringWoEmptyField() string {
+	var s []string
+	if x.Group != "" {
+		s = append(s, x.Group)
+	}
+	if x.Version != "" {
+		s = append(s, x.Version)
+	}
+	if x.Kind != "" {
+		s = append(s, x.Kind)
+	}
+	return strings.Join(s, fieldSep)
+}
+
 // Equals returns true if the Gvk's have equal fields.
 func (x Gvk) Equals(o Gvk) bool {
 	return x.Group == o.Group && x.Version == o.Version && x.Kind == o.Kind
