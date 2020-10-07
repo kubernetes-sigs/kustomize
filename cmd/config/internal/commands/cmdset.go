@@ -173,7 +173,7 @@ func (r *SetRunner) executeCmd(w io.Writer, pkgPath string) error {
 			fmt.Fprintf(w, "%s\n", err.Error())
 		}
 	} else {
-		fmt.Fprintf(w, "set %d field(s)\n", count)
+		fmt.Fprintf(w, "set %d field(s) of setter %q to value %q\n", count, r.Set.Name, r.Set.Value)
 	}
 	return nil
 }
