@@ -44,3 +44,106 @@ patches:
 ```
 
 patch 目标选择器的 `name` 和 `namespace` 字段是自动锚定的正则表达式。这意味着 `myapp` 的值相当于 `^myapp$`。
+
+示例 1 和示例 2 都将使用以下 `deployment.yaml`：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+  template:
+    containers:
+      - name: the-container
+        image: registry/conatiner:latest
+```
+
+## 示例1
+
+### 目的
+
+将容器镜像指向特定版本，代替 latest 版本。
+
+### 文件输入
+
+```yaml
+# kustomization.yaml
+resources:
+- deployment.yaml
+
+patches:
+- path: patch.yaml
+```
+
+```yaml
+# patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  template:
+    containers:
+      - name: the-container
+        image: registry/conatiner:1.0.0
+```
+
+### 构建输出
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+  template:
+    containers:
+    - image: registry/conatiner:1.0.0
+      name: the-container
+```
+
+## 示例2
+
+### 目的
+
+同上。
+
+### 文件输入
+
+```yaml
+# kustomization.yaml
+resources:
+- deployment.yaml
+
+patches:
+- target:
+    kind: Deployment
+    name: the-deployment
+  path: patch.json
+```
+
+```yaml
+# patch.json
+[
+   {"op": "replace", "path": "/spec/template/containers/0/image", "value": "registry/conatiner:1.0.0"}
+]
+
+```
+
+### 构建输出
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+  template:
+    containers:
+    - image: registry/conatiner:1.0.0
+      name: the-container
+```
