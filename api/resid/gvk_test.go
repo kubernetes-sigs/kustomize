@@ -96,21 +96,30 @@ func TestIsLessThan1(t *testing.T) {
 var stringTests = []struct {
 	x Gvk
 	s string
+	r string
 }{
-	{Gvk{}, "~G_~V_~K"},
-	{Gvk{Kind: "k"}, "~G_~V_k"},
-	{Gvk{Version: "v"}, "~G_v_~K"},
-	{Gvk{Version: "v", Kind: "k"}, "~G_v_k"},
-	{Gvk{Group: "g"}, "g_~V_~K"},
-	{Gvk{Group: "g", Kind: "k"}, "g_~V_k"},
-	{Gvk{Group: "g", Version: "v"}, "g_v_~K"},
-	{Gvk{Group: "g", Version: "v", Kind: "k"}, "g_v_k"},
+	{Gvk{}, "~G_~V_~K", ""},
+	{Gvk{Kind: "k"}, "~G_~V_k", "k"},
+	{Gvk{Version: "v"}, "~G_v_~K", "v"},
+	{Gvk{Version: "v", Kind: "k"}, "~G_v_k", "v_k"},
+	{Gvk{Group: "g"}, "g_~V_~K", "g"},
+	{Gvk{Group: "g", Kind: "k"}, "g_~V_k", "g_k"},
+	{Gvk{Group: "g", Version: "v"}, "g_v_~K", "g_v"},
+	{Gvk{Group: "g", Version: "v", Kind: "k"}, "g_v_k", "g_v_k"},
 }
 
 func TestString(t *testing.T) {
 	for _, hey := range stringTests {
 		if hey.x.String() != hey.s {
 			t.Fatalf("bad string for %v '%s'", hey.x, hey.s)
+		}
+	}
+}
+
+func TestStringWoEmptyField(t *testing.T) {
+	for _, hey := range stringTests {
+		if hey.x.StringWoEmptyField() != hey.r {
+			t.Fatalf("bad string %s for %v '%s'", hey.x.StringWoEmptyField(), hey.x, hey.r)
 		}
 	}
 }
