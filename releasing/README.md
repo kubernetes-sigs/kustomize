@@ -35,13 +35,14 @@ cd ~/gopath/src/sigs.k8s.io/kustomize
 git fetch upstream
 git co master
 git rebase upstream/master
-make prow-presubmit-check
+make prow-presubmit-check >& /tmp/k.txt; echo $?
+# The exit code should be zero; if not examine /tmp/k.txt
 ```
 
 #### Release `kyaml`
 
 ```
-gorepomod release kyaml
+gorepomod release kyaml --doIt
 ```
 Undraft the release on the [kustomize repo release page].
 
@@ -51,14 +52,23 @@ Undraft the release on the [kustomize repo release page].
 ```
 cd ../cli-utils
 
-# Pin to the most recent kyaml, e.g.
-go mod edit -require sigs.k8s.io/kustomize/kyaml@v0.9.0
+# Determine which version of kyaml you want at
+# https://github.com/kubernetes-sigs/kustomize/releases
+#
+# Pin ./go.mod to that version, e.g.:
+go mod edit -require sigs.k8s.io/kustomize/kyaml@v0.9.1
+
+# Test it
 go test ./...
 
 # Merge these changes to upstream (make a PR, merge it)
 
+git fetch upstream
+git co master
+git rebase upstream/master
+
 # Release cli-utils
-gorepomod release {top}
+gorepomod release {top} --doIt
 ```
 
 #### Release `cmd/config`
@@ -73,7 +83,7 @@ gorepomod pin kyaml --doIt
 # https://github.com/kubernetes-sigs/cli-utils/releases
 #
 # Pin cmd/config/go.mod to that version, e.g.:
-(cd cmd/config; go mod edit -require=sigs.k8s.io/cli-utils@v0.20.3)
+(cd cmd/config; go mod edit -require=sigs.k8s.io/cli-utils@v0.20.4)
 
 # Test it.
 make prow-presubmit-check >& /tmp/k.txt; echo $?
