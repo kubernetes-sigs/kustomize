@@ -40,6 +40,25 @@ func TestConvertToMapError(t *testing.T) {
 	}
 }
 
+func TestConvertSliceToMap(t *testing.T) {
+	args := []string{"a:b", "c:\"d\"", "e:\"f:g\"", "g:h:k"}
+	expected := make(map[string]string)
+	expected["a"] = "b"
+	expected["c"] = "d"
+	expected["e"] = "f:g"
+	expected["g"] = "h:k"
+
+	result, err := ConvertSliceToMap(args, "annotation")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+
+	eq := reflect.DeepEqual(expected, result)
+	if !eq {
+		t.Errorf("Converted map does not match expected, expected: %v, result: %v\n", expected, result)
+	}
+}
+
 func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.Create("test.yml")
