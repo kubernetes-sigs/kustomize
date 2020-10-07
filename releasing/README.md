@@ -67,12 +67,18 @@ gorepomod release {top}
 cd ../kustomize
 
 # Pin to the most recent kyaml.
-gorepomod pin kyaml
+gorepomod pin kyaml --doIt
 
-# Pin cmd/config/go.mod to the new cli-utils, e.g.
-(cd cmd/config; go mod edit -require=sigs.k8s.io/cli-utils@v0.20.2)
+# Determine which version of cli-utils you want at
+# https://github.com/kubernetes-sigs/cli-utils/releases
+#
+# Pin cmd/config/go.mod to that version, e.g.:
+(cd cmd/config; go mod edit -require=sigs.k8s.io/cli-utils@v0.20.3)
 
-# Merge these changes to upstream (make a PR, etc.)
+# Test it.
+make prow-presubmit-check >& /tmp/k.txt; echo $?
+
+# Make a PR and merge these changes.
 
 # Release it.
 gorepomod release cmd/config
