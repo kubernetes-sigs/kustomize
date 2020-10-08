@@ -7,7 +7,7 @@
 This document describes how to fetch OpenAPI data from
 a particular kubernetes version number. 
 
-###Fetching the Schema 
+### Fetching the Schema 
 In the [kyaml] directory, fetch the schema
 ```
 make schema
@@ -22,13 +22,13 @@ make schema VERSION=v1.14.1
 
 This will update the [OpenAPI schema]. 
 
-###Generating Swagger.go
+### Generating Swagger.go
 In the [kyaml] directory, generate the swagger.go files.
 ```
 make openapi
 ```
 
-###Run all tests
+### Run all tests
 In the [home] directory, run the tests.
 ```
 make prow-presubmit-check >& /tmp/k.txt; echo $?
