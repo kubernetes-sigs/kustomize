@@ -39,7 +39,7 @@ vet:
 # likely related to https://github.com/kubernetes/kubernetes/issues/39188
 openapi:
 	sed -i 's/"x-kubernetes-patch-merge-key": "containerPort"/"x-kubernetes-patch-merge-key": "name"/g' 'openapi/kubernetesapi/swagger.json'
-	(which $(GOPATH)/bin/go-bindata || go get -v github.com/go-bindata/go-bindata)
+	(which $(GOPATH)/bin/go-bindata || go get -u github.com/go-bindata/go-bindata/...)
 	$(GOPATH)/bin/go-bindata --pkg kubernetesapi -o openapi/kubernetesapi/swagger.go openapi/kubernetesapi/swagger.json
 	$(GOPATH)/bin/go-bindata --pkg kustomizationapi -o openapi/kustomizationapi/swagger.go openapi/kustomizationapi/swagger.json
 
