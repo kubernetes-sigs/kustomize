@@ -50,7 +50,7 @@ schema:
 	cp $(HOME)/.kube/config /tmp/kubeconfig.txt | true
 	$(GOPATH)/bin/kind create cluster --image kindest/node:$(VERSION) --name=getopenapidata
 	$(GOPATH)/bin/kpt live  fetch-k8s-schema  --pretty-print > openapi/kubernetesapi/swagger.json
-	kind delete cluster --name=getopenapidata 
+	$(GOPATH)/bin/kind delete cluster --name=getopenapidata 
 	cp /tmp/kubeconfig.txt $(HOME)/.kube/config | true
 
 
