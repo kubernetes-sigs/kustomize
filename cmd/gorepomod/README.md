@@ -16,7 +16,7 @@ dependencies, then performs some operation.
 
 Install:
 ```
-go get github.com/monopole/gorepomod
+go get sigs.k8s.io/kustomize/cmd/gorepomod
 ```
 
 ## Usage
