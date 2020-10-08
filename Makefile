@@ -48,8 +48,8 @@ $(MYGOBIN)/golangci-lint-kustomize:
 	)
 
 $(MYGOBIN)/gorepomod:
-	cd api; \
-	go install github.com/monopole/gorepomod
+	cd cmd/gorepomod; \
+	go install .
 
 $(MYGOBIN)/mdrip:
 	cd api; \
