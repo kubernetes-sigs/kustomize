@@ -548,7 +548,7 @@ func (p *HelmChartPlugin) helmConfigForDependencies(settings *cli.EnvSettings, c
 		defer unlockFn()
 	}
 
-	if dependencyRepoEntries, err := resolveDependencyRepos(settings, c); err != nil {
+	if dependencyRepoEntries, err := p.resolveDependencyRepos(settings, c); err != nil {
 		p.logger.Printf("error resolving dependency repos: %v\n", err)
 		return err
 	} else {
@@ -566,7 +566,7 @@ func (p *HelmChartPlugin) helmConfigForDependencies(settings *cli.EnvSettings, c
 	return nil
 }
 
-func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.Entry, error) {
+func (p *HelmChartPlugin) resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.Entry, error) {
 	newAliasedRepoEntries := make([]*repo.Entry, 0)
 	pureUrlDependencies := make(map[string]*chart.Dependency)
 
@@ -575,7 +575,7 @@ func resolveDependencyRepos(settings *cli.EnvSettings, c *chart.Chart) ([]*repo.
 		isAliasedRepoDependency := false
 		for _, aliasMarker := range []string{"@", "alias:"} {
 			if strings.HasPrefix(dep.Repository, aliasMarker) {
-				if repoEntry, err := getRepoEntryForAliasedDependency(aliasMarker, dep, c); err != nil {
+				if repoEntry, err := p.getRepoEntryForAliasedDependency(aliasMarker, dep, c); err != nil {
 					return nil, err
 				} else {
 					newAliasedRepoEntries = append(newAliasedRepoEntries, repoEntry)
@@ -636,8 +636,12 @@ func getRepoFileEntries(settings *cli.EnvSettings) ([]*repo.Entry, error) {
 	}
 }
 
-func getRepoEntryForAliasedDependency(aliasMarker string, dep *chart.Dependency, c *chart.Chart) (*repo.Entry, error) {
+func (p *HelmChartPlugin) getRepoEntryForAliasedDependency(aliasMarker string, dep *chart.Dependency, c *chart.Chart) (*repo.Entry, error) {
 	repoEntryName := strings.TrimPrefix(dep.Repository, aliasMarker)
+	if c.Lock == nil {
+		return nil, fmt.Errorf(`cannot find lock file for subchart: %v, repo alias: %v for %v.
+Run 'helm dep update' in %v`, dep.Name, repoEntryName, p.ChartName, filepath.Join(p.ChartHome, p.ChartName))
+	}
 	repoEntryUrl := getRepoUrlFromChartLock(c.Lock, dep.Name)
 	if repoEntryUrl == "" {
 		return nil, fmt.Errorf("cannot find URL for dependency: %v, alias: %v", dep.Name, repoEntryName)
