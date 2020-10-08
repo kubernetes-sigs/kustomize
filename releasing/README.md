@@ -10,6 +10,7 @@
 [semver release]: #semver-review
 [`cloudbuild.yaml`]: cloudbuild.yaml
 [kustomize repo release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[OpenAPI Readme]: ../kyaml/openapi/README.md
 
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
@@ -142,6 +143,10 @@ this should be automated, and descriptions in PR's should
 be standardized to make automation possible.
 See kubebuilder project.
 
+#### Fetching New OpenAPI Data
+The Kubernetes OpenAPI data changes once per quarter. Instructions 
+on how to get a new OpenAPI sample can be found in the
+[OpenAPI Readme].
 
 ## Public Modules
 
