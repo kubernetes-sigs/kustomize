@@ -35,8 +35,15 @@ cd ~/gopath/src/sigs.k8s.io/kustomize
 git fetch upstream
 git co master
 git rebase upstream/master
+
 make prow-presubmit-check >& /tmp/k.txt; echo $?
 # The exit code should be zero; if not examine /tmp/k.txt
+```
+
+#### Install the release tool
+
+```
+(cd cmd/gorepomod; go install .)
 ```
 
 #### Release `kyaml`
@@ -91,7 +98,7 @@ make prow-presubmit-check >& /tmp/k.txt; echo $?
 # Make a PR and merge these changes.
 
 # Release it.
-gorepomod release cmd/config
+gorepomod release cmd/config --doIt
 ```
 
 Undraft the release on the [kustomize repo release page].
@@ -99,10 +106,10 @@ Undraft the release on the [kustomize repo release page].
 #### Release `api` (the kustomize API, used by the CLI)
 
 ```
-gorepomod pin cmd/config
+gorepomod pin cmd/config --doIt
 # Merge these changes.
 
-gorepomod release api
+gorepomod release api --doIt
 ```
 
 Undraft the release on the [kustomize repo release page].
@@ -110,10 +117,10 @@ Undraft the release on the [kustomize repo release page].
 #### Release the kustomize CLI
 
 ```
-gorepomod pin api
+gorepomod pin api --doIt
 # Merge these changes.
 
-gorepomod release kustomize
+gorepomod release kustomize  --doIt
 ```
 
 Undraft the release on the [kustomize repo release page].
@@ -124,9 +131,9 @@ Go back into development mode, so current code in-repo
 depends on current code in-repo.
 
 ```
-gorepomod unpin api
-gorepomod unpin cmd/config
-gorepomod unpin kyaml
+gorepomod unpin api  --doIt
+gorepomod unpin cmd/config  --doIt
+gorepomod unpin kyaml  --doIt
 # Merge these changes.
 ```
 
