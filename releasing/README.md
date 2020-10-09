@@ -29,6 +29,11 @@ The dependencies determine the release order:
 
 Thus, do `kyaml` first, then `cli-utils`, etc.
 
+#### Consider fetching new OpenAPI data
+The Kubernetes OpenAPI data changes once per quarter. Instructions 
+on how to get a new OpenAPI sample can be found in the
+[OpenAPI Readme].
+
 #### Establish clean state
 
 ```
@@ -142,11 +147,6 @@ Visit the [release page] and edit the release notes as desired;
 this should be automated, and descriptions in PR's should
 be standardized to make automation possible.
 See kubebuilder project.
-
-#### Fetching New OpenAPI Data
-The Kubernetes OpenAPI data changes once per quarter. Instructions 
-on how to get a new OpenAPI sample can be found in the
-[OpenAPI Readme].
 
 ## Public Modules
 
