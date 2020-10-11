@@ -43,6 +43,9 @@ func NewCmdAdd(
 
 	# Adds one or more commonAnnotations to the kustomization
 	kustomize edit add annotation {annotationKey1:annotationValue1},{annotationKey2:annotationValue2}
+
+	# Adds a transformer configuration to the kustomization
+	kustomize edit add transformer <filepath>
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
@@ -55,6 +58,7 @@ func NewCmdAdd(
 		newCmdAddBase(fSys),
 		newCmdAddLabel(fSys, ldr.Validator().MakeLabelValidator()),
 		newCmdAddAnnotation(fSys, ldr.Validator().MakeAnnotationValidator()),
+		newCmdAddTransformer(fSys),
 	)
 	return c
 }
