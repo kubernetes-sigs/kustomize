@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -108,7 +109,7 @@ func (r *ListSettersRunner) ListSetters(w io.Writer, openAPIPath, resourcePath s
 		return err
 	}
 	table := newTable(w, r.Markdown)
-	table.SetHeader([]string{"NAME", "VALUE", "SET BY", "DESCRIPTION", "COUNT", "REQUIRED"})
+	table.SetHeader([]string{"NAME", "VALUE", "IS SET", "SET BY", "DESCRIPTION", "COUNT", "REQUIRED"})
 	for i := range r.List.Setters {
 		s := r.List.Setters[i]
 		v := s.Value
@@ -124,8 +125,17 @@ func (r *ListSettersRunner) ListSetters(w io.Writer, openAPIPath, resourcePath s
 		} else {
 			required = "No"
 		}
+
+		var isSet = "No"
+		if s.IsSet != "" {
+			var b, _ = strconv.ParseBool(s.IsSet)
+			if b {
+				isSet = "Yes"
+			}
+		}
+
 		table.Append([]string{
-			s.Name, v, s.SetBy, s.Description, fmt.Sprintf("%d", s.Count), required})
+			s.Name, v, isSet, s.SetBy, s.Description, fmt.Sprintf("%d", s.Count), required})
 	}
 	table.Render()
 
