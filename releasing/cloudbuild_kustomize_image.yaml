@@ -1,0 +1,44 @@
+# This cloud build job is only used to build kustomize docker image and push
+# it to gcr.io repo.
+steps:
+  - name: "bash"
+    args:
+      - "echo"
+      - "Cloud build substitution check: "
+      - "BUILD_ID=$BUILD_ID"
+      - "PROJECT_ID=$PROJECT_ID"
+      - "REVISION_ID=$REVISION_ID"
+      - "REPO_NAME=$REPO_NAME"
+      - "COMMIT_SHA=$COMMIT_SHA"
+      - "BRANCH_NAME=$BRANCH_NAME"
+      - "TAG_NAME=$TAG_NAME"
+
+# We need to use bash to configure the build date properly.
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: /bin/bash
+    args:
+      - -c
+      - >
+        docker
+        build
+        -t
+        gcr.io/$PROJECT_ID/$_MODULE_NAME:$_MODULE_VERSION
+        -t
+        gcr.io/$PROJECT_ID/$_MODULE_NAME:latest
+        -f
+        kustomize.Dockerfile
+        --build-arg
+        VERSION=$TAG_NAME
+        --build-arg
+        COMMIT=$COMMIT_SHA
+        --build-arg
+        DATE=`date -u +%FT%TZ`
+        .
+
+images:
+  - "gcr.io/$PROJECT_ID/$_MODULE_NAME:$_MODULE_VERSION"
+  - "gcr.io/$PROJECT_ID/$_MODULE_NAME:latest"
+
+substitutions:
+  _MODULE_NAME: ${TAG_NAME%/*}
+  _MODULE_VERSION: ${TAG_NAME#*/}
