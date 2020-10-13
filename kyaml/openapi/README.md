@@ -13,11 +13,11 @@ In the [kyaml] directory, fetch the schema
 make schema
 ```
 
-You can specify a specific version with the "VERSION" 
+You can specify a specific version with the "API_VERSION" 
 parameter. The default version is v1.19.1. Here is an
 example for fetching the data for v1.14.1.
 ```
-make schema VERSION=v1.14.1
+make schema API_VERSION=v1.14.1
 ```
 
 This will update the [OpenAPI schema]. 
