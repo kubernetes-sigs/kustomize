@@ -43,14 +43,19 @@ openapi:
 	$(GOPATH)/bin/go-bindata --pkg kubernetesapi -o openapi/kubernetesapi/swagger.go openapi/kubernetesapi/swagger.json
 	$(GOPATH)/bin/go-bindata --pkg kustomizationapi -o openapi/kustomizationapi/swagger.go openapi/kustomizationapi/swagger.json
 
-API_VERSION="v1.19.1"
-schema:
+kind:
 	which $(GOPATH)/bin/kind || GO111MODULE=on go get sigs.k8s.io/kind@v0.9.0
+
+kpt:
 	which $(GOPATH)/bin/kpt || GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
+
+API_VERSION="v1.19.1"
+schema: kind kpt
 	cp $(HOME)/.kube/config /tmp/kubeconfig.txt | true
 	$(GOPATH)/bin/kind create cluster --image kindest/node:$(API_VERSION) --name=getopenapidata
-	$(GOPATH)/bin/kpt live  fetch-k8s-schema  --pretty-print > openapi/kubernetesapi/swagger.json
+	$(GOPATH)/bin/kpt live  fetch-k8s-schema  --pretty-print > /tmp/new_swagger.json
 	$(GOPATH)/bin/kind delete cluster --name=getopenapidata 
 	cp /tmp/kubeconfig.txt $(HOME)/.kube/config | true
+	cp /tmp/new_swagger.json openapi/kubernetesapi/swagger.json
 
 
