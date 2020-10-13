@@ -1,7 +1,9 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test lint tidy openapi
+MYGOBIN := $(shell go env GOPATH)/bin
+
+.PHONY: generate license fix vet fmt test lint tidy openapi schema
 
 GOPATH := $(shell go env GOPATH)
 
@@ -43,18 +45,18 @@ openapi:
 	$(GOPATH)/bin/go-bindata --pkg kubernetesapi -o openapi/kubernetesapi/swagger.go openapi/kubernetesapi/swagger.json
 	$(GOPATH)/bin/go-bindata --pkg kustomizationapi -o openapi/kustomizationapi/swagger.go openapi/kustomizationapi/swagger.json
 
-kind:
-	which $(GOPATH)/bin/kind || GO111MODULE=on go get sigs.k8s.io/kind@v0.9.0
+$(MYGOBIN)/kind:
+	GO111MODULE=on go get sigs.k8s.io/kind@v0.9.0
 
 kpt:
 	which $(GOPATH)/bin/kpt || GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
 API_VERSION="v1.19.1"
-schema: kind kpt
+schema: $(MYGOBIN)/kind kpt
 	cp $(HOME)/.kube/config /tmp/kubeconfig.txt | true
-	$(GOPATH)/bin/kind create cluster --image kindest/node:$(API_VERSION) --name=getopenapidata
+	$(MYGOBIN)/kind create cluster --image kindest/node:$(API_VERSION) --name=getopenapidata
 	$(GOPATH)/bin/kpt live  fetch-k8s-schema  --pretty-print > /tmp/new_swagger.json
-	$(GOPATH)/bin/kind delete cluster --name=getopenapidata 
+	$(MYGOBIN)/kind delete cluster --name=getopenapidata
 	cp /tmp/kubeconfig.txt $(HOME)/.kube/config | true
 	cp /tmp/new_swagger.json openapi/kubernetesapi/swagger.json
 
