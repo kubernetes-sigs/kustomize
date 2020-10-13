@@ -2,10 +2,12 @@ package builtins_qlik
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-getter"
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
@@ -57,13 +59,14 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		dir = filepath.Join(konfig.HomeDir(), konfig.XdgConfigHomeEnvDefault, konfig.ProgramName, konfig.RelPluginHome)
 		p.logger.Printf("No kustomize plugin directory, will create default: %v\n", dir)
 	}
+
 	repodir := filepath.Join(dir, "qlik", "v1", "repos")
 	dir = filepath.Join(repodir, p.ObjectMeta.Name)
-	err = os.MkdirAll(repodir, 0777)
-	if err != nil {
+	if err := os.MkdirAll(repodir, 0777); err != nil {
 		p.logger.Printf("error creating directory: %v, error: %v\n", dir, err)
 		return nil, err
 	}
+
 	opts := []getter.ClientOption{}
 	client := &getter.Client{
 		Ctx:     context.TODO(),
@@ -73,22 +76,12 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		Mode:    getter.ClientModeAny,
 		Options: opts,
 	}
-	loader.GoGetterMutex.Lock()
-	// In case it was an update (slighty inefficient but easy)
-	// go getter doesn't do --tags so we can "fake it"
-	cmd := exec.Command("git", "config", "-f", filepath.Join(dir, ".git", "config"), "--add", "remote.origin.fetch", "+refs/tags/*:refs/tags/*")
-	cmd.Stderr = os.Stderr
-	cmd.Run()
-	err = client.Get()
-	cmd = exec.Command("git", "config", "-f", filepath.Join(dir, ".git", "config"), "--unset", "remote.origin.fetch", `\+refs\/tags\/\*\:refs\/tags\/\*`)
-	cmd.Stderr = os.Stderr
-	cmd.Run()
-	loader.GoGetterMutex.Unlock()
 
-	if err != nil {
+	if err := p.executeCoGetter(client, dir); err != nil {
 		p.logger.Printf("Error fetching repository: %v\n", err)
 		return nil, err
 	}
+
 	currentExe, err := p.executableResolver.Executable()
 	if err != nil {
 		p.logger.Printf("Unable to get kustomize executable: %v\n", err)
@@ -103,7 +96,7 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		p.logger.Printf("Error: Unable to set working dir %v: %v\n", dir, err)
 		return nil, err
 	}
-	cmd = exec.Command(currentExe, "build", ".")
+	cmd := exec.Command(currentExe, "build", ".")
 	cmd.Stderr = os.Stderr
 	kustomizedYaml, err := cmd.Output()
 	if err != nil {
@@ -112,6 +105,49 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 	}
 	os.Chdir(oswd)
 	return p.rf.NewResMapFromBytes(kustomizedYaml)
+}
+
+func (p *GoGetterPlugin) executeCoGetter(client *getter.Client, dir string) error {
+	loader.GoGetterMutex.Lock()
+	defer loader.GoGetterMutex.Unlock()
+
+	// In case it was an update (slighty inefficient but easy)
+	// Second time is not a full clone
+	// go getter doesn't do --tags so we can "fake it"
+	if _, err := os.Stat(dir); err != nil {
+		// First Time
+		if os.IsNotExist(err) {
+			if err := client.Get(); err != nil {
+				p.logger.Printf("Error executing go-getter: %v\n", err)
+				return err
+			}
+		}
+	}
+	// read the whole file at once
+	b, err := ioutil.ReadFile(filepath.Join(dir, ".git", "config"))
+	if err != nil {
+		p.logger.Printf("error reading git config file: %v, error: %v\n", filepath.Join(dir, ".git", "config"), err)
+		return err
+	}
+	if !strings.Contains(string(b), "+refs/tags/*:refs/tags/*") {
+		cmd := exec.Command("git", "config", "-f", filepath.Join(dir, ".git", "config"), "--add", "remote.origin.fetch", "+refs/tags/*:refs/tags/*")
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			p.logger.Printf("error executing git config: %v\n", err)
+			return err
+		}
+	}
+	if err := client.Get(); err != nil {
+		p.logger.Printf("Error executing go-getter: %v\n", err)
+		return err
+	}
+
+	// Since we are checking for existance we should not need
+	// cmd := exec.Command("git", "config", "-f", filepath.Join(dir, ".git", "config"), "--unset", "remote.origin.fetch", `\+refs\/tags\/\*\:refs\/tags\/\*`)
+	// cmd.Stderr = os.Stderr
+	// cmd.Run()
+
+	return nil
 }
 
 // NewGoGetterPlugin ...

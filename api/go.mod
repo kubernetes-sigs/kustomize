@@ -16,10 +16,12 @@ require (
 	github.com/imdario/mergo v0.3.8
 	github.com/mholt/archiver/v3 v3.3.0
 	github.com/pkg/errors v0.9.1
+	github.com/sosedoff/gitkit v0.2.0
 	github.com/stretchr/testify v1.4.0
 	github.com/yujunz/go-getter v1.4.1-lite
 	golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e
 	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
