@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
@@ -63,7 +64,7 @@ func NewCreateSetterRunner(parent string) *CreateSetterRunner {
 	set.Flags().BoolVarP(&r.CreateSetter.RecurseSubPackages, "recurse-subpackages", "R", false,
 		"creates setter recursively in all the nested subpackages")
 	set.Flags().MarkHidden("version")
-	fixDocs(parent, set)
+	runner.FixDocs(parent, set)
 	r.Command = set
 	return r
 }
@@ -81,7 +82,7 @@ type CreateSetterRunner struct {
 }
 
 func (r *CreateSetterRunner) runE(c *cobra.Command, args []string) error {
-	return handleError(c, r.createSetter(c, args))
+	return runner.HandleError(c, r.createSetter(c, args))
 }
 
 func (r *CreateSetterRunner) preRunE(c *cobra.Command, args []string) error {
@@ -179,16 +180,16 @@ func (r *CreateSetterRunner) processSchema() error {
 
 func (r *CreateSetterRunner) createSetter(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		e := executeCmdOnPkgs{
-			needOpenAPI:        true,
-			writer:             c.OutOrStdout(),
-			rootPkgPath:        args[0],
-			recurseSubPackages: r.CreateSetter.RecurseSubPackages,
-			cmdRunner:          r,
+		e := runner.ExecuteCmdOnPkgs{
+			NeedOpenAPI:        true,
+			Writer:             c.OutOrStdout(),
+			RootPkgPath:        args[0],
+			RecurseSubPackages: r.CreateSetter.RecurseSubPackages,
+			CmdRunner:          r,
 		}
-		err := e.execute()
+		err := e.Execute()
 		if err != nil {
-			return handleError(c, err)
+			return runner.HandleError(c, err)
 		}
 		return nil
 	}
@@ -204,7 +205,7 @@ func (r *CreateSetterRunner) createSetter(c *cobra.Command, args []string) error
 	return nil
 }
 
-func (r *CreateSetterRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *CreateSetterRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	r.CreateSetter = settersutil.SetterCreator{
 		Name:               r.CreateSetter.Name,
 		SetBy:              r.CreateSetter.SetBy,

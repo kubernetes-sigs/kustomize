@@ -15,7 +15,7 @@ var fieldSortOrder = []string{
 	// secret and configmap
 	"stringData", "data", "binaryData",
 
-	//cronjobspec,  daemonsetspec, deploymentspec, statefulsetspec,
+	// cronjobspec,  daemonsetspec, deploymentspec, statefulsetspec,
 	// jobspec fields
 	"parallelism", "completions", "activeDeadlineSeconds", "backoffLimit",
 	"replicas", "selector", "manualSelector", "template",

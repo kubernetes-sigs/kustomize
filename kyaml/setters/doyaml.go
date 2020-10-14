@@ -114,7 +114,7 @@ func (fs *fieldSetter) set(
 	}
 
 	// be sure to set the tag to the matching type so the yaml doesn't incorrectly quote
-	//integers or booleans as strings
+	// integers or booleans as strings
 	fType := fieldmeta.FieldValueType(f.Schema.Type[0])
 	if err := fType.Validate(field.YNode().Value); err != nil {
 		return err

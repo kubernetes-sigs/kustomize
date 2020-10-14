@@ -170,9 +170,9 @@ func (f *FileSetter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 			return nil, err
 		}
 		file := f.FilenamePattern
-		file = strings.Replace(file, string(KindFmt), strings.ToLower(m.Kind), -1)
-		file = strings.Replace(file, string(NameFmt), strings.ToLower(m.Name), -1)
-		file = strings.Replace(file, string(NamespaceFmt), strings.ToLower(m.Namespace), -1)
+		file = strings.ReplaceAll(file, string(KindFmt), strings.ToLower(m.Kind))
+		file = strings.ReplaceAll(file, string(NameFmt), strings.ToLower(m.Name))
+		file = strings.ReplaceAll(file, string(NamespaceFmt), strings.ToLower(m.Namespace))
 
 		if _, found := m.Annotations[kioutil.PathAnnotation]; !found || f.Override {
 			if _, err := input[i].Pipe(yaml.SetAnnotation(kioutil.PathAnnotation, file)); err != nil {

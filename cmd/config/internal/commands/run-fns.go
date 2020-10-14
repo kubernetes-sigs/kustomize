@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -29,7 +30,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
 	r.Command = c
@@ -103,7 +104,7 @@ type RunFnRunner struct {
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
-	return handleError(c, r.RunFns.Execute())
+	return runner.HandleError(c, r.RunFns.Execute())
 }
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
