@@ -1,10 +1,11 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test lint tidy openapi
-
+MYGOBIN := $(shell go env GOPATH)/bin
 GOPATH := $(shell go env GOPATH)
+export PATH := $(MYGOBIN):$(PATH)
 
+.PHONY: generate license fix vet fmt test lint tidy openapi schema
 all: generate license fix vet fmt test lint tidy
 
 fix:
@@ -39,6 +40,30 @@ vet:
 # likely related to https://github.com/kubernetes/kubernetes/issues/39188
 openapi:
 	sed -i 's/"x-kubernetes-patch-merge-key": "containerPort"/"x-kubernetes-patch-merge-key": "name"/g' 'openapi/kubernetesapi/swagger.json'
-	(which $(GOPATH)/bin/go-bindata || go get -v github.com/go-bindata/go-bindata)
+	(which $(GOPATH)/bin/go-bindata || go get -u github.com/go-bindata/go-bindata/...)
 	$(GOPATH)/bin/go-bindata --pkg kubernetesapi -o openapi/kubernetesapi/swagger.go openapi/kubernetesapi/swagger.json
 	$(GOPATH)/bin/go-bindata --pkg kustomizationapi -o openapi/kustomizationapi/swagger.go openapi/kustomizationapi/swagger.json
+
+$(MYGOBIN)/kind:
+	( \
+		set -e; \
+		d=$(shell mktemp -d); cd $$d; \
+		wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(shell uname)-amd64; \
+		chmod +x ./kind; \
+		mv ./kind $(MYGOBIN); \
+		rm -rf $$d; \
+	)
+
+$(MYGOBIN)/kpt:
+	../hack/install_kpt.sh 0.34.0 $(MYGOBIN)
+
+API_VERSION="v1.19.1"
+schema: $(MYGOBIN)/kind $(MYGOBIN)/kpt
+	cp $(HOME)/.kube/config /tmp/kubeconfig.txt | true
+	$(MYGOBIN)/kind create cluster --image kindest/node:$(API_VERSION) --name=getopenapidata
+	$(MYGOBIN)/kpt live  fetch-k8s-schema  --pretty-print > /tmp/new_swagger.json
+	$(MYGOBIN)/kind delete cluster --name=getopenapidata
+	cp /tmp/kubeconfig.txt $(HOME)/.kube/config | true
+	cp /tmp/new_swagger.json openapi/kubernetesapi/swagger.json
+
+
