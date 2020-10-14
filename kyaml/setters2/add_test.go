@@ -281,13 +281,13 @@ packageMetadata:
 func TestAdd_Filter2(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile")
 
-	//write initial resourcefile to temp path
+	// write initial resourcefile to temp path
 	err := ioutil.WriteFile(path, []byte(resourcefile), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	//add a setter definition
+	// add a setter definition
 	sd := SetterDefinition{
 		Name:  "image",
 		Value: "1",

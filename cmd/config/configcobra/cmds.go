@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/api"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/tutorials"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 )
 
 // Export commands publicly for composition
@@ -35,13 +36,13 @@ var (
 	Wrap               = commands.WrapCommand
 	XArgs              = commands.XArgsCommand
 
-	StackOnError = &commands.StackOnError
-	ExitOnError  = &commands.ExitOnError
+	StackOnError = &runner.StackOnError
+	ExitOnError  = &runner.ExitOnError
 )
 
 // AddCommands adds the cfg and fn commands to kustomize.
 func AddCommands(root *cobra.Command, name string) *cobra.Command {
-	commands.ExitOnError = true
+	runner.ExitOnError = true
 
 	root.PersistentFlags().BoolVar(StackOnError, "stack-trace", false,
 		"print a stack-trace on error")

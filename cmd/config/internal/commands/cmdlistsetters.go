@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
@@ -37,7 +38,7 @@ func NewListSettersRunner(parent string) *ListSettersRunner {
 		"include substitutions in the output")
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
 		"list setters recursively in all the nested subpackages")
-	fixDocs(parent, c)
+	runner.FixDocs(parent, c)
 	r.Command = c
 	return r
 }
@@ -67,24 +68,24 @@ func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
 
 func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		e := executeCmdOnPkgs{
-			needOpenAPI:        true,
-			writer:             c.OutOrStdout(),
-			rootPkgPath:        args[0],
-			recurseSubPackages: r.RecurseSubPackages,
-			cmdRunner:          r,
+		e := runner.ExecuteCmdOnPkgs{
+			NeedOpenAPI:        true,
+			Writer:             c.OutOrStdout(),
+			RootPkgPath:        args[0],
+			RecurseSubPackages: r.RecurseSubPackages,
+			CmdRunner:          r,
 		}
 
-		err := e.execute()
+		err := e.Execute()
 		if err != nil {
-			return handleError(c, err)
+			return runner.HandleError(c, err)
 		}
 		return nil
 	}
-	return handleError(c, lookup(r.Lookup, c, args))
+	return runner.HandleError(c, lookup(r.Lookup, c, args))
 }
 
-func (r *ListSettersRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *ListSettersRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	r.List = setters2.List{
 		Name:            r.List.Name,
 		OpenAPIFileName: ext.KRMFileName(),
@@ -130,7 +131,7 @@ func (r *ListSettersRunner) ListSetters(w io.Writer, openAPIPath, resourcePath s
 
 	if len(r.List.Setters) == 0 {
 		// exit non-0 if no matching setters are found
-		if ExitOnError {
+		if runner.ExitOnError {
 			os.Exit(1)
 		}
 	}

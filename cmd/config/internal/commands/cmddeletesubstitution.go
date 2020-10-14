@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -25,7 +26,7 @@ func NewDeleteSubstitutionRunner(parent string) *DeleteSubstitutionRunner {
 	}
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", false,
 		"deletes substitution recursively in all the nested subpackages")
-	fixDocs(parent, c)
+	runner.FixDocs(parent, c)
 	r.Command = c
 
 	return r
@@ -52,21 +53,21 @@ func (r *DeleteSubstitutionRunner) preRunE(c *cobra.Command, args []string) erro
 }
 
 func (r *DeleteSubstitutionRunner) runE(c *cobra.Command, args []string) error {
-	e := executeCmdOnPkgs{
-		needOpenAPI:        true,
-		writer:             c.OutOrStdout(),
-		rootPkgPath:        args[0],
-		recurseSubPackages: r.RecurseSubPackages,
-		cmdRunner:          r,
+	e := runner.ExecuteCmdOnPkgs{
+		NeedOpenAPI:        true,
+		Writer:             c.OutOrStdout(),
+		RootPkgPath:        args[0],
+		RecurseSubPackages: r.RecurseSubPackages,
+		CmdRunner:          r,
 	}
-	err := e.execute()
+	err := e.Execute()
 	if err != nil {
-		return handleError(c, err)
+		return runner.HandleError(c, err)
 	}
 	return nil
 }
 
-func (r *DeleteSubstitutionRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *DeleteSubstitutionRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	r.DeleteSubstitution = settersutil.DeleterCreator{
 		Name:               r.DeleteSubstitution.Name,
 		DefinitionPrefix:   fieldmeta.SubstitutionDefinitionPrefix,

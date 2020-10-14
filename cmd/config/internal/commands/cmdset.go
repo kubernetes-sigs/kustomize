@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
@@ -31,7 +32,7 @@ func NewSetRunner(parent string) *SetRunner {
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
-	fixDocs(parent, c)
+	runner.FixDocs(parent, c)
 	r.Command = c
 	c.Flags().StringArrayVar(&r.Values, "values", []string{},
 		"optional flag, the values of the setter to be set to")
@@ -131,26 +132,26 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 
 func (r *SetRunner) runE(c *cobra.Command, args []string) error {
 	if setterVersion == "v2" {
-		e := executeCmdOnPkgs{
-			needOpenAPI:        true,
-			writer:             c.OutOrStdout(),
-			rootPkgPath:        args[0],
-			recurseSubPackages: r.Set.RecurseSubPackages,
-			cmdRunner:          r,
+		e := runner.ExecuteCmdOnPkgs{
+			NeedOpenAPI:        true,
+			Writer:             c.OutOrStdout(),
+			RootPkgPath:        args[0],
+			RecurseSubPackages: r.Set.RecurseSubPackages,
+			CmdRunner:          r,
 		}
-		err := e.execute()
+		err := e.Execute()
 		if err != nil {
-			return handleError(c, err)
+			return runner.HandleError(c, err)
 		}
 		return nil
 	}
 	if len(args) > 2 || c.Flag("values").Changed {
-		return handleError(c, r.perform(c, args))
+		return runner.HandleError(c, r.perform(c, args))
 	}
-	return handleError(c, lookup(r.Lookup, c, args))
+	return runner.HandleError(c, lookup(r.Lookup, c, args))
 }
 
-func (r *SetRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *SetRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	r.Set = settersutil.FieldSetter{
 		Name:               r.Set.Name,
 		Value:              r.Set.Value,

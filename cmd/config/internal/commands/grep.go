@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
@@ -29,7 +30,7 @@ func GetGrepRunner(name string) *GrepRunner {
 		RunE:    r.runE,
 		Args:    cobra.MaximumNArgs(2),
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", true,
 		"annotate resources with their file origins.")
 	c.Flags().BoolVarP(&r.InvertMatch, "invert-match", "", false,
@@ -66,7 +67,7 @@ func (r *GrepRunner) preRunE(c *cobra.Command, args []string) error {
 
 		return qa.Cmp(qb), err
 	}
-	parts, err := parseFieldPath(args[0])
+	parts, err := runner.ParseFieldPath(args[0])
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (r *GrepRunner) preRunE(c *cobra.Command, args []string) error {
 func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 	if len(args) == 1 {
 		input := &kio.ByteReader{Reader: c.InOrStdin()}
-		return handleError(c, kio.Pipeline{
+		return runner.HandleError(c, kio.Pipeline{
 			Inputs:  []kio.Reader{input},
 			Filters: []kio.Filter{r.GrepFilter},
 			Outputs: []kio.Writer{kio.ByteWriter{
@@ -117,16 +118,16 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 
 	out := bytes.Buffer{}
 
-	e := executeCmdOnPkgs{
-		writer:             &out,
-		needOpenAPI:        false,
-		recurseSubPackages: r.RecurseSubPackages,
-		cmdRunner:          r,
-		rootPkgPath:        args[1],
-		skipPkgPathPrint:   true,
+	e := runner.ExecuteCmdOnPkgs{
+		Writer:             &out,
+		NeedOpenAPI:        false,
+		RecurseSubPackages: r.RecurseSubPackages,
+		CmdRunner:          r,
+		RootPkgPath:        args[1],
+		SkipPkgPathPrint:   true,
 	}
 
-	err := e.execute()
+	err := e.Execute()
 	if err != nil {
 		return err
 	}
@@ -138,7 +139,7 @@ func (r *GrepRunner) runE(c *cobra.Command, args []string) error {
 
 }
 
-func (r *GrepRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *GrepRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
 	out := &bytes.Buffer{}
 	err := kio.Pipeline{

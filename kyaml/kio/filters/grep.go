@@ -68,7 +68,7 @@ func (f GrepFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 				if err != nil {
 					return err
 				}
-				str = strings.TrimSpace(strings.Replace(str, `"`, "", -1))
+				str = strings.TrimSpace(strings.ReplaceAll(str, `"`, ""))
 			} else {
 				// if not regexp, then it needs to parse into a quantity and comments will
 				// break that
