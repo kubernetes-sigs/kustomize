@@ -57,15 +57,30 @@ func main() {
 // ListAllPullRequestFiles retrieves as many files as possible for the
 // target pull request.
 //
-// NOTE: GitHub API limits ListFiles to a maximum of 3000 files. Very large
+// Note: GitHub API limits ListFiles to a maximum of 3000 files. Very large
 // changes which exceed this limit may pass this check even if they
 // do contain spanning changes.
 // see: https://developer.github.com/v3/pulls/#list-pull-requests-files
 func ListAllPullRequestFiles(client *github.Client, owner *string, pullrequest *int, repo *string) ([]*github.CommitFile, error) {
+	// foundFiles across all pages from github api
+	var foundFiles []*github.CommitFile
 	// GitHub returns the first 30 files by default, increase this value
-	options := &github.ListOptions{PerPage: 3000}
-	files, _, err := client.PullRequests.ListFiles(context.Background(), *owner, *repo, *pullrequest, options)
-	return files, err
+	// Note: Page 1 is the first page of results. Page 0 is an end of list mark.
+	// Github only returns (max) 100 results per page and PR's may exceed this
+	// so loop until all pages have been enumerated.
+	options := &github.ListOptions{PerPage: 100, Page: 1}
+	for options.Page != 0 {
+		files, response, err := client.PullRequests.ListFiles(context.Background(), *owner, *repo, *pullrequest, options)
+
+		// If an error has occurred while querying api exit early, report error
+		if err != nil {
+			return nil, err
+		}
+		foundFiles = append(foundFiles, files...)
+		// setup next page to continue loop
+		options = &github.ListOptions{PerPage: 100, Page: response.NextPage}
+	}
+	return foundFiles, nil
 }
 
 // CountModifiedRestrictedDirectories Accepts a map of paths and the number of
