@@ -145,9 +145,6 @@ type SetterDefinition struct {
 	// ListValues are the value of a list setter.
 	ListValues []string `yaml:"listValues,omitempty"`
 
-	// IsSet indicates the specified field has been explicitly assigned.
-	IsSet string `yaml:"isSet,omitempty"`
-
 	// SetBy is the person or role that last set the value.
 	SetBy string `yaml:"setBy,omitempty"`
 
@@ -175,6 +172,9 @@ type SetterDefinition struct {
 	// live apply/preview. This field is added to the setter definition to record
 	// the package publisher's intent to make the setter required to be set.
 	Required bool `yaml:"required,omitempty"`
+
+	// IsSet indicates the specified field has been explicitly assigned.
+	IsSet bool `yaml:"isSet,omitempty"`
 }
 
 func (sd SetterDefinition) AddToFile(path string) error {
