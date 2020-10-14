@@ -514,7 +514,7 @@ func anchorRegex(pattern string) string {
 	if pattern == "" {
 		return pattern
 	}
-	return "^" + pattern + "$"
+	return "^(?:" + pattern + ")$"
 }
 
 // Select returns a list of resources that
