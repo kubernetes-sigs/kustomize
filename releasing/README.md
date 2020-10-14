@@ -10,6 +10,7 @@
 [semver release]: #semver-review
 [`cloudbuild.yaml`]: cloudbuild.yaml
 [kustomize repo release page]: https://github.com/kubernetes-sigs/kustomize/releases
+[OpenAPI Readme]: ../kyaml/openapi/README.md
 
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
@@ -27,6 +28,11 @@ The dependencies determine the release order:
 | `sigs.k8s.io/kustomize/kustomize`  | `cmd/config`, `api`   |
 
 Thus, do `kyaml` first, then `cli-utils`, etc.
+
+#### Consider fetching new OpenAPI data
+The Kubernetes OpenAPI data changes no more frequently than once per quarter. Instructions 
+on how to get a new OpenAPI sample can be found in the
+[OpenAPI Readme].
 
 #### Establish clean state
 
@@ -141,7 +147,6 @@ Visit the [release page] and edit the release notes as desired;
 this should be automated, and descriptions in PR's should
 be standardized to make automation possible.
 See kubebuilder project.
-
 
 ## Public Modules
 
