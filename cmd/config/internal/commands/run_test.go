@@ -300,6 +300,16 @@ apiVersion: v1
 				Env:  []string{"FOO=BAR", "BAR"},
 			},
 		},
+		{
+			name: "as current user",
+			args: []string{"run", "dir", "--as-current-user"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path:          "dir",
+				AsCurrentUser: true,
+				Env:           []string{},
+			},
+		},
 	}
 
 	for i := range tests {
