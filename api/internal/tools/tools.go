@@ -21,5 +21,5 @@ import (
 	// major version increments in pluginator with each
 	// api release to allow this trick to work and not
 	// introduce cycles.
-	// _ "sigs.k8s.io/kustomize/pluginator/v2"
+	// _ "sigs.k8s.io/kustomize/cmd/pluginator/v2"
 )
