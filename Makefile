@@ -47,35 +47,32 @@ $(MYGOBIN)/golangci-lint-kustomize:
 		GO111MODULE=on go build -tags=tools -o $(MYGOBIN)/golangci-lint-kustomize github.com/golangci/golangci-lint/cmd/golangci-lint; \
 	)
 
-$(MYGOBIN)/gorepomod:
-	cd cmd/gorepomod; \
-	go install .
-
+# Install from version specified in api/go.mod.
 $(MYGOBIN)/mdrip:
 	cd api; \
 	go install github.com/monopole/mdrip
 
+# Install from version specified in api/go.mod.
 $(MYGOBIN)/stringer:
 	cd api; \
 	go install golang.org/x/tools/cmd/stringer
 
+# Install from version specified in api/go.mod.
 $(MYGOBIN)/goimports:
 	cd api; \
 	go install golang.org/x/tools/cmd/goimports
 
-# Install resource from whatever is checked out.
-$(MYGOBIN)/resource:
-	cd cmd/resource; \
+# Build from local source.
+$(MYGOBIN)/gorepomod:
+	cd cmd/gorepomod; \
 	go install .
 
-# To pin pluginator, use this recipe instead:
-#   cd api;
-#   go install sigs.k8s.io/kustomize/pluginator/v2
+# Build from local source.
 $(MYGOBIN)/pluginator:
 	cd cmd/pluginator; \
 	go install .
 
-# Install kustomize from whatever is checked out.
+# Build from local source.
 $(MYGOBIN)/kustomize:
 	cd kustomize; \
 	go install .
