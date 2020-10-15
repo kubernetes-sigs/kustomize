@@ -72,7 +72,7 @@ $(MYGOBIN)/resource:
 #   cd api;
 #   go install sigs.k8s.io/kustomize/pluginator/v2
 $(MYGOBIN)/pluginator:
-	cd pluginator; \
+	cd cmd/pluginator; \
 	go install .
 
 # Install kustomize from whatever is checked out.
@@ -190,8 +190,8 @@ lint-kustomize: install-tools $(builtinplugins)
 	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
 	cd kustomize; \
 	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd pluginator; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
+	cd cmd/pluginator; \
+	$(MYGOBIN)/golangci-lint-kustomize -c ../../.golangci-kustomize.yml run ./...
 
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
