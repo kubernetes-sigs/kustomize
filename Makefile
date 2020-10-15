@@ -6,7 +6,6 @@
 MYGOBIN := $(shell go env GOPATH)/bin
 SHELL := /bin/bash
 export PATH := $(MYGOBIN):$(PATH)
-MODULES := "cmd/config" "api/" "kustomize/" "kyaml/"
 
 .PHONY: all
 all: verify-kustomize
@@ -25,7 +24,6 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
-	test-multi-module \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
@@ -221,17 +219,6 @@ test-unit-cmd-all:
 
 test-go-mod:
 	./travis/check-go-mod.sh
-
-# Environment variables are defined at
-# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
-.PHONY: test-multi-module
-test-multi-module:
-	go install github.com/google/go-github/github
-	go run ./travis/module-span/multi-module-span.go \
-	-owner=$(REPO_OWNER) \
-	-repo=$(REPO_NAME) \
-	-pr=$(PR_NUM) \
-	$(MODULES)
 
 .PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
