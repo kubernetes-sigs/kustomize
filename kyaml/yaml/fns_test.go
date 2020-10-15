@@ -57,6 +57,36 @@ func TestAppend(t *testing.T) {
 	assert.Nil(t, rn)
 }
 
+func TestGetElementByIndex(t *testing.T) {
+	node, err := Parse(`
+- 0
+- 1
+- 2
+`)
+	assert.NoError(t, err)
+
+	rn, err := node.Pipe(GetElementByIndex("0"))
+	assert.NoError(t, err)
+	assert.Equal(t, "0\n", assertNoErrorString(t)(rn.String()))
+
+	rn, err = node.Pipe(GetElementByIndex("2"))
+	assert.NoError(t, err)
+	assert.Equal(t, "2\n", assertNoErrorString(t)(rn.String()))
+
+	rn, err = node.Pipe(GetElementByIndex("-"))
+	assert.NoError(t, err)
+	assert.Equal(t, "2\n", assertNoErrorString(t)(rn.String()))
+
+	_, err = node.Pipe(GetElementByIndex("#"))
+	assert.Errorf(t, err, "unknown index #")
+
+	rn, _ = node.Pipe(GetElementByIndex("-1"))
+	assert.Nil(t, rn)
+
+	rn, _ = node.Pipe(GetElementByIndex("4"))
+	assert.Nil(t, rn)
+}
+
 func TestGetElementByKey(t *testing.T) {
 	node, err := Parse(`
 - b: c
@@ -340,6 +370,18 @@ j: k
   p: q
 `, assertNoErrorString(t)(rn.String()))
 
+	rn, err = node.Pipe(Lookup("a", "b", "0"))
+	assert.NoError(t, err)
+	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
+	assert.Equal(t, `f: g
+`, assertNoErrorString(t)(rn.String()))
+
+	rn, err = node.Pipe(Lookup("a", "b", "-", "h"))
+	assert.NoError(t, err)
+	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
+	assert.Equal(t, `i
+`, assertNoErrorString(t)(rn.String()))
+
 	rn, err = node.Pipe(Lookup("l"))
 	assert.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
@@ -381,6 +423,16 @@ j: k
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "[z=z]"))
+	assert.NoError(t, err)
+	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
+	assert.Nil(t, rn)
+
+	rn, err = node.Pipe(Lookup("a", "b", "-1"))
+	assert.NoError(t, err)
+	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
+	assert.Nil(t, rn)
+
+	rn, err = node.Pipe(Lookup("a", "b", "99"))
 	assert.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
