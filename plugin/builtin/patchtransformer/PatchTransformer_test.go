@@ -693,9 +693,8 @@ spec:
 }
 
 // test for https://github.com/kubernetes-sigs/kustomize/issues/2767
-// resolved with a sed command in kyaml/Makefile that edits the file
-// kyaml/openapi/kubernetesapi/swagger.json to change the ports merge key
-// likely related to https://github.com/kubernetes/kubernetes/issues/39188
+// currently documents broken state.  resulting ports: should have both
+// take-over-the-world and disappearing-act on 8080
 func TestPatchTransformerSimilarArrays(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
@@ -747,9 +746,6 @@ spec:
       - image: test-image
         name: test-deployment
         ports:
-        - containerPort: 8080
-          name: take-over-the-world
-          protocol: TCP
         - containerPort: 8080
           name: disappearing-act
           protocol: TCP
