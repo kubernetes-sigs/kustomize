@@ -1,12 +1,16 @@
-// multi-module-span script:
-// A script which can detect when a pull request would make changes which
-// span a series of restricted directories (ex: multiple go modules or projects)
+// prchecker examines pull requests
 //
-// When a pull request includes files which span two modules the script will
-// exit with a non-zero exit code.
+// - When a PR includes files from multiple modules that we'd rather not
+//   modify at the same time (in an effort to  have more self-contained
+//   release notes), the script will exit with a non-zero exit code.
 //
-// Running:
-// go run multi-module-span.go -owner=kubernetes-sigs -repo=kustomize -pr=2997 cmd/config  api/ kustomize/ kyaml/
+// Usage:
+//
+//    go run . \
+//      -owner=kubernetes-sigs \
+//      -repo=kustomize \
+//      -pr=2997 \
+//     cmd/config api kustomize kyaml
 
 package main
 
