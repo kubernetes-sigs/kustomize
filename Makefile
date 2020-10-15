@@ -73,6 +73,11 @@ $(MYGOBIN)/pluginator:
 	go install .
 
 # Build from local source.
+$(MYGOBIN)/prchecker:
+	cd cmd/prchecker; \
+	go install .
+
+# Build from local source.
 $(MYGOBIN)/kustomize:
 	cd kustomize; \
 	go install .
@@ -85,6 +90,7 @@ install-tools: \
 	$(MYGOBIN)/gorepomod \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
+	$(MYGOBIN)/prchecker \
 	$(MYGOBIN)/stringer
 
 ### Begin kustomize plugin rules.
