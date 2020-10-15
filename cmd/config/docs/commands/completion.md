@@ -1,20 +1,25 @@
-## install-completion
+## completion
 
-Install shell completion.
+Generate shell completion.
 
 ### Synopsis
 
-Install shell completion for kustomize commands and flags -- supports bash, fish and zsh.
+Generate shell completion for `kustomize` -- supports bash, zsh, fish and powershell.
 
-    kustomize install-completion
+### Examples
 
-Registers the completion command with known shells (e.g. .bashrc, .bash_profile, etc):
+    # load completion for Bash
+    source <(kustomize completion bash)
 
-    complete -C /Users/USER/go/bin/kustomize kustomize
+    # install for Bash in Linux
+    kustomize completion bash > /etc/bash_completion.d/kustomize
 
-Because the completion command is embedded in kustomize directly, there is no need to update
-it separately from the kustomize binary.
+    # install for Bash in MacOS
+    kustomize completion bash > /usr/local/etc/bash_completion.d/kustomize
 
-To uninstall shell completion run:
+    # package for Bash
+    kustomize completion bash > /usr/share/bash-completion/completions/kustomize
 
-    COMP_UNINSTALL=1 kustomize install-completion
+    # package for zsh
+    kustomize completion zsh > /usr/share/zsh/site-functions/_kustomize
+
