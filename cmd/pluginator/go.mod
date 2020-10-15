@@ -4,4 +4,4 @@ go 1.14
 
 require sigs.k8s.io/kustomize/api v0.6.3
 
-replace sigs.k8s.io/kustomize/api v0.6.3 => ../api
+replace sigs.k8s.io/kustomize/api v0.6.3 => ../../api
