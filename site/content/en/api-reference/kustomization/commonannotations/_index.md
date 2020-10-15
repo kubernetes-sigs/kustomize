@@ -3,10 +3,10 @@ title: "commonAnnotations"
 linkTitle: "commonAnnotations"
 type: docs
 description: >
-    Add annotations to add all resources.
+    Add annotations to all resources.
 ---
 
-Add annotations to all resources.  If the annotation key already is present on the resource,
+Add annotations to all resources.  If the annotation key is already present on the resource,
 the value will be overridden.
 
 ```yaml
