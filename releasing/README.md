@@ -157,7 +157,6 @@ See kubebuilder project.
 [`sigs.k8s.io/kustomize/cmd/config`]: #sigsk8siokustomizecmdconfig
 
 [kustomize/v3.2.1]: /../../releases/tag/kustomize%2Fv3.2.1
-[pluginator/v1.0.0]: /../../releases/tag/pluginator%2Fv1.0.0
 
 | Module Name                          | Module Description         | Example Tag         | Example Branch Name         |
 | ------                               | ---                        | ---                 | ---                         |
@@ -213,22 +212,6 @@ The [cmd/config module](https://github.com/kubernetes-sigs/kustomize/tree/master
 
 A collection od CLI commands that correspond to
 kyaml filters.
-
-### sigs.k8s.io/kustomize/pluginator
-
-The `pluginator` program, a code generator that
-converts Go plugins to conventional statically
-linkable library code.
-
-Only holds a `main`, and therefore unimportable.
-It holds the _pluginator_ executable.
-
-This binary is only of
-interest to someone writing a new builtin
-transformer or generator.  See the [plugin
-documentation](../docs/plugins).
-Its dependence on the API is  for
-plugin-related constants, not logic.
 
 ## Manual process
 
@@ -335,23 +318,10 @@ tag="${module}/v${major}.${minor}.${patch}"
 echo "tag=$tag"
 ```
 
-### Pin the executable to a particular API version
+### Pin modules to their dependencies.
 
-Only do this if releasing one of the
-executables (kustomize or pluginator).
-
-In this repository, an executable in development
-on the master branch typically depends on the API
-also in development on the master branch.  This is
-achieved via a `replace` directive in the
-executable's `go.mod` file.
-
-A _released_ executable, however, must depend on a
-specific release of the API.  For this reason,
-it's typical, but not required, to release an
-executable immediately after releasing the API,
-updating the API version that the executable
-requires.
+This is achieved via a `replace` directive
+in a module's `go.mod` file.
 
 ```
 # Update the following as needed, obviously.
