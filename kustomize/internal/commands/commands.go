@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
-	shell_complete "sigs.k8s.io/kustomize/cmd/config/complete"
+	"sigs.k8s.io/kustomize/cmd/config/completion"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit"
@@ -38,7 +38,7 @@ See https://sigs.k8s.io/kustomize
 	uf := kunstruct.NewKunstructuredFactoryImpl()
 	v := validator.NewKustValidator()
 	c.AddCommand(
-		shell_complete.NewCommand(),
+		completion.NewCommand(),
 		build.NewCmdBuild(stdOut),
 		edit.NewCmdEdit(fSys, v, uf),
 		create.NewCmdCreate(fSys, uf),
