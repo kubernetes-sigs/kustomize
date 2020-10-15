@@ -6,6 +6,7 @@ package yaml
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
@@ -121,6 +122,41 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	return NewRNode(e.Element), nil
+}
+
+// GetElementByIndex will return a Filter which can be applied to a sequence
+// node to get the element specified by the index
+func GetElementByIndex(index string) ElementPicker {
+	return ElementPicker{Index: index}
+}
+
+// ElementPicker picks the element with a specified index. Index starts from
+// 0 to len(list) - 1. a hyphen ("-") means the last index.
+type ElementPicker struct {
+	Index string
+}
+
+// Filter implements Filter
+func (p ElementPicker) Filter(rn *RNode) (*RNode, error) {
+	lastElement := false
+	idx, err := strconv.Atoi(p.Index)
+	if err != nil {
+		if p.Index != "-" {
+			return nil, errors.Errorf("unknown index %s", p.Index)
+		}
+		lastElement = true
+	}
+	elems, err := rn.Elements()
+	if err != nil {
+		return nil, err
+	}
+	if lastElement {
+		return elems[len(elems)-1], nil
+	}
+	if idx < 0 || idx >= len(elems) {
+		return nil, nil
+	}
+	return elems[idx], nil
 }
 
 // Clear returns a FieldClearer
@@ -364,12 +400,14 @@ type PathGetter struct {
 	// Each path part may be one of:
 	// * FieldMatcher -- e.g. "spec"
 	// * Map Key -- e.g. "app.k8s.io/version"
-	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]"
+	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]" or "0"
 	//
 	// Map Keys and Fields are equivalent.
 	// See FieldMatcher for more on Fields and Map Keys.
 	//
-	// List Entries are specified as map entry to match [fieldName=fieldValue].
+	// List Entries can be specified as map entry to match [fieldName=fieldValue]
+	// or a postional index like 0 to get the element. - is special and means the
+	// last element.
 	// See Elem for more on List Entries.
 	//
 	// Examples:
@@ -382,6 +420,8 @@ type PathGetter struct {
 	// * The leaf Node (final path) will be created with a Kind matching Create
 	// * Intermediary Nodes will be created as either a MappingNodes or
 	//   SequenceNodes as appropriate for each's Path location.
+	// * If a list item is specified by a index (an offset or "-"), this item will
+	//   not be created even Create is set.
 	Create yaml.Kind `yaml:"create,omitempty"`
 
 	// Style is the style to apply to created value Nodes.
@@ -402,9 +442,12 @@ func (l PathGetter) Filter(rn *RNode) (*RNode, error) {
 		if len(l.Path) > i+1 {
 			nextPart = l.Path[i+1]
 		}
-		if IsListIndex(part) {
+		switch {
+		case IsListIndex(part):
 			match, err = l.doElem(match, part)
-		} else {
+		case isPositionalIndex(part):
+			match, err = match.Pipe(GetElementByIndex(part))
+		default:
 			fieldPath = append(fieldPath, part)
 			match, err = l.doField(match, part, l.getKind(nextPart))
 		}
@@ -639,6 +682,16 @@ func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 // e.g. [=primitiveValue]
 func IsListIndex(p string) bool {
 	return strings.HasPrefix(p, "[") && strings.HasSuffix(p, "]")
+}
+
+// isPositionalIndex returns true if the index is a positional
+// index like 0, 1..., or - (last element)
+func isPositionalIndex(index string) bool {
+	if index == "-" {
+		return true
+	}
+	_, err := strconv.Atoi(index)
+	return err == nil
 }
 
 // SplitIndexNameValue splits a lookup part Val index into the field name
