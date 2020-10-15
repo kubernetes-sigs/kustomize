@@ -73,18 +73,24 @@ $(MYGOBIN)/pluginator:
 	go install .
 
 # Build from local source.
+$(MYGOBIN)/prchecker:
+	cd cmd/prchecker; \
+	go install .
+
+# Build from local source.
 $(MYGOBIN)/kustomize:
 	cd kustomize; \
 	go install .
 
 .PHONY: install-tools
 install-tools: \
+	$(MYGOBIN)/gh \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
-	$(MYGOBIN)/gh \
 	$(MYGOBIN)/gorepomod \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
+	$(MYGOBIN)/prchecker \
 	$(MYGOBIN)/stringer
 
 ### Begin kustomize plugin rules.
