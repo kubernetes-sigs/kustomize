@@ -84,9 +84,9 @@ $(MYGOBIN)/kustomize:
 
 .PHONY: install-tools
 install-tools: \
-	$(MYGOBIN)/gh \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
+	$(MYGOBIN)/gh \
 	$(MYGOBIN)/gorepomod \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
