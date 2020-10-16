@@ -30,8 +30,14 @@ The dependencies determine the release order:
 Thus, do `kyaml` first, then `cli-utils`, etc.
 
 #### Consider fetching new OpenAPI data
-The Kubernetes OpenAPI data changes no more frequently than once per quarter. Instructions 
-on how to get a new OpenAPI sample can be found in the
+The Kubernetes OpenAPI data changes no more frequently than once per quarter. 
+You can check the current version that kustomize is using with the
+following command. 
+```
+kustomize openapi info
+```
+
+Instructions on how to get a new OpenAPI sample can be found in the
 [OpenAPI Readme].
 
 #### Establish clean state
