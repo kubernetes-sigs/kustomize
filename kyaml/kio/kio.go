@@ -75,6 +75,16 @@ type Pipeline struct {
 
 	// Outputs are where the transformed Resource Configuration is written.
 	Outputs []Writer `yaml:"outputs,omitempty"`
+
+	// ContinueOnEmptyResult configures what happens when a filter in the pipeline
+	// returns an empty result.
+	// If it is false (default), subsequent filters will be skipped and the result
+	// will be returned immediately. This is useful as an optimization when you
+	// know that subsequent filters will not alter the empty result.
+	// If it is true, the empty result will be provided as input to the next
+	// filter in the list. This is useful when subsequent functions in the
+	// pipeline may generate new resources.
+	ContinueOnEmptyResult bool `yaml:"continueOnEmptyResult,omitempty"`
 }
 
 // Execute executes each step in the sequence, returning immediately after encountering
@@ -111,7 +121,7 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 		// TODO (issue 2872): This len(result) == 0 should be removed and empty result list should be
 		// handled by outputs. However currently some writer like LocalPackageReadWriter
 		// will clear the output directory and which will cause unpredictable results
-		if len(result) == 0 || err != nil {
+		if len(result) == 0 && !p.ContinueOnEmptyResult || err != nil {
 			return errors.Wrap(err)
 		}
 	}
