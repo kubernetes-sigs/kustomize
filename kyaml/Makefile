@@ -36,9 +36,7 @@ vet:
 	go vet ./...
 
 openapi:
-	(which $(GOPATH)/bin/go-bindata || go get -u github.com/go-bindata/go-bindata/...)
-	$(GOPATH)/bin/go-bindata --pkg kubernetesapi -o openapi/kubernetesapi/swagger.go openapi/kubernetesapi/swagger.json
-	$(GOPATH)/bin/go-bindata --pkg kustomizationapi -o openapi/kustomizationapi/swagger.go openapi/kustomizationapi/swagger.json
+	./hack/fetchOpenApiData.sh
 
 $(MYGOBIN)/kind:
 	( \
