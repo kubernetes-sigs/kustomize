@@ -21,7 +21,6 @@ func NewCmdInfo(w io.Writer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Fprintln(w, kubernetesapi.Info)
 		},
-		Hidden: true,
 	}
 
 	return &infoCmd

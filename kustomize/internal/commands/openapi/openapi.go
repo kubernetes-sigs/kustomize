@@ -18,6 +18,7 @@ func NewCmdOpenAPI(w io.Writer) *cobra.Command {
 		Use:     "openapi",
 		Short:   "Commands for interacting with the OpenAPI data",
 		Example: `kustomize openapi info`,
+		Hidden:  true,
 	}
 
 	openApiCmd.AddCommand(info.NewCmdInfo(w))
