@@ -149,3 +149,41 @@ items:
 		t.FailNow()
 	}
 }
+
+func TestContinueOnEmptyBehavior(t *testing.T) {
+	cases := map[string]struct {
+		continueOnEmptyResult bool
+		expected              string
+	}{
+		"quit on empty":     {continueOnEmptyResult: false, expected: ""},
+		"continue on empty": {continueOnEmptyResult: true, expected: "foo: bar"},
+	}
+	for _, tc := range cases {
+		actual := &bytes.Buffer{}
+		output := ByteWriter{Writer: actual}
+
+		generatorFunc := FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+			nodes = append(nodes, yaml.NewMapRNode(&map[string]string{
+				"foo": "bar",
+			}))
+			return nodes, nil
+		})
+		emptyFunc := FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) { return nodes, nil })
+
+		p := Pipeline{
+			Outputs:               []Writer{output},
+			Filters:               []Filter{emptyFunc, generatorFunc},
+			ContinueOnEmptyResult: tc.continueOnEmptyResult,
+		}
+
+		err := p.Execute()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !assert.Equal(t,
+			tc.expected, strings.TrimSpace(actual.String())) {
+			t.Fail()
+		}
+	}
+}
