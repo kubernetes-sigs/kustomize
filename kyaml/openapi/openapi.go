@@ -363,11 +363,11 @@ func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 const (
 	// kubernetesAPIAssetName is the name of the asset containing the statically compiled in
 	// OpenAPI definitions for Kubernetes built-in types
-	kubernetesAPIAssetName = "openapi/kubernetesapi/swagger.json"
+	kubernetesAPIAssetName = "kubernetesapi/swagger.json"
 
 	// kustomizationAPIAssetName is the name of the asset containing the statically compiled in
 	// OpenAPI definitions for Kustomization built-in types
-	kustomizationAPIAssetName = "openapi/kustomizationapi/swagger.json"
+	kustomizationAPIAssetName = "kustomizationapi/swagger.json"
 
 	// kubernetesGVKExtensionKey is the key to lookup the kubernetes group version kind extension
 	// -- the extension is an array of objects containing a gvk
