@@ -1,56 +1,53 @@
-// Copyright 2019 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
-
 package remove
 
 import (
-	"errors"
 	"testing"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove_test"
 )
 
-func TestRemoveResources(t *testing.T) {
+func TestRemoveTransformer(t *testing.T) {
 	testCases := []remove_test.Case{
 		{
-			Description: "remove resources",
+			Description: "remove transformers",
 			Given: remove_test.Given{
 				Items: []string{
-					"resource1.yaml",
-					"resource2.yaml",
-					"resource3.yaml",
+					"transformer1.yaml",
+					"transformer2.yaml",
+					"transformer3.yaml",
 				},
-				RemoveArgs: []string{"resource1.yaml"},
+				RemoveArgs: []string{"transformer1.yaml"},
 			},
 			Expected: remove_test.Expected{
 				Items: []string{
-					"resource2.yaml",
-					"resource3.yaml",
+					"transformer2.yaml",
+					"transformer3.yaml",
 				},
 				Deleted: []string{
-					"resource1.yaml",
+					"transformer1.yaml",
 				},
 			},
 		},
 		{
-			Description: "remove resource with pattern",
+			Description: "remove transformer with pattern",
 			Given: remove_test.Given{
 				Items: []string{
-					"foo/resource1.yaml",
-					"foo/resource2.yaml",
-					"foo/resource3.yaml",
+					"foo/transformer1.yaml",
+					"foo/transformer2.yaml",
+					"foo/transformer3.yaml",
 					"do/not/deleteme/please.yaml",
 				},
-				RemoveArgs: []string{"foo/resource*.yaml"},
+				RemoveArgs: []string{"foo/transformer*.yaml"},
 			},
 			Expected: remove_test.Expected{
 				Items: []string{
 					"do/not/deleteme/please.yaml",
 				},
 				Deleted: []string{
-					"foo/resource1.yaml",
-					"foo/resource2.yaml",
-					"foo/resource3.yaml",
+					"foo/transformer1.yaml",
+					"foo/transformer2.yaml",
+					"foo/transformer3.yaml",
 				},
 			},
 		},
@@ -58,17 +55,17 @@ func TestRemoveResources(t *testing.T) {
 			Description: "nothing found to remove",
 			Given: remove_test.Given{
 				Items: []string{
-					"resource1.yaml",
-					"resource2.yaml",
-					"resource3.yaml",
+					"transformer1.yaml",
+					"transformer2.yaml",
+					"transformer3.yaml",
 				},
 				RemoveArgs: []string{"foo"},
 			},
 			Expected: remove_test.Expected{
 				Items: []string{
-					"resource2.yaml",
-					"resource3.yaml",
-					"resource1.yaml",
+					"transformer2.yaml",
+					"transformer3.yaml",
+					"transformer1.yaml",
 				},
 			},
 		},
@@ -76,7 +73,7 @@ func TestRemoveResources(t *testing.T) {
 			Description: "no arguments",
 			Given:       remove_test.Given{},
 			Expected: remove_test.Expected{
-				Err: errors.New("must specify a resource file"),
+				Err: errors.New("must specify a transformer file"),
 			},
 		},
 		{
@@ -85,13 +82,13 @@ func TestRemoveResources(t *testing.T) {
 				Items: []string{
 					"foo/foo.yaml",
 					"bar/bar.yaml",
-					"resource3.yaml",
+					"transformer3.yaml",
 					"do/not/deleteme/please.yaml",
 				},
 				RemoveArgs: []string{
 					"foo/*.*",
 					"bar/*.*",
-					"res*.yaml",
+					"tra*.yaml",
 				},
 			},
 			Expected: remove_test.Expected{
@@ -101,11 +98,11 @@ func TestRemoveResources(t *testing.T) {
 				Deleted: []string{
 					"foo/foo.yaml",
 					"bar/bar.yaml",
-					"resource3.yaml",
+					"transformer3.yaml",
 				},
 			},
 		},
 	}
 
-	remove_test.ExecuteTestCases(t, testCases, "resources", newCmdRemoveResource)
+	remove_test.ExecuteTestCases(t, testCases, "transformers", newCmdRemoveTransformer)
 }
