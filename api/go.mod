@@ -6,6 +6,7 @@ require (
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/go-openapi/spec v0.19.5
 	github.com/golangci/golangci-lint v1.21.0
+	github.com/google/go-cmp v0.3.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0
