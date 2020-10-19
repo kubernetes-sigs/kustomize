@@ -1,7 +1,9 @@
 package nameref
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
@@ -9,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	kyaml_filtersutil "sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -19,6 +22,7 @@ type Filter struct {
 	Referrer           *resource.Resource
 	Target             resid.Gvk
 	ReferralCandidates resmap.ResMap
+	isRoleRef          bool
 }
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -36,6 +40,9 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 func (f Filter) set(node *yaml.RNode) error {
 	if yaml.IsMissingOrNull(node) {
 		return nil
+	}
+	if strings.HasSuffix(f.FieldSpec.Path, "roleRef/name") {
+		f.isRoleRef = true
 	}
 	switch node.YNode().Kind {
 	case yaml.ScalarNode:
@@ -65,6 +72,7 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 		f.Referrer,
 		f.Target,
 		f.ReferralCandidates,
+		f.isRoleRef,
 	)
 }
 
@@ -75,6 +83,7 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 		f.Target,
 		f.ReferralCandidates,
 		f.ReferralCandidates.Resources(),
+		f.isRoleRef,
 	)
 	if err != nil {
 		return err
@@ -84,6 +93,40 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 		return err
 	}
 	return nil
+}
+
+// getRoleRefGvk returns a Gvk in the roleRef field. Return error
+// if the roleRef, roleRef/apiGroup or roleRef/kind is missing.
+func getRoleRefGvk(res json.Marshaler) (*resid.Gvk, error) {
+	n, err := kyaml_filtersutil.GetRNode(res)
+	if err != nil {
+		return nil, err
+	}
+	roleRef, err := n.Pipe(yaml.Lookup("roleRef"))
+	if err != nil {
+		return nil, err
+	}
+	if roleRef.IsNil() {
+		return nil, fmt.Errorf("roleRef cannot be found in %s", n.MustString())
+	}
+	apiGroup, err := roleRef.Pipe(yaml.Lookup("apiGroup"))
+	if err != nil {
+		return nil, err
+	}
+	if apiGroup.IsNil() {
+		return nil, fmt.Errorf("apiGroup cannot be found in roleRef %s", roleRef.MustString())
+	}
+	kind, err := roleRef.Pipe(yaml.Lookup("kind"))
+	if err != nil {
+		return nil, err
+	}
+	if kind.IsNil() {
+		return nil, fmt.Errorf("kind cannot be found in roleRef %s", roleRef.MustString())
+	}
+	return &resid.Gvk{
+		Group: apiGroup.YNode().Value,
+		Kind:  kind.YNode().Value,
+	}, nil
 }
 
 func filterReferralCandidates(
@@ -117,11 +160,22 @@ func selectReferral(
 	referrer *resource.Resource,
 	target resid.Gvk,
 	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource) (string, string, error) {
-
+	referralCandidateSubset []*resource.Resource,
+	isRoleRef bool) (string, string, error) {
+	var roleRefGvk *resid.Gvk
+	if isRoleRef {
+		var err error
+		roleRefGvk, err = getRoleRefGvk(referrer)
+		if err != nil {
+			return "", "", err
+		}
+	}
 	for _, res := range referralCandidateSubset {
 		id := res.OrgId()
-		if id.IsSelected(&target) && res.GetOriginalName() == oldName {
+		// If the we are processing a roleRef, the apiGroup and Kind in the
+		// roleRef are needed to be considered.
+		if (!isRoleRef || id.IsSelected(roleRefGvk)) &&
+			id.IsSelected(&target) && res.GetOriginalName() == oldName {
 			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
 			// If there's more than one match,
 			// filter the matches by prefix and suffix
@@ -155,10 +209,11 @@ func getSimpleNameField(
 	referrer *resource.Resource,
 	target resid.Gvk,
 	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource) (string, error) {
+	referralCandidateSubset []*resource.Resource,
+	isRoleRef bool) (string, error) {
 
 	newName, _, err := selectReferral(oldName, referrer, target,
-		referralCandidates, referralCandidateSubset)
+		referralCandidates, referralCandidateSubset, isRoleRef)
 
 	return newName, err
 }
@@ -177,7 +232,8 @@ func setNameAndNs(
 	in *yaml.RNode,
 	referrer *resource.Resource,
 	target resid.Gvk,
-	referralCandidates resmap.ResMap) error {
+	referralCandidates resmap.ResMap,
+	isRoleRef bool) error {
 
 	if in.YNode().Kind != yaml.MappingNode {
 		return fmt.Errorf("expect a mapping node")
@@ -213,7 +269,7 @@ func setNameAndNs(
 
 	oldName := nameNode.YNode().Value
 	newname, newnamespace, err := selectReferral(oldName, referrer, target,
-		referralCandidates, subset)
+		referralCandidates, subset, isRoleRef)
 	if err != nil {
 		return err
 	}
