@@ -72,15 +72,15 @@ vars:
     fieldpath: data.MY_PORT
     
 configurations:
-  - linkage.yaml
+  - lookup.yaml
 ```
 
-Define the linkage of the consuming resource(s) and the field(s) inside.
+Define the consuming resource(s) and the field(s) inside need to lookup.
 
 ```yaml
-# linkage.yaml
+# lookup.yaml
 varReference:
-  # the path of resource(s) that you want the parser to lookup
+  # the path of field that you want the parser to lookups and replace.
   - path: spec/template/spec/containers/livenessProbe/httpGet/port
     kind: Deployment
 ```
