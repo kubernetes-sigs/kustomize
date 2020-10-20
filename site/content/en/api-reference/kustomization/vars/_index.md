@@ -15,13 +15,17 @@ k8s Secret object in a container's environment variable,
 so that the following would work:
 
 ```yaml
-
+# consider it is a deployment
 containers:
   - image: myimage
     command: ["start", "--host", "$(MY_SERVICE_NAME)"]
     env:
     - name: SECRET_TOKEN
       value: $(SOME_SECRET_NAME)
+    livenessProbe:
+       httpGet:
+         path: /healthz
+         port: $(APP_PORT)
 ```
 
 To do so, add an entry to `vars:` as follows:
@@ -29,6 +33,11 @@ To do so, add an entry to `vars:` as follows:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+configMapGenerator:
+- name: my-config
+  literals:
+  - MY_PORT=8080
 
 vars:
 - name: SOME_SECRET_NAME
@@ -50,6 +59,25 @@ vars:
     apiVersion: apps/v1
   fieldref:
     fieldpath: spec.template.spec.restartPolicy
+- name: APP_PORT
+  objref:
+    kind: ConfigMap
+    name: my-config
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.MY_PORT
+    
+configurations:
+  - linkage.yaml
+```
+
+Define the linkage of the consuming resource(s) and the field(s) inside.
+
+```yaml
+# linkage.yaml
+varReference:
+  - path: spec/template/spec/containers/livenessProbe/httpGet/port
+    kind: Deployment
 ```
 
 A var is a tuple of variable name, object
