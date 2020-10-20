@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 //
-package commands
+package runner
 
 import (
 	"fmt"
@@ -17,72 +17,72 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
 )
 
-// cmdRunner interface holds executeCmd definition which executes respective command's
+// CmdRunner interface holds ExecuteCmd definition which executes respective command's
 // implementation on single package
-type cmdRunner interface {
-	executeCmd(w io.Writer, pkgPath string) error
+type CmdRunner interface {
+	ExecuteCmd(w io.Writer, pkgPath string) error
 }
 
-// executeCmdOnPkgs struct holds the parameters necessary to
+// ExecuteCmdOnPkgs struct holds the parameters necessary to
 // execute the filter command on packages in rootPkgPath
-type executeCmdOnPkgs struct {
-	rootPkgPath        string
-	recurseSubPackages bool
-	needOpenAPI        bool
-	cmdRunner          cmdRunner
-	writer             io.Writer
-	skipPkgPathPrint   bool
+type ExecuteCmdOnPkgs struct {
+	RootPkgPath        string
+	RecurseSubPackages bool
+	NeedOpenAPI        bool
+	CmdRunner          CmdRunner
+	Writer             io.Writer
+	SkipPkgPathPrint   bool
 }
 
-// executeCmdOnPkgs takes the function definition for a command to be executed on single package, applies that definition
+// ExecuteCmdOnPkgs takes the function definition for a command to be executed on single package, applies that definition
 // recursively on all the subpackages present in rootPkgPath if recurseSubPackages is true, else applies the command on rootPkgPath only
-func (e executeCmdOnPkgs) execute() error {
-	pkgsPaths, err := pathutil.DirsWithFile(e.rootPkgPath, ext.KRMFileName(), e.recurseSubPackages)
+func (e ExecuteCmdOnPkgs) Execute() error {
+	pkgsPaths, err := pathutil.DirsWithFile(e.RootPkgPath, ext.KRMFileName(), e.RecurseSubPackages)
 	if err != nil {
 		return err
 	}
 
 	if len(pkgsPaths) == 0 {
 		// at this point, there are no openAPI files in the rootPkgPath
-		if e.needOpenAPI {
+		if e.NeedOpenAPI {
 			// few executions need openAPI file to be present(ex: setters commands), if true throw an error
-			return errors.Errorf("unable to find %q in package %q", ext.KRMFileName(), e.rootPkgPath)
+			return errors.Errorf("unable to find %q in package %q", ext.KRMFileName(), e.RootPkgPath)
 		}
 
 		// add root path for commands which doesn't need openAPI(ex: annotate, fmt)
-		pkgsPaths = []string{e.rootPkgPath}
+		pkgsPaths = []string{e.RootPkgPath}
 	}
 
 	// for commands which doesn't need openAPI file, make sure that the root package is
 	// included all the times
-	if !e.needOpenAPI && !containsString(pkgsPaths, e.rootPkgPath) {
-		pkgsPaths = append([]string{e.rootPkgPath}, pkgsPaths...)
+	if !e.NeedOpenAPI && !containsString(pkgsPaths, e.RootPkgPath) {
+		pkgsPaths = append([]string{e.RootPkgPath}, pkgsPaths...)
 	}
 
 	for i := range pkgsPaths {
 		pkgPath := pkgsPaths[i]
 		// Add schema present in openAPI file for current package
-		if e.needOpenAPI {
+		if e.NeedOpenAPI {
 			if err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName())); err != nil {
 				return err
 			}
 		}
 
-		if !e.skipPkgPathPrint {
-			fmt.Fprintf(e.writer, "%s/\n", pkgPath)
+		if !e.SkipPkgPathPrint {
+			fmt.Fprintf(e.Writer, "%s/\n", pkgPath)
 		}
 
-		err := e.cmdRunner.executeCmd(e.writer, pkgPath)
+		err := e.CmdRunner.ExecuteCmd(e.Writer, pkgPath)
 		if err != nil {
 			return err
 		}
 
 		if i != len(pkgsPaths)-1 {
-			fmt.Fprint(e.writer, "\n")
+			fmt.Fprint(e.Writer, "\n")
 		}
 
 		// Delete schema present in openAPI file for current package
-		if e.needOpenAPI {
+		if e.NeedOpenAPI {
 			if err := openapi.DeleteSchemaInFile(filepath.Join(pkgPath, ext.KRMFileName())); err != nil {
 				return err
 			}
@@ -91,8 +91,8 @@ func (e executeCmdOnPkgs) execute() error {
 	return nil
 }
 
-// parseFieldPath parse a flag value into a field path
-func parseFieldPath(path string) ([]string, error) {
+// ParseFieldPath parse a flag value into a field path
+func ParseFieldPath(path string) ([]string, error) {
 	// fixup '\.' so we don't split on it
 	match := strings.ReplaceAll(path, "\\.", "$$$$")
 	parts := strings.Split(match, ".")
@@ -118,7 +118,7 @@ func parseFieldPath(path string) ([]string, error) {
 	return newParts, nil
 }
 
-func handleError(c *cobra.Command, err error) error {
+func HandleError(c *cobra.Command, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -145,7 +145,7 @@ var StackOnError bool
 const cmdName = "kustomize config"
 
 // FixDocs replaces instances of old with new in the docs for c
-func fixDocs(new string, c *cobra.Command) {
+func FixDocs(new string, c *cobra.Command) {
 	c.Use = strings.ReplaceAll(c.Use, cmdName, new)
 	c.Short = strings.ReplaceAll(c.Short, cmdName, new)
 	c.Long = strings.ReplaceAll(c.Long, cmdName, new)

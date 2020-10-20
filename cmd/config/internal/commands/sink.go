@@ -6,6 +6,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
@@ -21,7 +22,7 @@ func GetSinkRunner(name string) *SinkRunner {
 		RunE:    r.runE,
 		Args:    cobra.MaximumNArgs(1),
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	r.Command = c
 	return r
 }
@@ -49,5 +50,5 @@ func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}},
 		Outputs: outputs}.Execute()
-	return handleError(c, err)
+	return runner.HandleError(c, err)
 }

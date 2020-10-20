@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -26,7 +27,7 @@ func GetCountRunner(name string) *CountRunner {
 		Example: commands.CountExamples,
 		RunE:    r.runE,
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	c.Flags().BoolVar(&r.Kind, "kind", true,
 		"count resources by kind.")
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
@@ -51,24 +52,24 @@ func (r *CountRunner) runE(c *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		input := &kio.ByteReader{Reader: c.InOrStdin()}
 
-		return handleError(c, kio.Pipeline{
+		return runner.HandleError(c, kio.Pipeline{
 			Inputs:  []kio.Reader{input},
 			Outputs: r.out(c.OutOrStdout()),
 		}.Execute())
 	}
 
-	e := executeCmdOnPkgs{
-		writer:             c.OutOrStdout(),
-		needOpenAPI:        false,
-		recurseSubPackages: r.RecurseSubPackages,
-		cmdRunner:          r,
-		rootPkgPath:        args[0],
+	e := runner.ExecuteCmdOnPkgs{
+		Writer:             c.OutOrStdout(),
+		NeedOpenAPI:        false,
+		RecurseSubPackages: r.RecurseSubPackages,
+		CmdRunner:          r,
+		RootPkgPath:        args[0],
 	}
 
-	return e.execute()
+	return e.Execute()
 }
 
-func (r *CountRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *CountRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
 
 	err := kio.Pipeline{

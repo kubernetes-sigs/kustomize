@@ -9,6 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,7 @@ func GetTreeRunner(name string) *TreeRunner {
 		RunE:    r.runE,
 		Args:    cobra.MaximumNArgs(1),
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 
 	// TODO(pwittrock): Figure out if these are the right things to expose, and consider making it
 	// a list of options instead of individual flags
@@ -91,7 +92,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 
 	var fields []kio.TreeWriterField
 	for _, field := range r.fields {
-		path, err := parseFieldPath(field)
+		path, err := runner.ParseFieldPath(field)
 		if err != nil {
 			return err
 		}
@@ -155,7 +156,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		ExcludeNonLocalConfig: r.excludeNonLocal,
 	}}
 
-	return handleError(c, kio.Pipeline{
+	return runner.HandleError(c, kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{kio.TreeWriter{

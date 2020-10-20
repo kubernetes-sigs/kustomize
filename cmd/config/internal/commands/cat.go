@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -30,7 +31,7 @@ func GetCatRunner(name string) *CatRunner {
 		RunE:    r.runE,
 		Args:    cobra.MaximumNArgs(1),
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	c.Flags().BoolVar(&r.Format, "format", true,
 		"format resource config yaml before printing.")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", false,
@@ -95,21 +96,21 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		return handleError(c, kio.Pipeline{Inputs: []kio.Reader{input}, Filters: r.catFilters(), Outputs: outputs}.Execute())
+		return runner.HandleError(c, kio.Pipeline{Inputs: []kio.Reader{input}, Filters: r.catFilters(), Outputs: outputs}.Execute())
 	}
 
 	out := &bytes.Buffer{}
 
-	e := executeCmdOnPkgs{
-		writer:             out,
-		needOpenAPI:        false,
-		recurseSubPackages: r.RecurseSubPackages,
-		cmdRunner:          r,
-		rootPkgPath:        args[0],
-		skipPkgPathPrint:   true,
+	e := runner.ExecuteCmdOnPkgs{
+		Writer:             out,
+		NeedOpenAPI:        false,
+		RecurseSubPackages: r.RecurseSubPackages,
+		CmdRunner:          r,
+		RootPkgPath:        args[0],
+		SkipPkgPathPrint:   true,
 	}
 
-	err := e.execute()
+	err := e.Execute()
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *CatRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: ext.KRMFileName()}
 	out := &bytes.Buffer{}
 	outputs, err := r.out(out)
