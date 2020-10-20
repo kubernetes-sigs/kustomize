@@ -64,7 +64,7 @@ run(ctx.resource_list["items"])
 		Filters: []kio.Filter{fltr},
 		Outputs: []kio.Writer{&kio.ByteWriter{Writer: output}}}.Execute()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	fmt.Println(output.String())
@@ -131,7 +131,7 @@ spec:
   value: "hello world"
 `)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	// fltr transforms the input using a starlark program
@@ -156,7 +156,7 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 		Filters: []kio.Filter{fltr},
 		Outputs: []kio.Writer{&kio.ByteWriter{Writer: output}}}.Execute()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	fmt.Println(output.String())
@@ -197,7 +197,7 @@ func ExampleFilter_Filter_file() {
 	// setup the configuration
 	d, err := ioutil.TempDir("", "")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer os.RemoveAll(d)
 
@@ -214,7 +214,7 @@ spec:
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 `), 0600)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	err = ioutil.WriteFile(filepath.Join(d, "deploy2.yaml"), []byte(`
@@ -230,7 +230,7 @@ spec:
         image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 `), 0600)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	err = ioutil.WriteFile(filepath.Join(d, "annotate.star"), []byte(`
@@ -241,7 +241,7 @@ def run(items):
 run(ctx.resource_list["items"])
 `), 0600)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	fltr := &starlark.Filter{
@@ -261,7 +261,7 @@ run(ctx.resource_list["items"])
 			ClearAnnotations: []string{"config.kubernetes.io/path"},
 		}}}.Execute()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	fmt.Println(output.String())

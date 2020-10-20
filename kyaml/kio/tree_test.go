@@ -5,7 +5,6 @@ package kio_test
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,7 +68,7 @@ spec:
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`
+	if !assert.Equal(t, `
 ├── bar-package
 │   └── [f2.yaml]  Deployment bar
 └── foo-package
@@ -77,7 +76,7 @@ spec:
     ├── [f1.yaml]  Service default/foo
     └── 3
         └── [f3.yaml]  Deployment default/foo
-`), out.String()) {
+`, out.String()) {
 		t.FailNow()
 	}
 }

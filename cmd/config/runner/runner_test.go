@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package commands
+package runner
 
 import (
 	"bytes"
@@ -76,14 +76,14 @@ ${baseDir}/subpkg2/subpkg3/
 		t.Run(test.name, func(t *testing.T) {
 			actual := &bytes.Buffer{}
 			r := &TestRunner{}
-			e := executeCmdOnPkgs{
-				needOpenAPI:        test.needOpenAPI,
-				writer:             actual,
-				rootPkgPath:        filepath.Join(dir, test.pkgPath),
-				recurseSubPackages: test.recurse,
-				cmdRunner:          r,
+			e := ExecuteCmdOnPkgs{
+				NeedOpenAPI:        test.needOpenAPI,
+				Writer:             actual,
+				RootPkgPath:        filepath.Join(dir, test.pkgPath),
+				RecurseSubPackages: test.recurse,
+				CmdRunner:          r,
 			}
-			err := e.execute()
+			err := e.Execute()
 			if test.errMsg == "" {
 				if !assert.NoError(t, err) {
 					t.FailNow()
@@ -170,7 +170,7 @@ func createTestDirStructure(dir string) error {
 
 type TestRunner struct{}
 
-func (r *TestRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *TestRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	children, err := ioutil.ReadDir(pkgPath)
 	if err != nil {
 		return err

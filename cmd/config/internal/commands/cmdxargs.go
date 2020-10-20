@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -211,7 +212,7 @@ func (r *XArgsRunner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return handleError(c, run.Run())
+	return runner.HandleError(c, run.Run())
 }
 
 func parseYNode(node *yaml.Node) string {

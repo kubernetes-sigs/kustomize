@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
@@ -25,7 +26,7 @@ func GetFmtRunner(name string) *FmtRunner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
 		`pattern to use for generating filenames for resources -- may contain the following
 formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'}`)
@@ -74,20 +75,20 @@ func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
 			Writer:                c.OutOrStdout(),
 			KeepReaderAnnotations: r.KeepAnnotations,
 		}
-		return handleError(c, kio.Pipeline{
+		return runner.HandleError(c, kio.Pipeline{
 			Inputs: []kio.Reader{rw}, Filters: r.fmtFilters(), Outputs: []kio.Writer{rw}}.Execute())
 	}
 
 	for _, rootPkgPath := range args {
-		e := executeCmdOnPkgs{
-			writer:             c.OutOrStdout(),
-			needOpenAPI:        false,
-			recurseSubPackages: r.RecurseSubPackages,
-			cmdRunner:          r,
-			rootPkgPath:        rootPkgPath,
+		e := runner.ExecuteCmdOnPkgs{
+			Writer:             c.OutOrStdout(),
+			NeedOpenAPI:        false,
+			RecurseSubPackages: r.RecurseSubPackages,
+			CmdRunner:          r,
+			RootPkgPath:        rootPkgPath,
 		}
 
-		err := e.execute()
+		err := e.Execute()
 		if err != nil {
 			return err
 		}
@@ -95,7 +96,7 @@ func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *FmtRunner) executeCmd(w io.Writer, pkgPath string) error {
+func (r *FmtRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	rw := &kio.LocalPackageReadWriter{
 		NoDeleteFiles:         true,
 		PackagePath:           pkgPath,

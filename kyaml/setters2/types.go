@@ -36,7 +36,7 @@ type substitutionSetterReference struct {
 	Marker string `yaml:"marker,omitempty" json:"marker,omitempty"`
 }
 
-//K8sCliExtensionKey is the name of the OpenAPI field containing the setter extensions
+// K8sCliExtensionKey is the name of the OpenAPI field containing the setter extensions
 const K8sCliExtensionKey = "x-k8s-cli"
 
 // GetExtFromSchema returns the cliExtension openAPI extension if it is present in schema

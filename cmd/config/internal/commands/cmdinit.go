@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
+	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/krmfile"
 )
@@ -26,7 +27,7 @@ func GetInitRunner(name string) *InitRunner {
 		Example: commands.InitExamples,
 		RunE:    r.runE,
 	}
-	fixDocs(name, c)
+	runner.FixDocs(name, c)
 	r.Command = c
 	return r
 }
