@@ -25,6 +25,7 @@ containers:
     livenessProbe:
        httpGet:
          path: /healthz
+         # it enables the parser to lookup this field
          port: $(APP_PORT)
 ```
 
@@ -59,6 +60,9 @@ vars:
     apiVersion: apps/v1
   fieldref:
     fieldpath: spec.template.spec.restartPolicy
+# it exports a value as `APP_PORT` 
+# from `ConfigMap` named `my-config`
+# in `data.MY_PORT`
 - name: APP_PORT
   objref:
     kind: ConfigMap
@@ -76,6 +80,7 @@ Define the linkage of the consuming resource(s) and the field(s) inside.
 ```yaml
 # linkage.yaml
 varReference:
+  # the path of resource(s) that you want the parser to lookup
   - path: spec/template/spec/containers/livenessProbe/httpGet/port
     kind: Deployment
 ```
