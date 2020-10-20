@@ -46,8 +46,8 @@ metadata:
 spec:
   replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `,
-			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
-  replicas   3       me       hello world   1       Yes       
+			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  replicas   3       me       hello world   1       Yes        No      
 `,
 		},
 
@@ -72,8 +72,8 @@ metadata:
 spec:
   replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `,
-			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
-  replicas   4       me       hello world   1       No        
+			expected: `    NAME     VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  replicas   4       me       hello world   1       No         No      
 `,
 		},
 		{
@@ -131,10 +131,10 @@ spec:
       - name: nginx2
         image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
  `,
-			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
-  image      nginx   me2      hello world 2   2       No        
-  replicas   3       me1      hello world 1   1       No        
-  tag        1.7.9   me3      hello world 3   1       Yes       
+			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED   IS SET  
+  image      nginx   me2      hello world 2   2       No         No      
+  replicas   3       me1      hello world 1   1       No         No      
+  tag        1.7.9   me3      hello world 3   1       Yes        No      
 --------------- ----------- --------------
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
@@ -207,10 +207,10 @@ spec:
       - name: nginx2
         image: nginx
 `,
-			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
-  image      nginx   me2      hello world 2   3       No        
-  replicas   3       me1      hello world 1   2       No        
-  tag        1.7.9   me3      hello world 3   2       No        
+			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED   IS SET  
+  image      nginx   me2      hello world 2   3       No         No      
+  replicas   3       me1      hello world 1   2       No         No      
+  tag        1.7.9   me3      hello world 3   2       No         No      
 --------------- ----------- --------------
   SUBSTITUTION    PATTERN    REFERENCES   
   image          IMAGE:TAG   [image,tag]  
@@ -284,8 +284,8 @@ spec:
       - name: nginx2
         image: nginx
 `,
-			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED  
-  image   nginx   me2      hello world 2   3       Yes       
+			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED   IS SET  
+  image   nginx   me2      hello world 2   3       Yes        No      
 `,
 		},
 
@@ -324,8 +324,8 @@ spec:
   - "b"
   - "c"
 `,
-			expected: `  NAME    VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
-  list   [a,b,c]   me       hello world   1       Yes       
+			expected: `  NAME    VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  list   [a,b,c]   me       hello world   1       Yes        No      
 `,
 		},
 
@@ -390,10 +390,10 @@ openAPI:
           name: my-other-setter
           value: nginxotherthing
  `,
-			expected: `       NAME              VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED  
-  my-image-setter   nginx                                    2       No        
-  my-other-setter   nginxotherthing                          1       No        
-  my-tag-setter     1.7.9                                    2       Yes       
+			expected: `       NAME              VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  my-image-setter   nginx                                    2       No         No      
+  my-other-setter   nginxotherthing                          1       No         No      
+  my-tag-setter     1.7.9                                    2       Yes        Yes     
 ------------------ ------------------------------------------------ -----------------------------------
    SUBSTITUTION                        PATTERN                                  REFERENCES             
   my-image-subst    ${my-image-setter}::${my-tag-setter}             [my-image-setter,my-tag-setter]   
@@ -476,20 +476,20 @@ func TestListSettersSubPackages(t *testing.T) {
 			expected: `
 
 test/testdata/dataset-with-setters/mysql/
-    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
-  image       mysql                            1       No        
-  namespace   myspace                          1       No        
-  tag         1.7.9                            1       No        
+    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  image       mysql                            1       No         No      
+  namespace   myspace                          1       No         No      
+  tag         1.7.9                            1       No         No      
 --------------- ----------------- --------------
   SUBSTITUTION       PATTERN       REFERENCES   
   image-tag      ${image}:${tag}   [image,tag]  
 
 test/testdata/dataset-with-setters/mysql/nosetters/
-  NAME   VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED  
+  NAME   VALUE   SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
 
 test/testdata/dataset-with-setters/mysql/storage/
-    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
-  namespace   myspace                          1       No        
+    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  namespace   myspace                          1       No         No
 `,
 		},
 		{
@@ -499,10 +499,10 @@ test/testdata/dataset-with-setters/mysql/storage/
 			expected: `
 
 test/testdata/dataset-with-setters/mysql/
-    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED  
-  image       mysql                            1       No        
-  namespace   myspace                          1       No        
-  tag         1.7.9                            1       No         
+    NAME       VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
+  image       mysql                            1       No         No      
+  namespace   myspace                          1       No         No      
+  tag         1.7.9                            1       No         No
 `,
 		},
 	}
