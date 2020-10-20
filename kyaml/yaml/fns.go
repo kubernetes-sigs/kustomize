@@ -126,37 +126,30 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 
 // GetElementByIndex will return a Filter which can be applied to a sequence
 // node to get the element specified by the index
-func GetElementByIndex(index string) ElementPicker {
-	return ElementPicker{Index: index}
+func GetElementByIndex(index int) ElementIndexer {
+	return ElementIndexer{Index: index}
 }
 
-// ElementPicker picks the element with a specified index. Index starts from
+// ElementIndexer picks the element with a specified index. Index starts from
 // 0 to len(list) - 1. a hyphen ("-") means the last index.
-type ElementPicker struct {
-	Index string
+type ElementIndexer struct {
+	Index int
 }
 
 // Filter implements Filter
-func (p ElementPicker) Filter(rn *RNode) (*RNode, error) {
-	lastElement := false
-	idx, err := strconv.Atoi(p.Index)
-	if err != nil {
-		if p.Index != "-" {
-			return nil, errors.Errorf("unknown index %s", p.Index)
-		}
-		lastElement = true
-	}
+func (i ElementIndexer) Filter(rn *RNode) (*RNode, error) {
+	// rn.Elements will return error if rn is not a sequence node.
 	elems, err := rn.Elements()
 	if err != nil {
 		return nil, err
 	}
-	if lastElement {
+	if i.Index < 0 {
 		return elems[len(elems)-1], nil
 	}
-	if idx < 0 || idx >= len(elems) {
+	if i.Index >= len(elems) {
 		return nil, nil
 	}
-	return elems[idx], nil
+	return elems[i.Index], nil
 }
 
 // Clear returns a FieldClearer
@@ -400,14 +393,15 @@ type PathGetter struct {
 	// Each path part may be one of:
 	// * FieldMatcher -- e.g. "spec"
 	// * Map Key -- e.g. "app.k8s.io/version"
-	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]" or "0"
+	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]" or "0" or "-"
 	//
 	// Map Keys and Fields are equivalent.
 	// See FieldMatcher for more on Fields and Map Keys.
 	//
 	// List Entries can be specified as map entry to match [fieldName=fieldValue]
-	// or a postional index like 0 to get the element. - is special and means the
-	// last element.
+	// or a postional index like 0 to get the element. - (unquoted hyphen) is
+	// special and means the last element.
+	//
 	// See Elem for more on List Entries.
 	//
 	// Examples:
@@ -442,15 +436,12 @@ func (l PathGetter) Filter(rn *RNode) (*RNode, error) {
 		if len(l.Path) > i+1 {
 			nextPart = l.Path[i+1]
 		}
-		switch {
-		case IsListIndex(part):
-			match, err = l.doElem(match, part)
-		case isPositionalIndex(part):
-			match, err = match.Pipe(GetElementByIndex(part))
-		default:
-			fieldPath = append(fieldPath, part)
-			match, err = l.doField(match, part, l.getKind(nextPart))
+		var fltr Filter
+		fltr, err = l.getFilter(part, nextPart, &fieldPath)
+		if err != nil {
+			return nil, err
 		}
+		match, err = match.Pipe(fltr)
 		if IsMissingOrError(match, err) {
 			return nil, err
 		}
@@ -459,14 +450,36 @@ func (l PathGetter) Filter(rn *RNode) (*RNode, error) {
 	return match, nil
 }
 
-func (l PathGetter) doElem(rn *RNode, part string) (*RNode, error) {
+func (l PathGetter) getFilter(part, nextPart string, fieldPath *[]string) (Filter, error) {
+	idx, err := strconv.Atoi(part)
+	switch {
+	case err == nil:
+		// part is a number
+		if idx < 0 {
+			return nil, fmt.Errorf("array index %d cannot be negative", idx)
+		}
+		return GetElementByIndex(idx), nil
+	case part == "-":
+		// part is a hyphen
+		return GetElementByIndex(-1), nil
+	case IsListIndex(part):
+		// part is surrounded by brackets
+		return l.elemFilter(part)
+	default:
+		// mapping node
+		*fieldPath = append(*fieldPath, part)
+		return l.fieldFilter(part, l.getKind(nextPart))
+	}
+}
+
+func (l PathGetter) elemFilter(part string) (Filter, error) {
 	var match *RNode
 	name, value, err := SplitIndexNameValue(part)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 	if !IsCreate(l.Create) {
-		return rn.Pipe(MatchElement(name, value))
+		return MatchElement(name, value), nil
 	}
 
 	var elem *RNode
@@ -486,15 +499,15 @@ func (l PathGetter) doElem(rn *RNode, part string) (*RNode, error) {
 		})
 	}
 	// Append the Node
-	return rn.Pipe(ElementMatcher{FieldName: name, FieldValue: value, Create: elem})
+	return ElementMatcher{FieldName: name, FieldValue: value, Create: elem}, nil
 }
 
-func (l PathGetter) doField(
-	rn *RNode, name string, kind yaml.Kind) (*RNode, error) {
+func (l PathGetter) fieldFilter(
+	name string, kind yaml.Kind) (Filter, error) {
 	if !IsCreate(l.Create) {
-		return rn.Pipe(Get(name))
+		return Get(name), nil
 	}
-	return rn.Pipe(FieldMatcher{Name: name, Create: &RNode{value: &yaml.Node{Kind: kind, Style: l.Style}}})
+	return FieldMatcher{Name: name, Create: &RNode{value: &yaml.Node{Kind: kind, Style: l.Style}}}, nil
 }
 
 func (l PathGetter) getKind(nextPart string) yaml.Kind {
@@ -682,16 +695,6 @@ func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 // e.g. [=primitiveValue]
 func IsListIndex(p string) bool {
 	return strings.HasPrefix(p, "[") && strings.HasSuffix(p, "]")
-}
-
-// isPositionalIndex returns true if the index is a positional
-// index like 0, 1..., or - (last element)
-func isPositionalIndex(index string) bool {
-	if index == "-" {
-		return true
-	}
-	_, err := strconv.Atoi(index)
-	return err == nil
 }
 
 // SplitIndexNameValue splits a lookup part Val index into the field name
