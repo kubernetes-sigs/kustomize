@@ -35,22 +35,26 @@ var CatExamples = `
     # unwrap Resource config from a directory in an ResourceList
     ... | kustomize cfg cat`
 
-var CompletionShort = `Install shell completion.`
+var CompletionShort = `Generate shell completion.`
 var CompletionLong = `
-Install shell completion for kustomize commands and flags -- supports bash, fish and zsh.
+Generate shell completion for ` + "`" + `kustomize` + "`" + ` -- supports bash, zsh, fish and powershell.
+`
+var CompletionExamples = `
+    # load completion for Bash
+    source <(kustomize completion bash)
 
-    kustomize install-completion
+    # install for Bash in Linux
+    kustomize completion bash > /etc/bash_completion.d/kustomize
 
-Registers the completion command with known shells (e.g. .bashrc, .bash_profile, etc):
+    # install for Bash in MacOS
+    kustomize completion bash > /usr/local/etc/bash_completion.d/kustomize
 
-    complete -C /Users/USER/go/bin/kustomize kustomize
+    # package for Bash
+    kustomize completion bash > /usr/share/bash-completion/completions/kustomize
 
-Because the completion command is embedded in kustomize directly, there is no need to update
-it separately from the kustomize binary.
-
-To uninstall shell completion run:
-
-    COMP_UNINSTALL=1 kustomize install-completion`
+    # package for zsh
+    kustomize completion zsh > /usr/share/zsh/site-functions/_kustomize
+`
 
 var CountShort = `[Alpha] Count Resources Config from a local directory.`
 var CountLong = `
