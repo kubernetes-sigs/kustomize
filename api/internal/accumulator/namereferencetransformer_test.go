@@ -789,9 +789,9 @@ func TestNameReferenceClusterWide(t *testing.T) {
 				"name": modifiedname,
 			},
 			"roleRef": map[string]interface{}{
-				"apiVersion": "rbac.authorization.k8s.io/v1",
-				"kind":       "ClusterRole",
-				"name":       orgname,
+				"apiGroup": "rbac.authorization.k8s.io",
+				"kind":     "ClusterRole",
+				"name":     orgname,
 			},
 			"subjects": []interface{}{
 				map[string]interface{}{
@@ -845,9 +845,9 @@ func TestNameReferenceClusterWide(t *testing.T) {
 					"name": modifiedname,
 				},
 				"roleRef": map[string]interface{}{
-					"apiVersion": "rbac.authorization.k8s.io/v1",
-					"kind":       "ClusterRole",
-					"name":       modifiedname,
+					"apiGroup": "rbac.authorization.k8s.io",
+					"kind":     "ClusterRole",
+					"name":     modifiedname,
 				},
 				// The following tests required a change in
 				// getNameFunc implementation in order to leverage
@@ -937,9 +937,9 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 				"name": modifiedname,
 			},
 			"roleRef": map[string]interface{}{
-				"apiVersion": "rbac.authorization.k8s.io/v1",
-				"kind":       "ClusterRole",
-				"name":       orgname,
+				"apiGroup": "rbac.authorization.k8s.io",
+				"kind":     "ClusterRole",
+				"name":     orgname,
 			},
 			"subjects": []interface{}{
 				map[string]interface{}{
@@ -973,9 +973,9 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 					"name": modifiedname,
 				},
 				"roleRef": map[string]interface{}{
-					"apiVersion": "rbac.authorization.k8s.io/v1",
-					"kind":       "ClusterRole",
-					"name":       modifiedname,
+					"apiGroup": "rbac.authorization.k8s.io",
+					"kind":     "ClusterRole",
+					"name":     modifiedname,
 				},
 				// The following tests required a change in
 				// getNameFunc implementation in order to leverage
