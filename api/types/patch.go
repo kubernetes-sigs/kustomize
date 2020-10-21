@@ -17,3 +17,12 @@ type Patch struct {
 	// Target points to the resources that the patch is applied to
 	Target *Selector `json:"target,omitempty" yaml:"target,omitempty"`
 }
+
+// Equals return true if p equals another.
+func (p *Patch) Equals(another Patch) bool {
+	targetEqual := (p.Target == another.Target) ||
+		(p.Target != nil && another.Target != nil && *p.Target == *another.Target)
+	return p.Path == another.Path &&
+		p.Patch == another.Patch &&
+		targetEqual
+}
