@@ -38,6 +38,8 @@ type FieldSetter struct {
 	ResourcesPath string
 
 	RecurseSubPackages bool
+
+	IsSet bool
 }
 
 func (fs *FieldSetter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -54,6 +56,7 @@ func (fs FieldSetter) Set() (int, error) {
 		ListValues:  fs.ListValues,
 		Description: fs.Description,
 		SetBy:       fs.SetBy,
+		IsSet:       fs.IsSet,
 	}
 
 	// the input field value is updated in the openAPI file and then parsed
@@ -156,6 +159,7 @@ func syncOpenAPIValuesWithSchema(openAPIPath string) error {
 			Name:       cliExt.Setter.Name,
 			Value:      cliExt.Setter.Value,
 			ListValues: cliExt.Setter.ListValues,
+			IsSet:      true,
 		}
 		if err := soa.UpdateFile(openAPIPath); err != nil {
 			return err

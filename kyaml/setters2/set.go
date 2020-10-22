@@ -353,6 +353,8 @@ type SetOpenAPI struct {
 	Description string `yaml:"description"`
 
 	SetBy string `yaml:"setBy"`
+
+	IsSet bool `yaml:"isSet"`
 }
 
 // UpdateFile updates the OpenAPI definitions in a file with the given setter value.
@@ -458,8 +460,10 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return nil, err
 	}
 
-	if err := def.PipeE(&yaml.FieldSetter{Name: "isSet", StringValue: "true"}); err != nil {
-		return nil, err
+	if s.IsSet {
+		if err := def.PipeE(&yaml.FieldSetter{Name: "isSet", StringValue: "true"}); err != nil {
+			return nil, err
+		}
 	}
 
 	if s.Description != "" {
