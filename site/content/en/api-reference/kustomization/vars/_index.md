@@ -15,13 +15,18 @@ k8s Secret object in a container's environment variable,
 so that the following would work:
 
 ```yaml
-
+# consider it is a deployment
 containers:
   - image: myimage
     command: ["start", "--host", "$(MY_SERVICE_NAME)"]
     env:
     - name: SECRET_TOKEN
       value: $(SOME_SECRET_NAME)
+    livenessProbe:
+       httpGet:
+         path: /healthz
+         # it enables the parser to lookup this field
+         port: $(APP_PORT)
 ```
 
 To do so, add an entry to `vars:` as follows:
@@ -29,6 +34,11 @@ To do so, add an entry to `vars:` as follows:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+configMapGenerator:
+- name: my-config
+  literals:
+  - MY_PORT=8080
 
 vars:
 - name: SOME_SECRET_NAME
@@ -50,6 +60,29 @@ vars:
     apiVersion: apps/v1
   fieldref:
     fieldpath: spec.template.spec.restartPolicy
+# it exports a value as `APP_PORT` 
+# from `ConfigMap` named `my-config`
+# in `data.MY_PORT`
+- name: APP_PORT
+  objref:
+    kind: ConfigMap
+    name: my-config
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.MY_PORT
+    
+configurations:
+  - lookup.yaml
+```
+
+Define the consuming resource(s) and the field(s) inside need to lookup.
+
+```yaml
+# lookup.yaml
+varReference:
+  # the path of field that you want the parser to lookups and replace.
+  - path: spec/template/spec/containers/livenessProbe/httpGet/port
+    kind: Deployment
 ```
 
 A var is a tuple of variable name, object
