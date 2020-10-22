@@ -23,7 +23,7 @@ func NewCmdRemove(
 	kustomize edit remove resource {pattern}
 
 	# Removes one or more patches from the kustomization file
-	kustomize edit remove patch <filepath>
+	kustomize edit remove patch --path {filepath} --group {target group name} --version {target version}
 
 	# Removes one or more commonLabels from the kustomization file
 	kustomize edit remove label {labelKey1},{labelKey2}

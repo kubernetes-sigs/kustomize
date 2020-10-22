@@ -10,55 +10,58 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/patch"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 )
 
 type removePatchOptions struct {
-	patchFilePaths []string
+	Patch types.Patch
 }
 
 // newCmdRemovePatch removes the name of a file containing a patch from the kustomization file.
 func newCmdRemovePatch(fSys filesys.FileSystem) *cobra.Command {
 	var o removePatchOptions
+	o.Patch.Target = &types.Selector{}
 
 	cmd := &cobra.Command{
 		Use: "patch",
-		Short: "Removes one or more patches from " +
+		Short: "Removes a patch from " +
 			konfig.DefaultKustomizationFileName(),
+		Long: `Removes a patch from patches field. The fields specified by flags must 
+exactly match the patch item to successfully remote the item.`,
 		Example: `
-		remove patch {filepath}`,
+		remove patch --path {filepath} --group {target group name} --version {target version}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate()
 			if err != nil {
 				return err
 			}
 			return o.RunRemovePatch(fSys)
 		},
 	}
+	cmd.Flags().StringVar(&o.Patch.Path, "path", "", "Path to the patch file. Cannot be used with --patch at the same time.")
+	cmd.Flags().StringVar(&o.Patch.Patch, "patch", "", "Literal string of patch content. Cannot be used with --path at the same time.")
+	cmd.Flags().StringVar(&o.Patch.Target.Group, "group", "", "API group in patch target")
+	cmd.Flags().StringVar(&o.Patch.Target.Version, "version", "", "API version in patch target")
+	cmd.Flags().StringVar(&o.Patch.Target.Kind, "kind", "", "Resource kind in patch target")
+	cmd.Flags().StringVar(&o.Patch.Target.Name, "name", "", "Resource name in patch target")
+	cmd.Flags().StringVar(&o.Patch.Target.Namespace, "namespace", "", "Resource namespace in patch target")
+	cmd.Flags().StringVar(&o.Patch.Target.AnnotationSelector, "annotation-selector", "", "annotationSelector in patch target")
+	cmd.Flags().StringVar(&o.Patch.Target.LabelSelector, "label-selector", "", "labelSelector in patch target")
+
 	return cmd
 }
 
 // Validate validates removePatch command.
-func (o *removePatchOptions) Validate(args []string) error {
-	if len(args) == 0 {
-		return errors.New("must specify a patch file")
+func (o *removePatchOptions) Validate() error {
+	if o.Patch.Patch != "" && o.Patch.Path != "" {
+		return errors.New("patch and path can't be set at the same time")
 	}
-	o.patchFilePaths = args
 	return nil
 }
 
 // RunRemovePatch runs removePatch command (do real work).
 func (o *removePatchOptions) RunRemovePatch(fSys filesys.FileSystem) error {
-	patches, err := util.GlobPatterns(fSys, o.patchFilePaths)
-	if err != nil {
-		return err
-	}
-	if len(patches) == 0 {
-		return nil
-	}
-
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err
@@ -69,15 +72,23 @@ func (o *removePatchOptions) RunRemovePatch(fSys filesys.FileSystem) error {
 		return err
 	}
 
-	var removePatches []string
-	for _, p := range patches {
-		if !patch.Exist(m.PatchesStrategicMerge, p) {
-			log.Printf("patch %s doesn't exist in kustomization file", p)
-			continue
-		}
-		removePatches = append(removePatches, p)
+	// Omit target if it's empty
+	emptyTarget := types.Selector{}
+	if o.Patch.Target != nil && *o.Patch.Target == emptyTarget {
+		o.Patch.Target = nil
 	}
-	m.PatchesStrategicMerge = patch.Delete(m.PatchesStrategicMerge, removePatches...)
+
+	var patches []types.Patch
+	for _, p := range m.Patches {
+		if !p.Equals(o.Patch) {
+			patches = append(patches, p)
+		}
+	}
+	if len(patches) == len(m.Patches) {
+		log.Printf("patch %s doesn't exist in kustomization file", o.Patch)
+		return nil
+	}
+	m.Patches = patches
 
 	return mf.Write(m)
 }
