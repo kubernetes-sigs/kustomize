@@ -971,11 +971,13 @@ func TestSetOpenAPI_Filter(t *testing.T) {
 		description string
 		setBy       string
 		err         string
+		isSet       bool
 	}{
 		{
 			name:   "set-replicas",
 			setter: "replicas",
 			value:  "3",
+			isSet:  true,
 			input: `
 openAPI:
   definitions:
@@ -1023,6 +1025,7 @@ openAPI:
 			name:   "set-annotation-quoted",
 			setter: "replicas",
 			value:  "3",
+			isSet:  true,
 			input: `
 openAPI:
   definitions:
@@ -1048,6 +1051,7 @@ openAPI:
 			setter:      "replicas",
 			value:       "3",
 			description: "hello world",
+			isSet:       true,
 			input: `
 openAPI:
   definitions:
@@ -1094,6 +1098,7 @@ openAPI:
 			setter: "replicas",
 			value:  "3",
 			setBy:  "carl",
+			isSet:  true,
 			input: `
 openAPI:
   definitions:
@@ -1139,6 +1144,7 @@ openAPI:
 			name:   "set-replicas-set-by-empty",
 			setter: "replicas",
 			value:  "3",
+			isSet:  true,
 			input: `
 openAPI:
   definitions:
@@ -1229,7 +1235,6 @@ openAPI:
           enumValues:
             foo: bar
             baz: biz
-          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -1242,6 +1247,7 @@ openAPI:
 			name:   "set-replicas-fail",
 			setter: "replicas",
 			value:  "hello",
+			isSet:  true,
 			input: `
 openAPI:
   definitions:
@@ -1272,6 +1278,7 @@ openAPI:
 			name:   "error",
 			setter: "replicas",
 			err:    `setter "replicas" is not found`,
+			isSet:  true,
 			input: `
 openAPI:
   definitions:
@@ -1328,7 +1335,6 @@ openAPI:
           name: args
           listValues: ["2", "3", "4"]
           required: true
-          isSet: true
 `,
 		},
 	}
@@ -1343,7 +1349,7 @@ openAPI:
 			// invoke the setter
 			instance := &SetOpenAPI{
 				Name: test.setter, Value: test.value, ListValues: test.values,
-				SetBy: test.setBy, Description: test.description}
+				SetBy: test.setBy, Description: test.description, IsSet: test.isSet}
 			result, err := instance.Filter(in)
 			if test.err != "" {
 				if !assert.EqualError(t, err, test.err) {

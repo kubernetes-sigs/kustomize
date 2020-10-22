@@ -163,6 +163,7 @@ func (r *SetRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		OpenAPIFileName:    ext.KRMFileName(),
 		ResourcesPath:      pkgPath,
 		RecurseSubPackages: r.Set.RecurseSubPackages,
+		IsSet:              true,
 	}
 	count, err := r.Set.Set()
 	if err != nil {
