@@ -377,5 +377,12 @@ nameReference:
     kind: Job
   - path: spec/template/spec/priorityClassName
     kind: DaemonSet
+
+- kind: IngressClass
+  version: v1
+  group: networking.k8s.io/v1
+  fieldSpecs:
+  - path: spec/ingressClassName
+    kind: Ingress
 `
 )
