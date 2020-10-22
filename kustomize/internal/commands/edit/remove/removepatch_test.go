@@ -4,29 +4,53 @@
 package remove
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/patch"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/internal/commands/testutils"
 )
 
 const (
-	patchFileContent = `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-`
+	patchFileContent = `- op: replace
+  path: /some/existing/path
+  value: new value`
+	kind               = "myKind"
+	group              = "myGroup"
+	version            = "myVersion"
+	name               = "myName"
+	namespace          = "myNamespace"
+	annotationSelector = "myAnnotationSelector"
+	labelSelector      = "myLabelSelector"
 )
 
 func makeKustomizationPatchFS() filesys.FileSystem {
 	fSys := filesys.MakeEmptyDirInMemory()
 	patches := []string{"patch1.yaml", "patch2.yaml"}
 
-	testutils_test.WriteTestKustomizationWith(fSys, []byte(
-		fmt.Sprintf("patchesStrategicMerge:\n  - %s",
-			strings.Join(patches, "\n  - "))))
+	testutils_test.WriteTestKustomizationWith(fSys, []byte(`
+patches:
+- path: patch1.yaml
+  target:
+    group: myGroup
+    version: myVersion
+    kind: myKind
+    name: myName
+    namespace: myNamespace
+    labelSelector: myLabelSelector
+    annotationSelector: myAnnotationSelector
+- path: patch2.yaml
+  target:
+    group: myGroup
+    version: myVersion
+    kind: myKind
+- patch: |-
+    - op: replace
+      path: /some/existing/path
+      value: new value
+  target:
+    kind: myKind
+    labelSelector: myLabelSelector
+`))
 
 	for _, p := range patches {
 		fSys.WriteFile(p, []byte(patchFileContent))
@@ -38,69 +62,86 @@ func makeKustomizationPatchFS() filesys.FileSystem {
 func TestRemovePatch(t *testing.T) {
 	fSys := makeKustomizationPatchFS()
 	cmd := newCmdRemovePatch(fSys)
-	args := []string{"patch1.yaml"}
-	err := cmd.RunE(cmd, args)
+	patchPath := "patch1.yaml"
+	args := []string{
+		"--path", patchPath,
+		"--kind", kind,
+		"--group", group,
+		"--version", version,
+		"--name", name,
+		"--namespace", namespace,
+		"--annotation-selector", annotationSelector,
+		"--label-selector", labelSelector,
+	}
+	cmd.SetArgs(args)
+	err := cmd.Execute()
 
 	if err != nil {
-		t.Errorf("unexpected error %v", err)
+		t.Fatalf("unexpected error %v", err)
 	}
 
 	m := readKustomizationFS(t, fSys)
-	for _, k := range args {
-		if patch.Exist(m.PatchesStrategicMerge, k) {
-			t.Errorf("%s must be deleted", k)
+	for _, p := range m.Patches {
+		if p.Path == patchPath {
+			t.Fatalf("%s must be deleted", patchPath)
 		}
 	}
 }
 
-func TestRemovePatchMultipleArgs(t *testing.T) {
+func TestRemovePatch2(t *testing.T) {
 	fSys := makeKustomizationPatchFS()
 	cmd := newCmdRemovePatch(fSys)
-	args := []string{"patch1.yaml", "patch2.yaml"}
-	err := cmd.RunE(cmd, args)
+	args := []string{
+		"--patch", patchFileContent,
+		"--kind", kind,
+		"--label-selector", labelSelector,
+	}
+	cmd.SetArgs(args)
+	err := cmd.Execute()
 
 	if err != nil {
-		t.Errorf("unexpected error %v", err)
+		t.Fatalf("unexpected error %v", err)
 	}
 
 	m := readKustomizationFS(t, fSys)
-	for _, k := range args {
-		if patch.Exist(m.PatchesStrategicMerge, k) {
-			t.Errorf("%s must be deleted", k)
+	for _, p := range m.Patches {
+		if p.Patch == patchFileContent {
+			t.Fatalf("%s must be deleted", patchFileContent)
 		}
-	}
-}
-
-func TestRemovePatchGlob(t *testing.T) {
-	fSys := makeKustomizationPatchFS()
-	cmd := newCmdRemovePatch(fSys)
-	args := []string{"patch*.yaml"}
-	err := cmd.RunE(cmd, args)
-
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-
-	m := readKustomizationFS(t, fSys)
-	if len(m.PatchesStrategicMerge) != 0 {
-		t.Errorf("all patch must be deleted")
 	}
 }
 
 func TestRemovePatchNotDefinedInKustomization(t *testing.T) {
 	fSys := makeKustomizationPatchFS()
 	cmd := newCmdRemovePatch(fSys)
-	args := []string{"patch3.yaml"}
-	err := cmd.RunE(cmd, args)
+	args := []string{
+		"--path", "patch3.yaml",
+		"--kind", kind,
+		"--group", group,
+		"--version", version,
+		"--name", name,
+		"--namespace", namespace,
+		"--annotation-selector", annotationSelector,
+		"--label-selector", labelSelector,
+	}
+	cmd.SetArgs(args)
+	err := cmd.Execute()
 
 	if err != nil {
-		t.Errorf("unexpected error %v", err)
+		t.Fatalf("unexpected error %v", err)
 	}
 
 	m := readKustomizationFS(t, fSys)
 	for _, k := range []string{"patch1.yaml", "patch2.yaml"} {
-		if !patch.Exist(m.PatchesStrategicMerge, k) {
-			t.Errorf("%s must exist", k)
+		found := false
+		for _, p := range m.Patches {
+			if p.Path == k {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("%s must exist", k)
 		}
 	}
 }
@@ -108,30 +149,45 @@ func TestRemovePatchNotDefinedInKustomization(t *testing.T) {
 func TestRemovePatchNotExist(t *testing.T) {
 	fSys := makeKustomizationPatchFS()
 	cmd := newCmdRemovePatch(fSys)
-	args := []string{"patch4.yaml"}
-	err := cmd.RunE(cmd, args)
+	args := []string{
+		"--path", "patch4.yaml",
+		"--kind", kind,
+		"--group", group,
+		"--version", version,
+		"--name", name,
+		"--namespace", namespace,
+		"--annotation-selector", annotationSelector,
+		"--label-selector", labelSelector,
+	}
+	cmd.SetArgs(args)
+	err := cmd.Execute()
 
 	if err != nil {
-		t.Errorf("unexpected error %v", err)
+		t.Fatalf("unexpected error %v", err)
 	}
 
 	m := readKustomizationFS(t, fSys)
 	for _, k := range []string{"patch1.yaml", "patch2.yaml"} {
-		if !patch.Exist(m.PatchesStrategicMerge, k) {
-			t.Errorf("%s must exist", k)
+		found := false
+		for _, p := range m.Patches {
+			if p.Path == k {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("%s must exist", k)
 		}
 	}
 }
 
 func TestRemovePatchNoArgs(t *testing.T) {
+	// if no flags specified, we should do nothing
 	fSys := makeKustomizationPatchFS()
 	cmd := newCmdRemovePatch(fSys)
-	err := cmd.RunE(cmd, nil)
+	err := cmd.Execute()
 
-	if err == nil {
-		t.Errorf("expected an error")
-	}
-	if err.Error() != "must specify a patch file" {
-		t.Errorf("incorrect error: %v", err.Error())
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
 	}
 }

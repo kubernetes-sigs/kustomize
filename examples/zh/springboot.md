@@ -106,7 +106,7 @@ spec:
             value: prod
 EOF
 
-kustomize edit add patch patch.yaml
+kustomize edit add patch --path patch.yaml --name sbdemo --kind Deployment --group apps --version v1
 
 cat <<EOF >$DEMO_HOME/application-prod.properties
 spring.jpa.hibernate.ddl-auto=update
@@ -260,20 +260,35 @@ cat $DEMO_HOME/healthcheck_patch.yaml
 <!-- @addPatch @testAgainstLatestRelease -->
 ```
 cd $DEMO_HOME
-kustomize edit add patch memorylimit_patch.yaml
-kustomize edit add patch healthcheck_patch.yaml
+kustomize edit add patch --path memorylimit_patch.yaml --name sbdemo --kind Deployment --group apps --version v1
+kustomize edit add patch --path healthcheck_patch.yaml --name sbdemo --kind Deployment --group apps --version v1
 ```
 
-执行上面的命令后，`kustomization.yaml` 的 patchesStrategicMerge 字段如下：
+执行上面的命令后，`kustomization.yaml` 的 patches 字段如下：
 
 > ```
-> patchesStrategicMerge:
-> - patch.yaml
-> - memorylimit_patch.yaml
-> - healthcheck_patch.yaml
+> patches:
+> - path: patch.yaml
+>   target:
+>     group: apps
+>     version: v1
+>     kind: Deployment
+>     name: sbdemo
+> - path: memorylimit_patch.yaml
+>   target:
+>     group: apps
+>     version: v1
+>     kind: Deployment
+>     name: sbdemo
+> - path: healthcheck_patch.yaml
+>   target:
+>     group: apps
+>     version: v1
+>     kind: Deployment
+>     name: sbdemo
 > ```
 
-现在就可以将完整的配置输出并在集群中部署（将结果通过管道输出给 `kubectl apply`），在生产环境创建Spring Boot 应用。
+现在就可以将完整的配置输出并在集群中部署（将结果通过管道输出给 `kubectl apply`），在生产环境创建 Spring Boot 应用。
 
 <!-- @finalBuild @testAgainstLatestRelease -->
 ```
