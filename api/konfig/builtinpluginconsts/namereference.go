@@ -267,6 +267,10 @@ nameReference:
     kind: Ingress
   - path: spec/backend/serviceName
     kind: Ingress
+  - path: spec/rules/http/paths/backend/service/name
+    kind: Ingress
+  - path: spec/defaultBackend/service/name
+    kind: Ingress
   - path: spec/service/name
     kind: APIService
     group: apiregistration.k8s.io
@@ -373,5 +377,12 @@ nameReference:
     kind: Job
   - path: spec/template/spec/priorityClassName
     kind: DaemonSet
+
+- kind: IngressClass
+  version: v1
+  group: networking.k8s.io/v1
+  fieldSpecs:
+  - path: spec/ingressClassName
+    kind: Ingress
 `
 )
