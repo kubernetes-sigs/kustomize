@@ -238,6 +238,8 @@ nameReference:
     kind: Ingress
   - path: metadata/annotations/nginx.ingress.kubernetes.io\/auth-tls-secret
     kind: Ingress
+  - path: spec/tls/secretName
+    kind: Ingress
   - path: imagePullSecrets/name
     kind: ServiceAccount
   - path: parameters/secretName
