@@ -1053,7 +1053,7 @@ data:
 			}
 
 			return searchReplacePluginTestCaseT{
-				name:          "replaceWithGitSemverTag",
+				name:          "replaceWithGitDescribeTag",
 				loaderRootDir: subDir,
 				pluginConfig: `
 apiVersion: qlik.com/v1
@@ -1063,25 +1063,24 @@ metadata:
 target:
   kind: Foo
   name: some-foo
-path: fooSpec/fooTemplate/fooContainers/env/value
-search: ^far$
-replaceWithGitSemverTag:
-  default: v0.0.0
+path: /
+search: \$\(VERSION\)
+replaceWithGitDescribeTag:
+  default: 0.0.0
 `,
 				pluginInputResources: `
 apiVersion: qlik.com/v1
 kind: Foo
 metadata:
   name: some-foo
+  version: $(VERSION)
 fooSpec:
   fooTemplate:
     fooContainers:
     - name: have-env
       env:
       - name: FOO
-        value: far
-      - name: BOO
-        value: farther than it looks
+        value: $(VERSION)
 `,
 				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 					res := resMap.GetByIndex(0)
@@ -1096,18 +1095,20 @@ fooSpec:
 						t.Fatalf("unexpected: %v\n", fooEnvVar["name"].(string))
 					}
 					expectedVersion := strings.TrimPrefix(semverTag, "v")
-					expectedFooValue := fmt.Sprintf("%s-%s", expectedVersion, hash)
+					expectedFooValue := fmt.Sprintf("%s-1-g%s", expectedVersion, hash)
+
 					if expectedFooValue != fooEnvVar["value"].(string) {
 						t.Fatalf("unexpected: %v\n", fooEnvVar["value"].(string))
 					}
 
-					booEnvVar := envVars.([]interface{})[1].(map[string]interface{})
-					if "BOO" != booEnvVar["name"].(string) {
-						t.Fatalf("unexpected: %v\n", booEnvVar["name"].(string))
+					metadataVersion, err := res.GetFieldValue("metadata.version")
+					if err != nil {
+						t.Fatalf("unexpected error: %v", err)
 					}
-					if "farther than it looks" != booEnvVar["value"].(string) {
-						t.Fatalf("unexpected: %v\n", booEnvVar["value"].(string))
+					if expectedFooValue != metadataVersion {
+						t.Fatalf("unexpected: %v\n", metadataVersion)
 					}
+
 					_ = os.RemoveAll(tmpDir)
 				},
 			}

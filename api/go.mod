@@ -5,7 +5,6 @@ go 1.14
 require (
 	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/evanphx/json-patch v4.5.0+incompatible
-	github.com/go-git/go-git/v5 v5.0.0
 	github.com/go-openapi/spec v0.19.5
 	github.com/gofrs/flock v0.7.1
 	github.com/golangci/golangci-lint v1.21.0
@@ -14,12 +13,18 @@ require (
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/imdario/mergo v0.3.8
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mholt/archiver/v3 v3.3.0
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sosedoff/gitkit v0.2.0
 	github.com/stretchr/testify v1.4.0
 	github.com/yujunz/go-getter v1.4.1-lite
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
+	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
+	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
 	golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
 	helm.sh/helm/v3 v3.1.2
