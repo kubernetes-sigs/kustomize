@@ -114,46 +114,6 @@ type TypeMeta struct {
 	Kind string `json:"kind,omitempty" yaml:"kind,omitempty"`
 }
 
-// Hardcoded list.
-// TODO(#2861): replace this with data acquired from openapi.
-var notNamespaceableKinds = []string{
-	"APIService",
-	"CSIDriver",
-	"CSINode",
-	"CertificateSigningRequest",
-	"Cluster",
-	"ClusterRole",
-	"ClusterRoleBinding",
-	"ComponentStatus",
-	"CustomResourceDefinition",
-	"MutatingWebhookConfiguration",
-	"Namespace",
-	"Node",
-	"PersistentVolume",
-	"PodSecurityPolicy",
-	"PriorityClass",
-	"RuntimeClass",
-	"SelfSubjectAccessReview",
-	"SelfSubjectRulesReview",
-	"StorageClass",
-	"SubjectAccessReview",
-	"TokenReview",
-	"ValidatingWebhookConfiguration",
-	"VolumeAttachment",
-}
-
-// IsNamespaceable returns true if this TypeMeta is for an object
-// that can be placed in a namespace.
-// Implements https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#not-all-objects-are-in-a-namespace
-func (tm TypeMeta) IsNamespaceable() bool {
-	for _, k := range notNamespaceableKinds {
-		if k == tm.Kind {
-			return false
-		}
-	}
-	return true
-}
-
 // NameMeta contains name information.
 type NameMeta struct {
 	// Name is the metadata.name field of a Resource

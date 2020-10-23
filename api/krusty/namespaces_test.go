@@ -159,7 +159,7 @@ subjects:
   name: default
   namespace: irrelevant
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: example
@@ -180,15 +180,17 @@ webhooks:
         name: svc3
         namespace: random
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crds.my.org
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cr1
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: crb1
@@ -197,6 +199,7 @@ subjects:
   name: default
   namespace: irrelevant
 ---
+apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: pv1
@@ -257,7 +260,7 @@ subjects:
   name: default
   namespace: newnamespace
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: p1-example-s1
@@ -278,15 +281,17 @@ webhooks:
       namespace: random
   name: example3
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crds.my.org
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: p1-cr1-s1
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: p1-crb1-s1
@@ -295,6 +300,7 @@ subjects:
   name: default
   namespace: newnamespace
 ---
+apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: p1-pv1-s1

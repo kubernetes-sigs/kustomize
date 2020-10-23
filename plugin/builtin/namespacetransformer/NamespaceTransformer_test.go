@@ -193,18 +193,22 @@ kind: Namespace
 metadata:
   name: ns1
 ---
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd1
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cr1
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: crb1
 ---
+apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: pv1

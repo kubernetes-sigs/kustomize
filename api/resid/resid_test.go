@@ -265,7 +265,7 @@ func TestResIdEquals(t *testing.T) {
 				Name: "nm",
 			},
 			gVknResult: false,
-			nsEquals:   false,
+			nsEquals:   true,
 			equals:     false,
 		},
 		{
@@ -376,7 +376,7 @@ func TestEffectiveNamespace(t *testing.T) {
 	}{
 		{
 			id: ResId{
-				Gvk:  Gvk{Group: "g", Version: "v", Kind: "Node"},
+				Gvk:  Gvk{Group: "", Version: "v1", Kind: "Node"},
 				Name: "nm",
 			},
 			expected: TotallyNotANamespace,
@@ -384,7 +384,7 @@ func TestEffectiveNamespace(t *testing.T) {
 		{
 			id: ResId{
 				Namespace: "foo",
-				Gvk:       Gvk{Group: "g", Version: "v", Kind: "Node"},
+				Gvk:       Gvk{Group: "", Version: "v1", Kind: "Node"},
 				Name:      "nm",
 			},
 			expected: TotallyNotANamespace,

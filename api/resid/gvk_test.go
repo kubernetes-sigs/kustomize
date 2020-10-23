@@ -18,6 +18,8 @@ package resid
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var equalsTests = []struct {
@@ -253,5 +255,42 @@ func TestSelectByGVK(t *testing.T) {
 		if filtered != tc.expected {
 			t.Fatalf("unexpected filter result for test case: %v", tc.description)
 		}
+	}
+}
+
+func TestIsNamespaceableKind(t *testing.T) {
+	testCases := []struct {
+		name     string
+		gvk      Gvk
+		expected bool
+	}{
+		{
+			"namespaceable resource",
+			Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
+			true,
+		},
+		{
+			"clusterscoped resource",
+			Gvk{Group: "", Version: "v1", Kind: "Namespace"},
+			false,
+		},
+		{
+			"unknown resource (should default to namespaceable)",
+			Gvk{Group: "example1.com", Version: "v1", Kind: "Bar"},
+			true,
+		},
+		{
+			"unknown resource (should default to namespaceable)",
+			Gvk{Group: "apps", Version: "v1", Kind: "ClusterRoleBinding"},
+			true,
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			isNamespaceable := test.gvk.IsNamespaceableKind()
+			assert.Equal(t, test.expected, isNamespaceable)
+		})
 	}
 }
