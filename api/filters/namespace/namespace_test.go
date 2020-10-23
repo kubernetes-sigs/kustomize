@@ -194,47 +194,47 @@ metadata:
 	{
 		name: "update-clusterrolebinding",
 		input: `
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: default
 ---
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: default
   namespace: foo
 ---
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: something
 ---
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: something
   namespace: foo
 `,
 		expected: `
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: default
   namespace: bar
 ---
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: default
   namespace: bar
 ---
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: something
 ---
-apiVersion: example.com/v1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
 - name: something
