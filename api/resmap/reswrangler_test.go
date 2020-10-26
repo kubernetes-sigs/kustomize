@@ -355,7 +355,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 		})
 	r4 := rf.FromMap(
 		map[string]interface{}{
-			"apiVersion": "v1",
+			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
 				"name":      "charlie",
@@ -374,7 +374,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	r5.AddNamePrefix("little-")
 	r6 := rf.FromMap(
 		map[string]interface{}{
-			"apiVersion": "v1",
+			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
 				"name":      "domino",
@@ -384,7 +384,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	r6.AddNamePrefix("little-")
 	r7 := rf.FromMap(
 		map[string]interface{}{
-			"apiVersion": "v1",
+			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
 			"metadata": map[string]interface{}{
 				"name": "meh",
