@@ -29,7 +29,7 @@ func NewCmdAdd(
 	kustomize edit add resource <filepath>
 
 	# Adds a patch to the kustomization
-	kustomize edit add patch <filepath>
+	kustomize edit add patch --path {filepath} --group {target group name} --version {target version}
 
 	# Adds a component to the kustomization
 	kustomize edit add component <filepath>

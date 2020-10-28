@@ -102,7 +102,7 @@ For Spring Boot application, we can set an active profile through the environmen
 the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configMap in two
 steps. Add an environment variable through the patch and add a file to the configMap.
 
-<!-- @customizeConfigMap @testAgainstLatestRelease -->
+<!-- @customizeConfigMap -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -119,7 +119,7 @@ spec:
             value: prod
 EOF
 
-kustomize edit add patch patch.yaml
+kustomize edit add patch --path patch.yaml --name sbdemo --kind Deployment --group apps --version v1
 
 cat <<EOF >$DEMO_HOME/application-prod.properties
 spring.jpa.hibernate.ddl-auto=update
@@ -281,20 +281,35 @@ The output contains
 
 Add these patches to the kustomization:
 
-<!-- @addPatch @testAgainstLatestRelease -->
+<!-- @addPatch -->
 ```
 cd $DEMO_HOME
-kustomize edit add patch memorylimit_patch.yaml
-kustomize edit add patch healthcheck_patch.yaml
+kustomize edit add patch --path memorylimit_patch.yaml --name sbdemo --kind Deployment --group apps --version v1
+kustomize edit add patch --path healthcheck_patch.yaml --name sbdemo --kind Deployment --group apps --version v1
 ```
 
 `kustomization.yaml` should have patches field:
 
 > ```
-> patchesStrategicMerge:
-> - patch.yaml
-> - memorylimit_patch.yaml
-> - healthcheck_patch.yaml
+> patches:
+> - path: patch.yaml
+>   target:
+>     group: apps
+>     version: v1
+>     kind: Deployment
+>     name: sbdemo
+> - path: memorylimit_patch.yaml
+>   target:
+>     group: apps
+>     version: v1
+>     kind: Deployment
+>     name: sbdemo
+> - path: healthcheck_patch.yaml
+>   target:
+>     group: apps
+>     version: v1
+>     kind: Deployment
+>     name: sbdemo
 > ```
 
 The output of the following command can now be applied
