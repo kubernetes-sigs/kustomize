@@ -6,6 +6,8 @@
 package merge2
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
@@ -90,9 +92,11 @@ func (m Merger) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yam
 	}
 	// Override value
 	if nodes.Origin() != nil {
+		fmt.Println("overriding", nodes.Origin().YNode().Value)
 		return nodes.Origin(), nil
 	}
 	// Keep
+	fmt.Println("keeping", nodes.Dest().YNode().Value)
 	return nodes.Dest(), nil
 }
 

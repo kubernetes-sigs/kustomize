@@ -4,10 +4,12 @@
 package walk
 
 import (
+	"fmt"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"strings"
 
 	"github.com/go-errors/errors"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
+	//"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -55,20 +57,24 @@ func appendListNode(dst, src *yaml.RNode, key string) (*yaml.RNode, error) {
 }
 
 // setAssociativeSequenceElements recursively set the elements in the list
-func (l *Walker) setAssociativeSequenceElements(values []string, key string, dest *yaml.RNode) (*yaml.RNode, error) {
+func (l *Walker) setAssociativeSequenceElements(values [][]string, keys []string, dest *yaml.RNode) (*yaml.RNode, error) {
 	// itemsToBeAdded contains the items that will be added to dest
+	fmt.Println(keys, values)
 	itemsToBeAdded := yaml.NewListRNode()
 	var schema *openapi.ResourceSchema
 	if l.Schema != nil {
 		schema = l.Schema.Elements()
 	}
 	for _, value := range values {
+		if len(value) == 0 {
+			continue
+		}
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
 			Visitor:               l,
 			Schema:                schema,
-			Sources:               l.elementValue(key, value),
+			Sources:               l.elementValue(keys[0], value[0]),
 			MergeOptions:          l.MergeOptions,
 		}.Walk()
 		if err != nil {
@@ -76,16 +82,16 @@ func (l *Walker) setAssociativeSequenceElements(values []string, key string, des
 		}
 		// delete the node from **dest** if it's null or empty
 		if yaml.IsMissingOrNull(val) || yaml.IsEmptyMap(val) {
-			_, err = dest.Pipe(yaml.ElementSetter{Key: key, Value: value})
+			_, err = dest.Pipe(yaml.ElementSetter{Key: keys[0], Value: value[0]})
 			if err != nil {
 				return nil, err
 			}
 			continue
 		}
 
-		if val.Field(key) == nil {
+		if val.Field(keys[0]) == nil {
 			// make sure the key is set on the field
-			_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(value)))
+			_, err = val.Pipe(yaml.SetField(keys[0], yaml.NewScalarRNode(value[0])))
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +100,7 @@ func (l *Walker) setAssociativeSequenceElements(values []string, key string, des
 		// Add the val to the sequence. val will replace the item in the sequence if
 		// there is an item that matches the key-value pair. Otherwise val will be appended
 		// the the sequence.
-		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{Element: val.YNode(), Key: key, Value: value})
+		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{Element: val.YNode(), Key: keys[0], Value: value[0]})
 		if err != nil {
 			return nil, err
 		}
@@ -103,10 +109,10 @@ func (l *Walker) setAssociativeSequenceElements(values []string, key string, des
 	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
 		// items from patches are needed to be prepended. so we append the
 		// dest to itemsToBeAdded
-		dest, err = appendListNode(itemsToBeAdded, dest, key)
+		dest, err = appendListNode(itemsToBeAdded, dest, keys[0])
 	} else {
 		// append the items
-		dest, err = appendListNode(dest, itemsToBeAdded, key)
+		dest, err = appendListNode(dest, itemsToBeAdded, keys[0])
 	}
 	if err != nil {
 		return nil, err
@@ -125,26 +131,39 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 		return nil, err
 	}
 
-	// get the merge key from schema
+	// get the merge key(s) from schema
 	var key, strategy string
+	fmt.Println(key)
+	var keys []string
 	if l.Schema != nil {
-		strategy, key = l.Schema.PatchStrategyAndKey()
+		strategy, keys = l.Schema.PatchStrategyAndKeyList()
 	}
-	if strategy == "" && key == "" { // neither strategy nor not present in the schema -- infer the key
+	if strategy == "" && len(keys) == 0 { // neither strategy nor keys present in the schema -- infer the key
 		// find the list of elements we need to recursively walk
 		key, err = l.elementKey()
 		if err != nil {
 			return nil, err
 		}
+	} else if len(keys) > 0 {
+		// set key to be the first merge key in the list
+		key = keys[0]
 	}
 
-	if key != "" {
-		// non-primitive associative list -- merge the elements
-		return l.setAssociativeSequenceElements(l.elementValues(key), key, dest)
+	// non-primitive associative list -- merge the elements
+	values := l.elementValues(keys)
+	if len(values) != 0 {
+		return l.setAssociativeSequenceElements(values, keys, dest)
 	}
 
-	// primitive associative list -- merge the values
-	return l.setAssociativeSequenceElements(l.elementPrimitiveValues(), key, dest)
+	//// if values array was empty for all merge keys, go back to primary merge key
+	//if key != "" {
+	//	// non-primitive associative list -- merge the elements
+	//	return l.setAssociativeSequenceElements(l.elementValues(key), key, dest)
+	//}
+	//
+	//// primitive associative list -- merge the values
+	//return l.setAssociativeSequenceElements(l.elementPrimitiveValues(), key, dest)
+	return nil, nil
 }
 
 // elementKey returns the merge key to use for the associative list
@@ -172,10 +191,11 @@ func (l Walker) elementKey() (string, error) {
 // from all sources.
 // Return value slice is ordered using the original ordering from the elements, where
 // elements missing from earlier sources appear later.
-func (l Walker) elementValues(key string) []string {
+func (l Walker) elementValues(keys []string) [][]string {
 	// use slice to to keep elements in the original order
-	var returnValues []string
-	seen := sets.String{}
+	var returnValues [][]string
+	var seen sets.StringList
+
 	// if we are doing append, dest node should be the first.
 	// otherwise dest node should be the last.
 	beginIdx := 0
@@ -190,14 +210,16 @@ func (l Walker) elementValues(key string) []string {
 
 		// add the value of the field for each element
 		// don't check error, we know this is a list node
-		values, _ := src.ElementValues(key)
+		values, _ := src.ElementValues(keys)
+
 		for _, s := range values {
 			if seen.Has(s) {
 				continue
 			}
 			returnValues = append(returnValues, s)
-			seen.Insert(s)
+			seen = seen.Insert(s)
 		}
+
 	}
 	return returnValues
 }

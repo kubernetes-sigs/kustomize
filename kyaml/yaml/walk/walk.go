@@ -62,6 +62,7 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.MappingNode, l.Sources...); err != nil {
 			return nil, err
 		}
+		fmt.Println("0")
 		return l.walkMap()
 	case yaml.SequenceNode:
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.SequenceNode, l.Sources...); err != nil {
@@ -70,19 +71,24 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 		// AssociativeSequence means the items in the sequence are associative. They can be merged
 		// according to merge key.
 		if schema.IsAssociative(l.Schema, l.Sources, l.InferAssociativeLists) {
+			fmt.Println("1")
 			return l.walkAssociativeSequence()
 		}
+		fmt.Println("2")
 		return l.walkNonAssociativeSequence()
 
 	case yaml.ScalarNode:
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.ScalarNode, l.Sources...); err != nil {
 			return nil, err
 		}
+		fmt.Println("3")
 		return l.walkScalar()
 	case 0:
 		// walk empty nodes as maps
+		fmt.Println("4")
 		return l.walkMap()
 	default:
+		fmt.Println("5")
 		return nil, nil
 	}
 }

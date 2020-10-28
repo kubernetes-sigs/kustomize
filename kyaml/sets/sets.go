@@ -4,6 +4,36 @@
 package sets
 
 type String map[string]interface{}
+type StringList [][]string
+
+func (s StringList) Insert(val []string) StringList {
+	return append(s, val)
+}
+
+func (s StringList) Has(val []string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	for _, v := range s {
+		if len(v) != len(val) {
+			continue
+		}
+		// check every value
+		var same bool
+		for i := range v {
+			same = true
+			if v[i] != val[i] {
+				same = false
+				break
+			}
+		}
+		if same {
+			return true
+		}
+	}
+	return false
+}
 
 func (s String) Len() int {
 	return len(s)

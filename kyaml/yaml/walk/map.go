@@ -4,6 +4,7 @@
 package walk
 
 import (
+	"fmt"
 	"sort"
 
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
@@ -62,6 +63,7 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 		if commentSch != nil {
 			s = commentSch
 		}
+		fmt.Println(l.Path)
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,

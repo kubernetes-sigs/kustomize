@@ -460,15 +460,21 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 // ElementValues returns a list of all observed values for a given field name in a
 // list of elements.
 // Returns error for non-SequenceNodes.
-func (rn *RNode) ElementValues(key string) ([]string, error) {
+func (rn *RNode) ElementValues(keys []string) ([][]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, errors.Wrap(err)
 	}
-	var elements []string
+	elements :=  make([][]string, len(keys))
+
 	for i := 0; i < len(rn.Content()); i++ {
-		field := NewRNode(rn.Content()[i]).Field(key)
-		if !field.IsNilOrEmpty() {
-			elements = append(elements, field.Value.YNode().Value)
+		for _, key := range keys {
+			field := NewRNode(rn.Content()[i]).Field(key)
+			//fmt.Println(i, j, field.Value.YNode().Value)
+			if !field.IsNilOrEmpty() {
+				elements[i] = append(elements[i], field.Value.YNode().Value)
+			} else {
+				elements[i] = append(elements[i], "")
+			}
 		}
 	}
 	return elements, nil
