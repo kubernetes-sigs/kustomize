@@ -89,7 +89,7 @@ cat kustomization.yaml
 1. 通过 patch 添加一个环境变量
 2. 将文件添加到 ConfigMap 中
 
-<!-- @customizeConfigMap @testAgainstLatestRelease -->
+<!-- @customizeConfigMap -->
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -257,7 +257,7 @@ cat $DEMO_HOME/healthcheck_patch.yaml
 
 将这些 patch 添加到 `kustomization.yaml` 中：
 
-<!-- @addPatch @testAgainstLatestRelease -->
+<!-- @addPatch -->
 ```
 cd $DEMO_HOME
 kustomize edit add patch --path memorylimit_patch.yaml --name sbdemo --kind Deployment --group apps --version v1

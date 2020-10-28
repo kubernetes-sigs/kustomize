@@ -5,6 +5,7 @@
 ## ConfigMap 的生成和滚动更新
 
 kustomize 提供了两种添加 ConfigMap 的方法：
+
 - 将 ConfigMap 声明为 [resource]
 - 通过 ConfigMapGenerator 声明 ConfigMap
 
@@ -14,7 +15,7 @@ kustomize 提供了两种添加 ConfigMap 的方法：
 > # 将 ConfigMap 声明为 resource
 > resources:
 > - configmap.yaml
-> 
+>
 > # 在 ConfigMapGenerator 中声明 ConfigMap
 > configMapGenerator:
 > - name: a-configmap
@@ -30,7 +31,9 @@ kustomize 提供了两种添加 ConfigMap 的方法：
 ### 建立 base 和 staging
 
 使用 configMapGenerator 建立 base
+
 <!-- @establishBase @testAgainstLatestRelease -->
+
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -48,16 +51,18 @@ commonLabels:
 resources:
 - deployment.yaml
 - service.yaml
-configMapGenerator:	
-- name: the-map	
-  literals:	
-    - altGreeting=Good Morning!	
+configMapGenerator:
+- name: the-map
+  literals:
+    - altGreeting=Good Morning!
     - enableRisky="false"
 EOF
 ```
 
 通过应用 ConfigMap patch 的方式建立 staging
+
 <!-- @establishStaging @testAgainstLatestRelease -->
+
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
@@ -94,6 +99,7 @@ EOF
 deployment 按照名称引用此 ConfigMap ：
 
 <!-- @showDeployment @testAgainstLatestRelease -->
+
 ```
 grep -C 2 configMapKeyRef $BASE/deployment.yaml
 ```
@@ -102,16 +108,17 @@ grep -C 2 configMapKeyRef $BASE/deployment.yaml
 
 更改 Deployment 配置的推荐方法是：
 
- 1. 使用新名称创建一个新的 configMap
- 2. 为_deployment_ 添加 patch，修改相应 `configMapKeyRef` 字段的名称值。
+1.  使用新名称创建一个新的 configMap
+2.  为*deployment* 添加 patch，修改相应 `configMapKeyRef` 字段的名称值。
 
 后一种更改会启动对 deployment 中的 pod 的滚动更新。旧的 configMap 在不再被任何其他资源引用时最终会被[垃圾回收](/../../issues/242)。
 
-### 如何使用 kustomize 
+### 如何使用 kustomize
 
 _staging_ 的 [variant] 包含一个 configMap 的 [patch]：
 
 <!-- @showMapPatch @testAgainstLatestRelease -->
+
 ```
 cat $OVERLAYS/staging/map.yaml
 ```
@@ -121,6 +128,7 @@ cat $OVERLAYS/staging/map.yaml
 在 ConfigMapGenerator 中声明 ConfigMap 的修改。
 
 <!-- @showMapBase @testAgainstLatestRelease -->
+
 ```
 grep -C 4 configMapGenerator $BASE/kustomization.yaml
 ```
@@ -130,6 +138,7 @@ grep -C 4 configMapGenerator $BASE/kustomization.yaml
 但是，文件中指定的名称值不是群集中使用的名称值。根据设计，kustomize 修改从 ConfigMapGenerator 声明的 ConfigMaps 的名称。要查看最终在群集中使用的名称，只需运行 kustomize：
 
 <!-- @grepStagingName @testAgainstLatestRelease -->
+
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -141,7 +150,8 @@ kustomize build $OVERLAYS/staging |\
 
 configMap 名称的后缀是由 map 内容的哈希生成的 - 在这种情况下，名称后缀是 _5276h4th55_ ：
 
-<!-- @grepStagingHash -->
+<!-- @grepStagingHash @testAgainstLatestRelease -->
+
 ```
 kustomize build $OVERLAYS/staging | grep 5276h4th55
 ```
@@ -149,6 +159,7 @@ kustomize build $OVERLAYS/staging | grep 5276h4th55
 现在修改 map patch ，更改该服务将使用的问候消息：
 
 <!-- @changeMap @testAgainstLatestRelease -->
+
 ```
 sed -i.bak 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
 ```
@@ -163,6 +174,7 @@ kustomize build $OVERLAYS/staging |\
 再次运行 kustomize 查看新的 configMap 名称：
 
 <!-- @grepStagingName @testAgainstLatestRelease -->
+
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -170,7 +182,8 @@ kustomize build $OVERLAYS/staging |\
 
 确认 configMap 内容的更改将会生成以 _c2g8fcbf88_ 结尾的三个新名称 - 一个在 configMap 的名称中，另两个在使用 ConfigMap 的 deployment 中：
 
-<!-- @countHashes -->
+<!-- @countHashes @testAgainstLatestRelease -->
+
 ```
 test 3 == \
   $(kustomize build $OVERLAYS/staging | grep c2g8fcbf88 | wc -l); \
