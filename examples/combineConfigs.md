@@ -251,8 +251,15 @@ specification of the cluster's desired state to
 point deployments to _new_ configMaps with _new_ names.
 `kustomize` makes this easy with its
 `configMapGenerator` directive and associated naming
-controls.  A GC process in the k8s master eventually
-deletes unused configMaps.
+controls. 
+
+To remove outdated configMaps add a label
+to your resource, for example, kustomize-cleanup="true",
+and then you can use `kustomize` to prune old resources^
+
+> ```
+> kustomize build | kubectl apply --prune -f- -l kustomize-cleanup="true" 
+> ```
 
 
 ### Create and use the overlay for _production_
