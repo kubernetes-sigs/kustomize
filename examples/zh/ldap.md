@@ -181,7 +181,7 @@ curl -s -o "$OVERLAYS/production/#1" "$CONTENT/overlays/production\
 
  * 一个 _base_ 目录：对拉取原始配置进行少量的定制
 
- * 一个 _overlays_ 目录：其中包含在集群中创建不同的 _staging_ 和 _production_ [variants] 所需的 kustomizations 文件和 patche 文件
+ * 一个 _overlays_ 目录：其中包含在集群中创建不同的 _staging_ 和 _production_ [variants] 所需的 kustomizations 文件和 patches 文件
 
 查看目录结构和差异：
 
