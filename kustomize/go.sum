@@ -598,12 +598,6 @@ k8s.io/utils v0.0.0-20191114184206-e782cd3c129f/go.mod h1:sZAwmy6armz5eXlNoLmJcl
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
-sigs.k8s.io/kustomize/api v0.6.4 h1:YIVJnBH+yngw1/1CcLH6GvJ2aEoX9jDlqVuWhfjWmYc=
-sigs.k8s.io/kustomize/api v0.6.4/go.mod h1:BX11EGGdQTCYHLMaz7oT4TKdQ8owypNlYIrUj1i5HwA=
-sigs.k8s.io/kustomize/cmd/config v0.8.4 h1:Lo26VjENBVfAOJu0v6w6C1cv5Zp9K8XRs39/0cb87+k=
-sigs.k8s.io/kustomize/cmd/config v0.8.4/go.mod h1:1+URiyIJrjdxCdCNDuh2SLyf+I36txRgubFI3PIg2Gc=
-sigs.k8s.io/kustomize/kyaml v0.9.3 h1:kZ5HnNmmnbndSXFivrAVM6u3Ik1dwu4kbpaV8KNwy8I=
-sigs.k8s.io/kustomize/kyaml v0.9.3/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 sigs.k8s.io/yaml v1.2.0 h1:kr/MCeFWJWTwyaHoR9c8EjH9OumOmoF9YGiZd7lFm/Q=
