@@ -10,10 +10,11 @@
 #
 # Fails if the file already exists.
 
-if [ -z "$1" ]; then
-    version=""
+if [ -n "$1" ]; then
+    version=v$1
   else
-    version=$1
+    version=$(curl -sL -o /dev/null -w %{url_effective} \
+    https://github.com/kubernetes-sigs/kustomize/releases/latest | rev | cut -d/ -f1 | rev)
 fi
 
 where=$PWD
@@ -47,14 +48,13 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
   grep browser_download |\
   grep $opsys |\
   cut -d '"' -f 4 |\
-  grep /kustomize/v$version |\
-  sort | tail -n 1 |\
-  xargs curl -s -O -L
+  grep /kustomize/$version.*amd64 |\
+  sort | xargs curl -sLO
 
 if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
     tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
 else
-    echo "Error: kustomize binary with the version $version does not exist!"
+    echo "Error: kustomize binary with the version ${version#v} does not exist!"
     exit 1
 fi
 
