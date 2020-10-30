@@ -91,7 +91,8 @@ install-tools: \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/prchecker \
-	$(MYGOBIN)/stringer
+	$(MYGOBIN)/stringer \
+	$(MYGOBIN)/helm
 
 ### Begin kustomize plugin rules.
 #
@@ -133,7 +134,8 @@ _builtinplugins = \
 	PrefixSuffixTransformer.go \
 	ReplicaCountTransformer.go \
 	SecretGenerator.go \
-	ValueAddTransformer.go
+	ValueAddTransformer.go \
+	HelmChartInflationGenerator.go
 
 # Maintaining this explicit list of generated files, and
 # adding it as a dependency to a few targets, to assure
@@ -159,6 +161,7 @@ $(pGen)/PrefixSuffixTransformer.go: $(pSrc)/prefixsuffixtransformer/PrefixSuffix
 $(pGen)/ReplicaCountTransformer.go: $(pSrc)/replicacounttransformer/ReplicaCountTransformer.go
 $(pGen)/SecretGenerator.go: $(pSrc)/secretgenerator/SecretGenerator.go
 $(pGen)/ValueAddTransformer.go: $(pSrc)/valueaddtransformer/ValueAddTransformer.go
+$(pGen)/HelmChartInflationGenerator.go: $(pSrc)/helmchartinflationgenerator/HelmChartInflationGenerator.go
 
 # The (verbose but portable) Makefile way to convert to lowercase.
 toLowerCase = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
@@ -304,16 +307,16 @@ $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.2.0-rc.1-linux-amd64.tar.gz; \
+		tgzFile=helm-v3.4.0-linux-amd64.tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
 		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
 
-# Default version of helm is v2 for the time being.
-$(MYGOBIN)/helm: $(MYGOBIN)/helmV2
-	ln -s $(MYGOBIN)/helmV2 $(MYGOBIN)/helm
+# Default version of helm is v3.
+$(MYGOBIN)/helm: $(MYGOBIN)/helmV3
+	ln -s $(MYGOBIN)/helmV3 $(MYGOBIN)/helm
 
 $(MYGOBIN)/kind:
 	( \
