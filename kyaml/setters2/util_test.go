@@ -154,7 +154,8 @@ openAPI:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			err = openapi.AddSchemaFromFile(filepath.Join(dir, "Krmfile"))
+			clean, err := openapi.AddSchemaFromFile(filepath.Join(dir, "Krmfile"))
+			defer clean()
 			if err != nil {
 				// do nothing if openAPI file or schema doesn't exist, CheckRequiredSettersSet()
 				// should not throw any error

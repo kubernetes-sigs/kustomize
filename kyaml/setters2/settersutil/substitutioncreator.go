@@ -93,9 +93,11 @@ func (c SubstitutionCreator) Create() error {
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(c.OpenAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(c.OpenAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 
 	visited := sets.String{}
 	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SubstitutionDefinitionPrefix + c.Name)
@@ -119,9 +121,11 @@ func (c SubstitutionCreator) Create() error {
 	}
 
 	// Load the updated definitions after setters are created
-	if err := openapi.AddSchemaFromFile(c.OpenAPIPath); err != nil {
+	clean, err = openapi.AddSchemaFromFile(c.OpenAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 
 	// revert openAPI file if there are cycles detected in created input substitution
 	if err := checkForCycles(ext, visited); err != nil {
