@@ -9,6 +9,7 @@ steps:
       - "PROJECT_ID=$PROJECT_ID"
       - "_GIT_TAG=$_GIT_TAG"
       - "_PULL_BASE_REF=$_PULL_BASE_REF"
+      - "_VERSION=$_VERSION"
 # We need to use bash to configure the build date properly.
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: /bin/bash
@@ -21,10 +22,12 @@ steps:
         gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}
         -t
         gcr.io/$PROJECT_ID/kustomize:latest
+        -t
+        gcr.io/$PROJECT_ID/kustomize:${_PULL_BASE_REF#*/}
         -f
         kustomize.Dockerfile
         --build-arg
-        VERSION=${_VERSION}
+        VERSION=${_PULL_BASE_REF#*/}
         --build-arg
         COMMIT=$(git rev-parse HEAD)
         --build-arg
@@ -42,7 +45,7 @@ substitutions:
   # _PULL_BASE_REF will contain the ref that was pushed to to trigger this build -
   # a branch like 'master' or 'release-0.2', or a tag like 'v0.2'.
   _PULL_BASE_REF: "master"
-  _VERSION: ${_PULL_BASE_REF#*/}
+  # Other substitutions will not be evaluated
 
 options:
   substitution_option: ALLOW_LOOSE
