@@ -39,9 +39,11 @@ func (d DeleterCreator) Delete() error {
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(d.OpenAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(d.OpenAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 
 	// Update the resources with the deleter reference
 	inout := &kio.LocalPackageReadWriter{PackagePath: d.ResourcesPath, PackageFileName: d.OpenAPIFileName}

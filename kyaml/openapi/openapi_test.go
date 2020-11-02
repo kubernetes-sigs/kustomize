@@ -143,10 +143,11 @@ openAPI:
 		t.FailNow()
 	}
 
-	err = AddSchemaFromFile(f.Name())
+	clean, err := AddSchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+	defer clean()
 
 	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
 
@@ -179,7 +180,7 @@ openAPI:
 		t.FailNow()
 	}
 
-	err = AddSchemaFromFile(f.Name())
+	clean, err := AddSchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -195,10 +196,7 @@ openAPI:
 	assert.Equal(t, `map[x-k8s-cli:map[setter:map[name:image-name value:nginx]]]`,
 		fmt.Sprintf("%v", s.Schema.Extensions))
 
-	err = DeleteSchemaInFile(f.Name())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	clean()
 
 	_, err = GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
 
@@ -225,15 +223,11 @@ openAPI:
 		t.FailNow()
 	}
 
-	err = AddSchemaFromFile(f.Name())
+	clean, err := AddSchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-
-	err = DeleteSchemaInFile(f.Name())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	defer clean()
 }
 
 func TestPopulateDefsInOpenAPI_Substitution(t *testing.T) {
@@ -271,9 +265,11 @@ openAPI:
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, AddSchemaFromFile(f.Name())) {
+	clean, err := AddSchemaFromFile(f.Name())
+	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+	defer clean()
 
 	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.substitutions.image"}`)
 
@@ -305,9 +301,11 @@ kind: Example
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, AddSchemaFromFile(f.Name())) {
+	clean, err := AddSchemaFromFile(f.Name())
+	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+	defer clean()
 
 	if !assert.Equal(t, len(globalSchema.schema.Definitions), 0) {
 		t.FailNow()

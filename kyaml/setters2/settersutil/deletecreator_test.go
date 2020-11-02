@@ -71,10 +71,11 @@ func TestDeleterCreator_Delete(t *testing.T) {
 		DefinitionPrefix: fieldmeta.SetterDefinitionPrefix,
 	}
 
-	err = openapi.AddSchemaFromFile(openAPI.Name())
+	clean, err := openapi.AddSchemaFromFile(openAPI.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
+	defer clean()
 	dc.OpenAPIPath = openAPI.Name()
 	dc.ResourcesPath = resource.Name()
 

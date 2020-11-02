@@ -42,13 +42,13 @@ openAPI:
 func TestDelete_Filter2(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile2")
 
-	//write initial resourcefile to temp path
+	// write initial resourcefile to temp path
 	err := ioutil.WriteFile(path, []byte(resourcefile2), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	//add a deleter definition
+	// add a deleter definition
 	dd := DeleterDefinition{
 		Name:             "image",
 		DefinitionPrefix: fieldmeta.SetterDefinitionPrefix,
