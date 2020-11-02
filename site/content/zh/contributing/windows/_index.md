@@ -59,7 +59,7 @@ Usage:  C:\_go\bin\mdrip.exe {fileName}...
 - In your GoRoot src
   - ```Example: C:\_go\src```
 - Navigate to the Kustomize `travis` directory
-  - ```Example: C:\_go\src\sigs.k8s.io\kustomize\travis```
+  - ```Example: C:\_go\src\sigs.k8s.io\kustomize\scripts```
 - Now Execute:
   - ```.\Invoke-PreCommit.ps1```
 

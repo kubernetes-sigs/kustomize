@@ -221,10 +221,10 @@ test-unit-kustomize-all: \
 	test-unit-kustomize-plugins
 
 test-unit-cmd-all:
-	./travis/kyaml-pre-commit.sh
+	./scripts/kyaml-pre-commit.sh
 
 test-go-mod:
-	./travis/check-go-mod.sh
+	./scripts/check-go-mod.sh
 
 .PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
