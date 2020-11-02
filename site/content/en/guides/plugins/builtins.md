@@ -3,9 +3,8 @@ title: "Builtin Plugins"
 linkTitle: "Builtin Plugins"
 type: docs
 description: >
-    Builtin Plugins
+  Builtin Plugins
 ---
-
 
 # Builtin Plugins
 
@@ -14,31 +13,31 @@ generators and transformers.
 
 For each plugin, an example is given for
 
-* implicitly triggering
-the plugin via a dedicated kustomization
-file field (e.g. the `AnnotationsTransformer` is
-triggered by the `commonAnnotations` field).
+- implicitly triggering
+  the plugin via a dedicated kustomization
+  file field (e.g. the `AnnotationsTransformer` is
+  triggered by the `commonAnnotations` field).
 
-* explicitly triggering the plugin
-via the `generators` or `transformers` field
-(by providing a config file specifying the
-plugin).
+- explicitly triggering the plugin
+  via the `generators` or `transformers` field
+  (by providing a config file specifying the
+  plugin).
 
 The former method is convenient but limited in
 power as most of the plugins arguments must
-be defaulted.  The latter method allows for
+be defaulted. The latter method allows for
 complete plugin argument specification.
 
-[types.GeneratorOptions]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/generatoroptions.go
-[types.SecretArgs]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/secretargs.go
-[types.ConfigMapArgs]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/configmapargs.go
-[config.FieldSpec]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/fieldspec.go
-[types.ObjectMeta]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/objectmeta.go
-[types.Selector]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/selector.go
-[types.Replica]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/replica.go
-[types.PatchStrategicMerge]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/patchstrategicmerge.go
-[types.PatchTarget]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/patchtarget.go
-[image.Image]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/image.go
+[types.generatoroptions]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/generatoroptions.go
+[types.secretargs]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/secretargs.go
+[types.configmapargs]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/configmapargs.go
+[config.fieldspec]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/fieldspec.go
+[types.objectmeta]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/objectmeta.go
+[types.selector]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/selector.go
+[types.replica]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/replica.go
+[types.patchstrategicmerge]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/patchstrategicmerge.go
+[types.patchtarget]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/patchtarget.go
+[image.image]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/types/image.go
 
 ## _AnnotationTransformer_
 
@@ -61,10 +60,10 @@ commonAnnotations:
 
 > Annotations map\[string\]string
 >
-> FieldSpecs  \[\][config.FieldSpec]
+> FieldSpecs \[\][config.FieldSpec]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: AnnotationsTransformer
@@ -98,13 +97,13 @@ replace an existing configMap from the parent.
 
 Also, each entry has an `options` field, that has the
 same subfields as the kustomization file's `generatorOptions` field.
-  
+
 This `options` field allows one to add labels and/or
 annotations to the generated instance, or to individually
 disable the name suffix hash for that instance.
 Labels and annotations added here will not be overwritten
 by the global options associated with the kustomization
-file `generatorOptions` field.  However, due to how
+file `generatorOptions` field. However, due to how
 booleans behave, if the global `generatorOptions` field
 specifies `disableNameSuffixHash: true`, this will
 trump any attempt to locally override it.
@@ -122,7 +121,7 @@ configMapGenerator:
   - application.properties
   - more.properties
 - name: my-java-server-env-vars
-  literals: 
+  literals:
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
   options:
@@ -162,7 +161,7 @@ configMapGenerator:
 > [types.ConfigMapArgs]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: ConfigMapGenerator
@@ -183,7 +182,7 @@ configMapGenerator:
 #### field name: `images`
 
 Images modify the name, tags and/or digest for images
-without creating patches.  E.g. Given this
+without creating patches. E.g. Given this
 kubernetes Deployment fragment:
 
 ```
@@ -205,7 +204,7 @@ one can change the `image` in the following ways:
 - image name `my-demo-app` to `my-app`,
 - alpine's tag `3.7` to a digest value
 
-all with the following *kustomization*:
+all with the following _kustomization_:
 
 ```
 images:
@@ -224,12 +223,12 @@ images:
 
 #### Arguments
 
-> ImageTag   [image.Image]
+> ImageTag [image.Image]
 >
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: ImageTagTransformer
@@ -259,12 +258,12 @@ commonLabels:
 
 #### Arguments
 
-> Labels  map\[string\]string
+> Labels map\[string\]string
 >
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: LabelTransformer
@@ -299,7 +298,7 @@ namespace: my-namespace
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 >  kind: NamespaceTransformer
@@ -338,7 +337,7 @@ The content in this patch file can be either in JSON format as
    {"op": "add", "path": "/some/new/path", "value": "value"},
    {"op": "replace", "path": "/some/existing/path", "value": "new value"}
  ]
- ```
+```
 
 or in YAML format as
 
@@ -388,12 +387,12 @@ patchesJson6902:
 
 > Target [types.PatchTarget]
 >
-> Path   string
+> Path string
 >
 > JsonOp string
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: PatchJson6902Transformer
@@ -420,12 +419,12 @@ definition.
 
 The names in these (possibly partial) resource
 files must match names already loaded via the
-`resources` field.  These entries are used to
+`resources` field. These entries are used to
 _patch_ (modify) the known resources.
 
 Small patches that do one thing are best, e.g. modify
 a memory request/limit, change an env var in a
-ConfigMap, etc.  Small patches are easy to review and
+ConfigMap, etc. Small patches are easy to review and
 easy to mix together in overlays.
 
 ```
@@ -466,7 +465,7 @@ patch that performs all the needed deletions.
 > Patches string
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: PatchStrategicMergeTransformer
@@ -526,7 +525,7 @@ is equivalent to `^myapp$`.
 > Target \*[types.Selector]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: PatchTransformer
@@ -548,7 +547,7 @@ Prepends or postfixes the value to the names
 of all resources.
 
 E.g. a deployment named `wordpress` could
-become `alices-wordpress` or  `wordpress-v2`
+become `alices-wordpress` or `wordpress-v2`
 or `alices-wordpress-v2`.
 
 ```
@@ -563,14 +562,14 @@ the resource type is ConfigMap or Secret.
 
 #### Arguments
 
-> Prefix     string
+> Prefix string
 >
-> Suffix     string
+> Suffix string
 >
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: PrefixSuffixTransformer
@@ -632,7 +631,7 @@ For more complex use cases, revert to using a patch.
 > FieldSpecs \[\][config.FieldSpec]
 
 #### Example
->
+
 > ```
 > apiVersion: builtin
 > kind: ReplicaCountTransformer
@@ -719,4 +718,80 @@ secretGenerator:
 > literals:
 > - FRUIT=apple
 > - VEGETABLE=carrot
+> ```
+
+## _HelmChartInflationGenerator_
+
+### Usage via `kustomization.yaml`
+
+#### field name: `helmChartInflationGenerator`
+
+Each entry in the argument list results in the pulling
+and rendering of a helm chart.
+
+Each entry can have following fields:
+
+- `chartName`: The name of the chart that you want to use.
+- `chartRepoUrl`: [Optional] The URL of the repository which contains the chart. If
+  this is provided, the plugin will try to fetch remote charts. Otherwise it will
+  try to load local chart in `chartHome`.
+- `chartVersion`: [Optional] Version of the chart. Will use latest version
+  if this is omitted.
+- `chartHome`: [Optional] Provide the path to the parent directory for local chart.
+- `chartRelease`: [Optional] The name of the repo where to find the chart.
+- `values`: [Optional] A path to the values file.
+- `releaseName`: [Optional] The release name that will be set in the chart.
+- `releaseNamespace`: [Optional] The namespace which will be used by `--namespace`
+  flag in `helm template` command.
+- `helmBin`: [Optional] Path to helm binary. Default is `helm`.
+- `helmHome`: [Optional] Path to helm home directory.
+
+```
+helmChartInflationGenerator:
+- chartName: minecraft
+  chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+  chartVersion: v1.2.0
+  releaseName: test
+  releaseNamespace: testNamespace
+```
+
+### Usage via plugin
+
+#### Arguments
+
+> ChartName string
+>
+> ChartVersion string
+>
+> ChartRepoURL string
+>
+> ChartHome string
+>
+> ChartRepoName string
+>
+> HelmBin string
+>
+> HelmHome string
+>
+> Values string
+>
+> ReleaseName string
+>
+> ReleaseNamespace string
+
+#### Example
+
+> ```
+> apiVersion: builtin
+> kind: HelmChartInflationGenerator
+> metadata:
+>   name: myMap
+> chartName: minecraft
+> chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+> chartVersion: v1.2.0
+> helmBin: /usr/bin/helm
+> helmHome: /tmp/helmHome
+> releaseName: test
+> releaseNamespace: testNamespace
+> values: values.yaml
 > ```

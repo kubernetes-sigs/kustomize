@@ -122,6 +122,11 @@ type Kustomization struct {
 	// the map will have a suffix hash generated from its contents.
 	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
 
+	// HelmChartInflationGenerator is a list of helm chart configurations.
+	// The resulting resource is a normal operand rendered from
+	// a remote chart by `helm template`
+	HelmChartInflationGenerator []HelmChartArgs `json:"helmChartInflationGenerator,omitempty" yaml:"helmChartInflationGenerator,omitempty"`
+
 	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
 
