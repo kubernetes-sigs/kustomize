@@ -7,7 +7,7 @@
 [plugin]: ../docs/plugins
 
 [Helm charts] aren't natively read by kustomize, but
-kustomize has a built in HelmChartInflationGenerator that allows one to
+kustomize has a builtin HelmChartInflationGenerator that allows one to
 access helm charts.
 
 One pattern combining kustomize and helm is
@@ -253,13 +253,17 @@ rm -r $DEMO_HOME
 
 ## How to migrate from old plugin to builtin plugin
 
-Before, we have [chartinflator](https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/someteam.example.com/v1/chartinflator)
-plugin which servers as an external plugin. Although you can continue
-using it but we recommend to migrate to builtin one if you are using
-Helm V3. For Helm V2 user, we haven't implemented V2 support in builtin
-plugin.
+[bash-based helm chart inflator]: https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/someteam.example.com/v1/chartinflator
+[go-based builtin helm chart inflator]: https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin/helmchartinflationgenerator
 
-What you need to do for your generator config file:
+The [bash-based helm chart inflator] is intended as an example of using bash
+to write a generator plugin.
 
-- Change the `apiVersion` to `builtin`.
-- Change the `kind` to `HelmChartInflationGenerator`
+It proved to be popular for inflating helm charts,
+so there's now a [go-based builtin helm chart inflator].
+
+This newer generator is supported as part of the core code, so anyone using the
+old bash-based example plugin would probably benefit from switching to the
+newer built-in plugin.
+
+Be advised that at the time of writing, the built-in plugin only supports helm v3.
