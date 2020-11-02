@@ -9,8 +9,7 @@ steps:
       - "PROJECT_ID=$PROJECT_ID"
       - "_GIT_TAG=$_GIT_TAG"
       - "_PULL_BASE_REF=$_PULL_BASE_REF"
-      - "_VERSION=$_VERSION"
-# We need to use bash to configure the build date properly.
+# We need to use bash to configure the build date and version properly.
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: /bin/bash
     args:
@@ -23,15 +22,15 @@ steps:
         -t
         gcr.io/$PROJECT_ID/kustomize:latest
         -t
-        gcr.io/$PROJECT_ID/kustomize:${_PULL_BASE_REF#*/}
+        gcr.io/$PROJECT_ID/kustomize:${_PULL_BASE_REF}
         -f
         kustomize.Dockerfile
         --build-arg
-        VERSION=${_PULL_BASE_REF#*/}
+        VERSION=${_PULL_BASE_REF}
         --build-arg
         COMMIT=$(git rev-parse HEAD)
         --build-arg
-        DATE=`date -u +%FT%TZ`
+        DATE=$(date -u +%FT%TZ)
         .
 
 images:
