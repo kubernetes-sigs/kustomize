@@ -63,17 +63,48 @@ type ElementSetter struct {
 	Value string `yaml:"value,omitempty"`
 }
 
+func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
+	return rn.Pipe(ElementSetterList{
+		Element: e.Element,
+		Keys:    []string{e.Key},
+		Values:  []string{e.Value},
+	})
+}
+
+// ElementSetterList sets the value for an Element in an associative list.
+// It behaves identically to ElementSetter, except that it uses multiple
+// key-value pairs (in the form of a list of keys and a corresponding list
+// of values) in order to find a matching element, whereas ElementSetter
+// uses only one key-value pair.
+type ElementSetterList struct {
+	Kind string `yaml:"kind,omitempty"`
+
+	// Element is the new value to set -- remove the existing element if nil
+	Element *Node
+
+	// Key is a list of fields on the elements. It is used to find matching elements to
+	// update / delete
+	Keys []string
+
+	// Value is a list of field values on the elements corresponding to the keys. It is
+	// used to find matching elements to update / delete.
+	Values []string
+}
+
 // isMappingNode returns whether node is a mapping node
-func (e ElementSetter) isMappingNode(node *RNode) bool {
+func (e ElementSetterList) isMappingNode(node *RNode) bool {
 	return ErrorIfInvalid(node, yaml.MappingNode) == nil
 }
 
 // isMappingSetter returns is this setter intended to set a mapping node
-func (e ElementSetter) isMappingSetter() bool {
-	return e.Key != "" && e.Value != ""
+func (e ElementSetterList) isMappingSetter() bool {
+	return len(e.Keys) > 0 && e.Keys[0] != "" &&
+		len(e.Values) > 0 && e.Values[0] != ""
 }
 
-func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
+// the main difference between this Filter and the ElementSetter Filter
+// is that here we must iterate through all the key-value pairs
+func (e ElementSetterList) Filter(rn *RNode) (*RNode, error) {
 	if err := ErrorIfInvalid(rn, SequenceNode); err != nil {
 		return nil, err
 	}
@@ -96,11 +127,18 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 		}
 
 		// check if this is the element we are matching
-		val, err := newNode.Pipe(FieldMatcher{Name: e.Key, StringValue: e.Value})
-		if err != nil {
-			return nil, err
+		found := true
+		for j, key := range e.Keys {
+			val, err := newNode.Pipe(FieldMatcher{Name: key, StringValue: e.Values[j]})
+			if err != nil {
+				return nil, err
+			}
+			if val == nil {
+				found = false
+				break
+			}
 		}
-		if val == nil {
+		if !found {
 			// not the element we are looking for, keep it in the Content
 			newContent = append(newContent, elem)
 			continue
@@ -242,18 +280,54 @@ type ElementMatcher struct {
 }
 
 func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
+	return rn.Pipe(ElementMatcherList{
+		Kind:          e.Kind,
+		Keys:          []string{e.FieldName},
+		Values:        []string{e.FieldValue},
+		Create:        e.Create,
+		MatchAnyValue: e.MatchAnyValue,
+	})
+}
+
+func MatchElementList(keys []string, values []string) ElementMatcherList {
+	return ElementMatcherList{Keys: keys, Values: values}
+}
+
+// ElementMatcherList returns the first element from a Sequence matching all
+// specified key, value pairs (as opposed to ElementMatcher, which matches
+// a single key, value pair). If there's no match, and no configuration error,
+// the matcher returns nil, nil.
+type ElementMatcherList struct {
+	Kind string `yaml:"kind,omitempty"`
+
+	// Keys are the list of fields upon which to match this element.
+	Keys []string
+
+	// Values are the list of values upon which to match this element.
+	Values []string
+
+	// Create will create the Element if it is not found
+	Create *RNode `yaml:"create,omitempty"`
+
+	// MatchAnyValue indicates that matcher should only consider the key and ignore
+	// the actual value in the list. FieldValue must be empty when NoValue is
+	// set to true.
+	MatchAnyValue bool `yaml:"noValue,omitempty"`
+}
+
+func (e ElementMatcherList) Filter(rn *RNode) (*RNode, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, err
 	}
-	if e.MatchAnyValue && e.FieldValue != "" {
+	if e.MatchAnyValue && len(e.Values) != 0 && e.Values[0] != "" {
 		return nil, fmt.Errorf("FieldValue must be empty when NoValue is set to true")
 	}
 
 	// SequenceNode Content is a slice of ScalarNodes.  Each ScalarNode has a
 	// YNode containing the primitive data.
-	if len(e.FieldName) == 0 {
+	if len(e.Keys) == 0 || len(e.Keys[0]) == 0 {
 		for i := range rn.Content() {
-			if rn.Content()[i].Value == e.FieldValue {
+			if rn.Content()[i].Value == e.Values[0] {
 				return &RNode{value: rn.Content()[i]}, nil
 			}
 		}
@@ -268,20 +342,28 @@ func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
 	for i := range rn.Content() {
 		// cast the entry to a RNode so we can operate on it
 		elem := NewRNode(rn.Content()[i])
+		var field *RNode
+		var err error
 
 		// only check mapping node
-		if err := ErrorIfInvalid(elem, yaml.MappingNode); err != nil {
+		if err = ErrorIfInvalid(elem, yaml.MappingNode); err != nil {
 			continue
 		}
 
-		var field *RNode
-		var err error
-		if e.MatchAnyValue {
-			field, err = elem.Pipe(Get(e.FieldName))
-		} else {
-			field, err = elem.Pipe(MatchField(e.FieldName, e.FieldValue))
+		matchesElement := true
+		for i, key := range e.Keys {
+			if e.MatchAnyValue {
+				field, err = elem.Pipe(Get(key))
+			} else {
+				field, err = elem.Pipe(MatchField(key, e.Values[i]))
+			}
+			if !IsFoundOrError(field, err) {
+				// this is not the element we are looking for
+				matchesElement = false
+				break
+			}
 		}
-		if IsFoundOrError(field, err) {
+		if matchesElement {
 			return elem, err
 		}
 	}
@@ -351,7 +433,7 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 				return rn, nil
 			}
 			return nil, nil
-		case rn.value.Value == f.Value.YNode().Value:
+		case f.Value.YNode() != nil && rn.value.Value == f.Value.YNode().Value:
 			return rn, nil
 		default:
 			return nil, nil
@@ -404,7 +486,7 @@ type PathGetter struct {
 	// See FieldMatcher for more on Fields and Map Keys.
 	//
 	// List Entries can be specified as map entry to match [fieldName=fieldValue]
-	// or a postional index like 0 to get the element. - (unquoted hyphen) is
+	// or a positional index like 0 to get the element. - (unquoted hyphen) is
 	// special and means the last element.
 	//
 	// See Elem for more on List Entries.
