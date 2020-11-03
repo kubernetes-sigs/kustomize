@@ -72,12 +72,13 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
 	return &FnPlugin{
 		runFns: runfn.RunFns{
-			Functions:      []*yaml.RNode{},
-			Network:        o.Network,
-			EnableStarlark: o.EnableStar,
-			EnableExec:     o.EnableExec,
-			StorageMounts:  toStorageMounts(o.Mounts),
-			Env:            o.Env,
+			Functions:             []*yaml.RNode{},
+			Network:               o.Network,
+			EnableStarlark:        o.EnableStar,
+			EnableExec:            o.EnableExec,
+			StorageMounts:         toStorageMounts(o.Mounts),
+			Env:                   o.Env,
+			ContinueOnEmptyResult: true,
 		},
 	}
 }
@@ -145,39 +146,12 @@ func (p *FnPlugin) Transform(rm resmap.ResMap) error {
 	return utils.UpdateResMapValues(p.pluginName, p.h, output, rm)
 }
 
-func injectAnnotation(input *yaml.RNode, k, v string) error {
-	err := input.PipeE(yaml.SetAnnotation(k, v))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // invokePlugin uses Function runner to run function as plugin
 func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	// get function config rnode
 	functionConfig, err := bytesToRNode(p.cfg)
 	if err != nil {
 		return nil, err
-	}
-
-	// This annotation will let kustomize ingnore this item in output
-	err = injectAnnotation(functionConfig, "config.kubernetes.io/local-config", "true")
-	if err != nil {
-		return nil, err
-	}
-	// we need to add config as input for generators. Some of them don't work with FunctionConfig
-	// and in addition kio.Pipeline won't create anything if there are no objects
-	// see https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/kio/kio.go#L93
-	// Since we added `local-config` annotation so it will be ignored in generator output
-	// TODO(donnyxia): This is actually not used by generator and only used to bypass a kio limitation.
-	// Need better solution.
-	if input == nil {
-		yml, err := functionConfig.String()
-		if err != nil {
-			return nil, err
-		}
-		input = []byte(yml)
 	}
 
 	// Configure and Execute Fn. We don't need to convert resources to ResourceList here

@@ -92,6 +92,14 @@ type RunFns struct {
 
 	// Env contains environment variables that will be exported to container
 	Env []string
+
+	// ContinueOnEmptyResult configures what happens when the underlying pipeline
+	// returns an empty result.
+	// If it is false (default), subsequent functions will be skipped and the
+	// result will be returned immediately.
+	// If it is true, the empty result will be provided as input to the next
+	// function in the list.
+	ContinueOnEmptyResult bool
 }
 
 // Execute runs the command
@@ -183,9 +191,10 @@ func (r RunFns) runFunctions(
 
 	var err error
 	pipeline := kio.Pipeline{
-		Inputs:  []kio.Reader{input},
-		Filters: fltrs,
-		Outputs: outputs,
+		Inputs:                []kio.Reader{input},
+		Filters:               fltrs,
+		Outputs:               outputs,
+		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 	if r.LogSteps {
 		err = pipeline.ExecuteWithCallback(func(op kio.Filter) {

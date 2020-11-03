@@ -73,6 +73,9 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
+	r.Command.Flags().BoolVar(
+		&r.ContinueOnEmptyResult, "continue-on-empty-result", false,
+		"don't stop if function returned emply list - emply list will be provided as input for the next function")
 	return r
 }
 
@@ -82,25 +85,26 @@ func RunCommand(name string) *cobra.Command {
 
 // RunFnRunner contains the run function
 type RunFnRunner struct {
-	IncludeSubpackages bool
-	Command            *cobra.Command
-	DryRun             bool
-	GlobalScope        bool
-	FnPaths            []string
-	Image              string
-	EnableStar         bool
-	StarPath           string
-	StarURL            string
-	StarName           string
-	EnableExec         bool
-	ExecPath           string
-	RunFns             runfn.RunFns
-	ResultsDir         string
-	Network            bool
-	Mounts             []string
-	LogSteps           bool
-	Env                []string
-	AsCurrentUser      bool
+	IncludeSubpackages    bool
+	Command               *cobra.Command
+	DryRun                bool
+	GlobalScope           bool
+	FnPaths               []string
+	Image                 string
+	EnableStar            bool
+	StarPath              string
+	StarURL               string
+	StarName              string
+	EnableExec            bool
+	ExecPath              string
+	RunFns                runfn.RunFns
+	ResultsDir            string
+	Network               bool
+	Mounts                []string
+	LogSteps              bool
+	Env                   []string
+	AsCurrentUser         bool
+	ContinueOnEmptyResult bool
 }
 
 func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
@@ -303,20 +307,21 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	storageMounts := toStorageMounts(r.Mounts)
 
 	r.RunFns = runfn.RunFns{
-		FunctionPaths:  r.FnPaths,
-		GlobalScope:    r.GlobalScope,
-		Functions:      fns,
-		Output:         output,
-		Input:          input,
-		Path:           path,
-		Network:        r.Network,
-		EnableStarlark: r.EnableStar,
-		EnableExec:     r.EnableExec,
-		StorageMounts:  storageMounts,
-		ResultsDir:     r.ResultsDir,
-		LogSteps:       r.LogSteps,
-		Env:            r.Env,
-		AsCurrentUser:  r.AsCurrentUser,
+		FunctionPaths:         r.FnPaths,
+		GlobalScope:           r.GlobalScope,
+		Functions:             fns,
+		Output:                output,
+		Input:                 input,
+		Path:                  path,
+		Network:               r.Network,
+		EnableStarlark:        r.EnableStar,
+		EnableExec:            r.EnableExec,
+		StorageMounts:         storageMounts,
+		ResultsDir:            r.ResultsDir,
+		LogSteps:              r.LogSteps,
+		Env:                   r.Env,
+		AsCurrentUser:         r.AsCurrentUser,
+		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 
 	// don't consider args for the function
