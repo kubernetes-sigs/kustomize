@@ -129,7 +129,7 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// Return error because ElementSetter doesn't support a single key
 	// when there is a scalar value in the list
-	rn, err = node.Pipe(ElementSetter{Key: "a"})
+	_, err = node.Pipe(ElementSetter{Key: "a"})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {scalarValue}")
 
 	node = MustParse(`
@@ -150,7 +150,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// Return error because ElementSetter will assume all elements are scalar when
 	// there is only value provided.
-	rn, err = node.Pipe(ElementSetter{Value: "b"})
+	_, err = node.Pipe(ElementSetter{Value: "b"})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
 
 	node = MustParse(`
