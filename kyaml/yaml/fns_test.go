@@ -108,7 +108,7 @@ func TestElementSetter(t *testing.T) {
 
 	// ElementSetter will update node, so make a copy
 	node := orig.Copy()
-	// Remove an element
+	// Remove an element, because ElementSetter.Element is left nil.
 	rn, err := node.Pipe(ElementSetter{Key: "a", Value: "b"})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
@@ -117,7 +117,7 @@ func TestElementSetter(t *testing.T) {
 `, assertNoErrorString(t)(node.String()))
 
 	node = orig.Copy()
-	// Set an element
+	// Set an element, replacing 'a: b' with 'e: f'
 	newElement := NewMapRNode(&map[string]string{
 		"e": "f",
 	})
@@ -134,7 +134,7 @@ func TestElementSetter(t *testing.T) {
 `, assertNoErrorString(t)(node.String()))
 
 	node = orig.Copy()
-	// Set an element with scalar
+	// Set an element with scalar, {"a": "b"} to "foo"
 	newElement = NewScalarRNode("foo")
 	rn, err = node.Pipe(ElementSetter{
 		Key:     "a",
@@ -149,7 +149,8 @@ func TestElementSetter(t *testing.T) {
 `, assertNoErrorString(t)(node.String()))
 
 	node = orig.Copy()
-	// Append an element
+	// Append an element, {"x": "y"} is not in the list
+	// so the element will be appended.
 	newElement = NewMapRNode(&map[string]string{
 		"e": "f",
 	})
