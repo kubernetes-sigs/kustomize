@@ -41,8 +41,13 @@ func (a ElementAppender) Filter(rn *RNode) (*RNode, error) {
 	return nil, nil
 }
 
-// ElementSetter sets the value for an Element in an associative list.  ElementSetter
-// will remove any elements which are empty.
+// ElementSetter sets the value for an Element in an associative list.
+// ElementSetter will append, replace or delete an element in an associative list.
+// To append, user a key-value pair that doesn't exist in the sequence. this
+// behavior is intended to handle the case that not matching element found. It's
+// not designed for this purpose. To append an element, please use ElementAppender.
+// To replace, set the key-value pair and a non-nil Element.
+// To delete, set the key-value pair and leave the Element as nil.
 type ElementSetter struct {
 	Kind string `yaml:"kind,omitempty"`
 

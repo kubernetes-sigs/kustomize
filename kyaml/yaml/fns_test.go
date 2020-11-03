@@ -97,6 +97,126 @@ func TestGetElementByKey(t *testing.T) {
 	assert.Equal(t, "f: g\n", assertNoErrorString(t)(rn.String()))
 }
 
+func TestElementSetter(t *testing.T) {
+	orig := MustParse(`
+- a: b
+- scalarValue
+- c: d
+# null will be removed
+- null
+`)
+
+	// ElementSetter will update node, so make a copy
+	node := orig.Copy()
+	// Remove an element, because ElementSetter.Element is left nil.
+	rn, err := node.Pipe(ElementSetter{Key: "a", Value: "b"})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+	assert.Equal(t, `- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Nothing happens because no element is matched
+	rn, err = node.Pipe(ElementSetter{Key: "a", Value: "zebra"})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+	assert.Equal(t, `- a: b
+- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Return error because ElementSetter doesn't support a single key
+	// when there is a scalar value in the list
+	_, err = node.Pipe(ElementSetter{Key: "a"})
+	assert.EqualError(t, err, "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {scalarValue}")
+
+	node = MustParse(`
+- a: b
+- c: d	
+`)
+	// {a: b} is removed since the value is omitted and only key is used
+	// to match and no Element specified.
+	rn, err = node.Pipe(ElementSetter{Key: "a"})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+	assert.Equal(t, `- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = MustParse(`
+- a: b
+- c: d	
+`)
+	// Return error because ElementSetter will assume all elements are scalar when
+	// there is only value provided.
+	_, err = node.Pipe(ElementSetter{Value: "b"})
+	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
+
+	node = MustParse(`
+- a
+- b
+`)
+	// b is removed since ElementSetter use the value "b" to match the
+	// scalar values.
+	rn, err = node.Pipe(ElementSetter{Value: "b"})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+	assert.Equal(t, `- a
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Set an element, replacing 'a: b' with 'e: f'
+	newElement := NewMapRNode(&map[string]string{
+		"e": "f",
+	})
+	rn, err = node.Pipe(ElementSetter{
+		Key:     "a",
+		Value:   "b",
+		Element: newElement.YNode(),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, rn, newElement)
+	assert.Equal(t, `- e: f
+- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Set an element with scalar, {"a": "b"} to "foo"
+	newElement = NewScalarRNode("foo")
+	rn, err = node.Pipe(ElementSetter{
+		Key:     "a",
+		Value:   "b",
+		Element: newElement.YNode(),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, rn, newElement)
+	assert.Equal(t, `- foo
+- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Append an element, {"x": "y"} is not in the list
+	// so the element will be appended.
+	newElement = NewMapRNode(&map[string]string{
+		"e": "f",
+	})
+	rn, err = node.Pipe(ElementSetter{
+		Key:     "x",
+		Value:   "y",
+		Element: newElement.YNode(),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, rn, newElement)
+	assert.Equal(t, `- a: b
+- scalarValue
+- c: d
+- e: f
+`, assertNoErrorString(t)(node.String()))
+}
+
 func TestElementMatcherWithNoValue(t *testing.T) {
 	node, err := Parse(`
 - a: c
