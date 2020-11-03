@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Lint
-      run: ./travis/kyaml-pre-commit.sh
+      run: ./scripts/kyaml-pre-commit.sh
       env:
         KUSTOMIZE_DOCKER_E2E: false # don't need to do e2e tests for linting
 
