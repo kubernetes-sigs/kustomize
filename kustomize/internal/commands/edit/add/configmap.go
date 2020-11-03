@@ -18,7 +18,7 @@ func newCmdAddConfigMap(
 	kf ifc.KunstructuredFactory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
-		Use:   "configmap NAME [--from-file=[key=]source] [--from-literal=key1=value1]",
+		Use:   "configmap NAME [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
 		Short: "Adds a configmap to the kustomization file.",
 		Long:  "",
 		Example: `
@@ -30,6 +30,9 @@ func newCmdAddConfigMap(
 
 	# Adds a configmap from env-file
 	kustomize edit add configmap my-configmap --from-env-file=env/path.env
+
+	# Adds a configmap from env-file with behavior merge
+	kustomize edit add configmap my-configmap --behavior=merge --from-env-file=env/path.env	
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
 			err := flags.ExpandFileSource(fSys)
@@ -86,6 +89,13 @@ func newCmdAddConfigMap(
 		"disableNameSuffixHash",
 		false,
 		"Disable the name suffix for the configmap")
+	cmd.Flags().StringVar(
+		&flags.Behavior,
+		"behavior",
+		"",
+		"Specify the behavior for config map generation, i.e whether to create a new configmap (the default),  "+
+			"to merge with a previously defined one, or to replace an existing one. Merge and replace should be used only "+
+			" when overriding an existing configmap defined in a base")
 
 	return cmd
 }
@@ -135,5 +145,8 @@ func mergeFlagsIntoCmArgs(args *types.ConfigMapArgs, flags flagsAndArgs) {
 		args.Options = &types.GeneratorOptions{
 			DisableNameSuffixHash: true,
 		}
+	}
+	if flags.Behavior != "" {
+		args.Behavior = flags.Behavior
 	}
 }

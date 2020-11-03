@@ -149,4 +149,7 @@ func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags flagsAndArgs) 
 			DisableNameSuffixHash: true,
 		}
 	}
+	if flags.Behavior != "" {
+		args.Behavior = flags.Behavior
+	}
 }

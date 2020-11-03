@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/types"
+
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/util"
 )
@@ -22,6 +24,8 @@ type flagsAndArgs struct {
 	// EnvFileSource to derive the configMap/Secret from (optional)
 	// TODO: Rationalize this name with Generic.EnvSource
 	EnvFileSource string
+	// Resource generation behavior (optional)
+	Behavior string
 	// Type of secret to create
 	Type string
 	// Namespace of secret
@@ -41,6 +45,10 @@ func (a *flagsAndArgs) Validate(args []string) error {
 	}
 	if len(a.EnvFileSource) > 0 && (len(a.FileSources) > 0 || len(a.LiteralSources) > 0) {
 		return fmt.Errorf("from-env-file cannot be combined with from-file or from-literal")
+	}
+	if len(a.Behavior) > 0 && types.NewGenerationBehavior(a.Behavior) == types.BehaviorUnspecified {
+		return fmt.Errorf(`invalid behavior: must be one of "%s", "%s", or "%s"`,
+			types.BehaviorCreate, types.BehaviorMerge, types.BehaviorReplace)
 	}
 	// TODO: Should we check if the path exists? if it's valid, if it's within the same (sub-)directory?
 	return nil
