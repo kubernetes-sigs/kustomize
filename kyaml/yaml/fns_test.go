@@ -97,6 +97,76 @@ func TestGetElementByKey(t *testing.T) {
 	assert.Equal(t, "f: g\n", assertNoErrorString(t)(rn.String()))
 }
 
+func TestElementSetter(t *testing.T) {
+	orig := MustParse(`
+- a: b
+- scalarValue
+- c: d
+# null will be removed
+- null
+`)
+
+	// ElementSetter will update node, so make a copy
+	node := orig.Copy()
+	// Remove an element
+	rn, err := node.Pipe(ElementSetter{Key: "a", Value: "b"})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+	assert.Equal(t, `- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Set an element
+	newElement := NewMapRNode(&map[string]string{
+		"e": "f",
+	})
+	rn, err = node.Pipe(ElementSetter{
+		Key:     "a",
+		Value:   "b",
+		Element: newElement.YNode(),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, rn, newElement)
+	assert.Equal(t, `- e: f
+- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Set an element with scalar
+	newElement = NewScalarRNode("foo")
+	rn, err = node.Pipe(ElementSetter{
+		Key:     "a",
+		Value:   "b",
+		Element: newElement.YNode(),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, rn, newElement)
+	assert.Equal(t, `- foo
+- scalarValue
+- c: d
+`, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Append an element
+	newElement = NewMapRNode(&map[string]string{
+		"e": "f",
+	})
+	rn, err = node.Pipe(ElementSetter{
+		Key:     "x",
+		Value:   "y",
+		Element: newElement.YNode(),
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, rn, newElement)
+	assert.Equal(t, `- a: b
+- scalarValue
+- c: d
+- e: f
+`, assertNoErrorString(t)(node.String()))
+}
+
 func TestElementMatcherWithNoValue(t *testing.T) {
 	node, err := Parse(`
 - a: c
