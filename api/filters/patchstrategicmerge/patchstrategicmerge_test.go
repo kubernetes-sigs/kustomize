@@ -529,6 +529,10 @@ spec:
           name: TCP-name-original
 `,
 		},
+
+		// the following tests document behavior
+		// that should not be affected by
+		// changes due to #3111, #3159
 		"list map keys - add a port, no protocol": {
 			input: `
 apiVersion: apps/v1
