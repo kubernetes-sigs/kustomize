@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,16 +25,17 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/plugins/goplugincaveats/" />
-<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-04T11:15:40-08:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Go plugin Caveats">
 <meta itemprop="description" content="Go plugin Caveats
 ">
-<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
+<meta itemprop="dateModified" content="2020-11-04T11:15:40-08:00" />
 <meta itemprop="wordCount" content="532">
 
 
 
-<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Go plugin Caveats"/>
 <meta name="twitter:description" content="Go plugin Caveats
 "/>
@@ -43,8 +44,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -311,6 +312,236 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Command Line Options</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmd">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">build</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdbuild">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/cfg/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">cfg</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdcfg">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/create/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">create</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdcreate">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/edit/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">edit</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdedit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/fn/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fn</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdfn">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/help/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">help</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdhelp">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/install-completion/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">install-completion</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdinstall-completion">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/live/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">live</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdlive">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/version/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">version</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdversion">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kustomize/guides/components/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize Components</a>
   </li>
   <ul>
@@ -421,7 +652,8 @@
 <div class="td-content">
 	<h1>Go plugin Caveats</h1>
 	<div class="lead">Go plugin Caveats</div>
-	<p>A <em>Go plugin</em> is a compilation artifact described
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/goplugincaveats" />
+<p>A <em>Go plugin</em> is a compilation artifact described
 by the Go <a href="https://golang.org/pkg/plugin">plugin package</a>.  It is built with
 special flags and cannot run on its own.
 It must be loaded into a running Go program.</p>
@@ -508,7 +740,7 @@ plugin vs host dependencies.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
 </div>
 </div>
 
