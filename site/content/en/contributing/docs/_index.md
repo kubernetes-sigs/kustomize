@@ -7,6 +7,9 @@ description: >
     How to make Kustomize docs contributions
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/docs" />
+
+
 Kustomize uses [Docsy](https://www.docsy.dev) for the site, and was
 forked from the [docsy-example](https://github.com/google/docsy-example)
 

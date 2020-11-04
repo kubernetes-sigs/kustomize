@@ -6,6 +6,9 @@ description: >
     Generate ConfigMap resources.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/configmapgenerator/" />
+
+
 Each entry in this list results in the creation of
 one ConfigMap resource (it's a generator of n maps).
 

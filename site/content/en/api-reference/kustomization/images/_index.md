@@ -6,6 +6,9 @@ description: >
     Modify the name, tags and/or digest for images.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/images/" />
+
+
 Images modify the name, tags and/or digest for images without creating patches.  E.g. Given this
 kubernetes Deployment fragment:
 

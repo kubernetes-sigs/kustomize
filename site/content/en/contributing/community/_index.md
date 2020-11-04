@@ -7,6 +7,9 @@ description: >
     Joining SIG-CLI and the Kubernetes community
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/community" />
+
+
 [CLI special interest group]: https://github.com/kubernetes/community/tree/master/sig-cli#cli-special-interest-group
 [contributor roles]: https://github.com/kubernetes/community/blob/master/community-membership.md#community-membership
 [mailing list]: https://groups.google.com/forum/#!forum/kubernetes-sig-cli

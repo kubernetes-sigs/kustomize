@@ -6,6 +6,9 @@ description: >
     Kustomize components guide
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/config_management/components/" />
+
+
 As of ``v3.7.0`` Kustomize supports a special type of kustomization that allows
 one to define reusable pieces of configuration logic that can be included from
 multiple overlays.

@@ -6,6 +6,9 @@ description: >
   Builtin Plugins
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/builtins" />
+
+
 # Builtin Plugins
 
 A list of kustomize's builtin plugins - both

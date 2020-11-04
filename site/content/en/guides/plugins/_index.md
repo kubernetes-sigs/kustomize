@@ -7,6 +7,8 @@ description: >
     Kustomize plugins guide
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/plugins" />
+
 Kustomize offers a plugin framework allowing people to write their own resource _generators_
 and _transformers_.
 

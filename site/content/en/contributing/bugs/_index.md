@@ -7,6 +7,8 @@ description: >
     How to file bugs and fix Kustomize bugs
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/bugs" />
+
 
 [krusty package]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/krusty
 [reusable custom transformer test]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/krusty/customconfigreusable_test.go
