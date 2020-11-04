@@ -6,6 +6,8 @@ description: >
     Go plugin Caveats
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/goplugincaveats" />
+
 [plugin package]: https://golang.org/pkg/plugin
 [Go modules]: https://github.com/golang/go/wiki/Modules
 [ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format

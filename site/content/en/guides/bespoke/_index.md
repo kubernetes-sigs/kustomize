@@ -7,6 +7,9 @@ description: >
     Workflow for bespoke applications
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/config_management/bespoke/" />
+
+
 In this workflow, all configuration (resource YAML) files are owned by the user.
 No content is incorporated from version control repositories owned by others.
 

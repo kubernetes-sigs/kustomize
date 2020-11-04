@@ -9,3 +9,5 @@ menu:
 description: >
     Reference for Kustomize client-side APIs
 ---
+
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/" />

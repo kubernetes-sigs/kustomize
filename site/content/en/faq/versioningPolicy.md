@@ -5,6 +5,8 @@ weight: 99
 type: docs
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/faq/kustomize/versioningpolicy/" />
+
 Running `kustomize` means one is running a
 particular version of a program (a CLI), using a
 particular version of underlying packages (a Go

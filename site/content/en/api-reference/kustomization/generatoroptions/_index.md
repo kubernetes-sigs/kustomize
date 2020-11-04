@@ -7,6 +7,7 @@ description: >
     [Secret](/kustomize/api-reference/kustomization/secretgenerator) generators.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/generatoroptions/" />
 
 
 Additionally, generatorOptions can be set on a per resource level within each

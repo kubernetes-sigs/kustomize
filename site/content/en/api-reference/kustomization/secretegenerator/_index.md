@@ -6,6 +6,9 @@ description: >
     Generate Secret resources.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/secretegenerator/" />
+
+
 Each entry in the argument list results in the creation of one Secret resource (it's a generator of N secrets).
 
 This works like the [configMapGenerator](/kustomize/api-reference/kustomization/configmapgenerator).

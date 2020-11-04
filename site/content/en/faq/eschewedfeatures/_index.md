@@ -7,6 +7,8 @@ description: >
     Eschewed Features
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/faq/kustomize/eschewedfeatures/" />
+
 The maintainers established this list to
 place bounds on the kustomize feature
 set.  The bounds can be changed with

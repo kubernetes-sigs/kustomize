@@ -6,6 +6,8 @@ description: >
     Add resources from a kustomization dir.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/bases/" />
+
 {{% pageinfo color="warning" %}}
 The `bases` field was deprecated in v2.1.0
 {{% /pageinfo %}}

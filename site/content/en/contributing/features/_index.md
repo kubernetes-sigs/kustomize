@@ -6,6 +6,8 @@ weight: 21
 description: >
     How to contribute features
 ---
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/features" />
+
 
 [issue]: https://github.com/kubernetes-sigs/kustomize/issues
 [sig-cli]: /kustomize/contributing/community/

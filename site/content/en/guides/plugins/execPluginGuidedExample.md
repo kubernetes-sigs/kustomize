@@ -6,6 +6,9 @@ description: >
     Exec plugin on linux in 60 seconds
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/execpluginguidedexample" />
+
+
 This is a (no reading allowed!) 60 second copy/paste guided
 example.  Full plugin docs [here](..).
 

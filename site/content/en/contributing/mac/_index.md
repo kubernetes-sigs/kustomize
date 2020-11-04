@@ -6,6 +6,7 @@ weight: 50
 description: >
     How to develop on MacOS
 ---
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/mac" />
 
 First install the tools to build and run tests
 

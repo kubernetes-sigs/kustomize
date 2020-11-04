@@ -7,6 +7,8 @@ description: >
     Install Kustomize from the Go source code
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/installation/kustomize/source/" />
+
 Requires [Go] to be installed.
 
 ## Install the kustomize CLI from source without cloning the repo
