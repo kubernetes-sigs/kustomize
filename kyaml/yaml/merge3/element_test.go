@@ -917,4 +917,351 @@ spec:
 `,
 		infer: false,
 	},
+
+	// The following test cases are regression tests
+	// that should not be broken as a result of
+	// #3111, #3159
+
+	//
+	// Test Case
+	//
+	{
+		description: `Add a containerPort to an existing list`,
+		origin: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+`,
+		update: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+        - containerPort: 80
+`,
+		local: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+        - containerPort: 80
+`},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Add a containerPort to a non-existing list, existing in dest`,
+		origin: `
+apiVersion: apps/v1
+kind: Deployment`,
+		update: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+`,
+		local: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 80
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 80
+        - containerPort: 8080
+`},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Add a name to containerPort`,
+		origin: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 80
+`,
+		update: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          name: 8080-port-update
+        - containerPort: 80
+`,
+		local: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+        - containerPort: 80
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          name: 8080-port-update
+        - containerPort: 80
+`},
+
+	// The following test cases document broken behavior
+	// that will change as a result of #3111, #3159
+
+	//
+	// Test Case
+	//
+{
+	description: `Add a containerPort with protocol to an existing list`,
+	origin: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+`,
+	update: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+        - containerPort: 80
+          protocol: TCP
+`,
+	local: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+`,
+	expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+        - containerPort: 80
+          protocol: TCP
+`},
+
+//
+// Test Case
+//
+{
+description: `Add a containerPort with protocol to a non-existing list, existing in dest`,
+origin: `
+apiVersion: apps/v1
+kind: Deployment`,
+update: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+`,
+local: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 80
+          protocol: TCP
+`,
+expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        - containerPort: 8080
+          protocol: UDP
+`},
+
+//
+// Test Case
+//
+{
+description: `Add a name to containerPort with protocol`,
+origin: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 80
+          protocol: TCP
+`,
+update: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+          name: 8080-port-update
+        - containerPort: 80
+          protocol: TCP
+`,
+local: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+        - containerPort: 80
+          protocol: TCP
+`,
+expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8080
+          protocol: UDP
+          name: 8080-port-update
+        - containerPort: 80
+          protocol: TCP
+`},
+
 }
