@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: golang:1.15-stretch
+      - image: golang:1.15-buster
     working_directory: /go/src/github.com/qlik-oss/kustomize
     steps:
       - checkout
@@ -15,7 +15,7 @@ jobs:
             go build -o /tmp/kustomize main.go
   build_release:
     docker:
-      - image: golang:1.15-stretch
+      - image: golang:1.15-buster
     working_directory: /go/src/github.com/qlik-oss/kustomize
     steps:
       - checkout
