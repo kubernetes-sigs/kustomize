@@ -90,6 +90,44 @@ kind: GoGetter
 metadata:
  name: notImportantHere
 url: %s
+preBuildScript: |-
+    package main
+    import (
+        "fmt"
+        "io/ioutil"
+        yaml "gopkg.in/yaml.v3"
+    )
+        
+    type Kustomization struct {
+        GeneratorOptions struct {
+            DisableNameSuffixHash bool `+"`yaml:\"disableNameSuffixHash\"`"+`
+        } `+"`yaml:\"generatorOptions\"`"+`
+        ConfigMapGenerator []struct {
+            Name     string   `+"`yaml:\"name\"`"+`
+            Literals []string `+"`yaml:\"literals\"`"+`
+        } `+"`yaml:\"configMapGenerator\"`"+`
+    }
+    
+    func main() {
+        var k Kustomization
+        yamlFile, err := ioutil.ReadFile("kustomization.yaml")
+        if err != nil {
+            panic(err)
+        }
+        err = yaml.Unmarshal(yamlFile, &k)
+        if err != nil {
+            panic(err)
+        }
+        k.ConfigMapGenerator[0].Literals[0] = "foo=changebar"
+        b, err := yaml.Marshal(k)
+        if err != nil {
+            panic(err)
+        }
+        err = ioutil.WriteFile("kustomization.yaml", b, 0644)
+        if err != nil {
+            panic(err)
+        }
+    }
 `, fmt.Sprintf("git::%s/foo", gitServer.URL)),
 				loaderRootDir: tmpDir,
 				teardown: func(t *testing.T) {
@@ -99,7 +137,7 @@ url: %s
 				checkAssertions: func(t *testing.T, resMap resmap.ResMap) {
 					expectedK8sYaml := `apiVersion: v1
 data:
-  foo: bar
+  foo: changebar
 kind: ConfigMap
 metadata:
   name: foo-config
