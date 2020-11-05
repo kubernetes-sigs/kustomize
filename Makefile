@@ -235,7 +235,7 @@ test-multi-module: $(MYGOBIN)/prchecker
 	go run ./cmd/prchecker \
 	-owner=$(REPO_OWNER) \
 	-repo=$(REPO_NAME) \
-	-pr=$(PR_NUM) \
+	-pr=$(PULL_NUMBER) \
 	$(MODULES)
 
 .PHONY:
