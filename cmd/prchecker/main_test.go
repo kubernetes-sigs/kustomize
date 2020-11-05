@@ -260,7 +260,7 @@ func TestIsChangesetSpanning(t *testing.T) {
 
 			changeset := &Changeset{files: tt.changeset}
 
-			result := ChangesetSpanningPathList(changeset, tt.files)
+			result := changeset.isSpanningPaths(tt.files)
 
 			if result != tt.expected {
 				t.Errorf("got %t, want %t", result, tt.expected)
