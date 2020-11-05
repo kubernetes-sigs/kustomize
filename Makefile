@@ -231,8 +231,7 @@ test-go-mod:
 # Environment variables are defined at
 # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
 .PHONY: test-multi-module
-test-multi-module:
-	go install github.com/google/go-github/github
+test-multi-module: $(MYGOBIN)/prchecker
 	go run ./cmd/prchecker \
 	-owner=$(REPO_OWNER) \
 	-repo=$(REPO_NAME) \
