@@ -19,6 +19,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sosedoff/gitkit v0.2.0
 	github.com/stretchr/testify v1.4.0
+	github.com/traefik/yaegi v0.9.4
 	github.com/yujunz/go-getter v1.4.1-lite
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
@@ -26,7 +27,7 @@ require (
 	golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2

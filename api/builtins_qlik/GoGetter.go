@@ -10,7 +10,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-getter"
+	"github.com/traefik/yaegi/interp"
+	"github.com/traefik/yaegi/stdlib"
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
+	yamlv3 "sigs.k8s.io/kustomize/api/builtins_qlik/yaegi"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -35,6 +38,9 @@ func (r *osExecutableResolverT) Executable() (string, error) {
 type GoGetterPlugin struct {
 	types.ObjectMeta   `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	URL                string `json:"url,omitempty" yaml:"url,omitempty"`
+	Cwd                string `json:"cwd,omitempty" yaml:"cwd,omitempty"`
+	PreBuildScript     string `json:"preBuildScript,omitempty" yaml:"preBuildScript,omitempty"`
+	PreBuildScriptFile string `json:"preBuildScriptFile,omitempty" yaml:"preBuildScriptFile,omitempty"`
 	Pwd                string
 	ldr                ifc.Loader
 	rf                 *resmap.Factory
@@ -77,7 +83,7 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		Options: opts,
 	}
 
-	if err := p.executeCoGetter(client, dir); err != nil {
+	if err := p.executeGoGetter(client, dir); err != nil {
 		p.logger.Printf("Error fetching repository: %v\n", err)
 		return nil, err
 	}
@@ -88,12 +94,34 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		return nil, err
 	}
 
+	cwd := dir
+	if len(p.Cwd) > 0 {
+		cwd = filepath.Join(dir, filepath.FromSlash(p.Cwd))
+	}
 	// Convert to relative path due to kustomize bug with drive letters
 	// thinks its a remote ref
 	oswd, _ := os.Getwd()
-	err = os.Chdir(dir)
+	err = os.Chdir(cwd)
+
+	if len(p.PreBuildScript) > 0 || len(p.PreBuildScriptFile) > 0 {
+		i := interp.New(interp.Options{})
+
+		i.Use(stdlib.Symbols)
+		i.Use(yamlv3.Symbols)
+		if len(p.PreBuildScript) > 0 {
+			_, err = i.Eval(p.PreBuildScript)
+		} else {
+			_, err = i.EvalPath(p.PreBuildScriptFile)
+		}
+		if err != nil {
+			p.logger.Printf("Go Script Error: %v\n", err)
+			return nil, err
+		}
+
+	}
+
 	if err != nil {
-		p.logger.Printf("Error: Unable to set working dir %v: %v\n", dir, err)
+		p.logger.Printf("Error: Unable to set working dir %v: %v\n", cwd, err)
 		return nil, err
 	}
 	cmd := exec.Command(currentExe, "build", ".")
@@ -103,11 +131,11 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 		p.logger.Printf("Error executing kustomize as a child process: %v\n", err)
 		return nil, err
 	}
-	os.Chdir(oswd)
+	_ = os.Chdir(oswd)
 	return p.rf.NewResMapFromBytes(kustomizedYaml)
 }
 
-func (p *GoGetterPlugin) executeCoGetter(client *getter.Client, dir string) error {
+func (p *GoGetterPlugin) executeGoGetter(client *getter.Client, dir string) error {
 	loader.GoGetterMutex.Lock()
 	defer loader.GoGetterMutex.Unlock()
 
