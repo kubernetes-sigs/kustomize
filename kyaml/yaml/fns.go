@@ -126,10 +126,15 @@ func (e ElementSetterList) Filter(rn *RNode) (*RNode, error) {
 			continue
 		}
 
+		// make sure keys and values are the same length
+		if len(e.Keys) != len(e.Values) {
+			return nil, fmt.Errorf("length of keys and values must be the same")
+		}
+
 		// check if this is the element we are matching
 		found := true
-		for j, key := range e.Keys {
-			val, err := newNode.Pipe(FieldMatcher{Name: key, StringValue: e.Values[j]})
+		for j := range e.Keys {
+			val, err := newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
 			if err != nil {
 				return nil, err
 			}
@@ -350,12 +355,16 @@ func (e ElementMatcherList) Filter(rn *RNode) (*RNode, error) {
 			continue
 		}
 
+		if !e.MatchAnyValue && len(e.Keys) != len(e.Values) {
+			return nil, fmt.Errorf("length of keys must equal length of values when MatchAnyValue is false")
+		}
+
 		matchesElement := true
-		for i, key := range e.Keys {
+		for i := range e.Keys {
 			if e.MatchAnyValue {
-				field, err = elem.Pipe(Get(key))
+				field, err = elem.Pipe(Get(e.Keys[i]))
 			} else {
-				field, err = elem.Pipe(MatchField(key, e.Values[i]))
+				field, err = elem.Pipe(MatchField(e.Keys[i], e.Values[i]))
 			}
 			if !IsFoundOrError(field, err) {
 				// this is not the element we are looking for
