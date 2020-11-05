@@ -235,7 +235,7 @@ func PullRequestSpanningPathList(repository GitHubService, pullrequest int, path
 
 	spanningChangesExist := false
 	for _, changeset := range changesets {
-		if ChangesetSpanningPathList(changeset, paths) {
+		if changeset.isSpanningPaths(paths) {
 			// When detecting the first spanning changeset print a prefix message
 			if !spanningChangesExist {
 				fmt.Printf("Spanning changesets detected in the following commits:\n\n")
@@ -250,9 +250,9 @@ func PullRequestSpanningPathList(repository GitHubService, pullrequest int, path
 	return spanningChangesExist, changesets, nil
 }
 
-// ChangesetSpanningPathList tests if a changeset is spanning
+// isSpanningPaths tests if a changeset is spanning
 // multiple directory paths.
-func ChangesetSpanningPathList(changeset *Changeset, paths []string) bool {
+func (changeset *Changeset) isSpanningPaths(paths []string) bool {
 	matchedPath := ""
 
 	for _, file := range changeset.files {
