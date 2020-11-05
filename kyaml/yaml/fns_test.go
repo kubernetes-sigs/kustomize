@@ -342,6 +342,20 @@ func TestElementSetterList(t *testing.T) {
 - e: f
 - g: h
 `, assertNoErrorString(t)(node.String()))
+
+	node = orig.Copy()
+	// Should return an error
+	// keys and values are not the same length
+	newElement = NewMapRNode(&map[string]string{
+		"g": "h",
+	})
+	rn, err = node.Pipe(ElementSetterList{
+		Keys:    []string{"a", "c"},
+		Values:  []string{"b"},
+		Element: newElement.YNode(),
+	})
+	assert.Error(t, err)
+	assert.Nil(t, rn)
 }
 
 func TestElementMatcherWithNoValue(t *testing.T) {
