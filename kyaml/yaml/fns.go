@@ -274,7 +274,7 @@ type ElementMatcher struct {
 	Create *RNode `yaml:"create,omitempty"`
 
 	// MatchAnyValue indicates that matcher should only consider the key and ignore
-	// the actual value in the list. FieldValue must be empty when NoValue is
+	// the actual value in the list. FieldValue must be empty when MatchAnyValue is
 	// set to true.
 	MatchAnyValue bool `yaml:"noValue,omitempty"`
 }
@@ -310,7 +310,7 @@ type ElementMatcherList struct {
 	Create *RNode `yaml:"create,omitempty"`
 
 	// MatchAnyValue indicates that matcher should only consider the key and ignore
-	// the actual value in the list. FieldValue must be empty when NoValue is
+	// the actual value in the list. Values must be empty when MatchAnyValue is
 	// set to true.
 	MatchAnyValue bool `yaml:"noValue,omitempty"`
 }
@@ -320,7 +320,7 @@ func (e ElementMatcherList) Filter(rn *RNode) (*RNode, error) {
 		return nil, err
 	}
 	if e.MatchAnyValue && len(e.Values) != 0 && e.Values[0] != "" {
-		return nil, fmt.Errorf("FieldValue must be empty when NoValue is set to true")
+		return nil, fmt.Errorf("Values must be empty when MatchAnyValue is set to true")
 	}
 
 	// SequenceNode Content is a slice of ScalarNodes.  Each ScalarNode has a
