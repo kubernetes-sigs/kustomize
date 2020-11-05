@@ -103,9 +103,11 @@ func (c SetterCreator) Create() error {
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(c.OpenAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(c.OpenAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 	// if the setter is of array type write the derived list values back to
 	// openAPI definitions
 	if len(a.ListValues) > 0 {
