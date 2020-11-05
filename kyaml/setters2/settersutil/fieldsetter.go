@@ -79,9 +79,11 @@ func (fs FieldSetter) Set() (int, error) {
 	}
 
 	// Load the updated definitions
-	if err := openapi.AddSchemaFromFile(fs.OpenAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(fs.OpenAPIPath)
+	if err != nil {
 		return 0, err
 	}
+	defer clean()
 
 	// Update the resources with the new value
 	// Set NoDeleteFiles to true as SetAll will return only the nodes of files which should be updated and
@@ -108,9 +110,11 @@ func (fs FieldSetter) Set() (int, error) {
 // If syncOpenAPI is true, the openAPI files in destination directories are also
 // updated with the setter values in the input openAPI file
 func SetAllSetterDefinitions(syncOpenAPI bool, openAPIPath string, dirs ...string) error {
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(openAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 	for _, destDir := range dirs {
 		if syncOpenAPI {
 			openAPIFileName := filepath.Base(openAPIPath)
@@ -122,7 +126,7 @@ func SetAllSetterDefinitions(syncOpenAPI bool, openAPIPath string, dirs ...strin
 		rw := &kio.LocalPackageReadWriter{
 			PackagePath: destDir,
 			// set output won't include resources from files which
-			//weren't modified.  make sure we don't delete them.
+			// weren't modified.  make sure we don't delete them.
 			NoDeleteFiles: true,
 		}
 

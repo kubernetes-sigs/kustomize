@@ -103,7 +103,7 @@ func TestGetValuesForMarkers(t *testing.T) {
 					}
 				}
 			} else {
-				//if expectedError is not nil, check for correctness of error message
+				// if expectedError is not nil, check for correctness of error message
 				assert.Contains(t, err.Error(), test.expectedError.Error())
 			}
 		})

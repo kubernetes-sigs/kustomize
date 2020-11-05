@@ -29,9 +29,11 @@ type List struct {
 
 // ListSetters initializes l.Setters with the setters from the OpenAPI definitions in the file
 func (l *List) ListSetters(openAPIPath, resourcePath string) error {
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(openAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 	y, err := yaml.ReadFile(openAPIPath)
 	if err != nil {
 		return err
@@ -41,9 +43,11 @@ func (l *List) ListSetters(openAPIPath, resourcePath string) error {
 
 // ListSubst initializes l.Substitutions with the substitutions from the OpenAPI definitions in the file
 func (l *List) ListSubst(openAPIPath string) error {
-	if err := openapi.AddSchemaFromFile(openAPIPath); err != nil {
+	clean, err := openapi.AddSchemaFromFile(openAPIPath)
+	if err != nil {
 		return err
 	}
+	defer clean()
 	y, err := yaml.ReadFile(openAPIPath)
 	if err != nil {
 		return err
