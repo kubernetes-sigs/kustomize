@@ -103,6 +103,11 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 	oswd, _ := os.Getwd()
 	err = os.Chdir(cwd)
 
+	if err != nil {
+		p.logger.Printf("Error: Unable to set working dir %v: %v\n", cwd, err)
+		return nil, err
+	}
+
 	if len(p.PreBuildScript) > 0 || len(p.PreBuildScriptFile) > 0 {
 		i := interp.New(interp.Options{})
 
@@ -120,10 +125,6 @@ func (p *GoGetterPlugin) Generate() (resmap.ResMap, error) {
 
 	}
 
-	if err != nil {
-		p.logger.Printf("Error: Unable to set working dir %v: %v\n", cwd, err)
-		return nil, err
-	}
 	cmd := exec.Command(currentExe, "build", ".")
 	cmd.Stderr = os.Stderr
 	kustomizedYaml, err := cmd.Output()
