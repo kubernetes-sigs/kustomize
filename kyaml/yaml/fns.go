@@ -393,7 +393,7 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 				return rn, nil
 			}
 			return nil, nil
-		case f.Value.YNode() != nil && rn.value.Value == f.Value.YNode().Value:
+		case GetValue(rn) == GetValue(f.Value):
 			return rn, nil
 		default:
 			return nil, nil
