@@ -21,7 +21,11 @@ func appendListNode(dst, src *yaml.RNode, key string) (*yaml.RNode, error) {
 		// If key is empty, we know this is a scalar value and we can directly set the
 		// node
 		if key == "" {
-			_, err := dst.Pipe(yaml.ElementSetter{Element: elem, Key: key, Value: elem.Value})
+			_, err := dst.Pipe(yaml.ElementSetter{
+				Element: elem,
+				Keys:    []string{key},
+				Values:  []string{elem.Value},
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -46,7 +50,11 @@ func appendListNode(dst, src *yaml.RNode, key string) (*yaml.RNode, error) {
 		// We use the key and value from elem to find the corresponding element in dst.
 		// Then we will use ElementSetter to replace the element with elem. If we cannot
 		// find the item, the element will be appended.
-		_, err = dst.Pipe(yaml.ElementSetter{Element: elem, Key: key, Value: v})
+		_, err = dst.Pipe(yaml.ElementSetter{
+			Element: elem,
+			Keys:    []string{key},
+			Values:  []string{v},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +84,10 @@ func (l *Walker) setAssociativeSequenceElements(values []string, key string, des
 		}
 		// delete the node from **dest** if it's null or empty
 		if yaml.IsMissingOrNull(val) || yaml.IsEmptyMap(val) {
-			_, err = dest.Pipe(yaml.ElementSetter{Key: key, Value: value})
+			_, err = dest.Pipe(yaml.ElementSetter{
+				Keys:   []string{key},
+				Values: []string{value},
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +105,11 @@ func (l *Walker) setAssociativeSequenceElements(values []string, key string, des
 		// Add the val to the sequence. val will replace the item in the sequence if
 		// there is an item that matches the key-value pair. Otherwise val will be appended
 		// the the sequence.
-		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{Element: val.YNode(), Key: key, Value: value})
+		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{
+			Element: val.YNode(),
+			Keys:    []string{key},
+			Values:  []string{value},
+		})
 		if err != nil {
 			return nil, err
 		}
