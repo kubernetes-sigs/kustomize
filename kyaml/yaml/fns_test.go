@@ -109,7 +109,7 @@ func TestElementSetter(t *testing.T) {
 	// ElementSetter will update node, so make a copy
 	node := orig.Copy()
 	// Remove an element, because ElementSetter.Element is left nil.
-	rn, err := node.Pipe(ElementSetter{Key: "a", Value: "b"})
+	rn, err := node.Pipe(ElementSetterList{Keys: []string{"a"}, Values: []string{"b"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- scalarValue
@@ -118,7 +118,7 @@ func TestElementSetter(t *testing.T) {
 
 	node = orig.Copy()
 	// Nothing happens because no element is matched
-	rn, err = node.Pipe(ElementSetter{Key: "a", Value: "zebra"})
+	rn, err = node.Pipe(ElementSetterList{Keys: []string{"a"}, Values: []string{"zebra"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a: b
@@ -129,7 +129,7 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// Return error because ElementSetter doesn't support a single key
 	// when there is a scalar value in the list
-	_, err = node.Pipe(ElementSetter{Key: "a"})
+	_, err = node.Pipe(ElementSetterList{Keys: []string{"a"}})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {scalarValue}")
 
 	node = MustParse(`
@@ -138,7 +138,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// {a: b} is removed since the value is omitted and only key is used
 	// to match and no Element specified.
-	rn, err = node.Pipe(ElementSetter{Key: "a"})
+	rn, err = node.Pipe(ElementSetterList{Keys: []string{"a"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- c: d
@@ -150,7 +150,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// Return error because ElementSetter will assume all elements are scalar when
 	// there is only value provided.
-	_, err = node.Pipe(ElementSetter{Value: "b"})
+	_, err = node.Pipe(ElementSetterList{Values: []string{"b"}})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
 
 	node = MustParse(`
@@ -159,7 +159,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// b is removed since ElementSetter use the value "b" to match the
 	// scalar values.
-	rn, err = node.Pipe(ElementSetter{Value: "b"})
+	rn, err = node.Pipe(ElementSetterList{Values: []string{"b"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a
@@ -170,9 +170,9 @@ func TestElementSetter(t *testing.T) {
 	newElement := NewMapRNode(&map[string]string{
 		"e": "f",
 	})
-	rn, err = node.Pipe(ElementSetter{
-		Key:     "a",
-		Value:   "b",
+	rn, err = node.Pipe(ElementSetterList{
+		Keys:     []string{"a"},
+		Values:   []string{"b"},
 		Element: newElement.YNode(),
 	})
 	assert.NoError(t, err)
@@ -185,9 +185,9 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// Set an element with scalar, {"a": "b"} to "foo"
 	newElement = NewScalarRNode("foo")
-	rn, err = node.Pipe(ElementSetter{
-		Key:     "a",
-		Value:   "b",
+	rn, err = node.Pipe(ElementSetterList{
+		Keys:     []string{"a"},
+		Values:   []string{"b"},
 		Element: newElement.YNode(),
 	})
 	assert.NoError(t, err)
@@ -203,9 +203,9 @@ func TestElementSetter(t *testing.T) {
 	newElement = NewMapRNode(&map[string]string{
 		"e": "f",
 	})
-	rn, err = node.Pipe(ElementSetter{
-		Key:     "x",
-		Value:   "y",
+	rn, err = node.Pipe(ElementSetterList{
+		Keys:     []string{"x"},
+		Values:   []string{"y"},
 		Element: newElement.YNode(),
 	})
 	assert.NoError(t, err)
@@ -217,7 +217,7 @@ func TestElementSetter(t *testing.T) {
 `, assertNoErrorString(t)(node.String()))
 }
 
-func TestElementSetterList(t *testing.T) {
+func TestElementSetterMultipleKeys(t *testing.T) {
 	orig := MustParse(`
 - a: b
   c: d
@@ -365,23 +365,23 @@ func TestElementMatcherWithNoValue(t *testing.T) {
 `)
 	assert.NoError(t, err)
 
-	rn, err := node.Pipe(ElementMatcher{FieldName: "b"})
+	rn, err := node.Pipe(ElementMatcher{Keys: []string{"b"}})
 	assert.NoError(t, err)
 	assert.Equal(t, "b: \"\"\n", assertNoErrorString(t)(rn.String()))
 
-	rn, err = node.Pipe(ElementMatcher{FieldName: "a"})
-	assert.NoError(t, err)
+	rn, err = node.Pipe(ElementMatcher{Keys: []string{"a"}})
+	assert.Error(t, err)
 	assert.Nil(t, rn)
 
-	rn, err = node.Pipe(ElementMatcher{FieldName: "a", MatchAnyValue: true})
+	rn, err = node.Pipe(ElementMatcher{Keys: []string{"a"}, MatchAnyValue: true})
 	assert.NoError(t, err)
 	assert.Equal(t, "a: c\n", assertNoErrorString(t)(rn.String()))
 
-	_, err = node.Pipe(ElementMatcher{FieldName: "a", FieldValue: "c", MatchAnyValue: true})
+	_, err = node.Pipe(ElementMatcher{Keys: []string{"a"}, Values: []string{"c"}, MatchAnyValue: true})
 	assert.Errorf(t, err, "FieldValue must be empty when NoValue is set to true")
 }
 
-func TestElementMatcherList(t *testing.T) {
+func TestElementMatcherMultipleKeys(t *testing.T) {
 	node, err := Parse(`
 - a: b
   c: d
