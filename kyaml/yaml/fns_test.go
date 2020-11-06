@@ -138,6 +138,27 @@ func TestElementSetter(t *testing.T) {
 	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
 
 	node = MustParse(`
+- a: b
+- c: d	
+`)
+	// If given a key and no values, ElementSetter will
+	// change node to be an empty list
+	rn, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
+	assert.NoError(t, err)
+	assert.Nil(t, rn)
+	assert.Equal(t, `[]
+`, assertNoErrorString(t)(node.String()))
+
+	node = MustParse(`
+- a: b
+- c: d	
+`)
+	// Return error because ElementSetter will assume all elements are scalar when
+	// there is only value provided.
+	_, err = node.Pipe(ElementSetter{Values: []string{"b"}})
+	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
+
+	node = MustParse(`
 - a
 - b
 `)
