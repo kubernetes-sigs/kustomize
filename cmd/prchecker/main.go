@@ -27,9 +27,8 @@ import (
 
 // splitCommitsHelp is a help message displayed when a PR has commits which
 // span modules.
-const splitCommitsHelp = "\nModifications to multiple restricted directories occurred.\n" +
-	"To resolve this please limit code changes in a commit to a single go module.\n\n" +
-	"You may learn more about how to split your existing commits at: https://git-scm.com/docs/git-rebase#_splitting_commits\n"
+const splitCommitsHelp = "\nCommits that include multiple Go modules must be split into multiple commits that each touch no more than one module.\n" +
+	"Splitting instructions: https://git-scm.com/docs/git-rebase#_splitting_commits\n"
 
 // Ignore span pattern defines a regular expression pattern that, when matched,
 // causes this check to be ignored.
@@ -62,16 +61,33 @@ type GitHubService interface {
 	ListCommits(prId int, options *github.ListOptions) ([]*github.RepositoryCommit, *github.Response, error)
 }
 
-func (repository GitHubRepository) GetPullRequest(prId int) (*github.PullRequest, *github.Response, error) {
-	return repository.client.PullRequests.Get(context.Background(), *repository.owner, *repository.repo, prId)
+// GetPullRequest retrieves details about a pull request from GitHub API
+func (repository GitHubRepository) GetPullRequest(prId int) (
+	*github.PullRequest, *github.Response, error) {
+	return repository.client.PullRequests.Get(
+		context.Background(),
+		*repository.owner,
+		*repository.repo,
+		prId)
 }
 
-func (repository GitHubRepository) GetCommit(commitSha string) (*github.RepositoryCommit, *github.Response, error) {
-	return repository.client.Repositories.GetCommit(context.Background(), *repository.owner, *repository.repo, commitSha)
+// GetCommit retrieves commit details from GitHub API
+func (repository GitHubRepository) GetCommit(commitSha string) (
+	*github.RepositoryCommit, *github.Response, error) {
+	return repository.client.Repositories.GetCommit(context.Background(),
+		*repository.owner,
+		*repository.repo,
+		commitSha)
 }
 
-func (repository GitHubRepository) ListCommits(prId int, options *github.ListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
-	return repository.client.PullRequests.ListCommits(context.Background(), *repository.owner, *repository.repo, prId, options)
+// ListCommits lists commits in a PR via GitHub API
+func (repository GitHubRepository) ListCommits(prId int, options *github.ListOptions) (
+	[]*github.RepositoryCommit, *github.Response, error) {
+	return repository.client.PullRequests.ListCommits(context.Background(),
+		*repository.owner,
+		*repository.repo,
+		prId,
+		options)
 }
 
 func main() {
@@ -145,7 +161,7 @@ func StringAllowsModuleSpan(body string) (bool, error) {
 	return regexp.MatchString(ignoreSpanPattern, body)
 }
 
-// IsModuleSpanAllowed tests a Pull Requests description for a regular
+// ModuleSpanAllowed tests a Pull Requests description for a regular
 // expression. If the expression matches then spanning modules are allowed.
 func ModuleSpanAllowed(repository GitHubService, pullId int) (bool, error) {
 
@@ -163,9 +179,6 @@ func ModuleSpanAllowed(repository GitHubService, pullId int) (bool, error) {
 // GetCommitChanges looks up a github commit by SHA and returns a Changeset
 // containing the modified files in the specified commit.
 func GetCommitChanges(repository GitHubService, commitSha string) (*Changeset, error) {
-
-	// Note: There are multiple ways to pull a github commit object
-	// we want a RepositoryCommit.
 	commit, _, err := repository.GetCommit(commitSha)
 
 	if err != nil {
@@ -210,7 +223,7 @@ func GetPullRequestCommits(repository GitHubService, pullrequest int) ([]*Change
 	return changesetResults, nil
 }
 
-// IsPullRequestSpanningPathList tests if a pull request spans multiple
+// PullRequestSpanningPathList tests if a pull request spans multiple
 // directory paths
 func PullRequestSpanningPathList(repository GitHubService, pullrequest int, paths []string) (bool, []*Changeset, error) {
 	// Create a buffer for commits
@@ -222,7 +235,7 @@ func PullRequestSpanningPathList(repository GitHubService, pullrequest int, path
 
 	spanningChangesExist := false
 	for _, changeset := range changesets {
-		if ChangesetSpanningPathList(changeset, paths) {
+		if changeset.isSpanningPaths(paths) {
 			// When detecting the first spanning changeset print a prefix message
 			if !spanningChangesExist {
 				fmt.Printf("Spanning changesets detected in the following commits:\n\n")
@@ -237,9 +250,9 @@ func PullRequestSpanningPathList(repository GitHubService, pullrequest int, path
 	return spanningChangesExist, changesets, nil
 }
 
-// IsChangesetSpanningPathList tests if a changeset is spanning
+// isSpanningPaths tests if a changeset is spanning
 // multiple directory paths.
-func ChangesetSpanningPathList(changeset *Changeset, paths []string) bool {
+func (changeset *Changeset) isSpanningPaths(paths []string) bool {
 	matchedPath := ""
 
 	for _, file := range changeset.files {
@@ -254,6 +267,5 @@ func ChangesetSpanningPathList(changeset *Changeset, paths []string) bool {
 		}
 	}
 
-	// If more than 1 matched paths then the changeset spans paths
 	return false
 }
