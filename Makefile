@@ -232,7 +232,7 @@ test-go-mod:
 # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
 .PHONY: test-multi-module
 test-multi-module: $(MYGOBIN)/prchecker
-	cd ./cmd/prchecker; go run . \
+	$(MYGOBIN)/prchecker \
 	-owner=$(REPO_OWNER) \
 	-repo=$(REPO_NAME) \
 	-pr=$(PULL_NUMBER) \
