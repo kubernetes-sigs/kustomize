@@ -65,6 +65,7 @@ type ElementSetter struct {
 
 func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	return rn.Pipe(ElementSetterList{
+		Kind:    e.Kind,
 		Element: e.Element,
 		Keys:    []string{e.Key},
 		Values:  []string{e.Value},
@@ -105,6 +106,13 @@ func (e ElementSetterList) isMappingSetter() bool {
 // the main difference between this Filter and the ElementSetter Filter
 // is that here we must iterate through all the key-value pairs
 func (e ElementSetterList) Filter(rn *RNode) (*RNode, error) {
+	if len(e.Keys) == 0 {
+		e.Keys = append(e.Keys, "")
+	}
+	if len(e.Values) == 0 {
+		e.Values = append(e.Values, "")
+	}
+
 	if err := ErrorIfInvalid(rn, SequenceNode); err != nil {
 		return nil, err
 	}
@@ -126,15 +134,20 @@ func (e ElementSetterList) Filter(rn *RNode) (*RNode, error) {
 			continue
 		}
 
-		// make sure keys and values are the same length
-		if len(e.Keys) != len(e.Values) {
-			return nil, fmt.Errorf("length of keys and values must be the same")
+		if len(e.Keys) > len(e.Values) {
+			return nil, fmt.Errorf("cannot have more keys than values")
 		}
 
 		// check if this is the element we are matching
+		var val *RNode
+		var err error
 		found := true
 		for j := range e.Keys {
-			val, err := newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
+			if j >= len(e.Values) {
+				val, err = newNode.Pipe(Get(e.Keys[j]))
+			} else {
+				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -254,55 +267,22 @@ func (c FieldClearer) Filter(rn *RNode) (*RNode, error) {
 }
 
 func MatchElement(field, value string) ElementMatcher {
-	return ElementMatcher{FieldName: field, FieldValue: value}
+	return ElementMatcher{Keys: []string{field}, Values: []string{value}}
+}
+
+func MatchElementList(keys []string, values []string) ElementMatcher {
+	return ElementMatcher{Keys: keys, Values: values}
 }
 
 func GetElementByKey(key string) ElementMatcher {
-	return ElementMatcher{FieldName: key, MatchAnyValue: true}
+	return ElementMatcher{Keys: []string{key}, MatchAnyValue: true}
 }
 
 // ElementMatcher returns the first element from a Sequence matching the
-// specified field's value. If there's no match, and no configuration error,
+// specified key-value pairs. If there's no match, and no configuration error,
 // the matcher returns nil, nil.
+
 type ElementMatcher struct {
-	Kind string `yaml:"kind,omitempty"`
-
-	// FieldName will attempt to match this field in each list element.
-	// Optional.  Leave empty for lists of primitives (ScalarNode).
-	FieldName string `yaml:"name,omitempty"`
-
-	// FieldValue will attempt to match each element field to this value.
-	// For lists of primitives, this will be used to match the primitive value.
-	FieldValue string `yaml:"value,omitempty"`
-
-	// Create will create the Element if it is not found
-	Create *RNode `yaml:"create,omitempty"`
-
-	// MatchAnyValue indicates that matcher should only consider the key and ignore
-	// the actual value in the list. FieldValue must be empty when MatchAnyValue is
-	// set to true.
-	MatchAnyValue bool `yaml:"noValue,omitempty"`
-}
-
-func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
-	return rn.Pipe(ElementMatcherList{
-		Kind:          e.Kind,
-		Keys:          []string{e.FieldName},
-		Values:        []string{e.FieldValue},
-		Create:        e.Create,
-		MatchAnyValue: e.MatchAnyValue,
-	})
-}
-
-func MatchElementList(keys []string, values []string) ElementMatcherList {
-	return ElementMatcherList{Keys: keys, Values: values}
-}
-
-// ElementMatcherList returns the first element from a Sequence matching all
-// specified key, value pairs (as opposed to ElementMatcher, which matches
-// a single key, value pair). If there's no match, and no configuration error,
-// the matcher returns nil, nil.
-type ElementMatcherList struct {
 	Kind string `yaml:"kind,omitempty"`
 
 	// Keys are the list of fields upon which to match this element.
@@ -320,7 +300,7 @@ type ElementMatcherList struct {
 	MatchAnyValue bool `yaml:"noValue,omitempty"`
 }
 
-func (e ElementMatcherList) Filter(rn *RNode) (*RNode, error) {
+func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, err
 	}
@@ -595,7 +575,7 @@ func (l PathGetter) elemFilter(part string) (Filter, error) {
 		})
 	}
 	// Append the Node
-	return ElementMatcher{FieldName: name, FieldValue: value, Create: elem}, nil
+	return ElementMatcher{Keys: []string{name}, Values: []string{value}, Create: elem}, nil
 }
 
 func (l PathGetter) fieldFilter(

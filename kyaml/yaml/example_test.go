@@ -228,7 +228,7 @@ func ExampleElementMatcher_Filter() {
 		log.Fatal(err)
 	}
 	elem, err := obj.Pipe(ElementMatcher{
-		FieldValue: "c", Create: NewScalarRNode("c"),
+		Values: []string{"c"}, Create: NewScalarRNode("c"),
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -255,7 +255,9 @@ func ExampleElementMatcher_Filter_primitiveFound() {
 		log.Fatal(err)
 	}
 	elem, err := obj.Pipe(ElementMatcher{
-		FieldValue: "c", Create: NewScalarRNode("c"),
+		Keys:   []string{""},
+		Values: []string{"c"},
+		Create: NewScalarRNode("c"),
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -287,7 +289,7 @@ image: nginx
 		log.Fatal(err)
 	}
 	elem, err := obj.Pipe(ElementMatcher{
-		FieldName: "name", FieldValue: "baz", Create: append})
+		Keys: []string{"name"}, Values: []string{"baz"}, Create: append})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -321,7 +323,7 @@ image: nginx
 		log.Fatal(err)
 	}
 	elem, err := obj.Pipe(ElementMatcher{
-		FieldName: "name", FieldValue: "baz", Create: append})
+		Keys: []string{"name"}, Values: []string{"baz"}, Create: append})
 	if err != nil {
 		log.Fatal(err)
 	}
