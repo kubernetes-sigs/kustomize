@@ -31,7 +31,7 @@ func (s StringList) Has(val []string) bool {
 	return false
 }
 
-func isStringSliceEqual (s []string, t []string) bool {
+func isStringSliceEqual(s []string, t []string) bool {
 	if len(s) != len(t) {
 		return false
 	}
