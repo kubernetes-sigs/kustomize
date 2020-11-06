@@ -132,22 +132,6 @@ func TestElementSetter(t *testing.T) {
 	_, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {scalarValue}")
 
-	node = MustParse(`
-- a: b
-- c: d	
-`)
-	// {a: b} is removed since the value is omitted and only key is used
-	// to match and no Element specified.
-	rn, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
-	assert.NoError(t, err)
-	assert.Nil(t, rn)
-	assert.Equal(t, `- c: d
-`, assertNoErrorString(t)(node.String()))
-
-	node = MustParse(`
-- a: b
-- c: d	
-`)
 	// Return error because ElementSetter will assume all elements are scalar when
 	// there is only value provided.
 	_, err = node.Pipe(ElementSetter{Values: []string{"b"}})
@@ -342,20 +326,6 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 - e: f
 - g: h
 `, assertNoErrorString(t)(node.String()))
-
-	node = orig.Copy()
-	// Should return an error
-	// keys and values are not the same length
-	newElement = NewMapRNode(&map[string]string{
-		"g": "h",
-	})
-	rn, err = node.Pipe(ElementSetter{
-		Keys:    []string{"a", "c"},
-		Values:  []string{"b"},
-		Element: newElement.YNode(),
-	})
-	assert.Error(t, err)
-	assert.Nil(t, rn)
 }
 
 func TestElementMatcherWithNoValue(t *testing.T) {

@@ -48,6 +48,7 @@ func (a ElementAppender) Filter(rn *RNode) (*RNode, error) {
 // not designed for this purpose. To append an element, please use ElementAppender.
 // To replace, set the key-value pair and a non-nil Element.
 // To delete, set the key-value pair and leave the Element as nil.
+// Every key must have a corresponding value.
 type ElementSetter struct {
 	Kind string `yaml:"kind,omitempty"`
 
@@ -78,9 +79,6 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	if len(e.Keys) == 0 {
 		e.Keys = append(e.Keys, "")
 	}
-	if len(e.Values) == 0 {
-		e.Values = append(e.Values, "")
-	}
 
 	if err := ErrorIfInvalid(rn, SequenceNode); err != nil {
 		return nil, err
@@ -103,16 +101,16 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 			continue
 		}
 
-		if len(e.Keys) > len(e.Values) {
-			return nil, fmt.Errorf("cannot have more keys than values")
-		}
-
 		// check if this is the element we are matching
 		var val *RNode
 		var err error
 		found := true
 		for j := range e.Keys {
-			val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
+			if j >= len(e.Values) {
+				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: ""})
+			} else {
+				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -123,7 +121,9 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 		}
 		if !found {
 			// not the element we are looking for, keep it in the Content
-			newContent = append(newContent, elem)
+			if len(e.Values) > 0 {
+				newContent = append(newContent, elem)
+			}
 			continue
 		}
 		matchingElementFound = true
