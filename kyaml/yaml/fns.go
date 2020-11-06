@@ -54,35 +54,6 @@ type ElementSetter struct {
 	// Element is the new value to set -- remove the existing element if nil
 	Element *Node
 
-	// Key is a field on the elements.  It is used to find the matching element to
-	// update / delete.
-	Key string `yaml:"key,omitempty"`
-
-	// Value is a field value on the elements.  It is used to find matching elements to
-	// update / delete.
-	Value string `yaml:"value,omitempty"`
-}
-
-func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
-	return rn.Pipe(ElementSetterList{
-		Kind:    e.Kind,
-		Element: e.Element,
-		Keys:    []string{e.Key},
-		Values:  []string{e.Value},
-	})
-}
-
-// ElementSetterList sets the value for an Element in an associative list.
-// It behaves identically to ElementSetter, except that it uses multiple
-// key-value pairs (in the form of a list of keys and a corresponding list
-// of values) in order to find a matching element, whereas ElementSetter
-// uses only one key-value pair.
-type ElementSetterList struct {
-	Kind string `yaml:"kind,omitempty"`
-
-	// Element is the new value to set -- remove the existing element if nil
-	Element *Node
-
 	// Key is a list of fields on the elements. It is used to find matching elements to
 	// update / delete
 	Keys []string
@@ -93,19 +64,17 @@ type ElementSetterList struct {
 }
 
 // isMappingNode returns whether node is a mapping node
-func (e ElementSetterList) isMappingNode(node *RNode) bool {
+func (e ElementSetter) isMappingNode(node *RNode) bool {
 	return ErrorIfInvalid(node, yaml.MappingNode) == nil
 }
 
 // isMappingSetter returns is this setter intended to set a mapping node
-func (e ElementSetterList) isMappingSetter() bool {
+func (e ElementSetter) isMappingSetter() bool {
 	return len(e.Keys) > 0 && e.Keys[0] != "" &&
 		len(e.Values) > 0 && e.Values[0] != ""
 }
 
-// the main difference between this Filter and the ElementSetter Filter
-// is that here we must iterate through all the key-value pairs
-func (e ElementSetterList) Filter(rn *RNode) (*RNode, error) {
+func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 	if len(e.Keys) == 0 {
 		e.Keys = append(e.Keys, "")
 	}
@@ -143,11 +112,7 @@ func (e ElementSetterList) Filter(rn *RNode) (*RNode, error) {
 		var err error
 		found := true
 		for j := range e.Keys {
-			if j >= len(e.Values) {
-				val, err = newNode.Pipe(Get(e.Keys[j]))
-			} else {
-				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
-			}
+			val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
 			if err != nil {
 				return nil, err
 			}
