@@ -109,7 +109,7 @@ func TestElementSetter(t *testing.T) {
 	// ElementSetter will update node, so make a copy
 	node := orig.Copy()
 	// Remove an element, because ElementSetter.Element is left nil.
-	rn, err := node.Pipe(ElementSetterList{Keys: []string{"a"}, Values: []string{"b"}})
+	rn, err := node.Pipe(ElementSetter{Keys: []string{"a"}, Values: []string{"b"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- scalarValue
@@ -118,7 +118,7 @@ func TestElementSetter(t *testing.T) {
 
 	node = orig.Copy()
 	// Nothing happens because no element is matched
-	rn, err = node.Pipe(ElementSetterList{Keys: []string{"a"}, Values: []string{"zebra"}})
+	rn, err = node.Pipe(ElementSetter{Keys: []string{"a"}, Values: []string{"zebra"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a: b
@@ -129,7 +129,7 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// Return error because ElementSetter doesn't support a single key
 	// when there is a scalar value in the list
-	_, err = node.Pipe(ElementSetterList{Keys: []string{"a"}})
+	_, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {scalarValue}")
 
 	node = MustParse(`
@@ -138,7 +138,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// {a: b} is removed since the value is omitted and only key is used
 	// to match and no Element specified.
-	rn, err = node.Pipe(ElementSetterList{Keys: []string{"a"}})
+	rn, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- c: d
@@ -150,7 +150,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// Return error because ElementSetter will assume all elements are scalar when
 	// there is only value provided.
-	_, err = node.Pipe(ElementSetterList{Values: []string{"b"}})
+	_, err = node.Pipe(ElementSetter{Values: []string{"b"}})
 	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
 
 	node = MustParse(`
@@ -159,7 +159,7 @@ func TestElementSetter(t *testing.T) {
 `)
 	// b is removed since ElementSetter use the value "b" to match the
 	// scalar values.
-	rn, err = node.Pipe(ElementSetterList{Values: []string{"b"}})
+	rn, err = node.Pipe(ElementSetter{Values: []string{"b"}})
 	assert.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a
@@ -170,7 +170,7 @@ func TestElementSetter(t *testing.T) {
 	newElement := NewMapRNode(&map[string]string{
 		"e": "f",
 	})
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a"},
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
@@ -185,7 +185,7 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// Set an element with scalar, {"a": "b"} to "foo"
 	newElement = NewScalarRNode("foo")
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a"},
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
@@ -203,7 +203,7 @@ func TestElementSetter(t *testing.T) {
 	newElement = NewMapRNode(&map[string]string{
 		"e": "f",
 	})
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"x"},
 		Values:  []string{"y"},
 		Element: newElement.YNode(),
@@ -231,7 +231,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	node := orig.Copy()
 	// Remove an element using one key-value pair,
 	// because ElementSetter.Element is left nil.
-	rn, err := node.Pipe(ElementSetterList{
+	rn, err := node.Pipe(ElementSetter{
 		Keys:   []string{"a"},
 		Values: []string{"b"},
 	})
@@ -244,7 +244,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	node = orig.Copy()
 	// Remove an element using multiple key-value pairs,
 	// because ElementSetter.Element is left nil.
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:   []string{"a", "c"},
 		Values: []string{"b", "d"},
 	})
@@ -258,7 +258,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	// Should do nothing, because Element is nil
 	// and there is no element which matches all
 	// give key-value pairs
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:   []string{"a", "c"},
 		Values: []string{"b", "wrong value"},
 	})
@@ -276,7 +276,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	newElement := NewMapRNode(&map[string]string{
 		"g": "h",
 	})
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a"},
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
@@ -294,7 +294,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	newElement = NewMapRNode(&map[string]string{
 		"g": "h",
 	})
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a", "c"},
 		Values:  []string{"b", "d"},
 		Element: newElement.YNode(),
@@ -310,7 +310,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	// Set an element scalar,
 	// {'a: b, c: d'} to "foo"
 	newElement = NewScalarRNode("foo")
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a", "c"},
 		Values:  []string{"b", "d"},
 		Element: newElement.YNode(),
@@ -329,7 +329,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	newElement = NewMapRNode(&map[string]string{
 		"g": "h",
 	})
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a", "c"},
 		Values:  []string{"b", "wrong value"},
 		Element: newElement.YNode(),
@@ -349,7 +349,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 	newElement = NewMapRNode(&map[string]string{
 		"g": "h",
 	})
-	rn, err = node.Pipe(ElementSetterList{
+	rn, err = node.Pipe(ElementSetter{
 		Keys:    []string{"a", "c"},
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
