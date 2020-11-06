@@ -281,7 +281,6 @@ func GetElementByKey(key string) ElementMatcher {
 // ElementMatcher returns the first element from a Sequence matching the
 // specified key-value pairs. If there's no match, and no configuration error,
 // the matcher returns nil, nil.
-
 type ElementMatcher struct {
 	Kind string `yaml:"kind,omitempty"`
 
@@ -301,6 +300,13 @@ type ElementMatcher struct {
 }
 
 func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
+	if len(e.Keys) == 0 {
+		e.Keys = append(e.Keys, "")
+	}
+	if len(e.Values) == 0 {
+		e.Values = append(e.Values, "")
+	}
+
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
 		return nil, err
 	}
