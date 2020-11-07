@@ -1288,9 +1288,9 @@ spec:
 	//
 	// Test Case
 	//
-{
-	description: `Add a containerPort with protocol to an existing list`,
-	origin: `
+	{
+		description: `Add a containerPort with protocol to an existing list`,
+		origin: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1303,7 +1303,7 @@ spec:
         - containerPort: 8080
           protocol: UDP
 `,
-	update: `
+		update: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1318,7 +1318,7 @@ spec:
         - containerPort: 8080
           protocol: TCP
 `,
-	local: `
+		local: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1331,7 +1331,7 @@ spec:
         - containerPort: 8080
           protocol: UDP
 `, // output should have both
-	expected: `
+		expected: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1345,15 +1345,15 @@ spec:
           protocol: UDP
 `},
 
-//
-// Test Case
-//
-{
-description: `Add a containerPort with protocol to a non-existing list, existing in dest`,
-origin: `
+	//
+	// Test Case
+	//
+	{
+		description: `Add a containerPort with protocol to a non-existing list, existing in dest`,
+		origin: `
 apiVersion: apps/v1
 kind: Deployment`,
-update: `
+		update: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1366,7 +1366,7 @@ spec:
         - containerPort: 8080
           protocol: UDP
 `,
-local: `
+		local: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1379,7 +1379,7 @@ spec:
         - containerPort: 8080
           protocol: TCP
 `, // output should have both
-expected: `
+		expected: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
