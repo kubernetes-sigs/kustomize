@@ -6,6 +6,9 @@ description: >
     Change the number of replicas for a resource.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/replicas/" />
+
+
 Given this kubernetes Deployment fragment:
 
 ```

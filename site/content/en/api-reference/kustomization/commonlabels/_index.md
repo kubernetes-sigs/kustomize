@@ -6,6 +6,9 @@ description: >
     Add labels and selectors to add all resources.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/commonlabels/" />
+
+
 Add labels and selectors to all resources.  If the label key already is present on the resource,
 the value will be overridden.
 

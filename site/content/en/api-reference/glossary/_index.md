@@ -7,6 +7,9 @@ description: >
     Glossary of terms
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/glossary/" />
+
+
 # Glossary
 
 [CRD spec]: https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/

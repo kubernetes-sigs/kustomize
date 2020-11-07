@@ -6,6 +6,9 @@ description: >
     Patch resources using the strategic merge patch standard.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patchesstrategicmerge/" />
+
+
 Each entry in this list should be either a relative
 file path or an inline content
 resolving to a partial or complete resource

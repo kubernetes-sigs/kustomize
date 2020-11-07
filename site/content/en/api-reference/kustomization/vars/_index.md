@@ -6,6 +6,9 @@ description: >
     Substitute name references.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/vars/" />
+
+
 Vars are used to capture text from one resource's field
 and insert that text elsewhere - a reflection feature.
 

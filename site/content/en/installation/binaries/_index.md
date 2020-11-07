@@ -7,6 +7,8 @@ description: >
     Install Kustomize by downloading precompiled binaries.
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/" />
+
 Binaries at various versions for linux, MacOs and Windows are published on the [releases page].
 
 The following [script] detects your OS and downloads the appropriate kustomize binary to your

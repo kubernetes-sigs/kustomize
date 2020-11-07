@@ -6,6 +6,9 @@ description: >
     Go plugin example
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/gopluginguidedexample" />
+
+
 # Go Plugin Guided Example for Linux
 
 [SopsEncodedSecrets repository]: https://github.com/monopole/sopsencodedsecrets
