@@ -324,7 +324,7 @@ func (kt *KustTarget) accumulateResources(
 			if errD != nil {
 				return nil, multierror.Append(
 					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("accumulateDirector error: %q", errD),
+					fmt.Errorf("accumulateDirectory error: %q", errD),
 				)
 			}
 		}
