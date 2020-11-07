@@ -55,7 +55,7 @@ type Kustomization struct {
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// Format documented at https://tools.ietf.org/html/rfc6902
 	// and http://jsonpatch.com
-	PatchesJson6902 []PatchJson6902 `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
+	PatchesJson6902 []Patch `json:"patchesJson6902,omitempty" yaml:"patchesJson6902,omitempty"`
 
 	// Patches is a list of patches, where each one can be either a
 	// Strategic Merge Patch or a JSON patch.
@@ -172,9 +172,7 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 // has been processed.
 func (k *Kustomization) FixKustomizationPreMarshalling() {
 	// PatchesJson6902 should be under the Patches field.
-	for _, patch := range k.PatchesJson6902 {
-		k.Patches = append(k.Patches, patch.ToPatch())
-	}
+	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
 }
 
