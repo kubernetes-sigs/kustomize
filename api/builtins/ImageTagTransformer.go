@@ -22,8 +22,7 @@ type ImageTagTransformerPlugin struct {
 	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-func (p *ImageTagTransformerPlugin) Config(
-	_ *resmap.PluginHelpers, c []byte) (err error) {
+func (p *ImageTagTransformerPlugin) Config(_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.ImageTag = types.Image{}
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

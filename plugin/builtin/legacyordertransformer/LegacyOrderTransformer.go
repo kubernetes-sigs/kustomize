@@ -23,8 +23,7 @@ type plugin struct{}
 var KustomizePlugin plugin
 
 // Nothing needed for configuration.
-func (p *plugin) Config(
-	_ *resmap.PluginHelpers, _ []byte) (err error) {
+func (p *plugin) Config(_ *resmap.PluginHelpers, _ []byte) (err error) {
 	return nil
 }
 

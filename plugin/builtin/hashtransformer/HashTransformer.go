@@ -18,8 +18,7 @@ type plugin struct {
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
-func (p *plugin) Config(
-	h *resmap.PluginHelpers, _ []byte) (err error) {
+func (p *plugin) Config(h *resmap.PluginHelpers, _ []byte) (err error) {
 	p.hasher = h.ResmapFactory().RF().Hasher()
 	return nil
 }

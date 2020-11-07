@@ -22,8 +22,7 @@ type ReplicaCountTransformerPlugin struct {
 	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-func (p *ReplicaCountTransformerPlugin) Config(
-	_ *resmap.PluginHelpers, c []byte) (err error) {
+func (p *ReplicaCountTransformerPlugin) Config(_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Replica = types.Replica{}
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

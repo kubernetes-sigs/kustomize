@@ -19,8 +19,7 @@ import (
 type LegacyOrderTransformerPlugin struct{}
 
 // Nothing needed for configuration.
-func (p *LegacyOrderTransformerPlugin) Config(
-	_ *resmap.PluginHelpers, _ []byte) (err error) {
+func (p *LegacyOrderTransformerPlugin) Config(_ *resmap.PluginHelpers, _ []byte) (err error) {
 	return nil
 }
 

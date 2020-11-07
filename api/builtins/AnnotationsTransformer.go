@@ -17,8 +17,7 @@ type AnnotationsTransformerPlugin struct {
 	FieldSpecs  []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-func (p *AnnotationsTransformerPlugin) Config(
-	_ *resmap.PluginHelpers, c []byte) (err error) {
+func (p *AnnotationsTransformerPlugin) Config(_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Annotations = nil
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

@@ -24,8 +24,7 @@ type PatchJson6902TransformerPlugin struct {
 	JsonOp       string          `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 }
 
-func (p *PatchJson6902TransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+func (p *PatchJson6902TransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
 	p.ldr = h.Loader()
 	err = yaml.Unmarshal(c, p)
 	if err != nil {

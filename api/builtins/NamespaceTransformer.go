@@ -19,8 +19,7 @@ type NamespaceTransformerPlugin struct {
 	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-func (p *NamespaceTransformerPlugin) Config(
-	_ *resmap.PluginHelpers, c []byte) (err error) {
+func (p *NamespaceTransformerPlugin) Config(_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
 	return yaml.Unmarshal(c, p)

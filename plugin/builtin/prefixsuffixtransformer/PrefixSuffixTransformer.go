@@ -33,8 +33,7 @@ var prefixSuffixFieldSpecsToSkip = types.FsSlice{
 	{Gvk: resid.Gvk{Kind: "Namespace"}},
 }
 
-func (p *plugin) Config(
-	_ *resmap.PluginHelpers, c []byte) (err error) {
+func (p *plugin) Config(_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Prefix = ""
 	p.Suffix = ""
 	p.FieldSpecs = nil

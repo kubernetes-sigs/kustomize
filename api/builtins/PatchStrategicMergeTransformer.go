@@ -23,8 +23,7 @@ type PatchStrategicMergeTransformerPlugin struct {
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
-func (p *PatchStrategicMergeTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+func (p *PatchStrategicMergeTransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
 	p.h = h
 	err = yaml.Unmarshal(c, p)
 	if err != nil {

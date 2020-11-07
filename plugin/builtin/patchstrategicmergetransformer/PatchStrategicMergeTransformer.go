@@ -27,8 +27,7 @@ type plugin struct {
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
-func (p *plugin) Config(
-	h *resmap.PluginHelpers, c []byte) (err error) {
+func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
 	p.h = h
 	err = yaml.Unmarshal(c, p)
 	if err != nil {

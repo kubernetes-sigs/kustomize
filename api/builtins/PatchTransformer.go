@@ -26,8 +26,7 @@ type PatchTransformerPlugin struct {
 	Target       *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
-func (p *PatchTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) error {
+func (p *PatchTransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	err := yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
