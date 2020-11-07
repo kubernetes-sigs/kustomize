@@ -7,6 +7,8 @@ menu:
     weight: 70
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/faq/kustomize/" />
+
 ## kubectl doesn't have the latest kustomize, when will it be updated?
 
 TLDR: This is blocked on either moving kubectl into its own repo, or changing its dependencies.  ETA k8s ~1.20.

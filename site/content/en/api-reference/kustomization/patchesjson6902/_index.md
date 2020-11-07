@@ -6,6 +6,9 @@ description: >
     Patch resources using the [json 6902 standard](https://tools.ietf.org/html/rfc6902)
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patchesjson6902/" />
+
+
 Each entry in this list should resolve to a kubernetes object and a JSON patch that will be applied
 to the object.
 The JSON patch is documented at <https://tools.ietf.org/html/rfc6902>

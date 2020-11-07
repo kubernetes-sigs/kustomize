@@ -7,6 +7,8 @@ description: >
     How to develop on Windows
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/windows" />
+
 This is the PowerShell script to run all go tests for Kustomize on a windows based platform which mimics /build/pre-commit.sh
 
 ## Pre-Reqs

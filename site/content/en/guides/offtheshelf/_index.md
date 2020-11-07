@@ -7,6 +7,9 @@ description: >
     Workflow for off the shelf applications
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/config_management/offtheshelf/" />
+
+
 In this workflow, all files are owned by the user and maintained in a repository under their control, but
 they are based on an [off-the-shelf] configuration that is periodically consulted for updates.
 

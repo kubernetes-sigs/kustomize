@@ -6,6 +6,9 @@ description: >
     Patch resources
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patches/" />
+
+
 [strategic merge]: /kustomize/api-reference/glossary#patchstrategicmerge
 [JSON]: /kustomize/api-reference/glossary#patchjson6902
 

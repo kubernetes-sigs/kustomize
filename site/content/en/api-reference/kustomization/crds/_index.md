@@ -6,6 +6,9 @@ description: >
     Adding CRD support
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/crds/" />
+
+
 Each entry in this list should be a relative path to
 a file for custom resource definition (CRD).
 

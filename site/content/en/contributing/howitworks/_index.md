@@ -7,6 +7,9 @@ description: >
     How to modify Kustomize
 ---
 
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/howitworks" />
+
+
 {{% pageinfo color="info" %}}
 To build kustomize using the locally modified modules, `replace` statements must be added to
 the `kustomize/go.mod`.
