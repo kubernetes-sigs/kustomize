@@ -24,7 +24,7 @@ func makeAndLoadKustTarget(
 	root string) *target.KustTarget {
 	kt := makeKustTargetWithRf(
 		t, fSys, root,
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
+		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 1)
 	if err := kt.Load(); err != nil {
 		t.Fatalf("Unexpected load error %v", err)
 	}
@@ -35,7 +35,8 @@ func makeKustTargetWithRf(
 	t *testing.T,
 	fSys filesys.FileSystem,
 	root string,
-	resourceFactory *resource.Factory) *target.KustTarget {
+	resourceFactory *resource.Factory,
+	maxParallelAccumulate int) *target.KustTarget {
 	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys)
 	if err != nil {
 		t.Fatal(err)
@@ -47,5 +48,6 @@ func makeKustTargetWithRf(
 		ldr,
 		valtest_test.MakeFakeValidator(),
 		rf,
-		pLdr.NewLoader(pc, rf))
+		pLdr.NewLoader(pc, rf),
+		maxParallelAccumulate)
 }

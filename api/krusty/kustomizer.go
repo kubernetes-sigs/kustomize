@@ -68,6 +68,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		b.depProvider.GetFieldValidator(),
 		resmapFactory,
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory),
+		b.options.MaxParallelAccumulate,
 	)
 	err = kt.Load()
 	if err != nil {

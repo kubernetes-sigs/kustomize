@@ -77,7 +77,7 @@ commonLabels:
 
 	kt := makeKustTargetWithRf(
 		t, th.GetFSys(), "/",
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()))
+		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 1)
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			th.WriteK("/", tc.content)
@@ -245,7 +245,7 @@ metadata:
 	}
 
 	kt := makeKustTargetWithRf(
-		t, th.GetFSys(), "/whatever", resFactory)
+		t, th.GetFSys(), "/whatever", resFactory, 1)
 	err := kt.Load()
 	if err != nil {
 		t.Fatalf("unexpected Resources error %v", err)
@@ -256,6 +256,21 @@ metadata:
 	}
 
 	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
+		t.Fatalf("unexpected inequality: %v", err)
+	}
+
+	kt = makeKustTargetWithRf(
+		t, th.GetFSys(), "/whatever", resFactory, 16)
+	err = kt.Load()
+	if err != nil {
+		t.Fatalf("unexpected Resources error %v", err)
+	}
+	actual, err = kt.MakeCustomizedResMap()
+	if err != nil {
+		t.Fatalf("unexpected Resources error %v", err)
+	}
+
+	if err = expected.ErrorIfNotEqualSets(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
 	}
 }

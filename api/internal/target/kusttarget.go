@@ -4,11 +4,15 @@
 package target
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -24,11 +28,12 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	ldr           ifc.Loader
-	validator     ifc.Validator
-	rFactory      *resmap.Factory
-	pLdr          *loader.Loader
+	kustomization         *types.Kustomization
+	ldr                   ifc.Loader
+	validator             ifc.Validator
+	rFactory              *resmap.Factory
+	pLdr                  *loader.Loader
+	maxParallelAccumulate int
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -36,12 +41,14 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
-	pLdr *loader.Loader) *KustTarget {
+	pLdr *loader.Loader,
+	maxParallelAccumulate int) *KustTarget {
 	return &KustTarget{
-		ldr:       ldr,
-		validator: validator,
-		rFactory:  rFactory,
-		pLdr:      pLdr,
+		ldr:                   ldr,
+		validator:             validator,
+		rFactory:              rFactory,
+		pLdr:                  pLdr,
+		maxParallelAccumulate: maxParallelAccumulate,
 	}
 }
 
@@ -85,7 +92,7 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 	for _, kf := range konfig.RecognizedKustomizationFileNames() {
 		c, err := ldr.Load(kf)
 		if err == nil {
-			match += 1
+			match++
 			content = c
 		}
 	}
@@ -309,6 +316,13 @@ func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) {
 // with resources read from the given list of paths.
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
+
+	ctx := context.Background()
+	errs, ctx := errgroup.WithContext(ctx)
+
+	maxWorker := min(len(paths), kt.maxParallelAccumulate)
+	sem := semaphore.NewWeighted(int64(maxWorker))
+
 	for _, path := range paths {
 		// try loading resource as file then as base (directory or git repository)
 		if errF := kt.accumulateFile(ra, path); errF != nil {
@@ -328,6 +342,28 @@ func (kt *KustTarget) accumulateResources(
 				)
 			}
 		}
+
+		path := path
+		errs.Go(func() error {
+			// try loading resource as file then as base (directory or git repository)
+			if errF := kt.accumulateFile(ra, path); errF != nil {
+				ldr, errL := kt.ldr.New(path)
+				if errL != nil {
+					return fmt.Errorf("accumulateFile %q, loader.New %q", errF, errL)
+				}
+				var errD error
+				ra, errD = kt.accumulateDirectory(ra, ldr, false)
+				if errD != nil {
+					return fmt.Errorf("accumulateFile %q, accumulateDirector: %q", errF, errD)
+				}
+			}
+			defer sem.Release(1)
+			return nil
+		})
+	}
+
+	if err := errs.Wait(); err != nil {
+		return nil, err
 	}
 	return ra, nil
 }
@@ -354,7 +390,7 @@ func (kt *KustTarget) accumulateComponents(
 func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
-	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
+	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr, kt.maxParallelAccumulate)
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.Wrapf(
@@ -419,4 +455,11 @@ func (kt *KustTarget) configureBuiltinPlugin(
 			err, "trouble configuring builtin %s with config: `\n%s`", bpt, string(y))
 	}
 	return nil
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

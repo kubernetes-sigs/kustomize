@@ -93,8 +93,8 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	cmd.Flags().StringArrayVarP(
 		&o.fnOptions.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
-
 	addFlagLoadRestrictor(cmd.Flags())
+	addFlagMaxParallelAccumulate(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())
 	addFlagReorderOutput(cmd.Flags())
 	addFlagEnableManagedbyLabel(cmd.Flags())
@@ -127,6 +127,7 @@ func (o *Options) makeOptions() *krusty.Options {
 	opts := krusty.MakeDefaultOptions()
 	opts.DoLegacyResourceSort = o.outOrder == legacy
 	opts.LoadRestrictions = getFlagLoadRestrictorValue()
+	opts.MaxParallelAccumulate = getMaxParallelAccumulateValue()
 	if isFlagEnablePluginsSet() {
 		c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		if err != nil {
