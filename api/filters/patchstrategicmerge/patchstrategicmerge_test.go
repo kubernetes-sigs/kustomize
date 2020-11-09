@@ -372,9 +372,6 @@ spec:
         image: test
 `,
 		},
-		// the following tests document broken behavior and
-		// will be fixed
-		// ref: #3111, #3159
 		"list map keys - add a port, no names": {
 			input: `
 apiVersion: apps/v1
@@ -424,6 +421,8 @@ spec:
           protocol: UDP
         - containerPort: 80
           protocol: UDP
+        - containerPort: 8080
+          protocol: TCP
 `,
 		},
 		"list map keys - add name to port": {
@@ -472,6 +471,9 @@ spec:
       - image: test-image
         name: test-deployment
         ports:
+        - containerPort: 8080
+          protocol: UDP
+          name: UDP-name-patch
         - containerPort: 8080
           protocol: TCP
 `,
@@ -525,14 +527,13 @@ spec:
         name: test-deployment
         ports:
         - containerPort: 8080
+          protocol: UDP
+          name: UDP-name-patch
+        - containerPort: 8080
           protocol: TCP
           name: TCP-name-original
 `,
 		},
-
-		// the following tests document behavior
-		// that should not be affected by
-		// changes due to #3111, #3159
 		"list map keys - add a port, no protocol": {
 			input: `
 apiVersion: apps/v1
