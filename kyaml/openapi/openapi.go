@@ -349,6 +349,35 @@ func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 	return &ResourceSchema{Schema: &s}
 }
 
+// PatchStrategyAndKeyList returns the patch strategy and complete merge key list
+func (rs *ResourceSchema) PatchStrategyAndKeyList() (string, []string) {
+	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
+	if !found {
+		// empty patch strategy
+		return "", []string{}
+	}
+
+	mkList, found := rs.Schema.Extensions[kubernetesMergeKeyMapList]
+	if found {
+		//mkList is []interface, convert to []string
+		mkListStr := make([]string, len(mkList.([]interface{})))
+
+		for i, v := range mkList.([]interface{}) {
+			mkListStr[i] = v.(string)
+		}
+
+		return ps.(string), mkListStr
+	}
+
+	mk, found := rs.Schema.Extensions[kubernetesMergeKeyExtensionKey]
+	if !found {
+		// no mergeKey -- may be a primitive associative list (e.g. finalizers)
+		return ps.(string), []string{}
+	}
+
+	return ps.(string), []string{mk.(string)}
+}
+
 // PatchStrategyAndKey returns the patch strategy and merge key extensions
 func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
@@ -377,12 +406,18 @@ const (
 	// kubernetesGVKExtensionKey is the key to lookup the kubernetes group version kind extension
 	// -- the extension is an array of objects containing a gvk
 	kubernetesGVKExtensionKey = "x-kubernetes-group-version-kind"
+
 	// kubernetesMergeKeyExtensionKey is the key to lookup the kubernetes merge key extension
 	// -- the extension is a string
 	kubernetesMergeKeyExtensionKey = "x-kubernetes-patch-merge-key"
+
 	// kubernetesPatchStrategyExtensionKey is the key to lookup the kubernetes patch strategy
 	// extension -- the extension is a string
 	kubernetesPatchStrategyExtensionKey = "x-kubernetes-patch-strategy"
+
+	// kubernetesMergeKeyMapList is the list of merge keys when there needs to be multiple
+	// -- the extension is an array of strings
+	kubernetesMergeKeyMapList = "x-kubernetes-list-map-keys"
 
 	// groupKey is the key to lookup the group from the GVK extension
 	groupKey = "group"
