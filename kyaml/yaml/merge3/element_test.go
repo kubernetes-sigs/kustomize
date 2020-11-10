@@ -1282,9 +1282,6 @@ spec:
           name: bar
 `},
 
-	// The following test cases document broken behavior
-	// that will change as a result of #3111, #3159
-
 	//
 	// Test Case
 	//
