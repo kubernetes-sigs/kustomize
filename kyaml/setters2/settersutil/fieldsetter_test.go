@@ -20,72 +20,9 @@ func TestSetAllSetterDefinitions(t *testing.T) {
 		destOpenAPI             string
 		expectedDestFile        string
 		expectedDestOpenAPIFile string
-		syncSchema              bool
 	}{
 		{
-			name:       "set definitions with syncSchema",
-			syncSchema: true,
-			srcOpenAPIFile: `openAPI:
-  definitions:
-    io.k8s.cli.setters.namespace:
-      x-k8s-cli:
-        setter:
-          name: namespace
-          value: "project-namespace"
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "4"`,
-
-			destFile: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  namespace: some-other-namespace # {"$ref": "#/definitions/io.k8s.cli.setters.namespace"}
-spec:
-  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas-new"}`,
-
-			destOpenAPI: `openAPI:
-  definitions:
-    io.k8s.cli.setters.namespace:
-      x-k8s-cli:
-        setter:
-          name: namespace
-          value: "some-other-namespace"
-    io.k8s.cli.setters.replicas-new:
-      x-k8s-cli:
-        setter:
-          name: replicas-new
-          value: "3"`,
-
-			expectedDestFile: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  namespace: project-namespace # {"$ref": "#/definitions/io.k8s.cli.setters.namespace"}
-spec:
-  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas-new"}
-`,
-
-			expectedDestOpenAPIFile: `openAPI:
-  definitions:
-    io.k8s.cli.setters.namespace:
-      x-k8s-cli:
-        setter:
-          name: namespace
-          value: "project-namespace"
-          isSet: true
-    io.k8s.cli.setters.replicas-new:
-      x-k8s-cli:
-        setter:
-          name: replicas-new
-          value: "3"
-`,
-		},
-		{
-			name:       "set values only to resources and not the openAPI",
-			syncSchema: false,
+			name: "set values only to resources and not the openAPI",
 			srcOpenAPIFile: `openAPI:
   definitions:
     io.k8s.cli.setters.namespace:
@@ -172,7 +109,7 @@ spec:
 				t.FailNow()
 			}
 
-			err = SetAllSetterDefinitions(test.syncSchema, filepath.Join(srcDir, "Krmfile"), destDir)
+			err = SetAllSetterDefinitions(filepath.Join(srcDir, "Krmfile"), destDir)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

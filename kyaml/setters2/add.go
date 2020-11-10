@@ -40,6 +40,8 @@ type Add struct {
 
 	// Count is the number of fields the setter applies to
 	Count int
+
+	SettersSchema *spec.Schema
 }
 
 // Filter implements yaml.Filter
@@ -50,7 +52,7 @@ func (a *Add) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if a.Ref == "" {
 		return nil, errors.Errorf("must specify ref")
 	}
-	return object, accept(a, object)
+	return object, accept(a, object, a.SettersSchema)
 }
 
 func (a *Add) visitSequence(_ *yaml.RNode, _ string, _ *openapi.ResourceSchema) error {
@@ -115,7 +117,7 @@ func (a *Add) visitScalar(object *yaml.RNode, p string, _, _ *openapi.ResourceSc
 // addRef adds the setter/subst ref to the object node as a line comment
 func (a *Add) addRef(object *yaml.RNode) error {
 	// read the field metadata
-	fm := fieldmeta.FieldMeta{}
+	fm := fieldmeta.FieldMeta{SettersSchema: a.SettersSchema}
 	if err := fm.Read(object); err != nil {
 		return err
 	}
