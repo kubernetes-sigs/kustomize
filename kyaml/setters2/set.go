@@ -32,11 +32,13 @@ type Set struct {
 
 	// SetAll if set to true will set all setters regardless of name
 	SetAll bool
+
+	SettersSchema *spec.Schema
 }
 
 // Filter implements Set as a yaml.Filter
 func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	return object, accept(s, object)
+	return object, accept(s, object, s.SettersSchema)
 }
 
 // isMatch returns true if the setter with name should have the field
@@ -81,9 +83,9 @@ func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.Resour
 }
 
 // visitScalar
-func (s *Set) visitScalar(object *yaml.RNode, p string, oa, setterSchema *openapi.ResourceSchema) error {
+func (s *Set) visitScalar(object *yaml.RNode, p string, oa, settersSchema *openapi.ResourceSchema) error {
 	// get the openAPI for this field describing how to apply the setter
-	ext, err := getExtFromComment(setterSchema)
+	ext, err := getExtFromComment(settersSchema)
 	if err != nil {
 		return err
 	}
@@ -97,7 +99,7 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, oa, setterSchema *openap
 	}
 
 	// perform a direct set of the field if it matches
-	ok, err := s.set(object, ext, k8sSchema, setterSchema.Schema)
+	ok, err := s.set(object, ext, k8sSchema, settersSchema.Schema)
 	if err != nil {
 		return err
 	}
@@ -177,7 +179,7 @@ func (s *Set) substituteUtil(ext *CliExtension, visited sets.String, nameMatch *
 		if err != nil {
 			return "", errors.Wrap(err)
 		}
-		def, err := openapi.Resolve(&ref) // resolve the def to its openAPI def
+		def, err := openapi.Resolve(&ref, s.SettersSchema) // resolve the def to its openAPI def
 		if err != nil {
 			return "", errors.Wrap(err)
 		}
