@@ -23,12 +23,15 @@ verify-kustomize: \
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
 	lint-kustomize \
-	test-multi-module \
 	test-unit-kustomize-all \
 	test-unit-cmd-all \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-3.8.6
+
+# test-multi-module \
+# Temporarily removed from prow-presubmit-check
+# See https://github.com/kubernetes-sigs/kustomize/issues/3191
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
