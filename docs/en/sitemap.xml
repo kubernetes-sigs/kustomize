@@ -4,7 +4,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/bespoke/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -19,7 +19,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/installation/source/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -34,7 +34,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -49,7 +49,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/offtheshelf/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -64,7 +64,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/installation/binaries/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -79,7 +79,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/installation/homebrew/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -94,7 +94,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -109,7 +109,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/installation/chocolatey/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -124,7 +124,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/bugs/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -139,7 +139,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -154,7 +154,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/community/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -169,7 +169,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/installation/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -184,7 +184,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/blog/releases/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -199,7 +199,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/features/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -214,7 +214,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/docs/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -229,7 +229,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/howitworks/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -244,7 +244,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/mac/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -259,7 +259,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/contributing/windows/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -274,7 +274,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/plugins/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -289,7 +289,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/faq/eschewedfeatures/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -304,7 +304,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/glossary/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -319,7 +319,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/faq/versioningpolicy/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -469,7 +469,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/bases/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -484,7 +484,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/blog/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -498,13 +498,8 @@
   </url>
   
   <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/build/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/plugins/builtins/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -518,18 +513,8 @@
   </url>
   
   <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/cfg/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonannotations/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -544,7 +529,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonlabels/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -559,7 +544,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/components/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -574,7 +559,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/configmapgenerator/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -604,7 +589,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/crds/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -618,18 +603,8 @@
   </url>
   
   <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/create/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/edit/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/plugins/execpluginguidedexample/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -644,7 +619,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/faq/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -658,13 +633,8 @@
   </url>
   
   <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/fn/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/generatoroptions/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -679,7 +649,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/plugins/goplugincaveats/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -694,7 +664,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/plugins/gopluginguidedexample/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -708,13 +678,8 @@
   </url>
   
   <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/help/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/images/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -725,11 +690,6 @@
                 hreflang="en"
                 href="https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/images/"
                 />
-  </url>
-  
-  <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/install-completion/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
   </url>
   
   <url>
@@ -749,17 +709,12 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/guides/components/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/live/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
   </url>
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/nameprefix/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -774,7 +729,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/namespace/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -789,7 +744,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/namesuffix/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -804,7 +759,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patches/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -819,7 +774,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patchesjson6902/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -834,7 +789,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patchesstrategicmerge/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -849,7 +804,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/replicas/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -864,7 +819,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/resources/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -894,7 +849,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/secretegenerator/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -909,7 +864,7 @@
   
   <url>
     <loc>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/vars/</loc>
-    <lastmod>2020-11-04T11:15:40-08:00</lastmod>
+    <lastmod>2020-11-11T08:29:43-08:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh"
@@ -920,11 +875,6 @@
                 hreflang="en"
                 href="https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/vars/"
                 />
-  </url>
-  
-  <url>
-    <loc>https://kubernetes-sigs.github.io/kustomize/guides/cmd/version/</loc>
-    <lastmod>2020-09-05T11:36:49-04:00</lastmod>
   </url>
   
 </urlset>

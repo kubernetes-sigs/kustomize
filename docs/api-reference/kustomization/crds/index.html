@@ -748,34 +748,8 @@
 	<h1>crds</h1>
 	<div class="lead">Adding CRD support</div>
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/crds/" />
-<p>Each entry in this list should be a relative path to
-a file for custom resource definition (CRD).</p>
-<p>The presence of this field is to allow kustomize be
-aware of CRDs and apply proper
-transformation for any objects in those types.</p>
-<p>Typical use case: A CRD object refers to a
-ConfigMap object.  In a kustomization, the ConfigMap
-object name may change by adding namePrefix,
-nameSuffix, or hashing. The name reference for this
-ConfigMap object in CRD object need to be updated
-with namePrefix, nameSuffix, or hashing in the
-same way.</p>
-<p>The annotations can be put into openAPI definitions are:</p>
-<ul>
-<li>&ldquo;x-kubernetes-annotation&rdquo;: &quot;&quot;</li>
-<li>&ldquo;x-kubernetes-label-selector&rdquo;: &quot;&quot;</li>
-<li>&ldquo;x-kubernetes-identity&rdquo;: &quot;&quot;</li>
-<li>&ldquo;x-kubernetes-object-ref-api-version&rdquo;: &ldquo;v1&rdquo;,</li>
-<li>&ldquo;x-kubernetes-object-ref-kind&rdquo;: &ldquo;Secret&rdquo;,</li>
-<li>&ldquo;x-kubernetes-object-ref-name-key&rdquo;: &ldquo;name&rdquo;,</li>
-</ul>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">kustomize.config.k8s.io/v1beta1</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">Kustomization</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">crds</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">crds/typeA.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">crds/typeB.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div>
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
+
         <div class="section-index">
     
     
@@ -830,7 +804,7 @@ same way.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 
