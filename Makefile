@@ -6,7 +6,17 @@
 MYGOBIN := $(shell go env GOPATH)/bin
 SHELL := /bin/bash
 export PATH := $(MYGOBIN):$(PATH)
-MODULES := "cmd/config" "api/" "kustomize/" "kyaml/"
+MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
+
+# Provide defaults for REPO_OWNER and REPO_NAME if not present.
+# Typically these values would be provided by Prow.
+ifndef REPO_OWNER
+REPO_OWNER := "kubernetes-sigs"
+endif
+
+ifndef REPO_NAME
+REPO_NAME := "kustomize"
+endif
 
 .PHONY: all
 all: verify-kustomize
@@ -233,11 +243,14 @@ test-go-mod:
 # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
 .PHONY: test-multi-module
 test-multi-module: $(MYGOBIN)/prchecker
-	$(MYGOBIN)/prchecker \
-	-owner=$(REPO_OWNER) \
-	-repo=$(REPO_NAME) \
-	-pr=$(PULL_NUMBER) \
-	$(MODULES)
+	( \
+		export MYGOBIN=$(MYGOBIN); \
+		export REPO_OWNER=$(REPO_OWNER); \
+		export REPO_NAME=$(REPO_NAME); \
+		export PULL_NUMBER=$(PULL_NUMBER); \
+		export MODULES=$(MODULES); \
+		./scripts/check-multi-module.sh; \
+	)
 
 .PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
