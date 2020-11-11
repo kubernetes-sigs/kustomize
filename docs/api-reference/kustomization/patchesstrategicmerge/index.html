@@ -748,45 +748,7 @@
 	<h1>patchesStrategicMerge</h1>
 	<div class="lead">Patch resources using the strategic merge patch standard.</div>
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patchesstrategicmerge/" />
-<p>Each entry in this list should be either a relative
-file path or an inline content
-resolving to a partial or complete resource
-definition.</p>
-<p>The names in these (possibly partial) resource
-files must match names already loaded via the
-<code>resources</code> field.  These entries are used to
-<em>patch</em> (modify) the known resources.</p>
-<p>Small patches that do one thing are best, e.g. modify
-a memory request/limit, change an env var in a
-ConfigMap, etc.  Small patches are easy to review and
-easy to mix together in overlays.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">kustomize.config.k8s.io/v1beta1</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">Kustomization</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">patchesStrategicMerge</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">service_port_8888.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">deployment_increase_replicas.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">deployment_increase_memory.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>The patch content can be a inline string as well.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">kustomize.config.k8s.io/v1beta1</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">Kustomization</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">patchesStrategicMerge</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000;font-weight:bold">|-</span><span style="color:#8f5902;font-style:italic">
-</span><span style="color:#8f5902;font-style:italic">  apiVersion: apps/v1
-</span><span style="color:#8f5902;font-style:italic">  kind: Deployment
-</span><span style="color:#8f5902;font-style:italic">  metadata:
-</span><span style="color:#8f5902;font-style:italic">    name: nginx
-</span><span style="color:#8f5902;font-style:italic">  spec:
-</span><span style="color:#8f5902;font-style:italic">    template:
-</span><span style="color:#8f5902;font-style:italic">      spec:
-</span><span style="color:#8f5902;font-style:italic">        containers:
-</span><span style="color:#8f5902;font-style:italic">          - name: nginx
-</span><span style="color:#8f5902;font-style:italic">            image: nignx:latest</span><span style="color:#f8f8f8;text-decoration:underline">  
-</span></code></pre></div><p>Note that kustomize does not support more than one patch
-for the same object that contain a <em>delete</em> directive. To remove
-several fields / slice elements from an object create a single
-patch that performs all the needed deletions.</p>
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -842,7 +804,7 @@ patch that performs all the needed deletions.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

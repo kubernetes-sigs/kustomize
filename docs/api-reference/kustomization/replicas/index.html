@@ -748,33 +748,7 @@
 	<h1>replicas</h1>
 	<div class="lead">Change the number of replicas for a resource.</div>
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/replicas/" />
-<p>Given this kubernetes Deployment fragment:</p>
-<pre><code># deployment.yaml
-kind: Deployment
-metadata:
-  name: deployment-name
-spec:
-  replicas: 3
-</code></pre><p>one can change the number of replicas to 5
-by adding the following to your kustomization:</p>
-<pre><code>apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-replicas:
-- name: deployment-name
-  count: 5
-</code></pre><p>This field accepts a list, so many resources can
-be modified at the same time.</p>
-<p>As this declaration does not take in a <code>kind:</code> nor a <code>group:</code>
-it will match any <code>group</code> and <code>kind</code> that has a matching name and
-that is one of:</p>
-<ul>
-<li><code>Deployment</code></li>
-<li><code>ReplicationController</code></li>
-<li><code>ReplicaSet</code></li>
-<li><code>StatefulSet</code></li>
-</ul>
-<p>For more complex use cases, revert to using a patch.</p>
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -830,7 +804,7 @@ that is one of:</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

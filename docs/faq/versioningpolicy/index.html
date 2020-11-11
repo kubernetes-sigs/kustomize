@@ -21,27 +21,21 @@
 <link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
 
 <title>Versioning Policy | Kustomize</title><meta property="og:title" content="Versioning Policy" />
-<meta property="og:description" content="Running kustomize means one is running a particular version of a program (a CLI), using a particular version of underlying packages (a Go API), and reading a particular version of a kustomization file.
- If you&rsquo;re having trouble with go get, please read Go API Versioning and be patient.
- CLI Program Versioning The command kustomize version prints a three field version tag (e.g. v3.0.0) that aspires to semantic versioning." />
+<meta property="og:description" content="Moved to https://github.com/kubernetes-sigs/cli-experimental" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/faq/versioningpolicy/" />
-<meta property="article:modified_time" content="2020-11-04T11:15:40-08:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-11T08:29:43-08:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Versioning Policy">
-<meta itemprop="description" content="Running kustomize means one is running a particular version of a program (a CLI), using a particular version of underlying packages (a Go API), and reading a particular version of a kustomization file.
- If you&rsquo;re having trouble with go get, please read Go API Versioning and be patient.
- CLI Program Versioning The command kustomize version prints a three field version tag (e.g. v3.0.0) that aspires to semantic versioning.">
-<meta itemprop="dateModified" content="2020-11-04T11:15:40-08:00" />
-<meta itemprop="wordCount" content="1054">
+<meta itemprop="description" content="Moved to https://github.com/kubernetes-sigs/cli-experimental">
+<meta itemprop="dateModified" content="2020-11-11T08:29:43-08:00" />
+<meta itemprop="wordCount" content="3">
 
 
 
 <meta itemprop="keywords" content="" />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Versioning Policy"/>
-<meta name="twitter:description" content="Running kustomize means one is running a particular version of a program (a CLI), using a particular version of underlying packages (a Go API), and reading a particular version of a kustomization file.
- If you&rsquo;re having trouble with go get, please read Go API Versioning and be patient.
- CLI Program Versioning The command kustomize version prints a three field version tag (e.g. v3.0.0) that aspires to semantic versioning."/>
+<meta name="twitter:description" content="Moved to https://github.com/kubernetes-sigs/cli-experimental"/>
 
 
 
@@ -279,35 +273,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#cli-program-versioning">CLI Program Versioning</a>
-      <ul>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#go-api-versioning">Go API Versioning</a>
-      <ul>
-        <li></li>
-      </ul>
-    </li>
-    <li><a href="#kustomization-file-versioning">Kustomization File Versioning</a>
-      <ul>
-        <li><a href="#field-change-policy">Field Change Policy</a></li>
-        <li><a href="#the-edit-fix-command">The <code>edit fix</code> Command</a></li>
-        <li><a href="#examples">Examples</a></li>
-      </ul>
-    </li>
-    <li><a href="#relationship-to-the-k8s-api">Relationship to the k8s API</a>
-      <ul>
-        <li><a href="#review-of-k8s-api-versioning">Review of k8s API versioning</a></li>
-        <li><a href="#differences">Differences</a></li>
-        <li><a href="#additional-kustomization-file-rules">Additional Kustomization file rules</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -344,213 +309,11 @@
 	<h1>Versioning Policy</h1>
 	
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/faq/kustomize/versioningpolicy/" />
-<p>Running <code>kustomize</code> means one is running a
-particular version of a program (a CLI), using a
-particular version of underlying packages (a Go
-API), and reading a particular version of a
-<a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> file.</p>
-<blockquote>
-<p>If you&rsquo;re having trouble with <code>go get</code>, please
-read  <a href="#go-api-versioning">Go API Versioning</a>
-and be patient.</p>
-</blockquote>
-<h2 id="cli-program-versioning">CLI Program Versioning</h2>
-<p>The command <code>kustomize version</code> prints a three
-field version tag (e.g. <code>v3.0.0</code>) that aspires to
-<a href="https://semver.org">semantic versioning</a>.</p>
-<p>This notion of semver applies only to the CLI;
-the command names, their arguments and their flags.</p>
-<p>The major version changes when some backward
-incompatibility appears in how the commands
-behave.</p>
-<h3 id="installation">Installation</h3>
-<p>See the <a href="INSTALL.md">installation docs</a>.</p>
-<h2 id="go-api-versioning">Go API Versioning</h2>
-<p>The public methods in the public packages
-of module <code>sigs.k8s.io/kustomize/api</code> constitute
-the <em>kustomize Go API</em>.</p>
-<h4 id="version-sigsk8siokustomizev3-and-earlier">Version sigs.k8s.io/kustomize/v3 and earlier</h4>
-<p>In <code>kustomize/v3</code> (and preceding major versions), the
-kustomize program and the API live the same Go
-module at <code>sigs.k8s.io/kustomize</code>, at <a href="https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher">import path</a>
-<code>sigs.k8s.io/kustomize/v3</code>.</p>
-<p>This has been fine for the CLI, but it presents a
-problem for the Go API.</p>
-<p>The process around Go modules, in particular the
-notion of <a href="https://research.swtch.com/vgo-mvs">minimal version selection</a>, demands
-that the module respect semver.</p>
-<p>Almost all the code in module
-<code>sigs.k8s.io/kustomize/v3</code> is exposed (not in a
-directory named <code>internal</code>).  Even a minor
-refactor changing a method name or argument type
-in some deeply buried (but still public) method is
-a backward incompatible change.  As a result, Go
-API semver hasn&rsquo;t been followed.  This was a mistake.</p>
-<p>Some options are</p>
-<ul>
-<li>
-<p>continue to ignore Go API semver and stick to
-CLI semver (eliminating the usefullness of
-minimal version selection),</p>
-</li>
-<li>
-<p>obey semver, and increment the module&rsquo;s major
-version number with every release (drastically
-reducing the usefullness of minimal version
-selection - since virtually all releases will
-be major),</p>
-</li>
-<li>
-<p>slow down change in the huge API in favor of
-stability, yet somehow continue to deliver
-features,</p>
-</li>
-<li>
-<p>drastically reduce the API surface, stabilize on
-semver there, and refactor as needed inside
-<code>internal</code>.</p>
-</li>
-</ul>
-<p>The last option seems the most appealing.</p>
-<h4 id="the-first-stable-api-version-is-coming">The first stable API version is coming</h4>
-<p>The first stable API version will launch
-as the Go module</p>
-<pre><code>sigs.k8s.io/kustomize/api
-</code></pre><p>The <em>kustomize</em> program itself (<code>main.go</code>
-and CLI specific code) will have moved out of
-<code>sigs.k8s.io/kustomize</code> and into the new module
-<code>sigs.k8s.io/kustomize/kustomize</code>.  This is a
-submodule in the same repo, and it will retain its
-current notion of semver (e.g. a backward
-incompatible change in command behavior will
-trigger a major version bump).  This module will
-not export packages; it&rsquo;s just home to a <code>main</code>
-package.</p>
-<p>The <code>sigs.k8s.io/kustomize/api</code> module will
-obey semver with a sustainable public
-surface, informed by current usage.  Clients
-should import packages from this module, i.e.
-from import paths prefixed by
-<code>sigs.k8s.io/kustomize/api/</code> at first,
-and later by <code>sigs.k8s.io/kustomize/api/v2/</code>.
-The kustomize binary
-itself is an API client requiring this module.</p>
-<p>The clients and API will evolve independently.</p>
-<h2 id="kustomization-file-versioning">Kustomization File Versioning</h2>
-<p>The kustomization file is a struct that is part of
-the kustomize Go API (the <code>sigs.k8s.io/kustomize</code>
-module), but it also evolves as a k8s API object -
-it has an <code>apiVersion</code> field containing its
-own version number.</p>
-<h3 id="field-change-policy">Field Change Policy</h3>
-<ul>
-<li>A field&rsquo;s meaning cannot be changed.</li>
-<li>A field may be deprecated, then removed.</li>
-<li>Deprecation means triggering a <em>minor</em> (semver)
-version bump in the kustomize Go API, and
-defining a migration path in a non-fatal error
-message.</li>
-<li>Removal means triggering a <em>major</em> (semver)
-version bump in the kustomize Go API, and fatal
-error if field encountered (as with any unknown
-field).  Likewise a change in <code>apiVersion</code>.</li>
-</ul>
-<h3 id="the-edit-fix-command">The <code>edit fix</code> Command</h3>
-<p>This <code>kustomize</code> command reads a Kustomization
-file, converts deprecated fields to new
-fields, and writes it out again in the latest
-format.</p>
-<p>This is a type version upgrade mechanism that
-works within <em>major</em> API revisions.  There is no
-downgrade capability, as there&rsquo;s no use case for
-it (see discussion below).</p>
-<h3 id="examples">Examples</h3>
-<p>With the 2.0.0 release, there were three field
-removals:</p>
-<ul>
-<li><code>imageTag</code> was deprecated when <code>images</code> was
-introduced, because the latter offers more
-general features for image data manipulation.
-<code>imageTag</code> was removed in v2.0.0.</li>
-<li><code>patches</code> was deprecated and replaced by
-<code>patchesStrategicMerge</code> when <code>patchesJson6902</code>
-was introduced, to make a clearer
-distinction between patch specification formats.
-<code>patches</code> was removed in v2.0.0.</li>
-<li><code>secretGenerator/commands</code> was removed
-due to security concerns in v2.0.0
-with no deprecation period.</li>
-</ul>
-<p>The <code>edit fix</code> command in a v2.0.x binary
-will no longer recognize these fields.</p>
-<h2 id="relationship-to-the-k8s-api">Relationship to the k8s API</h2>
-<h3 id="review-of-k8s-api-versioning">Review of k8s API versioning</h3>
-<p>The k8s API has specific <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md">conventions</a> and a
-process for making <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md">changes</a>.</p>
-<p>The presence of an <code>apiVersion</code> field in a k8s
-native type signals:</p>
-<ul>
-<li>its reliability level (alpha vs beta vs
-generally available),</li>
-<li>the existence of code to provide default values
-to fields not present in a serialization,</li>
-<li>the existence of code to provide both forward
-and backward conversion between different
-versions of types.</li>
-</ul>
-<p>The k8s API promises a lossless <em>conversion</em>
-between versions over a specific range.  This
-means that a recent client can write an object
-bearing the newest possible value for its version,
-the server will accept it and store it in
-&ldquo;versionless&rdquo; JSON form in storage, and can
-convert it to a range of older versions should
-an older client request data.</p>
-<p>For native k8s types, this all requires writing Go
-code in the kubernetes core repo, to provide
-defaulting and conversions.</p>
-<p>For CRDs, there&rsquo;s a <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/customresources-versioning.md">proposal</a> on how to manage
-versioning (e.g. a remote service can offer type
-defaulting and conversions).</p>
-<h3 id="differences">Differences</h3>
-<ul>
-<li>A k8s API server is able to go <em>forward</em> and
-<em>backward</em> in versioning, to work with older
-clients, over <a href="https://kubernetes.io/docs/reference/using-api/deprecation-policy">some range</a>.</li>
-<li>The <code>kustomize edit fix</code> command only moves
-<em>forward</em> within a <em>major</em> API
-version.</li>
-</ul>
-<p>At the time of writing, the YAML in a
-kustomization file does not represent a <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md">k8s API</a>
-object, and the kustomize command and associated
-library is neither a server of, nor a client to,
-the k8s API.</p>
-<h3 id="additional-kustomization-file-rules">Additional Kustomization file rules</h3>
-<p>In addition to the <a href="#field-change-policy">field change policy</a> described
-above, kustomization files conform to
-the following rules.</p>
-<h4 id="eschew-classic-k8s-fields">Eschew classic k8s fields</h4>
-<p>Field names with dedicated meaning in k8s
-(<code>metadata</code>, <code>spec</code>, <code>status</code>, etc.)  aren&rsquo;t used.
-This is enforced via code review.</p>
-<h4 id="default-values-for-k8s-kind-and-apiversion">Default values for k8s <code>kind</code> and <code>apiVersion</code></h4>
-<p>In <code>v3</code> or below, the two <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources">special</a> k8s
-resource fields <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds"><code>kind</code></a> and <a href="https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-versioning"><code>apiVersion</code></a> may
-be omitted from the kustomization file.</p>
-<p>If either field is present, they both must be.
-If present, the value of <code>kind</code> must be:</p>
-<blockquote>
-<pre><code>kind: Kustomization
-</code></pre></blockquote>
-<p>If missing, the value of <code>apiVersion</code> defaults to</p>
-<blockquote>
-<pre><code>apiVersion: kustomize.config.k8s.io/v1beta1
-</code></pre></blockquote>
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 
