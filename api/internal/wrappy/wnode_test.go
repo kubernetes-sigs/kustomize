@@ -1,14 +1,16 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package wrappy_test
+package wrappy
 
 import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"sigs.k8s.io/kustomize/api/resid"
+
 	"gopkg.in/yaml.v3"
-	. "sigs.k8s.io/kustomize/api/internal/wrappy"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -335,5 +337,217 @@ func TestGettingFields(t *testing.T) {
 	v, ok = actualMap["greeting"]
 	if !ok || v != "Take me to your leader." {
 		t.Fatalf("unexpected annotations '%v'", actualMap)
+	}
+}
+
+func TestGetFieldValueReturnsMap(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := map[string]interface{}{
+		"fruit":  "apple",
+		"veggie": "carrot",
+	}
+	actual, err := wn.GetFieldValue("metadata.labels")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+}
+
+func TestGetFieldValueReturnsSlice(t *testing.T) {
+	bytes, err := yaml.Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rNode, err := kyaml.Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	wn := FromRNode(rNode)
+	expected := []interface{}{"idx0", "idx1", "idx2", "idx3"}
+	actual, err := wn.GetFieldValue("that")
+	if err != nil {
+		t.Fatalf("error getting slice: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
+	}
+}
+
+func TestGetFieldValueReturnsString(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	actual, err := wn.GetFieldValue("metadata.labels.fruit")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	v, ok := actual.(string)
+	if !ok || v != "apple" {
+		t.Fatalf("unexpected value '%v'", actual)
+	}
+}
+
+func TestGetFieldValueResolvesAlias(t *testing.T) {
+	yamlWithAlias := `
+foo: &a theValue
+bar: *a
+`
+	rNode, err := kyaml.Parse(yamlWithAlias)
+	if err != nil {
+		t.Fatalf("unexpected yaml parse error: %v", err)
+	}
+	wn := FromRNode(rNode)
+	actual, err := wn.GetFieldValue("bar")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	v, ok := actual.(string)
+	if !ok || v != "theValue" {
+		t.Fatalf("unexpected value '%v'", actual)
+	}
+}
+
+func TestGetString(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := "carrot"
+	actual, err := wn.GetString("metadata.labels.veggie")
+	if err != nil {
+		t.Fatalf("error getting string: %v", err)
+	}
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestGetSlice(t *testing.T) {
+	bytes, err := yaml.Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rNode, err := kyaml.Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	wn := FromRNode(rNode)
+	expected := []interface{}{"idx0", "idx1", "idx2", "idx3"}
+	actual, err := wn.GetSlice("that")
+	if err != nil {
+		t.Fatalf("error getting slice: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
+	}
+}
+
+func TestMap(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentLittleJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+
+	expected := map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "homer",
+			"namespace": "simpsons",
+		},
+	}
+
+	actual := wn.Map()
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+}
+
+func TestSetName(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	wn.SetName("marge")
+	if expected, actual := "marge", wn.GetName(); expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestSetNamespace(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	wn.SetNamespace("flanders")
+	meta, _ := wn.node.GetMeta()
+	if expected, actual := "flanders", meta.Namespace; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestSetLabels(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	wn.SetLabels(map[string]string{
+		"label1": "foo",
+		"label2": "bar",
+	})
+	labels := wn.GetLabels()
+	if expected, actual := 2, len(labels); expected != actual {
+		t.Fatalf("expected '%d', got '%d'", expected, actual)
+	}
+	if expected, actual := "foo", labels["label1"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "bar", labels["label2"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestGetAnnotations(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	wn.SetAnnotations(map[string]string{
+		"annotation1": "foo",
+		"annotation2": "bar",
+	})
+	annotations := wn.GetAnnotations()
+	if expected, actual := 2, len(annotations); expected != actual {
+		t.Fatalf("expected '%d', got '%d'", expected, actual)
+	}
+	if expected, actual := "foo", annotations["annotation1"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "bar", annotations["annotation2"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestSetGvk(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	wn.SetGvk(resid.GvkFromString("grp_ver_knd"))
+	gvk := wn.GetGvk()
+	if expected, actual := "grp", gvk.Group; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "ver", gvk.Version; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "knd", gvk.Kind; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
 }
