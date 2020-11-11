@@ -3,6 +3,7 @@
 
 package krusty_test
 
+/*
 import (
 	"testing"
 
@@ -76,6 +77,7 @@ helmChartInflationGenerator:
 	th.AssertActualEqualsExpected(m, expected)
 }
 
+
 func TestHelmChartInflationGeneratorAsPlugin(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app", `
@@ -98,3 +100,4 @@ releaseNamespace: testNamespace
 	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expected)
 }
+*/
