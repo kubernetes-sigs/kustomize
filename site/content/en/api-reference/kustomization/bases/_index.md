@@ -8,11 +8,4 @@ description: >
 
 <meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/bases/" />
 
-{{% pageinfo color="warning" %}}
-The `bases` field was deprecated in v2.1.0
-{{% /pageinfo %}}
-
-Move entries into the [resources](/kustomize/api-reference/kustomization/resources)
-field.  This allows bases - which are still a
-[central concept](/kustomize/api-reference/glossary#base) - to be
-ordered relative to other input resources.
+Moved to https://github.com/kubernetes-sigs/cli-experimental
