@@ -359,7 +359,7 @@ func (rs *ResourceSchema) PatchStrategyAndKeyList() (string, []string) {
 
 	mkList, found := rs.Schema.Extensions[kubernetesMergeKeyMapList]
 	if found {
-		//mkList is []interface, convert to []string
+		// mkList is []interface, convert to []string
 		mkListStr := make([]string, len(mkList.([]interface{})))
 
 		for i, v := range mkList.([]interface{}) {
