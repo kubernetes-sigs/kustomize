@@ -395,9 +395,9 @@ func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 }
 
 const (
-	// kubernetesAPIAssetName is the name of the asset containing the statically compiled in
-	// OpenAPI definitions for Kubernetes built-in types
-	kubernetesAPIAssetName = "kubernetesapi/swagger.json"
+	// kubernetesAPIDefaultVersion is the latest version number of the statically compiled in
+	// OpenAPI schema for kubernetes built-in types
+	kubernetesAPIDefaultVersion = kubernetesapi.DefaultOpenApi
 
 	// kustomizationAPIAssetName is the name of the asset containing the statically compiled in
 	// OpenAPI definitions for Kustomization built-in types
@@ -436,7 +436,8 @@ func initSchema() {
 		}
 
 		// parse the swagger, this should never fail
-		if err := parse(kubernetesapi.MustAsset(kubernetesAPIAssetName)); err != nil {
+		assetName := "kubernetesapi/" + kubernetesAPIDefaultVersion + "/swagger.json"
+		if err := parse(kubernetesapi.OpenApiMustAsset[kubernetesAPIDefaultVersion](assetName)); err != nil {
 			// this should never happen
 			panic(err)
 		}
