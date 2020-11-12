@@ -30,3 +30,11 @@ func WrapPrefixf(err interface{}, msg string, args ...interface{}) error {
 func Errorf(msg string, args ...interface{}) error {
 	return goerrors.Wrap(fmt.Errorf(msg, args...), 1)
 }
+
+// GetStack returns a stack trace for the error if it has one
+func GetStack(err error) string {
+	if e, ok := err.(*goerrors.Error); ok {
+		return string(e.Stack())
+	}
+	return ""
+}

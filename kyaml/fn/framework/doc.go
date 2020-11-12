@@ -4,7 +4,72 @@
 // Package framework contains a framework for writing functions in go.  The function spec
 // is defined at: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 //
-// Examples
+// Functions are executables which generate, modify, delete or validate Kubernetes resources.
+// They are often used used to implement abstractions ("kind: JavaSpringBoot") and
+// cross-cutting logic ("kind: SidecarInjector").
+//
+// Functions may be run as standalone executables or invoked as part of an orchestrated
+// pipeline (e.g. kustomize).
+//
+// Example standalone usage
+//
+// Function template input:
+//
+//    # config.yaml -- this is the input to the template
+//    apiVersion: example.com/v1alpha1
+//    kind: Example
+//    Key: a
+//    Value: b
+//
+// Additional function inputs:
+//
+//    # patch.yaml -- this will be applied as a patch
+//    apiVersion: apps/v1
+//    kind: Deployment
+//    metadata:
+//      name: foo
+//      namespace: default
+//      annotations:
+//        patch-key: patch-value
+//
+// Manually run the function:
+//
+//    # build the function
+//    $ go build example-fn/
+//
+//    # run the function using the
+//    $ ./example-fn config.yaml patch.yaml
+//
+// Go implementation
+//
+//   // example-fn/main.go
+//   func main() {
+//
+//     // Define the template used to generate resources
+//     tc := framework.TemplateCommand{
+//       Merge: true, // apply inputs as patches to the template output
+//       API: &struct {
+//         Key   string `json:"key" yaml:"key"`
+//         Value string `json:"value" yaml:"value"`
+//       }{},
+//       Template: template.Must(template.New("example").Parse(`
+//   apiVersion: apps/v1
+//   kind: Deployment
+//   metadata:
+//     name: foo
+//     namespace: default
+//     annotations:
+//       {{ .Key }}: {{ .Value }}
+//   `))}
+//
+//     // Run the command
+//     if err := tc.GetCommand().Execute(); err != nil {
+//       fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+//       os.Exit(1)
+//     }
+//  }
+//
+// More Examples
 //
 // Example function implementation using framework.Command with flag input
 //
@@ -113,7 +178,7 @@
 //
 // Building a container image for the function
 //
-// The go program must be built into a container to be run as a function.  The framework
+// The go program may be built into a container and run as a function.  The framework
 // can be used to generate a Dockerfile to build the function container.
 //
 //   # create the ./Dockerfile for the container
