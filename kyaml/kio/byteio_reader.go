@@ -43,6 +43,7 @@ type ByteReadWriter struct {
 
 	Results *yaml.RNode
 
+	NoWrap             bool
 	WrappingAPIVersion string
 	WrappingKind       string
 }
@@ -53,10 +54,15 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
 	}
 	val, err := b.Read()
-	rw.FunctionConfig = b.FunctionConfig
+	if rw.FunctionConfig == nil {
+		rw.FunctionConfig = b.FunctionConfig
+	}
 	rw.Results = b.Results
-	rw.WrappingAPIVersion = b.WrappingAPIVersion
-	rw.WrappingKind = b.WrappingKind
+
+	if !rw.NoWrap {
+		rw.WrappingAPIVersion = b.WrappingAPIVersion
+		rw.WrappingKind = b.WrappingKind
+	}
 	return val, errors.Wrap(err)
 }
 

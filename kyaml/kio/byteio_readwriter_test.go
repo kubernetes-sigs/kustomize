@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestByteReadWriter(t *testing.T) {
@@ -225,6 +226,68 @@ metadata:
     config.kubernetes.io/index: '1'
 `,
 			instance: kio.ByteReadWriter{KeepReaderAnnotations: true},
+		},
+
+		{
+			name: "manual_override_wrap",
+			input: `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+functionConfig:
+  a: b # something
+`,
+			expectedOutput: `
+kind: Deployment
+spec:
+  replicas: 1
+---
+kind: Service
+spec:
+  selectors:
+    foo: bar
+`,
+			instance: kio.ByteReadWriter{NoWrap: true},
+		},
+
+		{
+			name: "manual_override_function_config",
+			input: `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+functionConfig:
+  a: b # something
+`,
+			expectedOutput: `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+functionConfig:
+  c: d
+`,
+			instance: kio.ByteReadWriter{FunctionConfig: yaml.MustParse(`c: d`)},
 		},
 	}
 
