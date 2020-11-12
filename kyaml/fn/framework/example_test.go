@@ -6,6 +6,8 @@ package framework_test
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
+	"text/template"
 
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -536,4 +538,68 @@ items:
 	//     field:
 	//       path: spec.field
 	//       suggestedValue: "1"
+}
+
+// ExampleTemplateCommand provides an example for using the TemplateCommand
+func ExampleTemplateCommand() {
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: &struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+		}{},
+		// Template
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+`)),
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
+
+// ExampleTemplateCommand_files provides an example for using the TemplateCommand
+func ExampleTemplateCommand_files() {
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: &struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+		}{},
+		// Template
+		TemplatesFiles: []string{filepath.Join("testdata", "templatefiles", "deployment.template")},
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "templatefiles", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
 }
