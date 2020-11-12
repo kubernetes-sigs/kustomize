@@ -1,0 +1,7 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
