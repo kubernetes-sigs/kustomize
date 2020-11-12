@@ -10,7 +10,7 @@ import (
 )
 
 // NewCmdSet returns an instance of 'set' subcommand.
-func NewCmdSet(fSys filesys.FileSystem, v ifc.Validator) *cobra.Command {
+func NewCmdSet(fSys filesys.FileSystem, ldr ifc.KvLoader, v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "set",
 		Short: "Sets the value of different fields in kustomization file.",
@@ -31,6 +31,7 @@ func NewCmdSet(fSys filesys.FileSystem, v ifc.Validator) *cobra.Command {
 		newCmdSetNamespace(fSys, v),
 		newCmdSetImage(fSys),
 		newCmdSetReplicas(fSys),
+		newCmdSetLabel(fSys, ldr.Validator().MakeLabelValidator()),
 	)
 	return c
 }
