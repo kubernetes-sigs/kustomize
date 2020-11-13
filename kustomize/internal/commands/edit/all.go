@@ -40,7 +40,10 @@ func NewCmdEdit(
 			fSys,
 			kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), v),
 			kf),
-		set.NewCmdSet(fSys, v),
+		set.NewCmdSet(
+			fSys,
+			kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), v),
+			v),
 		fix.NewCmdFix(fSys),
 		remove.NewCmdRemove(fSys, v),
 	)
