@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,7 +29,8 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Kustomize Components">
 <meta itemprop="description" content="Kustomize components guide
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Kustomize Components"/>
 <meta name="twitter:description" content="Kustomize components guide
 "/>
@@ -38,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -392,340 +393,9 @@
 <div class="td-content">
 	<h1>Kustomize Components</h1>
 	<div class="lead">Kustomize components guide</div>
-	<p>As of <code>v3.7.0</code> Kustomize supports a special type of kustomization that allows
-one to define reusable pieces of configuration logic that can be included from
-multiple overlays.</p>
-<p>Components come in handy when dealing with applications that support multiple
-optional features and you wish to enable only a subset of them in different
-overlays, i.e., different features for different environments or audiences.</p>
-<p>For more details regarding this feature you can read the
-<a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/1802-kustomize-components.md">Kustomize Components KEP</a>.</p>
-<h2 id="use-case">Use case</h2>
-<p>Suppose you&rsquo;ve written a very simple Web application:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example<span style="color:#000;font-weight:bold">:</span><span style="color:#0000cf;font-weight:bold">1.0</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>You want to deploy a <strong>community</strong> edition of this application as SaaS, so you
-add support for persistence (e.g. an external database), and bot detection
-(e.g. Google reCAPTCHA).</p>
-<p>You&rsquo;ve now attracted <strong>enterprise</strong> customers who want to deploy it
-on-premises, so you add LDAP support, and disable Google reCAPTCHA. At the same
-time, the <strong>devs</strong> need to be able to test parts of the application, so they
-want to deploy it with some features enabled and others not.</p>
-<p>Here&rsquo;s a matrix with the deployments of this application and the features
-enabled for each one:</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th align="center">External DB</th>
-<th align="center">LDAP</th>
-<th align="center">reCAPTCHA</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Community</td>
-<td align="center">✔️</td>
-<td align="center"></td>
-<td align="center">✔️</td>
-</tr>
-<tr>
-<td>Enterprise</td>
-<td align="center">✔️</td>
-<td align="center">✔️</td>
-<td align="center"></td>
-</tr>
-<tr>
-<td>Dev</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
-</tr>
-</tbody>
-</table>
-<p>(✔️ enabled, ✅: optional)</p>
-<p>So, you want to make it easy to deploy your application in any of the above
-three environments. Here&rsquo;s how you can do this with Kustomize components: each
-opt-in feature gets packaged as a component, so that it can be referred to from
-multiple higher-level overlays.</p>
-<p>First, define a place to work:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">DEMO_HOME</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span>mktemp -d<span style="color:#204a87;font-weight:bold">)</span>
-</code></pre></div><p>Define a common <strong>base</strong> that has a <code>Deployment</code> and a simple <code>ConfigMap</code>, that
-is mounted on the application&rsquo;s container.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">BASE</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/base
-mkdir <span style="color:#000">$BASE</span>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/config_management/components/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$BASE/kustomization.yaml
-</span><span style="color:#4e9a06">resources:
-</span><span style="color:#4e9a06">- deployment.yaml
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">configMapGenerator:
-</span><span style="color:#4e9a06">- name: conf
-</span><span style="color:#4e9a06">  literals:
-</span><span style="color:#4e9a06">    - main.conf=|
-</span><span style="color:#4e9a06">        color=cornflower_blue
-</span><span style="color:#4e9a06">        log_level=info
-</span><span style="color:#4e9a06">EOF</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$BASE/deployment.yaml
-</span><span style="color:#4e9a06">apiVersion: apps/v1
-</span><span style="color:#4e9a06">kind: Deployment
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: example
-</span><span style="color:#4e9a06">spec:
-</span><span style="color:#4e9a06">  template:
-</span><span style="color:#4e9a06">    spec:
-</span><span style="color:#4e9a06">      containers:
-</span><span style="color:#4e9a06">      - name: example
-</span><span style="color:#4e9a06">        image: example:1.0
-</span><span style="color:#4e9a06">        volumeMounts:
-</span><span style="color:#4e9a06">        - name: conf
-</span><span style="color:#4e9a06">          mountPath: /etc/config
-</span><span style="color:#4e9a06">      volumes:
-</span><span style="color:#4e9a06">        - name: conf
-</span><span style="color:#4e9a06">          configMap:
-</span><span style="color:#4e9a06">            name: conf
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Define an <code>external_db</code> component, using <code>kind: Component</code>, that creates a
-<code>Secret</code> for the DB password and a new entry in the <code>ConfigMap</code>:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">EXT_DB</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/components/external_db
-mkdir -p <span style="color:#000">$EXT_DB</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$EXT_DB/kustomization.yaml
-</span><span style="color:#4e9a06">apiVersion: kustomize.config.k8s.io/v1alpha1  # &lt;-- Component notation
-</span><span style="color:#4e9a06">kind: Component
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">secretGenerator:
-</span><span style="color:#4e9a06">- name: dbpass
-</span><span style="color:#4e9a06">  files:
-</span><span style="color:#4e9a06">    - dbpass.txt
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">patchesStrategicMerge:
-</span><span style="color:#4e9a06">  - configmap.yaml
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">patchesJson6902:
-</span><span style="color:#4e9a06">- target:
-</span><span style="color:#4e9a06">    group: apps
-</span><span style="color:#4e9a06">    version: v1
-</span><span style="color:#4e9a06">    kind: Deployment
-</span><span style="color:#4e9a06">    name: example
-</span><span style="color:#4e9a06">  path: deployment.yaml
-</span><span style="color:#4e9a06">EOF</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$EXT_DB/deployment.yaml
-</span><span style="color:#4e9a06">- op: add
-</span><span style="color:#4e9a06">  path: /spec/template/spec/volumes/0
-</span><span style="color:#4e9a06">  value:
-</span><span style="color:#4e9a06">    name: dbpass
-</span><span style="color:#4e9a06">    secret:
-</span><span style="color:#4e9a06">      secretName: dbpass
-</span><span style="color:#4e9a06">- op: add
-</span><span style="color:#4e9a06">  path: /spec/template/spec/containers/0/volumeMounts/0
-</span><span style="color:#4e9a06">  value:
-</span><span style="color:#4e9a06">    mountPath: /var/run/secrets/db/
-</span><span style="color:#4e9a06">    name: dbpass
-</span><span style="color:#4e9a06">EOF</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$EXT_DB/configmap.yaml
-</span><span style="color:#4e9a06">apiVersion: v1
-</span><span style="color:#4e9a06">kind: ConfigMap
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: conf
-</span><span style="color:#4e9a06">data:
-</span><span style="color:#4e9a06">  db.conf: |
-</span><span style="color:#4e9a06">    endpoint=127.0.0.1:1234
-</span><span style="color:#4e9a06">    name=app
-</span><span style="color:#4e9a06">    user=admin
-</span><span style="color:#4e9a06">    pass=/var/run/secrets/db/dbpass.txt
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Define an <code>ldap</code> component, that creates a <code>Secret</code> for the LDAP password
-and a new entry in the <code>ConfigMap</code>:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">LDAP</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/components/ldap
-mkdir -p <span style="color:#000">$LDAP</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$LDAP/kustomization.yaml
-</span><span style="color:#4e9a06">apiVersion: kustomize.config.k8s.io/v1alpha1
-</span><span style="color:#4e9a06">kind: Component
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">secretGenerator:
-</span><span style="color:#4e9a06">- name: ldappass
-</span><span style="color:#4e9a06">  files:
-</span><span style="color:#4e9a06">    - ldappass.txt
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">patchesStrategicMerge:
-</span><span style="color:#4e9a06">  - configmap.yaml
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">patchesJson6902:
-</span><span style="color:#4e9a06">- target:
-</span><span style="color:#4e9a06">    group: apps
-</span><span style="color:#4e9a06">    version: v1
-</span><span style="color:#4e9a06">    kind: Deployment
-</span><span style="color:#4e9a06">    name: example
-</span><span style="color:#4e9a06">  path: deployment.yaml
-</span><span style="color:#4e9a06">EOF</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$LDAP/deployment.yaml
-</span><span style="color:#4e9a06">- op: add
-</span><span style="color:#4e9a06">  path: /spec/template/spec/volumes/0
-</span><span style="color:#4e9a06">  value:
-</span><span style="color:#4e9a06">    name: ldappass
-</span><span style="color:#4e9a06">    secret:
-</span><span style="color:#4e9a06">      secretName: ldappass
-</span><span style="color:#4e9a06">- op: add
-</span><span style="color:#4e9a06">  path: /spec/template/spec/containers/0/volumeMounts/0
-</span><span style="color:#4e9a06">  value:
-</span><span style="color:#4e9a06">    mountPath: /var/run/secrets/ldap/
-</span><span style="color:#4e9a06">    name: ldappass
-</span><span style="color:#4e9a06">EOF</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$LDAP/configmap.yaml
-</span><span style="color:#4e9a06">apiVersion: v1
-</span><span style="color:#4e9a06">kind: ConfigMap
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: conf
-</span><span style="color:#4e9a06">data:
-</span><span style="color:#4e9a06">  ldap.conf: |
-</span><span style="color:#4e9a06">    endpoint=ldap://ldap.example.com
-</span><span style="color:#4e9a06">    bindDN=cn=admin,dc=example,dc=com
-</span><span style="color:#4e9a06">    pass=/var/run/secrets/ldap/ldappass.txt
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Define a <code>recaptcha</code> component, that creates a <code>Secret</code> for the reCAPTCHA
-site/secret keys and a new entry in the <code>ConfigMap</code>:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">RECAPTCHA</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/components/recaptcha
-mkdir -p <span style="color:#000">$RECAPTCHA</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$RECAPTCHA/kustomization.yaml
-</span><span style="color:#4e9a06">apiVersion: kustomize.config.k8s.io/v1alpha1
-</span><span style="color:#4e9a06">kind: Component
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">secretGenerator:
-</span><span style="color:#4e9a06">- name: recaptcha
-</span><span style="color:#4e9a06">  files:
-</span><span style="color:#4e9a06">    - site_key.txt
-</span><span style="color:#4e9a06">    - secret_key.txt
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06"># Updating the ConfigMap works with generators as well.
-</span><span style="color:#4e9a06">configMapGenerator:
-</span><span style="color:#4e9a06">- name: conf
-</span><span style="color:#4e9a06">  behavior: merge
-</span><span style="color:#4e9a06">  literals:
-</span><span style="color:#4e9a06">    - recaptcha.conf=|
-</span><span style="color:#4e9a06">        enabled=true
-</span><span style="color:#4e9a06">        site_key=/var/run/secrets/recaptcha/site_key.txt
-</span><span style="color:#4e9a06">        secret_key=/var/run/secrets/recaptcha/secret_key.txt
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">patchesJson6902:
-</span><span style="color:#4e9a06">- target:
-</span><span style="color:#4e9a06">    group: apps
-</span><span style="color:#4e9a06">    version: v1
-</span><span style="color:#4e9a06">    kind: Deployment
-</span><span style="color:#4e9a06">    name: example
-</span><span style="color:#4e9a06">  path: deployment.yaml
-</span><span style="color:#4e9a06">EOF</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$RECAPTCHA/deployment.yaml
-</span><span style="color:#4e9a06">- op: add
-</span><span style="color:#4e9a06">  path: /spec/template/spec/volumes/0
-</span><span style="color:#4e9a06">  value:
-</span><span style="color:#4e9a06">    name: recaptcha
-</span><span style="color:#4e9a06">    secret:
-</span><span style="color:#4e9a06">      secretName: recaptcha
-</span><span style="color:#4e9a06">- op: add
-</span><span style="color:#4e9a06">  path: /spec/template/spec/containers/0/volumeMounts/0
-</span><span style="color:#4e9a06">  value:
-</span><span style="color:#4e9a06">    mountPath: /var/run/secrets/recaptcha/
-</span><span style="color:#4e9a06">    name: recaptcha
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Define a <code>community</code> variant, that bundles the external DB and reCAPTCHA
-components:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">COMMUNITY</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/overlays/community
-mkdir -p <span style="color:#000">$COMMUNITY</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$COMMUNITY/kustomization.yaml
-</span><span style="color:#4e9a06">apiVersion: kustomize.config.k8s.io/v1beta1
-</span><span style="color:#4e9a06">kind: Kustomization
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">resources:
-</span><span style="color:#4e9a06">  - ../../base
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">components:
-</span><span style="color:#4e9a06">  - ../../components/external_db
-</span><span style="color:#4e9a06">  - ../../components/recaptcha
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Define an <code>enterprise</code> overlay, that bundles the external DB and LDAP
-components:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">ENTERPRISE</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/overlays/enterprise
-mkdir -p <span style="color:#000">$ENTERPRISE</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$ENTERPRISE/kustomization.yaml
-</span><span style="color:#4e9a06">apiVersion: kustomize.config.k8s.io/v1beta1
-</span><span style="color:#4e9a06">kind: Kustomization
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">resources:
-</span><span style="color:#4e9a06">  - ../../base
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">components:
-</span><span style="color:#4e9a06">  - ../../components/external_db
-</span><span style="color:#4e9a06">  - ../../components/ldap
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Define a <code>dev</code> overlay, that points to all the components and has LDAP
-disabled:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#000">DEV</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO_HOME</span>/overlays/dev
-mkdir -p <span style="color:#000">$DEV</span>
-
-cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$DEV/kustomization.yaml
-</span><span style="color:#4e9a06">apiVersion: kustomize.config.k8s.io/v1beta1
-</span><span style="color:#4e9a06">kind: Kustomization
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">resources:
-</span><span style="color:#4e9a06">  - ../../base
-</span><span style="color:#4e9a06">
-</span><span style="color:#4e9a06">components:
-</span><span style="color:#4e9a06">  - ../../components/external_db
-</span><span style="color:#4e9a06">  #- ../../components/ldap
-</span><span style="color:#4e9a06">  - ../../components/recaptcha
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>Now, the workspace has the following directories:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">├── base
-│   ├── deployment.yaml
-│   └── kustomization.yaml
-├── components
-│   ├── external_db
-│   │   ├── configmap.yaml
-│   │   ├── dbpass.txt
-│   │   ├── deployment.yaml
-│   │   └── kustomization.yaml
-│   ├── ldap
-│   │   ├── configmap.yaml
-│   │   ├── deployment.yaml
-│   │   ├── kustomization.yaml
-│   │   └── ldappass.txt
-│   └── recaptcha
-│       ├── deployment.yaml
-│       ├── kustomization.yaml
-│       ├── secret_key.txt
-│       └── site_key.txt
-└── overlays
-    ├── community
-    │   └── kustomization.yaml
-    ├── dev
-    │   └── kustomization.yaml
-    └── enterprise
-        └── kustomization.yaml
-</code></pre></div><p>With this structure, you can generate the YAML manifests for each deployment
-using <code>kustomize build</code>:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kustomize build overlays/community
-kustomize build overlays/enterprise
-kustomize build overlays/dev
-</code></pre></div>
         <div class="section-index">
     
     
@@ -756,7 +426,7 @@ kustomize build overlays/dev
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 6, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/1b531c6ac737065d574a9c9f2cdf98cf2873c79e">docs: Add guide for components (1b531c6a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

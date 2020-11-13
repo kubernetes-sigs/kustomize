@@ -60,35 +60,32 @@ func (e ExecuteCmdOnPkgs) Execute() error {
 	}
 
 	for i := range pkgsPaths {
-		pkgPath := pkgsPaths[i]
-		// Add schema present in openAPI file for current package
-		if e.NeedOpenAPI {
-			if err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName())); err != nil {
-				return err
-			}
-		}
-
-		if !e.SkipPkgPathPrint {
-			fmt.Fprintf(e.Writer, "%s/\n", pkgPath)
-		}
-
-		err := e.CmdRunner.ExecuteCmd(e.Writer, pkgPath)
+		err := e.processPkg(pkgsPaths[i])
 		if err != nil {
 			return err
 		}
-
 		if i != len(pkgsPaths)-1 {
 			fmt.Fprint(e.Writer, "\n")
 		}
-
-		// Delete schema present in openAPI file for current package
-		if e.NeedOpenAPI {
-			if err := openapi.DeleteSchemaInFile(filepath.Join(pkgPath, ext.KRMFileName())); err != nil {
-				return err
-			}
-		}
 	}
 	return nil
+}
+
+func (e ExecuteCmdOnPkgs) processPkg(pkgPath string) error {
+	// Add schema present in openAPI file for current package
+	if e.NeedOpenAPI {
+		clean, err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName()))
+		if err != nil {
+			return err
+		}
+		defer clean()
+	}
+
+	if !e.SkipPkgPathPrint {
+		fmt.Fprintf(e.Writer, "%s/\n", pkgPath)
+	}
+
+	return e.CmdRunner.ExecuteCmd(e.Writer, pkgPath)
 }
 
 // ParseFieldPath parse a flag value into a field path

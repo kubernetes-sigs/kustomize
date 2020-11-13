@@ -6,12 +6,7 @@ description: >
     Adds namespace to all resources.
 ---
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/namespace/" />
 
-namespace: my-namespace
-```
 
-Will override the existing namespace if it is set on a resource, or add it
-if it is not set on a resource.
+Moved to https://github.com/kubernetes-sigs/cli-experimental

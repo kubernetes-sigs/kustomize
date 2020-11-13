@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filtersutil"
@@ -20,9 +19,9 @@ import (
 type PatchJson6902TransformerPlugin struct {
 	ldr          ifc.Loader
 	decodedPatch jsonpatch.Patch
-	Target       types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
-	Path         string            `json:"path,omitempty" yaml:"path,omitempty"`
-	JsonOp       string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
+	Target       *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+	Path         string          `json:"path,omitempty" yaml:"path,omitempty"`
+	JsonOp       string          `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 }
 
 func (p *PatchJson6902TransformerPlugin) Config(
@@ -72,22 +71,22 @@ func (p *PatchJson6902TransformerPlugin) Config(
 }
 
 func (p *PatchJson6902TransformerPlugin) Transform(m resmap.ResMap) error {
-	id := resid.NewResIdWithNamespace(
-		resid.Gvk{
-			Group:   p.Target.Group,
-			Version: p.Target.Version,
-			Kind:    p.Target.Kind,
-		},
-		p.Target.Name,
-		p.Target.Namespace,
-	)
-	obj, err := m.GetById(id)
+	if p.Target == nil {
+		return fmt.Errorf("must specify a target for patch %s", p.JsonOp)
+	}
+	resources, err := m.Select(*p.Target)
 	if err != nil {
 		return err
 	}
-	return filtersutil.ApplyToJSON(patchjson6902.Filter{
-		Patch: p.JsonOp,
-	}, obj)
+	for _, res := range resources {
+		err = filtersutil.ApplyToJSON(patchjson6902.Filter{
+			Patch: p.JsonOp,
+		}, res)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func NewPatchJson6902TransformerPlugin() resmap.TransformerPlugin {

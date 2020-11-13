@@ -6,6 +6,17 @@
 MYGOBIN := $(shell go env GOPATH)/bin
 SHELL := /bin/bash
 export PATH := $(MYGOBIN):$(PATH)
+MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
+
+# Provide defaults for REPO_OWNER and REPO_NAME if not present.
+# Typically these values would be provided by Prow.
+ifndef REPO_OWNER
+REPO_OWNER := "kubernetes-sigs"
+endif
+
+ifndef REPO_NAME
+REPO_NAME := "kustomize"
+endif
 
 .PHONY: all
 all: verify-kustomize
@@ -15,8 +26,7 @@ verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.8.0 \
-	test-examples-kustomize-against-3.8.2
+	test-examples-kustomize-against-3.8.6
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -27,8 +37,11 @@ prow-presubmit-check: \
 	test-unit-cmd-all \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.8.0 \
-	test-examples-kustomize-against-3.8.2
+	test-examples-kustomize-against-3.8.6
+
+# test-multi-module \
+# Temporarily removed from prow-presubmit-check
+# See https://github.com/kubernetes-sigs/kustomize/issues/3191
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
@@ -91,7 +104,8 @@ install-tools: \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/prchecker \
-	$(MYGOBIN)/stringer
+	$(MYGOBIN)/stringer \
+	$(MYGOBIN)/helm
 
 ### Begin kustomize plugin rules.
 #
@@ -133,7 +147,8 @@ _builtinplugins = \
 	PrefixSuffixTransformer.go \
 	ReplicaCountTransformer.go \
 	SecretGenerator.go \
-	ValueAddTransformer.go
+	ValueAddTransformer.go \
+	HelmChartInflationGenerator.go
 
 # Maintaining this explicit list of generated files, and
 # adding it as a dependency to a few targets, to assure
@@ -159,6 +174,7 @@ $(pGen)/PrefixSuffixTransformer.go: $(pSrc)/prefixsuffixtransformer/PrefixSuffix
 $(pGen)/ReplicaCountTransformer.go: $(pSrc)/replicacounttransformer/ReplicaCountTransformer.go
 $(pGen)/SecretGenerator.go: $(pSrc)/secretgenerator/SecretGenerator.go
 $(pGen)/ValueAddTransformer.go: $(pSrc)/valueaddtransformer/ValueAddTransformer.go
+$(pGen)/HelmChartInflationGenerator.go: $(pSrc)/helmchartinflationgenerator/HelmChartInflationGenerator.go
 
 # The (verbose but portable) Makefile way to convert to lowercase.
 toLowerCase = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
@@ -221,10 +237,23 @@ test-unit-kustomize-all: \
 	test-unit-kustomize-plugins
 
 test-unit-cmd-all:
-	./travis/kyaml-pre-commit.sh
+	./scripts/kyaml-pre-commit.sh
 
 test-go-mod:
-	./travis/check-go-mod.sh
+	./scripts/check-go-mod.sh
+
+# Environment variables are defined at
+# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
+.PHONY: test-multi-module
+test-multi-module: $(MYGOBIN)/prchecker
+	( \
+		export MYGOBIN=$(MYGOBIN); \
+		export REPO_OWNER=$(REPO_OWNER); \
+		export REPO_NAME=$(REPO_NAME); \
+		export PULL_NUMBER=$(PULL_NUMBER); \
+		export MODULES=$(MODULES); \
+		./scripts/check-multi-module.sh; \
+	)
 
 .PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
@@ -241,23 +270,10 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-3.8.0: $(MYGOBIN)/mdrip
+test-examples-kustomize-against-3.8.6: $(MYGOBIN)/mdrip
 	( \
 		set -e; \
-		tag=v3.8.0; \
-		/bin/rm -f $(MYGOBIN)/kustomize; \
-		echo "Installing kustomize $$tag."; \
-		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@$${tag}; \
-		./hack/testExamplesAgainstKustomize.sh $$tag; \
-		echo "Reinstalling kustomize from HEAD."; \
-		cd kustomize; go install .; \
-	)
-
-.PHONY:
-test-examples-kustomize-against-3.8.2: $(MYGOBIN)/mdrip
-	( \
-		set -e; \
-		tag=v3.8.2; \
+		tag=v3.8.6; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
 		echo "Installing kustomize $$tag."; \
 		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@$${tag}; \
@@ -304,16 +320,16 @@ $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.2.0-rc.1-linux-amd64.tar.gz; \
+		tgzFile=helm-v3.4.0-linux-amd64.tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
 		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
 
-# Default version of helm is v2 for the time being.
-$(MYGOBIN)/helm: $(MYGOBIN)/helmV2
-	ln -s $(MYGOBIN)/helmV2 $(MYGOBIN)/helm
+# Default version of helm is v3.
+$(MYGOBIN)/helm: $(MYGOBIN)/helmV3
+	ln -s $(MYGOBIN)/helmV3 $(MYGOBIN)/helm
 
 $(MYGOBIN)/kind:
 	( \

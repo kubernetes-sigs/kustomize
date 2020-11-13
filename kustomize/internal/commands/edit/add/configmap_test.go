@@ -110,3 +110,41 @@ func TestMergeFlagsIntoConfigMapArgs_EnvSource(t *testing.T) {
 		t.Fatalf("expected env2")
 	}
 }
+
+func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
+	k := &types.Kustomization{}
+	args := findOrMakeConfigMapArgs(k, "foo")
+
+	createBehaviorFlags := flagsAndArgs{
+		Behavior:      "create",
+		EnvFileSource: "env1",
+	}
+	mergeFlagsIntoGeneratorArgs(
+		&args.GeneratorArgs,
+		createBehaviorFlags)
+	if k.ConfigMapGenerator[0].Behavior != "create" {
+		t.Fatalf("expected create")
+	}
+
+	mergeBehaviorFlags := flagsAndArgs{
+		Behavior:      "merge",
+		EnvFileSource: "env1",
+	}
+	mergeFlagsIntoGeneratorArgs(
+		&args.GeneratorArgs,
+		mergeBehaviorFlags)
+	if k.ConfigMapGenerator[0].Behavior != "merge" {
+		t.Fatalf("expected merge")
+	}
+
+	replaceBehaviorFlags := flagsAndArgs{
+		Behavior:      "replace",
+		EnvFileSource: "env1",
+	}
+	mergeFlagsIntoGeneratorArgs(
+		&args.GeneratorArgs,
+		replaceBehaviorFlags)
+	if k.ConfigMapGenerator[0].Behavior != "replace" {
+		t.Fatalf("expected replace")
+	}
+}

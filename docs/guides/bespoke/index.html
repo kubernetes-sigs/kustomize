@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,7 +29,8 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Bespoke Application">
 <meta itemprop="description" content="Workflow for bespoke applications
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Bespoke Application"/>
 <meta name="twitter:description" content="Workflow for bespoke applications
 "/>
@@ -38,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -392,44 +393,8 @@
 <div class="td-content">
 	<h1>Bespoke Application</h1>
 	<div class="lead">Workflow for bespoke applications</div>
-	<p>In this workflow, all configuration (resource YAML) files are owned by the user.
-No content is incorporated from version control repositories owned by others.</p>
-<p><img src="/kustomize/images/workflowBespoke.jpg" alt="bespoke config workflow image"></p>
-<h4 id="1-create-a-directory-in-version-control">1) create a directory in version control</h4>
-<p>Speculate some overall cluster application called <em>ldap</em>;
-we want to keep its configuration in its own repo.</p>
-<blockquote>
-<pre><code>git init ~/ldap
-</code></pre></blockquote>
-<h4 id="2-create-a-base">2) create a <a href="/kustomize/api-reference/glossary#base">base</a></h4>
-<blockquote>
-<pre><code>mkdir -p ~/ldap/base
-</code></pre></blockquote>
-<p>In this directory, create and commit a <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a>
-file and a set of <a href="/kustomize/api-reference/glossary#resource">resources</a>.</p>
-<h4 id="3-create-overlays">3) create <a href="/kustomize/api-reference/glossary#overlay">overlays</a></h4>
-<blockquote>
-<pre><code>mkdir -p ~/ldap/overlays/staging
-mkdir -p ~/ldap/overlays/production
-</code></pre></blockquote>
-<p>Each of these directories needs a <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a>
-file and one or more <a href="/kustomize/api-reference/glossary#patch">patches</a>.</p>
-<p>The <em>staging</em> directory might get a patch
-that turns on an experiment flag in a configmap.</p>
-<p>The <em>production</em> directory might get a patch
-that increases the replica count in a deployment
-specified in the base.</p>
-<h4 id="4-bring-up-variants">4) bring up <a href="/kustomize/api-reference/glossary#variant">variants</a></h4>
-<p>Run kustomize, and pipe the output to <a href="/kustomize/api-reference/glossary#apply">apply</a>.</p>
-<blockquote>
-<pre><code>kustomize build ~/ldap/overlays/staging | kubectl apply -f -
-kustomize build ~/ldap/overlays/production | kubectl apply -f -
-</code></pre></blockquote>
-<p>You can also use <a href="https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/">kubectl-v1.14.0</a> to apply your <a href="/kustomize/api-reference/glossary#variant">variants</a>.</p>
-<blockquote>
-<pre><code>kubectl apply -k ~/ldap/overlays/staging
-kubectl apply -k ~/ldap/overlays/production
-</code></pre></blockquote>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/config_management/bespoke/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -461,7 +426,7 @@ kubectl apply -k ~/ldap/overlays/production
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

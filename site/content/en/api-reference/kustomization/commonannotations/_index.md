@@ -6,52 +6,6 @@ description: >
     Add annotations to all resources.
 ---
 
-Add annotations to all resources.  If the annotation key is already present on the resource,
-the value will be overridden.
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/commonannotations/" />
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-commonAnnotations:
-  oncallPager: 800-555-1212
-```
-
-## Example
-
-### File Input
-
-```yaml
-# kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-commonAnnotations:
-  oncallPager: 800-555-1212
-
-resources:
-- deploy.yaml
-```
-
-```yaml
-# deploy.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: example
-spec:
-  ...
-```
-
-### Build Output
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: example
-  annotations:
-    oncallPager: 800-555-1212
-spec:
-  ...
-```
+Moved to https://github.com/kubernetes-sigs/cli-experimental

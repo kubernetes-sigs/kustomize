@@ -9,3 +9,6 @@ menu:
 description: >
     Reference for Kustomize usage and best practices
 ---
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/config_management" />
+
+Moved to https://github.com/kubernetes-sigs/cli-experimental

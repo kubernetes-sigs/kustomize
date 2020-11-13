@@ -65,28 +65,54 @@ const SupplementaryOpenAPIFieldName = "openAPI"
 const Definitions = "definitions"
 
 // AddSchemaFromFile reads the file at path and parses the OpenAPI definitions
-// from the field "openAPI"
-func AddSchemaFromFile(path string) error {
-	return AddSchemaFromFileUsingField(path, SupplementaryOpenAPIFieldName)
-}
-
-// DeleteSchemaInFile reads the file at path and removes all the openAPI definitions
-// present in file from global schema
-func DeleteSchemaInFile(openAPIPath string) error {
-	fields, err := DefinitionRefs(openAPIPath)
+// from the field "openAPI", also returns a function to clean the added definitions
+// The returned clean function is a no-op on error, or else it's a function
+// that the caller should use to remove the added openAPI definitions from
+// global schema
+func AddSchemaFromFile(path string) (func(), error) {
+	object, err := parseOpenAPI(path)
 	if err != nil {
-		return err
+		return func() {}, err
 	}
 
-	for _, field := range fields {
-		delete(globalSchema.schema.Definitions, field)
+	defs, err := definitionRefsFromRNode(object)
+	if err != nil {
+		return func() {}, err
 	}
-	return nil
+
+	clean := func() {
+		for _, def := range defs {
+			delete(globalSchema.schema.Definitions, def)
+		}
+	}
+	return clean, addSchemaUsingField(object, SupplementaryOpenAPIFieldName)
 }
 
 // DefinitionRefs returns the list of openAPI definition references present in the
 // input openAPIPath
 func DefinitionRefs(openAPIPath string) ([]string, error) {
+	object, err := parseOpenAPI(openAPIPath)
+	if err != nil {
+		return nil, err
+	}
+	return definitionRefsFromRNode(object)
+}
+
+// definitionRefsFromRNode returns the list of openAPI definitions keys from input
+// yaml RNode
+func definitionRefsFromRNode(object *yaml.RNode) ([]string, error) {
+	definitions, err := object.Pipe(yaml.Lookup(SupplementaryOpenAPIFieldName, Definitions))
+	if definitions == nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	return definitions.Fields()
+}
+
+// parseOpenAPI reads openAPIPath yaml and converts it to RNode
+func parseOpenAPI(openAPIPath string) (*yaml.RNode, error) {
 	b, err := ioutil.ReadFile(openAPIPath)
 	if err != nil {
 		return nil, err
@@ -96,44 +122,23 @@ func DefinitionRefs(openAPIPath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	definitions, err := object.Pipe(yaml.Lookup(SupplementaryOpenAPIFieldName, Definitions))
-	if definitions == nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return definitions.Fields()
+	return object, nil
 }
 
-// AddSchemaFromFileUsingField reads the file at path and parses the OpenAPI definitions
-// from the specified field.  If field is the empty string, use the whole document as
-// OpenAPI.
-func AddSchemaFromFileUsingField(path, field string) error {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	// parse the yaml file (json is a subset of yaml, so will also parse)
-	y, err := yaml.Parse(string(b))
-	if err != nil {
-		return err
-	}
-
+// addSchemaUsingField parses the OpenAPI definitions from the specified field.
+// If field is the empty string, use the whole document as OpenAPI.
+func addSchemaUsingField(object *yaml.RNode, field string) error {
 	if field != "" {
 		// get the field containing the openAPI
-		m := y.Field(field)
+		m := object.Field(field)
 		if m.IsNilOrEmpty() {
 			// doesn't contain openAPI definitions
 			return nil
 		}
-		y = m.Value
+		object = m.Value
 	}
 
-	oAPI, err := y.String()
+	oAPI, err := object.String()
 	if err != nil {
 		return err
 	}
@@ -344,6 +349,35 @@ func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 	return &ResourceSchema{Schema: &s}
 }
 
+// PatchStrategyAndKeyList returns the patch strategy and complete merge key list
+func (rs *ResourceSchema) PatchStrategyAndKeyList() (string, []string) {
+	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
+	if !found {
+		// empty patch strategy
+		return "", []string{}
+	}
+
+	mkList, found := rs.Schema.Extensions[kubernetesMergeKeyMapList]
+	if found {
+		//mkList is []interface, convert to []string
+		mkListStr := make([]string, len(mkList.([]interface{})))
+
+		for i, v := range mkList.([]interface{}) {
+			mkListStr[i] = v.(string)
+		}
+
+		return ps.(string), mkListStr
+	}
+
+	mk, found := rs.Schema.Extensions[kubernetesMergeKeyExtensionKey]
+	if !found {
+		// no mergeKey -- may be a primitive associative list (e.g. finalizers)
+		return ps.(string), []string{}
+	}
+
+	return ps.(string), []string{mk.(string)}
+}
+
 // PatchStrategyAndKey returns the patch strategy and merge key extensions
 func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
@@ -372,12 +406,18 @@ const (
 	// kubernetesGVKExtensionKey is the key to lookup the kubernetes group version kind extension
 	// -- the extension is an array of objects containing a gvk
 	kubernetesGVKExtensionKey = "x-kubernetes-group-version-kind"
+
 	// kubernetesMergeKeyExtensionKey is the key to lookup the kubernetes merge key extension
 	// -- the extension is a string
 	kubernetesMergeKeyExtensionKey = "x-kubernetes-patch-merge-key"
+
 	// kubernetesPatchStrategyExtensionKey is the key to lookup the kubernetes patch strategy
 	// extension -- the extension is a string
 	kubernetesPatchStrategyExtensionKey = "x-kubernetes-patch-strategy"
+
+	// kubernetesMergeKeyMapList is the list of merge keys when there needs to be multiple
+	// -- the extension is an array of strings
+	kubernetesMergeKeyMapList = "x-kubernetes-list-map-keys"
 
 	// groupKey is the key to lookup the group from the GVK extension
 	groupKey = "group"

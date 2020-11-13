@@ -6,11 +6,6 @@ description: >
     Prepends the value to the names of all resources and references.
 ---
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/nameprefix/" />
 
-namePrefix: alices-
-```
-
-A deployment named `wordpress` would become `alices-wordpress`.
+Moved to https://github.com/kubernetes-sigs/cli-experimental
