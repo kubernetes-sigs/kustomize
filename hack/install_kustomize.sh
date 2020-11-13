@@ -10,8 +10,11 @@
 #
 # Fails if the file already exists.
 
+release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
+
 if [ -n "$1" ]; then
     version=v$1
+    release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases/tags/kustomize%2F$version
 fi
 
 where=$PWD
@@ -41,7 +44,7 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases |\
+curl -s $release_url |\
   grep browser_download |\
   grep $opsys |\
   cut -d '"' -f 4 |\
