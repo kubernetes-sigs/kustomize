@@ -258,6 +258,8 @@ nameReference:
     kind: Service
     group: serving.knative.dev
     version: v1
+  - path: spec/azureFile/secretName
+    kind: PersistentVolume
 
 - kind: Service
   version: v1
