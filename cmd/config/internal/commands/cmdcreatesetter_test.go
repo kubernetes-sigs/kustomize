@@ -466,60 +466,6 @@ spec:
   replicas: 3 # {"$openapi":"foo.bar"}
  `,
 		},
-
-		{
-			name: "create setter v1",
-			args: []string{"hubsetter", "my-hub"},
-			inputOpenAPI: `
- `,
-			input: `
-apiVersion: install.istio.io/v1alpha2
-kind: IstioControlPlane
-metadata:
-  clusterName: "project-id/us-east1-d/cluster-name"
-spec:
-  profile: asm # {"type":"string","x-kustomize":{"setter":{"name":"profilesetter","value":"asm"}}}
-  hub: my-hub
- `,
-			expectedOpenAPI: `
- `,
-			expectedResources: `
-apiVersion: install.istio.io/v1alpha2
-kind: IstioControlPlane
-metadata:
-  clusterName: "project-id/us-east1-d/cluster-name"
-spec:
-  profile: asm # {"type":"string","x-kustomize":{"setter":{"name":"profilesetter","value":"asm"}}}
-  hub: my-hub # {"type":"","x-kustomize":{"setter":{"name":"hubsetter","value":"my-hub"}}}
- `,
-		},
-
-		{
-			name: "create partial setter v1",
-			args: []string{"regionsetter", "us-east1-d", "--partial"},
-			inputOpenAPI: `
- `,
-			input: `
-apiVersion: install.istio.io/v1alpha2
-kind: IstioControlPlane
-metadata:
-  clusterName: "project-id/us-east1-d/cluster-name" # {"type":"","x-kustomize":{"partialSetters":[{"name":"projectsetter","value":"project-id"}]}}
-spec:
-  profile: asm # {"type":"string","x-kustomize":{"setter":{"name":"profilesetter","value":"asm"}}}
-  hub: my-hub # {"type":"","x-kustomize":{"setter":{"name":"hubsetter","value":"my-hub"}}}
- `,
-			expectedOpenAPI: `
- `,
-			expectedResources: `
-apiVersion: install.istio.io/v1alpha2
-kind: IstioControlPlane
-metadata:
-  clusterName: "project-id/us-east1-d/cluster-name" # {"type":"","x-kustomize":{"partialSetters":[{"name":"projectsetter","value":"project-id"},{"name":"regionsetter","value":"us-east1-d"}]}}
-spec:
-  profile: asm # {"type":"string","x-kustomize":{"setter":{"name":"profilesetter","value":"asm"}}}
-  hub: my-hub # {"type":"","x-kustomize":{"setter":{"name":"hubsetter","value":"my-hub"}}}
- `,
-		},
 		{
 			name:   "provide different type values in schema and with flag",
 			args:   []string{"replicas", "3", "--description", "hello world", "--type", "string"},
