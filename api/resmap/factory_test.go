@@ -17,6 +17,7 @@ import (
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestFromFile(t *testing.T) {
@@ -277,6 +278,59 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 			},
 		}).ResMap()
 	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
+		t.Fatalf("error: %s", err)
+	}
+}
+
+func TestFromRNodeSlice(t *testing.T) {
+	input := `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-reader
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+  `
+	rnodes := []*yaml.RNode{
+		yaml.MustParse(input),
+	}
+
+	rm, err := rmF.NewResMapFromRNodeSlice(rnodes)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := resmaptest_test.NewRmBuilder(t, rf).Add(
+		map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": "namespace-reader",
+			},
+			"rules": []interface{}{
+				map[string]interface{}{
+					"apiGroups": []interface{}{
+						"",
+					},
+					"resources": []interface{}{
+						"namespaces",
+					},
+					"verbs": []interface{}{
+						"get",
+						"watch",
+						"list",
+					},
+				},
+			},
+		}).ResMap()
+
+	if err = expected.ErrorIfNotEqualLists(rm); err != nil {
 		t.Fatalf("error: %s", err)
 	}
 }
