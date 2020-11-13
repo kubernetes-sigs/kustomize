@@ -17,6 +17,8 @@ clean:
 
 # This will remove all currently built-in schema,
 # so think twice before deleting.
+# To replace what this will delete typically requires the ability
+# to contact a live kubernetes API server.
 .PHONY: nuke
 nuke: clean
 	rm -r kubernetesapi/*

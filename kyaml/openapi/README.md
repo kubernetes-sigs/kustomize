@@ -1,11 +1,10 @@
 # Sampling New OpenAPI Data
 
 [OpenAPI schema]: ./kubernetesapi/
-[kind clusters]: https://hub.docker.com/r/kindest/node/tags
+[kind]: https://hub.docker.com/r/kindest/node/tags
 
-This document describes how to fetch OpenAPI data from
-a particular kubernetes version number. Note that you can
-only fetch data from versions supported by [kind clusters].
+This document describes how to fetch OpenAPI data from a
+live kubernetes API server, e.g. an instance of [kind].
 
 ### Delete all currently built-in schema
 ```
