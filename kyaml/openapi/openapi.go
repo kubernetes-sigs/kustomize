@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
@@ -436,7 +437,10 @@ func initSchema() {
 		}
 
 		// parse the swagger, this should never fail
-		assetName := "kubernetesapi/" + kubernetesAPIDefaultVersion + "/swagger.json"
+		assetName := filepath.Join(
+			"kubernetesapi",
+			kubernetesAPIDefaultVersion,
+			"swagger.json")
 		if err := parse(kubernetesapi.OpenApiMustAsset[kubernetesAPIDefaultVersion](assetName)); err != nil {
 			// this should never happen
 			panic(err)
