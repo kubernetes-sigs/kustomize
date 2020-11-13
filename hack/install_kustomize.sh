@@ -38,6 +38,7 @@ trap cleanup EXIT
 pushd $tmpDir >& /dev/null
 
 opsys=windows
+arch=amd64
 if [[ "$OSTYPE" == linux* ]]; then
   opsys=linux
 elif [[ "$OSTYPE" == darwin* ]]; then
@@ -45,10 +46,8 @@ elif [[ "$OSTYPE" == darwin* ]]; then
 fi
 
 curl -s $release_url |\
-  grep browser_download |\
-  grep $opsys |\
+  grep browser_download.*${opsys}_${arch} |\
   cut -d '"' -f 4 |\
-  grep /kustomize/$version.*amd64 |\
   sort | tail -n 1 |\
   xargs curl -sLO
 
