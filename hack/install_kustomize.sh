@@ -14,7 +14,7 @@ release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 
 if [ -n "$1" ]; then
     version=v$1
-    release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases/tags/kustomize%2F$version
+    release_url=${release_url}/tags/kustomize%2F$version
 fi
 
 where=$PWD
