@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,16 +25,17 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/plugins/execpluginguidedexample/" />
-<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-11T08:29:43-08:00" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Exec plugin on linux">
 <meta itemprop="description" content="Exec plugin on linux in 60 seconds
 ">
-<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
-<meta itemprop="wordCount" content="465">
+<meta itemprop="dateModified" content="2020-11-11T08:29:43-08:00" />
+<meta itemprop="wordCount" content="3">
 
 
 
-<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Exec plugin on linux"/>
 <meta name="twitter:description" content="Exec plugin on linux in 60 seconds
 "/>
@@ -43,8 +44,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -362,23 +363,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li></li>
-      </ul>
-    </li>
-    <li><a href="#make-a-place-to-work">Make a place to work</a></li>
-    <li><a href="#create-a-kustomization">Create a kustomization</a></li>
-    <li><a href="#make-a-home-for-plugins">Make a home for plugins</a></li>
-    <li><a href="#create-the-plugin">Create the plugin</a></li>
-    <li><a href="#install-kustomize">Install kustomize</a></li>
-    <li><a href="#review-the-layout">Review the layout</a></li>
-    <li><a href="#build-your-app-using-the-plugin">Build your app, using the plugin</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -424,164 +408,12 @@
 <div class="td-content">
 	<h1>Exec plugin on linux</h1>
 	<div class="lead">Exec plugin on linux in 60 seconds</div>
-	<p>This is a (no reading allowed!) 60 second copy/paste guided
-example.  Full plugin docs <a href="..">here</a>.</p>
-<p>This demo writes and uses a somewhat ridiculous
-<em>exec</em> plugin (written in bash) that generates a
-<code>ConfigMap</code>.</p>
-<p>This is a guide to try it without damaging your
-current setup.</p>
-<h4 id="requirements">requirements</h4>
-<ul>
-<li>linux, git, curl, Go 1.13</li>
-</ul>
-<h2 id="make-a-place-to-work">Make a place to work</h2>
-<pre><code>DEMO=$(mktemp -d)
-</code></pre><h2 id="create-a-kustomization">Create a kustomization</h2>
-<p>Make a kustomization directory to
-hold all your config:</p>
-<pre><code>MYAPP=$DEMO/myapp
-mkdir -p $MYAPP
-</code></pre><p>Make a deployment config:</p>
-<pre><code>cat &lt;&lt;'EOF' &gt;$MYAPP/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: the-deployment
-spec:
-  replicas: 3
-  template:
-    spec:
-      containers:
-      - name: the-container
-        image: monopole/hello:1
-        command: [&quot;/hello&quot;,
-                  &quot;--port=8080&quot;,
-                  &quot;--date=$(THE_DATE)&quot;,
-                  &quot;--enableRiskyFeature=$(ENABLE_RISKY)&quot;]
-        ports:
-        - containerPort: 8080
-        env:
-        - name: THE_DATE
-          valueFrom:
-            configMapKeyRef:
-              name: the-map
-              key: today
-        - name: ALT_GREETING
-          valueFrom:
-            configMapKeyRef:
-              name: the-map
-              key: altGreeting
-        - name: ENABLE_RISKY
-          valueFrom:
-            configMapKeyRef:
-              name: the-map
-              key: enableRisky
-EOF
-</code></pre><p>Make a service config:</p>
-<pre><code>cat &lt;&lt;EOF &gt;$MYAPP/service.yaml
-kind: Service
-apiVersion: v1
-metadata:
-  name: the-service
-spec:
-  type: LoadBalancer
-  ports:
-  - protocol: TCP
-    port: 8666
-    targetPort: 8080
-EOF
-</code></pre><p>Now make a config file for the plugin
-you&rsquo;re about to write.</p>
-<p>This config file is just another k8s resource
-object.  The values of its <code>apiVersion</code> and <code>kind</code>
-fields are used to <em>find</em> the plugin code on your
-filesystem (more on this later).</p>
-<pre><code>cat &lt;&lt;'EOF' &gt;$MYAPP/cmGenerator.yaml
-apiVersion: myDevOpsTeam
-kind: SillyConfigMapGenerator
-metadata:
-  name: whatever
-argsOneLiner: Bienvenue true
-EOF
-</code></pre><p>Finally, make a kustomization file
-referencing all of the above:</p>
-<pre><code>cat &lt;&lt;EOF &gt;$MYAPP/kustomization.yaml
-commonLabels:
-  app: hello
-resources:
-- deployment.yaml
-- service.yaml
-generators:
-- cmGenerator.yaml
-EOF
-</code></pre><p>Review the files</p>
-<pre><code>ls -C1 $MYAPP
-</code></pre><h2 id="make-a-home-for-plugins">Make a home for plugins</h2>
-<p>Plugins must live in a particular place for
-kustomize to find them.</p>
-<p>This demo will use the ephemeral directory:</p>
-<pre><code>PLUGIN_ROOT=$DEMO/kustomize/plugin
-</code></pre><p>The plugin config defined above in
-<code>$MYAPP/cmGenerator.yaml</code> specifies:</p>
-<blockquote>
-<pre><code>apiVersion: myDevOpsTeam
-kind: SillyConfigMapGenerator
-</code></pre></blockquote>
-<p>This means the plugin must live in a directory
-named:</p>
-<pre><code>MY_PLUGIN_DIR=$PLUGIN_ROOT/myDevOpsTeam/sillyconfigmapgenerator
-
-mkdir -p $MY_PLUGIN_DIR
-</code></pre><p>The directory name is the plugin config&rsquo;s
-<em>apiVersion</em> followed by its lower-cased <em>kind</em>.</p>
-<p>A plugin gets its own directory to hold itself,
-its tests and any supplemental data files it
-might need.</p>
-<h2 id="create-the-plugin">Create the plugin</h2>
-<p>There are two kinds of plugins, <em>exec</em> and <em>Go</em>.</p>
-<p>Make an <em>exec</em> plugin, installing it to the
-correct directory and file name.  The file name
-must match the plugin&rsquo;s <em>kind</em> (in this case,
-<code>SillyConfigMapGenerator</code>):</p>
-<pre><code>cat &lt;&lt;'EOF' &gt;$MY_PLUGIN_DIR/SillyConfigMapGenerator
-#!/bin/bash
-# Skip the config file name argument.
-shift
-today=`date +%F`
-echo &quot;
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: the-map
-data:
-  today: $today
-  altGreeting: &quot;$1&quot;
-  enableRisky: &quot;$2&quot;
-&quot;
-EOF
-</code></pre><p>By definition, an <em>exec</em> plugin must be executable:</p>
-<pre><code>chmod a+x $MY_PLUGIN_DIR/SillyConfigMapGenerator
-</code></pre><h2 id="install-kustomize">Install kustomize</h2>
-<p>Per the <a href="/kustomize/installation">instructions</a>:</p>
-<pre><code>curl -s &quot;https://raw.githubusercontent.com/\
-kubernetes-sigs/kustomize/master/hack/install_kustomize.sh&quot;  | bash
-mkdir -p $DEMO/bin
-mv kustomize $DEMO/bin
-</code></pre><h2 id="review-the-layout">Review the layout</h2>
-<pre><code>tree $DEMO
-</code></pre><h2 id="build-your-app-using-the-plugin">Build your app, using the plugin</h2>
-<pre><code>XDG_CONFIG_HOME=$DEMO $DEMO/bin/kustomize build --enable_alpha_plugins $MYAPP
-</code></pre><p>Above, if you had set</p>
-<blockquote>
-<pre><code>PLUGIN_ROOT=$HOME/.config/kustomize/plugin
-</code></pre></blockquote>
-<p>there would be no need to use <code>XDG_CONFIG_HOME</code> in the
-<em>kustomize</em> command above.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/execpluginguidedexample" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

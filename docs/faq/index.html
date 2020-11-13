@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -27,7 +27,8 @@
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/faq/" />
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="FAQ">
-<meta itemprop="description" content="Kubernetes Configuration Customization"><meta name="twitter:card" content="summary"/>
+<meta itemprop="description" content="Kubernetes Configuration Customization">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="FAQ"/>
 <meta name="twitter:description" content="Kubernetes Configuration Customization"/>
 
@@ -35,8 +36,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -267,14 +268,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#kubectl-doesnt-have-the-latest-kustomize-when-will-it-be-updated">kubectl doesn&rsquo;t have the latest kustomize, when will it be updated?</a></li>
-    <li><a href="#security-file-foo-is-not-in-or-below-bar">security: file &lsquo;foo&rsquo; is not in or below &lsquo;bar&rsquo;</a></li>
-    <li><a href="#some-field-is-not-transformed-by-kustomize">Some field is not transformed by kustomize</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -300,59 +293,8 @@
 <div class="td-content">
 	<h1>FAQ</h1>
 	
-	<h2 id="kubectl-doesnt-have-the-latest-kustomize-when-will-it-be-updated">kubectl doesn&rsquo;t have the latest kustomize, when will it be updated?</h2>
-<p>TLDR: This is blocked on either moving kubectl into its own repo, or changing its dependencies.  ETA k8s ~1.20.</p>
-<p>The adoption of go modules in the kubernetes/kubernetes repo broke the update process for kustomize.
-This is due to the kustomize libraries depending on the kubernetes apimachinery libraries, which are
-published out of the kubernetes staging directory.</p>
-<p>2 pieces of work are underway which will allow kustomize to be updated in kubectl:</p>
-<ul>
-<li>migrating kubectl out of kubernetes/kubernetes (expected Kubernetes ~1.20)</li>
-<li>migrating kustomize off of the apimachinery libraries (expected Kuberntes ~1.20)
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/issues/2506">2506</a></li>
-</ul>
-</li>
-</ul>
-<p>Once either of these issues is resolved we will then update kubectl with the latest kustomize version.</p>
-<h2 id="security-file-foo-is-not-in-or-below-bar">security: file &lsquo;foo&rsquo; is not in or below &lsquo;bar&rsquo;</h2>
-<p>v2.0 added a security check that prevents
-kustomizations from reading files outside their own
-directory root.</p>
-<p>This was meant to help protect the person inclined to
-download kustomization directories from the web and use
-them without inspection to control their production
-cluster
-(see <a href="https://github.com/kubernetes-sigs/kustomize/issues/693">#693</a>,
-<a href="https://github.com/kubernetes-sigs/kustomize/pull/700">#700</a>,
-<a href="https://github.com/kubernetes-sigs/kustomize/pull/995">#995</a> and
-<a href="https://github.com/kubernetes-sigs/kustomize/pull/998">#998</a>)</p>
-<p>Resources (including configmap and secret generators)
-can <em>still be shared</em> via the recommended best practice
-of placing them in a directory with their own
-kustomization file, and referring to this directory as a
-<a href="/kustomize/api-reference/glossary#base"><code>base</code></a> from any kustomization that
-wants to use it.  This encourages modularity and
-relocatability.</p>
-<p>To disable this, use v3, and the <code>load_restrictor</code> flag:</p>
-<pre><code>kustomize build --load_restrictor none $target
-</code></pre><h2 id="some-field-is-not-transformed-by-kustomize">Some field is not transformed by kustomize</h2>
-<p>Example: <a href="https://github.com/kubernetes-sigs/kustomize/issues/1319">#1319</a>, <a href="https://github.com/kubernetes-sigs/kustomize/issues/1322">#1322</a>, <a href="https://github.com/kubernetes-sigs/kustomize/issues/1347">#1347</a> and etc.</p>
-<p>The fields transformed by kustomize is configured explicitly in <a href="https://github.com/kubernetes-sigs/kustomize/tree/master/api/konfig/builtinpluginconsts/defaultconfig.go">defaultconfig</a>. The configuration itself can be customized by including <code>configurations</code> in <code>kustomization.yaml</code>, e.g.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">configurations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- kustomizeconfig.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>The configuration directive allows customization of the following transformers:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">commonAnnotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">commonLabels</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">nameprefix</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">namespace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">varreference</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">namereference</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">images</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>To persist the changes to default configuration, submit a PR like <a href="https://github.com/kubernetes-sigs/kustomize/pull/1338">#1338</a>, <a href="https://github.com/kubernetes-sigs/kustomize/pull/1348">#1348</a> and etc.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/faq/kustomize/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -386,7 +328,7 @@ relocatability.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 22, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/c6524f984cfeb7b173cdc005ad2d900044bc6033">Docs: Update FAQ with why kubectl has kustomize 2 (c6524f98)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

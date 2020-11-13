@@ -7,13 +7,9 @@ steps:
       - "Cloud build substitution check: "
       - "BUILD_ID=$BUILD_ID"
       - "PROJECT_ID=$PROJECT_ID"
-      - "REVISION_ID=$REVISION_ID"
-      - "REPO_NAME=$REPO_NAME"
-      - "COMMIT_SHA=$COMMIT_SHA"
-      - "BRANCH_NAME=$BRANCH_NAME"
-      - "TAG_NAME=$TAG_NAME"
-
-# We need to use bash to configure the build date properly.
+      - "_GIT_TAG=$_GIT_TAG"
+      - "_PULL_BASE_REF=$_PULL_BASE_REF"
+# We need to use bash to configure the build date and version properly.
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: /bin/bash
     args:
@@ -22,23 +18,31 @@ steps:
         docker
         build
         -t
-        gcr.io/$PROJECT_ID/$_MODULE_NAME:$_MODULE_VERSION
+        gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}
         -t
-        gcr.io/$PROJECT_ID/$_MODULE_NAME:latest
+        gcr.io/$PROJECT_ID/kustomize:latest
         -f
         kustomize.Dockerfile
         --build-arg
-        VERSION=$TAG_NAME
+        VERSION=${_PULL_BASE_REF}
         --build-arg
-        COMMIT=$COMMIT_SHA
+        COMMIT=$(git rev-parse HEAD)
         --build-arg
-        DATE=`date -u +%FT%TZ`
+        DATE=$(date -u +%FT%TZ)
         .
 
 images:
-  - "gcr.io/$PROJECT_ID/$_MODULE_NAME:$_MODULE_VERSION"
-  - "gcr.io/$PROJECT_ID/$_MODULE_NAME:latest"
+  - "gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}"
+  - "gcr.io/$PROJECT_ID/kustomize:latest"
 
 substitutions:
-  _MODULE_NAME: ${TAG_NAME%/*}
-  _MODULE_VERSION: ${TAG_NAME#*/}
+  # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and
+  # can be used as a substitution
+  _GIT_TAG: "12345"
+  # _PULL_BASE_REF will contain the ref that was pushed to to trigger this build -
+  # a branch like 'master' or 'release-0.2', or a tag like 'v0.2'.
+  _PULL_BASE_REF: "master"
+  # Other substitutions will not be evaluated
+
+options:
+  substitution_option: ALLOW_LOOSE

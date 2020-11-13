@@ -4,7 +4,7 @@
 
 这些示例默认 `kustomize` 在您的 `$PATH` 中。
 
-这些示例通过了 [pre-commit](../../travis/kyaml-pre-commit.sh) 测试，并且应该与 HEAD 一起使用。
+这些示例通过了 [pre-commit](../../scripts/kyaml-pre-commit.sh) 测试，并且应该与 HEAD 一起使用。
 
 ```
 go get sigs.k8s.io/kustomize/v3/cmd/kustomize

@@ -102,7 +102,8 @@ For Spring Boot application, we can set an active profile through the environmen
 the application will pick up an extra `application-<profile>.properties` file. With this, we can customize the configMap in two
 steps. Add an environment variable through the patch and add a file to the configMap.
 
-<!-- @customizeConfigMap -->
+<!-- @customizeConfigMap @testAgainstLatestRelease -->
+
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -281,7 +282,8 @@ The output contains
 
 Add these patches to the kustomization:
 
-<!-- @addPatch -->
+<!-- @addPatch @testAgainstLatestRelease -->
+
 ```
 cd $DEMO_HOME
 kustomize edit add patch --path memorylimit_patch.yaml --name sbdemo --kind Deployment --group apps --version v1

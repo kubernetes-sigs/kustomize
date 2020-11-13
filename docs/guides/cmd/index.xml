@@ -1,0 +1,173 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kustomize – Command Line Options</title>
+    <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/</link>
+    <description>Recent content in Command Line Options on Kustomize</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://kubernetes-sigs.github.io/kustomize/guides/cmd/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Guides: build</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/build/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/build/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: cfg</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/cfg/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/cfg/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: create</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/create/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/create/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: edit</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/edit/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/edit/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: fn</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/fn/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/fn/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: help</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/help/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/help/</guid>
+      <description>
+        
+        
+        &lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;kustomize help
+
+Manages declarative configuration of Kubernetes.
+See https://sigs.k8s.io/kustomize
+
+Usage:
+  kustomize [command]
+
+Available Commands:
+  build                     Print configuration per contents of kustomization.yaml
+  cfg                       Commands for reading and writing configuration.
+  create                    Create a new kustomization in the current directory
+  edit                      Edits a kustomization file
+  fn                        Commands for running functions against configuration.
+  help                      Help about any command
+  install-completion        Install shell completion.
+  live                      Commands for reading and writing resources to a cluster.
+  version                   Prints the kustomize version
+
+Flags:
+  -h, --help          help for kustomize
+      --stack-trace   print a stack-trace on error
+
+Additional help topics:
+  kustomize docs-fn                   [Alpha] Documentation for developing and invoking Configuration Functions.
+  kustomize docs-fn-spec              [Alpha] Documentation for Configuration Functions Specification.
+  kustomize docs-io-annotations       [Alpha] Documentation for annotations used by io.
+  kustomize docs-merge                [Alpha] Documentation for merging Resources (2-way merge).
+  kustomize docs-merge3               [Alpha] Documentation for merging Resources (3-way merge).
+  kustomize tutorials-command-basics  [Alpha] Tutorials for using basic config commands.
+  kustomize tutorials-function-basics [Alpha] Tutorials for using functions.
+
+Use &amp;quot;kustomize [command] --help&amp;quot; for more information about a command.&lt;/code&gt;&lt;/pre&gt;&lt;/blockquote&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: install-completion</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/install-completion/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/install-completion/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: live</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/live/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/live/</guid>
+      <description>
+        
+        
+        
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: version</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/cmd/version/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/cmd/version/</guid>
+      <description>
+        
+        
+        &lt;p&gt;Prints the current kustomize version&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;kustomize version
+{Version:kustomize/v3.8.1 GitCommit:0b359d0ef0272e6545eda0e99aacd63aef99c4d0 BuildDate:2020-07-16T00:58:46Z GoOs:linux GoArch:amd64}
+&lt;/code&gt;&lt;/pre&gt;&lt;/blockquote&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>
