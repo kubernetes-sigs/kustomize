@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	kyaml_yaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -560,4 +561,22 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 		result = append(result, r)
 	}
 	return result, nil
+}
+
+// ToRNodeSlice converts the resources in the resmp
+// to a list of RNodes
+func (m *resWrangler) ToRNodeSlice() ([]*kyaml_yaml.RNode, error) {
+	var rnodes []*kyaml_yaml.RNode
+	for _, r := range m.Resources() {
+		s, err := r.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		rnode, err := kyaml_yaml.Parse(string(s))
+		if err != nil {
+			return nil, err
+		}
+		rnodes = append(rnodes, rnode)
+	}
+	return rnodes, nil
 }
