@@ -31,6 +31,14 @@ func NewWNode() *WNode {
 	return FromRNode(yaml.NewRNode(nil))
 }
 
+func FromMap(m map[string]interface{}) (*WNode, error) {
+	n, err := yaml.FromMap(m)
+	if err != nil {
+		return nil, err
+	}
+	return FromRNode(n), nil
+}
+
 func FromRNode(node *yaml.RNode) *WNode {
 	return &WNode{node: node}
 }
