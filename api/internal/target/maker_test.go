@@ -21,7 +21,8 @@ import (
 func makeAndLoadKustTarget(
 	t *testing.T,
 	fSys filesys.FileSystem,
-	root string) *target.KustTarget {
+	root string,
+	maxParallelAccumulate int) *target.KustTarget {
 	kt := makeKustTargetWithRf(
 		t, fSys, root,
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 1)

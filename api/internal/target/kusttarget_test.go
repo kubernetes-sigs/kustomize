@@ -6,6 +6,7 @@ package target_test
 import (
 	"encoding/base64"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -78,6 +79,27 @@ commonLabels:
 	kt := makeKustTargetWithRf(
 		t, th.GetFSys(), "/",
 		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 1)
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			th.WriteK("/", tc.content)
+			err := kt.Load()
+			if tc.errContains != "" {
+				require.NotNilf(t, err, "expected error containing: `%s`", tc.errContains)
+				require.Contains(t, err.Error(), tc.errContains)
+			} else {
+				require.Nilf(t, err, "got error: %v", err)
+				k := kt.Kustomization()
+				require.Condition(t, func() bool {
+					return reflect.DeepEqual(tc.k, k)
+				}, "expected %v, got %v", tc.k, k)
+			}
+		})
+	}
+
+	// Repeat test with parallel accumulation
+	kt = makeKustTargetWithRf(
+		t, th.GetFSys(), "/",
+		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 16)
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			th.WriteK("/", tc.content)
@@ -259,6 +281,7 @@ metadata:
 		t.Fatalf("unexpected inequality: %v", err)
 	}
 
+	// Repeat test with parallel accumulation
 	kt = makeKustTargetWithRf(
 		t, th.GetFSys(), "/whatever", resFactory, 16)
 	err = kt.Load()
@@ -273,4 +296,95 @@ metadata:
 	if err = expected.ErrorIfNotEqualSets(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)
 	}
+}
+
+func TestMaxParallelAccumulate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/app/serviceA.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceA
+spec:
+  ports:
+  - port: 7002
+`)
+	th.WriteF("/app/serviceB.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceB
+spec:
+  ports:
+  - port: 7002
+`)
+	th.WriteF("/app/serviceC.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceC
+spec:
+  ports:
+  - port: 7002
+`)
+	th.WriteF("/app/serviceD.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceD
+spec:
+  ports:
+  - port: 7002
+`)
+	th.WriteK("/app", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- serviceA.yaml
+- serviceB.yaml
+- serviceC.yaml
+- serviceD.yaml
+`)
+	options := th.MakeDefaultOptions()
+	options.MaxParallelAccumulate = 4
+	//options.AddManagedbyLabel = true
+	m := th.Run("/app", options)
+	//th.AssertActualEqualsExpected(m, `
+	serviceName := regexp.MustCompile("name: myService[A-D]")
+	th.AssertActualEqualsExpectedWithTweak(m,
+		func(x []byte) []byte {
+			return serviceName.ReplaceAll(x, []byte("name: myServiceX"))
+		}, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceX
+spec:
+  ports:
+  - port: 7002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceX
+spec:
+  ports:
+  - port: 7002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceX
+spec:
+  ports:
+  - port: 7002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myServiceX
+spec:
+  ports:
+  - port: 7002
+`)
 }

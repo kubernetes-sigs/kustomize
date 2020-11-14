@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 
@@ -317,30 +316,14 @@ func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) {
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
 
-	ctx := context.Background()
+	ctx := context.TODO()
 	errs, ctx := errgroup.WithContext(ctx)
-
 	maxWorker := min(len(paths), kt.maxParallelAccumulate)
 	sem := semaphore.NewWeighted(int64(maxWorker))
 
 	for _, path := range paths {
-		// try loading resource as file then as base (directory or git repository)
-		if errF := kt.accumulateFile(ra, path); errF != nil {
-			ldr, errL := kt.ldr.New(path)
-			if errL != nil {
-				return nil, multierror.Append(
-					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("loader.New error: %q", errL),
-				)
-			}
-			var errD error
-			ra, errD = kt.accumulateDirectory(ra, ldr, false)
-			if errD != nil {
-				return nil, multierror.Append(
-					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("accumulateDirector error: %q", errD),
-				)
-			}
+		if err := sem.Acquire(ctx, 1); err != nil {
+			break
 		}
 
 		path := path

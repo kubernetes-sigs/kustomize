@@ -65,7 +65,7 @@ vars:
       apiVersion: v300
 `)
 	ra, err := makeAndLoadKustTarget(
-		t, th.GetFSys(), "/app").AccumulateTarget()
+		t, th.GetFSys(), "/app", 1).AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -81,6 +81,26 @@ vars:
 			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
 		}
 	}
+
+	// Repeat test with parallel accumulation
+	ra, err = makeAndLoadKustTarget(
+		t, th.GetFSys(), "/app", 16).AccumulateTarget()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	vars = ra.Vars()
+	if len(vars) != 2 {
+		t.Fatalf("unexpected size %d", len(vars))
+	}
+	for i := range vars[:2] {
+		// By using Var.DeepEqual, we are protecting the code
+		// from a potential invocation of vars[i].ObjRef.GVK()
+		// during accumulateTarget
+		if !vars[i].DeepEqual(someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
+		}
+	}
+
 }
 
 func TestGetAllVarsNested(t *testing.T) {
@@ -120,11 +140,33 @@ resources:
 `)
 
 	ra, err := makeAndLoadKustTarget(
-		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
+		t, th.GetFSys(), "/app/overlays/o2", 1).AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
 	vars := ra.Vars()
+	if len(vars) != 4 {
+		for i, v := range vars {
+			fmt.Printf("%v: %v\n", i, v)
+		}
+		t.Fatalf("expected 4 vars, got %d", len(vars))
+	}
+	for i := range vars {
+		// By using Var.DeepEqual, we are protecting the code
+		// from a potential invocation of vars[i].ObjRef.GVK()
+		// during accumulateTarget
+		if !vars[i].DeepEqual(someVars[i]) {
+			t.Fatalf("unexpected var[%d]:\n  %v\n  %v", i, vars[i], someVars[i])
+		}
+	}
+
+	// Repeat test with parallel accumulation
+	ra, err = makeAndLoadKustTarget(
+		t, th.GetFSys(), "/app/overlays/o2", 16).AccumulateTarget()
+	if err != nil {
+		t.Fatalf("Err: %v", err)
+	}
+	vars = ra.Vars()
 	if len(vars) != 4 {
 		for i, v := range vars {
 			fmt.Printf("%v: %v\n", i, v)
@@ -177,7 +219,18 @@ resources:
 - ../o1
 `)
 	_, err := makeAndLoadKustTarget(
-		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
+		t, th.GetFSys(), "/app/overlays/o2", 1).AccumulateTarget()
+	if err == nil {
+		t.Fatalf("expected var collision")
+	}
+	if !strings.Contains(err.Error(),
+		"var 'AWARD' already encountered") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Repeat test with parallel accumulation
+	_, err = makeAndLoadKustTarget(
+		t, th.GetFSys(), "/app/overlays/o2", 16).AccumulateTarget()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}
