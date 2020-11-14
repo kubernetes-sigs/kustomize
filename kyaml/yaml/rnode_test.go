@@ -11,6 +11,137 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRNodeFromMap(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type thingExpected struct {
+		out string
+		err error
+	}
+
+	testCases := map[string]struct {
+		theMap   map[string]interface{}
+		expected thingExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			expected: thingExpected{
+				out: `{}`,
+				err: nil,
+			},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			expected: thingExpected{
+				out: `{}`,
+				err: nil,
+			},
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			expected: thingExpected{
+				out: `hey: there`,
+				err: nil,
+			},
+		},
+		"configmap": {
+			theMap: testConfigMap,
+			expected: thingExpected{
+				out: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`,
+				err: nil,
+			},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			expected: thingExpected{
+				out: `
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+kind: List
+`,
+				err: nil,
+			},
+		},
+		"configmaplist": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMapList",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			expected: thingExpected{
+				out: `
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+kind: ConfigMapList
+`,
+				err: nil,
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if tc.expected.err == nil {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t,
+					strings.TrimSpace(tc.expected.out),
+					strings.TrimSpace(rn.MustString())) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.expected.err, err) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
 // Test that non-UTF8 characters in comments don't cause failures
 func TestRNode_GetMeta_UTF16(t *testing.T) {
 	sr, err := Parse(`apiVersion: rbac.istio.io/v1alpha1
