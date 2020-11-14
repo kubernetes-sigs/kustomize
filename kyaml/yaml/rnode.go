@@ -318,8 +318,7 @@ func (rn *RNode) PipeE(functions ...Filter) error {
 	return errors.Wrap(err)
 }
 
-// Document returns the Node RNode for the value.  Does not unwrap the node if it is a
-// DocumentNodes
+// Document returns the Node for the value.
 func (rn *RNode) Document() *yaml.Node {
 	return rn.value
 }
@@ -565,6 +564,7 @@ func (rn *RNode) GetAssociativeKey() string {
 	return ""
 }
 
+// MarshalJSON creates a byte slice from the RNode.
 func (rn *RNode) MarshalJSON() ([]byte, error) {
 	s, err := rn.String()
 	if err != nil {
@@ -586,23 +586,26 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+// UnmarshalJSON overwrites this RNode with data from []byte.
 func (rn *RNode) UnmarshalJSON(b []byte) error {
 	m := map[string]interface{}{}
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
 	}
-
-	c, err := Marshal(m)
-	if err != nil {
-		return err
-	}
-
-	r, err := Parse(string(c))
+	r, err := FromMap(m)
 	if err != nil {
 		return err
 	}
 	rn.value = r.value
 	return nil
+}
+
+func FromMap(m map[string]interface{}) (*RNode, error) {
+	c, err := Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return Parse(string(c))
 }
 
 // ConvertJSONToYamlNode parses input json string and returns equivalent yaml node
