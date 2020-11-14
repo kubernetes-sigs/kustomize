@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -332,12 +333,18 @@ func (kt *KustTarget) accumulateResources(
 			if errF := kt.accumulateFile(ra, path); errF != nil {
 				ldr, errL := kt.ldr.New(path)
 				if errL != nil {
-					return fmt.Errorf("accumulateFile %q, loader.New %q", errF, errL)
+					return multierror.Append(
+						fmt.Errorf("accumulateFile error: %q", errF),
+						fmt.Errorf("loader.New error: %q", errL),
+					)
 				}
 				var errD error
 				ra, errD = kt.accumulateDirectory(ra, ldr, false)
 				if errD != nil {
-					return fmt.Errorf("accumulateFile %q, accumulateDirector: %q", errF, errD)
+					return multierror.Append(
+						fmt.Errorf("accumulateFile error: %q", errF),
+						fmt.Errorf("accumulateDirector error: %q", errD),
+					)
 				}
 			}
 			defer sem.Release(1)
