@@ -52,7 +52,7 @@ type ListSettersRunner struct {
 	Markdown           bool
 	IncludeSubst       bool
 	RecurseSubPackages bool
-	Name string
+	Name               string
 }
 
 func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
