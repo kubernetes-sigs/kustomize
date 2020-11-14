@@ -61,18 +61,18 @@ func CreateSetterCommand(parent string) *cobra.Command {
 }
 
 type CreateSetterRunner struct {
-	Command      *cobra.Command
-	CreateSetter settersutil.SetterCreator
-	OpenAPIFile  string
-	SchemaPath   string
-	FieldValue  string
-	SetBy string
-	Description string
-	SetterName string
-	Type string
-	FieldName string
-	Schema string
-	Required bool
+	Command            *cobra.Command
+	CreateSetter       settersutil.SetterCreator
+	OpenAPIFile        string
+	SchemaPath         string
+	FieldValue         string
+	SetBy              string
+	Description        string
+	SetterName         string
+	Type               string
+	FieldName          string
+	Schema             string
+	Required           bool
 	RecurseSubPackages bool
 }
 

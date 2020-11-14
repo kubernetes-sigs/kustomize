@@ -52,15 +52,15 @@ func SetCommand(parent string) *cobra.Command {
 }
 
 type SetRunner struct {
-	Command     *cobra.Command
-	Set         settersutil.FieldSetter
-	OpenAPIFile string
-	Values      []string
-	SetBy string
-	Description string
-	Name string
-	Value string
-	ListValues []string
+	Command            *cobra.Command
+	Set                settersutil.FieldSetter
+	OpenAPIFile        string
+	Values             []string
+	SetBy              string
+	Description        string
+	Name               string
+	Value              string
+	ListValues         []string
 	RecurseSubPackages bool
 }
 
