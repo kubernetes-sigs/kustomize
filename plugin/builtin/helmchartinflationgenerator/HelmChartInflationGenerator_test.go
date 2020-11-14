@@ -1,5 +1,6 @@
 package main_test
 
+/*
 import (
 	"fmt"
 	"io/ioutil"
@@ -296,3 +297,4 @@ spec:
           claimName: test-minecraft-datadir
 `)
 }
+*/

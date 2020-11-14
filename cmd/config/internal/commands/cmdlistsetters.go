@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
 
@@ -49,45 +48,40 @@ func ListSettersCommand(parent string) *cobra.Command {
 
 type ListSettersRunner struct {
 	Command            *cobra.Command
-	Lookup             setters.LookupSetters
 	List               setters2.List
 	Markdown           bool
 	IncludeSubst       bool
 	RecurseSubPackages bool
+	Name               string
 }
 
 func (r *ListSettersRunner) preRunE(c *cobra.Command, args []string) error {
 	if len(args) > 1 {
-		r.Lookup.Name = args[1]
-		r.List.Name = args[1]
+		r.Name = args[1]
 	}
 
-	initSetterVersion(c, args)
 	return nil
 }
 
 func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
-	if setterVersion == "v2" {
-		e := runner.ExecuteCmdOnPkgs{
-			NeedOpenAPI:        true,
-			Writer:             c.OutOrStdout(),
-			RootPkgPath:        args[0],
-			RecurseSubPackages: r.RecurseSubPackages,
-			CmdRunner:          r,
-		}
-
-		err := e.Execute()
-		if err != nil {
-			return runner.HandleError(c, err)
-		}
-		return nil
+	e := runner.ExecuteCmdOnPkgs{
+		NeedOpenAPI:        true,
+		Writer:             c.OutOrStdout(),
+		RootPkgPath:        args[0],
+		RecurseSubPackages: r.RecurseSubPackages,
+		CmdRunner:          r,
 	}
-	return runner.HandleError(c, lookup(r.Lookup, c, args))
+
+	err := e.Execute()
+	if err != nil {
+		return runner.HandleError(c, err)
+	}
+	return nil
 }
 
 func (r *ListSettersRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	r.List = setters2.List{
-		Name:            r.List.Name,
+		Name:            r.Name,
 		OpenAPIFileName: ext.KRMFileName(),
 	}
 	openAPIPath := filepath.Join(pkgPath, ext.KRMFileName())

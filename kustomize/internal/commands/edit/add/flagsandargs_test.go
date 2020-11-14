@@ -61,6 +61,22 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 			},
 			shouldFail: false,
 		},
+		{
+			name: "correct behavior",
+			fa: flagsAndArgs{
+				EnvFileSource: "foo",
+				Behavior:      "merge",
+			},
+			shouldFail: false,
+		},
+		{
+			name: "incorrect behavior",
+			fa: flagsAndArgs{
+				EnvFileSource: "foo",
+				Behavior:      "merge-unknown",
+			},
+			shouldFail: true,
+		},
 	}
 
 	for _, test := range tests {

@@ -7,12 +7,7 @@ description: >
     Install Kustomize for Windows using Chocolatey
 ---
 
-```
-choco install kustomize
-```
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/installation/kustomize/chocolatey/" />
 
-For support on the chocolatey package
-and prior releases, see:
 
-- [Choco Package](https://chocolatey.org/packages/kustomize)
-- [Package Source](https://github.com/kenmaglio/choco-kustomize)
+Moved to https://github.com/kubernetes-sigs/cli-experimental

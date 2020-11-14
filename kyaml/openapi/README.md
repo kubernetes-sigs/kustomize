@@ -1,35 +1,56 @@
 # Sampling New OpenAPI Data
 
-[OpenAPI schema]: ./kubernetesapi/swagger.json
+[OpenAPI schema]: ./kubernetesapi/
+[kind]: https://hub.docker.com/r/kindest/node/tags
 
-This document describes how to fetch OpenAPI data from
-a particular kubernetes version number.
+This document describes how to fetch OpenAPI data from a
+live kubernetes API server, e.g. an instance of [kind].
 
-### Fetching the Schema
+### Delete all currently built-in schema
+```
+make nuke
+```
 
-In this directory, fetch the openapi schema for the kubernetes api:
+### Add a new built-in schema
+
+In this directory, fetch the openapi schema and generate the 
+corresponding swagger.go for the kubernetes api: 
+
+```
+make kubernetesapi/swagger.go
+```
+
+To fetch the schema without generating the swagger.go, you can
+run:
 
 ```
 make nuke
 make kubernetesapi/swagger.json
 ```
 
+Note that generating the swagger.go will re-fetch the schema.
+
 You can specify a specific version with the "API_VERSION"
 parameter. The default version is v1.19.1. Here is an
-example for fetching the data for v1.14.1.
+example for generating swagger.go for v1.14.1.
 
 ```
-make kubernetesapi/swagger.json API_VERSION=v1.14.1
+make kubernetesapi/swagger.go API_VERSION=v1.14.1
 ```
 
-This will update the [OpenAPI schema].
+This will update the [OpenAPI schema]. The above command will
+create a directory kubernetesapi/v1141 and store the resulting
+swagger.json and swagger.go files there. 
 
-### Generating Swagger.go
+### Make the schema available for use
 
-In this directory, generate the swagger.go files.
+While the above commands generate the swagger.go files, they
+do not make them available for use nor do they update the
+info field reported by `kustomize openapi info`. To make the
+newly fetched schema and swagger.go available:
 
 ```
-make
+make kubernetesapi/openapiinfo.go
 ```
 
 ### Run all tests

@@ -93,6 +93,9 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	cmd.Flags().StringArrayVarP(
 		&o.fnOptions.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
+	cmd.Flags().BoolVar(
+		&o.fnOptions.ContinueOnEmptyResult, "continue-on-empty-result", true,
+		"don't stop if function returned emply list - emply list will be provided as input for the next function")
 
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())

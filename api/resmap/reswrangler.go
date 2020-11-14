@@ -6,7 +6,6 @@ package resmap
 import (
 	"bytes"
 	"fmt"
-	"regexp"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -510,51 +509,34 @@ func (m *resWrangler) appendReplaceOrMerge(
 	return nil
 }
 
-func anchorRegex(pattern string) string {
-	if pattern == "" {
-		return pattern
-	}
-	return "^(?:" + pattern + ")$"
-}
-
 // Select returns a list of resources that
 // are selected by a Selector
 func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
-	ns := regexp.MustCompile(anchorRegex(s.Namespace))
-	nm := regexp.MustCompile(anchorRegex(s.Name))
 	var result []*resource.Resource
+	sr, err := types.NewSelectorRegex(&s)
+	if err != nil {
+		return nil, err
+	}
 	for _, r := range m.Resources() {
 		curId := r.CurId()
 		orgId := r.OrgId()
 
-		// matches the namespace when namespace is not empty in the selector
 		// It first tries to match with the original namespace
 		// then matches with the current namespace
-		if s.Namespace != "" {
-			matched := ns.MatchString(orgId.EffectiveNamespace())
-			if !matched {
-				matched = ns.MatchString(curId.EffectiveNamespace())
-				if !matched {
-					continue
-				}
-			}
+		if !sr.MatchNamespace(orgId.EffectiveNamespace()) &&
+			!sr.MatchNamespace(curId.EffectiveNamespace()) {
+			continue
 		}
 
-		// matches the name when name is not empty in the selector
 		// It first tries to match with the original name
 		// then matches with the current name
-		if s.Name != "" {
-			matched := nm.MatchString(orgId.Name)
-			if !matched {
-				matched = nm.MatchString(curId.Name)
-				if !matched {
-					continue
-				}
-			}
+		if !sr.MatchName(orgId.Name) &&
+			!sr.MatchName(curId.Name) {
+			continue
 		}
 
 		// matches the GVK
-		if !r.GetGvk().IsSelected(&s.Gvk) {
+		if !sr.MatchGvk(r.GetGvk()) {
 			continue
 		}
 

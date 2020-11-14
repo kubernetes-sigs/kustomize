@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,7 +29,8 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="patchesStrategicMerge">
 <meta itemprop="description" content="Patch resources using the strategic merge patch standard.
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="patchesStrategicMerge"/>
 <meta name="twitter:description" content="Patch resources using the strategic merge patch standard.
 "/>
@@ -38,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -483,10 +484,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kustomize/api-reference/kustomization/patches/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">patches</a>
+    <a  href="/kustomize/api-reference/kustomization/patches/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">patches</a>
   </li>
   <ul>
-    <li class="collapse show" id="kustomizeapi-referencekustomizationpatches">
+    <li class="collapse " id="kustomizeapi-referencekustomizationpatches">
       
       
       
@@ -746,45 +747,8 @@
 <div class="td-content">
 	<h1>patchesStrategicMerge</h1>
 	<div class="lead">Patch resources using the strategic merge patch standard.</div>
-	<p>Each entry in this list should be either a relative
-file path or an inline content
-resolving to a partial or complete resource
-definition.</p>
-<p>The names in these (possibly partial) resource
-files must match names already loaded via the
-<code>resources</code> field.  These entries are used to
-<em>patch</em> (modify) the known resources.</p>
-<p>Small patches that do one thing are best, e.g. modify
-a memory request/limit, change an env var in a
-ConfigMap, etc.  Small patches are easy to review and
-easy to mix together in overlays.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">patchesStrategicMerge</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- service_port_8888.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- deployment_increase_replicas.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- deployment_increase_memory.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>The patch content can be a inline string as well.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">patchesStrategicMerge</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- |<span style="color:#8f5902;font-style:italic">-
-</span><span style="color:#8f5902;font-style:italic">  apiVersion: apps/v1</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>nginx<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>nginx<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>nignx<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Note that kustomize does not support more than one patch
-for the same object that contain a <em>delete</em> directive. To remove
-several fields / slice elements from an object create a single
-patch that performs all the needed deletions.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patchesstrategicmerge/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -840,7 +804,7 @@ patch that performs all the needed deletions.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

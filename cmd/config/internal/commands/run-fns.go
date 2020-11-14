@@ -74,7 +74,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
 	r.Command.Flags().BoolVar(
-		&r.ContinueOnEmptyResult, "continue-on-empty-result", false,
+		&r.ContinueOnEmptyResult, "continue-on-empty-result", true,
 		"don't stop if function returned emply list - emply list will be provided as input for the next function")
 	return r
 }

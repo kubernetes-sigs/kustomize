@@ -159,12 +159,12 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
-			Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
-			Path   string            `json:"path,omitempty" yaml:"path,omitempty"`
-			JsonOp string            `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
+			Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+			Path   string          `json:"path,omitempty" yaml:"path,omitempty"`
+			JsonOp string          `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 		}
 		for _, args := range kt.kustomization.PatchesJson6902 {
-			c.Target = *args.Target
+			c.Target = args.Target
 			c.Path = args.Path
 			c.JsonOp = args.Patch
 			p := f()

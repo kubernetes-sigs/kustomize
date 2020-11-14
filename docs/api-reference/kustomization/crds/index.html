@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,7 +29,8 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="crds">
 <meta itemprop="description" content="Adding CRD support
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="crds"/>
 <meta name="twitter:description" content="Adding CRD support
 "/>
@@ -38,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -746,34 +747,9 @@
 <div class="td-content">
 	<h1>crds</h1>
 	<div class="lead">Adding CRD support</div>
-	<p>Each entry in this list should be a relative path to
-a file for custom resource definition (CRD).</p>
-<p>The presence of this field is to allow kustomize be
-aware of CRDs and apply proper
-transformation for any objects in those types.</p>
-<p>Typical use case: A CRD object refers to a
-ConfigMap object.  In a kustomization, the ConfigMap
-object name may change by adding namePrefix,
-nameSuffix, or hashing. The name reference for this
-ConfigMap object in CRD object need to be updated
-with namePrefix, nameSuffix, or hashing in the
-same way.</p>
-<p>The annotations can be put into openAPI definitions are:</p>
-<ul>
-<li>&ldquo;x-kubernetes-annotation&rdquo;: &quot;&rdquo;</li>
-<li>&ldquo;x-kubernetes-label-selector&rdquo;: &quot;&rdquo;</li>
-<li>&ldquo;x-kubernetes-identity&rdquo;: &quot;&rdquo;</li>
-<li>&ldquo;x-kubernetes-object-ref-api-version&rdquo;: &ldquo;v1&rdquo;,</li>
-<li>&ldquo;x-kubernetes-object-ref-kind&rdquo;: &ldquo;Secret&rdquo;,</li>
-<li>&ldquo;x-kubernetes-object-ref-name-key&rdquo;: &ldquo;name&rdquo;,</li>
-</ul>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">crds</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- crds/typeA.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- crds/typeB.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/crds/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
+
         <div class="section-index">
     
     
@@ -828,7 +804,7 @@ same way.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

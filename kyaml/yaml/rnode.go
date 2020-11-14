@@ -474,6 +474,28 @@ func (rn *RNode) ElementValues(key string) ([]string, error) {
 	return elements, nil
 }
 
+// ElementValuesList returns a list of lists, where each list is a set of
+// values corresponding to each key in keys.
+// Returns error for non-SequenceNodes.
+func (rn *RNode) ElementValuesList(keys []string) ([][]string, error) {
+	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	elements := make([][]string, len(rn.Content()))
+
+	for i := 0; i < len(rn.Content()); i++ {
+		for _, key := range keys {
+			field := NewRNode(rn.Content()[i]).Field(key)
+			if field.IsNilOrEmpty() {
+				elements[i] = append(elements[i], "")
+			} else {
+				elements[i] = append(elements[i], field.Value.YNode().Value)
+			}
+		}
+	}
+	return elements, nil
+}
+
 // Element returns the element in the list which contains the field matching the value.
 // Returns nil for non-SequenceNodes or if no Element matches.
 func (rn *RNode) Element(key, value string) *RNode {
@@ -481,6 +503,20 @@ func (rn *RNode) Element(key, value string) *RNode {
 		return nil
 	}
 	elem, err := rn.Pipe(MatchElement(key, value))
+	if err != nil {
+		return nil
+	}
+	return elem
+}
+
+// ElementList returns the element in the list in which all fields keys[i] matches all
+// corresponding values[i].
+// Returns nil for non-SequenceNodes or if no Element matches.
+func (rn *RNode) ElementList(keys []string, values []string) *RNode {
+	if rn.YNode().Kind != yaml.SequenceNode {
+		return nil
+	}
+	elem, err := rn.Pipe(MatchElementList(keys, values))
 	if err != nil {
 		return nil
 	}

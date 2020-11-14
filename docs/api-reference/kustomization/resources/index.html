@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.76.5" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -29,7 +29,8 @@
 <meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="resources">
 <meta itemprop="description" content="Resources to include.
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="resources"/>
 <meta name="twitter:description" content="Resources to include.
 "/>
@@ -38,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
-<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -746,24 +747,8 @@
 <div class="td-content">
 	<h1>resources</h1>
 	<div class="lead">Resources to include.</div>
-	<p>Each entry in this list must be a path to a <em>file</em>, or a path (or URL) referring to another
-kustomization <em>directory</em>, e.g.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">resources</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- myNamespace.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- sub-dir/some-deployment.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- ../../commonbase<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- github.com/kubernetes-sigs/kustomize/examples/multibases<span style="color:#000;font-weight:bold">?</span>ref=v1<span style="color:#0000cf;font-weight:bold">.0.6</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- deployment.yaml<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- github.com/kubernets-sigs/kustomize/examples/helloWorld<span style="color:#000;font-weight:bold">?</span>ref=test-branch<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Resources will be read and processed in depth-first order.</p>
-<p>Files should contain k8s resources in YAML form. A file may contain multiple resources separated by
-the document marker <code>---</code>.  File paths should be specified <em>relative</em> to the directory holding the
-kustomization file containing the <code>resources</code> field.</p>
-<p>Directory specification can be relative, absolute, or part of a URL.  URL specifications should
-follow the <a href="https://github.com/hashicorp/go-getter#url-format">hashicorp URL</a> format.  The directory must contain a <code>kustomization.yaml</code> file.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/resources/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -819,7 +804,7 @@ follow the <a href="https://github.com/hashicorp/go-getter#url-format">hashicorp
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/42497c664f619a36cc86156e366b53099bd633cb">Convert docs to docsy (42497c66)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

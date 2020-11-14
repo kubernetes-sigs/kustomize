@@ -55,4 +55,7 @@ type FnPluginLoadingOptions struct {
 	Mounts []string
 	// list of env variables to pass to fn
 	Env []string
+	// configures what happens when the underlying pipeline
+	// used for fn returns an empty result
+	ContinueOnEmptyResult bool
 }

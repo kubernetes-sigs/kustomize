@@ -19,10 +19,76 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/google/go-github/github"
 )
+
+// splitCommitsHelp is a help message displayed when a PR has commits which
+// span modules.
+const splitCommitsHelp = "\nCommits that include multiple Go modules must be split into multiple commits that each touch no more than one module.\n" +
+	"Splitting instructions: https://git-scm.com/docs/git-rebase#_splitting_commits\n"
+
+// Ignore span pattern defines a regular expression pattern that, when matched,
+// causes this check to be ignored.
+// Pattern expects "ALLOW_MODULE_SPAN" in CAPS on a line by itself.
+// Spaces may be included before or after but no other characters with one
+// exception. ">" may be used to quote the exclusion.
+// Pattern may be provided at any point in the pull request description.
+//
+// Ex: "ALLOW_MODULE_SPAN", "> ALLOW_MODULE_SPAN", "   ALLOW_MODULE_SPAN   "
+const ignoreSpanPattern = "(?m)^>?\\s*ALLOW_MODULE_SPAN\\s*$"
+
+// Changeset represents a set of file modifications associated with a commit
+type Changeset struct {
+	files []string
+	id    string
+}
+
+// GitHubRepository represents a pairing of the owner and repository to make
+// passing around references to specific projects simpler
+type GitHubRepository struct {
+	client *github.Client
+	owner  *string
+	repo   *string
+}
+
+// GitHubService is the collection of GitHub API interactions this service consumes
+type GitHubService interface {
+	GetPullRequest(prId int) (*github.PullRequest, *github.Response, error)
+	GetCommit(commitSha string) (*github.RepositoryCommit, *github.Response, error)
+	ListCommits(prId int, options *github.ListOptions) ([]*github.RepositoryCommit, *github.Response, error)
+}
+
+// GetPullRequest retrieves details about a pull request from GitHub API
+func (repository GitHubRepository) GetPullRequest(prId int) (
+	*github.PullRequest, *github.Response, error) {
+	return repository.client.PullRequests.Get(
+		context.Background(),
+		*repository.owner,
+		*repository.repo,
+		prId)
+}
+
+// GetCommit retrieves commit details from GitHub API
+func (repository GitHubRepository) GetCommit(commitSha string) (
+	*github.RepositoryCommit, *github.Response, error) {
+	return repository.client.Repositories.GetCommit(context.Background(),
+		*repository.owner,
+		*repository.repo,
+		commitSha)
+}
+
+// ListCommits lists commits in a PR via GitHub API
+func (repository GitHubRepository) ListCommits(prId int, options *github.ListOptions) (
+	[]*github.RepositoryCommit, *github.Response, error) {
+	return repository.client.PullRequests.ListCommits(context.Background(),
+		*repository.owner,
+		*repository.repo,
+		prId,
+		options)
+}
 
 func main() {
 	owner := flag.String("owner", "", "the github repository owner name")
@@ -41,79 +107,165 @@ func main() {
 
 	client := github.NewClient(nil)
 
-	files, err := ListAllPullRequestFiles(client, owner, pullrequest, repo)
+	githubRepo := &GitHubRepository{
+		client: client,
+		owner:  owner,
+		repo:   repo,
+	}
+
+	// Check if module span is allowed before scanning on commits
+	isSpanAllowed, err := ModuleSpanAllowed(githubRepo, *pullrequest)
 
 	if err != nil {
-		fmt.Println("Unable to retrieve pull request details:", err.Error())
+		fmt.Printf("unable to retrieve pull request details: %v", err.Error())
 		os.Exit(2)
 	}
 
-	contributedRestrictedPaths := CountRestrictedPathUses(files, restrictedPaths)
-	modifiedRestrictedDirectories := CountModifiedRestrictedDirectories(contributedRestrictedPaths)
+	if isSpanAllowed {
+		fmt.Println("Check not run. Module spanning was allowed in this Pull Request.")
+		os.Exit(0)
+	}
+
+	isSpanningPull, _, err := PullRequestSpanningPathList(githubRepo, *pullrequest, restrictedPaths)
+
+	if err != nil {
+		fmt.Printf("unable to retrieve pull request details: %v", err)
+		os.Exit(2)
+	}
 
 	// Exit with error if two or more restricted directories where modified
-	if modifiedRestrictedDirectories > 1 {
-		fmt.Println("Modifications to multiple restricted directories occurred.")
+	if isSpanningPull {
+		// Provide a suggestion for potential solution if the check fails.
+		fmt.Println(splitCommitsHelp)
 		os.Exit(1)
 	}
 }
 
-// ListAllPullRequestFiles retrieves as many files as possible for the
-// target pull request.
-//
-// Note: GitHub API limits ListFiles to a maximum of 3000 files. Very large
-// changes which exceed this limit may pass this check even if they
-// do contain spanning changes.
-// see: https://developer.github.com/v3/pulls/#list-pull-requests-files
-func ListAllPullRequestFiles(client *github.Client, owner *string, pullrequest *int, repo *string) ([]*github.CommitFile, error) {
+// ConstructChangeset creates a changeset from a GitHub Commit object
+func ConstructChangeset(commit *github.RepositoryCommit) *Changeset {
+	id := commit.SHA
+	fileset := []string{}
+
+	for _, file := range commit.Files {
+		fileset = append(fileset, *file.Filename)
+	}
+
+	return &Changeset{
+		files: fileset,
+		id:    *id,
+	}
+}
+
+// StringAllowsModuleSpan tests if a string matches the allow span regex
+func StringAllowsModuleSpan(body string) (bool, error) {
+	return regexp.MatchString(ignoreSpanPattern, body)
+}
+
+// ModuleSpanAllowed tests a Pull Requests description for a regular
+// expression. If the expression matches then spanning modules are allowed.
+func ModuleSpanAllowed(repository GitHubService, pullId int) (bool, error) {
+
+	// Note: There are multiple ways to pull a github commit object
+	// we want a RepositoryCommit.
+	pullRequest, _, err := repository.GetPullRequest(pullId)
+
+	if err != nil {
+		return false, err
+	}
+
+	return StringAllowsModuleSpan(*pullRequest.Body)
+}
+
+// GetCommitChanges looks up a github commit by SHA and returns a Changeset
+// containing the modified files in the specified commit.
+func GetCommitChanges(repository GitHubService, commitSha string) (*Changeset, error) {
+	commit, _, err := repository.GetCommit(commitSha)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ConstructChangeset(commit), nil
+}
+
+// GetPullRequestCommits constructs a list of all commits and the associated
+// files changes in the given pull request
+func GetPullRequestCommits(repository GitHubService, pullrequest int) ([]*Changeset, error) {
+
 	// foundFiles across all pages from github api
-	var foundFiles []*github.CommitFile
-	// GitHub returns the first 30 files by default, increase this value
-	// Note: Page 1 is the first page of results. Page 0 is an end of list mark.
-	// Github only returns (max) 100 results per page and PR's may exceed this
-	// so loop until all pages have been enumerated.
-	options := &github.ListOptions{PerPage: 100, Page: 1}
+	var collectedCommits []*github.RepositoryCommit
+	// Github only returns a limited set of commits per request and PR's may
+	// exceed this so loop until all pages have been enumerated.
+	options := &github.ListOptions{Page: 1}
 	for options.Page != 0 {
-		files, response, err := client.PullRequests.ListFiles(context.Background(), *owner, *repo, *pullrequest, options)
+		commits, response, err := repository.ListCommits(pullrequest, options)
 
 		// If an error has occurred while querying api exit early, report error
 		if err != nil {
 			return nil, err
 		}
-		foundFiles = append(foundFiles, files...)
+		collectedCommits = append(collectedCommits, commits...)
 		// setup next page to continue loop
-		options = &github.ListOptions{PerPage: 100, Page: response.NextPage}
+		options = &github.ListOptions{Page: response.NextPage}
 	}
-	return foundFiles, nil
+
+	var changesetResults []*Changeset
+	for _, commit := range collectedCommits {
+		// The repository commits from list commits are not hydrated
+		// We will need to retrieve the complete object:
+		changeset, err := GetCommitChanges(repository, *commit.SHA)
+		if err != nil {
+			return nil, err
+		}
+
+		changesetResults = append(changesetResults, changeset)
+	}
+	return changesetResults, nil
 }
 
-// CountModifiedRestrictedDirectories Accepts a map of paths and the number of
-// occurances and returns the count of the paths which had a non-zero value.
-func CountModifiedRestrictedDirectories(contributedRestrictedPaths map[string]int) int {
-	modifiedRestrictedDirectories := 0
-	for _, occurance := range contributedRestrictedPaths {
-		if occurance != 0 {
-			modifiedRestrictedDirectories++
+// PullRequestSpanningPathList tests if a pull request spans multiple
+// directory paths
+func PullRequestSpanningPathList(repository GitHubService, pullrequest int, paths []string) (bool, []*Changeset, error) {
+	// Create a buffer for commits
+	changesets, err := GetPullRequestCommits(repository, pullrequest)
+
+	if err != nil {
+		return false, nil, err
+	}
+
+	spanningChangesExist := false
+	for _, changeset := range changesets {
+		if changeset.isSpanningPaths(paths) {
+			// When detecting the first spanning changeset print a prefix message
+			if !spanningChangesExist {
+				fmt.Printf("Spanning changesets detected in the following commits:\n\n")
+			}
+
+			fmt.Printf("\t* %s\n", changeset.id)
+			// In order provide a full list of outstanding commits, do not shortcircuit this check
+			spanningChangesExist = true
 		}
 	}
-	return modifiedRestrictedDirectories
+
+	return spanningChangesExist, changesets, nil
 }
 
-// CountRestrictedPathUses Constructs a map that contains the number of
-// references keyed to each restricted path. This provides details about how
-// many files in the list are associated with each restricted path.
-func CountRestrictedPathUses(files []*github.CommitFile, restrictedPaths []string) map[string]int {
-	contributedRestrictedPaths := make(map[string]int)
-	for _, path := range restrictedPaths {
-		contributedRestrictedPaths[path] = 0
-	}
+// isSpanningPaths tests if a changeset is spanning
+// multiple directory paths.
+func (changeset *Changeset) isSpanningPaths(paths []string) bool {
+	matchedPath := ""
 
-	for _, file := range files {
-		for path := range contributedRestrictedPaths {
-			if strings.HasPrefix(*file.Filename, path) {
-				contributedRestrictedPaths[path]++
+	for _, file := range changeset.files {
+		for _, path := range paths {
+			if strings.HasPrefix(file, path) {
+				// If a different path has already matched then the changeset spans multiple restricted paths
+				if matchedPath != "" && matchedPath != path {
+					return true
+				}
+				matchedPath = path
 			}
 		}
 	}
-	return contributedRestrictedPaths
+
+	return false
 }

@@ -3,25 +3,14 @@
 
 package krusty_test
 
+/*
 import (
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestHelmChartInflationGenerator(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
-helmChartInflationGenerator:
-- chartName: minecraft
-  chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
-  chartVersion: v1.2.0
-  releaseName: test
-  releaseNamespace: testNamespace
-`)
-
-	m := th.Run("/app", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+var expected string = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -71,5 +60,44 @@ spec:
   selector:
     app: test-minecraft
   type: LoadBalancer
+`
+
+func TestHelmChartInflationGenerator(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+helmChartInflationGenerator:
+- chartName: minecraft
+  chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+  chartVersion: v1.2.0
+  releaseName: test
+  releaseNamespace: testNamespace
 `)
+
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
 }
+
+
+func TestHelmChartInflationGeneratorAsPlugin(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+generators:
+- helm.yaml
+`)
+
+	th.WriteF("/app/helm.yaml", `
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myMap
+chartName: minecraft
+chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+chartVersion: v1.2.0
+releaseName: test
+releaseNamespace: testNamespace
+`)
+
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
+}
+*/

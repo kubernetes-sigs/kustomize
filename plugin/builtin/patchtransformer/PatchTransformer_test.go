@@ -508,6 +508,82 @@ spec:
 `)
 }
 
+func TestPatchTransformerWithInlineYamlRegexTarget(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+target:
+  name: .*Deploy
+  kind: Deployment|MyKind
+  group: \w{4}
+  version: v\d
+patch: |-
+  apiVersion: apps/v1
+  metadata:
+    name: myDeploy
+  kind: Deployment
+  spec:
+    replica: 77
+`, someDeploymentResources, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 77
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 77
+  template:
+    metadata:
+      labels:
+        new-label: new-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 77
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
+
 func TestPatchTransformerWithPatchDelete(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
@@ -747,7 +823,7 @@ spec:
         name: test-deployment
         ports:
         - containerPort: 8080
-          name: disappearing-act
+          name: take-over-the-world
           protocol: TCP
 `)
 }

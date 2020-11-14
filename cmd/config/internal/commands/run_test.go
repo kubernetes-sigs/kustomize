@@ -198,9 +198,10 @@ apiVersion: v1
 			args: []string{"run", "dir", "--enable-star"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:           "dir",
-				EnableStarlark: true,
-				Env:            []string{},
+				Path:                  "dir",
+				EnableStarlark:        true,
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 		},
 		{
@@ -251,9 +252,10 @@ apiVersion: v1
 			args: []string{"run", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:       "dir",
-				ResultsDir: "foo/",
-				Env:        []string{},
+				Path:                  "dir",
+				ResultsDir:            "foo/",
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 			expected: `
 metadata:
@@ -286,9 +288,10 @@ apiVersion: v1
 			args: []string{"run", "dir", "--log-steps"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:     "dir",
-				LogSteps: true,
-				Env:      []string{},
+				Path:                  "dir",
+				LogSteps:              true,
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 		},
 		{
@@ -296,8 +299,9 @@ apiVersion: v1
 			args: []string{"run", "dir", "--env", "FOO=BAR", "-e", "BAR"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path: "dir",
-				Env:  []string{"FOO=BAR", "BAR"},
+				Path:                  "dir",
+				Env:                   []string{"FOO=BAR", "BAR"},
+				ContinueOnEmptyResult: true,
 			},
 		},
 		{
@@ -305,9 +309,10 @@ apiVersion: v1
 			args: []string{"run", "dir", "--as-current-user"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:          "dir",
-				AsCurrentUser: true,
-				Env:           []string{},
+				Path:                  "dir",
+				AsCurrentUser:         true,
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 		},
 	}

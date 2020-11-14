@@ -21,8 +21,6 @@ steps:
         gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}
         -t
         gcr.io/$PROJECT_ID/kustomize:latest
-        -t
-        gcr.io/$PROJECT_ID/kustomize:${_PULL_BASE_REF}
         -f
         kustomize.Dockerfile
         --build-arg
