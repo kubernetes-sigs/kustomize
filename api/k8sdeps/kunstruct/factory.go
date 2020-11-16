@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/k8sdeps/configmapandsecret"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -116,10 +117,6 @@ func (kf *KunstructuredFactoryImpl) validate(u unstructured.Unstructured) error 
 	return nil
 }
 
-// nonKustomizableResourceAnnotation if set on a Resource will cause Kustomize to
-// ignore the Resource rather than Kustomize it.
-const ignoredByKustomizeResourceAnnotation = "config.kubernetes.io/local-config"
-
 // skipResource returns true if the Resource should not be accumulated
 func (kf *KunstructuredFactoryImpl) skipResource(u unstructured.Unstructured) bool {
 	an := u.GetAnnotations()
@@ -128,7 +125,7 @@ func (kf *KunstructuredFactoryImpl) skipResource(u unstructured.Unstructured) bo
 		return false
 	}
 	// check if the Resource has opt-ed out of kustomize
-	_, found := an[ignoredByKustomizeResourceAnnotation]
+	_, found := an[konfig.IgnoredByKustomizeResourceAnnotation]
 	return found
 }
 
