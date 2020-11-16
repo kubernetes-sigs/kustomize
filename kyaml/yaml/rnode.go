@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -456,8 +458,8 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 	return elements, nil
 }
 
-// ElementValues returns a list of all observed values for a given field name in a
-// list of elements.
+// ElementValues returns a list of all observed values for a given field name
+// in a list of elements.
 // Returns error for non-SequenceNodes.
 func (rn *RNode) ElementValues(key string) ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
@@ -598,6 +600,55 @@ func (rn *RNode) UnmarshalJSON(b []byte) error {
 	}
 	rn.value = r.value
 	return nil
+}
+
+// GetValidatedMetadata returns metadata after subjecting it to some tests.
+func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
+	m, err := rn.GetMeta()
+	if err != nil {
+		return m, err
+	}
+	if m.Kind == "" {
+		return m, fmt.Errorf("missing kind in object %v", m)
+	}
+	if strings.HasSuffix(m.Kind, "List") {
+		// A list doesn't require a name.
+		return m, nil
+	}
+	if m.NameMeta.Name == "" {
+		return m, fmt.Errorf("missing metadata.name in object %v", m)
+	}
+	return m, nil
+}
+
+// HasNilEntryInList returns true if the RNode contains a list which has
+// a nil item, along with the path to the missing item.
+// TODO(broken): This was copied from
+// api/k8sdeps/kunstruct/factory.go//checkListItemNil
+// and doesn't do what it claims to do (see TODO in unit test and pr 1513).
+func (rn *RNode) HasNilEntryInList() (bool, string) {
+	return hasNilEntryInList(rn.value)
+}
+
+func hasNilEntryInList(in interface{}) (bool, string) {
+	switch v := in.(type) {
+	case map[string]interface{}:
+		for key, s := range v {
+			if result, path := hasNilEntryInList(s); result {
+				return result, key + "/" + path
+			}
+		}
+	case []interface{}:
+		for index, s := range v {
+			if s == nil {
+				return true, ""
+			}
+			if result, path := hasNilEntryInList(s); result {
+				return result, "[" + strconv.Itoa(index) + "]/" + path
+			}
+		}
+	}
+	return false, ""
 }
 
 func FromMap(m map[string]interface{}) (*RNode, error) {
