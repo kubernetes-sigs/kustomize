@@ -85,7 +85,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		t := builtins.LabelTransformerPlugin{
 			Labels: map[string]string{
 				konfig.ManagedbyLabelKey: fmt.Sprintf(
-					"kustomize-%s", provenance.GetProvenance().Version)},
+					"kustomize-%s", provenance.GetProvenance().Semver())},
 			FieldSpecs: []types.FieldSpec{{
 				Path:               "metadata/labels",
 				CreateIfNotPresent: true,
