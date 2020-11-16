@@ -44,7 +44,7 @@ lastCommitHash=$(
 changeLogFile=$(mktemp)
 git log $lastCommitHash.. \
   --pretty=oneline \
-  --abbrev-commit --no-decorate --no-color \
+  --abbrev-commit --no-decorate --no-color --no-merges \
   -- $module > $changeLogFile
 echo "Release notes:"
 cat $changeLogFile
