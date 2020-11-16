@@ -1,0 +1,17 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-1
+  annotations:
+    baz: foo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-2
+  namespace: test
+  annotations:
+    foo: bar

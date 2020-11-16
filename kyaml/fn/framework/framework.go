@@ -256,6 +256,9 @@ type TemplateCommand struct {
 	// Templates is a list of templates to render.
 	Templates []*template.Template
 
+	// PatchTemplates is a list of templates to render into Patches and apply.
+	PatchTemplates []PatchTemplate
+
 	// TemplateFiles list of templates to read from disk which are appended
 	// to Templates.
 	TemplatesFiles []string
@@ -338,6 +341,12 @@ func (tc TemplateCommand) GetCommand() cobra.Command {
 
 		for i := range tc.Templates {
 			if err := tc.doTemplate(tc.Templates[i], &rl); err != nil {
+				return err
+			}
+		}
+
+		for i := range tc.PatchTemplates {
+			if err := tc.PatchTemplates[i].Apply(&rl); err != nil {
 				return err
 			}
 		}
