@@ -603,3 +603,186 @@ func ExampleTemplateCommand_files() {
 	//   annotations:
 	//     a: b
 }
+
+// ExampleTemplateCommand_preprocess provides an example for using the TemplateCommand
+// with PreProcess to configure the template based on the input resources observed.
+func ExampleTemplateCommand_preprocess() {
+	config := &struct {
+		Key   string `json:"key" yaml:"key"`
+		Value string `json:"value" yaml:"value"`
+		Short bool
+	}{}
+
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: config,
+		PreProcess: func(rl *framework.ResourceList) error {
+			config.Short = len(rl.Items) < 3
+			return nil
+		},
+		// Template
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+{{- if .Short }}
+    short: 'true'
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+{{- if .Short }}
+    short: 'true'
+{{- end }}
+`)),
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+	//     short: 'true'
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     a: b
+	//     short: 'true'
+}
+
+// ExampleTemplateCommand_postprocess provides an example for using the TemplateCommand
+// with PostProcess to modify the results.
+func ExampleTemplateCommand_postprocess() {
+	config := &struct {
+		Key   string `json:"key" yaml:"key"`
+		Value string `json:"value" yaml:"value"`
+	}{}
+
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: config,
+		// Template
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+`)),
+		PostProcess: func(rl *framework.ResourceList) error {
+			// trim the first resources
+			rl.Items = rl.Items[1:]
+			return nil
+		},
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
+
+// ExampleTemplateCommand_patch provides an example for using the TemplateCommand to
+// create a function which patches resources.
+func ExampleTemplateCommand_patch() {
+	// patch the foo resource only
+	s := framework.Selector{Names: []string{"foo"}}
+
+	cmd := framework.TemplateCommand{
+		API: &struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+		}{},
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+`)),
+		// PatchTemplates are applied to BOTH ResourceList input resources AND templated resources
+		PatchTemplates: []framework.PatchTemplate{{
+			Selector: &s,
+			Template: template.Must(template.New("test").Parse(`
+metadata:
+  annotations:
+    patched: 'true'
+`)),
+		}},
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+	//     patched: 'true'
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
