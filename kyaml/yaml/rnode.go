@@ -50,12 +50,14 @@ func GetValue(node *RNode) string {
 	return node.YNode().Value
 }
 
-// Parse parses a yaml string into an *RNode
+// Parse parses a yaml string into an *RNode.
+// To parse multiple resources, consider a kio.ByteReader
 func Parse(value string) (*RNode, error) {
 	return Parser{Value: value}.Filter(nil)
 }
 
-// ReadFile parses a single Resource from a yaml file
+// ReadFile parses a single Resource from a yaml file.
+// To parse multiple resources, consider a kio.ByteReader
 func ReadFile(path string) (*RNode, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
