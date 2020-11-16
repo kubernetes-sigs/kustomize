@@ -1,0 +1,10 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: example.com/v1alpha1
+kind: patcher
+selector:
+  annotations:
+    foo: bar
+a: a
+b: b

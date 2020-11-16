@@ -35,10 +35,10 @@ type ResultsChecker struct {
 	// Defaults to "input*.yaml"
 	InputFilenameGlob string
 
-	// ExpectedOutputFilname is the file with the expected output of the function
+	// ExpectedOutputFilename is the file with the expected output of the function
 	// Defaults to "expected.yaml".  Directories containing neither this file
 	// nore ExpectedErrorFilename will be skipped.
-	ExpectedOutputFilname string
+	ExpectedOutputFilename string
 
 	// ExpectedErrorFilename is the file containing part of an expected error message
 	// Defaults to "error.yaml".  Directories containing neither this file
@@ -57,8 +57,8 @@ func (rc ResultsChecker) Assert(t *testing.T) bool {
 	if rc.ConfigInputFilename == "" {
 		rc.ConfigInputFilename = "config.yaml"
 	}
-	if rc.ExpectedOutputFilname == "" {
-		rc.ExpectedOutputFilname = "expected.yaml"
+	if rc.ExpectedOutputFilename == "" {
+		rc.ExpectedOutputFilename = "expected.yaml"
 	}
 	if rc.ExpectedErrorFilename == "" {
 		rc.ExpectedErrorFilename = "error.yaml"
@@ -90,64 +90,67 @@ func (rc ResultsChecker) compare(t *testing.T, path string) {
 		// missing input
 		return
 	}
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
 	args := []string{configPath}
-
-	if rc.InputFilenameGlob != "" {
-		inputs, err := filepath.Glob(filepath.Join(path, rc.InputFilenameGlob))
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		args = append(args, inputs...)
-	}
-
-	var actualOutput, actualError bytes.Buffer
-	cmd := rc.Command()
-	cmd.SetArgs(args)
-	cmd.SetOut(&actualOutput)
-	cmd.SetErr(&actualError)
 
 	expectedOutput, expectedError := rc.getExpected(t, path)
 	if expectedError == "" && expectedOutput == "" {
 		// missing expected
 		return
 	}
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 
-	err = cmd.Execute()
+	// run the test
+	t.Run(path, func(t *testing.T) {
+		if rc.InputFilenameGlob != "" {
+			inputs, err := filepath.Glob(filepath.Join(path, rc.InputFilenameGlob))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			args = append(args, inputs...)
+		}
 
-	// Compae the results
-	if expectedError != "" && !assert.Error(t, err, actualOutput.String()) {
-		t.FailNow()
-	}
-	if expectedError == "" && !assert.NoError(t, err, actualError.String()) {
-		t.FailNow()
-	}
-	if !assert.Equal(t,
-		strings.TrimSpace(expectedOutput),
-		strings.TrimSpace(actualOutput.String()), actualError.String()) {
-		t.FailNow()
-	}
-	if !assert.Contains(t,
-		strings.TrimSpace(actualError.String()),
-		strings.TrimSpace(expectedError), actualOutput.String()) {
-		t.FailNow()
-	}
+		var actualOutput, actualError bytes.Buffer
+		cmd := rc.Command()
+		cmd.SetArgs(args)
+		cmd.SetOut(&actualOutput)
+		cmd.SetErr(&actualError)
+
+		err = cmd.Execute()
+
+		// Compae the results
+		if expectedError != "" && !assert.Error(t, err, actualOutput.String()) {
+			t.FailNow()
+		}
+		if expectedError == "" && !assert.NoError(t, err, actualError.String()) {
+			t.FailNow()
+		}
+		if !assert.Equal(t,
+			strings.TrimSpace(expectedOutput),
+			strings.TrimSpace(actualOutput.String()), actualError.String()) {
+			t.FailNow()
+		}
+		if !assert.Contains(t,
+			strings.TrimSpace(actualError.String()),
+			strings.TrimSpace(expectedError), actualOutput.String()) {
+			t.FailNow()
+		}
+	})
 }
 
 // getExpected reads the expected results and error files
 func (rc ResultsChecker) getExpected(t *testing.T, path string) (string, string) {
 	// read the expected results
 	var expectedOutput, expectedError string
-	if rc.ExpectedOutputFilname != "" {
-		_, err := os.Stat(filepath.Join(path, rc.ExpectedOutputFilname))
+	if rc.ExpectedOutputFilename != "" {
+		_, err := os.Stat(filepath.Join(path, rc.ExpectedOutputFilename))
 		if !os.IsNotExist(err) && err != nil {
 			t.FailNow()
 		}
 		if err == nil {
 			// only read the file if it exists
-			b, err := ioutil.ReadFile(filepath.Join(path, rc.ExpectedOutputFilname))
+			b, err := ioutil.ReadFile(filepath.Join(path, rc.ExpectedOutputFilename))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
