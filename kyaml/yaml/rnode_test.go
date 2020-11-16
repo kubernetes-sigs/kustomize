@@ -11,6 +11,212 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRNodeHasNilEntryInList(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		hasNil bool
+		path   string
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp:  resultExpected{},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp:  resultExpected{},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{},
+		},
+		"listWithNil": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					nil,
+				},
+			},
+			rsExp: resultExpected{
+				hasNil: false, // TODO: This should be true.
+				path:   "this/should/be/non-empty",
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			hasNil, path := rn.HasNilEntryInList()
+			if tc.rsExp.hasNil {
+				if !assert.True(t, hasNil) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.path, path) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.False(t, hasNil) {
+					t.FailNow()
+				}
+				if !assert.Empty(t, path) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func TestRNodeGetValidatedMetadata(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		out    ResourceMeta
+		errMsg string
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"noNameConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+			},
+			rsExp: resultExpected{
+				errMsg: "missing metadata.name",
+			},
+		},
+		"configmap": {
+			theMap: testConfigMap,
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMap",
+					},
+					ObjectMeta: ObjectMeta{
+						NameMeta: NameMeta{
+							Name: "winnie",
+						},
+					},
+				},
+			},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "List",
+					},
+				},
+			},
+		},
+		"configmaplist": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMapList",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMapList",
+					},
+				},
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			m, err := rn.GetValidatedMetadata()
+			if tc.rsExp.errMsg == "" {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.out, m) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.rsExp.errMsg) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
 func TestRNodeFromMap(t *testing.T) {
 	testConfigMap := map[string]interface{}{
 		"apiVersion": "v1",
@@ -19,25 +225,25 @@ func TestRNodeFromMap(t *testing.T) {
 			"name": "winnie",
 		},
 	}
-	type thingExpected struct {
+	type resultExpected struct {
 		out string
 		err error
 	}
 
 	testCases := map[string]struct {
-		theMap   map[string]interface{}
-		expected thingExpected
+		theMap map[string]interface{}
+		rsExp  resultExpected
 	}{
 		"actuallyNil": {
 			theMap: nil,
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `{}`,
 				err: nil,
 			},
 		},
 		"empty": {
 			theMap: map[string]interface{}{},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `{}`,
 				err: nil,
 			},
@@ -46,14 +252,14 @@ func TestRNodeFromMap(t *testing.T) {
 			theMap: map[string]interface{}{
 				"hey": "there",
 			},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `hey: there`,
 				err: nil,
 			},
 		},
 		"configmap": {
 			theMap: testConfigMap,
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `
 apiVersion: v1
 kind: ConfigMap
@@ -72,7 +278,7 @@ metadata:
 					testConfigMap,
 				},
 			},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `
 apiVersion: v1
 items:
@@ -98,7 +304,7 @@ kind: List
 					testConfigMap,
 				},
 			},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `
 apiVersion: v1
 items:
@@ -121,12 +327,12 @@ kind: ConfigMapList
 		tc := testCases[n]
 		t.Run(n, func(t *testing.T) {
 			rn, err := FromMap(tc.theMap)
-			if tc.expected.err == nil {
+			if tc.rsExp.err == nil {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
 				if !assert.Equal(t,
-					strings.TrimSpace(tc.expected.out),
+					strings.TrimSpace(tc.rsExp.out),
 					strings.TrimSpace(rn.MustString())) {
 					t.FailNow()
 				}
@@ -134,7 +340,7 @@ kind: ConfigMapList
 				if !assert.Error(t, err) {
 					t.FailNow()
 				}
-				if !assert.Equal(t, tc.expected.err, err) {
+				if !assert.Equal(t, tc.rsExp.err, err) {
 					t.FailNow()
 				}
 			}
