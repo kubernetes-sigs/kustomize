@@ -4,6 +4,7 @@
 package resmap_test
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/yaml"
 )
 
 var rf = resource.NewFactory(
@@ -730,5 +732,52 @@ func TestAbsorbAll(t *testing.T) {
 	err := w.AbsorbAll(w2)
 	if err == nil {
 		t.Fatalf("expected error with unspecified behavior")
+	}
+}
+
+func TestToRNodeSlice(t *testing.T) {
+	input := `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-reader
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+`
+	rm, err := rmF.NewResMapFromBytes([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	rnodes, err := rm.ToRNodeSlice()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	b := bytes.NewBufferString("")
+	for i, n := range rnodes {
+		if i != 0 {
+			b.WriteString("---\n")
+		}
+		s, err := n.String()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		y, err := yaml.JSONToYAML([]byte(s))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		b.WriteString(string(y))
+	}
+
+	if !reflect.DeepEqual(input, b.String()) {
+		t.Fatalf("actual doesn't match expected.\nActual:\n%s\n===\nExpected:\n%s\n",
+			b.String(), input)
 	}
 }
