@@ -4,14 +4,15 @@
 package framework_test
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/frameworktestutil"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -65,8 +66,9 @@ func TestCommand_standalone(t *testing.T) {
 	var config api
 
 	resourceList := &framework.ResourceList{FunctionConfig: &config}
-	cmd := framework.Command(resourceList, func() error {
-		resourceList.Items = append(resourceList.Items, yaml.MustParse(`
+	cmdFn := func() cobra.Command {
+		return framework.Command(resourceList, func() error {
+			resourceList.Items = append(resourceList.Items, yaml.MustParse(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -75,31 +77,16 @@ metadata:
   annotations:
     foo: bar1
 `))
-
-		for i := range resourceList.Items {
-			err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a", config.A))
-			if err != nil {
-				return err
+			for i := range resourceList.Items {
+				err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a", config.A))
+				if err != nil {
+					return err
+				}
 			}
-		}
 
-		return nil
-	})
-	cmd.SetArgs([]string{
-		filepath.Join("testdata", "command", "config.yaml"),
-		filepath.Join("testdata", "command", "input.yaml"),
-	})
-	var out bytes.Buffer
-	cmd.SetOutput(&out)
-	if !assert.NoError(t, cmd.Execute()) {
-		t.FailNow()
+			return nil
+		})
 	}
 
-	expected, err := ioutil.ReadFile(filepath.Join("testdata", "command", "expected.yaml"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, string(expected), out.String()) {
-		t.FailNow()
-	}
+	frameworktestutil.ResultsChecker{Command: cmdFn}.Assert(t)
 }
