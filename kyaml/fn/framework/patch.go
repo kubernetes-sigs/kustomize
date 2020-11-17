@@ -131,6 +131,10 @@ type Selector struct {
 
 	// matches contains a list of matching reosurces.
 	matches []*yaml.RNode
+
+	// TemplatizeValues if set to true will parse the selector values as templates
+	// and execute them with the functionConfig
+	TemplatizeValues bool
 }
 
 // GetMatches returns them matching resources from rl
@@ -141,7 +145,65 @@ func (s *Selector) GetMatches(rl *ResourceList) ([]*yaml.RNode, error) {
 	return s.matches, nil
 }
 
+// templatize templatizes the value
+func (s *Selector) templatize(value string, api interface{}) (string, error) {
+	t, err := template.New("kinds").Parse(value)
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+	var b bytes.Buffer
+	err = t.Execute(&b, api)
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+	return b.String(), nil
+}
+
+func (s *Selector) templatizeSlice(values []string, api interface{}) error {
+	var err error
+	for i := range values {
+		values[i], err = s.templatize(values[i], api)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Selector) templatizeMap(values map[string]string, api interface{}) error {
+	var err error
+	for k := range values {
+		values[k], err = s.templatize(values[k], api)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Selector) init(rl *ResourceList) error {
+	if s.TemplatizeValues {
+		// templatize the selector values from the input configuration
+		if err := s.templatizeSlice(s.Kinds, rl.FunctionConfig); err != nil {
+			return err
+		}
+		if err := s.templatizeSlice(s.APIVersions, rl.FunctionConfig); err != nil {
+			return err
+		}
+		if err := s.templatizeSlice(s.Names, rl.FunctionConfig); err != nil {
+			return err
+		}
+		if err := s.templatizeSlice(s.Namespaces, rl.FunctionConfig); err != nil {
+			return err
+		}
+		if err := s.templatizeMap(s.Labels, rl.FunctionConfig); err != nil {
+			return err
+		}
+		if err := s.templatizeMap(s.Annotations, rl.FunctionConfig); err != nil {
+			return err
+		}
+	}
+
 	// index the selectors
 	s.matches = nil
 	s.kindsSet = sets.String{}
@@ -153,7 +215,7 @@ func (s *Selector) init(rl *ResourceList) error {
 	s.namespaceSet = sets.String{}
 	s.namespaceSet.Insert(s.Namespaces...)
 
-	//check each resource that matches the patch selector
+	// check each resource that matches the patch selector
 	for i := range rl.Items {
 		if match, err := s.isMatch(rl.Items[i]); err != nil {
 			return err
