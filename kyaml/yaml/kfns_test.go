@@ -16,7 +16,7 @@ data:
   enableRisky: "false"
 `
 
-func TestSetLabel(t *testing.T) {
+func TestSetLabel1(t *testing.T) {
 	rn := MustParse(input)
 	_, err := rn.Pipe(SetLabel("foo", "bar"))
 	if err != nil {
@@ -33,6 +33,31 @@ metadata:
 data:
   altGreeting: "Good Morning!"
   enableRisky: "false"
+`
+	if output != expected {
+		t.Fatalf("expected \n%s\nbut got \n%s\n", expected, output)
+	}
+}
+
+func TestSetLabel2(t *testing.T) {
+	rn := MustParse(`apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+`)
+	_, err := rn.Pipe(SetLabel("foo", "bar"))
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	output := rn.MustString()
+
+	expected := `apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+metadata:
+  labels:
+    foo: 'bar'
 `
 	if output != expected {
 		t.Fatalf("expected \n%s\nbut got \n%s\n", expected, output)
