@@ -4,6 +4,7 @@
 package setters2
 
 import (
+	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -32,27 +33,27 @@ type visitor interface {
 }
 
 // accept invokes the appropriate function on v for each field in object
-func accept(v visitor, object *yaml.RNode) error {
+func accept(v visitor, object *yaml.RNode, settersSchema *spec.Schema) error {
 	// get the OpenAPI for the type if it exists
-	oa := getSchema(object, nil, "")
-	return acceptImpl(v, object, "", oa)
+	oa := getSchema(object, nil, "", settersSchema)
+	return acceptImpl(v, object, "", oa, settersSchema)
 }
 
 // acceptImpl implements accept using recursion
-func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSchema) error {
+func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSchema, settersSchema *spec.Schema) error {
 	switch object.YNode().Kind {
 	case yaml.DocumentNode:
 		// Traverse the child of the document
-		return accept(v, yaml.NewRNode(object.YNode()))
+		return accept(v, yaml.NewRNode(object.YNode()), settersSchema)
 	case yaml.MappingNode:
 		if err := v.visitMapping(object, p, oa); err != nil {
 			return err
 		}
 		return object.VisitFields(func(node *yaml.MapNode) error {
 			// get the schema for the field and propagate it
-			fieldSchema := getSchema(node.Key, oa, node.Key.YNode().Value)
+			fieldSchema := getSchema(node.Key, oa, node.Key.YNode().Value, settersSchema)
 			// Traverse each field value
-			return acceptImpl(v, node.Value, p+"."+node.Key.YNode().Value, fieldSchema)
+			return acceptImpl(v, node.Value, p+"."+node.Key.YNode().Value, fieldSchema, settersSchema)
 		})
 	case yaml.SequenceNode:
 		// get the schema for the sequence node, use the schema provided if not present
@@ -61,14 +62,14 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 			return err
 		}
 		// get the schema for the elements
-		schema := getSchema(object, oa, "")
+		schema := getSchema(object, oa, "", settersSchema)
 		return object.VisitElements(func(node *yaml.RNode) error {
 			// Traverse each list element
-			return acceptImpl(v, node, p, schema)
+			return acceptImpl(v, node, p, schema, settersSchema)
 		})
 	case yaml.ScalarNode:
 		// Visit the scalar field
-		fieldSchema := getSchema(object, oa, "")
+		fieldSchema := getSchema(object, oa, "", settersSchema)
 		return v.visitScalar(object, p, oa, fieldSchema)
 	}
 	return nil
@@ -80,14 +81,14 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 // r is the Node to get the Schema for
 // s is the provided schema for the field if known
 // field is the name of the field
-func getSchema(r *yaml.RNode, s *openapi.ResourceSchema, field string) *openapi.ResourceSchema {
+func getSchema(r *yaml.RNode, s *openapi.ResourceSchema, field string, settersSchema *spec.Schema) *openapi.ResourceSchema {
 	// get the override schema if it exists on the field
-	fm := fieldmeta.FieldMeta{}
+	fm := fieldmeta.FieldMeta{SettersSchema: settersSchema}
 	if err := fm.Read(r); err == nil && !fm.IsEmpty() {
 		// per-field schema, this is fine
 		if fm.Schema.Ref.String() != "" {
 			// resolve the reference
-			s, err := openapi.Resolve(&fm.Schema.Ref)
+			s, err := openapi.Resolve(&fm.Schema.Ref, settersSchema)
 			if err == nil && s != nil {
 				fm.Schema = *s
 			}

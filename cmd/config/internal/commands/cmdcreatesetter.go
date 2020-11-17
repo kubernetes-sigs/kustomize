@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -170,6 +171,10 @@ func (r *CreateSetterRunner) createSetter(c *cobra.Command, args []string) error
 }
 
 func (r *CreateSetterRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
+	sc, err := openapi.SchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName()))
+	if err != nil {
+		return err
+	}
 	r.CreateSetter = settersutil.SetterCreator{
 		Name:               r.SetterName,
 		SetBy:              r.SetBy,
@@ -183,9 +188,10 @@ func (r *CreateSetterRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		OpenAPIFileName:    ext.KRMFileName(),
 		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
+		SettersSchema:      sc,
 	}
 
-	err := r.CreateSetter.Create()
+	err = r.CreateSetter.Create()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.CreateSetter.RecurseSubPackages {
