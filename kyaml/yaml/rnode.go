@@ -14,18 +14,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-const (
-	// NodeTagNull is the tag set for a yaml.Document that contains no data;
-	// e.g. it isn't a Map, Slice, Document, etc
-	NodeTagNull   = "!!null"
-	NodeTagFloat  = "!!float"
-	NodeTagString = "!!str"
-	NodeTagBool   = "!!bool"
-	NodeTagInt    = "!!int"
-	NodeTagMap    = "!!map"
-	NodeTagSeq    = "!!seq"
-	NodeTagEmpty  = ""
-)
 
 // MakeNullNode returns an RNode that represents an empty document.
 func MakeNullNode() *RNode {
@@ -183,17 +171,6 @@ func (rn *RNode) Copy() *RNode {
 }
 
 var ErrMissingMetadata = fmt.Errorf("missing Resource metadata")
-
-// Field names
-const (
-	AnnotationsField = "annotations"
-	APIVersionField  = "apiVersion"
-	KindField        = "kind"
-	MetadataField    = "metadata"
-	NameField        = "name"
-	NamespaceField   = "namespace"
-	LabelsField      = "labels"
-)
 
 // IsNil is true if the node is nil, or its underlying YNode is nil.
 func (rn *RNode) IsNil() bool {
