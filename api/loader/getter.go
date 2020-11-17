@@ -5,8 +5,6 @@ package loader
 
 import (
 	"context"
-	"log"
-	"os"
 
 	"github.com/yujunz/go-getter"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -57,33 +55,46 @@ func newLoaderAtGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader
 
 func getRemoteTarget(rs *remoteTargetSpec) error {
 	var err error
-
 	rs.TempDir, err = filesys.NewTmpConfirmedDir()
 	if err != nil {
 		return err
 	}
 
-	rs.Dir = filesys.ConfirmedDir(rs.TempDir.Join("repo"))
-
-	// Get the pwd
-	pwd, err := os.Getwd()
+	// Normalize the url
+	source, err := getter.Detect(rs.Raw, "", []getter.Detector{
+		// Detect takes a pwd, but none of our detectors use it, so we just
+		// pass in empty string
+		new(getter.GitHubDetector),
+		new(getter.GitDetector),
+		new(getter.BitBucketDetector),
+	})
 	if err != nil {
-		log.Fatalf("Error getting wd: %s", err)
+		return err
 	}
+
+	// split the url into the base url and the subdir. for example,
+	//
+	// github.com/foo/bar
+	// => "github.com/foo/bar", ""
+	//
+	// github.com/foo/bar//overlays/production
+	// => "github.com/foo/bar", "overlays/production"
+	//
+	// note, this is only splits on `//` and we rely on urls already being
+	// normalized by the detectors
+	sourceBase, subdir := getter.SourceDirSubdir(source)
+	destination := filesys.ConfirmedDir(rs.TempDir.Join("repo"))
+	rs.Dir = filesys.ConfirmedDir(destination.Join(subdir))
 
 	opts := []getter.ClientOption{}
 	client := &getter.Client{
-		Ctx:  context.TODO(),
-		Src:  rs.Raw,
-		Dst:  rs.Dir.String(),
-		Pwd:  pwd,
-		Mode: getter.ClientModeAny,
-		Detectors: []getter.Detector{
-			new(getter.GitHubDetector),
-			new(getter.GitDetector),
-			new(getter.BitBucketDetector),
-		},
-		Options: opts,
+		Ctx:       context.TODO(),
+		Src:       sourceBase,
+		Dst:       destination.String(),
+		Pwd:       "",
+		Mode:      getter.ClientModeAny,
+		Detectors: []getter.Detector{}, // we've already done this step separately
+		Options:   opts,
 	}
 	return client.Get()
 }
@@ -95,12 +106,6 @@ func getNothing(rs *remoteTargetSpec) error {
 		return err
 	}
 
-	// Get the pwd
-	pwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Error getting wd: %s", err)
-	}
-
-	_, err = getter.Detect(rs.Raw, pwd, []getter.Detector{})
+	_, err = getter.Detect(rs.Raw, "", []getter.Detector{})
 	return err
 }
