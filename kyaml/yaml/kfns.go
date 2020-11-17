@@ -17,7 +17,7 @@ type AnnotationClearer struct {
 
 func (c AnnotationClearer) Filter(rn *RNode) (*RNode, error) {
 	return rn.Pipe(
-		PathGetter{Path: []string{"metadata", "annotations"}},
+		PathGetter{Path: []string{MetadataField, AnnotationsField}},
 		FieldClearer{Name: c.Key})
 }
 
@@ -28,12 +28,12 @@ func ClearAnnotation(key string) AnnotationClearer {
 // ClearEmptyAnnotations clears the keys, annotations
 // and metadata if they are empty/null
 func ClearEmptyAnnotations(rn *RNode) error {
-	_, err := rn.Pipe(Lookup("metadata"), FieldClearer{
-		Name: "annotations", IfEmpty: true})
+	_, err := rn.Pipe(Lookup(MetadataField), FieldClearer{
+		Name: AnnotationsField, IfEmpty: true})
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	_, err = rn.Pipe(FieldClearer{Name: "metadata", IfEmpty: true})
+	_, err = rn.Pipe(FieldClearer{Name: MetadataField, IfEmpty: true})
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -59,7 +59,9 @@ func (s AnnotationSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	return rn.Pipe(
-		PathGetter{Path: []string{"metadata", "annotations"}, Create: yaml.MappingNode},
+		PathGetter{
+			Path: []string{MetadataField, AnnotationsField},
+			Create: yaml.MappingNode},
 		FieldSetter{Name: s.Key, Value: v})
 }
 
@@ -78,7 +80,8 @@ type AnnotationGetter struct {
 // AnnotationGetter returns the annotation value.
 // Returns "", nil if the annotation does not exist.
 func (g AnnotationGetter) Filter(rn *RNode) (*RNode, error) {
-	v, err := rn.Pipe(PathGetter{Path: []string{"metadata", "annotations", g.Key}})
+	v, err := rn.Pipe(
+		PathGetter{Path: []string{MetadataField, AnnotationsField, g.Key}})
 	if v == nil || err != nil {
 		return v, err
 	}
@@ -106,7 +109,8 @@ func (s LabelSetter) Filter(rn *RNode) (*RNode, error) {
 	v.YNode().Tag = NodeTagString
 	v.YNode().Style = yaml.SingleQuotedStyle
 	return rn.Pipe(
-		PathGetter{Path: []string{"metadata", "labels"}, Create: yaml.MappingNode},
+		PathGetter{
+			Path: []string{MetadataField, LabelsField}, Create: yaml.MappingNode},
 		FieldSetter{Name: s.Key, Value: v})
 }
 
