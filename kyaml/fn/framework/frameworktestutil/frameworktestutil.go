@@ -83,16 +83,26 @@ func (rc ResultsChecker) Assert(t *testing.T) bool {
 }
 
 func (rc ResultsChecker) compare(t *testing.T, path string) {
+	// cd into the directory so we can test functions that refer
+	// local files by relative paths
+	d, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer func() { _ = os.Chdir(d) }()
+	if !assert.NoError(t, os.Chdir(path)) {
+		t.FailNow()
+	}
+
 	// make sure this directory contains test data
-	configPath := filepath.Join(path, rc.ConfigInputFilename)
-	_, err := os.Stat(configPath)
+	_, err = os.Stat(rc.ConfigInputFilename)
 	if os.IsNotExist(err) {
 		// missing input
 		return
 	}
-	args := []string{configPath}
+	args := []string{rc.ConfigInputFilename}
 
-	expectedOutput, expectedError := rc.getExpected(t, path)
+	expectedOutput, expectedError := rc.getExpected(t)
 	if expectedError == "" && expectedOutput == "" {
 		// missing expected
 		return
@@ -104,7 +114,7 @@ func (rc ResultsChecker) compare(t *testing.T, path string) {
 	// run the test
 	t.Run(path, func(t *testing.T) {
 		if rc.InputFilenameGlob != "" {
-			inputs, err := filepath.Glob(filepath.Join(path, rc.InputFilenameGlob))
+			inputs, err := filepath.Glob(rc.InputFilenameGlob)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -140,17 +150,17 @@ func (rc ResultsChecker) compare(t *testing.T, path string) {
 }
 
 // getExpected reads the expected results and error files
-func (rc ResultsChecker) getExpected(t *testing.T, path string) (string, string) {
+func (rc ResultsChecker) getExpected(t *testing.T) (string, string) {
 	// read the expected results
 	var expectedOutput, expectedError string
 	if rc.ExpectedOutputFilename != "" {
-		_, err := os.Stat(filepath.Join(path, rc.ExpectedOutputFilename))
+		_, err := os.Stat(rc.ExpectedOutputFilename)
 		if !os.IsNotExist(err) && err != nil {
 			t.FailNow()
 		}
 		if err == nil {
 			// only read the file if it exists
-			b, err := ioutil.ReadFile(filepath.Join(path, rc.ExpectedOutputFilename))
+			b, err := ioutil.ReadFile(rc.ExpectedOutputFilename)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -158,13 +168,13 @@ func (rc ResultsChecker) getExpected(t *testing.T, path string) (string, string)
 		}
 	}
 	if rc.ExpectedErrorFilename != "" {
-		_, err := os.Stat(filepath.Join(path, rc.ExpectedErrorFilename))
+		_, err := os.Stat(rc.ExpectedErrorFilename)
 		if !os.IsNotExist(err) && err != nil {
 			t.FailNow()
 		}
 		if err == nil {
 			// only read the file if it exists
-			b, err := ioutil.ReadFile(filepath.Join(path, rc.ExpectedErrorFilename))
+			b, err := ioutil.ReadFile(rc.ExpectedErrorFilename)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
