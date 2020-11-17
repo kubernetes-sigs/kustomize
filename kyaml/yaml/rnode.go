@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-
 // MakeNullNode returns an RNode that represents an empty document.
 func MakeNullNode() *RNode {
 	return NewRNode(&Node{Tag: NodeTagNull})
