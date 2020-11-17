@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -72,6 +73,10 @@ func (r *DeleteSetterRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *DeleteSetterRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
+	sc, err := openapi.SchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName()))
+	if err != nil {
+		return err
+	}
 	r.DeleteSetter = settersutil.DeleterCreator{
 		Name:               r.DeleteSetter.Name,
 		DefinitionPrefix:   fieldmeta.SetterDefinitionPrefix,
@@ -79,9 +84,10 @@ func (r *DeleteSetterRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		OpenAPIFileName:    ext.KRMFileName(),
 		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
+		SettersSchema:      sc,
 	}
 
-	err := r.DeleteSetter.Delete()
+	err = r.DeleteSetter.Delete()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.DeleteSetter.RecurseSubPackages {

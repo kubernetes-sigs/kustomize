@@ -20,28 +20,8 @@ func TestAddSchema(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`)
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`, Schema())
 	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
-		t.FailNow()
-	}
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	assert.Equal(t, `map[x-kustomize:map[setBy:Jane setter:map[name:replicas value:5]]]`,
-		fmt.Sprintf("%v", s.Schema.Extensions))
-}
-
-func TestNoUseBuiltInSchema_AddSchema(t *testing.T) {
-	// reset package vars
-	globalSchema = openapiData{}
-
-	SuppressBuiltInSchemaUse()
-	err := AddSchema(additionalSchema)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.config.setters.replicas"}`)
-	if !assert.Equal(t, len(globalSchema.schema.Definitions), 1) {
 		t.FailNow()
 	}
 	if !assert.NoError(t, err) {
@@ -124,7 +104,7 @@ func TestSchemaForResourceType(t *testing.T) {
 	}
 }
 
-func TestAddSchemaFromFile(t *testing.T) {
+func TestSchemaFromFile(t *testing.T) {
 	ResetOpenAPI()
 	inputyaml := `
 openAPI:
@@ -143,91 +123,21 @@ openAPI:
 		t.FailNow()
 	}
 
-	clean, err := AddSchemaFromFile(f.Name())
+	sc, err := SchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	defer clean()
 
-	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`, sc)
 
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
+	if !assert.Greater(t, len(sc.Definitions), 0) {
 		t.FailNow()
 	}
 	assert.Equal(t, `map[x-k8s-cli:map[setter:map[name:image-name value:nginx]]]`,
 		fmt.Sprintf("%v", s.Schema.Extensions))
-}
-
-func TestDeleteSchemaInFile(t *testing.T) {
-	ResetOpenAPI()
-	inputyaml := `
-openAPI:
-  definitions:
-    io.k8s.cli.setters.image-name:
-      x-k8s-cli:
-        setter:
-          name: image-name
-          value: "nginx"
- `
-	f, err := ioutil.TempFile("", "openapi-")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
-		t.FailNow()
-	}
-
-	clean, err := AddSchemaFromFile(f.Name())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
-
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
-		t.FailNow()
-	}
-	assert.Equal(t, `map[x-k8s-cli:map[setter:map[name:image-name value:nginx]]]`,
-		fmt.Sprintf("%v", s.Schema.Extensions))
-
-	clean()
-
-	_, err = GetSchema(`{"$ref": "#/definitions/io.k8s.cli.setters.image-name"}`)
-
-	if !assert.Error(t, err) {
-		t.FailNow()
-	}
-
-	if !assert.Equal(t, `object has no key "io.k8s.cli.setters.image-name"`, err.Error()) {
-		t.FailNow()
-	}
-}
-
-func TestDeleteSchemaInFileNoDefs(t *testing.T) {
-	ResetOpenAPI()
-	inputyaml := `
-openAPI:
-  definitions:
- `
-	f, err := ioutil.TempFile("", "openapi-")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
-		t.FailNow()
-	}
-
-	clean, err := AddSchemaFromFile(f.Name())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer clean()
 }
 
 func TestPopulateDefsInOpenAPI_Substitution(t *testing.T) {
@@ -265,18 +175,17 @@ openAPI:
 		t.FailNow()
 	}
 
-	clean, err := AddSchemaFromFile(f.Name())
+	sc, err := SchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	defer clean()
 
-	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.substitutions.image"}`)
+	s, err := GetSchema(`{"$ref": "#/definitions/io.k8s.cli.substitutions.image"}`, sc)
 
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.Greater(t, len(globalSchema.schema.Definitions), 200) {
+	if !assert.Equal(t, len(sc.Definitions), 3) {
 		t.FailNow()
 	}
 
@@ -301,13 +210,12 @@ kind: Example
 		t.FailNow()
 	}
 
-	clean, err := AddSchemaFromFile(f.Name())
+	sc, err := SchemaFromFile(f.Name())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	defer clean()
 
-	if !assert.Equal(t, len(globalSchema.schema.Definitions), 0) {
+	if !assert.Nil(t, sc) {
 		t.FailNow()
 	}
 }

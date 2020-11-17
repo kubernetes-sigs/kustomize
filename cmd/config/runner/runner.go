@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
 )
 
@@ -73,14 +71,6 @@ func (e ExecuteCmdOnPkgs) Execute() error {
 
 func (e ExecuteCmdOnPkgs) processPkg(pkgPath string) error {
 	// Add schema present in openAPI file for current package
-	if e.NeedOpenAPI {
-		clean, err := openapi.AddSchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName()))
-		if err != nil {
-			return err
-		}
-		defer clean()
-	}
-
 	if !e.SkipPkgPathPrint {
 		fmt.Fprintf(e.Writer, "%s/\n", pkgPath)
 	}
