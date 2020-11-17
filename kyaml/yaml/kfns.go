@@ -60,7 +60,7 @@ func (s AnnotationSetter) Filter(rn *RNode) (*RNode, error) {
 
 	return rn.Pipe(
 		PathGetter{
-			Path: []string{MetadataField, AnnotationsField},
+			Path:   []string{MetadataField, AnnotationsField},
 			Create: yaml.MappingNode},
 		FieldSetter{Name: s.Key, Value: v})
 }
