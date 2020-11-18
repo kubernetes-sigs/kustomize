@@ -6,6 +6,7 @@ package framework_test
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"path/filepath"
 	"text/template"
 
@@ -785,4 +786,107 @@ metadata:
 	//   namespace: default
 	//   annotations:
 	//     a: b
+}
+
+func ExampleSelector_templatizeKinds() {
+	type api struct {
+		KindName string `yaml:"kindName"`
+	}
+	rl := &framework.ResourceList{
+		FunctionConfig: &api{KindName: "Deployment"},
+		Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bar
+  namespace: default
+`),
+		Writer: os.Stdout,
+	}
+	if err := rl.Read(); err != nil {
+		panic(err)
+	}
+
+	var err error
+	s := &framework.Selector{
+		TemplatizeValues: true,
+		Kinds:            []string{"{{ .KindName }}"},
+	}
+	rl.Items, err = s.GetMatches(rl)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := rl.Write(); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     config.kubernetes.io/index: '0'
+}
+
+func ExampleSelector_templatizeAnnotations() {
+	type api struct {
+		Value string `yaml:"vaue"`
+	}
+	rl := &framework.ResourceList{
+		FunctionConfig: &api{Value: "bar"},
+		Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    key: foo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    key: bar
+`),
+		Writer: os.Stdout,
+	}
+	if err := rl.Read(); err != nil {
+		panic(err)
+	}
+
+	var err error
+	s := &framework.Selector{
+		TemplatizeValues: true,
+		Annotations:      map[string]string{"key": "{{ .Value }}"},
+	}
+	rl.Items, err = s.GetMatches(rl)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := rl.Write(); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     key: bar
+	//     config.kubernetes.io/index: '1'
 }
