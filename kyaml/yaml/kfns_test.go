@@ -39,8 +39,8 @@ data:
   fruit: apple
   veggie: celery
 `
-	if output != expected {
-		t.Fatalf("expected \n%s\nbut got \n%s\n", expected, output)
+	if !assert.Equal(t, expected, output) {
+		t.FailNow()
 	}
 }
 
@@ -79,8 +79,8 @@ metadata:
   name: foo
   namespace: bar
 `
-	if output != expected {
-		t.Fatalf("expected \n%s\nbut got \n%s\n", expected, output)
+	if !assert.Equal(t, expected, output) {
+		t.FailNow()
 	}
 }
 

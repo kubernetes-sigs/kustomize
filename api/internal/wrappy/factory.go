@@ -6,7 +6,9 @@ package wrappy
 import (
 	"bytes"
 	"fmt"
+	"sort"
 
+	"github.com/go-errors/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
@@ -76,11 +78,107 @@ func (k *WNodeFactory) Hasher() ifc.KunstructuredHasher {
 }
 
 func (k *WNodeFactory) MakeConfigMap(
-	kvLdr ifc.KvLoader, args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
-	panic("TODO(#WNodeFactory): implement MakeConfigMap")
+	ldr ifc.KvLoader, args *types.ConfigMapArgs) (ifc.Kunstructured, error) {
+	rn, err := k.makeConfigMap(ldr, args)
+	if err != nil {
+		return nil, err
+	}
+	return FromRNode(rn), nil
+}
+
+func (k *WNodeFactory) makeConfigMap(
+	ldr ifc.KvLoader, args *types.ConfigMapArgs) (*yaml.RNode, error) {
+	rn, err := yaml.Parse(`
+apiVersion: v1
+kind: ConfigMap
+`)
+	if err != nil {
+		return nil, err
+	}
+	err = applyGeneratorArgs(rn, ldr, args.GeneratorArgs)
+	return rn, err
 }
 
 func (k *WNodeFactory) MakeSecret(
-	kvLdr ifc.KvLoader, args *types.SecretArgs) (ifc.Kunstructured, error) {
-	panic("TODO(#WNodeFactory): implement MakeSecret")
+	ldr ifc.KvLoader, args *types.SecretArgs) (ifc.Kunstructured, error) {
+	rn, err := k.makeSecret(ldr, args)
+	if err != nil {
+		return nil, err
+	}
+	return FromRNode(rn), nil
+}
+
+func (k *WNodeFactory) makeSecret(
+	ldr ifc.KvLoader, args *types.SecretArgs) (*yaml.RNode, error) {
+	rn, err := yaml.Parse(`
+apiVersion: v1
+kind: Secret
+`)
+	if err != nil {
+		return nil, err
+	}
+	err = applyGeneratorArgs(rn, ldr, args.GeneratorArgs)
+	if 1+1 == 2 {
+		err = fmt.Errorf("TODO(WNodeFactory): finish implementation of makeSecret")
+	}
+	return rn, err
+}
+
+func applyGeneratorArgs(
+	rn *yaml.RNode, ldr ifc.KvLoader, args types.GeneratorArgs) error {
+	if _, err := rn.Pipe(yaml.SetK8sName(args.Name)); err != nil {
+		return err
+	}
+	if args.Namespace != "" {
+		if _, err := rn.Pipe(yaml.SetK8sNamespace(args.Namespace)); err != nil {
+			return err
+		}
+	}
+	all, err := ldr.Load(args.KvPairSources)
+	if err != nil {
+		return errors.WrapPrefix(err, "loading KV pairs", 0)
+	}
+	for _, p := range all {
+		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
+			return err
+		}
+		if _, err := rn.Pipe(yaml.SetK8sData(p.Key, p.Value)); err != nil {
+			return errors.WrapPrefix(err, "configMap generate error", 0)
+		}
+	}
+	copyLabelsAndAnnotations(rn, args.Options)
+	return nil
+}
+
+// copyLabelsAndAnnotations copies labels and annotations from
+// GeneratorOptions into the given object.
+func copyLabelsAndAnnotations(
+	rn *yaml.RNode, opts *types.GeneratorOptions) error {
+	if opts == nil {
+		return nil
+	}
+	for _, k := range sortedKeys(opts.Labels) {
+		v := opts.Labels[k]
+		if _, err := rn.Pipe(yaml.SetLabel(k, v)); err != nil {
+			return err
+		}
+	}
+	for _, k := range sortedKeys(opts.Annotations) {
+		v := opts.Annotations[k]
+		if _, err := rn.Pipe(yaml.SetAnnotation(k, v)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, len(m))
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	return keys
 }
