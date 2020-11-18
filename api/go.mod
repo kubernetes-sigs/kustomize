@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
 	github.com/golangci/golangci-lint v1.21.0
 	github.com/google/go-cmp v0.3.0

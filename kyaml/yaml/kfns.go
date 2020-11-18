@@ -58,7 +58,7 @@ func (s k8sDataSetter) Filter(rn *RNode) (*RNode, error) {
 		// test in a mapping field called "data" as a string. Pairs with a 'v'
 		// failing this test go into a field called binaryData as a []byte.
 		// TODO: support this distinction in kyaml with NodeTagBytes?
-		return nil, fmt.Errorf(
+		return nil, errors.Errorf(
 			"key '%s' appears to have non-utf8 data; "+
 				"binaryData field not yet supported", s.Key)
 	}
@@ -73,8 +73,8 @@ func (s k8sDataSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 	v := NewScalarRNode(s.Value)
 	v.YNode().Tag = NodeTagString
-	// Add quotes?
-	// v.YNode().Style = yaml.SingleQuotedStyle
+	// TODO: use schema to determine node style and tag.
+	// FormatNonStringStyle(v.YNode(), *k8sSch)
 	_, err = rn.Pipe(
 		LookupCreate(yaml.MappingNode, DataField), SetField(s.Key, v))
 	return rn, err
