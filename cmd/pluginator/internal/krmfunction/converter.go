@@ -11,7 +11,7 @@ import (
 
 	"github.com/rakyll/statik/fs"
 	// load embedded func wrapper
-	_ "sigs.k8s.io/kustomize/cmd/pluginator/v2/krmfunction/funcwrapper"
+	_ "sigs.k8s.io/kustomize/cmd/pluginator/v2/internal/krmfunction/funcwrapper"
 )
 
 // Converter is a converter to convert the
