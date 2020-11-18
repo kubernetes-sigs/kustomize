@@ -13,7 +13,7 @@ test: generate
 
 generate: statik
 	( \
-		cd krmfunction; \
+		cd internal/krmfunction; \
 		statik -src=$(FUNC_WRAPPER_SRC_DIR) -f -p $(FUNC_WRAPPER_DST_DIR) -include=main.go,go.mod.src \
 	)
 

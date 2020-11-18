@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/pluginator/v2/builtinplugin"
-	"sigs.k8s.io/kustomize/cmd/pluginator/v2/krmfunction"
+	"sigs.k8s.io/kustomize/cmd/pluginator/v2/internal/builtinplugin"
+	"sigs.k8s.io/kustomize/cmd/pluginator/v2/internal/krmfunction"
 )
 
 func main() {
