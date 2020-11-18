@@ -5,6 +5,8 @@ package yaml
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var input = `apiVersion: v1
@@ -15,6 +17,72 @@ data:
   altGreeting: "Good Morning!"
   enableRisky: "false"
 `
+
+func TestSetK8sData(t *testing.T) {
+	rn := MustParse(`apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+`)
+	_, err := rn.Pipe(
+		SetK8sData("foo", "bar"),
+		SetK8sData("fruit", "apple"),
+		SetK8sData("veggie", "celery"))
+	assert.NoError(t, err)
+	output := rn.MustString()
+
+	expected := `apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+  foo: bar
+  fruit: apple
+  veggie: celery
+`
+	if !assert.Equal(t, expected, output) {
+		t.FailNow()
+	}
+}
+
+func TestSetK8sDataForbidOverwrite(t *testing.T) {
+	rn := MustParse(`apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+`)
+	_, err := rn.Pipe(
+		SetK8sData("foo", "bar"),
+		SetK8sData("altGreeting", "hey"),
+		SetK8sData("veggie", "celery"))
+	assert.EqualError(
+		t, err, "protecting existing altGreeting='\"Good Morning!\"' "+
+			"against attempt to add new value 'hey'")
+}
+
+func TestSetMeta(t *testing.T) {
+	rn := MustParse(`apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+`)
+	_, err := rn.Pipe(SetK8sName("foo"), SetK8sNamespace("bar"))
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	output := rn.MustString()
+
+	expected := `apiVersion: v1
+kind: ConfigMap
+data:
+  altGreeting: "Good Morning!"
+metadata:
+  name: foo
+  namespace: bar
+`
+	if !assert.Equal(t, expected, output) {
+		t.FailNow()
+	}
+}
 
 func TestSetLabel1(t *testing.T) {
 	rn := MustParse(input)
