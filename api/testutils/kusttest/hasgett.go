@@ -12,7 +12,7 @@ import (
 )
 
 type hasGetT interface {
-	GetT() *testing.T
+	GetT() testing.TB
 }
 
 func assertActualEqualsExpectedWithTweak(
@@ -41,7 +41,7 @@ func assertActualEqualsExpectedWithTweak(
 
 // Pretty printing of file differences.
 func reportDiffAndFail(
-	t *testing.T, actual []byte, expected string) {
+	t testing.TB, actual []byte, expected string) {
 	sE, maxLen := convertToArray(expected)
 	sA, _ := convertToArray(string(actual))
 	fmt.Println("===== ACTUAL BEGIN ========================================")

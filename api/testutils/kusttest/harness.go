@@ -18,23 +18,23 @@ import (
 
 // Harness manages a test environment.
 type Harness struct {
-	t    *testing.T
+	t    testing.TB
 	fSys filesys.FileSystem
 }
 
-func MakeHarness(t *testing.T) Harness {
+func MakeHarness(t testing.TB) Harness {
 	return MakeHarnessWithFs(t, filesys.MakeFsInMemory())
 }
 
 func MakeHarnessWithFs(
-	t *testing.T, fSys filesys.FileSystem) Harness {
+	t testing.TB, fSys filesys.FileSystem) Harness {
 	return Harness{
 		t:    t,
 		fSys: fSys,
 	}
 }
 
-func (th Harness) GetT() *testing.T {
+func (th Harness) GetT() testing.TB {
 	return th.t
 }
 

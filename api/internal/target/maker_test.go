@@ -25,7 +25,7 @@ func makeAndLoadKustTarget(
 	maxParallelAccumulate int) *target.KustTarget {
 	kt := makeKustTargetWithRf(
 		t, fSys, root,
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 1)
+		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), maxParallelAccumulate)
 	if err := kt.Load(); err != nil {
 		t.Fatalf("Unexpected load error %v", err)
 	}

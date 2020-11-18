@@ -5,9 +5,13 @@ package target_test
 
 import (
 	"encoding/base64"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"regexp"
 	"testing"
+
+	"sigs.k8s.io/kustomize/api/filesys"
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -387,4 +391,45 @@ spec:
   ports:
   - port: 7002
 `)
+}
+
+func BenchmarkMaxParallelAccumulate1(b *testing.B) {
+	benchmarkMaxParallelAccumulate(1, b)
+}
+
+func BenchmarkMaxParallelAccumulate2(b *testing.B) {
+	benchmarkMaxParallelAccumulate(2, b)
+}
+func BenchmarkMaxParallelAccumulate3(b *testing.B) {
+	benchmarkMaxParallelAccumulate(3, b)
+}
+
+func benchmarkMaxParallelAccumulate(i int, b *testing.B) {
+
+	dir := makeTmpDir(b)
+	defer os.RemoveAll(dir)
+
+	th := kusttest_test.MakeHarnessWithFs(b, filesys.MakeFsOnDisk())
+	th.WriteK(dir, `
+resources:
+- git::https://github.com/kubernetes-sigs/kustomize.git//examples/helloWorld
+- git::https://github.com/kubernetes-sigs/kustomize.git//examples/multibases
+- git::https://github.com/kubernetes-sigs/kustomize.git//examples/loadHttp
+`)
+	options := th.MakeDefaultOptions()
+	options.LoadRestrictions = types.LoadRestrictionsNone
+	options.MaxParallelAccumulate = i
+	th.Run(dir, options)
+}
+
+func makeTmpDir(t testing.TB) string {
+	base, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("err %v", err)
+	}
+	dir, err := ioutil.TempDir(base, "kustomize-tmp-test-")
+	if err != nil {
+		t.Fatalf("err %v", err)
+	}
+	return dir
 }

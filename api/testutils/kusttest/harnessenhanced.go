@@ -136,7 +136,7 @@ func (th *HarnessEnhanced) ErrorFromLoadAndRunTransformer(
 	return err
 }
 
-type AssertFunc func(t *testing.T, err error)
+type AssertFunc func(t testing.TB, err error)
 
 func (th *HarnessEnhanced) RunTransformerAndCheckError(
 	config, input string, assertFn AssertFunc) {
