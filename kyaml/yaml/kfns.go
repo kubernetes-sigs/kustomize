@@ -4,6 +4,10 @@
 package yaml
 
 import (
+	"fmt"
+	"strings"
+	"unicode/utf8"
+
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -38,6 +42,70 @@ func ClearEmptyAnnotations(rn *RNode) error {
 		return errors.Wrap(err)
 	}
 	return nil
+}
+
+// k8sDataSetter place key value pairs in either a 'data' or 'binaryData' field.
+// Useful for creating ConfigMaps and Secrets.
+type k8sDataSetter struct {
+	Key             string `yaml:"key,omitempty"`
+	Value           string `yaml:"value,omitempty"`
+	ProtectExisting bool   `yaml:"protectExisting,omitempty"`
+}
+
+func (s k8sDataSetter) Filter(rn *RNode) (*RNode, error) {
+	if !utf8.Valid([]byte(s.Value)) {
+		// Core k8s ConfigMaps store k,v pairs with 'v' passing the above utf8
+		// test in a mapping field called "data" as a string. Pairs with a 'v'
+		// failing this test go into a field called binaryData as a []byte.
+		// TODO: support this distinction in kyaml with NodeTagBytes?
+		return nil, fmt.Errorf(
+			"key '%s' appears to have non-utf8 data; "+
+				"binaryData field not yet supported", s.Key)
+	}
+	keyNode, err := rn.Pipe(Lookup(DataField, s.Key))
+	if err != nil {
+		return nil, err
+	}
+	if keyNode != nil && s.ProtectExisting {
+		return nil, fmt.Errorf(
+			"protecting existing %s='%s' against attempt to add new value '%s'",
+			s.Key, strings.TrimSpace(keyNode.MustString()), s.Value)
+	}
+	v := NewScalarRNode(s.Value)
+	v.YNode().Tag = NodeTagString
+	// Add quotes?
+	// v.YNode().Style = yaml.SingleQuotedStyle
+	_, err = rn.Pipe(
+		LookupCreate(yaml.MappingNode, DataField), SetField(s.Key, v))
+	return rn, err
+}
+
+func SetK8sData(key, value string) k8sDataSetter {
+	return k8sDataSetter{Key: key, Value: value, ProtectExisting: true}
+}
+
+// k8sMetaSetter sets a name at metadata.{key}.
+// Creates metadata if does not exist.
+type k8sMetaSetter struct {
+	Key   string `yaml:"key,omitempty"`
+	Value string `yaml:"value,omitempty"`
+}
+
+func (s k8sMetaSetter) Filter(rn *RNode) (*RNode, error) {
+	v := NewScalarRNode(s.Value)
+	v.YNode().Tag = NodeTagString
+	_, err := rn.Pipe(
+		PathGetter{Path: []string{MetadataField}, Create: yaml.MappingNode},
+		FieldSetter{Name: s.Key, Value: v})
+	return rn, err
+}
+
+func SetK8sName(value string) k8sMetaSetter {
+	return k8sMetaSetter{Key: NameField, Value: value}
+}
+
+func SetK8sNamespace(value string) k8sMetaSetter {
+	return k8sMetaSetter{Key: NamespaceField, Value: value}
 }
 
 // AnnotationSetter sets an annotation at metadata.annotations.
