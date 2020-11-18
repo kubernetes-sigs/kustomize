@@ -14,8 +14,8 @@ import (
 // subcommand
 func NewCmdListBuiltinPlugin() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-builtin-plugin",
-		Short: "List the builtin plugins",
+		Use:   "alpha-list-builtin-plugin",
+		Short: "[Alpha] List the builtin plugins",
 		Long:  "",
 		Run: func(cmd *cobra.Command, args []string) {
 			plugins := konfig.GetBuiltinPluginNames()
