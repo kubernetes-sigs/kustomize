@@ -35,7 +35,7 @@ module=${fullTag%/*}
 echo "module=$module"
 
 # Find previous tag that matches the tags module
-prevTag=$(git tag -l "$module*" --sort=-version:refname --no-contains=$currentTag | head -n 1)
+prevTag=$(git tag -l "$module*" --sort=-version:refname --no-contains=$fullTag | head -n 1)
 
 # Generate the changelog for this release
 # using the last two tags for the module
