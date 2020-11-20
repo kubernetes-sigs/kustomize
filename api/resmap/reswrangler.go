@@ -568,7 +568,7 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 func (m *resWrangler) ToRNodeSlice() ([]*kyaml_yaml.RNode, error) {
 	var rnodes []*kyaml_yaml.RNode
 	for _, r := range m.Resources() {
-		s, err := r.MarshalJSON()
+		s, err := r.AsYAML()
 		if err != nil {
 			return nil, err
 		}
