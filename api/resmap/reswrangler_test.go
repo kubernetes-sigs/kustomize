@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/yaml"
 )
 
 var rf = resource.NewFactory(
@@ -769,11 +768,7 @@ rules:
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		y, err := yaml.JSONToYAML([]byte(s))
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		b.WriteString(string(y))
+		b.WriteString(s)
 	}
 
 	if !reflect.DeepEqual(input, b.String()) {
