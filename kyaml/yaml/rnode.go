@@ -100,6 +100,15 @@ func NewScalarRNode(value string) *RNode {
 		}}
 }
 
+// NewStringRNode returns a new Scalar *RNode containing the provided string.
+// If the string is non-utf8, it will be base64 encoded, and the tag
+// will indicate binary data.
+func NewStringRNode(value string) *RNode {
+	n := yaml.Node{Kind: yaml.ScalarNode}
+	n.SetString(value)
+	return NewRNode(&n)
+}
+
 // NewListRNode returns a new List *RNode containing the provided scalar values.
 func NewListRNode(values ...string) *RNode {
 	seq := &RNode{value: &yaml.Node{Kind: yaml.SequenceNode}}
