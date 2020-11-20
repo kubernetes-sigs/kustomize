@@ -78,6 +78,20 @@ func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
 	}.Write(nodes)
 }
 
+// ParseAll reads all of the inputs into resources
+func ParseAll(inputs ...string) ([]*yaml.RNode, error) {
+	return (&ByteReader{
+		Reader: bytes.NewBufferString(strings.Join(inputs, "\n---\n")),
+	}).Read()
+}
+
+// StringAll writes all of the resources to a string
+func StringAll(resources []*yaml.RNode) (string, error) {
+	var b bytes.Buffer
+	err := (&ByteWriter{Writer: &b}).Write(resources)
+	return b.String(), err
+}
+
 // ByteReader decodes ResourceNodes from bytes.
 // By default, Read will set the config.kubernetes.io/index annotation on each RNode as it
 // is read so they can be written back in the same order.
