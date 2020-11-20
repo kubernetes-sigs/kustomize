@@ -11,7 +11,6 @@ in the [multibases](multibases/README.md) example.  There's
 one pod in the output:
 
 <!-- @remoteOverlayBuild @testAgainstLatestRelease -->
-
 ```
 target="github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6"
 test 1 == \
