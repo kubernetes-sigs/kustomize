@@ -81,15 +81,15 @@ functionConfig:
   kind: FulfillmentCenter
   metadata:
     name: staging
-    metadata:
-      annotations:
-        config.kubernetes.io/function: |
-          container:
-            image: gcr.io/example/foo:v1.0.0
-  namespace: foo
-  fieldSpecs:
-  - path: metadata/namespace
-    create: true
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: gcr.io/example/foo:v1.0.0
+  data:
+    namespace: foo
+    fieldSpecs:
+    - path: metadata/namespace
+      create: true
 items:
   - apiVersion: apps/v1
     kind: foobar
@@ -108,7 +108,9 @@ func runKrmFunction(t *testing.T, input []byte, dir string) []byte {
 	cmd.Stderr = eb
 	cmd.Dir = dir
 	err := cmd.Run()
-	assert.NoErrorf(t, err, "Stdout:\n%s\nStderr:\n%s\n", ob.String(), eb.String())
+	if !assert.NoErrorf(t, err, "Stdout:\n%s\nStderr:\n%s\n", ob.String(), eb.String()) {
+		t.FailNow()
+	}
 	return ob.Bytes()
 }
 
@@ -139,15 +141,15 @@ functionConfig:
   kind: FulfillmentCenter
   metadata:
     name: staging
-    metadata:
-      annotations:
-        config.kubernetes.io/function: |
-          container:
-            image: gcr.io/example/foo:v1.0.0
-  namespace: foo
-  fieldSpecs:
-  - path: metadata/namespace
-    create: true
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: gcr.io/example/foo:v1.0.0
+  data:
+    namespace: foo
+    fieldSpecs:
+    - path: metadata/namespace
+      create: true
 `, string(output))
 }
 
@@ -198,11 +200,13 @@ functionConfig:
   kind: FulfillmentCenter
   metadata:
     name: staging
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: gcr.io/example/foo:v1.0.0
+  data:
     metadata:
-      annotations:
-        config.kubernetes.io/function: |
-          container:
-            image: gcr.io/example/foo:v1.0.0
+      name: staging
 items: []
 `)
 }
@@ -232,10 +236,12 @@ functionConfig:
   kind: FulfillmentCenter
   metadata:
     name: staging
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: gcr.io/example/foo:v1.0.0
+  data:
     metadata:
-      annotations:
-        config.kubernetes.io/function: |
-          container:
-            image: gcr.io/example/foo:v1.0.0
+      name: staging
 `, string(output))
 }

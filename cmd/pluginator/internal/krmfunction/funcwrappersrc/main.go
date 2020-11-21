@@ -21,18 +21,23 @@ func main() {
 	pluginHelpers := newPluginHelpers(resmapFactory)
 
 	resourceList := &framework.ResourceList{}
+	resourceList.FunctionConfig = map[string]interface{}{}
 
 	cmd := framework.Command(resourceList, func() error {
 		resMap, err := resmapFactory.NewResMapFromRNodeSlice(resourceList.Items)
 		if err != nil {
 			return err
 		}
-		pluginConfig, err := functionConfigToPluginConfig(resourceList.FunctionConfig)
+		dataField, err := getDataFromFunctionConfig(resourceList.FunctionConfig)
+		if err != nil {
+			return err
+		}
+		dataValue, err := yaml.Marshal(dataField)
 		if err != nil {
 			return err
 		}
 
-		err = plugin.Config(pluginHelpers, pluginConfig)
+		err = plugin.Config(pluginHelpers, dataValue)
 		if err != nil {
 			return err
 		}
@@ -72,6 +77,10 @@ func newResMapFactory() *resmap.Factory {
 }
 
 //nolint
-func functionConfigToPluginConfig(fc interface{}) ([]byte, error) {
-	return yaml.Marshal(fc)
+func getDataFromFunctionConfig(fc interface{}) (interface{}, error) {
+	f, ok := fc.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("function config %#v is not valid", fc)
+	}
+	return f["data"], nil
 }
