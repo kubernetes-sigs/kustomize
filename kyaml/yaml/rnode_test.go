@@ -90,6 +90,31 @@ func TestRNodeHasNilEntryInList(t *testing.T) {
 	}
 }
 
+func TestRNodeNewStringRNodeText(t *testing.T) {
+	rn := NewStringRNode("cat")
+	if !assert.Equal(t, `cat
+`,
+		rn.MustString()) {
+		t.FailNow()
+	}
+}
+
+func TestRNodeNewStringRNodeBinary(t *testing.T) {
+	rn := NewStringRNode(string([]byte{
+		0xff, // non-utf8
+		0x68, // h
+		0x65, // e
+		0x6c, // l
+		0x6c, // l
+		0x6f, // o
+	}))
+	if !assert.Equal(t, `!!binary /2hlbGxv
+`,
+		rn.MustString()) {
+		t.FailNow()
+	}
+}
+
 func TestRNodeGetValidatedMetadata(t *testing.T) {
 	testConfigMap := map[string]interface{}{
 		"apiVersion": "v1",

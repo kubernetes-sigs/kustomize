@@ -23,6 +23,7 @@ const (
 	KindField        = "kind"
 	MetadataField    = "metadata"
 	DataField        = "data"
+	BinaryDataField  = "binaryData"
 	NameField        = "name"
 	NamespaceField   = "namespace"
 	LabelsField      = "labels"
