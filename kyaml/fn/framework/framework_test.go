@@ -4,13 +4,16 @@
 package framework_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/frameworktestutil"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
@@ -66,7 +69,7 @@ func TestCommand_standalone(t *testing.T) {
 	var config api
 
 	resourceList := &framework.ResourceList{FunctionConfig: &config}
-	cmdFn := func() cobra.Command {
+	cmdFn := func() *cobra.Command {
 		return framework.Command(resourceList, func() error {
 			resourceList.Items = append(resourceList.Items, yaml.MustParse(`
 apiVersion: apps/v1
@@ -89,4 +92,73 @@ metadata:
 	}
 
 	frameworktestutil.ResultsChecker{Command: cmdFn}.Assert(t)
+}
+
+func TestCommand_standalonestdin(t *testing.T) {
+	// TODO: make this test pass on windows -- currently failure seems spurious
+	testutil.SkipWindows(t)
+
+	type api = struct {
+		A string `json:"a" yaml:"a"`
+	}
+	var config api
+
+	resourceList := &framework.ResourceList{FunctionConfig: &config}
+	cmd := framework.Command(resourceList, func() error {
+		resourceList.Items = append(resourceList.Items, yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar2
+  namespace: default
+  annotations:
+    foo: bar2
+`))
+		for i := range resourceList.Items {
+			err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a", config.A))
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	cmd.SetIn(bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar1
+  namespace: default
+  annotations:
+    foo: bar1
+spec:
+  replicas: 1
+`))
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetArgs([]string{filepath.Join("testdata", "command", "config.yaml"), "-"})
+
+	require.NoError(t, cmd.Execute())
+
+	require.Equal(t, strings.TrimSpace(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar1
+  namespace: default
+  annotations:
+    foo: bar1
+    a: 'b'
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar2
+  namespace: default
+  annotations:
+    foo: bar2
+    a: 'b'
+`), strings.TrimSpace(out.String()))
 }
