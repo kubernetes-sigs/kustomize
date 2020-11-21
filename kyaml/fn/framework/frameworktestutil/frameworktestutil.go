@@ -46,7 +46,7 @@ type ResultsChecker struct {
 	ExpectedErrorFilename string
 
 	// Command provides the function to run.
-	Command func() cobra.Command
+	Command func() *cobra.Command
 }
 
 // Assert asserts the results for functions

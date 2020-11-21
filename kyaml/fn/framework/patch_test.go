@@ -21,7 +21,7 @@ func TestPatchTemplate(t *testing.T) {
 	// TODO: make this test pass on windows -- current failure seems spurious
 	testutil.SkipWindows(t)
 
-	cmdFn := func() cobra.Command {
+	cmdFn := func() *cobra.Command {
 		type api struct {
 			Selector framework.Selector `json:"selector" yaml:"selector"`
 			A        string             `json:"a" yaml:"a"`
