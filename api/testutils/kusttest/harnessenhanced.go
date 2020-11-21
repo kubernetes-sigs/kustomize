@@ -8,13 +8,11 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/merge"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -46,11 +44,9 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resourceFactory := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	resmapFactory := resmap.NewFactory(
-		resourceFactory,
-		merge.NewMerginator(resourceFactory))
+	p := provider.NewDefaultDepProvider()
+	resourceFactory := p.GetResourceFactory()
+	resmapFactory := resmap.NewFactory(resourceFactory, p.GetMerginator())
 
 	result := &HarnessEnhanced{
 		Harness: MakeHarness(t),

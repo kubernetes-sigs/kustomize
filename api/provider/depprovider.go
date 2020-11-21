@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/wrappy"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 )
@@ -138,6 +139,7 @@ import (
 // If you're reading this, plan not done.
 //
 type DepProvider struct {
+	kFactory        ifc.KunstructuredFactory
 	resourceFactory *resource.Factory
 	merginator      resmap.Merginator
 	fieldValidator  ifc.Validator
@@ -147,6 +149,7 @@ func makeK8sdepBasedInstances() *DepProvider {
 	kf := kunstruct.NewKunstructuredFactoryImpl()
 	rf := resource.NewFactory(kf)
 	return &DepProvider{
+		kFactory:        kf,
 		resourceFactory: rf,
 		merginator:      merge.NewMerginator(rf),
 		fieldValidator:  validator.NewKustValidator(),
@@ -157,6 +160,7 @@ func makeKyamlBasedInstances() *DepProvider {
 	kf := &wrappy.WNodeFactory{}
 	rf := resource.NewFactory(kf)
 	return &DepProvider{
+		kFactory:        kf,
 		resourceFactory: rf,
 		merginator:      kmerge.NewMerginator(rf),
 		fieldValidator:  validate.NewFieldValidator(),
@@ -168,6 +172,14 @@ func NewDepProvider(useKyaml bool) *DepProvider {
 		return makeKyamlBasedInstances()
 	}
 	return makeK8sdepBasedInstances()
+}
+
+func NewDefaultDepProvider() *DepProvider {
+	return NewDepProvider(konfig.FlagEnableKyamlDefaultValue)
+}
+
+func (dp *DepProvider) GetKunstructuredFactory() ifc.KunstructuredFactory {
+	return dp.kFactory
 }
 
 func (dp *DepProvider) GetResourceFactory() *resource.Factory {

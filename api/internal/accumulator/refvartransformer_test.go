@@ -7,10 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -46,8 +44,7 @@ func TestRefVarTransformer(t *testing.T) {
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/interface"},
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/num"},
 				},
-				res: resmaptest_test.NewRmBuilder(
-					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+				res: resmaptest_test.NewRmBuilderDefault(t).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -77,8 +74,7 @@ func TestRefVarTransformer(t *testing.T) {
 						}}).ResMap(),
 			},
 			expected: expected{
-				res: resmaptest_test.NewRmBuilder(
-					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+				res: resmaptest_test.NewRmBuilderDefault(t).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -116,8 +112,7 @@ func TestRefVarTransformer(t *testing.T) {
 				fs: []types.FieldSpec{
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/slice"},
 				},
-				res: resmaptest_test.NewRmBuilder(
-					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+				res: resmaptest_test.NewRmBuilderDefault(t).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -138,8 +133,7 @@ func TestRefVarTransformer(t *testing.T) {
 				fs: []types.FieldSpec{
 					{Gvk: resid.Gvk{Version: "v1", Kind: "ConfigMap"}, Path: "data/nil"},
 				},
-				res: resmaptest_test.NewRmBuilder(
-					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+				res: resmaptest_test.NewRmBuilderDefault(t).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",
@@ -151,8 +145,7 @@ func TestRefVarTransformer(t *testing.T) {
 						}}).ResMap(),
 			},
 			expected: expected{
-				res: resmaptest_test.NewRmBuilder(
-					t, resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())).
+				res: resmaptest_test.NewRmBuilderDefault(t).
 					Add(map[string]interface{}{
 						"apiVersion": "v1",
 						"kind":       "ConfigMap",

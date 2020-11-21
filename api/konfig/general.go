@@ -20,6 +20,10 @@ func DefaultKustomizationFileName() string {
 }
 
 const (
+	// FlagEnableKyamlDefaultValue is the default value for the --enable_kyaml
+	// flag.  This value is also used in unit tests.  See provider.DepProvider.
+	FlagEnableKyamlDefaultValue = false
+
 	// An environment variable to consult for kustomization
 	// configuration data.  See:
 	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
