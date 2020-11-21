@@ -7,13 +7,12 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/provider"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
-
-var fileReader = kunstruct.NewKunstructuredFactoryImpl()
 
 // This document is meant to be used at the elasticsearch document type.
 // Fields are serialized as-is to elasticsearch, where indices are built
@@ -42,6 +41,7 @@ type KustomizationDocument struct {
 	Kinds       []string `json:"kinds,omitempty"`
 	Identifiers []string `json:"identifiers,omitempty"`
 	Values      []string `json:"values,omitempty"`
+	resFactory  *resource.Factory
 }
 
 type set map[string]struct{}
@@ -52,6 +52,7 @@ func (doc *KustomizationDocument) Copy() *KustomizationDocument {
 		Kinds:       doc.Kinds,
 		Identifiers: doc.Identifiers,
 		Values:      doc.Values,
+		resFactory:  provider.NewDefaultDepProvider().GetResourceFactory(),
 	}
 }
 
@@ -150,7 +151,7 @@ func (doc *KustomizationDocument) readBytes() ([]map[string]interface{}, error) 
 	}
 
 	configs := make([]map[string]interface{}, 0)
-	ks, err := fileReader.SliceFromBytes(data)
+	ks, err := doc.resFactory.SliceFromBytes(data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse resource: %v", err)
 	}

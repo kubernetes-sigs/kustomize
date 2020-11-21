@@ -12,7 +12,7 @@ import (
 
 	. "sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -20,16 +20,14 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-func makeResAccumulator(t *testing.T) (*ResAccumulator, *resource.Factory) {
+func makeResAccumulator(t *testing.T) *ResAccumulator {
 	ra := MakeEmptyAccumulator()
 	err := ra.MergeConfig(builtinconfig.MakeDefaultConfig())
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
 	err = ra.AppendAll(
-		resmaptest_test.NewRmBuilder(t, rf).
+		resmaptest_test.NewRmBuilderDefault(t).
 			Add(map[string]interface{}{
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
@@ -66,11 +64,11 @@ func makeResAccumulator(t *testing.T) (*ResAccumulator, *resource.Factory) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	return ra, rf
+	return ra
 }
 
 func TestResolveVarsHappy(t *testing.T) {
-	ra, _ := makeResAccumulator(t)
+	ra := makeResAccumulator(t)
 	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
@@ -99,7 +97,7 @@ func TestResolveVarsHappy(t *testing.T) {
 }
 
 func TestResolveVarsOneUnused(t *testing.T) {
-	ra, _ := makeResAccumulator(t)
+	ra := makeResAccumulator(t)
 	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
@@ -140,11 +138,10 @@ func expectLog(t *testing.T, log bytes.Buffer, expect string) {
 }
 
 func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
-	ra, rf := makeResAccumulator(t)
-
+	ra := makeResAccumulator(t)
 	rm0 := resmap.New()
 	err := rm0.Append(
-		rf.FromMap(
+		provider.NewDefaultDepProvider().GetResourceFactory().FromMap(
 			map[string]interface{}{
 				"apiVersion": "v1",
 				"kind":       "Service",
@@ -213,8 +210,7 @@ func makeVarToNamepaceAndPath(
 }
 
 func TestResolveVarConflicts(t *testing.T) {
-	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-
+	rf := provider.NewDefaultDepProvider().GetResourceFactory()
 	// create configmaps in foo and bar namespaces with `data.provider` values.
 	fooAws := makeNamespacedConfigMapWithDataProviderValue("foo", "aws")
 	barAws := makeNamespacedConfigMapWithDataProviderValue("bar", "aws")
@@ -261,7 +257,7 @@ func TestResolveVarConflicts(t *testing.T) {
 }
 
 func TestResolveVarsGoodResIdBadField(t *testing.T) {
-	ra, _ := makeResAccumulator(t)
+	ra := makeResAccumulator(t)
 	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
@@ -286,7 +282,7 @@ func TestResolveVarsGoodResIdBadField(t *testing.T) {
 }
 
 func TestResolveVarsUnmappableVar(t *testing.T) {
-	ra, _ := makeResAccumulator(t)
+	ra := makeResAccumulator(t)
 	err := ra.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_THREE",
@@ -310,7 +306,7 @@ func TestResolveVarsUnmappableVar(t *testing.T) {
 }
 
 func TestResolveVarsWithNoambiguation(t *testing.T) {
-	ra1, rf := makeResAccumulator(t)
+	ra1 := makeResAccumulator(t)
 	err := ra1.MergeVars([]types.Var{
 		{
 			Name: "SERVICE_ONE",
@@ -327,7 +323,7 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 	// Create another accumulator having a resource with different prefix
 	ra2 := MakeEmptyAccumulator()
 
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilderDefault(t).
 		Add(map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
