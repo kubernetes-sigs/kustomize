@@ -131,7 +131,11 @@ func TestTransformerConverter(t *testing.T) {
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1beta1
 kind: ResourceList
 items:
-- {"apiVersion": "apps/v1", "kind": "foobar", "metadata": {"name": "whatever", "namespace": "foo"}}
+- apiVersion: apps/v1
+  kind: foobar
+  metadata:
+    name: whatever
+    namespace: foo
 functionConfig:
   apiVersion: foo-corp.com/v1
   kind: FulfillmentCenter
@@ -223,7 +227,10 @@ func TestGeneratorConverter(t *testing.T) {
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1beta1
 kind: ResourceList
 items:
-- {"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": "staging"}}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: staging
 functionConfig:
   apiVersion: foo-corp.com/v1
   kind: FulfillmentCenter
