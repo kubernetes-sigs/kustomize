@@ -95,11 +95,21 @@ type ResourceList struct {
 
 	// NoPrintError if set will prevent the error from being printed
 	NoPrintError bool
+
+	Command *cobra.Command
 }
 
 // Read reads the ResourceList
 func (r *ResourceList) Read() error {
+	var in io.Reader = os.Stdin
+	var out io.Writer = os.Stdout
+	if r.Command != nil {
+		in = r.Command.InOrStdin()
+		out = r.Command.OutOrStdout()
+	}
+
 	// parse the inputs from the args
+	var readStdinStandalone bool
 	if len(r.Args) > 0 && !r.DisableStandalone {
 		// write the files as input
 		var buf bytes.Buffer
@@ -109,6 +119,12 @@ func (r *ResourceList) Read() error {
 			if i == 0 {
 				continue
 			}
+			if r.Args[i] == "-" {
+				// Read stdin separately
+				readStdinStandalone = true
+				continue
+			}
+
 			b, err := ioutil.ReadFile(r.Args[i])
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to read input file %s", r.Args[i])
@@ -120,10 +136,10 @@ func (r *ResourceList) Read() error {
 	}
 
 	if r.Reader == nil {
-		r.Reader = os.Stdin
+		r.Reader = in
 	}
 	if r.Writer == nil {
-		r.Writer = os.Stdout
+		r.Writer = out
 	}
 	r.rw = &kio.ByteReadWriter{
 		Reader:                r.Reader,
@@ -155,6 +171,16 @@ func (r *ResourceList) Read() error {
 	r.Items, err = r.rw.Read()
 	if err != nil {
 		return errors.Wrap(err)
+	}
+
+	if readStdinStandalone {
+		br := kio.ByteReader{Reader: in}
+		items, err := br.Read()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		// stdin always comes first so files are patches
+		r.Items = append(items, r.Items...)
 	}
 
 	// parse the functionConfig
@@ -223,8 +249,9 @@ func (r *ResourceList) Write() error {
 // a Dockerfile to build the function into a container image
 //
 //		go run main.go gen DIR/
-func Command(resourceList *ResourceList, function Function) cobra.Command {
+func Command(resourceList *ResourceList, function Function) *cobra.Command {
 	cmd := cobra.Command{}
+	resourceList.Command = &cmd
 	AddGenerateDockerfile(&cmd)
 	var printStack bool
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
@@ -242,7 +269,7 @@ func Command(resourceList *ResourceList, function Function) cobra.Command {
 	cmd.Args = cobra.MinimumNArgs(0)
 	cmd.SilenceErrors = true
 	cmd.SilenceUsage = true
-	return cmd
+	return &cmd
 }
 
 // TemplateCommand provides a cobra command to invoke a template
@@ -310,7 +337,7 @@ func (tc TemplateCommand) doTemplate(t *template.Template, rl *ResourceList) err
 }
 
 // GetCommand returns a new cobra command
-func (tc TemplateCommand) GetCommand() cobra.Command {
+func (tc TemplateCommand) GetCommand() *cobra.Command {
 	rl := ResourceList{
 		FunctionConfig: tc.API,
 		NoPrintError:   true,
