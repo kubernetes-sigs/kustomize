@@ -357,9 +357,11 @@ $(MYGOBIN)/gh:
 clean: kustomize-external-go-plugin-clean
 	go clean --cache
 	rm -f $(builtinplugins)
-	rm -f $(MYGOBIN)/pluginator
 	rm -f $(MYGOBIN)/kustomize
 	rm -f $(MYGOBIN)/golangci-lint-kustomize
+
+# Handle pluginator manually.
+# rm -f $(MYGOBIN)/pluginator
 
 # Nuke the site from orbit.  It's the only way to be sure.
 .PHONY: nuke
