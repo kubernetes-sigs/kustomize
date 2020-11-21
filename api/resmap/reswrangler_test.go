@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -18,8 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-var rf = resource.NewFactory(
-	kunstruct.NewKunstructuredFactoryImpl())
+var rf = provider.NewDefaultDepProvider().GetResourceFactory()
 var rmF = NewFactory(rf, nil)
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {

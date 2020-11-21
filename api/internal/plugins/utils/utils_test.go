@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -64,7 +64,7 @@ func strptr(s string) *string {
 }
 
 func TestUpdateResourceOptions(t *testing.T) {
-	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+	rf := provider.NewDefaultDepProvider().GetResourceFactory()
 	in := resmap.New()
 	expected := resmap.New()
 	cases := []struct {
@@ -108,7 +108,7 @@ func TestUpdateResourceOptions(t *testing.T) {
 }
 
 func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {
-	rf := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+	rf := provider.NewDefaultDepProvider().GetResourceFactory()
 	cases := []string{
 		"",
 		"FaLsE",

@@ -5,17 +5,18 @@ package build
 
 import (
 	"github.com/spf13/pflag"
+	"sigs.k8s.io/kustomize/api/konfig"
 )
 
 var (
-	flagEnableKyamlValue = false
+	flagEnableKyamlValue = konfig.FlagEnableKyamlDefaultValue
 )
 
 func addFlagEnableKyaml(set *pflag.FlagSet) {
 	set.BoolVar(
 		&flagEnableKyamlValue,
-		"enable_kyaml", // flag name
-		false,          // default value
+		"enable_kyaml",                                   // flag name
+		konfig.FlagEnableKyamlDefaultValue,               // default value
 		"enable dependence on kyaml instead of k8sdeps.", // help
 	)
 }
