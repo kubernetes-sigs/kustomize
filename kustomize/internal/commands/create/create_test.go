@@ -8,12 +8,12 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/kustfile"
 )
 
-var factory = kunstruct.NewKunstructuredFactoryImpl()
+var factory = provider.NewDefaultDepProvider().GetKunstructuredFactory()
 
 func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomization {
 	kf, err := kustfile.NewKustomizationFile(fSys)

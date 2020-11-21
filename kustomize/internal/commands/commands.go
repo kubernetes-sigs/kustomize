@@ -8,14 +8,12 @@ import (
 	"flag"
 	"os"
 
-	"sigs.k8s.io/kustomize/cmd/config/configcobra"
-
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/cmd/config/completion"
+	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/create"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit"
@@ -36,13 +34,13 @@ Manages declarative configuration of Kubernetes.
 See https://sigs.k8s.io/kustomize
 `,
 	}
-	uf := kunstruct.NewKunstructuredFactoryImpl()
-	v := validator.NewKustValidator()
+	pvd := provider.NewDefaultDepProvider()
 	c.AddCommand(
 		completion.NewCommand(),
 		build.NewCmdBuild(stdOut),
-		edit.NewCmdEdit(fSys, v, uf),
-		create.NewCmdCreate(fSys, uf),
+		edit.NewCmdEdit(
+			fSys, pvd.GetFieldValidator(), pvd.GetKunstructuredFactory()),
+		create.NewCmdCreate(fSys, pvd.GetKunstructuredFactory()),
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
 	)

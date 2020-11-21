@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/yaml"
 )
@@ -16,9 +15,10 @@ import (
 //nolint
 func main() {
 	var plugin resmap.Configurable
-	resmapFactory := newResMapFactory()
-
-	pluginHelpers := newPluginHelpers(resmapFactory)
+	p := provider.NewDefaultDepProvider()
+	resmapFactory := resmap.NewFactory(p.GetResourceFactory(), p.GetMerginator())
+	pluginHelpers := resmap.NewPluginHelpers(
+		nil, p.GetFieldValidator(), resmapFactory)
 
 	resourceList := &framework.ResourceList{}
 	resourceList.FunctionConfig = map[string]interface{}{}
@@ -63,17 +63,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-//nolint
-func newPluginHelpers(resmapFactory *resmap.Factory) *resmap.PluginHelpers {
-	return resmap.NewPluginHelpers(nil, nil, resmapFactory)
-}
-
-//nolint
-func newResMapFactory() *resmap.Factory {
-	resourceFactory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-	return resmap.NewFactory(resourceFactory, nil)
 }
 
 //nolint
