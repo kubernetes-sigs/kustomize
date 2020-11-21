@@ -6,12 +6,14 @@ package framework_test
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"text/template"
 
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -889,4 +891,227 @@ metadata:
 	//   annotations:
 	//     key: bar
 	//     config.kubernetes.io/index: '1'
+}
+
+// ExamplePatchTemplateContainers_names patches all containers.
+func ExamplePatchTemplateContainers() {
+	resources, err := kio.ParseAll(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: bar
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+spec:
+  selector:
+    foo: bar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: baz
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar
+spec:
+  selector:
+    foo: bar
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	input := struct{ Value string }{Value: "new-value"}
+	err = framework.PatchTemplateContainers(resources, `
+env:
+  KEY: {{ .Value }}
+`, input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(kio.StringAll(resources))
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: bar
+	//         image: b
+	//         env:
+	//           KEY: new-value
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: foo
+	// spec:
+	//   selector:
+	//     foo: bar
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: baz
+	//         image: b
+	//         env:
+	//           KEY: new-value
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: bar
+	// spec:
+	//   selector:
+	//     foo: bar
+	//  <nil>
+}
+
+// ExamplePatchTemplateContainers_names patches containers matching
+// a specific name.
+func ExamplePatchTemplateContainers_names() {
+	resources, err := kio.ParseAll(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: bar
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+spec:
+  selector:
+    foo: bar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: baz
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar
+spec:
+  selector:
+    foo: bar
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	input := struct{ Value string }{Value: "new-value"}
+	err = framework.PatchTemplateContainers(resources, `
+env:
+  KEY: {{ .Value }}
+`, input, "foo")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(kio.StringAll(resources))
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: bar
+	//         image: b
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: foo
+	// spec:
+	//   selector:
+	//     foo: bar
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: baz
+	//         image: b
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: bar
+	// spec:
+	//   selector:
+	//     foo: bar
+	//  <nil>
 }
