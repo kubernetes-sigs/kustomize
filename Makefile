@@ -205,12 +205,15 @@ kustomize-external-go-plugin-clean:
 
 .PHONY: lint-kustomize
 lint-kustomize: install-tools $(builtinplugins)
-	cd api; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd kustomize; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd cmd/pluginator; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../../.golangci-kustomize.yml run ./...
+	cd api; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../.golangci-kustomize.yml \
+	  run ./...
+	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../.golangci-kustomize.yml \
+	  run ./...
+	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../../.golangci-kustomize.yml \
+	  run ./...
 
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
