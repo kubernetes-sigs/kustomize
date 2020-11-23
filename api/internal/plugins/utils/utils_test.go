@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -87,24 +88,8 @@ func TestUpdateResourceOptions(t *testing.T) {
 		expected.Append(makeConfigMapOptions(rf, name, c.behavior, !c.needsHash))
 	}
 	actual, err := UpdateResourceOptions(in)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err.Error())
-	}
-	for i, a := range expected.Resources() {
-		b := actual.GetByIndex(i)
-		if b == nil {
-			t.Fatalf("resource %d missing from processed map", i)
-		}
-		if !a.Equals(b) {
-			t.Errorf("expected %v got %v", a, b)
-		}
-		if a.NeedHashSuffix() != b.NeedHashSuffix() {
-			t.Errorf("")
-		}
-		if a.Behavior() != b.Behavior() {
-			t.Errorf("expected %v got %v", a.Behavior(), b.Behavior())
-		}
-	}
+	assert.NoError(t, err)
+	assert.NoError(t, expected.ErrorIfNotEqualLists(actual))
 }
 
 func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {

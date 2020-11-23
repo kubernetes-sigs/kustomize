@@ -5,6 +5,7 @@
 package resource
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -156,9 +157,25 @@ func (r *Resource) copyOtherFields(other *Resource) {
 	r.nameSuffixes = copyStringSlice(other.nameSuffixes)
 }
 
-func (r *Resource) Equals(o *Resource) bool {
-	return r.ReferencesEqual(o) &&
-		reflect.DeepEqual(r.kunStr, o.kunStr)
+func (r *Resource) ErrIfNotEquals(o *Resource) error {
+	meYaml, err := r.AsYAML()
+	if err != nil {
+		return err
+	}
+	otherYaml, err := o.AsYAML()
+	if err != nil {
+		return err
+	}
+	if !r.ReferencesEqual(o) {
+		return fmt.Errorf("references unequal")
+	}
+	if string(meYaml) != string(otherYaml) {
+		return fmt.Errorf("---  self:\n"+
+			"%s\n"+
+			"--- other:\n"+
+			"%s\n", meYaml, otherYaml)
+	}
+	return nil
 }
 
 func (r *Resource) ReferencesEqual(o *Resource) bool {

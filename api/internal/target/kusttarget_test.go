@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -243,18 +244,14 @@ metadata:
 			t.Fatalf("unexpected error %v", err)
 		}
 	}
+	expYaml, err := expected.AsYaml()
+	assert.NoError(t, err)
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/whatever", pvd)
-	err := kt.Load()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
+	assert.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
-
-	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
-		t.Fatalf("unexpected inequality: %v", err)
-	}
+	assert.NoError(t, err)
+	actYaml, err := actual.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, expYaml, actYaml)
 }
