@@ -5,9 +5,9 @@ package resmap_test
 
 import (
 	"encoding/base64"
-	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/kv"
@@ -60,29 +60,21 @@ metadata:
 				"name":      "dply2",
 				"namespace": "test",
 			}}).ResMap()
+	expYaml, err := expected.AsYaml()
+	assert.NoError(t, err)
 
 	fSys := filesys.MakeFsInMemory()
-	err := fSys.WriteFile("deployment.yaml", []byte(resourceStr))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, fSys.WriteFile("deployment.yaml", []byte(resourceStr)))
 
 	ldr, err := loader.NewLoader(
 		loader.RestrictionRootOnly, filesys.Separator, fSys)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	m, err := rmF.FromFile(ldr, "deployment.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m.Size() != 3 {
-		t.Fatalf("result should contain 3, but got %d", m.Size())
-	}
-	if err := expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
-	}
+	assert.NoError(t, err)
+	mYaml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, expYaml, mYaml)
 }
 
 func TestFromBytes(t *testing.T) {
@@ -109,13 +101,13 @@ metadata:
 			"metadata": map[string]interface{}{
 				"name": "cm2",
 			}}).ResMap()
+	expYaml, err := expected.AsYaml()
+	assert.NoError(t, err)
 	m, err := rmF.NewResMapFromBytes(encoded)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !reflect.DeepEqual(m, expected) {
-		t.Fatalf("%#v doesn't match expected %#v", m, expected)
-	}
+	assert.NoError(t, err)
+	mYaml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, expYaml, mYaml)
 }
 
 var cmap = resid.Gvk{Version: "v1", Kind: "ConfigMap"}
@@ -229,12 +221,12 @@ BAR=baz
 			}
 		}
 		r, err := rmF.NewResMapFromConfigMapArgs(kvLdr, tc.input)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if err = tc.expected.ErrorIfNotEqualLists(r); err != nil {
-			t.Fatalf("testcase: %q, err: %v", tc.description, err)
-		}
+		assert.NoError(t, err, tc.description)
+		rYaml, err := r.AsYaml()
+		assert.NoError(t, err, tc.description)
+		expYaml, err := tc.expected.AsYaml()
+		assert.NoError(t, err, tc.description)
+		assert.Equal(t, expYaml, rYaml)
 	}
 }
 
@@ -263,6 +255,8 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	actYaml, err := actual.AsYaml()
+	assert.NoError(t, err)
 
 	expected := resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
@@ -277,9 +271,10 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 				"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 			},
 		}).ResMap()
-	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
-		t.Fatalf("error: %s", err)
-	}
+	expYaml, err := expected.AsYaml()
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expYaml), string(actYaml))
 }
 
 func TestFromRNodeSlice(t *testing.T) {
