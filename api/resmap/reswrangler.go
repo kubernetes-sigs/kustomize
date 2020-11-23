@@ -339,10 +339,8 @@ func (m *resWrangler) ErrorIfNotEqualLists(other ResMap) error {
 	}
 	for i, r1 := range m.rList {
 		r2 := m2.rList[i]
-		if !r1.Equals(r2) {
-			return fmt.Errorf(
-				"Item i=%d differs:\n  n1 = %s\n  n2 = %s\n  o1 = %s\n  o2 = %s\n",
-				i, r1.OrgId(), r2.OrgId(), r1, r2)
+		if err := r1.ErrIfNotEquals(r2); err != nil {
+			return err
 		}
 	}
 	return nil
