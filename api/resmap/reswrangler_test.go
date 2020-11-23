@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
@@ -704,27 +705,16 @@ func TestAbsorbAll(t *testing.T) {
 			Behavior: "create",
 		}))
 	w := makeMap1()
-	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := expected.ErrorIfNotEqualLists(w); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(makeMap2(types.BehaviorMerge)))
+	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
 	w = makeMap1()
-	if err := w.AbsorbAll(nil); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w.ErrorIfNotEqualLists(makeMap1()); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(nil))
+	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1()))
+
 	w = makeMap1()
 	w2 := makeMap2(types.BehaviorReplace)
-	if err := w.AbsorbAll(w2); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w2.ErrorIfNotEqualLists(w); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(w2))
+	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
 	w = makeMap1()
 	w2 = makeMap2(types.BehaviorUnspecified)
 	err := w.AbsorbAll(w2)
