@@ -13,12 +13,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 )
 
-// PatchTemplateContainers executes t as a template and patches each container in each resource
+// PatchContainersWithString executes t as a template and patches each container in each resource
 // with the result.
-func PatchTemplateContainers(resources []*yaml.RNode, t string, input interface{}, containers ...string) error {
+func PatchContainersWithString(resources []*yaml.RNode, t string, input interface{}, containers ...string) error {
 	resourcePatch := template.Must(template.New("containers").Parse(t))
+	return PatchContainersWithTemplate(resources, resourcePatch, input, containers...)
+}
+
+// PatchContainersWithTemplate executes t and patches each container in each resource
+// with the result.
+func PatchContainersWithTemplate(resources []*yaml.RNode, t *template.Template, input interface{}, containers ...string) error {
 	var b bytes.Buffer
-	if err := resourcePatch.Execute(&b, input); err != nil {
+	if err := t.Execute(&b, input); err != nil {
 		return errors.Wrap(err)
 	}
 	patch, err := yaml.Parse(b.String())
