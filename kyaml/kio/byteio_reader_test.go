@@ -423,3 +423,306 @@ metadata:
 		})
 	}
 }
+
+func TestFromBytes(t *testing.T) {
+	type expected struct {
+		isErr bool
+		sOut  []string
+	}
+
+	testCases := map[string]struct {
+		input []byte
+		exp   expected
+	}{
+		"garbage": {
+			input: []byte("garbageIn: garbageOut"),
+			exp: expected{
+				sOut: []string{"garbageIn: garbageOut"},
+			},
+		},
+		"noBytes": {
+			input: []byte{},
+			exp: expected{
+				sOut: []string{},
+			},
+		},
+		"goodJson": {
+			input: []byte(`
+{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie"}}
+`),
+			exp: expected{
+				sOut: []string{`
+{"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": "winnie"}}
+`},
+			},
+		},
+		"goodYaml1": {
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`},
+			},
+		},
+		"goodYaml2": {
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`},
+			},
+		},
+		"localConfigYaml": {
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie-skip
+  annotations:
+    # this annotation causes the Resource to be ignored by kustomize
+    config.kubernetes.io/local-config: ""
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie-skip
+  annotations:
+    # this annotation causes the Resource to be ignored by kustomize
+    config.kubernetes.io/local-config: ""
+`,
+					`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`},
+			},
+		},
+		"garbageInOneOfTwoObjects": {
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+---
+WOOOOOOOOOOOOOOOOOOOOOOOOT:     woot
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`,
+					`
+WOOOOOOOOOOOOOOOOOOOOOOOOT: woot
+`},
+			},
+		},
+		"emptyObjects": {
+			input: []byte(`
+---
+#a comment
+
+---
+
+`),
+			exp: expected{
+				sOut: []string{},
+			},
+		},
+		"Missing .metadata.name in object": {
+			input: []byte(`
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    foo: bar
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    foo: bar
+`},
+			},
+		},
+		"nil value in list": {
+			input: []byte(`
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: kube100-site
+	labels:
+	  app: web
+testList:
+- testA
+-
+`),
+			exp: expected{
+				isErr: true,
+			},
+		},
+		"List": {
+			input: []byte(`
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`},
+			},
+		},
+		"ConfigMapList": {
+			input: []byte(`
+apiVersion: v1
+kind: ConfigMapList
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: ConfigMapList
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+`},
+			},
+		},
+		"listWithAnchors": {
+			input: []byte(`
+apiVersion: v1
+kind: DeploymentList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-a
+  spec: &hostAliases
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-b
+  spec:
+    <<: *hostAliases
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: DeploymentList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-a
+  spec: &hostAliases
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-b
+  spec:
+    !!merge <<: *hostAliases
+`},
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rNodes, err := FromBytes(tc.input)
+			if err != nil {
+				assert.True(t, tc.exp.isErr)
+				return
+			}
+			assert.False(t, tc.exp.isErr)
+			assert.Equal(t, len(tc.exp.sOut), len(rNodes))
+			for i, n := range rNodes {
+				json, err := n.String()
+				assert.NoError(t, err)
+				assert.Equal(
+					t, strings.TrimSpace(tc.exp.sOut[i]),
+					strings.TrimSpace(json), n)
+			}
+		})
+	}
+}

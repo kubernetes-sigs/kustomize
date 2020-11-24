@@ -1,12 +1,15 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package wrappy
+package wrappy_test
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	. "sigs.k8s.io/kustomize/api/internal/wrappy"
 )
 
 func TestHasher(t *testing.T) {
@@ -55,6 +58,45 @@ func TestSliceFromBytes(t *testing.T) {
 			"items": []interface{}{
 				testConfigMap,
 				testConfigMap,
+			},
+		}
+	testDeploymentSpec := map[string]interface{}{
+		"template": map[string]interface{}{
+			"spec": map[string]interface{}{
+				"hostAliases": []interface{}{
+					map[string]interface{}{
+						"hostnames": []interface{}{
+							"a.example.com",
+						},
+						"ip": "8.8.8.8",
+					},
+				},
+			},
+		},
+	}
+	testDeploymentA := map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name": "deployment-a",
+		},
+		"spec": testDeploymentSpec,
+	}
+	testDeploymentB := map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name": "deployment-b",
+		},
+		"spec": testDeploymentSpec,
+	}
+	testDeploymentList :=
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "DeploymentList",
+			"items": []interface{}{
+				testDeploymentA,
+				testDeploymentB,
 			},
 		}
 
@@ -224,28 +266,54 @@ items:
 				out: []map[string]interface{}{testConfigMapList},
 			},
 		},
+		"listWithAnchors": {
+			input: []byte(`
+apiVersion: v1
+kind: DeploymentList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-a
+  spec: &hostAliases
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-b
+  spec:
+    <<: *hostAliases
+`),
+			exp: expected{
+				out: []map[string]interface{}{testDeploymentList},
+			},
+		},
 	}
 
 	for n := range testCases {
 		tc := testCases[n]
 		t.Run(n, func(t *testing.T) {
 			rs, err := factory.SliceFromBytes(tc.input)
-			if tc.exp.isErr && err == nil {
-				t.Fatalf("%v: should return error", n)
+			if err != nil {
+				assert.True(t, tc.exp.isErr)
+				return
 			}
-			if !tc.exp.isErr && err != nil {
-				t.Fatalf("%v: unexpected error: %s", n, err)
-			}
-			if len(tc.exp.out) != len(rs) {
-				fmt.Printf("%s: \nexpected:%v\nactual: %v\n",
-					n, tc.exp.out, rs)
-				t.Fatalf("%s: length mismatch; expected %d, actual %d",
-					n, len(tc.exp.out), len(rs))
-			}
+			assert.False(t, tc.exp.isErr)
+			assert.Equal(t, len(tc.exp.out), len(rs))
 			for i := range rs {
-				if !reflect.DeepEqual(tc.exp.out[i], rs[i].Map()) {
-					t.Fatalf("%s: Got: %v\nexpected:%v",
-						n, rs[i].Map(), tc.exp.out[i])
+				assert.Equal(
+					t, fmt.Sprintf("%v", tc.exp.out[i]), fmt.Sprintf("%v", rs[i].Map()))
+				if n != "listWithAnchors" {
+					// https://github.com/kubernetes-sigs/kustomize/issues/3271
+					if !reflect.DeepEqual(tc.exp.out[i], rs[i].Map()) {
+						t.Fatalf("%s:\nexpected: %v\n  actual: %v",
+							n, tc.exp.out[i], rs[i].Map())
+					}
 				}
 			}
 		})
