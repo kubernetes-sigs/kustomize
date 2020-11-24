@@ -4,7 +4,6 @@
 package wrappy
 
 import (
-	"bytes"
 	"fmt"
 
 	"sigs.k8s.io/kustomize/api/hasher"
@@ -36,9 +35,7 @@ type WNodeFactory struct {
 var _ ifc.KunstructuredFactory = (*WNodeFactory)(nil)
 
 func (k *WNodeFactory) SliceFromBytes(bs []byte) ([]ifc.Kunstructured, error) {
-	r := kio.ByteReader{OmitReaderAnnotations: true}
-	r.Reader = bytes.NewBuffer(bs)
-	yamlRNodes, err := r.Read()
+	yamlRNodes, err := kio.FromBytes(bs)
 	if err != nil {
 		return nil, err
 	}

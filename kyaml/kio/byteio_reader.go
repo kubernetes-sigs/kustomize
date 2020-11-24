@@ -85,6 +85,14 @@ func ParseAll(inputs ...string) ([]*yaml.RNode, error) {
 	}).Read()
 }
 
+// FromBytes reads from a byte slice.
+func FromBytes(bs []byte) ([]*yaml.RNode, error) {
+	return (&ByteReader{
+		OmitReaderAnnotations: true,
+		Reader:                bytes.NewBuffer(bs),
+	}).Read()
+}
+
 // StringAll writes all of the resources to a string
 func StringAll(resources []*yaml.RNode) (string, error) {
 	var b bytes.Buffer

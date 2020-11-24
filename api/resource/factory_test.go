@@ -350,7 +350,7 @@ kind: List
 			expectedErr: false,
 		},
 		{
-			name:        "listWithNo'items:'",
+			name:        "listWithNoItems",
 			input:       []types.PatchStrategicMerge{patchList4},
 			expectedOut: []*Resource{},
 			expectedErr: false,
@@ -364,10 +364,7 @@ kind: List
 			continue
 		}
 		assert.False(t, test.expectedErr, "expected no error")
-		if len(rs) != len(test.expectedOut) {
-			t.Fatalf("%s: length mismatch %d != %d",
-				test.name, len(rs), len(test.expectedOut))
-		}
+		assert.Equal(t, len(test.expectedOut), len(rs))
 		for i := range rs {
 			expYaml, err := test.expectedOut[i].AsYAML()
 			assert.NoError(t, err)
