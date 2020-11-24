@@ -893,8 +893,8 @@ metadata:
 	//     config.kubernetes.io/index: '1'
 }
 
-// ExamplePatchTemplateContainers_names patches all containers.
-func ExamplePatchTemplateContainers() {
+// ExamplePatchContainersWithString patches all containers.
+func ExamplePatchContainersWithString() {
 	resources, err := kio.ParseAll(`
 apiVersion: apps/v1
 kind: Deployment
@@ -943,7 +943,7 @@ spec:
 	}
 
 	input := struct{ Value string }{Value: "new-value"}
-	err = framework.PatchTemplateContainers(resources, `
+	err = framework.PatchContainersWithString(resources, `
 env:
   KEY: {{ .Value }}
 `, input)
@@ -1006,9 +1006,9 @@ env:
 	//  <nil>
 }
 
-// ExamplePatchTemplateContainers_names patches containers matching
+// PatchTemplateContainersWithString patches containers matching
 // a specific name.
-func ExamplePatchTemplateContainers_names() {
+func ExamplePatchContainersWithString_names() {
 	resources, err := kio.ParseAll(`
 apiVersion: apps/v1
 kind: Deployment
@@ -1057,7 +1057,7 @@ spec:
 	}
 
 	input := struct{ Value string }{Value: "new-value"}
-	err = framework.PatchTemplateContainers(resources, `
+	err = framework.PatchContainersWithString(resources, `
 env:
   KEY: {{ .Value }}
 `, input, "foo")

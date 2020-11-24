@@ -286,6 +286,16 @@ type TemplateCommand struct {
 	// PatchTemplates is a list of templates to render into Patches and apply.
 	PatchTemplates []PatchTemplate
 
+	// PatchTemplateFn returns a list of templates to render into Patches and apply.
+	// PatchTemplateFn is called after the ResourceList has been parsed.
+	PatchTemplatesFn func(*ResourceList) ([]PatchTemplate, error)
+
+	// PatchContainerTemplates applies patches to matching container fields
+	PatchContainerTemplates []ContainerPatchTemplate
+
+	// PatchContainerTemplates returns a list of PatchContainerTemplates
+	PatchContainerTemplatesFn func(*ResourceList) ([]ContainerPatchTemplate, error)
+
 	// TemplateFiles list of templates to read from disk which are appended
 	// to Templates.
 	TemplatesFiles []string
@@ -299,6 +309,13 @@ type TemplateCommand struct {
 
 	// PostProcess is run on the ResourceList after the template is invoked
 	PostProcess func(*ResourceList) error
+}
+
+// ContainerPatchTemplate defines a patch to be applied to containers
+type ContainerPatchTemplate struct {
+	PatchTemplate
+
+	ContainerNames []string
 }
 
 func (tc TemplateCommand) doTemplate(t *template.Template, rl *ResourceList) error {
@@ -372,8 +389,35 @@ func (tc TemplateCommand) GetCommand() *cobra.Command {
 			}
 		}
 
+		if tc.PatchTemplatesFn != nil {
+			pt, err := tc.PatchTemplatesFn(&rl)
+			if err != nil {
+				return err
+			}
+			tc.PatchTemplates = append(tc.PatchTemplates, pt...)
+		}
+
 		for i := range tc.PatchTemplates {
 			if err := tc.PatchTemplates[i].Apply(&rl); err != nil {
+				return err
+			}
+		}
+
+		if tc.PatchContainerTemplatesFn != nil {
+			ct, err := tc.PatchContainerTemplatesFn(&rl)
+			if err != nil {
+				return err
+			}
+			tc.PatchContainerTemplates = append(tc.PatchContainerTemplates, ct...)
+		}
+		for i := range tc.PatchContainerTemplates {
+			ct := tc.PatchContainerTemplates[i]
+			matches, err := ct.Selector.GetMatches(&rl)
+			if err != nil {
+				return err
+			}
+			err = PatchContainersWithTemplate(matches, ct.Template, rl.FunctionConfig, ct.ContainerNames...)
+			if err != nil {
 				return err
 			}
 		}
