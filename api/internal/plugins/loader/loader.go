@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -177,7 +178,11 @@ func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error)
 
 func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, error) {
 	// First try to load the plugin as an executable.
-	p := execplugin.NewExecPlugin(l.absolutePluginPath(resId))
+	pluginPath := l.absolutePluginPath(resId)
+	if runtime.GOOS == "windows" {
+		pluginPath = fmt.Sprintf("%s.exe", pluginPath)
+	}
+	p := execplugin.NewExecPlugin(pluginPath)
 	err := p.ErrIfNotExecutable()
 	if err == nil {
 		return p, nil
