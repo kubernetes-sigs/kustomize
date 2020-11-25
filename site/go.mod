@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/site
 
-go 1.13
+go 1.15
 
 require (
 	github.com/gobuffalo/envy v1.9.0 // indirect

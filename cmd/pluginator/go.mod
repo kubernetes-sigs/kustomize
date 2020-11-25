@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/pluginator/v2
 
-go 1.14
+go 1.15
 
 require (
 	github.com/rakyll/statik v0.1.7

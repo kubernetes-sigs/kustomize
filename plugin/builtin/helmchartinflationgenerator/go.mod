@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/helmchartinflationgenerator
 
-go 1.14
+go 1.15
 
 require (
 	github.com/pkg/errors v0.8.1
