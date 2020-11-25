@@ -8,9 +8,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"sigs.k8s.io/kustomize/api/resid"
-
 	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/kustomize/api/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 

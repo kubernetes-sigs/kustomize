@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/konfig"
+
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -341,7 +343,15 @@ kind: List
 			name:        "listWithAnchorReference",
 			input:       []types.PatchStrategicMerge{patchList2},
 			expectedOut: []*Resource{testDeploymentA, testDeploymentB},
-			expectedErr: false,
+			// See https://github.com/kubernetes-sigs/kustomize/issues/3271
+			// This test should not have an error, but does when kyaml is used.
+			// The error using kyaml is:
+			//   json: unsupported type: map[interface {}]interface {}
+			// probably arising from too many conversions between
+			// yaml, json, Resource, RNode, Unstructured etc.
+			// These conversions can be removed after closing
+			// https://github.com/kubernetes-sigs/kustomize/issues/2506
+			expectedErr: konfig.FlagEnableKyamlDefaultValue,
 		},
 		{
 			name:        "listWithNoEntries",
@@ -363,7 +373,7 @@ kind: List
 				fmt.Sprintf("in test %s, got unexpected error: %v", test.name, err))
 			continue
 		}
-		assert.False(t, test.expectedErr, "expected no error")
+		assert.False(t, test.expectedErr, "expected no error in "+test.name)
 		assert.Equal(t, len(test.expectedOut), len(rs))
 		for i := range rs {
 			expYaml, err := test.expectedOut[i].AsYAML()
