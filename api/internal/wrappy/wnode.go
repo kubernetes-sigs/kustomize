@@ -174,36 +174,40 @@ func (wn *WNode) MatchesLabelSelector(string) (bool, error) {
 
 // SetAnnotations implements ifc.Kunstructured.
 func (wn *WNode) SetAnnotations(annotations map[string]string) {
-	wn.setField(yaml.NewMapRNode(&annotations), yaml.MetadataField, yaml.AnnotationsField)
+	if err := wn.node.SetAnnotations(annotations); err != nil {
+		log.Fatal(err) // interface doesn't allow error.
+	}
 }
 
 // SetGvk implements ifc.Kunstructured.
 func (wn *WNode) SetGvk(gvk resid.Gvk) {
-	wn.setField(yaml.NewScalarRNode(gvk.Kind), yaml.KindField)
-	wn.setField(yaml.NewScalarRNode(fmt.Sprintf("%s/%s", gvk.Group, gvk.Version)), yaml.APIVersionField)
+	wn.setMapField(yaml.NewScalarRNode(gvk.Kind), yaml.KindField)
+	wn.setMapField(
+		yaml.NewScalarRNode(
+			fmt.Sprintf("%s/%s", gvk.Group, gvk.Version)), yaml.APIVersionField)
 }
 
 // SetLabels implements ifc.Kunstructured.
 func (wn *WNode) SetLabels(labels map[string]string) {
-	wn.setField(yaml.NewMapRNode(&labels), yaml.MetadataField, yaml.LabelsField)
+	if err := wn.node.SetLabels(labels); err != nil {
+		log.Fatal(err) // interface doesn't allow error.
+	}
 }
 
 // SetName implements ifc.Kunstructured.
 func (wn *WNode) SetName(name string) {
-	wn.setField(yaml.NewScalarRNode(name), yaml.MetadataField, yaml.NameField)
+	wn.setMapField(yaml.NewScalarRNode(name), yaml.MetadataField, yaml.NameField)
 }
 
 // SetNamespace implements ifc.Kunstructured.
 func (wn *WNode) SetNamespace(ns string) {
-	wn.setField(yaml.NewScalarRNode(ns), yaml.MetadataField, yaml.NamespaceField)
+	if err := wn.node.SetNamespace(ns); err != nil {
+		log.Fatal(err) // interface doesn't allow error.
+	}
 }
 
-func (wn *WNode) setField(value *yaml.RNode, path ...string) {
-	err := wn.node.PipeE(
-		yaml.LookupCreate(yaml.MappingNode, path[0:len(path)-1]...),
-		yaml.SetField(path[len(path)-1], value),
-	)
-	if err != nil {
+func (wn *WNode) setMapField(value *yaml.RNode, path ...string) {
+	if err := wn.node.SetMapField(value, path...); err != nil {
 		// Log and die since interface doesn't allow error.
 		log.Fatalf("failed to set field %v: %v", path, err)
 	}
