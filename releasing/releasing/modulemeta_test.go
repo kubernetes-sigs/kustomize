@@ -73,7 +73,7 @@ func TestCheckModReplace1(t *testing.T) {
 	path := "testpath"
 	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
 
-	go 1.13
+	go 1.15
 	
 	replace (
 		sigs.k8s.io/kustomize/cmd/kubectl v0.0.3 => ../cmd/kubectl
@@ -93,7 +93,7 @@ func TestCheckModReplace2(t *testing.T) {
 	path := "testpath"
 	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
 
-	go 1.13
+	go 1.15
 	
 	replace sigs.k8s.io/kustomize/cmd/kubectl v0.0.3 => ../cmd/kubectl`
 
@@ -111,7 +111,7 @@ func TestCheckModReplace3(t *testing.T) {
 	path := "testpath"
 	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
 
-	go 1.13
+	go 1.15
 	
 	exclude (
 		github.com/russross/blackfriday v2.0.0+incompatible
@@ -127,7 +127,7 @@ func TestCheckModReplace3(t *testing.T) {
 func TestCheckModReplaceWithFile(t *testing.T) {
 	dataString := `module sigs.k8s.io/kustomize/kustomize/v3
 
-	go 1.13
+	go 1.15
 	
 	exclude (
 		github.com/russross/blackfriday v2.0.0+incompatible
