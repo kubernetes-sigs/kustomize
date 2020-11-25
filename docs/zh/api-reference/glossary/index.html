@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -702,36 +702,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#应用">应用</a></li>
-    <li><a href="#apply">apply</a></li>
-    <li><a href="#base">base</a></li>
-    <li><a href="#定制配置">定制配置</a></li>
-    <li><a href="#custom-resource-definition">custom resource definition</a></li>
-    <li><a href="#声明式应用程序管理">声明式应用程序管理</a></li>
-    <li><a href="#生成器">生成器</a></li>
-    <li><a href="#gitops">gitops</a></li>
-    <li><a href="#kustomization-root">kustomization root</a></li>
-    <li><a href="#kubernetes">kubernetes</a></li>
-    <li><a href="#kubernetes-风格的对象">Kubernetes 风格的对象</a></li>
-    <li><a href="#kustomize">kustomize</a></li>
-    <li><a href="#通用配置">通用配置</a></li>
-    <li><a href="#overlay">overlay</a></li>
-    <li><a href="#包">包</a></li>
-    <li><a href="#patch">patch</a></li>
-    <li><a href="#patchstrategicmerge">patchStrategicMerge</a></li>
-    <li><a href="#patchjson6902">patchJson6902</a></li>
-    <li><a href="#插件">插件</a></li>
-    <li><a href="#资源">资源</a></li>
-    <li><a href="#root">root</a></li>
-    <li><a href="#sub-target--sub-application--sub-package">sub-target / sub-application / sub-package</a></li>
-    <li><a href="#target">target</a></li>
-    <li><a href="#transformer">transformer</a></li>
-    <li><a href="#变体">变体</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -767,164 +737,8 @@
 <div class="td-content">
 	<h1>术语表</h1>
 	<div class="lead">术语表</div>
-	<h2 id="应用">应用</h2>
-<p><strong>应用</strong>是为某种目的关联起来的一组 Kubernetes 资源，例如一个前有负载均衡器，后有数据库的 Web 服务器。用标签、命名和元数据将[资源]组织起来，可以进行<strong>添加</strong>或<strong>删除</strong>等操作。</p>
-<p>有提案（<a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md">Declarative Application Management</a>）描述了一种称为应用的新的 Kubernetes 资源。更加正式的描述了这一思路，并在应用程序级别提供了运维和仪表盘的支持。</p>
-<p><a href="#kustomize">Kustomize</a> 对 Kubernetes 资源进行配置，其中描述的应用程序资源只是另一种普通的资源。</p>
-<h2 id="apply">apply</h2>
-<p><strong>Apply</strong> 这个动词在 Kubernetes 的上下文中，指的是一个 Kubernetes 命令以及能够对集群施加影响的进程内 <a href="https://goo.gl/UbCRuf">API 端点</a>。</p>
-<p>用户可以将对集群的运行要求用一组完整的资源列表的形式进行表达，通过 <strong>apply</strong> 命令进行提交。</p>
-<p>集群把新提交的资源和之前提交的状态以及当前的实际状态进行合并，形成新的状态。这就是 Kubernetes 的状态管理过程。</p>
-<h2 id="base">base</h2>
-<p><strong>Base</strong> 指的是会被其它 <a href="#kustomization">Kustomization</a> 引用的 <a href="#kustomization">Kustomization</a>。</p>
-<p>包括 <a href="#overlay">Overlay</a> 在内的任何 Kustomization，都可以作为其它 Kustomization 的 Base。</p>
-<p>Base 对引用自己的 Overlay 并无感知。</p>
-<p>Base 和 <a href="#overlay">Overlay</a> 可以作为 Git 仓库中的唯一内容，用于简单的 <a href="#gitops">GitOps</a> 管理。对仓库的变更可以触发构建、测试以及部署过程。</p>
-<h2 id="定制配置">定制配置</h2>
-<p><strong>定制</strong>配置是由组织为满足自身需要，在内部创建和管理的 <a href="#kustomization">Kustomization</a> 和[资源]。</p>
-<p>和<strong>定制配置</strong>关联的 <a href="/kustomize/zh/guides">Workflow</a> 比关联到通用配置的 <a href="/kustomize/zh/guides">Workflow</a> 要简单一些，原因是通用配置是共享的，需要周期性的跟踪他人作出的变更。</p>
-<h2 id="custom-resource-definition">custom resource definition</h2>
-<p>可以通过定制 CRD (<a href="https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/">CRD spec</a>) 的方式对 Kubernetes API 进行扩展。</p>
-<p>CRD 定义的[资源]是一种全新的资源，可以和 ConfigMap、Deployment 之类的原生资源以相同的方式来使用。</p>
-<p>Kustomize 能够生成自定义资源，但是要完成这个目标，必须给出对应的 CRD，这样才能正确的对这种结构进行处理。</p>
-<h2 id="声明式应用程序管理">声明式应用程序管理</h2>
-<p>Kustomize 鼓励对声明式应用程序管理（<a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md">Declarative Application Management</a>）的支持，这种方式是一系列 Kubernetes 集群管理的最佳实践。Kustomize 应该可以：</p>
-<ul>
-<li>适用于任何配置，例如自有配置、共享配置、无状态、有状态等。</li>
-<li>支持通用配置，以及创建变体（例如开发、预发布、生产）。</li>
-<li>开放使用原生 Kubernetes API，而不是隐藏它们。</li>
-<li>不会给版本控制系统和集成的评审和审计工作造成困难。</li>
-<li>用 Unix 的风格和其它工具进行协作。</li>
-<li>避免使用模板、领域特定的语言等额外的学习内容。</li>
-</ul>
-<h2 id="生成器">生成器</h2>
-<p>生成器生成的资源，可以直接使用，也可以输出给转换器（<a href="#transformer">transformer</a>）。</p>
-<h2 id="gitops">gitops</h2>
-<p><strong>Kustomization</strong> 这个词可以指 <code>kustomization.yaml</code> 这个文件，更常见的情况是一个包含了 <code>kustomization.yaml</code> 及其所有直接引用文件的相对路径（所有不需要 URL 的本地数据）。</p>
-<p>也就是说，如果在 <a href="#kustomize">Kustomize</a> 的上下文中说到 <strong>Kustomization</strong>，可能是以下的情况之一：</p>
-<ul>
-<li>一个叫做 <code>kustomization.yaml</code> 的文件。</li>
-<li>一个压缩包（包含 YAML 文件以及它的引用文件）。</li>
-<li>一个 Git 压缩包。</li>
-<li>一个 Git 仓库的 URL。</li>
-</ul>
-<p>一个 Kustomization 文件包含的<a href="fields.md">字段</a>，分为四个类别：</p>
-<ul>
-<li><code>resources</code>：待定制的现存[资源]，示例字段：<code>resources</code>、<code>crds</code>。</li>
-<li><code>generator</code>：将要创建的<strong>新</strong>资源，示例字段：<code>configMapGenerator</code>（传统）、<code>secretGenerator</code>（传统）、<code>generators</code>（v2.1）</li>
-<li><code>transformer</code>：对前面提到的新旧资源进行<strong>处理</strong>的方式。示例字段：<code>namePrefix</code>、<code>nameSuffix</code>、<code>images</code>、<code>commonLabels</code>、<code>patchesJson6902</code> 等。在 v2.1 中还有更多的 <code>transformer</code>。</li>
-<li><code>meta</code>：会对上面几种字段产生影响。示例字段：<code>vars</code>、<code>namespace</code>、<code>apiVersion</code>、<code>kind</code> 等。</li>
-</ul>
-<h2 id="kustomization-root">kustomization root</h2>
-<p>直接包含 <code>kustomization.yaml</code> 文件的目录。</p>
-<p>处理 Kustomization 文件时，可能访问到该目录以内或以外的文件。</p>
-<p>像 YAML 资源这样的数据文件，或者用于生成 ConfigMap 或 Secret 的包含 <code>name=value</code> 的文本文件，或者用于补丁转换的补丁文件，必须<strong>在这个目录的内部</strong>，需要显式的使用<strong>相对路径</strong>来表达。</p>
-<p>v2.1 中有一个特殊选项 <code>--load_restrictions none</code> 能够放宽这个限制，从而让不同的 Kustomization 可以共享补丁文件。</p>
-<p>可以用 URL、绝对路径或者相对路径引用其它的 Kustomization（包含 <code>kustomization.yaml</code> 文件的其它目录）。</p>
-<p>如果 <code>A</code> Kustomization 依赖 <code>B</code> Kustomization，那么：</p>
-<ul>
-<li><code>B</code> 不能包含 <code>A</code>。</li>
-<li><code>B</code> 不能依赖 <code>A</code>，间接依赖也不可以。</li>
-</ul>
-<p><code>A</code> 可以包含 <code>B</code>，但是这样的话，最简单的方式可能是让 <code>A</code> 直接依赖 <code>B</code> 的资源，并去除 <code>B</code> 的 <code>kustomization.yaml</code> 文件（就是把 <code>B</code> 合并到 <code>A</code>）。</p>
-<p>通常情况下，<code>B</code> 和 <code>A</code> 处于同级目录，或者 <code>B</code> 放在一个完全独立的 Git 仓库里，可以从任意的 Kustomization 进行引用。</p>
-<p>常见布局大致如下：</p>
-<blockquote>
-<pre><code>├── base
-│   ├── deployment.yaml
-│   ├── kustomization.yaml
-│   └── service.yaml
-└── overlays
-    ├── dev
-    │   ├── kustomization.yaml
-    │   └── patch.yaml
-    ├── prod
-    │   ├── kustomization.yaml
-    │   └── patch.yaml
-    └── staging
-        ├── kustomization.yaml
-        └── patch.yaml
-</code></pre></blockquote>
-<p><code>dev</code>、<code>prod</code> 以及 <code>staging</code> 是否依赖于 <code>base</code>，要根据 <code>kustomization.yaml</code> 具体判断。</p>
-<h2 id="kubernetes">kubernetes</h2>
-<p><a href="https://kubernetes.io">Kubernetes</a> 是一个开源软件，为容器化应用提供了自动部署、伸缩和管理的能力。</p>
-<p>它经常会被简写为 <code>k8s</code>。</p>
-<h2 id="kubernetes-风格的对象">Kubernetes 风格的对象</h2>
-<p>用 YAML 或者 JSON 文件表达一个对象，其中包含一些<a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields">必要字段</a>。<code>kind</code> 字段用于标识对象类型，<code>metadata/name</code> 字段用于区分实例，<code>apiVersion</code> 表示的是版本（如果有多个版本的话）。</p>
-<h2 id="kustomize">kustomize</h2>
-<p><code>kustomize</code> 是一个面向 Kubernetes 的命令行工具，用一种无模板、结构化的的方式为为声明式配置提供定制支持。</p>
-<p><code>面向 Kubernetes</code> 的意思是 Kustomize 对 API 资源、Kubernetes 概念（例如名称、标签、命名空间等）、以及资源补丁是有支持的。</p>
-<p>Kustomize 是 <a href="#declarative-application-management">DAM</a> 的一个实现。</p>
-<h2 id="通用配置">通用配置</h2>
-<p>通用配置是一种用于共享的 Kustomization 以及资源。</p>
-<p>例如创建一个这样的 Github 仓库：</p>
-<blockquote>
-<pre><code>github.com/username/someapp/
-  kustomization.yaml
-  deployment.yaml
-  configmap.yaml
-  README.md
-</code></pre></blockquote>
-<p>其他人可以 <code>fork</code> 这个仓库，并把它们的 Fork <code>clone</code> 到本地进行定制。</p>
-<p>用户可以用这个克隆回来的版本作为 <a href="#base">Base</a>，在此基础上定制 <a href="#overlay">Overlay</a> 来满足自身需求。</p>
-<h2 id="overlay">overlay</h2>
-<p><code>Overlay</code> 是一个 依赖于其它 Kustomization 的 Kustomization。</p>
-<p>Overlay 引用（通过文件路径、URI 或者别的什么方式）的 <a href="#kustomization">Kustomization</a> 被称为 <a href="#base">Base</a>。</p>
-<p>Overlay 无法脱离 Base 独立生效。</p>
-<p>Overlay 可以作为其它 Overlay 的 Base。</p>
-<p>通常 Overlay 都是不止一个的，因为实际情况中就需要为单一 Base 创建不同的[变体]，例如 <code>development</code>、<code>QA</code>、<code>production</code> 等。</p>
-<p>总的说来，这些变体使用的资源基本是一致的，只有一些简单的差异，例如 Deployment 的实例数量、特定 Pod 的 CPU 资源、ConfigMap 中的数据源定义等。</p>
-<p>可以这样把配置提交到集群：</p>
-<blockquote>
-<pre><code> kustomize build someapp/overlays/staging |\
-     kubectl apply -f -
-
- kustomize build someapp/overlays/production |\
-     kubectl apply -f -
-</code></pre></blockquote>
-<p>对 Base 的使用是隐性的——Overlay 的依赖是指向 Base 的。</p>
-<p>请参考 <a href="#kustomization-root">root</a>。</p>
-<h2 id="包">包</h2>
-<p>在 Kustomize 中，<code>包</code>是没有意义的，Kustomize 并无意成为 <a href="https://en.wikipedia.org/wiki/APT_(Debian)">apt</a>、<a href="https://en.wikipedia.org/wiki/Rpm_(software)">rpm</a> 那样的传统包管理工具。</p>
-<h2 id="patch">patch</h2>
-<p>修改资源的通用指令。</p>
-<p>有两种功能类似但是实现不同的补丁方式：<a href="#patchstrategicmerge">strategic merge patch</a> 和 <a href="#patchjson6902">JSON patch</a>。</p>
-<h2 id="patchstrategicmerge">patchStrategicMerge</h2>
-<p><code>patchStrategicMerge</code> 是 <a href="https://git.k8s.io/community/contributors/devel/sig-api-machinery/strategic-merge-patch.md">strategic-merge</a> 风格的补丁（SMP）。</p>
-<p>SMP 看上去像个不完整的 Kubernetes 资源 YAML。SMP 中包含 <code>TypeMeta</code> 字段，用于表明这个补丁的目标[资源]的 <code>group/version/kind/name</code>，剩余的字段是一个嵌套的结构，用于指定新的字段值，例如镜像标签。</p>
-<p>缺省情况下，SMP 会<strong>替换</strong>目标值。如果目标值是一个字符串，这种行为是合适的，但是如果目标值是个列表，可能就不合适了。</p>
-<p>可以加入 <code>directive</code> 来修改这种行为，，可以接受的 <code>directive</code> 包括 <code>replace</code>（缺省）、<code>merge</code>（不替换列表）、<code>delete</code> 等（<a href="https://git.k8s.io/community/contributors/devel/sig-api-machinery/strategic-merge-patch.md">相关说明</a>）。</p>
-<p>注意对自定义资源来说，SMP 会被当作 <a href="https://tools.ietf.org/html/rfc7386">json merge patches</a>.</p>
-<p>有趣的事实：所有的资源文件都可以当作 SMP 使用，相同 <code>group/version/kind/name</code> 资源中的匹配字段会被替换，其它内容则保持不变。</p>
-<h2 id="patchjson6902">patchJson6902</h2>
-<p><code>patchJson6902</code> 引用一个 Kubernetes 资源，并用 <a href="https://tools.ietf.org/html/rfc6902">JSONPatch</a> 指定了修改这一资源的方法。</p>
-<p><code>patchJson6902</code> 几乎可以做到所有 <code>patchStrategicMerge</code> 的功能，但是语法更加简单，参考<a href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples/jsonpatch.md">示例</a></p>
-<h2 id="插件">插件</h2>
-<p>Kustomize 可以使用的一段代码，但是无需编译到 Kustomize 内部，可以作为 Kustomization 的一部分，生成或转换 Kubernetes 资源。</p>
-<p><a href="../../guides/plugins">插件</a>的细节。</p>
-<h2 id="资源">资源</h2>
-<p>在 REST-ful API 的上下文中，资源是 <code>GET</code>、<code>PUT</code> 或者 <code>POST</code> 等 HTTP 操作的目标。Kubernetes 提供了 REST-ful API 界面，用于和客户端进行交互。</p>
-<p>在 Kustomization 的上下文中，资源是一个相对于 <a href="#kustomization-root">root</a> 的相对路径，指向 <a href="http://www.yaml.org/start.html">YAML</a> 或者 <a href="https://www.json.org/">JSON</a> 文件，描述了一个 Kubernetes API 对象，例如 Deployment 或者 ConfigMap，或者一个 Kustomization、或者一个指向 Kustomization 的 URL。</p>
-<p>或者说任何定义了<a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields">对象</a>的格式正确的 YAML 文件，其中包含了 <code>kind</code> 和 <code>metadata/name</code> 字段，都是资源。</p>
-<h2 id="root">root</h2>
-<p>参看 <a href="#kustomization-root">kustomization root</a>.</p>
-<h2 id="sub-target--sub-application--sub-package">sub-target / sub-application / sub-package</h2>
-<p>不存在 <code>sub-xxx</code>，只有 <a href="#base">Base</a> 和 <a href="#overlay">Overlay</a>。</p>
-<h2 id="target">target</h2>
-<p><code>target</code> 是 <code>kustomize build</code> 的参数，例如：</p>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> kustomize build <span style="color:#000">$target</span>
-</code></pre></div></blockquote>
-<p><code>$target</code> 必须是一个指向 <a href="#kustomization">Kustomization</a> 的路径或者 URL。</p>
-<p>要创建用于进行 <a href="#apply">Apply</a> 操作的资源，<code>target</code> 中必须包含或者引用所有相关信息。</p>
-<p><a href="#base">Base</a> 或者 <a href="#overlay">Overlay</a> 都可以作为 <code>target</code>。</p>
-<h2 id="transformer">transformer</h2>
-<p>转换器能够修改资源，或者在 <code>kustomize build</code> 的过程中获取资源的信息。</p>
-<h2 id="变体">变体</h2>
-<p>在集群中把 <a href="#overlay">Overlay</a> 应用到 <a href="#base">Base</a> 上的产物称为<strong>变体</strong>。</p>
-<p>比如 <code>staging</code> 和 <code>production</code> 两个 Overlay，都修改了同样的 Base，来创建各自的变体。</p>
-<p><code>staging</code> 变体包含了一组用来保障测试过程的资源，或者一些想要看到生产环境下一个版本的外部用户。</p>
-<p><code>production</code> 变体用于承载生产流量，可能使用大量的副本，分配更多的 CPU 和内存。</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/api-reference/glossary/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -980,7 +794,7 @@
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年06月15日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

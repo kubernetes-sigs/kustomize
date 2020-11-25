@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -403,20 +403,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#development">Development</a></li>
-    <li><a href="#publishing">Publishing</a></li>
-    <li><a href="#publishing-docs-to-your-kustomize-fork">Publishing docs to your kustomize fork</a>
-      <ul>
-        <li><a href="#setup-github-pages-for-the-fork">Setup GitHub Pages for the fork</a></li>
-        <li><a href="#publish-to-the-forks-github-pages">Publish to the fork&rsquo;s GitHub Pages</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -452,71 +438,8 @@
 <div class="td-content">
 	<h1>Writing Docs</h1>
 	<div class="lead">How to make Kustomize docs contributions</div>
-	<p>Kustomize uses <a href="https://www.docsy.dev">Docsy</a> for the site, and was
-forked from the <a href="https://github.com/google/docsy-example">docsy-example</a></p>
-<h2 id="prerequisites">Prerequisites</h2>
-<ul>
-<li><a href="https://gohugo.io/getting-started/installing/#fetch-from-github">Install hugo</a></li>
-<li>Clone kustomize
-<ul>
-<li><code>git clone git@github.com:kubernetes-sigs/kustomize &amp;&amp; cd kustomize/</code></li>
-</ul>
-</li>
-</ul>
-<h2 id="development">Development</h2>
-<p>The doc input files are in the <code>site</code> directory.  The site can be hosted locally using
-<code>hugo serve</code>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#204a87">cd</span> site/
-hugo serve
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">...
-Running in Fast Render Mode. For full rebuilds on change: hugo server --disableFastRender
-Web Server is available at http://localhost:1313/kustomize/ <span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87">bind</span> address 127.0.0.1<span style="color:#ce5c00;font-weight:bold">)</span>
-</code></pre></div><h2 id="publishing">Publishing</h2>
-<p>Hugo compiles the files under <code>site</code> Hugo into html which it puts in the <code>docs</code> folder:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#204a87">cd</span> site/
-hugo
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">                   <span style="color:#000;font-weight:bold">|</span> EN  
--------------------+-----
-  Pages            <span style="color:#000;font-weight:bold">|</span> <span style="color:#0000cf;font-weight:bold">99</span>  
-  Paginator pages  <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-  Non-page files   <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-  Static files     <span style="color:#000;font-weight:bold">|</span> <span style="color:#0000cf;font-weight:bold">47</span>  
-  Processed images <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-  Aliases          <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">2</span>  
-  Sitemaps         <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">1</span>  
-  Cleaned          <span style="color:#000;font-weight:bold">|</span>  <span style="color:#0000cf;font-weight:bold">0</span>  
-</code></pre></div><p>Add the <code>site/</code> and <code>docs/</code> folders to a commit, then create a PR.</p>
-<h2 id="publishing-docs-to-your-kustomize-fork">Publishing docs to your kustomize fork</h2>
-<p>It is possible to have the kustomize docs published to your forks github pages.</p>
-<h3 id="setup-github-pages-for-the-fork">Setup GitHub Pages for the fork</h3>
-<ol>
-<li>Go to the <em>forked repo&rsquo;s</em> <strong>Settings</strong> tab
-<ul>
-<li>e.g. <a href="https://github.com/pwittrock/kustomize">https://github.com/pwittrock/kustomize</a></li>
-</ul>
-</li>
-<li>Go to the <strong>GitHub Pages</strong> section</li>
-<li>Set the source to master branch <strong>/docs folder</strong></li>
-</ol>
-<h3 id="publish-to-the-forks-github-pages">Publish to the fork&rsquo;s GitHub Pages</h3>
-
-
-<div class="pageinfo pageinfo-info">
-<p>Changes must be pushed to the fork&rsquo;s <strong>master branch</strong> to be served as the fork&rsquo;s GitHub Page.</p>
-
-</div>
-
-<ol>
-<li>Make a change to a file under <code>site/content</code></li>
-<li>Run <code>hugo</code> from the <code>site/</code> directory</li>
-<li>Add the <code>site</code> and <code>docs</code> directories to the <strong>master branch</strong></li>
-<li>Commit and push the changes to the <em>remote fork&rsquo;s</em> <strong>master branch</strong></li>
-<li>After a few minutes, the docs should be served from the fork&rsquo;s GitHub Page
-<ul>
-<li>e.g. <a href="https://pwittrock.github.io/kustomize/">https://pwittrock.github.io/kustomize/</a></li>
-</ul>
-</li>
-</ol>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/contributing/docs/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -546,7 +469,7 @@ hugo
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

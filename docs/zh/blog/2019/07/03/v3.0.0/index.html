@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -26,13 +26,13 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/blog/2019/07/03/v3.0.0/" />
 <meta property="article:published_time" content="2019-07-03T00:00:00+00:00" />
-<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-25T21:41:27+05:30" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="v3.0.0">
 <meta itemprop="description" content="Kustomize v3.0.0
 ">
 <meta itemprop="datePublished" content="2019-07-03T00:00:00+00:00" />
-<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
-<meta itemprop="wordCount" content="324">
+<meta itemprop="dateModified" content="2020-11-25T21:41:27+05:30" />
+<meta itemprop="wordCount" content="3">
 
 
 
@@ -46,8 +46,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -335,53 +335,8 @@
 		
 		<time datetime="2019-07-03" class="text-muted">2019年07月03日</time>
 	</div>
-	<p>This release is basically <a href="v2.1.0.md">v2.1.0</a>,
-with many post-v2.1.0 bugs fixed (in about 150
-commits) and a <code>v3</code> in Go package paths.</p>
-<p>The major version increment to <code>v3</code> puts a new
-floor on a stable API for <a href="/docs/plugins">plugin</a> developers
-(both <em>Go</em> plugin developers and <em>exec</em> plugin
-developers who happen to use Go).</p>
-<h3 id="why-so-soon-after-v210">Why so soon after v2.1.0</h3>
-<p>We made a mistake - v2.1.0 should have been
-v3.0.0.  Per the <a href="https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher">Go modules doc</a> (which have
-improved a great deal recently), a release that&rsquo;s
-already tagged v2 or higher should increment the
-major version when performing their first Go
-module-based release.</p>
-<p>This advice applies to kustomize, since it was
-already at major version 2 when it began using Go
-modules to state <em>its own</em> dependencies in v2.1.0.</p>
-<p>But the more important reason for <code>v3</code> is a change
-to the kustomize <a href="/kustomize/faq/versioningpolicy">versioning policy</a>, forced by
-the introduction of plugins.</p>
-<p>Historically, kustomize&rsquo;s <a href="/kustomize/faq/versioningpolicy">versioning policy</a>
-didn&rsquo;t involve Go modules and addressed <em>only</em> the
-command line tool&rsquo;s behavior and the fields in a
-kustomization file.  The underlying packages were
-an implementation detail, not under semantic
-versioning, because they weren&rsquo;t intended for
-export (and should have all been under
-<code>internal</code>).  Thus although the v2.1.0 CLI is
-backward compatible with v2.0.3, the underlying
-package APIs are not.</p>
-<p>With Go modules, the <code>go</code> tool must assume that Go
-packages respect <a href="https://semver.org">semantic versioning</a>, so it can
-perform <a href="https://research.swtch.com/vgo-mvs">minimal version selection</a>.</p>
-<p>With the introduction of alpha plugins, kustomize
-sub-packages - in particular <code>loader</code> and
-<code>resmap</code> - become part of an API formally exposed
-to plugin authors, and so must be semantically
-versioned.  This allows plugins defined in other
-repositories to clarify that they depend on
-kustomize v3.0.0, and not see confusing errors
-arising from incompatibilities between v2.1.0 and
-v2.0.3.  Hence, the jump to v3.</p>
-<p>Aside - the set of kustomize packages outside
-<code>internal</code> is too large, and over time, informed
-by package use, this API surface must shrink.
-Such shrinkage will trigger a major version
-increment.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/blog/2019/07/03/v3.0.0/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
 	
 

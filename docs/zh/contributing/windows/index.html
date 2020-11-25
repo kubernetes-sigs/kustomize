@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -403,16 +403,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#pre-reqs">Pre-Reqs</a>
-      <ul>
-        <li><a href="#if-you-are-tryin-to-run-these-tests-locally-you-can-follow-these-instructions">If you are tryin to run these tests locally you can follow these instructions</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -448,83 +438,8 @@
 <div class="td-content">
 	<h1>Windows Dev Guide</h1>
 	<div class="lead">How to develop on Windows</div>
-	<p>This is the PowerShell script to run all go tests for Kustomize on a windows based platform which mimics /build/pre-commit.sh</p>
-<h2 id="pre-reqs">Pre-Reqs</h2>
-<ul>
-<li>PowerShell installed
-<ul>
-<li>PowerShell Core is supported</li>
-</ul>
-</li>
-<li>go installed</li>
-<li>golangci-lint installed</li>
-<li>mdrip installed</li>
-</ul>
-<p>This script should output to the current console and return an exit code if all tests are successful(0) or any failed(1).</p>
-<h3 id="if-you-are-tryin-to-run-these-tests-locally-you-can-follow-these-instructions">If you are tryin to run these tests locally you can follow these instructions</h3>
-<p>Assume:</p>
-<ul>
-<li>Running a stock Windows 10 system</li>
-<li>Local Admin rights.</li>
-<li>You can open <a href="http://lmgtfy.com/?iie=1&amp;q=How+to+open+powershell+as+administrator">PowerShell as administrator</a></li>
-<li>You should be knowledgeable enough to pull source for packages into your GO <code>src</code> directory
-<ul>
-<li>Yes, this means you also need to know a bit about <strong>git</strong> usually</li>
-</ul>
-</li>
-</ul>
-<h4 id="step-1---install-go">Step 1 - Install Go</h4>
-<ul>
-<li><a href="https://golang.org/dl/">Install Go</a> - please use the msi
-<ul>
-<li>If you use chocolatey - it&rsquo;s using the zip not msi and assumptions on where go is located are made for you.</li>
-</ul>
-</li>
-</ul>
-<h4 id="step-2---install-go-packages">Step 2 - Install Go Packages</h4>
-<ul>
-<li>Open new PowerShell Administrative window
-<ul>
-<li>Install golangci-lint
-<ul>
-<li><code>go get -u github.com/golangci/golangci-lint/cmd/golangci-lint</code></li>
-</ul>
-</li>
-<li>Install mdrip
-<ul>
-<li><code>go get github.com/monopole/mdrip</code></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p>You should now be able to issue these commands and see comparable responses</p>
-<pre><code>C:\...&gt; golangci-lint --help
-Smart, fast linters runner. Run it in cloud for every GitHub pull request on https://golangci.com
-...
-
-C:\...&gt; mdrip --help
-Usage:  C:\_go\bin\mdrip.exe {fileName}...
-...
-</code></pre><h4 id="step-3---get-source-and-test">Step 3 - Get Source and Test</h4>
-<ul>
-<li>In your GoRoot src
-<ul>
-<li><code>Example: C:\_go\src</code></li>
-</ul>
-</li>
-<li>Navigate to the Kustomize <code>travis</code> directory
-<ul>
-<li><code>Example: C:\_go\src\sigs.k8s.io\kustomize\scripts</code></li>
-</ul>
-</li>
-<li>Now Execute:
-<ul>
-<li><code>.\Invoke-PreCommit.ps1</code></li>
-</ul>
-</li>
-</ul>
-<p>This should run all pre-commit tests thus defined in the script.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/bugs" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -554,7 +469,7 @@ Usage:  C:\_go\bin\mdrip.exe {fileName}...
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月02日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/072ae36fe629c6424715e5f98af3bcbdac3ed5c4">removing travis references (072ae36f)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 
