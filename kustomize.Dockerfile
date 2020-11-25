@@ -13,6 +13,8 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build \
 
 # only copy binary
 FROM alpine
+# install dependencies
+RUN apk add git openssh
 COPY --from=builder /build/kustomize /app/
 WORKDIR /app
 ENTRYPOINT ["./kustomize"]
