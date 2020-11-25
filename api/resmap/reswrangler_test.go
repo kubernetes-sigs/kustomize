@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
@@ -687,21 +688,25 @@ func makeMap2(b types.GenerationBehavior) ResMap {
 }
 
 func TestAbsorbAll(t *testing.T) {
+	metadata := map[string]interface{}{
+		"name": "cmap",
+	}
+	if !konfig.FlagEnableKyamlDefaultValue {
+		metadata["annotations"] = map[string]interface{}{}
+		metadata["labels"] = map[string]interface{}{}
+	}
 	expected := rmF.FromResource(rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"annotations": map[string]interface{}{},
-				"labels":      map[string]interface{}{},
-				"name":        "cmap",
-			},
+			"metadata":   metadata,
 			"data": map[string]interface{}{
 				"a": "u",
 				"b": "v",
 				"c": "w",
 			},
-		}, &types.GeneratorArgs{
+		},
+		&types.GeneratorArgs{
 			Behavior: "create",
 		}))
 	w := makeMap1()
@@ -718,9 +723,9 @@ func TestAbsorbAll(t *testing.T) {
 	w = makeMap1()
 	w2 = makeMap2(types.BehaviorUnspecified)
 	err := w.AbsorbAll(w2)
-	if err == nil {
-		t.Fatalf("expected error with unspecified behavior")
-	}
+	assert.Error(t, err)
+	assert.True(
+		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
 }
 
 func TestToRNodeSlice(t *testing.T) {
