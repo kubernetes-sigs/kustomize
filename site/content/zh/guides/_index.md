@@ -9,3 +9,7 @@ menu:
 description: >
     Kustomize CLI 命令参考。
 ---
+
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/guides/" />
+
+Moved to https://github.com/kubernetes-sigs/cli-experimental
