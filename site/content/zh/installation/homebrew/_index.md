@@ -7,14 +7,6 @@ description: >
     MacOS 系统可以使用 Homebrew 或 MacPorts 来安装 Kustomize。
 ---
 
-[Homebrew](https://brew.sh) 用户可以：
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/installation/homebrew/" />
 
-```
-brew install kustomize
-```
-
-[MacPorts](https://www.macports.org) 用户可以：
-
-```
-sudo port install kustomize
-```
+Moved to https://github.com/kubernetes-sigs/cli-experimental
