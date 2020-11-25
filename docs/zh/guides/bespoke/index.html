@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -370,38 +370,8 @@
 <div class="td-content">
 	<h1>配置定制（Bespoke configuration）</h1>
 	<div class="lead">自定义配置的工作流。</div>
-	<p>在这个工作流方式中，所有的配置文件（ YAML 资源）都为用户所有，存储在用户的私有 repo 中。其他用户是无法使用的。</p>
-<p><img src="/kustomize/images/workflowBespoke.jpg" alt="bespoke config workflow image"></p>
-<h4 id="1-创建一个目录用于版本控制">1) 创建一个目录用于版本控制</h4>
-<p>我们希望将一个名为 <em>ldap</em> 的 Kubernetes 集群应用的配置保存在自己的 repo 中。
-这里使用 git 进行版本控制。</p>
-<blockquote>
-<pre><code>git init ~/ldap
-</code></pre></blockquote>
-<h4 id="2-创建一个-base">2) 创建一个 <a href="/kustomize/api-reference/glossary#base">base</a></h4>
-<blockquote>
-<pre><code>mkdir -p ~/ldap/base
-</code></pre></blockquote>
-<p>在这个目录中创建并提交 <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> 文件及一组资源 <a href="/kustomize/api-reference/glossary#resource">resources</a> 配置。</p>
-<h4 id="3-创建-overlays">3) 创建 <a href="/kustomize/api-reference/glossary#overlay">overlays</a></h4>
-<blockquote>
-<pre><code>mkdir -p ~/ldap/overlays/staging
-mkdir -p ~/ldap/overlays/production
-</code></pre></blockquote>
-<p>每个目录都包含需要一个 <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> 文件以及一或多个 <a href="/kustomize/api-reference/glossary#patch">patches</a>。</p>
-<p>在 <em>staging</em> 目录可能会有一个用于在 configmap 中打开一个实验标记的补丁。</p>
-<p>在 <em>production</em> 目录可能会有一个在 deployment 中增加副本数的补丁。</p>
-<h4 id="4-生成-variants">4) 生成 <a href="/kustomize/api-reference/glossary#variant">variants</a></h4>
-<p>运行 kustomize，将生成的配置用于 kubernetes 应用发布。</p>
-<blockquote>
-<pre><code>kustomize build ~/ldap/overlays/staging | kubectl apply -f -
-kustomize build ~/ldap/overlays/production | kubectl apply -f -
-</code></pre></blockquote>
-<p>也可以在 <a href="https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/">kubectl-v1.14.0</a> 版，使用 <code>kubectl</code> 命令发布你的 <a href="/kustomize/api-reference/glossary#variant">variants</a> 。</p>
-<blockquote>
-<pre><code>kubectl apply -k ~/ldap/overlays/staging
-kubectl apply -k ~/ldap/overlays/production
-</code></pre></blockquote>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/guides/bespoke/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -431,7 +401,7 @@ kubectl apply -k ~/ldap/overlays/production
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 
