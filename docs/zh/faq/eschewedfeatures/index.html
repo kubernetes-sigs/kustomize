@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -271,15 +271,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#removal-directives">Removal directives</a></li>
-    <li><a href="#unstructured-edits">Unstructured edits</a></li>
-    <li><a href="#build-time-side-effects-from-cli-args-or-env-variables">Build-time side effects from CLI args or env variables</a></li>
-    <li><a href="#globs-in-kustomization-files">Globs in kustomization files</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -315,117 +306,8 @@
 <div class="td-content">
 	<h1>Eschewed Features</h1>
 	<div class="lead">Eschewed Features</div>
-	<p>The maintainers established this list to
-place bounds on the kustomize feature
-set.  The bounds can be changed with
-a consensus on the risks.</p>
-<p>For a bigger picture about why kustomize
-does some things and not others, see the
-glossary entry for <a href="/kustomize/api-reference/glossary#declarative-application-management">DAM</a>.</p>
-<h2 id="removal-directives">Removal directives</h2>
-<p><code>kustomize</code> supports configurations that can be reasoned about as
-<em>compositions</em> or <em>mixins</em> - concepts that are widely accepted as
-a best practice in various programming languages.</p>
-<p>To this end, <code>kustomize</code> offers various <em>addition</em> directives.
-One may add labels, annotations, patches, resources, bases, etc.
-Corresponding <em>removal</em> directives are not offered.</p>
-<p>Removal semantics would introduce many possibilities for
-inconsistency, and the need to add code to detect, report and
-reject it.  It would also allow, and possibly encourage,
-unnecessarily complex configuration layouts.</p>
-<p>When faced with a situation where removal is desirable, it&rsquo;s
-always possible to remove things from a base like labels and
-annotations, and/or split multi-resource manifests into individual
-resource files - then add things back as desired via the
-<a href="/kustomize/api-reference/glossary#kustomization">kustomization</a>.</p>
-<p>If the underlying base is outside of one&rsquo;s control, an <a href="/kustomize/api-reference/glossary#off-the-shelf-configuration">OTS
-workflow</a> is the recommended best practice.  Fork the base, remove
-what you don&rsquo;t want and commit it to your private fork, then use
-kustomize on your fork.  As often as desired, use <em>git rebase</em> to
-capture improvements from the upstream base.</p>
-<h2 id="unstructured-edits">Unstructured edits</h2>
-<p><em>Structured edits</em> are changes controlled by
-knowledge of the k8s API, and YAML or JSON syntax.</p>
-<p>Most edits performed by kustomize can be expressed as
-<a href="/kustomize/api-reference/glossary#patchjson6902">JSON patches</a> or <a href="/kustomize/api-reference/glossary#patchstrategicmerge">SMP patches</a>.
-Those can be verbose, so common patches,
-like adding labels or annotatations, get dedicated
-transformer plugins - <code>LabelTransformer</code>,
-<code>AnnotationsTransformer</code>, etc.
-These accept relatively simple YAML configuration
-allowing easy targeting of any number of resources.</p>
-<p>Another class of edits take data from one specific
-object&rsquo;s field and use it in another (e.g. a service
-object&rsquo;s name found and copied into a container&rsquo;s
-command line).  These reflection-style edits
-are called <em>replacements</em>.</p>
-<p>The above edits create valid output given valid input,
-and can provide syntactically and semantically
-informed error messages if inputs are invalid.</p>
-<p><em>Unstructured edits</em>, edits that don&rsquo;t limit
-themselves to a syntax or object structure,
-come in many forms.  A common one in the
-configuration domain is the template or
-parameterization approach.</p>
-<p>In this technique, the source
-material is sprinkled with strings of the
-form <code>${VAR}</code>.  A scanner replaces them
-with a value taken from a map using <code>VAR</code>
-as the map key. It&rsquo;s trivial to implement.</p>
-<p>kustomize eschews parameterization, because</p>
-<ul>
-<li>The source yaml gets polluted with <code>$VARs</code>
-and can no longed be applied as is
-to the cluster (it <em>must</em> be processed).</li>
-<li>The source material is no longer structured,
-making it unusable with any YAML processor.
-It&rsquo;s no longer <em>data</em>, it&rsquo;s now logic that
-must be compiled.</li>
-<li>Errors in the output are disconnected from
-the edit that caused it.</li>
-<li>The input becomes <a href="https://github.com/helm/charts/blob/e002378c13e91bef4a3b0ba718c191ec791ce3f9/stable/artifactory/templates/artifactory-deployment.yaml">unintelligible</a> as the project
-scales in any number of dimensions (resource
-count, cluster count, environment count, etc.)</li>
-</ul>
-<p>Kustomizations are meant to be sharable and stackable.
-Imagine tracing down a problem rooted in a
-clever set of stacked regexp replacements
-performed by various overlays on some remote base.
-We&rsquo;ve used such systems, and never want to again.</p>
-<p>Other tools (sed, jinja, erb, envsubst, kafka, helm, ksonnet,
-etc.) provide varying degrees of unstructured editting
-and/or embedded languages, and can be used instead
-of, or in a pipe with, kustomize.  If you want to
-go all-in on <em>configuration as a language</em>, consider <a href="https://cuelang.org/">cue</a>.</p>
-<p>kustomize is going to stick to YAML in / YAML out.</p>
-<h2 id="build-time-side-effects-from-cli-args-or-env-variables">Build-time side effects from CLI args or env variables</h2>
-<p><code>kustomize</code> supports the best practice of storing one&rsquo;s
-entire configuration in a version control system.</p>
-<p>Changing <code>kustomize build</code> configuration output as a result
-of additional arguments or flags to <code>build</code>, or by
-consulting shell environment variable values in <code>build</code>
-code, would frustrate that goal.</p>
-<p><code>kustomize</code> insteads offers <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> file <code>edit</code>
-commands.  Like any shell command, they can accept
-environment variable arguments.</p>
-<p>For example, to set the tag used on an image to match an
-environment variable, run</p>
-<pre><code>kustomize edit set image nginx:$MY_NGINX_VERSION
-</code></pre><p>as part of some encapsulating work flow executed before
-<code>kustomize build</code>.</p>
-<h2 id="globs-in-kustomization-files">Globs in kustomization files</h2>
-<p><code>kustomize</code> supports the best practice of storing one&rsquo;s
-entire configuration in a version control system.</p>
-<p>Globbing the local file system for files not explicitly
-declared in the <a href="/kustomize/api-reference/glossary#kustomization">kustomization</a> file at <code>kustomize build</code> time
-would violate that goal.</p>
-<p>Allowing globbing in a kustomization file would also introduce
-the same problems as allowing globbing in <a href="https://www.codebyamir.com/blog/pitfalls-java-import-wildcards">java import</a>
-declarations or BUILD/Makefile dependency rules.</p>
-<p><code>kustomize</code> will instead provide kustomization file editting
-commands that accept globbed arguments, expand them at <em>edit
-time</em> relative to the local file system, and store the resulting
-explicit names into the kustomization file.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/faq/eschewedfeatures/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -445,7 +327,7 @@ explicit names into the kustomization file.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 
