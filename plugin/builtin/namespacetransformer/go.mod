@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/namespacetransformer
 
-go 1.14
+go 1.15
 
 require (
 	sigs.k8s.io/kustomize/api v0.6.5

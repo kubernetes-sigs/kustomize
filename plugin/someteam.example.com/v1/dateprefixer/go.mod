@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/dateprefixer
 
-go 1.14
+go 1.15
 
 require (
 	github.com/pkg/errors v0.8.1
