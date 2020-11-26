@@ -222,9 +222,6 @@ build-kustomize-api: $(builtinplugins)
 generate-kustomize-api:
 	cd api; go generate ./...
 
-.PHONY: clean-kustomize-api
-clean-kustomize-api:
-
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
 	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
@@ -361,7 +358,7 @@ $(MYGOBIN)/gh:
 	)
 
 .PHONY: clean
-clean: clean-kustomize-external-go-plugin clean-kustomize-api
+clean: clean-kustomize-external-go-plugin
 	go clean --cache
 	rm -f $(builtinplugins)
 	rm -f $(MYGOBIN)/kustomize
