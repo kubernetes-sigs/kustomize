@@ -386,6 +386,9 @@ spec:
 `)
 }
 
+func BenchmarkMaxParallelAccumulate0(b *testing.B) {
+	benchmarkMaxParallelAccumulate(0, b)
+}
 func BenchmarkMaxParallelAccumulate1(b *testing.B) {
 	benchmarkMaxParallelAccumulate(1, b)
 }
@@ -411,7 +414,9 @@ resources:
 `)
 	options := th.MakeDefaultOptions()
 	options.LoadRestrictions = types.LoadRestrictionsNone
-	options.MaxParallelAccumulate = i
+	if i > 0 {
+		options.MaxParallelAccumulate = i
+	}
 	th.Run(dir, options)
 }
 
