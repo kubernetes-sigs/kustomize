@@ -1080,6 +1080,73 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 	assert.Equal(t, "Running unknown-type function\n", logs.String())
 }
 
+func getGeneratorFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+		return kio.FilterFunc(func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+			if f.Container.Image == "generate" {
+				node, err := yaml.Parse("kind: generated")
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				return append(items, node), nil
+			}
+			return items, nil
+		}), nil
+	}
+}
+func TestRunFns_ContinueOnEmptyResult(t *testing.T) {
+	fn1, err := yaml.Parse(`
+kind: fakefn
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: pass
+`)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	fn2, err := yaml.Parse(`
+kind: fakefn
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: generate
+`)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	var test = []struct {
+		ContinueOnEmptyResult bool
+		ExpectedOutput        string
+	}{
+		{
+			ContinueOnEmptyResult: false,
+			ExpectedOutput:        "",
+		},
+		{
+			ContinueOnEmptyResult: true,
+			ExpectedOutput:        "kind: generated\n",
+		},
+	}
+	for i := range test {
+		ouputBuffer := bytes.Buffer{}
+		instance := RunFns{
+			Input:                  bytes.NewReader([]byte{}),
+			Output:                 &ouputBuffer,
+			Functions:              []*yaml.RNode{fn1, fn2},
+			functionFilterProvider: getGeneratorFilterProvider(t),
+			ContinueOnEmptyResult:  test[i].ContinueOnEmptyResult,
+		}
+		if !assert.NoError(t, instance.Execute()) {
+			t.FailNow()
+		}
+		assert.Equal(t, test[i].ExpectedOutput, ouputBuffer.String())
+	}
+}
+
 // setupTest initializes a temp test directory containing test data
 func setupTest(t *testing.T) string {
 	dir, err := ioutil.TempDir("", "kustomize-kyaml-test")

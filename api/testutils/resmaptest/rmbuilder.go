@@ -6,6 +6,7 @@ package resmaptest_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 )
@@ -23,6 +24,15 @@ func NewSeededRmBuilder(t *testing.T, rf *resource.Factory, m resmap.ResMap) *rm
 
 func NewRmBuilder(t *testing.T, rf *resource.Factory) *rmBuilder {
 	return NewSeededRmBuilder(t, rf, resmap.New())
+}
+
+func NewRmBuilderDefault(t *testing.T) *rmBuilder {
+	return NewSeededRmBuilderDefault(t, resmap.New())
+}
+
+func NewSeededRmBuilderDefault(t *testing.T, m resmap.ResMap) *rmBuilder {
+	return NewSeededRmBuilder(
+		t, provider.NewDefaultDepProvider().GetResourceFactory(), m)
 }
 
 func (rm *rmBuilder) Add(m map[string]interface{}) *rmBuilder {

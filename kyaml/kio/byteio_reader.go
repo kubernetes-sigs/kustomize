@@ -43,6 +43,7 @@ type ByteReadWriter struct {
 
 	Results *yaml.RNode
 
+	NoWrap             bool
 	WrappingAPIVersion string
 	WrappingKind       string
 }
@@ -53,10 +54,15 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
 	}
 	val, err := b.Read()
-	rw.FunctionConfig = b.FunctionConfig
+	if rw.FunctionConfig == nil {
+		rw.FunctionConfig = b.FunctionConfig
+	}
 	rw.Results = b.Results
-	rw.WrappingAPIVersion = b.WrappingAPIVersion
-	rw.WrappingKind = b.WrappingKind
+
+	if !rw.NoWrap {
+		rw.WrappingAPIVersion = b.WrappingAPIVersion
+		rw.WrappingKind = b.WrappingKind
+	}
 	return val, errors.Wrap(err)
 }
 
@@ -70,6 +76,28 @@ func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
 		WrappingAPIVersion:    rw.WrappingAPIVersion,
 		WrappingKind:          rw.WrappingKind,
 	}.Write(nodes)
+}
+
+// ParseAll reads all of the inputs into resources
+func ParseAll(inputs ...string) ([]*yaml.RNode, error) {
+	return (&ByteReader{
+		Reader: bytes.NewBufferString(strings.Join(inputs, "\n---\n")),
+	}).Read()
+}
+
+// FromBytes reads from a byte slice.
+func FromBytes(bs []byte) ([]*yaml.RNode, error) {
+	return (&ByteReader{
+		OmitReaderAnnotations: true,
+		Reader:                bytes.NewBuffer(bs),
+	}).Read()
+}
+
+// StringAll writes all of the resources to a string
+func StringAll(resources []*yaml.RNode) (string, error) {
+	var b bytes.Buffer
+	err := (&ByteWriter{Writer: &b}).Write(resources)
+	return b.String(), err
 }
 
 // ByteReader decodes ResourceNodes from bytes.

@@ -7,14 +7,12 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/merge"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
 
@@ -25,7 +23,7 @@ func makeAndLoadKustTarget(
 	maxParallelAccumulate int) *target.KustTarget {
 	kt := makeKustTargetWithRf(
 		t, fSys, root,
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), maxParallelAccumulate)
+		provider.NewDefaultDepProvider(), maxParallelAccumulate)
 	if err := kt.Load(); err != nil {
 		t.Fatalf("Unexpected load error %v", err)
 	}
@@ -36,14 +34,13 @@ func makeKustTargetWithRf(
 	t *testing.T,
 	fSys filesys.FileSystem,
 	root string,
-	resourceFactory *resource.Factory,
+	pvd *provider.DepProvider,
 	maxParallelAccumulate int) *target.KustTarget {
 	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys)
 	if err != nil {
 		t.Fatal(err)
 	}
-	rf := resmap.NewFactory(
-		resourceFactory, merge.NewMerginator(resourceFactory))
+	rf := resmap.NewFactory(pvd.GetResourceFactory(), pvd.GetMerginator())
 	pc := konfig.DisabledPluginConfig()
 	return target.NewKustTarget(
 		ldr,

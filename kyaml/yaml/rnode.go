@@ -7,22 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-)
-
-const (
-	// NodeTagNull is the tag set for a yaml.Document that contains no data;
-	// e.g. it isn't a Map, Slice, Document, etc
-	NodeTagNull   = "!!null"
-	NodeTagFloat  = "!!float"
-	NodeTagString = "!!str"
-	NodeTagBool   = "!!bool"
-	NodeTagInt    = "!!int"
-	NodeTagMap    = "!!map"
-	NodeTagSeq    = "!!seq"
-	NodeTagEmpty  = ""
 )
 
 // MakeNullNode returns an RNode that represents an empty document.
@@ -50,12 +39,14 @@ func GetValue(node *RNode) string {
 	return node.YNode().Value
 }
 
-// Parse parses a yaml string into an *RNode
+// Parse parses a yaml string into an *RNode.
+// To parse multiple resources, consider a kio.ByteReader
 func Parse(value string) (*RNode, error) {
 	return Parser{Value: value}.Filter(nil)
 }
 
-// ReadFile parses a single Resource from a yaml file
+// ReadFile parses a single Resource from a yaml file.
+// To parse multiple resources, consider a kio.ByteReader
 func ReadFile(path string) (*RNode, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -107,6 +98,15 @@ func NewScalarRNode(value string) *RNode {
 			Kind:  yaml.ScalarNode,
 			Value: value,
 		}}
+}
+
+// NewStringRNode returns a new Scalar *RNode containing the provided string.
+// If the string is non-utf8, it will be base64 encoded, and the tag
+// will indicate binary data.
+func NewStringRNode(value string) *RNode {
+	n := yaml.Node{Kind: yaml.ScalarNode}
+	n.SetString(value)
+	return NewRNode(&n)
 }
 
 // NewListRNode returns a new List *RNode containing the provided scalar values.
@@ -179,17 +179,6 @@ func (rn *RNode) Copy() *RNode {
 }
 
 var ErrMissingMetadata = fmt.Errorf("missing Resource metadata")
-
-// Field names
-const (
-	AnnotationsField = "annotations"
-	APIVersionField  = "apiVersion"
-	KindField        = "kind"
-	MetadataField    = "metadata"
-	NameField        = "name"
-	NamespaceField   = "namespace"
-	LabelsField      = "labels"
-)
 
 // IsNil is true if the node is nil, or its underlying YNode is nil.
 func (rn *RNode) IsNil() bool {
@@ -318,8 +307,7 @@ func (rn *RNode) PipeE(functions ...Filter) error {
 	return errors.Wrap(err)
 }
 
-// Document returns the Node RNode for the value.  Does not unwrap the node if it is a
-// DocumentNodes
+// Document returns the Node for the value.
 func (rn *RNode) Document() *yaml.Node {
 	return rn.value
 }
@@ -457,8 +445,8 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 	return elements, nil
 }
 
-// ElementValues returns a list of all observed values for a given field name in a
-// list of elements.
+// ElementValues returns a list of all observed values for a given field name
+// in a list of elements.
 // Returns error for non-SequenceNodes.
 func (rn *RNode) ElementValues(key string) ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
@@ -474,6 +462,28 @@ func (rn *RNode) ElementValues(key string) ([]string, error) {
 	return elements, nil
 }
 
+// ElementValuesList returns a list of lists, where each list is a set of
+// values corresponding to each key in keys.
+// Returns error for non-SequenceNodes.
+func (rn *RNode) ElementValuesList(keys []string) ([][]string, error) {
+	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	elements := make([][]string, len(rn.Content()))
+
+	for i := 0; i < len(rn.Content()); i++ {
+		for _, key := range keys {
+			field := NewRNode(rn.Content()[i]).Field(key)
+			if field.IsNilOrEmpty() {
+				elements[i] = append(elements[i], "")
+			} else {
+				elements[i] = append(elements[i], field.Value.YNode().Value)
+			}
+		}
+	}
+	return elements, nil
+}
+
 // Element returns the element in the list which contains the field matching the value.
 // Returns nil for non-SequenceNodes or if no Element matches.
 func (rn *RNode) Element(key, value string) *RNode {
@@ -481,6 +491,20 @@ func (rn *RNode) Element(key, value string) *RNode {
 		return nil
 	}
 	elem, err := rn.Pipe(MatchElement(key, value))
+	if err != nil {
+		return nil
+	}
+	return elem
+}
+
+// ElementList returns the element in the list in which all fields keys[i] matches all
+// corresponding values[i].
+// Returns nil for non-SequenceNodes or if no Element matches.
+func (rn *RNode) ElementList(keys []string, values []string) *RNode {
+	if rn.YNode().Kind != yaml.SequenceNode {
+		return nil
+	}
+	elem, err := rn.Pipe(MatchElementList(keys, values))
 	if err != nil {
 		return nil
 	}
@@ -529,6 +553,7 @@ func (rn *RNode) GetAssociativeKey() string {
 	return ""
 }
 
+// MarshalJSON creates a byte slice from the RNode.
 func (rn *RNode) MarshalJSON() ([]byte, error) {
 	s, err := rn.String()
 	if err != nil {
@@ -550,23 +575,75 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+// UnmarshalJSON overwrites this RNode with data from []byte.
 func (rn *RNode) UnmarshalJSON(b []byte) error {
 	m := map[string]interface{}{}
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
 	}
-
-	c, err := Marshal(m)
-	if err != nil {
-		return err
-	}
-
-	r, err := Parse(string(c))
+	r, err := FromMap(m)
 	if err != nil {
 		return err
 	}
 	rn.value = r.value
 	return nil
+}
+
+// GetValidatedMetadata returns metadata after subjecting it to some tests.
+func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
+	m, err := rn.GetMeta()
+	if err != nil {
+		return m, err
+	}
+	if m.Kind == "" {
+		return m, fmt.Errorf("missing kind in object %v", m)
+	}
+	if strings.HasSuffix(m.Kind, "List") {
+		// A list doesn't require a name.
+		return m, nil
+	}
+	if m.NameMeta.Name == "" {
+		return m, fmt.Errorf("missing metadata.name in object %v", m)
+	}
+	return m, nil
+}
+
+// HasNilEntryInList returns true if the RNode contains a list which has
+// a nil item, along with the path to the missing item.
+// TODO(broken): This was copied from
+// api/k8sdeps/kunstruct/factory.go//checkListItemNil
+// and doesn't do what it claims to do (see TODO in unit test and pr 1513).
+func (rn *RNode) HasNilEntryInList() (bool, string) {
+	return hasNilEntryInList(rn.value)
+}
+
+func hasNilEntryInList(in interface{}) (bool, string) {
+	switch v := in.(type) {
+	case map[string]interface{}:
+		for key, s := range v {
+			if result, path := hasNilEntryInList(s); result {
+				return result, key + "/" + path
+			}
+		}
+	case []interface{}:
+		for index, s := range v {
+			if s == nil {
+				return true, ""
+			}
+			if result, path := hasNilEntryInList(s); result {
+				return result, "[" + strconv.Itoa(index) + "]/" + path
+			}
+		}
+	}
+	return false, ""
+}
+
+func FromMap(m map[string]interface{}) (*RNode, error) {
+	c, err := Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return Parse(string(c))
 }
 
 // ConvertJSONToYamlNode parses input json string and returns equivalent yaml node

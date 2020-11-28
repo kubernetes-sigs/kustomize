@@ -4,16 +4,20 @@
 package framework
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -57,6 +61,12 @@ type ResourceList struct {
 	// ResourceList.Write()
 	Result *Result
 
+	// DisableStandalone if set will not support standalone mode
+	DisableStandalone bool
+
+	// Args are the command args used for standalone mode
+	Args []string
+
 	// Flags are an optional set of flags to parse the ResourceList.functionConfig.data.
 	// If non-nil, ResourceList.Read() will set the flag value for each flag name matching
 	// a ResourceList.functionConfig.data map entry.
@@ -82,15 +92,54 @@ type ResourceList struct {
 
 	// rw reads function input and writes function output
 	rw *kio.ByteReadWriter
+
+	// NoPrintError if set will prevent the error from being printed
+	NoPrintError bool
+
+	Command *cobra.Command
 }
 
 // Read reads the ResourceList
 func (r *ResourceList) Read() error {
+	var in io.Reader = os.Stdin
+	var out io.Writer = os.Stdout
+	if r.Command != nil {
+		in = r.Command.InOrStdin()
+		out = r.Command.OutOrStdout()
+	}
+
+	// parse the inputs from the args
+	var readStdinStandalone bool
+	if len(r.Args) > 0 && !r.DisableStandalone {
+		// write the files as input
+		var buf bytes.Buffer
+		for i := range r.Args {
+			// the first argument is the resourceList.FunctionConfig and will be parsed
+			// separately later, the rest of the arguments are the resourceList.items
+			if i == 0 {
+				continue
+			}
+			if r.Args[i] == "-" {
+				// Read stdin separately
+				readStdinStandalone = true
+				continue
+			}
+
+			b, err := ioutil.ReadFile(r.Args[i])
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to read input file %s", r.Args[i])
+			}
+			buf.WriteString(string(b))
+			buf.WriteString("\n---\n")
+		}
+		r.Reader = &buf
+	}
+
 	if r.Reader == nil {
-		r.Reader = os.Stdin
+		r.Reader = in
 	}
 	if r.Writer == nil {
-		r.Writer = os.Stdout
+		r.Writer = out
 	}
 	r.rw = &kio.ByteReadWriter{
 		Reader:                r.Reader,
@@ -98,10 +147,40 @@ func (r *ResourceList) Read() error {
 		KeepReaderAnnotations: true,
 	}
 
+	// parse the resourceList.FunctionConfig from the first arg
+	if len(r.Args) > 0 && !r.DisableStandalone {
+		// Don't keep the reader annotations if we are in standalone mode
+		r.rw.KeepReaderAnnotations = false
+		// Don't wrap the resources in a resourceList -- we are in
+		// standalone mode and writing to stdout to be applied
+		r.rw.NoWrap = true
+
+		b, err := ioutil.ReadFile(r.Args[0])
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to read configuration file %s", r.Args[0])
+		}
+		fc, err := yaml.Parse(string(b))
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to parse configuration file %s", r.Args[0])
+		}
+		// use this as the function config used to configure the function
+		r.rw.FunctionConfig = fc
+	}
+
 	var err error
 	r.Items, err = r.rw.Read()
 	if err != nil {
 		return errors.Wrap(err)
+	}
+
+	if readStdinStandalone {
+		br := kio.ByteReader{Reader: in}
+		items, err := br.Read()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		// stdin always comes first so files are patches
+		r.Items = append(items, r.Items...)
 	}
 
 	// parse the functionConfig
@@ -170,19 +249,197 @@ func (r *ResourceList) Write() error {
 // a Dockerfile to build the function into a container image
 //
 //		go run main.go gen DIR/
-func Command(resourceList *ResourceList, function Function) cobra.Command {
+func Command(resourceList *ResourceList, function Function) *cobra.Command {
 	cmd := cobra.Command{}
+	resourceList.Command = &cmd
 	AddGenerateDockerfile(&cmd)
+	var printStack bool
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		err := execute(resourceList, function, cmd)
-		if err != nil {
+		err := execute(resourceList, function, cmd, args)
+		if err != nil && !resourceList.NoPrintError {
 			fmt.Fprintf(cmd.ErrOrStderr(), "%v", err)
+		}
+		// print the stack if requested
+		if s := errors.GetStack(err); printStack && s != "" {
+			fmt.Fprintln(cmd.ErrOrStderr(), s)
 		}
 		return err
 	}
+	cmd.Flags().BoolVar(&printStack, "stack", false, "print the stack trace on failure")
+	cmd.Args = cobra.MinimumNArgs(0)
 	cmd.SilenceErrors = true
 	cmd.SilenceUsage = true
-	return cmd
+	return &cmd
+}
+
+// TemplateCommand provides a cobra command to invoke a template
+type TemplateCommand struct {
+	// API is the function API provide to the template as input
+	API interface{}
+
+	// Template is a go template to render and is appended to Templates.
+	Template *template.Template
+
+	// Templates is a list of templates to render.
+	Templates []*template.Template
+
+	// PatchTemplates is a list of templates to render into Patches and apply.
+	PatchTemplates []PatchTemplate
+
+	// PatchTemplateFn returns a list of templates to render into Patches and apply.
+	// PatchTemplateFn is called after the ResourceList has been parsed.
+	PatchTemplatesFn func(*ResourceList) ([]PatchTemplate, error)
+
+	// PatchContainerTemplates applies patches to matching container fields
+	PatchContainerTemplates []ContainerPatchTemplate
+
+	// PatchContainerTemplates returns a list of PatchContainerTemplates
+	PatchContainerTemplatesFn func(*ResourceList) ([]ContainerPatchTemplate, error)
+
+	// TemplateFiles list of templates to read from disk which are appended
+	// to Templates.
+	TemplatesFiles []string
+
+	// MergeResources if set to true will apply input resources
+	// as patches to the templates
+	MergeResources bool
+
+	// PreProcess is run on the ResourceList before the template is invoked
+	PreProcess func(*ResourceList) error
+
+	// PostProcess is run on the ResourceList after the template is invoked
+	PostProcess func(*ResourceList) error
+}
+
+// ContainerPatchTemplate defines a patch to be applied to containers
+type ContainerPatchTemplate struct {
+	PatchTemplate
+
+	ContainerNames []string
+}
+
+func (tc TemplateCommand) doTemplate(t *template.Template, rl *ResourceList) error {
+	// invoke the template
+	var b bytes.Buffer
+	err := t.Execute(&b, tc.API)
+	if err != nil {
+		return errors.WrapPrefixf(err, "failed to render template %v", t.DefinedTemplates())
+	}
+	// split the resources so the error messaging is better
+	for _, s := range strings.Split(b.String(), "\n---\n") {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		nodes, err := (&kio.ByteReader{Reader: bytes.NewBufferString(s)}).Read()
+		if err != nil {
+			// create the debug string
+			lines := strings.Split(s, "\n")
+			for j := range lines {
+				lines[j] = fmt.Sprintf("%03d %s", j+1, lines[j])
+			}
+			s = strings.Join(lines, "\n")
+			return errors.WrapPrefixf(err, "failed to parse rendered template into a resource:\n%s\n", s)
+		}
+
+		if tc.MergeResources {
+			// apply inputs as patches -- add the
+			rl.Items = append(nodes, rl.Items...)
+		} else {
+			// add to the inputs list
+			rl.Items = append(rl.Items, nodes...)
+		}
+	}
+	return nil
+}
+
+// GetCommand returns a new cobra command
+func (tc TemplateCommand) GetCommand() *cobra.Command {
+	rl := ResourceList{
+		FunctionConfig: tc.API,
+		NoPrintError:   true,
+	}
+	c := Command(&rl, func() error {
+		// do any preprocessing
+		if tc.PreProcess != nil {
+			if err := tc.PreProcess(&rl); err != nil {
+				return err
+			}
+		}
+
+		if tc.Template != nil {
+			tc.Templates = append(tc.Templates, tc.Template)
+		}
+
+		for i := range tc.TemplatesFiles {
+			tbytes, err := ioutil.ReadFile(tc.TemplatesFiles[i])
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to read template file")
+			}
+			t, err := template.New("files").Parse(string(tbytes))
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to parse template files %v", tc.TemplatesFiles)
+			}
+			tc.Templates = append(tc.Templates, t)
+		}
+
+		for i := range tc.Templates {
+			if err := tc.doTemplate(tc.Templates[i], &rl); err != nil {
+				return err
+			}
+		}
+
+		if tc.PatchTemplatesFn != nil {
+			pt, err := tc.PatchTemplatesFn(&rl)
+			if err != nil {
+				return err
+			}
+			tc.PatchTemplates = append(tc.PatchTemplates, pt...)
+		}
+
+		for i := range tc.PatchTemplates {
+			if err := tc.PatchTemplates[i].Apply(&rl); err != nil {
+				return err
+			}
+		}
+
+		if tc.PatchContainerTemplatesFn != nil {
+			ct, err := tc.PatchContainerTemplatesFn(&rl)
+			if err != nil {
+				return err
+			}
+			tc.PatchContainerTemplates = append(tc.PatchContainerTemplates, ct...)
+		}
+		for i := range tc.PatchContainerTemplates {
+			ct := tc.PatchContainerTemplates[i]
+			matches, err := ct.Selector.GetMatches(&rl)
+			if err != nil {
+				return err
+			}
+			err = PatchContainersWithTemplate(matches, ct.Template, rl.FunctionConfig, ct.ContainerNames...)
+			if err != nil {
+				return err
+			}
+		}
+
+		var err error
+		if tc.MergeResources {
+			rl.Items, err = filters.MergeFilter{}.Filter(rl.Items)
+			if err != nil {
+				return err
+			}
+		}
+
+		// finish up
+		if tc.PostProcess != nil {
+			if err := tc.PostProcess(&rl); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	return c
 }
 
 // AddGenerateDockerfile adds a "gen" subcommand to create a Dockerfile for building
@@ -207,10 +464,11 @@ CMD ["function"]
 	cmd.AddCommand(gen)
 }
 
-func execute(rl *ResourceList, function Function, cmd *cobra.Command) error {
+func execute(rl *ResourceList, function Function, cmd *cobra.Command, args []string) error {
 	rl.Reader = cmd.InOrStdin()
 	rl.Writer = cmd.OutOrStdout()
 	rl.Flags = cmd.Flags()
+	rl.Args = args
 
 	if err := rl.Read(); err != nil {
 		return err

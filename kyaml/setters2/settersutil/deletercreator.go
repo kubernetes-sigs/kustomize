@@ -4,8 +4,8 @@
 package settersutil
 
 import (
+	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
 
@@ -27,6 +27,8 @@ type DeleterCreator struct {
 
 	// Path to resources folder
 	ResourcesPath string
+
+	SettersSchema *spec.Schema
 }
 
 func (d DeleterCreator) Delete() error {
@@ -38,13 +40,6 @@ func (d DeleterCreator) Delete() error {
 		return err
 	}
 
-	// Load the updated definitions
-	clean, err := openapi.AddSchemaFromFile(d.OpenAPIPath)
-	if err != nil {
-		return err
-	}
-	defer clean()
-
 	// Update the resources with the deleter reference
 	inout := &kio.LocalPackageReadWriter{PackagePath: d.ResourcesPath, PackageFileName: d.OpenAPIFileName}
 	return kio.Pipeline{
@@ -53,6 +48,7 @@ func (d DeleterCreator) Delete() error {
 			&setters2.Delete{
 				Name:             d.Name,
 				DefinitionPrefix: d.DefinitionPrefix,
+				SettersSchema:    d.SettersSchema,
 			})},
 		Outputs: []kio.Writer{inout},
 	}.Execute()

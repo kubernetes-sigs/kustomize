@@ -334,13 +334,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#install-the-kustomize-cli-from-source-without-cloning-the-repo">Install the kustomize CLI from source without cloning the repo</a></li>
-    <li><a href="#install-the-kustomize-cli-from-local-source-with-cloning-the-repo">Install the kustomize CLI from local source with cloning the repo</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -377,30 +370,8 @@
 	<h1>Go Source</h1>
 	<div class="lead">Install Kustomize from the Go source code</div>
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/installation/kustomize/source/" />
-<p>Requires <a href="https://golang.org">Go</a> to be installed.</p>
-<h2 id="install-the-kustomize-cli-from-source-without-cloning-the-repo">Install the kustomize CLI from source without cloning the repo</h2>
-<pre><code>GOBIN=$(pwd)/ GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
-</code></pre><h2 id="install-the-kustomize-cli-from-local-source-with-cloning-the-repo">Install the kustomize CLI from local source with cloning the repo</h2>
-<pre><code># Need go 1.13 or higher
-unset GOPATH
-# see https://golang.org/doc/go1.13#modules
-unset GO111MODULES
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
-# clone the repo
-git clone git@github.com:kubernetes-sigs/kustomize.git
-# get into the repo root
-cd kustomize
-
-# Optionally checkout a particular tag if you don't
-# want to build at head
-git checkout kustomize/v3.2.3
-
-# build the binary
-(cd kustomize; go install .)
-
-# run it
-~/go/bin/kustomize version
-</code></pre>
         <div class="section-index">
     
     
@@ -423,7 +394,7 @@ git checkout kustomize/v3.2.3
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

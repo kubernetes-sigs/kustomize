@@ -23,11 +23,12 @@ func _() {
 	_ = x[ReplicaCountTransformer-12]
 	_ = x[SecretGenerator-13]
 	_ = x[ValueAddTransformer-14]
+	_ = x[HelmChartInflationGenerator-15]
 }
 
-const _BuiltinPluginType_name = "UnknownAnnotationsTransformerConfigMapGeneratorHashTransformerImageTagTransformerLabelTransformerLegacyOrderTransformerNamespaceTransformerPatchJson6902TransformerPatchStrategicMergeTransformerPatchTransformerPrefixSuffixTransformerReplicaCountTransformerSecretGeneratorValueAddTransformer"
+const _BuiltinPluginType_name = "UnknownAnnotationsTransformerConfigMapGeneratorHashTransformerImageTagTransformerLabelTransformerLegacyOrderTransformerNamespaceTransformerPatchJson6902TransformerPatchStrategicMergeTransformerPatchTransformerPrefixSuffixTransformerReplicaCountTransformerSecretGeneratorValueAddTransformerHelmChartInflationGenerator"
 
-var _BuiltinPluginType_index = [...]uint16{0, 7, 29, 47, 62, 81, 97, 119, 139, 163, 193, 209, 232, 255, 270, 289}
+var _BuiltinPluginType_index = [...]uint16{0, 7, 29, 47, 62, 81, 97, 119, 139, 163, 193, 209, 232, 255, 270, 289, 316}
 
 func (i BuiltinPluginType) String() string {
 	if i < 0 || i >= BuiltinPluginType(len(_BuiltinPluginType_index)-1) {

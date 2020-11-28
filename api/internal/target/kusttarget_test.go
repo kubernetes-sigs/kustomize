@@ -13,9 +13,10 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -82,7 +83,7 @@ commonLabels:
 
 	kt := makeKustTargetWithRf(
 		t, th.GetFSys(), "/",
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 1)
+		provider.NewDefaultDepProvider(), 1)
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			th.WriteK("/", tc.content)
@@ -103,7 +104,7 @@ commonLabels:
 	// Repeat test with parallel accumulation
 	kt = makeKustTargetWithRf(
 		t, th.GetFSys(), "/",
-		resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl()), 16)
+		provider.NewDefaultDepProvider(), 16)
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			th.WriteK("/", tc.content)
@@ -174,7 +175,8 @@ metadata:
     {"op": "add", "path": "/spec/replica", "value": "3"}
 ]`)
 
-	resFactory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+	pvd := provider.NewDefaultDepProvider()
+	resFactory := pvd.GetResourceFactory()
 
 	resources := []*resource.Resource{
 		resFactory.FromMapWithName("dply1", map[string]interface{}{
@@ -269,33 +271,24 @@ metadata:
 			t.Fatalf("unexpected error %v", err)
 		}
 	}
+	expYaml, err := expected.AsYaml()
+	assert.NoError(t, err)
 
 	kt := makeKustTargetWithRf(
-		t, th.GetFSys(), "/whatever", resFactory, 1)
-	err := kt.Load()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
+		t, th.GetFSys(), "/whatever", pvd, 1)
+	assert.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
-
-	if err = expected.ErrorIfNotEqualLists(actual); err != nil {
-		t.Fatalf("unexpected inequality: %v", err)
-	}
+	assert.NoError(t, err)
+	actYaml, err := actual.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, expYaml, actYaml)
 
 	// Repeat test with parallel accumulation
 	kt = makeKustTargetWithRf(
-		t, th.GetFSys(), "/whatever", resFactory, 16)
-	err = kt.Load()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
+		t, th.GetFSys(), "/whatever", pvd, 16)
+	assert.NoError(t, kt.Load())
 	actual, err = kt.MakeCustomizedResMap()
-	if err != nil {
-		t.Fatalf("unexpected Resources error %v", err)
-	}
+	assert.NoError(t, err)
 
 	if err = expected.ErrorIfNotEqualSets(actual); err != nil {
 		t.Fatalf("unexpected inequality: %v", err)

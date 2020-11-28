@@ -4,12 +4,14 @@
 package resmap_test
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -17,8 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-var rf = resource.NewFactory(
-	kunstruct.NewKunstructuredFactoryImpl())
+var rf = provider.NewDefaultDepProvider().GetResourceFactory()
 var rmF = NewFactory(rf, nil)
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
@@ -704,31 +705,63 @@ func TestAbsorbAll(t *testing.T) {
 			Behavior: "create",
 		}))
 	w := makeMap1()
-	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := expected.ErrorIfNotEqualLists(w); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(makeMap2(types.BehaviorMerge)))
+	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
 	w = makeMap1()
-	if err := w.AbsorbAll(nil); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w.ErrorIfNotEqualLists(makeMap1()); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(nil))
+	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1()))
+
 	w = makeMap1()
 	w2 := makeMap2(types.BehaviorReplace)
-	if err := w.AbsorbAll(w2); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w2.ErrorIfNotEqualLists(w); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(w2))
+	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
 	w = makeMap1()
 	w2 = makeMap2(types.BehaviorUnspecified)
 	err := w.AbsorbAll(w2)
 	if err == nil {
 		t.Fatalf("expected error with unspecified behavior")
+	}
+}
+
+func TestToRNodeSlice(t *testing.T) {
+	input := `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-reader
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+`
+	rm, err := rmF.NewResMapFromBytes([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	rnodes, err := rm.ToRNodeSlice()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	b := bytes.NewBufferString("")
+	for i, n := range rnodes {
+		if i != 0 {
+			b.WriteString("---\n")
+		}
+		s, err := n.String()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		b.WriteString(s)
+	}
+
+	if !reflect.DeepEqual(input, b.String()) {
+		t.Fatalf("actual doesn't match expected.\nActual:\n%s\n===\nExpected:\n%s\n",
+			b.String(), input)
 	}
 }

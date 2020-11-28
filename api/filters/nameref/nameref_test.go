@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -220,7 +219,7 @@ map:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
 			referrer, err := factory.FromBytes([]byte(tc.input))
 			if err != nil {
 				t.Fatal(err)
@@ -321,7 +320,7 @@ metadata:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
 			referrer, err := factory.FromBytes([]byte(tc.input))
 			if err != nil {
 				t.Fatal(err)
@@ -732,7 +731,7 @@ ref:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
 			referrer, err := factory.FromBytes([]byte(tc.input))
 			if err != nil {
 				t.Fatal(err)

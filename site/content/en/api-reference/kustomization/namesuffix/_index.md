@@ -9,13 +9,4 @@ description: >
 <meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/namesuffix/" />
 
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-nameSuffix: -v2
-```
-
-A deployment named `wordpress` would become `wordpress-v2`.
-
-**Note:** The suffix is appended before the content hash if the resource type is ConfigMap or Secret.
+Moved to https://github.com/kubernetes-sigs/cli-experimental

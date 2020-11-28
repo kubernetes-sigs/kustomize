@@ -11,9 +11,9 @@ import (
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/krusty/internal/provider"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provenance"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -86,7 +86,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		t := builtins.LabelTransformerPlugin{
 			Labels: map[string]string{
 				konfig.ManagedbyLabelKey: fmt.Sprintf(
-					"kustomize-%s", provenance.GetProvenance().Version)},
+					"kustomize-%s", provenance.GetProvenance().Semver())},
 			FieldSpecs: []types.FieldSpec{{
 				Path:               "metadata/labels",
 				CreateIfNotPresent: true,

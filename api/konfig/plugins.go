@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -156,4 +157,16 @@ func pwdEnv() string {
 		return "CD"
 	}
 	return "PWD"
+}
+
+// GetBuiltinPluginNames returns a list of builtin plugin names
+func GetBuiltinPluginNames() []string {
+	var ret []string
+	for k := range builtinhelpers.GeneratorFactories {
+		ret = append(ret, k.String())
+	}
+	for k := range builtinhelpers.TransformerFactories {
+		ret = append(ret, k.String())
+	}
+	return ret
 }

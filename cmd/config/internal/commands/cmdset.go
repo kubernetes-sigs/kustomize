@@ -6,17 +6,13 @@ package commands
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -36,13 +32,13 @@ func NewSetRunner(parent string) *SetRunner {
 	r.Command = c
 	c.Flags().StringArrayVar(&r.Values, "values", []string{},
 		"optional flag, the values of the setter to be set to")
-	c.Flags().StringVar(&r.Perform.SetBy, "set-by", "",
+	c.Flags().StringVar(&r.SetBy, "set-by", "",
 		"annotate the field with who set it")
-	c.Flags().StringVar(&r.Perform.Description, "description", "",
+	c.Flags().StringVar(&r.Description, "description", "",
 		"annotate the field with a description of its value")
 	c.Flags().StringVar(&setterVersion, "version", "",
 		"use this version of the setter format")
-	c.Flags().BoolVarP(&r.Set.RecurseSubPackages, "recurse-subpackages", "R", false,
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", false,
 		"sets recursively in all the nested subpackages")
 	c.Flags().MarkHidden("version")
 
@@ -56,31 +52,16 @@ func SetCommand(parent string) *cobra.Command {
 }
 
 type SetRunner struct {
-	Command     *cobra.Command
-	Lookup      setters.LookupSetters
-	Perform     setters.PerformSetters
-	Set         settersutil.FieldSetter
-	OpenAPIFile string
-	Values      []string
-}
-
-func initSetterVersion(c *cobra.Command, args []string) error {
-	setterVersion = "v2"
-	l := setters.LookupSetters{}
-
-	// backwards compatibility for resources with setter v1
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: args[0]}},
-		Filters: []kio.Filter{&l},
-	}.Execute()
-	if err != nil {
-		return err
-	}
-	if len(l.SetterCounts) > 0 {
-		setterVersion = "v1"
-	}
-
-	return nil
+	Command            *cobra.Command
+	Set                settersutil.FieldSetter
+	OpenAPIFile        string
+	Values             []string
+	SetBy              string
+	Description        string
+	Name               string
+	Value              string
+	ListValues         []string
+	RecurseSubPackages bool
 }
 
 func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
@@ -90,79 +71,51 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("value should set either from flag or arg")
 	}
 
-	if len(args) > 1 {
-		r.Perform.Name = args[1]
-		r.Lookup.Name = args[1]
-	}
-
+	r.Name = args[1]
 	if valueFlagSet {
-		r.Perform.Value = r.Values[0]
-	} else if len(args) > 2 {
-		r.Perform.Value = args[2]
+		r.Value = r.Values[0]
+	} else {
+		r.Value = args[2]
 	}
 
-	if setterVersion == "" {
-		if len(args) < 2 || len(args) < 3 && !valueFlagSet {
-			setterVersion = "v1"
-		} else if err := initSetterVersion(c, args); err != nil {
-			return err
-		}
+	// set remaining values as list values
+	if valueFlagSet && len(r.Values) > 1 {
+		r.ListValues = r.Values[1:]
+	} else if !valueFlagSet && len(args) > 3 {
+		r.ListValues = args[3:]
 	}
-	if setterVersion == "v2" {
-		r.Set.Name = args[1]
-		if valueFlagSet {
-			r.Set.Value = r.Values[0]
-		} else {
-			r.Set.Value = args[2]
-		}
 
-		// set remaining values as list values
-		if valueFlagSet && len(r.Values) > 1 {
-			r.Set.ListValues = r.Values[1:]
-		} else if !valueFlagSet && len(args) > 3 {
-			r.Set.ListValues = args[3:]
-		}
-
-		r.Set.Description = r.Perform.Description
-		r.Set.SetBy = r.Perform.SetBy
-		r.OpenAPIFile = filepath.Join(args[0], ext.KRMFileName())
-	}
+	r.OpenAPIFile = filepath.Join(args[0], ext.KRMFileName())
 	return nil
 }
 
 func (r *SetRunner) runE(c *cobra.Command, args []string) error {
-	if setterVersion == "v2" {
-		e := runner.ExecuteCmdOnPkgs{
-			NeedOpenAPI:        true,
-			Writer:             c.OutOrStdout(),
-			RootPkgPath:        args[0],
-			RecurseSubPackages: r.Set.RecurseSubPackages,
-			CmdRunner:          r,
-		}
-		err := e.Execute()
-		if err != nil {
-			return runner.HandleError(c, err)
-		}
-		return nil
+	e := runner.ExecuteCmdOnPkgs{
+		NeedOpenAPI:        true,
+		Writer:             c.OutOrStdout(),
+		RootPkgPath:        args[0],
+		RecurseSubPackages: r.RecurseSubPackages,
+		CmdRunner:          r,
 	}
-	if len(args) > 2 || c.Flag("values").Changed {
-		return runner.HandleError(c, r.perform(c, args))
+	err := e.Execute()
+	if err != nil {
+		return runner.HandleError(c, err)
 	}
-	return runner.HandleError(c, lookup(r.Lookup, c, args))
+	return nil
 }
 
 func (r *SetRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	r.Set = settersutil.FieldSetter{
-		Name:               r.Set.Name,
-		Value:              r.Set.Value,
-		ListValues:         r.Set.ListValues,
-		Description:        r.Set.Description,
-		SetBy:              r.Set.SetBy,
+		Name:               r.Name,
+		Value:              r.Value,
+		ListValues:         r.ListValues,
+		Description:        r.Description,
+		SetBy:              r.SetBy,
 		Count:              0,
 		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		OpenAPIFileName:    ext.KRMFileName(),
 		ResourcesPath:      pkgPath,
-		RecurseSubPackages: r.Set.RecurseSubPackages,
+		RecurseSubPackages: r.RecurseSubPackages,
 		IsSet:              true,
 	}
 	count, err := r.Set.Set()
@@ -177,67 +130,5 @@ func (r *SetRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	} else {
 		fmt.Fprintf(w, "set %d field(s) of setter %q to value %q\n", count, r.Set.Name, r.Set.Value)
 	}
-	return nil
-}
-
-func lookup(l setters.LookupSetters, c *cobra.Command, args []string) error {
-	// lookup the setters
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: args[0]}},
-		Filters: []kio.Filter{&l},
-	}.Execute()
-	if err != nil {
-		return err
-	}
-
-	table := tablewriter.NewWriter(c.OutOrStdout())
-	table.SetRowLine(false)
-	table.SetBorder(false)
-	table.SetHeaderLine(false)
-	table.SetColumnSeparator(" ")
-	table.SetCenterSeparator(" ")
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeader([]string{
-		"NAME", "DESCRIPTION", "VALUE", "TYPE", "COUNT", "SETBY",
-	})
-	for i := range l.SetterCounts {
-		s := l.SetterCounts[i]
-		v := s.Value
-		if s.Value == "" {
-			v = s.Value
-		}
-		table.Append([]string{
-			s.Name,
-			"'" + s.Description + "'",
-			v,
-			fmt.Sprintf("%v", s.Type),
-			fmt.Sprintf("%d", s.Count),
-			s.SetBy,
-		})
-	}
-	table.Render()
-
-	if len(l.SetterCounts) == 0 {
-		// exit non-0 if no matching setters are found
-		os.Exit(1)
-	}
-	return nil
-}
-
-// perform the setters
-func (r *SetRunner) perform(c *cobra.Command, args []string) error {
-	rw := &kio.LocalPackageReadWriter{
-		PackagePath: args[0],
-	}
-	// perform the setters in the package
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{rw},
-		Filters: []kio.Filter{&r.Perform},
-		Outputs: []kio.Writer{rw},
-	}.Execute()
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(c.OutOrStdout(), "set %d fields\n", r.Perform.Count)
 	return nil
 }

@@ -94,7 +94,7 @@ func (rf *Factory) SliceFromPatches(
 	return result, nil
 }
 
-// FromBytes unmarshals bytes into one Resource.
+// FromBytes unmarshalls bytes into one Resource.
 func (rf *Factory) FromBytes(in []byte) (*Resource, error) {
 	result, err := rf.SliceFromBytes(in)
 	if err != nil {

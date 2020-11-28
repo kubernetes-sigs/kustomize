@@ -20,11 +20,13 @@ type Delete struct {
 
 	// DefinitionPrefix is the prefix of the OpenAPI definition type
 	DefinitionPrefix string
+
+	SettersSchema *spec.Schema
 }
 
 // Filter implements yaml.Filter
 func (d *Delete) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	return object, accept(d, object)
+	return object, accept(d, object, d.SettersSchema)
 }
 
 func (d *Delete) visitSequence(_ *yaml.RNode, _ string, _ *openapi.ResourceSchema) error {
@@ -52,7 +54,7 @@ func (d *Delete) visitMapping(object *yaml.RNode, _ string, _ *openapi.ResourceS
 // visitScalar will remove the reference on each scalar field whose name matches.
 func (d *Delete) visitScalar(object *yaml.RNode, _ string, _, _ *openapi.ResourceSchema) error {
 	// read the field metadata
-	fm := fieldmeta.FieldMeta{}
+	fm := fieldmeta.FieldMeta{SettersSchema: d.SettersSchema}
 	if err := fm.Read(object); err != nil {
 		return err
 	}

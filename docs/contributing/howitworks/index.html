@@ -439,100 +439,7 @@
 	<h1>Writing Code</h1>
 	<div class="lead">How to modify Kustomize</div>
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/contributing/kustomize/howitworks" />
-
-
-<div class="pageinfo pageinfo-info">
-<p>To build kustomize using the locally modified modules, <code>replace</code> statements must be added to
-the <code>kustomize/go.mod</code>.</p>
-<p>e.g. if code in <code>api</code> was modified, a <code>replace</code> statement would need to be added for the
-<code>kustomize/api</code> module.</p>
-
-</div>
-
-<p>Call stack when running <code>kustomize build</code>, with links to code.</p>
-<h2 id="run-build">Run build</h2>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/kustomize/internal/commands/build/build.go#L121">RunBuild</a>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/krusty/kustomizer.go#L32">MakeKustomizer</a></li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/krusty/kustomizer.go#L47">Run</a>: performs a kustomization. It uses its internal filesystem reference to read the file at the given path argument, interpret it as a kustomization.yaml file, perform the kustomization it represents, and return the resulting resources.
-<ul>
-<li>Create factories
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/k8sdeps/transformer/factory.go#L17">tranformer.NewFactoryImpl</a></li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/resmap/factory.go#L21">resmap.NewFactory</a>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/resource/factory.go#L23">resource.NewFactory</a>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/k8sdeps/kunstruct/factory.go#L28">kustruct.NewKunstructuredFactoryImpl</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/loader/loader.go#L19">loader.NewLoader</a></li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/k8sdeps/validator/validators.go#L23">validator.NewKustValidator</a></li>
-</ul>
-</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L38">NewKustTarget</a></li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L54">Load</a></li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L109">MakeCustomizeResMap</a>: details in next section</li>
-</ul>
-</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/kustomize/internal/commands/build/build.go#L143">emitResources</a></li>
-</ul>
-</li>
-</ul>
-<h2 id="make-resource-map">Make resource map</h2>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L117">makeCustomizeResMap</a>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L196">AccumulateTarget</a>: returns a new ResAccumulator, holding customized resources and the data/rules used to do so. The name back references and vars are not yet fixed.
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L302">accummulateResources</a>: fills the given resourceAccumulator with resources read from the given list of paths.</li>
-<li>Merge config from builtin and CRDs</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L239">runGenerators</a>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget_configplugin.go#L28">configureBuiltinGenerators</a>
-<ul>
-<li>ConfigMapGenerator</li>
-<li>SecretGenerator</li>
-</ul>
-</li>
-<li><a href="">configureExternalGenerators</a></li>
-<li>Iterate all generators</li>
-</ul>
-</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L274">runTransfomers</a>
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget_configplugin.go#L44">configureBuiltinTransformers</a>
-<ul>
-<li>PatchStrategicMergeTransformer</li>
-<li>PatchTransformer</li>
-<li>NamespaceTransformer</li>
-<li>PrefixSuffixTransformer</li>
-<li>LabelTransformer</li>
-<li>AnnotationsTransformer</li>
-<li>PatchJson6902Transformer</li>
-<li>ReplicaCountTransformer</li>
-<li>ImageTagTransformer</li>
-</ul>
-</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L291">configureExternalTransformers</a></li>
-</ul>
-</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L64">MergeVars</a></li>
-</ul>
-</li>
-<li>The following steps must be done last, not as part of the recursion implicit in AccumulateTarget.
-<ul>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L153">addHashesToNames</a></li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L160">FixBackReferences</a>: Given that names have changed (prefixs/suffixes added), fix all the back references to those names.</li>
-<li><a href="https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L141">ResolveVars</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -562,7 +469,7 @@ the <code>kustomize/go.mod</code>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

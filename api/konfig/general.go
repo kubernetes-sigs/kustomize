@@ -20,6 +20,10 @@ func DefaultKustomizationFileName() string {
 }
 
 const (
+	// FlagEnableKyamlDefaultValue is the default value for the --enable_kyaml
+	// flag.  This value is also used in unit tests.  See provider.DepProvider.
+	FlagEnableKyamlDefaultValue = false
+
 	// An environment variable to consult for kustomization
 	// configuration data.  See:
 	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
@@ -30,6 +34,9 @@ const (
 
 	// A program name, for use in help, finding the XDG_CONFIG_DIR, etc.
 	ProgramName = "kustomize"
+
+	// If a resource has this annotation, kustomize will drop it.
+	IgnoredByKustomizeResourceAnnotation = "config.kubernetes.io/local-config"
 
 	// Label key that indicates the resources are built from Kustomize
 	ManagedbyLabelKey = "app.kubernetes.io/managed-by"

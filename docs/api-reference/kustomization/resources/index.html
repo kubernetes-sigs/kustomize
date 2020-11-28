@@ -748,24 +748,7 @@
 	<h1>resources</h1>
 	<div class="lead">Resources to include.</div>
 	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/references/kustomize/resources/" />
-<p>Each entry in this list must be a path to a <em>file</em>, or a path (or URL) referring to another
-kustomization <em>directory</em>, e.g.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">kustomize.config.k8s.io/v1beta1</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">Kustomization</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">resources</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">myNamespace.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">sub-dir/some-deployment.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">../../commonbase</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">deployment.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">github.com/kubernets-sigs/kustomize/examples/helloWorld?ref=test-branch</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Resources will be read and processed in depth-first order.</p>
-<p>Files should contain k8s resources in YAML form. A file may contain multiple resources separated by
-the document marker <code>---</code>.  File paths should be specified <em>relative</em> to the directory holding the
-kustomization file containing the <code>resources</code> field.</p>
-<p>Directory specification can be relative, absolute, or part of a URL.  URL specifications should
-follow the <a href="https://github.com/hashicorp/go-getter#url-format">hashicorp URL</a> format.  The directory must contain a <code>kustomization.yaml</code> file.</p>
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -821,7 +804,7 @@ follow the <a href="https://github.com/hashicorp/go-getter#url-format">hashicorp
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 4, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/0834e152b203ffeccfbbf1ddd3c1f49debdac341">Redirect kustomize docs to the new unified site. (0834e152)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 11, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/71b763888cad614abb44b3086e291fe72d601080">Remove duplicate kustomize docs content (71b76388)</a>
 </div>
 </div>
 

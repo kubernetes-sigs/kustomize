@@ -135,12 +135,6 @@ openAPI:
  `,
 			expectedError: true,
 		},
-
-		{
-			name:             "no openAPI",
-			inputOpenAPIfile: ``,
-			expectedError:    false,
-		},
 	}
 	for i := range tests {
 		test := tests[i]
@@ -154,14 +148,16 @@ openAPI:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			clean, err := openapi.AddSchemaFromFile(filepath.Join(dir, "Krmfile"))
-			defer clean()
+			sc, err := openapi.SchemaFromFile(filepath.Join(dir, "Krmfile"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 			if err != nil {
 				// do nothing if openAPI file or schema doesn't exist, CheckRequiredSettersSet()
 				// should not throw any error
 				fmt.Println("Unable to load schema from file, continuing...")
 			}
-			err = CheckRequiredSettersSet()
+			err = CheckRequiredSettersSet(sc)
 			if test.expectedError && !assert.Error(t, err) {
 				t.FailNow()
 			}

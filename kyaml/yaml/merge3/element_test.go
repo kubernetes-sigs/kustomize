@@ -1211,8 +1211,8 @@ spec:
         ports:
         - containerPort: 80
           protocol: HTTP
-        - protocol: TCP
-          containerPort: 8080
+        - containerPort: 8080
+          protocol: TCP
 `},
 
 	{
@@ -1282,9 +1282,6 @@ spec:
           name: bar
 `},
 
-	// The following test cases document broken behavior
-	// that will change as a result of #3111, #3159
-
 	//
 	// Test Case
 	//
@@ -1330,7 +1327,7 @@ spec:
         ports:
         - containerPort: 8080
           protocol: UDP
-`, // output should have both
+`,
 		expected: `
 apiVersion: apps/v1
 kind: Deployment
@@ -1343,6 +1340,8 @@ spec:
         ports:
         - containerPort: 8080
           protocol: UDP
+        - containerPort: 8080
+          protocol: TCP
 `},
 
 	//
@@ -1378,7 +1377,7 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
-`, // output should have both
+`,
 		expected: `
 apiVersion: apps/v1
 kind: Deployment
@@ -1389,6 +1388,8 @@ spec:
       - image: test-image
         name: test-deployment
         ports:
+        - containerPort: 8080
+          protocol: TCP
         - containerPort: 8080
           protocol: UDP
 `},
@@ -1468,8 +1469,11 @@ spec:
           protocol: UDP
           name: original
         - containerPort: 8080
-          protocol: UDP
-          name: original
+          protocol: HTTP
+          name: local
+        - containerPort: 8080
+          name: updated
+          protocol: TCP
 `},
 
 	{
@@ -1531,6 +1535,8 @@ spec:
       - image: test-image
         name: test-deployment
         ports:
+        - containerPort: 8080
+          protocol: HTTP
         - containerPort: 8080
           protocol: TCP
 `},

@@ -20,15 +20,20 @@ This tool is sponsored by [sig-cli] ([KEP]).
 
 ## kubectl integration
 
-Since [v1.14][kubectl announcement] the kustomize build system has been included in kubectl.
+The kustomize build flow at [v2.0.3] was added
+to [kubectl v1.14][kubectl announcement].  The kustomize
+flow in kubectl has remained frozen at v2.0.3 while work
+to extract kubectl from the k/k repo, and work to remove
+kustomize's dependence on core k/k code ([#2506]) has proceeded.
+The reintegration effort is tracked in [#1500] (and its blocking
+issues).
 
-| kubectl version | kustomize version |
-|---------|--------|
-| v1.16.0 | [v2.0.3](/../../tree/v2.0.3) |
-| v1.15.x | [v2.0.3](/../../tree/v2.0.3) |
-| v1.14.x | [v2.0.3](/../../tree/v2.0.3) |
+[v2.0.3]: /../../tree/v2.0.3
+[#2506]: https://github.com/kubernetes-sigs/kustomize/issues/2506
+[#1500]: https://github.com/kubernetes-sigs/kustomize/issues/1500
 
-For examples and guides for using the kubectl integration please see the [kubectl book] or the [kubernetes documentation].
+For examples and guides for using the kubectl integration please
+see the [kubectl book] or the [kubernetes documentation].
 
 ## Usage
 

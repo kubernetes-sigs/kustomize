@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	kyaml_yaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -338,10 +339,8 @@ func (m *resWrangler) ErrorIfNotEqualLists(other ResMap) error {
 	}
 	for i, r1 := range m.rList {
 		r2 := m2.rList[i]
-		if !r1.Equals(r2) {
-			return fmt.Errorf(
-				"Item i=%d differs:\n  n1 = %s\n  n2 = %s\n  o1 = %s\n  o2 = %s\n",
-				i, r1.OrgId(), r2.OrgId(), r1, r2)
+		if err := r1.ErrIfNotEquals(r2); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -560,4 +559,22 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 		result = append(result, r)
 	}
 	return result, nil
+}
+
+// ToRNodeSlice converts the resources in the resmp
+// to a list of RNodes
+func (m *resWrangler) ToRNodeSlice() ([]*kyaml_yaml.RNode, error) {
+	var rnodes []*kyaml_yaml.RNode
+	for _, r := range m.Resources() {
+		s, err := r.AsYAML()
+		if err != nil {
+			return nil, err
+		}
+		rnode, err := kyaml_yaml.Parse(string(s))
+		if err != nil {
+			return nil, err
+		}
+		rnodes = append(rnodes, rnode)
+	}
+	return rnodes, nil
 }

@@ -6,7 +6,17 @@
 MYGOBIN := $(shell go env GOPATH)/bin
 SHELL := /bin/bash
 export PATH := $(MYGOBIN):$(PATH)
-MODULES := "cmd/config" "api/" "kustomize/" "kyaml/"
+MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
+
+# Provide defaults for REPO_OWNER and REPO_NAME if not present.
+# Typically these values would be provided by Prow.
+ifndef REPO_OWNER
+REPO_OWNER := "kubernetes-sigs"
+endif
+
+ifndef REPO_NAME
+REPO_NAME := "kustomize"
+endif
 
 .PHONY: all
 all: verify-kustomize
@@ -180,30 +190,40 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator
 .PHONY: generate-kustomize-builtin-plugins
 generate-kustomize-builtin-plugins: $(builtinplugins)
 
-.PHONY: kustomize-external-go-plugin-build
-kustomize-external-go-plugin-build:
+.PHONY: build-kustomize-external-go-plugin
+build-kustomize-external-go-plugin:
 	./hack/buildExternalGoPlugins.sh ./plugin
 
-.PHONY: kustomize-external-go-plugin-clean
-kustomize-external-go-plugin-clean:
+.PHONY: clean-kustomize-external-go-plugin
+clean-kustomize-external-go-plugin:
 	./hack/buildExternalGoPlugins.sh ./plugin clean
 
 ### End kustomize plugin rules.
 
 .PHONY: lint-kustomize
 lint-kustomize: install-tools $(builtinplugins)
-	cd api; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd kustomize; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd cmd/pluginator; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../../.golangci-kustomize.yml run ./...
+	cd api; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../.golangci-kustomize.yml \
+	  run ./...
+	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../.golangci-kustomize.yml \
+	  run ./...
+	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../../.golangci-kustomize.yml \
+	  run ./...
 
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
 build-kustomize-api: $(builtinplugins)
 	cd api; go build ./...
+
+.PHONY: generate-kustomize-api
+generate-kustomize-api:
+	cd api; go generate ./...
+
+.PHONY: clean-kustomize-api
+clean-kustomize-api:
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
@@ -233,11 +253,14 @@ test-go-mod:
 # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
 .PHONY: test-multi-module
 test-multi-module: $(MYGOBIN)/prchecker
-	$(MYGOBIN)/prchecker \
-	-owner=$(REPO_OWNER) \
-	-repo=$(REPO_NAME) \
-	-pr=$(PULL_NUMBER) \
-	$(MODULES)
+	( \
+		export MYGOBIN=$(MYGOBIN); \
+		export REPO_OWNER=$(REPO_OWNER); \
+		export REPO_NAME=$(REPO_NAME); \
+		export PULL_NUMBER=$(PULL_NUMBER); \
+		export MODULES=$(MODULES); \
+		./scripts/check-multi-module.sh; \
+	)
 
 .PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
@@ -338,12 +361,14 @@ $(MYGOBIN)/gh:
 	)
 
 .PHONY: clean
-clean: kustomize-external-go-plugin-clean
+clean: clean-kustomize-external-go-plugin clean-kustomize-api
 	go clean --cache
 	rm -f $(builtinplugins)
-	rm -f $(MYGOBIN)/pluginator
 	rm -f $(MYGOBIN)/kustomize
 	rm -f $(MYGOBIN)/golangci-lint-kustomize
+
+# Handle pluginator manually.
+# rm -f $(MYGOBIN)/pluginator
 
 # Nuke the site from orbit.  It's the only way to be sure.
 .PHONY: nuke

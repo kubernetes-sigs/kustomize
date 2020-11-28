@@ -4,9 +4,10 @@
 package resource_test
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/loader"
 	. "sigs.k8s.io/kustomize/api/resource"
@@ -349,7 +350,7 @@ kind: List
 			expectedErr: false,
 		},
 		{
-			name:        "listWithNo'items:'",
+			name:        "listWithNoItems",
 			input:       []types.PatchStrategicMerge{patchList4},
 			expectedOut: []*Resource{},
 			expectedErr: false,
@@ -357,21 +358,19 @@ kind: List
 	}
 	for _, test := range tests {
 		rs, err := factory.SliceFromPatches(ldr, test.input)
-		if test.expectedErr && err == nil {
-			t.Fatalf("%v: should return error", test.name)
+		if err != nil {
+			assert.True(t, test.expectedErr,
+				fmt.Sprintf("in test %s, got unexpected error: %v", test.name, err))
+			continue
 		}
-		if !test.expectedErr && err != nil {
-			t.Fatalf("%v: unexpected error: %s", test.name, err)
-		}
-		if len(rs) != len(test.expectedOut) {
-			t.Fatalf("%s: length mismatch %d != %d",
-				test.name, len(rs), len(test.expectedOut))
-		}
+		assert.False(t, test.expectedErr, "expected no error")
+		assert.Equal(t, len(test.expectedOut), len(rs))
 		for i := range rs {
-			if !reflect.DeepEqual(test.expectedOut[i], rs[i]) {
-				t.Fatalf("%s: Got: %v\nexpected:%v",
-					test.name, test.expectedOut[i], rs[i])
-			}
+			expYaml, err := test.expectedOut[i].AsYAML()
+			assert.NoError(t, err)
+			actYaml, err := rs[i].AsYAML()
+			assert.NoError(t, err)
+			assert.Equal(t, expYaml, actYaml)
 		}
 	}
 }

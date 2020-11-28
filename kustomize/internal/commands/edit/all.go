@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/add"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/fix"
+	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/listbuiltin"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/remove"
 	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands/edit/set"
 )
@@ -40,9 +41,13 @@ func NewCmdEdit(
 			fSys,
 			kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), v),
 			kf),
-		set.NewCmdSet(fSys, v),
+		set.NewCmdSet(
+			fSys,
+			kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), v),
+			v),
 		fix.NewCmdFix(fSys),
 		remove.NewCmdRemove(fSys, v),
+		listbuiltin.NewCmdListBuiltinPlugin(),
 	)
 	return c
 }

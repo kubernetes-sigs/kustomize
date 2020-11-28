@@ -6,9 +6,14 @@ package framework_test
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"text/template"
 
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -536,4 +541,577 @@ items:
 	//     field:
 	//       path: spec.field
 	//       suggestedValue: "1"
+}
+
+// ExampleTemplateCommand provides an example for using the TemplateCommand
+func ExampleTemplateCommand() {
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: &struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+		}{},
+		// Template
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+`)),
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
+
+// ExampleTemplateCommand_files provides an example for using the TemplateCommand
+func ExampleTemplateCommand_files() {
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: &struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+		}{},
+		// Template
+		TemplatesFiles: []string{filepath.Join("testdata", "templatefiles", "deployment.template")},
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "templatefiles", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
+
+// ExampleTemplateCommand_preprocess provides an example for using the TemplateCommand
+// with PreProcess to configure the template based on the input resources observed.
+func ExampleTemplateCommand_preprocess() {
+	config := &struct {
+		Key   string `json:"key" yaml:"key"`
+		Value string `json:"value" yaml:"value"`
+		Short bool
+	}{}
+
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: config,
+		PreProcess: func(rl *framework.ResourceList) error {
+			config.Short = len(rl.Items) < 3
+			return nil
+		},
+		// Template
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+{{- if .Short }}
+    short: 'true'
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+{{- if .Short }}
+    short: 'true'
+{{- end }}
+`)),
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+	//     short: 'true'
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     a: b
+	//     short: 'true'
+}
+
+// ExampleTemplateCommand_postprocess provides an example for using the TemplateCommand
+// with PostProcess to modify the results.
+func ExampleTemplateCommand_postprocess() {
+	config := &struct {
+		Key   string `json:"key" yaml:"key"`
+		Value string `json:"value" yaml:"value"`
+	}{}
+
+	// create the template
+	cmd := framework.TemplateCommand{
+		// Template input
+		API: config,
+		// Template
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+`)),
+		PostProcess: func(rl *framework.ResourceList) error {
+			// trim the first resources
+			rl.Items = rl.Items[1:]
+			return nil
+		},
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
+
+// ExampleTemplateCommand_patch provides an example for using the TemplateCommand to
+// create a function which patches resources.
+func ExampleTemplateCommand_patch() {
+	// patch the foo resource only
+	s := framework.Selector{Names: []string{"foo"}}
+
+	cmd := framework.TemplateCommand{
+		API: &struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+		}{},
+		Template: template.Must(template.New("example").Parse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    {{ .Key }}: {{ .Value }}
+`)),
+		// PatchTemplates are applied to BOTH ResourceList input resources AND templated resources
+		PatchTemplates: []framework.PatchTemplate{{
+			Selector: &s,
+			Template: template.Must(template.New("test").Parse(`
+metadata:
+  annotations:
+    patched: 'true'
+`)),
+		}},
+	}.GetCommand()
+
+	cmd.SetArgs([]string{filepath.Join("testdata", "template", "config.yaml")})
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     a: b
+	//     patched: 'true'
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     a: b
+}
+
+func ExampleSelector_templatizeKinds() {
+	type api struct {
+		KindName string `yaml:"kindName"`
+	}
+	rl := &framework.ResourceList{
+		FunctionConfig: &api{KindName: "Deployment"},
+		Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bar
+  namespace: default
+`),
+		Writer: os.Stdout,
+	}
+	if err := rl.Read(); err != nil {
+		panic(err)
+	}
+
+	var err error
+	s := &framework.Selector{
+		TemplatizeValues: true,
+		Kinds:            []string{"{{ .KindName }}"},
+	}
+	rl.Items, err = s.GetMatches(rl)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := rl.Write(); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	//   namespace: default
+	//   annotations:
+	//     config.kubernetes.io/index: '0'
+}
+
+func ExampleSelector_templatizeAnnotations() {
+	type api struct {
+		Value string `yaml:"vaue"`
+	}
+	rl := &framework.ResourceList{
+		FunctionConfig: &api{Value: "bar"},
+		Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    key: foo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+  namespace: default
+  annotations:
+    key: bar
+`),
+		Writer: os.Stdout,
+	}
+	if err := rl.Read(); err != nil {
+		panic(err)
+	}
+
+	var err error
+	s := &framework.Selector{
+		TemplatizeValues: true,
+		Annotations:      map[string]string{"key": "{{ .Value }}"},
+	}
+	rl.Items, err = s.GetMatches(rl)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := rl.Write(); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	//   namespace: default
+	//   annotations:
+	//     key: bar
+	//     config.kubernetes.io/index: '1'
+}
+
+// ExamplePatchContainersWithString patches all containers.
+func ExamplePatchContainersWithString() {
+	resources, err := kio.ParseAll(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: bar
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+spec:
+  selector:
+    foo: bar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: baz
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar
+spec:
+  selector:
+    foo: bar
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	input := struct{ Value string }{Value: "new-value"}
+	err = framework.PatchContainersWithString(resources, `
+env:
+  KEY: {{ .Value }}
+`, input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(kio.StringAll(resources))
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: bar
+	//         image: b
+	//         env:
+	//           KEY: new-value
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: foo
+	// spec:
+	//   selector:
+	//     foo: bar
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: baz
+	//         image: b
+	//         env:
+	//           KEY: new-value
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: bar
+	// spec:
+	//   selector:
+	//     foo: bar
+	//  <nil>
+}
+
+// PatchTemplateContainersWithString patches containers matching
+// a specific name.
+func ExamplePatchContainersWithString_names() {
+	resources, err := kio.ParseAll(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: bar
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo
+spec:
+  selector:
+    foo: bar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        image: a
+      - name: baz
+        image: b
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bar
+spec:
+  selector:
+    foo: bar
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	input := struct{ Value string }{Value: "new-value"}
+	err = framework.PatchContainersWithString(resources, `
+env:
+  KEY: {{ .Value }}
+`, input, "foo")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(kio.StringAll(resources))
+
+	// Output:
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: foo
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: bar
+	//         image: b
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: foo
+	// spec:
+	//   selector:
+	//     foo: bar
+	// ---
+	// apiVersion: apps/v1
+	// kind: Deployment
+	// metadata:
+	//   name: bar
+	// spec:
+	//   template:
+	//     spec:
+	//       containers:
+	//       - name: foo
+	//         image: a
+	//         env:
+	//           KEY: new-value
+	//       - name: baz
+	//         image: b
+	// ---
+	// apiVersion: v1
+	// kind: Service
+	// metadata:
+	//   name: bar
+	// spec:
+	//   selector:
+	//     foo: bar
+	//  <nil>
 }

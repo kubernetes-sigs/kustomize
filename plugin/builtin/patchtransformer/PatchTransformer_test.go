@@ -823,7 +823,7 @@ spec:
         name: test-deployment
         ports:
         - containerPort: 8080
-          name: disappearing-act
+          name: take-over-the-world
           protocol: TCP
 `)
 }

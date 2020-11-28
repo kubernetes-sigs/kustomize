@@ -11,6 +11,368 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestRNodeHasNilEntryInList(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		hasNil bool
+		path   string
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp:  resultExpected{},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp:  resultExpected{},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{},
+		},
+		"listWithNil": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					nil,
+				},
+			},
+			rsExp: resultExpected{
+				hasNil: false, // TODO: This should be true.
+				path:   "this/should/be/non-empty",
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			hasNil, path := rn.HasNilEntryInList()
+			if tc.rsExp.hasNil {
+				if !assert.True(t, hasNil) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.path, path) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.False(t, hasNil) {
+					t.FailNow()
+				}
+				if !assert.Empty(t, path) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func TestRNodeNewStringRNodeText(t *testing.T) {
+	rn := NewStringRNode("cat")
+	if !assert.Equal(t, `cat
+`,
+		rn.MustString()) {
+		t.FailNow()
+	}
+}
+
+func TestRNodeNewStringRNodeBinary(t *testing.T) {
+	rn := NewStringRNode(string([]byte{
+		0xff, // non-utf8
+		0x68, // h
+		0x65, // e
+		0x6c, // l
+		0x6c, // l
+		0x6f, // o
+	}))
+	if !assert.Equal(t, `!!binary /2hlbGxv
+`,
+		rn.MustString()) {
+		t.FailNow()
+	}
+}
+
+func TestRNodeGetValidatedMetadata(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		out    ResourceMeta
+		errMsg string
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"noNameConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+			},
+			rsExp: resultExpected{
+				errMsg: "missing metadata.name",
+			},
+		},
+		"configmap": {
+			theMap: testConfigMap,
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMap",
+					},
+					ObjectMeta: ObjectMeta{
+						NameMeta: NameMeta{
+							Name: "winnie",
+						},
+					},
+				},
+			},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "List",
+					},
+				},
+			},
+		},
+		"configmaplist": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMapList",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMapList",
+					},
+				},
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			m, err := rn.GetValidatedMetadata()
+			if tc.rsExp.errMsg == "" {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.out, m) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.rsExp.errMsg) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func TestRNodeFromMap(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		out string
+		err error
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp: resultExpected{
+				out: `{}`,
+				err: nil,
+			},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp: resultExpected{
+				out: `{}`,
+				err: nil,
+			},
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			rsExp: resultExpected{
+				out: `hey: there`,
+				err: nil,
+			},
+		},
+		"configmap": {
+			theMap: testConfigMap,
+			rsExp: resultExpected{
+				out: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`,
+				err: nil,
+			},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: `
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+kind: List
+`,
+				err: nil,
+			},
+		},
+		"configmaplist": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMapList",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: `
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: winnie
+kind: ConfigMapList
+`,
+				err: nil,
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if tc.rsExp.err == nil {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t,
+					strings.TrimSpace(tc.rsExp.out),
+					strings.TrimSpace(rn.MustString())) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.err, err) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
 // Test that non-UTF8 characters in comments don't cause failures
 func TestRNode_GetMeta_UTF16(t *testing.T) {
 	sr, err := Parse(`apiVersion: rbac.istio.io/v1alpha1
