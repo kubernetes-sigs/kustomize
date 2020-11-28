@@ -5,7 +5,7 @@ MYGOBIN := $(shell go env GOPATH)/bin
 export PATH := $(MYGOBIN):$(PATH)
 
 .PHONY: generate license fix vet fmt test lint tidy clean
-all: generate license fix vet fmt test lint tidy
+all: license fix vet fmt test lint tidy
 
 fix:
 	go fix ./...
