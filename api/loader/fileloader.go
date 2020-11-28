@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -334,6 +335,12 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 			return nil, err
 		}
 		return body, nil
+	}
+
+	// Skip verifications done on normal files and directories to allow
+	// reading resources directly from stdin
+	if path == "{stdin}" {
+		return ioutil.ReadAll(os.Stdin)
 	}
 
 	if !filepath.IsAbs(path) {
