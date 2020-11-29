@@ -163,13 +163,13 @@ func (wn *WNode) MarshalJSON() ([]byte, error) {
 }
 
 // MatchesAnnotationSelector implements ifc.Kunstructured.
-func (wn *WNode) MatchesAnnotationSelector(string) (bool, error) {
-	panic("TODO(#WNode) MatchesAnnotationSelector; implement or drop from API")
+func (wn *WNode) MatchesAnnotationSelector(selector string) (bool, error) {
+	return wn.node.MatchesAnnotationSelector(selector)
 }
 
 // MatchesLabelSelector implements ifc.Kunstructured.
-func (wn *WNode) MatchesLabelSelector(string) (bool, error) {
-	panic("TODO(#WNode) MatchesLabelSelector; implement or drop from API")
+func (wn *WNode) MatchesLabelSelector(selector string) (bool, error) {
+	return wn.node.MatchesLabelSelector(selector)
 }
 
 // SetAnnotations implements ifc.Kunstructured.
