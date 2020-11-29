@@ -852,3 +852,99 @@ func TestRNodeGetAnnotations(t *testing.T) {
 	assert.NoError(t, n.SetAnnotations(map[string]string{}))
 	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
 }
+
+func TestRNodeMatchesAnnotationSelector(t *testing.T) {
+	rn := NewRNode(nil)
+	assert.NoError(t, rn.UnmarshalJSON([]byte(deploymentJSON)))
+	testcases := map[string]struct {
+		selector string
+		matches  bool
+		errMsg   string
+	}{
+		"select_01": {
+			selector: ".*",
+			matches:  false,
+			errMsg:   "name part must consist of alphanumeric character",
+		},
+		"select_02": {
+			selector: "area=51",
+			matches:  true,
+		},
+		"select_03": {
+			selector: "area=florida",
+			matches:  false,
+		},
+		"select_04": {
+			selector: "area in (disneyland, 51, iowa)",
+			matches:  true,
+		},
+		"select_05": {
+			selector: "area in (disneyland, iowa)",
+			matches:  false,
+		},
+		"select_06": {
+			selector: "area notin (disneyland, 51, iowa)",
+			matches:  false,
+		},
+	}
+	for n, tc := range testcases {
+		gotMatch, err := rn.MatchesAnnotationSelector(tc.selector)
+		if tc.errMsg == "" {
+			assert.NoError(t, err)
+			assert.Equalf(
+				t, tc.matches, gotMatch, "test=%s selector=%v", n, tc.selector)
+		} else {
+			assert.Truef(
+				t, strings.Contains(err.Error(), tc.errMsg),
+				"test=%s selector=%v", n, tc.selector)
+		}
+	}
+}
+
+func TestRNodeMatchesLabelSelector(t *testing.T) {
+	rn := NewRNode(nil)
+	assert.NoError(t, rn.UnmarshalJSON([]byte(deploymentJSON)))
+	testcases := map[string]struct {
+		selector string
+		matches  bool
+		errMsg   string
+	}{
+		"select_01": {
+			selector: ".*",
+			matches:  false,
+			errMsg:   "name part must consist of alphanumeric character",
+		},
+		"select_02": {
+			selector: "fruit=apple",
+			matches:  true,
+		},
+		"select_03": {
+			selector: "fruit=banana",
+			matches:  false,
+		},
+		"select_04": {
+			selector: "fruit in (orange, banana, apple)",
+			matches:  true,
+		},
+		"select_05": {
+			selector: "fruit in (orange, banana)",
+			matches:  false,
+		},
+		"select_06": {
+			selector: "fruit notin (orange, banana, apple)",
+			matches:  false,
+		},
+	}
+	for n, tc := range testcases {
+		gotMatch, err := rn.MatchesLabelSelector(tc.selector)
+		if tc.errMsg == "" {
+			assert.NoError(t, err)
+			assert.Equalf(
+				t, tc.matches, gotMatch, "test=%s selector=%v", n, tc.selector)
+		} else {
+			assert.Truef(
+				t, strings.Contains(err.Error(), tc.errMsg),
+				"test=%s selector=%v", n, tc.selector)
+		}
+	}
+}
