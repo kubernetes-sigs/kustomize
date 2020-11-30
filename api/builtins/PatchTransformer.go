@@ -8,9 +8,7 @@ import (
 	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
-	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -41,7 +39,6 @@ func (p *PatchTransformerPlugin) Config(
 		return fmt.Errorf(
 			"patch and path can't be set at the same time\n%s", string(c))
 	}
-
 	if p.Path != "" {
 		loaded, loadErr := h.Loader().Load(p.Path)
 		if loadErr != nil {
@@ -88,66 +85,13 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 		if err != nil {
 			return err
 		}
-		return p.applySMPatch(target, patch)
+		return target.ApplySmPatch(patch)
 	}
-
-	resources, err := m.Select(*p.Target)
+	selected, err := m.Select(*p.Target)
 	if err != nil {
 		return err
 	}
-	for _, res := range resources {
-		patchCopy := patch.DeepCopy()
-		patchCopy.SetName(res.GetName())
-		patchCopy.SetNamespace(res.GetNamespace())
-		patchCopy.SetGvk(res.GetGvk())
-		err := p.applySMPatch(res, patchCopy)
-		if err != nil {
-			// Check for an error string from UnmarshalJSON that's indicative
-			// of an object that's missing basic KRM fields, and thus may have been
-			// entirely deleted (an acceptable outcome).  This error handling should
-			// be deleted along with use of ResMap and apimachinery functions like
-			// UnmarshalJSON.
-			if !strings.Contains(err.Error(), "Object 'Kind' is missing") {
-				// Some unknown error, let it through.
-				return err
-			}
-			if !res.IsEmpty() {
-				return errors.Wrapf(
-					err, "with unexpectedly non-empty object map of size %d",
-					len(res.Map()))
-			}
-			// Fall through to handle deleted object.
-		}
-		if res.IsEmpty() {
-			// This means all fields have been removed from the object.
-			// This can happen if a patch required deletion of the
-			// entire resource (not just a part of it).  This means
-			// the overall resmap must shrink by one.
-			err = m.Remove(res.CurId())
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// applySMPatch applies the provided strategic merge patch to the
-// given resource.
-func (p *PatchTransformerPlugin) applySMPatch(resource, patch *resource.Resource) error {
-	node, err := filtersutil.GetRNode(patch)
-	if err != nil {
-		return err
-	}
-	n, ns := resource.GetName(), resource.GetNamespace()
-	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
-		Patch: node,
-	}, resource)
-	if !resource.IsEmpty() {
-		resource.SetName(n)
-		resource.SetNamespace(ns)
-	}
-	return err
+	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
 }
 
 // transformJson6902 applies the provided json6902 patch

@@ -183,8 +183,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			return
 		}
 		var c struct {
-			Paths   []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
-			Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
+			Paths []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 		}
 		c.Paths = kt.kustomization.PatchesStrategicMerge
 		p := f()

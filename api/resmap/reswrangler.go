@@ -6,6 +6,7 @@ package resmap
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resid"
@@ -577,4 +578,47 @@ func (m *resWrangler) ToRNodeSlice() ([]*kyaml_yaml.RNode, error) {
 		rnodes = append(rnodes, rnode)
 	}
 	return rnodes, nil
+}
+
+func (m *resWrangler) ApplySmPatch(
+	selectedSet *resource.IdSet, patch *resource.Resource) error {
+	newRm := New()
+	for _, res := range m.Resources() {
+		if !selectedSet.Contains(res.CurId()) {
+			newRm.Append(res)
+			continue
+		}
+		patchCopy := patch.DeepCopy()
+		patchCopy.SetName(res.GetName())
+		patchCopy.SetNamespace(res.GetNamespace())
+		patchCopy.SetGvk(res.GetGvk())
+		err := res.ApplySmPatch(patchCopy)
+		if err != nil {
+			// Check for an error string from UnmarshalJSON that's indicative
+			// of an object that's missing basic KRM fields, and thus may have been
+			// entirely deleted (an acceptable outcome).  This error handling should
+			// be deleted along with use of ResMap and apimachinery functions like
+			// UnmarshalJSON.
+			if !strings.Contains(err.Error(), "Object 'Kind' is missing") {
+				// Some unknown error, let it through.
+				return err
+			}
+			if !res.IsEmpty() {
+				return errors.Wrapf(
+					err, "with unexpectedly non-empty object map of size %d",
+					len(res.Map()))
+			}
+			// Fall through to handle deleted object.
+		}
+		if !res.IsEmpty() {
+			// IsEmpty means all fields have been removed from the object.
+			// This can happen if a patch required deletion of the
+			// entire resource (not just a part of it).  This means
+			// the overall resmap must shrink by one.
+			newRm.Append(res)
+		}
+	}
+	m.Clear()
+	m.AppendAll(newRm)
+	return nil
 }
