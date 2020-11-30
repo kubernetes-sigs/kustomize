@@ -1107,7 +1107,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorMsg:      "conflict",
 		},
 		{
-			name: "withschema-latest-label-1.7.9",
+			name: "withschema-latest-label-1.7.9-difforder",
 			base: baseResource(Deployment),
 			patch: []string{
 				changeImagePatch(Deployment, "nginx:latest"),

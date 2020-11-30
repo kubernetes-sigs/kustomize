@@ -240,4 +240,9 @@ type ResMap interface {
 	// ToRNodeSlice converts the resources in the resmp
 	// to a list of RNodes
 	ToRNodeSlice() ([]*yaml.RNode, error)
+
+	// ApplySmPatch applies a strategic-merge patch to the
+	// selected set of resources.
+	ApplySmPatch(
+		selectedSet *resource.IdSet, patch *resource.Resource) error
 }
