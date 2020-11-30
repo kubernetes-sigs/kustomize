@@ -283,6 +283,9 @@ type TemplateCommand struct {
 	// Templates is a list of templates to render.
 	Templates []*template.Template
 
+	// TemplatesFn returns a list of templates
+	TemplatesFn func(*ResourceList) ([]*template.Template, error)
+
 	// PatchTemplates is a list of templates to render into Patches and apply.
 	PatchTemplates []PatchTemplate
 
@@ -307,8 +310,12 @@ type TemplateCommand struct {
 	// PreProcess is run on the ResourceList before the template is invoked
 	PreProcess func(*ResourceList) error
 
+	PreProcessFilters []kio.Filter
+
 	// PostProcess is run on the ResourceList after the template is invoked
 	PostProcess func(*ResourceList) error
+
+	PostProcessFilters []kio.Filter
 }
 
 // ContainerPatchTemplate defines a patch to be applied to containers
@@ -353,6 +360,134 @@ func (tc TemplateCommand) doTemplate(t *template.Template, rl *ResourceList) err
 	return nil
 }
 
+// Defaulter is implemented by APIs to have Default invoked
+type Defaulter interface {
+	Default() error
+}
+
+func (tc *TemplateCommand) doPreProcess(rl *ResourceList) error {
+	// do any preprocessing
+	if tc.PreProcess != nil {
+		if err := tc.PreProcess(rl); err != nil {
+			return err
+		}
+	}
+
+	// TODO: test this
+	if tc.PreProcessFilters != nil {
+		for i := range tc.PreProcessFilters {
+			fltr := tc.PreProcessFilters[i]
+			var err error
+			rl.Items, err = fltr.Filter(rl.Items)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (tc *TemplateCommand) doMerge(rl *ResourceList) error {
+	var err error
+	if tc.MergeResources {
+		rl.Items, err = filters.MergeFilter{}.Filter(rl.Items)
+	}
+	return err
+}
+
+func (tc *TemplateCommand) doPostProcess(rl *ResourceList) error {
+	// finish up
+	if tc.PostProcess != nil {
+		if err := tc.PostProcess(rl); err != nil {
+			return err
+		}
+	}
+	// TODO: test this
+	if tc.PostProcessFilters != nil {
+		for i := range tc.PostProcessFilters {
+			fltr := tc.PostProcessFilters[i]
+			var err error
+			rl.Items, err = fltr.Filter(rl.Items)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (tc *TemplateCommand) doTemplates(rl *ResourceList) error {
+	if tc.Template != nil {
+		tc.Templates = append(tc.Templates, tc.Template)
+	}
+
+	// TODO: test this
+	if tc.TemplatesFn != nil {
+		t, err := tc.TemplatesFn(rl)
+		if err != nil {
+			return err
+		}
+		tc.Templates = append(tc.Templates, t...)
+	}
+
+	for i := range tc.TemplatesFiles {
+		tbytes, err := ioutil.ReadFile(tc.TemplatesFiles[i])
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to read template file")
+		}
+		t, err := template.New("files").Parse(string(tbytes))
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to parse template files %v", tc.TemplatesFiles)
+		}
+		tc.Templates = append(tc.Templates, t)
+	}
+
+	for i := range tc.Templates {
+		if err := tc.doTemplate(tc.Templates[i], rl); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (tc *TemplateCommand) doPatchTemplates(rl *ResourceList) error {
+	if tc.PatchTemplatesFn != nil {
+		pt, err := tc.PatchTemplatesFn(rl)
+		if err != nil {
+			return err
+		}
+		tc.PatchTemplates = append(tc.PatchTemplates, pt...)
+	}
+	for i := range tc.PatchTemplates {
+		if err := tc.PatchTemplates[i].Apply(rl); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (tc *TemplateCommand) doPatchContainerTemplates(rl *ResourceList) error {
+	if tc.PatchContainerTemplatesFn != nil {
+		ct, err := tc.PatchContainerTemplatesFn(rl)
+		if err != nil {
+			return err
+		}
+		tc.PatchContainerTemplates = append(tc.PatchContainerTemplates, ct...)
+	}
+	for i := range tc.PatchContainerTemplates {
+		ct := tc.PatchContainerTemplates[i]
+		matches, err := ct.Selector.GetMatches(rl)
+		if err != nil {
+			return err
+		}
+		err = PatchContainersWithTemplate(matches, ct.Template, rl.FunctionConfig, ct.ContainerNames...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // GetCommand returns a new cobra command
 func (tc TemplateCommand) GetCommand() *cobra.Command {
 	rl := ResourceList{
@@ -360,81 +495,29 @@ func (tc TemplateCommand) GetCommand() *cobra.Command {
 		NoPrintError:   true,
 	}
 	c := Command(&rl, func() error {
-		// do any preprocessing
-		if tc.PreProcess != nil {
-			if err := tc.PreProcess(&rl); err != nil {
+		if d, ok := rl.FunctionConfig.(Defaulter); ok {
+			if err := d.Default(); err != nil {
 				return err
 			}
 		}
 
-		if tc.Template != nil {
-			tc.Templates = append(tc.Templates, tc.Template)
+		if err := tc.doPreProcess(&rl); err != nil {
+			return err
 		}
-
-		for i := range tc.TemplatesFiles {
-			tbytes, err := ioutil.ReadFile(tc.TemplatesFiles[i])
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to read template file")
-			}
-			t, err := template.New("files").Parse(string(tbytes))
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to parse template files %v", tc.TemplatesFiles)
-			}
-			tc.Templates = append(tc.Templates, t)
+		if err := tc.doTemplates(&rl); err != nil {
+			return err
 		}
-
-		for i := range tc.Templates {
-			if err := tc.doTemplate(tc.Templates[i], &rl); err != nil {
-				return err
-			}
+		if err := tc.doPatchTemplates(&rl); err != nil {
+			return err
 		}
-
-		if tc.PatchTemplatesFn != nil {
-			pt, err := tc.PatchTemplatesFn(&rl)
-			if err != nil {
-				return err
-			}
-			tc.PatchTemplates = append(tc.PatchTemplates, pt...)
+		if err := tc.doPatchContainerTemplates(&rl); err != nil {
+			return err
 		}
-
-		for i := range tc.PatchTemplates {
-			if err := tc.PatchTemplates[i].Apply(&rl); err != nil {
-				return err
-			}
+		if err := tc.doMerge(&rl); err != nil {
+			return err
 		}
-
-		if tc.PatchContainerTemplatesFn != nil {
-			ct, err := tc.PatchContainerTemplatesFn(&rl)
-			if err != nil {
-				return err
-			}
-			tc.PatchContainerTemplates = append(tc.PatchContainerTemplates, ct...)
-		}
-		for i := range tc.PatchContainerTemplates {
-			ct := tc.PatchContainerTemplates[i]
-			matches, err := ct.Selector.GetMatches(&rl)
-			if err != nil {
-				return err
-			}
-			err = PatchContainersWithTemplate(matches, ct.Template, rl.FunctionConfig, ct.ContainerNames...)
-			if err != nil {
-				return err
-			}
-		}
-
-		var err error
-		if tc.MergeResources {
-			rl.Items, err = filters.MergeFilter{}.Filter(rl.Items)
-			if err != nil {
-				return err
-			}
-		}
-
-		// finish up
-		if tc.PostProcess != nil {
-			if err := tc.PostProcess(&rl); err != nil {
-				return err
-			}
+		if err := tc.doPostProcess(&rl); err != nil {
+			return err
 		}
 
 		return nil
@@ -481,4 +564,11 @@ func execute(rl *ResourceList, function Function, cmd *cobra.Command, args []str
 	}
 
 	return retErr
+}
+
+// Filters returns a function which returns the provided Filters
+func Filters(fltrs ...kio.Filter) func(*ResourceList) []kio.Filter {
+	return func(*ResourceList) []kio.Filter {
+		return fltrs
+	}
 }
