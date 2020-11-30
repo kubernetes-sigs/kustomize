@@ -8,6 +8,7 @@ require (
 	github.com/go-openapi/spec v0.19.5
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/validate v0.19.8
+	github.com/markbates/pkger v0.17.1
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 	github.com/qri-io/starlib v0.4.2-0.20200213133954-ff2e8cd5ef8d
 	github.com/sergi/go-diff v1.1.0
