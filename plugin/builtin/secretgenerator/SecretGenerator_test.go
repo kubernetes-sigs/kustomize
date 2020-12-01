@@ -4,8 +4,10 @@
 package main_test
 
 import (
+	"fmt"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -42,18 +44,26 @@ literals:
 - VEGETABLE=carrot
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	obscure := `obscure: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==`
+	if konfig.FlagEnableKyamlDefaultValue {
+		// The kyaml code does a better job of line wrapping.
+		obscure = `obscure: |
+    CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIG
+    VsaXQuCg==`
+	}
+
+	th.AssertActualEqualsExpected(rm, fmt.Sprintf(`
 apiVersion: v1
 data:
   DB_PASSWORD: aWxvdmV5b3U=
   FRUIT: YXBwbGU=
   ROUTER_PASSWORD: YWRtaW4=
   VEGETABLE: Y2Fycm90
-  obscure: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==
+  %s
 kind: Secret
 metadata:
   name: mySecret
   namespace: whatever
 type: Opaque
-`)
+`, obscure))
 }
