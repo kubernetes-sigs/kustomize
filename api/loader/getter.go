@@ -78,18 +78,21 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		log.Fatalf("Error getting wd: %s", err)
 	}
 
+	httpGetter := &getter.HttpGetter{
+		Netrc: true,
+	}
+
 	opts := []getter.ClientOption{}
 	client := &getter.Client{
-		Ctx:  context.TODO(),
-		Src:  rs.Raw,
-		Dst:  rs.Dir.String(),
-		Pwd:  pwd,
-		Mode: getter.ClientModeAny,
-		Detectors: []getter.Detector{
-			new(getter.GitHubDetector),
-			new(getter.GitLabDetector),
-			new(getter.GitDetector),
-			new(getter.BitBucketDetector),
+		Ctx:       context.TODO(),
+		Src:       rs.Raw,
+		Dst:       rs.Dir.String(),
+		Pwd:       pwd,
+		Mode:      getter.ClientModeDir,
+		Detectors: []getter.Detector{},
+		Getters: map[string]getter.Getter{
+			"http":  httpGetter,
+			"https": httpGetter,
 		},
 		Options: opts,
 	}
