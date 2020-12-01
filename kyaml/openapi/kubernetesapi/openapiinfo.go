@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1191"
 )
 
-const Info = "{title:Kubernetes,version:v1.18.4},{title:Kubernetes,version:v1.18.6},{title:Kubernetes,version:v1.18.8},{title:Kubernetes,version:v1.19.0},{title:Kubernetes,version:v1.19.1}"
+const Info = "{title:Kubernetes,version:v1.18.4}\n{title:Kubernetes,version:v1.18.6}\n{title:Kubernetes,version:v1.18.8}\n{title:Kubernetes,version:v1.19.0}\n{title:Kubernetes,version:v1.19.1}"
 
 var OpenApiMustAsset = map[string]func(string) []byte{
 	"v1184": v1184.MustAsset,
