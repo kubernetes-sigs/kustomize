@@ -65,6 +65,7 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		// Detect takes a pwd, but none of our detectors use it, so we just
 		// pass in empty string
 		new(getter.GitHubDetector),
+		new(getter.GitLabDetector),
 		new(getter.GitDetector),
 		new(getter.BitBucketDetector),
 	})
