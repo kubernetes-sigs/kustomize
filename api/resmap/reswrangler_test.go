@@ -770,3 +770,377 @@ rules:
 			b.String(), input)
 	}
 }
+
+func TestApplySmPatch_Namespaces(t *testing.T) {
+	const (
+		myDeployment      = "Deployment"
+		myCRD             = "myCRD"
+		expectedResultSMP = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        image: nginx
+        name: nginx
+`
+	)
+	tests := map[string]struct {
+		base          []string
+		patches       []string
+		expected      []string
+		errorExpected bool
+		errorMsg      string
+	}{
+		"withschema-ns1-ns2-one": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+				addNamespace("ns2", baseResource(myDeployment)),
+			},
+			patches: []string{
+				addNamespace("ns1", addLabelAndEnvPatch(myDeployment)),
+				addNamespace("ns2", addLabelAndEnvPatch(myDeployment)),
+			},
+			errorExpected: false,
+			expected: []string{
+				addNamespace("ns1", expectedResultSMP),
+				addNamespace("ns2", expectedResultSMP),
+			},
+		},
+		"withschema-ns1-ns2-two": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+			patches: []string{
+				addNamespace("ns2", changeImagePatch(myDeployment)),
+			},
+			expected: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+		},
+		"withschema-ns1-ns2-three": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+			patches: []string{
+				addNamespace("ns1", changeImagePatch(myDeployment)),
+			},
+			expected: []string{
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  namespace: ns1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+`,
+			},
+		},
+		"withschema-nil-ns2": {
+			base: []string{
+				baseResource(myDeployment),
+			},
+			patches: []string{
+				addNamespace("ns2", changeImagePatch(myDeployment)),
+			},
+			expected: []string{
+				baseResource(myDeployment),
+			},
+		},
+		"withschema-ns1-nil": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+			patches: []string{
+				changeImagePatch(myDeployment),
+			},
+			expected: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+		},
+		"noschema-ns1-ns2-one": {
+			base: []string{
+				addNamespace("ns1", baseResource(myCRD)),
+				addNamespace("ns2", baseResource(myCRD)),
+			},
+			patches: []string{
+				addNamespace("ns1", addLabelAndEnvPatch(myCRD)),
+				addNamespace("ns2", addLabelAndEnvPatch(myCRD)),
+			},
+			errorExpected: false,
+			expected: []string{
+				addNamespace("ns1", expectedResultJMP("")),
+				addNamespace("ns2", expectedResultJMP("")),
+			},
+		},
+		"noschema-ns1-ns2-two": {
+			base:     []string{addNamespace("ns1", baseResource(myCRD))},
+			patches:  []string{addNamespace("ns2", changeImagePatch(myCRD))},
+			expected: []string{addNamespace("ns1", baseResource(myCRD))},
+		},
+		"noschema-nil-ns2": {
+			base:     []string{baseResource(myCRD)},
+			patches:  []string{addNamespace("ns2", changeImagePatch(myCRD))},
+			expected: []string{baseResource(myCRD)},
+		},
+		"noschema-ns1-nil": {
+			base:     []string{addNamespace("ns1", baseResource(myCRD))},
+			patches:  []string{changeImagePatch(myCRD)},
+			expected: []string{addNamespace("ns1", baseResource(myCRD))},
+		},
+	}
+	for n := range tests {
+		tc := tests[n]
+		t.Run(n, func(t *testing.T) {
+			m, err := rmF.NewResMapFromBytes([]byte(strings.Join(tc.base, "\n---\n")))
+			assert.NoError(t, err)
+			foundError := false
+			for _, patch := range tc.patches {
+				rp, err := rf.FromBytes([]byte(patch))
+				assert.NoError(t, err)
+				idSet := resource.MakeIdSet([]*resource.Resource{rp})
+				if err = m.ApplySmPatch(idSet, rp); err != nil {
+					foundError = true
+					break
+				}
+			}
+			if foundError {
+				assert.True(t, tc.errorExpected)
+				// compare error message?
+				return
+			}
+			assert.False(t, tc.errorExpected)
+			yml, err := m.AsYaml()
+			assert.NoError(t, err)
+			assert.Equal(t, strings.Join(tc.expected, "---\n"), string(yml))
+		})
+	}
+}
+
+// simple utility function to add an namespace in a resource
+// used as base, patch or expected result. Simply looks
+// for specs: in order to add namespace: xxxx before this line
+func addNamespace(namespace string, base string) string {
+	res := strings.Replace(base,
+		"\nspec:\n",
+		"\n  namespace: "+namespace+"\nspec:\n",
+		1)
+	return res
+}
+
+func TestApplySmPatch_Deletion(t *testing.T) {
+	target := `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`
+	tests := map[string]struct {
+		patch        string
+		expected     string
+		finalMapSize int
+	}{
+		"delete1": {
+			patch: `apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  replica: 2
+  template:
+    $patch: delete
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 2
+`,
+			finalMapSize: 1,
+		},
+		"delete2": {
+			patch: `apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  $patch: delete
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+`,
+			finalMapSize: 1,
+		},
+		"delete3": {
+			patch: `apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+$patch: delete
+`,
+			expected:     "",
+			finalMapSize: 0,
+		},
+	}
+	for name, test := range tests {
+		m, err := rmF.NewResMapFromBytes([]byte(target))
+		assert.NoError(t, err, name)
+		idSet := resource.MakeIdSet(m.Resources())
+		assert.Equal(t, 1, idSet.Size(), name)
+		p, err := rf.FromBytes([]byte(test.patch))
+		assert.NoError(t, err, name)
+		assert.NoError(t, m.ApplySmPatch(idSet, p), name)
+		assert.Equal(t, test.finalMapSize, m.Size(), name)
+		yml, err := m.AsYaml()
+		assert.NoError(t, err, name)
+		assert.Equal(t, test.expected, string(yml), name)
+	}
+}
+
+// baseResource produces a base object which used to test
+// patch transformation
+// Also the structure is matching the Deployment syntax
+// the kind can be replaced to allow testing using CRD
+// without access to the schema
+func baseResource(kind string) string {
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: %s
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, kind)
+}
+
+// addContainerAndEnvPatch produces a patch object which adds
+// an entry in the env slice of the first/nginx container
+// as well as adding a label in the metadata
+// Note that for SMP/WithSchema merge, the name:nginx entry
+// is mandatory
+func addLabelAndEnvPatch(kind string) string {
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: %s
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        some-label: some-value
+    spec:
+      containers:
+       - name: nginx
+         env:
+         - name: SOMEENV
+           value: SOMEVALUE`, kind)
+}
+
+// changeImagePatch produces a patch object which replaces
+// the value of the image field in the first/nginx container
+// Note that for SMP/WithSchema merge, the name:nginx entry
+// is mandatory
+func changeImagePatch(kind string) string {
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: %s
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: "nginx:1.7.9"`, kind)
+}
+
+// utility method building the expected output of a JMP.
+// imagename parameter allows to build a result consistent
+// with the JMP behavior which basically overrides the
+// entire "containers" list.
+func expectedResultJMP(imagename string) string {
+	if imagename == "" {
+		return `apiVersion: apps/v1
+kind: myCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        name: nginx
+`
+	}
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: myCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - image: %s
+        name: nginx
+`, imagename)
+}
