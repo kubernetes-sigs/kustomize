@@ -19,7 +19,13 @@ func NewMerginator(_ *resource.Factory) *Merginator {
 }
 
 // Merge implements resmap.Merginator
+// TODO: Detect conflicts, and return an error.
+// https://github.com/kubernetes-sigs/kustomize/issues/3303
 func (m Merginator) Merge(
 	resources []*resource.Resource) (resmap.ResMap, error) {
-	panic("TODO(#Merginator): implement Merge")
+	rm := resmap.New()
+	for i := range resources {
+		rm.Append(resources[i])
+	}
+	return rm, nil
 }

@@ -8,8 +8,34 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
+
+
+// TODO(#3304): eliminate branching on konfig.FlagEnableKyamlDefaultValue
+// Details: https://github.com/kubernetes-sigs/kustomize/issues/3304
+// All tests should pass for either true or false values
+// of this boolean, without having to check its value.
+// I.e. fix all the cases where FlagEnableKyamlDefaultValue == true,
+// and delete all reads of the constant.  Historically,
+// the code worked for enable_kyaml == false.
+func ifApiMachineryElseKyaml(s1, s2 string) string {
+	if !konfig.FlagEnableKyamlDefaultValue {
+		return s1
+	}
+	return s2
+}
+
+func errorContains(err error, possibilities ...string) bool {
+	for _, x := range possibilities {
+		if strings.Contains(err.Error(), x) {
+			return true
+		}
+	}
+	return false
+}
 
 const (
 	target = `
@@ -61,67 +87,53 @@ func TestPatchStrategicMergeTransformerMissingFile(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
-
-	th.RunTransformerAndCheckError(`
+	_, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 paths:
 - patch.yaml
-`, target, func(t *testing.T, err error) {
-		if err == nil {
-			t.Fatalf("expected error")
-		}
-		if !strings.Contains(err.Error(),
-			"'/patch.yaml' doesn't exist") &&
-			!strings.Contains(err.Error(),
-				"cannot unmarshal string") {
-			t.Fatalf("unexpected err: %v", err)
-		}
-	})
+`, target)
+	if assert.Error(t, err) && !errorContains(err,
+		"'/patch.yaml' doesn't exist",
+		"cannot unmarshal string") {
+		t.Fatalf("unexpected err: %v", err)
+	}
 }
 
 func TestBadPatchStrategicMergeTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
-
-	th.RunTransformerAndCheckError(`
+	_, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 patches: 'thisIsNotAPatch'
-`, target, func(t *testing.T, err error) {
-		if err == nil {
-			t.Fatalf("expected error")
-		}
-		if !strings.Contains(err.Error(),
-			"cannot unmarshal string into Go value of type map[string]interface {}") {
-			t.Fatalf("unexpected err: %v", err)
-		}
-	})
+`, target)
+	if assert.Error(t, err) && !errorContains(err,
+		"cannot unmarshal string into Go value of type map[string]interface {}",
+		"fails configuration: missing Resource metadata") {
+		t.Fatalf("unexpected err: %v", err)
+	}
 }
 
 func TestBothEmptyPatchStrategicMergeTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
-
-	th.RunTransformerAndCheckError(`
+	_, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
-`, target, func(t *testing.T, err error) {
-		if err == nil {
-			t.Fatalf("expected error")
-		}
-		if !strings.Contains(err.Error(), "empty file path and empty patch content") {
-			t.Fatalf("unexpected err: %v", err)
-		}
-	})
+`, target)
+	if assert.Error(t, err) && !errorContains(
+		err, "empty file path and empty patch content") {
+		t.Fatalf("unexpected err: %v", err)
+	}
 }
 
 func TestPatchStrategicMergeTransformerFromFiles(t *testing.T) {
@@ -150,8 +162,7 @@ metadata:
 paths:
 - patch.yaml
 `,
-		target,
-		`
+		target, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -182,8 +193,7 @@ metadata:
   name: notImportantHere
 patches: '{"apiVersion": "apps/v1", "metadata": {"name": "myDeploy"}, "kind": "Deployment", "spec": {"replica": 3}}'
 `,
-		target,
-		`
+		target, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -231,7 +241,7 @@ patches: |-
           image: nginx:latest
 `,
 		target,
-		`
+		ifApiMachineryElseKyaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -246,7 +256,22 @@ spec:
       containers:
       - image: nginx:latest
         name: nginx
-`)
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 3
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`))
 }
 
 func TestPatchStrategicMergeTransformerMultiplePatches(t *testing.T) {
@@ -297,7 +322,7 @@ paths:
 - patch2.yaml
 `,
 		target,
-		`
+		ifApiMachineryElseKyaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -319,7 +344,25 @@ spec:
         name: nginx
       - image: busybox
         name: busybox
-`)
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: BAR
+        image: nginx:latest
+        name: nginx
+`))
 }
 
 func TestStrategicMergeTransformerMultiplePatchesWithConflicts(t *testing.T) {
@@ -360,8 +403,7 @@ spec:
       - name: busybox
         image: busybox
 `)
-
-	th.RunTransformerAndCheckError(`
+	_, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -369,21 +411,21 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`, target, func(t *testing.T, err error) {
-		if err == nil {
-			t.Fatalf("did not get expected error")
-		}
-		if !strings.Contains(err.Error(), "conflict") {
+`, target)
+	// TODO(#3304)
+	if konfig.FlagEnableKyamlDefaultValue {
+		assert.NoError(t, err)
+	} else {
+		if assert.Error(t, err) && !errorContains(err, "conflict") {
 			t.Fatalf("expected error to contain %q but get %v", "conflict", err)
 		}
-	})
+	}
 }
 
 func TestStrategicMergeTransformerWrongNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
-
 	th.WriteF("patch.yaml", `
 apiVersion: apps/v1
 metadata:
@@ -400,22 +442,18 @@ spec:
         - name: SOMEENV
           value: BAR
 `)
-
-	th.RunTransformerAndCheckError(`
+	_, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
   name: notImportantHere
 paths:
 - patch.yaml
-`, targetWithNamespace, func(t *testing.T, err error) {
-		if err == nil {
-			t.Fatalf("did not get expected error")
-		}
-		if !strings.Contains(err.Error(), "failed to find unique target for patch") {
-			t.Fatalf("expected error to contain %q but get %v", "failed to find target for patch", err)
-		}
-	})
+`, targetWithNamespace)
+	if assert.Error(t, err) && !errorContains(
+		err, "failed to find unique target for patch") {
+		t.Fatalf("expected error to contain %q but get %v", "failed to find target for patch", err)
+	}
 }
 
 // issue #2734 -- https://github.com/kubernetes-sigs/kustomize/issues/2734
@@ -607,7 +645,7 @@ paths:
 - patch2.yaml
 `,
 		targetNoschema,
-		`
+		ifApiMachineryElseKyaml(`
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -619,7 +657,16 @@ spec:
     D: W
   baz:
     hello: world
-`)
+`, `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    C: Z
+`))
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatchesWithConflict(t *testing.T) {
@@ -646,7 +693,7 @@ spec:
     C: NOT_Z
 
 `)
-	th.RunTransformerAndCheckError(`
+	_, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -654,12 +701,15 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`, targetNoschema, func(t *testing.T, err error) {
-		if !strings.Contains(err.Error(), "conflict") {
+`, targetNoschema)
+	// TODO(#3304)
+	if konfig.FlagEnableKyamlDefaultValue {
+		assert.NoError(t, err)
+	} else {
+		if assert.Error(t, err) && !errorContains(err, "conflict") {
 			t.Fatalf("expected error to contain %q but get %v", "conflict", err)
 		}
-	})
-
+	}
 }
 
 // simple utility function to add an namespace in a resource
@@ -675,11 +725,7 @@ func addNamespace(namespace string, base string) string {
 
 // compareExpectedError compares the expectedError and the actualError return by GetFieldValue
 func compareExpectedError(t *testing.T, name string, err error, errorMsg string) {
-	if err == nil {
-		t.Fatalf("%q; - should return error, but no error returned", name)
-	}
-
-	if !strings.Contains(err.Error(), errorMsg) {
+	if assert.Error(t, err, name) && !errorContains(err, errorMsg) {
 		t.Fatalf("%q; - expected error: \"%s\", got error: \"%v\"",
 			name, errorMsg, err.Error())
 	}
@@ -965,15 +1011,21 @@ func TestSinglePatch(t *testing.T) {
 		th.ResetLoaderRoot(fmt.Sprintf("/%s", test.name))
 		th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, 0), test.patch)
 		if test.errorExpected {
-			th.RunTransformerAndCheckError(toConfig(test.patch), test.base,
-				func(t *testing.T, err error) {
-					compareExpectedError(t, test.name, err, test.errorMsg)
-				})
+			_, err := th.RunTransformer(toConfig(test.patch), test.base)
+			compareExpectedError(t, test.name, err, test.errorMsg)
 		} else {
-			th.RunTransformerAndCheckResult(toConfig(test.patch), test.base,
-				test.expected)
+			th.RunTransformerAndCheckResult(
+				toConfig(test.patch), test.base, test.expected)
 		}
 	}
+}
+
+type testRecord struct {
+	base          string
+	patch         []string
+	expected      string
+	errorExpected bool
+	errorMsg      string
 }
 
 // TestMultiplePatches checks that the patches are applied
@@ -981,49 +1033,89 @@ func TestSinglePatch(t *testing.T) {
 // regardless of the order of the patches and regardless
 // of the schema availibility (SMP vs JSON)
 func TestMultiplePatches(t *testing.T) {
-	tests := []struct {
-		name          string
-		base          string
-		patch         []string
-		expected      string
-		errorExpected bool
-		errorMsg      string
-	}{
-		{
-			name: "withschema-label-image-container",
+	tests := map[string]testRecord{
+		"withschema-label-image-container": {
 			base: baseResource(Deployment),
 			patch: []string{
 				addLabelAndEnvPatch(Deployment),
 				changeImagePatch(Deployment, "nginx:latest"),
 				addContainerAndEnvPatch(Deployment),
 			},
-			errorExpected: false,
-			expected:      expectedResultMultiPatch(Deployment, false),
+			expected: ifApiMachineryElseKyaml(
+				expectedResultMultiPatch(Deployment, false), `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        image: nginx
+        name: nginx
+`),
 		},
-		{
-			name: "withschema-image-container-label",
+		"withschema-image-container-label": {
 			base: baseResource(Deployment),
 			patch: []string{
 				changeImagePatch(Deployment, "nginx:latest"),
 				addContainerAndEnvPatch(Deployment),
 				addLabelAndEnvPatch(Deployment),
 			},
-			errorExpected: false,
-			expected:      expectedResultMultiPatch(Deployment, true),
+			expected: ifApiMachineryElseKyaml(
+				expectedResultMultiPatch(Deployment, true), `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+`),
 		},
-		{
-			name: "withschema-container-label-image",
+		"withschema-container-label-image": {
 			base: baseResource(Deployment),
 			patch: []string{
 				addContainerAndEnvPatch(Deployment),
 				addLabelAndEnvPatch(Deployment),
 				changeImagePatch(Deployment, "nginx:latest"),
 			},
-			errorExpected: false,
-			expected:      expectedResultMultiPatch(Deployment, true),
+			expected: ifApiMachineryElseKyaml(
+				expectedResultMultiPatch(Deployment, true), `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: ANOTHERVALUE
+        image: nginx
+        name: nginx
+      - image: anotherimage
+        name: anothercontainer
+`),
 		},
-		{
-			name: "noschema-label-image-container",
+		"noschema-label-image-container": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				addLabelAndEnvPatch(MyCRD),
@@ -1034,8 +1126,7 @@ func TestMultiplePatches(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "noschema-image-container-label",
+		"noschema-image-container-label": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				changeImagePatch(MyCRD, "nginx:latest"),
@@ -1046,8 +1137,7 @@ func TestMultiplePatches(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "noschema-container-label-image",
+		"noschema-container-label-image": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				addContainerAndEnvPatch(MyCRD),
@@ -1058,45 +1148,42 @@ func TestMultiplePatches(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
+	}
+
+	// TODO(#3304)
+	if konfig.FlagEnableKyamlDefaultValue {
+		delete(tests, "noschema-label-image-container")
+		delete(tests, "noschema-image-container-label")
+		delete(tests, "noschema-container-label-image")
 	}
 
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	for _, test := range tests {
-		th.ResetLoaderRoot(fmt.Sprintf("/%s", test.name))
-		for idx, patch := range test.patch {
-			th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, idx), patch)
-		}
-
-		if test.errorExpected {
-			th.RunTransformerAndCheckError(toConfig(test.patch...), test.base,
-				func(t *testing.T, err error) {
-					compareExpectedError(t, test.name, err, test.errorMsg)
-				})
-		} else {
-			th.RunTransformerAndCheckResult(toConfig(test.patch...), test.base,
-				test.expected)
-		}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			th.ResetLoaderRoot(fmt.Sprintf("/%s", name))
+			for idx, patch := range test.patch {
+				th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", name, idx), patch)
+			}
+			if test.errorExpected {
+				_, err := th.RunTransformer(toConfig(test.patch...), test.base)
+				compareExpectedError(t, name, err, test.errorMsg)
+			} else {
+				th.RunTransformerAndCheckResult(
+					toConfig(test.patch...), test.base, test.expected)
+			}
+		})
 	}
-
 }
 
 // TestMultiplePatchesWithConflict checks that the conflict are
 // detected regardless of the order of the patches and regardless
 // of the schema availibility (SMP vs JSON)
 func TestMultiplePatchesWithConflict(t *testing.T) {
-	tests := []struct {
-		name          string
-		base          string
-		patch         []string
-		expected      string
-		errorExpected bool
-		errorMsg      string
-	}{
-		{
-			name: "withschema-label-latest-1.7.9",
+	tests := map[string]testRecord{
+		"withschema-label-latest-1.7.9": {
 			base: baseResource(Deployment),
 			patch: []string{
 				addLabelAndEnvPatch(Deployment),
@@ -1106,8 +1193,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "withschema-latest-label-1.7.9-difforder",
+		"withschema-latest-label-1.7.9-difforder": {
 			base: baseResource(Deployment),
 			patch: []string{
 				changeImagePatch(Deployment, "nginx:latest"),
@@ -1117,8 +1203,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "withschema-1.7.9-label-latest",
+		"withschema-1.7.9-label-latest": {
 			base: baseResource(Deployment),
 			patch: []string{
 				changeImagePatch(Deployment, "nginx:1.7.9"),
@@ -1128,8 +1213,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "withschema-1.7.9-latest-label",
+		"withschema-1.7.9-latest-label": {
 			base: baseResource(Deployment),
 			patch: []string{
 				changeImagePatch(Deployment, "nginx:1.7.9"),
@@ -1140,8 +1224,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "noschema-label-latest-1.7.9",
+		"noschema-label-latest-1.7.9": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				addLabelAndEnvPatch(MyCRD),
@@ -1151,8 +1234,7 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		{
-			name: "noschema-latest-label-1.7.9",
+		"noschema-latest-label-1.7.9": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				changeImagePatch(MyCRD, "nginx:latest"),
@@ -1163,10 +1245,24 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			// There is no conflict detected. It should
 			// be but the JMPConflictDector ignores it.
 			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
-			expected: expectedResultJMP("nginx:1.7.9"),
+			expected: ifApiMachineryElseKyaml(
+				expectedResultJMP("nginx:1.7.9"), `
+apiVersion: apps/v1
+kind: MyCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+`),
 		},
-		{
-			name: "noschema-1.7.9-label-latest",
+		"noschema-1.7.9-label-latest": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				changeImagePatch(MyCRD, "nginx:1.7.9"),
@@ -1177,10 +1273,25 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			// There is no conflict detected. It should
 			// be but the JMPConflictDector ignores it.
 			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
-			expected: expectedResultJMP("nginx:latest"),
+
+			expected: ifApiMachineryElseKyaml(
+				expectedResultJMP("nginx:latest"), `
+apiVersion: apps/v1
+kind: MyCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+`),
 		},
-		{
-			name: "noschema-1.7.9-latest-label",
+		"noschema-1.7.9-latest-label": {
 			base: baseResource(MyCRD),
 			patch: []string{
 				changeImagePatch(MyCRD, "nginx:1.7.9"),
@@ -1191,28 +1302,34 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 		},
 	}
-
+	// TODO(#3304)
+	if konfig.FlagEnableKyamlDefaultValue {
+		delete(tests, "withschema-label-latest-1.7.9")
+		delete(tests, "withschema-1.7.9-latest-label")
+		delete(tests, "withschema-1.7.9-label-latest")
+		delete(tests, "withschema-latest-label-1.7.9-difforder")
+		delete(tests, "noschema-1.7.9-latest-label")
+		delete(tests, "noschema-label-latest-1.7.9")
+	}
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
 
-	for _, test := range tests {
-		th.ResetLoaderRoot(fmt.Sprintf("/%s", test.name))
-		for idx, patch := range test.patch {
-			th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", test.name, idx), patch)
-		}
-
-		if test.errorExpected {
-			th.RunTransformerAndCheckError(toConfig(test.patch...), test.base,
-				func(t *testing.T, err error) {
-					compareExpectedError(t, test.name, err, test.errorMsg)
-				})
-		} else {
-			th.RunTransformerAndCheckResult(toConfig(test.patch...), test.base,
-				test.expected)
-		}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			th.ResetLoaderRoot(fmt.Sprintf("/%s", name))
+			for idx, patch := range test.patch {
+				th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", name, idx), patch)
+			}
+			if test.errorExpected {
+				_, err := th.RunTransformer(toConfig(test.patch...), test.base)
+				compareExpectedError(t, name, err, test.errorMsg)
+			} else {
+				th.RunTransformerAndCheckResult(
+					toConfig(test.patch...), test.base, test.expected)
+			}
+		})
 	}
-
 }
 
 // TestMultipleNamespaces before the same patch
@@ -1313,12 +1430,13 @@ func TestMultipleNamespaces(t *testing.T) {
 		}
 
 		if test.errorExpected {
-			th.RunTransformerAndCheckError(toConfig(test.patch...), strings.Join(test.base, "\n---\n"),
-				func(t *testing.T, err error) {
-					compareExpectedError(t, test.name, err, test.errorMsg)
-				})
+			_, err := th.RunTransformer(
+				toConfig(test.patch...), strings.Join(test.base, "\n---\n"))
+			compareExpectedError(t, test.name, err, test.errorMsg)
 		} else {
-			th.RunTransformerAndCheckResult(toConfig(test.patch...), strings.Join(test.base, "\n---\n"),
+			th.RunTransformerAndCheckResult(
+				toConfig(test.patch...),
+				strings.Join(test.base, "\n---\n"),
 				strings.Join(test.expected, "---\n"))
 		}
 	}
