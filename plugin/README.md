@@ -41,10 +41,17 @@ maintained by the kustomize maintainers for just that purpose.
 To see how this works, run any plugin test, e.g.
 this plugin written in bash:
 ```
-cd plugin/someteam.example.com/v1/bashedconfigmap
+pushd plugin/someteam.example.com/v1/bashedconfigmap
 go test -v .
+popd
 ```
-and examine the associated Go test code.
+
+For plugins with many tests, it's possible to target just one test:
+```
+pushd plugin/builtin/patchstrategicmergetransformer
+go test -v -run TestBadPatchStrategicMergeTransformer PatchStrategicMergeTransformer_test.go
+popd
+```
 
 ### Plugin styles
 
