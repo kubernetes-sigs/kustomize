@@ -13,7 +13,6 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-
 // TODO(#3304): eliminate branching on konfig.FlagEnableKyamlDefaultValue
 // Details: https://github.com/kubernetes-sigs/kustomize/issues/3304
 // All tests should pass for either true or false values
@@ -27,6 +26,9 @@ func ifApiMachineryElseKyaml(s1, s2 string) string {
 	}
 	return s2
 }
+
+// TODO(#3304)
+const skipConflictDetectionTests = konfig.FlagEnableKyamlDefaultValue
 
 func errorContains(err error, possibilities ...string) bool {
 	for _, x := range possibilities {
@@ -240,8 +242,7 @@ patches: |-
         - name: nginx
           image: nginx:latest
 `,
-		target,
-		ifApiMachineryElseKyaml(`
+		target, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -256,22 +257,7 @@ spec:
       containers:
       - image: nginx:latest
         name: nginx
-`, `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myDeploy
-spec:
-  replica: 3
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`))
+`)
 }
 
 func TestPatchStrategicMergeTransformerMultiplePatches(t *testing.T) {
@@ -321,8 +307,7 @@ paths:
 - patch1.yaml
 - patch2.yaml
 `,
-		target,
-		ifApiMachineryElseKyaml(`
+		target, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -344,28 +329,13 @@ spec:
         name: nginx
       - image: busybox
         name: busybox
-`, `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myDeploy
-spec:
-  replica: 2
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-    spec:
-      containers:
-      - env:
-        - name: SOMEENV
-          value: BAR
-        image: nginx:latest
-        name: nginx
-`))
+`)
 }
 
 func TestStrategicMergeTransformerMultiplePatchesWithConflicts(t *testing.T) {
+	if skipConflictDetectionTests {
+		t.Skip("Skipping patch merge conflict tests.")
+	}
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
@@ -412,13 +382,8 @@ paths:
 - patch1.yaml
 - patch2.yaml
 `, target)
-	// TODO(#3304)
-	if konfig.FlagEnableKyamlDefaultValue {
-		assert.NoError(t, err)
-	} else {
-		if assert.Error(t, err) && !errorContains(err, "conflict") {
-			t.Fatalf("expected error to contain %q but get %v", "conflict", err)
-		}
+	if assert.Error(t, err) && !errorContains(err, "conflict") {
+		t.Fatalf("expected error to contain %q but get %v", "conflict", err)
 	}
 }
 
@@ -665,11 +630,18 @@ metadata:
 spec:
   bar:
     A: X
+    B: "Y"
     C: Z
+    D: W
+  baz:
+    hello: world
 `))
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatchesWithConflict(t *testing.T) {
+	if skipConflictDetectionTests {
+		t.Skip("Skipping patch merge conflict tests.")
+	}
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
@@ -702,13 +674,8 @@ paths:
 - patch1.yaml
 - patch2.yaml
 `, targetNoschema)
-	// TODO(#3304)
-	if konfig.FlagEnableKyamlDefaultValue {
-		assert.NoError(t, err)
-	} else {
-		if assert.Error(t, err) && !errorContains(err, "conflict") {
-			t.Fatalf("expected error to contain %q but get %v", "conflict", err)
-		}
+	if assert.Error(t, err) && !errorContains(err, "conflict") {
+		t.Fatalf("expected error to contain %q but get %v", "conflict", err)
 	}
 }
 
@@ -1041,26 +1008,7 @@ func TestMultiplePatches(t *testing.T) {
 				changeImagePatch(Deployment, "nginx:latest"),
 				addContainerAndEnvPatch(Deployment),
 			},
-			expected: ifApiMachineryElseKyaml(
-				expectedResultMultiPatch(Deployment, false), `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy1
-spec:
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-        some-label: some-value
-    spec:
-      containers:
-      - env:
-        - name: SOMEENV
-          value: SOMEVALUE
-        image: nginx
-        name: nginx
-`),
+			expected: expectedResultMultiPatch(Deployment, false),
 		},
 		"withschema-image-container-label": {
 			base: baseResource(Deployment),
@@ -1069,22 +1017,7 @@ spec:
 				addContainerAndEnvPatch(Deployment),
 				addLabelAndEnvPatch(Deployment),
 			},
-			expected: ifApiMachineryElseKyaml(
-				expectedResultMultiPatch(Deployment, true), `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy1
-spec:
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-    spec:
-      containers:
-      - image: nginx:latest
-        name: nginx
-`),
+			expected: expectedResultMultiPatch(Deployment, true),
 		},
 		"withschema-container-label-image": {
 			base: baseResource(Deployment),
@@ -1093,68 +1026,34 @@ spec:
 				addLabelAndEnvPatch(Deployment),
 				changeImagePatch(Deployment, "nginx:latest"),
 			},
-			expected: ifApiMachineryElseKyaml(
-				expectedResultMultiPatch(Deployment, true), `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy1
-spec:
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-    spec:
-      containers:
-      - env:
-        - name: ANOTHERENV
-          value: ANOTHERVALUE
-        image: nginx
-        name: nginx
-      - image: anotherimage
-        name: anothercontainer
-`),
+			expected: expectedResultMultiPatch(Deployment, true),
 		},
-		"noschema-label-image-container": {
+		"noschema-1.7.9-label-latest": {
 			base: baseResource(MyCRD),
 			patch: []string{
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:latest"),
-				addContainerAndEnvPatch(MyCRD),
-			},
-			// This should work
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"noschema-image-container-label": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				changeImagePatch(MyCRD, "nginx:latest"),
-				addContainerAndEnvPatch(MyCRD),
-				addLabelAndEnvPatch(MyCRD),
-			},
-			// This should work
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"noschema-container-label-image": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				addContainerAndEnvPatch(MyCRD),
+				changeImagePatch(MyCRD, "nginx:1.7.9"),
 				addLabelAndEnvPatch(MyCRD),
 				changeImagePatch(MyCRD, "nginx:latest"),
 			},
-			// This should work
-			errorExpected: true,
-			errorMsg:      "conflict",
+			errorExpected: false,
+			// There is no conflict detected. It should
+			// be but the JMPConflictDector ignores it.
+			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
+			expected: expectedResultJMP("nginx:latest"),
 		},
-	}
-
-	// TODO(#3304)
-	if konfig.FlagEnableKyamlDefaultValue {
-		delete(tests, "noschema-label-image-container")
-		delete(tests, "noschema-image-container-label")
-		delete(tests, "noschema-container-label-image")
+		"noschema-latest-label-1.7.9": {
+			base: baseResource(MyCRD),
+			patch: []string{
+				changeImagePatch(MyCRD, "nginx:latest"),
+				addLabelAndEnvPatch(MyCRD),
+				changeImagePatch(MyCRD, "nginx:1.7.9"),
+			},
+			errorExpected: false,
+			// There is no conflict detected. It should
+			// be but the JMPConflictDector ignores it.
+			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
+			expected: expectedResultJMP("nginx:1.7.9"),
+		},
 	}
 
 	th := kusttest_test.MakeEnhancedHarness(t).
@@ -1182,6 +1081,9 @@ spec:
 // detected regardless of the order of the patches and regardless
 // of the schema availibility (SMP vs JSON)
 func TestMultiplePatchesWithConflict(t *testing.T) {
+	if skipConflictDetectionTests {
+		t.Skip("Skipping patch merge conflict tests.")
+	}
 	tests := map[string]testRecord{
 		"withschema-label-latest-1.7.9": {
 			base: baseResource(Deployment),
@@ -1234,63 +1136,6 @@ func TestMultiplePatchesWithConflict(t *testing.T) {
 			errorExpected: true,
 			errorMsg:      "conflict",
 		},
-		"noschema-latest-label-1.7.9": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				changeImagePatch(MyCRD, "nginx:latest"),
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:1.7.9"),
-			},
-			errorExpected: false,
-			// There is no conflict detected. It should
-			// be but the JMPConflictDector ignores it.
-			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
-			expected: ifApiMachineryElseKyaml(
-				expectedResultJMP("nginx:1.7.9"), `
-apiVersion: apps/v1
-kind: MyCRD
-metadata:
-  name: deploy1
-spec:
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-    spec:
-      containers:
-      - image: nginx:latest
-        name: nginx
-`),
-		},
-		"noschema-1.7.9-label-latest": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				changeImagePatch(MyCRD, "nginx:1.7.9"),
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:latest"),
-			},
-			errorExpected: false,
-			// There is no conflict detected. It should
-			// be but the JMPConflictDector ignores it.
-			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
-
-			expected: ifApiMachineryElseKyaml(
-				expectedResultJMP("nginx:latest"), `
-apiVersion: apps/v1
-kind: MyCRD
-metadata:
-  name: deploy1
-spec:
-  template:
-    metadata:
-      labels:
-        old-label: old-value
-    spec:
-      containers:
-      - image: nginx:1.7.9
-        name: nginx
-`),
-		},
 		"noschema-1.7.9-latest-label": {
 			base: baseResource(MyCRD),
 			patch: []string{
@@ -1301,15 +1146,36 @@ spec:
 			},
 			errorExpected: true,
 		},
-	}
-	// TODO(#3304)
-	if konfig.FlagEnableKyamlDefaultValue {
-		delete(tests, "withschema-label-latest-1.7.9")
-		delete(tests, "withschema-1.7.9-latest-label")
-		delete(tests, "withschema-1.7.9-label-latest")
-		delete(tests, "withschema-latest-label-1.7.9-difforder")
-		delete(tests, "noschema-1.7.9-latest-label")
-		delete(tests, "noschema-label-latest-1.7.9")
+		"noschema-label-image-container": {
+			base: baseResource(MyCRD),
+			patch: []string{
+				addLabelAndEnvPatch(MyCRD),
+				changeImagePatch(MyCRD, "nginx:latest"),
+				addContainerAndEnvPatch(MyCRD),
+			},
+			errorExpected: true,
+			errorMsg:      "conflict",
+		},
+		"noschema-image-container-label": {
+			base: baseResource(MyCRD),
+			patch: []string{
+				changeImagePatch(MyCRD, "nginx:latest"),
+				addContainerAndEnvPatch(MyCRD),
+				addLabelAndEnvPatch(MyCRD),
+			},
+			errorExpected: true,
+			errorMsg:      "conflict",
+		},
+		"noschema-container-label-image": {
+			base: baseResource(MyCRD),
+			patch: []string{
+				addContainerAndEnvPatch(MyCRD),
+				addLabelAndEnvPatch(MyCRD),
+				changeImagePatch(MyCRD, "nginx:latest"),
+			},
+			errorExpected: true,
+			errorMsg:      "conflict",
+		},
 	}
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
