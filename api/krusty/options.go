@@ -36,16 +36,21 @@ type Options struct {
 	// When true, use kyaml/ packages to manipulate KRM yaml.
 	// When false, use k8sdeps/ instead (uses k8s.io/api* packages).
 	UseKyaml bool
+
+	// When true, allow name and kind changing via a patch
+	// When false, patch name/kind don't overwrite target name/kind
+	AllowResourceIdChanges bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
 func MakeDefaultOptions() *Options {
 	return &Options{
-		DoLegacyResourceSort: false,
-		AddManagedbyLabel:    false,
-		LoadRestrictions:     types.LoadRestrictionsRootOnly,
-		DoPrune:              false,
-		PluginConfig:         konfig.DisabledPluginConfig(),
-		UseKyaml:             false,
+		DoLegacyResourceSort:   false,
+		AddManagedbyLabel:      false,
+		LoadRestrictions:       types.LoadRestrictionsRootOnly,
+		DoPrune:                false,
+		PluginConfig:           konfig.DisabledPluginConfig(),
+		UseKyaml:               false,
+		AllowResourceIdChanges: false,
 	}
 }
