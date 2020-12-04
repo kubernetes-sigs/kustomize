@@ -1031,7 +1031,7 @@ type testRecord struct {
 // TestMultiplePatches checks that the patches are applied
 // properly, that the same result is obtained,
 // regardless of the order of the patches and regardless
-// of the schema availibility (SMP vs JSON)
+// of the schema availability (SMP vs JSON)
 func TestMultiplePatches(t *testing.T) {
 	tests := map[string]testRecord{
 		"withschema-label-image-container": {
