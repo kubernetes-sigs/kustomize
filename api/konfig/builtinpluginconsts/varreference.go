@@ -90,6 +90,9 @@ varReference:
 - path: spec/template/metadata/annotations
   kind: Deployment
 
+- path: spec/template/metadata/labels
+  kind: Deployment
+
 - path: spec/rules/host
   kind: Ingress
 
