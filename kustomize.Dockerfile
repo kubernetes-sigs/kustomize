@@ -17,4 +17,4 @@ FROM alpine
 RUN apk add git openssh
 COPY --from=builder /build/kustomize /app/
 WORKDIR /app
-ENTRYPOINT ["./kustomize"]
+ENTRYPOINT ["/app/kustomize"]
