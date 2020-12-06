@@ -53,7 +53,7 @@ func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
 func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	resmapFactory := resmap.NewFactory(
 		b.depProvider.GetResourceFactory(),
-		b.depProvider.GetMerginator())
+		b.depProvider.GetConflictDetectorFactory())
 	lr := fLdr.RestrictionNone
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
