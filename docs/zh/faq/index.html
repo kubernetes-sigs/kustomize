@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -36,8 +36,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -268,13 +268,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#security-file-foo-is-not-in-or-below-bar">security: file &lsquo;foo&rsquo; is not in or below &lsquo;bar&rsquo;</a></li>
-    <li><a href="#some-field-is-not-transformed-by-kustomize">Some field is not transformed by kustomize</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -300,44 +293,8 @@
 <div class="td-content">
 	<h1>FAQ</h1>
 	
-	<h2 id="security-file-foo-is-not-in-or-below-bar">security: file &lsquo;foo&rsquo; is not in or below &lsquo;bar&rsquo;</h2>
-<p>v2.0 added a security check that prevents
-kustomizations from reading files outside their own
-directory root.</p>
-<p>This was meant to help protect the person inclined to
-download kustomization directories from the web and use
-them without inspection to control their production
-cluster
-(see <a href="https://github.com/kubernetes-sigs/kustomize/issues/693">#693</a>,
-<a href="https://github.com/kubernetes-sigs/kustomize/pull/700">#700</a>,
-<a href="https://github.com/kubernetes-sigs/kustomize/pull/995">#995</a> and
-<a href="https://github.com/kubernetes-sigs/kustomize/pull/998">#998</a>)</p>
-<p>Resources (including configmap and secret generators)
-can <em>still be shared</em> via the recommended best practice
-of placing them in a directory with their own
-kustomization file, and referring to this directory as a
-<a href="/kustomize/api-reference/glossary#base"><code>base</code></a> from any kustomization that
-wants to use it.  This encourages modularity and
-relocatability.</p>
-<p>To disable this, use v3, and the <code>load_restrictor</code> flag:</p>
-<pre><code>kustomize build --load_restrictor none $target
-</code></pre><h2 id="some-field-is-not-transformed-by-kustomize">Some field is not transformed by kustomize</h2>
-<p>Example: <a href="https://github.com/kubernetes-sigs/kustomize/issues/1319">#1319</a>, <a href="https://github.com/kubernetes-sigs/kustomize/issues/1322">#1322</a>, <a href="https://github.com/kubernetes-sigs/kustomize/issues/1347">#1347</a> and etc.</p>
-<p>The fields transformed by kustomize is configured explicitly in <a href="https://github.com/kubernetes-sigs/kustomize/tree/master/api/konfig/builtinpluginconsts/defaultconfig.go">defaultconfig</a>. The configuration itself can be customized by including <code>configurations</code> in <code>kustomization.yaml</code>, e.g.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">kustomize.config.k8s.io/v1beta1</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">Kustomization</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">configurations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#000">kustomizeconfig.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>The configuration directive allows customization of the following transformers:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">commonAnnotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">commonLabels</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">nameprefix</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">namespace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">varreference</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">namereference</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">images</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[]</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>To persist the changes to default configuration, submit a PR like <a href="https://github.com/kubernetes-sigs/kustomize/pull/1338">#1338</a>, <a href="https://github.com/kubernetes-sigs/kustomize/pull/1348">#1348</a> and etc.</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/faq/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -371,7 +328,7 @@ relocatability.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

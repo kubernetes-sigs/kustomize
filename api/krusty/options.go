@@ -39,6 +39,10 @@ type Options struct {
 
 	// Number of parallel accumulation processes
 	MaxParallelAccumulate int
+
+	// When true, allow name and kind changing via a patch
+	// When false, patch name/kind don't overwrite target name/kind
+	AllowResourceIdChanges bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -51,5 +55,6 @@ func MakeDefaultOptions() *Options {
 		PluginConfig:          konfig.DisabledPluginConfig(),
 		UseKyaml:              false,
 		MaxParallelAccumulate: 1,
+		AllowResourceIdChanges: false,
 	}
 }

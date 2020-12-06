@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -370,42 +370,8 @@
 <div class="td-content">
 	<h1>通用配置（Off-the-shelf configuration）</h1>
 	<div class="lead">使用通用配置的工作流。</div>
-	<p>在这个工作流程中，所有文件都由用户拥有，并维护在他们控制的存储库中，但它们是基于一个现成的（<a href="/kustomize/api-reference/glossary#off-the-shelf-configuration">off-the-shelf</a>）配置，定期查询更新。</p>
-<p><img src="/kustomize/images/workflowOts.jpg" alt="off-the-shelf config workflow image"></p>
-<h4 id="1-寻找并且-fork-一个-ots-配置">1) 寻找并且 <a href="https://guides.github.com/activities/forking/">fork</a> 一个 <a href="/kustomize/api-reference/glossary#off-the-shelf-configuration">OTS</a> 配置</h4>
-<h4 id="2-将其克隆为你自己的-base">2) 将其克隆为你自己的 <a href="/kustomize/api-reference/glossary#base">base</a></h4>
-<p>这个 <a href="/kustomize/api-reference/glossary#base">base</a> 目录维护在上游为 <a href="/kustomize/api-reference/glossary#off-the-shelf-configuration">OTS</a> 配置的 repo ，在这个示例中使用 <code>ladp</code> 的 repo 。</p>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir ~/ldap
-git clone https://github.com/<span style="color:#000">$USER</span>/ldap ~/ldap/base
-<span style="color:#204a87">cd</span> ~/ldap/base
-git remote add upstream git@github.com:<span style="color:#000">$USER</span>/ldap
-</code></pre></div></blockquote>
-<h4 id="3-创建-overlays">3) 创建 <a href="/kustomize/api-reference/glossary#overlay">overlays</a></h4>
-<p>如配置定制方法一样，创建并完善 <em>overlays</em> 目录中的内容。</p>
-<p>所有的 <a href="/kustomize/api-reference/glossary#overlay">overlays</a> 都依赖于 <a href="/kustomize/api-reference/glossary#base">base</a> 。</p>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p ~/ldap/overlays/staging
-mkdir -p ~/ldap/overlays/production
-</code></pre></div></blockquote>
-<p>用户可以将 <code>overlays</code> 维护在不同的 repo 中。</p>
-<h4 id="4-生成-variants">4) 生成 <a href="/kustomize/api-reference/glossary#variant">variants</a></h4>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kustomize build ~/ldap/overlays/staging <span style="color:#000;font-weight:bold">|</span> kubectl apply -f -
-kustomize build ~/ldap/overlays/production <span style="color:#000;font-weight:bold">|</span> kubectl apply -f -
-</code></pre></div></blockquote>
-<p>也可以在 <a href="https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/">kubectl-v1.14.0</a> 版，使用 <code>kubectl</code> 命令发布你的 <a href="/kustomize/api-reference/glossary#variant">variants</a> 。</p>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl apply -k ~/ldap/overlays/staging
-kubectl apply -k ~/ldap/overlays/production
-</code></pre></div></blockquote>
-<h4 id="5-可选从上游更新">5) （可选）从上游更新</h4>
-<p>用户可以定期从上游 repo 中 <a href="https://git-scm.com/docs/git-rebase">rebase</a> 他们的 <a href="/kustomize/api-reference/glossary#base">base</a> 以保证及时更新。</p>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#204a87">cd</span> ~/ldap/base
-git fetch upstream
-git rebase upstream/master
-</code></pre></div></blockquote>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/guides/offtheshelf/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
         <div class="section-index">
     
@@ -435,7 +401,7 @@ git rebase upstream/master
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

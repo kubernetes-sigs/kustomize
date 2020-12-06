@@ -1,7 +1,6 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package resource implements representations of k8s API resources.
 package resource
 
 import (
@@ -9,9 +8,11 @@ import (
 	"reflect"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -394,6 +395,23 @@ func (r *Resource) GetRefVarNames() []string {
 // AppendRefVarName appends a name of a var into the refVar list
 func (r *Resource) AppendRefVarName(variable types.Var) {
 	r.refVarNames = append(r.refVarNames, variable.Name)
+}
+
+// ApplySmPatch applies the provided strategic merge patch.
+func (r *Resource) ApplySmPatch(patch *Resource) error {
+	node, err := filtersutil.GetRNode(patch)
+	if err != nil {
+		return err
+	}
+	n, ns := r.GetName(), r.GetNamespace()
+	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+		Patch: node,
+	}, r)
+	if !r.IsEmpty() {
+		r.SetName(n)
+		r.SetNamespace(ns)
+	}
+	return err
 }
 
 // TODO: Add BinaryData once we sync to new k8s.io/api

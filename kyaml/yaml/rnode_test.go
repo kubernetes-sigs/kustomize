@@ -751,3 +751,200 @@ func TestRNodeIsNilOrEmpty(t *testing.T) {
 		t.Fatalf("non-empty list should not be empty")
 	}
 }
+
+const deploymentJSON = `
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "homer",
+    "namespace": "simpsons",
+    "labels": {
+      "fruit": "apple",
+      "veggie": "carrot"
+    },
+    "annotations": {
+      "area": "51",
+      "greeting": "Take me to your leader."
+    }
+  }
+}
+`
+
+func getNamespaceOrDie(t *testing.T, n *RNode) string {
+	m, err := n.GetNamespace()
+	assert.NoError(t, err)
+	return m
+}
+
+func TestRNodeSetNamespace(t *testing.T) {
+	n := NewRNode(nil)
+	assert.Equal(t, "", getNamespaceOrDie(t, n))
+	assert.NoError(t, n.SetNamespace(""))
+	assert.Equal(t, "", getNamespaceOrDie(t, n))
+	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	assert.NoError(t, n.SetNamespace("flanders"))
+	assert.Equal(t, "flanders", getNamespaceOrDie(t, n))
+}
+
+func getLabelsOrDie(t *testing.T, n *RNode) map[string]string {
+	m, err := n.GetLabels()
+	assert.NoError(t, err)
+	return m
+}
+
+func TestRNodeSetLabels(t *testing.T) {
+	n := NewRNode(nil)
+	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+	assert.NoError(t, n.SetLabels(map[string]string{}))
+	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+
+	n = NewRNode(nil)
+	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	labels := getLabelsOrDie(t, n)
+	assert.Equal(t, 2, len(labels))
+	assert.Equal(t, "apple", labels["fruit"])
+	assert.Equal(t, "carrot", labels["veggie"])
+	assert.NoError(t, n.SetLabels(map[string]string{
+		"label1": "foo",
+		"label2": "bar",
+	}))
+	labels = getLabelsOrDie(t, n)
+	assert.Equal(t, 2, len(labels))
+	assert.Equal(t, "foo", labels["label1"])
+	assert.Equal(t, "bar", labels["label2"])
+	assert.NoError(t, n.SetLabels(map[string]string{}))
+	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+}
+
+func getAnnotationsOrDie(t *testing.T, n *RNode) map[string]string {
+	m, err := n.GetAnnotations()
+	assert.NoError(t, err)
+	return m
+}
+
+func TestRNodeGetAnnotations(t *testing.T) {
+	n := NewRNode(nil)
+	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+	assert.NoError(t, n.SetAnnotations(map[string]string{}))
+	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+
+	n = NewRNode(nil)
+	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	annotations := getAnnotationsOrDie(t, n)
+	assert.Equal(t, 2, len(annotations))
+	assert.Equal(t, "51", annotations["area"])
+	assert.Equal(t, "Take me to your leader.", annotations["greeting"])
+	assert.NoError(t, n.SetAnnotations(map[string]string{
+		"annotation1": "foo",
+		"annotation2": "bar",
+	}))
+	annotations = getAnnotationsOrDie(t, n)
+	assert.Equal(t, 2, len(annotations))
+	assert.Equal(t, "foo", annotations["annotation1"])
+	assert.Equal(t, "bar", annotations["annotation2"])
+	assert.NoError(t, n.SetAnnotations(map[string]string{}))
+	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+}
+
+func TestRNodeMatchesAnnotationSelector(t *testing.T) {
+	rn := NewRNode(nil)
+	assert.NoError(t, rn.UnmarshalJSON([]byte(deploymentJSON)))
+	testcases := map[string]struct {
+		selector string
+		matches  bool
+		errMsg   string
+	}{
+		"select_01": {
+			selector: ".*",
+			matches:  false,
+			errMsg:   "name part must consist of alphanumeric character",
+		},
+		"select_02": {
+			selector: "area=51",
+			matches:  true,
+		},
+		"select_03": {
+			selector: "area=florida",
+			matches:  false,
+		},
+		"select_04": {
+			selector: "area in (disneyland, 51, iowa)",
+			matches:  true,
+		},
+		"select_05": {
+			selector: "area in (disneyland, iowa)",
+			matches:  false,
+		},
+		"select_06": {
+			selector: "area notin (disneyland, 51, iowa)",
+			matches:  false,
+		},
+	}
+	for n, tc := range testcases {
+		gotMatch, err := rn.MatchesAnnotationSelector(tc.selector)
+		if tc.errMsg == "" {
+			assert.NoError(t, err)
+			assert.Equalf(
+				t, tc.matches, gotMatch, "test=%s selector=%v", n, tc.selector)
+		} else {
+			assert.Truef(
+				t, strings.Contains(err.Error(), tc.errMsg),
+				"test=%s selector=%v", n, tc.selector)
+		}
+	}
+}
+
+func TestRNodeMatchesLabelSelector(t *testing.T) {
+	rn := NewRNode(nil)
+	assert.NoError(t, rn.UnmarshalJSON([]byte(deploymentJSON)))
+	testcases := map[string]struct {
+		selector string
+		matches  bool
+		errMsg   string
+	}{
+		"select_01": {
+			selector: ".*",
+			matches:  false,
+			errMsg:   "name part must consist of alphanumeric character",
+		},
+		"select_02": {
+			selector: "fruit=apple",
+			matches:  true,
+		},
+		"select_03": {
+			selector: "fruit=banana",
+			matches:  false,
+		},
+		"select_04": {
+			selector: "fruit in (orange, banana, apple)",
+			matches:  true,
+		},
+		"select_05": {
+			selector: "fruit in (orange, banana)",
+			matches:  false,
+		},
+		"select_06": {
+			selector: "fruit notin (orange, banana, apple)",
+			matches:  false,
+		},
+	}
+	for n, tc := range testcases {
+		gotMatch, err := rn.MatchesLabelSelector(tc.selector)
+		if tc.errMsg == "" {
+			assert.NoError(t, err)
+			assert.Equalf(
+				t, tc.matches, gotMatch, "test=%s selector=%v", n, tc.selector)
+		} else {
+			assert.Truef(
+				t, strings.Contains(err.Error(), tc.errMsg),
+				"test=%s selector=%v", n, tc.selector)
+		}
+	}
+}

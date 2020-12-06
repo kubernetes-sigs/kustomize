@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -26,13 +26,13 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/blog/2019/02/05/v2.0.0/" />
 <meta property="article:published_time" content="2019-02-05T00:00:00+00:00" />
-<meta property="article:modified_time" content="2020-06-15T13:39:13+08:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-25T21:41:27+05:30" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="v2.0.0">
 <meta itemprop="description" content="Kustomize v2.0.0
 ">
 <meta itemprop="datePublished" content="2019-02-05T00:00:00+00:00" />
-<meta itemprop="dateModified" content="2020-06-15T13:39:13+08:00" />
-<meta itemprop="wordCount" content="458">
+<meta itemprop="dateModified" content="2020-11-25T21:41:27+05:30" />
+<meta itemprop="wordCount" content="3">
 
 
 
@@ -46,8 +46,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -320,18 +320,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#backward-incompatible-changes">Backward Incompatible Changes</a>
-      <ul>
-        <li><a href="#kustomization-path-constraints">Kustomization Path Constraints</a></li>
-        <li><a href="#kustomization-field-removals">Kustomization Field Removals</a></li>
-      </ul>
-    </li>
-    <li><a href="#compatible-changes-new-features">Compatible Changes (New Features)</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -347,109 +335,8 @@
 		
 		<time datetime="2019-02-05" class="text-muted">2019年02月05日</time>
 	</div>
-	<p>After security review, a field used in secret
-generation (see below) was removed from the
-definition of a kustomization file with no
-mechanism to convert it to a new form.  Also, the
-set of files accessible from a kustomization file
-has been further constrained.</p>
-<p>Per the <a href="/kustomize/faq/versioningpolicy">versioning policy</a>,
-backward incompatible changes trigger an increment
-of the major version number, hence we go
-from 1.0.11 to 2.0.0. We&rsquo;re taking this major
-version increment opportunity to remove some
-already deprecated fields, and the code paths
-associated with them.</p>
-<h2 id="backward-incompatible-changes">Backward Incompatible Changes</h2>
-<h3 id="kustomization-path-constraints">Kustomization Path Constraints</h3>
-<p>A kustomization file can specify paths to other
-files, including resources, patches, configmap
-generation data, secret generation data and
-bases. In the case of a base, the path can be a
-git URL instead.</p>
-<p>In 1.x, these paths had to be relative to the
-current kustomization directory (the location of
-the kustomization file used in the <code>build</code>
-command).</p>
-<p>In 2.0, bases can continue to specify, via
-relative paths, kustomizations outside the current
-kustomization directory.  But non-base paths are
-constrained to terminate in or below the current
-kustomization directory. Further, bases specified
-via a git URL may not reference files outside of
-the directory used to clone the repository.</p>
-<h3 id="kustomization-field-removals">Kustomization Field Removals</h3>
-<h4 id="patches">patches</h4>
-<p><code>patches</code> was deprecated and replaced by
-<code>patchesStrategicMerge</code> when <code>patchesJson6902</code> was
-introduced.  In Kustomize 2.0.0, <code>patches</code> is
-removed. Please use <code>patchesStrategicMerge</code>
-instead.</p>
-<h4 id="imagetags">imageTags</h4>
-<p><code>imageTags</code> is replaced by <code>images</code> since <code>images</code>
-can provide more features to change image names,
-registries, tags and digests.</p>
-<h4 id="secretgeneratorcommands">secretGenerator/commands</h4>
-<p><code>commands</code> is removed from SecretGenerator due to
-a <a href="https://docs.google.com/document/d/1FYgLVdq-siB_Cef9yuQBmit0PbrE8lsyTBdGI2eA2y8/edit">security concern</a>. One can use <code>files</code> or
-<code>literals</code>, similar to ConfigMapGenerator, to
-generate a secret.</p>
-<pre><code>secretGenerator:
-- name: app-tls
-  files:
-    - secret/tls.cert
-    - secret/tls.key
-  type: &quot;kubernetes.io/tls&quot;
-</code></pre><h2 id="compatible-changes-new-features">Compatible Changes (New Features)</h2>
-<p>As this release is triggered by a security change,
-there are no major new features to announce. A few
-things that are worth mentioning in this release
-are:</p>
-<ul>
-<li>
-<p>More than <em>40</em> issues closed since 1.0.11
-release (including many extensions to
-transformation rules).</p>
-</li>
-<li>
-<p>Users can run <code>kustomize edit fix</code> to migrate a
-kustomization file working with previous
-versions to one working with 2.0.0. For example,
-a kustomization.yaml with following content</p>
-<pre><code>patches:
-  - deployment-patch.yaml
-imageTags:
-  - name: postgres
-    newTag: v1
-</code></pre><p>will be converted to</p>
-<pre><code>apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-patchesStrategicMerge:
-  - deployment-patch.yaml
-images:
-  - name: postgres
-    newTag: v1
-</code></pre></li>
-<li>
-<p>Kustomization filename</p>
-<p>In previous versions, the name of a
-kustomization file had to be
-<code>kustomization.yaml</code>.
-Kustomize allows <code>kustomization.yaml</code>,
-<code>kustomization.yml</code> and
-<code>Kustomization</code>. In a directory, only one of
-those filenames is allowed. If there are more
-than one found, Kustomize will exit with an
-error. Please select the best filename for your
-use cases.</p>
-</li>
-<li>
-<p>Cancelled plans to deprecate applying prefix/suffix to namespace.
-The deprecation warning</p>
-<pre><code>Adding nameprefix and namesuffix to Namespace resource will be deprecated in next release.
-</code></pre><p>was removed.</p>
-</li>
-</ul>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/blog/2019/02/05/v2.0.0/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
 	
 

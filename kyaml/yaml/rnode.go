@@ -12,6 +12,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/labels"
 )
 
 // MakeNullNode returns an RNode that represents an empty document.
@@ -333,6 +334,88 @@ func (rn *RNode) SetYNode(node *yaml.Node) {
 	*rn.value = *node
 }
 
+// GetNamespace gets the metadata namespace field.
+func (rn *RNode) GetNamespace() (string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return "", err
+	}
+	return meta.Namespace, nil
+}
+
+// SetNamespace tries to set the metadata namespace field.
+func (rn *RNode) SetNamespace(ns string) error {
+	meta, err := rn.Pipe(Lookup(MetadataField))
+	if err != nil {
+		return err
+	}
+	if ns == "" {
+		if rn == nil {
+			return nil
+		}
+		return meta.PipeE(Clear(NamespaceField))
+	}
+	return rn.SetMapField(
+		NewScalarRNode(ns), MetadataField, NamespaceField)
+}
+
+// GetAnnotations gets the metadata annotations field.
+func (rn *RNode) GetAnnotations() (map[string]string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return nil, err
+	}
+	return meta.Annotations, nil
+}
+
+// SetAnnotations tries to set the metadata annotations field.
+func (rn *RNode) SetAnnotations(m map[string]string) error {
+	meta, err := rn.Pipe(Lookup(MetadataField))
+	if err != nil {
+		return err
+	}
+	if len(m) == 0 {
+		if meta == nil {
+			return nil
+		}
+		return meta.PipeE(Clear(AnnotationsField))
+	}
+	return rn.SetMapField(
+		NewMapRNode(&m), MetadataField, AnnotationsField)
+}
+
+// GetLabels gets the metadata labels field.
+func (rn *RNode) GetLabels() (map[string]string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return nil, err
+	}
+	return meta.Labels, nil
+}
+
+// SetLabels sets the metadata labels field.
+func (rn *RNode) SetLabels(m map[string]string) error {
+	meta, err := rn.Pipe(Lookup(MetadataField))
+	if err != nil {
+		return err
+	}
+	if len(m) == 0 {
+		if meta == nil {
+			return nil
+		}
+		return meta.PipeE(Clear(LabelsField))
+	}
+	return rn.SetMapField(
+		NewMapRNode(&m), MetadataField, LabelsField)
+}
+
+func (rn *RNode) SetMapField(value *RNode, path ...string) error {
+	return rn.PipeE(
+		LookupCreate(yaml.MappingNode, path[0:len(path)-1]...),
+		SetField(path[len(path)-1], value),
+	)
+}
+
 // AppendToFieldPath appends a field name to the FieldPath.
 func (rn *RNode) AppendToFieldPath(parts ...string) {
 	rn.fieldPath = append(rn.fieldPath, parts...)
@@ -606,6 +689,32 @@ func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
 		return m, fmt.Errorf("missing metadata.name in object %v", m)
 	}
 	return m, nil
+}
+
+// MatchesAnnotationSelector implements ifc.Kunstructured.
+func (rn *RNode) MatchesAnnotationSelector(selector string) (bool, error) {
+	s, err := labels.Parse(selector)
+	if err != nil {
+		return false, err
+	}
+	slice, err := rn.GetAnnotations()
+	if err != nil {
+		return false, err
+	}
+	return s.Matches(labels.Set(slice)), nil
+}
+
+// MatchesLabelSelector implements ifc.Kunstructured.
+func (rn *RNode) MatchesLabelSelector(selector string) (bool, error) {
+	s, err := labels.Parse(selector)
+	if err != nil {
+		return false, err
+	}
+	slice, err := rn.GetLabels()
+	if err != nil {
+		return false, err
+	}
+	return s.Matches(labels.Set(slice)), nil
 }
 
 // HasNilEntryInList returns true if the RNode contains a list which has

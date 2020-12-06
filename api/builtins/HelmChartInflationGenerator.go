@@ -125,6 +125,7 @@ func (p *HelmChartInflationGeneratorPlugin) getTemplateCommandArgs() []string {
 	if p.Values != "" {
 		args = append(args, "--values", p.Values)
 	}
+	args = append(args, p.ExtraArgs...)
 	return args
 }
 

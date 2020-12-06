@@ -6,4 +6,6 @@ description: >
     Compose kustomizations.
 ---
 
-*Coming soon*
+<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/api-reference/kustomization/components/" />
+
+Moved to https://github.com/kubernetes-sigs/cli-experimental

@@ -40,7 +40,8 @@ func makeKustTargetWithRf(
 	if err != nil {
 		t.Fatal(err)
 	}
-	rf := resmap.NewFactory(pvd.GetResourceFactory(), pvd.GetMerginator())
+	rf := resmap.NewFactory(
+		pvd.GetResourceFactory(), pvd.GetConflictDetectorFactory())
 	pc := konfig.DisabledPluginConfig()
 	return target.NewKustTarget(
 		ldr,

@@ -52,7 +52,7 @@ EOF
 done
 
 # add info string for `kustomize openapi info` command
-OPEN_API_INFO=`echo ${info_list[@]} | tr " " ","`
+OPEN_API_INFO=`echo ${info_list[@]} | sed 's/ /\\\n/g'`
 cat <<EOF >>kubernetesapi/openapiinfo.go
 )
 

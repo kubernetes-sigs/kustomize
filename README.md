@@ -153,7 +153,7 @@ is governed by the [Kubernetes Code of Conduct].
 [imageBase]: docs/images/base.jpg
 [imageOverlay]: docs/images/overlay.jpg
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
-[kubectl book]: https://kubectl.docs.kubernetes.io/pages/app_customization/introduction.html
+[kubectl book]: https://kubectl.docs.kubernetes.io/guides/introduction/kustomize/
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
 [kubernetes style]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#kubernetes-style-object
 [kustomization]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#kustomization
