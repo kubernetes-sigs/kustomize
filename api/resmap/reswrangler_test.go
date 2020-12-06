@@ -20,8 +20,9 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-var rf = provider.NewDefaultDepProvider().GetResourceFactory()
-var rmF = NewFactory(rf, nil)
+var depProvider = provider.NewDefaultDepProvider()
+var rf = depProvider.GetResourceFactory()
+var rmF = NewFactory(rf, depProvider.GetConflictDetectorFactory())
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
 	err := w.Append(r)
@@ -192,6 +193,8 @@ metadata:
 }
 
 func TestGetMatchingResourcesByCurrentId(t *testing.T) {
+	cmap := resid.Gvk{Version: "v1", Kind: "ConfigMap"}
+
 	r1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -771,7 +774,7 @@ rules:
 	}
 }
 
-func TestApplySmPatch_Namespaces(t *testing.T) {
+func TestApplySmPatch_General(t *testing.T) {
 	const (
 		myDeployment      = "Deployment"
 		myCRD             = "myCRD"
@@ -801,6 +804,53 @@ spec:
 		errorExpected bool
 		errorMsg      string
 	}{
+		"confusion": {
+			base: []string{`apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: Y
+`,
+			},
+			patches: []string{`apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`, `apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+			},
+			errorExpected: false,
+			expected: []string{
+				`apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+			},
+		},
 		"withschema-ns1-ns2-one": {
 			base: []string{
 				addNamespace("ns1", baseResource(myDeployment)),

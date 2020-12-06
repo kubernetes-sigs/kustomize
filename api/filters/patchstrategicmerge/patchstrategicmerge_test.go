@@ -15,6 +15,78 @@ func TestFilter(t *testing.T) {
 		patch    *yaml.RNode
 		expected string
 	}{
+		"nullMapEntry1": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`,
+			patch: yaml.MustParse(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`),
+			expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+		},
+		"nullMapEntry2": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+			patch: yaml.MustParse(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`),
+			expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+		},
 		"simple patch": {
 			input: `
 apiVersion: apps/v1
