@@ -13,20 +13,6 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// TODO(#3304): eliminate branching on konfig.FlagEnableKyamlDefaultValue
-// Details: https://github.com/kubernetes-sigs/kustomize/issues/3304
-// All tests should pass for either true or false values
-// of this boolean, without having to check its value.
-// I.e. fix all the cases where FlagEnableKyamlDefaultValue == true,
-// and delete all reads of the constant.  Historically,
-// the code worked for enable_kyaml == false.
-func ifApiMachineryElseKyaml(s1, s2 string) string {
-	if !konfig.FlagEnableKyamlDefaultValue {
-		return s1
-	}
-	return s2
-}
-
 // TODO(#3304)
 const skipConflictDetectionTests = konfig.FlagEnableKyamlDefaultValue
 
@@ -573,11 +559,10 @@ spec:
 `)
 }
 
-func TestStrategicMergeTransformerNoSchemaMultiPatches(t *testing.T) {
+func TestStrategicMergeTransformerNoSchemaMultiPatchesNoConflict(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
-
 	th.WriteF("patch1.yaml", `
 apiVersion: example.com/v1
 kind: Foo
@@ -600,7 +585,7 @@ spec:
   baz:
     hello: world
 `)
-	th.RunTransformerAndCheckResult(`
+	resMap, err := th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
 metadata:
@@ -608,9 +593,23 @@ metadata:
 paths:
 - patch1.yaml
 - patch2.yaml
-`,
-		targetNoschema,
-		ifApiMachineryElseKyaml(`
+`, `apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: Y
+`)
+	assert.NoError(t, err)
+	th.AssertActualEqualsExpected(
+		resMap,
+		// In kyaml/yaml.merge2, the empty "B: " is dropped
+		// when patch1 and patch2 are merged, so the patch
+		// applied is effectively only patch2.yaml.
+		// So it cannot delete the "B: Y"
+		konfig.IfApiMachineryElseKyaml(`
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -618,6 +617,55 @@ metadata:
 spec:
   bar:
     A: X
+    C: Z
+    D: W
+  baz:
+    hello: world
+`, `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: "Y"
+    C: Z
+    D: W
+  baz:
+    hello: world
+`))
+	resMap, err = th.RunTransformer(`
+apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: notImportantHere
+paths:
+- patch2.yaml
+`, `apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: Y
+`)
+	assert.NoError(t, err)
+	th.AssertActualEqualsExpected(
+		resMap,
+		// This time only patch2 was applied.  Same answer on the kyaml
+		// path, but different answer on apimachinery path (B becomes "true"?)
+		// The kyaml path is doing better here.
+		konfig.IfApiMachineryElseKyaml(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: true
     C: Z
     D: W
   baz:
