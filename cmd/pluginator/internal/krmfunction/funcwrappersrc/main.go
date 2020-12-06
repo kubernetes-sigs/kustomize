@@ -16,7 +16,8 @@ import (
 func main() {
 	var plugin resmap.Configurable
 	p := provider.NewDefaultDepProvider()
-	resmapFactory := resmap.NewFactory(p.GetResourceFactory(), p.GetMerginator())
+	resmapFactory := resmap.NewFactory(
+		p.GetResourceFactory(), p.GetConflictDetectorFactory())
 	pluginHelpers := resmap.NewPluginHelpers(
 		nil, p.GetFieldValidator(), resmapFactory)
 

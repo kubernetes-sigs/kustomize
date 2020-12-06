@@ -5,14 +5,13 @@ package provider
 
 import (
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/internal/k8sdeps/merge"
-	kmerge "sigs.k8s.io/kustomize/api/internal/merge"
+	"sigs.k8s.io/kustomize/api/internal/conflict"
+	k8sconflict "sigs.k8s.io/kustomize/api/internal/k8sdeps/conflict"
 	"sigs.k8s.io/kustomize/api/internal/validate"
 	"sigs.k8s.io/kustomize/api/internal/wrappy"
 	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 )
 
@@ -96,17 +95,27 @@ import (
 //            would really reduce the work
 //            (e.g. drop Vars, drop ReplacementTranformer).
 //
-//   - resmap.Merginator
+//   - resource.ConflictDetector
 //
-//       1) api/internal/k8sdeps/merge.Merginator
+//       1) api/internal/k8sdeps/conflict.conflictDetectorJson
+//          api/internal/k8sdeps/conflict.conflictDetectorSm
 //
 //            Uses k8s.io/apimachinery/pkg/util/strategicpatch,
 //            apimachinery/pkg/util/mergepatch, etc. to merge
 //            resource.Resource instances.
 //
-//       2) api/internal/merge.Merginator
+//       2) api/internal/conflict.smPatchMergeOnlyDetector
 //
-//            At time of writing, this is unimplemented.
+//           At time of writing, this doesn't report conflicts,
+//           but it does know how to merge patches. Conflict
+//           reporting isn't vital to kustomize function.  It's
+//           rare that a person would configure one transformer
+//           with many patches, much less so many that it became
+//           hard to spot conflicts.  In the case of an undetected
+//           conflict, the last patch applied wins, likely what
+//           the user wants anyway.  Regardless, the effect of this
+//           is plainly visible and usable in the output, even if
+//           a conflict happened but wasn't reported as an error.
 //
 //   - ifc.Validator
 //
@@ -117,6 +126,7 @@ import (
 //
 //       2) api/internal/validate.FieldValidator
 //
+//            See TODO inside the validator for status.
 //            At time of writing, this is a do-nothing
 //            validator as it's not critical to kustomize function.
 //
@@ -139,20 +149,20 @@ import (
 // If you're reading this, plan not done.
 //
 type DepProvider struct {
-	kFactory        ifc.KunstructuredFactory
-	resourceFactory *resource.Factory
-	merginator      resmap.Merginator
-	fieldValidator  ifc.Validator
+	kFactory                 ifc.KunstructuredFactory
+	resourceFactory          *resource.Factory
+	conflictDectectorFactory resource.ConflictDetectorFactory
+	fieldValidator           ifc.Validator
 }
 
 func makeK8sdepBasedInstances() *DepProvider {
 	kf := kunstruct.NewKunstructuredFactoryImpl()
 	rf := resource.NewFactory(kf)
 	return &DepProvider{
-		kFactory:        kf,
-		resourceFactory: rf,
-		merginator:      merge.NewMerginator(rf),
-		fieldValidator:  validator.NewKustValidator(),
+		kFactory:                 kf,
+		resourceFactory:          rf,
+		conflictDectectorFactory: k8sconflict.NewFactory(rf),
+		fieldValidator:           validator.NewKustValidator(),
 	}
 }
 
@@ -160,10 +170,10 @@ func makeKyamlBasedInstances() *DepProvider {
 	kf := &wrappy.WNodeFactory{}
 	rf := resource.NewFactory(kf)
 	return &DepProvider{
-		kFactory:        kf,
-		resourceFactory: rf,
-		merginator:      kmerge.NewMerginator(rf),
-		fieldValidator:  validate.NewFieldValidator(),
+		kFactory:                 kf,
+		resourceFactory:          rf,
+		conflictDectectorFactory: conflict.NewFactory(),
+		fieldValidator:           validate.NewFieldValidator(),
 	}
 }
 
@@ -186,8 +196,8 @@ func (dp *DepProvider) GetResourceFactory() *resource.Factory {
 	return dp.resourceFactory
 }
 
-func (dp *DepProvider) GetMerginator() resmap.Merginator {
-	return dp.merginator
+func (dp *DepProvider) GetConflictDetectorFactory() resource.ConflictDetectorFactory {
+	return dp.conflictDectectorFactory
 }
 
 func (dp *DepProvider) GetFieldValidator() ifc.Validator {

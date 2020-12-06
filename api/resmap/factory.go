@@ -12,24 +12,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Merginator merges resources.
-type Merginator interface {
-	// Merge creates a new ResMap by merging incoming resources.
-	// Error if conflict found.
-	Merge([]*resource.Resource) (ResMap, error)
-}
-
 // Factory makes instances of ResMap.
 type Factory struct {
 	// Makes resources.
 	resF *resource.Factory
-	// Makes ResMaps via merging.
-	pm Merginator
+	// Makes ConflictDetectors.
+	cdf resource.ConflictDetectorFactory
 }
 
 // NewFactory returns a new resmap.Factory.
-func NewFactory(rf *resource.Factory, pm Merginator) *Factory {
-	return &Factory{resF: rf, pm: pm}
+func NewFactory(
+	rf *resource.Factory, cdf resource.ConflictDetectorFactory) *Factory {
+	return &Factory{resF: rf, cdf: cdf}
 }
 
 // RF returns a resource.Factory.
@@ -134,8 +128,8 @@ func (rmF *Factory) FromSecretArgs(
 
 // Merge creates a new ResMap by merging incoming resources.
 // Error if conflict found.
-func (rmF *Factory) Merge(patches []*resource.Resource) (ResMap, error) {
-	return rmF.pm.Merge(patches)
+func (rmF *Factory) Merge(incoming []*resource.Resource) (ResMap, error) {
+	return (&merginator{cdf: rmF.cdf}).Merge(incoming)
 }
 
 func newResMapFromResourceSlice(

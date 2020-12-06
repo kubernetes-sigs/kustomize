@@ -31,6 +31,11 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 	}
 	if len(p.Paths) != 0 {
 		for _, onePath := range p.Paths {
+			// The following oddly attempts to interpret a path string as an
+			// actual patch (instead of as a path to a file containing a patch).
+			// All tests pass if this code is commented out.  This code should
+			// be deleted; the user should use the Patches field which
+			// exists for this purpose (inline patch declaration).
 			res, err := p.h.ResmapFactory().RF().SliceFromBytes([]byte(onePath))
 			if err == nil {
 				p.loadedPatches = append(p.loadedPatches, res...)
