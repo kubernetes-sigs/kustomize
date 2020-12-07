@@ -26,7 +26,7 @@ func (s TaggedModules) String() string {
 	// format := "%-"+strconv.Itoa(s.LenLongestString()+2)+"s"
 	var b strings.Builder
 	for i := range s {
-		b.WriteString(fmt.Sprintf("%-15s", s[i]))
+		b.WriteString(fmt.Sprintf("%-19s", s[i]))
 	}
 	return b.String()
 }
