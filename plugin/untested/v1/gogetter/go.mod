@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/gogetter
+module sigs.k8s.io/kustomize/plugin/untested/v1/gogetter
 
 go 1.15
 
