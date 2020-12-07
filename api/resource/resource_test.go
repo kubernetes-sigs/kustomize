@@ -207,6 +207,100 @@ spec:
 `, string(bytes))
 }
 
+func TestApplySmPatch_2(t *testing.T) {
+	resource, err := factory.FromBytes([]byte(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: Y
+`))
+	assert.NoError(t, err)
+	patch, err := factory.FromBytes([]byte(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`))
+	assert.NoError(t, err)
+	assert.NoError(t, resource.ApplySmPatch(patch))
+	bytes, err := resource.AsYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    C: Z
+    D: W
+  baz:
+    hello: world
+`, string(bytes))
+}
+
+func TestApplySmPatch_SwapOrder(t *testing.T) {
+	s1 := `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`
+	s2 := `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`
+	expected := `apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`
+	r1, err := factory.FromBytes([]byte(s1))
+	assert.NoError(t, err)
+	r2, err := factory.FromBytes([]byte(s2))
+	assert.NoError(t, err)
+	assert.NoError(t, r1.ApplySmPatch(r2))
+	bytes, err := r1.AsYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, string(bytes))
+
+	r1, _ = factory.FromBytes([]byte(s1))
+	r2, _ = factory.FromBytes([]byte(s2))
+	assert.NoError(t, r2.ApplySmPatch(r1))
+	bytes, err = r2.AsYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, string(bytes))
+}
+
 func TestApplySmPatch(t *testing.T) {
 	const (
 		myDeployment = "Deployment"
