@@ -77,8 +77,11 @@ func (mgr *Manager) List() error {
 		strconv.Itoa(mgr.modules.LenLongestName()+2) +
 		"s%-11s%-11s%17s  %s\n"
 	fmt.Printf(
-		format, "NAME", "LOCAL", "REMOTE",
+		format, "MODULE-NAME", "LOCAL", "REMOTE",
 		"HAS-UNPINNED-DEPS", "INTRA-REPO-DEPENDENCIES")
+	fmt.Printf(
+		format, "-----------", "-----", "------",
+		"-----------------", "-----------------------")
 	return mgr.modules.Apply(func(m misc.LaModule) error {
 		fmt.Printf(
 			format, m.ShortName(),
