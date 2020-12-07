@@ -29,43 +29,57 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 
 	cmd := exec.Command(
 		gitProgram,
-		"clone",
-		"--depth=1",
-		repoSpec.CloneSpec(),
+		"init",
 		repoSpec.Dir.String())
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error cloning git repo: %s", out)
+		log.Printf("Error initializing git repo: %s", out)
 		return errors.Wrapf(
 			err,
-			"trouble cloning git repo %v in %s",
-			repoSpec.CloneSpec(), repoSpec.Dir.String())
+			"trouble initializing git repo in %s",
+			repoSpec.Dir.String())
 	}
 
-	if repoSpec.Ref != "" {
-		cmd = exec.Command(
-			gitProgram,
-			"fetch",
-			"--depth=1",
-			"origin",
-			repoSpec.Ref)
-		cmd.Dir = repoSpec.Dir.String()
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			log.Printf("Error fetching ref: %s", out)
-			return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
-		}
+	cmd = exec.Command(
+		gitProgram,
+		"remote",
+		"add",
+		"origin",
+		repoSpec.CloneSpec())
+	cmd.Dir = repoSpec.Dir.String()
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error adding remote: %s", out)
+		return errors.Wrapf(err, "trouble adding remote %s", repoSpec.CloneSpec())
+	}
 
-		cmd = exec.Command(
-			gitProgram,
-			"checkout",
-			"FETCH_HEAD")
-		cmd.Dir = repoSpec.Dir.String()
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			log.Printf("Error checking out ref: %s", out)
-			return errors.Wrapf(err, "trouble checking out %s", repoSpec.Ref)
-		}
+	ref := "HEAD"
+	if repoSpec.Ref != "" {
+		ref = repoSpec.Ref
+	}
+
+	cmd = exec.Command(
+		gitProgram,
+		"fetch",
+		"--depth=1",
+		"origin",
+		ref)
+	cmd.Dir = repoSpec.Dir.String()
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error fetching ref: %s", out)
+		return errors.Wrapf(err, "trouble fetching %s", ref)
+	}
+
+	cmd = exec.Command(
+		gitProgram,
+		"checkout",
+		"FETCH_HEAD")
+	cmd.Dir = repoSpec.Dir.String()
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error checking out ref: %s", out)
+		return errors.Wrapf(err, "trouble checking out %s", ref)
 	}
 
 	cmd = exec.Command(
