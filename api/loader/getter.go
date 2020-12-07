@@ -80,6 +80,7 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		Mode: getter.ClientModeAny,
 		Detectors: []getter.Detector{
 			new(getter.GitHubDetector),
+			new(getter.GitLabDetector),
 			new(getter.GitDetector),
 			new(getter.BitBucketDetector),
 		},
