@@ -1,9 +1,14 @@
 package krusty_test
 
 import (
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"regexp"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/filesys"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -87,6 +92,63 @@ func skipIfNoDocker(t *testing.T) {
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("skipping because docker binary wasn't found in PATH")
 	}
+}
+
+func TestFnNonAbsPath(t *testing.T) {
+	skipIfNoDocker(t)
+
+	// need this on FS because docker will mount this dir
+	th := kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsOnDisk())
+	dir, err := ioutil.TempDir("", "kustomize-test-")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Setenv("KUSTOMIZE_PLUGIN_HOME", dir)
+
+	th.WriteK(dir, `
+generators:
+- inflate-redis.yaml
+`)
+
+	th.WriteF(filepath.Join(dir, "inflate-redis.yaml"), `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-func-config
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-functions/helm-inflator
+        network: true
+        mounts:
+        - type: bind
+          src:
+          dst: /source
+data:
+  chart: bitnami/redis
+  chart-repo: bitnami
+  chart-repo-url: https://charts.bitnami.com/bitnami
+  name: expected-args
+  '--values': /source/values-redis.yaml
+`)
+
+	th.WriteF(filepath.Join(dir, "values-redis.yaml"), `
+image:
+  registry: quay.io
+`)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.Network = true
+	o.PluginConfig.FnpLoadingOptions.AsCurrentUser = true
+
+	m := th.Run(dir, o)
+	// the output is too long, we want to make sure that it contains
+	// registry quay.io (docker.io is default)
+	chartName := regexp.MustCompile(`image: quay\.io.*:`)
+	th.AssertActualEqualsExpectedWithTweak(m,
+		func(x []byte) []byte {
+			return chartName.Find(x)
+		}, `image: quay.io/bitnami/redis:`)
 }
 
 func TestFnContainerGenerator(t *testing.T) {

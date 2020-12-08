@@ -6,6 +6,7 @@ package runtimeutil
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -136,9 +137,6 @@ type FunctionSpec struct {
 
 	// ExecSpec is the spec for running a function as an executable
 	Exec ExecSpec `json:"exec,omitempty" yaml:"exec,omitempty"`
-
-	// Mounts are the storage or directories to mount into the container
-	StorageMounts []StorageMount `json:"mounts,omitempty" yaml:"mounts,omitempty"`
 }
 
 type ExecSpec struct {
@@ -198,6 +196,43 @@ func (s *StorageMount) String() string {
 	return fmt.Sprintf("type=%s,source=%s,target=%s%s", s.MountType, s.Src, s.DstPath, mode)
 }
 
+func (s *StorageMount) SrcIsPath() bool {
+	return s.MountType == "bind"
+}
+
+func (s *StorageMount) HasAbsSrcPath() bool {
+	if s.SrcIsPath() && filepath.IsAbs(s.Src) {
+		return true
+	}
+	return false
+}
+
+func (s *StorageMount) HasRelativeSrcPath() bool {
+	if s.SrcIsPath() && !filepath.IsAbs(s.Src) {
+		return true
+	}
+	return false
+}
+
+func (s *StorageMount) RelativePathToAbs(storageMountRoot string) (bool, error) {
+	if !s.HasRelativeSrcPath() {
+		return false, nil
+	}
+
+	absPath := filepath.Clean(filepath.Join(storageMountRoot, s.Src))
+	absPathRoot := filepath.Clean(storageMountRoot)
+
+	if !strings.HasPrefix(absPath+string(filepath.Separator),
+		absPathRoot) {
+		return false, fmt.Errorf(
+			"resulting path %s is out of scope path %s",
+			s.Src, storageMountRoot)
+	}
+
+	s.Src = absPath
+	return true, nil
+}
+
 // GetFunctionSpec returns the FunctionSpec for a resource.  Returns
 // nil if the resource does not have a FunctionSpec.
 //
@@ -210,7 +245,6 @@ func GetFunctionSpec(n *yaml.RNode) *FunctionSpec {
 	}
 
 	if fn := getFunctionSpecFromAnnotation(n, meta); fn != nil {
-		fn.StorageMounts = []StorageMount{}
 		return fn
 	}
 

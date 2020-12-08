@@ -72,12 +72,14 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
 	return &FnPlugin{
 		runFns: runfn.RunFns{
-			Functions:      []*yaml.RNode{},
-			Network:        o.Network,
-			EnableStarlark: o.EnableStar,
-			EnableExec:     o.EnableExec,
-			StorageMounts:  toStorageMounts(o.Mounts),
-			Env:            o.Env,
+			Functions:        []*yaml.RNode{},
+			Network:          o.Network,
+			EnableStarlark:   o.EnableStar,
+			EnableExec:       o.EnableExec,
+			StorageMounts:    toStorageMounts(o.Mounts),
+			StorageMountRoot: o.MountRoot,
+			Env:              o.Env,
+			AsCurrentUser:    o.AsCurrentUser,
 		},
 	}
 }
@@ -186,6 +188,10 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	p.runFns.Input = bytes.NewReader(input)
 	p.runFns.Functions = append(p.runFns.Functions, functionConfig)
 	p.runFns.Output = &ouputBuffer
+	if p.runFns.StorageMountRoot == "" {
+		// if not overriden - set kustomization dir as root
+		p.runFns.StorageMountRoot = p.h.Loader().Root()
+	}
 
 	err = p.runFns.Execute()
 	if err != nil {

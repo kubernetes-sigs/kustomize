@@ -90,9 +90,13 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 	cmd.Flags().StringArrayVar(
 		&o.fnOptions.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
+	cmd.Flags().StringVar(
+		&o.fnOptions.MountRoot, "mount-root", "", "use this path as a root for relative paths set in mount")
 	cmd.Flags().StringArrayVarP(
 		&o.fnOptions.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
+	cmd.Flags().BoolVar(
+		&o.fnOptions.AsCurrentUser, "as-current-user", false, "use the uid and gid to run the function in the container")
 
 	addFlagLoadRestrictor(cmd.Flags())
 	addFlagEnablePlugins(cmd.Flags())

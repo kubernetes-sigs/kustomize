@@ -1246,3 +1246,169 @@ func TestRunFns_mergeContainerEnv(t *testing.T) {
 		})
 	}
 }
+
+func fromSlash(path string) string {
+	if len(path) > 0 && string(path[0]) == "/" {
+		// this will add volume on non unix
+		vn, err := filepath.Abs(filepath.FromSlash(path))
+		if err != nil {
+			return filepath.FromSlash(path)
+		}
+		return vn
+	}
+	return filepath.FromSlash(path)
+}
+
+func toSlash(path string) string {
+	vn := filepath.VolumeName(path)
+	path = path[len(vn):]
+	return filepath.ToSlash(path)
+}
+
+func TestRunFns_combineStorageMounts(t *testing.T) {
+	testcases := []struct {
+		name              string
+		instance          RunFns
+		specStorageMounts []runtimeutil.StorageMount
+		expect            []runtimeutil.StorageMount
+		expectErr         bool
+	}{
+		{
+			name:     "all empty",
+			instance: RunFns{},
+		},
+		{
+			name: "only RunFns - volume",
+			instance: RunFns{
+				StorageMounts: []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+			},
+			expect: []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+		},
+		{
+			name: "only RunFns - abs bind",
+			instance: RunFns{
+				StorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "/tmp", DstPath: "/local/"}},
+			},
+			expect: []runtimeutil.StorageMount{{MountType: "bind", Src: "/tmp", DstPath: "/local/"}},
+		},
+		{
+			name: "only RunFns - rel bind without root",
+			instance: RunFns{
+				StorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "tmp", DstPath: "/local/"}},
+			},
+			expectErr: true,
+		},
+		{
+			name: "only RunFns - rel bind without root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+				StorageMounts:    []runtimeutil.StorageMount{{MountType: "bind", Src: "tmp", DstPath: "/local/"}},
+			},
+			expect: []runtimeutil.StorageMount{{MountType: "bind", Src: "/home/user/tmp", DstPath: "/local/"}},
+		},
+		{
+			name:              "only abs spec without root",
+			instance:          RunFns{},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "/home/user/tmp", DstPath: "/local/"}},
+			expectErr:         true,
+		},
+		{
+			name: "only abs spec with root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+			},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "/home/user/tmp", DstPath: "/local/"}},
+			expectErr:         true,
+		},
+		{
+			name:              "only rel spec without root",
+			instance:          RunFns{},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "user/tmp", DstPath: "/local/"}},
+			expectErr:         true,
+		},
+		{
+			name: "only rel spec with root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+			},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "user/tmp", DstPath: "/local/"}},
+			expect:            []runtimeutil.StorageMount{{MountType: "bind", Src: "/home/user/user/tmp", DstPath: "/local/"}},
+		},
+		{
+			name: "only volume spec with root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+			},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "volume", Src: "myVol", DstPath: "/local/"}},
+			expectErr:         true,
+		},
+		{
+			name: "rel spec and volume RunFns with root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+				StorageMounts:    []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+			},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "user/tmp", DstPath: "/local2/"}},
+			expect: []runtimeutil.StorageMount{
+				{MountType: "volume", Src: "myvol", DstPath: "/local/"},
+				{MountType: "bind", Src: "/home/user/user/tmp", DstPath: "/local2/"},
+			},
+		},
+		{
+			name: "rel spec and abs RunFns with root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+				StorageMounts:    []runtimeutil.StorageMount{{MountType: "bind", Src: "/tmp/x", DstPath: "/local/"}},
+			},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "user/tmp", DstPath: "/local2/"}},
+			expect: []runtimeutil.StorageMount{
+				{MountType: "bind", Src: "/tmp/x", DstPath: "/local/"},
+				{MountType: "bind", Src: "/home/user/user/tmp", DstPath: "/local2/"},
+			},
+		},
+		{
+			name: "rel spec and rel RunFns with root",
+			instance: RunFns{
+				StorageMountRoot: "/home/user/",
+				StorageMounts:    []runtimeutil.StorageMount{{MountType: "bind", Src: "tmp/x", DstPath: "/local/"}},
+			},
+			specStorageMounts: []runtimeutil.StorageMount{{MountType: "bind", Src: "user/tmp", DstPath: "/local2/"}},
+			expect: []runtimeutil.StorageMount{
+				{MountType: "bind", Src: "/home/user/tmp/x", DstPath: "/local/"},
+				{MountType: "bind", Src: "/home/user/user/tmp", DstPath: "/local2/"},
+			},
+		},
+	}
+
+	for i := range testcases {
+		tc := testcases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			// adjust instance and specMounts from Linux style to the current os
+			tc.instance.StorageMountRoot = fromSlash(tc.instance.StorageMountRoot)
+			for i, sm := range tc.instance.StorageMounts {
+				tc.instance.StorageMounts[i].Src = fromSlash(sm.Src)
+			}
+			for i, sm := range tc.specStorageMounts {
+				tc.specStorageMounts[i].Src = fromSlash(sm.Src)
+			}
+			// test
+			res, err := tc.instance.combineStorageMounts(tc.specStorageMounts)
+			if tc.expectErr {
+				if err == nil {
+					t.Error("expected error, but didn't get")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error %v", err)
+				return
+			}
+			// adjust paths back
+			for i, sm := range res {
+				res[i].Src = toSlash(sm.Src)
+			}
+			// compare
+			assert.Equal(t, tc.expect, res)
+		})
+	}
+}

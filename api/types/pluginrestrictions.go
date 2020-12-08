@@ -53,6 +53,11 @@ type FnPluginLoadingOptions struct {
 	NetworkName string
 	// list of mounts
 	Mounts []string
+	// mount root for not-absolute src paths in mounts
+	MountRoot string
 	// list of env variables to pass to fn
 	Env []string
+	// AsCurrentUser is a boolean to indicate whether docker container should use
+	// the uid and gid that run the command
+	AsCurrentUser bool
 }

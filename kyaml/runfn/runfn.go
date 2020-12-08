@@ -100,6 +100,9 @@ type RunFns struct {
 	// If it is true, the empty result will be provided as input to the next
 	// function in the list.
 	ContinueOnEmptyResult bool
+
+	// Base directory for all relative source paths provided as StorageMount
+	StorageMountRoot string
 }
 
 // Execute runs the command
@@ -421,6 +424,50 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
+type ByDstPath []runtimeutil.StorageMount
+
+func (a ByDstPath) Len() int           { return len(a) }
+func (a ByDstPath) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByDstPath) Less(i, j int) bool { return a[i].DstPath < a[j].DstPath }
+
+func (r *RunFns) combineStorageMounts(sms []runtimeutil.StorageMount) ([]runtimeutil.StorageMount, error) {
+	smsMap := map[string]runtimeutil.StorageMount{}
+
+	for _, sm := range sms {
+		if !sm.SrcIsPath() {
+			return nil, errors.Errorf(
+				"unsupported mount type %s in container spec", sm.MountType)
+		}
+		if sm.HasAbsSrcPath() {
+			return nil, errors.Errorf(
+				"absolute function mount src path %s not allowed", sm.Src)
+		}
+		smsMap[sm.DstPath] = sm
+	}
+	// add mounts from runfns so they could override what was set in specs
+	for _, sm := range r.StorageMounts {
+		smsMap[sm.DstPath] = sm
+	}
+
+	sms = nil
+	for _, sm := range smsMap {
+		if sm.HasRelativeSrcPath() {
+			if r.StorageMountRoot == "" {
+				return nil, errors.Errorf(
+					"relative storage mount src path %s found, "+
+						"but root isn't set", sm.Src)
+			}
+			_, err := sm.RelativePathToAbs(r.StorageMountRoot)
+			if err != nil {
+				return nil, err
+			}
+		}
+		sms = append(sms, sm)
+	}
+	sort.Sort(ByDstPath(sms))
+	return sms, nil
+}
+
 // ffp provides function filters
 func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 	var resultsFile string
@@ -435,11 +482,16 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 		if err != nil {
 			return nil, err
 		}
+		// Build StorageMounts
+		sms, err := r.combineStorageMounts(spec.Container.StorageMounts)
+		if err != nil {
+			return nil, err
+		}
 		c := container.NewContainer(
 			runtimeutil.ContainerSpec{
 				Image:         spec.Container.Image,
 				Network:       spec.Container.Network,
-				StorageMounts: r.StorageMounts,
+				StorageMounts: sms,
 				Env:           spec.Container.Env,
 			},
 			uidgid,

@@ -66,6 +66,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
+	r.Command.Flags().StringVar(
+		&r.MountRoot, "mount-root", "", "use this path as a root for relative paths set in mount")
 	r.Command.Flags().BoolVar(
 		&r.LogSteps, "log-steps", false, "log steps to stderr")
 	r.Command.Flags().StringArrayVarP(
@@ -98,6 +100,7 @@ type RunFnRunner struct {
 	ResultsDir         string
 	Network            bool
 	Mounts             []string
+	MountRoot          string
 	LogSteps           bool
 	Env                []string
 	AsCurrentUser      bool
@@ -302,21 +305,27 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// parse mounts to set storageMounts
 	storageMounts := toStorageMounts(r.Mounts)
 
+	storageMountRoot := path
+	if r.MountRoot != "" {
+		storageMountRoot = r.MountRoot
+	}
+
 	r.RunFns = runfn.RunFns{
-		FunctionPaths:  r.FnPaths,
-		GlobalScope:    r.GlobalScope,
-		Functions:      fns,
-		Output:         output,
-		Input:          input,
-		Path:           path,
-		Network:        r.Network,
-		EnableStarlark: r.EnableStar,
-		EnableExec:     r.EnableExec,
-		StorageMounts:  storageMounts,
-		ResultsDir:     r.ResultsDir,
-		LogSteps:       r.LogSteps,
-		Env:            r.Env,
-		AsCurrentUser:  r.AsCurrentUser,
+		FunctionPaths:    r.FnPaths,
+		GlobalScope:      r.GlobalScope,
+		Functions:        fns,
+		Output:           output,
+		Input:            input,
+		Path:             path,
+		Network:          r.Network,
+		EnableStarlark:   r.EnableStar,
+		EnableExec:       r.EnableExec,
+		StorageMounts:    storageMounts,
+		StorageMountRoot: storageMountRoot,
+		ResultsDir:       r.ResultsDir,
+		LogSteps:         r.LogSteps,
+		Env:              r.Env,
+		AsCurrentUser:    r.AsCurrentUser,
 	}
 
 	// don't consider args for the function

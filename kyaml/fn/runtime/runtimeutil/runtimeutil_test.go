@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -1421,6 +1422,115 @@ func Test_StringToStorageMount(t *testing.T) {
 	for _, tc := range tests {
 		s := StringToStorageMount(tc.in)
 		assert.Equal(t, tc.expectedOut, (&s).String())
+	}
+}
+
+func fromSlash(path string) string {
+	if len(path) > 0 && string(path[0]) == "/" {
+		// this will add volume on non unix
+		vn, err := filepath.Abs(filepath.FromSlash(path))
+		if err != nil {
+			return filepath.FromSlash(path)
+		}
+		return vn
+	}
+	return filepath.FromSlash(path)
+}
+
+func toSlash(path string) string {
+	vn := filepath.VolumeName(path)
+	path = path[len(vn):]
+	return filepath.ToSlash(path)
+}
+
+func Test_StorageMount_AbsAndRelativeFn(t *testing.T) {
+	tests := []struct {
+		in             string
+		expectedOutAbs bool
+		expectedOutRel bool
+	}{
+		{
+			in:             "type=bind,source=/tmp/test/,target=/tmp/source/",
+			expectedOutAbs: true,
+		},
+		{
+			in:             "type=bind,source=,target=/tmp/source/",
+			expectedOutRel: true,
+		},
+		{
+			in:             "type=bind,source=./,target=/tmp/source/",
+			expectedOutRel: true,
+		},
+		{
+			in:             "type=bind,source=./test,target=/tmp/source/",
+			expectedOutRel: true,
+		},
+		{
+			in:             "type=bind,source=test,target=/tmp/source/",
+			expectedOutRel: true,
+		},
+		{
+			in: "type=volume,source=myvol,target=/tmp/source/",
+		},
+	}
+	for _, tc := range tests {
+		s := StringToStorageMount(tc.in)
+		s.Src = fromSlash(s.Src)
+		assert.Equal(t, tc.expectedOutAbs, s.HasAbsSrcPath())
+		assert.Equal(t, tc.expectedOutRel, s.HasRelativeSrcPath())
+	}
+}
+
+func Test_StorageMount_RelativePathToAbs(t *testing.T) {
+	tests := []struct {
+		in          string
+		storageRoot string
+		expectedSrc string
+		expectedOut bool
+		expectedErr bool
+	}{
+		{
+			in:          "type=bind,source=test,target=/tmp/source/",
+			storageRoot: "/home/user/example/",
+			expectedOut: true,
+			expectedSrc: "/home/user/example/test",
+		},
+		{
+			in:          "type=bind,source=../test,target=/tmp/source/",
+			storageRoot: "/home/user/example/",
+			expectedErr: true,
+		},
+		{
+			in:          "type=bind,source=test1/../test,target=/tmp/source/",
+			storageRoot: "/home/user/example/",
+			expectedOut: true,
+			expectedSrc: "/home/user/example/test",
+		},
+		{
+			in:          "type=volume,source=myVol,target=/tmp/source/",
+			storageRoot: "/home/user/example/",
+			expectedOut: false,
+			expectedSrc: "myVol",
+		},
+	}
+	for _, tc := range tests {
+		s := StringToStorageMount(tc.in)
+		s.Src = fromSlash(s.Src)
+
+		out, err := s.RelativePathToAbs(tc.storageRoot)
+		if tc.expectedErr {
+			if err != nil {
+				continue
+			}
+			t.Error("expected error, but didn't get it")
+		}
+		if err != nil {
+			t.Errorf("got unexpected error %v", err)
+			continue
+		}
+		s.Src = toSlash(s.Src)
+		assert.Equal(t, tc.expectedOut, out)
+		assert.Equal(t, tc.expectedSrc, s.Src)
 	}
 }
 
