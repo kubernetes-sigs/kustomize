@@ -10,7 +10,7 @@ require (
 	k8s.io/client-go v0.18.10
 	sigs.k8s.io/kustomize/api v0.6.5
 	sigs.k8s.io/kustomize/cmd/config v0.8.5
-	sigs.k8s.io/kustomize/kyaml v0.9.4
+	sigs.k8s.io/kustomize/kyaml v0.10.3
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -23,5 +23,3 @@ exclude (
 replace sigs.k8s.io/kustomize/api v0.6.5 => ../api
 
 replace sigs.k8s.io/kustomize/cmd/config v0.8.5 => ../cmd/config
-
-replace sigs.k8s.io/kustomize/kyaml v0.9.4 => ../kyaml
