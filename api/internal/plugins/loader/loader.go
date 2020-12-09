@@ -178,11 +178,8 @@ func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error)
 
 func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, error) {
 	// First try to load the plugin as an executable.
-	pluginPath := l.absolutePluginPath(resId)
-	if runtime.GOOS == "windows" {
-		pluginPath = fmt.Sprintf("%s.exe", pluginPath)
-	}
-	p := execplugin.NewExecPlugin(pluginPath)
+	path, _ := lookForExecutable(l.absolutePluginPath(resId))
+	p := execplugin.NewExecPlugin(path)
 	err := p.ErrIfNotExecutable()
 	if err == nil {
 		return p, nil
@@ -248,4 +245,22 @@ func copyPlugin(c resmap.Configurable) resmap.Configurable {
 	newIndirect.Elem().Set(reflect.ValueOf(indirect.Interface()))
 	newNamed := newIndirect.Interface()
 	return newNamed.(resmap.Configurable)
+}
+
+func lookForExecutable(partialPath string) (fullPath string, err error) {
+	if runtime.GOOS != "windows" {
+		return partialPath, nil
+	}
+
+	possibleWindowsSuffixes := []string{"exe", "bat", "ps1"}
+
+	for _, possibleWindowsSuffix := range possibleWindowsSuffixes {
+		fullPath := fmt.Sprintf("%s.%s", partialPath, possibleWindowsSuffix)
+		_, err := os.Stat(fullPath)
+		if err == nil {
+			return fullPath, nil
+		}
+	}
+
+	return "", fmt.Errorf("no possible excutable found, partial path: %v tried suffixes: %v", partialPath, possibleWindowsSuffixes)
 }
