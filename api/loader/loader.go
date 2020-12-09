@@ -21,24 +21,22 @@ import (
 func NewLoader(
 	lr LoadRestrictorFunc,
 	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
-
-	ldr, errGet := newLoaderAtGetter(target, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget)
+	ldr, errGet := newLoaderAtGetter(
+		target, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget)
 	if errGet == nil {
 		return ldr, nil
 	}
-
 	repoSpec, errGit := git.NewRepoSpecFromUrl(target)
 	if errGit == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
 			repoSpec, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget)
 	}
-
 	root, errDir := demandDirectoryRoot(fSys, target)
 	if errDir == nil {
-		return newLoaderAtConfirmedDir(lr, root, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget), nil
+		return newLoaderAtConfirmedDir(
+			lr, root, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget), nil
 	}
-
 	return nil, fmt.Errorf(
 		"error creating new loader with git: %v, dir: %v, get: %v",
 		errGit, errDir, errGet)
