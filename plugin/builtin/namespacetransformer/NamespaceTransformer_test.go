@@ -78,7 +78,7 @@ subjects:
   name: another
   namespace: random
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: example
@@ -94,7 +94,7 @@ webhooks:
         name: svc2
         namespace: system
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
@@ -159,7 +159,7 @@ subjects:
   name: another
   namespace: random
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: example
