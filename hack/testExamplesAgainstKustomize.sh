@@ -16,7 +16,7 @@ version=$1
 # We test against the latest release, and HEAD, and presumably
 # any branch using this label, so it should probably get
 # a new value.
-mdrip --mode test \
+mdrip --mode test --blockTimeOut 9m \
     --label testAgainstLatestRelease examples
 
 # TODO: make work for non-linux
