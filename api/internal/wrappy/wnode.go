@@ -91,8 +91,8 @@ func (wn *WNode) GetFieldValue(path string) (interface{}, error) {
 	// Return value as slice for SequenceNode kind
 	if yn.Kind == yaml.SequenceNode {
 		var result []interface{}
-		for _, node := range yn.Content {
-			result = append(result, node.Value)
+		if err := yn.Decode(&result); err != nil {
+			return nil, err
 		}
 		return result, nil
 	}
