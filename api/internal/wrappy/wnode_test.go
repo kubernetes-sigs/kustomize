@@ -377,6 +377,39 @@ func TestGetFieldValueReturnsSlice(t *testing.T) {
 	}
 }
 
+func TestGetFieldValueReturnsSliceOfMappings(t *testing.T) {
+	bytes, err := yaml.Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rNode, err := kyaml.Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	wn := FromRNode(rNode)
+	expected := []interface{}{
+		map[string]interface{}{
+			"field1": "idx0foo",
+			"field2": "idx0bar",
+		},
+		map[string]interface{}{
+			"field1": "idx1foo",
+			"field2": "idx1bar",
+		},
+		map[string]interface{}{
+			"field1": "idx2foo",
+			"field2": "idx2bar",
+		},
+	}
+	actual, err := wn.GetFieldValue("those")
+	if err != nil {
+		t.Fatalf("error getting slice: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
+	}
+}
+
 func TestGetFieldValueReturnsString(t *testing.T) {
 	wn := NewWNode()
 	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
