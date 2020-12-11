@@ -197,7 +197,8 @@ func (rn *RNode) IsNilOrEmpty() bool {
 	return rn.IsNil() ||
 		IsYNodeTaggedNull(rn.YNode()) ||
 		IsYNodeEmptyMap(rn.YNode()) ||
-		IsYNodeEmptySeq(rn.YNode())
+		IsYNodeEmptySeq(rn.YNode()) ||
+		IsYNodeZero(rn.YNode())
 }
 
 // GetMeta returns the ResourceMeta for an RNode
