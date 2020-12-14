@@ -259,7 +259,7 @@ metadata:
   name: cm
   namespace: bar
 `,
-	func(t *testing.T, err error) {
+    func(t *testing.T, err error) {
 		if err == nil {
 			t.Fatal("expected error")
 		}
