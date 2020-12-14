@@ -73,6 +73,8 @@ images:
 
 to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image name exists.
+
+The image tag can only contain alphanumeric, '.', '_' and '-'.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
