@@ -21,7 +21,7 @@ func TestImageTagUpdater_Filter(t *testing.T) {
 	}{
 		"ignore CustomResourceDefinition": {
 			input: `
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: whatever
@@ -30,7 +30,7 @@ spec:
   - image: whatever
 `,
 			expectedOutput: `
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: whatever

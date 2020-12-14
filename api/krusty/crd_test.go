@@ -317,7 +317,7 @@ images:
     newTag: latest
 `)
 	th.WriteF("/app/crd/containers/crd.yaml", `
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crontabs.stable.example.com
@@ -339,7 +339,7 @@ spec:
   `)
 	m := th.Run("/app/crd/containers", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crontabs.stable.example.com
