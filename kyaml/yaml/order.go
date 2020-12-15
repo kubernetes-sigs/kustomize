@@ -87,7 +87,7 @@ var WhitelistedListSortKinds = newSet(
 // sorting list field elements
 var WhitelistedListSortApis = newSet(
 	"apps/v1", "apps/v1beta1", "apps/v1beta2", "batch/v1", "batch/v1beta1",
-	"extensions/v1beta1", "v1", "admissionregistration.k8s.io/v1beta1")
+	"extensions/v1beta1", "v1", "admissionregistration.k8s.io/v1")
 
 // WhitelistedListSortFields contains json paths to list fields that should
 // be sorted, and the field they should be sorted by
