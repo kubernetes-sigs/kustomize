@@ -11,7 +11,7 @@ import (
 
 func writeBaseWithCrd(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1
 kind: Kustomization
 crds:
 - mycrd.json
@@ -32,7 +32,7 @@ spec:
   action: fly
 `)
 	th.WriteF("/app/base/mykind.yaml", `
-apiVersion: jingfang.example.com/v1beta1
+apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
   name: mykind
