@@ -152,11 +152,11 @@ func (rmF *Factory) NewResMapFromRNodeSlice(rnodes []*yaml.RNode) (ResMap, error
 		if err != nil {
 			return nil, err
 		}
-		r, err := rmF.resF.FromBytes([]byte(s))
+		r, err := rmF.resF.SliceFromBytes([]byte(s))
 		if err != nil {
 			return nil, err
 		}
-		resources = append(resources, r)
+		resources = append(resources, r...)
 	}
 	return newResMapFromResourceSlice(resources)
 }
