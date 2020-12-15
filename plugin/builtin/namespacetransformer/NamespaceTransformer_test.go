@@ -78,7 +78,7 @@ subjects:
   name: another
   namespace: random
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: example
@@ -94,21 +94,21 @@ webhooks:
         name: svc2
         namespace: system
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
 `,
-// Import note: The namespace transformer is in charge of
-// the metadata.namespace field. The namespace transformer SHOULD
-// NOT modify neither the "namespace" subfield within the
-// ClusterRoleBinding.subjects field nor the "namespace"
-// subfield in the ValidatingWebhookConfiguration.webhooks field.
-// This is the role of the namereference Transformer to handle
-// object reference changes (prefix/suffix and namespace).
-// For use cases involving simultaneous change of name and namespace,
-// refer to namespaces tests in pkg/target test suites.
-`
+		// Import note: The namespace transformer is in charge of
+		// the metadata.namespace field. The namespace transformer SHOULD
+		// NOT modify neither the "namespace" subfield within the
+		// ClusterRoleBinding.subjects field nor the "namespace"
+		// subfield in the ValidatingWebhookConfiguration.webhooks field.
+		// This is the role of the namereference Transformer to handle
+		// object reference changes (prefix/suffix and namespace).
+		// For use cases involving simultaneous change of name and namespace,
+		// refer to namespaces tests in pkg/target test suites.
+		`
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -159,7 +159,7 @@ subjects:
   name: another
   namespace: random
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: example
@@ -175,7 +175,7 @@ webhooks:
       namespace: system
   name: example2
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
@@ -259,12 +259,12 @@ metadata:
   name: cm
   namespace: bar
 `,
-    func(t *testing.T, err error) {
-		if err == nil {
-			t.Fatal("expected error")
-		}
-		if !strings.Contains(err.Error(), "ID conflict") {
-			t.Fatalf("unexpected error: %s", err.Error())
-		}
-	})
+		func(t *testing.T, err error) {
+			if err == nil {
+				t.Fatal("expected error")
+			}
+			if !strings.Contains(err.Error(), "ID conflict") {
+				t.Fatalf("unexpected error: %s", err.Error())
+			}
+		})
 }

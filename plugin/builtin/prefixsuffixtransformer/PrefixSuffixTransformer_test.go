@@ -37,7 +37,7 @@ spec:
   ports:
   - port: 7002
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
@@ -67,7 +67,7 @@ spec:
   ports:
   - port: 7002
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
@@ -106,7 +106,7 @@ spec:
       - image: myapp
         name: main
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
@@ -134,7 +134,7 @@ spec:
       - image: myapp
         name: test-main
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crd
