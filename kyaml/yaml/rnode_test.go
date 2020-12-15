@@ -750,6 +750,10 @@ func TestRNodeIsNilOrEmpty(t *testing.T) {
 	if NewListRNode("foo").IsNilOrEmpty() {
 		t.Fatalf("non-empty list should not be empty")
 	}
+
+	if !NewRNode(&Node{}).IsNilOrEmpty() {
+		t.Fatalf("zero YNode should be empty")
+	}
 }
 
 const deploymentJSON = `
