@@ -112,3 +112,15 @@ func TestIsYNodeEmptySeq(t *testing.T) {
 		t.Fatalf("a node with content isn't empty")
 	}
 }
+
+func TestIsYNodeZero(t *testing.T) {
+	if IsYNodeZero(nil) {
+		t.Fatalf("nil node should not be zero")
+	}
+	if !IsYNodeZero(&Node{}) {
+		t.Fatalf("node is zero")
+	}
+	if IsYNodeZero(&Node{Kind: MappingNode}) {
+		t.Fatalf("node is not zero")
+	}
+}
