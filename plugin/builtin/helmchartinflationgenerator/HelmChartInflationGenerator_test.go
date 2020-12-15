@@ -114,6 +114,14 @@ releaseName: test
 releaseNamespace: testNamespace
 values: %s
 `, tempDir, tempDir, valuesPath))
+valuesLocal:
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+    requests:
+      memory: 512Mi
+      cpu: 200m
 
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
