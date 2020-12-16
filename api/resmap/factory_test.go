@@ -277,7 +277,17 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 }
 
 func TestFromRNodeSlice(t *testing.T) {
-	input := `apiVersion: rbac.authorization.k8s.io/v1
+	type testcase struct {
+		input    string
+		expected ResMap
+	}
+	testcases := map[string]testcase{
+		"no resource": {
+			input:    "---",
+			expected: resmaptest_test.NewRmBuilder(t, rf).ResMap(),
+		},
+		"single resource": {
+			input: `apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: namespace-reader
@@ -290,42 +300,54 @@ rules:
   - get
   - watch
   - list
-  `
-	rnodes := []*yaml.RNode{
-		yaml.MustParse(input),
-	}
-
-	rm, err := rmF.NewResMapFromRNodeSlice(rnodes)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	expected := resmaptest_test.NewRmBuilder(t, rf).Add(
-		map[string]interface{}{
-			"apiVersion": "rbac.authorization.k8s.io/v1",
-			"kind":       "ClusterRole",
-			"metadata": map[string]interface{}{
-				"name": "namespace-reader",
-			},
-			"rules": []interface{}{
+      `,
+			expected: resmaptest_test.NewRmBuilder(t, rf).Add(
 				map[string]interface{}{
-					"apiGroups": []interface{}{
-						"",
+					"apiVersion": "rbac.authorization.k8s.io/v1",
+					"kind":       "ClusterRole",
+					"metadata": map[string]interface{}{
+						"name": "namespace-reader",
 					},
-					"resources": []interface{}{
-						"namespaces",
+					"rules": []interface{}{
+						map[string]interface{}{
+							"apiGroups": []interface{}{
+								"",
+							},
+							"resources": []interface{}{
+								"namespaces",
+							},
+							"verbs": []interface{}{
+								"get",
+								"watch",
+								"list",
+							},
+						},
 					},
-					"verbs": []interface{}{
-						"get",
-						"watch",
-						"list",
-					},
-				},
-			},
-		}).ResMap()
-
-	if err = expected.ErrorIfNotEqualLists(rm); err != nil {
-		t.Fatalf("error: %s", err)
+				}).ResMap(),
+		},
+		"local config": {
+			// local config should be ignored
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+  annotations:
+    config.kubernetes.io/local-config: 'true'
+`,
+			expected: resmaptest_test.NewRmBuilder(t, rf).ResMap(),
+		},
+	}
+	for name, tc := range testcases {
+		rnodes := []*yaml.RNode{
+			yaml.MustParse(tc.input),
+		}
+		rm, err := rmF.NewResMapFromRNodeSlice(rnodes)
+		if err != nil {
+			t.Fatalf("unexpected error in test case [%s]: %v", name, err)
+		}
+		if err = tc.expected.ErrorIfNotEqualLists(rm); err != nil {
+			t.Fatalf("error in test case [%s]: %s", name, err)
+		}
 	}
 }
 
