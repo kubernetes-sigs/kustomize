@@ -32,7 +32,7 @@ spec:
   action: fly
 `)
 	th.WriteF("/app/base/mykind.yaml", `
-apiVersion: jingfang.example.com/v1beta1
+apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
   name: mykind
@@ -236,7 +236,7 @@ kind: Secret
 metadata:
   name: x-crdsecret
 ---
-apiVersion: jingfang.example.com/v1beta1
+apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
   name: x-mykind
@@ -285,7 +285,7 @@ kind: Secret
 metadata:
   name: prod-x-crdsecret
 ---
-apiVersion: jingfang.example.com/v1beta1
+apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
   name: prod-x-mykind
