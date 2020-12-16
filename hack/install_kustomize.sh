@@ -10,6 +10,7 @@
 #
 # Fails if the file already exists.
 
+curl_timeout=600
 release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 
 if [ -n "$1" ]; then
@@ -45,11 +46,11 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-curl -s $release_url |\
+curl -m $curl_timeout -s $release_url |\
   grep browser_download.*${opsys}_${arch} |\
   cut -d '"' -f 4 |\
   sort | tail -n 1 |\
-  xargs curl -sLO
+  xargs curl -m $curl_timeout -sLO
 
 if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
     tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
