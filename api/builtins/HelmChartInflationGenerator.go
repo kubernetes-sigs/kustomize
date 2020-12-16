@@ -107,7 +107,49 @@ func (p *HelmChartInflationGeneratorPlugin) EncodeValues(w io.Writer) error {
 	return nil
 }
 
-//
+// useValuesLocal process (merge) inflator config provided values with chart default values.yaml
+func (p *HelmChartInflationGeneratorPlugin) useValuesLocal() error {
+	fn := path.Join(p.ChartHome, p.ChartName, "kustomize-values.yaml")
+	vf, err := os.Create(fn)
+	defer vf.Close()
+	if err != nil {
+		return err
+	}
+	// override, merge, none
+	if p.ValuesMerge == "none" || p.ValuesMerge == "no" || p.ValuesMerge == "false" {
+		p.Values = fn
+	} else {
+		pValues, err := ioutil.ReadFile(p.Values)
+		if err != nil {
+			return err
+		}
+		chValues := make(map[string]interface{})
+		err = yaml.Unmarshal(pValues, &chValues)
+		if err != nil {
+			return err
+		}
+		if p.ValuesMerge == "override" {
+			err = mergo.Merge(&chValues, p.ValuesLocal, mergo.WithOverride)
+			if err != nil {
+				return err
+			}
+		}
+		if p.ValuesMerge == "merge" {
+			err = mergo.Merge(&chValues, p.ValuesLocal)
+			if err != nil {
+				return err
+			}
+		}
+		p.ValuesLocal = chValues
+		p.Values = fn
+	}
+	err = p.EncodeValues(vf)
+	if err != nil {
+		return err
+	}
+	vf.Sync()
+	return nil
+}
 
 // Generate implements generator
 func (p *HelmChartInflationGeneratorPlugin) Generate() (resmap.ResMap, error) {
@@ -126,47 +168,12 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (resmap.ResMap, error) {
 		}
 	}
 
-	// values
+	// inflator config valuesLocal
 	if len(p.ValuesLocal) > 0 {
-		fn := path.Join(p.ChartHome, p.ChartName, "kustomize-values.yaml")
-		vf, err := os.Create(fn)
-		defer vf.Close()
+		err := p.useValuesLocal()
 		if err != nil {
 			return nil, err
 		}
-		// override, merge, none
-		if p.ValuesMerge == "none" || p.ValuesMerge == "no" || p.ValuesMerge == "false" {
-			p.Values = fn
-		} else {
-			pValues, err := ioutil.ReadFile(p.Values)
-			if err != nil {
-				return nil, err
-			}
-			chValues := make(map[string]interface{})
-			err = yaml.Unmarshal(pValues, &chValues)
-			if err != nil {
-				return nil, err
-			}
-			if p.ValuesMerge == "override" {
-				err = mergo.Merge(&chValues, p.ValuesLocal, mergo.WithOverride)
-				if err != nil {
-					return nil, err
-				}
-			}
-			if p.ValuesMerge == "merge" {
-				err = mergo.Merge(&chValues, p.ValuesLocal)
-				if err != nil {
-					return nil, err
-				}
-			}
-			p.ValuesLocal = chValues
-			p.Values = fn
-		}
-		err = p.EncodeValues(vf)
-		if err != nil {
-			return nil, err
-		}
-		vf.Sync()
 	}
 
 	// render the charts
