@@ -94,14 +94,13 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		Options: opts,
 	}
 
-	ch := make(chan bool, 1)
-	defer close(ch)
+	ch := make(chan struct{})
 	d := 21 * time.Second // arbitrary
 	timer := time.NewTimer(d)
 	defer timer.Stop()
 	go func() {
 		err = client.Get()
-		ch <- true
+		close(ch)
 	}()
 	select {
 	case <-ch:
