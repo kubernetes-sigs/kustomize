@@ -11,7 +11,7 @@ import (
 
 func writeBaseWithCrd(th kusttest_test.Harness) {
 	th.WriteK("/app/base", `
-apiVersion: kustomize.config.k8s.io/v1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 crds:
 - mycrd.json
@@ -236,7 +236,7 @@ kind: Secret
 metadata:
   name: x-crdsecret
 ---
-apiVersion: jingfang.example.com/v1beta1
+apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
   name: x-mykind
@@ -285,7 +285,7 @@ kind: Secret
 metadata:
   name: prod-x-crdsecret
 ---
-apiVersion: jingfang.example.com/v1beta1
+apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
   name: prod-x-mykind
