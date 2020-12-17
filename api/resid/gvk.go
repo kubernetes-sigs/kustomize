@@ -80,6 +80,14 @@ func (x Gvk) String() string {
 	return strings.Join([]string{g, v, k}, fieldSep)
 }
 
+// ApiVersion returns the combination of Group and Version
+func (x Gvk) ApiVersion() string {
+	if x.Group == "" {
+		return x.Version
+	}
+	return x.Group + "/" + x.Version
+}
+
 // StringWoEmptyField returns a string representation of the GVK. Non-exist
 // fields will be omitted.
 func (x Gvk) StringWoEmptyField() string {

@@ -804,6 +804,34 @@ spec:
 		errorExpected bool
 		errorMsg      string
 	}{
+		"clown": {
+			base: []string{`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 1
+`,
+			},
+			patches: []string{`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`,
+			},
+			errorExpected: false,
+			expected: []string{
+				`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`,
+			},
+		},
 		"confusion": {
 			base: []string{`apiVersion: example.com/v1
 kind: Foo
