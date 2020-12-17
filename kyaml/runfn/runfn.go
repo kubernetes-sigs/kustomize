@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync/atomic"
 
@@ -243,7 +244,10 @@ func (r RunFns) getFunctionsFromInput(nodes []*yaml.RNode) ([]kio.Filter, error)
 	if err != nil {
 		return nil, err
 	}
-	sortFns(buff)
+	err = sortFns(buff)
+	if err != nil {
+		return nil, err
+	}
 	return r.getFunctionFilters(false, buff.Nodes...)
 }
 
@@ -322,12 +326,33 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 }
 
 // sortFns sorts functions so that functions with the longest paths come first
-func sortFns(buff *kio.PackageBuffer) {
+func sortFns(buff *kio.PackageBuffer) error {
+	var outerErr error
 	// sort the nodes so that we traverse them depth first
 	// functions deeper in the file system tree should be run first
 	sort.Slice(buff.Nodes, func(i, j int) bool {
 		mi, _ := buff.Nodes[i].GetMeta()
 		pi := filepath.ToSlash(mi.Annotations[kioutil.PathAnnotation])
+
+		mj, _ := buff.Nodes[j].GetMeta()
+		pj := filepath.ToSlash(mj.Annotations[kioutil.PathAnnotation])
+
+		// If the path is the same, we decide the ordering based on the
+		// index annotation.
+		if pi == pj {
+			iIndex, err := strconv.Atoi(mi.Annotations[kioutil.IndexAnnotation])
+			if err != nil {
+				outerErr = err
+				return false
+			}
+			jIndex, err := strconv.Atoi(mj.Annotations[kioutil.IndexAnnotation])
+			if err != nil {
+				outerErr = err
+				return false
+			}
+			return iIndex < jIndex
+		}
+
 		if filepath.Base(path.Dir(pi)) == "functions" {
 			// don't count the functions dir, the functions are scoped 1 level above
 			pi = filepath.Dir(path.Dir(pi))
@@ -335,8 +360,6 @@ func sortFns(buff *kio.PackageBuffer) {
 			pi = filepath.Dir(pi)
 		}
 
-		mj, _ := buff.Nodes[j].GetMeta()
-		pj := filepath.ToSlash(mj.Annotations[kioutil.PathAnnotation])
 		if filepath.Base(path.Dir(pj)) == "functions" {
 			// don't count the functions dir, the functions are scoped 1 level above
 			pj = filepath.Dir(path.Dir(pj))
@@ -365,6 +388,7 @@ func sortFns(buff *kio.PackageBuffer) {
 		// sort by path names if depths are equal
 		return pi < pj
 	})
+	return outerErr
 }
 
 // init initializes the RunFns with a containerFilterProvider.

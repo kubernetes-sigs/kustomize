@@ -734,6 +734,94 @@ metadata:
 	}
 }
 
+func TestRunFns_sortFns(t *testing.T) {
+	testCases := []struct {
+		name           string
+		nodes          []*yaml.RNode
+		expectedImages []string
+		expectedErrMsg string
+	}{
+		{
+			name: "multiple functions in the same file are ordered by index",
+			nodes: []*yaml.RNode{
+				yaml.MustParse(`
+metadata:
+  annotations:
+    config.kubernetes.io/path: functions.yaml
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/function: |
+      container:
+        image: a
+`),
+				yaml.MustParse(`
+metadata:
+  annotations:
+    config.kubernetes.io/path: functions.yaml
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/function: |
+      container:
+        image: b
+`),
+			},
+			expectedImages: []string{"b", "a"},
+		},
+		{
+			name: "non-integer value in index annotation is an error",
+			nodes: []*yaml.RNode{
+				yaml.MustParse(`
+metadata:
+  annotations:
+    config.kubernetes.io/path: functions.yaml
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/function: |
+      container:
+        image: a
+`),
+				yaml.MustParse(`
+metadata:
+  annotations:
+    config.kubernetes.io/path: functions.yaml
+    config.kubernetes.io/index: abc
+    config.kubernetes.io/function: |
+      container:
+        image: b
+`),
+			},
+			expectedErrMsg: "strconv.Atoi: parsing \"abc\": invalid syntax",
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			packageBuff := &kio.PackageBuffer{
+				Nodes: test.nodes,
+			}
+
+			err := sortFns(packageBuff)
+			if test.expectedErrMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				assert.Equal(t, test.expectedErrMsg, err.Error())
+				return
+			}
+
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			var images []string
+			for _, n := range packageBuff.Nodes {
+				spec := runtimeutil.GetFunctionSpec(n)
+				images = append(images, spec.Container.Image)
+			}
+
+			assert.Equal(t, test.expectedImages, images)
+		})
+	}
+}
+
 func TestRunFns_network(t *testing.T) {
 	tests := []struct {
 		name          string
