@@ -4,8 +4,10 @@
 package krusty_test
 
 import (
+	"fmt"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -60,9 +62,8 @@ strong nuclear
 weak nuclear
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+	m := th.Run("/app", th.MakeDefaultOptionsWithProperEnableKyaml())
+	expFmt := `apiVersion: v1
 data:
   MOUNTAIN: everest
   OCEAN: pacific
@@ -95,15 +96,25 @@ apiVersion: v1
 data:
   MOUNTAIN: ZXZlcmVzdA==
   OCEAN: cGFjaWZpYw==
-  forces.txt: CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo=
+  forces.txt: %s
   fruit: YXBwbGU=
-  passphrase: CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo=
+  passphrase: %s
   vegetable: YnJvY2NvbGk=
 kind: Secret
 metadata:
-  name: blah-bob-ftht6hfgmb
+  name: blah-bob-9t25t44gg4
 type: Opaque
-`)
+`
+	th.AssertActualEqualsExpected(
+		m, konfig.IfApiMachineryElseKyaml(
+			fmt.Sprintf(expFmt,
+				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo`,
+				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo`),
+			fmt.Sprintf(expFmt, `|
+    CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
+    VjbGVhcgo=`, `|
+    CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`)))
 }
 
 // TODO: These should be errors instead.

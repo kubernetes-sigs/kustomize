@@ -70,6 +70,12 @@ func (th Harness) MakeDefaultOptions() krusty.Options {
 	return th.MakeOptionsPluginsDisabled()
 }
 
+func (th Harness) MakeDefaultOptionsWithProperEnableKyaml() krusty.Options {
+	o := th.MakeOptionsPluginsDisabled()
+	o.UseKyaml = konfig.FlagEnableKyamlDefaultValue
+	return o
+}
+
 // This has no impact on Builtin plugins, as they are always enabled.
 func (th Harness) MakeOptionsPluginsDisabled() krusty.Options {
 	return *krusty.MakeDefaultOptions()
