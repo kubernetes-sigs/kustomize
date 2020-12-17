@@ -266,7 +266,7 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		// document that we can use for validation.
 		var tmplText string
 		if sch.Items != nil && sch.Items.Schema != nil &&
-			sch.Items.Schema.Type.Contains("string") {
+			shouldQuoteSetterValue(ext.Setter.ListValues, sch.Items.Schema.Type) {
 			// If string is one of the legal types for the value, we
 			// output it with quotes in the yaml document to make sure it
 			// is later parsed as a string.
@@ -295,7 +295,7 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		var format string
 		// Only add quotes around the value is string is one of the
 		// types in the schema.
-		if sch.Type.Contains("string") {
+		if shouldQuoteSetterValue([]string{ext.Setter.Value}, sch.Type) {
 			format = "%s: \"%s\""
 		} else {
 			format = "%s: %s"
@@ -313,6 +313,22 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		return errors.Errorf("The input value doesn't validate against provided OpenAPI schema: %v\n", err.Error())
 	}
 	return nil
+}
+
+// shouldQuoteSetterValue returns true if string is one of the types in the
+// schema, or if the value ends in a ':' (the yaml parser gets confused by
+// the ':' at the end unless the value is quoted)
+func shouldQuoteSetterValue(a []string, schType spec.StringOrArray) bool {
+	if schType.Contains("string") {
+		return true
+	}
+
+	for _, s := range a {
+		if strings.HasSuffix(s, ":") {
+			return true
+		}
+	}
+	return false
 }
 
 // fixSchemaTypes traverses the schema and checks for some common
