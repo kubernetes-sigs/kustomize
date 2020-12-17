@@ -8,3 +8,5 @@ require (
 )
 
 replace sigs.k8s.io/kustomize/kyaml => ../../../../kyaml
+
+replace sigs.k8s.io/kustomize/api v0.7.0 => ../../../../api
