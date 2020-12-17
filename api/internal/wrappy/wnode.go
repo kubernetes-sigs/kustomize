@@ -182,9 +182,7 @@ func (wn *WNode) SetAnnotations(annotations map[string]string) {
 // SetGvk implements ifc.Kunstructured.
 func (wn *WNode) SetGvk(gvk resid.Gvk) {
 	wn.setMapField(yaml.NewScalarRNode(gvk.Kind), yaml.KindField)
-	wn.setMapField(
-		yaml.NewScalarRNode(
-			fmt.Sprintf("%s/%s", gvk.Group, gvk.Version)), yaml.APIVersionField)
+	wn.setMapField(yaml.NewScalarRNode(gvk.ApiVersion()), yaml.APIVersionField)
 }
 
 // SetLabels implements ifc.Kunstructured.
