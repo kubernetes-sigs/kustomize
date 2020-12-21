@@ -170,6 +170,39 @@ metadata:
 `)
 }
 
+func TestGeneratorSimpleOverlay(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+namePrefix: p-
+configMapGenerator:
+- name: cm
+  behavior: create
+  literals:
+  - fruit=apple
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: cm
+  behavior: merge
+  literals:
+  - veggie=broccoli
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  fruit: apple
+  veggie: broccoli
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels: {}
+  name: p-cm-877mt5hc89
+`)
+}
+
 func TestGeneratorOverlays(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base1", `
