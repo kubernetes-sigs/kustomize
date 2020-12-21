@@ -108,6 +108,16 @@ func (wn *WNode) GetGvk() resid.Gvk {
 	return resid.Gvk{Group: g, Version: v, Kind: meta.Kind}
 }
 
+// GetDataMap implements ifc.Kunstructured.
+func (wn *WNode) GetDataMap() map[string]string {
+	return wn.node.GetDataMap()
+}
+
+// SetDataMap implements ifc.Kunstructured.
+func (wn *WNode) SetDataMap(m map[string]string) {
+	wn.node.SetDataMap(m)
+}
+
 // GetKind implements ifc.Kunstructured.
 func (wn *WNode) GetKind() string {
 	return wn.demandMetaData("GetKind").Kind

@@ -43,11 +43,11 @@ type Kunstructured interface {
 	// Several uses.
 	Copy() Kunstructured
 
-	// Used by Resource.Replace, which in turn is used in many places, e.g.
-	//  - resource.Resource.Merge
-	//  - resWrangler.appendReplaceOrMerge (AbsorbAll)
-	//  - api.internal.k8sdeps.transformer.patch.conflictdetector
+	// GetAnnotations returns the k8s annotations.
 	GetAnnotations() map[string]string
+
+	// GetData returns a top-level "data" field, as in a ConfigMap.
+	GetDataMap() map[string]string
 
 	// Used by ResAccumulator and ReplacementTransformer.
 	GetFieldValue(string) (interface{}, error)
@@ -58,7 +58,7 @@ type Kunstructured interface {
 	// Used by resource.Factory.SliceFromBytes
 	GetKind() string
 
-	// Used by Resource.Replace
+	// GetLabels returns the k8s labels.
 	GetLabels() map[string]string
 
 	// Used by Resource.CurId and resource factory.
@@ -84,19 +84,22 @@ type Kunstructured interface {
 	// Used by resWrangler.Select
 	MatchesLabelSelector(selector string) (bool, error)
 
-	// Used by Resource.Replace.
+	// SetAnnotations replaces the k8s annotations.
 	SetAnnotations(map[string]string)
+
+	// SetDataMap sets a top-level "data" field, as in a ConfigMap.
+	SetDataMap(map[string]string)
 
 	// Used by PatchStrategicMergeTransformer.
 	SetGvk(resid.Gvk)
 
-	// Used by Resource.Replace and used to remove "validated by" labels.
+	// SetLabels replaces the k8s labels.
 	SetLabels(map[string]string)
 
-	// Used by Resource.Replace.
+	// SetName changes the name.
 	SetName(string)
 
-	// Used by Resource.Replace.
+	// SetNamespace changes the namespace.
 	SetNamespace(string)
 
 	// Needed, for now, by kyaml/filtersutil.ApplyToJSON.

@@ -41,13 +41,11 @@ func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.AsSlice()
 }
 
-func (ra *ResAccumulator) AppendAll(
-	resources resmap.ResMap) error {
+func (ra *ResAccumulator) AppendAll(resources resmap.ResMap) error {
 	return ra.resMap.AppendAll(resources)
 }
 
-func (ra *ResAccumulator) AbsorbAll(
-	resources resmap.ResMap) error {
+func (ra *ResAccumulator) AbsorbAll(resources resmap.ResMap) error {
 	return ra.resMap.AbsorbAll(resources)
 }
 
