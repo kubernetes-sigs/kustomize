@@ -115,6 +115,148 @@ func TestRNodeNewStringRNodeBinary(t *testing.T) {
 	}
 }
 
+func TestRNodeGetDataMap(t *testing.T) {
+	emptyMap := map[string]string{}
+	testCases := map[string]struct {
+		theMap   map[string]interface{}
+		expected map[string]string
+	}{
+		"actuallyNil": {
+			theMap:   nil,
+			expected: emptyMap,
+		},
+		"empty": {
+			theMap:   map[string]interface{}{},
+			expected: emptyMap,
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			expected: emptyMap,
+		},
+		"noNameConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+			},
+			expected: emptyMap,
+		},
+		"configmap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "winnie",
+				},
+				"data": map[string]string{
+					"wine":   "cabernet",
+					"truck":  "ford",
+					"rocket": "falcon9",
+					"planet": "mars",
+					"city":   "brownsville",
+				},
+			},
+			// order irrelevant, because assert.Equals is smart about maps.
+			expected: map[string]string{
+				"city":   "brownsville",
+				"wine":   "cabernet",
+				"planet": "mars",
+				"rocket": "falcon9",
+				"truck":  "ford",
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			m := rn.GetDataMap()
+			if !assert.Equal(t, tc.expected, m) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestRNodeSetDataMap(t *testing.T) {
+	testCases := map[string]struct {
+		theMap   map[string]interface{}
+		input    map[string]string
+		expected map[string]string
+	}{
+		"empty": {
+			theMap: map[string]interface{}{},
+			input: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+			expected: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+		},
+		"replace": {
+			theMap: map[string]interface{}{
+				"foo": 3,
+				"data": map[string]string{
+					"rocket": "falcon9",
+					"planet": "mars",
+				},
+			},
+			input: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+			expected: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+		},
+		"clear1": {
+			theMap: map[string]interface{}{
+				"foo": 3,
+				"data": map[string]string{
+					"rocket": "falcon9",
+					"planet": "mars",
+				},
+			},
+			input:    map[string]string{},
+			expected: map[string]string{},
+		},
+		"clear2": {
+			theMap: map[string]interface{}{
+				"foo": 3,
+				"data": map[string]string{
+					"rocket": "falcon9",
+					"planet": "mars",
+				},
+			},
+			input:    nil,
+			expected: map[string]string{},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			rn.SetDataMap(tc.input)
+			m := rn.GetDataMap()
+			if !assert.Equal(t, tc.expected, m) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
 func TestRNodeGetValidatedMetadata(t *testing.T) {
 	testConfigMap := map[string]interface{}{
 		"apiVersion": "v1",

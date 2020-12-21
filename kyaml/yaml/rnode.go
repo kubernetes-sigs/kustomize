@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"strconv"
 	"strings"
 
@@ -415,6 +416,34 @@ func (rn *RNode) SetMapField(value *RNode, path ...string) error {
 		LookupCreate(yaml.MappingNode, path[0:len(path)-1]...),
 		SetField(path[len(path)-1], value),
 	)
+}
+
+func (rn *RNode) GetDataMap() map[string]string {
+	n, err := rn.Pipe(Lookup(DataField))
+	if err != nil {
+		return nil
+	}
+	result := map[string]string{}
+	_ = n.VisitFields(func(node *MapNode) error {
+		result[GetValue(node.Key)] = GetValue(node.Value)
+		return nil
+	})
+	return result
+}
+
+func (rn *RNode) SetDataMap(m map[string]string) {
+	if rn == nil {
+		log.Fatal("cannot set data map on nil Rnode")
+	}
+	if len(m) == 0 {
+		if err := rn.PipeE(Clear(DataField)); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	if err := rn.SetMapField(NewMapRNode(&m), DataField); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // AppendToFieldPath appends a field name to the FieldPath.
