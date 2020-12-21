@@ -281,6 +281,42 @@ spec:
 `, string(bytes))
 }
 
+func TestMergeDataMapFrom(t *testing.T) {
+	resource, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: BlahBlah
+metadata:
+  name: clown
+data:
+  fruit: pear
+`))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	patch, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Whatever
+metadata:
+  name: spaceship
+data:
+  spaceship: enterprise
+`))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	resource.MergeDataMapFrom(patch)
+	bytes, err := resource.AsYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+data:
+  fruit: pear
+  spaceship: enterprise
+kind: BlahBlah
+metadata:
+  name: clown
+`, string(bytes))
+}
+
 func TestApplySmPatch_SwapOrder(t *testing.T) {
 	s1 := `
 apiVersion: example.com/v1

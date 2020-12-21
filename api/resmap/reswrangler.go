@@ -456,8 +456,7 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 	return nil
 }
 
-func (m *resWrangler) appendReplaceOrMerge(
-	res *resource.Resource) error {
+func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	id := res.CurId()
 	matches := m.GetMatchingResourcesByOriginalId(id.Equals)
 	if len(matches) == 0 {
@@ -471,10 +470,7 @@ func (m *resWrangler) appendReplaceOrMerge(
 				"id %#v does not exist; cannot merge or replace", id)
 		default:
 			// presumably types.BehaviorCreate
-			err := m.Append(res)
-			if err != nil {
-				return err
-			}
+			return m.Append(res)
 		}
 	case 1:
 		old := matches[0]
@@ -487,9 +483,10 @@ func (m *resWrangler) appendReplaceOrMerge(
 		}
 		switch res.Behavior() {
 		case types.BehaviorReplace:
-			res.Replace(old)
+			res.CopyMergeMetaDataFieldsFrom(old)
 		case types.BehaviorMerge:
-			res.Merge(old)
+			res.CopyMergeMetaDataFieldsFrom(old)
+			res.MergeDataMapFrom(old)
 		default:
 			return fmt.Errorf(
 				"id %#v exists; behavior must be merge or replace", id)
@@ -499,14 +496,14 @@ func (m *resWrangler) appendReplaceOrMerge(
 			return err
 		}
 		if i != index {
-			return fmt.Errorf("unexpected index in replacement")
+			return fmt.Errorf("unexpected target index in replacement")
 		}
+		return nil
 	default:
 		return fmt.Errorf(
 			"found multiple objects %v that could accept merge of %v",
 			matches, id)
 	}
-	return nil
 }
 
 // Select returns a list of resources that
