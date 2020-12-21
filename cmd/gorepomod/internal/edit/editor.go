@@ -66,8 +66,9 @@ func (e *Editor) Pin(target misc.LaModule, oldV, newV semver.SemVer) error {
 func (e *Editor) UnPin(target misc.LaModule, oldV semver.SemVer) error {
 	var r strings.Builder
 	r.WriteString(target.ImportPath())
-	r.WriteString("@")
-	r.WriteString(oldV.String())
+	// Don't specify the old version.
+	// r.WriteString("@")
+	// r.WriteString(oldV.String())
 	r.WriteString("=")
 	r.WriteString(upstairs(e.module.ShortName().Depth()))
 	r.WriteString(string(target.ShortName()))
