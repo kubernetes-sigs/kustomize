@@ -121,6 +121,10 @@ nameReference:
     kind: CronJob
   - path: spec/configSource/configMap
     kind: Node
+  - path: rules/resourceNames
+    kind: Role
+  - path: rules/resourceNames
+    kind: ClusterRole
 
 - kind: Secret
   version: v1
