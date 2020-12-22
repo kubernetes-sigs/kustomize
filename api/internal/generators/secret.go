@@ -37,10 +37,14 @@ func MakeSecret(
 	if err != nil {
 		return nil, err
 	}
+	t := "Opaque"
+	if args.Type != "" {
+		t = args.Type
+	}
 	if _, err := rn.Pipe(
 		yaml.FieldSetter{
 			Name:  "type",
-			Value: yaml.NewStringRNode("Opaque")}); err != nil {
+			Value: yaml.NewStringRNode(t)}); err != nil {
 		return nil, err
 	}
 	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
