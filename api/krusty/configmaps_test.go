@@ -197,8 +197,6 @@ data:
   veggie: broccoli
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: p-cm-877mt5hc89
 `)
 }
@@ -259,8 +257,6 @@ data:
   from: overlay
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: p1-com1-8tc62428t2
 ---
 apiVersion: v1
@@ -268,8 +264,6 @@ data:
   from: overlay
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: p2-com2-87mcggf7d7
 `)
 }
@@ -316,8 +310,6 @@ data:
   foo: bar
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: o1-cm-ft9mmdc8c6
 ---
 apiVersion: v1
@@ -326,8 +318,6 @@ data:
   foo: bar
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: cm-o2-5k95kd76ft
 `)
 }

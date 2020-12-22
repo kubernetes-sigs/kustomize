@@ -102,8 +102,6 @@ data:
   overlay: "true"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: testCase-bcbmmg48hd
   namespace: overlay
 `)
