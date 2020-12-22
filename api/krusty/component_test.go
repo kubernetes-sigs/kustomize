@@ -130,8 +130,6 @@ data:
   testValue: "2"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: comp-my-configmap-kc6k2kmkh9
 ---
 apiVersion: v1
@@ -184,8 +182,6 @@ data:
   testValue: "2"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: comp-my-configmap-55249mf5kb
 ---
 apiVersion: v1
@@ -239,8 +235,6 @@ data:
   testValue: "2"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: comp-my-configmap-55249mf5kb
 ---
 apiVersion: v1
@@ -299,8 +293,6 @@ data:
   testValue: "2"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: comp-my-configmap-kc6k2kmkh9
 ---
 apiVersion: v1
@@ -347,8 +339,6 @@ data:
   testValue: "2"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: my-configmap-kc6k2kmkh9
 `,
 		},
@@ -378,8 +368,6 @@ data:
   testValue: "1"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: my-configmap-5g7gh5mgt5
 ---
 apiVersion: v1
