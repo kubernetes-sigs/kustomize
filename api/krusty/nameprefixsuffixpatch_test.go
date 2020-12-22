@@ -88,8 +88,6 @@ data:
   PORT: "3306"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
   name: mysql-9792mdchtg
 ---
 apiVersion: apps/v1

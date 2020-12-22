@@ -95,6 +95,11 @@ func (r *Resource) MatchesAnnotationSelector(selector string) (bool, error) {
 }
 
 func (r *Resource) SetAnnotations(m map[string]string) {
+	if len(m) == 0 {
+		// Force field erasure.
+		r.kunStr.SetAnnotations(nil)
+		return
+	}
 	r.kunStr.SetAnnotations(m)
 }
 
@@ -107,6 +112,11 @@ func (r *Resource) SetGvk(gvk resid.Gvk) {
 }
 
 func (r *Resource) SetLabels(m map[string]string) {
+	if len(m) == 0 {
+		// Force field erasure.
+		r.kunStr.SetLabels(nil)
+		return
+	}
 	r.kunStr.SetLabels(m)
 }
 
