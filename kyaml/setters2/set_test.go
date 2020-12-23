@@ -732,6 +732,73 @@ metadata:
     foo: true # {"$ref": "#/definitions/io.k8s.cli.setters.foo"}
  `,
 		},
+		{
+			name:        "set-quoted-value-with-colon",
+			description: "if a value ends in ':', we should accept it",
+			setter:      "app",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.app:
+      x-k8s-cli:
+        setter:
+          name: app
+          value: "value:"
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    app: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.app"}
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    app: "value:" # {"$ref": "#/definitions/io.k8s.cli.setters.app"}
+ `,
+		},
+		{
+			name:   "set-quoted-list-values-with-colon",
+			setter: "args",
+			openapi: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.args:
+      x-k8s-cli:
+        type: array
+        setter:
+          name: args
+          listValues: ["1:", "2:", "3:"]
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas: 
+    - 4
+    - 5
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
+  replicas:
+  - "1:"
+  - "2:"
+  - "3:"
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
