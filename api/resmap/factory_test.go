@@ -351,13 +351,13 @@ metadata:
 	}
 }
 
-func TestMerge_Empty(t *testing.T) {
-	rm, err := rmF.Merge([]*resource.Resource{})
+func TestConflatePatches_Empty(t *testing.T) {
+	rm, err := rmF.ConflatePatches([]*resource.Resource{})
 	assert.NoError(t, err)
 	assert.Equal(t, 0, rm.Size())
 }
 
-func TestMerge(t *testing.T) {
+func TestConflatePatches(t *testing.T) {
 	var (
 		err    error
 		yml    []byte
@@ -387,7 +387,7 @@ spec:
 `))
 	assert.NoError(t, err)
 
-	rm, err := rmF.Merge([]*resource.Resource{r1, r2})
+	rm, err := rmF.ConflatePatches([]*resource.Resource{r1, r2})
 	assert.NoError(t, err)
 
 	yml, err = rm.AsYaml()

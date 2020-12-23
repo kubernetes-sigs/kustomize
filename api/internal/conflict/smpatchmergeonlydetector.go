@@ -21,6 +21,11 @@ func (c *smPatchMergeOnlyDetector) HasConflict(
 	return false, nil
 }
 
+// There's at least one case that doesn't work.  Suppose one has a
+// Deployment with a volume with the bizarre "emptyDir: {}" entry.
+// If you want to get rid of this entry via a patch containing
+// the entry "emptyDir: null", then the following won't work,
+// because null entries are eliminated.
 func (c *smPatchMergeOnlyDetector) MergePatches(
 	r, patch *resource.Resource) (*resource.Resource, error) {
 	err := r.ApplySmPatch(patch)
