@@ -13,7 +13,6 @@ import (
 )
 
 type PatchStrategicMergeTransformerPlugin struct {
-	h             *resmap.PluginHelpers
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
@@ -21,7 +20,6 @@ type PatchStrategicMergeTransformerPlugin struct {
 
 func (p *PatchStrategicMergeTransformerPlugin) Config(
 	h *resmap.PluginHelpers, c []byte) (err error) {
-	p.h = h
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return err
@@ -36,13 +34,13 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 			// All tests pass if this code is commented out.  This code should
 			// be deleted; the user should use the Patches field which
 			// exists for this purpose (inline patch declaration).
-			res, err := p.h.ResmapFactory().RF().SliceFromBytes([]byte(onePath))
+			res, err := h.ResmapFactory().RF().SliceFromBytes([]byte(onePath))
 			if err == nil {
 				p.loadedPatches = append(p.loadedPatches, res...)
 				continue
 			}
-			res, err = p.h.ResmapFactory().RF().SliceFromPatches(
-				p.h.Loader(), []types.PatchStrategicMerge{onePath})
+			res, err = h.ResmapFactory().RF().SliceFromPatches(
+				h.Loader(), []types.PatchStrategicMerge{onePath})
 			if err != nil {
 				return err
 			}
@@ -50,7 +48,7 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 		}
 	}
 	if p.Patches != "" {
-		res, err := p.h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patches))
+		res, err := h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patches))
 		if err != nil {
 			return err
 		}
@@ -61,15 +59,17 @@ func (p *PatchStrategicMergeTransformerPlugin) Config(
 		return fmt.Errorf(
 			"patch appears to be empty; files=%v, Patch=%s", p.Paths, p.Patches)
 	}
-	return err
-}
-
-func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error {
-	patches, err := p.h.ResmapFactory().Merge(p.loadedPatches)
+	// Merge the patches, looking for conflicts.
+	m, err := h.ResmapFactory().ConflatePatches(p.loadedPatches)
 	if err != nil {
 		return err
 	}
-	for _, patch := range patches.Resources() {
+	p.loadedPatches = m.Resources()
+	return nil
+}
+
+func (p *PatchStrategicMergeTransformerPlugin) Transform(m resmap.ResMap) error {
+	for _, patch := range p.loadedPatches {
 		target, err := m.GetById(patch.OrgId())
 		if err != nil {
 			return err
