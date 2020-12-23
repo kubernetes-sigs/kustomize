@@ -125,6 +125,34 @@ data:
 `,
 			},
 		},
+		"construct secret with type": {
+			args: types.SecretArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "literalSecret1",
+					KvPairSources: types.KvPairSources{
+						LiteralSources: []string{"a=x"},
+					},
+					Options: &types.GeneratorOptions{
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+				Type: "foobar",
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: Secret
+metadata:
+  name: literalSecret1
+  labels:
+    foo: 'bar'
+type: foobar
+data:
+  a: eA==
+`,
+			},
+		},
 		"construct secret from literal with GeneratorOptions in SecretArgs": {
 			args: types.SecretArgs{
 				GeneratorArgs: types.GeneratorArgs{
