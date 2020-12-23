@@ -10,6 +10,441 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+func TestVolumePatch1(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- deployment.yaml
+patchesStrategicMerge:
+- patch.yaml
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: fancyDisk
+        emptyDir: {}
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: fancyDisk
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: fancyDisk
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - gcePersistentDisk:
+          pdName: fancyDisk
+        name: fancyDisk
+`)
+}
+
+func TestVolumePatch2(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- deployment.yaml
+configMapGenerator:
+- name: baseCm
+  literals:
+  - foo=bar
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: fancyDisk
+          mountPath: /tmp/ps
+      volumes:
+      - name: fancyDisk
+        emptyDir: {}
+      - configMap:
+          name: baseCm
+        name: baseCm
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: fancyDisk
+      volumes:
+      - emptyDir: {}
+        name: fancyDisk
+      - configMap:
+          name: baseCm-798k5k7g9f
+        name: baseCm
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: baseCm-798k5k7g9f
+`)
+
+	th.WriteK("overlay", `
+patchesStrategicMerge:
+- patch.yaml
+resources:
+- ../base
+configMapGenerator:
+- name: overlayCm
+  literals:
+  - hello=world
+`)
+	th.WriteF("overlay/patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: fancyDisk
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: fancyDisk
+      - configMap:
+          name: overlayCm
+        name: overlayCm
+`)
+	m = th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: fancyDisk
+      volumes:
+      - gcePersistentDisk:
+          pdName: fancyDisk
+        name: fancyDisk
+      - configMap:
+          name: overlayCm-dc6fm46dhm
+        name: overlayCm
+      - configMap:
+          name: baseCm-798k5k7g9f
+        name: baseCm
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: baseCm-798k5k7g9f
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  name: overlayCm-dc6fm46dhm
+`)
+}
+
+func TestVolumePatch3(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+commonLabels:
+  team: foo
+resources:
+- deployment.yaml
+configMapGenerator:
+- name: configmap-in-base
+  literals:
+  - foo=bar
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+      - name: sidecar
+        image: sidecar:latest
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: {}
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+`)
+	th.WriteK("overlay", `
+commonLabels:
+  env: staging
+patchesStrategicMerge:
+- deployment-patch1.yaml
+- deployment-patch2.yaml
+resources:
+- ../base
+`)
+	th.WriteF("overlay/deployment-patch1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+`)
+	th.WriteF("overlay/deployment-patch2.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        env:
+        - name: ANOTHERENV
+          value: FOO
+      volumes:
+      - name: nginx-persistent-storage
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      env: staging
+      team: foo
+  template:
+    metadata:
+      labels:
+        env: staging
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: FOO
+        image: nginx
+        name: nginx
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-base-798k5k7g9f
+        name: configmap-in-base
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: configmap-in-base-798k5k7g9f
+`)
+}
+
+func TestEmptyDirOverrideMultiplePatches(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+namePrefix: b-
+commonLabels:
+  team: foo
+resources:
+- deployment.yaml
+configMapGenerator:
+- name: configmap-in-base
+  literals:
+  - foo=bar
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: nginx-persistent-storage
+          mountPath: /tmp/ps
+      - name: sidecar
+        image: sidecar:latest
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: {}
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+`)
+	th.WriteK("overlay", `
+namePrefix: a-
+commonLabels:
+  env: staging
+patchesStrategicMerge:
+- deployment-patch1.yaml
+- deployment-patch2.yaml
+resources:
+- ../base
+`)
+	th.WriteF("overlay/deployment-patch1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        env:
+        - name: ENVKEY
+          value: ENVVALUE
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+`)
+	th.WriteF("overlay/deployment-patch2.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ANOTHERENV
+          value: FOO
+      volumes:
+      - name: nginx-persistent-storage
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-nginx
+spec:
+  selector:
+    matchLabels:
+      env: staging
+      team: foo
+  template:
+    metadata:
+      labels:
+        env: staging
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: FOO
+        - name: ENVKEY
+          value: ENVVALUE
+        image: nginx:latest
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: a-b-configmap-in-base-798k5k7g9f
+        name: configmap-in-base
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-configmap-in-base-798k5k7g9f
+`)
+}
+
 func TestSimpleMultiplePatches(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
@@ -405,6 +840,10 @@ metadata:
 
 func TestMultiplePatchesWithConflict(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
+	opts := th.MakeDefaultOptions()
+	if opts.UseKyaml {
+		t.Skip("kyaml merging doesn't look for conflicts")
+	}
 	makeCommonFileForMultiplePatchTest(th)
 	th.WriteF("/app/overlay/staging/deployment-patch1.yaml", `
 apiVersion: apps/v1
@@ -442,7 +881,7 @@ spec:
         - name: ENABLE_FEATURE_FOO
           value: FALSE
 `)
-	err := th.RunWithErr("/app/overlay/staging", th.MakeDefaultOptions())
+	err := th.RunWithErr("/app/overlay/staging", opts)
 	if err == nil {
 		t.Fatalf("expected conflict")
 	}

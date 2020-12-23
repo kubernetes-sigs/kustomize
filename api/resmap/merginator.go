@@ -16,7 +16,7 @@ type merginator struct {
 	result   ResMap
 }
 
-func (m *merginator) Merge(in []*resource.Resource) (ResMap, error) {
+func (m *merginator) ConflatePatches(in []*resource.Resource) (ResMap, error) {
 	m.result = New()
 	m.incoming = in
 	for index := range m.incoming {
