@@ -7,9 +7,96 @@ import (
 	"fmt"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
+
+// Numbers and booleans are quoted
+func TestGeneratorIntVsStringNoMerge(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+configMapGenerator:
+- name: bob
+  literals:
+  - fruit=Indian Gooseberry
+  - year=2020
+  - crisis=true
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    port: 8080
+    happy: true
+    color: green
+  name: demo
+spec:
+  clusterIP: None
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(
+		m, `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    color: green
+    happy: true
+    port: 8080
+  name: demo
+spec:
+  clusterIP: None
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  name: bob-79t79mt227
+`)
+}
+
+// Observation: Numbers no longer quoted
+func TestGeneratorIntVsStringWithMerge(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+- name: bob
+  literals:
+  - fruit=Indian Gooseberry
+  - year=2020
+  - crisis=true
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: bob
+  behavior: merge
+  literals:
+  - month=12
+`)
+	opts := th.MakeDefaultOptions()
+	m := th.Run("overlay", opts)
+	expFmt := `apiVersion: v1
+data:
+  crisis: %s
+  fruit: Indian Gooseberry
+  month: %s
+  year: %s
+kind: ConfigMap
+metadata:
+  name: bob-%s
+`
+	th.AssertActualEqualsExpected(
+		m, opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(expFmt, `"true"`, `"12"`, `"2020"`, `bk46gm59c6`),
+			fmt.Sprintf(expFmt, `true`, `12`, `2020`, `bkmtk2t2fb`)))
+}
 
 // Generate a Secret and a ConfigMap from the same data
 // to compare the result.
@@ -61,8 +148,8 @@ electromagnetic
 strong nuclear
 weak nuclear
 `)
-
-	m := th.Run("/app", th.MakeDefaultOptionsWithProperEnableKyaml())
+	opts := th.MakeDefaultOptions()
+	m := th.Run("/app", opts)
 	expFmt := `apiVersion: v1
 data:
   MOUNTAIN: everest
@@ -102,19 +189,20 @@ data:
   vegetable: YnJvY2NvbGk=
 kind: Secret
 metadata:
-  name: blah-bob-9t25t44gg4
+  name: blah-bob-%s
 type: Opaque
 `
 	th.AssertActualEqualsExpected(
-		m, konfig.IfApiMachineryElseKyaml(
+		m, opts.IfApiMachineryElseKyaml(
 			fmt.Sprintf(expFmt,
-				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo`,
-				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo`),
+				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo=`,
+				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`,
+				`ftht6hfgmb`),
 			fmt.Sprintf(expFmt, `|
     CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
     VjbGVhcgo=`, `|
     CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
-    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`)))
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`, `9t25t44gg4`)))
 }
 
 // TODO: These should be errors instead.
