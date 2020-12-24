@@ -74,7 +74,7 @@ kind: ConfigMap
 metadata:
   name: configmap-a
   annotations:
-    kustomize.k8s.io/Generated: "false"
+    fruit: peach
 data:
   foo: $FOO
 `)
@@ -87,7 +87,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    kustomize.k8s.io/Generated: "false"
+    fruit: peach
   name: configmap-a
 ---
 apiVersion: v1

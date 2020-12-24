@@ -55,3 +55,10 @@ func MakeDefaultOptions() *Options {
 		AllowResourceIdChanges: false,
 	}
 }
+
+func (o Options) IfApiMachineryElseKyaml(s1, s2 string) string {
+	if !o.UseKyaml {
+		return s1
+	}
+	return s2
+}
