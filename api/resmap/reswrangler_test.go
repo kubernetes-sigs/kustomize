@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
@@ -693,10 +692,6 @@ func makeMap2(b types.GenerationBehavior) ResMap {
 func TestAbsorbAll(t *testing.T) {
 	metadata := map[string]interface{}{
 		"name": "cmap",
-	}
-	if !konfig.FlagEnableKyamlDefaultValue {
-		metadata["annotations"] = map[string]interface{}{}
-		metadata["labels"] = map[string]interface{}{}
 	}
 	expected := rmF.FromResource(rf.FromMapAndOption(
 		map[string]interface{}{
