@@ -172,7 +172,7 @@ resources:
 EOF
 ```
 
-Make a transformer configration file.
+Make a transformer configuration file.
 
 The transformer used is called `AddValueTransformer`.  It's
 intended to implement the 'add' operation of
