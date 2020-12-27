@@ -43,7 +43,6 @@ type Options struct {
 }
 
 // MakeDefaultOptions returns a default instance of Options.
-// TODO(#3343): UseKyaml: konfig.FlagEnableKyamlDefaultValue
 func MakeDefaultOptions() *Options {
 	return &Options{
 		DoLegacyResourceSort:   false,
@@ -51,7 +50,7 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:       types.LoadRestrictionsRootOnly,
 		DoPrune:                false,
 		PluginConfig:           konfig.DisabledPluginConfig(),
-		UseKyaml:               false,
+		UseKyaml:               konfig.FlagEnableKyamlDefaultValue,
 		AllowResourceIdChanges: false,
 	}
 }
