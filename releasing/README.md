@@ -66,7 +66,7 @@ gorepomod release kyaml --doIt
 Undraft the release on the [kustomize repo release page].
 
 
-#### Release `cli-utils`
+#### Release [`cli-utils`](https://github.com/kubernetes-sigs/cli-utils)
 
 ```
 cd ../cli-utils
