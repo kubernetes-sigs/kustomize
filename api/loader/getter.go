@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 )
 
 type remoteTargetSpec struct {
@@ -93,22 +93,7 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		},
 		Options: opts,
 	}
-
-	ch := make(chan bool, 1)
-	defer close(ch)
-	d := 21 * time.Second // arbitrary
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	go func() {
-		err = client.Get()
-		ch <- true
-	}()
-	select {
-	case <-ch:
-	case <-timer.C:
-		err = types.NewErrTimeOut(d, "go-getter client.Get")
-	}
-	return err
+	return utils.TimedCall("go-getter client.Get", 21*time.Second, client.Get)
 }
 
 func getNothing(rs *remoteTargetSpec) error {
