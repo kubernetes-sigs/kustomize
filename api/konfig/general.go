@@ -43,7 +43,7 @@ const (
 	// Historically, tests passed for enable_kyaml == false, i.e. using
 	// apimachinery libs.  This doesn't mean the code was better, it just
 	// means regression tests preserved those outcomes.
-	FlagEnableKyamlDefaultValue = true
+	FlagEnableKyamlDefaultValue = false
 
 	// An environment variable to consult for kustomization
 	// configuration data.  See:
