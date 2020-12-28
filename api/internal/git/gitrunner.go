@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 )
 
 // Arbitrary, but non-infinite, timeout for running commands.
@@ -41,25 +41,18 @@ func newCmdRunner() (*gitRunner, error) {
 }
 
 // run a command with a timeout.
-func (r gitRunner) run(args ...string) (err error) {
-	ch := make(chan bool, 1)
-	defer close(ch)
+func (r gitRunner) run(args ...string) error {
 	//nolint: gosec
 	cmd := exec.Command(r.gitProgram, args...)
 	cmd.Dir = r.dir.String()
-	timer := time.NewTimer(r.duration)
-	defer timer.Stop()
-	go func() {
-		_, err = cmd.CombinedOutput()
-		ch <- true
-	}()
-	select {
-	case <-ch:
-		if err != nil {
-			return errors.Wrapf(err, "git cmd = '%s'", cmd.String())
-		}
-		return nil
-	case <-timer.C:
-		return types.NewErrTimeOut(r.duration, cmd.String())
-	}
+	return utils.TimedCall(
+		cmd.String(),
+		r.duration,
+		func() error {
+			_, err := cmd.CombinedOutput()
+			if err != nil {
+				return errors.Wrapf(err, "git cmd = '%s'", cmd.String())
+			}
+			return err
+		})
 }
