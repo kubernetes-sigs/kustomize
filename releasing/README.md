@@ -78,7 +78,8 @@ cd ../cli-utils
 go mod edit -require sigs.k8s.io/kustomize/kyaml@v0.9.1
 
 # Test it
-go test ./...
+make test
+make test-e2e
 
 # Merge these changes to upstream (make a PR, merge it)
 
