@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/krusty"
-	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestRemoteLoad(t *testing.T) {
@@ -17,7 +17,7 @@ func TestRemoteLoad(t *testing.T) {
 	b := krusty.MakeKustomizer(fSys, krusty.MakeDefaultOptions())
 	m, err := b.Run(
 		"github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6")
-	if types.IsErrTimeout(err) {
+	if utils.IsErrTimeout(err) {
 		// Don't fail on timeouts.
 		t.SkipNow()
 	}
