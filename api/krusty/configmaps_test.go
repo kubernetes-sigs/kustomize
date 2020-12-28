@@ -258,6 +258,37 @@ metadata:
 `)
 }
 
+func TestIssue3393(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- cm.yaml
+configMapGenerator:
+  - name: project
+    behavior: merge
+    literals:
+    - ANOTHER_ENV_VARIABLE="bar"
+`)
+	th.WriteF("cm.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project
+data:
+  A_FIRST_ENV_VARIABLE: "foo"
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  A_FIRST_ENV_VARIABLE: foo
+  ANOTHER_ENV_VARIABLE: bar
+kind: ConfigMap
+metadata:
+  name: project
+`)
+}
+
 func TestGeneratorSimpleOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
