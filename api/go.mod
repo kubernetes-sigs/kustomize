@@ -16,7 +16,7 @@ require (
 	github.com/yujunz/go-getter v1.5.1-lite.0.20201201013212-6d9c071adddf
 	golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e
 	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
