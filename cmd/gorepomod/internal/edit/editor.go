@@ -54,6 +54,7 @@ func (e *Editor) Tidy() error {
 func (e *Editor) Pin(target misc.LaModule, oldV, newV semver.SemVer) error {
 	err := e.run(
 		"edit",
+		"-dropreplace="+target.ImportPath(),
 		"-dropreplace="+target.ImportPath()+"@"+oldV.String(),
 		"-require="+target.ImportPath()+"@"+newV.String(),
 	)
