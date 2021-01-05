@@ -39,8 +39,8 @@ resources:
 configMapGenerator:
 - name: my-configmap
   literals:	
-  - testValue=1
-  - otherValue=10
+  - testValue=purple
+  - otherValue=green
 `)
 	th.WriteF("/app/base/deploy.yaml", `
 apiVersion: v1
@@ -64,8 +64,8 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-  - testValue=2
-  - compValue=5
+  - testValue=blue
+  - compValue=red
 `)
 	th.WriteF("/app/comp/stub.yaml", `
 apiVersion: v1
@@ -125,14 +125,12 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: "5"
-  otherValue: "10"
-  testValue: "2"
+  compValue: red
+  otherValue: green
+  testValue: blue
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: comp-my-configmap-kc6k2kmkh9
+  name: comp-my-configmap-97647ckcmg
 ---
 apiVersion: v1
 kind: Deployment
@@ -156,7 +154,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-  - otherValue=9
+  - otherValue=orange
 `),
 				writeK("/app/prod", `
 resources:
@@ -179,14 +177,12 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: "5"
-  otherValue: "9"
-  testValue: "2"
+  compValue: red
+  otherValue: orange
+  testValue: blue
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: comp-my-configmap-55249mf5kb
+  name: comp-my-configmap-g486mb229k
 ---
 apiVersion: v1
 kind: Deployment
@@ -212,7 +208,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:
-  - otherValue=9
+  - otherValue=orange
 `),
 				writeK("/app/prod", `
 resources:
@@ -234,14 +230,12 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: "5"
-  otherValue: "9"
-  testValue: "2"
+  compValue: red
+  otherValue: orange
+  testValue: blue
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: comp-my-configmap-55249mf5kb
+  name: comp-my-configmap-g486mb229k
 ---
 apiVersion: v1
 kind: Deployment
@@ -279,11 +273,11 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: "10"
-  testValue: "1"
+  otherValue: green
+  testValue: purple
 kind: ConfigMap
 metadata:
-  name: my-configmap-2g9c94mhb8
+  name: my-configmap-9cd648hm8f
 ---
 apiVersion: v1
 kind: Deployment
@@ -294,14 +288,12 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: "5"
-  otherValue: "10"
-  testValue: "2"
+  compValue: red
+  otherValue: green
+  testValue: blue
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: comp-my-configmap-kc6k2kmkh9
+  name: comp-my-configmap-97647ckcmg
 ---
 apiVersion: v1
 kind: Deployment
@@ -327,8 +319,8 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-  - compValue=5
-  - testValue=2
+  - compValue=red
+  - testValue=blue
 `),
 			},
 			runPath: "/app/direct-component",
@@ -342,14 +334,12 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: "5"
-  otherValue: "10"
-  testValue: "2"
+  compValue: red
+  otherValue: green
+  testValue: blue
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: my-configmap-kc6k2kmkh9
+  name: my-configmap-97647ckcmg
 `,
 		},
 		"missing-optional-component-api-version": {
@@ -360,7 +350,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-  - otherValue=9
+  - otherValue=orange
 `),
 			},
 			runPath: "/app/prod",
@@ -374,13 +364,11 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: "9"
-  testValue: "1"
+  otherValue: orange
+  testValue: purple
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: my-configmap-5g7gh5mgt5
+  name: my-configmap-6hhdg8gkdg
 ---
 apiVersion: v1
 kind: Deployment
@@ -423,11 +411,11 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: "10"
-  testValue: "1"
+  otherValue: green
+  testValue: purple
 kind: ConfigMap
 metadata:
-  name: my-configmap-a-b-2g9c94mhb8
+  name: my-configmap-a-b-9cd648hm8f
 ---
 apiVersion: v1
 kind: Deployment
@@ -438,11 +426,11 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: "10"
-  testValue: "1"
+  otherValue: green
+  testValue: purple
 kind: ConfigMap
 metadata:
-  name: my-configmap-b-2g9c94mhb8
+  name: my-configmap-b-9cd648hm8f
 `,
 		},
 
@@ -574,7 +562,7 @@ configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
-  - otherValue=9
+  - otherValue=orange
 `),
 			},
 			runPath:       "/app/prod",

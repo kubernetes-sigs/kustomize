@@ -91,8 +91,8 @@ func (wn *WNode) GetFieldValue(path string) (interface{}, error) {
 	// Return value as slice for SequenceNode kind
 	if yn.Kind == yaml.SequenceNode {
 		var result []interface{}
-		for _, node := range yn.Content {
-			result = append(result, node.Value)
+		if err := yn.Decode(&result); err != nil {
+			return nil, err
 		}
 		return result, nil
 	}
@@ -106,6 +106,16 @@ func (wn *WNode) GetGvk() resid.Gvk {
 	meta := wn.demandMetaData("GetGvk")
 	g, v := resid.ParseGroupVersion(meta.APIVersion)
 	return resid.Gvk{Group: g, Version: v, Kind: meta.Kind}
+}
+
+// GetDataMap implements ifc.Kunstructured.
+func (wn *WNode) GetDataMap() map[string]string {
+	return wn.node.GetDataMap()
+}
+
+// SetDataMap implements ifc.Kunstructured.
+func (wn *WNode) SetDataMap(m map[string]string) {
+	wn.node.SetDataMap(m)
 }
 
 // GetKind implements ifc.Kunstructured.
@@ -182,9 +192,7 @@ func (wn *WNode) SetAnnotations(annotations map[string]string) {
 // SetGvk implements ifc.Kunstructured.
 func (wn *WNode) SetGvk(gvk resid.Gvk) {
 	wn.setMapField(yaml.NewScalarRNode(gvk.Kind), yaml.KindField)
-	wn.setMapField(
-		yaml.NewScalarRNode(
-			fmt.Sprintf("%s/%s", gvk.Group, gvk.Version)), yaml.APIVersionField)
+	wn.setMapField(yaml.NewScalarRNode(gvk.ApiVersion()), yaml.APIVersionField)
 }
 
 // SetLabels implements ifc.Kunstructured.

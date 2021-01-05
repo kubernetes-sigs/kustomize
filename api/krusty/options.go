@@ -50,7 +50,14 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:       types.LoadRestrictionsRootOnly,
 		DoPrune:                false,
 		PluginConfig:           konfig.DisabledPluginConfig(),
-		UseKyaml:               false,
+		UseKyaml:               konfig.FlagEnableKyamlDefaultValue,
 		AllowResourceIdChanges: false,
 	}
+}
+
+func (o Options) IfApiMachineryElseKyaml(s1, s2 string) string {
+	if !o.UseKyaml {
+		return s1
+	}
+	return s2
 }

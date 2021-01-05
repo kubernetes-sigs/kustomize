@@ -126,10 +126,11 @@ func (rmF *Factory) FromSecretArgs(
 	return rmF.FromResource(res), nil
 }
 
-// Merge creates a new ResMap by merging incoming resources.
+// ConflatePatches creates a new ResMap containing a merger of the
+// incoming patches.
 // Error if conflict found.
-func (rmF *Factory) Merge(incoming []*resource.Resource) (ResMap, error) {
-	return (&merginator{cdf: rmF.cdf}).Merge(incoming)
+func (rmF *Factory) ConflatePatches(patches []*resource.Resource) (ResMap, error) {
+	return (&merginator{cdf: rmF.cdf}).ConflatePatches(patches)
 }
 
 func newResMapFromResourceSlice(
@@ -152,11 +153,11 @@ func (rmF *Factory) NewResMapFromRNodeSlice(rnodes []*yaml.RNode) (ResMap, error
 		if err != nil {
 			return nil, err
 		}
-		r, err := rmF.resF.FromBytes([]byte(s))
+		r, err := rmF.resF.SliceFromBytes([]byte(s))
 		if err != nil {
 			return nil, err
 		}
-		resources = append(resources, r)
+		resources = append(resources, r...)
 	}
 	return newResMapFromResourceSlice(resources)
 }

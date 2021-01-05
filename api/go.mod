@@ -10,17 +10,18 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-multierror v1.1.0
+	github.com/imdario/mergo v0.3.5
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0
 	github.com/yujunz/go-getter v1.5.1-lite.0.20201201013212-6d9c071adddf
 	golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e
 	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
-	sigs.k8s.io/kustomize/kyaml v0.10.3
+	sigs.k8s.io/kustomize/kyaml v0.10.5
 	sigs.k8s.io/yaml v1.2.0
 )
 

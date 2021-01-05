@@ -51,6 +51,11 @@ commonLabels:
   group: apps
   kind: Deployment
 
+- path: spec/template/spec/topologySpreadConstraints/labelSelector/matchLabels
+  create: false
+  group: apps
+  kind: Deployment
+
 - path: spec/selector/matchLabels
   create: true
   kind: ReplicaSet
@@ -93,6 +98,11 @@ commonLabels:
   kind: StatefulSet
 
 - path: spec/template/spec/affinity/podAntiAffinity/requiredDuringSchedulingIgnoredDuringExecution/labelSelector/matchLabels
+  create: false
+  group: apps
+  kind: StatefulSet
+
+- path: spec/template/spec/topologySpreadConstraints/labelSelector/matchLabels
   create: false
   group: apps
   kind: StatefulSet

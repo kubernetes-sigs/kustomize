@@ -46,6 +46,10 @@ func (r *Resource) GetFieldValue(f string) (interface{}, error) {
 	return r.kunStr.GetFieldValue(f)
 }
 
+func (r *Resource) GetDataMap() map[string]string {
+	return r.kunStr.GetDataMap()
+}
+
 func (r *Resource) GetGvk() resid.Gvk {
 	return r.kunStr.GetGvk()
 }
@@ -91,7 +95,16 @@ func (r *Resource) MatchesAnnotationSelector(selector string) (bool, error) {
 }
 
 func (r *Resource) SetAnnotations(m map[string]string) {
+	if len(m) == 0 {
+		// Force field erasure.
+		r.kunStr.SetAnnotations(nil)
+		return
+	}
 	r.kunStr.SetAnnotations(m)
+}
+
+func (r *Resource) SetDataMap(m map[string]string) {
+	r.kunStr.SetDataMap(m)
 }
 
 func (r *Resource) SetGvk(gvk resid.Gvk) {
@@ -99,6 +112,11 @@ func (r *Resource) SetGvk(gvk resid.Gvk) {
 }
 
 func (r *Resource) SetLabels(m map[string]string) {
+	if len(m) == 0 {
+		// Force field erasure.
+		r.kunStr.SetLabels(nil)
+		return
+	}
 	r.kunStr.SetLabels(m)
 }
 
@@ -139,10 +157,12 @@ func (r *Resource) DeepCopy() *Resource {
 	return rc
 }
 
-// Replace performs replace with other resource.
-func (r *Resource) Replace(other *Resource) {
+// CopyMergeMetaDataFields copies everything but the non-metadata in
+// the ifc.Kunstructured map, merging labels and annotations.
+func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) {
 	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
-	r.SetAnnotations(mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
+	r.SetAnnotations(
+		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
 	r.SetName(other.GetName())
 	r.SetNamespace(other.GetNamespace())
 	r.copyOtherFields(other)
@@ -156,6 +176,10 @@ func (r *Resource) copyOtherFields(other *Resource) {
 	r.refVarNames = copyStringSlice(other.refVarNames)
 	r.namePrefixes = copyStringSlice(other.namePrefixes)
 	r.nameSuffixes = copyStringSlice(other.nameSuffixes)
+}
+
+func (r *Resource) MergeDataMapFrom(o *Resource) {
+	r.SetDataMap(mergeStringMaps(o.GetDataMap(), r.GetDataMap()))
 }
 
 func (r *Resource) ErrIfNotEquals(o *Resource) error {
@@ -196,12 +220,6 @@ func (r *Resource) ReferencesEqual(o *Resource) bool {
 
 func (r *Resource) KunstructEqual(o *Resource) bool {
 	return reflect.DeepEqual(r.kunStr, o.kunStr)
-}
-
-// Merge performs merge with other resource.
-func (r *Resource) Merge(other *Resource) {
-	r.Replace(other)
-	mergeConfigmap(r.Map(), other.Map(), r.Map())
 }
 
 func (r *Resource) copyRefBy() []resid.ResId {
@@ -412,22 +430,6 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 		r.SetNamespace(ns)
 	}
 	return err
-}
-
-// TODO: Add BinaryData once we sync to new k8s.io/api
-func mergeConfigmap(
-	mergedTo map[string]interface{},
-	maps ...map[string]interface{}) {
-	mergedMap := map[string]interface{}{}
-	for _, m := range maps {
-		datamap, ok := m["data"].(map[string]interface{})
-		if ok {
-			for key, value := range datamap {
-				mergedMap[key] = value
-			}
-		}
-	}
-	mergedTo["data"] = mergedMap
 }
 
 func mergeStringMaps(maps ...map[string]string) map[string]string {

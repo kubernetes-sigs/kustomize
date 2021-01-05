@@ -80,7 +80,7 @@ namespace: base
 configMapGenerator:
 - name: testCase
   literals:
-    - base=true
+    - base=apple
 `)
 	th.WriteK("/app/overlay", `
 resources:
@@ -92,19 +92,17 @@ configMapGenerator:
   - name: testCase
     behavior: merge
     literals:
-      - overlay=true
+      - overlay=peach
 `)
 	m := th.Run("/app/overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  base: "true"
-  overlay: "true"
+  base: apple
+  overlay: peach
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: testCase-bcbmmg48hd
+  name: testCase-gmfch8gkbt
   namespace: overlay
 `)
 }

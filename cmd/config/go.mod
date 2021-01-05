@@ -15,7 +15,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	k8s.io/apimachinery v0.18.10
-	sigs.k8s.io/kustomize/kyaml v0.10.3
+	sigs.k8s.io/kustomize/kyaml v0.10.5
 )
 
 replace sigs.k8s.io/kustomize/kyaml => ../../kyaml

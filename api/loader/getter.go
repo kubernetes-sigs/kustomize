@@ -7,11 +7,13 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/yujunz/go-getter"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 )
 
 type remoteTargetSpec struct {
@@ -28,7 +30,12 @@ type remoteTargetSpec struct {
 // Getter is a function that can gets resource
 type remoteTargetGetter func(rs *remoteTargetSpec) error
 
-func newLoaderAtGetter(raw string, fSys filesys.FileSystem, referrer *fileLoader, cloner git.Cloner, getter remoteTargetGetter) (ifc.Loader, error) {
+func newLoaderAtGetter(
+	raw string,
+	fSys filesys.FileSystem,
+	referrer *fileLoader,
+	cloner git.Cloner,
+	getter remoteTargetGetter) (ifc.Loader, error) {
 	rs := &remoteTargetSpec{
 		Raw: raw,
 	}
@@ -86,7 +93,7 @@ func getRemoteTarget(rs *remoteTargetSpec) error {
 		},
 		Options: opts,
 	}
-	return client.Get()
+	return utils.TimedCall("go-getter client.Get", 21*time.Second, client.Get)
 }
 
 func getNothing(rs *remoteTargetSpec) error {

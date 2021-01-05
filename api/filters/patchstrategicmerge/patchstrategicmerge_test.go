@@ -15,6 +15,29 @@ func TestFilter(t *testing.T) {
 		patch    *yaml.RNode
 		expected string
 	}{
+		"simple": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 1
+`,
+			patch: yaml.MustParse(`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`),
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`,
+		},
 		"nullMapEntry1": {
 			input: `
 apiVersion: example.com/v1
