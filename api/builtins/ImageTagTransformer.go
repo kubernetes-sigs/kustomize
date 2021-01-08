@@ -11,7 +11,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/imagetag"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -32,17 +31,17 @@ func (p *ImageTagTransformerPlugin) Config(
 func (p *ImageTagTransformerPlugin) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
 		// traverse all fields at first
-		err := filtersutil.ApplyToJSON(imagetag.LegacyFilter{
+		err := r.ApplyFilter(imagetag.LegacyFilter{
 			ImageTag: p.ImageTag,
-		}, r)
+		})
 		if err != nil {
 			return err
 		}
 		// then use user specified field specs
-		err = filtersutil.ApplyToJSON(imagetag.Filter{
+		err = r.ApplyFilter(imagetag.Filter{
 			ImageTag: p.ImageTag,
 			FsSlice:  p.FieldSpecs,
-		}, r)
+		})
 		if err != nil {
 			return err
 		}

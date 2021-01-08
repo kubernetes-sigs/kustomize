@@ -43,6 +43,10 @@ func FromRNode(node *yaml.RNode) *WNode {
 	return &WNode{node: node}
 }
 
+func (wn *WNode) AsRNode() *yaml.RNode {
+	return wn.node
+}
+
 func (wn *WNode) demandMetaData(label string) yaml.ResourceMeta {
 	meta, err := wn.node.GetMeta()
 	if err != nil {

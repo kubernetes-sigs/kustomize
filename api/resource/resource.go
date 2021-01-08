@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -422,14 +423,18 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 		return err
 	}
 	n, ns := r.GetName(), r.GetNamespace()
-	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+	r.ApplyFilter(patchstrategicmerge.Filter{
 		Patch: node,
-	}, r)
+	})
 	if !r.IsEmpty() {
 		r.SetName(n)
 		r.SetNamespace(ns)
 	}
 	return err
+}
+
+func (r *Resource) ApplyFilter(f kio.Filter) error {
+	return filtersutil.ApplyToJSON(f, r)
 }
 
 func mergeStringMaps(maps ...map[string]string) map[string]string {
