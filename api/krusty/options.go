@@ -4,6 +4,7 @@
 package krusty
 
 import (
+	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -60,4 +61,16 @@ func (o Options) IfApiMachineryElseKyaml(s1, s2 string) string {
 		return s1
 	}
 	return s2
+}
+
+// GetBuiltinPluginNames returns a list of builtin plugin names
+func GetBuiltinPluginNames() []string {
+	var ret []string
+	for k := range builtinhelpers.GeneratorFactories {
+		ret = append(ret, k.String())
+	}
+	for k := range builtinhelpers.TransformerFactories {
+		ret = append(ret, k.String())
+	}
+	return ret
 }
