@@ -9,7 +9,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/nameref"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 )
 
 type nameReferenceTransformer struct {
@@ -84,12 +83,12 @@ func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 					if candidates == nil {
 						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
 					}
-					err := filtersutil.ApplyToJSON(nameref.Filter{
+					err := referrer.ApplyFilter(nameref.Filter{
 						FieldSpec:          fSpec,
 						Referrer:           referrer,
 						Target:             target.Gvk,
 						ReferralCandidates: candidates,
-					}, referrer)
+					})
 					if err != nil {
 						return err
 					}
