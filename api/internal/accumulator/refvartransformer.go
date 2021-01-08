@@ -9,7 +9,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/refvar"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 )
 
 type refVarTransformer struct {
@@ -50,10 +49,10 @@ func (rv *refVarTransformer) Transform(m resmap.ResMap) error {
 		rv.replacementCounts, rv.varMap)
 	for _, res := range m.Resources() {
 		for _, fieldSpec := range rv.fieldSpecs {
-			err := filtersutil.ApplyToJSON(refvar.Filter{
+			err := res.ApplyFilter(refvar.Filter{
 				MappingFunc: rv.mappingFunc,
 				FieldSpec:   fieldSpec,
-			}, res)
+			})
 			if err != nil {
 				return err
 			}
