@@ -1100,18 +1100,21 @@ $patch: delete
 			finalMapSize: 0,
 		},
 	}
-	for name, test := range tests {
-		m, err := rmF.NewResMapFromBytes([]byte(target))
-		assert.NoError(t, err, name)
-		idSet := resource.MakeIdSet(m.Resources())
-		assert.Equal(t, 1, idSet.Size(), name)
-		p, err := rf.FromBytes([]byte(test.patch))
-		assert.NoError(t, err, name)
-		assert.NoError(t, m.ApplySmPatch(idSet, p), name)
-		assert.Equal(t, test.finalMapSize, m.Size(), name)
-		yml, err := m.AsYaml()
-		assert.NoError(t, err, name)
-		assert.Equal(t, test.expected, string(yml), name)
+	for name := range tests {
+		tc := tests[name]
+		t.Run(name, func(t *testing.T) {
+			m, err := rmF.NewResMapFromBytes([]byte(target))
+			assert.NoError(t, err, name)
+			idSet := resource.MakeIdSet(m.Resources())
+			assert.Equal(t, 1, idSet.Size(), name)
+			p, err := rf.FromBytes([]byte(tc.patch))
+			assert.NoError(t, err, name)
+			assert.NoError(t, m.ApplySmPatch(idSet, p), name)
+			assert.Equal(t, tc.finalMapSize, m.Size(), name)
+			yml, err := m.AsYaml()
+			assert.NoError(t, err, name)
+			assert.Equal(t, tc.expected, string(yml), name)
+		})
 	}
 }
 
