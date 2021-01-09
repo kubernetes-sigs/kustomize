@@ -423,9 +423,12 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 		return err
 	}
 	n, ns := r.GetName(), r.GetNamespace()
-	r.ApplyFilter(patchstrategicmerge.Filter{
+	err = r.ApplyFilter(patchstrategicmerge.Filter{
 		Patch: node,
 	})
+	if err != nil {
+		return err
+	}
 	if !r.IsEmpty() {
 		r.SetName(n)
 		r.SetNamespace(ns)

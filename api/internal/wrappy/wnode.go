@@ -163,12 +163,7 @@ func (wn *WNode) GetString(path string) (string, error) {
 
 // Map implements ifc.Kunstructured.
 func (wn *WNode) Map() map[string]interface{} {
-	var result map[string]interface{}
-	if err := wn.node.YNode().Decode(&result); err != nil {
-		// Log and die since interface doesn't allow error.
-		log.Fatalf("failed to decode ynode: %v", err)
-	}
-	return result
+	return wn.node.Map()
 }
 
 // MarshalJSON implements ifc.Kunstructured.
