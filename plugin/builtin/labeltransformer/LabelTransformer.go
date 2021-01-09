@@ -28,6 +28,9 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
+	if len(p.Labels) == 0 {
+		return nil
+	}
 	for _, r := range m.Resources() {
 		err := r.ApplyFilter(labels.Filter{
 			Labels:  p.Labels,
