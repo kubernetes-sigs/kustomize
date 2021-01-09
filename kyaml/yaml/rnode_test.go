@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -381,6 +382,38 @@ func TestRNodeGetValidatedMetadata(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestRNodeMapEmpty(t *testing.T) {
+	assert.Equal(t, 0, len(NewRNode(nil).Map()))
+}
+
+func TestRNodeMap(t *testing.T) {
+	wn := NewRNode(nil)
+	if err := wn.UnmarshalJSON([]byte(`{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "homer",
+    "namespace": "simpsons"
+  }
+}`)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+
+	expected := map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "homer",
+			"namespace": "simpsons",
+		},
+	}
+
+	actual := wn.Map()
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
 	}
 }
 
