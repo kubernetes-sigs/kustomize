@@ -24,6 +24,9 @@ func (p *AnnotationsTransformerPlugin) Config(
 }
 
 func (p *AnnotationsTransformerPlugin) Transform(m resmap.ResMap) error {
+	if len(p.Annotations) == 0 {
+		return nil
+	}
 	for _, r := range m.Resources() {
 		err := r.ApplyFilter(annotations.Filter{
 			Annotations: p.Annotations,
