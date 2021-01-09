@@ -15,6 +15,7 @@ type Filter struct {
 
 var _ kio.Filter = Filter{}
 
+// Filter does a strategic merge patch, which can delete nodes.
 func (pf Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	var result []*yaml.RNode
 	for i := range nodes {

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/api/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
@@ -478,6 +479,10 @@ func TestGetSlice(t *testing.T) {
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
 	}
+}
+
+func TestMapEmpty(t *testing.T) {
+	assert.Equal(t, 0, len(NewWNode().Map()))
 }
 
 func TestMap(t *testing.T) {
