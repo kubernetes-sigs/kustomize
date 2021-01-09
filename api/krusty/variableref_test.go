@@ -1976,67 +1976,64 @@ spec:
 
 func TestDeploymentAnnotations(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
+	th.WriteK(".", `
 configMapGenerator:
-  - name: testConfigMap
-    envs:
-      - test.properties
+- name: theConfigMap
+  envs:
+  - test.properties
 
 vars:
-  - name: FOO
-    objref:
-      kind: ConfigMap
-      name: testConfigMap
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.foo
+- name: SOMERIVER
+  objref:
+    kind: ConfigMap
+    name: theConfigMap
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.waterway
 
 commonAnnotations:
-  foo: $(FOO)
+  river: $(SOMERIVER)
 
 resources:
-  - deployment.yaml
+- deployment.yaml
 `)
 
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test
+  name: theDeployment
 spec:
   template:
     spec:
       containers:
-        - name: test
+      - name: test
 `)
-	th.WriteF("/app/test.properties", `foo=bar`)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	th.WriteF("test.properties", `waterway=mississippi`)
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    foo: bar
-  name: test
+    river: mississippi
+  name: theDeployment
 spec:
   template:
     metadata:
       annotations:
-        foo: bar
+        river: mississippi
     spec:
       containers:
       - name: test
 ---
 apiVersion: v1
 data:
-  foo: bar
+  waterway: mississippi
 kind: ConfigMap
 metadata:
   annotations:
-    foo: bar
-  name: testConfigMap-798k5k7g9f
+    river: mississippi
+  name: theConfigMap-hdd8h8cgdt
 `)
 }
