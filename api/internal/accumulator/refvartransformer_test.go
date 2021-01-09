@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
@@ -123,8 +124,18 @@ func TestRefVarTransformer(t *testing.T) {
 							"slice": []interface{}{5}, // noticeably *not* a []string
 						}}).ResMap(),
 			},
-			errMessage: `obj '{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
+			errMessage: konfig.IfApiMachineryElseKyaml(
+				`obj '{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
 ' at path 'data/slice': invalid value type expect a string`,
+				`obj 'apiVersion: v1
+data:
+  slice:
+  - 5
+kind: ConfigMap
+metadata:
+  name: cm1
+' at path 'data/slice': invalid value type expect a string`,
+			),
 		},
 		{
 			description: "var replacement in nil",
