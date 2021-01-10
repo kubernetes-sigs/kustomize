@@ -28,17 +28,17 @@ func newNameReferenceTransformer(br []builtinconfig.NameBackReferences) resmap.T
 
 // Transform updates name references in resource A that
 // refer to resource B, given that B's name may have
-// changed.
+// changed.  A is the referrer, B is the referralTarget.
 //
 // For example, a HorizontalPodAutoscaler (HPA)
 // necessarily refers to a Deployment, the thing that
-// the HPA scales. The Deployment name might change
+// the HPA scales. The Deployment's name might change
 // (e.g. prefix added), and the reference in the HPA
 // has to be fixed.
 //
 // In the outer loop over the ResMap below, say we
-// encounter a specific HPA. Then, in scanning backrefs,
-// we encounter an entry like
+// encounter a specific HPA. Then, in scanning the set
+// of all known backrefs, we encounter an entry like
 //
 //   - kind: Deployment
 //     fieldSpecs:
@@ -73,20 +73,20 @@ func newNameReferenceTransformer(br []builtinconfig.NameBackReferences) resmap.T
 // Name transformers should only modify the name in the
 // body of the resource object (the value in the ResMap).
 //
-func (o *nameReferenceTransformer) Transform(m resmap.ResMap) error {
+func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	// TODO: Too much looping, here and in transitive calls.
 	for _, referrer := range m.Resources() {
 		var candidates resmap.ResMap
-		for _, target := range o.backRefs {
-			for _, fSpec := range target.FieldSpecs {
+		for _, referralTarget := range t.backRefs {
+			for _, fSpec := range referralTarget.FieldSpecs {
 				if referrer.OrgId().IsSelected(&fSpec.Gvk) {
 					if candidates == nil {
 						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
 					}
 					err := referrer.ApplyFilter(nameref.Filter{
-						FieldSpec:          fSpec,
 						Referrer:           referrer,
-						Target:             target.Gvk,
+						NameFieldToUpdate:  fSpec,
+						ReferralTarget:     referralTarget.Gvk,
 						ReferralCandidates: candidates,
 					})
 					if err != nil {
