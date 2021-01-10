@@ -149,6 +149,11 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 	index := 0
 	for i := range values {
+		// the Split used above will eat the tail '\n' from each resource. This may affect the
+		// literal string value since '\n' is meaningful in it.
+		if i != len(values)-1 {
+			values[i] += "\n"
+		}
 		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
 		node, err := r.decode(index, decoder)
 		if err == io.EOF {
