@@ -51,7 +51,8 @@ func IsYNodeEmptyDoc(n *yaml.Node) bool {
 }
 
 func IsYNodeString(n *yaml.Node) bool {
-	return n.Kind == yaml.ScalarNode && n.Tag == NodeTagString
+	return n.Kind == yaml.ScalarNode &&
+		(n.Tag == NodeTagString || n.Tag == NodeTagEmpty)
 }
 
 // IsYNodeZero is true if all the public fields in the Node are empty.
