@@ -4,9 +4,8 @@
 package accumulator
 
 import (
-	expansion2 "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
-
 	"sigs.k8s.io/kustomize/api/filters/refvar"
+	expansion2 "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 )
