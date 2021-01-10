@@ -164,6 +164,6 @@ func (ra *ResAccumulator) FixBackReferences() (err error) {
 	if ra.tConfig.NameReference == nil {
 		return nil
 	}
-	return ra.Transform(newNameReferenceTransformer(
-		ra.tConfig.NameReference))
+	return ra.Transform(
+		newNameReferenceTransformer(ra.tConfig.NameReference))
 }

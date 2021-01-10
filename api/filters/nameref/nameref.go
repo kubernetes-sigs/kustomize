@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
-	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -33,6 +32,8 @@ type Filter struct {
 	ReferralCandidates resmap.ResMap
 }
 
+// At time of writing, in practice this is called with a slice with only
+// one entry, the node also referred to be the resource in the Referrer field.
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	return kio.FilterAll(yaml.FilterFunc(f.run)).Filter(nodes)
 }
@@ -40,7 +41,7 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 // The node passed in here is the same node as held in Referrer, and
 // that's how the referrer's name field is updated.
 // However, this filter still needs the extra methods on Referrer
-// to consult things like the resource Id, it's namespace, etc.
+// to consult things like the resource Id, its namespace, etc.
 func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 	err := node.PipeE(fieldspec.Filter{
 		FieldSpec: f.NameFieldToUpdate,
@@ -95,41 +96,53 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 	}
 
 	oldName := nameNode.YNode().Value
-	newName, newNamespace, err := f.selectReferral(oldName, subset)
+	res, err := f.selectReferral(oldName, subset)
+	if err != nil || res == nil {
+		// Nil res means nothing to do.
+		return err
+	}
+	f.recordTheReferral(res)
+	if res.GetName() == oldName && res.GetNamespace() == "" {
+		// The name has not changed, nothing to do.
+		return nil
+	}
+	err = node.PipeE(yaml.FieldSetter{
+		Name:        "name",
+		StringValue: res.GetName(),
+	})
 	if err != nil {
 		return err
 	}
-
-	if newName == oldName && newNamespace == "" {
-		// Nothing to do.
-		return nil
-	}
-
-	// set name
-	node.Pipe(yaml.FieldSetter{
-		Name:        "name",
-		StringValue: newName,
-	})
-	if newNamespace != "" {
+	if res.GetNamespace() != "" {
 		// We don't want value "" to replace value "default" since
 		// the empty string is handled as a wild card here not default namespace
 		// by kubernetes.
-		node.Pipe(yaml.FieldSetter{
+		err = node.PipeE(yaml.FieldSetter{
 			Name:        "namespace",
-			StringValue: newNamespace,
+			StringValue: res.GetNamespace(),
 		})
 	}
-	return nil
+	return err
 }
 
 func (f Filter) setScalar(node *yaml.RNode) error {
-	newValue, _, err := f.selectReferral(
-		node.YNode().Value,
-		f.ReferralCandidates.Resources())
-	if err != nil {
+	res, err := f.selectReferral(
+		node.YNode().Value, f.ReferralCandidates.Resources())
+	if err != nil || res == nil {
+		// Nil res means nothing to do.
 		return err
 	}
-	return filtersutil.SetScalar(newValue)(node)
+	f.recordTheReferral(res)
+	if res.GetName() == node.YNode().Value {
+		// The name has not changed, nothing to do.
+		return nil
+	}
+	return node.PipeE(yaml.FieldSetter{StringValue: res.GetName()})
+}
+
+// In the resource, make a note that it is referred to by the referrer.
+func (f Filter) recordTheReferral(res *resource.Resource) {
+	res.AppendRefBy(f.Referrer.CurId())
 }
 
 func (f Filter) isRoleRef() bool {
@@ -191,52 +204,57 @@ func (f Filter) filterReferralCandidates(
 }
 
 // selectReferral picks the referral among a subset of candidates.
-// It returns the current name and namespace of the selected candidate.
-// The content of the referricalCandidateSubset slice is most of the time
-// identical to the referralCandidates resmap. Still in some cases, such
+// The content of the candidateSubset slice is most of the time
+// identical to the ReferralCandidates resmap. Still in some cases, such
 // as ClusterRoleBinding, the subset only contains the resources of a specific
 // namespace.
 func (f Filter) selectReferral(
 	oldName string,
-	referralCandidateSubset []*resource.Resource) (string, string, error) {
+	candidateSubset []*resource.Resource) (*resource.Resource, error) {
 	var roleRefGvk *resid.Gvk
 	if f.isRoleRef() {
 		var err error
 		roleRefGvk, err = getRoleRefGvk(f.Referrer)
 		if err != nil {
-			return "", "", err
+			return nil, err
 		}
 	}
-	for _, res := range referralCandidateSubset {
+	for _, res := range candidateSubset {
+		if res.GetOriginalName() != oldName {
+			continue
+		}
 		id := res.OrgId()
+		if !id.IsSelected(&f.ReferralTarget) {
+			continue
+		}
 		// If the we are processing a roleRef, the apiGroup and Kind in the
 		// roleRef are needed to be considered.
-		if (!f.isRoleRef() || id.IsSelected(roleRefGvk)) &&
-			id.IsSelected(&f.ReferralTarget) && res.GetOriginalName() == oldName {
-			matches := f.ReferralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
-			// If there's more than one match,
-			// filter the matches by prefix and suffix
-			if len(matches) > 1 {
-				filteredMatches := f.filterReferralCandidates(matches)
-				if len(filteredMatches) > 1 {
-					return "", "", fmt.Errorf(
-						"multiple matches for %s:\n  %v",
-						id, getIds(filteredMatches))
-				}
-				// Check is the match the resource we are working on
-				if len(filteredMatches) == 0 || res != filteredMatches[0] {
-					continue
-				}
-			}
-			// In the resource, note that it is referenced
-			// by the referrer.
-			res.AppendRefBy(f.Referrer.CurId())
-			// Return transformed name of the object,
-			// complete with prefixes, hashes, etc.
-			return res.GetName(), res.GetNamespace(), nil
+		if f.isRoleRef() && !id.IsSelected(roleRefGvk) {
+			continue
 		}
+		matches := f.ReferralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
+		// If there's more than one match,
+		// filter the matches by prefix and suffix
+		if len(matches) > 1 {
+			filteredMatches := f.filterReferralCandidates(matches)
+			if len(filteredMatches) > 1 {
+				return nil, fmt.Errorf(
+					"multiple matches for %s:\n  %v",
+					id, getIds(filteredMatches))
+			}
+			// Check is the match the resource we are working on
+			if len(filteredMatches) == 0 || res != filteredMatches[0] {
+				continue
+			}
+		}
+		// In the resource, note that it is referenced
+		// by the referrer.
+		res.AppendRefBy(f.Referrer.CurId())
+		// Return transformed name of the object,
+		// complete with prefixes, hashes, etc.
+		return res, nil
 	}
-	return oldName, "", nil
+	return nil, nil
 }
 
 func getIds(rs []*resource.Resource) []string {

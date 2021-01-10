@@ -929,7 +929,64 @@ metadata:
 `)
 }
 
-func TestVariableRefIngress(t *testing.T) {
+func TestVariableRefIngressBasic(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- ingress.yaml
+- deployment.yaml
+
+vars:
+- name: DEPLOYMENT_NAME
+  objref:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginxDep
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxDep
+`)
+
+	th.WriteF("ingress.yaml", `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginxIngress
+spec:
+  rules:
+  - host: $(DEPLOYMENT_NAME).example.com
+  tls:
+  - hosts:
+    - $(DEPLOYMENT_NAME).example.com
+    secretName: $(DEPLOYMENT_NAME).example.com-tls
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginxIngress
+spec:
+  rules:
+  - host: nginxDep.example.com
+  tls:
+  - hosts:
+    - nginxDep.example.com
+    secretName: nginxDep.example.com-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxDep
+`)
+}
+
+func TestVariableRefIngressOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 resources:

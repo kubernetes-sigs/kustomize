@@ -19,7 +19,8 @@ var _ resmap.Transformer = &nameReferenceTransformer{}
 
 // newNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given slice of NameBackReferences.
-func newNameReferenceTransformer(br []builtinconfig.NameBackReferences) resmap.Transformer {
+func newNameReferenceTransformer(
+	br []builtinconfig.NameBackReferences) resmap.Transformer {
 	if br == nil {
 		log.Fatal("backrefs not expected to be nil")
 	}
@@ -81,8 +82,18 @@ func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 			for _, fSpec := range referralTarget.FieldSpecs {
 				if referrer.OrgId().IsSelected(&fSpec.Gvk) {
 					if candidates == nil {
+						// This excludes objects from other namespaces.
+						// In most realistic uses, it returns all elements of m,
+						// (since they're all in the same namespace).
 						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
 					}
+					// One way to get here is with, say, a referrer that's an
+					// HPA, and a target that's a Deployment (one of the
+					// Deployment's fieldSpecs selects an HPA).  Now we look
+					// through the candidates to see if one is a Deployment
+					// (the target), and if so, get the Deployment's name and
+					// write it into the referrer, at the field specfied in
+					// fSpec.
 					err := referrer.ApplyFilter(nameref.Filter{
 						Referrer:           referrer,
 						NameFieldToUpdate:  fSpec,
