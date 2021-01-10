@@ -723,7 +723,7 @@ j: k
 	assert.Nil(t, rn)
 }
 
-func TestSetField_Fn(t *testing.T) {
+func TestFieldSetter(t *testing.T) {
 	// Change field
 	node, err := Parse(`
 foo: baz
@@ -801,6 +801,40 @@ foo
 		assert.Contains(t, err.Error(), "wrong Node Kind")
 	}
 	assert.Nil(t, k)
+}
+
+func TestFieldSetterNumberInKeyRegression(t *testing.T) {
+	node := NewMapRNode(&map[string]string{"river": "mississippi"})
+
+	k, err := FieldSetter{
+		Name:  "forty 2",
+		Value: NewScalarRNode("number key one"),
+	}.Filter(node)
+	assert.NoError(t, err)
+	assert.Equal(t, `number key one
+`, assertNoErrorString(t)(k.String()))
+
+	k, err = FieldSetter{
+		Name:  "fortytwo",
+		Value: NewScalarRNode("number key two"),
+	}.Filter(node)
+	assert.NoError(t, err)
+	assert.Equal(t, `number key two
+`, assertNoErrorString(t)(k.String()))
+
+	k, err = FieldSetter{
+		Name:  "42",
+		Value: NewScalarRNode("number key three"),
+	}.Filter(node)
+	assert.NoError(t, err)
+	assert.Equal(t, `number key three
+`, assertNoErrorString(t)(k.String()))
+
+	assert.Equal(t, `river: mississippi
+forty 2: number key one
+fortytwo: number key two
+42: number key three
+`, assertNoErrorString(t)(node.String()))
 }
 
 func TestSet_Fn(t *testing.T) {
