@@ -440,3 +440,40 @@ metadata:
   name: cm-o2-5k95kd76ft
 `)
 }
+
+func TestConfigMapGeneratorLiteralNewline(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+generators:
+- configmaps.yaml
+`)
+	th.WriteF("/app/configmaps.yaml", `
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: testing
+literals:
+  - |
+    initial.txt=greetings
+    everyone
+  - |
+    final.txt=different
+    behavior
+---
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(
+		m, `
+apiVersion: v1
+data:
+  final.txt: |
+    different
+    behavior
+  initial.txt: |
+    greetings
+    everyone
+kind: ConfigMap
+metadata:
+  name: testing-tt4769fb52
+`)
+}
