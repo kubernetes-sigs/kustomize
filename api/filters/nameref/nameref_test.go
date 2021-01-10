@@ -50,8 +50,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -90,8 +90,8 @@ seq:
 - oldName2
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "seq"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "seq"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -128,8 +128,8 @@ map:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "map"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "map"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -169,8 +169,8 @@ map:
   namespace: oldNs
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "map"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "map"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -207,8 +207,8 @@ map:
   name: null
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "map"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "map"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -277,8 +277,8 @@ metadata:
 			originalNames: []string{"oldName", "oldName"},
 			expected:      "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -308,8 +308,8 @@ metadata:
 			originalNames: []string{"oldName", "oldName"},
 			expected:      "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -395,8 +395,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -438,8 +438,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -481,8 +481,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -517,8 +517,8 @@ metadata:
 			inputSuffix:   "suffix",
 			expected:      "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -553,8 +553,8 @@ metadata:
 			inputSuffix:   "",
 			expected:      "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -589,8 +589,8 @@ metadata:
 			inputSuffix:   "suffix",
 			expected:      "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -632,8 +632,8 @@ ref:
   name: oldName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -675,8 +675,8 @@ ref:
   name: oldName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -718,8 +718,8 @@ ref:
   name: oldName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
