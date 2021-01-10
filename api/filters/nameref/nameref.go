@@ -16,22 +16,34 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Filter will update the name reference
+// Filter updates a name references.
 type Filter struct {
-	FieldSpec          types.FieldSpec `json:"fieldSpec,omitempty" yaml:"fieldSpec,omitempty"`
-	Referrer           *resource.Resource
-	Target             resid.Gvk
+	// Referrer is the object that refers to something else by a name,
+	// a name that this filter seeks to update.
+	Referrer *resource.Resource
+
+	// NameFieldToUpdate is the field in the Referrer that holds the
+	// name requiring an update.
+	NameFieldToUpdate types.FieldSpec `json:"nameFieldToUpdate,omitempty" yaml:"nameFieldToUpdate,omitempty"`
+
+	// Source of the new value for the name (in its name field).
+	ReferralTarget resid.Gvk
+
+	// Set of resources to hunt through to find the ReferralTarget.
 	ReferralCandidates resmap.ResMap
-	isRoleRef          bool
 }
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	return kio.FilterAll(yaml.FilterFunc(f.run)).Filter(nodes)
 }
 
+// The node passed in here is the same node as held in Referrer, and
+// that's how the referrer's name field is updated.
+// However, this filter still needs the extra methods on Referrer
+// to consult things like the resource Id, it's namespace, etc.
 func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 	err := node.PipeE(fieldspec.Filter{
-		FieldSpec: f.FieldSpec,
+		FieldSpec: f.NameFieldToUpdate,
 		SetValue:  f.set,
 	})
 	return node, err
@@ -41,58 +53,87 @@ func (f Filter) set(node *yaml.RNode) error {
 	if yaml.IsMissingOrNull(node) {
 		return nil
 	}
-	if strings.HasSuffix(f.FieldSpec.Path, "roleRef/name") {
-		f.isRoleRef = true
-	}
 	switch node.YNode().Kind {
 	case yaml.ScalarNode:
 		return f.setScalar(node)
 	case yaml.MappingNode:
-		// Kind: ValidatingWebhookConfiguration
-		// FieldSpec is webhooks/clientConfig/service
 		return f.setMapping(node)
 	case yaml.SequenceNode:
-		return f.setSequence(node)
+		return applyFilterToSeq(seqFilter{
+			setScalarFn:  f.setScalar,
+			setMappingFn: f.setMapping,
+		}, node)
 	default:
 		return fmt.Errorf(
 			"node is expected to be either a string or a slice of string or a map of string")
 	}
 }
 
-func (f Filter) setSequence(node *yaml.RNode) error {
-	return applyFilterToSeq(seqFilter{
-		setScalarFn:  f.setScalar,
-		setMappingFn: f.setMapping,
-	}, node)
-}
-
+// Replace name field within a map RNode and leverage the namespace field.
 func (f Filter) setMapping(node *yaml.RNode) error {
-	return setNameAndNs(
-		node,
-		f.Referrer,
-		f.Target,
-		f.ReferralCandidates,
-		f.isRoleRef,
-	)
+	if node.YNode().Kind != yaml.MappingNode {
+		return fmt.Errorf("expect a mapping node")
+	}
+	nameNode, err := node.Pipe(yaml.FieldMatcher{Name: "name"})
+	if err != nil || nameNode == nil {
+		return fmt.Errorf("cannot find field 'name' in node")
+	}
+	namespaceNode, err := node.Pipe(yaml.FieldMatcher{Name: "namespace"})
+	if err != nil {
+		return fmt.Errorf("error when find field 'namespace'")
+	}
+
+	// name will not be updated if the namespace doesn't match
+	subset := f.ReferralCandidates.Resources()
+	if namespaceNode != nil {
+		namespace := namespaceNode.YNode().Value
+		bynamespace := f.ReferralCandidates.GroupedByOriginalNamespace()
+		if _, ok := bynamespace[namespace]; !ok {
+			return nil
+		}
+		subset = bynamespace[namespace]
+	}
+
+	oldName := nameNode.YNode().Value
+	newName, newNamespace, err := f.selectReferral(oldName, subset)
+	if err != nil {
+		return err
+	}
+
+	if newName == oldName && newNamespace == "" {
+		// Nothing to do.
+		return nil
+	}
+
+	// set name
+	node.Pipe(yaml.FieldSetter{
+		Name:        "name",
+		StringValue: newName,
+	})
+	if newNamespace != "" {
+		// We don't want value "" to replace value "default" since
+		// the empty string is handled as a wild card here not default namespace
+		// by kubernetes.
+		node.Pipe(yaml.FieldSetter{
+			Name:        "namespace",
+			StringValue: newNamespace,
+		})
+	}
+	return nil
 }
 
 func (f Filter) setScalar(node *yaml.RNode) error {
-	newValue, err := getSimpleNameField(
+	newValue, _, err := f.selectReferral(
 		node.YNode().Value,
-		f.Referrer,
-		f.Target,
-		f.ReferralCandidates,
-		f.ReferralCandidates.Resources(),
-		f.isRoleRef,
-	)
+		f.ReferralCandidates.Resources())
 	if err != nil {
 		return err
 	}
-	err = filtersutil.SetScalar(newValue)(node)
-	if err != nil {
-		return err
-	}
-	return nil
+	return filtersutil.SetScalar(newValue)(node)
+}
+
+func (f Filter) isRoleRef() bool {
+	return strings.HasSuffix(f.NameFieldToUpdate.Path, "roleRef/name")
 }
 
 // getRoleRefGvk returns a Gvk in the roleRef field. Return error
@@ -114,14 +155,16 @@ func getRoleRefGvk(res json.Marshaler) (*resid.Gvk, error) {
 		return nil, err
 	}
 	if apiGroup.IsNil() {
-		return nil, fmt.Errorf("apiGroup cannot be found in roleRef %s", roleRef.MustString())
+		return nil, fmt.Errorf(
+			"apiGroup cannot be found in roleRef %s", roleRef.MustString())
 	}
 	kind, err := roleRef.Pipe(yaml.Lookup("kind"))
 	if err != nil {
 		return nil, err
 	}
 	if kind.IsNil() {
-		return nil, fmt.Errorf("kind cannot be found in roleRef %s", roleRef.MustString())
+		return nil, fmt.Errorf(
+			"kind cannot be found in roleRef %s", roleRef.MustString())
 	}
 	return &resid.Gvk{
 		Group: apiGroup.YNode().Value,
@@ -129,19 +172,17 @@ func getRoleRefGvk(res json.Marshaler) (*resid.Gvk, error) {
 	}, nil
 }
 
-func filterReferralCandidates(
-	referrer *resource.Resource,
-	matches []*resource.Resource,
-	target resid.Gvk,
-) []*resource.Resource {
+func (f Filter) filterReferralCandidates(
+	matches []*resource.Resource) []*resource.Resource {
 	var ret []*resource.Resource
 	for _, m := range matches {
 		// If target kind is not ServiceAccount, we shouldn't consider condidates which
 		// doesn't have same namespace.
-		if target.Kind != "ServiceAccount" && m.GetNamespace() != referrer.GetNamespace() {
+		if f.ReferralTarget.Kind != "ServiceAccount" &&
+			m.GetNamespace() != f.Referrer.GetNamespace() {
 			continue
 		}
-		if !referrer.PrefixesSuffixesEquals(m) {
+		if !f.Referrer.PrefixesSuffixesEquals(m) {
 			continue
 		}
 		ret = append(ret, m)
@@ -151,21 +192,17 @@ func filterReferralCandidates(
 
 // selectReferral picks the referral among a subset of candidates.
 // It returns the current name and namespace of the selected candidate.
-// Note that the content of the referricalCandidateSubset slice is most of the time
+// The content of the referricalCandidateSubset slice is most of the time
 // identical to the referralCandidates resmap. Still in some cases, such
 // as ClusterRoleBinding, the subset only contains the resources of a specific
 // namespace.
-func selectReferral(
+func (f Filter) selectReferral(
 	oldName string,
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource,
-	isRoleRef bool) (string, string, error) {
+	referralCandidateSubset []*resource.Resource) (string, string, error) {
 	var roleRefGvk *resid.Gvk
-	if isRoleRef {
+	if f.isRoleRef() {
 		var err error
-		roleRefGvk, err = getRoleRefGvk(referrer)
+		roleRefGvk, err = getRoleRefGvk(f.Referrer)
 		if err != nil {
 			return "", "", err
 		}
@@ -174,13 +211,13 @@ func selectReferral(
 		id := res.OrgId()
 		// If the we are processing a roleRef, the apiGroup and Kind in the
 		// roleRef are needed to be considered.
-		if (!isRoleRef || id.IsSelected(roleRefGvk)) &&
-			id.IsSelected(&target) && res.GetOriginalName() == oldName {
-			matches := referralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
+		if (!f.isRoleRef() || id.IsSelected(roleRefGvk)) &&
+			id.IsSelected(&f.ReferralTarget) && res.GetOriginalName() == oldName {
+			matches := f.ReferralCandidates.GetMatchingResourcesByOriginalId(id.Equals)
 			// If there's more than one match,
 			// filter the matches by prefix and suffix
 			if len(matches) > 1 {
-				filteredMatches := filterReferralCandidates(referrer, matches, target)
+				filteredMatches := f.filterReferralCandidates(matches)
 				if len(filteredMatches) > 1 {
 					return "", "", fmt.Errorf(
 						"multiple matches for %s:\n  %v",
@@ -193,29 +230,13 @@ func selectReferral(
 			}
 			// In the resource, note that it is referenced
 			// by the referrer.
-			res.AppendRefBy(referrer.CurId())
+			res.AppendRefBy(f.Referrer.CurId())
 			// Return transformed name of the object,
 			// complete with prefixes, hashes, etc.
 			return res.GetName(), res.GetNamespace(), nil
 		}
 	}
-
 	return oldName, "", nil
-}
-
-// utility function to replace a simple string by the new name
-func getSimpleNameField(
-	oldName string,
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap,
-	referralCandidateSubset []*resource.Resource,
-	isRoleRef bool) (string, error) {
-
-	newName, _, err := selectReferral(oldName, referrer, target,
-		referralCandidates, referralCandidateSubset, isRoleRef)
-
-	return newName, err
 }
 
 func getIds(rs []*resource.Resource) []string {
@@ -224,74 +245,4 @@ func getIds(rs []*resource.Resource) []string {
 		result = append(result, r.CurId().String()+"\n")
 	}
 	return result
-}
-
-// utility function to replace name field within a map RNode
-// and leverage the namespace field.
-func setNameAndNs(
-	in *yaml.RNode,
-	referrer *resource.Resource,
-	target resid.Gvk,
-	referralCandidates resmap.ResMap,
-	isRoleRef bool) error {
-
-	if in.YNode().Kind != yaml.MappingNode {
-		return fmt.Errorf("expect a mapping node")
-	}
-
-	// Get name field
-	nameNode, err := in.Pipe(yaml.FieldMatcher{
-		Name: "name",
-	})
-	if err != nil || nameNode == nil {
-		return fmt.Errorf("cannot find field 'name' in node")
-	}
-
-	// Get namespace field
-	namespaceNode, err := in.Pipe(yaml.FieldMatcher{
-		Name: "namespace",
-	})
-	if err != nil {
-		return fmt.Errorf("error when find field 'namespace'")
-	}
-
-	// check is namespace matched
-	// name will bot be updated if the namespace doesn't match
-	subset := referralCandidates.Resources()
-	if namespaceNode != nil {
-		namespace := namespaceNode.YNode().Value
-		bynamespace := referralCandidates.GroupedByOriginalNamespace()
-		if _, ok := bynamespace[namespace]; !ok {
-			return nil
-		}
-		subset = bynamespace[namespace]
-	}
-
-	oldName := nameNode.YNode().Value
-	newname, newnamespace, err := selectReferral(oldName, referrer, target,
-		referralCandidates, subset, isRoleRef)
-	if err != nil {
-		return err
-	}
-
-	if (newname == oldName) && (newnamespace == "") {
-		// no candidate found.
-		return nil
-	}
-
-	// set name
-	in.Pipe(yaml.FieldSetter{
-		Name:        "name",
-		StringValue: newname,
-	})
-	if newnamespace != "" {
-		// We don't want value "" to replace value "default" since
-		// the empty string is handled as a wild card here not default namespace
-		// by kubernetes.
-		in.Pipe(yaml.FieldSetter{
-			Name:        "namespace",
-			StringValue: newnamespace,
-		})
-	}
-	return nil
 }
