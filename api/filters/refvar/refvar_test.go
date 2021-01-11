@@ -272,7 +272,7 @@ metadata:
     config.kubernetes.io/index: '0'
 data:
   1: str
-' at path 'data': invalid map key: 1, type: ` + yaml.NodeTagInt,
+' at path 'data': invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,
 			filter: Filter{
 				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
