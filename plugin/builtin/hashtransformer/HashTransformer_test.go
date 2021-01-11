@@ -53,7 +53,7 @@ spec:
         image: nginx:1.7.9
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 kind: ConfigMap
 metadata:

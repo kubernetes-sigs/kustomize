@@ -23,15 +23,18 @@ import (
 // paired with metadata used by kustomize.
 // For more history, see sigs.k8s.io/kustomize/api/ifc.Unstructured
 type Resource struct {
-	kunStr       ifc.Kunstructured
-	originalName string
-	originalNs   string
-	options      *types.GenArgs
-	refBy        []resid.ResId
-	refVarNames  []string
-	namePrefixes []string
-	nameSuffixes []string
+	kunStr      ifc.Kunstructured
+	options     *types.GenArgs
+	refBy       []resid.ResId
+	refVarNames []string
 }
+
+const (
+	nameAnnotation      = "config.kubernetes.io/originalName"
+	prefixAnnotation    = "config.kubernetes.io/prefixes"
+	suffixAnnotation    = "config.kubernetes.io/suffixes"
+	namespaceAnnotation = "config.kubernetes.io/originalNs"
+)
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
 	r.kunStr = incoming.Copy()
@@ -172,13 +175,9 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) {
 }
 
 func (r *Resource) copyOtherFields(other *Resource) {
-	r.originalName = other.originalName
-	r.originalNs = other.originalNs
 	r.options = other.options
 	r.refBy = other.copyRefBy()
 	r.refVarNames = copyStringSlice(other.refVarNames)
-	r.namePrefixes = copyStringSlice(other.namePrefixes)
-	r.nameSuffixes = copyStringSlice(other.nameSuffixes)
 }
 
 func (r *Resource) MergeDataMapFrom(o *Resource) {
@@ -245,28 +244,48 @@ func copyStringSlice(s []string) []string {
 
 // Implements ResCtx AddNamePrefix
 func (r *Resource) AddNamePrefix(p string) {
-	r.namePrefixes = append(r.namePrefixes, p)
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if _, ok := annotations[prefixAnnotation]; !ok {
+		annotations[prefixAnnotation] = p
+	} else {
+		annotations[prefixAnnotation] = annotations[prefixAnnotation] + "," + p
+	}
+	r.SetAnnotations(annotations)
 }
 
 // Implements ResCtx AddNameSuffix
 func (r *Resource) AddNameSuffix(s string) {
-	r.nameSuffixes = append(r.nameSuffixes, s)
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if _, ok := annotations[suffixAnnotation]; !ok {
+		annotations[suffixAnnotation] = s
+	} else {
+		annotations[suffixAnnotation] = annotations[suffixAnnotation] + "," + s
+	}
+	r.SetAnnotations(annotations)
 }
 
 // Implements ResCtx GetOutermostNamePrefix
 func (r *Resource) GetOutermostNamePrefix() string {
-	if len(r.namePrefixes) == 0 {
+	namePrefixes := r.GetNamePrefixes()
+	if len(namePrefixes) == 0 {
 		return ""
 	}
-	return r.namePrefixes[len(r.namePrefixes)-1]
+	return namePrefixes[len(namePrefixes)-1]
 }
 
 // Implements ResCtx GetOutermostNameSuffix
 func (r *Resource) GetOutermostNameSuffix() string {
-	if len(r.nameSuffixes) == 0 {
+	nameSuffixes := r.GetNameSuffixes()
+	if len(nameSuffixes) == 0 {
 		return ""
 	}
-	return r.nameSuffixes[len(r.nameSuffixes)-1]
+	return nameSuffixes[len(nameSuffixes)-1]
 }
 
 func sameEndingSubarray(a, b []string) bool {
@@ -291,12 +310,20 @@ func sameEndingSubarray(a, b []string) bool {
 
 // Implements ResCtx GetNamePrefixes
 func (r *Resource) GetNamePrefixes() []string {
-	return r.namePrefixes
+	annotations := r.GetAnnotations()
+	if _, ok := annotations[prefixAnnotation]; !ok {
+		return nil
+	}
+	return strings.Split(annotations[prefixAnnotation], ",")
 }
 
 // Implements ResCtx GetNameSuffixes
 func (r *Resource) GetNameSuffixes() []string {
-	return r.nameSuffixes
+	annotations := r.GetAnnotations()
+	if _, ok := annotations[suffixAnnotation]; !ok {
+		return nil
+	}
+	return strings.Split(annotations[suffixAnnotation], ",")
 }
 
 // OutermostPrefixSuffixEquals returns true if both resources
@@ -320,23 +347,96 @@ func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
 	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
-func (r *Resource) GetOriginalName() string {
-	return r.originalName
+func (r *Resource) RemoveIdAnnotations() error {
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	delete(annotations, nameAnnotation)
+	delete(annotations, prefixAnnotation)
+	delete(annotations, suffixAnnotation)
+	delete(annotations, namespaceAnnotation)
+	if len(annotations) == 0 {
+		json, err := r.MarshalJSON()
+		if err != nil {
+			return err
+		}
+
+		yml, err := yaml.JSONToYAML(json)
+		if err != nil {
+			return err
+		}
+
+		rnode, err := kyaml.Parse(string(yml))
+		if err != nil {
+			return err
+		}
+
+		err = rnode.SetAnnotations(nil)
+		if err != nil {
+			return err
+		}
+
+		b, err := rnode.MarshalJSON()
+		if err != nil {
+			return err
+		}
+
+		err = r.UnmarshalJSON(b)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	r.SetAnnotations(annotations)
+	return nil
 }
 
-// Making this public would be bad.
-func (r *Resource) setOriginalName(n string) *Resource {
-	r.originalName = n
+func (r *Resource) GetOriginalName() string {
+	annotations := r.GetAnnotations()
+	if name, ok := annotations[nameAnnotation]; ok {
+		return name
+	}
+	return r.kunStr.GetName()
+}
+
+func (r *Resource) SetOriginalName(n string, overwrite bool) *Resource {
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if _, ok := annotations[nameAnnotation]; !ok || overwrite {
+		annotations[nameAnnotation] = n
+	}
+	r.kunStr.SetAnnotations(annotations)
 	return r
 }
 
 func (r *Resource) GetOriginalNs() string {
-	return r.originalNs
+	annotations := r.GetAnnotations()
+	if ns, ok := annotations[namespaceAnnotation]; ok {
+		return ns
+	}
+	ns := r.GetNamespace()
+	if ns == "default" {
+		return ""
+	}
+	return ns
 }
 
-// Making this public would be bad.
-func (r *Resource) setOriginalNs(n string) *Resource {
-	r.originalNs = n
+func (r *Resource) SetOriginalNs(n string, overwrite bool) *Resource {
+	if n == "" {
+		n = "default"
+	}
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if _, ok := annotations[namespaceAnnotation]; !ok || overwrite {
+		annotations[namespaceAnnotation] = n
+	}
+	r.SetAnnotations(annotations)
 	return r
 }
 

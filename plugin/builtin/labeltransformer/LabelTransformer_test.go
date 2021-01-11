@@ -65,7 +65,7 @@ spec:
         image: nginx
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 kind: Service
 metadata:

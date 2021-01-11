@@ -603,7 +603,7 @@ spec:
     B: Y
 `)
 	assert.NoError(t, err)
-	th.AssertActualEqualsExpected(
+	th.AssertActualEqualsExpectedNoIdAnnotations(
 		resMap,
 		// In kyaml/yaml.merge2, the empty "B: " is dropped
 		// when patch1 and patch2 are merged, so the patch
@@ -652,7 +652,7 @@ spec:
     B: Y
 `)
 	assert.NoError(t, err)
-	th.AssertActualEqualsExpected(
+	th.AssertActualEqualsExpectedNoIdAnnotations(
 		resMap,
 		// This time only patch2 was applied.  Same answer on the kyaml
 		// path, but different answer on apimachinery path (B becomes "true"?)
@@ -1388,7 +1388,7 @@ paths:
 - patch.yaml
 `, target)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1430,7 +1430,7 @@ paths:
 - patch.yaml
 `, target)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:

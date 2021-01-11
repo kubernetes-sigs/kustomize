@@ -245,4 +245,6 @@ type ResMap interface {
 	// selected set of resources.
 	ApplySmPatch(
 		selectedSet *resource.IdSet, patch *resource.Resource) error
+
+	RemoveIdAnnotations() error
 }

@@ -52,7 +52,7 @@ spec:
         name: init-alpine
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -122,7 +122,7 @@ spec:
         name: init-alpine
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -194,7 +194,7 @@ spec:
         name: init-alpine
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -265,7 +265,7 @@ spec:
         name: init-alpine
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -337,7 +337,7 @@ spec:
         name: init-alpine
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -395,7 +395,7 @@ spec:
       containers:
       initContainers:
 `)
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -438,7 +438,7 @@ spec:
         name: my-image
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment
@@ -480,7 +480,7 @@ spec:
         name: my-image
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 group: apps
 kind: Deployment

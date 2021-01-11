@@ -126,6 +126,14 @@ func (th Harness) AssertActualEqualsExpected(
 	th.AssertActualEqualsExpectedWithTweak(m, nil, expected)
 }
 
+func (th Harness) AssertActualEqualsExpectedNoIdAnnotations(m resmap.ResMap, expected string) {
+	err := m.RemoveIdAnnotations()
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	th.AssertActualEqualsExpectedWithTweak(m, nil, expected)
+}
+
 func (th Harness) AssertActualEqualsExpectedWithTweak(
 	m resmap.ResMap, tweaker func([]byte) []byte, expected string) {
 	assertActualEqualsExpectedWithTweak(th, m, tweaker, expected)

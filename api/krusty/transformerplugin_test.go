@@ -80,7 +80,7 @@ data:
 `)
 
 	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(m, `
 apiVersion: v1
 data:
   foo: foo
