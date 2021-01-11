@@ -78,7 +78,9 @@ func (f Filter) setMap(node *yaml.RNode) error {
 	contents := node.YNode().Content
 	for i := 0; i < len(contents); i += 2 {
 		if !yaml.IsYNodeString(contents[i]) {
-			return fmt.Errorf("invalid map key: %s, type: %s", contents[i].Value, contents[i].Tag)
+			return fmt.Errorf(
+				"invalid map key: value='%s', tag='%s'",
+				contents[i].Value, contents[i].Tag)
 		}
 		if !yaml.IsYNodeString(contents[i+1]) {
 			continue
