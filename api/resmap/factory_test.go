@@ -389,7 +389,6 @@ spec:
 
 	rm, err := rmF.ConflatePatches([]*resource.Resource{r1, r2})
 	assert.NoError(t, err)
-
 	yml, err = rm.AsYaml()
 	assert.NoError(t, err)
 

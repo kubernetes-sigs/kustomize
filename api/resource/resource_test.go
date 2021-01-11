@@ -695,6 +695,325 @@ spec:
 	}
 }
 
+func TestSetOriginalNameAndNs(t *testing.T) {
+	input := `apiVersion: apps/v1
+kind: Secret
+metadata:
+ name: newName`
+
+	factory := provider.NewDefaultDepProvider().GetResourceFactory()
+	resources, err := factory.SliceFromBytes([]byte(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res := resources[0]
+	res.SetOriginalName("oldName", false)
+	res.SetOriginalNs("default", false)
+
+	expected := `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+    config.kubernetes.io/originalNs: default
+  name: newName
+`
+	bytes, err := res.AsYAML()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, expected, string(bytes))
+}
+
+func TestGetOriginalName(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			// no name annotation, return the name
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: mySecret`,
+			expected: "mySecret",
+		},
+
+		{
+			// return name from name annotation
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+  name: newName`,
+			expected: "oldName",
+		},
+	}
+
+	for _, test := range tests {
+		factory := provider.NewDefaultDepProvider().GetResourceFactory()
+		resources, err := factory.SliceFromBytes([]byte(test.input))
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, test.expected, resources[0].GetOriginalName())
+	}
+}
+
+func TestSetOriginalName(t *testing.T) {
+	tests := []struct {
+		input        string
+		originalName string
+		overwrite    bool
+		expected     string
+	}{
+		{
+			// no original name set, overwrite is false
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName`,
+			originalName: "oldName",
+			overwrite:    false,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+  name: newName
+`,
+		},
+
+		{
+			// no original name set, overwrite is true
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName`,
+			originalName: "oldName",
+			overwrite:    true,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+  name: newName
+`,
+		},
+
+		{
+			// original name is set, overwrite is false, resource shouldn't change
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+  name: newName`,
+			originalName: "newOriginalName",
+			overwrite:    false,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+  name: newName
+`,
+		},
+
+		{
+			// original name is set, overwrite is true, resource should change
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: oldName
+  name: newName`,
+			originalName: "newOriginalName",
+			overwrite:    true,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalName: newOriginalName
+  name: newName
+`,
+		},
+	}
+
+	for _, test := range tests {
+		factory := provider.NewDefaultDepProvider().GetResourceFactory()
+		resources, err := factory.SliceFromBytes([]byte(test.input))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		res := resources[0]
+		res.SetOriginalName(test.originalName, test.overwrite)
+
+		bytes, err := res.AsYAML()
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, test.expected, string(bytes))
+	}
+}
+
+func TestGetOriginalNs(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			// no namespace, return default
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: mySecret`,
+			expected: "",
+		},
+
+		{
+			// return old namespace
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: oldNamespace
+  name: mySecret
+  namespace: myNamespace`,
+			expected: "oldNamespace",
+		},
+
+		{
+			// return namespace
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: mySecret
+  namespace: myNamespace`,
+			expected: "myNamespace",
+		},
+	}
+
+	for _, test := range tests {
+		factory := provider.NewDefaultDepProvider().GetResourceFactory()
+		resources, err := factory.SliceFromBytes([]byte(test.input))
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, test.expected, resources[0].GetOriginalNs())
+	}
+}
+
+func TestSetOriginalNs(t *testing.T) {
+	tests := []struct {
+		input      string
+		originalNs string
+		overwrite  bool
+		expected   string
+	}{
+		{
+			// no original namespace set, overwrite is false
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+  namespace: newNamespace`,
+			originalNs: "oldNamespace",
+			overwrite:  false,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: oldNamespace
+  name: newName
+  namespace: newNamespace
+`,
+		},
+
+		{
+			// no original name set, overwrite is true
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+  namespace: newNamespace`,
+
+			originalNs: "oldNamespace",
+			overwrite:  true,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: oldNamespace
+  name: newName
+  namespace: newNamespace
+`,
+		},
+
+		{
+			// original name is set, overwrite is false, resource shouldn't change
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: oldNamespace
+  name: newName
+  namespace: newNamespace`,
+			originalNs: "newOriginalNamespace",
+			overwrite:  false,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: oldNamespace
+  name: newName
+  namespace: newNamespace
+`,
+		},
+
+		{
+			// original name is set, overwrite is true, resource should change
+			input: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: oldNamespace
+  name: newName
+  namespace: newNamespace`,
+			originalNs: "newOriginalNamespace",
+			overwrite:  true,
+			expected: `apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/originalNs: newOriginalNamespace
+  name: newName
+  namespace: newNamespace
+`,
+		},
+	}
+
+	for _, test := range tests {
+		factory := provider.NewDefaultDepProvider().GetResourceFactory()
+		resources, err := factory.SliceFromBytes([]byte(test.input))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		res := resources[0]
+		res.SetOriginalNs(test.originalNs, test.overwrite)
+
+		bytes, err := res.AsYAML()
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, test.expected, string(bytes))
+	}
+}
+
 // baseResource produces a base object which used to test
 // patch transformation
 // Also the structure is matching the Deployment syntax

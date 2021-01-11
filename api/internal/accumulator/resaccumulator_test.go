@@ -355,7 +355,8 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 	// went through a prefix transformer.
 	r := m.GetByIndex(1)
 	r.AddNamePrefix("sub-")
-	r.SetName("sub-backendOne") // original name remains "backendOne"
+	r.SetName("sub-backendOne")
+	r.SetOriginalName("backendOne", true)
 
 	err = ra2.AppendAll(m)
 	if err != nil {
