@@ -602,6 +602,10 @@ type FieldSetter struct {
 	// when setting it.  Otherwise, if an existing node is found, the style is
 	// retained.
 	OverrideStyle bool `yaml:"overrideStyle,omitempty"`
+
+	// DisableOverride can be set to retain the existing node if one is found.
+	// Otherwise the node is created.
+	DisableOverride bool `yaml:"disableOverride,omitempty"`
 }
 
 func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
@@ -614,6 +618,9 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 			return rn, err
 		}
 		if IsMissingOrNull(s.Value) {
+			return rn, nil
+		}
+		if GetValue(rn) != "" && s.DisableOverride {
 			return rn, nil
 		}
 		// only apply the style if there is not an existing style
@@ -636,6 +643,11 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		return nil, err
 	}
 	if field != nil {
+		// if the field already exists don't override if DisableOverride is true
+		if s.DisableOverride {
+			return field, nil
+		}
+
 		// only apply the style if there is not an existing style
 		// or we want to override it
 		if !s.OverrideStyle || field.YNode().Style == 0 {

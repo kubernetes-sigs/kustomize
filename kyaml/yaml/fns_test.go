@@ -801,6 +801,67 @@ foo
 		assert.Contains(t, err.Error(), "wrong Node Kind")
 	}
 	assert.Nil(t, k)
+
+	// Change field - DisableOverride when absent should create field
+	node, err = Parse(`
+bar: buz
+`)
+	assert.NoError(t, err)
+	instance = FieldSetter{
+		Name:            "foo",
+		Value:           NewScalarRNode("bar"),
+		DisableOverride: true,
+	}
+	k, err = instance.Filter(node)
+	assert.NoError(t, err)
+	assert.Equal(t, `bar: buz
+foo: bar
+`, assertNoErrorString(t)(node.String()))
+	assert.Equal(t, `bar
+`, assertNoErrorString(t)(k.String()))
+
+	// Change field - DisableOverride when present should not change
+	node, err = Parse(`
+foo: baz
+`)
+	assert.NoError(t, err)
+	instance = FieldSetter{
+		Name:            "foo",
+		Value:           NewScalarRNode("bar"),
+		DisableOverride: true,
+	}
+	k, err = instance.Filter(node)
+	assert.NoError(t, err)
+	assert.Equal(t, `foo: baz
+`, assertNoErrorString(t)(node.String()))
+	assert.Equal(t, `baz
+`, assertNoErrorString(t)(k.String()))
+
+	// Change field - DisableOverride when present should not change
+	orig := MustParse(`
+root:
+  foo: bar
+`)
+	node = orig.Copy()
+	_, err = node.Pipe(LookupCreate(yaml.ScalarNode, "root", "foo"), FieldSetter{StringValue: "baz", DisableOverride: true})
+	assert.NoError(t, err)
+	assert.Equal(t, `root:
+  foo: bar
+`, assertNoErrorString(t)(node.String()))
+
+	// Change field - DisableOverride when absent should create
+	orig = MustParse(`
+root:
+  qux: moo
+`)
+	node = orig.Copy()
+	_, err = node.Pipe(LookupCreate(yaml.ScalarNode, "root", "foo"), FieldSetter{StringValue: "baz", DisableOverride: true})
+	assert.NoError(t, err)
+	assert.Equal(t, `root:
+  qux: moo
+  foo: baz
+`, assertNoErrorString(t)(node.String()))
+
 }
 
 func TestFieldSetterNumberInKeyRegression(t *testing.T) {
