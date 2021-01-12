@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type myProperties map[string]spec.Schema
+type myProperties = map[string]spec.Schema
 type nameToApiMap map[string]common.OpenAPIDefinition
 
 // LoadConfigFromCRDs parse CRD schemas from paths into a TransformerConfig
