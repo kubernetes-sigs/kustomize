@@ -178,7 +178,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		if !r.DisableUnwrapping &&
 			len(values) == 1 && // Only unwrap if there is only 1 value
 			(meta.Kind == ResourceListKind || meta.Kind == "List") &&
-			node.Field("items") != nil {
+			(node.Field("items") != nil || node.Field("functionConfig") != nil) {
 			r.WrappingKind = meta.Kind
 			r.WrappingAPIVersion = meta.APIVersion
 
