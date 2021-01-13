@@ -137,7 +137,6 @@ metadata:
   annotations:
     config.kubernetes.io/originalName: deployment
     config.kubernetes.io/prefixes: test-
-    config.kubernetes.io/suffixes: null
   name: test-deployment
 spec:
   template:

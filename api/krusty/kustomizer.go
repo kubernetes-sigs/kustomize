@@ -93,9 +93,6 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		}
 		t.Transform(m)
 	}
-	err = m.RemoveIdAnnotations()
-	if err != nil {
-		return nil, err
-	}
+	m.RemoveIdAnnotations()
 	return m, nil
 }

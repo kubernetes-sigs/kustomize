@@ -4,6 +4,7 @@
 package krusty_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -360,7 +361,7 @@ resources:
 	}
 }
 
-// TODO: varref has some quote issues
+// TODO(#3449): varref has some quote issues
 // https://github.com/kubernetes-sigs/kustomize/issues/3449
 func TestVarRefBig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
@@ -682,7 +683,7 @@ resources:
 - ../../base
 `)
 	m := th.Run("/app/overlay/staging", opts)
-	th.AssertActualEqualsExpected(m, `
+	expFmt := `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -756,9 +757,9 @@ kind: Service
 metadata:
   annotations:
     prometheus.io/path: _status/vars
-    prometheus.io/port: 8080
-    prometheus.io/scrape: true
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: true
+    prometheus.io/port: %s
+    prometheus.io/scrape: %s
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: %s
   labels:
     app: cockroachdb
   name: dev-base-cockroachdb
@@ -769,8 +770,8 @@ spec:
     port: 26257
     targetPort: 26257
   - name: http
-    port: "8080"
-    targetPort: "8080"
+    port: %s
+    targetPort: %s
   selector:
     app: cockroachdb
 ---
@@ -786,8 +787,8 @@ spec:
     port: 26257
     targetPort: 26257
   - name: http
-    port: "8080"
-    targetPort: "8080"
+    port: %s
+    targetPort: %s
   selector:
     app: cockroachdb
 ---
@@ -824,8 +825,8 @@ spec:
         - --host $(hostname -f)
         - --http-host 0.0.0.0
         - --join dev-base-cockroachdb-0.dev-base-cockroachdb,dev-base-cockroachdb-1.dev-base-cockroachdb,dev-base-cockroachdb-2.dev-base-cockroachdb
-        - --cache 25%
-        - --max-sql-memory 25%
+        - --cache 25%%
+        - --max-sql-memory 25%%
         image: cockroachdb/cockroach:v1.1.5
         imagePullPolicy: IfNotPresent
         name: cockroachdb
@@ -925,7 +926,16 @@ data:
 kind: ConfigMap
 metadata:
   name: dev-base-test-config-map-6b85g79g7g
-`)
+`
+	th.AssertActualEqualsExpected(m,
+		opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(
+				expFmt,
+				`"8080"`, `"true"`, `"true"`, `8080`, `8080`, `8080`, `8080`),
+			fmt.Sprintf(
+				expFmt,
+				`8080`, `true`, `true`, `"8080"`, `"8080"`, `"8080"`, `"8080"`),
+		))
 }
 
 func TestVariableRefIngressBasic(t *testing.T) {

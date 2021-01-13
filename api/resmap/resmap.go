@@ -246,5 +246,6 @@ type ResMap interface {
 	ApplySmPatch(
 		selectedSet *resource.IdSet, patch *resource.Resource) error
 
-	RemoveIdAnnotations() error
+	// Remove annotations used exclusively by the kustomize build process.
+	RemoveIdAnnotations()
 }

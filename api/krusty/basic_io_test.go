@@ -4,13 +4,33 @@
 package krusty_test
 
 import (
+	"fmt"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestBasicIO1(t *testing.T) {
+func TestBasicIO_1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
+	opts := th.MakeDefaultOptions()
+	if !opts.UseKyaml {
+		// This test won't pass under apimachinery, because in the bowels of
+		// that code (see GetAnnotations in v0.17.0 of
+		// k8s.io/apimachinery/pkg/apis/meta/v1/unstructured/unstructured.go)
+		// an error returned from NestedStringMap is discarded, and an
+		// empty annotation map is silently returned, making this test fail
+		// The swallowed error arises from code like:
+		//   var v interface{}
+		//   v = true
+		//   if str, ok := v.(string); ok {
+		//     save the value in a map (doesn't happen)
+		//   } else {
+		//     return an error (that is then ignored by GetAnnotations)
+		//   }
+		// The error happens when any annotation value can be interpreted as
+		// a boolean or number.
+		t.SkipNow()
+	}
 	th.WriteK(".", `
 resources:
 - service.yaml
@@ -27,7 +47,8 @@ metadata:
 spec:
   clusterIP: None
 `)
-	m := th.Run(".", th.MakeDefaultOptions())
+	m := th.Run(".", opts)
+	// The annotations are sorted by key, hence the order change.
 	th.AssertActualEqualsExpected(
 		m, `
 apiVersion: v1
@@ -41,4 +62,46 @@ metadata:
 spec:
   clusterIP: None
 `)
+}
+
+func TestBasicIO_2(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	opts := th.MakeDefaultOptions()
+	th.WriteK(".", `
+resources:
+- service.yaml
+`)
+	// All the annotation values are quoted.
+	// The apimachinery code path retains the quotes, the kyaml
+	// path drops them at the moment.
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    port: "8080"
+    happy: "true"
+    color: green
+  name: demo
+spec:
+  clusterIP: None
+`)
+	m := th.Run(".", opts)
+	// The annotations are sorted by key, hence the order change.
+	expFmt := `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    color: green
+    happy: %s
+    port: %s
+  name: demo
+spec:
+  clusterIP: None
+`
+	th.AssertActualEqualsExpected(
+		m, opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(expFmt, `"true"`, `"8080"`),
+			fmt.Sprintf(expFmt, `true`, `8080`)))
 }

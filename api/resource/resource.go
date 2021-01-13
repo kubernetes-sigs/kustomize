@@ -244,28 +244,26 @@ func copyStringSlice(s []string) []string {
 
 // Implements ResCtx AddNamePrefix
 func (r *Resource) AddNamePrefix(p string) {
-	annotations := r.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	if _, ok := annotations[prefixAnnotation]; !ok {
-		annotations[prefixAnnotation] = p
-	} else {
-		annotations[prefixAnnotation] = annotations[prefixAnnotation] + "," + p
-	}
-	r.SetAnnotations(annotations)
+	r.addAdditiveAnnotation(prefixAnnotation, p)
 }
 
 // Implements ResCtx AddNameSuffix
 func (r *Resource) AddNameSuffix(s string) {
+	r.addAdditiveAnnotation(suffixAnnotation, s)
+}
+
+func (r *Resource) addAdditiveAnnotation(name, value string) {
+	if value == "" {
+		return
+	}
 	annotations := r.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
-	if _, ok := annotations[suffixAnnotation]; !ok {
-		annotations[suffixAnnotation] = s
+	if existing, ok := annotations[name]; ok {
+		annotations[name] = existing + "," + value
 	} else {
-		annotations[suffixAnnotation] = annotations[suffixAnnotation] + "," + s
+		annotations[name] = value
 	}
 	r.SetAnnotations(annotations)
 }
@@ -347,50 +345,16 @@ func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
 	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
-func (r *Resource) RemoveIdAnnotations() error {
+func (r *Resource) RemoveIdAnnotations() {
 	annotations := r.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
+	if len(annotations) == 0 {
+		return
 	}
 	delete(annotations, nameAnnotation)
 	delete(annotations, prefixAnnotation)
 	delete(annotations, suffixAnnotation)
 	delete(annotations, namespaceAnnotation)
-	if len(annotations) == 0 {
-		json, err := r.MarshalJSON()
-		if err != nil {
-			return err
-		}
-
-		yml, err := yaml.JSONToYAML(json)
-		if err != nil {
-			return err
-		}
-
-		rnode, err := kyaml.Parse(string(yml))
-		if err != nil {
-			return err
-		}
-
-		err = rnode.SetAnnotations(nil)
-		if err != nil {
-			return err
-		}
-
-		b, err := rnode.MarshalJSON()
-		if err != nil {
-			return err
-		}
-
-		err = r.UnmarshalJSON(b)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	r.SetAnnotations(annotations)
-	return nil
 }
 
 func (r *Resource) GetOriginalName() string {
