@@ -34,6 +34,7 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
+		r.SetOriginalNs(r.GetNamespace(), false)
 		err := r.ApplyFilter(namespace.Filter{
 			Namespace: p.Namespace,
 			FsSlice:   p.FieldSpecs,

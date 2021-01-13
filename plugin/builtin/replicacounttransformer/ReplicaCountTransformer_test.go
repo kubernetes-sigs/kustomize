@@ -91,7 +91,7 @@ spec:
       app: app
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Service
 metadata:
@@ -180,7 +180,7 @@ fieldSpecs:
 - path: spec/replicas
   create: true
   kind: Deployment`, rm)
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
