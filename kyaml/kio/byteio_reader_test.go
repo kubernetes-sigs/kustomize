@@ -98,6 +98,29 @@ elems:
 			wrappingAPIVersion: ResourceListAPIVersion,
 			wrappingAPIKind:    ResourceListKind,
 		},
+		//
+		//
+		//
+		{
+			name: "wrapped_resource_list_function_config_without_items",
+			input: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+functionConfig:
+  foo: bar
+  elems:
+  - a
+  - b
+  - c
+`,
+			expectedItems: []string{},
+			expectedFunctionConfig: `foo: bar
+elems:
+- a
+- b
+- c`,
+			wrappingAPIVersion: ResourceListAPIVersion,
+			wrappingAPIKind:    ResourceListKind,
+		},
 
 		//
 		//
