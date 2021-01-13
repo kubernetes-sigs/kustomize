@@ -104,6 +104,7 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap, patch jsonpa
 		return err
 	}
 	for _, res := range resources {
+		res.SetOriginalName(res.GetName(), false)
 		err = res.ApplyFilter(patchjson6902.Filter{
 			Patch: p.Patch,
 		})

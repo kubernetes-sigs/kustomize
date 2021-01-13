@@ -745,7 +745,6 @@ rules:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
 	rnodes, err := rm.ToRNodeSlice()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -999,6 +998,7 @@ spec:
 				return
 			}
 			assert.False(t, tc.errorExpected)
+			assert.NoError(t, m.RemoveIdAnnotations())
 			yml, err := m.AsYaml()
 			assert.NoError(t, err)
 			assert.Equal(t, strings.Join(tc.expected, "---\n"), string(yml))
@@ -1111,6 +1111,7 @@ $patch: delete
 			assert.NoError(t, err, name)
 			assert.NoError(t, m.ApplySmPatch(idSet, p), name)
 			assert.Equal(t, tc.finalMapSize, m.Size(), name)
+			assert.NoError(t, m.RemoveIdAnnotations())
 			yml, err := m.AsYaml()
 			assert.NoError(t, err, name)
 			assert.Equal(t, tc.expected, string(yml), name)

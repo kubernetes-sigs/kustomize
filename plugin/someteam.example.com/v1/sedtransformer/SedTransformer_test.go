@@ -36,7 +36,7 @@ fruit: $FRUIT
 vegetable: $VEGGIE
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 beans: two two two two
 fruit: orange

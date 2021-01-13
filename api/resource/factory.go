@@ -35,17 +35,17 @@ func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 
 // FromMapWithName returns a new instance with the given "original" name.
 func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalName(n)
+	return rf.makeOne(rf.kf.FromMap(m), nil).SetOriginalName(n, true)
 }
 
 // FromMapWithNamespace returns a new instance with the given "original" namespace.
 func (rf *Factory) FromMapWithNamespace(n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalNs(n)
+	return rf.makeOne(rf.kf.FromMap(m), nil).SetOriginalNs(n, true)
 }
 
 // FromMapWithNamespaceAndName returns a new instance with the given "original" namespace.
 func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).setOriginalNs(ns).setOriginalName(n)
+	return rf.makeOne(rf.kf.FromMap(m), nil).SetOriginalNs(ns, true).SetOriginalName(n, true)
 }
 
 // FromMapAndOption returns a new instance of Resource with given options.
@@ -72,7 +72,7 @@ func (rf *Factory) makeOne(
 		kunStr:  u,
 		options: o,
 	}
-	return r.setOriginalName(r.kunStr.GetName()).setOriginalNs(r.GetNamespace())
+	return r
 }
 
 // SliceFromPatches returns a slice of resources given a patch path
@@ -157,7 +157,7 @@ func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resour
 		return nil, fmt.Errorf("number of names doesn't match number of resources")
 	}
 	for i, res := range result {
-		res.originalName = names[i]
+		res.SetOriginalName(names[i], true)
 	}
 	return result, nil
 }

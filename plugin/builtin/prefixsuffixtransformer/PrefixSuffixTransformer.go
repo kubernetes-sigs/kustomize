@@ -6,7 +6,6 @@ package main
 
 import (
 	"errors"
-
 	"sigs.k8s.io/kustomize/api/filters/prefixsuffix"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -70,8 +69,12 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 				// this will add a prefix and a suffix
 				// to the resource even if those are
 				// empty
+
 				r.AddNamePrefix(p.Prefix)
 				r.AddNameSuffix(p.Suffix)
+				if p.Prefix != "" || p.Suffix != "" {
+					r.SetOriginalName(r.GetName(), false)
+				}
 			}
 			err := r.ApplyFilter(prefixsuffix.Filter{
 				Prefix:    p.Prefix,

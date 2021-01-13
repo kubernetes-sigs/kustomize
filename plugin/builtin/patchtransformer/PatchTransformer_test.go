@@ -306,7 +306,7 @@ path: patch.yaml
 target:
   name: myDeploy
 `, someDeploymentResources)
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
