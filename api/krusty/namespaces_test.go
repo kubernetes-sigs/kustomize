@@ -532,9 +532,6 @@ vars:
 func TestVariablesAmbiguousWorkaround(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	opts := th.MakeDefaultOptions()
-	if opts.UseKyaml {
-		t.Skip("TODO(#3396)")
-	}
 	th.WriteK("dev", namespaceNeedInVarDevFolder)
 	th.WriteF("dev/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteK("test", namespaceNeedInVarTestFolder)
@@ -591,10 +588,6 @@ vars:
 // to the variable declarations allows to disambiguate the variables.
 func TestVariablesDisambiguatedWithNamespace(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	opts := th.MakeDefaultOptions()
-	if opts.UseKyaml {
-		t.Skip("TODO(#3396)")
-	}
 	th.WriteK(".", namespaceNeedInVarMyAppWithNamespace)
 	th.WriteF("elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteF("elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
