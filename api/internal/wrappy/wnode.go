@@ -6,6 +6,7 @@ package wrappy
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -66,9 +67,35 @@ func (wn *WNode) GetAnnotations() map[string]string {
 	return wn.demandMetaData("GetAnnotations").Annotations
 }
 
+// convertSliceIndex traverses the items in `fields` and find
+// if there is a slice index in the item and change it to a
+// valid Lookup field path. For example, 'ports[0]' will be
+// converted to 'ports' and '0'.
+func convertSliceIndex(fields []string) []string {
+	var res []string
+	for _, s := range fields {
+		if !strings.HasSuffix(s, "]") {
+			res = append(res, s)
+			continue
+		}
+		re := regexp.MustCompile(`^(.*)\[(\d+)\]$`)
+		groups := re.FindStringSubmatch(s)
+		if len(groups) == 0 {
+			// no match, add to result
+			res = append(res, s)
+			continue
+		}
+		if groups[1] != "" {
+			res = append(res, groups[1])
+		}
+		res = append(res, groups[2])
+	}
+	return res
+}
+
 // GetFieldValue implements ifc.Kunstructured.
 func (wn *WNode) GetFieldValue(path string) (interface{}, error) {
-	fields := strings.Split(path, ".")
+	fields := convertSliceIndex(strings.Split(path, "."))
 	rn, err := wn.node.Pipe(yaml.Lookup(fields...))
 	if err != nil {
 		return nil, err
