@@ -435,13 +435,13 @@ func (rn *RNode) SetDataMap(m map[string]string) {
 	if rn == nil {
 		log.Fatal("cannot set data map on nil Rnode")
 	}
+	if err := rn.PipeE(Clear(DataField)); err != nil {
+		log.Fatal(err)
+	}
 	if len(m) == 0 {
-		if err := rn.PipeE(Clear(DataField)); err != nil {
-			log.Fatal(err)
-		}
 		return
 	}
-	if err := rn.SetMapField(NewMapRNode(&m), DataField); err != nil {
+	if err := rn.LoadMapIntoConfigMapData(m); err != nil {
 		log.Fatal(err)
 	}
 }

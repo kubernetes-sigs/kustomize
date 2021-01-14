@@ -74,20 +74,16 @@ configMapGenerator:
 `)
 	opts := th.MakeDefaultOptions()
 	m := th.Run("overlay", opts)
-	expFmt := `apiVersion: v1
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
 data:
-  crisis: %s
+  crisis: "true"
   fruit: Indian Gooseberry
-  month: %s
-  year: %s
+  month: "12"
+  year: "2020"
 kind: ConfigMap
 metadata:
-  name: bob-%s
-`
-	th.AssertActualEqualsExpected(
-		m, opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `"true"`, `"12"`, `"2020"`, `bk46gm59c6`),
-			fmt.Sprintf(expFmt, `true`, `12`, `2020`, `bkmtk2t2fb`)))
+  name: bob-bk46gm59c6
+`)
 }
 
 // Generate a Secret and a ConfigMap from the same data
