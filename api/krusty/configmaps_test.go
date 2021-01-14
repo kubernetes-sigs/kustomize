@@ -52,7 +52,6 @@ metadata:
 `)
 }
 
-// Observation: Numbers no longer quoted
 func TestGeneratorIntVsStringWithMerge(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
@@ -72,8 +71,7 @@ configMapGenerator:
   literals:
   - month=12
 `)
-	opts := th.MakeDefaultOptions()
-	m := th.Run("overlay", opts)
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `apiVersion: v1
 data:
   crisis: "true"
@@ -83,6 +81,41 @@ data:
 kind: ConfigMap
 metadata:
   name: bob-bk46gm59c6
+`)
+}
+
+func TestGeneratorFromProperties(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+  - name: test-configmap
+    behavior: create
+    envs:
+    - properties
+`)
+	th.WriteF("base/properties", `
+VAR1=100
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: test-configmap
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+VAR2=200
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  VAR1: "100"
+  VAR2: "200"
+kind: ConfigMap
+metadata:
+  name: test-configmap-hdghb5ddkg
 `)
 }
 
