@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/builtins_qlik/utils"
@@ -37,6 +38,7 @@ type SearchReplacePlugin struct {
 	fieldSpec                 types.FieldSpec
 	re                        *regexp.Regexp
 	pwd                       string
+	replaceIsInt              bool
 }
 
 func (p *SearchReplacePlugin) Config(h *resmap.PluginHelpers, c []byte) (err error) {
@@ -81,7 +83,8 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 			var replaceEmpty bool
 			for _, res := range m.Resources() {
 				if p.matchesObjRef(res) {
-					if replacementValue, err := getReplacementValue(res, p.ReplaceWithObjRef.FieldRef.FieldPath); err != nil {
+					var replacementValue string
+					if replacementValue, p.replaceIsInt, err = getReplacementValue(res, p.ReplaceWithObjRef.FieldRef.FieldPath); err != nil {
 						p.logger.Printf("error getting replacement value: %v\n", err)
 					} else {
 						p.Replace = replacementValue
@@ -135,20 +138,28 @@ func (p *SearchReplacePlugin) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func getReplacementValue(res *resource.Resource, fieldPath string) (string, error) {
+func getReplacementValue(res *resource.Resource, fieldPath string) (string, bool, error) {
+	var strVal string
+	var ok bool
+	var isInt bool
+
 	if val, err := res.GetFieldValue(fieldPath); err != nil {
-		return "", err
-	} else if strVal, ok := val.(string); !ok {
-		return "", errors.New("FieldRef for the ReplaceWithObjRef must point to a value of string type")
+		return "", false, err
+	} else if strVal, ok = val.(string); !ok {
+		if intVal, ok := val.(int64); ok {
+			strVal = strconv.FormatInt(intVal, 10)
+			isInt = true
+		} else {
+			return "", false, errors.New("FieldRef for the ReplaceWithObjRef must point to a value of string or int type")
+		}
 	} else if isSecretDataReplacement(res, fieldPath) {
 		if decodedStrVal, err := base64.StdEncoding.DecodeString(strVal); err != nil {
-			return "", err
+			return "", false, err
 		} else {
-			return string(decodedStrVal), nil
+			return string(decodedStrVal), false, nil
 		}
-	} else {
-		return strVal, nil
 	}
+	return strVal, isInt, nil
 }
 
 func isSecretDataReplacement(res *resource.Resource, fieldPath string) bool {
@@ -188,6 +199,10 @@ func (p *SearchReplacePlugin) searchAndReplaceRNode(node *kyaml.RNode, base64Enc
 	}
 
 	if _, ok := changed.(string); ok {
+		if p.replaceIsInt {
+			node.YNode().Tag = kyaml.NodeTagInt
+			node.YNode().Style = 0
+		}
 		node.YNode().Value = changed.(string)
 	} else {
 		tempMap := map[string]interface{}{"tmp": changed}
