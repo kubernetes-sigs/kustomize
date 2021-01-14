@@ -621,12 +621,8 @@ func (m *resWrangler) ApplySmPatch(
 	return nil
 }
 
-func (m *resWrangler) RemoveIdAnnotations() error {
+func (m *resWrangler) RemoveIdAnnotations() {
 	for _, r := range m.Resources() {
-		err := r.RemoveIdAnnotations()
-		if err != nil {
-			return err
-		}
+		r.RemoveIdAnnotations()
 	}
-	return nil
 }

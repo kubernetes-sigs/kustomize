@@ -244,7 +244,7 @@ metadata:
 			t.Fatalf("unexpected error %v", err)
 		}
 	}
-	assert.NoError(t, expected.RemoveIdAnnotations())
+	expected.RemoveIdAnnotations()
 	expYaml, err := expected.AsYaml()
 	assert.NoError(t, err)
 
@@ -252,7 +252,7 @@ metadata:
 	assert.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
 	assert.NoError(t, err)
-	assert.NoError(t, actual.RemoveIdAnnotations())
+	actual.RemoveIdAnnotations()
 	actYaml, err := actual.AsYaml()
 	assert.NoError(t, err)
 	assert.Equal(t, expYaml, actYaml)
