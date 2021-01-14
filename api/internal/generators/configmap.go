@@ -4,7 +4,6 @@
 package generators
 
 import (
-	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -38,14 +37,9 @@ func MakeConfigMap(
 	if err != nil {
 		return nil, err
 	}
-	for _, k := range filtersutil.SortedMapKeys(m) {
-		fldName, vrN := makeConfigMapValueRNode(m[k])
-		if _, err = rn.Pipe(
-			yaml.LookupCreate(yaml.MappingNode, fldName),
-			yaml.SetField(k, vrN)); err != nil {
-			return nil, err
-		}
+	if err = rn.LoadMapIntoConfigMapData(m); err != nil {
+		return nil, err
 	}
 	copyLabelsAndAnnotations(rn, args.Options)
-	return rn, err
+	return rn, nil
 }
