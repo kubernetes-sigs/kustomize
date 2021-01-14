@@ -24,7 +24,7 @@ type Filter struct {
 var _ kio.Filter = Filter{}
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	keys := filtersutil.SortedMapKeys(f.Annotations)
+	keys := yaml.SortedMapKeys(f.Annotations)
 	_, err := kio.FilterAll(yaml.FilterFunc(
 		func(node *yaml.RNode) (*yaml.RNode, error) {
 			for _, k := range keys {
