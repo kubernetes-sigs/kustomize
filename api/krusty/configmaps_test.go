@@ -27,10 +27,6 @@ configMapGenerator:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    port: 8080
-    happy: true
-    color: green
   name: demo
 spec:
   clusterIP: None
@@ -41,10 +37,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    color: green
-    happy: true
-    port: 8080
   name: demo
 spec:
   clusterIP: None
