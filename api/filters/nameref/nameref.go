@@ -90,7 +90,10 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 		namespace := namespaceNode.YNode().Value
 		bynamespace := f.ReferralCandidates.GroupedByOriginalNamespace()
 		if _, ok := bynamespace[namespace]; !ok {
-			return nil
+			bynamespace = f.ReferralCandidates.GroupedByCurrentNamespace()
+			if _, ok := bynamespace[namespace]; !ok {
+				return nil
+			}
 		}
 		subset = bynamespace[namespace]
 	}
