@@ -10,8 +10,52 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// Demonstrate unwanted quotes added to an integer by a strategic merge patch.
-func TestIssue3424Basics(t *testing.T) {
+func TestPodDisruptionBudgetBasics(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("pdbLiteral.yaml", `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: pdbLiteral
+spec:
+  maxUnavailable: 90
+`)
+	th.WriteF("pdbPercentage.yaml", `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: pdbPercentage
+spec:
+  maxUnavailable: 90%
+`)
+	th.WriteK(".", `
+resources:
+- pdbLiteral.yaml
+- pdbPercentage.yaml
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	// In a PodDisruptionBudget, the fields maxUnavailable
+	// minAvailable are mutually exclusive, and both can hold
+	// either an integer, i.e. 10, or string that has to be
+	// an int followed by a percent sign, e.g. 10%.
+	th.AssertActualEqualsExpected(m, `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: pdbLiteral
+spec:
+  maxUnavailable: 90
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: pdbPercentage
+spec:
+  maxUnavailable: 90%
+`)
+}
+
+func TestPodDisruptionBudgetMerging(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	opts := th.MakeDefaultOptions()
 	th.WriteF("pdb-patch.yaml", `
@@ -73,6 +117,10 @@ metadata:
 spec:
   maxUnavailable: %s
 `
+	// In a PodDisruptionBudget, the fields maxUnavailable
+	// minAvailable are mutually exclusive, and both can hold
+	// either an integer, i.e. 10, or string that has to be
+	// an int followed by a percent sign, e.g. 10%.
 	th.AssertActualEqualsExpected(m, opts.IfApiMachineryElseKyaml(
 		fmt.Sprintf(expFmt, `"1"`, `"1"`),
 		fmt.Sprintf(expFmt, `1`, `1`)))
