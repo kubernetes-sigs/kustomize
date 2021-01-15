@@ -10,7 +10,7 @@ func TestPatchDeleteOfNotExistingAttributesShouldNotAddExtraElements(t *testing.
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteF("/app/resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,7 +27,7 @@ spec:
         name: whatever
         image: helloworld
 `)
-	th.WriteF("/app/patch.yml", `
+	th.WriteF("patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,36 +43,36 @@ spec:
         - name: NOT_EXISTING_FOR_REMOVAL
           $patch: delete
 `)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - resource.yaml
 patches:
-- path: patch.yml
+- path: patch.yaml
   target:
     kind: Deployment
 `)
 
-	/*
-		// It's expected that removal of not existing elements should not introduce extra values,
-		// as a patch can be applied to multipe resources, not all of them can have all deleted elements.
-		expected := `
-	apiVersion: apps/v1
-	kind: Deployment
-	metadata:
-	  name: whatever
-	spec:
-	  template:
-	    spec:
-	      containers:
-	      - env:
-	        - name: EXISTING
-	          value: EXISTING_VALUE
-	        image: helloworld
-	        name: whatever
-	`
-	*/
+	// It's expected that removal of not existing elements should not introduce extra values,
+	// as a patch can be applied to multiple resources, not all of them can have all the elements being deleted.
+	expected := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whatever
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: EXISTING
+          value: EXISTING_VALUE
+        image: helloworld
+        name: whatever
+`
+	// Allow expected variable to be unused
+	_ = expected
 
-	// Currently kustomize inserts $patch: delete elements into the resulting resources
+	// Currently, kustomize inserts $patch: delete elements into the resulting resources
 	erroneousActual := `
 apiVersion: apps/v1
 kind: Deployment
@@ -91,6 +91,6 @@ spec:
         name: whatever
 `
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, erroneousActual)
 }
