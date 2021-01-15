@@ -109,7 +109,7 @@ func (th *HarnessEnhanced) LoadAndRunGenerator(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
-	rm.RemoveIdAnnotations()
+	rm.RemoveBuildAnnotations()
 	return rm
 }
 
