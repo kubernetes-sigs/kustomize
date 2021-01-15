@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/wrappy"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filtersutil"
@@ -30,10 +31,10 @@ type Resource struct {
 }
 
 const (
-	nameAnnotation      = "config.kubernetes.io/originalName"
-	prefixAnnotation    = "config.kubernetes.io/prefixes"
-	suffixAnnotation    = "config.kubernetes.io/suffixes"
-	namespaceAnnotation = "config.kubernetes.io/originalNs"
+	buildAnnotationOriginalName      = konfig.ConfigAnnoDomain + "/originalName"
+	buildAnnotationPrefixes          = konfig.ConfigAnnoDomain + "/prefixes"
+	buildAnnotationSuffixes          = konfig.ConfigAnnoDomain + "/suffixes"
+	buildAnnotationOriginalNamespace = konfig.ConfigAnnoDomain + "/originalNs"
 )
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
@@ -244,12 +245,12 @@ func copyStringSlice(s []string) []string {
 
 // Implements ResCtx AddNamePrefix
 func (r *Resource) AddNamePrefix(p string) {
-	r.addAdditiveAnnotation(prefixAnnotation, p)
+	r.addAdditiveAnnotation(buildAnnotationPrefixes, p)
 }
 
 // Implements ResCtx AddNameSuffix
 func (r *Resource) AddNameSuffix(s string) {
-	r.addAdditiveAnnotation(suffixAnnotation, s)
+	r.addAdditiveAnnotation(buildAnnotationSuffixes, s)
 }
 
 func (r *Resource) addAdditiveAnnotation(name, value string) {
@@ -309,19 +310,19 @@ func sameEndingSubarray(a, b []string) bool {
 // Implements ResCtx GetNamePrefixes
 func (r *Resource) GetNamePrefixes() []string {
 	annotations := r.GetAnnotations()
-	if _, ok := annotations[prefixAnnotation]; !ok {
+	if _, ok := annotations[buildAnnotationPrefixes]; !ok {
 		return nil
 	}
-	return strings.Split(annotations[prefixAnnotation], ",")
+	return strings.Split(annotations[buildAnnotationPrefixes], ",")
 }
 
 // Implements ResCtx GetNameSuffixes
 func (r *Resource) GetNameSuffixes() []string {
 	annotations := r.GetAnnotations()
-	if _, ok := annotations[suffixAnnotation]; !ok {
+	if _, ok := annotations[buildAnnotationSuffixes]; !ok {
 		return nil
 	}
-	return strings.Split(annotations[suffixAnnotation], ",")
+	return strings.Split(annotations[buildAnnotationSuffixes], ",")
 }
 
 // OutermostPrefixSuffixEquals returns true if both resources
@@ -345,21 +346,24 @@ func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
 	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
-func (r *Resource) RemoveIdAnnotations() {
+// RemoveBuildAnnotations removes annotations created by the build process.
+// These are internal-only to kustomize, added to the data pipeline to
+// track name changes so name references can be fixed.
+func (r *Resource) RemoveBuildAnnotations() {
 	annotations := r.GetAnnotations()
 	if len(annotations) == 0 {
 		return
 	}
-	delete(annotations, nameAnnotation)
-	delete(annotations, prefixAnnotation)
-	delete(annotations, suffixAnnotation)
-	delete(annotations, namespaceAnnotation)
+	delete(annotations, buildAnnotationOriginalName)
+	delete(annotations, buildAnnotationPrefixes)
+	delete(annotations, buildAnnotationSuffixes)
+	delete(annotations, buildAnnotationOriginalNamespace)
 	r.SetAnnotations(annotations)
 }
 
 func (r *Resource) GetOriginalName() string {
 	annotations := r.GetAnnotations()
-	if name, ok := annotations[nameAnnotation]; ok {
+	if name, ok := annotations[buildAnnotationOriginalName]; ok {
 		return name
 	}
 	return r.kunStr.GetName()
@@ -370,8 +374,8 @@ func (r *Resource) SetOriginalName(n string, overwrite bool) *Resource {
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
-	if _, ok := annotations[nameAnnotation]; !ok || overwrite {
-		annotations[nameAnnotation] = n
+	if _, ok := annotations[buildAnnotationOriginalName]; !ok || overwrite {
+		annotations[buildAnnotationOriginalName] = n
 	}
 	r.kunStr.SetAnnotations(annotations)
 	return r
@@ -379,7 +383,7 @@ func (r *Resource) SetOriginalName(n string, overwrite bool) *Resource {
 
 func (r *Resource) GetOriginalNs() string {
 	annotations := r.GetAnnotations()
-	if ns, ok := annotations[namespaceAnnotation]; ok {
+	if ns, ok := annotations[buildAnnotationOriginalNamespace]; ok {
 		return ns
 	}
 	ns := r.GetNamespace()
@@ -397,8 +401,8 @@ func (r *Resource) SetOriginalNs(n string, overwrite bool) *Resource {
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
-	if _, ok := annotations[namespaceAnnotation]; !ok || overwrite {
-		annotations[namespaceAnnotation] = n
+	if _, ok := annotations[buildAnnotationOriginalNamespace]; !ok || overwrite {
+		annotations[buildAnnotationOriginalNamespace] = n
 	}
 	r.SetAnnotations(annotations)
 	return r
