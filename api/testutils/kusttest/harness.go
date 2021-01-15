@@ -127,7 +127,7 @@ func (th Harness) AssertActualEqualsExpected(
 }
 
 func (th Harness) AssertActualEqualsExpectedNoIdAnnotations(m resmap.ResMap, expected string) {
-	m.RemoveIdAnnotations()
+	m.RemoveBuildAnnotations()
 	th.AssertActualEqualsExpectedWithTweak(m, nil, expected)
 }
 

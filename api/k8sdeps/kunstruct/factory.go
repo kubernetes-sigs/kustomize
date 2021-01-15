@@ -125,7 +125,7 @@ func (kf *KunstructuredFactoryImpl) skipResource(u unstructured.Unstructured) bo
 		return false
 	}
 	// check if the Resource has opt-ed out of kustomize
-	_, found := an[konfig.IgnoredByKustomizeResourceAnnotation]
+	_, found := an[konfig.IgnoredByKustomizeAnnotation]
 	return found
 }
 

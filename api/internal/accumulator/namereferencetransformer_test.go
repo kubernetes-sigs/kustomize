@@ -721,7 +721,7 @@ func TestNameReferenceNamespace(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	m.RemoveIdAnnotations()
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
@@ -883,7 +883,7 @@ func TestNameReferenceClusterWide(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	m.RemoveIdAnnotations()
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
@@ -1010,7 +1010,7 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	m.RemoveIdAnnotations()
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
@@ -1047,7 +1047,7 @@ func TestNameReferenceCandidateSelection(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	m.RemoveIdAnnotations()
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf("actual doesn't match expected: %v", err)
 	}
