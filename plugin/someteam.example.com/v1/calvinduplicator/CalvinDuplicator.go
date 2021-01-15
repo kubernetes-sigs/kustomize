@@ -9,10 +9,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const calvinName = "calvin"
-
-// Look for resources named $Name, and duplicate them N times,
-// leaving resources named ${Name}-1, ..., ${Name}-N.
+// A silly plugin that duplicates resources with a given name.
+// It looks for resources named $Name, and duplicates them N times,
+// creating resources named ${Name}-1, ..., ${Name}-N.
+// See https://calvinandhobbes.fandom.com/wiki/Duplicator
 type plugin struct {
 	// Name of resource to duplicate.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
