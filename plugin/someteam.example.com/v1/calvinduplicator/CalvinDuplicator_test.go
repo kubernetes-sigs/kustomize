@@ -25,15 +25,25 @@ name: calvin
 		`apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: hobbes
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: calvin
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fred
+  name: susie
 `)
 
 	th.AssertActualEqualsExpectedNoIdAnnotations(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hobbes
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,6 +62,6 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fred
+  name: susie
 `)
 }
