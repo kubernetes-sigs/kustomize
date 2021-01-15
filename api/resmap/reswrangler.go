@@ -621,8 +621,8 @@ func (m *resWrangler) ApplySmPatch(
 	return nil
 }
 
-func (m *resWrangler) RemoveIdAnnotations() {
+func (m *resWrangler) RemoveBuildAnnotations() {
 	for _, r := range m.Resources() {
-		r.RemoveIdAnnotations()
+		r.RemoveBuildAnnotations()
 	}
 }

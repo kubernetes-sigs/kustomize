@@ -45,7 +45,7 @@ s/$BAR/bar baz/g
 			"argsFromFile": "sed-input.txt",
 		})
 
-	pluginConfig.RemoveIdAnnotations()
+	pluginConfig.RemoveBuildAnnotations()
 	p := NewExecPlugin(
 		pLdr.AbsolutePluginPath(
 			konfig.DisabledPluginConfig(),
