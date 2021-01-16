@@ -5,7 +5,6 @@ package accumulator
 
 import (
 	"sigs.k8s.io/kustomize/api/filters/refvar"
-	expansion2 "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -44,7 +43,7 @@ func (rv *refVarTransformer) UnusedVars() []string {
 // Transform replaces $(VAR) style variables with values.
 func (rv *refVarTransformer) Transform(m resmap.ResMap) error {
 	rv.replacementCounts = make(map[string]int)
-	rv.mappingFunc = expansion2.MappingFuncFor(
+	rv.mappingFunc = refvar.MappingFuncFor(
 		rv.replacementCounts, rv.varMap)
 	for _, res := range m.Resources() {
 		for _, fieldSpec := range rv.fieldSpecs {
