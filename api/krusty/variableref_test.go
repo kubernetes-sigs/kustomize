@@ -361,6 +361,86 @@ resources:
 	}
 }
 
+func TestSimpleServicePortVarReplace(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+- statefulset.yaml
+vars:
+ - name: THE_PORT
+   objref:
+     kind: StatefulSet
+     name: cockroachdb
+     apiVersion: apps/v1beta1
+   fieldref:
+     fieldpath: spec.template.spec.containers[0].ports[1].containerPort
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - port: $(THE_PORT)
+    targetPort: $(THE_PORT)
+    name: grpc
+`)
+	th.WriteF("statefulset.yaml", `
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:v1.1.5
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http
+`)
+	opts := th.MakeDefaultOptions()
+	m := th.Run(".", opts)
+	expFmt := `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - name: grpc
+    port: %s
+    targetPort: %s
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - image: cockroachdb/cockroach:v1.1.5
+        name: cockroachdb
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http
+`
+	th.AssertActualEqualsExpected(m,
+		// TODO(#3304): DECISION - quotes bad here, this is a bug.
+		opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(expFmt, `8888`, `8888`),
+			fmt.Sprintf(expFmt, `"8888"`, `"8888"`),
+		))
+}
+
 // TODO(#3449): varref has some quote issues
 // https://github.com/kubernetes-sigs/kustomize/issues/3449
 func TestVarRefBig(t *testing.T) {
@@ -928,6 +1008,7 @@ metadata:
   name: dev-base-test-config-map-6b85g79g7g
 `
 	th.AssertActualEqualsExpected(m,
+		// TODO(#3304): DECISION - quotes bad here, this still a bug.
 		opts.IfApiMachineryElseKyaml(
 			fmt.Sprintf(expFmt, `8080`, `8080`, `8080`, `8080`),
 			fmt.Sprintf(expFmt, `"8080"`, `"8080"`, `"8080"`, `"8080"`),
