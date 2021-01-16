@@ -124,6 +124,7 @@ func TestRefVarTransformer(t *testing.T) {
 							"slice": []interface{}{5}, // noticeably *not* a []string
 						}}).ResMap(),
 			},
+			// TODO(#3304): DECISION - kyaml better; not a bug.
 			errMessage: konfig.IfApiMachineryElseKyaml(
 				`obj '{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
 ' at path 'data/slice': invalid value type expect a string`,

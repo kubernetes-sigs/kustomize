@@ -44,15 +44,7 @@ literals:
 - VEGETABLE=carrot
 `)
 
-	obscure := `obscure: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==`
-	if konfig.FlagEnableKyamlDefaultValue {
-		// The kyaml code does a better job of line wrapping.
-		obscure = `obscure: |
-    CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIG
-    VsaXQuCg==`
-	}
-
-	th.AssertActualEqualsExpected(rm, fmt.Sprintf(`
+	expFmt :=  `
 apiVersion: v1
 data:
   DB_PASSWORD: aWxvdmV5b3U=
@@ -65,5 +57,18 @@ metadata:
   name: mySecret
   namespace: whatever
 type: Opaque
-`, obscure))
+`
+	th.AssertActualEqualsExpected(
+		rm,
+		// TODO(#3304): DECISION - kyaml doing better here, not a bug.
+		konfig.IfApiMachineryElseKyaml(
+			fmt.Sprintf(
+				expFmt,
+				`obscure: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==`),
+			fmt.Sprintf(
+				expFmt,
+				`obscure: |
+    CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIG
+    VsaXQuCg==`),
+			))
 }

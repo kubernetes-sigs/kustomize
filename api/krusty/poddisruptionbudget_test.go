@@ -121,7 +121,14 @@ spec:
 	// minAvailable are mutually exclusive, and both can hold
 	// either an integer, i.e. 10, or string that has to be
 	// an int followed by a percent sign, e.g. 10%.
-	th.AssertActualEqualsExpected(m, opts.IfApiMachineryElseKyaml(
-		fmt.Sprintf(expFmt, `"1"`, `"1"`),
-		fmt.Sprintf(expFmt, `1`, `1`)))
+	// In the former case - bare integer - they should NOT be quoted
+	// as the api server will reject it.  In the latter case with
+	// the percent sign, quotes can be added and the API server will
+	// accept it, but they don't have to be added.
+	th.AssertActualEqualsExpected(
+		m,
+		// TODO(#3304): DECISION - kyaml better; not a bug.
+		opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(expFmt, `"1"`, `"1"`),
+			fmt.Sprintf(expFmt, `1`, `1`)))
 }
