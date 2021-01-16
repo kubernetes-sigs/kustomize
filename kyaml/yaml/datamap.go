@@ -52,11 +52,13 @@ func makeConfigMapValueRNode(s string) (field string, rN *RNode) {
 }
 
 func (rn *RNode) LoadMapIntoSecretData(m map[string]string) error {
+	mapNode, err := rn.Pipe(LookupCreate(MappingNode, DataField))
+	if err != nil {
+		return err
+	}
 	for _, k := range SortedMapKeys(m) {
 		vrN := makeSecretValueRNode(m[k])
-		if _, err := rn.Pipe(
-			LookupCreate(MappingNode, DataField),
-			SetField(k, vrN)); err != nil {
+		if _, err := mapNode.Pipe(SetField(k, vrN)); err != nil {
 			return err
 		}
 	}
