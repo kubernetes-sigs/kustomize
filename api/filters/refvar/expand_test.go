@@ -1,13 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package expansion_test
+package refvar_test
 
 import (
 	"fmt"
 	"testing"
 
-	. "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
+	. "sigs.k8s.io/kustomize/api/filters/refvar"
 )
 
 type expected struct {

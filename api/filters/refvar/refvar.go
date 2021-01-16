@@ -8,8 +8,6 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-
-	expansion2 "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
 )
 
 // Filter updates $(VAR) style variables with values.
@@ -69,7 +67,7 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 	if !yaml.IsYNodeString(node.YNode()) {
 		return nil
 	}
-	v := expansion2.Expand(node.YNode().Value, f.MappingFunc)
+	v := Expand(node.YNode().Value, f.MappingFunc)
 	updateNodeValue(node.YNode(), v)
 	return nil
 }
@@ -85,7 +83,7 @@ func (f Filter) setMap(node *yaml.RNode) error {
 		if !yaml.IsYNodeString(contents[i+1]) {
 			continue
 		}
-		newValue := expansion2.Expand(contents[i+1].Value, f.MappingFunc)
+		newValue := Expand(contents[i+1].Value, f.MappingFunc)
 		updateNodeValue(contents[i+1], newValue)
 	}
 	return nil
@@ -96,7 +94,7 @@ func (f Filter) setSeq(node *yaml.RNode) error {
 		if !yaml.IsYNodeString(item) {
 			return fmt.Errorf("invalid value type expect a string")
 		}
-		newValue := expansion2.Expand(item.Value, f.MappingFunc)
+		newValue := Expand(item.Value, f.MappingFunc)
 		updateNodeValue(item, newValue)
 	}
 	return nil
