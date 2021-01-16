@@ -392,6 +392,7 @@ spec:
 	yml, err = rm.AsYaml()
 	assert.NoError(t, err)
 
+	// TODO(#3304): DECISION - kyaml better; not a bug.
 	assert.Equal(t, konfig.IfApiMachineryElseKyaml(`apiVersion: example.com/v1
 kind: Foo
 metadata:

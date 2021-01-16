@@ -214,12 +214,16 @@ metadata:
 type: Opaque
 `
 	th.AssertActualEqualsExpected(
-		m, opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt,
+		m,
+		// TODO(#3304): DECISION - kyaml better; not a bug.
+		opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(
+				expFmt,
 				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo=`,
 				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`,
 				`ftht6hfgmb`),
-			fmt.Sprintf(expFmt, `|
+			fmt.Sprintf(
+				expFmt, `|
     CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
     VjbGVhcgo=`, `|
     CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
