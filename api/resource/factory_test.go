@@ -351,6 +351,7 @@ kind: List
 			// yaml, json, Resource, RNode, Unstructured etc.
 			// These conversions can be removed after closing
 			// https://github.com/kubernetes-sigs/kustomize/issues/2506
+			// TODO(#3304): DECISION - still a bug.
 			expectedErr: konfig.FlagEnableKyamlDefaultValue,
 		},
 		{
