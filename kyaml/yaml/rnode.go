@@ -372,18 +372,7 @@ func (rn *RNode) GetAnnotations() (map[string]string, error) {
 
 // SetAnnotations tries to set the metadata annotations field.
 func (rn *RNode) SetAnnotations(m map[string]string) error {
-	meta, err := rn.Pipe(Lookup(MetadataField))
-	if err != nil {
-		return err
-	}
-	if len(m) == 0 {
-		if meta == nil {
-			return nil
-		}
-		return meta.PipeE(Clear(AnnotationsField))
-	}
-	return rn.SetMapField(
-		NewMapRNode(&m), MetadataField, AnnotationsField)
+	return rn.setMapInMetadata(m, AnnotationsField)
 }
 
 // GetLabels gets the metadata labels field.
@@ -397,18 +386,32 @@ func (rn *RNode) GetLabels() (map[string]string, error) {
 
 // SetLabels sets the metadata labels field.
 func (rn *RNode) SetLabels(m map[string]string) error {
+	return rn.setMapInMetadata(m, LabelsField)
+}
+
+// This established proper quoting on string values, and sorts by key.
+func (rn *RNode) setMapInMetadata(m map[string]string, field string) error {
 	meta, err := rn.Pipe(Lookup(MetadataField))
 	if err != nil {
 		return err
 	}
-	if len(m) == 0 {
-		if meta == nil {
-			return nil
-		}
-		return meta.PipeE(Clear(LabelsField))
+	if err = meta.PipeE(Clear(field)); err != nil {
+		return err
 	}
-	return rn.SetMapField(
-		NewMapRNode(&m), MetadataField, LabelsField)
+	if len(m) == 0 {
+		return nil
+	}
+	mapNode, err := meta.Pipe(LookupCreate(MappingNode, field))
+	if err != nil {
+		return err
+	}
+	for _, k := range SortedMapKeys(m) {
+		if _, err := mapNode.Pipe(
+			SetField(k, NewStringRNode(m[k]))); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (rn *RNode) SetMapField(value *RNode, path ...string) error {
