@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"fmt"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -28,7 +27,8 @@ func TestBasicIO_1(t *testing.T) {
 		//     return an error (that is then ignored by GetAnnotations)
 		//   }
 		// The error happens when any annotation value can be interpreted as
-		// a boolean or number.
+		// a boolean or number.  Such annotations cannot be successfully applied
+		// to an object in a cluster unless they are quoted.
 		t.SkipNow()
 	}
 	th.WriteK(".", `
@@ -49,6 +49,7 @@ spec:
 `)
 	m := th.Run(".", opts)
 	// The annotations are sorted by key, hence the order change.
+	// Quotes are added intentionally.
 	th.AssertActualEqualsExpected(
 		m, `
 apiVersion: v1
@@ -56,8 +57,8 @@ kind: Service
 metadata:
   annotations:
     color: green
-    happy: true
-    port: 8080
+    happy: "true"
+    port: "8080"
   name: demo
 spec:
   clusterIP: None
@@ -71,9 +72,7 @@ func TestBasicIO_2(t *testing.T) {
 resources:
 - service.yaml
 `)
-	// All the annotation values are quoted.
-	// The apimachinery code path retains the quotes, the kyaml
-	// path drops them at the moment.
+	// All the annotation values are quoted in the input.
 	th.WriteF("service.yaml", `
 apiVersion: v1
 kind: Service
@@ -88,20 +87,16 @@ spec:
 `)
 	m := th.Run(".", opts)
 	// The annotations are sorted by key, hence the order change.
-	expFmt := `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
     color: green
-    happy: %s
-    port: %s
+    happy: "true"
+    port: "8080"
   name: demo
 spec:
   clusterIP: None
-`
-	th.AssertActualEqualsExpected(
-		m, opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `"true"`, `"8080"`),
-			fmt.Sprintf(expFmt, `true`, `8080`)))
+`)
 }
