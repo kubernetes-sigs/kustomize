@@ -13,7 +13,6 @@ type refVarTransformer struct {
 	varMap            map[string]interface{}
 	replacementCounts map[string]int
 	fieldSpecs        []types.FieldSpec
-	mappingFunc       func(string) interface{}
 }
 
 // newRefVarTransformer returns a new refVarTransformer
@@ -32,8 +31,7 @@ func newRefVarTransformer(
 func (rv *refVarTransformer) UnusedVars() []string {
 	var unused []string
 	for k := range rv.varMap {
-		_, ok := rv.replacementCounts[k]
-		if !ok {
+		if _, ok := rv.replacementCounts[k]; !ok {
 			unused = append(unused, k)
 		}
 	}
@@ -43,12 +41,11 @@ func (rv *refVarTransformer) UnusedVars() []string {
 // Transform replaces $(VAR) style variables with values.
 func (rv *refVarTransformer) Transform(m resmap.ResMap) error {
 	rv.replacementCounts = make(map[string]int)
-	rv.mappingFunc = refvar.MappingFuncFor(
-		rv.replacementCounts, rv.varMap)
+	mf := refvar.MakePrimitiveReplacer(rv.replacementCounts, rv.varMap)
 	for _, res := range m.Resources() {
 		for _, fieldSpec := range rv.fieldSpecs {
 			err := res.ApplyFilter(refvar.Filter{
-				MappingFunc: rv.mappingFunc,
+				MappingFunc: mf,
 				FieldSpec:   fieldSpec,
 			})
 			if err != nil {

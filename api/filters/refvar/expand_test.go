@@ -7,12 +7,55 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/api/filters/refvar"
 )
 
 type expected struct {
 	count  int
 	edited string
+}
+
+func TestPrimitiveReplacer(t *testing.T) {
+	varCounts := make(map[string]int)
+	f := MakePrimitiveReplacer(
+		varCounts,
+		map[string]interface{}{
+			"FOO":        "bar",
+			"ZOO":        "$(FOO)-1",
+			"BLU":        "$(ZOO)-2",
+			"EIGHT":      8,
+			"PI":         3.14159,
+			"ZINT":       "$(INT)",
+			"BOOL":       "true",
+			"HUGENUMBER": int64(9223372036854775807),
+			"CRAZYMAP":   map[string]int{"crazy": 200},
+			"ZBOOL":      "$(BOOL)",
+		})
+	assert.Equal(t, "$()", f(""))
+	assert.Equal(t, "$(      )", f("      "))
+	assert.Equal(t, "$(florida)", f("florida"))
+	assert.Equal(t, "$(0)", f("0"))
+	assert.Equal(t, "bar", f("FOO"))
+	assert.Equal(t, "bar", f("FOO"))
+	assert.Equal(t, "bar", f("FOO"))
+	assert.Equal(t, 8, f("EIGHT"))
+	assert.Equal(t, 8, f("EIGHT"))
+	assert.Equal(t, 3.14159, f("PI"))
+	assert.Equal(t, "true", f("BOOL"))
+	assert.Equal(t, int64(9223372036854775807), f("HUGENUMBER"))
+	assert.Equal(t, "$(FOO)-1", f("ZOO"))
+	assert.Equal(t, "$(CRAZYMAP)", f("CRAZYMAP"))
+	assert.Equal(t,
+		map[string]int{
+			"FOO":        3,
+			"EIGHT":      2,
+			"BOOL":       1,
+			"PI":         1,
+			"ZOO":        1,
+			"HUGENUMBER": 1,
+		},
+		varCounts)
 }
 
 func TestMapReference(t *testing.T) {
@@ -51,7 +94,7 @@ func TestMapReference(t *testing.T) {
 		},
 	}
 
-	declaredEnv := map[string]interface{}{
+	varMap := map[string]interface{}{
 		"FOO":   "bar",
 		"ZOO":   "$(FOO)-1",
 		"BLU":   "$(ZOO)-2",
@@ -61,11 +104,11 @@ func TestMapReference(t *testing.T) {
 		"ZBOOL": "$(BOOL)",
 	}
 
-	counts := make(map[string]int)
-	mapping := MappingFuncFor(counts, declaredEnv)
-
+	varCounts := make(map[string]int)
 	for _, env := range envs {
-		declaredEnv[env.Name] = Expand(fmt.Sprintf("%v", env.Value), mapping)
+		varMap[env.Name] = DoReplacements(
+			fmt.Sprintf("%v", env.Value),
+			MakePrimitiveReplacer(varCounts, varMap))
 	}
 
 	expectedEnv := map[string]expected{
@@ -79,45 +122,20 @@ func TestMapReference(t *testing.T) {
 	}
 
 	for k, v := range expectedEnv {
-		if e, a := v, declaredEnv[k]; e.edited != a || e.count != counts[k] {
+		if e, a := v, varMap[k]; e.edited != a || e.count != varCounts[k] {
 			t.Errorf("Expected %v count=%d, got %v count=%d",
-				e.edited, e.count, a, counts[k])
+				e.edited, e.count, a, varCounts[k])
 		} else {
-			delete(declaredEnv, k)
+			delete(varMap, k)
 		}
 	}
 
-	if len(declaredEnv) != 0 {
-		t.Errorf("Unexpected keys in declared env: %v", declaredEnv)
+	if len(varMap) != 0 {
+		t.Errorf("Unexpected keys in declared env: %v", varMap)
 	}
 }
 
 func TestMapping(t *testing.T) {
-	context := map[string]interface{}{
-		"VAR_A":     "A",
-		"VAR_B":     "B",
-		"VAR_C":     "C",
-		"VAR_REF":   "$(VAR_A)",
-		"VAR_EMPTY": "",
-	}
-	doExpansionTest(t, context)
-}
-
-func TestMappingDual(t *testing.T) {
-	context := map[string]interface{}{
-		"VAR_A":     "A",
-		"VAR_EMPTY": "",
-	}
-	context2 := map[string]interface{}{
-		"VAR_B":   "B",
-		"VAR_C":   "C",
-		"VAR_REF": "$(VAR_A)",
-	}
-
-	doExpansionTest(t, context, context2)
-}
-
-func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 	cases := []struct {
 		name     string
 		input    string
@@ -333,11 +351,17 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 			expected: "\n",
 		},
 	}
-
 	for _, tc := range cases {
 		counts := make(map[string]int)
-		mapping := MappingFuncFor(counts, context...)
-		expanded := Expand(fmt.Sprintf("%v", tc.input), mapping)
+		expanded := DoReplacements(
+			fmt.Sprintf("%v", tc.input),
+			MakePrimitiveReplacer(counts, map[string]interface{}{
+				"VAR_A":     "A",
+				"VAR_B":     "B",
+				"VAR_C":     "C",
+				"VAR_REF":   "$(VAR_A)",
+				"VAR_EMPTY": "",
+			}))
 		if e, a := tc.expected, expanded; e != a {
 			t.Errorf("%v: expected %q, got %q", tc.name, e, a)
 		}
@@ -347,8 +371,7 @@ func doExpansionTest(t *testing.T, context ...map[string]interface{}) {
 		}
 		if len(tc.counts) > 0 {
 			for k, expectedCount := range tc.counts {
-				c, ok := counts[k]
-				if ok {
+				if c, ok := counts[k]; ok {
 					if c != expectedCount {
 						t.Errorf(
 							"%v: k=%s, expected count %d, got %d",
