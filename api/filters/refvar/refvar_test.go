@@ -1,11 +1,11 @@
-package refvar
+package refvar_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	expansion2 "sigs.k8s.io/kustomize/api/internal/accumulator/expansion"
+	. "sigs.k8s.io/kustomize/api/filters/refvar"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -35,7 +35,7 @@ metadata:
 spec:
   replicas: 5`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "spec/replicas"},
@@ -57,7 +57,7 @@ metadata:
 spec:
   replicas: 1`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "spec/replicas"},
@@ -79,7 +79,7 @@ metadata:
 spec:
   replicas: 1`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "a/b/c"},
@@ -111,7 +111,7 @@ data:
 - false
 - 1.23`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"FOO":   "foo",
 					"BAR":   "bar",
 					"BOOL":  false,
@@ -142,7 +142,7 @@ data:
   BAZ: $(BAZ)
   PLUS: foo+bar`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"FOO": "foo",
 					"BAR": "bar",
 				}),
@@ -181,7 +181,7 @@ data:
     SLICE:
     - $(FOO)`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"FOO": "foo",
 					"BAR": "bar",
 				}),
@@ -204,7 +204,7 @@ metadata:
 data:
   FOO: null`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{}),
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{}),
 				FieldSpec:   types.FieldSpec{Path: "data/FOO"},
 			},
 		},
@@ -250,7 +250,7 @@ data:
   - false
 ' at path 'data/slice': invalid value type expect a string`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "data/slice"},
@@ -274,7 +274,7 @@ data:
   1: str
 ' at path 'data': invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,
 			filter: Filter{
-				MappingFunc: expansion2.MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "data"},

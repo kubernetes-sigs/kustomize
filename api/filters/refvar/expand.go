@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package expansion provides functions find and replace $(FOO) style variables in strings.
-package expansion
+package refvar
 
 import (
 	"bytes"
