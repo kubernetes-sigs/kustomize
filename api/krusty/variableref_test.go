@@ -757,9 +757,9 @@ kind: Service
 metadata:
   annotations:
     prometheus.io/path: _status/vars
-    prometheus.io/port: %s
-    prometheus.io/scrape: %s
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: %s
+    prometheus.io/port: "8080"
+    prometheus.io/scrape: "true"
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
   labels:
     app: cockroachdb
   name: dev-base-cockroachdb
@@ -929,12 +929,8 @@ metadata:
 `
 	th.AssertActualEqualsExpected(m,
 		opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(
-				expFmt,
-				`"8080"`, `"true"`, `"true"`, `8080`, `8080`, `8080`, `8080`),
-			fmt.Sprintf(
-				expFmt,
-				`8080`, `true`, `true`, `"8080"`, `"8080"`, `"8080"`, `"8080"`),
+			fmt.Sprintf(expFmt, `8080`, `8080`, `8080`, `8080`),
+			fmt.Sprintf(expFmt, `"8080"`, `"8080"`, `"8080"`, `"8080"`),
 		))
 }
 
