@@ -322,7 +322,6 @@ Undraft the release on the [kustomize repo release page].
 ### Important
 
 [installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
-[Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
 
  * Follow the [installation instructions] to install your new
    releas and make sure it reports the expected version number.
@@ -369,19 +368,12 @@ testKustomizeRepo
 
 ### Finally
 
-[installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
 [Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
 
- * Follow the [installation instructions] to install your new
-   releas and make sure it reports the expected version number.
+Edit the `prow-presubmit-target` in the [Makefile]
+to test examples against your new release.
 
-   If not, some is very wrong.
-
- * Visit the [release page] and edit the release notes as desired.
-
- * Edit the `prow-presubmit-target` in the [Makefile]
-   to test examples against your new release.
-
+----
 
 ----
 
