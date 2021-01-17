@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -127,9 +128,29 @@ func (wn *WNode) GetFieldValue(path string) (interface{}, error) {
 		}
 		return result, nil
 	}
+	if yn.Kind != yaml.ScalarNode {
+		return nil, fmt.Errorf("expected ScalarNode, got Kind=%d", yn.Kind)
+	}
 
-	// Return value value directly for all other (ScalarNode) kinds
-	return yn.Value, nil
+	// TODO: When doing kustomize var replacement, which is likely a
+	// a primary use of this function and the reason it returns interface{}
+	// rather than string, we do conversion from Nodes to Go types and back
+	// to nodes.  We should figure out how to do replacement using raw nodes,
+	// assuming we keep the var feature in kustomize.
+	// The other end of this is: refvar.go:updateNodeValue.
+	switch yn.Tag {
+	case yaml.NodeTagString:
+		return yn.Value, nil
+	case yaml.NodeTagInt:
+		return strconv.Atoi(yn.Value)
+	case yaml.NodeTagFloat:
+		return strconv.ParseFloat(yn.Value, 64)
+	case yaml.NodeTagBool:
+		return strconv.ParseBool(yn.Value)
+	default:
+		// Possibly this should be an error or log.
+		return yn.Value, nil
+	}
 }
 
 // GetGvk implements ifc.Kunstructured.
