@@ -17,3 +17,5 @@ require (
 	k8s.io/apimachinery v0.18.10
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 )
+
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
