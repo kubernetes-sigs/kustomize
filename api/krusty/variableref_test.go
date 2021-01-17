@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -404,9 +403,8 @@ spec:
         - containerPort: 8888
           name: http
 `)
-	opts := th.MakeDefaultOptions()
-	m := th.Run(".", opts)
-	expFmt := `
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
 metadata:
@@ -414,8 +412,8 @@ metadata:
 spec:
   ports:
   - name: grpc
-    port: %s
-    targetPort: %s
+    port: 8888
+    targetPort: 8888
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
@@ -432,13 +430,7 @@ spec:
           name: grpc
         - containerPort: 8888
           name: http
-`
-	th.AssertActualEqualsExpected(m,
-		// TODO(#3304): DECISION - quotes bad here, this is a bug.
-		opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `8888`, `8888`),
-			fmt.Sprintf(expFmt, `"8888"`, `"8888"`),
-		))
+`)
 }
 
 // TODO(3449): Yield bare primitives in var replacements from configmaps.
@@ -551,7 +543,6 @@ metadata:
 
 func TestVarRefBig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	opts := th.MakeDefaultOptions()
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -868,8 +859,8 @@ namePrefix: dev-
 resources:
 - ../../base
 `)
-	m := th.Run("/app/overlay/staging", opts)
-	expFmt := `
+	m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -956,8 +947,8 @@ spec:
     port: 26257
     targetPort: 26257
   - name: http
-    port: %s
-    targetPort: %s
+    port: 8080
+    targetPort: 8080
   selector:
     app: cockroachdb
 ---
@@ -973,8 +964,8 @@ spec:
     port: 26257
     targetPort: 26257
   - name: http
-    port: %s
-    targetPort: %s
+    port: 8080
+    targetPort: 8080
   selector:
     app: cockroachdb
 ---
@@ -1011,8 +1002,8 @@ spec:
         - --host $(hostname -f)
         - --http-host 0.0.0.0
         - --join dev-base-cockroachdb-0.dev-base-cockroachdb,dev-base-cockroachdb-1.dev-base-cockroachdb,dev-base-cockroachdb-2.dev-base-cockroachdb
-        - --cache 25%%
-        - --max-sql-memory 25%%
+        - --cache 25%
+        - --max-sql-memory 25%
         image: cockroachdb/cockroach:v1.1.5
         imagePullPolicy: IfNotPresent
         name: cockroachdb
@@ -1112,13 +1103,7 @@ data:
 kind: ConfigMap
 metadata:
   name: dev-base-test-config-map-6b85g79g7g
-`
-	th.AssertActualEqualsExpected(m,
-		// TODO(#3304): DECISION - quotes bad here, this still a bug.
-		opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `8080`, `8080`, `8080`, `8080`),
-			fmt.Sprintf(expFmt, `"8080"`, `"8080"`, `"8080"`, `"8080"`),
-		))
+`)
 }
 
 func TestVariableRefIngressBasic(t *testing.T) {
