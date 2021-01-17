@@ -441,8 +441,114 @@ spec:
 		))
 }
 
-// TODO(#3449): varref has some quote issues
-// https://github.com/kubernetes-sigs/kustomize/issues/3449
+// TODO(3449): Yield bare primitives in var replacements from configmaps.
+// The ConfigMap data field is always strings, and anything that looks
+// like a boolean or int or float must be quoted, or the API server won't
+// accept the map.  This creates a problem if one wants to use a var to
+// inject a raw number or raw boolean sourced from a configmap, because as
+// far as the configmap representation is concerned, it's a string.
+// A workaround would be to source the var from another Kind, from a field
+// that allowed unquoted vars or booleans.
+func TestIssue3449(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- workflow.yaml
+
+configurations:
+- kustomization-config.yaml
+
+configMapGenerator:
+- name: kustomize-vars
+  envs:
+  - vars.env
+
+vars:
+- name: DBT_TARGET
+  objref: &config-map-ref
+    kind: ConfigMap
+    name: kustomize-vars
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.DBT_TARGET
+- name: SUSPENDED
+  objref: *config-map-ref
+  fieldref:
+    fieldpath: data.SUSPENDED
+`)
+	th.WriteF("workflow.yaml", `
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  schedule: "45 2 * * *"
+  timezone: "Europe/Vienna"
+  concurrencyPolicy: Forbid
+  suspend: $(SUSPENDED)
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    workflowTemplateRef:
+      name: core-load-pipeline
+    arguments:
+      parameters:
+        - name: dbt_target
+          value: $(DBT_TARGET)
+`)
+	th.WriteF("kustomization-config.yaml", `
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - kind: CronWorkflow
+        version: v1alpha1
+        path: spec/workflowSpec/arguments/parameters/value
+varReference:
+  - path: spec/workflowSpec/arguments/parameters/value
+    kind: CronWorkflow
+    apiVersion: argoproj.io/v1alpha1
+  - path: spec
+    kind: CronWorkflow
+    apiVersion: argoproj.io/v1alpha1
+`)
+	th.WriteF("vars.env", `
+DBT_TARGET=development
+SUSPENDED=True
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  concurrencyPolicy: Forbid
+  schedule: 45 2 * * *
+  suspend: "True"
+  timezone: Europe/Vienna
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    arguments:
+      parameters:
+      - name: dbt_target
+        value: development
+    workflowTemplateRef:
+      name: core-load-pipeline
+---
+apiVersion: v1
+data:
+  DBT_TARGET: development
+  SUSPENDED: "True"
+kind: ConfigMap
+metadata:
+  name: kustomize-vars-7mhm8cg5kg
+`)
+}
+
 func TestVarRefBig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	opts := th.MakeDefaultOptions()
