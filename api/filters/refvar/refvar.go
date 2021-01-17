@@ -47,12 +47,21 @@ func (f Filter) set(node *yaml.RNode) error {
 
 func updateNodeValue(node *yaml.Node, newValue interface{}) {
 	switch newValue := newValue.(type) {
+	case int:
+		node.Value = strconv.FormatInt(int64(newValue), 10)
+		node.Tag = yaml.NodeTagInt
+	case int32:
+		node.Value = strconv.FormatInt(int64(newValue), 10)
+		node.Tag = yaml.NodeTagInt
 	case int64:
 		node.Value = strconv.FormatInt(newValue, 10)
 		node.Tag = yaml.NodeTagInt
 	case bool:
 		node.SetString(strconv.FormatBool(newValue))
 		node.Tag = yaml.NodeTagBool
+	case float32:
+		node.SetString(strconv.FormatFloat(float64(newValue), 'f', -1, 32))
+		node.Tag = yaml.NodeTagFloat
 	case float64:
 		node.SetString(strconv.FormatFloat(newValue, 'f', -1, 64))
 		node.Tag = yaml.NodeTagFloat
