@@ -13,8 +13,8 @@ import (
 // Filter updates $(VAR) style variables with values.
 // The fieldSpecs are the places to look for occurrences of $(VAR).
 type Filter struct {
-	MappingFunc func(string) interface{} `json:"mappingFunc,omitempty" yaml:"mappingFunc,omitempty"`
-	FieldSpec   types.FieldSpec          `json:"fieldSpec,omitempty" yaml:"fieldSpec,omitempty"`
+	MappingFunc MappingFunc     `json:"mappingFunc,omitempty" yaml:"mappingFunc,omitempty"`
+	FieldSpec   types.FieldSpec `json:"fieldSpec,omitempty" yaml:"fieldSpec,omitempty"`
 }
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -47,12 +47,21 @@ func (f Filter) set(node *yaml.RNode) error {
 
 func updateNodeValue(node *yaml.Node, newValue interface{}) {
 	switch newValue := newValue.(type) {
+	case int:
+		node.Value = strconv.FormatInt(int64(newValue), 10)
+		node.Tag = yaml.NodeTagInt
+	case int32:
+		node.Value = strconv.FormatInt(int64(newValue), 10)
+		node.Tag = yaml.NodeTagInt
 	case int64:
 		node.Value = strconv.FormatInt(newValue, 10)
 		node.Tag = yaml.NodeTagInt
 	case bool:
 		node.SetString(strconv.FormatBool(newValue))
 		node.Tag = yaml.NodeTagBool
+	case float32:
+		node.SetString(strconv.FormatFloat(float64(newValue), 'f', -1, 32))
+		node.Tag = yaml.NodeTagFloat
 	case float64:
 		node.SetString(strconv.FormatFloat(newValue, 'f', -1, 64))
 		node.Tag = yaml.NodeTagFloat
@@ -67,7 +76,7 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 	if !yaml.IsYNodeString(node.YNode()) {
 		return nil
 	}
-	v := Expand(node.YNode().Value, f.MappingFunc)
+	v := DoReplacements(node.YNode().Value, f.MappingFunc)
 	updateNodeValue(node.YNode(), v)
 	return nil
 }
@@ -83,7 +92,7 @@ func (f Filter) setMap(node *yaml.RNode) error {
 		if !yaml.IsYNodeString(contents[i+1]) {
 			continue
 		}
-		newValue := Expand(contents[i+1].Value, f.MappingFunc)
+		newValue := DoReplacements(contents[i+1].Value, f.MappingFunc)
 		updateNodeValue(contents[i+1], newValue)
 	}
 	return nil
@@ -94,7 +103,7 @@ func (f Filter) setSeq(node *yaml.RNode) error {
 		if !yaml.IsYNodeString(item) {
 			return fmt.Errorf("invalid value type expect a string")
 		}
-		newValue := Expand(item.Value, f.MappingFunc)
+		newValue := DoReplacements(item.Value, f.MappingFunc)
 		updateNodeValue(item, newValue)
 	}
 	return nil

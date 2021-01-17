@@ -1,12 +1,12 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package expansion provides functions find and replace $(FOO) style variables in strings.
 package refvar
 
 import (
-	"bytes"
 	"fmt"
+	"log"
+	"strings"
 )
 
 const (
@@ -17,38 +17,64 @@ const (
 
 // syntaxWrap returns the input string wrapped by the expansion syntax.
 func syntaxWrap(input string) string {
-	return string(operator) + string(referenceOpener) + input + string(referenceCloser)
+	var sb strings.Builder
+	sb.WriteByte(operator)
+	sb.WriteByte(referenceOpener)
+	sb.WriteString(input)
+	sb.WriteByte(referenceCloser)
+	return sb.String()
 }
 
-// MappingFuncFor returns a mapping function for use with Expand that
-// implements the expansion semantics defined in the expansion spec; it
-// returns the input string wrapped in the expansion syntax if no mapping
-// for the input is found.
-func MappingFuncFor(
-	counts map[string]int,
-	context ...map[string]interface{}) func(string) interface{} {
-	return func(input string) interface{} {
-		for _, vars := range context {
-			val, ok := vars[input]
-			if ok {
-				counts[input]++
-				switch typedV := val.(type) {
-				case string, int64, float64, bool:
-					return typedV
-				default:
-					return syntaxWrap(input)
-				}
+// MappingFunc maps a string to anything.
+type MappingFunc func(string) interface{}
+
+// MakePrimitiveReplacer returns a MappingFunc that uses a map to do
+// replacements, and a histogram to count map hits.
+//
+// Func behavior:
+//
+// If the input key is NOT found in the map, the key is wrapped up as
+// as a variable declaration string and returned, e.g. key FOO becomes $(FOO).
+// This string is presumably put back where it was found, and might get replaced
+// later.
+//
+// If the key is found in the map, the value is returned if it is a primitive
+// type (string, bool, number), and the hit is counted.
+//
+// If it's not a primitive type (e.g. a map, struct, func, etc.) then this
+// function doesn't know what to do with it and it returns the key wrapped up
+// again as if it had not been replaced.  This should probably be an error.
+func MakePrimitiveReplacer(
+	counts map[string]int, someMap map[string]interface{}) MappingFunc {
+	return func(key string) interface{} {
+		if value, ok := someMap[key]; ok {
+			switch typedV := value.(type) {
+			case string, int, int32, int64, float32, float64, bool:
+				counts[key]++
+				return typedV
+			default:
+				// If the value is some complicated type (e.g. a map or struct),
+				// this function doesn't know how to jam it into a string,
+				// so just pretend it was a cache miss.
+				// Likely this should be an error instead of a silent failure,
+				// since the programmer passed an impossible value.
+				log.Printf(
+					"MakePrimitiveReplacer: bad replacement type=%T val=%v",
+					typedV, typedV)
+				return syntaxWrap(key)
 			}
 		}
-		return syntaxWrap(input)
+		// If unable to return the mapped variable, return it
+		// as it was found, and a later mapping might be able to
+		// replace it.
+		return syntaxWrap(key)
 	}
 }
 
-// Expand replaces variable references in the input string according to
-// the expansion spec using the given mapping function to resolve the
-// values of variables.
-func Expand(input string, mapping func(string) interface{}) interface{} {
-	var buf bytes.Buffer
+// DoReplacements replaces variable references in the input string
+// using the mapping function.
+func DoReplacements(input string, mapping MappingFunc) interface{} {
+	var buf strings.Builder
 	checkpoint := 0
 	for cursor := 0; cursor < len(input); cursor++ {
 		if input[cursor] == operator && cursor+1 < len(input) {

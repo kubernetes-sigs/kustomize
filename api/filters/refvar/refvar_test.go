@@ -11,8 +11,12 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+var makeMf = func(theMap map[string]interface{}) MappingFunc {
+	ignored := make(map[string]int)
+	return MakePrimitiveReplacer(ignored, theMap)
+}
+
 func TestFilter(t *testing.T) {
-	replacementCounts := make(map[string]int)
 
 	testCases := map[string]struct {
 		input    string
@@ -35,7 +39,7 @@ metadata:
 spec:
   replicas: 5`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "spec/replicas"},
@@ -57,7 +61,7 @@ metadata:
 spec:
   replicas: 1`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "spec/replicas"},
@@ -79,7 +83,7 @@ metadata:
 spec:
   replicas: 1`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "a/b/c"},
@@ -111,7 +115,7 @@ data:
 - false
 - 1.23`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"FOO":   "foo",
 					"BAR":   "bar",
 					"BOOL":  false,
@@ -142,7 +146,7 @@ data:
   BAZ: $(BAZ)
   PLUS: foo+bar`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"FOO": "foo",
 					"BAR": "bar",
 				}),
@@ -181,7 +185,7 @@ data:
     SLICE:
     - $(FOO)`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"FOO": "foo",
 					"BAR": "bar",
 				}),
@@ -204,8 +208,10 @@ metadata:
 data:
   FOO: null`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{}),
-				FieldSpec:   types.FieldSpec{Path: "data/FOO"},
+				MappingFunc: makeMf(map[string]interface{}{
+					// no replacements!
+				}),
+				FieldSpec: types.FieldSpec{Path: "data/FOO"},
 			},
 		},
 	}
@@ -223,8 +229,6 @@ data:
 }
 
 func TestFilterUnhappy(t *testing.T) {
-	replacementCounts := make(map[string]int)
-
 	testCases := map[string]struct {
 		input         string
 		expectedError string
@@ -250,7 +254,7 @@ data:
   - false
 ' at path 'data/slice': invalid value type expect a string`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "data/slice"},
@@ -274,7 +278,7 @@ data:
   1: str
 ' at path 'data': invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,
 			filter: Filter{
-				MappingFunc: MappingFuncFor(replacementCounts, map[string]interface{}{
+				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),
 				}),
 				FieldSpec: types.FieldSpec{Path: "data"},
