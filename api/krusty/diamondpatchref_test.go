@@ -9,17 +9,16 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// Coverage for issue #2609
 func TestNamePrefixSuffixPatch(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteK("bottom/kustomization.yaml", `configMapGenerator:
+	th.WriteK("bottom", `configMapGenerator:
 - name: bottom
   literals:
   - KEY=value
 `)
 
-	th.WriteK("left-service/kustomization.yaml", `resources:
+	th.WriteK("left-service", `resources:
 - deployment.yaml
 `)
 
@@ -43,7 +42,7 @@ spec:
         name: service
 `)
 
-	th.WriteK("right-service/kustomization.yaml", `resources:
+	th.WriteK("right-service", `resources:
 - deployment.yaml
 `)
 
@@ -67,12 +66,12 @@ spec:
         name: service
 `)
 
-	th.WriteK("top/kustomization.yaml", `resources:
+	th.WriteK("top", `resources:
 - ./left
 - ./right
 `)
 
-	th.WriteK("top/left/kustomization.yaml", `resources:
+	th.WriteK("top/left", `resources:
 - ../../left-service
 - ./bottom
 
@@ -98,13 +97,13 @@ patches:
                   key: KEY
 `)
 
-	th.WriteK("top/left/bottom/kustomization.yaml", `namePrefix: left-
+	th.WriteK("top/left/bottom", `namePrefix: left-
 
 resources:
   - ../../../bottom
 `)
 
-	th.WriteK("top/right/kustomization.yaml", `resources:
+	th.WriteK("top/right", `resources:
 - ../../right-service
 - ./bottom
 
@@ -130,7 +129,7 @@ patches:
                   key: KEY
 `)
 
-	th.WriteK("top/right/bottom/kustomization.yaml", `namePrefix: right-
+	th.WriteK("top/right/bottom", `namePrefix: right-
 
 resources:
   - ../../../bottom
@@ -138,21 +137,7 @@ resources:
 
 	m := th.Run("top", th.MakeDefaultOptions())
 	// Per #2609, the desired behavior is for configMapRef.name and configMapKeyRef.name to be "mysql-9792mdchtg" not "mysql"
-	th.AssertActualEqualsExpected(m, `apiVersion: v1
-data:
-  KEY: value
-kind: ConfigMap
-metadata:
-  name: left-bottom-9f2t6f5h6d
----
-apiVersion: v1
-data:
-  KEY: value
-kind: ConfigMap
-metadata:
-  name: right-bottom-9f2t6f5h6d
----
-apiVersion: apps/v1
+	th.AssertActualEqualsExpected(m, `apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -173,9 +158,16 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: KEY
-              name: left-bottom-9f2t6f5h6d
+              name: left-bottom
         image: left-image:v1.0
         name: service
+---
+apiVersion: v1
+data:
+  KEY: value
+kind: ConfigMap
+metadata:
+  name: left-bottom-9f2t6f5h6d
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -198,7 +190,15 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: KEY
-              name: right-bottom-9f2t6f5h6d
+              name: right-bottom
         image: right-image:v1.0
-        name: service`)
+        name: service
+---
+apiVersion: v1
+data:
+  KEY: value
+kind: ConfigMap
+metadata:
+  name: right-bottom-9f2t6f5h6d
+`)
 }
