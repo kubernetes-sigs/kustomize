@@ -100,7 +100,7 @@ patches:
 	th.WriteK("top/left/bottom", `namePrefix: left-
 
 resources:
-  - ../../../bottom
+- ../../../bottom
 `)
 
 	th.WriteK("top/right", `resources:
@@ -132,11 +132,11 @@ patches:
 	th.WriteK("top/right/bottom", `namePrefix: right-
 
 resources:
-  - ../../../bottom
+- ../../../bottom
 `)
 
 	m := th.Run("top", th.MakeDefaultOptions())
-	// Per #2609, the desired behavior is for configMapRef.name and configMapKeyRef.name to be "mysql-9792mdchtg" not "mysql"
+	// Desired behaviour: configMapKeyRef should reference ConfigMap names.
 	th.AssertActualEqualsExpected(m, `apiVersion: apps/v1
 kind: Deployment
 metadata:
