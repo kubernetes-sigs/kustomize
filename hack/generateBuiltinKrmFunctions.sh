@@ -14,7 +14,8 @@ builtinPlugins=(AnnotationsTransformer \
 	ReplicaCountTransformer \
 	SecretGenerator \
 	ValueAddTransformer \
-	HelmChartInflationGenerator)
+	HelmChartInflationGenerator \
+  GotplInflator)
 
 builtinPluginDir=../plugin/builtin
 

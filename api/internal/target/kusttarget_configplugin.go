@@ -33,6 +33,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 		builtinhelpers.ConfigMapGenerator,
 		builtinhelpers.SecretGenerator,
 		builtinhelpers.HelmChartInflationGenerator,
+		builtinhelpers.GotplInflator,
 	} {
 		r, err := generatorConfigurators[bpt](
 			kt, bpt, builtinhelpers.GeneratorFactories[bpt])
@@ -119,6 +120,23 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		}
 		for _, args := range kt.kustomization.HelmChartInflationGenerator {
 			c.HelmChartArgs = args
+			p := f()
+			err := kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
+
+	builtinhelpers.GotplInflator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
+		result []resmap.Generator, err error) {
+		var c struct {
+			types.GotplInflatorArgs
+		}
+		for _, args := range kt.kustomization.GotplInflator {
+			c.GotplInflatorArgs = args
 			p := f()
 			err := kt.configureBuiltinPlugin(p, c, bpt)
 			if err != nil {

@@ -127,6 +127,9 @@ type Kustomization struct {
 	// a remote chart by `helm template`
 	HelmChartInflationGenerator []HelmChartArgs `json:"helmChartInflationGenerator,omitempty" yaml:"helmChartInflationGenerator,omitempty"`
 
+	// GotplInflator is a list of configurations for go-template render/inflator generator.
+	GotplInflator []GotplInflatorArgs `json:"gotplInflator,omitempty" yaml:"gotplInflator,omitempty"`
+
 	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 	GeneratorOptions *GeneratorOptions `json:"generatorOptions,omitempty" yaml:"generatorOptions,omitempty"`
 
