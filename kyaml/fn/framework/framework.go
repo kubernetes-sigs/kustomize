@@ -392,6 +392,11 @@ type Defaulter interface {
 	Default() error
 }
 
+// Validator is implemented by APIs to have Validate invoked
+type Validator interface {
+	Validate() error
+}
+
 func (tc *TemplateCommand) doPreProcess(rl *ResourceList) error {
 	// do any preprocessing
 	if tc.PreProcess != nil {
@@ -527,6 +532,12 @@ func (tc TemplateCommand) GetCommand() *cobra.Command {
 func (tc TemplateCommand) Execute(rl *ResourceList) error {
 	if d, ok := rl.FunctionConfig.(Defaulter); ok {
 		if err := d.Default(); err != nil {
+			return err
+		}
+	}
+
+	if v, ok := rl.FunctionConfig.(Validator); ok {
+		if err := v.Validate(); err != nil {
 			return err
 		}
 	}
