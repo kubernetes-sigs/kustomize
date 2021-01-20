@@ -274,7 +274,7 @@ func (m *resWrangler) AsYaml() ([]byte, error) {
 	for _, res := range m.Resources() {
 		out, err := yaml.Marshal(res.Map())
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "%#v", res.Map())
 		}
 		if firstObj {
 			firstObj = false
