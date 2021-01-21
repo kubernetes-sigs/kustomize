@@ -90,8 +90,9 @@ type ResourceList struct {
 	// Defaults to os.Stdout.
 	Writer io.Writer
 
-	// rw reads function input and writes function output
-	rw *kio.ByteReadWriter
+	// ReadWriter reads function input and writes function output
+	// If set, it will take precedence over the Reader and Writer fields
+	ReadWriter *kio.ByteReadWriter
 
 	// NoPrintError if set will prevent the error from being printed
 	NoPrintError bool
@@ -99,15 +100,36 @@ type ResourceList struct {
 	Command *cobra.Command
 }
 
-// Read reads the ResourceList
-func (r *ResourceList) Read() error {
-	var in io.Reader = os.Stdin
-	var out io.Writer = os.Stdout
-	if r.Command != nil {
-		in = r.Command.InOrStdin()
-		out = r.Command.OutOrStdout()
+func (r *ResourceList) defaultReadWriter() *kio.ByteReadWriter {
+	rw := kio.ByteReadWriter{
+		KeepReaderAnnotations: true,
+		Reader:                r.Reader,
+		Writer:                r.Writer,
 	}
 
+	// Default reader source precedence: r.Reader > r.Command.InOrStdin > os.Stdin
+	if rw.Reader == nil {
+		if r.Command != nil {
+			rw.Reader = r.Command.InOrStdin()
+		} else {
+			rw.Reader = os.Stdin
+		}
+	}
+
+	// Default writer source precedence: r.Writer > r.Command.OutOrStdout > os.Stdout
+	if rw.Writer == nil {
+		if r.Command != nil {
+			rw.Writer = r.Command.OutOrStdout()
+		} else {
+			rw.Writer = os.Stdout
+		}
+	}
+
+	return &rw
+}
+
+// Read reads the ResourceList
+func (r *ResourceList) Read() error {
 	// parse the inputs from the args
 	var readStdinStandalone bool
 	if len(r.Args) > 0 && !r.DisableStandalone {
@@ -135,25 +157,20 @@ func (r *ResourceList) Read() error {
 		r.Reader = &buf
 	}
 
-	if r.Reader == nil {
-		r.Reader = in
+	// Default the ReadWriter and ensure related fields are in a consistent state
+	if r.ReadWriter == nil {
+		r.ReadWriter = r.defaultReadWriter()
 	}
-	if r.Writer == nil {
-		r.Writer = out
-	}
-	r.rw = &kio.ByteReadWriter{
-		Reader:                r.Reader,
-		Writer:                r.Writer,
-		KeepReaderAnnotations: true,
-	}
+	r.Reader = r.ReadWriter.Reader
+	r.Writer = r.ReadWriter.Writer
 
 	// parse the resourceList.FunctionConfig from the first arg
 	if len(r.Args) > 0 && !r.DisableStandalone {
 		// Don't keep the reader annotations if we are in standalone mode
-		r.rw.KeepReaderAnnotations = false
+		r.ReadWriter.KeepReaderAnnotations = false
 		// Don't wrap the resources in a resourceList -- we are in
 		// standalone mode and writing to stdout to be applied
-		r.rw.NoWrap = true
+		r.ReadWriter.NoWrap = true
 
 		b, err := ioutil.ReadFile(r.Args[0])
 		if err != nil {
@@ -164,16 +181,22 @@ func (r *ResourceList) Read() error {
 			return errors.WrapPrefixf(err, "unable to parse configuration file %s", r.Args[0])
 		}
 		// use this as the function config used to configure the function
-		r.rw.FunctionConfig = fc
+		r.ReadWriter.FunctionConfig = fc
 	}
 
 	var err error
-	r.Items, err = r.rw.Read()
+	r.Items, err = r.ReadWriter.Read()
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
 	if readStdinStandalone {
+		var in io.Reader
+		if r.Command != nil {
+			in = r.Command.InOrStdin()
+		} else {
+			in = os.Stdin
+		}
 		br := kio.ByteReader{Reader: in}
 		items, err := br.Read()
 		if err != nil {
@@ -185,16 +208,16 @@ func (r *ResourceList) Read() error {
 
 	// parse the functionConfig
 	return func() error {
-		if r.rw.FunctionConfig == nil {
+		if r.ReadWriter.FunctionConfig == nil {
 			// no function config exists
 			return nil
 		}
 		if r.FunctionConfig == nil {
 			// set directly from r.rw
-			r.FunctionConfig = r.rw.FunctionConfig
+			r.FunctionConfig = r.ReadWriter.FunctionConfig
 		} else {
 			// unmarshal the functionConfig into the provided value
-			err := yaml.Unmarshal([]byte(r.rw.FunctionConfig.MustString()), r.FunctionConfig)
+			err := yaml.Unmarshal([]byte(r.ReadWriter.FunctionConfig.MustString()), r.FunctionConfig)
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -205,7 +228,7 @@ func (r *ResourceList) Read() error {
 			return nil
 		}
 		// flags are always set from the "data" field
-		data, err := r.rw.FunctionConfig.Pipe(yaml.Lookup("data"))
+		data, err := r.ReadWriter.FunctionConfig.Pipe(yaml.Lookup("data"))
 		if err != nil || data == nil {
 			return err
 		}
@@ -232,12 +255,12 @@ func (r *ResourceList) Write() error {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			r.rw.Results = y
+			r.ReadWriter.Results = y
 		}
 	}
 
 	// write the results
-	return r.rw.Write(r.Items)
+	return r.ReadWriter.Write(r.Items)
 }
 
 // Command returns a cobra.Command to run a function.
@@ -255,7 +278,11 @@ func Command(resourceList *ResourceList, function Function) *cobra.Command {
 	AddGenerateDockerfile(&cmd)
 	var printStack bool
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		err := execute(resourceList, function, cmd, args)
+		resourceList.Reader = cmd.InOrStdin()
+		resourceList.Writer = cmd.OutOrStdout()
+		resourceList.Flags = cmd.Flags()
+		resourceList.Args = args
+		err := WrapInResourceListIO(resourceList, function)()
 		if err != nil && !resourceList.NoPrintError {
 			fmt.Fprintf(cmd.ErrOrStderr(), "%v", err)
 		}
@@ -363,6 +390,11 @@ func (tc TemplateCommand) doTemplate(t *template.Template, rl *ResourceList) err
 // Defaulter is implemented by APIs to have Default invoked
 type Defaulter interface {
 	Default() error
+}
+
+// Validator is implemented by APIs to have Validate invoked
+type Validator interface {
+	Validate() error
 }
 
 func (tc *TemplateCommand) doPreProcess(rl *ResourceList) error {
@@ -490,39 +522,46 @@ func (tc *TemplateCommand) doPatchContainerTemplates(rl *ResourceList) error {
 
 // GetCommand returns a new cobra command
 func (tc TemplateCommand) GetCommand() *cobra.Command {
-	rl := ResourceList{
+	rl := &ResourceList{
 		FunctionConfig: tc.API,
 		NoPrintError:   true,
 	}
-	c := Command(&rl, func() error {
-		if d, ok := rl.FunctionConfig.(Defaulter); ok {
-			if err := d.Default(); err != nil {
-				return err
-			}
-		}
+	return Command(rl, func() error { return tc.Execute(rl) })
+}
 
-		if err := tc.doPreProcess(&rl); err != nil {
+func (tc TemplateCommand) Execute(rl *ResourceList) error {
+	if d, ok := rl.FunctionConfig.(Defaulter); ok {
+		if err := d.Default(); err != nil {
 			return err
 		}
-		if err := tc.doTemplates(&rl); err != nil {
-			return err
-		}
-		if err := tc.doPatchTemplates(&rl); err != nil {
-			return err
-		}
-		if err := tc.doPatchContainerTemplates(&rl); err != nil {
-			return err
-		}
-		if err := tc.doMerge(&rl); err != nil {
-			return err
-		}
-		if err := tc.doPostProcess(&rl); err != nil {
-			return err
-		}
+	}
 
-		return nil
-	})
-	return c
+	if v, ok := rl.FunctionConfig.(Validator); ok {
+		if err := v.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if err := tc.doPreProcess(rl); err != nil {
+		return err
+	}
+	if err := tc.doTemplates(rl); err != nil {
+		return err
+	}
+	if err := tc.doPatchTemplates(rl); err != nil {
+		return err
+	}
+	if err := tc.doPatchContainerTemplates(rl); err != nil {
+		return err
+	}
+	if err := tc.doMerge(rl); err != nil {
+		return err
+	}
+	if err := tc.doPostProcess(rl); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // AddGenerateDockerfile adds a "gen" subcommand to create a Dockerfile for building
@@ -547,23 +586,20 @@ CMD ["function"]
 	cmd.AddCommand(gen)
 }
 
-func execute(rl *ResourceList, function Function, cmd *cobra.Command, args []string) error {
-	rl.Reader = cmd.InOrStdin()
-	rl.Writer = cmd.OutOrStdout()
-	rl.Flags = cmd.Flags()
-	rl.Args = args
+func WrapInResourceListIO(rl *ResourceList, function Function) Function {
+	return func() error {
+		if err := rl.Read(); err != nil {
+			return err
+		}
 
-	if err := rl.Read(); err != nil {
-		return err
+		retErr := function()
+
+		if err := rl.Write(); err != nil {
+			return err
+		}
+
+		return retErr
 	}
-
-	retErr := function()
-
-	if err := rl.Write(); err != nil {
-		return err
-	}
-
-	return retErr
 }
 
 // Filters returns a function which returns the provided Filters
