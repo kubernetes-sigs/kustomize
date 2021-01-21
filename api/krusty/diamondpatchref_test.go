@@ -9,7 +9,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestNamePrefixSuffixPatch(t *testing.T) {
+func TestConfMapNameResolutionInDiamondWithPatches(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK("bottom", `
