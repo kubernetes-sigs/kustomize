@@ -12,17 +12,20 @@ import (
 func TestNamePrefixSuffixPatch(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteK("bottom", `configMapGenerator:
+	th.WriteK("bottom", `
+configMapGenerator:
 - name: bottom
   literals:
   - KEY=value
 `)
 
-	th.WriteK("left-service", `resources:
+	th.WriteK("left-service", `
+resources:
 - deployment.yaml
 `)
 
-	th.WriteF("left-service/deployment.yaml", `apiVersion: apps/v1
+	th.WriteF("left-service/deployment.yaml", `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: left-deploy
@@ -42,11 +45,13 @@ spec:
         name: service
 `)
 
-	th.WriteK("right-service", `resources:
+	th.WriteK("right-service", `
+resources:
 - deployment.yaml
 `)
 
-	th.WriteF("right-service/deployment.yaml", `apiVersion: apps/v1
+	th.WriteF("right-service/deployment.yaml", `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: right-deploy
@@ -66,12 +71,14 @@ spec:
         name: service
 `)
 
-	th.WriteK("top", `resources:
+	th.WriteK("top", `
+resources:
 - ./left
 - ./right
 `)
 
-	th.WriteK("top/left", `resources:
+	th.WriteK("top/left", `
+resources:
 - ../../left-service
 - ./bottom
 
@@ -97,13 +104,15 @@ patches:
                   key: KEY
 `)
 
-	th.WriteK("top/left/bottom", `namePrefix: left-
+	th.WriteK("top/left/bottom", `
+namePrefix: left-
 
 resources:
 - ../../../bottom
 `)
 
-	th.WriteK("top/right", `resources:
+	th.WriteK("top/right", `
+resources:
 - ../../right-service
 - ./bottom
 
@@ -129,7 +138,8 @@ patches:
                   key: KEY
 `)
 
-	th.WriteK("top/right/bottom", `namePrefix: right-
+	th.WriteK("top/right/bottom", `
+namePrefix: right-
 
 resources:
 - ../../../bottom
