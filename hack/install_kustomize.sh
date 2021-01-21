@@ -8,6 +8,10 @@
 # kustomize binary to your current working directory.
 # (e.g. 'install_kustomize.sh 3.8.2')
 #
+# If two arguments are given -> Downloads the specified version of the
+# kustomize binary to the specified directory.
+# (e.g. 'install_kustomize.sh 3.8.2 $(go env GOPATH)/bin')
+# 
 # Fails if the file already exists.
 
 curl_timeout=600
@@ -18,7 +22,12 @@ if [ -n "$1" ]; then
     release_url=${release_url}/tags/kustomize%2F$version
 fi
 
-where=$PWD
+if [ -z "$2" ]; then
+    where=$PWD
+  else
+    where=$2
+fi
+
 if [ -f $where/kustomize ]; then
   echo "A file named kustomize already exists (remove it first)."
   exit 1
@@ -63,6 +72,6 @@ cp ./kustomize $where
 
 popd >& /dev/null
 
-./kustomize version
+$where/kustomize version
 
-echo kustomize installed to current directory.
+echo kustomize installed to specified directory.
