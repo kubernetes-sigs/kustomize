@@ -320,5 +320,5 @@ create the production environment.
 
 <!-- @finalBuild @testAgainstLatestRelease -->
 ```
-kustomize build $DEMO_HOME  # | kubectl apply -f -
+kustomize build $DEMO_HOME | kubectl apply -f -
 ```
