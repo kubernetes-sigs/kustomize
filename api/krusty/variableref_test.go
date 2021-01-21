@@ -360,12 +360,189 @@ resources:
 	}
 }
 
+func TestSimpleServicePortVarReplace(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+- statefulset.yaml
+vars:
+ - name: THE_PORT
+   objref:
+     kind: StatefulSet
+     name: cockroachdb
+     apiVersion: apps/v1beta1
+   fieldref:
+     fieldpath: spec.template.spec.containers[0].ports[1].containerPort
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - port: $(THE_PORT)
+    targetPort: $(THE_PORT)
+    name: grpc
+`)
+	th.WriteF("statefulset.yaml", `
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:v1.1.5
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - name: grpc
+    port: 8888
+    targetPort: 8888
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - image: cockroachdb/cockroach:v1.1.5
+        name: cockroachdb
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http
+`)
+}
+
+// TODO(3449): Yield bare primitives in var replacements from configmaps.
+// The ConfigMap data field is always strings, and anything that looks
+// like a boolean or int or float must be quoted, or the API server won't
+// accept the map.  This creates a problem if one wants to use a var to
+// inject a raw number or raw boolean sourced from a configmap, because as
+// far as the configmap representation is concerned, it's a string.
+// A workaround would be to source the var from another Kind, from a field
+// that allowed unquoted vars or booleans.
+func TestIssue3449(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- workflow.yaml
+
+configurations:
+- kustomization-config.yaml
+
+configMapGenerator:
+- name: kustomize-vars
+  envs:
+  - vars.env
+
+vars:
+- name: DBT_TARGET
+  objref: &config-map-ref
+    kind: ConfigMap
+    name: kustomize-vars
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.DBT_TARGET
+- name: SUSPENDED
+  objref: *config-map-ref
+  fieldref:
+    fieldpath: data.SUSPENDED
+`)
+	th.WriteF("workflow.yaml", `
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  schedule: "45 2 * * *"
+  timezone: "Europe/Vienna"
+  concurrencyPolicy: Forbid
+  suspend: $(SUSPENDED)
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    workflowTemplateRef:
+      name: core-load-pipeline
+    arguments:
+      parameters:
+        - name: dbt_target
+          value: $(DBT_TARGET)
+`)
+	th.WriteF("kustomization-config.yaml", `
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - kind: CronWorkflow
+        version: v1alpha1
+        path: spec/workflowSpec/arguments/parameters/value
+varReference:
+  - path: spec/workflowSpec/arguments/parameters/value
+    kind: CronWorkflow
+    apiVersion: argoproj.io/v1alpha1
+  - path: spec
+    kind: CronWorkflow
+    apiVersion: argoproj.io/v1alpha1
+`)
+	th.WriteF("vars.env", `
+DBT_TARGET=development
+SUSPENDED=True
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  concurrencyPolicy: Forbid
+  schedule: 45 2 * * *
+  suspend: "True"
+  timezone: Europe/Vienna
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    arguments:
+      parameters:
+      - name: dbt_target
+        value: development
+    workflowTemplateRef:
+      name: core-load-pipeline
+---
+apiVersion: v1
+data:
+  DBT_TARGET: development
+  SUSPENDED: "True"
+kind: ConfigMap
+metadata:
+  name: kustomize-vars-7mhm8cg5kg
+`)
+}
+
 func TestVarRefBig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	opts := th.MakeDefaultOptions()
-	if opts.UseKyaml {
-		t.Skip("TODO(#3396)")
-	}
 	th.WriteK("/app/base", `
 namePrefix: base-
 resources:
@@ -682,7 +859,7 @@ namePrefix: dev-
 resources:
 - ../../base
 `)
-	m := th.Run("/app/overlay/staging", opts)
+	m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -929,7 +1106,64 @@ metadata:
 `)
 }
 
-func TestVariableRefIngress(t *testing.T) {
+func TestVariableRefIngressBasic(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- ingress.yaml
+- deployment.yaml
+
+vars:
+- name: DEPLOYMENT_NAME
+  objref:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginxDep
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxDep
+`)
+
+	th.WriteF("ingress.yaml", `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginxIngress
+spec:
+  rules:
+  - host: $(DEPLOYMENT_NAME).example.com
+  tls:
+  - hosts:
+    - $(DEPLOYMENT_NAME).example.com
+    secretName: $(DEPLOYMENT_NAME).example.com-tls
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginxIngress
+spec:
+  rules:
+  - host: nginxDep.example.com
+  tls:
+  - hosts:
+    - nginxDep.example.com
+    secretName: nginxDep.example.com-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxDep
+`)
+}
+
+func TestVariableRefIngressOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base", `
 resources:
@@ -1976,67 +2210,64 @@ spec:
 
 func TestDeploymentAnnotations(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
+	th.WriteK(".", `
 configMapGenerator:
-  - name: testConfigMap
-    envs:
-      - test.properties
+- name: theConfigMap
+  envs:
+  - test.properties
 
 vars:
-  - name: FOO
-    objref:
-      kind: ConfigMap
-      name: testConfigMap
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.foo
+- name: SOMERIVER
+  objref:
+    kind: ConfigMap
+    name: theConfigMap
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.waterway
 
 commonAnnotations:
-  foo: $(FOO)
+  river: $(SOMERIVER)
 
 resources:
-  - deployment.yaml
+- deployment.yaml
 `)
 
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test
+  name: theDeployment
 spec:
   template:
     spec:
       containers:
-        - name: test
+      - name: test
 `)
-	th.WriteF("/app/test.properties", `foo=bar`)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	th.WriteF("test.properties", `waterway=mississippi`)
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    foo: bar
-  name: test
+    river: mississippi
+  name: theDeployment
 spec:
   template:
     metadata:
       annotations:
-        foo: bar
+        river: mississippi
     spec:
       containers:
       - name: test
 ---
 apiVersion: v1
 data:
-  foo: bar
+  waterway: mississippi
 kind: ConfigMap
 metadata:
   annotations:
-    foo: bar
-  name: testConfigMap-798k5k7g9f
+    river: mississippi
+  name: theConfigMap-hdd8h8cgdt
 `)
 }

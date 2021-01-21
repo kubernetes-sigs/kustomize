@@ -62,6 +62,10 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    config.kubernetes.io/originalName: apple
+    config.kubernetes.io/prefixes: baked-
+    config.kubernetes.io/suffixes: -pie
   name: baked-apple-pie
 spec:
   ports:
@@ -80,6 +84,10 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    config.kubernetes.io/originalName: cm
+    config.kubernetes.io/prefixes: baked-
+    config.kubernetes.io/suffixes: -pie
   name: baked-cm-pie
 `)
 
@@ -126,6 +134,9 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    config.kubernetes.io/originalName: deployment
+    config.kubernetes.io/prefixes: test-
   name: test-deployment
 spec:
   template:

@@ -589,6 +589,7 @@ func (m *resWrangler) ApplySmPatch(
 		patchCopy.SetName(res.GetName())
 		patchCopy.SetNamespace(res.GetNamespace())
 		patchCopy.SetGvk(res.GetGvk())
+		patchCopy.SetOriginalName(res.GetOriginalName(), true)
 		err := res.ApplySmPatch(patchCopy)
 		if err != nil {
 			// Check for an error string from UnmarshalJSON that's indicative
@@ -618,4 +619,10 @@ func (m *resWrangler) ApplySmPatch(
 	m.Clear()
 	m.AppendAll(newRm)
 	return nil
+}
+
+func (m *resWrangler) RemoveBuildAnnotations() {
+	for _, r := range m.Resources() {
+		r.RemoveBuildAnnotations()
+	}
 }

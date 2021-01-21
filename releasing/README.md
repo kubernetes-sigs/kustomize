@@ -30,7 +30,7 @@ The dependencies determine the release order:
 Thus, do `kyaml` first, then `cli-utils`, etc.
 
 #### Consider fetching new OpenAPI data
-The Kubernetes OpenAPI data changes no more frequently than once per quarter. 
+The Kubernetes OpenAPI data changes no more frequently than once per quarter.
 You can check the current builtin versions that kustomize is using with the
 following command.
 ```
@@ -40,22 +40,67 @@ kustomize openapi info
 Instructions on how to get a new OpenAPI sample can be found in the
 [OpenAPI Readme].
 
-#### Establish clean state
+#### Make some helper functions
 
 ```
-cd ~/gopath/src/sigs.k8s.io/kustomize
-git fetch upstream
-git co master
-git rebase upstream/master
+function createBranch {
+  branch=$1
+  echo "Making branch $branch : \"$title\""
+  git branch -D $branch  # delete if it exists
+  git co -b $branch
+  git commit -a -m "$title"
+  git push -f origin $branch
+}
+```
 
-make prow-presubmit-check >& /tmp/k.txt; echo $?
-# The exit code should be zero; if not examine /tmp/k.txt
+```
+function createPr {
+  gh pr create --title "$title" --body "ALLOW_MODULE_SPAN" --base master
+}
+```
+
+```
+function refreshMaster {
+  git co master
+  git fetch upstream
+  git rebase upstream/master
+}
+```
+
+```
+function testKustomizeRepo {
+  make prow-presubmit-check >& /tmp/k.txt
+  local code=$?
+  if [ $code -ne 0 ]; then
+    echo "**** FAILURE ******************"
+    tail -n /tmp/k.txt
+  else
+    echo "LGTM"
+  fi
+}
 ```
 
 #### Install the release tool
 
 ```
-(cd cmd/gorepomod; go install .)
+( cd cmd/gorepomod; go install . )
+```
+
+#### Authenticate to github using [gh](https://github.com/cli/cli)
+
+```
+# Use your own token
+GITHUB_TOKEN=deadbeefdeadbeef
+
+echo $GITHUB_TOKEN | gh auth login --scopes repo --with-token
+```
+
+#### Establish clean state
+
+```
+cd ~/gopath/src/sigs.k8s.io/kustomize
+refreshMaster
+testKustomizeRepo
 ```
 
 #### Release `kyaml`
@@ -63,97 +108,276 @@ make prow-presubmit-check >& /tmp/k.txt; echo $?
 ```
 gorepomod release kyaml --doIt
 ```
-Undraft the release on the [kustomize repo release page].
+
+Note the version:
+```
+versionKyaml=v0.10.6   # EDIT THIS!
+```
+
+Undraft the release on the [kustomize repo release page],
+make sure the version number is what you expect.
 
 
 #### Release [`cli-utils`](https://github.com/kubernetes-sigs/cli-utils)
 
+
 ```
 cd ../cli-utils
+```
 
-# Determine which version of kyaml you want at
-# https://github.com/kubernetes-sigs/kustomize/releases
-#
-# Pin ./go.mod to that version, e.g.:
-go mod edit -require sigs.k8s.io/kustomize/kyaml@v0.9.1
+Pin to the new version of kyaml you just released:
+```
+go mod edit -require sigs.k8s.io/kustomize/kyaml@$versionKyaml
+```
 
-# Test it
+Test it
+```
 make test
 make test-e2e
+```
 
-# Merge these changes to upstream (make a PR, merge it)
+Create the PR
+```
+title="Pin cli-utils to kyaml $versionKyaml"
+createBranch pinKyaml
+createPr
+```
 
-git fetch upstream
-git co master
-git rebase upstream/master
+Run local tests while GH runs tests in the cloud:
+```
+testKustomizeRepo
+```
 
-# Release cli-utils
+Wait for tests to pass, then merge the PR:
+```
+gh pr status
+gh pr merge -m
+```
+
+Get back on master and do paranoia test:
+```
+refreshMaster
+testKustomizeRepo
+```
+
+Release it:
+```
 gorepomod release {top} --doIt
+```
+
+Note the version:
+```
+versionCliUtils=v0.22.4     # EDIT THIS!
 ```
 
 #### Release `cmd/config`
 
 ```
 cd ../kustomize
+```
 
-# Pin to the most recent kyaml.
+Pin to the most recent kyaml.
+
+```
 gorepomod pin kyaml --doIt
+```
 
-# Determine which version of cli-utils you want at
-# https://github.com/kubernetes-sigs/cli-utils/releases
-#
-# Pin cmd/config/go.mod to that version, e.g.:
-(cd cmd/config; go mod edit -require=sigs.k8s.io/cli-utils@v0.20.4)
+Pin to the version of cli-utils you just created
+([releases](https://github.com/kubernetes-sigs/cli-utils/releases))
 
-# Test it.
-make prow-presubmit-check >& /tmp/k.txt; echo $?
+```
+(cd cmd/config; \
+ go mod edit -require=sigs.k8s.io/cli-utils@$versionCliUtils)
+```
 
-# Make a PR and merge these changes.
+Test it.
 
-# Release it.
+```
+testKustomizeRepo
+```
+
+Create the PR:
+```
+title="Pin to kyaml $versionKyaml and cli-utils $versionCliUtils"
+createBranch pinToKyamlAndCliUtils
+createPr
+```
+
+Run local tests while GH runs tests in the cloud:
+```
+testKustomizeRepo
+```
+
+Wait for tests to pass, then merge the PR:
+```
+gh pr status
+gh pr merge -m
+```
+
+Get back on master and do paranoia test:
+```
+refreshMaster
+testKustomizeRepo
+```
+
+Release it:
+```
 gorepomod release cmd/config --doIt
 ```
 
-Undraft the release on the [kustomize repo release page].
+Note the version:
+```
+versionCmdConfig=v0.8.8 # EDIT THIS!
+```
+
+Undraft the release on the [kustomize repo release page],
+make sure the version number is what you expect.
+
 
 #### Release `api` (the kustomize API, used by the CLI)
 
+
+Pin to the new cmd/config:
+
 ```
 gorepomod pin cmd/config --doIt
-# Merge these changes.
+```
 
+Create the PR:
+```
+title="Pin to cmd/config $versionCmdConfig"
+createBranch pinToCmdConfig
+createPr
+```
+
+Run local tests while GH runs tests in the cloud:
+```
+testKustomizeRepo
+```
+
+Wait for tests to pass, then merge the PR:
+```
+gh pr status  # rinse, repeat
+gh pr merge -m
+```
+
+Get back on master and do paranoia test:
+```
+refreshMaster
+testKustomizeRepo
+```
+
+Release it:
+```
 gorepomod release api --doIt
 ```
 
-Undraft the release on the [kustomize repo release page].
+Note the version:
+```
+versionApi=v0.7.2   # EDIT THIS!
+```
+
+Undraft the release on the [kustomize repo release page],
+make sure the version number is what you expect.
+
 
 #### Release the kustomize CLI
 
+Pin to the new API:
 ```
 gorepomod pin api --doIt
-# Merge these changes.
+```
 
-gorepomod release kustomize  --doIt
+Create the PR:
+```
+title="Pin to api $versionApi"
+createBranch pinToApi
+createPr
+```
+
+Run local tests while GH runs tests in the cloud:
+```
+testKustomizeRepo
+```
+
+Wait for tests to pass, then merge the PR:
+```
+gh pr status  # rinse, repeat
+gh pr merge -m
+```
+
+Get back on master and do paranoia test:
+```
+refreshMaster
+testKustomizeRepo
+```
+
+Release it:
+```
+gorepomod release kustomize --doIt
 ```
 
 Undraft the release on the [kustomize repo release page].
 
+### Important
+
+[installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
+
+ * Follow the [installation instructions] to install your new
+   releas and make sure it reports the expected version number.
+
+   If not, something is very wrong.
+
+ * Visit the [release page] and edit the release notes as desired.
+
+
 #### Unpin everything
 
-Go back into development mode, so current code in-repo
-depends on current code in-repo.
+
+Go back into development mode, where all modules depend on in-repo code:
 
 ```
-gorepomod unpin api  --doIt
+gorepomod unpin api         --doIt
 gorepomod unpin cmd/config  --doIt
-gorepomod unpin kyaml  --doIt
-# Merge these changes.
+gorepomod unpin kyaml       --doIt
 ```
 
-Visit the [release page] and edit the release notes as desired;
-this should be automated, and descriptions in PR's should
-be standardized to make automation possible.
-See kubebuilder project.
+Create the PR:
+```
+title="Back to development mode; unpin the modules"
+createBranch unpinEverything
+createPr
+```
+
+Run local tests while GH runs tests in the cloud:
+```
+testKustomizeRepo
+```
+
+Wait for tests to pass, then merge the PR:
+```
+gh pr status  # rinse, repeat
+gh pr merge -m
+```
+
+Get back on master and do paranoia test:
+```
+refreshMaster
+testKustomizeRepo
+```
+
+### Finally
+
+[Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
+
+Edit the `prow-presubmit-target` in the [Makefile]
+to test examples against your new release.
+
+----
+
+----
+
+Older notes follow:
 
 ## Public Modules
 

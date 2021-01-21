@@ -34,7 +34,7 @@ function runTest {
   fi
   rcAccumulator=$((rcAccumulator || $code))
   if [ $code -ne 0 ]; then
-    echo "Failure in $d"
+    echo "**** FAILURE in $d"
   fi
 }
 
@@ -61,8 +61,6 @@ for goMod in $(find ./plugin -name 'go.mod' -not -path "./plugin/untested/*"); d
 done
 
 if [ $rcAccumulator -ne 0 ]; then
-  echo "FAILURE; exit code $rcAccumulator"
+  echo "FAIL; exit code $rcAccumulator"
   exit 1
 fi
-
-

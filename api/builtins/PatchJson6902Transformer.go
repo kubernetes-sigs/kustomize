@@ -12,7 +12,6 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -79,9 +78,9 @@ func (p *PatchJson6902TransformerPlugin) Transform(m resmap.ResMap) error {
 		return err
 	}
 	for _, res := range resources {
-		err = filtersutil.ApplyToJSON(patchjson6902.Filter{
+		err = res.ApplyFilter(patchjson6902.Filter{
 			Patch: p.JsonOp,
-		}, res)
+		})
 		if err != nil {
 			return err
 		}

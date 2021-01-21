@@ -318,8 +318,9 @@ spec:
       volumes:%s
         name: nginx-persistent-storage
 `
-	// TODO(#3394)
 	th.AssertActualEqualsExpected(
+		// TODO(#3394): Should be possible to delete emptyDir with a patch.
+		// TODO(#3304): DECISION - still a bug, emptyDir should be deleted.
 		m, opts.IfApiMachineryElseKyaml(
 			fmt.Sprintf(expFmt, `
       - gcePersistentDisk:

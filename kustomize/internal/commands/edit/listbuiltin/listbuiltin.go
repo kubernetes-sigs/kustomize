@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/krusty"
 )
 
 // NewCmdListBuiltinPlugin return an instance of list-builtin-plugin
@@ -18,7 +18,7 @@ func NewCmdListBuiltinPlugin() *cobra.Command {
 		Short: "[Alpha] List the builtin plugins",
 		Long:  "",
 		Run: func(cmd *cobra.Command, args []string) {
-			plugins := konfig.GetBuiltinPluginNames()
+			plugins := krusty.GetBuiltinPluginNames()
 			fmt.Print("Builtin plugins:\n\n")
 			for _, p := range plugins {
 				fmt.Printf(" * %s\n", p)

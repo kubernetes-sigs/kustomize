@@ -58,7 +58,7 @@ func (k *WNodeFactory) SliceFromBytes(bs []byte) ([]ifc.Kunstructured, error) {
 
 // shouldDropObject returns true if the resource should not be accumulated.
 func shouldDropObject(m yaml.ResourceMeta) bool {
-	_, y := m.ObjectMeta.Annotations[konfig.IgnoredByKustomizeResourceAnnotation]
+	_, y := m.ObjectMeta.Annotations[konfig.IgnoredByKustomizeAnnotation]
 	return y
 }
 

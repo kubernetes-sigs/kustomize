@@ -532,9 +532,6 @@ vars:
 func TestVariablesAmbiguousWorkaround(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	opts := th.MakeDefaultOptions()
-	if opts.UseKyaml {
-		t.Skip("TODO(#3396)")
-	}
 	th.WriteK("dev", namespaceNeedInVarDevFolder)
 	th.WriteF("dev/elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteK("test", namespaceNeedInVarTestFolder)
@@ -591,13 +588,68 @@ vars:
 // to the variable declarations allows to disambiguate the variables.
 func TestVariablesDisambiguatedWithNamespace(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	opts := th.MakeDefaultOptions()
-	if opts.UseKyaml {
-		t.Skip("TODO(#3396)")
-	}
 	th.WriteK(".", namespaceNeedInVarMyAppWithNamespace)
 	th.WriteF("elasticsearch-dev-service.yaml", namespaceNeedInVarDevResources)
 	th.WriteF("elasticsearch-test-service.yaml", namespaceNeedInVarTestResources)
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, namespaceNeedInVarExpectedOutput)
+}
+
+// TestAddNamePrefixWithNamespace tests that adding a name prefix works within
+// namespaces other than the default namespace.
+// Test for issue #3430
+func TestAddNamePrefixWithNamespace(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+
+	th.WriteF("/app/serviceaccount.yaml", `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+`)
+
+	th.WriteF("/app/clusterrolebinding.yaml", `
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: iter8-monitoring
+`)
+
+	th.WriteK("/app", `
+namePrefix: iter8-
+namespace: iter8-monitoring
+resources:
+- clusterrolebinding.yaml
+- serviceaccount.yaml
+`)
+
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: iter8-prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: iter8-prometheus
+  namespace: iter8-monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: iter8-prometheus
+  namespace: iter8-monitoring
+`)
 }

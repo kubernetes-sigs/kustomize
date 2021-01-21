@@ -343,14 +343,13 @@ kind: List
 			name:        "listWithAnchorReference",
 			input:       []types.PatchStrategicMerge{patchList2},
 			expectedOut: []*Resource{testDeploymentA, testDeploymentB},
-			// See https://github.com/kubernetes-sigs/kustomize/issues/3271
-			// This test should not have an error, but does when kyaml is used.
 			// The error using kyaml is:
 			//   json: unsupported type: map[interface {}]interface {}
-			// probably arising from too many conversions between
+			// maybe arising from too many conversions between
 			// yaml, json, Resource, RNode, Unstructured etc.
-			// These conversions can be removed after closing
-			// https://github.com/kubernetes-sigs/kustomize/issues/2506
+			// These conversions go away after closing #3506
+			// TODO(#3271) This shouldn't have an error, but does when kyaml is used.
+			// TODO(#3304): DECISION - still a bug, but not a blocker to #3304 or #2506
 			expectedErr: konfig.FlagEnableKyamlDefaultValue,
 		},
 		{

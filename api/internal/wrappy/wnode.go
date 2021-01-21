@@ -6,6 +6,8 @@ package wrappy
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -43,6 +45,10 @@ func FromRNode(node *yaml.RNode) *WNode {
 	return &WNode{node: node}
 }
 
+func (wn *WNode) AsRNode() *yaml.RNode {
+	return wn.node
+}
+
 func (wn *WNode) demandMetaData(label string) yaml.ResourceMeta {
 	meta, err := wn.node.GetMeta()
 	if err != nil {
@@ -62,9 +68,35 @@ func (wn *WNode) GetAnnotations() map[string]string {
 	return wn.demandMetaData("GetAnnotations").Annotations
 }
 
+// convertSliceIndex traverses the items in `fields` and find
+// if there is a slice index in the item and change it to a
+// valid Lookup field path. For example, 'ports[0]' will be
+// converted to 'ports' and '0'.
+func convertSliceIndex(fields []string) []string {
+	var res []string
+	for _, s := range fields {
+		if !strings.HasSuffix(s, "]") {
+			res = append(res, s)
+			continue
+		}
+		re := regexp.MustCompile(`^(.*)\[(\d+)\]$`)
+		groups := re.FindStringSubmatch(s)
+		if len(groups) == 0 {
+			// no match, add to result
+			res = append(res, s)
+			continue
+		}
+		if groups[1] != "" {
+			res = append(res, groups[1])
+		}
+		res = append(res, groups[2])
+	}
+	return res
+}
+
 // GetFieldValue implements ifc.Kunstructured.
 func (wn *WNode) GetFieldValue(path string) (interface{}, error) {
-	fields := strings.Split(path, ".")
+	fields := convertSliceIndex(strings.Split(path, "."))
 	rn, err := wn.node.Pipe(yaml.Lookup(fields...))
 	if err != nil {
 		return nil, err
@@ -96,9 +128,29 @@ func (wn *WNode) GetFieldValue(path string) (interface{}, error) {
 		}
 		return result, nil
 	}
+	if yn.Kind != yaml.ScalarNode {
+		return nil, fmt.Errorf("expected ScalarNode, got Kind=%d", yn.Kind)
+	}
 
-	// Return value value directly for all other (ScalarNode) kinds
-	return yn.Value, nil
+	// TODO: When doing kustomize var replacement, which is likely a
+	// a primary use of this function and the reason it returns interface{}
+	// rather than string, we do conversion from Nodes to Go types and back
+	// to nodes.  We should figure out how to do replacement using raw nodes,
+	// assuming we keep the var feature in kustomize.
+	// The other end of this is: refvar.go:updateNodeValue.
+	switch yn.Tag {
+	case yaml.NodeTagString:
+		return yn.Value, nil
+	case yaml.NodeTagInt:
+		return strconv.Atoi(yn.Value)
+	case yaml.NodeTagFloat:
+		return strconv.ParseFloat(yn.Value, 64)
+	case yaml.NodeTagBool:
+		return strconv.ParseBool(yn.Value)
+	default:
+		// Possibly this should be an error or log.
+		return yn.Value, nil
+	}
 }
 
 // GetGvk implements ifc.Kunstructured.
@@ -159,12 +211,7 @@ func (wn *WNode) GetString(path string) (string, error) {
 
 // Map implements ifc.Kunstructured.
 func (wn *WNode) Map() map[string]interface{} {
-	var result map[string]interface{}
-	if err := wn.node.YNode().Decode(&result); err != nil {
-		// Log and die since interface doesn't allow error.
-		log.Fatalf("failed to decode ynode: %v", err)
-	}
-	return result
+	return wn.node.Map()
 }
 
 // MarshalJSON implements ifc.Kunstructured.

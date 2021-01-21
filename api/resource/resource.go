@@ -10,9 +10,13 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/internal/wrappy"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -20,15 +24,18 @@ import (
 // paired with metadata used by kustomize.
 // For more history, see sigs.k8s.io/kustomize/api/ifc.Unstructured
 type Resource struct {
-	kunStr       ifc.Kunstructured
-	originalName string
-	originalNs   string
-	options      *types.GenArgs
-	refBy        []resid.ResId
-	refVarNames  []string
-	namePrefixes []string
-	nameSuffixes []string
+	kunStr      ifc.Kunstructured
+	options     *types.GenArgs
+	refBy       []resid.ResId
+	refVarNames []string
 }
+
+const (
+	buildAnnotationOriginalName      = konfig.ConfigAnnoDomain + "/originalName"
+	buildAnnotationPrefixes          = konfig.ConfigAnnoDomain + "/prefixes"
+	buildAnnotationSuffixes          = konfig.ConfigAnnoDomain + "/suffixes"
+	buildAnnotationOriginalNamespace = konfig.ConfigAnnoDomain + "/originalNs"
+)
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
 	r.kunStr = incoming.Copy()
@@ -169,13 +176,9 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) {
 }
 
 func (r *Resource) copyOtherFields(other *Resource) {
-	r.originalName = other.originalName
-	r.originalNs = other.originalNs
 	r.options = other.options
 	r.refBy = other.copyRefBy()
 	r.refVarNames = copyStringSlice(other.refVarNames)
-	r.namePrefixes = copyStringSlice(other.namePrefixes)
-	r.nameSuffixes = copyStringSlice(other.nameSuffixes)
 }
 
 func (r *Resource) MergeDataMapFrom(o *Resource) {
@@ -242,28 +245,46 @@ func copyStringSlice(s []string) []string {
 
 // Implements ResCtx AddNamePrefix
 func (r *Resource) AddNamePrefix(p string) {
-	r.namePrefixes = append(r.namePrefixes, p)
+	r.addAdditiveAnnotation(buildAnnotationPrefixes, p)
 }
 
 // Implements ResCtx AddNameSuffix
 func (r *Resource) AddNameSuffix(s string) {
-	r.nameSuffixes = append(r.nameSuffixes, s)
+	r.addAdditiveAnnotation(buildAnnotationSuffixes, s)
+}
+
+func (r *Resource) addAdditiveAnnotation(name, value string) {
+	if value == "" {
+		return
+	}
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if existing, ok := annotations[name]; ok {
+		annotations[name] = existing + "," + value
+	} else {
+		annotations[name] = value
+	}
+	r.SetAnnotations(annotations)
 }
 
 // Implements ResCtx GetOutermostNamePrefix
 func (r *Resource) GetOutermostNamePrefix() string {
-	if len(r.namePrefixes) == 0 {
+	namePrefixes := r.GetNamePrefixes()
+	if len(namePrefixes) == 0 {
 		return ""
 	}
-	return r.namePrefixes[len(r.namePrefixes)-1]
+	return namePrefixes[len(namePrefixes)-1]
 }
 
 // Implements ResCtx GetOutermostNameSuffix
 func (r *Resource) GetOutermostNameSuffix() string {
-	if len(r.nameSuffixes) == 0 {
+	nameSuffixes := r.GetNameSuffixes()
+	if len(nameSuffixes) == 0 {
 		return ""
 	}
-	return r.nameSuffixes[len(r.nameSuffixes)-1]
+	return nameSuffixes[len(nameSuffixes)-1]
 }
 
 func sameEndingSubarray(a, b []string) bool {
@@ -288,12 +309,20 @@ func sameEndingSubarray(a, b []string) bool {
 
 // Implements ResCtx GetNamePrefixes
 func (r *Resource) GetNamePrefixes() []string {
-	return r.namePrefixes
+	annotations := r.GetAnnotations()
+	if _, ok := annotations[buildAnnotationPrefixes]; !ok {
+		return nil
+	}
+	return strings.Split(annotations[buildAnnotationPrefixes], ",")
 }
 
 // Implements ResCtx GetNameSuffixes
 func (r *Resource) GetNameSuffixes() []string {
-	return r.nameSuffixes
+	annotations := r.GetAnnotations()
+	if _, ok := annotations[buildAnnotationSuffixes]; !ok {
+		return nil
+	}
+	return strings.Split(annotations[buildAnnotationSuffixes], ",")
 }
 
 // OutermostPrefixSuffixEquals returns true if both resources
@@ -317,23 +346,65 @@ func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
 	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
-func (r *Resource) GetOriginalName() string {
-	return r.originalName
+// RemoveBuildAnnotations removes annotations created by the build process.
+// These are internal-only to kustomize, added to the data pipeline to
+// track name changes so name references can be fixed.
+func (r *Resource) RemoveBuildAnnotations() {
+	annotations := r.GetAnnotations()
+	if len(annotations) == 0 {
+		return
+	}
+	delete(annotations, buildAnnotationOriginalName)
+	delete(annotations, buildAnnotationPrefixes)
+	delete(annotations, buildAnnotationSuffixes)
+	delete(annotations, buildAnnotationOriginalNamespace)
+	r.SetAnnotations(annotations)
 }
 
-// Making this public would be bad.
-func (r *Resource) setOriginalName(n string) *Resource {
-	r.originalName = n
+func (r *Resource) GetOriginalName() string {
+	annotations := r.GetAnnotations()
+	if name, ok := annotations[buildAnnotationOriginalName]; ok {
+		return name
+	}
+	return r.kunStr.GetName()
+}
+
+func (r *Resource) SetOriginalName(n string, overwrite bool) *Resource {
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if _, ok := annotations[buildAnnotationOriginalName]; !ok || overwrite {
+		annotations[buildAnnotationOriginalName] = n
+	}
+	r.kunStr.SetAnnotations(annotations)
 	return r
 }
 
 func (r *Resource) GetOriginalNs() string {
-	return r.originalNs
+	annotations := r.GetAnnotations()
+	if ns, ok := annotations[buildAnnotationOriginalNamespace]; ok {
+		return ns
+	}
+	ns := r.GetNamespace()
+	if ns == "default" {
+		return ""
+	}
+	return ns
 }
 
-// Making this public would be bad.
-func (r *Resource) setOriginalNs(n string) *Resource {
-	r.originalNs = n
+func (r *Resource) SetOriginalNs(n string, overwrite bool) *Resource {
+	if n == "" {
+		n = "default"
+	}
+	annotations := r.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if _, ok := annotations[buildAnnotationOriginalNamespace]; !ok || overwrite {
+		annotations[buildAnnotationOriginalNamespace] = n
+	}
+	r.SetAnnotations(annotations)
 	return r
 }
 
@@ -422,14 +493,29 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 		return err
 	}
 	n, ns := r.GetName(), r.GetNamespace()
-	err = filtersutil.ApplyToJSON(patchstrategicmerge.Filter{
+	err = r.ApplyFilter(patchstrategicmerge.Filter{
 		Patch: node,
-	}, r)
+	})
+	if err != nil {
+		return err
+	}
 	if !r.IsEmpty() {
 		r.SetName(n)
 		r.SetNamespace(ns)
 	}
 	return err
+}
+
+func (r *Resource) ApplyFilter(f kio.Filter) error {
+	if wn, ok := r.kunStr.(*wrappy.WNode); ok {
+		l, err := f.Filter([]*kyaml.RNode{wn.AsRNode()})
+		if len(l) == 0 {
+			// Hack to deal with deletion.
+			r.kunStr = wrappy.NewWNode()
+		}
+		return err
+	}
+	return filtersutil.ApplyToJSON(f, r)
 }
 
 func mergeStringMaps(maps ...map[string]string) map[string]string {

@@ -3,7 +3,6 @@ package krusty_test
 import (
 	"io/ioutil"
 	"os"
-	"fmt"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -191,9 +190,8 @@ stringData:
     bootcmd:
     - mkdir /mnt/vda
 `)
-	opts := th.MakeOptionsPluginsEnabled()
-	m := th.Run("/app", opts)
-	expFmt := `
+	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -216,7 +214,7 @@ metadata:
     name: demo
   name: demo-budget
 spec:
-  minAvailable: 67%%
+  minAvailable: 67%
   selector:
     matchLabels:
       app: cockroachdb
@@ -249,7 +247,9 @@ metadata:
   annotations:
     config.kubernetes.io/path: config/demo_service.yaml
     prometheus.io/path: _status/vars
-%s
+    prometheus.io/port: "8080"
+    prometheus.io/scrape: "true"
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
   labels:
     app: cockroachdb
     name: demo
@@ -306,7 +306,7 @@ spec:
         - /bin/bash
         - -ecx
         - |
-          # The use of qualified ` + "`hostname -f`" + ` is crucial:
+          # The use of qualified `+"`hostname -f`"+` is crucial:
           # Other nodes aren't able to look up the unqualified hostname.
           CRARGS=("start" "--logtostderr" "--insecure" "--host" "$(hostname -f)" "--http-host" "0.0.0.0")
           # We only want to initialize a new cluster (by omitting the join flag)
@@ -364,14 +364,7 @@ spec:
       resources:
         requests:
           storage: 1Gi
-`
-	th.AssertActualEqualsExpected(m, opts.IfApiMachineryElseKyaml(
-		fmt.Sprintf(expFmt, `    prometheus.io/port: "8080"
-    prometheus.io/scrape: "true"
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"`),
-		fmt.Sprintf(expFmt, `    prometheus.io/port: 8080
-    prometheus.io/scrape: true
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: true`)))
+`)
 }
 
 func TestFnContainerTransformer(t *testing.T) {

@@ -109,6 +109,7 @@ func (th *HarnessEnhanced) LoadAndRunGenerator(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
+	rm.RemoveBuildAnnotations()
 	return rm
 }
 
@@ -124,7 +125,7 @@ func (th *HarnessEnhanced) LoadAndRunTransformer(
 func (th *HarnessEnhanced) RunTransformerAndCheckResult(
 	config, input, expected string) {
 	resMap := th.LoadAndRunTransformer(config, input)
-	th.AssertActualEqualsExpected(resMap, expected)
+	th.AssertActualEqualsExpectedNoIdAnnotations(resMap, expected)
 }
 
 func (th *HarnessEnhanced) ErrorFromLoadAndRunTransformer(

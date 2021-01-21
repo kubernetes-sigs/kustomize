@@ -21,7 +21,7 @@ require (
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
-	sigs.k8s.io/kustomize/kyaml v0.10.5
+	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/yaml v1.2.0
 )
 

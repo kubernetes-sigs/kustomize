@@ -1,10 +1,13 @@
-package filtersutil_test
+// Copyright 2021 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+package yaml_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/filters/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestSortedKeys(t *testing.T) {
@@ -23,9 +26,10 @@ func TestSortedKeys(t *testing.T) {
 			expected: []string{"a", "b", "c"}},
 	}
 	for tn, tc := range testCases {
+		tc := tc
 		t.Run(tn, func(t *testing.T) {
 			if !assert.Equal(t,
-				filtersutil.SortedMapKeys(tc.input),
+				yaml.SortedMapKeys(tc.input),
 				tc.expected) {
 				t.FailNow()
 			}

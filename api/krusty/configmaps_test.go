@@ -27,10 +27,6 @@ configMapGenerator:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    port: 8080
-    happy: true
-    color: green
   name: demo
 spec:
   clusterIP: None
@@ -41,10 +37,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    color: green
-    happy: true
-    port: 8080
   name: demo
 spec:
   clusterIP: None
@@ -60,7 +52,6 @@ metadata:
 `)
 }
 
-// Observation: Numbers no longer quoted
 func TestGeneratorIntVsStringWithMerge(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
@@ -80,22 +71,52 @@ configMapGenerator:
   literals:
   - month=12
 `)
-	opts := th.MakeDefaultOptions()
-	m := th.Run("overlay", opts)
-	expFmt := `apiVersion: v1
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
 data:
-  crisis: %s
+  crisis: "true"
   fruit: Indian Gooseberry
-  month: %s
-  year: %s
+  month: "12"
+  year: "2020"
 kind: ConfigMap
 metadata:
-  name: bob-%s
-`
-	th.AssertActualEqualsExpected(
-		m, opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `"true"`, `"12"`, `"2020"`, `bk46gm59c6`),
-			fmt.Sprintf(expFmt, `true`, `12`, `2020`, `bkmtk2t2fb`)))
+  name: bob-bk46gm59c6
+`)
+}
+
+func TestGeneratorFromProperties(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+  - name: test-configmap
+    behavior: create
+    envs:
+    - properties
+`)
+	th.WriteF("base/properties", `
+VAR1=100
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: test-configmap
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+VAR2=200
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  VAR1: "100"
+  VAR2: "200"
+kind: ConfigMap
+metadata:
+  name: test-configmap-hdghb5ddkg
+`)
 }
 
 // Generate a Secret and a ConfigMap from the same data
@@ -193,12 +214,16 @@ metadata:
 type: Opaque
 `
 	th.AssertActualEqualsExpected(
-		m, opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt,
+		m,
+		// TODO(#3304): DECISION - kyaml better; not a bug.
+		opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(
+				expFmt,
 				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo=`,
 				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`,
 				`ftht6hfgmb`),
-			fmt.Sprintf(expFmt, `|
+			fmt.Sprintf(
+				expFmt, `|
     CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
     VjbGVhcgo=`, `|
     CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
@@ -438,5 +463,42 @@ data:
 kind: ConfigMap
 metadata:
   name: cm-o2-5k95kd76ft
+`)
+}
+
+func TestConfigMapGeneratorLiteralNewline(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+generators:
+- configmaps.yaml
+`)
+	th.WriteF("/app/configmaps.yaml", `
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: testing
+literals:
+  - |
+    initial.txt=greetings
+    everyone
+  - |
+    final.txt=different
+    behavior
+---
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(
+		m, `
+apiVersion: v1
+data:
+  final.txt: |
+    different
+    behavior
+  initial.txt: |
+    greetings
+    everyone
+kind: ConfigMap
+metadata:
+  name: testing-tt4769fb52
 `)
 }

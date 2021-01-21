@@ -245,4 +245,7 @@ type ResMap interface {
 	// selected set of resources.
 	ApplySmPatch(
 		selectedSet *resource.IdSet, patch *resource.Resource) error
+
+	// RemoveBuildAnnotations removes annotations created by the build process.
+	RemoveBuildAnnotations()
 }

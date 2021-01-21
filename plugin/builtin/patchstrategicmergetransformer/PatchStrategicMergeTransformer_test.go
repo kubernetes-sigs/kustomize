@@ -13,7 +13,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// TODO(#3304)
+// TODO(#3304): DECISION - OK to move to kyaml and not do conflict detection.
 const skipConflictDetectionTests = konfig.FlagEnableKyamlDefaultValue
 
 func errorContains(err error, possibilities ...string) bool {
@@ -603,12 +603,13 @@ spec:
     B: Y
 `)
 	assert.NoError(t, err)
-	th.AssertActualEqualsExpected(
+	th.AssertActualEqualsExpectedNoIdAnnotations(
 		resMap,
 		// In kyaml/yaml.merge2, the empty "B: " is dropped
 		// when patch1 and patch2 are merged, so the patch
 		// applied is effectively only patch2.yaml.
 		// So it cannot delete the "B: Y"
+		// TODO(#3304): DECISION - undecided.
 		konfig.IfApiMachineryElseKyaml(`
 apiVersion: example.com/v1
 kind: Foo
@@ -652,11 +653,11 @@ spec:
     B: Y
 `)
 	assert.NoError(t, err)
-	th.AssertActualEqualsExpected(
+	th.AssertActualEqualsExpectedNoIdAnnotations(
 		resMap,
 		// This time only patch2 was applied.  Same answer on the kyaml
 		// path, but different answer on apimachinery path (B becomes "true"?)
-		// The kyaml path is doing better here.
+		// TODO(#3304): DECISION - kyaml doing better here, not a bug.
 		konfig.IfApiMachineryElseKyaml(`
 apiVersion: example.com/v1
 kind: Foo
@@ -779,7 +780,6 @@ spec:
 // Note that for SMP/WithSchema merge, the name:nginx entry
 // is mandatory
 func addLabelAndEnvPatch(kind string) string {
-
 	res := `
 apiVersion: apps/v1
 kind: %s
@@ -1388,7 +1388,7 @@ paths:
 - patch.yaml
 `, target)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1430,7 +1430,7 @@ paths:
 - patch.yaml
 `, target)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:

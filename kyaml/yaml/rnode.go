@@ -372,18 +372,7 @@ func (rn *RNode) GetAnnotations() (map[string]string, error) {
 
 // SetAnnotations tries to set the metadata annotations field.
 func (rn *RNode) SetAnnotations(m map[string]string) error {
-	meta, err := rn.Pipe(Lookup(MetadataField))
-	if err != nil {
-		return err
-	}
-	if len(m) == 0 {
-		if meta == nil {
-			return nil
-		}
-		return meta.PipeE(Clear(AnnotationsField))
-	}
-	return rn.SetMapField(
-		NewMapRNode(&m), MetadataField, AnnotationsField)
+	return rn.setMapInMetadata(m, AnnotationsField)
 }
 
 // GetLabels gets the metadata labels field.
@@ -397,18 +386,32 @@ func (rn *RNode) GetLabels() (map[string]string, error) {
 
 // SetLabels sets the metadata labels field.
 func (rn *RNode) SetLabels(m map[string]string) error {
+	return rn.setMapInMetadata(m, LabelsField)
+}
+
+// This established proper quoting on string values, and sorts by key.
+func (rn *RNode) setMapInMetadata(m map[string]string, field string) error {
 	meta, err := rn.Pipe(Lookup(MetadataField))
 	if err != nil {
 		return err
 	}
-	if len(m) == 0 {
-		if meta == nil {
-			return nil
-		}
-		return meta.PipeE(Clear(LabelsField))
+	if err = meta.PipeE(Clear(field)); err != nil {
+		return err
 	}
-	return rn.SetMapField(
-		NewMapRNode(&m), MetadataField, LabelsField)
+	if len(m) == 0 {
+		return nil
+	}
+	mapNode, err := meta.Pipe(LookupCreate(MappingNode, field))
+	if err != nil {
+		return err
+	}
+	for _, k := range SortedMapKeys(m) {
+		if _, err := mapNode.Pipe(
+			SetField(k, NewStringRNode(m[k]))); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (rn *RNode) SetMapField(value *RNode, path ...string) error {
@@ -435,13 +438,13 @@ func (rn *RNode) SetDataMap(m map[string]string) {
 	if rn == nil {
 		log.Fatal("cannot set data map on nil Rnode")
 	}
+	if err := rn.PipeE(Clear(DataField)); err != nil {
+		log.Fatal(err)
+	}
 	if len(m) == 0 {
-		if err := rn.PipeE(Clear(DataField)); err != nil {
-			log.Fatal(err)
-		}
 		return
 	}
-	if err := rn.SetMapField(NewMapRNode(&m), DataField); err != nil {
+	if err := rn.LoadMapIntoConfigMapData(m); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -783,6 +786,19 @@ func FromMap(m map[string]interface{}) (*RNode, error) {
 		return nil, err
 	}
 	return Parse(string(c))
+}
+
+func (rn *RNode) Map() map[string]interface{} {
+	if rn == nil || rn.value == nil {
+		return make(map[string]interface{})
+	}
+	var result map[string]interface{}
+	if err := rn.value.Decode(&result); err != nil {
+		// Should not be able to create an RNode that cannot be decoded;
+		// this is an unrecoverable error.
+		log.Fatalf("failed to decode ynode: %v", err)
+	}
+	return result
 }
 
 // ConvertJSONToYamlNode parses input json string and returns equivalent yaml node

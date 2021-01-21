@@ -93,5 +93,6 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		}
 		t.Transform(m)
 	}
+	m.RemoveBuildAnnotations()
 	return m, nil
 }

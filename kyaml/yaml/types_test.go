@@ -58,6 +58,27 @@ func TestCopyYNode(t *testing.T) {
 	}
 }
 
+func TestIsYNodeString(t *testing.T) {
+	if IsYNodeTaggedNull(nil) {
+		t.Fatalf("nil cannot be tagged null")
+	}
+	if IsYNodeTaggedNull(&Node{}) {
+		t.Fatalf("untagged node is not tagged")
+	}
+	if IsYNodeString(&Node{Tag: NodeTagString}) {
+		t.Fatalf("non-scalar node is not a string")
+	}
+	if IsYNodeString(&Node{Kind: ScalarNode, Tag: NodeTagFloat}) {
+		t.Fatalf("float tagged node is not tagged")
+	}
+	if !IsYNodeString(&Node{Kind: ScalarNode}) {
+		t.Fatalf("this looks like a string - no tag implies string")
+	}
+	if !IsYNodeString(&Node{Kind: ScalarNode, Tag: NodeTagString}) {
+		t.Fatalf("this looks like a string")
+	}
+}
+
 func TestIsYNodeTaggedNull(t *testing.T) {
 	if IsYNodeTaggedNull(nil) {
 		t.Fatalf("nil cannot be tagged null")

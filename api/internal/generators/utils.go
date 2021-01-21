@@ -4,13 +4,9 @@
 package generators
 
 import (
-	"encoding/base64"
 	"fmt"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/go-errors/errors"
-	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -66,74 +62,17 @@ func copyLabelsAndAnnotations(
 	if opts == nil {
 		return nil
 	}
-	for _, k := range filtersutil.SortedMapKeys(opts.Labels) {
+	for _, k := range yaml.SortedMapKeys(opts.Labels) {
 		v := opts.Labels[k]
 		if _, err := rn.Pipe(yaml.SetLabel(k, v)); err != nil {
 			return err
 		}
 	}
-	for _, k := range filtersutil.SortedMapKeys(opts.Annotations) {
+	for _, k := range yaml.SortedMapKeys(opts.Annotations) {
 		v := opts.Annotations[k]
 		if _, err := rn.Pipe(yaml.SetAnnotation(k, v)); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-// In a secret, all data is base64 encoded, regardless of its conformance
-// or lack thereof to UTF-8.
-func makeSecretValueRNode(s string) *yaml.RNode {
-	yN := &yaml.Node{Kind: yaml.ScalarNode}
-	// Purposely don't use YAML tags to identify the data as being plain text or
-	// binary.  It kubernetes Secrets the values in the `data` map are expected
-	// to be base64 encoded, and in ConfigMaps that same can be said for the
-	// values in the `binaryData` field.
-	yN.Tag = yaml.NodeTagString
-	yN.Value = encodeBase64(s)
-	if strings.Contains(yN.Value, "\n") {
-		yN.Style = yaml.LiteralStyle
-	}
-	return yaml.NewRNode(yN)
-}
-
-func makeConfigMapValueRNode(s string) (field string, rN *yaml.RNode) {
-	yN := &yaml.Node{Kind: yaml.ScalarNode}
-	yN.Tag = yaml.NodeTagString
-	if utf8.ValidString(s) {
-		field = yaml.DataField
-		yN.Value = s
-	} else {
-		field = yaml.BinaryDataField
-		yN.Value = encodeBase64(s)
-	}
-	if strings.Contains(yN.Value, "\n") {
-		yN.Style = yaml.LiteralStyle
-	}
-	return field, yaml.NewRNode(yN)
-}
-
-// encodeBase64 encodes s as base64 that is broken up into multiple lines
-// as appropriate for the resulting length.
-func encodeBase64(s string) string {
-	const lineLen = 70
-	encLen := base64.StdEncoding.EncodedLen(len(s))
-	lines := encLen/lineLen + 1
-	buf := make([]byte, encLen*2+lines)
-	in := buf[0:encLen]
-	out := buf[encLen:]
-	base64.StdEncoding.Encode(in, []byte(s))
-	k := 0
-	for i := 0; i < len(in); i += lineLen {
-		j := i + lineLen
-		if j > len(in) {
-			j = len(in)
-		}
-		k += copy(out[k:], in[i:j])
-		if lines > 1 {
-			out[k] = '\n'
-			k++
-		}
-	}
-	return string(out[:k])
 }
