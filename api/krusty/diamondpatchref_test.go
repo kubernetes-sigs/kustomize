@@ -3,6 +3,20 @@
 
 package krusty_test
 
+// In the following structure `top` patches `left-deploy` and `right-deploy` to reference the
+// configMap in `bottom`. This test verifies `configMapRef.name` in `left-deploy` and
+// `right-deploy` is modified correctly.
+//
+//                       top
+//                 /            \
+//           left                   right
+//          /   \                  /    \
+// left-service  bottom        bottom right-service
+//         |          \       /          |
+// left-deploy          bottom        right-deploy
+//                        |
+//                     configMap
+
 import (
 	"testing"
 
