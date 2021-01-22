@@ -4,25 +4,13 @@
 package framework
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Function defines a function which mutates or validates a collection of configuration
-// To create a structured validation result, return a Result as the error.
-type Function func() error
-
-// Result defines a function result which will be set on the emitted ResourceList
-type Result struct {
-	// Name is the name of the function creating the result
-	Name string `yaml:"name,omitempty"`
-
-	// Items are the individual results
-	Items []Item `yaml:"items,omitempty"`
-}
-
-// Severity indicates the severity of the result
+// Severity indicates the severity of the Result
 type Severity string
 
 const (
@@ -34,20 +22,29 @@ const (
 	Info Severity = "info"
 )
 
-// Item defines a validation result
-type Item struct {
+// ResultItem defines a validation result
+type ResultItem struct {
 	// Message is a human readable message
 	Message string `yaml:"message,omitempty"`
 
-	// Severity is the severity of the
+	// Severity is the severity of this result
 	Severity Severity `yaml:"severity,omitempty"`
 
 	// ResourceRef is a reference to a resource
 	ResourceRef yaml.ResourceMeta `yaml:"resourceRef,omitempty"`
 
+	// Field is a reference to the field in a resource this result refers to
 	Field Field `yaml:"field,omitempty"`
 
+	// File references a file containing the resource this result refers to
 	File File `yaml:"file,omitempty"`
+}
+
+// String provides a human-readable message for the result item
+func (i ResultItem) String() string {
+	identifier := i.ResourceRef.GetIdentifier()
+	idString := strings.Join([]string{identifier.GetAPIVersion(), identifier.GetKind(), identifier.GetNamespace(), identifier.GetName()}, "/")
+	return fmt.Sprintf("[%s] %s %s: %s", i.Severity, idString, i.Field.Path, i.Message)
 }
 
 // File references a file containing a resource
@@ -72,16 +69,25 @@ type Field struct {
 	SuggestedValue string `yaml:"suggestedValue,omitempty"`
 }
 
-// Error implement error
+// Result defines a function result which will be set on the emitted ResourceList
+type Result struct {
+	// Name is the name of the function creating the result
+	Name string `yaml:"name,omitempty"`
+
+	// Items are the individual results
+	Items []ResultItem `yaml:"items,omitempty"`
+}
+
+// Error enables a Result to be returned as an error
 func (e Result) Error() string {
 	var msgs []string
 	for _, i := range e.Items {
-		msgs = append(msgs, i.Message)
+		msgs = append(msgs, i.String())
 	}
 	return strings.Join(msgs, "\n\n")
 }
 
-// ExitCode provides the exit code based on the result
+// ExitCode provides the exit code based on the result's severity
 func (e Result) ExitCode() int {
 	for _, i := range e.Items {
 		if i.Severity == Error {
