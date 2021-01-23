@@ -25,6 +25,9 @@ type Kustomization struct {
 	// MetaData is a pointer to avoid marshalling empty struct
 	MetaData *ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 
+	// OpenAPI contains information about what kubernetes schema to use.
+	OpenAPI map[string]string `json:"openapi,omitempty" yaml:"openapi,omitempty"`
+
 	//
 	// Operators - what kustomize can do.
 	//
