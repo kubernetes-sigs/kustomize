@@ -15,7 +15,8 @@ import (
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+	k8syaml "sigs.k8s.io/yaml"
 )
 
 type stringMarshal struct {
@@ -31,7 +32,7 @@ type field struct {
 
 type plugin struct {
 	ldr    ifc.Loader
-	Target types.PatchTarget `json:"target,omitempty" yaml:"target,omitempty"`
+	Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
 	Fields []*field          `json:"fields,omitempty" yaml:"fields,omitempty"`
 }
 
@@ -84,10 +85,16 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	if configData == nil {
 		return fmt.Errorf("Invalid data in configmap")
 	}
+	updatedData := make(map[string]string)
+
+	for k,v := range configData {
+		updatedData[k] = v.(string)
+	}
+
 	for _, field := range p.Fields {
 		var kvalue interface{}
 		var ok bool
-		if kvalue, ok = configData[field.Name]; !ok {
+		if kvalue, ok = updatedData[field.Name]; !ok {
 			return fmt.Errorf("Non existent key %s in configmap", field.Name)
 		}
 		res, aerr := field.decodedPatch.Apply([]byte(kvalue.(string)))
@@ -99,8 +106,10 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			return ierr
 		}
 
-		configData[field.Name] = out.String()
+		updatedData[field.Name] = out.String()
 	}
+
+	obj.SetDataMap(updatedData)
 	return nil
 }
 
@@ -124,7 +133,7 @@ func (p *plugin) load(field *field) (err error) {
 	if field.JsonOp[0] != '[' {
 		// if it doesn't seem to be JSON, imagine
 		// it is YAML, and convert to JSON.
-		op, err := yaml.YAMLToJSON([]byte(field.JsonOp))
+		op, err := k8syaml.YAMLToJSON([]byte(field.JsonOp))
 		if err != nil {
 			return err
 		}
