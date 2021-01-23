@@ -15,7 +15,7 @@ import (
 
 const Info = "{title:Kubernetes,version:v1.18.4}\n{title:Kubernetes,version:v1.18.6}\n{title:Kubernetes,version:v1.18.8}\n{title:Kubernetes,version:v1.19.0}\n{title:Kubernetes,version:v1.19.1}"
 
-var OpenApiMustAsset = map[string]func(string) []byte{
+var OpenAPIMustAsset = map[string]func(string) []byte{
 	"v1184": v1184.MustAsset,
 	"v1186": v1186.MustAsset,
 	"v1188": v1188.MustAsset,
@@ -23,4 +23,4 @@ var OpenApiMustAsset = map[string]func(string) []byte{
 	"v1191": v1191.MustAsset,
 }
 
-const DefaultOpenApi = "v1191"
+const DefaultOpenAPI = "v1191"
