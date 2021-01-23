@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
-	"sync"
 
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -22,14 +21,30 @@ import (
 // globalSchema contains global state information about the openapi
 var globalSchema openapiData
 
+// kubernetesOpenAPIVersion specifies which builtin kubernetes schema to use
+var kubernetesOpenAPIVersion string
+
 // openapiData contains the parsed openapi state.  this is in a struct rather than
 // a list of vars so that it can be reset from tests.
 type openapiData struct {
-	setup                          sync.Once
-	schema                         spec.Schema
-	schemaByResourceType           map[yaml.TypeMeta]*spec.Schema
+	// schema holds the OpenAPI schema data
+	schema spec.Schema
+
+	// schemaForResourceType is a map of Resource types to their schemas
+	schemaByResourceType map[yaml.TypeMeta]*spec.Schema
+
+	// namespaceabilityByResourceType stores whether a given Resource type
+	// is namespaceable or not
 	namespaceabilityByResourceType map[yaml.TypeMeta]bool
-	noUseBuiltInSchema             bool
+
+	// noUseBuiltInSchema stores whether we want to prevent using the built-n
+	// Kubernetes schema as part of the global schema
+	noUseBuiltInSchema bool
+
+	// currentOpenAPIVersion stores the version if the kubernetes openapi data
+	// that is currently stored as the schema, so that we only reparse the
+	// schema when necessary (to speed up performance)
+	currentOpenAPIVersion string
 }
 
 // ResourceSchema wraps the OpenAPI Schema.
@@ -387,9 +402,9 @@ func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 }
 
 const (
-	// kubernetesAPIDefaultVersion is the latest version number of the statically compiled in
+	// kubernetesOpenAPIDefaultVersion is the latest version number of the statically compiled in
 	// OpenAPI schema for kubernetes built-in types
-	kubernetesAPIDefaultVersion = kubernetesapi.DefaultOpenApi
+	kubernetesOpenAPIDefaultVersion = kubernetesapi.DefaultOpenAPI
 
 	// kustomizationAPIAssetName is the name of the asset containing the statically compiled in
 	// OpenAPI definitions for Kustomization built-in types
@@ -419,29 +434,65 @@ const (
 	kindKey = "kind"
 )
 
+// SetSchemaVersion sets the kubernetes OpenAPI schema version to use
+func SetSchemaVersion(openAPIField map[string]string, reset bool) error {
+	// this should only be set once
+	if kubernetesOpenAPIVersion != "" && !reset {
+		return nil
+	}
+
+	kubernetesOpenAPIVersion = strings.ReplaceAll(openAPIField["version"], ".", "")
+	if kubernetesOpenAPIVersion == "" {
+		return nil
+	}
+	if _, ok := kubernetesapi.OpenAPIMustAsset[kubernetesOpenAPIVersion]; !ok {
+		return fmt.Errorf("the specified OpenAPI version is not built in")
+	}
+	return nil
+}
+
+// GetSchemaVersion returns what kubernetes OpenAPI version is being used
+func GetSchemaVersion() string {
+	if kubernetesOpenAPIVersion == "" {
+		return kubernetesOpenAPIDefaultVersion
+	}
+	return kubernetesOpenAPIVersion
+}
+
 // initSchema parses the json schema
 func initSchema() {
-	globalSchema.setup.Do(func() {
-		if globalSchema.noUseBuiltInSchema {
-			// don't parse the built in schema
-			return
-		}
+	currentVersion := kubernetesOpenAPIVersion
+	if currentVersion == "" {
+		currentVersion = kubernetesOpenAPIDefaultVersion
+	}
+	if globalSchema.currentOpenAPIVersion != currentVersion {
+		parseSchema(currentVersion)
+	}
+	globalSchema.currentOpenAPIVersion = currentVersion
+}
 
-		// parse the swagger, this should never fail
-		assetName := filepath.Join(
-			"kubernetesapi",
-			kubernetesAPIDefaultVersion,
-			"swagger.json")
-		if err := parse(kubernetesapi.OpenApiMustAsset[kubernetesAPIDefaultVersion](assetName)); err != nil {
-			// this should never happen
-			panic(err)
-		}
+// parseSchema calls parse to parse the json schemas
+func parseSchema(version string) {
+	if globalSchema.noUseBuiltInSchema {
+		// don't parse the built in schema
+		return
+	}
 
-		if err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
-			// this should never happen
-			panic(err)
-		}
-	})
+	// parse the swagger, this should never fail
+	assetName := filepath.Join(
+		"kubernetesapi",
+		version,
+		"swagger.json")
+
+	if err := parse(kubernetesapi.OpenAPIMustAsset[version](assetName)); err != nil {
+		// this should never happen
+		panic(err)
+	}
+
+	if err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
+		// this should never happen
+		panic(err)
+	}
 }
 
 // parse parses and indexes a single json schema
