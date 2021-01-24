@@ -28,4 +28,28 @@ type KvPairSources struct {
 	// or npm ".env" file or a ".ini" file
 	// (wikipedia.org/wiki/INI_file)
 	EnvSources []string `json:"envs,omitempty" yaml:"envs,omitempty"`
+
+	// AgeIdentitySources is a list of file paths.
+	// The contents of each files should be an AGE identity file.
+	// AGE decryption will only apply to sources which have a '.age' suffix, e.g.:
+	//
+	//    envs:
+	//    - foo.env.age
+	//    file:
+	//    - assets/id_rsa.age
+	//    - id_rsa=assets/id_rsa.age
+	//    literals:
+	//    - |
+	//      id_rsa.age=-----BEGIN AGE ENCRYPTED FILE-----
+	//      YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBPUjFuSDFaUStEaE5SQVhl
+	//      ...
+	//      SUrmocOpPl1j/aosTU0opGJ67FKiDu/XgVkJ9e4Sln386eTAwSFap1Z5FW7BFiZC
+	//      -----END AGE ENCRYPTED FILE-----
+	//
+	// The `.age` suffix of the generated keys is removed.
+	//
+	// By default kustomize will also try do decrypt encrypted values with OpenSSH
+	// keys found at ~/.ssh/id_rsa and ~/.ssh/id_ed25519. If either one of these
+	// keys can decrypt your age encrypted data you can leave this property empty.
+	AgeIdentitySources []string `json:"ageIdentities,omitempty" yaml:"ageIdentities,omitempty"`
 }

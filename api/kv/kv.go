@@ -7,13 +7,19 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
+	"filippo.io/age"
+	"filippo.io/age/armor"
+
 	"github.com/pkg/errors"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -39,7 +45,14 @@ func (kvl *loader) Validator() ifc.Validator {
 
 func (kvl *loader) Load(
 	args types.KvPairSources) (all []types.Pair, err error) {
-	pairs, err := kvl.keyValuesFromEnvFiles(args.EnvSources)
+	ids, err := kvl.getAgeIdentities(args.AgeIdentitySources)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(
+			"age identity source files: %v",
+			args.AgeIdentitySources))
+	}
+
+	pairs, err := kvl.keyValuesFromEnvFiles(args.EnvSources, ids)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"env source files: %v",
@@ -47,14 +60,14 @@ func (kvl *loader) Load(
 	}
 	all = append(all, pairs...)
 
-	pairs, err = keyValuesFromLiteralSources(args.LiteralSources)
+	pairs, err = keyValuesFromLiteralSources(args.LiteralSources, ids)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"literal sources %v", args.LiteralSources))
 	}
 	all = append(all, pairs...)
 
-	pairs, err = kvl.keyValuesFromFileSources(args.FileSources)
+	pairs, err = kvl.keyValuesFromFileSources(args.FileSources, ids)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(
 			"file sources: %v", args.FileSources))
@@ -62,19 +75,73 @@ func (kvl *loader) Load(
 	return append(all, pairs...), nil
 }
 
-func keyValuesFromLiteralSources(sources []string) ([]types.Pair, error) {
+func (kvl *loader) getAgeIdentities(sources []string) ([]age.Identity, error) {
+	var ids []age.Identity
+	if len(sources) > 0 {
+		for _, path := range sources {
+			path, err := filepath.Abs(path)
+			if err != nil {
+				return nil, err
+			}
+			content, err := kvl.ldr.Load(path)
+			if err != nil {
+				return nil, err
+			}
+			fd := bytes.NewBuffer(content)
+			id, err := age.ParseIdentities(fd)
+			if err != nil {
+				return nil, err
+			}
+			ids = append(ids, id...)
+		}
+	}
+
+	for _, path := range []string{
+		os.ExpandEnv("$HOME/.ssh/id_rsa"),
+		os.ExpandEnv("$HOME/.ssh/id_ed25519"),
+	} {
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			continue
+		}
+
+		sshids, err := parseSSHIdentity(path, content)
+		if err != nil {
+			// If the key is explicitly requested, this error will be caught
+			// below, otherwise ignore it silently.
+			continue
+		}
+		ids = append(ids, sshids...)
+	}
+	return ids, nil
+}
+
+func keyValuesFromLiteralSources(sources []string, ids []age.Identity) ([]types.Pair, error) {
 	var kvs []types.Pair
 	for _, s := range sources {
 		k, v, err := parseLiteralSource(s)
 		if err != nil {
 			return nil, err
 		}
+		if strings.HasSuffix(k, ".age") {
+			k = strings.TrimRight(k, ".age")
+			content := []byte(v)
+			if strings.HasSuffix(k, ".yaml") || strings.HasSuffix(k, ".yml") {
+				content, err = decryptInPlaceYAMLWithAge(content, ids)
+			} else {
+				content, err = decryptValueWithAge(content, ids)
+			}
+			if err != nil {
+				return nil, err
+			}
+			v = string(content)
+		}
 		kvs = append(kvs, types.Pair{Key: k, Value: v})
 	}
 	return kvs, nil
 }
 
-func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, error) {
+func (kvl *loader) keyValuesFromFileSources(sources []string, ids []age.Identity) ([]types.Pair, error) {
 	var kvs []types.Pair
 	for _, s := range sources {
 		k, fPath, err := parseFileSource(s)
@@ -85,17 +152,38 @@ func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, err
 		if err != nil {
 			return nil, err
 		}
+		if strings.HasSuffix(fPath, ".age") {
+			k = strings.TrimRight(k, ".age")
+
+			if (strings.HasSuffix(k, ".yaml") || strings.HasSuffix(k, ".yml")) &&
+				!bytes.HasPrefix(content, []byte(armor.Header)) {
+				// If key has .yaml or .yml extension and has no age armor header
+				// then we try inline decrypting of the file.
+				content, err = decryptInPlaceYAMLWithAge(content, ids)
+			} else {
+				content, err = decryptValueWithAge(content, ids)
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
 		kvs = append(kvs, types.Pair{Key: k, Value: string(content)})
 	}
 	return kvs, nil
 }
 
-func (kvl *loader) keyValuesFromEnvFiles(paths []string) ([]types.Pair, error) {
+func (kvl *loader) keyValuesFromEnvFiles(paths []string, ids []age.Identity) ([]types.Pair, error) {
 	var kvs []types.Pair
 	for _, p := range paths {
 		content, err := kvl.ldr.Load(p)
 		if err != nil {
 			return nil, err
+		}
+		if strings.HasSuffix(p, ".age") {
+			content, err = decryptValueWithAge(content, ids)
+			if err != nil {
+				return nil, err
+			}
 		}
 		more, err := kvl.keyValuesFromLines(content)
 		if err != nil {
