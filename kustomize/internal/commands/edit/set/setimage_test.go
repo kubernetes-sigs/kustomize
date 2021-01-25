@@ -251,6 +251,104 @@ func TestSetImage(t *testing.T) {
 				err: errImageInvalidArgs,
 			},
 		},
+		{
+			description: "override new tag but keep new name",
+			given: given{
+				args: []string{"image1=*:v1"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newName: foo.bar.foo:8800/foo/image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: foo.bar.foo:8800/foo/image1",
+					"  newTag: v1",
+				}},
+		},
+		{
+			description: "override new name but keep new tag",
+			given: given{
+				args: []string{"image1=my-image1:*"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newName: foo.bar.foo:8800/foo/image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				}},
+		},
+		{
+			description: "keep new name and new tag (rare case)",
+			given: given{
+				args: []string{"image1=*:*"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				}},
+		},
+		{
+			description: "do not set asterisk as new name for existing image",
+			given: given{
+				args: []string{"image1=*:v1"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newTag: v1",
+				}},
+		},
+		{
+			description: "do not set asterisk as new name",
+			given: given{
+				args: []string{"image1=*:v1"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newTag: v1",
+				}},
+		},
+		{
+			description: "do not set asterisk as new tag",
+			given: given{
+				args: []string{"image1=my-image1:*"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+				}},
+		},
 	}
 
 	for _, tc := range testCases {
