@@ -349,6 +349,63 @@ func TestSetImage(t *testing.T) {
 					"  newName: my-image1",
 				}},
 		},
+		{
+			description: "keep new name and update digest",
+			given: given{
+				args: []string{"image2=*@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
+				infileImages: []string{
+					"images:",
+					"- name: image2",
+					"  newName: my-image2",
+					"  digest: sha256:abcdef12345",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: my-image2",
+				}},
+		},
+		{
+			description: "keep new name, remove tag, and set digest",
+			given: given{
+				args: []string{"image2=*@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
+				infileImages: []string{
+					"images:",
+					"- name: image2",
+					"  newName: my-image2",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: my-image2",
+				}},
+		},
+		{
+			description: "update new name and keep the digest",
+			given: given{
+				args: []string{"image2=my-image2@*"},
+				infileImages: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: foo.bar.foo:8800/foo/image1",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: my-image2",
+				}},
+		},
 	}
 
 	for _, tc := range testCases {

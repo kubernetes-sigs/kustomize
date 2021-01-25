@@ -140,6 +140,11 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 				argIm = replaceNewTag(argIm, im.NewTag)
 			}
 
+			// Reuse the existing digest when asterisk disgest is passed
+			if argIm.Digest == preserveSeparator {
+				argIm = replaceDigest(argIm, im.Digest)
+			}
+
 			o.imageMap[im.Name] = argIm
 
 			continue
@@ -157,6 +162,10 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 
 		if v.NewTag == preserveSeparator {
 			v = replaceNewTag(v, "")
+		}
+
+		if v.Digest == preserveSeparator {
+			v = replaceDigest(v, "")
 		}
 
 		images = append(images, v)
@@ -185,6 +194,15 @@ func replaceNewTag(image types.Image, newTag string) types.Image {
 		NewName: image.NewName,
 		NewTag:  newTag,
 		Digest:  image.Digest,
+	}
+}
+
+func replaceDigest(image types.Image, digest string) types.Image {
+	return types.Image{
+		Name:    image.Name,
+		NewName: image.NewName,
+		NewTag:  image.NewTag,
+		Digest:  digest,
 	}
 }
 
