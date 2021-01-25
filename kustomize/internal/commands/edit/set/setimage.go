@@ -76,8 +76,8 @@ images:
 to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image name exists.
 
-The image tag can only contain alphanumeric, '.', '_' and '-'. Passing * (asterisk) either in the new name 
-or in new tag will preserve the appropriate values from the kustomization file.
+The image tag can only contain alphanumeric, '.', '_' and '-'. Passing * (asterisk) either as the new name, 
+the new tag, or the digest will preserve the appropriate values from the kustomization file.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
