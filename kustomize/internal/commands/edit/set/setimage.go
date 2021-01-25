@@ -20,7 +20,7 @@ type setImageOptions struct {
 	imageMap map[string]types.Image
 }
 
-var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*|\\*)$")
+var pattern = regexp.MustCompile(`^(.*):([a-zA-Z0-9._-]*|\*)$`)
 
 var preserveSeparator = "*"
 
