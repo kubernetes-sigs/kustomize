@@ -10,7 +10,7 @@
 # Validates them and output in the stdout
 #
 # Example execution:
-# cat <raw K8s yaml> | ./plugin/someteam.example.com/v1/Validator
+# cat <raw K8s yaml> | ./plugin/someteam.example.com/v1/validator/Validator
 
 if ! [ -x "$(command -v kubeval)" ]; then
   echo "Error: kubeval is not installed."
