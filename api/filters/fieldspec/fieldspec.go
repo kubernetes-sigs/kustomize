@@ -59,6 +59,8 @@ func (fltr Filter) filter(obj *yaml.RNode) error {
 		return fltr.seq(obj)
 	case yaml.MappingNode:
 		return fltr.field(obj)
+	case yaml.AliasNode:
+		return fltr.filter(yaml.NewRNode(obj.YNode().Alias))
 	default:
 		return errors.Errorf("expected sequence or mapping node")
 	}
