@@ -272,9 +272,9 @@ func (m *resWrangler) AsYaml() ([]byte, error) {
 	var b []byte
 	buf := bytes.NewBuffer(b)
 	for _, res := range m.Resources() {
-		out, err := yaml.Marshal(res.Map())
+		out, err := res.AsYAML()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "%#v", res.Map())
 		}
 		if firstObj {
 			firstObj = false
