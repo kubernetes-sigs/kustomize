@@ -251,6 +251,161 @@ func TestSetImage(t *testing.T) {
 				err: errImageInvalidArgs,
 			},
 		},
+		{
+			description: "override new tag but keep new name",
+			given: given{
+				args: []string{"image1=*:v1"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newName: foo.bar.foo:8800/foo/image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: foo.bar.foo:8800/foo/image1",
+					"  newTag: v1",
+				}},
+		},
+		{
+			description: "override new name but keep new tag",
+			given: given{
+				args: []string{"image1=my-image1:*"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newName: foo.bar.foo:8800/foo/image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				}},
+		},
+		{
+			description: "keep new name and new tag (rare case)",
+			given: given{
+				args: []string{"image1=*:*"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				}},
+		},
+		{
+			description: "do not set asterisk as new name for existing image",
+			given: given{
+				args: []string{"image1=*:v1"},
+				infileImages: []string{
+					"images:",
+					"- name: image1",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newTag: v1",
+				}},
+		},
+		{
+			description: "do not set asterisk as new name",
+			given: given{
+				args: []string{"image1=*:v1"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newTag: v1",
+				}},
+		},
+		{
+			description: "do not set asterisk as new tag",
+			given: given{
+				args: []string{"image1=my-image1:*"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- name: image1",
+					"  newName: my-image1",
+				}},
+		},
+		{
+			description: "keep new name and update digest",
+			given: given{
+				args: []string{"image2=*@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
+				infileImages: []string{
+					"images:",
+					"- name: image2",
+					"  newName: my-image2",
+					"  digest: sha256:abcdef12345",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: my-image2",
+				}},
+		},
+		{
+			description: "keep new name, remove tag, and set digest",
+			given: given{
+				args: []string{"image2=*@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
+				infileImages: []string{
+					"images:",
+					"- name: image2",
+					"  newName: my-image2",
+					"  newTag: my-tag",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: my-image2",
+				}},
+		},
+		{
+			description: "update new name and keep the digest",
+			given: given{
+				args: []string{"image2=my-image2@*"},
+				infileImages: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: foo.bar.foo:8800/foo/image1",
+				},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image2",
+					"  newName: my-image2",
+				}},
+		},
 	}
 
 	for _, tc := range testCases {

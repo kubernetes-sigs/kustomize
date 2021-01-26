@@ -20,7 +20,9 @@ type setImageOptions struct {
 	imageMap map[string]types.Image
 }
 
-var pattern = regexp.MustCompile("^(.*):([a-zA-Z0-9._-]*)$")
+var pattern = regexp.MustCompile(`^(.*):([a-zA-Z0-9._-]*|\*)$`)
+
+var preserveSeparator = "*"
 
 // errors
 
@@ -74,7 +76,8 @@ images:
 to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image name exists.
 
-The image tag can only contain alphanumeric, '.', '_' and '-'.
+The image tag can only contain alphanumeric, '.', '_' and '-'. Passing * (asterisk) either as the new name, 
+the new tag, or the digest will preserve the appropriate values from the kustomization file.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
@@ -125,7 +128,25 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 
 	// append only new images from kustomize file
 	for _, im := range m.Images {
-		if _, ok := o.imageMap[im.Name]; ok {
+		if argIm, ok := o.imageMap[im.Name]; ok {
+
+			// Reuse the existing new name when asterisk new name is passed
+			if argIm.NewName == preserveSeparator {
+				argIm = replaceNewName(argIm, im.NewName)
+			}
+
+			// Reuse the existing new tag when asterisk new tag is passed
+			if argIm.NewTag == preserveSeparator {
+				argIm = replaceNewTag(argIm, im.NewTag)
+			}
+
+			// Reuse the existing digest when asterisk disgest is passed
+			if argIm.Digest == preserveSeparator {
+				argIm = replaceDigest(argIm, im.Digest)
+			}
+
+			o.imageMap[im.Name] = argIm
+
 			continue
 		}
 
@@ -134,6 +155,19 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 
 	var images []types.Image
 	for _, v := range o.imageMap {
+
+		if v.NewName == preserveSeparator {
+			v = replaceNewName(v, "")
+		}
+
+		if v.NewTag == preserveSeparator {
+			v = replaceNewTag(v, "")
+		}
+
+		if v.Digest == preserveSeparator {
+			v = replaceDigest(v, "")
+		}
+
 		images = append(images, v)
 	}
 
@@ -143,6 +177,33 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 
 	m.Images = images
 	return mf.Write(m)
+}
+
+func replaceNewName(image types.Image, newName string) types.Image {
+	return types.Image{
+		Name:    image.Name,
+		NewName: newName,
+		NewTag:  image.NewTag,
+		Digest:  image.Digest,
+	}
+}
+
+func replaceNewTag(image types.Image, newTag string) types.Image {
+	return types.Image{
+		Name:    image.Name,
+		NewName: image.NewName,
+		NewTag:  newTag,
+		Digest:  image.Digest,
+	}
+}
+
+func replaceDigest(image types.Image, digest string) types.Image {
+	return types.Image{
+		Name:    image.Name,
+		NewName: image.NewName,
+		NewTag:  image.NewTag,
+		Digest:  digest,
+	}
 }
 
 func parse(arg string) (types.Image, error) {
