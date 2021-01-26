@@ -4,7 +4,7 @@
 # Makefile for kustomize CLI and API.
 
 MYGOBIN := $(shell go env GOPATH)/bin
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 export PATH := $(MYGOBIN):$(PATH)
 MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
 
