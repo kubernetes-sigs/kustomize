@@ -15,21 +15,21 @@
 # Fails if the file already exists.
 
 curl_timeout=600
-release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 
+version=""
+release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 if [ -n "$1" ]; then
-    version=v$1
-    release_url=${release_url}/tags/kustomize%2F$version
+  version=v$1
+  release_url=${release_url}/tags/kustomize%2F$version
 fi
 
-if [ -z "$2" ]; then
-    where=$PWD
-  else
-    where=$2
+where=$PWD
+if [ -n "$2" ]; then
+  where=$2
 fi
 
 if [ -f $where/kustomize ]; then
-  echo "A file named kustomize already exists (remove it first)."
+  echo "A file named $where/kustomize already exists (remove it first)."
   exit 1
 fi
 
@@ -74,4 +74,4 @@ popd >& /dev/null
 
 $where/kustomize version
 
-echo kustomize installed to specified directory.
+echo kustomize installed to $where
