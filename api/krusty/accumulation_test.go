@@ -93,3 +93,70 @@ resources:
 		t.Fatalf("unexpected error: %q", err)
 	}
 }
+
+func TestResourceHasAnchor(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+resources:
+- ingress.yaml
+`)
+	th.WriteF("/app/ingress.yaml", `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog
+spec:
+  tls:
+  - hosts:
+    - xyz.me
+    - www.xyz.me
+    secretName: cert-tls
+  rules:
+  - host: xyz.me
+    http: &xxx_rules
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service
+            port:
+              number: 80
+  - host: www.xyz.me
+    http: *xxx_rules
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog
+spec:
+  rules:
+  - host: xyz.me
+    http:
+      paths:
+      - backend:
+          service:
+            name: service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  - host: www.xyz.me
+    http:
+      paths:
+      - backend:
+          service:
+            name: service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - xyz.me
+    - www.xyz.me
+    secretName: cert-tls
+`)
+}
