@@ -67,9 +67,6 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 	if p.HelmBin == "" {
 		p.HelmBin = "helm"
 	}
-	if p.HelmHome == "" {
-		p.HelmHome = path.Join(p.tmpDir, ".helm")
-	}
 	if p.Values == "" {
 		p.Values = path.Join(p.ChartHome, p.ChartName, "values.yaml")
 	}
@@ -84,11 +81,13 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		cmd := exec.Command(p.HelmBin, args...)
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
-		cmd.Env = append(cmd.Env,
-			fmt.Sprintf("HELM_CONFIG_HOME=%s", p.HelmHome),
-			fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.HelmHome),
-			fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.HelmHome),
-		)
+		if p.HelmHome != "" {
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("HELM_CONFIG_HOME=%s", p.HelmHome),
+				fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.HelmHome),
+				fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.HelmHome),
+			)
+		}
 		err := cmd.Run()
 		if err != nil {
 			return stdout.Bytes(),
