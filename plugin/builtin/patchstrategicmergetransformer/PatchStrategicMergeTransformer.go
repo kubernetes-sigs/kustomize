@@ -64,11 +64,10 @@ func (p *plugin) Config(
 			"patch appears to be empty; files=%v, Patch=%s", p.Paths, p.Patches)
 	}
 	// Merge the patches, looking for conflicts.
-	m, err := h.ResmapFactory().ConflatePatches(p.loadedPatches)
+	_, err = h.ResmapFactory().ConflatePatches(p.loadedPatches)
 	if err != nil {
 		return err
 	}
-	p.loadedPatches = m.Resources()
 	return nil
 }
 

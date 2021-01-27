@@ -69,28 +69,6 @@ spec:
         image: helloworld
         name: whatever
 `
-	// Allow expected variable to be unused
-	_ = expected
-
-	// Currently, kustomize inserts $patch: delete elements into the resulting resources
-	erroneousActual := `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: whatever
-spec:
-  template:
-    spec:
-      containers:
-      - env:
-        - $patch: delete
-          name: NOT_EXISTING_FOR_REMOVAL
-        - name: EXISTING
-          value: EXISTING_VALUE
-        image: helloworld
-        name: whatever
-`
-
 	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, erroneousActual)
+	th.AssertActualEqualsExpected(m, expected)
 }
