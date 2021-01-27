@@ -59,6 +59,11 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 	}
 	if yaml.IsMissingOrNull(nodes.Dest()) {
 		// Add
+		ps, _ := determineSmpDirective(nodes.Origin())
+		if ps == smpDelete {
+			return walk.ClearNode, nil
+		}
+
 		return nodes.Origin(), nil
 	}
 	if nodes.Origin().IsTaggedNull() {
