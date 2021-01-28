@@ -107,6 +107,104 @@ spec:
  `,
 		},
 		{
+			name: "create all possible substitutions",
+			args: []string{
+				"my_subst", "--all-subst"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+      - name: sidecar
+        image: sidecar:1.7.9
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image-setter:
+      x-k8s-cli:
+        setter:
+          name: my-image-setter
+          value: "nginx"
+    io.k8s.cli.setters.my-tag-setter:
+      x-k8s-cli:
+        setter:
+          name: my-tag-setter
+          value: "1.7.9"
+ `,
+			out: `created substitution "my_subst_1"`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image-setter:
+      x-k8s-cli:
+        setter:
+          name: my-image-setter
+          value: "nginx"
+    io.k8s.cli.setters.my-tag-setter:
+      x-k8s-cli:
+        setter:
+          name: my-tag-setter
+          value: "1.7.9"
+    io.k8s.cli.substitutions.my_subst_1:
+      x-k8s-cli:
+        substitution:
+          name: my_subst_1
+          pattern: ${my-image-setter}-deployment
+          values:
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+    io.k8s.cli.substitutions.my_subst_2:
+      x-k8s-cli:
+        substitution:
+          name: my_subst_2
+          pattern: ${my-image-setter}:${my-tag-setter}
+          values:
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+    io.k8s.cli.substitutions.my_subst_3:
+      x-k8s-cli:
+        substitution:
+          name: my_subst_3
+          pattern: sidecar:${my-tag-setter}
+          values:
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment # {"$openapi":"my_subst_1"}
+  annotations:
+    foo: nginx-deployment # {"$openapi":"my_subst_1"}
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9 # {"$openapi":"my_subst_2"}
+      - name: sidecar
+        image: sidecar:1.7.9 # {"$openapi":"my_subst_3"}
+ `,
+		},
+		{
 			name: "error if substitution with same name exists",
 			args: []string{"my-image", "--field-value", "some:image", "--pattern", "some:${image}"},
 			inputOpenAPI: `
@@ -503,7 +601,6 @@ created substitution "image-tag"`,
 			actualNormalized := strings.Replace(
 				strings.Replace(actual.String(), "\\", "/", -1),
 				"//", "/", -1)
-
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
 			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
