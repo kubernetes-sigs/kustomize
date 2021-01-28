@@ -103,7 +103,6 @@ the application will pick up an extra `application-<profile>.properties` file. W
 steps. Add an environment variable through the patch and add a file to the configMap.
 
 <!-- @customizeConfigMap @testAgainstLatestRelease -->
-
 ```
 cat <<EOF >$DEMO_HOME/patch.yaml
 apiVersion: apps/v1
@@ -283,7 +282,6 @@ The output contains
 Add these patches to the kustomization:
 
 <!-- @addPatch @testAgainstLatestRelease -->
-
 ```
 cd $DEMO_HOME
 kustomize edit add patch --path memorylimit_patch.yaml --name sbdemo --kind Deployment --group apps --version v1
@@ -320,5 +318,5 @@ create the production environment.
 
 <!-- @finalBuild @testAgainstLatestRelease -->
 ```
-kustomize build $DEMO_HOME  # | kubectl apply -f -
+kustomize build $DEMO_HOME # | kubectl apply -f -
 ```
