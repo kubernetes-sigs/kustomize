@@ -24,14 +24,12 @@ func TestRefVarTransformer(t *testing.T) {
 		res    resmap.ResMap
 		unused []string
 	}
-	testCases := []struct {
-		description string
-		given       given
-		expected    expected
-		errMessage  string
+	testCases := map[string]struct {
+		given      given
+		expected   expected
+		errMessage string
 	}{
-		{
-			description: "var replacement in map[string]",
+		"var replacement in map[string]": {
 			given: given{
 				varMap: map[string]interface{}{
 					"FOO": "replacementForFoo",
@@ -106,8 +104,7 @@ func TestRefVarTransformer(t *testing.T) {
 				unused: []string{"BAR"},
 			},
 		},
-		{
-			description: "var replacement panic in map[string]",
+		"var replacement panic in map[string]": {
 			given: given{
 				varMap: map[string]interface{}{},
 				fs: []types.FieldSpec{
@@ -126,20 +123,21 @@ func TestRefVarTransformer(t *testing.T) {
 			},
 			// TODO(#3304): DECISION - kyaml better; not a bug.
 			errMessage: konfig.IfApiMachineryElseKyaml(
-				`obj '{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
-' at path 'data/slice': invalid value type expect a string`,
-				`obj 'apiVersion: v1
+				`considering field 'data/slice' of object
+{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
+: invalid value type expect a string`,
+				`considering field 'data/slice' of object
+apiVersion: v1
 data:
   slice:
   - 5
 kind: ConfigMap
 metadata:
   name: cm1
-' at path 'data/slice': invalid value type expect a string`,
+: invalid value type expect a string`,
 			),
 		},
-		{
-			description: "var replacement in nil",
+		"var replacement in nil": {
 			given: given{
 				varMap: map[string]interface{}{},
 				fs: []types.FieldSpec{
@@ -171,20 +169,18 @@ metadata:
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.description, func(t *testing.T) {
-			// arrange
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
 			tr := newRefVarTransformer(tc.given.varMap, tc.given.fs)
-
-			// act
 			err := tr.Transform(tc.given.res)
-
-			// assert
 			if tc.errMessage != "" {
 				if err == nil {
 					t.Fatalf("missing expected error %v", tc.errMessage)
 				} else if err.Error() != tc.errMessage {
-					t.Fatalf("actual error doesn't match expected error: \nACTUAL: %v\nEXPECTED: %v", err.Error(), tc.errMessage)
+					t.Fatalf(`actual error doesn't match expected error:
+ACTUAL: %v
+EXPECTED: %v`,
+						err.Error(), tc.errMessage)
 				}
 			} else {
 				if err != nil {
@@ -194,7 +190,13 @@ metadata:
 				a, e := tc.given.res, tc.expected.res
 				if !reflect.DeepEqual(a, e) {
 					err = e.ErrorIfNotEqualLists(a)
-					t.Fatalf("actual doesn't match expected: \nACTUAL:\n%v\nEXPECTED:\n%v\nERR: %v", a, e, err)
+					t.Fatalf(`actual doesn't match expected:
+ACTUAL:
+%v
+EXPECTED:
+%v
+ERR: %v`,
+						a, e, err)
 				}
 			}
 		})
