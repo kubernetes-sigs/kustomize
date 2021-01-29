@@ -362,7 +362,7 @@ metadata:
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "multiple matches for ~G_v1_ServiceAccount|~X|serviceaccount") {
+	if !strings.Contains(err.Error(), "found multiple possible referrals") {
 		t.Fatalf("unexpected error %v", err)
 	}
 }
