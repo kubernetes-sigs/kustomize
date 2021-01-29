@@ -176,8 +176,11 @@ kind: Bar
 a:
   b: a
 `,
-		error: "obj 'kind: Bar\na:\n  b: a\n' at path 'a/b/c': " +
-			"expected sequence or mapping node",
+		error: `considering field 'a/b/c' of object
+kind: Bar
+a:
+  b: a
+: expected sequence or mapping node`,
 		filter: fieldspec.Filter{
 			SetValue: filtersutil.SetScalar("e"),
 		},
