@@ -14,14 +14,14 @@ import (
 
 func TestNamerefFilter(t *testing.T) {
 	testCases := map[string]struct {
-		input         string
-		candidates    string
-		expected      string
-		filter        Filter
-		originalNames []string
+		referrerOriginal string
+		candidates       string
+		referrerFinal    string
+		filter           Filter
+		originalNames    []string
 	}{
 		"simple scalar": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,7 +41,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", ""},
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -59,7 +59,7 @@ ref:
 			},
 		},
 		"sequence": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,7 +80,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName1", ""},
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -99,7 +99,7 @@ seq:
 			},
 		},
 		"mapping": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -119,7 +119,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", ""},
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -137,7 +137,7 @@ map:
 			},
 		},
 		"mapping with namespace": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -159,7 +159,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", ""},
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -178,7 +178,7 @@ map:
 			},
 		},
 		"null value": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -198,7 +198,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", ""},
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -220,7 +220,7 @@ map:
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			factory := provider.NewDefaultDepProvider().GetResourceFactory()
-			referrer, err := factory.FromBytes([]byte(tc.input))
+			referrer, err := factory.FromBytes([]byte(tc.referrerOriginal))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -237,9 +237,9 @@ map:
 			tc.filter.ReferralCandidates = candidates
 
 			if !assert.Equal(t,
-				strings.TrimSpace(tc.expected),
+				strings.TrimSpace(tc.referrerFinal),
 				strings.TrimSpace(
-					filtertest_test.RunFilter(t, tc.input, tc.filter))) {
+					filtertest_test.RunFilter(t, tc.referrerOriginal, tc.filter))) {
 				t.FailNow()
 			}
 		})
@@ -248,14 +248,14 @@ map:
 
 func TestNamerefFilterUnhappy(t *testing.T) {
 	testCases := map[string]struct {
-		input         string
-		candidates    string
-		expected      string
-		filter        Filter
-		originalNames []string
+		referrerOriginal string
+		candidates       string
+		referrerFinal    string
+		filter           Filter
+		originalNames    []string
 	}{
 		"multiple match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -275,7 +275,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", "oldName"},
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
 				ReferralTarget: resid.Gvk{
@@ -286,7 +286,7 @@ metadata:
 			},
 		},
 		"no name": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -306,7 +306,7 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", "oldName"},
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "ref"},
 				ReferralTarget: resid.Gvk{
@@ -321,7 +321,7 @@ metadata:
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			factory := provider.NewDefaultDepProvider().GetResourceFactory()
-			referrer, err := factory.FromBytes([]byte(tc.input))
+			referrer, err := factory.FromBytes([]byte(tc.referrerOriginal))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -337,11 +337,11 @@ metadata:
 			candidates := resMapFactory.FromResourceSlice(candidatesRes)
 			tc.filter.ReferralCandidates = candidates
 
-			_, err = filtertest_test.RunFilterE(t, tc.input, tc.filter)
+			_, err = filtertest_test.RunFilterE(t, tc.referrerOriginal, tc.filter)
 			if err == nil {
 				t.Fatalf("expect an error")
 			}
-			if tc.expected != "" && !assert.EqualError(t, err, tc.expected) {
+			if tc.referrerFinal != "" && !assert.EqualError(t, err, tc.referrerFinal) {
 				t.FailNow()
 			}
 		})
@@ -350,19 +350,19 @@ metadata:
 
 func TestCandidatesWithDifferentPrefixSuffix(t *testing.T) {
 	testCases := map[string]struct {
-		input         string
-		candidates    string
-		expected      string
-		filter        Filter
-		originalNames []string
-		prefix        []string
-		suffix        []string
-		inputPrefix   string
-		inputSuffix   string
-		err           bool
+		referrerOriginal string
+		candidates       string
+		referrerFinal    string
+		filter           Filter
+		originalNames    []string
+		prefix           []string
+		suffix           []string
+		inputPrefix      string
+		inputSuffix      string
+		err              bool
 	}{
 		"prefix match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -386,7 +386,7 @@ metadata:
 			suffix:        []string{"", "suffix2"},
 			inputPrefix:   "prefix1",
 			inputSuffix:   "",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -405,7 +405,7 @@ ref:
 			err: false,
 		},
 		"suffix match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -429,7 +429,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "",
 			inputSuffix:   "suffix1",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -448,7 +448,7 @@ ref:
 			err: false,
 		},
 		"prefix suffix both match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -472,7 +472,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "prefix1",
 			inputSuffix:   "suffix1",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -491,7 +491,7 @@ ref:
 			err: false,
 		},
 		"multiple match: both": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -515,7 +515,7 @@ metadata:
 			suffix:        []string{"suffix", "suffix"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
 				ReferralTarget: resid.Gvk{
@@ -527,7 +527,7 @@ metadata:
 			err: true,
 		},
 		"multiple match: only prefix": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -551,7 +551,7 @@ metadata:
 			suffix:        []string{"", ""},
 			inputPrefix:   "prefix",
 			inputSuffix:   "",
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
 				ReferralTarget: resid.Gvk{
@@ -563,7 +563,7 @@ metadata:
 			err: true,
 		},
 		"multiple match: only suffix": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -587,7 +587,7 @@ metadata:
 			suffix:        []string{"suffix", "suffix"},
 			inputPrefix:   "",
 			inputSuffix:   "suffix",
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
 				ReferralTarget: resid.Gvk{
@@ -599,7 +599,7 @@ metadata:
 			err: true,
 		},
 		"no match: neither match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -623,7 +623,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -642,7 +642,7 @@ ref:
 			err: false,
 		},
 		"no match: prefix doesn't match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -666,7 +666,7 @@ metadata:
 			suffix:        []string{"suffix", "suffix"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -685,7 +685,7 @@ ref:
 			err: false,
 		},
 		"no match: suffix doesn't match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -709,7 +709,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -732,7 +732,7 @@ ref:
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			factory := provider.NewDefaultDepProvider().GetResourceFactory()
-			referrer, err := factory.FromBytes([]byte(tc.input))
+			referrer, err := factory.FromBytes([]byte(tc.referrerOriginal))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -764,13 +764,15 @@ ref:
 
 			if !tc.err {
 				if !assert.Equal(t,
-					strings.TrimSpace(tc.expected),
+					strings.TrimSpace(tc.referrerFinal),
 					strings.TrimSpace(
-						filtertest_test.RunFilter(t, tc.input, tc.filter))) {
+						filtertest_test.RunFilter(
+							t, tc.referrerOriginal, tc.filter))) {
 					t.FailNow()
 				}
 			} else {
-				_, err := filtertest_test.RunFilterE(t, tc.input, tc.filter)
+				_, err := filtertest_test.RunFilterE(
+					t, tc.referrerOriginal, tc.filter)
 				if err == nil {
 					t.Fatalf("an error is expected")
 				}

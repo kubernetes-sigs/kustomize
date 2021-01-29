@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
-	kyaml_filtersutil "sigs.k8s.io/kustomize/kyaml/filtersutil"
+	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -38,18 +39,28 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	return kio.FilterAll(yaml.FilterFunc(f.run)).Filter(nodes)
 }
 
-// The node passed in here is the same node as held in Referrer, and
+// The node passed in here is the same node as held in Referrer;
 // that's how the referrer's name field is updated.
-// However, this filter still needs the extra methods on Referrer
+// Currently, however, this filter still needs the extra methods on Referrer
 // to consult things like the resource Id, its namespace, etc.
+// TODO(3455): No filter should use the Resource api; all information
+// about names should come from annotations, with helper methods
+// on the RNode object.  Resource should get stupider, RNode smarter.
 func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
-	err := node.PipeE(fieldspec.Filter{
+	if err := node.PipeE(fieldspec.Filter{
 		FieldSpec: f.NameFieldToUpdate,
 		SetValue:  f.set,
-	})
-	return node, err
+	}); err != nil {
+		return nil, errors.Wrapf(
+			err, "updating name reference in '%s' field of '%s'",
+			f.NameFieldToUpdate.Path, f.Referrer.CurId().String())
+	}
+	return node, nil
 }
 
+// This function is called at many nodes in the YAML doc tree.
+// Only on first entry can one expect the argument to match the
+// top-level node backing the Referrer.
 func (f Filter) set(node *yaml.RNode) error {
 	if yaml.IsMissingOrNull(node) {
 		return nil
@@ -65,8 +76,7 @@ func (f Filter) set(node *yaml.RNode) error {
 			setMappingFn: f.setMapping,
 		}, node)
 	default:
-		return fmt.Errorf(
-			"node is expected to be either a string or a slice of string or a map of string")
+		return fmt.Errorf("node must be a scalar, sequence or map")
 	}
 }
 
@@ -76,16 +86,19 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 		return fmt.Errorf("expect a mapping node")
 	}
 	nameNode, err := node.Pipe(yaml.FieldMatcher{Name: "name"})
-	if err != nil || nameNode == nil {
-		return fmt.Errorf("cannot find field 'name' in node")
+	if err != nil {
+		return errors.Wrap(err, "trying to match 'name' field")
+	}
+	if nameNode == nil {
+		return fmt.Errorf("no 'name' field in node")
 	}
 	namespaceNode, err := node.Pipe(yaml.FieldMatcher{Name: "namespace"})
 	if err != nil {
-		return fmt.Errorf("error when find field 'namespace'")
+		return errors.Wrap(err, "trying to match 'namespace' field")
 	}
 
 	// name will not be updated if the namespace doesn't match
-	subset := f.ReferralCandidates.Resources()
+	candidates := f.ReferralCandidates.Resources()
 	if namespaceNode != nil {
 		namespace := namespaceNode.YNode().Value
 		bynamespace := f.ReferralCandidates.GroupedByOriginalNamespace()
@@ -95,57 +108,57 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 				return nil
 			}
 		}
-		subset = bynamespace[namespace]
+		candidates = bynamespace[namespace]
 	}
 
 	oldName := nameNode.YNode().Value
-	res, err := f.selectReferral(oldName, subset)
-	if err != nil || res == nil {
-		// Nil res means nothing to do.
+	referral, err := f.selectReferral(oldName, candidates)
+	if err != nil || referral == nil {
+		// Nil referral means nothing to do.
 		return err
 	}
-	f.recordTheReferral(res)
-	if res.GetName() == oldName && res.GetNamespace() == "" {
+	f.recordTheReferral(referral)
+	if referral.GetName() == oldName && referral.GetNamespace() == "" {
 		// The name has not changed, nothing to do.
 		return nil
 	}
 	err = node.PipeE(yaml.FieldSetter{
 		Name:        "name",
-		StringValue: res.GetName(),
+		StringValue: referral.GetName(),
 	})
 	if err != nil {
 		return err
 	}
-	if res.GetNamespace() != "" {
+	if referral.GetNamespace() != "" {
 		// We don't want value "" to replace value "default" since
 		// the empty string is handled as a wild card here not default namespace
 		// by kubernetes.
 		err = node.PipeE(yaml.FieldSetter{
 			Name:        "namespace",
-			StringValue: res.GetNamespace(),
+			StringValue: referral.GetNamespace(),
 		})
 	}
 	return err
 }
 
 func (f Filter) setScalar(node *yaml.RNode) error {
-	res, err := f.selectReferral(
+	referral, err := f.selectReferral(
 		node.YNode().Value, f.ReferralCandidates.Resources())
-	if err != nil || res == nil {
-		// Nil res means nothing to do.
+	if err != nil || referral == nil {
+		// Nil referral means nothing to do.
 		return err
 	}
-	f.recordTheReferral(res)
-	if res.GetName() == node.YNode().Value {
+	f.recordTheReferral(referral)
+	if referral.GetName() == node.YNode().Value {
 		// The name has not changed, nothing to do.
 		return nil
 	}
-	return node.PipeE(yaml.FieldSetter{StringValue: res.GetName()})
+	return node.PipeE(yaml.FieldSetter{StringValue: referral.GetName()})
 }
 
-// In the resource, make a note that it is referred to by the referrer.
-func (f Filter) recordTheReferral(res *resource.Resource) {
-	res.AppendRefBy(f.Referrer.CurId())
+// In the resource, make a note that it is referred to by the Referrer.
+func (f Filter) recordTheReferral(referral *resource.Resource) {
+	referral.AppendRefBy(f.Referrer.CurId())
 }
 
 func (f Filter) isRoleRef() bool {
@@ -155,7 +168,7 @@ func (f Filter) isRoleRef() bool {
 // getRoleRefGvk returns a Gvk in the roleRef field. Return error
 // if the roleRef, roleRef/apiGroup or roleRef/kind is missing.
 func getRoleRefGvk(res json.Marshaler) (*resid.Gvk, error) {
-	n, err := kyaml_filtersutil.GetRNode(res)
+	n, err := filtersutil.GetRNode(res)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +226,7 @@ func (f Filter) filterReferralCandidates(
 // namespace.
 func (f Filter) selectReferral(
 	oldName string,
-	candidateSubset []*resource.Resource) (*resource.Resource, error) {
+	referralCandidates []*resource.Resource) (*resource.Resource, error) {
 	var roleRefGvk *resid.Gvk
 	if f.isRoleRef() {
 		var err error
@@ -222,11 +235,11 @@ func (f Filter) selectReferral(
 			return nil, err
 		}
 	}
-	for _, res := range candidateSubset {
-		if res.GetOriginalName() != oldName {
+	for _, candidate := range referralCandidates {
+		if candidate.GetOriginalName() != oldName {
 			continue
 		}
-		id := res.OrgId()
+		id := candidate.OrgId()
 		if !id.IsSelected(&f.ReferralTarget) {
 			continue
 		}
@@ -242,28 +255,26 @@ func (f Filter) selectReferral(
 			filteredMatches := f.filterReferralCandidates(matches)
 			if len(filteredMatches) > 1 {
 				return nil, fmt.Errorf(
-					"multiple matches for %s:\n  %v",
-					id, getIds(filteredMatches))
+					"cannot fix name in '%s' field of referrer '%s';"+
+						" found multiple possible referrals: %v",
+					f.NameFieldToUpdate.Path,
+					f.Referrer.CurId(),
+					getIds(filteredMatches))
 			}
 			// Check is the match the resource we are working on
-			if len(filteredMatches) == 0 || res != filteredMatches[0] {
+			if len(filteredMatches) == 0 || candidate != filteredMatches[0] {
 				continue
 			}
 		}
-		// In the resource, note that it is referenced
-		// by the referrer.
-		res.AppendRefBy(f.Referrer.CurId())
-		// Return transformed name of the object,
-		// complete with prefixes, hashes, etc.
-		return res, nil
+		return candidate, nil
 	}
 	return nil, nil
 }
 
-func getIds(rs []*resource.Resource) []string {
+func getIds(rs []*resource.Resource) string {
 	var result []string
 	for _, r := range rs {
-		result = append(result, r.CurId().String()+"\n")
+		result = append(result, r.CurId().String())
 	}
-	return result
+	return strings.Join(result, ", ")
 }
