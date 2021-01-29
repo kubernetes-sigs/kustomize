@@ -674,6 +674,63 @@ spec:
         - containerPort: 8080
 `,
 		},
+
+		// Test for issue #3513
+		// Currently broken; when one port has only containerPort, the output
+		// should not merge containerPort 8301 together
+		// This occurs because when protocol is missing on the first port,
+		// the merge code uses [containerPort] as the merge key rather than
+		// [containerPort, protocol]
+		"list map keys - protocol only present on some ports": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: consul
+        image: "hashicorp/consul:1.9.1"
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8301
+          protocol: "TCP"
+        - containerPort: 8301
+          protocol: "UDP"
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  labels:
+    test: label
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  labels:
+    test: label
+spec:
+  template:
+    spec:
+      containers:
+      - name: consul
+        image: "hashicorp/consul:1.9.1"
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8301
+          protocol: "UDP"
+        - containerPort: 8301
+          protocol: "UDP"
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
