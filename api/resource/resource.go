@@ -195,21 +195,27 @@ func (r *Resource) ErrIfNotEquals(o *Resource) error {
 		return err
 	}
 	if !r.ReferencesEqual(o) {
-		return fmt.Errorf("references unequal")
+		return fmt.Errorf(
+			`unequal references - self:
+%sreferenced by: %s
+--- other:
+%sreferenced by: %s
+`, meYaml, r.GetRefBy(), otherYaml, o.GetRefBy())
 	}
 	if string(meYaml) != string(otherYaml) {
-		return fmt.Errorf("---  self:\n"+
-			"%s\n"+
-			"--- other:\n"+
-			"%s\n", meYaml, otherYaml)
+		return fmt.Errorf(`---  self:
+%s
+--- other:
+%s
+`, meYaml, otherYaml)
 	}
 	return nil
 }
 
-func (r *Resource) ReferencesEqual(o *Resource) bool {
+func (r *Resource) ReferencesEqual(other *Resource) bool {
 	setSelf := make(map[resid.ResId]bool)
 	setOther := make(map[resid.ResId]bool)
-	for _, ref := range o.refBy {
+	for _, ref := range other.refBy {
 		setOther[ref] = true
 	}
 	for _, ref := range r.refBy {

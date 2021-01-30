@@ -50,7 +50,7 @@ resources:
 - secrets.yaml
 - role.yaml
 `)
-	// This validates Fix #1444. This should not be an error anymore -
+	// This validates fix for Issue #1044. This should not be an error anymore -
 	// the secrets have the same name but are in different namespaces.
 	// The ClusterRole (by def) is not in a namespace,
 	// an in this case applies to *any* Secret resource
@@ -91,13 +91,71 @@ rules:
 `)
 }
 
+func TestNameReferenceDeployment(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- cm.yaml
+- dep.yaml
+`)
+	th.WriteF("base/cm.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myMap
+`)
+	th.WriteF("base/dep.yaml", `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: myDep
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: CM_FOO
+          valueFrom:
+            configMapKeyRef:
+              key: foo
+              name: myMap
+`)
+	th.WriteK("ov1", `
+resources:
+- ../base
+namePrefix: pp-
+`)
+	th.WriteK("ov2", `
+resources:
+- ../base
+nameSuffix: -ss
+`)
+	th.WriteK("ov3", `
+resources:
+- ../base
+namespace: fred
+nameSuffix: -xx
+`)
+	th.WriteK(".", `
+resources:
+- ../ov1
+- ../ov2
+- ../ov3
+`)
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	if err == nil {
+		t.Fatal("TODO(3489): this should work")
+	}
+}
+
 // TestNameAndNsTransformation validates that NamespaceTransformer,
 // PrefixSuffixTransformer and namereference transformers are
 // able to deal with simultaneous change of namespace and name.
 func TestNameAndNsTransformation(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteK("/nameandns", `
+	th.WriteK(".", `
 namePrefix: p1-
 nameSuffix: -s1
 namespace: newnamespace
@@ -105,7 +163,7 @@ resources:
 - resources.yaml
 `)
 
-	th.WriteF("/nameandns/resources.yaml", `
+	th.WriteF("resources.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -204,7 +262,7 @@ kind: PersistentVolume
 metadata:
   name: pv1
 `)
-	m := th.Run("/nameandns", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ConfigMap
