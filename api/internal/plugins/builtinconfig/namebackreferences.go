@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-// NameBackReferences is an association between a gvk.GVK and a list
-// of FieldSpec instances that could refer to it.
+// NameBackReferences is an association between a gvk.GVK (a ReferralTarget)
+// and a list of Referrers that could refer to it.
 //
 // It is used to handle name changes, and can be thought of as a
 // a contact list.  If you change your own contact info (name,
@@ -19,16 +19,20 @@ import (
 // know about the change.
 //
 // For example, ConfigMaps can be used by Pods and everything that
-// contains a Pod; Deployment, Job, StatefulSet, etc.  To change
-// the name of a ConfigMap instance from 'alice' to 'bob', one
-// must visit all objects that could refer to the ConfigMap, see if
-// they mention 'alice', and if so, change the reference to 'bob'.
+// contains a Pod; Deployment, Job, StatefulSet, etc.
+// The ConfigMap is the ReferralTarget, the others are Referrers.
+//
+// If the the name of a ConfigMap instance changed from 'alice' to 'bob',
+// one must
+//  - visit all objects that could refer to the ConfigMap (the Referrers)
+//  - see if they mention 'alice',
+//  - if so, change the Referrer's name reference to 'bob'.
 //
 // The NameBackReferences instance to aid in this could look like
 //   {
 //     kind: ConfigMap
 //     version: v1
-//     FieldSpecs:
+//     fieldSpecs:
 //     - kind: Pod
 //       version: v1
 //       path: spec/volumes/configMap/name
@@ -39,13 +43,15 @@ import (
 //       (etc.)
 //   }
 type NameBackReferences struct {
-	resid.Gvk  `json:",inline,omitempty" yaml:",inline,omitempty"`
-	FieldSpecs types.FsSlice `json:"FieldSpecs,omitempty" yaml:"FieldSpecs,omitempty"`
+	resid.Gvk `json:",inline,omitempty" yaml:",inline,omitempty"`
+	// TODO: rename json 'fieldSpecs' to 'referrers' for clarity.
+	// This will, however, break anyone using a custom config.
+	Referrers types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 func (n NameBackReferences) String() string {
 	var r []string
-	for _, f := range n.FieldSpecs {
+	for _, f := range n.Referrers {
 		r = append(r, f.String())
 	}
 	return n.Gvk.String() + ":  (\n" +
@@ -77,7 +83,7 @@ func (s nbrSlice) mergeOne(other NameBackReferences) (nbrSlice, error) {
 	found := false
 	for _, c := range s {
 		if c.Gvk.Equals(other.Gvk) {
-			c.FieldSpecs, err = c.FieldSpecs.MergeAll(other.FieldSpecs)
+			c.Referrers, err = c.Referrers.MergeAll(other.Referrers)
 			if err != nil {
 				return nil, err
 			}

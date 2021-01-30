@@ -162,7 +162,7 @@ func loadCrdIntoConfig(
 				err = theConfig.AddNamereferenceFieldSpec(
 					builtinconfig.NameBackReferences{
 						Gvk: resid.Gvk{Kind: kind, Version: version},
-						FieldSpecs: []types.FieldSpec{
+						Referrers: []types.FieldSpec{
 							makeFs(theGvk, append(path, propName, nameKey))},
 					})
 				if err != nil {
