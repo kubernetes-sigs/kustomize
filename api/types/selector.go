@@ -16,6 +16,7 @@ import (
 type Selector struct {
 	// ResId refers to a GVKN/Ns of a resource.
 	resid.ResId `json:",inline,omitempty" yaml:",inline,omitempty"`
+	Skip        bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 
 	// AnnotationSelector is a string that follows the label selection expression
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#api

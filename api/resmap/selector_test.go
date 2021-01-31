@@ -181,9 +181,17 @@ func TestFindPatchTargets(t *testing.T) {
 		},
 	}
 	for n, testcase := range testcases {
+		// This is the default test with no skip options
 		actual, err := rm.Select(testcase.target)
 		assert.NoError(t, err)
 		assert.Equalf(
 			t, testcase.count, len(actual), "test=%s target=%v", n, testcase.target)
+
+		// Here we test the skip flag and verify that the count is the inverse of what is in testcase count
+		testcase.target.Skip = true
+		actual, err = rm.Select(testcase.target)
+		assert.NoError(t, err)
+		assert.Equalf(
+			t, rm.Size()-testcase.count, len(actual), "test=%s target=%v", n, testcase.target)	
 	}
 }

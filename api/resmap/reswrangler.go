@@ -529,6 +529,48 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	}
 }
 
+func (m *resWrangler) isSelected(s types.Selector, sr *types.SelectorRegex, r *resource.Resource) (bool, error) {
+	curId := r.CurId()
+	orgId := r.OrgId()
+
+	if !sr.MatchNamespace(orgId.EffectiveNamespace()) &&
+		!sr.MatchNamespace(curId.EffectiveNamespace()) {
+		return false, nil
+	}
+
+	// It first tries to match with the original name
+	// then matches with the current name
+	if !sr.MatchName(orgId.Name) &&
+		!sr.MatchName(curId.Name) {
+		return false, nil
+	}
+
+	// matches the GVK
+	if !sr.MatchGvk(r.GetGvk()) {
+		return false, nil
+	}
+
+	// matches the label selector
+	matched, err := r.MatchesLabelSelector(s.LabelSelector)
+	if err != nil {
+		return false, err
+	}
+	if !matched {
+		return false, nil
+	}
+
+	// matches the annotation selector
+	matched, err = r.MatchesAnnotationSelector(s.AnnotationSelector)
+	if err != nil {
+		return false, err
+	}
+	if !matched {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // Select returns a list of resources that
 // are selected by a Selector
 func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
@@ -538,46 +580,16 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 		return nil, err
 	}
 	for _, r := range m.rList {
-		curId := r.CurId()
-		orgId := r.OrgId()
 
-		// It first tries to match with the original namespace
-		// then matches with the current namespace
-		if !sr.MatchNamespace(orgId.EffectiveNamespace()) &&
-			!sr.MatchNamespace(curId.EffectiveNamespace()) {
-			continue
-		}
-
-		// It first tries to match with the original name
-		// then matches with the current name
-		if !sr.MatchName(orgId.Name) &&
-			!sr.MatchName(curId.Name) {
-			continue
-		}
-
-		// matches the GVK
-		if !sr.MatchGvk(r.GetGvk()) {
-			continue
-		}
-
-		// matches the label selector
-		matched, err := r.MatchesLabelSelector(s.LabelSelector)
+		selected, err := m.isSelected(s, sr, r)
 		if err != nil {
 			return nil, err
 		}
-		if !matched {
-			continue
-		}
 
-		// matches the annotation selector
-		matched, err = r.MatchesAnnotationSelector(s.AnnotationSelector)
-		if err != nil {
-			return nil, err
+		if selected && !s.Skip ||
+			!selected && s.Skip {
+			result = append(result, r)
 		}
-		if !matched {
-			continue
-		}
-		result = append(result, r)
 	}
 	return result, nil
 }
