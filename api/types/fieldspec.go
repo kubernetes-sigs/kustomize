@@ -5,7 +5,6 @@ package types
 
 import (
 	"fmt"
-	"strings"
 
 	"sigs.k8s.io/kustomize/api/resid"
 )
@@ -34,11 +33,6 @@ type FieldSpec struct {
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
 }
 
-const (
-	escapedForwardSlash  = "\\/"
-	tempSlashReplacement = "???"
-)
-
 func (fs FieldSpec) String() string {
 	return fmt.Sprintf(
 		"%s:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path)
@@ -47,34 +41,6 @@ func (fs FieldSpec) String() string {
 // If true, the primary key is the same, but other fields might not be.
 func (fs FieldSpec) effectivelyEquals(other FieldSpec) bool {
 	return fs.IsSelected(&other.Gvk) && fs.Path == other.Path
-}
-
-// PathSlice converts the path string to a slice of strings,
-// separated by a '/'. Forward slash can be contained in a
-// fieldname. such as ingress.kubernetes.io/auth-secret in
-// Ingress annotations. To deal with this special case, the
-// path to this field should be formatted as
-//
-//   metadata/annotations/ingress.kubernetes.io\/auth-secret
-//
-// Then PathSlice will return
-//
-//   []string{
-//      "metadata",
-//      "annotations",
-//      "ingress.auth-secretkubernetes.io/auth-secret"
-//   }
-func (fs FieldSpec) PathSlice() []string {
-	if !strings.Contains(fs.Path, escapedForwardSlash) {
-		return strings.Split(fs.Path, "/")
-	}
-	s := strings.Replace(fs.Path, escapedForwardSlash, tempSlashReplacement, -1)
-	paths := strings.Split(s, "/")
-	var result []string
-	for _, path := range paths {
-		result = append(result, strings.Replace(path, tempSlashReplacement, "/", -1))
-	}
-	return result
 }
 
 type FsSlice []FieldSpec
