@@ -192,6 +192,6 @@ func TestFindPatchTargets(t *testing.T) {
 		actual, err = rm.Select(testcase.target)
 		assert.NoError(t, err)
 		assert.Equalf(
-			t, rm.Size()-testcase.count, len(actual), "test=%s target=%v", n, testcase.target)	
+			t, rm.Size()-testcase.count, len(actual), "test=%s target=%v", n, testcase.target)
 	}
 }
