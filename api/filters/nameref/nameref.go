@@ -18,18 +18,25 @@ import (
 
 // Filter updates a name references.
 type Filter struct {
-	// Referrer is the object that refers to something else by a name,
-	// a name that this filter seeks to update.
+	// Referrer refers to another resource X by X's name.
+	// E.g. A Deployment can refer to a ConfigMap.
+	// The Deployment is the Referrer,
+	// the ConfigMap is the ReferralTarget.
+	// This filter seeks to repair the reference in Deployment, given
+	// that the ConfigMap's name may have changed.
 	Referrer *resource.Resource
 
-	// NameFieldToUpdate is the field in the Referrer that holds the
-	// name requiring an update.
-	NameFieldToUpdate types.FieldSpec `json:"nameFieldToUpdate,omitempty" yaml:"nameFieldToUpdate,omitempty"`
+	// NameFieldToUpdate is the field in the Referrer
+	// that holds the name requiring an update.
+	// This is the field to write.
+	NameFieldToUpdate types.FieldSpec
 
-	// Source of the new value for the name (in its name field).
+	// ReferralTarget is the source of the new value for
+	// the name, always in the 'metadata/name' field.
+	// This is the field to read.
 	ReferralTarget resid.Gvk
 
-	// Set of resources to hunt through to find the ReferralTarget.
+	// Set of resources to scan to find the ReferralTarget.
 	ReferralCandidates resmap.ResMap
 }
 
@@ -47,6 +54,10 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 // about names should come from annotations, with helper methods
 // on the RNode object.  Resource should get stupider, RNode smarter.
 func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
+	if err := f.confirmNodeMatchesReferrer(node); err != nil {
+		// sanity check.
+		return nil, err
+	}
 	if err := node.PipeE(fieldspec.Filter{
 		FieldSpec: f.NameFieldToUpdate,
 		SetValue:  f.set,
@@ -221,7 +232,7 @@ func (f Filter) filterReferralCandidates(
 
 // selectReferral picks the referral among a subset of candidates.
 // The content of the candidateSubset slice is most of the time
-// identical to the ReferralCandidates resmap. Still in some cases, such
+// identical to the ReferralCandidates ResMap. Still in some cases, such
 // as ClusterRoleBinding, the subset only contains the resources of a specific
 // namespace.
 func (f Filter) selectReferral(
@@ -277,4 +288,38 @@ func getIds(rs []*resource.Resource) string {
 		result = append(result, r.CurId().String())
 	}
 	return strings.Join(result, ", ")
+}
+
+func checkEqual(k, a, b string) error {
+	if a != b {
+		return fmt.Errorf(
+			"node-referrerOriginal '%s' mismatch '%s' != '%s'",
+			k, a, b)
+	}
+	return nil
+}
+
+func (f Filter) confirmNodeMatchesReferrer(node *yaml.RNode) error {
+	meta, err := node.GetMeta()
+	if err != nil {
+		return err
+	}
+	gvk := f.Referrer.GetGvk()
+	if err = checkEqual(
+		"APIVersion", meta.APIVersion, gvk.ApiVersion()); err != nil {
+		return err
+	}
+	if err = checkEqual(
+		"Kind", meta.Kind, gvk.Kind); err != nil {
+		return err
+	}
+	if err = checkEqual(
+		"Name", meta.Name, f.Referrer.GetName()); err != nil {
+		return err
+	}
+	if err = checkEqual(
+		"Namespace", meta.Namespace, f.Referrer.GetNamespace()); err != nil {
+		return err
+	}
+	return nil
 }
