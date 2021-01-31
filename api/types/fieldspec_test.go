@@ -13,30 +13,6 @@ import (
 	. "sigs.k8s.io/kustomize/api/types"
 )
 
-func TestPathSlice(t *testing.T) {
-	type path struct {
-		input  string
-		parsed []string
-	}
-	paths := []path{
-		{
-			input:  "spec/metadata/annotations",
-			parsed: []string{"spec", "metadata", "annotations"},
-		},
-		{
-			input:  `metadata/annotations/nginx.ingress.kubernetes.io\/auth-secret`,
-			parsed: []string{"metadata", "annotations", "nginx.ingress.kubernetes.io/auth-secret"},
-		},
-	}
-	for _, p := range paths {
-		fs := FieldSpec{Path: p.input}
-		actual := fs.PathSlice()
-		if !reflect.DeepEqual(actual, p.parsed) {
-			t.Fatalf("expected %v, but got %v", p.parsed, actual)
-		}
-	}
-}
-
 var mergeTests = []struct {
 	name     string
 	original FsSlice
