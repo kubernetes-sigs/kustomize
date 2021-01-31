@@ -4,11 +4,13 @@
 package accumulator
 
 import (
+	"fmt"
 	"log"
 
 	"sigs.k8s.io/kustomize/api/filters/nameref"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 )
 
 type nameReferenceTransformer struct {
@@ -16,6 +18,8 @@ type nameReferenceTransformer struct {
 }
 
 var _ resmap.Transformer = &nameReferenceTransformer{}
+
+type filterMap map[*resource.Resource][]nameref.Filter
 
 // newNameReferenceTransformer constructs a nameReferenceTransformer
 // with a given slice of NameBackReferences.
@@ -29,16 +33,62 @@ func newNameReferenceTransformer(
 
 // Transform updates name references in resource A that
 // refer to resource B, given that B's name may have
-// changed.  A is the referrer, B is the referralTarget.
+// changed.
 //
 // For example, a HorizontalPodAutoscaler (HPA)
 // necessarily refers to a Deployment, the thing that
-// the HPA scales. The Deployment's name might change
-// (e.g. prefix added), and the reference in the HPA
-// has to be fixed.
+// an HPA scales. In this case:
 //
-// In the outer loop over the ResMap below, say we
-// encounter a specific HPA. Then, in scanning the set
+//   - the HPA instance is the Referrer,
+//   - the Deployment instance is the ReferralTarget.
+//
+// If the Deployment's name changes, e.g. a prefix is added,
+// then the HPA's reference to the Deployment must be fixed.
+//
+func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
+	fMap := t.determineFilters(m.Resources())
+	// debug(fMap)
+	for r, fList := range fMap {
+		c := m.SubsetThatCouldBeReferencedByResource(r)
+		for _, f := range fList {
+			f.Referrer = r
+			f.ReferralCandidates = c
+			if err := f.Referrer.ApplyFilter(f); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+//nolint: deadcode, unused
+func debug(fMap filterMap) {
+	fmt.Printf("filterMap has %d entries:\n", len(fMap))
+	rCount := 0
+	for r, fList := range fMap {
+		yml, _ := r.AsYAML()
+		rCount++
+		fmt.Printf(`
+---- %3d. possible referrer -------------
+%s
+---------`, rCount, string(yml),
+		)
+		for i, f := range fList {
+			fmt.Printf(`
+%3d/%3d update: %s
+          from: %s
+`, rCount, i+1, f.NameFieldToUpdate.Path, f.ReferralTarget,
+			)
+		}
+	}
+}
+
+// Produce a map from referrer resources that might need to be fixed
+// to filters that might fix them.  The keys to this map are potential
+// referrers, so won't include resources like ConfigMap or Secret.
+//
+// In the inner loop over the resources below, say we
+// encounter an HPA instance. Then, in scanning the set
 // of all known backrefs, we encounter an entry like
 //
 //   - kind: Deployment
@@ -48,64 +98,50 @@ func newNameReferenceTransformer(
 //
 // This entry says that an HPA, via its
 // 'spec/scaleTargetRef/name' field, may refer to a
-// Deployment.  This match to HPA means we may need to
-// modify the value in its 'spec/scaleTargetRef/name'
-// field, by searching for the thing it refers to,
-// and getting its new name.
+// Deployment.
 //
-// As a filter, and search optimization, we compute a
-// subset of all resources that the HPA could refer to,
-// by excluding objects from other namespaces, and
-// excluding objects that don't have the same prefix-
-// suffix mods as the HPA.
-//
-// We look in this subset for all Deployment objects
-// with a resId that has a Name matching the field value
-// present in the HPA.  If no match do nothing; if more
-// than one match, it's an error.
-//
-// We overwrite the HPA name field with the value found
-// in the Deployment's name field (the name in the raw
-// object - the modified name - not the unmodified name
-// in the Deployment's resId).
-//
-// This process assumes that the name stored in a ResId
-// (the ResMap key) isn't modified by name transformers.
-// Name transformers should only modify the name in the
-// body of the resource object (the value in the ResMap).
-//
-func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
-	// TODO: Too much looping, here and in transitive calls.
-	for _, referrer := range m.Resources() {
-		var candidates resmap.ResMap
-		for _, referralTarget := range t.backRefs {
-			for _, fSpec := range referralTarget.FieldSpecs {
-				if referrer.OrgId().IsSelected(&fSpec.Gvk) {
-					if candidates == nil {
-						// This excludes objects from other namespaces.
-						// In most realistic uses, it returns all elements of m,
-						// (since they're all in the same namespace).
-						candidates = m.SubsetThatCouldBeReferencedByResource(referrer)
-					}
-					// One way to get here is with, say, a referrer that's an
-					// HPA, and a target that's a Deployment (one of the
-					// Deployment's fieldSpecs selects an HPA).  Now we look
-					// through the candidates to see if one is a Deployment
-					// (the target), and if so, get the Deployment's name and
-					// write it into the referrer, at the field specfied in
-					// fSpec.
-					err := referrer.ApplyFilter(nameref.Filter{
-						Referrer:           referrer,
-						NameFieldToUpdate:  fSpec,
-						ReferralTarget:     referralTarget.Gvk,
-						ReferralCandidates: candidates,
-					})
-					if err != nil {
-						return err
+// This means that a filter will need to hunt for the right Deployment,
+// obtain it's new name, and write that name into the HPA's
+// 'spec/scaleTargetRef/name' field. Return a filter that can do that.
+func (t *nameReferenceTransformer) determineFilters(
+	resources []*resource.Resource) (fMap filterMap) {
+	fMap = make(filterMap)
+	for _, backReference := range t.backRefs {
+		for _, referrerSpec := range backReference.Referrers {
+			for _, res := range resources {
+				if res.OrgId().IsSelected(&referrerSpec.Gvk) {
+					// If this is true, the res might be a referrer, and if
+					// so, the name reference it holds might need an update.
+					if resHasField(res, referrerSpec.Path) {
+						// Optimization - the referrer has the field
+						// that might need updating.
+						fMap[res] = append(fMap[res], nameref.Filter{
+							// Name field to write in the Referrer.
+							NameFieldToUpdate: referrerSpec,
+							// Specification of object class to read from.
+							// Always read from metadata/name field.
+							ReferralTarget: backReference.Gvk,
+						})
 					}
 				}
 			}
 		}
 	}
-	return nil
+	return fMap
+}
+
+// TODO: check res for field existence here to avoid extra work.
+// res.GetFieldValue, which uses yaml.Lookup under the hood, doesn't know
+// how to parse fieldspec-style paths that make no distinction
+// between maps and sequences.  This means it cannot lookup commonly
+// used "indeterminate" paths like
+//    spec/containers/env/valueFrom/configMapKeyRef/name
+// ('containers' is a list, not a map).
+// However, the fieldspec filter does know how to handle this;
+// extract that code and call it here?
+func resHasField(res *resource.Resource, path string) bool {
+	return true
+	// fld := strings.Join(utils.PathSplitter(path), ".")
+	// _, e := res.GetFieldValue(fld)
+	// return e == nil
 }

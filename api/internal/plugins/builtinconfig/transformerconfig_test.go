@@ -24,7 +24,7 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 		Gvk: resid.Gvk{
 			Kind: "KindA",
 		},
-		FieldSpecs: []types.FieldSpec{
+		Referrers: []types.FieldSpec{
 			{
 				Gvk: resid.Gvk{
 					Kind: "KindB",
@@ -89,7 +89,7 @@ func TestMerge(t *testing.T) {
 			Gvk: resid.Gvk{
 				Kind: "KindA",
 			},
-			FieldSpecs: []types.FieldSpec{
+			Referrers: []types.FieldSpec{
 				{
 					Gvk: resid.Gvk{
 						Kind: "KindB",
@@ -103,7 +103,7 @@ func TestMerge(t *testing.T) {
 			Gvk: resid.Gvk{
 				Kind: "KindA",
 			},
-			FieldSpecs: []types.FieldSpec{
+			Referrers: []types.FieldSpec{
 				{
 					Gvk: resid.Gvk{
 						Kind: "KindC",

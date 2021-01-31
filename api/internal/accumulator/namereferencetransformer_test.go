@@ -7,14 +7,15 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
-
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 )
+
+const notEqualErrFmt = "expected (self) doesn't match actual (other): %v"
 
 func TestNameReferenceHappyRun(t *testing.T) {
 	m := resmaptest_test.NewRmBuilderDefault(t).AddWithName(
@@ -472,7 +473,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 	}
 
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -609,7 +610,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	v2.AppendRefBy(c2.CurId())
 
 	if err := m1.ErrorIfNotEqualLists(m2); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -745,7 +746,7 @@ func TestNameReferenceNamespace(t *testing.T) {
 
 	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -907,7 +908,7 @@ func TestNameReferenceClusterWide(t *testing.T) {
 
 	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -1034,7 +1035,7 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 
 	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -1071,6 +1072,6 @@ func TestNameReferenceCandidateSelection(t *testing.T) {
 
 	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }

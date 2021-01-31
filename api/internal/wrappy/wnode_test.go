@@ -33,6 +33,38 @@ const (
       "area": "51",
       "greeting": "Take me to your leader."
     }
+  },
+  "spec": {
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "CM_FOO",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "key": "somekey",
+                    "name": "myCm"
+                  }
+                }
+              },
+              {
+                "name": "SECRET_FOO",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "someKey",
+                    "name": "mySecret"
+                  }
+                }
+              }
+            ],
+            "image": "nginx:1.7.9",
+            "name": "nginx"
+          }
+        ]
+      }
+    }
   }
 }
 `
@@ -355,6 +387,51 @@ func TestGetFieldValueReturnsMap(t *testing.T) {
 	}
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+}
+
+func TestGetFieldValueReturnsStuff(t *testing.T) {
+	wn := NewWNode()
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := []interface{}{
+		map[string]interface{}{
+			"env": []interface{}{
+				map[string]interface{}{
+					"name": "CM_FOO",
+					"valueFrom": map[string]interface{}{
+						"configMapKeyRef": map[string]interface{}{
+							"key":  "somekey",
+							"name": "myCm",
+						},
+					},
+				},
+				map[string]interface{}{
+					"name": "SECRET_FOO",
+					"valueFrom": map[string]interface{}{
+						"secretKeyRef": map[string]interface{}{
+							"key":  "someKey",
+							"name": "mySecret",
+						},
+					},
+				},
+			},
+			"image": string("nginx:1.7.9"),
+			"name":  string("nginx"),
+		},
+	}
+	actual, err := wn.GetFieldValue("spec.template.spec.containers")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+	// Cannot go deeper yet.
+	_, err = wn.GetFieldValue("spec.template.spec.containers.env")
+	if err == nil {
+		t.Fatalf("expected err %v", err)
 	}
 }
 

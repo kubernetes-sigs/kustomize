@@ -3,6 +3,9 @@
 
 package builtinpluginconsts
 
+// TODO: rename 'fieldSpecs' to 'referrers' for clarity.
+// This will, however, break anyone using a custom config.
+
 const (
 	nameReferenceFieldSpecs = `
 nameReference:

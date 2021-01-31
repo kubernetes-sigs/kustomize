@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/loader"
-
 	. "sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -140,21 +139,19 @@ func TestLoadCRDs(t *testing.T) {
 	nbrs := []builtinconfig.NameBackReferences{
 		{
 			Gvk: resid.Gvk{Kind: "Secret", Version: "v1"},
-			FieldSpecs: []types.FieldSpec{
+			Referrers: []types.FieldSpec{
 				{
-					CreateIfNotPresent: false,
-					Gvk:                resid.Gvk{Kind: "MyKind"},
-					Path:               "spec/secretRef/name",
+					Gvk:  resid.Gvk{Kind: "MyKind"},
+					Path: "spec/secretRef/name",
 				},
 			},
 		},
 		{
 			Gvk: resid.Gvk{Kind: "Bee", Version: "v1beta1"},
-			FieldSpecs: []types.FieldSpec{
+			Referrers: []types.FieldSpec{
 				{
-					CreateIfNotPresent: false,
-					Gvk:                resid.Gvk{Kind: "MyKind"},
-					Path:               "spec/beeRef/name",
+					Gvk:  resid.Gvk{Kind: "MyKind"},
+					Path: "spec/beeRef/name",
 				},
 			},
 		},

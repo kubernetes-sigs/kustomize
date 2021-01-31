@@ -377,52 +377,59 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 
 // SubsetThatCouldBeReferencedByResource implements ResMap.
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
-	inputRes *resource.Resource) ResMap {
+	referrer *resource.Resource) ResMap {
+	referrerId := referrer.CurId()
+	if !referrerId.IsNamespaceableKind() {
+		// A cluster scoped resource can refer to anything.
+		return m
+	}
 	result := newOne()
-	inputId := inputRes.CurId()
-	isInputIdNamespaceable := inputId.IsNamespaceableKind()
-	subjectNamespaces := getNamespacesForRoleBinding(inputRes)
-	for _, r := range m.Resources() {
-		// Need to match more accuratly both at the time of selection and transformation.
-		// OutmostPrefixSuffixEquals is not accurate enough since it is only using
-		// the outer most suffix and the last prefix. Use PrefixedSuffixesEquals instead.
-		resId := r.CurId()
-		if !isInputIdNamespaceable || !resId.IsNamespaceableKind() || resId.IsNsEquals(inputId) ||
-			isRoleBindingNamespace(&subjectNamespaces, r.GetNamespace()) {
-			result.append(r)
+	roleBindingNamespaces := getNamespacesForRoleBinding(referrer)
+	for _, possibleTarget := range m.Resources() {
+		id := possibleTarget.CurId()
+		if !id.IsNamespaceableKind() {
+			// A cluster-scoped resource can be referred to by anything.
+			result.append(possibleTarget)
+			continue
+		}
+		if id.IsNsEquals(referrerId) {
+			// The two objects are in the same namespace.
+			result.append(possibleTarget)
+			continue
+		}
+		// The two objects are namespaced (not cluster-scoped), AND
+		// are in different namespaces.
+		// There's still a chance they can refer to each other.
+		ns := possibleTarget.GetNamespace()
+		if roleBindingNamespaces[ns] {
+			result.append(possibleTarget)
 		}
 	}
 	return result
 }
 
-// isRoleBindingNamespace returns true is the namespace `ns` is in role binding
-// namespaces `m`
-func isRoleBindingNamespace(m *map[string]bool, ns string) bool {
-	return (*m)[ns]
-}
-
-// getNamespacesForRoleBinding returns referenced ServiceAccount namespaces if the inputRes is
-// a RoleBinding
-func getNamespacesForRoleBinding(inputRes *resource.Resource) map[string]bool {
-	res := make(map[string]bool)
-	if inputRes.GetKind() != "RoleBinding" {
-		return res
+// getNamespacesForRoleBinding returns referenced ServiceAccount namespaces
+// if the resource is a RoleBinding
+func getNamespacesForRoleBinding(r *resource.Resource) map[string]bool {
+	result := make(map[string]bool)
+	if r.GetKind() != "RoleBinding" {
+		return result
 	}
-	subjects, err := inputRes.GetSlice("subjects")
+	subjects, err := r.GetSlice("subjects")
 	if err != nil || subjects == nil {
-		return res
+		return result
 	}
-
 	for _, s := range subjects {
 		subject := s.(map[string]interface{})
-		if subject["namespace"] == nil || subject["kind"] == nil ||
-			subject["kind"].(string) != "ServiceAccount" {
-			continue
+		if ns, ok1 := subject["namespace"]; ok1 {
+			if kind, ok2 := subject["kind"]; ok2 {
+				if kind.(string) == "ServiceAccount" {
+					result[ns.(string)] = true
+				}
+			}
 		}
-		res[subject["namespace"].(string)] = true
 	}
-
-	return res
+	return result
 }
 
 func (m *resWrangler) append(res *resource.Resource) {
