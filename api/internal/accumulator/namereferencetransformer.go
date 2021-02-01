@@ -17,6 +17,8 @@ type nameReferenceTransformer struct {
 	backRefs []builtinconfig.NameBackReferences
 }
 
+const doDebug = false
+
 var _ resmap.Transformer = &nameReferenceTransformer{}
 
 type filterMap map[*resource.Resource][]nameref.Filter
@@ -47,7 +49,7 @@ func newNameReferenceTransformer(
 //
 func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	fMap := t.determineFilters(m.Resources())
-	// debug(fMap)
+	debug(fMap)
 	for r, fList := range fMap {
 		c := m.SubsetThatCouldBeReferencedByResource(r)
 		for _, f := range fList {
@@ -61,8 +63,10 @@ func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-//nolint: deadcode, unused
 func debug(fMap filterMap) {
+	if !doDebug {
+		return
+	}
 	fmt.Printf("filterMap has %d entries:\n", len(fMap))
 	rCount := 0
 	for r, fList := range fMap {
@@ -117,6 +121,9 @@ func (t *nameReferenceTransformer) determineFilters(
 						// that might need updating.
 						fMap[res] = append(fMap[res], nameref.Filter{
 							// Name field to write in the Referrer.
+							// If the path specified here isn't found in
+							// the Referrer, nothing happens (no error,
+							// no field creation).
 							NameFieldToUpdate: referrerSpec,
 							// Specification of object class to read from.
 							// Always read from metadata/name field.
