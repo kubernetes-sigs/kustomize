@@ -155,8 +155,7 @@ func (m *resWrangler) GetIndexOfCurrentId(id resid.ResId) (int, error) {
 
 type IdFromResource func(r *resource.Resource) resid.ResId
 
-func GetOriginalId(r *resource.Resource) resid.ResId { return r.OrgId() }
-func GetCurrentId(r *resource.Resource) resid.ResId  { return r.CurId() }
+func GetCurrentId(r *resource.Resource) resid.ResId { return r.CurId() }
 
 // GetMatchingResourcesByCurrentId implements ResMap.
 func (m *resWrangler) GetMatchingResourcesByCurrentId(
@@ -164,10 +163,21 @@ func (m *resWrangler) GetMatchingResourcesByCurrentId(
 	return m.filteredById(matches, GetCurrentId)
 }
 
-// GetMatchingResourcesByOriginalId implements ResMap.
-func (m *resWrangler) GetMatchingResourcesByOriginalId(
+// GetMatchingResourcesByAnyId implements ResMap.
+func (m *resWrangler) GetMatchingResourcesByAnyId(
 	matches IdMatcher) []*resource.Resource {
-	return m.filteredById(matches, GetOriginalId)
+	var result []*resource.Resource
+	for _, r := range m.rList {
+		prevIds := r.PrevIds()
+		prevIds = append(prevIds, r.CurId())
+		for _, prevId := range prevIds {
+			if matches(prevId) {
+				result = append(result, r)
+				break
+			}
+		}
+	}
+	return result
 }
 
 func (m *resWrangler) filteredById(
@@ -187,26 +197,16 @@ func (m *resWrangler) GetByCurrentId(
 	return demandOneMatch(m.GetMatchingResourcesByCurrentId, id, "Current")
 }
 
-// GetByOriginalId implements ResMap.
-func (m *resWrangler) GetByOriginalId(
-	id resid.ResId) (*resource.Resource, error) {
-	return demandOneMatch(m.GetMatchingResourcesByOriginalId, id, "Original")
-}
-
 // GetById implements ResMap.
 func (m *resWrangler) GetById(
 	id resid.ResId) (*resource.Resource, error) {
-	match, err1 := m.GetByOriginalId(id)
-	if err1 == nil {
-		return match, nil
+	r, err := demandOneMatch(m.GetMatchingResourcesByAnyId, id, "Id")
+	if err != nil {
+		return nil, fmt.Errorf(
+			"%s; failed to find unique target for patch %s",
+			err.Error(), id.GvknString())
 	}
-	match, err2 := m.GetByCurrentId(id)
-	if err2 == nil {
-		return match, nil
-	}
-	return nil, fmt.Errorf(
-		"%s; %s; failed to find unique target for patch %s",
-		err1.Error(), err2.Error(), id.GvknString())
+	return r, nil
 }
 
 type resFinder func(IdMatcher) []*resource.Resource
@@ -465,10 +465,7 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 
 func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	id := res.CurId()
-	matches := m.GetMatchingResourcesByOriginalId(id.Equals)
-	if len(matches) == 0 {
-		matches = m.GetMatchingResourcesByCurrentId(id.Equals)
-	}
+	matches := m.GetMatchingResourcesByAnyId(id.Equals)
 	switch len(matches) {
 	case 0:
 		switch res.Behavior() {
@@ -593,10 +590,8 @@ func (m *resWrangler) ApplySmPatch(
 			continue
 		}
 		patchCopy := patch.DeepCopy()
-		patchCopy.SetName(res.GetName())
-		patchCopy.SetNamespace(res.GetNamespace())
+		patchCopy.CopyMergeMetaDataFieldsFrom(patch)
 		patchCopy.SetGvk(res.GetGvk())
-		patchCopy.SetOriginalName(res.GetOriginalName(), true)
 		err := res.ApplySmPatch(patchCopy)
 		if err != nil {
 			// Check for an error string from UnmarshalJSON that's indicative

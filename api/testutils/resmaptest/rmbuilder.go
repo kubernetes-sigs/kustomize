@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/provider"
+	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 )
@@ -48,15 +49,7 @@ func (rm *rmBuilder) AddR(r *resource.Resource) *rmBuilder {
 }
 
 func (rm *rmBuilder) AddWithName(n string, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMapWithName(n, m))
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmBuilder) AddWithNs(ns string, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMapWithNamespace(ns, m))
+	err := rm.m.Append(rm.rf.FromMapWithNamespaceAndName(resid.DefaultNamespace, n, m))
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}

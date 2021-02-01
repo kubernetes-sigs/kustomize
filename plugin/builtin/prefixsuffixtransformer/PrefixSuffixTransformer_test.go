@@ -64,6 +64,7 @@ kind: Service
 metadata:
   annotations:
     config.kubernetes.io/originalName: apple
+    config.kubernetes.io/originalNs: default
     config.kubernetes.io/prefixes: baked-
     config.kubernetes.io/suffixes: -pie
   name: baked-apple-pie
@@ -86,6 +87,7 @@ kind: ConfigMap
 metadata:
   annotations:
     config.kubernetes.io/originalName: cm
+    config.kubernetes.io/originalNs: default
     config.kubernetes.io/prefixes: baked-
     config.kubernetes.io/suffixes: -pie
   name: baked-cm-pie
@@ -136,6 +138,7 @@ kind: Deployment
 metadata:
   annotations:
     config.kubernetes.io/originalName: deployment
+    config.kubernetes.io/originalNs: default
     config.kubernetes.io/prefixes: test-
   name: test-deployment
 spec:
