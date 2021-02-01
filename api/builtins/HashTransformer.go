@@ -28,7 +28,7 @@ func (p *HashTransformerPlugin) Transform(m resmap.ResMap) error {
 			if err != nil {
 				return err
 			}
-			res.SetOriginalName(res.GetName(), false)
+			res.StorePreviousId()
 			res.SetName(fmt.Sprintf("%s-%s", res.GetName(), h))
 		}
 	}

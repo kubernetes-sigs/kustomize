@@ -35,9 +35,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	found := false
 	for _, fs := range p.FieldSpecs {
 		matcher := p.createMatcher(fs)
-		matchOriginal := m.GetMatchingResourcesByOriginalId(matcher)
-		resList := append(
-			matchOriginal, m.GetMatchingResourcesByCurrentId(matcher)...)
+		resList := m.GetMatchingResourcesByAnyId(matcher)
 		if len(resList) > 0 {
 			found = true
 			for _, r := range resList {

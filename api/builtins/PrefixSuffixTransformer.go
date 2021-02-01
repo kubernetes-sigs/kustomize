@@ -70,7 +70,7 @@ func (p *PrefixSuffixTransformerPlugin) Transform(m resmap.ResMap) error {
 				r.AddNamePrefix(p.Prefix)
 				r.AddNameSuffix(p.Suffix)
 				if p.Prefix != "" || p.Suffix != "" {
-					r.SetOriginalName(r.GetName(), false)
+					r.StorePreviousId()
 				}
 			}
 			err := r.ApplyFilter(prefixsuffix.Filter{
