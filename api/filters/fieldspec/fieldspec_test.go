@@ -15,209 +15,243 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-type TestCase struct {
-	name      string
-	input     string
-	expected  string
-	filter    fieldspec.Filter
-	fieldSpec string
-	error     string
-}
-
-var tests = []TestCase{
-	{
-		name: "update",
-		fieldSpec: `
+func TestFilter_Filter(t *testing.T) {
+	testCases := map[string]struct {
+		input     string
+		expected  string
+		filter    fieldspec.Filter
+		fieldSpec string
+		error     string
+	}{
+		"path not found": {
+			fieldSpec: `
 path: a/b
 group: foo
 kind: Bar
 `,
-		input: `
+			input: `
+apiVersion: foo
+kind: Bar
+xxx:
+`,
+			expected: `
+apiVersion: foo
+kind: Bar
+xxx:
+`,
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
+		},
+		"empty path": {
+			fieldSpec: `
+group: foo
+kind: Bar
+`,
+			input: `
+apiVersion: foo
+kind: Bar
+xxx:
+`,
+			expected: `
+apiVersion: foo
+kind: Bar
+xxx:
+`,
+			error: `considering field '' of object
+apiVersion: foo
+kind: Bar
+xxx:
+: cannot set or create an empty field name`,
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
+		},
+
+		"update": {
+			fieldSpec: `
+path: a/b
+group: foo
+kind: Bar
+`,
+			input: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
   b: c
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
   b: e
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	{
-		name: "update-kind-not-match",
-		fieldSpec: `
+		"update-kind-not-match": {
+			fieldSpec: `
 path: a/b
 group: foo
 kind: Bar1
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta1
 kind: Bar2
 a:
   b: c
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta1
 kind: Bar2
 a:
   b: c
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	{
-		name: "update-group-not-match",
-		fieldSpec: `
+		"update-group-not-match": {
+			fieldSpec: `
 path: a/b
 group: foo1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo2/v1beta1
 kind: Bar
 a:
   b: c
 `,
-		expected: `
+			expected: `
 apiVersion: foo2/v1beta1
 kind: Bar
 a:
   b: c
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	{
-		name: "update-version-not-match",
-		fieldSpec: `
+		"update-version-not-match": {
+			fieldSpec: `
 path: a/b
 group: foo
 version: v1beta1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta2
 kind: Bar
 a:
   b: c
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta2
 kind: Bar
 a:
   b: c
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	{
-		name: "bad-version",
-		fieldSpec: `
+		"bad-version": {
+			fieldSpec: `
 path: a/b
 group: foo
 version: v1beta1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta2/something
 kind: Bar
 a:
   b: c
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta2/something
 kind: Bar
 a:
   b: c
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	{
-		name: "bad-meta",
-		fieldSpec: `
+		"bad-meta": {
+			fieldSpec: `
 path: a/b
 group: foo
 version: v1beta1
 kind: Bar
 `,
-		input: `
+			input: `
 a:
   b: c
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
+			error: "missing Resource metadata",
 		},
-		error: "missing Resource metadata",
-	},
 
-	{
-		name: "miss-match-type",
-		fieldSpec: `
+		"miss-match-type": {
+			fieldSpec: `
 path: a/b/c
 kind: Bar
 `,
-		input: `
+			input: `
 kind: Bar
 a:
   b: a
 `,
-		error: `considering field 'a/b/c' of object
+			error: `considering field 'a/b/c' of object
 kind: Bar
 a:
   b: a
 : expected sequence or mapping node`,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	{
-		name: "add",
-		fieldSpec: `
+		"add": {
+			fieldSpec: `
 path: a/b/c/d
 group: foo
 create: true
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta1
 kind: Bar
 a: {}
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a: {b: {c: {d: e}}}
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("e"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("e"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
 
-	{
-		name: "update-in-sequence",
-		fieldSpec: `
+		"update-in-sequence": {
+			fieldSpec: `
 path: a/b[]/c/d
 group: foo
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
@@ -225,7 +259,7 @@ a:
   - c:
       d: a
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
@@ -233,244 +267,237 @@ a:
   - c:
       d: e
 `,
-		filter: fieldspec.Filter{
-			SetValue: filtersutil.SetScalar("e"),
+			filter: fieldspec.Filter{
+				SetValue: filtersutil.SetScalar("e"),
+			},
 		},
-	},
 
-	// Don't create a sequence
-	{
-		name: "empty-sequence-no-create",
-		fieldSpec: `
+		// Don't create a sequence
+		"empty-sequence-no-create": {
+			fieldSpec: `
 path: a/b[]/c/d
 group: foo
 create: true
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta1
 kind: Bar
 a: {}
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a: {}
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("e"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("e"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
 
-	// Create a new field for an element in a sequence
-	{
-		name: "empty-sequence-create",
-		fieldSpec: `
+		// Create a new field for an element in a sequence
+		"empty-sequence-create": {
+			fieldSpec: `
 path: a/b[]/c/d
 group: foo
 create: true
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
   b:
   - c: {}
 `,
-		expected: `
+			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
   b:
   - c: {d: e}
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("e"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("e"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
 
-	{
-		name: "group v1",
-		fieldSpec: `
+		"group v1": {
+			fieldSpec: `
 path: a/b
 group: v1
 create: true
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("e"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("e"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
 
-	{
-		name: "version v1",
-		fieldSpec: `
+		"version v1": {
+			fieldSpec: `
 path: a/b
 version: v1
 create: true
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 a:
   b: e
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("e"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("e"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-	{
-		name: "successfully set field on array entry no sequence hint",
-		fieldSpec: `
+
+		"successfully set field on array entry no sequence hint": {
+			fieldSpec: `
 path: spec/containers/image
 version: v1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
   - image: foo
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
   - image: bar
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("bar"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("bar"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-	{
-		name: "successfully set field on array entry with sequence hint",
-		fieldSpec: `
+
+		"successfully set field on array entry with sequence hint": {
+			fieldSpec: `
 path: spec/containers[]/image
 version: v1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
   - image: foo
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
   - image: bar
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("bar"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("bar"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-	{
-		name: "failure to set field on array entry with sequence hint in path",
-		fieldSpec: `
+		"failure to set field on array entry with sequence hint in path": {
+			fieldSpec: `
 path: spec/containers[]/image
 version: v1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 spec:
   containers: []
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("bar"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("bar"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-	{
-		name: "failure to set field on array entry, no sequence hint in path",
-		fieldSpec: `
+
+		"failure to set field on array entry, no sequence hint in path": {
+			fieldSpec: `
 path: spec/containers/image
 version: v1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("bar"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("bar"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-	{
-		name: "filedname with slash '/'",
-		fieldSpec: `
+		"fieldname with slash '/'": {
+			fieldSpec: `
 path: a/b\/c/d
 version: v1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 a:
   b/c:
     d: foo
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 a:
   b/c:
     d: bar
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("bar"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("bar"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-	{
-		name: "filedname with multiple '/'",
-		fieldSpec: `
+		"fieldname with multiple '/'": {
+			fieldSpec: `
 path: a/b\/c/d\/e/f
 version: v1
 kind: Bar
 `,
-		input: `
+			input: `
 apiVersion: v1
 kind: Bar
 a:
@@ -478,7 +505,7 @@ a:
     d/e:
       f: foo
 `,
-		expected: `
+			expected: `
 apiVersion: v1
 kind: Bar
 a:
@@ -486,25 +513,24 @@ a:
     d/e:
       f: bar
 `,
-		filter: fieldspec.Filter{
-			SetValue:   filtersutil.SetScalar("bar"),
-			CreateKind: yaml.ScalarNode,
+			filter: fieldspec.Filter{
+				SetValue:   filtersutil.SetScalar("bar"),
+				CreateKind: yaml.ScalarNode,
+			},
 		},
-	},
-}
+	}
 
-func TestFilter_Filter(t *testing.T) {
-	for i := range tests {
-		test := tests[i]
-		t.Run(test.name, func(t *testing.T) {
-			err := yaml.Unmarshal([]byte(test.fieldSpec), &test.filter.FieldSpec)
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			err := yaml.Unmarshal([]byte(tc.fieldSpec), &tc.filter.FieldSpec)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
 			out := &bytes.Buffer{}
 			rw := &kio.ByteReadWriter{
-				Reader:                bytes.NewBufferString(test.input),
+				Reader:                bytes.NewBufferString(tc.input),
 				Writer:                out,
 				OmitReaderAnnotations: true,
 			}
@@ -512,11 +538,11 @@ func TestFilter_Filter(t *testing.T) {
 			// run the filter
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},
-				Filters: []kio.Filter{kio.FilterAll(test.filter)},
+				Filters: []kio.Filter{kio.FilterAll(tc.filter)},
 				Outputs: []kio.Writer{rw},
 			}.Execute()
-			if test.error != "" {
-				if !assert.EqualError(t, err, test.error) {
+			if tc.error != "" {
+				if !assert.EqualError(t, err, tc.error) {
 					t.FailNow()
 				}
 				// stop rest of test
@@ -529,7 +555,7 @@ func TestFilter_Filter(t *testing.T) {
 
 			// check results
 			if !assert.Equal(t,
-				strings.TrimSpace(test.expected),
+				strings.TrimSpace(tc.expected),
 				strings.TrimSpace(out.String())) {
 				t.FailNow()
 			}

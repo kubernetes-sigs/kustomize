@@ -4,6 +4,7 @@
 package fieldspec
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
@@ -15,7 +16,16 @@ import (
 
 var _ yaml.Filter = Filter{}
 
-// Filter applies a single fieldSpec to a single object
+// Filter possibly mutates its object argument using a FieldSpec.
+// If the object matches the FieldSpec, and the node found
+// by following the fieldSpec's path is non-null, this filter calls
+// the setValue function on the node at the end of the path.
+// If any part of the path doesn't exist, the filter returns
+// without doing anything and without error, unless it was set
+// to create the path. If set to create, it creates a tree of maps
+// along the path, and the leaf node gets the setValue called on it.
+// Error on GVK mismatch, empty or poorly formed path.
+// Filter expect kustomize style paths, not JSON paths.
 // Filter stores internal state and should not be reused
 type Filter struct {
 	// FieldSpec contains the path to the value to set.
@@ -39,7 +49,8 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 		return obj, errors.Wrap(err)
 	}
 	fltr.path = utils.PathSplitter(fltr.FieldSpec.Path)
-	if err := fltr.filter(obj); err != nil {
+	err := fltr.filter(obj)
+	if err != nil {
 		s, _ := obj.String()
 		return nil, errors.WrapPrefixf(err,
 			"considering field '%s' of object\n%v", fltr.FieldSpec.Path, s)
@@ -47,6 +58,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	return obj, nil
 }
 
+// Recursively called.
 func (fltr Filter) filter(obj *yaml.RNode) error {
 	if len(fltr.path) == 0 {
 		// found the field -- set its value
@@ -57,9 +69,9 @@ func (fltr Filter) filter(obj *yaml.RNode) error {
 	}
 	switch obj.YNode().Kind {
 	case yaml.SequenceNode:
-		return fltr.seq(obj)
+		return fltr.handleSequence(obj)
 	case yaml.MappingNode:
-		return fltr.field(obj)
+		return fltr.handleMap(obj)
 	case yaml.AliasNode:
 		return fltr.filter(yaml.NewRNode(obj.YNode().Alias))
 	default:
@@ -67,17 +79,20 @@ func (fltr Filter) filter(obj *yaml.RNode) error {
 	}
 }
 
-// field calls filter on the field matching the next path element
-func (fltr Filter) field(obj *yaml.RNode) error {
+// handleMap calls filter on the map field matching the next path element
+func (fltr Filter) handleMap(obj *yaml.RNode) error {
 	fieldName, isSeq := isSequenceField(fltr.path[0])
+	if fieldName == "" {
+		return fmt.Errorf("cannot set or create an empty field name")
+	}
 	// lookup the field matching the next path element
-	var lookupField yaml.Filter
+	var operation yaml.Filter
 	var kind yaml.Kind
 	tag := yaml.NodeTagEmpty
 	switch {
 	case !fltr.FieldSpec.CreateIfNotPresent || fltr.CreateKind == 0 || isSeq:
-		// dont' create the field if we don't find it
-		lookupField = yaml.Lookup(fieldName)
+		// don't create the field if we don't find it
+		operation = yaml.Lookup(fieldName)
 		if isSeq {
 			// The query path thinks this field should be a sequence;
 			// accept this hint for use later if the tag is NodeTagNull.
@@ -85,20 +100,24 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 		}
 	case len(fltr.path) <= 1:
 		// create the field if it is missing: use the provided node kind
-		lookupField = yaml.LookupCreate(fltr.CreateKind, fieldName)
+		operation = yaml.LookupCreate(fltr.CreateKind, fieldName)
 		kind = fltr.CreateKind
 		tag = fltr.CreateTag
 	default:
 		// create the field if it is missing: must be a mapping node
-		lookupField = yaml.LookupCreate(yaml.MappingNode, fieldName)
+		operation = yaml.LookupCreate(yaml.MappingNode, fieldName)
 		kind = yaml.MappingNode
 		tag = yaml.NodeTagMap
 	}
 
 	// locate (or maybe create) the field
-	field, err := obj.Pipe(lookupField)
-	if err != nil || field == nil {
+	field, err := obj.Pipe(operation)
+	if err != nil {
 		return errors.WrapPrefixf(err, "fieldName: %s", fieldName)
+	}
+	if field == nil {
+		// No error if field not found.
+		return nil
 	}
 
 	// if the value exists, but is null and kind is set,
@@ -117,7 +136,7 @@ func (fltr Filter) field(obj *yaml.RNode) error {
 }
 
 // seq calls filter on all sequence elements
-func (fltr Filter) seq(obj *yaml.RNode) error {
+func (fltr Filter) handleSequence(obj *yaml.RNode) error {
 	if err := obj.VisitElements(func(node *yaml.RNode) error {
 		// recurse on each element -- re-allocating a Filter is
 		// not strictly required, but is more consistent with field
@@ -128,16 +147,14 @@ func (fltr Filter) seq(obj *yaml.RNode) error {
 		return errors.WrapPrefixf(err,
 			"visit traversal on path: %v", fltr.path)
 	}
-
 	return nil
 }
 
 // isSequenceField returns true if the path element is for a sequence field.
 // isSequence also returns the path element with the '[]' suffix trimmed
 func isSequenceField(name string) (string, bool) {
-	isSeq := strings.HasSuffix(name, "[]")
-	name = strings.TrimSuffix(name, "[]")
-	return name, isSeq
+	shorter := strings.TrimSuffix(name, "[]")
+	return shorter, shorter != name
 }
 
 // isMatchGVK returns true if the fs.GVK matches the obj GVK.
