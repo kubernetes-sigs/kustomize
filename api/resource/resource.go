@@ -282,24 +282,6 @@ func (r *Resource) appendCsvAnnotation(name, value string) {
 	r.SetAnnotations(annotations)
 }
 
-// Implements ResCtx GetOutermostNamePrefix
-func (r *Resource) GetOutermostNamePrefix() string {
-	namePrefixes := r.GetNamePrefixes()
-	if len(namePrefixes) == 0 {
-		return ""
-	}
-	return namePrefixes[len(namePrefixes)-1]
-}
-
-// Implements ResCtx GetOutermostNameSuffix
-func (r *Resource) GetOutermostNameSuffix() string {
-	nameSuffixes := r.GetNameSuffixes()
-	if len(nameSuffixes) == 0 {
-		return ""
-	}
-	return nameSuffixes[len(nameSuffixes)-1]
-}
-
 func SameEndingSubarray(shortest, longest []string) bool {
 	if len(shortest) > len(longest) {
 		longest, shortest = shortest, longest
