@@ -23,7 +23,7 @@ kind: HelmChartInflationGenerator
 metadata:
   name: myMap
 chartName: minecraft
-chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+chartRepoUrl: https://charts.helm.sh/stable
 chartVersion: v1.2.0
 releaseName: test
 releaseNamespace: testNamespace
@@ -105,7 +105,7 @@ kind: HelmChartInflationGenerator
 metadata:
   name: myMap
 chartName: minecraft
-chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+chartRepoUrl: https://charts.helm.sh/stable
 chartVersion: v1.2.0
 helmBin: helm
 helmHome: %s
@@ -113,7 +113,6 @@ chartHome: %s
 releaseName: test
 releaseNamespace: testNamespace
 values: %s
-`, tempDir, tempDir, valuesPath))
 valuesLocal:
   resources:
     limits:
@@ -122,6 +121,7 @@ valuesLocal:
     requests:
       memory: 512Mi
       cpu: 200m
+`, tempDir, tempDir, valuesPath))
 
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
@@ -290,8 +290,11 @@ spec:
           successThreshold: 1
           timeoutSeconds: 1
         resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
           requests:
-            cpu: 500m
+            cpu: 200m
             memory: 512Mi
         volumeMounts:
         - mountPath: /data
