@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -51,7 +51,7 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		return fmt.Errorf("chartName cannot be empty")
 	}
 	if p.ChartHome == "" {
-		p.ChartHome = path.Join(p.tmpDir, "chart")
+		p.ChartHome = filepath.Join(p.tmpDir, "chart")
 	}
 	if p.ChartRepoName == "" {
 		p.ChartRepoName = "stable"
@@ -60,10 +60,10 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		p.HelmBin = "helm"
 	}
 	if p.HelmHome == "" {
-		p.HelmHome = path.Join(p.tmpDir, ".helm")
+		p.HelmHome = filepath.Join(p.tmpDir, ".helm")
 	}
 	if p.Values == "" {
-		p.Values = path.Join(p.ChartHome, p.ChartName, "values.yaml")
+		p.Values = filepath.Join(p.ChartHome, p.ChartName, "values.yaml")
 	}
 	if p.ValuesMerge == "" {
 		p.ValuesMerge = "override"
@@ -109,17 +109,16 @@ func (p *HelmChartInflationGeneratorPlugin) EncodeValues(w io.Writer) error {
 
 // useValuesLocal process (merge) inflator config provided values with chart default values.yaml
 func (p *HelmChartInflationGeneratorPlugin) useValuesLocal() error {
-	fn := path.Join(p.ChartHome, p.ChartName, "kustomize-values.yaml")
-	vf, err := os.Create(fn)
-	defer vf.Close()
-	if err != nil {
-		return err
-	}
-	// override, merge, none
-	if p.ValuesMerge == "none" || p.ValuesMerge == "no" || p.ValuesMerge == "false" {
-		p.Values = fn
-	} else {
-		pValues, err := ioutil.ReadFile(p.Values)
+	// not override, merge, none
+	if !(p.ValuesMerge == "none" || p.ValuesMerge == "no" || p.ValuesMerge == "false") {
+		var pValues []byte
+		var err error
+
+		if filepath.IsAbs(p.Values) {
+			pValues, err = ioutil.ReadFile(p.Values)
+		} else {
+			pValues, err = p.h.Loader().Load(p.Values)
+		}
 		if err != nil {
 			return err
 		}
@@ -141,14 +140,46 @@ func (p *HelmChartInflationGeneratorPlugin) useValuesLocal() error {
 			}
 		}
 		p.ValuesLocal = chValues
-		p.Values = fn
 	}
-	err = p.EncodeValues(vf)
+	b, err := yaml.Marshal(p.ValuesLocal)
 	if err != nil {
 		return err
 	}
-	vf.Sync()
+	path, err := p.writeValuesBytes(b)
+	if err != nil {
+		return err
+	}
+	p.Values = path
 	return nil
+}
+
+// copyValues will copy the relative values file into the temp directory
+// to avoid messing up with CWD.
+func (p *HelmChartInflationGeneratorPlugin) copyValues() error {
+	// only copy when the values path is not absolute
+	if filepath.IsAbs(p.Values) {
+		return nil
+	}
+	// we must use use loader to read values file
+	b, err := p.h.Loader().Load(p.Values)
+	if err != nil {
+		return err
+	}
+	path, err := p.writeValuesBytes(b)
+	if err != nil {
+		return err
+	}
+	p.Values = path
+	return nil
+}
+
+func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(b []byte) (string, error) {
+	path := filepath.Join(p.ChartHome, p.ChartName, "kustomize-values.yaml")
+	err := ioutil.WriteFile(path, b, 0644)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
 }
 
 // Generate implements generator
@@ -174,6 +205,11 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (resmap.ResMap, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		err := p.copyValues()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// render the charts
@@ -190,7 +226,7 @@ func (p *HelmChartInflationGeneratorPlugin) getTemplateCommandArgs() []string {
 	if p.ReleaseName != "" {
 		args = append(args, p.ReleaseName)
 	}
-	args = append(args, path.Join(p.ChartHome, p.ChartName))
+	args = append(args, filepath.Join(p.ChartHome, p.ChartName))
 	if p.ReleaseNamespace != "" {
 		args = append(args, "--namespace", p.ReleaseNamespace)
 	}
@@ -220,7 +256,7 @@ func (p *HelmChartInflationGeneratorPlugin) getPullCommandArgs() []string {
 // checkLocalChart will return true if the chart does exist in
 // local chart home.
 func (p *HelmChartInflationGeneratorPlugin) checkLocalChart() bool {
-	path := path.Join(p.ChartHome, p.ChartName)
+	path := filepath.Join(p.ChartHome, p.ChartName)
 	s, err := os.Stat(path)
 	if err != nil {
 		return false
