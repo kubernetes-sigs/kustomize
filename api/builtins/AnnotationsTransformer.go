@@ -4,6 +4,8 @@
 package builtins
 
 import (
+	"encoding/json"
+	yaml3 "gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/api/filters/annotations"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
@@ -28,6 +30,8 @@ func (p *AnnotationsTransformerPlugin) Transform(m resmap.ResMap) error {
 		return nil
 	}
 	for _, r := range m.Resources() {
+		resourceYaml, _ := r.AsYAML()
+		p.MergeExistingAnnotation(resourceYaml)
 		err := r.ApplyFilter(annotations.Filter{
 			Annotations: p.Annotations,
 			FsSlice:     p.FieldSpecs,
@@ -41,4 +45,63 @@ func (p *AnnotationsTransformerPlugin) Transform(m resmap.ResMap) error {
 
 func NewAnnotationsTransformerPlugin() resmap.TransformerPlugin {
 	return &AnnotationsTransformerPlugin{}
+}
+
+func (p *AnnotationsTransformerPlugin) MergeExistingAnnotation(resourceYaml []byte) error {
+	var resourceNode yaml3.Node
+	if err := yaml3.Unmarshal(resourceYaml, &resourceNode); err != nil {
+		return err
+	}
+	if metadataNode := extractYAMLNode(&resourceNode, "metadata"); metadataNode != nil {
+		if annotationsNode := extractYAMLNode(metadataNode, "annotations"); annotationsNode != nil {
+			for annotationKey, annotationVal := range p.Annotations {
+				var annotationValMap map[string]string
+				if err := json.Unmarshal([]byte(annotationVal), &annotationValMap); err != nil {
+					// we only merge annotations that are maps
+					continue
+				}
+				// check if the existing annotations contains the same key
+				if matchingAnnotation := extractYAMLNode(annotationsNode, annotationKey); matchingAnnotation != nil {
+					var existingAnnotationVal map[string]string
+					if err := json.Unmarshal([]byte(matchingAnnotation.Value), &existingAnnotationVal); err != nil {
+						// if the new annotation is a map, but the existing one is not, we overwrite it with the new one
+						continue
+					}
+					// both old and new annotation are maps, merge them
+					for k, v := range existingAnnotationVal {
+						annotationValMap[k] = v
+					}
+					newAnnotationsStr, _ := json.Marshal(annotationValMap)
+					p.Annotations[annotationKey] = string(newAnnotationsStr)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func extractYAMLNode(node *yaml3.Node, key string) *yaml3.Node {
+	foundNode := false
+	for _, nn := range node.Content {
+		if foundNode {
+			return nn
+		}
+		if len(nn.Content) > 0 {
+			nextNode := extractYAMLNode(nn, key)
+			if nextNode != nil {
+				return nextNode
+			}
+		}
+		switch nn.Value {
+		case key:
+			foundNode = true
+			continue
+		default:
+			nextNode := extractYAMLNode(nn, key)
+			if nextNode != nil {
+				return nextNode
+			}
+		}
+	}
+	return nil
 }
