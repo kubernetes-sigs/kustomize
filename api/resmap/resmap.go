@@ -151,7 +151,7 @@ type ResMap interface {
 	// an exact match, returning an error on multiple or no matches.
 	GetByCurrentId(resid.ResId) (*resource.Resource, error)
 
-	// GetByPreviousId is shorthand for calling
+	// GetById is shorthand for calling
 	// GetMatchingResourcesByAnyId with a matcher requiring
 	// an exact match, returning an error on multiple or no matches.
 	GetById(resid.ResId) (*resource.Resource, error)
