@@ -53,7 +53,7 @@ resources:
 	// This validates fix for Issue #1044. This should not be an error anymore -
 	// the secrets have the same name but are in different namespaces.
 	// The ClusterRole (by def) is not in a namespace,
-	// an in this case applies to *any* Secret resource
+	// and in this case applies to *any* Secret resource
 	// named "dummy"
 	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
@@ -91,7 +91,7 @@ rules:
 `)
 }
 
-func TestNameReferenceDeployment(t *testing.T) {
+func TestNameReferenceDeploymentIssue3489(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
 resources:

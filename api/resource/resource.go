@@ -5,6 +5,7 @@ package resource
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
@@ -293,7 +294,7 @@ func (r *Resource) GetOutermostNameSuffix() string {
 	return nameSuffixes[len(nameSuffixes)-1]
 }
 
-func sameEndingSubarray(a, b []string) bool {
+func SameEndingSubarray(a, b []string) bool {
 	compareLen := len(b)
 	if len(a) < len(b) {
 		compareLen = len(a)
@@ -340,16 +341,8 @@ func (r *Resource) OutermostPrefixSuffixEquals(o ResCtx) bool {
 // PrefixesSuffixesEquals is conceptually doing the same task
 // as OutermostPrefixSuffix but performs a deeper comparison
 // of the suffix and prefix slices.
-//
-// Important note: The PrefixSuffixTransformer is stacking the
-// prefix values in the reverse order of appearance in
-// the transformed name. For this reason the sameEndingSubarray
-// method is used (as opposed to the sameBeginningSubarray)
-// to compare the prefix slice. In the same spirit, the
-// GetOutermostNamePrefix is using the last element of the
-// nameprefix slice and not the first.
 func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
-	return sameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && sameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
+	return SameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && SameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
 // RemoveBuildAnnotations removes annotations created by the build process.
@@ -431,6 +424,15 @@ func (r *Resource) AsYAML() ([]byte, error) {
 		return nil, err
 	}
 	return yaml.JSONToYAML(json)
+}
+
+// MustYaml returns YAML or panics.
+func (r *Resource) MustYaml() string {
+	yml, err := r.AsYAML()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(yml)
 }
 
 // SetOptions updates the generator options for the resource.
