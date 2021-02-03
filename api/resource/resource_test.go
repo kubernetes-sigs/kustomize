@@ -1196,10 +1196,10 @@ func TestSameEndingSubarray(t *testing.T) {
 			b:        []string{},
 			expected: true,
 		},
-		"no1 - TODO(3489) this should be false": {
+		"no1": {
 			a:        []string{"a"},
 			b:        []string{},
-			expected: true,
+			expected: false,
 		},
 		"no2": {
 			a:        []string{"b", "a"},
