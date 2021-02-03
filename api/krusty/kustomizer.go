@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 // Kustomizer performs kustomizations.  It's meant to behave
@@ -70,6 +71,10 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory),
 	)
 	err = kt.Load()
+	if err != nil {
+		return nil, err
+	}
+	err = openapi.SetSchemaVersion(kt.Kustomization().OpenAPI, true)
 	if err != nil {
 		return nil, err
 	}

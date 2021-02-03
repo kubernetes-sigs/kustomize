@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/yaml"
 )
 
@@ -381,6 +382,11 @@ func (kt *KustTarget) accumulateDirectory(
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "couldn't make target for path '%s'", ldr.Root())
+	}
+	err = openapi.SetSchemaVersion(subKt.Kustomization().OpenAPI, false)
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "couldn't set openapi version for path '%s'", ldr.Root())
 	}
 	if isComponent && subKt.kustomization.Kind != types.ComponentKind {
 		return nil, fmt.Errorf(
