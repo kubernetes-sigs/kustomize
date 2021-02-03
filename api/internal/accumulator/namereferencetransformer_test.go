@@ -528,7 +528,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 					`: considering field 'rules/resourceNames' of object
 {"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "ClusterRole", "metadata": {
     "name": "cr"}, "rules": [{"resourceNames": {"foo": "bar"}, "resources": ["secrets"]}]}
-: visit traversal on path: [resourceNames]: no 'name' field in node`,
+: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`,
 				`updating name reference in 'rules/resourceNames' field of `+
 					`'rbac.authorization.k8s.io_v1_ClusterRole|~X|cr'`+
 					`: considering field 'rules/resourceNames' of object
@@ -541,7 +541,7 @@ rules:
     foo: bar
   resources:
   - secrets
-: visit traversal on path: [resourceNames]: no 'name' field in node`)},
+: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`)},
 	}
 
 	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)

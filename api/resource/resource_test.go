@@ -1177,3 +1177,55 @@ spec:
         name: nginx
 `, imagename)
 }
+
+func TestSameEndingSubarray(t *testing.T) {
+	testCases := map[string]struct {
+		a        []string
+		b        []string
+		expected bool
+	}{
+		"both nil": {
+			expected: true,
+		},
+		"one nil": {
+			b:        []string{},
+			expected: true,
+		},
+		"both empty": {
+			a:        []string{},
+			b:        []string{},
+			expected: true,
+		},
+		"no1 - TODO(3489) this should be false": {
+			a:        []string{"a"},
+			b:        []string{},
+			expected: true,
+		},
+		"no2": {
+			a:        []string{"b", "a"},
+			b:        []string{"b"},
+			expected: false,
+		},
+		"yes1": {
+			a:        []string{"a", "b"},
+			b:        []string{"b"},
+			expected: true,
+		},
+		"yes2": {
+			a:        []string{"a", "b", "c"},
+			b:        []string{"b", "c"},
+			expected: true,
+		},
+		"yes3": {
+			a:        []string{"a", "b", "c", "d", "e", "f"},
+			b:        []string{"f"},
+			expected: true,
+		},
+	}
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			assert.Equal(t, tc.expected, SameEndingSubarray(tc.a, tc.b))
+		})
+	}
+}

@@ -142,31 +142,38 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dep
+  namespace: someNs
 map:
   name: oldName
-  namespace: oldNs
+  namespace: someNs
 `,
 			candidates: `
 apiVersion: apps/v1
 kind: Secret
 metadata:
   name: newName
-  namespace: oldNs
+  namespace: someNs
 ---
 apiVersion: apps/v1
 kind: NotSecret
 metadata:
   name: newName2
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: thirdName
 `,
-			originalNames: []string{"oldName", ""},
+			originalNames: []string{"oldName", "oldName", "oldName"},
 			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dep
+  namespace: someNs
 map:
   name: newName
-  namespace: oldNs
+  namespace: someNs
 `,
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "map"},
@@ -236,10 +243,10 @@ map:
 			candidates := resMapFactory.FromResourceSlice(candidatesRes)
 			tc.filter.ReferralCandidates = candidates
 
+			result := filtertest_test.RunFilter(t, tc.referrerOriginal, tc.filter)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.referrerFinal),
-				strings.TrimSpace(
-					filtertest_test.RunFilter(t, tc.referrerOriginal, tc.filter))) {
+				strings.TrimSpace(result)) {
 				t.FailNow()
 			}
 		})

@@ -15,7 +15,6 @@ func TestNamePrefixSuffixPatch(t *testing.T) {
 
 	th.WriteF("handlers/kustomization.yaml", `
 nameSuffix: -suffix
-
 resources:
 - deployment.yaml
 `)
