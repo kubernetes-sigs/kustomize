@@ -352,9 +352,9 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "sub-backendOne",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/originalName": "backendOne",
-					"config.kubernetes.io/originalNs":   "default",
-					"config.kubernetes.io/prefixes":     "sub-",
+					"config.kubernetes.io/previousNames":      "backendOne",
+					"config.kubernetes.io/previousNamespaces": "default",
+					"config.kubernetes.io/prefixes":           "sub-",
 				},
 			}}).ResMap()
 

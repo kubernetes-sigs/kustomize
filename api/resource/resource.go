@@ -4,6 +4,7 @@
 package resource
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -32,17 +33,17 @@ type Resource struct {
 }
 
 const (
-	buildAnnotationPreviousName      = konfig.ConfigAnnoDomain + "/originalName"
-	buildAnnotationPrefixes          = konfig.ConfigAnnoDomain + "/prefixes"
-	buildAnnotationSuffixes          = konfig.ConfigAnnoDomain + "/suffixes"
-	buildAnnotationPreviousNamespace = konfig.ConfigAnnoDomain + "/originalNs"
+	buildAnnotationPreviousNames      = konfig.ConfigAnnoDomain + "/previousNames"
+	buildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
+	buildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
+	buildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
 )
 
 var buildAnnotations = []string{
-	buildAnnotationPreviousName,
+	buildAnnotationPreviousNames,
 	buildAnnotationPrefixes,
 	buildAnnotationSuffixes,
-	buildAnnotationPreviousNamespace,
+	buildAnnotationPreviousNamespaces,
 }
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
@@ -338,13 +339,8 @@ func (r *Resource) RemoveBuildAnnotations() {
 }
 
 func (r *Resource) setPreviousNamespaceAndName(ns string, n string) *Resource {
-	// name
-	r.appendCsvAnnotation(buildAnnotationPreviousName, n)
-	// namespace
-	if ns == "" {
-		ns = resid.DefaultNamespace
-	}
-	r.appendCsvAnnotation(buildAnnotationPreviousNamespace, ns)
+	r.appendCsvAnnotation(buildAnnotationPreviousNames, n)
+	r.appendCsvAnnotation(buildAnnotationPreviousNamespaces, ns)
 	return r
 }
 
@@ -412,15 +408,20 @@ func (r *Resource) OrgId() resid.ResId {
 // PrevIds returns a list of ResIds that includes every
 // previous ResId the resource has had through all of its
 // GVKN transformations, in the order that it had that ID.
+// I.e. the oldest ID is first.
 // The returned array does not include the resource's current
-// ID.
-// If there are no previous IDs, this will return nil.
+// ID. If there are no previous IDs, this will return nil.
 func (r *Resource) PrevIds() []resid.ResId {
 	var ids []resid.ResId
-
-	// names and ns should always be the same length
-	names := r.getCsvAnnotation(buildAnnotationPreviousName)
-	ns := r.getCsvAnnotation(buildAnnotationPreviousNamespace)
+	// TODO: merge previous names and namespaces into one list of
+	//     pairs on one annotation so there is no chance of error
+	names := r.getCsvAnnotation(buildAnnotationPreviousNames)
+	ns := r.getCsvAnnotation(buildAnnotationPreviousNamespaces)
+	if len(names) != len(ns) {
+		panic(errors.New(
+			"number of previous names not equal to " +
+				"number of previous namespaces"))
+	}
 	for i := range names {
 		ids = append(ids, resid.NewResIdWithNamespace(
 			r.GetGvk(), names[i], ns[i]))
@@ -430,7 +431,8 @@ func (r *Resource) PrevIds() []resid.ResId {
 
 // StorePreviousId stores the resource's current ID via build annotations.
 func (r *Resource) StorePreviousId() {
-	r.setPreviousNamespaceAndName(r.GetNamespace(), r.GetName())
+	id := r.CurId()
+	r.setPreviousNamespaceAndName(id.EffectiveNamespace(), id.Name)
 }
 
 // CurId returns a ResId for the resource using the

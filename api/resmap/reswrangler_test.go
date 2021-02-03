@@ -331,7 +331,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 	}
 }
 
-func TestGetMatchingResourcesByPreviousId(t *testing.T) {
+func TestGetMatchingResourcesByAnyId(t *testing.T) {
 	r1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -339,8 +339,8 @@ func TestGetMatchingResourcesByPreviousId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-alice",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/originalName": "alice",
-					"config.kubernetes.io/originalNs":   "default",
+					"config.kubernetes.io/previousNames":      "alice",
+					"config.kubernetes.io/previousNamespaces": "default",
 				},
 			},
 		})
@@ -351,8 +351,8 @@ func TestGetMatchingResourcesByPreviousId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-bob",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/originalName": "bob,bob2",
-					"config.kubernetes.io/originalNs":   "default,default",
+					"config.kubernetes.io/previousNames":      "bob,bob2",
+					"config.kubernetes.io/previousNamespaces": "default,default",
 				},
 			},
 		})
@@ -364,8 +364,8 @@ func TestGetMatchingResourcesByPreviousId(t *testing.T) {
 				"name":      "new-bob",
 				"namespace": "new-happy",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/originalName": "bob",
-					"config.kubernetes.io/originalNs":   "happy",
+					"config.kubernetes.io/previousNames":      "bob",
+					"config.kubernetes.io/previousNamespaces": "happy",
 				},
 			},
 		})
@@ -377,8 +377,8 @@ func TestGetMatchingResourcesByPreviousId(t *testing.T) {
 				"name":      "charlie",
 				"namespace": "happy",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/originalName": "charlie",
-					"config.kubernetes.io/originalNs":   "default",
+					"config.kubernetes.io/previousNames":      "charlie",
+					"config.kubernetes.io/previousNamespaces": "default",
 				},
 			},
 		})
