@@ -143,10 +143,73 @@ resources:
 - ../ov2
 - ../ov3
 `)
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	if err == nil {
-		t.Fatal("TODO(3489): this should work")
-	}
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pp-myMap
+---
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: pp-myDep
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: CM_FOO
+          valueFrom:
+            configMapKeyRef:
+              key: foo
+              name: pp-myMap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myMap-ss
+---
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: myDep-ss
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: CM_FOO
+          valueFrom:
+            configMapKeyRef:
+              key: foo
+              name: myMap-ss
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myMap-xx
+  namespace: fred
+---
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: myDep-xx
+  namespace: fred
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: CM_FOO
+          valueFrom:
+            configMapKeyRef:
+              key: foo
+              name: myMap-xx
+`)
 }
 
 // TestNameAndNsTransformation validates that NamespaceTransformer,

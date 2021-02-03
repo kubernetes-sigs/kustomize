@@ -294,20 +294,16 @@ func (r *Resource) GetOutermostNameSuffix() string {
 	return nameSuffixes[len(nameSuffixes)-1]
 }
 
-func SameEndingSubarray(a, b []string) bool {
-	compareLen := len(b)
-	if len(a) < len(b) {
-		compareLen = len(a)
+func SameEndingSubarray(shortest, longest []string) bool {
+	if len(shortest) > len(longest) {
+		longest, shortest = shortest, longest
 	}
-
-	if compareLen == 0 {
-		return true
+	diff := len(longest) - len(shortest)
+	if len(shortest) == 0 {
+		return diff == 0
 	}
-
-	alen := len(a) - 1
-	blen := len(b) - 1
-	for i := 0; i <= compareLen-1; i++ {
-		if a[alen-i] != b[blen-i] {
+	for i := len(shortest) - 1; i >= 0; i-- {
+		if longest[i+diff] != shortest[i] {
 			return false
 		}
 	}
