@@ -7,6 +7,54 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+func TestIssue3489Simplified(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+namespace: kube-system
+resources:
+- aa
+- bb
+`)
+	th.WriteK("aa", `
+resources:
+- ../base
+`)
+	th.WriteK("bb", `
+resources:
+- ../base
+nameSuffix: -private
+`)
+	th.WriteK("base", `
+resources:
+- deployment.yaml
+- serviceAccount.yaml
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDep
+spec:
+  template:
+    spec:
+      serviceAccountName: mySvcAcct
+      containers:
+      - name: whatever
+        image: k8s.gcr.io/governmentCheese
+`)
+	th.WriteF("base/serviceAccount.yaml", `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mySvcAcct
+`)
+	// TODO(3489): This shouldn't be an error.
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	if !strings.Contains(err.Error(), "found multiple possible referrals") {
+		t.Fatalf("unexpected error: %q", err)
+	}
+}
+
 func TestIssue3489(t *testing.T) {
 	const assets = `{
 	"tenantId": "XXXXX-XXXXXX-XXXXX-XXXXXX-XXXXXX",

@@ -101,7 +101,7 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 		return errors.Wrap(err, "trying to match 'name' field")
 	}
 	if nameNode == nil {
-		return fmt.Errorf("no 'name' field in node")
+		return fmt.Errorf("path config error; no 'name' field in node")
 	}
 	namespaceNode, err := node.Pipe(yaml.FieldMatcher{Name: "namespace"})
 	if err != nil {
