@@ -714,8 +714,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName
-    config.kubernetes.io/originalNs: default
+    config.kubernetes.io/previousNames: oldName
+    config.kubernetes.io/previousNamespaces: default
   name: newName
 `,
 		},
@@ -725,8 +725,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName
-    config.kubernetes.io/originalNs: default
+    config.kubernetes.io/previousNames: oldName
+    config.kubernetes.io/previousNamespaces: default
   name: oldName2
 `,
 			newName: "newName",
@@ -735,8 +735,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName,oldName2
-    config.kubernetes.io/originalNs: default,default
+    config.kubernetes.io/previousNames: oldName,oldName2
+    config.kubernetes.io/previousNamespaces: default,default
   name: newName
 `,
 		},
@@ -746,8 +746,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName
-    config.kubernetes.io/originalNs: default
+    config.kubernetes.io/previousNames: oldName
+    config.kubernetes.io/previousNamespaces: default
   name: oldName2
   namespace: oldNamespace
 `,
@@ -757,8 +757,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName,oldName2
-    config.kubernetes.io/originalNs: default,oldNamespace
+    config.kubernetes.io/previousNames: oldName,oldName2
+    config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
   namespace: newNamespace
 `,
@@ -806,8 +806,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName
-    config.kubernetes.io/originalNs: default
+    config.kubernetes.io/previousNames: oldName
+    config.kubernetes.io/previousNamespaces: default
   name: newName
 `,
 			expected: []resid.ResId{
@@ -824,8 +824,8 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/originalName: oldName,oldName2
-    config.kubernetes.io/originalNs: default,oldNamespace
+    config.kubernetes.io/previousNames: oldName,oldName2
+    config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
   namespace: newNamespace
 `,

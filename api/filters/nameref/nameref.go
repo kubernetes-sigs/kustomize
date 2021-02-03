@@ -304,7 +304,7 @@ func (f Filter) sameCurrentNamespaceAsReferrer() sieveFunc {
 
 // selectReferral picks the best referral from a list of candidates.
 func (f Filter) selectReferral(
-// The name referral that may need to be updated.
+	// The name referral that may need to be updated.
 	oldName string,
 	candidates []*resource.Resource) (*resource.Resource, error) {
 	candidates = doSieve(candidates, originalNameMatches(oldName))

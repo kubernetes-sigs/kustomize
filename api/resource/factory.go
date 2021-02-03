@@ -153,7 +153,7 @@ func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resour
 		return nil, fmt.Errorf("number of names doesn't match number of resources")
 	}
 	for i, res := range result {
-		res.setPreviousNamespaceAndName("", names[i])
+		res.setPreviousNamespaceAndName(resid.DefaultNamespace, names[i])
 	}
 	return result, nil
 }
