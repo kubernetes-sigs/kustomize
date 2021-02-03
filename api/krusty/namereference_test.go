@@ -1,7 +1,6 @@
 package krusty_test
 
 import (
-	"strings"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -48,11 +47,46 @@ kind: ServiceAccount
 metadata:
   name: mySvcAcct
 `)
-	// TODO(3489): This shouldn't be an error.
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	if !strings.Contains(err.Error(), "found multiple possible referrals") {
-		t.Fatalf("unexpected error: %q", err)
-	}
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDep
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - image: k8s.gcr.io/governmentCheese
+        name: whatever
+      serviceAccountName: mySvcAcct
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mySvcAcct
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDep-private
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - image: k8s.gcr.io/governmentCheese
+        name: whatever
+      serviceAccountName: mySvcAcct-private
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mySvcAcct-private
+  namespace: kube-system
+`)
 }
 
 func TestIssue3489(t *testing.T) {
@@ -230,11 +264,234 @@ kind: ServiceAccount
 metadata:
   name: external-dns
 `)
-	// TODO(3489): This shouldn't be an error.
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	if !strings.Contains(err.Error(), "found multiple possible referrals") {
-		t.Fatalf("unexpected error: %q", err)
-	}
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: external-dns
+    instance: public
+  name: external-dns
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  - pods
+  - services
+  - nodes
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - extensions
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: external-dns
+    instance: public
+  name: external-dns-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+- kind: ServiceAccount
+  name: external-dns
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: external-dns
+    instance: public
+  name: external-dns
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: external-dns
+      instance: public
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: external-dns
+        instance: public
+    spec:
+      containers:
+      - args:
+        - --txt-owner-id="aks"
+        - --txt-prefix=external-dns-
+        - --source=service
+        - --provider=azure
+        - --registry=txt
+        - --domain-filter=dev.company.com
+        image: xxx.azurecr.io/external-dns:v0.7.4_sylr.1
+        name: external-dns
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/kubernetes
+          name: azure-config-file
+          readOnly: true
+      serviceAccountName: external-dns
+      volumes:
+      - name: azure-config-file
+        secret:
+          secretName: azure-config-file-66cc4224mm
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: external-dns
+    instance: public
+  name: external-dns
+  namespace: kube-system
+---
+apiVersion: v1
+data:
+  azure.json: |
+    ewoJInRlbmFudElkIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIiwKCS
+    JzdWJzY3JpcHRpb25JZCI6ICJYWFhYWC1YWFhYWFgtWFhYWFgtWFhYWFhYLVhYWFhYWCIs
+    CgkicmVzb3VyY2VHcm91cCI6ICJETlMtRVVXLVhYWC1SRyIsCgkidXNlTWFuYWdlZElkZW
+    50aXR5RXh0ZW5zaW9uIjogdHJ1ZSwKCSJ1c2VyQXNzaWduZWRJZGVudGl0eUlEIjogIlhY
+    WFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIgp9Cg==
+kind: Secret
+metadata:
+  labels:
+    app: external-dns
+    instance: public
+  name: azure-config-file-66cc4224mm
+  namespace: kube-system
+type: Opaque
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: external-dns
+    instance: private
+  name: external-dns-private
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  - pods
+  - services
+  - nodes
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - extensions
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: external-dns
+    instance: private
+  name: external-dns-viewer-private
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns-private
+subjects:
+- kind: ServiceAccount
+  name: external-dns-private
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: external-dns
+    instance: private
+  name: external-dns-private
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: external-dns
+      instance: private
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: external-dns
+        instance: private
+    spec:
+      containers:
+      - args:
+        - --txt-owner-id="aks"
+        - --txt-prefix=external-dns-private-
+        - --source=service
+        - --provider=azure-private-dns
+        - --registry=txt
+        - --domain-filter=static.company.az
+        image: xxx.azurecr.io/external-dns:v0.7.4_sylr.1
+        name: external-dns
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/kubernetes
+          name: azure-config-file
+          readOnly: true
+      serviceAccountName: external-dns-private
+      volumes:
+      - name: azure-config-file
+        secret:
+          secretName: azure-config-file-private-66cc4224mm
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: external-dns
+    instance: private
+  name: external-dns-private
+  namespace: kube-system
+---
+apiVersion: v1
+data:
+  azure.json: |
+    ewoJInRlbmFudElkIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIiwKCS
+    JzdWJzY3JpcHRpb25JZCI6ICJYWFhYWC1YWFhYWFgtWFhYWFgtWFhYWFhYLVhYWFhYWCIs
+    CgkicmVzb3VyY2VHcm91cCI6ICJETlMtRVVXLVhYWC1SRyIsCgkidXNlTWFuYWdlZElkZW
+    50aXR5RXh0ZW5zaW9uIjogdHJ1ZSwKCSJ1c2VyQXNzaWduZWRJZGVudGl0eUlEIjogIlhY
+    WFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIgp9Cg==
+kind: Secret
+metadata:
+  labels:
+    app: external-dns
+    instance: private
+  name: azure-config-file-private-66cc4224mm
+  namespace: kube-system
+type: Opaque
+`)
 }
 
 func TestEmptyFieldSpecValue(t *testing.T) {
