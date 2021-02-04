@@ -331,6 +331,134 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 	}
 }
 
+func TestGetMatchingResourcesByAnyId(t *testing.T) {
+	r1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "new-alice",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousNames":      "alice",
+					"config.kubernetes.io/previousNamespaces": "default",
+				},
+			},
+		})
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "new-bob",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousNames":      "bob,bob2",
+					"config.kubernetes.io/previousNamespaces": "default,default",
+				},
+			},
+		})
+	r3 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "new-bob",
+				"namespace": "new-happy",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousNames":      "bob",
+					"config.kubernetes.io/previousNamespaces": "happy",
+				},
+			},
+		})
+	r4 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousNames":      "charlie",
+					"config.kubernetes.io/previousNamespaces": "default",
+				},
+			},
+		})
+	r5 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+			},
+		})
+
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
+
+	// nolint:goconst
+	tests := []struct {
+		name    string
+		matcher IdMatcher
+		count   int
+	}{
+		{
+			"match everything",
+			func(resid.ResId) bool { return true },
+			5,
+		},
+		{
+			"match nothing",
+			func(resid.ResId) bool { return false },
+			0,
+		},
+		{
+			"name is alice",
+			func(x resid.ResId) bool { return x.Name == "alice" },
+			1,
+		},
+		{
+			"name is charlie",
+			func(x resid.ResId) bool { return x.Name == "charlie" },
+			2,
+		},
+		{
+			"name is bob",
+			func(x resid.ResId) bool { return x.Name == "bob" },
+			2,
+		},
+		{
+			"happy namespace",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy"
+			},
+			3,
+		},
+		{
+			"happy deployment",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy" &&
+					x.Gvk.Kind == "Deployment"
+			},
+			1,
+		},
+		{
+			"happy ConfigMap",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy" &&
+					x.Gvk.Kind == "ConfigMap"
+			},
+			2,
+		},
+	}
+	for _, tst := range tests {
+		result := m.GetMatchingResourcesByAnyId(tst.matcher)
+		if len(result) != tst.count {
+			t.Fatalf("test '%s';  actual: %d, expected: %d",
+				tst.name, len(result), tst.count)
+		}
+	}
+}
+
 func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	r1 := rf.FromMap(
 		map[string]interface{}{

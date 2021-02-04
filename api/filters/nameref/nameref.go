@@ -241,7 +241,7 @@ func acceptAll(r *resource.Resource) bool {
 
 func originalNameMatches(name string) sieveFunc {
 	return func(r *resource.Resource) bool {
-		return r.GetOriginalName() == name
+		return r.OrgId().Name == name
 	}
 }
 

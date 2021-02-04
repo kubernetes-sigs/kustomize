@@ -77,7 +77,7 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 			// wildcard search on the namespace hence we still use GvknEquals
 			idMatcher = targetId.Equals
 		}
-		matched := ra.resMap.GetMatchingResourcesByOriginalId(idMatcher)
+		matched := ra.resMap.GetMatchingResourcesByAnyId(idMatcher)
 		if len(matched) > 1 {
 			return fmt.Errorf(
 				"found %d resId matches for var %s "+

@@ -40,7 +40,7 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName", ""},
+			originalNames: []string{"oldName", "newName2"},
 			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
@@ -79,7 +79,7 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName1", ""},
+			originalNames: []string{"oldName1", "newName2"},
 			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
@@ -118,7 +118,7 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName", ""},
+			originalNames: []string{"oldName", "newName2"},
 			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
@@ -204,7 +204,7 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName", ""},
+			originalNames: []string{"oldName", "newName2"},
 			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment

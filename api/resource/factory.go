@@ -11,6 +11,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/kusterr"
+	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -35,17 +36,12 @@ func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 
 // FromMapWithName returns a new instance with the given "original" name.
 func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).SetOriginalName(n, true)
-}
-
-// FromMapWithNamespace returns a new instance with the given "original" namespace.
-func (rf *Factory) FromMapWithNamespace(n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).SetOriginalNs(n, true)
+	return rf.FromMapWithNamespaceAndName(resid.DefaultNamespace, n, m)
 }
 
 // FromMapWithNamespaceAndName returns a new instance with the given "original" namespace.
 func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).SetOriginalNs(ns, true).SetOriginalName(n, true)
+	return rf.makeOne(rf.kf.FromMap(m), nil).setPreviousNamespaceAndName(ns, n)
 }
 
 // FromMapAndOption returns a new instance of Resource with given options.
@@ -157,7 +153,7 @@ func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resour
 		return nil, fmt.Errorf("number of names doesn't match number of resources")
 	}
 	for i, res := range result {
-		res.SetOriginalName(names[i], true)
+		res.setPreviousNamespaceAndName(resid.DefaultNamespace, names[i])
 	}
 	return result, nil
 }

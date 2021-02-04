@@ -4,6 +4,7 @@
 package resource
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -32,18 +33,29 @@ type Resource struct {
 }
 
 const (
-	buildAnnotationOriginalName      = konfig.ConfigAnnoDomain + "/originalName"
-	buildAnnotationPrefixes          = konfig.ConfigAnnoDomain + "/prefixes"
-	buildAnnotationSuffixes          = konfig.ConfigAnnoDomain + "/suffixes"
-	buildAnnotationOriginalNamespace = konfig.ConfigAnnoDomain + "/originalNs"
+	buildAnnotationPreviousNames      = konfig.ConfigAnnoDomain + "/previousNames"
+	buildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
+	buildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
+	buildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
 )
+
+var buildAnnotations = []string{
+	buildAnnotationPreviousNames,
+	buildAnnotationPrefixes,
+	buildAnnotationSuffixes,
+	buildAnnotationPreviousNamespaces,
+}
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
 	r.kunStr = incoming.Copy()
 }
 
 func (r *Resource) GetAnnotations() map[string]string {
-	return r.kunStr.GetAnnotations()
+	annotations := r.kunStr.GetAnnotations()
+	if annotations == nil {
+		return make(map[string]string)
+	}
+	return annotations
 }
 
 func (r *Resource) Copy() ifc.Kunstructured {
@@ -146,8 +158,6 @@ func (r *Resource) UnmarshalJSON(s []byte) error {
 type ResCtx interface {
 	AddNamePrefix(p string)
 	AddNameSuffix(s string)
-	GetOutermostNamePrefix() string
-	GetOutermostNameSuffix() string
 	GetNamePrefixes() []string
 	GetNameSuffixes() []string
 }
@@ -252,46 +262,25 @@ func copyStringSlice(s []string) []string {
 
 // Implements ResCtx AddNamePrefix
 func (r *Resource) AddNamePrefix(p string) {
-	r.addAdditiveAnnotation(buildAnnotationPrefixes, p)
+	r.appendCsvAnnotation(buildAnnotationPrefixes, p)
 }
 
 // Implements ResCtx AddNameSuffix
 func (r *Resource) AddNameSuffix(s string) {
-	r.addAdditiveAnnotation(buildAnnotationSuffixes, s)
+	r.appendCsvAnnotation(buildAnnotationSuffixes, s)
 }
 
-func (r *Resource) addAdditiveAnnotation(name, value string) {
+func (r *Resource) appendCsvAnnotation(name, value string) {
 	if value == "" {
 		return
 	}
 	annotations := r.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
 	if existing, ok := annotations[name]; ok {
 		annotations[name] = existing + "," + value
 	} else {
 		annotations[name] = value
 	}
 	r.SetAnnotations(annotations)
-}
-
-// Implements ResCtx GetOutermostNamePrefix
-func (r *Resource) GetOutermostNamePrefix() string {
-	namePrefixes := r.GetNamePrefixes()
-	if len(namePrefixes) == 0 {
-		return ""
-	}
-	return namePrefixes[len(namePrefixes)-1]
-}
-
-// Implements ResCtx GetOutermostNameSuffix
-func (r *Resource) GetOutermostNameSuffix() string {
-	nameSuffixes := r.GetNameSuffixes()
-	if len(nameSuffixes) == 0 {
-		return ""
-	}
-	return nameSuffixes[len(nameSuffixes)-1]
 }
 
 func SameEndingSubarray(shortest, longest []string) bool {
@@ -312,26 +301,20 @@ func SameEndingSubarray(shortest, longest []string) bool {
 
 // Implements ResCtx GetNamePrefixes
 func (r *Resource) GetNamePrefixes() []string {
-	annotations := r.GetAnnotations()
-	if _, ok := annotations[buildAnnotationPrefixes]; !ok {
-		return nil
-	}
-	return strings.Split(annotations[buildAnnotationPrefixes], ",")
+	return r.getCsvAnnotation(buildAnnotationPrefixes)
 }
 
 // Implements ResCtx GetNameSuffixes
 func (r *Resource) GetNameSuffixes() []string {
-	annotations := r.GetAnnotations()
-	if _, ok := annotations[buildAnnotationSuffixes]; !ok {
-		return nil
-	}
-	return strings.Split(annotations[buildAnnotationSuffixes], ",")
+	return r.getCsvAnnotation(buildAnnotationSuffixes)
 }
 
-// OutermostPrefixSuffixEquals returns true if both resources
-// outer suffix and prefix matches.
-func (r *Resource) OutermostPrefixSuffixEquals(o ResCtx) bool {
-	return (r.GetOutermostNamePrefix() == o.GetOutermostNamePrefix()) && (r.GetOutermostNameSuffix() == o.GetOutermostNameSuffix())
+func (r *Resource) getCsvAnnotation(name string) []string {
+	annotations := r.GetAnnotations()
+	if _, ok := annotations[name]; !ok {
+		return nil
+	}
+	return strings.Split(annotations[name], ",")
 }
 
 // PrefixesSuffixesEquals is conceptually doing the same task
@@ -349,57 +332,15 @@ func (r *Resource) RemoveBuildAnnotations() {
 	if len(annotations) == 0 {
 		return
 	}
-	delete(annotations, buildAnnotationOriginalName)
-	delete(annotations, buildAnnotationPrefixes)
-	delete(annotations, buildAnnotationSuffixes)
-	delete(annotations, buildAnnotationOriginalNamespace)
-	r.SetAnnotations(annotations)
-}
-
-func (r *Resource) GetOriginalName() string {
-	annotations := r.GetAnnotations()
-	if name, ok := annotations[buildAnnotationOriginalName]; ok {
-		return name
-	}
-	return r.kunStr.GetName()
-}
-
-func (r *Resource) SetOriginalName(n string, overwrite bool) *Resource {
-	annotations := r.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	if _, ok := annotations[buildAnnotationOriginalName]; !ok || overwrite {
-		annotations[buildAnnotationOriginalName] = n
-	}
-	r.kunStr.SetAnnotations(annotations)
-	return r
-}
-
-func (r *Resource) GetOriginalNs() string {
-	annotations := r.GetAnnotations()
-	if ns, ok := annotations[buildAnnotationOriginalNamespace]; ok {
-		return ns
-	}
-	ns := r.GetNamespace()
-	if ns == "default" {
-		return ""
-	}
-	return ns
-}
-
-func (r *Resource) SetOriginalNs(n string, overwrite bool) *Resource {
-	if n == "" {
-		n = "default"
-	}
-	annotations := r.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	if _, ok := annotations[buildAnnotationOriginalNamespace]; !ok || overwrite {
-		annotations[buildAnnotationOriginalNamespace] = n
+	for _, a := range buildAnnotations {
+		delete(annotations, a)
 	}
 	r.SetAnnotations(annotations)
+}
+
+func (r *Resource) setPreviousNamespaceAndName(ns string, n string) *Resource {
+	r.appendCsvAnnotation(buildAnnotationPreviousNames, n)
+	r.appendCsvAnnotation(buildAnnotationPreviousNamespaces, ns)
 	return r
 }
 
@@ -456,10 +397,42 @@ func (r *Resource) GetNamespace() string {
 
 // OrgId returns the original, immutable ResId for the resource.
 // This doesn't have to be unique in a ResMap.
-// TODO: compute this once and save it in the resource.
 func (r *Resource) OrgId() resid.ResId {
-	return resid.NewResIdWithNamespace(
-		r.GetGvk(), r.GetOriginalName(), r.GetOriginalNs())
+	ids := r.PrevIds()
+	if len(ids) > 0 {
+		return ids[0]
+	}
+	return r.CurId()
+}
+
+// PrevIds returns a list of ResIds that includes every
+// previous ResId the resource has had through all of its
+// GVKN transformations, in the order that it had that ID.
+// I.e. the oldest ID is first.
+// The returned array does not include the resource's current
+// ID. If there are no previous IDs, this will return nil.
+func (r *Resource) PrevIds() []resid.ResId {
+	var ids []resid.ResId
+	// TODO: merge previous names and namespaces into one list of
+	//     pairs on one annotation so there is no chance of error
+	names := r.getCsvAnnotation(buildAnnotationPreviousNames)
+	ns := r.getCsvAnnotation(buildAnnotationPreviousNamespaces)
+	if len(names) != len(ns) {
+		panic(errors.New(
+			"number of previous names not equal to " +
+				"number of previous namespaces"))
+	}
+	for i := range names {
+		ids = append(ids, resid.NewResIdWithNamespace(
+			r.GetGvk(), names[i], ns[i]))
+	}
+	return ids
+}
+
+// StorePreviousId stores the resource's current ID via build annotations.
+func (r *Resource) StorePreviousId() {
+	id := r.CurId()
+	r.setPreviousNamespaceAndName(id.EffectiveNamespace(), id.Name)
 }
 
 // CurId returns a ResId for the resource using the
