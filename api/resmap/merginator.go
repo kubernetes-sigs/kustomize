@@ -47,7 +47,7 @@ func (m *merginator) ConflatePatches(in []*resource.Resource) (ResMap, error) {
 
 func (m *merginator) appendIfNoMatch(index int) (*resource.Resource, error) {
 	candidate := m.incoming[index]
-	matchedResources := m.result.GetMatchingResourcesByOriginalId(
+	matchedResources := m.result.GetMatchingResourcesByAnyId(
 		candidate.OrgId().Equals)
 	if len(matchedResources) == 0 {
 		m.result.Append(candidate)

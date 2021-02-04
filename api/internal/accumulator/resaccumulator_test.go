@@ -344,19 +344,19 @@ func TestResolveVarsWithNoambiguation(t *testing.T) {
 					},
 				},
 			}}).
+		// Make it seem like this resource
+		// went through a prefix transformer.
 		Add(map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Service",
 			"metadata": map[string]interface{}{
-				"name": "backendOne",
+				"name": "sub-backendOne",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousNames":      "backendOne",
+					"config.kubernetes.io/previousNamespaces": "default",
+					"config.kubernetes.io/prefixes":           "sub-",
+				},
 			}}).ResMap()
-
-	// Make it seem like this resource
-	// went through a prefix transformer.
-	r := m.GetByIndex(1)
-	r.AddNamePrefix("sub-")
-	r.SetName("sub-backendOne")
-	r.SetOriginalName("backendOne", true)
 
 	err = ra2.AppendAll(m)
 	if err != nil {

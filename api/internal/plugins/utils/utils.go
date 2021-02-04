@@ -135,9 +135,6 @@ func GetResMapWithIDAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
 			return nil, err
 		}
 		annotations := r.GetAnnotations()
-		if annotations == nil {
-			annotations = make(map[string]string)
-		}
 		annotations[idAnnotation] = string(idString)
 		r.SetAnnotations(annotations)
 	}
