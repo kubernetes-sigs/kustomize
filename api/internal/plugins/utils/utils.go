@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -147,39 +148,61 @@ func GetResMapWithIDAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
 // UpdateResMapValues updates the Resource value in the given ResMap
 // with the emitted Resource values in output.
 func UpdateResMapValues(pluginName string, h *resmap.PluginHelpers, output []byte, rm resmap.ResMap) error {
-	outputRM, err := h.ResmapFactory().NewResMapFromBytes(output)
+	resFactory := h.ResmapFactory().RF()
+	resources, err := resFactory.SliceFromBytes(output)
 	if err != nil {
 		return err
 	}
-	for _, r := range outputRM.Resources() {
+	for _, r := range resources {
 		// for each emitted Resource, find the matching Resource in the original ResMap
 		// using its id
 		annotations := r.GetAnnotations()
 		idString, ok := annotations[idAnnotation]
+		// Transformer-generated resource--add to resMap
 		if !ok {
-			return fmt.Errorf("the transformer %s should not remove annotation %s",
-				pluginName, idAnnotation)
+			if err := rm.Append(r); err != nil {
+				return err
+			}
+			continue
 		}
+
 		id := resid.ResId{}
-		err := yaml.Unmarshal([]byte(idString), &id)
+		err = yaml.Unmarshal([]byte(idString), &id)
 		if err != nil {
 			return err
 		}
+
+		// Outdated ID is likely a duplicated resource--add to resMap
+		if !id.Equals(r.CurId()) {
+			removeIDAnnotation(r)
+			if err := rm.Append(r); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// Existing resource--update in resMap
+
 		res, err := rm.GetByCurrentId(id)
 		if err != nil {
 			return fmt.Errorf("unable to find unique match to %s", id.String())
 		}
-		// remove the annotation set by Kustomize to track the resource
-		delete(annotations, idAnnotation)
-		if len(annotations) == 0 {
-			annotations = nil
-		}
-		r.SetAnnotations(annotations)
+		removeIDAnnotation(r)
 
 		// update the resource value with the transformed object
 		res.ResetPrimaryData(r)
 	}
 	return nil
+}
+
+func removeIDAnnotation(r *resource.Resource) {
+	// remove the annotation set by Kustomize to track the resource
+	annotations := r.GetAnnotations()
+	delete(annotations, idAnnotation)
+	if len(annotations) == 0 {
+		annotations = nil
+	}
+	r.SetAnnotations(annotations)
 }
 
 // UpdateResourceOptions updates the generator options for each resource in the
