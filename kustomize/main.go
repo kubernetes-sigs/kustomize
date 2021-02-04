@@ -7,7 +7,7 @@ package main
 import (
 	"os"
 
-	"sigs.k8s.io/kustomize/kustomize/v3/internal/commands"
+	"sigs.k8s.io/kustomize/kustomize/v3/commands"
 
 	// initialize auth
 	// This is here rather than in the libraries because of
