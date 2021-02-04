@@ -1,6 +1,7 @@
 package krusty_test
 
 import (
+	"fmt"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -264,8 +265,9 @@ kind: ServiceAccount
 metadata:
   name: external-dns
 `)
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+	opts := th.MakeDefaultOptions()
+	m := th.Run(".", opts)
+	expFmt := `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -351,7 +353,7 @@ spec:
       volumes:
       - name: azure-config-file
         secret:
-          secretName: azure-config-file-66cc4224mm
+          secretName: azure-config-file-%s
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -364,18 +366,13 @@ metadata:
 ---
 apiVersion: v1
 data:
-  azure.json: |
-    ewoJInRlbmFudElkIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIiwKCS
-    JzdWJzY3JpcHRpb25JZCI6ICJYWFhYWC1YWFhYWFgtWFhYWFgtWFhYWFhYLVhYWFhYWCIs
-    CgkicmVzb3VyY2VHcm91cCI6ICJETlMtRVVXLVhYWC1SRyIsCgkidXNlTWFuYWdlZElkZW
-    50aXR5RXh0ZW5zaW9uIjogdHJ1ZSwKCSJ1c2VyQXNzaWduZWRJZGVudGl0eUlEIjogIlhY
-    WFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIgp9Cg==
+  azure.json: %s
 kind: Secret
 metadata:
   labels:
     app: external-dns
     instance: public
-  name: azure-config-file-66cc4224mm
+  name: azure-config-file-%s
   namespace: kube-system
 type: Opaque
 ---
@@ -464,7 +461,7 @@ spec:
       volumes:
       - name: azure-config-file
         secret:
-          secretName: azure-config-file-private-66cc4224mm
+          secretName: azure-config-file-private-%s
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -477,21 +474,42 @@ metadata:
 ---
 apiVersion: v1
 data:
-  azure.json: |
-    ewoJInRlbmFudElkIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIiwKCS
-    JzdWJzY3JpcHRpb25JZCI6ICJYWFhYWC1YWFhYWFgtWFhYWFgtWFhYWFhYLVhYWFhYWCIs
-    CgkicmVzb3VyY2VHcm91cCI6ICJETlMtRVVXLVhYWC1SRyIsCgkidXNlTWFuYWdlZElkZW
-    50aXR5RXh0ZW5zaW9uIjogdHJ1ZSwKCSJ1c2VyQXNzaWduZWRJZGVudGl0eUlEIjogIlhY
-    WFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIgp9Cg==
+  azure.json: %s
 kind: Secret
 metadata:
   labels:
     app: external-dns
     instance: private
-  name: azure-config-file-private-66cc4224mm
+  name: azure-config-file-private-%s
   namespace: kube-system
 type: Opaque
-`)
+`
+	const (
+		nameHashKyaml = "66cc4224mm"
+		contentKyaml  = `|
+    ewoJInRlbmFudElkIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIiwKCS
+    JzdWJzY3JpcHRpb25JZCI6ICJYWFhYWC1YWFhYWFgtWFhYWFgtWFhYWFhYLVhYWFhYWCIs
+    CgkicmVzb3VyY2VHcm91cCI6ICJETlMtRVVXLVhYWC1SRyIsCgkidXNlTWFuYWdlZElkZW
+    50aXR5RXh0ZW5zaW9uIjogdHJ1ZSwKCSJ1c2VyQXNzaWduZWRJZGVudGl0eUlEIjogIlhY
+    WFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIgp9Cg==`
+		nameHashApiMach = "g2k4bkgt4d"
+		// nolint: lll
+		contentApiMach = `ewoJInRlbmFudElkIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIiwKCSJzdWJzY3JpcHRpb25JZCI6ICJYWFhYWC1YWFhYWFgtWFhYWFgtWFhYWFhYLVhYWFhYWCIsCgkicmVzb3VyY2VHcm91cCI6ICJETlMtRVVXLVhYWC1SRyIsCgkidXNlTWFuYWdlZElkZW50aXR5RXh0ZW5zaW9uIjogdHJ1ZSwKCSJ1c2VyQXNzaWduZWRJZGVudGl0eUlEIjogIlhYWFhYLVhYWFhYWC1YWFhYWC1YWFhYWFgtWFhYWFhYIgp9Cg==`
+	)
+	th.AssertActualEqualsExpected(
+		m,
+		// TODO(#3304): DECISION - kyaml better; not a bug.
+		opts.IfApiMachineryElseKyaml(
+			fmt.Sprintf(expFmt,
+				nameHashApiMach,
+				contentApiMach, nameHashApiMach,
+				nameHashApiMach,
+				contentApiMach, nameHashApiMach),
+			fmt.Sprintf(expFmt,
+				nameHashKyaml,
+				contentKyaml, nameHashKyaml,
+				nameHashKyaml,
+				contentKyaml, nameHashKyaml)))
 }
 
 func TestEmptyFieldSpecValue(t *testing.T) {
