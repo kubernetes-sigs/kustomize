@@ -160,7 +160,6 @@ resources:
 `)
 
 	m := th.Run("top", th.MakeDefaultOptions())
-	// Desired behaviour: configMapKeyRef should reference ConfigMap names.
 	th.AssertActualEqualsExpected(m, `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -182,7 +181,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: KEY
-              name: left-bottom
+              name: left-bottom-9f2t6f5h6d
         image: left-image:v1.0
         name: service
 ---
@@ -214,7 +213,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: KEY
-              name: right-bottom
+              name: right-bottom-9f2t6f5h6d
         image: right-image:v1.0
         name: service
 ---

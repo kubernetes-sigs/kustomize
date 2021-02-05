@@ -239,15 +239,25 @@ func acceptAll(r *resource.Resource) bool {
 	return true
 }
 
-func originalNameMatches(name string) sieveFunc {
+func previousNameMatches(name string) sieveFunc {
 	return func(r *resource.Resource) bool {
-		return r.OrgId().Name == name
+		for _, id := range r.PrevIds() {
+			if id.Name == name {
+				return true
+			}
+		}
+		return false
 	}
 }
 
-func originalIdSelectedByGvk(gvk *resid.Gvk) sieveFunc {
+func previousIdSelectedByGvk(gvk *resid.Gvk) sieveFunc {
 	return func(r *resource.Resource) bool {
-		return r.OrgId().IsSelected(gvk)
+		for _, id := range r.PrevIds() {
+			if id.IsSelected(gvk) {
+				return true
+			}
+		}
+		return false
 	}
 }
 
@@ -270,9 +280,7 @@ func (f Filter) roleRefFilter() sieveFunc {
 	if err != nil {
 		return acceptAll
 	}
-	return func(r *resource.Resource) bool {
-		return r.OrgId().IsSelected(roleRefGvk)
-	}
+	return previousIdSelectedByGvk(roleRefGvk)
 }
 
 func prefixSuffixEquals(other resource.ResCtx) sieveFunc {
@@ -307,8 +315,8 @@ func (f Filter) selectReferral(
 	// The name referral that may need to be updated.
 	oldName string,
 	candidates []*resource.Resource) (*resource.Resource, error) {
-	candidates = doSieve(candidates, originalNameMatches(oldName))
-	candidates = doSieve(candidates, originalIdSelectedByGvk(&f.ReferralTarget))
+	candidates = doSieve(candidates, previousNameMatches(oldName))
+	candidates = doSieve(candidates, previousIdSelectedByGvk(&f.ReferralTarget))
 	candidates = doSieve(candidates, f.roleRefFilter())
 	candidates = doSieve(candidates, f.sameCurrentNamespaceAsReferrer())
 	if len(candidates) == 1 {
