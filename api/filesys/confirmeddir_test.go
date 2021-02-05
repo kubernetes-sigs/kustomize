@@ -4,6 +4,7 @@
 package filesys_test
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -98,6 +99,7 @@ func TestNewTempConfirmDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	defer os.RemoveAll(string(tmp))
 
 	delinked, err := filepath.EvalSymlinks(string(tmp))
 	if err != nil {
