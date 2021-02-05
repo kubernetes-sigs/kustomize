@@ -41,6 +41,7 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	pte := newPluginTestEnv(t).set()
 
 	pc, err := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pc.FnpLoadingOptions.EnableStar = true
 	if err != nil {
 		t.Fatal(err)
 	}
