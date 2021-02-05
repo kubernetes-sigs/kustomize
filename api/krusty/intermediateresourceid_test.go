@@ -3,6 +3,7 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -65,6 +66,147 @@ spec:
       containers:
       - image: whatever
 `)
+}
+
+// Tests that if resources in different layers (containing name
+// transformations) have the same name, there is no conflict
+func TestIntermediateNameSameNameDifferentLayer(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app/gcp", `
+namePrefix: gcp-
+resources:
+- ../emea
+patchesStrategicMerge:
+- depPatch.yaml
+`)
+	th.WriteF("/app/gcp/depPatch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-foo
+spec:
+  replicas: 999
+`)
+	th.WriteK("/app/emea", `
+namePrefix: emea-
+resources:
+- ../prod
+- deployment.yaml
+`)
+	th.WriteF("/app/emea/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+	th.WriteK("/app/prod", `
+namePrefix: prod-
+resources:
+- ../base
+`)
+	th.WriteK("/app/base", `
+resources:
+- deployment.yaml
+`)
+	th.WriteF("/app/base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+	m := th.Run("/app/gcp", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcp-emea-prod-foo
+spec:
+  replicas: 999
+  template:
+    spec:
+      containers:
+      - image: whatever
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcp-emea-foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+}
+
+// Same as above test but tries to refer to the name foo
+// instead of prod-foo
+func TestIntermediateNameAmbiguous(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app/gcp", `
+namePrefix: gcp-
+resources:
+- ../emea
+patchesStrategicMerge:
+- depPatch.yaml
+`)
+	th.WriteF("/app/gcp/depPatch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 999
+`)
+	th.WriteK("/app/emea", `
+namePrefix: emea-
+resources:
+- ../prod
+- deployment.yaml
+`)
+	th.WriteF("/app/emea/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+	th.WriteK("/app/prod", `
+namePrefix: prod-
+resources:
+- ../base
+`)
+	th.WriteK("/app/base", `
+resources:
+- deployment.yaml
+`)
+	th.WriteF("/app/base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+	err := th.RunWithErr("/app/gcp", th.MakeDefaultOptions())
+	assert.Error(t, err)
 }
 
 // Test for issue #3228
