@@ -97,7 +97,6 @@ builds:
 
   goarch:
   - amd64
-  - arm
   - arm64
 
 checksum:
