@@ -622,6 +622,8 @@ k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89/go.mod h1:sZAwmy6armz5eXlNoLmJcl
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
+sigs.k8s.io/kustomize/api v0.6.9 h1:wJK+JujSyRemVxESNvk0bXjBMcDkJk0IbDkQ+8yRKO4=
+sigs.k8s.io/kustomize/api v0.6.9/go.mod h1:4RLLidX0T3BWrC6gsRqz6uCJ6OXFecXfh/3QDHMauOg=
 sigs.k8s.io/kustomize/cmd/config v0.8.9 h1:JJFkXhOLgEY3Bui4BUGW+Rojc8dr5QsbsMOY0JfqC+Q=
 sigs.k8s.io/kustomize/cmd/config v0.8.9/go.mod h1:HQck2mfAI1blKQvFCRYzRSW+sRrQcdHs7DradiWJ/UY=
 sigs.k8s.io/kustomize/kyaml v0.10.7 h1:r0r8UEL0bL7X56HKUmhJZ+TP+nvRNGrDHHSLO7izlcQ=
