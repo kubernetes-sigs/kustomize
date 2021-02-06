@@ -37,6 +37,7 @@ steps:
 # Run goreleaser indirectly via a shell script
 # to configure it properly.
 - name: goreleaser/goreleaser:v0.138.0
+  timeout: 720s
   entrypoint: /bin/sh
   dir: myClone
   secretEnv: ['GITHUB_TOKEN']
@@ -46,6 +47,9 @@ steps:
   # - '--snapshot'
   # Use this final arg in a local build, to suppress
   # the release and leave the 'dist' directory in place.
+
+# Overall timeout
+timeout: 800s
 
 # golreleaser expects the GITHUB_TOKEN env var to hold the github token
 # it needs to write the released package and notes back to github.
