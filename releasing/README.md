@@ -143,25 +143,16 @@ createBranch pinKyaml
 createPr
 ```
 
-Run local tests while GH runs tests in the cloud:
-```
-testKustomizeRepo
-```
-
 Wait for tests to pass, then merge the PR:
 ```
 gh pr status
 gh pr merge -m
 ```
 
-Get back on master and do paranoia test:
-```
-refreshMaster
-testKustomizeRepo
-```
-
 Release it:
 ```
+git co master
+git rebase upstream/master
 gorepomod release {top} --doIt
 ```
 
@@ -182,7 +173,8 @@ Pin to the most recent kyaml.
 gorepomod pin kyaml --doIt
 ```
 
-Pin to the version of cli-utils you just created
+If there is a cli-utils dependence,
+pin to the version of cli-utils you just created
 ([releases](https://github.com/kubernetes-sigs/cli-utils/releases))
 
 ```
