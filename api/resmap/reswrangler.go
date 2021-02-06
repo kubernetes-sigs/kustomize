@@ -216,7 +216,7 @@ func demandOneMatch(
 		return r[0], nil
 	}
 	if len(r) > 1 {
-		return nil, fmt.Errorf("multiple matches for %sId %s", s, id)
+		return nil, fmt.Errorf("multiple matches for %s %s", s, id)
 	}
 	return nil, fmt.Errorf("no matches for %sId %s", s, id)
 }
