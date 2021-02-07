@@ -116,8 +116,14 @@ EOF
 
 cat $configFile
 
-/bin/goreleaser release \
+date
+
+time /goreleaser release \
+  --timeout 10m \
+  --parallelism 4 \
   --config=$configFile \
   --release-notes=$changeLogFile \
   --rm-dist \
-  --skip-validate $remainingArgs 
+  --skip-validate $remainingArgs
+
+date
