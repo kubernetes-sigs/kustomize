@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/annotationstransformer
 go 1.15
 
 require (
-	sigs.k8s.io/kustomize/api v0.6.9
+	sigs.k8s.io/kustomize/api v0.7.3
 	sigs.k8s.io/yaml v1.2.0
 )
 
