@@ -58,8 +58,8 @@ echo "pwd = $PWD"
 # Sanity check
 echo "### ls -las . ################################"
 ls -las .
-# echo "### ls -C /usr/bin ################################"
-# ls -C /usr/bin
+echo "### ls -C /usr/bin/gorel* ################################"
+ls -C /usr/bin/gorel*
 echo "###################################"
 
 
@@ -118,7 +118,7 @@ cat $configFile
 
 date
 
-time /goreleaser release \
+time /usr/local/bin/goreleaser release \
   --timeout 10m \
   --parallelism 4 \
   --config=$configFile \
