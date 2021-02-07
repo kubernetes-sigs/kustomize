@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"filippo.io/age"
 	"sigs.k8s.io/kustomize/api/filesys"
 	ldr "sigs.k8s.io/kustomize/api/loader"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -86,7 +87,7 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
 	kvl := makeKvLoader(fSys)
 	for _, tc := range tests {
-		kvs, err := kvl.keyValuesFromFileSources(tc.sources)
+		kvs, err := kvl.keyValuesFromFileSources(tc.sources, []age.Identity{})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
