@@ -58,8 +58,6 @@ echo "pwd = $PWD"
 # Sanity check
 echo "### ls -las . ################################"
 ls -las .
-echo "### ls -C /usr/bin/gorel* ################################"
-ls -C /usr/bin/gorel*
 echo "###################################"
 
 
