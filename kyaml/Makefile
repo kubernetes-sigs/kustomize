@@ -5,13 +5,6 @@ MYGOBIN := $(shell go env GOPATH)/bin
 export PATH := $(MYGOBIN):$(PATH)
 
 .PHONY: generate license fix vet fmt test lint tidy clean
-all: license fix vet fmt test lint tidy
-
-fix:
-	go fix ./...
-
-fmt:
-	go fmt ./...
 
 $(MYGOBIN)/addlicense:
 	go get github.com/google/addlicense
@@ -25,25 +18,38 @@ $(MYGOBIN)/k8scopy:
 $(MYGOBIN)/stringer:
 	go get golang.org/x/tools/cmd/stringer
 
+all: license fix vet fmt test lint tidy
+
+k8sGenDir := yaml/internal/k8sgen/pkg
+
 generate: $(MYGOBIN)/stringer $(MYGOBIN)/k8scopy
 	go generate ./...
 
 clean:
-	rm -rf yaml/internal/k8sgen/pkg
-
-license: $(MYGOBIN)/addlicense
-	$(MYGOBIN)/addlicense -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
-
-tidy:
-	go mod tidy
+	rm -rf $(k8sGenDir)
 
 lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
-	  --skip-dirs yaml/internal/k8sgen/pkg \
+	  --skip-dirs $(k8sGenDir) \
 	  run ./...
 
-test:
+license: $(MYGOBIN)/addlicense
+	$(MYGOBIN)/addlicense \
+	  -y 2021 \
+	  -c "The Kubernetes Authors." \
+	  -f LICENSE_TEMPLATE .
+
+test: generate
 	go test -cover ./...
+
+fix:
+	go fix ./...
+
+fmt:
+	go fmt ./...
+
+tidy:
+	go mod tidy
 
 vet:
 	go vet ./...
