@@ -13,20 +13,31 @@ fix:
 fmt:
 	go fmt ./...
 
-generate:
-	(which $(MYGOBIN)/stringer || go get golang.org/x/tools/cmd/stringer)
+$(MYGOBIN)/addlicense:
+	go get github.com/google/addlicense
+
+$(MYGOBIN)/golangci-lint:
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
+
+$(MYGOBIN)/k8scopy:
+	( cd ../cmd/k8scopy; go install . )
+
+$(MYGOBIN)/stringer:
+	go get golang.org/x/tools/cmd/stringer
+
+generate: $(MYGOBIN)/stringer $(MYGOBIN)/k8scopy
 	go generate ./...
 
-license:
-	(which $(MYGOBIN)/addlicense || go get github.com/google/addlicense)
+clean:
+	rm -rf yaml/internal/k8sgen/pkg
+
+license: $(MYGOBIN)/addlicense
 	$(MYGOBIN)/addlicense -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 tidy:
 	go mod tidy
 
-lint:
-	(which $(MYGOBIN)/golangci-lint || \
-	  go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1)
+lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
 	  --skip-dirs yaml/internal/k8sgen/pkg \
 	  run ./...
@@ -36,6 +47,3 @@ test:
 
 vet:
 	go vet ./...
-
-clean:
-	rm -rf yaml/internal/k8sgen/pkg
