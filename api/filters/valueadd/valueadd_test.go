@@ -94,6 +94,20 @@ spec:
 				FilePathPosition: 2,
 			},
 		},
+		"backSlash": {
+			input: `
+kind: SomeKind
+`,
+			expectedOutput: `
+kind: SomeKind
+spec:
+  resourceRef/external: valueAdded
+`,
+			filter: Filter{
+				Value:     "valueAdded",
+				FieldPath: "spec/resourceRef\\/external",
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
