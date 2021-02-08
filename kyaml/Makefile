@@ -39,7 +39,7 @@ license: $(MYGOBIN)/addlicense
 	  -c "The Kubernetes Authors." \
 	  -f LICENSE_TEMPLATE .
 
-test: generate
+test:
 	go test -cover ./...
 
 fix:
