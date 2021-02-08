@@ -34,11 +34,11 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Need name of yaml file containing module specs.")
+	if len(os.Args) < 3 {
+		log.Fatal("Need name of yaml file containing module specs and prefix.")
 	}
 	spec := internal.ReadSpec(os.Args[1])
-	c := internal.NewCopier(spec)
+	c := internal.NewCopier(spec, os.Args[2])
 	internal.RunNoOutputCommand("go", "get", spec.Name())
 	for _, p := range spec.Packages {
 		for _, n := range p.Files {

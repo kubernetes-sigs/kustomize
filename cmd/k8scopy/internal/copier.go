@@ -32,7 +32,7 @@ func (c Copier) subPath() string {
 	return filepath.Join("internal", c.pgmName)
 }
 
-func (c Copier) print() {
+func (c Copier) Print() {
 	fmt.Printf("   apiMachineryModule: %s\n", c.spec.Module)
 	fmt.Printf("      replacementPath: %s\n", c.replacementPath())
 	fmt.Printf("           goModCache: %s\n", c.goModCache)
@@ -44,14 +44,14 @@ func (c Copier) print() {
 	fmt.Printf("                  pwd: %s\n", os.Getenv("PWD"))
 }
 
-func NewCopier(s *ModuleSpec) Copier {
+func NewCopier(s *ModuleSpec, prefix string) Copier {
 	tmp := Copier{
 		spec:       s,
 		pgmName:    os.Getenv("GOPACKAGE"),
 		goModCache: RunGetOutputCommand("go", "env", "GOMODCACHE"),
 	}
 	goMod := RunGetOutputCommand("go", "env", "GOMOD")
-	topPackage := filepath.Join(goMod[:len(goMod)-len("go.mod")-1], "yaml")
+	topPackage := filepath.Join(goMod[:len(goMod)-len("go.mod")-1], prefix)
 	k := strings.Index(topPackage, sigsK8sIo)
 	if k < 1 {
 		log.Fatalf("cannot find %s in %s", sigsK8sIo, topPackage)
