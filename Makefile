@@ -80,6 +80,11 @@ $(MYGOBIN)/gorepomod:
 	go install .
 
 # Build from local source.
+$(MYGOBIN)/k8scopy:
+	cd cmd/k8scopy; \
+	go install .
+
+# Build from local source.
 $(MYGOBIN)/pluginator:
 	cd cmd/pluginator; \
 	go install .
@@ -98,13 +103,13 @@ $(MYGOBIN)/kustomize:
 install-tools: \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
-	$(MYGOBIN)/gh \
 	$(MYGOBIN)/gorepomod \
+	$(MYGOBIN)/helm \
+	$(MYGOBIN)/k8scopy \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/prchecker \
-	$(MYGOBIN)/stringer \
-	$(MYGOBIN)/helm
+	$(MYGOBIN)/stringer
 
 ### Begin kustomize plugin rules.
 #
@@ -221,7 +226,7 @@ build-kustomize-api: $(builtinplugins)
 	cd api; go build ./...
 
 .PHONY: generate-kustomize-api
-generate-kustomize-api:
+generate-kustomize-api: $(MYGOBIN)/k8scopy
 	cd api; go generate ./...
 
 .PHONY: test-unit-kustomize-api
