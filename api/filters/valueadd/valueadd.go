@@ -98,7 +98,17 @@ var _ kio.Filter = Filter{}
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	_, err := kio.FilterAll(yaml.FilterFunc(
 		func(node *yaml.RNode) (*yaml.RNode, error) {
-			fields := strings.Split(f.FieldPath, "/")
+			var fields []string
+			// if there is forward slash '/' in the field name, a back slash '\'
+			// will be used to escape it.
+			for _, f := range strings.Split(f.FieldPath, "/") {
+				if len(fields) > 0 && strings.HasSuffix(fields[len(fields)-1], "\\") {
+					concatField := strings.TrimSuffix(fields[len(fields)-1], "\\") + "/" + f
+					fields = append(fields[:len(fields)-1], concatField)
+				} else {
+					fields = append(fields, f)
+				}
+			}
 			// TODO: support SequenceNode.
 			// Presumably here one could look for array indices (digits) at
 			// the end of the field path (as described in IETF RFC 6902 JSON),
