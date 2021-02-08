@@ -1,7 +1,7 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test build tidy
+.PHONY: generate license fix vet fmt test build tidy clean
 
 GOBIN := $(shell go env GOPATH)/bin
 
@@ -11,6 +11,9 @@ $(GOBIN)/addlicense:
 $(GOBIN)/golangci-lint:
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
 
+$(GOBIN)/k8scopy:
+	( cd ../k8scopy; go install . )
+
 $(GOBIN)/mdtogo:
 	go get sigs.k8s.io/kustomize/cmd/mdtogo
 
@@ -19,11 +22,18 @@ build:
 
 all: build license fix vet fmt test lint tidy
 
-generate: $(GOBIN)/mdtogo
+k8sGenDir := internal/commands/internal/k8sgen/pkg
+
+generate: $(GOBIN)/mdtogo $(GOBIN)/k8scopy
 	GOBIN=$(GOBIN) go generate ./...
 
+clean:
+	rm -rf $(k8sGenDir)
+
 lint: $(GOBIN)/golangci-lint
-	$(GOBIN)/golangci-lint run ./...
+	$(GOBIN)/golangci-lint \
+	  --skip-dirs $(k8sGenDir) \
+	  run ./...
 
 license: $(GOBIN)/addlicense
 	$(GOBIN)/addlicense \

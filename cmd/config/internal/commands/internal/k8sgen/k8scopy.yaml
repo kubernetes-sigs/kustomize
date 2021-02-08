@@ -1,0 +1,18 @@
+# Copyright 2020 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+#
+# The files to vendor (copy).
+# See {repo}/cmd/k8scopy/main.go for more info.
+module: k8s.io/apimachinery
+version: v0.18.10
+packages:
+- name: pkg/api/resource
+  files:
+  - amount.go
+  - generated.pb.go
+  - math.go
+  - quantity.go
+  - quantity_proto.go
+  - scale_int.go
+  - suffix.go
+  - zz_generated.deepcopy.go
