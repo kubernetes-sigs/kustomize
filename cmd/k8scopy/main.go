@@ -33,12 +33,14 @@ import (
 	"sigs.k8s.io/kustomize/cmd/k8scopy/internal"
 )
 
+const pgmName = "k8scopy"
+
 func main() {
 	if len(os.Args) < 3 {
 		log.Fatal("Need name of yaml file containing module specs and prefix.")
 	}
 	spec := internal.ReadSpec(os.Args[1])
-	c := internal.NewCopier(spec, os.Args[2])
+	c := internal.NewCopier(spec, os.Args[2], pgmName)
 	internal.RunNoOutputCommand("go", "get", spec.Name())
 	for _, p := range spec.Packages {
 		for _, n := range p.Files {
