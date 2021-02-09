@@ -482,6 +482,8 @@ honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
+sigs.k8s.io/kustomize/api v0.8.0 h1:6C3GlBzDSrHg3q29k4nwAJHKyLAyZ+Fsz6DwZuao54w=
+sigs.k8s.io/kustomize/api v0.8.0/go.mod h1:Ih6Y6bOErR70EdapDtWitBzPG9HewyemRY6sFaQyugU=
 sigs.k8s.io/kustomize/cmd/config v0.9.1 h1:vU5aKij0ej0DroCAaiu8eObj7Z0HxNtbGi7wBmYYwP0=
 sigs.k8s.io/kustomize/cmd/config v0.9.1/go.mod h1:HAoxw2o0Kwfdre4+xAQpgD0ljMzUZvLnqcpItqnqFlk=
 sigs.k8s.io/kustomize/kyaml v0.10.9 h1:n3WNdvPPReRNDxW+XXd2JlyZ8EII721I21D1DBpBVBE=
