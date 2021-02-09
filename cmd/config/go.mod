@@ -5,7 +5,6 @@ go 1.15
 require (
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
-	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/kr/text v0.2.0 // indirect
