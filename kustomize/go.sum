@@ -628,6 +628,8 @@ sigs.k8s.io/kustomize/cmd/config v0.8.9 h1:JJFkXhOLgEY3Bui4BUGW+Rojc8dr5QsbsMOY0
 sigs.k8s.io/kustomize/cmd/config v0.8.9/go.mod h1:HQck2mfAI1blKQvFCRYzRSW+sRrQcdHs7DradiWJ/UY=
 sigs.k8s.io/kustomize/kyaml v0.10.7 h1:r0r8UEL0bL7X56HKUmhJZ+TP+nvRNGrDHHSLO7izlcQ=
 sigs.k8s.io/kustomize/kyaml v0.10.7/go.mod h1:K9yg1k/HB/6xNOf5VH3LhTo1DK9/5ykSZO5uIv+Y/1k=
+sigs.k8s.io/kustomize/kyaml v0.10.8 h1:z5BAm9ZCfaXGnZOLIF7p9cYZMUoftUmYhDziESumVoI=
+sigs.k8s.io/kustomize/kyaml v0.10.8/go.mod h1:K9yg1k/HB/6xNOf5VH3LhTo1DK9/5ykSZO5uIv+Y/1k=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e h1:4Z09Hglb792X0kfOBBJUPFEyvVfQWrYT/l8h5EKA6JQ=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff/v3 v3.0.0-20200116222232-67a7b8c61874/go.mod h1:PlARxl6Hbt/+BC80dRLi1qAmnMqwqDg62YvvVkZjemw=
