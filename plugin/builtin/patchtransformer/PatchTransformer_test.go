@@ -803,10 +803,10 @@ spec:
         name: test-deployment
         ports:
         - containerPort: 8080
-          name: take-over-the-world
+          name: disappearing-act
           protocol: TCP
         - containerPort: 8080
-          name: disappearing-act
+          name: take-over-the-world
           protocol: TCP
 `, `
 apiVersion: apps/v1
