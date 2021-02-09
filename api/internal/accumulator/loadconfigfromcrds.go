@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
-	"k8s.io/kube-openapi/pkg/common"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
@@ -18,8 +17,16 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// OpenAPIDefinition describes single type.
+// Normally these definitions are auto-generated using gen-openapi.
+// Same as in k8s.io / kube-openapi / pkg / common.
+type OpenAPIDefinition struct {
+	Schema       spec.Schema
+	Dependencies []string
+}
+
 type myProperties map[string]spec.Schema
-type nameToApiMap map[string]common.OpenAPIDefinition
+type nameToApiMap map[string]OpenAPIDefinition
 
 // LoadConfigFromCRDs parse CRD schemas from paths into a TransformerConfig
 func LoadConfigFromCRDs(
