@@ -1124,3 +1124,92 @@ metadata:
 		}
 	}
 }
+
+// test for #3513
+func TestSmpWithDifferentKeysOnDifferentPorts(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+  - resource.yaml
+patches:
+  - path: patch.yaml
+    target:
+      kind: StatefulSet
+      name: myapp
+`)
+	th.WriteF("resource.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  template:
+    spec:
+      containers:
+        - name: consul
+          image: "hashicorp/consul:1.9.1"
+          ports:
+            - containerPort: 8500
+              name: http
+            - containerPort: 8501
+              name: https
+            - containerPort: 8301
+              protocol: "TCP"
+              name: serflan-tcp
+            - containerPort: 8301
+              protocol: "UDP"
+              name: serflan-udp
+            - containerPort: 8302
+              name: serfwan
+            - containerPort: 8300
+              name: server
+            - containerPort: 8600
+              name: dns-tcp
+              protocol: "TCP"
+            - containerPort: 8600
+              name: dns-udp
+              protocol: "UDP"`)
+	th.WriteF("patch.yaml", `
+kind: StatefulSet
+metadata:
+  name: myapp
+  labels:
+    test: label
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    test: label
+  name: myapp
+spec:
+  template:
+    spec:
+      containers:
+      - image: hashicorp/consul:1.9.1
+        name: consul
+        ports:
+        - containerPort: 8301
+          name: serflan-tcp
+          protocol: TCP
+        - containerPort: 8301
+          name: serflan-udp
+          protocol: UDP
+        - containerPort: 8600
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 8600
+          name: dns-udp
+          protocol: UDP
+        - containerPort: 8500
+          name: http
+        - containerPort: 8501
+          name: https
+        - containerPort: 8302
+          name: serfwan
+        - containerPort: 8300
+          name: server
+`)
+}

@@ -106,9 +106,7 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 		var err error
 		found := true
 		for j := range e.Keys {
-			if j >= len(e.Values) {
-				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: ""})
-			} else {
+			if j < len(e.Values) {
 				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
 			}
 			if err != nil {
