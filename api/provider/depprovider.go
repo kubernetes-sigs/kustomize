@@ -4,13 +4,12 @@
 package provider
 
 import (
+	"log"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/conflict"
-	k8sconflict "sigs.k8s.io/kustomize/api/internal/k8sdeps/conflict"
 	"sigs.k8s.io/kustomize/api/internal/validate"
 	"sigs.k8s.io/kustomize/api/internal/wrappy"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resource"
 )
@@ -131,18 +130,18 @@ import (
 //            validator as it's not critical to kustomize function.
 //
 // Proposed plan:
-//  [ ] Ship kustomize with the ability to switch from 1 to 2 via
+//  [x] Ship kustomize with the ability to switch from 1 to 2 via
 //      an --enable_kyaml flag.
-//  [ ] Make --enable_kyaml true by default.
-//  [ ] When 2 is not noticeably more buggy than 1, delete 1.
+//  [x] Make --enable_kyaml true by default.
+//  [x] When 2 is not noticeably more buggy than 1, delete 1.
 //      I.e. delete k8sdeps/, transitively deleting all k8s.io/api* deps.
 //      This DepProvider should be left in place to retain these
 //      comments, but it will have only one choice.
-//  [ ] The way is now clear to reintegrate into kubectl.
+//  [x] The way is now clear to reintegrate into kubectl.
 //      This should be done ASAP; the last step is cleanup.
-//  [ ] With only one impl of Kunstructure remaining, that interface
-//      and WNode can be deleted, along with this DepProvider.
-//      The other two interfaces could be dropped too.
+//  [ ] Cleanup.  With only one impl of Kunstructure remaining,
+//      that interface and WNode can be deleted, along with this
+//      DepProvider.  The other two interfaces could be dropped too.
 //
 // When the above is done, kustomize will use yaml.RNode and/or
 // KRM Config Functions directly and exclusively.
@@ -155,15 +154,12 @@ type DepProvider struct {
 	fieldValidator           ifc.Validator
 }
 
+// The dependencies this method needs have been deleted -
+// see comments above.  This method will be deleted
+// along with DepProvider in the final step.
 func makeK8sdepBasedInstances() *DepProvider {
-	kf := kunstruct.NewKunstructuredFactoryImpl()
-	rf := resource.NewFactory(kf)
-	return &DepProvider{
-		kFactory:                 kf,
-		resourceFactory:          rf,
-		conflictDectectorFactory: k8sconflict.NewFactory(rf),
-		fieldValidator:           validator.NewKustValidator(),
-	}
+	log.Fatal("This binary cannot use k8s.io code; it must use kyaml.")
+	return nil
 }
 
 func makeKyamlBasedInstances() *DepProvider {
