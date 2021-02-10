@@ -14,6 +14,9 @@ set -o pipefail
 
 rcAccumulator=0
 
+MYGOBIN=$(go env GOBIN)
+MYGOBIN="${MYGOBIN:-$(go env GOPATH)/bin}"
+
 # All hack scripts should run from top level.
 . hack/shellHelpers.sh
 
@@ -49,10 +52,10 @@ function scanDir {
 
 if onLinuxAndNotOnRemoteCI; then
   # Some of these tests have special deps.
-  make $(go env GOPATH)/bin/helmV2
-  make $(go env GOPATH)/bin/helmV3
-  make $(go env GOPATH)/bin/helm
-  make $(go env GOPATH)/bin/kubeval
+  make $MYGOBIN/helmV2
+  make $MYGOBIN/helmV3
+  make $MYGOBIN/helm
+  make $MYGOBIN/kubeval
 fi
 
 for goMod in $(find ./plugin -name 'go.mod' -not -path "./plugin/untested/*"); do
