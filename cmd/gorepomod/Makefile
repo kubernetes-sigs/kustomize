@@ -1,4 +1,7 @@
-MYGOBIN := $(shell go env GOPATH)/bin
+MYGOBIN = $(shell go env GOBIN)
+ifeq ($(MYGOBIN),)
+MYGOBIN = $(shell go env GOPATH)/bin
+endif
 
 $(MYGOBIN)/gorepomod: usage.go
 	go install .
