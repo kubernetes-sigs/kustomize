@@ -3,7 +3,10 @@
 
 .PHONY: generate license fix vet fmt test build tidy clean
 
-GOBIN := $(shell go env GOPATH)/bin
+GOBIN = $(shell go env GOBIN)
+ifeq ($(GOBIN),)
+GOBIN = $(shell go env GOPATH)/bin
+endif
 
 $(GOBIN)/addlicense:
 	go get github.com/google/addlicense
