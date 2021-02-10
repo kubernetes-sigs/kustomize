@@ -3,7 +3,10 @@
 
 .PHONY: license image
 
-GOBIN := $(shell go env GOPATH)/bin
+GOBIN = $(shell go env GOBIN)
+ifeq ($(GOBIN),)
+GOBIN = $(shell go env GOPATH)/bin
+endif
 
 license:
 	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
