@@ -11,7 +11,7 @@
 # If two arguments are given -> Downloads the specified version of the
 # kustomize binary to the specified directory.
 # (e.g. 'install_kustomize.sh 3.8.2 $(go env GOPATH)/bin')
-# 
+#
 # Fails if the file already exists.
 
 curl_timeout=600
@@ -58,7 +58,7 @@ fi
 curl -m $curl_timeout -s $release_url |\
   grep browser_download.*${opsys}_${arch} |\
   cut -d '"' -f 4 |\
-  sort | tail -n 1 |\
+  sort -V | tail -n 1 |\
   xargs curl -m $curl_timeout -sLO
 
 if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
