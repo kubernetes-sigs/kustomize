@@ -68,11 +68,13 @@ func (o *addComponentOptions) RunAddComponent(fSys filesys.FileSystem) error {
 	}
 
 	for _, component := range components {
-		if kustfile.StringInSlice(component, m.Components) {
-			log.Printf("component %s already in kustomization file", component)
-			continue
+		if mf.GetPath() != component {
+			if kustfile.StringInSlice(component, m.Components) {
+				log.Printf("component %s already in kustomization file", component)
+				continue
+			}
+			m.Components = append(m.Components, component)
 		}
-		m.Components = append(m.Components, component)
 	}
 
 	return mf.Write(m)
