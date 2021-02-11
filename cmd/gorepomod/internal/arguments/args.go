@@ -51,11 +51,12 @@ const (
 )
 
 type Args struct {
-	cmd        Command
-	moduleName misc.ModuleShortName
-	version    semver.SemVer
-	bump       semver.SvBump
-	doIt       bool
+	cmd               Command
+	moduleName        misc.ModuleShortName
+	conditionalModule misc.ModuleShortName
+	version           semver.SemVer
+	bump              semver.SvBump
+	doIt              bool
 }
 
 func (a *Args) GetCommand() Command {
@@ -72,6 +73,10 @@ func (a *Args) Version() semver.SemVer {
 
 func (a *Args) ModuleName() misc.ModuleShortName {
 	return a.moduleName
+}
+
+func (a *Args) ConditionalModule() misc.ModuleShortName {
+	return a.conditionalModule
 }
 
 func (a *Args) Exclusions() (result []string) {
@@ -122,6 +127,7 @@ func Parse() (result *Args, err error) {
 	result.doIt = clArgs.doIt
 
 	result.moduleName = misc.ModuleUnknown
+	result.conditionalModule = misc.ModuleUnknown
 	if !clArgs.more() {
 		return nil, fmt.Errorf("command needs at least one arg")
 	}
@@ -146,6 +152,9 @@ func Parse() (result *Args, err error) {
 			return nil, fmt.Errorf("unpin needs a moduleName to unpin")
 		}
 		result.moduleName = misc.ModuleShortName(clArgs.next())
+		if clArgs.more() {
+			result.conditionalModule = misc.ModuleShortName(clArgs.next())
+		}
 		result.cmd = UnPin
 	case cmdTidy:
 		result.cmd = Tidy

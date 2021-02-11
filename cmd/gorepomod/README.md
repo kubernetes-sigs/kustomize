@@ -37,14 +37,19 @@ Use this to get module names for use in other commands.
 Creates a change with mechanical updates
 to `go.mod` and `go.sum` files.
 
-#### `gorepomod unpin {module}`
+#### `gorepomod unpin {module} [{conditionalmodule}]`
 
 Creates a change to `go.mod` files.
 
 For each module _m_ in the repository,
-if _m_ depends on a _{module}_,
-then _m_'s dependency on it will be replaced by
-a relative path to the in-repo module.
+if _m_ depends on a _{module}_, then
+_m_'s dependency on _{module} will be
+replaced by a relative path to the in-repo
+version of _{module}_.
+
+If _conditionalModule_ is specified, then
+the replacement of _{module}_ will happen
+if _m_ depends on _{conditionalModule}_.
 
 #### `gorepomod pin {module} [{version}]`
 
