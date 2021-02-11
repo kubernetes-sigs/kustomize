@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -335,20 +334,15 @@ func (kt *KustTarget) accumulateResources(
 	for _, path := range paths {
 		// try loading resource as file then as base (directory or git repository)
 		if errF := kt.accumulateFile(ra, path); errF != nil {
-			ldr, errL := kt.ldr.New(path)
-			if errL != nil {
-				return nil, multierror.Append(
-					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("loader.New error: %q", errL),
-				)
+			ldr, err := kt.ldr.New(path)
+			if err != nil {
+				return nil, errors.Wrapf(
+					err, "accumulation err='%s'", errF.Error())
 			}
-			var errD error
-			ra, errD = kt.accumulateDirectory(ra, ldr, false)
-			if errD != nil {
-				return nil, multierror.Append(
-					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("accumulateDirector error: %q", errD),
-				)
+			ra, err = kt.accumulateDirectory(ra, ldr, false)
+			if err != nil {
+				return nil, errors.Wrapf(
+					err, "accumulation err='%s'", errF.Error())
 			}
 		}
 	}
