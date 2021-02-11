@@ -62,6 +62,28 @@ func TestAddComponentAlreadyThere(t *testing.T) {
 	}
 }
 
+func TestAddKustomizationFileAsComponent(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	fSys.WriteFile(componentFileName, []byte(componentFileContent))
+	testutils_test.WriteTestKustomization(fSys)
+
+	cmd := newCmdAddComponent(fSys)
+	args := []string{componentFileName}
+	err := cmd.RunE(cmd, args)
+	if err != nil {
+		t.Fatalf("unexpected cmd error: %v", err)
+	}
+
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	if err != nil {
+		t.Errorf("unexpected read error: %v", err)
+	}
+
+	if strings.Contains(string(content), componentFileName) {
+		t.Errorf("%v shouldn't be in the list of the components", componentFileName)
+	}
+}
+
 func TestAddComponentNoArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 
