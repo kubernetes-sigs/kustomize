@@ -47,6 +47,10 @@ type ResultsChecker struct {
 
 	// Command provides the function to run.
 	Command func() *cobra.Command
+
+	// UpdateExpectedFromActual if set to true will write the actual results to the
+	// expected testdata files.  This is useful for updating test data.
+	UpdateExpectedFromActual bool
 }
 
 // Assert asserts the results for functions
@@ -131,20 +135,32 @@ func (rc ResultsChecker) compare(t *testing.T, path string) {
 
 		// Compae the results
 		if expectedError != "" && !assert.Error(t, err, actualOutput.String()) {
-			t.FailNow()
+			if !rc.UpdateExpectedFromActual {
+				t.FailNow()
+			}
 		}
 		if expectedError == "" && !assert.NoError(t, err, actualError.String()) {
-			t.FailNow()
+			if !rc.UpdateExpectedFromActual {
+				t.FailNow()
+			}
 		}
 		if !assert.Equal(t,
 			strings.TrimSpace(expectedOutput),
 			strings.TrimSpace(actualOutput.String()), actualError.String()) {
-			t.FailNow()
+			if !rc.UpdateExpectedFromActual {
+				t.FailNow()
+			}
+			// update test results
+			assert.NoError(t, ioutil.WriteFile(rc.ExpectedOutputFilename, actualOutput.Bytes(), 0600))
 		}
 		if !assert.Contains(t,
 			strings.TrimSpace(actualError.String()),
 			strings.TrimSpace(expectedError), actualOutput.String()) {
-			t.FailNow()
+			if !rc.UpdateExpectedFromActual {
+				t.FailNow()
+			}
+			// update test results
+			assert.NoError(t, ioutil.WriteFile(rc.ExpectedErrorFilename, actualError.Bytes(), 0600))
 		}
 	})
 }
