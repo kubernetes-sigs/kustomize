@@ -434,6 +434,19 @@ func (rn *RNode) GetDataMap() map[string]string {
 	return result
 }
 
+func (rn *RNode) GetBinaryDataMap() map[string]string {
+	n, err := rn.Pipe(Lookup(BinaryDataField))
+	if err != nil {
+		return nil
+	}
+	result := map[string]string{}
+	_ = n.VisitFields(func(node *MapNode) error {
+		result[GetValue(node.Key)] = GetValue(node.Value)
+		return nil
+	})
+	return result
+}
+
 func (rn *RNode) SetDataMap(m map[string]string) {
 	if rn == nil {
 		log.Fatal("cannot set data map on nil Rnode")
@@ -445,6 +458,21 @@ func (rn *RNode) SetDataMap(m map[string]string) {
 		return
 	}
 	if err := rn.LoadMapIntoConfigMapData(m); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (rn *RNode) SetBinaryDataMap(m map[string]string) {
+	if rn == nil {
+		log.Fatal("cannot set binaryData map on nil Rnode")
+	}
+	if err := rn.PipeE(Clear(BinaryDataField)); err != nil {
+		log.Fatal(err)
+	}
+	if len(m) == 0 {
+		return
+	}
+	if err := rn.LoadMapIntoConfigMapBinaryData(m); err != nil {
 		log.Fatal(err)
 	}
 }

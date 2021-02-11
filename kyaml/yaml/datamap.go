@@ -35,6 +35,20 @@ func (rn *RNode) LoadMapIntoConfigMapData(m map[string]string) error {
 	return nil
 }
 
+func (rn *RNode) LoadMapIntoConfigMapBinaryData(m map[string]string) error {
+	for _, k := range SortedMapKeys(m) {
+		_, vrN := makeConfigMapValueRNode(m[k])
+		// we know this is binary data
+		fldName := BinaryDataField
+		if _, err := rn.Pipe(
+			LookupCreate(MappingNode, fldName),
+			SetField(k, vrN)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func makeConfigMapValueRNode(s string) (field string, rN *RNode) {
 	yN := &Node{Kind: ScalarNode}
 	yN.Tag = NodeTagString
