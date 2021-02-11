@@ -53,10 +53,17 @@ func (mgr *Manager) Pin(
 	})
 }
 
-func (mgr *Manager) UnPin(doIt bool, target misc.LaModule) error {
+func (mgr *Manager) UnPin(
+	doIt bool, target misc.LaModule, conditional misc.LaModule) error {
 	return mgr.modules.Apply(func(m misc.LaModule) error {
-		if yes, oldVersion := m.DependsOn(target); yes {
-			return edit.New(m, doIt).UnPin(target, oldVersion)
+		if conditional == nil {
+			if yes, oldVersion := m.DependsOn(target); yes {
+				return edit.New(m, doIt).UnPin(target, oldVersion)
+			}
+		} else {
+			if yes, oldVersion := m.DependsOn(conditional); yes {
+				return edit.New(m, doIt).UnPin(target, oldVersion)
+			}
 		}
 		return nil
 	})
