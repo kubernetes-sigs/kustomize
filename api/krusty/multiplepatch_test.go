@@ -1147,7 +1147,7 @@ spec:
     spec:
       containers:
         - name: consul
-          image: "hashicorp/consul:1.9.1"
+          image: "dashicorp/consul:1.9.1"
           ports:
             - containerPort: 8500
               name: http
@@ -1188,7 +1188,7 @@ spec:
   template:
     spec:
       containers:
-      - image: hashicorp/consul:1.9.1
+      - image: dashicorp/consul:1.9.1
         name: consul
         ports:
         - containerPort: 8301

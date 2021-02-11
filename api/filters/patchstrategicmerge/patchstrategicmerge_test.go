@@ -692,7 +692,7 @@ spec:
     spec:
       containers:
       - name: consul
-        image: "hashicorp/consul:1.9.1"
+        image: "dashicorp/consul:1.9.1"
         ports:
         - containerPort: 8500
           name: http
@@ -721,7 +721,7 @@ spec:
     spec:
       containers:
       - name: consul
-        image: "hashicorp/consul:1.9.1"
+        image: "dashicorp/consul:1.9.1"
         ports:
         - containerPort: 8301
           protocol: "TCP"
