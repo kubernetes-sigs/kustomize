@@ -49,6 +49,9 @@ type Kunstructured interface {
 	// GetData returns a top-level "data" field, as in a ConfigMap.
 	GetDataMap() map[string]string
 
+	// GetData returns a top-level "binaryData" field, as in a ConfigMap.
+	GetBinaryDataMap() map[string]string
+
 	// Used by ResAccumulator and ReplacementTransformer.
 	GetFieldValue(string) (interface{}, error)
 
@@ -90,6 +93,8 @@ type Kunstructured interface {
 	// SetDataMap sets a top-level "data" field, as in a ConfigMap.
 	SetDataMap(map[string]string)
 
+	// SetDataMap sets a top-level "binaryData" field, as in a ConfigMap.
+	SetBinaryDataMap(map[string]string)
 	// Used by PatchStrategicMergeTransformer.
 	SetGvk(resid.Gvk)
 
