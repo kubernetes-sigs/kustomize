@@ -29,7 +29,7 @@ var (
 		"Use '" + none.String() + "' to suppress a final reordering."
 )
 
-func addFlagReorderOutput(set *pflag.FlagSet) {
+func AddFlagReorderOutput(set *pflag.FlagSet) {
 	set.StringVar(
 		&flagReorderOutputValue, flagReorderOutputName,
 		legacy.String(), flagReorderOutputHelp)
