@@ -32,8 +32,7 @@ const (
 	// FlagEnableKyamlDefaultValue is the default value for the --enable_kyaml
 	// flag.  This value is also used in unit tests.  See provider.DepProvider.
 	//
-	// TODO(#3304): eliminate branching on this constant.
-	// Details: https://github.com/kubernetes-sigs/kustomize/issues/3304
+	// TODO(#3588): Delete this constant.
 	//
 	// All tests should pass for either true or false values
 	// of this constant, without having to check its value.

@@ -34,6 +34,7 @@ type Options struct {
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
 
+	// TODO(#3588): Delete this field (it's always true).
 	// When true, use kyaml/ packages to manipulate KRM yaml.
 	// When false, use k8sdeps/ instead (uses k8s.io/api* packages).
 	UseKyaml bool
