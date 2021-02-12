@@ -388,7 +388,7 @@ whatever
 	}
 	l, err := newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)), getNothing)
+		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -467,7 +467,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	}
 	l1, err = newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), getNothing)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -506,7 +506,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	}
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, root, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), getNothing)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	if l1.Root() != topDir {
 		t.Fatalf("unexpected root %s", l1.Root())
 	}
@@ -532,7 +532,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 	}
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, root, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), getNothing)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromUrl(p1)
 	if err != nil {
@@ -561,7 +561,7 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 	}
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, root, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), getNothing)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 
 	p1 := "github.com/someOrg/someRepo1"
 	p2 := "github.com/someOrg/someRepo2"

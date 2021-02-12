@@ -37,14 +37,15 @@ See https://sigs.k8s.io/kustomize
 	pvd := provider.NewDefaultDepProvider()
 	c.AddCommand(
 		completion.NewCommand(),
-		build.NewCmdBuild("build", stdOut),
+		build.NewCmdBuild(
+			build.MakeHelp(konfig.ProgramName, "build"), stdOut),
 		edit.NewCmdEdit(
 			fSys, pvd.GetFieldValidator(), pvd.GetKunstructuredFactory()),
 		create.NewCmdCreate(fSys, pvd.GetKunstructuredFactory()),
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
 	)
-	configcobra.AddCommands(c, "kustomize")
+	configcobra.AddCommands(c, konfig.ProgramName)
 
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
