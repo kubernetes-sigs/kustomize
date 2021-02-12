@@ -14,11 +14,11 @@ import (
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/cmd/config/completion"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/build"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/create"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/openapi"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/version"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/build"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/create"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/openapi"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/version"
 )
 
 // NewDefaultCommand returns the default (aka root) command for kustomize command.

@@ -9,11 +9,11 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/add"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/fix"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/listbuiltin"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/remove"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/set"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/add"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/fix"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/listbuiltin"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/remove"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/set"
 )
 
 // NewCmdEdit returns an instance of 'edit' subcommand.
