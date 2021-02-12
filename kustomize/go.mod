@@ -8,7 +8,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	sigs.k8s.io/kustomize/api v0.8.0
-	sigs.k8s.io/kustomize/cmd/config v0.9.1
+	sigs.k8s.io/kustomize/cmd/config v0.9.2
 	sigs.k8s.io/kustomize/kyaml v0.10.10
 	sigs.k8s.io/yaml v1.2.0
 )
@@ -19,5 +19,3 @@ exclude (
 )
 
 replace sigs.k8s.io/kustomize/api => ../api
-
-replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
