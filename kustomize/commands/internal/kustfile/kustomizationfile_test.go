@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/commands/internal/testutils"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 )
 
 func TestFieldOrder(t *testing.T) {
