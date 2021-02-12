@@ -80,6 +80,18 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
+func TestGetPath(t *testing.T) {
+	fSys := filesys.MakeEmptyDirInMemory()
+	testutils_test.WriteTestKustomization(fSys)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if mf.GetPath() != "kustomization.yaml" {
+		t.Fatalf("Path expected: kustomization.yaml. Actual path: %v", mf.GetPath())
+	}
+}
+
 func TestNewNotExist(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	_, err := NewKustomizationFile(fSys)

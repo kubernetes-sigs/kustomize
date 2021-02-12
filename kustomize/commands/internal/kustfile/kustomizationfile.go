@@ -117,6 +117,13 @@ func NewKustomizationFile(fSys filesys.FileSystem) (*kustomizationFile, error) {
 	return mf, nil
 }
 
+func (mf *kustomizationFile) GetPath() string {
+	if mf == nil {
+		return ""
+	}
+	return mf.path
+}
+
 func (mf *kustomizationFile) validate() error {
 	match := 0
 	var path []string
