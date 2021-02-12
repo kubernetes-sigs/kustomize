@@ -18,7 +18,7 @@ var (
 	flagPluginsEnabledValue = false
 )
 
-func addFlagEnablePlugins(set *pflag.FlagSet) {
+func AddFlagEnablePlugins(set *pflag.FlagSet) {
 	set.BoolVar(
 		&flagPluginsEnabledValue, flagEnablePluginsName,
 		false, flagEnablePluginsHelp)
