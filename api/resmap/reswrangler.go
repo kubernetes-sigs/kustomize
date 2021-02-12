@@ -489,6 +489,7 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 		case types.BehaviorMerge:
 			res.CopyMergeMetaDataFieldsFrom(old)
 			res.MergeDataMapFrom(old)
+			res.MergeBinaryDataMapFrom(old)
 		default:
 			return fmt.Errorf(
 				"id %#v exists; behavior must be merge or replace", id)
