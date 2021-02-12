@@ -16,7 +16,7 @@ var (
 	flagAllowResourceIdChangesValue = false
 )
 
-func addFlagAllowResourceIdChanges(set *pflag.FlagSet) {
+func AddFlagAllowResourceIdChanges(set *pflag.FlagSet) {
 	set.BoolVar(
 		&flagAllowResourceIdChangesValue, flagAllowResourceIdChangesName,
 		false, flagAllowResourceIdChangesHelp)
