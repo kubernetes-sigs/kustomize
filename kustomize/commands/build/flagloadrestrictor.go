@@ -21,7 +21,7 @@ var (
 		"This does, however, break the relocatability of the kustomization."
 )
 
-func addFlagLoadRestrictor(set *pflag.FlagSet) {
+func AddFlagLoadRestrictor(set *pflag.FlagSet) {
 	set.StringVar(
 		&flagLrValue, flagName,
 		types.LoadRestrictionsRootOnly.String(), flagLrHelp)

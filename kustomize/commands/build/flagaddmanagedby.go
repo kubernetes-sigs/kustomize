@@ -19,7 +19,7 @@ var (
 	flagEnableManagedbyLabelValue = false
 )
 
-func addFlagEnableManagedbyLabel(set *pflag.FlagSet) {
+func AddFlagEnableManagedbyLabel(set *pflag.FlagSet) {
 	set.BoolVar(
 		&flagEnableManagedbyLabelValue, flagEnableManagedbyLabelName,
 		false, flagEnableManagedbyLabelHelp)

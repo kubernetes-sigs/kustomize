@@ -14,8 +14,9 @@ import (
 
 func TestRemoteLoad(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
-	b := krusty.MakeKustomizer(fSys, krusty.MakeDefaultOptions())
+	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	m, err := b.Run(
+		fSys,
 		"github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6")
 	if utils.IsErrTimeout(err) {
 		// Don't fail on timeouts.

@@ -19,22 +19,21 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
-// Kustomizer performs kustomizations.  It's meant to behave
-// similarly to the kustomize CLI, and can be used instead of
-// performing an exec to a kustomize CLI subprocess.
+// Kustomizer performs kustomizations.
+//
+// It's meant to behave similarly to the kustomize CLI, and can be
+// used instead of performing an exec to a kustomize CLI subprocess.
 // To use, load a filesystem with kustomization files (any
 // number of overlays and bases), then make a Kustomizer
 // injected with the given fileystem, then call Run.
 type Kustomizer struct {
-	fSys        filesys.FileSystem
 	options     *Options
 	depProvider *provider.DepProvider
 }
 
 // MakeKustomizer returns an instance of Kustomizer.
-func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
+func MakeKustomizer(o *Options) *Kustomizer {
 	return &Kustomizer{
-		fSys:        fSys,
 		options:     o,
 		depProvider: provider.NewDepProvider(o.UseKyaml),
 	}
@@ -42,16 +41,16 @@ func MakeKustomizer(fSys filesys.FileSystem, o *Options) *Kustomizer {
 
 // Run performs a kustomization.
 //
-// It uses its internal filesystem reference to read the file at
-// the given path argument, interpret it as a kustomization.yaml
-// file, perform the kustomization it represents, and return the
-// resulting resources.
+// It reads given path from the given file system, interprets it as
+// a kustomization.yaml file, perform the kustomization it represents,
+// and return the resulting resources.
 //
-// Any files referenced by the kustomization must be present in the
-// internal filesystem.  One may call Run any number of times,
-// on any number of internal paths (e.g. the filesystem may contain
-// multiple overlays, and Run can be called on each of them).
-func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
+// Any files referenced by the kustomization must be present on the
+// filesystem.  One may call Run any number of times, on any number
+// of internal paths (e.g. the filesystem may contain multiple overlays,
+// and Run can be called on each of them).
+func (b *Kustomizer) Run(
+	fSys filesys.FileSystem, path string) (resmap.ResMap, error) {
 	resmapFactory := resmap.NewFactory(
 		b.depProvider.GetResourceFactory(),
 		b.depProvider.GetConflictDetectorFactory())
@@ -59,7 +58,7 @@ func (b *Kustomizer) Run(path string) (resmap.ResMap, error) {
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
 	}
-	ldr, err := fLdr.NewLoader(lr, path, b.fSys)
+	ldr, err := fLdr.NewLoader(lr, path, fSys)
 	if err != nil {
 		return nil, err
 	}
