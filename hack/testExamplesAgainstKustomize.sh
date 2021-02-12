@@ -19,8 +19,10 @@ echo "Installing kustomize ${version}"
 rm -f $(go env GOPATH)/bin/kustomize
 if [ "$version" == "HEAD" ]; then
   (cd kustomize; go install .)
+elif [ "$version" == "v3.10.0" ]; then
+  GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@v3.10.0
 else
-  GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@${version}
+  GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v4@v4.0.0
 fi
 
 # TODO: change the label?
