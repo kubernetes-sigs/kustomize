@@ -345,6 +345,55 @@ metadata:
 `)
 }
 
+var binaryHello = []byte{
+	0xff, // non-utf8
+	0x68, // h
+	0x65, // e
+	0x6c, // l
+	0x6c, // l
+	0x6f, // o
+}
+
+func manyHellos(count int) (result []byte) {
+	for i := 0; i < count; i++ {
+		result = append(result, binaryHello...)
+	}
+	return
+}
+
+func TestGeneratorOverlaysBinaryData(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/app/base/data.bin", string(manyHellos(30)))
+	th.WriteK("/app/base", `
+namePrefix: p1-
+configMapGenerator:
+- name: com1
+  behavior: create
+  files:
+  - data.bin
+`)
+	th.WriteK("/app/overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: com1
+  behavior: merge
+`)
+	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+binaryData:
+  data.bin: |
+    /2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbG
+    xv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hl
+    bGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2
+    hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv
+kind: ConfigMap
+metadata:
+  name: p1-com1-96gmmt6gt5
+`)
+}
+
 func TestGeneratorOverlays(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/app/base1", `
