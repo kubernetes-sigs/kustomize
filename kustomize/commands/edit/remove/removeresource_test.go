@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/edit/remove_test"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/remove_test"
 )
 
 func TestRemoveResources(t *testing.T) {

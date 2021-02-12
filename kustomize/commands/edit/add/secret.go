@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 )
 
 // newCmdAddSecret returns a new command.
