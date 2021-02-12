@@ -4,6 +4,7 @@
 package build
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"path/filepath"
@@ -36,31 +37,45 @@ func NewOptions(p, o string) *Options {
 	}
 }
 
-var examples = `
-To generate the resources specified in 'someDir/kustomization.yaml', run
+type Help struct {
+	Use     string
+	Short   string
+	Long    string
+	Example string
+}
 
-  kustomize build someDir
+func MakeHelp(pgmName, cmdName string) Help {
+	fN := konfig.DefaultKustomizationFileName()
+	return Help{
+		Use:   cmdName + " <dir>",
+		Short: "Build a kustomization target from a directory or URL.",
+		Long: fmt.Sprintf(`Build a set of KRM resources using a '%s' file.
+The <dir> argument must be a path to a directory containing
+'%s', or a git repository URL with a path suffix
+specifying same with respect to the repository root.
+If <dir> is omitted, '.' is assumed.
+`, fN, fN),
+		Example: fmt.Sprintf(`# Build the current working directory
+  %s %s
 
-The default argument to 'build' is '.' (the current working directory).
+# Build some shared configuration directory
+  %s %s /home/config/production
 
-The argument can be a URL resolving to a directory
-with a kustomization.yaml file, e.g.
-
-  kustomize build \
-    github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6
-
-The URL should be formulated as described at
-https://github.com/hashicorp/go-getter#url-format
-`
+# Build from github
+  %s %s \
+     https://github.com/kubernetes-sigs/kustomize.git/examples/helloWorld?ref=v1.0.6
+`, pgmName, cmdName, pgmName, cmdName, pgmName, cmdName),
+	}
+}
 
 // NewCmdBuild creates a new build command.
-func NewCmdBuild(cmdName string, out io.Writer) *cobra.Command {
+func NewCmdBuild(help Help, out io.Writer) *cobra.Command {
 	var o Options
 	cmd := &cobra.Command{
-		Use: cmdName + " {path}",
-		Short: "Print configuration per contents of " +
-			konfig.DefaultKustomizationFileName(),
-		Example:      examples,
+		Use:          help.Use,
+		Short:        help.Short,
+		Long:         help.Long,
+		Example:      help.Example,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := o.Validate(args)
@@ -74,7 +89,7 @@ func NewCmdBuild(cmdName string, out io.Writer) *cobra.Command {
 	cmd.Flags().StringVarP(
 		&o.outputPath,
 		"output", "o", "",
-		"If specified, write the build output to this path.")
+		"If specified, write output to this path.")
 	cmd.Flags().BoolVar(
 		&o.fnOptions.EnableExec, "enable-exec", false, /*do not change!*/
 		"enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
