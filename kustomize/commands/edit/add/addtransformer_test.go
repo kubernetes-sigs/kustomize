@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/kustomize/v3/commands/internal/kustfile"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v3/commands/internal/testutils"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 )
 
 const (
