@@ -47,7 +47,7 @@ function createBranch {
   branch=$1
   echo "Making branch $branch : \"$title\""
   git branch -D $branch  # delete if it exists
-  git co -b $branch
+  git checkout -b $branch
   git commit -a -m "$title"
   git push -f origin $branch
 }
@@ -61,7 +61,7 @@ function createPr {
 
 ```
 function refreshMaster {
-  git co master
+  git checkout master
   git fetch upstream
   git rebase upstream/master
 }
