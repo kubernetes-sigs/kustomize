@@ -282,11 +282,11 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 
 .PHONY:
 test-examples-kustomize-against-4.0: $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh v4.0.0
+	./hack/testExamplesAgainstKustomize.sh v4@v4.0.1
 
 .PHONY:
 test-examples-kustomize-against-3.10: $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh v3.10.0
+	./hack/testExamplesAgainstKustomize.sh v3@v3.10.0
 
 # linux only.
 # This is for testing an example plugin that
