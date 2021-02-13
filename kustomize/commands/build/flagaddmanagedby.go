@@ -10,28 +10,18 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 )
 
-const (
-	flagEnableManagedbyLabelName = "enable_managedby_label"
-	flagEnableManagedbyLabelHelp = `enable adding ` + konfig.ManagedbyLabelKey
-)
-
-var (
-	flagEnableManagedbyLabelValue = false
-)
-
 func AddFlagEnableManagedbyLabel(set *pflag.FlagSet) {
 	set.BoolVar(
-		&flagEnableManagedbyLabelValue, flagEnableManagedbyLabelName,
-		false, flagEnableManagedbyLabelHelp)
+		&theFlags.enable.managedByLabel,
+		"enable-managedby-label",
+		false,
+		`enable adding `+konfig.ManagedbyLabelKey)
 }
 
-func isManagedbyLabelEnabled() bool {
-	if flagEnableManagedbyLabelValue {
+func isManagedByLabelEnabled() bool {
+	if theFlags.enable.managedByLabel {
 		return true
 	}
 	enableLabel, isSet := os.LookupEnv(konfig.EnableManagedbyLabelEnv)
-	if isSet && enableLabel == "on" {
-		return true
-	}
-	return false
+	return isSet && enableLabel == "on"
 }

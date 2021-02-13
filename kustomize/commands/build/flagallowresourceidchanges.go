@@ -7,17 +7,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const (
-	flagAllowResourceIdChangesName = "allow_id_changes"
-	flagAllowResourceIdChangesHelp = `enable changes to a resourceId`
-)
-
-var (
-	flagAllowResourceIdChangesValue = false
-)
-
 func AddFlagAllowResourceIdChanges(set *pflag.FlagSet) {
 	set.BoolVar(
-		&flagAllowResourceIdChangesValue, flagAllowResourceIdChangesName,
-		false, flagAllowResourceIdChangesHelp)
+		&theFlags.enable.resourceIdChanges,
+		"allow-id-changes",
+		false,
+		`enable changes to a resourceId`)
 }
