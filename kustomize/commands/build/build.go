@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -16,20 +15,20 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-// Options contain the options for running a build
-type Options struct {
+var theArgs struct {
 	kustomizationPath string
-	outputPath        string
-	outOrder          reorderOutput
-	fnOptions         types.FnPluginLoadingOptions
 }
 
-// NewOptions creates a Options object
-func NewOptions(p, o string) *Options {
-	return &Options{
-		kustomizationPath: p,
-		outputPath:        o,
+var theFlags struct {
+	outputPath string
+	enable     struct {
+		resourceIdChanges bool
+		plugins           bool
+		managedByLabel    bool
 	}
+	loadRestrictor string
+	reorderOutput  string
+	fnOptions      types.FnPluginLoadingOptions
 }
 
 type Help struct {
@@ -39,16 +38,16 @@ type Help struct {
 	Example string
 }
 
-func MakeHelp(pgmName, cmdName string) Help {
+func MakeHelp(pgmName, cmdName string) *Help {
 	fN := konfig.DefaultKustomizationFileName()
-	return Help{
-		Use:   cmdName + " <dir>",
+	return &Help{
+		Use:   cmdName + " DIR",
 		Short: "Build a kustomization target from a directory or URL.",
 		Long: fmt.Sprintf(`Build a set of KRM resources using a '%s' file.
-The <dir> argument must be a path to a directory containing
+The DIR argument must be a path to a directory containing
 '%s', or a git repository URL with a path suffix
 specifying same with respect to the repository root.
-If <dir> is omitted, '.' is assumed.
+If DIR is omitted, '.' is assumed.
 `, fN, fN),
 		Example: fmt.Sprintf(`# Build the current working directory
   %s %s
@@ -57,15 +56,14 @@ If <dir> is omitted, '.' is assumed.
   %s %s /home/config/production
 
 # Build from github
-  %s %s \
-     https://github.com/kubernetes-sigs/kustomize.git/examples/helloWorld?ref=v1.0.6
+  %s %s https://github.com/kubernetes-sigs/kustomize.git/examples/helloWorld?ref=v1.0.6
 `, pgmName, cmdName, pgmName, cmdName, pgmName, cmdName),
 	}
 }
 
 // NewCmdBuild creates a new build command.
-func NewCmdBuild(help Help, out io.Writer) *cobra.Command {
-	var o Options
+func NewCmdBuild(
+	fSys filesys.FileSystem, help *Help, writer io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          help.Use,
 		Short:        help.Short,
@@ -73,40 +71,36 @@ func NewCmdBuild(help Help, out io.Writer) *cobra.Command {
 		Example:      help.Example,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := o.Validate(args); err != nil {
+			if err := Validate(args); err != nil {
 				return err
 			}
 			k := krusty.MakeKustomizer(
-				o.ModifyKrustyOptions(krusty.MakeDefaultOptions()),
+				HonorKustomizeFlags(krusty.MakeDefaultOptions()),
 			)
-			fSys := filesys.MakeFsOnDisk()
-			m, err := k.Run(fSys, o.kustomizationPath)
+			m, err := k.Run(fSys, theArgs.kustomizationPath)
 			if err != nil {
 				return err
 			}
-			if o.outputPath != "" && fSys.IsDir(o.outputPath) {
-				// Ignore io.Writer; write to o.outputPath directly.
-				return MakeWriter(fSys).WriteIndividualFiles(o.outputPath, m)
+			if theFlags.outputPath != "" && fSys.IsDir(theFlags.outputPath) {
+				// Ignore writer; write to o.outputPath directly.
+				return MakeWriter(fSys).WriteIndividualFiles(
+					theFlags.outputPath, m)
 			}
 			yml, err := m.AsYaml()
 			if err != nil {
 				return err
 			}
-			if o.outputPath != "" {
-				// Ignore io.Writer; write to o.outputPath directly.
-				return fSys.WriteFile(o.outputPath, yml)
+			if theFlags.outputPath != "" {
+				// Ignore writer; write to o.outputPath directly.
+				return fSys.WriteFile(theFlags.outputPath, yml)
 			}
-			_, err = out.Write(yml)
+			_, err = writer.Write(yml)
 			return err
 		},
 	}
 
-	cmd.Flags().StringVarP(
-		&o.outputPath,
-		"output", "o", "",
-		"If specified, write output to this path.")
-
-	AddFunctionFlags(cmd.Flags(), &o.fnOptions)
+	AddFlagOutputPath(cmd.Flags())
+	AddFunctionFlags(cmd.Flags())
 	AddFlagLoadRestrictor(cmd.Flags())
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
@@ -116,40 +110,39 @@ func NewCmdBuild(help Help, out io.Writer) *cobra.Command {
 	return cmd
 }
 
-// Validate validates build command.
-func (o *Options) Validate(args []string) (err error) {
+// Validate validates build command args and flags.
+func Validate(args []string) (err error) {
 	if len(args) > 1 {
-		return errors.New(
+		return fmt.Errorf(
 			"specify one path to " +
 				konfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
-		o.kustomizationPath = filesys.SelfDir
+		theArgs.kustomizationPath = filesys.SelfDir
 	} else {
-		o.kustomizationPath = args[0]
+		theArgs.kustomizationPath = args[0]
 	}
 	err = validateFlagLoadRestrictor()
 	if err != nil {
 		return err
 	}
-	o.outOrder, err = validateFlagReorderOutput()
-	return
+	return validateFlagReorderOutput()
 }
 
-// ModifyKrustyOptions feeds command line data into the krusty options.
-func (o *Options) ModifyKrustyOptions(kOpts *krusty.Options) *krusty.Options {
-	kOpts.DoLegacyResourceSort = o.outOrder == legacy
+// HonorKustomizeFlags feeds command line data to the krusty options.
+// Flags and such are held in private package variables.
+func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
+	kOpts.DoLegacyResourceSort = getFlagReorderOutput() == legacy
 	kOpts.LoadRestrictions = getFlagLoadRestrictorValue()
-	if isFlagEnablePluginsSet() {
+	if theFlags.enable.plugins {
 		c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		if err != nil {
 			log.Fatal(err)
 		}
-		c.FnpLoadingOptions = o.fnOptions
+		c.FnpLoadingOptions = theFlags.fnOptions
 		kOpts.PluginConfig = c
 	}
-	kOpts.AddManagedbyLabel = isManagedbyLabelEnabled()
-	kOpts.UseKyaml = konfig.FlagEnableKyamlDefaultValue
-	kOpts.AllowResourceIdChanges = flagAllowResourceIdChangesValue
+	kOpts.AddManagedbyLabel = isManagedByLabelEnabled()
+	kOpts.AllowResourceIdChanges = theFlags.enable.resourceIdChanges
 	return kOpts
 }

@@ -10,42 +10,38 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-const (
-	flagName = "load_restrictor"
-)
-
-var (
-	flagLrValue = types.LoadRestrictionsRootOnly.String()
-	flagLrHelp  = "if set to '" + types.LoadRestrictionsNone.String() +
-		"', local kustomizations may load files from outside their root. " +
-		"This does, however, break the relocatability of the kustomization."
-)
+const flagLoadRestrictorName = "load-restrictor"
 
 func AddFlagLoadRestrictor(set *pflag.FlagSet) {
 	set.StringVar(
-		&flagLrValue, flagName,
-		types.LoadRestrictionsRootOnly.String(), flagLrHelp)
+		&theFlags.loadRestrictor,
+		flagLoadRestrictorName,
+		types.LoadRestrictionsRootOnly.String(),
+		"if set to '"+types.LoadRestrictionsNone.String()+
+			"', local kustomizations may load files from outside their root. "+
+			"This does, however, break the "+
+			"relocatability of the kustomization.")
 }
 
 func validateFlagLoadRestrictor() error {
-	switch getFlagLoadRestrictorValue() {
-	case types.LoadRestrictionsRootOnly, types.LoadRestrictionsNone:
+	switch theFlags.loadRestrictor {
+	case types.LoadRestrictionsRootOnly.String(),
+		types.LoadRestrictionsNone.String(), "":
 		return nil
 	default:
 		return fmt.Errorf(
 			"illegal flag value --%s %s; legal values: %v",
-			flagName, flagLrValue,
-			[]string{types.LoadRestrictionsRootOnly.String(), types.LoadRestrictionsNone.String()})
+			flagLoadRestrictorName, theFlags.loadRestrictor,
+			[]string{types.LoadRestrictionsRootOnly.String(),
+				types.LoadRestrictionsNone.String()})
 	}
 }
 
 func getFlagLoadRestrictorValue() types.LoadRestrictions {
-	switch flagLrValue {
-	case types.LoadRestrictionsRootOnly.String(), "rootOnly":
-		return types.LoadRestrictionsRootOnly
+	switch theFlags.loadRestrictor {
 	case types.LoadRestrictionsNone.String(), "none":
 		return types.LoadRestrictionsNone
 	default:
-		return types.LoadRestrictionsUnknown
+		return types.LoadRestrictionsRootOnly
 	}
 }
