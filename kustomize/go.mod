@@ -17,9 +17,3 @@ exclude (
 	sigs.k8s.io/kustomize/api v0.2.0
 	sigs.k8s.io/kustomize/cmd/config v0.2.0
 )
-
-replace sigs.k8s.io/kustomize/api => ../api
-
-replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
-
-replace sigs.k8s.io/kustomize/kyaml => ../kyaml
