@@ -18,33 +18,37 @@ const (
 	legacy
 )
 
-const (
-	flagReorderOutputName = "reorder"
-)
-
-var (
-	flagReorderOutputValue = legacy.String()
-	flagReorderOutputHelp  = "Reorder the resources just before output. " +
-		"Use '" + legacy.String() + "' to apply a legacy reordering (Namespaces first, Webhooks last, etc). " +
-		"Use '" + none.String() + "' to suppress a final reordering."
-)
+const flagReorderOutputName = "reorder"
 
 func AddFlagReorderOutput(set *pflag.FlagSet) {
 	set.StringVar(
-		&flagReorderOutputValue, flagReorderOutputName,
-		legacy.String(), flagReorderOutputHelp)
+		&theFlags.reorderOutput, flagReorderOutputName,
+		legacy.String(),
+		"Reorder the resources just before output. "+
+			"Use '"+legacy.String()+"' to apply a legacy reordering "+
+			"(Namespaces first, Webhooks last, etc). "+
+			"Use '"+none.String()+"' to suppress a final reordering.")
 }
 
-func validateFlagReorderOutput() (reorderOutput, error) {
-	switch flagReorderOutputValue {
-	case none.String():
-		return none, nil
-	case legacy.String():
-		return legacy, nil
+func validateFlagReorderOutput() error {
+	switch theFlags.reorderOutput {
+	case none.String(), legacy.String():
+		return nil
 	default:
-		return unspecified, fmt.Errorf(
+		return fmt.Errorf(
 			"illegal flag value --%s %s; legal values: %v",
-			flagReorderOutputName, flagReorderOutputValue,
+			flagReorderOutputName, theFlags.reorderOutput,
 			[]string{legacy.String(), none.String()})
+	}
+}
+
+func getFlagReorderOutput() reorderOutput {
+	switch theFlags.reorderOutput {
+	case none.String():
+		return none
+	case legacy.String():
+		return legacy
+	default:
+		return unspecified
 	}
 }

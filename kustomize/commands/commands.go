@@ -38,7 +38,7 @@ See https://sigs.k8s.io/kustomize
 	c.AddCommand(
 		completion.NewCommand(),
 		build.NewCmdBuild(
-			build.MakeHelp(konfig.ProgramName, "build"), stdOut),
+			fSys, build.MakeHelp(konfig.ProgramName, "build"), stdOut),
 		edit.NewCmdEdit(
 			fSys, pvd.GetFieldValidator(), pvd.GetKunstructuredFactory()),
 		create.NewCmdCreate(fSys, pvd.GetKunstructuredFactory()),
