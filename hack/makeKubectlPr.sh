@@ -1,4 +1,11 @@
+# Build the kubectl integration PR
+
+# Merge pull request #93861 from sttts/sttts-so-reuseaddr-kube
+# apiserver: add --permit-address-sharing flag to listen with SO_REUSEADDR
+baseCommit=7f083d339f9d4e104cc31e671626c74fd3c83611
+
 repoDir=$HOME/gopath/src/k8s.io/kubernetes
+
 k8sio=staging/src/k8s.io
 
 function saveIt {
@@ -27,7 +34,7 @@ function doSave {
 
 function doReset {
     cd $repoDir
-    git reset 11a05eb9aff104c2384781c740e053907a3849e6 --hard
+    git reset $baseCommit --hard
     git clean -fd
     git log -n 1
     git status
@@ -45,14 +52,16 @@ function doCommit1 {
     git commit -m "Delete ${k8sio}/cli-runtime/pkg/kustomize"
 }
 
-function doCommit2 {
+function pullCodeFromStash {
     getIt   ${k8sio}/cli-runtime/pkg/resource  builder.go
     getIt   ${k8sio}/cli-runtime/pkg/resource  kustomizevisitor.go
     getIt   ${k8sio}/cli-runtime/pkg/resource  kustomizevisitor_test.go
     getIt   ${k8sio}/cli-runtime/pkg/resource  visitor.go
 
     getIt   ${k8sio}/kubectl/pkg/cmd/kustomize kustomize.go
+}
 
+function doCommit2 {
     (cd ${k8sio}/kubectl;     go mod tidy)
     (cd ${k8sio}/kubectl;     go test ./...)
 
@@ -77,9 +86,21 @@ function doCommit3 {
     git commit -m "Run ./hack/update-vendor.sh"
 }
 
+function sanityCheck {
+    kCtl=./_output/local/go/bin/kubectl
+    $kCtl help kustomize
+    $kCtl kustomize https://github.com/kubernetes-sigs/kustomize.git/examples/helloWorld?ref=v1.0.6
+}
+
 function makePrBranch {
     doReset
     doCommit1
+    pullCodeFromStash
     doCommit2
     doCommit3
+
+
+    # make everything
+    make
+    sanityCheck
 }
