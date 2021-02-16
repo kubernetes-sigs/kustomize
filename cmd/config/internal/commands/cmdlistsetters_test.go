@@ -472,7 +472,7 @@ func TestListSettersSubPackages(t *testing.T) {
 		{
 			name:    "list-replicas",
 			dataset: "dataset-with-setters",
-			args:    []string{"--include-subst"},
+			args:    []string{"--include-subst", "-R"},
 			expected: `
 
 test/testdata/dataset-with-setters/mysql/
@@ -495,7 +495,6 @@ test/testdata/dataset-with-setters/mysql/storage/
 		{
 			name:    "list-replicas",
 			dataset: "dataset-with-setters/mysql",
-			args:    []string{"--recurse-subpackages=false"},
 			expected: `
 
 test/testdata/dataset-with-setters/mysql/
