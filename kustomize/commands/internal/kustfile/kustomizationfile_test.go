@@ -20,6 +20,7 @@ func TestFieldOrder(t *testing.T) {
 	expected := []string{
 		"APIVersion",
 		"Kind",
+		"MetaData",
 		"Resources",
 		"Bases",
 		"NamePrefix",
