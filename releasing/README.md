@@ -361,7 +361,7 @@ testKustomizeRepo
 ### Publish Official Docker Image
 
 [k8s.io]: https://github.com/kubernetes/k8s.io
-[k8s-staging-kustomize]: https://pantheon.corp.google.com/home/dashboard?project=k8s-staging-kustomize
+[k8s-staging-kustomize]: https://pantheon.corp.google.com/gcr/images/k8s-staging-kustomize?project=k8s-staging-kustomize
 
 Fork and clone the [k8s.io] repo.
 
@@ -370,7 +370,8 @@ Checkout a new branch.
 Edit file `k8s.gcr.io/images/k8s-staging-kustomize/images.yaml`
 to add the new kustomize version and the image sha256.
 
-Image sha256 can be found in the GCP project [k8s-staging-kustomize].
+Image sha256 can be found in the image registry in the GCP 
+project [k8s-staging-kustomize].
 
 Commit and push your changes. Then create a PR to [k8s.io] to promote
 new images. Assign the PR to @monopole and @Shell32-natsu.
