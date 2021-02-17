@@ -130,6 +130,15 @@ func (r *ResourceList) defaultReadWriter() *kio.ByteReadWriter {
 
 // Read reads the ResourceList
 func (r *ResourceList) Read() error {
+	// legacy kustomize plugin input style
+	legacyPlugin := os.Getenv("KUSTOMIZE_PLUGIN_CONFIG_STRING")
+	if legacyPlugin != "" && r.FunctionConfig != nil {
+		err := yaml.Unmarshal([]byte(legacyPlugin), r.FunctionConfig)
+		if err != nil {
+			return err
+		}
+	}
+
 	// parse the inputs from the args
 	var readStdinStandalone bool
 	if len(r.Args) > 0 && !r.DisableStandalone {
