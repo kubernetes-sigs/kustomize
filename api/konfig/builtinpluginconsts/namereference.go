@@ -128,6 +128,8 @@ nameReference:
     kind: Role
   - path: rules/resourceNames
     kind: ClusterRole
+  - path: metadata/annotations/nginx.ingress.kubernetes.io\/fastcgi-params-configmap
+    kind: Ingress
 
 - kind: Secret
   version: v1
