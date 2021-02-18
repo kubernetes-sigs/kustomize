@@ -6,6 +6,7 @@ package target
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -377,10 +378,17 @@ func (kt *KustTarget) accumulateDirectory(
 		return nil, errors.Wrapf(
 			err, "couldn't make target for path '%s'", ldr.Root())
 	}
-	err = openapi.SetSchemaVersion(subKt.Kustomization().OpenAPI, false)
+	var bytes []byte
+	path := ldr.Root()
+	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
+		bytes, err = ldr.Load(filepath.Join(path, openApiPath))
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = openapi.SetSchema(subKt.Kustomization().OpenAPI, bytes, false)
 	if err != nil {
-		return nil, errors.Wrapf(
-			err, "couldn't set openapi version for path '%s'", ldr.Root())
+		return nil, err
 	}
 	if isComponent && subKt.kustomization.Kind != types.ComponentKind {
 		return nil, fmt.Errorf(

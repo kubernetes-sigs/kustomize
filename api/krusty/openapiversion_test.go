@@ -285,12 +285,13 @@ spec:
 `)
 }
 
+const runPath = "/app/prod"
+
 func TestOpenAPIFieldFromComponent(t *testing.T) {
 	input := []FileGen{
 		writeTestBase,
 		writeTestComponentWithOlderOpenAPIVersion,
 		writeOverlayProd}
-	runPath := "/app/prod"
 
 	th := kusttest_test.MakeHarness(t)
 	for _, f := range input {
