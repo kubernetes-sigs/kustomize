@@ -64,7 +64,7 @@ func (fltr Filter) filter(obj *yaml.RNode) error {
 		// found the field -- set its value
 		return fltr.SetValue(obj)
 	}
-	if obj.IsTaggedNull() {
+	if obj.IsTaggedNull() || obj.IsNil() {
 		return nil
 	}
 	switch obj.YNode().Kind {
