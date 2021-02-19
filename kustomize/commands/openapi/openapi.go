@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/openapi/fetch"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/openapi/info"
 )
 
@@ -22,6 +23,7 @@ func NewCmdOpenAPI(w io.Writer) *cobra.Command {
 	}
 
 	openApiCmd.AddCommand(info.NewCmdInfo(w))
+	openApiCmd.AddCommand(fetch.NewCmdFetch(w))
 	configcobra.AddCommands(openApiCmd, "openapi")
 
 	return openApiCmd
