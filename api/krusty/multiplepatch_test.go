@@ -1213,3 +1213,52 @@ spec:
           name: server
 `)
 }
+
+// test for #3616
+func TestSmpDeleteOnResource(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- workloads.yaml
+patches:
+- patch: |
+    apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      name: rule1
+    $patch: delete
+`)
+	th.WriteF("workloads.yaml", `
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+  name: rule1
+spec:
+  groups:
+  - name: rabbitmq.rules
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+  name: rule2
+spec:
+  groups:
+  - name: rabbitmq.rules
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    role: alert-rules
+  name: rule2
+spec:
+  groups:
+  - name: rabbitmq.rules
+`)
+}
