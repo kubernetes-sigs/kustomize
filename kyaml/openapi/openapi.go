@@ -481,7 +481,7 @@ func initSchema() {
 		ResetOpenAPI()
 		err := parse(customSchema)
 		if err != nil {
-			panic(err)
+			panic("invalid schema file")
 		}
 		return
 	}

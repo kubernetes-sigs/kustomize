@@ -11,13 +11,13 @@ import (
 
 func TestOpenApiFieldBasicUsage(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 openapi:
   version: v1.18.8
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,7 +29,7 @@ spec:
       - image: whatever
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -46,13 +46,13 @@ spec:
 
 func TestOpenApiFieldNotBuiltin(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 openapi:
   version: v1.14.1
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -64,7 +64,7 @@ spec:
       - image: whatever
 `)
 
-	err := th.RunWithErr("/app", th.MakeDefaultOptions())
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
@@ -72,11 +72,11 @@ spec:
 
 func TestOpenApiFieldDefaultVersion(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -88,7 +88,7 @@ spec:
       - image: whatever
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -260,7 +260,7 @@ spec:
 
 func TestOpenAPIFieldFromComponentDefault(t *testing.T) {
 	input := []FileGen{writeTestBase, writeTestComponent, writeOverlayProd}
-	runPath := "/app/prod"
+	runPath := "/prod"
 
 	th := kusttest_test.MakeHarness(t)
 	for _, f := range input {
@@ -271,11 +271,11 @@ func TestOpenAPIFieldFromComponentDefault(t *testing.T) {
 }
 
 func writeTestComponentWithOlderOpenAPIVersion(th kusttest_test.Harness) {
-	th.WriteC("/app/comp", `
+	th.WriteC("/comp", `
 openapi:
   version: v1.18.8
 `)
-	th.WriteF("/app/comp/stub.yaml", `
+	th.WriteF("/comp/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -285,7 +285,7 @@ spec:
 `)
 }
 
-const runPath = "/app/prod"
+const runPath = "prod"
 
 func TestOpenAPIFieldFromComponent(t *testing.T) {
 	input := []FileGen{

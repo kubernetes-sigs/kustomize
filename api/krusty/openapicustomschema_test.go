@@ -14,14 +14,34 @@ func writeTestSchema(th kusttest_test.Harness, filepath string) {
 	th.WriteF(filepath+"mycrd_schema.json", string(bytes))
 }
 
+func writeCustomResource(th kusttest_test.Harness, filepath string) {
+	th.WriteF(filepath, `
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  template:
+    spec:
+      containers:
+      - name: server
+        image: server
+        command: example
+        ports:
+        - name: grpc
+          protocol: TCP
+          containerPort: 8080
+`)
+}
+
 func writeTestComponentWithCustomSchema(th kusttest_test.Harness) {
-	writeTestSchema(th, "/app/comp/")
+	writeTestSchema(th, "/comp/")
 	openapi.ResetOpenAPI()
-	th.WriteC("/app/comp", `
+	th.WriteC("/comp", `
 openapi:
   path: mycrd_schema.json
 `)
-	th.WriteF("/app/comp/stub.yaml", `
+	th.WriteF("/comp/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -31,16 +51,7 @@ spec:
 `)
 }
 
-// Test for issue #2825
-func TestCustomOpenApiFieldBasicUsage(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
-resources:
-- mycrd.yaml
-
-openapi:
-  path: mycrd_schema.json
-
+const customSchemaPatch = `
 patchesStrategicMerge:
 - |-
   apiVersion: example.com/v1alpha1
@@ -53,29 +64,9 @@ patchesStrategicMerge:
         containers:
         - name: server
           image: nginx
-`)
-	th.WriteF("/app/mycrd.yaml", `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - name: server
-        image: server
-        command: example
-        ports:
-        - name: grpc
-          protocol: TCP
-          containerPort: 8080
-`)
-	writeTestSchema(th, "/app/")
-	openapi.ResetOpenAPI()
+`
 
-	m := th.Run("/app", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+const patchedCustomResource = `
 apiVersion: example.com/v1alpha1
 kind: MyCRD
 metadata:
@@ -91,54 +82,39 @@ spec:
         - containerPort: 8080
           name: grpc
           protocol: TCP
-`)
+`
+
+// Test for issue #2825
+func TestCustomOpenApiFieldBasicUsage(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- mycrd.yaml
+openapi:
+  path: mycrd_schema.json
+`+customSchemaPatch)
+	writeCustomResource(th, "/mycrd.yaml")
+	writeTestSchema(th, "./")
+	openapi.ResetOpenAPI()
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, patchedCustomResource)
 }
 
 // Error if user tries to specify both builtin version
 // and custom schema
 func TestCustomOpenApiFieldBothPathAndVersion(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - mycrd.yaml
-
 openapi:
   version: v1.18.8
   path: mycrd_schema.json
-
-patchesStrategicMerge:
-- |-
-  apiVersion: example.com/v1alpha1
-  kind: MyCRD
-  metadata:
-    name: service
-  spec:
-    template:
-      spec:
-        containers:
-        - name: server
-          image: nginx
-`)
-	th.WriteF("/app/mycrd.yaml", `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - name: server
-        image: server
-        command: example
-        ports:
-        - name: grpc
-          protocol: TCP
-          containerPort: 8080
-`)
-	writeTestSchema(th, "/app/")
+`+customSchemaPatch)
+	writeCustomResource(th, "/mycrd.yaml")
+	writeTestSchema(th, "./")
 	openapi.ResetOpenAPI()
-	err := th.RunWithErr("/app", th.MakeDefaultOptions())
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
 	assert.Error(t, err)
 	assert.Equal(t,
 		"builtin version and custom schema provided, cannot use both",
@@ -148,48 +124,18 @@ spec:
 // Test for if the filepath specified is not found
 func TestCustomOpenApiFieldFileNotFound(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - mycrd.yaml
-
 openapi:
   path: mycrd_schema.json
-
-patchesStrategicMerge:
-- |-
-  apiVersion: example.com/v1alpha1
-  kind: MyCRD
-  metadata:
-    name: service
-  spec:
-    template:
-      spec:
-        containers:
-        - name: server
-          image: nginx
-`)
-	th.WriteF("/app/mycrd.yaml", `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - name: server
-        image: server
-        command: example
-        ports:
-        - name: grpc
-          protocol: TCP
-          containerPort: 8080
-`)
+`+customSchemaPatch)
+	writeCustomResource(th, "/mycrd.yaml")
 	openapi.ResetOpenAPI()
-	err := th.RunWithErr("/app", th.MakeDefaultOptions())
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
 	assert.Error(t, err)
 	assert.Equal(t,
-		"'/app/mycrd_schema.json' doesn't exist",
+		"'/mycrd_schema.json' doesn't exist",
 		err.Error())
 }
 
@@ -198,64 +144,18 @@ func TestCustomOpenApiFieldFromBase(t *testing.T) {
 	th.WriteK("base", `
 resources:
 - mycrd.yaml
-
 openapi:
   path: mycrd_schema.json
-`)
-	th.WriteF("base/mycrd.yaml", `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - name: server
-        image: server
-        command: example
-        ports:
-        - name: grpc
-          protocol: TCP
-          containerPort: 8080
 `)
 	th.WriteK("overlay", `
 resources:
 - ../base
-
-patchesStrategicMerge:
-- |-
-  apiVersion: example.com/v1alpha1
-  kind: MyCRD
-  metadata:
-    name: service
-  spec:
-    template:
-      spec:
-        containers:
-        - name: server
-          image: nginx
-`)
+`+customSchemaPatch)
+	writeCustomResource(th, "base/mycrd.yaml")
 	writeTestSchema(th, "/base/")
 	openapi.ResetOpenAPI()
 	m := th.Run("overlay", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - command: example
-        image: nginx
-        name: server
-        ports:
-        - containerPort: 8080
-          name: grpc
-          protocol: TCP
-`)
+	th.AssertActualEqualsExpected(m, patchedCustomResource)
 	assert.Equal(t, "using custom schema from file provided",
 		openapi.GetSchemaVersion())
 }
@@ -266,61 +166,17 @@ func TestCustomOpenApiFieldFromOverlay(t *testing.T) {
 resources:
 - mycrd.yaml
 `)
-	th.WriteF("base/mycrd.yaml", `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - name: server
-        image: server
-        command: example
-        ports:
-        - name: grpc
-          protocol: TCP
-          containerPort: 8080
-`)
 	th.WriteK("overlay", `
 resources:
 - ../base
 openapi:
   path: mycrd_schema.json
-patchesStrategicMerge:
-- |-
-  apiVersion: example.com/v1alpha1
-  kind: MyCRD
-  metadata:
-    name: service
-  spec:
-    template:
-      spec:
-        containers:
-        - name: server
-          image: nginx
-`)
+`+customSchemaPatch)
+	writeCustomResource(th, "base/mycrd.yaml")
 	writeTestSchema(th, "/overlay/")
 	openapi.ResetOpenAPI()
 	m := th.Run("overlay", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - command: example
-        image: nginx
-        name: server
-        ports:
-        - containerPort: 8080
-          name: grpc
-          protocol: TCP
-`)
+	th.AssertActualEqualsExpected(m, patchedCustomResource)
 	assert.Equal(t, "using custom schema from file provided",
 		openapi.GetSchemaVersion())
 }
@@ -333,41 +189,13 @@ resources:
 openapi:
   path: mycrd_schema.json
 `)
-	th.WriteF("base/mycrd.yaml", `
-apiVersion: example.com/v1alpha1
-kind: MyCRD
-metadata:
-  name: service
-spec:
-  template:
-    spec:
-      containers:
-      - name: server
-        image: server
-        command: example
-        ports:
-        - name: grpc
-          protocol: TCP
-          containerPort: 8080
-`)
 	th.WriteK("overlay", `
 resources:
 - ../base
 openapi:
   version: v1.19.1
-patchesStrategicMerge:
-- |-
-  apiVersion: example.com/v1alpha1
-  kind: MyCRD
-  metadata:
-    name: service
-  spec:
-    template:
-      spec:
-        containers:
-        - name: server
-          image: nginx
-`)
+`+customSchemaPatch)
+	writeCustomResource(th, "base/mycrd.yaml")
 	writeTestSchema(th, "/base/")
 	openapi.ResetOpenAPI()
 	m := th.Run("overlay", th.MakeDefaultOptions())
@@ -383,8 +211,7 @@ spec:
       - image: nginx
         name: server
 `)
-	assert.Equal(t, "v1191",
-		openapi.GetSchemaVersion())
+	assert.Equal(t, "v1191", openapi.GetSchemaVersion())
 }
 
 func TestCustomOpenAPIFieldFromComponent(t *testing.T) {
