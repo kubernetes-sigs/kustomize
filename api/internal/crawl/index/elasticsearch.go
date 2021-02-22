@@ -191,7 +191,8 @@ func (idx *index) Put(uniqueID string, doc interface{}) error {
 	}
 
 	if exists {
-		docBytes, err := json.Marshal(doc)
+		var docBytes []byte
+		docBytes, err = json.Marshal(doc)
 		if err != nil {
 			return err
 		}
@@ -204,12 +205,14 @@ func (idx *index) Put(uniqueID string, doc interface{}) error {
 			Body:       bytes.NewReader(body),
 			DocumentID: uniqueID,
 		}
-		res, err := req.Do(idx.ctx, idx.client)
+		var res *esapi.Response
+		res, err = req.Do(idx.ctx, idx.client)
 
 		err = idx.responseErrorOrNil("could not update document",
 			res, err, ignoreResponseBody)
 	} else {
-		body, err := json.Marshal(doc)
+		var body []byte
+		body, err = json.Marshal(doc)
 		if err != nil {
 			return err
 		}
@@ -219,7 +222,8 @@ func (idx *index) Put(uniqueID string, doc interface{}) error {
 			Body:       bytes.NewReader(body),
 			DocumentID: uniqueID,
 		}
-		res, err := req.Do(idx.ctx, idx.client)
+		var res *esapi.Response
+		res, err = req.Do(idx.ctx, idx.client)
 
 		err = idx.responseErrorOrNil("could not insert document",
 			res, err, ignoreResponseBody)
