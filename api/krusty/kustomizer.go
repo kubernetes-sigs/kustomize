@@ -5,6 +5,7 @@ package krusty
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -73,7 +74,14 @@ func (b *Kustomizer) Run(
 	if err != nil {
 		return nil, err
 	}
-	err = openapi.SetSchemaVersion(kt.Kustomization().OpenAPI, true)
+	var bytes []byte
+	if openApiPath, exists := kt.Kustomization().OpenAPI["path"]; exists {
+		bytes, err = ldr.Load(filepath.Join(ldr.Root(), openApiPath))
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = openapi.SetSchema(kt.Kustomization().OpenAPI, bytes, true)
 	if err != nil {
 		return nil, err
 	}
