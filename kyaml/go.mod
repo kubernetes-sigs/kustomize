@@ -11,7 +11,7 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/markbates/pkger v0.17.1
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
-	github.com/qri-io/starlib v0.4.2-0.20200213133954-ff2e8cd5ef8d
+	github.com/pkg/errors v0.8.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
