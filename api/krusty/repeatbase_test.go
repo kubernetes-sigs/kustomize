@@ -18,120 +18,117 @@ import (
 // final resource. This is named canary as it is a simple pattern to
 // duplicate a resource that can be used with canary deployments.
 //
-// deployment-base
+// base
 // |    deployment.yaml
 // |    kustomization.yaml
-// deployment-canary
+// canary
 // |    deployment-canary-patch.yaml
 // |    kustomization.yaml
-// deployment-a
-// |    deployment-a-patch.yaml
+// mango
+// |    deployment-mango-patch.yaml
+// |    deployment-mango-canary-patch.yaml
 // |    kustomization.yaml
 func TestRepeatBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/deployment-base", `
+	th.WriteK("base", `
 resources:
   - deployment.yaml
 `)
-	th.WriteF("/app/deployment-base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment
+  name: banana
 spec:
   selector:
     matchLabels:
-      component: deployment
+      component: banana
   template:
     metadata:
       labels:
-        component: deployment
+        component: banana
     spec:
       containers:
-      - name: container-a
+      - name: banana
         image: image
 `)
 
-	th.WriteK("/app/deployment-canary", `
+	th.WriteK("canary", `
 resources:
-  - ../deployment-base
+  - ../base
 patches:
 - patch: |
     - op: replace
       path: /metadata/name
-      value: deployment-canary
+      value: banana-canary
   target: 
     kind: Deployment
 - path: deployment-canary-patch.yaml
 `)
-	th.WriteF("/app/deployment-canary/deployment-canary-patch.yaml", `
+	th.WriteF("canary/deployment-canary-patch.yaml", `
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-canary
+  name: banana-canary
   labels:
     type: canary
 spec:
   selector:
     matchLabels:
-      component: deployment
+      component: banana
       type: canary
   template:
     metadata:
       labels:
-        component: deployment
+        component: banana
+        type: canary
     spec:
       containers:
-      - name: container-a
+      - name: banana
         image: image-canary
 `)
 
-	th.WriteK("/app/deployment-a", `
-nameSuffix: -a
+	th.WriteK("mango", `
+nameSuffix: -mango
 resources:
-  - ../deployment-base
-  - ../deployment-canary
+  - ../base
+  - ../canary
 patches:
-- path: deployment-a-base-patch.yaml
-- path: deployment-a-canary-patch.yaml
+- path: deployment-mango-base-patch.yaml
+- path: deployment-mango-canary-patch.yaml
 `)
-	th.WriteF("/app/deployment-a/deployment-a-base-patch.yaml", `
+	th.WriteF("mango/deployment-mango-base-patch.yaml", `
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment
+  name: banana
 spec:
   template:
     spec:
       containers:
-      - name: container-a
-        image: image-a
+      - name: banana
+        image: image-mango
 `)
-	th.WriteF("/app/deployment-a/deployment-a-canary-patch.yaml", `
+	th.WriteF("mango/deployment-mango-canary-patch.yaml", `
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-canary
+  name: banana-canary
 spec:
   template:
     spec:
       containers:
-      - name: container-a
-        image: image-canary-a
+      - name: banana
+        image: image-canary-mango
 `)
 
-	th.WriteK("/app", `
-resources:
-  - deployment-a
-`)
-
-	err := th.RunWithErr("/app", th.MakeDefaultOptions())
+	err := th.RunWithErr("mango", th.MakeDefaultOptions())
 	if !strings.Contains(
-		err.Error(), "multiple matches for Id apps_v1_Deployment|~X|deployment; failed to find unique target for patch") {
+		err.Error(), "multiple matches for Id apps_v1_Deployment|~X|banana; failed to find unique target for patch") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 
