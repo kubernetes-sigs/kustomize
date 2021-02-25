@@ -9,7 +9,7 @@ import (
 // https://github.com/kubernetes-sigs/kustomize/issues/2640
 func TestNameUpdateInRoleRef(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/rbac.yaml", `
+	th.WriteF("rbac.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -61,7 +61,7 @@ subjects:
   name: default
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 namespace: foo
 resources:
 - rbac.yaml
@@ -78,7 +78,7 @@ patches:
     name: my-role
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -138,7 +138,7 @@ subjects:
 // https://github.com/kubernetes-sigs/kustomize/issues/3073
 func TestNameUpdateInRoleRef2(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/workloads.yaml", `
+	th.WriteF("workloads.yaml", `
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -198,7 +198,7 @@ subjects:
   name: myapp
 `)
 
-	th.WriteF("/app/suffixTransformer.yaml", `
+	th.WriteF("suffixTransformer.yaml", `
 apiVersion: builtin
 kind: PrefixSuffixTransformer
 metadata:
@@ -213,7 +213,7 @@ fieldSpecs:
   name: myapp
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
@@ -224,7 +224,7 @@ namespace: test
 
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount

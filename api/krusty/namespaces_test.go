@@ -12,7 +12,7 @@ import (
 
 func TestNamespacedSecrets(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/secrets.yaml", `
+	th.WriteF("secrets.yaml", `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -33,7 +33,7 @@ data:
 `)
 
 	// This should find the proper secret.
-	th.WriteF("/app/role.yaml", `
+	th.WriteF("role.yaml", `
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -45,7 +45,7 @@ rules:
   verbs: ["get"]
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - secrets.yaml
 - role.yaml
@@ -55,7 +55,7 @@ resources:
 	// The ClusterRole (by def) is not in a namespace,
 	// and in this case applies to *any* Secret resource
 	// named "dummy"
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -722,14 +722,14 @@ func TestVariablesDisambiguatedWithNamespace(t *testing.T) {
 func TestAddNamePrefixWithNamespace(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteF("/app/serviceaccount.yaml", `
+	th.WriteF("serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus
 `)
 
-	th.WriteF("/app/clusterrolebinding.yaml", `
+	th.WriteF("clusterrolebinding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -744,7 +744,7 @@ subjects:
   namespace: iter8-monitoring
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 namePrefix: iter8-
 namespace: iter8-monitoring
 resources:
@@ -752,7 +752,7 @@ resources:
 - serviceaccount.yaml
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding

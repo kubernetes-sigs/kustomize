@@ -11,7 +11,7 @@ func TestFnExecGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - short_secret.yaml
 generators:
@@ -19,7 +19,7 @@ generators:
 `)
 
 	// Create some additional resource just to make sure everything is added
-	th.WriteF("/app/short_secret.yaml", `
+	th.WriteF("short_secret.yaml", `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -33,7 +33,7 @@ stringData:
     - mkdir /mnt/vda
 `)
 
-	th.WriteF("/app/gener.yaml", `
+	th.WriteF("gener.yaml", `
 kind: executable
 metadata:
   name: demo
@@ -45,7 +45,7 @@ spec:
 `)
 	o := th.MakeOptionsPluginsEnabled()
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
-	m := th.Run("/app", o)
+	m := th.Run(".", o)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Secret
@@ -95,14 +95,14 @@ func TestFnContainerGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - short_secret.yaml
 generators:
 - gener.yaml
 `)
 	// Create generator config
-	th.WriteF("/app/gener.yaml", `
+	th.WriteF("gener.yaml", `
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: CockroachDB
 metadata:
@@ -115,7 +115,7 @@ spec:
   replicas: 3
 `)
 	// Create some additional resource just to make sure everything is added
-	th.WriteF("/app/short_secret.yaml", `
+	th.WriteF("short_secret.yaml", `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -128,7 +128,7 @@ stringData:
     bootcmd:
     - mkdir /mnt/vda
 `)
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Secret
@@ -311,7 +311,7 @@ func TestFnContainerTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - data.yaml
 transformers:
@@ -319,7 +319,7 @@ transformers:
 - transf2.yaml
 `)
 
-	th.WriteF("/app/data.yaml", `
+	th.WriteF("data.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -343,7 +343,7 @@ spec:
 `)
 	// This transformer should add resource reservations based on annotation in data.yaml
 	// See https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/injection-tshirt-sizes
-	th.WriteF("/app/transf1.yaml", `
+	th.WriteF("transf1.yaml", `
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Validator
 metadata:
@@ -355,7 +355,7 @@ metadata:
 `)
 	// This transformer will check resources without and won't do any changes
 	// See https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/validator-kubeval
-	th.WriteF("/app/transf2.yaml", `
+	th.WriteF("transf2.yaml", `
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: Kubeval
 metadata:
@@ -375,7 +375,7 @@ spec:
   kubernetesVersion: "1.16.0"
   schemaLocation: "file:///schemas"
 `)
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -411,7 +411,7 @@ func TestFnContainerTransformerWithConfig(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - data1.yaml
 - data2.yaml
@@ -419,18 +419,18 @@ transformers:
 - label_namespace.yaml
 `)
 
-	th.WriteF("/app/data1.yaml", `apiVersion: v1
+	th.WriteF("data1.yaml", `apiVersion: v1
 kind: Namespace
 metadata:
   name: my-namespace
 `)
-	th.WriteF("/app/data2.yaml", `apiVersion: v1
+	th.WriteF("data2.yaml", `apiVersion: v1
 kind: Namespace
 metadata:
   name: another-namespace
 `)
 
-	th.WriteF("/app/label_namespace.yaml", `apiVersion: v1
+	th.WriteF("label_namespace.yaml", `apiVersion: v1
 kind: ConfigMap
 metadata:
   name: label_namespace
@@ -443,7 +443,7 @@ data:
   label_value: function-test
 `)
 
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Namespace
@@ -471,7 +471,7 @@ func TestFnContainerEnvVars(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 generators:
 - gener.yaml
 `)
@@ -479,7 +479,7 @@ generators:
 	// TODO: cheange image to gcr.io/kpt-functions/templater:stable
 	// when https://github.com/GoogleContainerTools/kpt-functions-catalog/pull/103
 	// is merged
-	th.WriteF("/app/gener.yaml", `
+	th.WriteF("gener.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -499,7 +499,7 @@ data:
     data:
       value: '{{ env "TESTTEMPLATE" }}'
 `)
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:

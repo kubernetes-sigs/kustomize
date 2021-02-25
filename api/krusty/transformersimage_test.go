@@ -10,7 +10,7 @@ import (
 )
 
 func makeTransfomersImageBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deploy1.yaml
 - random.yaml
@@ -34,7 +34,7 @@ images:
   newName: my-docker
   digest: sha256:25a0d4b4
 `)
-	th.WriteF("/app/base/deploy1.yaml", `
+	th.WriteF("base/deploy1.yaml", `
 group: apps
 apiVersion: v1
 kind: Deployment
@@ -56,7 +56,7 @@ spec:
       - name: postgresdb
         image: postgres:1.8.0
 `)
-	th.WriteF("/app/base/random.yaml", `
+	th.WriteF("base/random.yaml", `
 kind: randomKind
 metadata:
   name: random
@@ -95,7 +95,7 @@ spec3:
 
 func TestIssue1281_JsonPatchAndImageTag(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 
@@ -113,7 +113,7 @@ patchesJson6902:
     name: ben
   path: patch.json
 `)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -138,7 +138,7 @@ spec:
         image: abbott
 `)
 
-	th.WriteF("/app/patch.json", `
+	th.WriteF("patch.json", `
 [ {"op": "add",
    "path": "/spec/replica", "value": "3"},
   {"op": "replace",
@@ -146,7 +146,7 @@ spec:
    "value": { "image": "costello" } } ]
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -179,7 +179,7 @@ spec:
 func TestTransfomersImageDefaultConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageBase(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 group: apps
@@ -239,7 +239,7 @@ spec3:
 }
 
 func makeTransfomersImageCustomBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - custom.yaml
 configurations:
@@ -264,7 +264,7 @@ images:
   newName: my-docker
   digest: sha256:25a0d4b4
 `)
-	th.WriteF("/app/base/custom.yaml", `
+	th.WriteF("base/custom.yaml", `
 kind: customKind
 metadata:
   name: custom
@@ -299,7 +299,7 @@ spec3:
       - name: my-cool-app
         image: gcr.io:8080/my-project/my-cool-app:latest
 `)
-	th.WriteF("/app/base/config/custom.yaml", `
+	th.WriteF("base/config/custom.yaml", `
 images:
 - kind: Custom
   path: spec/template/spec/myContainers[]/image
@@ -313,7 +313,7 @@ images:
 func TestTransfomersImageCustomConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageCustomBase(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 kind: customKind
 metadata:
@@ -352,7 +352,7 @@ spec3:
 }
 
 func makeTransfomersImageKnativeBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - knative.yaml
 configurations:
@@ -361,7 +361,7 @@ images:
 - name: solsa-echo
   newTag: foo
 `)
-	th.WriteF("/app/base/knative.yaml", `
+	th.WriteF("base/knative.yaml", `
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
@@ -374,7 +374,7 @@ spec:
           container:
             image: solsa-echo
 `)
-	th.WriteF("/app/base/config/knative.yaml", `
+	th.WriteF("base/config/knative.yaml", `
 images:
 - path: spec/runLatest/configuration/revisionTemplate/spec/container/image
   apiVersion: serving.knative.dev/v1alpha1
@@ -385,7 +385,7 @@ images:
 func TestTransfomersImageKnativeConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeTransfomersImageKnativeBase(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service

@@ -33,7 +33,7 @@ func writeK(path string, content string) FileGen {
 }
 
 func writeTestBase(th kusttest_test.Harness) {
-	th.WriteK("/base", `
+	th.WriteK("base", `
 resources:
 - deploy.yaml
 configMapGenerator:
@@ -42,7 +42,7 @@ configMapGenerator:
   - testValue=purple
   - otherValue=green
 `)
-	th.WriteF("/base/deploy.yaml", `
+	th.WriteF("base/deploy.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -53,7 +53,7 @@ spec:
 }
 
 func writeTestComponent(th kusttest_test.Harness) {
-	th.WriteC("/comp", `
+	th.WriteC("comp", `
 namePrefix: comp-
 replicas:
 - name: storefront
@@ -67,7 +67,7 @@ configMapGenerator:
   - testValue=blue
   - compValue=red
 `)
-	th.WriteF("/comp/stub.yaml", `
+	th.WriteF("comp/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -78,7 +78,7 @@ spec:
 }
 
 func writeOverlayProd(th kusttest_test.Harness) {
-	th.WriteK("/prod", `
+	th.WriteK("prod", `
 resources:
 - ../base
 - db
@@ -90,7 +90,7 @@ components:
 }
 
 func writeDB(th kusttest_test.Harness) {
-	deployment("db", "/prod/db")(th)
+	deployment("db", "prod/db")(th)
 }
 
 func deployment(name string, path string) FileGen {
@@ -114,7 +114,7 @@ func TestComponent(t *testing.T) {
 		// resources that come before it in the resources list of the parent Kustomization.
 		"basic-component": {
 			input:   []FileGen{writeTestBase, writeTestComponent, writeOverlayProd},
-			runPath: "/prod",
+			runPath: "prod",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -149,14 +149,14 @@ spec:
 		},
 		"multiple-components": {
 			input: []FileGen{writeTestBase, writeTestComponent, writeDB,
-				writeC("/additionalcomp", `
+				writeC("additionalcomp", `
 configMapGenerator:
 - name: my-configmap
   behavior: merge
   literals:	
   - otherValue=orange
 `),
-				writeK("/prod", `
+				writeK("prod", `
 resources:
 - ../base
 - db
@@ -166,7 +166,7 @@ components:
 - ../additionalcomp
 `),
 			},
-			runPath: "/prod",
+			runPath: "prod",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -201,7 +201,7 @@ spec:
 		},
 		"nested-components": {
 			input: []FileGen{writeTestBase, writeTestComponent, writeDB,
-				writeC("/additionalcomp", `
+				writeC("additionalcomp", `
 components:
 - ../comp
 configMapGenerator:
@@ -210,7 +210,7 @@ configMapGenerator:
   literals:
   - otherValue=orange
 `),
-				writeK("/prod", `
+				writeK("prod", `
 resources:
 - ../base
 - db
@@ -219,7 +219,7 @@ components:
 - ../additionalcomp
 `),
 			},
-			runPath: "/prod",
+			runPath: "prod",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -256,13 +256,13 @@ spec:
 		// without being affected by the component in another branch of the resource tree
 		"basic-component-with-repeated-base": {
 			input: []FileGen{writeTestBase, writeTestComponent, writeOverlayProd,
-				writeK("/repeated", `
+				writeK("repeated", `
 resources:
 - ../base
 - ../prod
 `),
 			},
-			runPath: "/repeated",
+			runPath: "repeated",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -312,7 +312,7 @@ spec:
 		},
 		"applying-component-directly-should-be-same-as-kustomization": {
 			input: []FileGen{writeTestBase, writeTestComponent,
-				writeC("/direct-component", `
+				writeC("direct-component", `
 resources:
 - ../base
 configMapGenerator:
@@ -323,7 +323,7 @@ configMapGenerator:
   - testValue=blue
 `),
 			},
-			runPath: "/direct-component",
+			runPath: "direct-component",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -344,7 +344,7 @@ metadata:
 		},
 		"missing-optional-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,
-				writeF("/comp/"+konfig.DefaultKustomizationFileName(), `
+				writeF("comp/"+konfig.DefaultKustomizationFileName(), `
 kind: Component
 configMapGenerator:
 - name: my-configmap
@@ -353,7 +353,7 @@ configMapGenerator:
   - otherValue=orange
 `),
 			},
-			runPath: "/prod",
+			runPath: "prod",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -382,25 +382,25 @@ spec:
 		// accumulator when "comp-b" is accumulated.  In practice we could use simple Kustomizations for this example.
 		"components-can-add-the-same-base-if-the-first-renames-resources": {
 			input: []FileGen{writeTestBase,
-				deployment("proxy", "/comp-a/proxy.yaml"),
-				writeC("/comp-a", `
+				deployment("proxy", "comp-a/proxy.yaml"),
+				writeC("comp-a", `
 resources:
 - ../base
 
 nameSuffix: "-a"
 `),
-				writeC("/comp-b", `
+				writeC("comp-b", `
 resources:
 - ../base
 
 nameSuffix: "-b"
 `),
-				writeK("/prod", `
+				writeK("prod", `
 components:
 - ../comp-a
 - ../comp-b`),
 			},
-			runPath: "/prod",
+			runPath: "prod",
 			expectedOutput: `
 apiVersion: v1
 kind: Deployment
@@ -436,34 +436,34 @@ metadata:
 
 		"multiple-bases-can-add-the-same-component-if-it-doesn-not-define-named-entities": {
 			input: []FileGen{
-				writeC("/comp", `
+				writeC("comp", `
 namespace: prod
 `),
-				writeK("/base-a", `
+				writeK("base-a", `
 resources:
 - proxy.yaml
 
 components:
 - ../comp
 `),
-				deployment("proxy-a", "/base-a/proxy.yaml"),
-				writeK("/base-b", `
+				deployment("proxy-a", "base-a/proxy.yaml"),
+				writeK("base-b", `
 resources:
 - proxy.yaml
 
 components:
 - ../comp
 `),
-				deployment("proxy-b", "/base-b/proxy.yaml"),
-				writeK("/prod", `
+				deployment("proxy-b", "base-b/proxy.yaml"),
+				writeK("prod", `
 resources:
 - proxy.yaml
 - ../base-a
 - ../base-b
 `),
-				deployment("proxy-prod", "/prod/proxy.yaml"),
+				deployment("proxy-prod", "prod/proxy.yaml"),
 			},
-			runPath: "/prod",
+			runPath: "prod",
 			// Note that the namepsace has not been applied to proxy-prod because it was not in scope when the
 			// component was applied
 			expectedOutput: `
@@ -513,7 +513,7 @@ func TestComponentErrors(t *testing.T) {
 	}{
 		"components-cannot-be-added-to-resources": {
 			input: []FileGen{writeTestBase, writeTestComponent,
-				writeK("/compinres", `
+				writeK("compinres", `
 resources:
 - ../base
 - ../comp
@@ -524,19 +524,19 @@ resources:
 		},
 		"kustomizations-cannot-be-added-to-components": {
 			input: []FileGen{writeTestBase, writeTestComponent,
-				writeK("/kustincomponents", `
+				writeK("kustincomponents", `
 components:
 - ../base
 - ../comp
 `),
 			},
-			runPath: "/kustincomponents",
+			runPath: "kustincomponents",
 			expectedError: "accumulating components: accumulateDirectory: \"expected kind 'Component' for path " +
 				"'/base' but got 'Kustomization'",
 		},
 		"files-cannot-be-added-to-components-list": {
 			input: []FileGen{writeTestBase,
-				writeF("/filesincomponents/stub.yaml", `
+				writeF("filesincomponents/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -544,18 +544,18 @@ metadata:
 spec:
   replicas: 1
 `),
-				writeK("/filesincomponents", `
+				writeK("filesincomponents", `
 components:
 - stub.yaml
 - ../comp
 `),
 			},
-			runPath:       "/filesincomponents",
+			runPath:       "filesincomponents",
 			expectedError: "'/filesincomponents/stub.yaml' must be a directory to be a root",
 		},
 		"invalid-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,
-				writeF("/comp/"+konfig.DefaultKustomizationFileName(), `
+				writeF("comp/"+konfig.DefaultKustomizationFileName(), `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Component
 configMapGenerator:
@@ -565,22 +565,22 @@ configMapGenerator:
   - otherValue=orange
 `),
 			},
-			runPath:       "/prod",
+			runPath:       "prod",
 			expectedError: "apiVersion for Component should be kustomize.config.k8s.io/v1alpha1",
 		},
 		"components-cannot-add-the-same-resource": {
 			input: []FileGen{writeTestBase,
-				writeC("/comp-a", `
+				writeC("comp-a", `
 resources:
 - proxy.yaml
 `),
-				deployment("proxy", "/comp-a/proxy.yaml"),
-				writeC("/comp-b", `
+				deployment("proxy", "comp-a/proxy.yaml"),
+				writeC("comp-b", `
 resources:
 - proxy.yaml
 `),
-				deployment("proxy", "/comp-b/proxy.yaml"),
-				writeK("/prod", `
+				deployment("proxy", "comp-b/proxy.yaml"),
+				writeK("prod", `
 resources:
 - ../base
 
@@ -588,49 +588,49 @@ components:
 - ../comp-a
 - ../comp-b`),
 			},
-			runPath:       "/prod",
+			runPath:       "prod",
 			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|proxy",
 		},
 		"components-cannot-add-the-same-base": {
 			input: []FileGen{writeTestBase,
-				deployment("proxy", "/comp-a/proxy.yaml"),
-				writeC("/comp-a", `
+				deployment("proxy", "comp-a/proxy.yaml"),
+				writeC("comp-a", `
 resources:
 - ../base
 `),
-				writeC("/comp-b", `
+				writeC("comp-b", `
 resources:
 - ../base
 `),
-				writeK("/prod", `
+				writeK("prod", `
 components:
 - ../comp-a
 - ../comp-b`),
 			},
-			runPath:       "/prod",
+			runPath:       "prod",
 			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|storefront",
 		},
 		"components-cannot-add-bases-containing-the-same-resource": {
 			input: []FileGen{writeTestBase,
-				writeC("/comp-a", `
+				writeC("comp-a", `
 resources:
 - ../base-a
 `),
-				writeK("/base-a", `
+				writeK("base-a", `
 resources:
 - proxy.yaml
 `),
-				deployment("proxy", "/base-a/proxy.yaml"),
-				writeC("/comp-b", `
+				deployment("proxy", "base-a/proxy.yaml"),
+				writeC("comp-b", `
 resources:
 - ../base-b
 `),
-				writeK("/base-b", `
+				writeK("base-b", `
 resources:
 - proxy.yaml
 `),
-				deployment("proxy", "/base-b/proxy.yaml"),
-				writeK("/prod", `
+				deployment("proxy", "base-b/proxy.yaml"),
+				writeK("prod", `
 resources:
 - ../base
 
@@ -638,7 +638,7 @@ components:
 - ../comp-a
 - ../comp-b`),
 			},
-			runPath:       "/prod",
+			runPath:       "prod",
 			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|proxy",
 		},
 	}

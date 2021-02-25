@@ -10,7 +10,7 @@ import (
 )
 
 func makeBaseReferencingCustomConfig(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: x-
 commonLabels:
   app: myApp
@@ -35,7 +35,7 @@ configurations:
 - config/defaults.yaml
 - config/custom.yaml
 `)
-	th.WriteF("/app/base/giraffes.yaml", `
+	th.WriteF("base/giraffes.yaml", `
 kind: Giraffe
 metadata:
   name: april
@@ -50,7 +50,7 @@ spec:
   diet: acacia
   location: SE
 `)
-	th.WriteF("/app/base/gorilla.yaml", `
+	th.WriteF("base/gorilla.yaml", `
 kind: Gorilla
 metadata:
   name: koko
@@ -58,7 +58,7 @@ spec:
   diet: bambooshoots
   location: SW
 `)
-	th.WriteF("/app/base/animalPark.yaml", `
+	th.WriteF("base/animalPark.yaml", `
 apiVersion: foo
 kind: AnimalPark
 metadata:
@@ -77,8 +77,8 @@ spec:
 func TestCustomConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeBaseReferencingCustomConfig(th)
-	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
-	th.WriteF("/app/base/config/custom.yaml", `
+	th.WriteLegacyConfigs("base/config/defaults.yaml")
+	th.WriteF("base/config/custom.yaml", `
 nameReference:
 - kind: Gorilla
   fieldSpecs:
@@ -92,7 +92,7 @@ varReference:
 - path: spec/food
   kind: AnimalPark
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: foo
 kind: AnimalPark
@@ -141,11 +141,11 @@ spec:
 func TestCustomConfigWithDefaultOverspecification(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeBaseReferencingCustomConfig(th)
-	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
+	th.WriteLegacyConfigs("base/config/defaults.yaml")
 	// Specifying namePrefix here conflicts with (is the same as)
 	// the defaults written above.  This is intentional in the
 	// test to assure duplicate config doesn't cause problems.
-	th.WriteF("/app/base/config/custom.yaml", `
+	th.WriteF("base/config/custom.yaml", `
 namePrefix:
 - path: metadata/name
 nameReference:
@@ -161,7 +161,7 @@ varReference:
 - path: spec/food
   kind: AnimalPark
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: foo
 kind: AnimalPark
@@ -210,8 +210,8 @@ spec:
 func TestFixedBug605_BaseCustomizationAvailableInOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeBaseReferencingCustomConfig(th)
-	th.WriteLegacyConfigs("/app/base/config/defaults.yaml")
-	th.WriteF("/app/base/config/custom.yaml", `
+	th.WriteLegacyConfigs("base/config/defaults.yaml")
+	th.WriteF("base/config/custom.yaml", `
 nameReference:
 - kind: Gorilla
   fieldSpecs:
@@ -228,7 +228,7 @@ varReference:
   apiVersion: foo
   kind: AnimalPark
 `)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 namePrefix: o-
 commonLabels:
   movie: planetOfTheApes
@@ -238,7 +238,7 @@ resources:
 - ../base
 - ursus.yaml
 `)
-	th.WriteF("/app/overlay/ursus.yaml", `
+	th.WriteF("overlay/ursus.yaml", `
 kind: Gorilla
 metadata:
   name: ursus
@@ -247,7 +247,7 @@ spec:
   location: Arizona
 `)
 	// The following replaces the gorillaRef in the AnimalPark.
-	th.WriteF("/app/overlay/animalPark.yaml", `
+	th.WriteF("overlay/animalPark.yaml", `
 apiVersion: foo
 kind: AnimalPark
 metadata:
@@ -256,7 +256,7 @@ spec:
   gorillaRef:
     name: ursus
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: foo
 kind: AnimalPark

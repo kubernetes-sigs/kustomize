@@ -27,11 +27,11 @@ spec:
 `
 
 func writeStatefulSetBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - statefulset.yaml
 `)
-	th.WriteF("/app/base/statefulset.yaml", `
+	th.WriteF("base/statefulset.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -56,15 +56,15 @@ spec:
 }
 
 func writeHTTPSOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/https", `
+	th.WriteK("https", `
 resources:
 - ../base
 - https-svc.yaml
 patchesStrategicMerge:
 - sts-patch.yaml
 `)
-	th.WriteF("/app/https/https-svc.yaml", httpsService)
-	th.WriteF("/app/https/sts-patch.yaml", `
+	th.WriteF("https/https-svc.yaml", httpsService)
+	th.WriteF("https/sts-patch.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -75,8 +75,8 @@ spec:
 }
 
 func writeHTTPSTransformerRaw(th kusttest_test.Harness) {
-	th.WriteF("/app/https/service/https-svc.yaml", httpsService)
-	th.WriteF("/app/https/transformer/transformer.yaml", `
+	th.WriteF("https/service/https-svc.yaml", httpsService)
+	th.WriteF("https/transformer/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -97,11 +97,11 @@ patch: |-
 }
 
 func writeHTTPSTransformerBase(th kusttest_test.Harness) {
-	th.WriteK("/app/https/service", `
+	th.WriteK("https/service", `
 resources:
 - https-svc.yaml
 `)
-	th.WriteK("/app/https/transformer", `
+	th.WriteK("https/transformer", `
 resources:
 - transformer.yaml
 `)
@@ -109,7 +109,7 @@ resources:
 }
 
 func writeConfigFromEnvOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/config", `
+	th.WriteK("config", `
 resources:
 - ../base
 configMapGenerator:
@@ -121,7 +121,7 @@ generatorOptions:
 patchesStrategicMerge:
 - sts-patch.yaml
 `)
-	th.WriteF("/app/config/sts-patch.yaml", `
+	th.WriteF("config/sts-patch.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -138,7 +138,7 @@ spec:
 }
 
 func writeConfigFromEnvTransformerRaw(th kusttest_test.Harness) {
-	th.WriteF("/app/config/map/generator.yaml", `
+	th.WriteF("config/map/generator.yaml", `
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
@@ -148,7 +148,7 @@ options:
 literals:
 - MY_ENV=foo
 `)
-	th.WriteF("/app/config/transformer/transformer.yaml", `
+	th.WriteF("config/transformer/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -174,11 +174,11 @@ patch: |-
 `)
 }
 func writeConfigFromEnvTransformerBase(th kusttest_test.Harness) {
-	th.WriteK("/app/config/map", `
+	th.WriteK("config/map", `
 resources:
 - generator.yaml
 `)
-	th.WriteK("/app/config/transformer", `
+	th.WriteK("config/transformer", `
 resources:
 - transformer.yaml
 `)
@@ -186,13 +186,13 @@ resources:
 }
 
 func writeTolerationsOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/tolerations", `
+	th.WriteK("tolerations", `
 resources:
 - ../base
 patchesStrategicMerge:
 - sts-patch.yaml
 `)
-	th.WriteF("/app/tolerations/sts-patch.yaml", `
+	th.WriteF("tolerations/sts-patch.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -208,7 +208,7 @@ spec:
 }
 
 func writeTolerationsTransformerRaw(th kusttest_test.Harness) {
-	th.WriteF("/app/tolerations/transformer.yaml", `
+	th.WriteF("tolerations/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -234,7 +234,7 @@ patch: |-
 }
 
 func writeTolerationsTransformerBase(th kusttest_test.Harness) {
-	th.WriteK("/app/tolerations", `
+	th.WriteK("tolerations", `
 resources:
 - transformer.yaml
 `)
@@ -242,7 +242,7 @@ resources:
 }
 
 func writeStorageOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/storage", `
+	th.WriteK("storage", `
 resources:
 - ../base
 patchesJson6902:
@@ -253,13 +253,13 @@ patchesJson6902:
     name: my-sts
   path: sts-patch.json
 `)
-	th.WriteF("/app/storage/sts-patch.json", `
+	th.WriteF("storage/sts-patch.json", `
 [{"op": "replace", "path": "/spec/volumeClaimTemplates/0/spec/storageClassName", "value": "my-sc"}]
 `)
 }
 
 func writeStorageTransformerRaw(th kusttest_test.Harness) {
-	th.WriteF("/app/storage/transformer.yaml", `
+	th.WriteF("storage/transformer.yaml", `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -275,7 +275,7 @@ patch: |-
 }
 
 func writeStorageTransformerBase(th kusttest_test.Harness) {
-	th.WriteK("/app/storage", `
+	th.WriteK("storage", `
 resources:
 - transformer.yaml
 `)
@@ -358,12 +358,12 @@ func TestComplexComposition_Dev_Failure(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
-	th.WriteK("/app/dev", `
+	th.WriteK("dev", `
 resources:
 - ../storage
 - ../config
 `)
-	err := th.RunWithErr("/app/dev", th.MakeDefaultOptions())
+	err := th.RunWithErr("dev", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
 	}
@@ -410,7 +410,7 @@ func TestComplexComposition_Dev_SuccessWithRawTransformers(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
-	th.WriteK("/app/dev", `
+	th.WriteK("dev", `
 resources:
 - ../base
 generators:
@@ -419,7 +419,7 @@ transformers:
 - ../config/transformer/transformer.yaml
 - ../storage/transformer.yaml
 `)
-	m := th.Run("/app/dev", func() Options {
+	m := th.Run("dev", func() Options {
 		o := th.MakeDefaultOptions()
 		o.LoadRestrictions = types.LoadRestrictionsNone
 		return o
@@ -431,7 +431,7 @@ func TestComplexComposition_Dev_SuccessWithBaseTransformers(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformerBases(th)
-	th.WriteK("/app/dev", `
+	th.WriteK("dev", `
 resources:
 - ../base
 generators:
@@ -440,7 +440,7 @@ transformers:
 - ../config/transformer
 - ../storage
 `)
-	m := th.Run("/app/dev", th.MakeDefaultOptions())
+	m := th.Run("dev", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, devDesiredResult)
 }
 
@@ -448,13 +448,13 @@ func TestComplexComposition_Prod_Failure(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingOverlays(th)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 resources:
 - ../config
 - ../tolerations
 - ../https
 `)
-	err := th.RunWithErr("/app/prod", th.MakeDefaultOptions())
+	err := th.RunWithErr("prod", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
 	}
@@ -517,7 +517,7 @@ func TestComplexComposition_Prod_SuccessWithRawTransformers(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformersRaw(th)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 resources:
 - ../base
 - ../https/service/https-svc.yaml
@@ -528,7 +528,7 @@ transformers:
 - ../https/transformer/transformer.yaml
 - ../tolerations/transformer.yaml
 `)
-	m := th.Run("/app/prod", func() Options {
+	m := th.Run("prod", func() Options {
 		o := th.MakeDefaultOptions()
 		o.LoadRestrictions = types.LoadRestrictionsNone
 		return o
@@ -540,7 +540,7 @@ func TestComplexComposition_Prod_SuccessWithBaseTransformers(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeStatefulSetBase(th)
 	writePatchingTransformerBases(th)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 resources:
 - ../base
 - ../https/service
@@ -551,6 +551,6 @@ transformers:
 - ../https/transformer
 - ../tolerations
 `)
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
+	m := th.Run("prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, prodDesiredResult)
 }

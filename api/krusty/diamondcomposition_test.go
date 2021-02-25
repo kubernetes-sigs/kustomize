@@ -59,12 +59,12 @@ spec:
 const patchJsonRestartPolicy = `[{"op": "add", "path": "/spec/template/spec/restartPolicy", "value": "Always"}]`
 
 func writeDeploymentBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 `)
 
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,33 +80,33 @@ spec:
 }
 
 func writeProbeOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/probe", `
+	th.WriteK("probe", `
 resources:
 - ../base
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("/app/probe/dep-patch.yaml", patchAddProbe)
+	th.WriteF("probe/dep-patch.yaml", patchAddProbe)
 }
 
 func writeDNSOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/dns", `
+	th.WriteK("dns", `
 resources:
 - ../base
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("/app/dns/dep-patch.yaml", patchDnsPolicy)
+	th.WriteF("dns/dep-patch.yaml", patchDnsPolicy)
 }
 
 func writeRestartOverlay(th kusttest_test.Harness) {
-	th.WriteK("/app/restart", `
+	th.WriteK("restart", `
 resources:
 - ../base
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("/app/restart/dep-patch.yaml", patchRestartPolicy)
+	th.WriteF("restart/dep-patch.yaml", patchRestartPolicy)
 }
 
 // Here's a composite kustomization, that combines multiple overlays
@@ -129,14 +129,14 @@ func TestIssue1251_CompositeDiamond_Failure(t *testing.T) {
 	writeDNSOverlay(th)
 	writeRestartOverlay(th)
 
-	th.WriteK("/app/composite", `
+	th.WriteK("composite", `
 resources:
 - ../probe
 - ../dns
 - ../restart
 `)
 
-	err := th.RunWithErr("/app/composite", th.MakeDefaultOptions())
+	err := th.RunWithErr("composite", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("Expected resource accumulation error")
 	}
@@ -176,7 +176,7 @@ func TestIssue1251_Patches_Overlayed(t *testing.T) {
 
 	// dns overlays probe.
 	writeDNSOverlay(th)
-	th.WriteK("/app/dns", `
+	th.WriteK("dns", `
 resources:
 - ../probe
 patchesStrategicMerge:
@@ -185,14 +185,14 @@ patchesStrategicMerge:
 
 	// restart overlays dns.
 	writeRestartOverlay(th)
-	th.WriteK("/app/restart", `
+	th.WriteK("restart", `
 resources:
 - ../dns
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
 
-	m := th.Run("/app/restart", th.MakeDefaultOptions())
+	m := th.Run("restart", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
@@ -200,7 +200,7 @@ func TestIssue1251_Patches_Local(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
 
-	th.WriteK("/app/composite", `
+	th.WriteK("composite", `
 resources:
 - ../base
 patchesStrategicMerge:
@@ -208,20 +208,20 @@ patchesStrategicMerge:
 - patchDnsPolicy.yaml
 - patchRestartPolicy.yaml
 `)
-	th.WriteF("/app/composite/patchRestartPolicy.yaml", patchRestartPolicy)
-	th.WriteF("/app/composite/patchDnsPolicy.yaml", patchDnsPolicy)
-	th.WriteF("/app/composite/patchAddProbe.yaml", patchAddProbe)
+	th.WriteF("composite/patchRestartPolicy.yaml", patchRestartPolicy)
+	th.WriteF("composite/patchDnsPolicy.yaml", patchDnsPolicy)
+	th.WriteF("composite/patchAddProbe.yaml", patchAddProbe)
 
-	m := th.Run("/app/composite", th.MakeDefaultOptions())
+	m := th.Run("composite", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
 func definePatchDirStructure(th kusttest_test.Harness) {
 	writeDeploymentBase(th)
 
-	th.WriteF("/app/patches/patchRestartPolicy.yaml", patchRestartPolicy)
-	th.WriteF("/app/patches/patchDnsPolicy.yaml", patchDnsPolicy)
-	th.WriteF("/app/patches/patchAddProbe.yaml", patchAddProbe)
+	th.WriteF("patches/patchRestartPolicy.yaml", patchRestartPolicy)
+	th.WriteF("patches/patchDnsPolicy.yaml", patchDnsPolicy)
+	th.WriteF("patches/patchAddProbe.yaml", patchAddProbe)
 }
 
 // Fails due to file load restrictor.
@@ -229,7 +229,7 @@ func TestIssue1251_Patches_ProdVsDev_Failure(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	definePatchDirStructure(th)
 
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 resources:
 - ../base
 patchesStrategicMerge:
@@ -237,13 +237,13 @@ patchesStrategicMerge:
 - ../patches/patchDnsPolicy.yaml
 `)
 
-	err := th.RunWithErr("/app/prod", th.MakeDefaultOptions())
+	err := th.RunWithErr("prod", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(
 		err.Error(),
-		"security; file '/app/patches/patchAddProbe.yaml' is not in or below '/app/prod'") {
+		"security; file '/patches/patchAddProbe.yaml' is not in or below '/prod'") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -302,7 +302,7 @@ func TestIssue1251_Patches_ProdVsDev(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	definePatchDirStructure(th)
 
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 resources:
 - ../base
 patchesStrategicMerge:
@@ -312,13 +312,13 @@ patchesStrategicMerge:
 	opts := th.MakeDefaultOptions()
 	opts.LoadRestrictions = types.LoadRestrictionsNone
 
-	m := th.Run("/app/prod", opts)
+	m := th.Run("prod", opts)
 	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
 
 	th = kusttest_test.MakeHarness(t)
 	definePatchDirStructure(th)
 
-	th.WriteK("/app/dev", `
+	th.WriteK("dev", `
 resources:
 - ../base
 patchesStrategicMerge:
@@ -326,7 +326,7 @@ patchesStrategicMerge:
 - ../patches/patchRestartPolicy.yaml
 `)
 
-	m = th.Run("/app/dev", opts)
+	m = th.Run("dev", opts)
 	th.AssertActualEqualsExpected(m, prodDevMergeResult2)
 }
 
@@ -336,7 +336,7 @@ func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
 	defer th.Reset()
 
 	defineTransformerDirStructure(th)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 resources:
 - ../base
 transformers:
@@ -344,11 +344,11 @@ transformers:
 - ../patches/addDnsPolicy
 `)
 
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
+	m := th.Run("prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
 
 	defineTransformerDirStructure(th)
-	th.WriteK("/app/dev", `
+	th.WriteK("dev", `
 resources:
 - ../base
 transformers:
@@ -356,7 +356,7 @@ transformers:
 - ../patches/addDnsPolicy
 `)
 
-	m = th.Run("/app/dev", th.MakeDefaultOptions())
+	m = th.Run("dev", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, prodDevMergeResult2)
 }
 
@@ -368,13 +368,13 @@ func TestIssue1251_Plugins_Local(t *testing.T) {
 	writeDeploymentBase(th.Harness)
 
 	writeJsonTransformerPluginConfig(
-		th, "/app/composite", "addDnsPolicy", patchJsonDnsPolicy)
+		th, "composite", "addDnsPolicy", patchJsonDnsPolicy)
 	writeJsonTransformerPluginConfig(
-		th, "/app/composite", "addRestartPolicy", patchJsonRestartPolicy)
+		th, "composite", "addRestartPolicy", patchJsonRestartPolicy)
 	writeJsonTransformerPluginConfig(
-		th, "/app/composite", "addProbe", patchJsonAddProbe)
+		th, "composite", "addProbe", patchJsonAddProbe)
 
-	th.WriteK("/app/composite", `
+	th.WriteK("composite", `
 resources:
 - ../base
 transformers:
@@ -382,7 +382,7 @@ transformers:
 - addRestartPolicyConfig.yaml
 - addProbeConfig.yaml
 `)
-	m := th.Run("/app/composite", th.MakeDefaultOptions())
+	m := th.Run("composite", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
@@ -410,50 +410,50 @@ func TestIssue1251_Plugins_Bundled(t *testing.T) {
 	defer th.Reset()
 	writeDeploymentBase(th.Harness)
 
-	th.WriteK("/app/patches", `
+	th.WriteK("patches", `
 resources:
 - addDnsPolicyConfig.yaml
 - addRestartPolicyConfig.yaml
 - addProbeConfig.yaml
 `)
 	writeJsonTransformerPluginConfig(
-		th, "/app/patches", "addDnsPolicy", patchJsonDnsPolicy)
+		th, "patches", "addDnsPolicy", patchJsonDnsPolicy)
 	writeJsonTransformerPluginConfig(
-		th, "/app/patches", "addRestartPolicy", patchJsonRestartPolicy)
+		th, "patches", "addRestartPolicy", patchJsonRestartPolicy)
 	writeJsonTransformerPluginConfig(
-		th, "/app/patches", "addProbe", patchJsonAddProbe)
+		th, "patches", "addProbe", patchJsonAddProbe)
 
-	th.WriteK("/app/composite", `
+	th.WriteK("composite", `
 resources:
 - ../base
 transformers:
 - ../patches
 `)
-	m := th.Run("/app/composite", th.MakeDefaultOptions())
+	m := th.Run("composite", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expectedPatchedDeployment)
 }
 
 func defineTransformerDirStructure(th *kusttest_test.HarnessEnhanced) {
 	writeDeploymentBase(th.Harness)
 
-	th.WriteK("/app/patches/addDnsPolicy", `
+	th.WriteK("patches/addDnsPolicy", `
 resources:
 - addDnsPolicyConfig.yaml
 `)
 	writeJsonTransformerPluginConfig(
-		th, "/app/patches/addDnsPolicy", "addDnsPolicy", patchJsonDnsPolicy)
+		th, "patches/addDnsPolicy", "addDnsPolicy", patchJsonDnsPolicy)
 
-	th.WriteK("/app/patches/addRestartPolicy", `
+	th.WriteK("patches/addRestartPolicy", `
 resources:
 - addRestartPolicyConfig.yaml
 `)
 	writeJsonTransformerPluginConfig(
-		th, "/app/patches/addRestartPolicy", "addRestartPolicy", patchJsonRestartPolicy)
+		th, "patches/addRestartPolicy", "addRestartPolicy", patchJsonRestartPolicy)
 
-	th.WriteK("/app/patches/addProbe", `
+	th.WriteK("patches/addProbe", `
 resources:
 - addProbeConfig.yaml
 `)
 	writeJsonTransformerPluginConfig(
-		th, "/app/patches/addProbe", "addProbe", patchJsonAddProbe)
+		th, "patches/addProbe", "addProbe", patchJsonAddProbe)
 }

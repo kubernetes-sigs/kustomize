@@ -10,7 +10,7 @@ import (
 )
 
 func makeCommonFileForMergeEnvFromTest(th kusttest_test.Harness) {
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,7 +33,7 @@ spec:
 func TestMergeEnvFrom(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMergeEnvFromTest(th)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 
@@ -52,7 +52,7 @@ patchesStrategicMerge:
           - configMapRef:
               name: another-config
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -73,7 +73,7 @@ spec:
 func TestMergeEnvFromViaJsonInline(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForMergeEnvFromTest(th)
-	th.WriteK("app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 patches:
@@ -87,7 +87,7 @@ patches:
         configMapRef:
           name: another-config
 `)
-	m := th.Run("app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
