@@ -5,5 +5,8 @@
 package hack
 
 import (
+	// for code generation
+	_ "golang.org/x/tools/cmd/stringer"
+	// for lint checks
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 )
