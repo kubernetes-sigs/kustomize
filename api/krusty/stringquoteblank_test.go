@@ -13,7 +13,7 @@ import (
 // is invalid as plain style.
 func TestLongLineBreaks(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -42,11 +42,11 @@ spec:
         - name: INVALID_PLAIN_STYLE_STRING
           value: ': test'
 `)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: extensions/v1beta1
 kind: Deployment

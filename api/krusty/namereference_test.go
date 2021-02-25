@@ -514,13 +514,13 @@ type: Opaque
 
 func TestEmptyFieldSpecValue(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 generators:
 - generators.yaml
 configurations:
 - kustomizeconfig.yaml
 `)
-	th.WriteF("/app/generators.yaml", `
+	th.WriteF("generators.yaml", `
 apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
@@ -530,7 +530,7 @@ labels:
 literals:
 - this_is_a_secret_name=
 `)
-	th.WriteF("/app/kustomizeconfig.yaml", `
+	th.WriteF("kustomizeconfig.yaml", `
 nameReference:
 - kind: Secret
   version: v1
@@ -538,7 +538,7 @@ nameReference:
   - path: data/this_is_a_secret_name
     kind: ConfigMap
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:

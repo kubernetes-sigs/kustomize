@@ -14,7 +14,7 @@ func TestNumericCommonLabels(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	// A basic deployment just used to put labels into
-	th.WriteF("/app/default/deployment.yaml", `
+	th.WriteF("default/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,14 +24,14 @@ metadata:
 	// Combine these custom transformers in one kustomization file.
 	// This kustomization file has a string-valued commonLabel that
 	// should always be quoted to remain a string
-	th.WriteK("/app/default", `
+	th.WriteK("default", `
 commonLabels:
   version: "1"
 resources:
 - deployment.yaml
 `)
 
-	m := th.Run("/app/default", th.MakeDefaultOptions())
+	m := th.Run("default", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

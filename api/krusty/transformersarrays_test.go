@@ -10,14 +10,14 @@ import (
 )
 
 func makeStatefulSetKustomization(th kusttest_test.Harness) {
-	th.WriteK("/app", `
+	th.WriteK(".", `
 commonLabels:
   notIn: arrays
 resources:
 - statefulset.yaml
 - statefulset-with-template.yaml
 `)
-	th.WriteF("/app/statefulset.yaml", `
+	th.WriteF("statefulset.yaml", `
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
@@ -42,7 +42,7 @@ spec:
         - containerPort: 80
           name: web
 `)
-	th.WriteF("/app/statefulset-with-template.yaml", `
+	th.WriteF("statefulset-with-template.yaml", `
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
@@ -94,7 +94,7 @@ spec:
 func TestTransformersNoCreateArrays(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeStatefulSetKustomization(th)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: StatefulSet

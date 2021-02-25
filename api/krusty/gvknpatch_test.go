@@ -15,8 +15,8 @@ import (
 func TestKeepOriginalGVKN(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteF("apps/deployment.yaml", `
-apiVersion: apps/v1
+	th.WriteF("deployment.yaml", `
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -28,14 +28,14 @@ spec:
           image: nginx
 `)
 
-	th.WriteF("apps/patch.yaml", `
-apiVersion: apps/v1
+	th.WriteF("patch.yaml", `
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
 `)
 
-	th.WriteK("apps", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 
@@ -45,9 +45,9 @@ patches:
     kind: Deployment
 `)
 
-	m := th.Run("apps", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -65,8 +65,8 @@ spec:
 func TestChangeName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteF("apps/deployment.yaml", `
-apiVersion: apps/v1
+	th.WriteF("deployment.yaml", `
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -78,14 +78,14 @@ spec:
           image: nginx
 `)
 
-	th.WriteF("apps/patch.yaml", `
-apiVersion: apps/v1
+	th.WriteF("patch.yaml", `
+apiVersion: v1
 kind: Deployment
 metadata:
   name: new-name
 `)
 
-	th.WriteK("apps", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 
@@ -99,9 +99,9 @@ patches:
 	options.AllowResourceIdChanges = true
 
 	// name should become `new-name`
-	m := th.Run("apps", options)
+	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -117,8 +117,8 @@ spec:
 func TestChangeKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteF("apps/deployment.yaml", `
-apiVersion: apps/v1
+	th.WriteF("deployment.yaml", `
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -130,14 +130,14 @@ spec:
           image: nginx
 `)
 
-	th.WriteF("apps/patch.yaml", `
-apiVersion: apps/v1
+	th.WriteF("patch.yaml", `
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: old-name
 `)
 
-	th.WriteK("apps", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 
@@ -151,9 +151,9 @@ patches:
 	options.AllowResourceIdChanges = true
 
 	// kind should become `StatefulSet`
-	m := th.Run("apps", options)
+	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -169,8 +169,8 @@ spec:
 func TestChangeNameAndKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
-	th.WriteF("apps/deployment.yaml", `
-apiVersion: apps/v1
+	th.WriteF("deployment.yaml", `
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -182,14 +182,14 @@ spec:
           image: nginx
 `)
 
-	th.WriteF("apps/patch.yaml", `
-apiVersion: apps/v1
+	th.WriteF("patch.yaml", `
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
 `)
 
-	th.WriteK("apps", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 
@@ -204,9 +204,9 @@ patches:
 
 	// kind should become `StatefulSet`
 	// name should become `new-name`
-	m := th.Run("apps", options)
+	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -226,7 +226,7 @@ func TestPatchOriginalName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	th.WriteF("base/deployment.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -238,7 +238,7 @@ spec:
           image: nginx
 `)
 	th.WriteF("base/patch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: new-name
@@ -260,7 +260,7 @@ patchesStrategicMerge:
 - depPatch.yaml
 `)
 	th.WriteF("overlay/depPatch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -274,7 +274,7 @@ spec:
 	// name should become `new-name`
 	m := th.Run("overlay", options)
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -292,7 +292,7 @@ func TestPatchNewName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	th.WriteF("base/deployment.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -304,7 +304,7 @@ spec:
           image: nginx
 `)
 	th.WriteF("base/patch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: new-name
@@ -326,7 +326,7 @@ patchesStrategicMerge:
 - depPatch.yaml
 `)
 	th.WriteF("overlay/depPatch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: new-name
@@ -346,7 +346,7 @@ func TestPatchOriginalNameAndKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	th.WriteF("base/deployment.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -358,7 +358,7 @@ spec:
           image: nginx
 `)
 	th.WriteF("base/patch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
@@ -380,7 +380,7 @@ patchesStrategicMerge:
 - depPatch.yaml
 `)
 	th.WriteF("overlay/depPatch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -395,7 +395,7 @@ spec:
 	// name should become `new-name`
 	m := th.Run("overlay", options)
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -413,7 +413,7 @@ func TestPatchNewNameAndKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	th.WriteF("base/deployment.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -425,7 +425,7 @@ spec:
           image: nginx
 `)
 	th.WriteF("base/patch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
@@ -447,7 +447,7 @@ patchesStrategicMerge:
 - depPatch.yaml
 `)
 	th.WriteF("overlay/depPatch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
@@ -469,7 +469,7 @@ func TestPatchOriginalNameAndNewKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	th.WriteF("base/deployment.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: old-name
@@ -481,7 +481,7 @@ spec:
           image: nginx
 `)
 	th.WriteF("base/patch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
@@ -503,7 +503,7 @@ patchesStrategicMerge:
 - depPatch.yaml
 `)
 	th.WriteF("overlay/depPatch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: new-name
@@ -558,7 +558,7 @@ resources:
   - deployment.yaml
 `)
 	th.WriteF("/app/shared/deployment.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: my-deploy
@@ -592,7 +592,7 @@ patches:
     name: my-deploy
 `)
 	th.WriteF("/app/component2/base/patch.yaml", `
-apiVersion: apps/v1
+apiVersion: v1
 kind: StatefulSet
 metadata:
   name: my-stateful-set

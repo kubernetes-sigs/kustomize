@@ -10,7 +10,7 @@ import (
 )
 
 func makeCommonFileForExtendedPatchTest(th kusttest_test.Harness) {
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -61,7 +61,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 `)
-	th.WriteF("/app/base/service.yaml", `
+	th.WriteF("base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -91,7 +91,7 @@ spec:
 func TestExtendedPatchNameSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -100,7 +100,7 @@ patches:
   target:
     name: busybox
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -108,7 +108,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -193,7 +193,7 @@ spec:
 func TestExtendedPatchGvkSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -202,7 +202,7 @@ patches:
   target:
     kind: Deployment
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -210,7 +210,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -295,7 +295,7 @@ spec:
 func TestExtendedPatchLabelSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -304,7 +304,7 @@ patches:
   target:
     labelSelector: app=nginx
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -312,7 +312,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -397,7 +397,7 @@ spec:
 func TestExtendedPatchNameGvkSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -407,7 +407,7 @@ patches:
     name: busybox
     kind: Deployment
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -415,7 +415,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -498,7 +498,7 @@ spec:
 func TestExtendedPatchNameLabelSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -508,7 +508,7 @@ patches:
     name: .*
     labelSelector: app=busybox
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -516,7 +516,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -601,7 +601,7 @@ spec:
 func TestExtendedPatchGvkLabelSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -611,7 +611,7 @@ patches:
     kind: Deployment
     labelSelector: app=busybox
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -619,7 +619,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -702,7 +702,7 @@ spec:
 func TestExtendedPatchNameGvkLabelSelector(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -713,7 +713,7 @@ patches:
     kind: Deployment
     labelSelector: app=busybox
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -721,7 +721,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -804,7 +804,7 @@ spec:
 func TestExtendedPatchNoMatch(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -813,7 +813,7 @@ patches:
   target:
     name: no-match
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -821,7 +821,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -902,14 +902,14 @@ spec:
 func TestExtendedPatchWithoutTarget(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
 patches:
 - path: patch.yaml
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -917,7 +917,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -1000,7 +1000,7 @@ spec:
 func TestExtendedPatchNoMatchMultiplePatch(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -1013,7 +1013,7 @@ patches:
     name: busybox
     kind: Job
 `)
-	th.WriteF("/app/base/patch.yaml", `
+	th.WriteF("base/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1021,7 +1021,7 @@ metadata:
   annotations:
     new-key: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -1102,7 +1102,7 @@ spec:
 func TestExtendedPatchMultiplePatchOverlapping(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - service.yaml
@@ -1115,7 +1115,7 @@ patches:
     name: busybox
     kind: Deployment
 `)
-	th.WriteF("/app/base/patch1.yaml", `
+	th.WriteF("base/patch1.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1123,7 +1123,7 @@ metadata:
   annotations:
     new-key-from-patch1: new-value
 `)
-	th.WriteF("/app/base/patch2.yaml", `
+	th.WriteF("base/patch2.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1131,7 +1131,7 @@ metadata:
   annotations:
     new-key-from-patch2: new-value
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

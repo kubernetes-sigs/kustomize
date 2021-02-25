@@ -31,11 +31,11 @@ import (
 //             base
 //
 func writeDiamondBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deploy.yaml
 `)
-	th.WriteF("/app/base/deploy.yaml", `
+	th.WriteF("base/deploy.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -46,7 +46,7 @@ spec:
 }
 
 func writeKirk(th kusttest_test.Harness) {
-	th.WriteK("/app/kirk", `
+	th.WriteK("kirk", `
 namePrefix: kirk-
 resources:
 - ../base
@@ -54,7 +54,7 @@ resources:
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("/app/kirk/dep-patch.yaml", `
+	th.WriteF("kirk/dep-patch.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -62,7 +62,7 @@ metadata:
 spec:
   type: Confident
 `)
-	th.WriteF("/app/kirk/configmap.yaml", `
+	th.WriteF("kirk/configmap.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -73,14 +73,14 @@ data:
 }
 
 func writeSpock(th kusttest_test.Harness) {
-	th.WriteK("/app/spock", `
+	th.WriteK("spock", `
 namePrefix: spock-
 resources:
 - ../base
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("/app/spock/dep-patch.yaml", `
+	th.WriteF("spock/dep-patch.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -91,14 +91,14 @@ spec:
 }
 
 func writeBones(th kusttest_test.Harness) {
-	th.WriteK("/app/bones", `
+	th.WriteK("bones", `
 namePrefix: bones-
 resources:
 - ../base
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("/app/bones/dep-patch.yaml", `
+	th.WriteF("bones/dep-patch.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -109,7 +109,7 @@ spec:
 }
 
 func writeTenants(th kusttest_test.Harness) {
-	th.WriteK("/app/tenants", `
+	th.WriteK("tenants", `
 namePrefix: t-
 resources:
 - ../kirk
@@ -119,7 +119,7 @@ resources:
 patchesStrategicMerge:
 - bones-patch.yaml
 `)
-	th.WriteF("/app/tenants/bones-patch.yaml", `
+	th.WriteF("tenants/bones-patch.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -127,7 +127,7 @@ metadata:
 spec:
   mood: Cantankerous
 `)
-	th.WriteF("/app/tenants/configMap.yaml", `
+	th.WriteF("tenants/configMap.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -145,7 +145,7 @@ func TestBasicDiamond(t *testing.T) {
 	writeSpock(th)
 	writeBones(th)
 	writeTenants(th)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 namePrefix: prod-
 resources:
 - ../tenants
@@ -154,7 +154,7 @@ patchesStrategicMerge:
 `)
 	// The patch only has to be specific enough
 	// to match the item.
-	th.WriteF("/app/prod/patches.yaml", `
+	th.WriteF("prod/patches.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -177,7 +177,7 @@ data:
   zone: twilight
 `)
 
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
+	m := th.Run("prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Deployment

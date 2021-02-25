@@ -11,7 +11,7 @@ import (
 
 func TestSimple1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/dep.yaml", `
+	th.WriteF("dep.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -19,7 +19,7 @@ metadata:
 spec:
   numReplicas: 1
 `)
-	th.WriteF("/patch.yaml", `
+	th.WriteF("patch.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -28,13 +28,13 @@ spec:
   numReplicas: 999
 `)
 
-	th.WriteK("/", `
+	th.WriteK(".", `
 resources:
 - dep.yaml
 patchesStrategicMerge:
 - patch.yaml
 `)
-	m := th.Run("/", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1

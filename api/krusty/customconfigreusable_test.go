@@ -23,7 +23,7 @@ func TestReusableCustomTransformers(t *testing.T) {
 	// First write three custom configurations for builtin plugins.
 
 	// A custom name prefixer that only touches Deployments and Services.
-	th.WriteF("/app/mytransformers/deploymentServicePrefixer.yaml", `
+	th.WriteF("mytransformers/deploymentServicePrefixer.yaml", `
 apiVersion: builtin
 kind: PrefixSuffixTransformer
 metadata:
@@ -37,7 +37,7 @@ fieldSpecs:
 `)
 
 	// A custom annotator exclusively annotating Roles.
-	th.WriteF("/app/mytransformers/roleAnnotator.yaml", `
+	th.WriteF("mytransformers/roleAnnotator.yaml", `
 apiVersion: builtin
 kind: AnnotationsTransformer
 metadata:
@@ -55,7 +55,7 @@ fieldSpecs:
 	// and only labels them at their top metadata level
 	// exclusively.  It does not modify selectors or
 	// add labels to pods in the template.
-	th.WriteF("/app/mytransformers/deploymentLabeller.yaml", `
+	th.WriteF("mytransformers/deploymentLabeller.yaml", `
 apiVersion: builtin
 kind: LabelTransformer
 metadata:
@@ -73,7 +73,7 @@ fieldSpecs:
 	// all happen to be plugin configurations. This makes
 	// these plugins re-usable as a group in any number of other
 	// kustomizations.
-	th.WriteK("/app/mytransformers", `
+	th.WriteK("mytransformers", `
 resources:
 - deploymentServicePrefixer.yaml
 - roleAnnotator.yaml
@@ -82,7 +82,7 @@ resources:
 
 	// Finally, define the kustomization for the (arbitrarily named)
 	// staging environment.
-	th.WriteK("/app/staging", `
+	th.WriteK("staging", `
 
 # Bring in the custom transformers.
 transformers:
@@ -104,7 +104,7 @@ resources:
 - role.yaml
 - service.yaml
 `)
-	th.WriteF("/app/staging/deployment.yaml", `
+	th.WriteF("staging/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -119,20 +119,20 @@ spec:
       - name: whatever
         image: whatever
 `)
-	th.WriteF("/app/staging/role.yaml", `
+	th.WriteF("staging/role.yaml", `
 apiVersion: v1
 kind: Role
 metadata:
   name: myRole
 `)
-	th.WriteF("/app/staging/service.yaml", `
+	th.WriteF("staging/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
   name: myService
 `)
 
-	m := th.Run("/app/staging", th.MakeDefaultOptions())
+	m := th.Run("staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
