@@ -12,7 +12,7 @@ import (
 
 func TestSimpleBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("app/base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: team-foo-
@@ -27,7 +27,7 @@ resources:
   - deployment.yaml
   - networkpolicy.yaml
 `)
-	th.WriteF("/app/base/service.yaml", `
+	th.WriteF("app/base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -40,7 +40,7 @@ spec:
   selector:
     app: nginx
 `)
-	th.WriteF("/app/base/networkpolicy.yaml", `
+	th.WriteF("app/base/networkpolicy.yaml", `
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -55,7 +55,7 @@ spec:
             matchLabels:
               app: nginx
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("app/base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -72,7 +72,7 @@ spec:
       - name: nginx
         image: nginx
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("app/base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
@@ -149,7 +149,7 @@ spec:
 }
 
 func makeBaseWithGenerators(th kusttest_test.Harness) {
-	th.WriteK("/app", `
+	th.WriteK("app", `
 namePrefix: team-foo-
 commonLabels:
   app: mynginx
@@ -170,7 +170,7 @@ secretGenerator:
   - username=admin
   - password=somepw
 `)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("app/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -196,7 +196,7 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 `)
-	th.WriteF("/app/service.yaml", `
+	th.WriteF("app/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -214,7 +214,7 @@ spec:
 func TestBaseWithGeneratorsAlone(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeBaseWithGenerators(th)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run("app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -305,7 +305,7 @@ type: Opaque
 func TestMergeAndReplaceGenerators(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeBaseWithGenerators(th)
-	th.WriteF("/overlay/deployment.yaml", `
+	th.WriteF("overlay/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -322,7 +322,7 @@ spec:
           name: configmap-in-overlay
         name: configmap-in-overlay
 `)
-	th.WriteK("/overlay", `
+	th.WriteK("overlay", `
 namePrefix: staging-
 commonLabels:
   env: staging
@@ -345,7 +345,7 @@ secretGenerator:
   literals:
   - proxy=haproxy
 `)
-	m := th.Run("/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -457,7 +457,7 @@ metadata:
 
 func TestGeneratingIntoNamespaces(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK("app", `
 configMapGenerator:
 - name: test
   namespace: default
@@ -479,7 +479,7 @@ secretGenerator:
   - username=admin
   - password=somepw
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run("app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -523,7 +523,7 @@ type: Opaque
 // and namespace left to default
 func TestConfigMapGeneratingIntoSameNamespace(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK("app", `
 configMapGenerator:
 - name: test
   namespace: default
@@ -533,7 +533,7 @@ configMapGenerator:
   literals:
   - key=value
 `)
-	err := th.RunWithErr("/app", th.MakeDefaultOptions())
+	err := th.RunWithErr("app", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -546,7 +546,7 @@ configMapGenerator:
 // and namespace left to default
 func TestSecretGeneratingIntoSameNamespace(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK("app", `
 secretGenerator:
 - name: test
   namespace: default
@@ -558,7 +558,7 @@ secretGenerator:
   - username=admin
   - password=somepw
 `)
-	err := th.RunWithErr("/app", th.MakeDefaultOptions())
+	err := th.RunWithErr("app", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}

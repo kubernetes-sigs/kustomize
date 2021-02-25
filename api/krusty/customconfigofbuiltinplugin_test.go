@@ -17,7 +17,7 @@ func TestCustomNamePrefixer(t *testing.T) {
 		PrepBuiltin("PrefixSuffixTransformer")
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 - role.yaml
@@ -25,7 +25,7 @@ resources:
 transformers:
 - prefixer.yaml
 `)
-	th.WriteF("/app/prefixer.yaml", `
+	th.WriteF("prefixer.yaml", `
 apiVersion: builtin
 kind: PrefixSuffixTransformer
 metadata:
@@ -37,7 +37,7 @@ fieldSpecs:
 - kind: Service
   path: metadata/name
 `)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,20 +52,20 @@ spec:
       - name: whatever
         image: whatever
 `)
-	th.WriteF("/app/role.yaml", `
+	th.WriteF("role.yaml", `
 apiVersion: v1
 kind: Role
 metadata:
   name: myRole
 `)
-	th.WriteF("/app/service.yaml", `
+	th.WriteF("service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
   name: myService
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

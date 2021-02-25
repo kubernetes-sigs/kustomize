@@ -41,37 +41,37 @@ import (
 
 func TestBaseReuseNameConflict(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/component1/base", `
+	th.WriteK("component1/base", `
 resources:
   - ../../shared
 
 namePrefix: component1-
 `)
-	th.WriteK("/app/component1/overlay", `
+	th.WriteK("component1/overlay", `
 resources:
   - ../base
 
 namePrefix: overlay-
 `)
 
-	th.WriteK("/app/component2/base", `
+	th.WriteK("component2/base", `
 resources:
   - ../../shared
 
 namePrefix: component2-
 `)
-	th.WriteK("/app/component2/overlay", `
+	th.WriteK("component2/overlay", `
 resources:
   - ../base
 
 namePrefix: overlay-
 `)
 
-	th.WriteK("/app/shared", `
+	th.WriteK("shared", `
 resources:
   - resources.yaml
 `)
-	th.WriteF("/app/shared/resources.yaml", `
+	th.WriteF("shared/resources.yaml", `
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -111,13 +111,13 @@ spec:
             claimName: postgres
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
   - component1/overlay
   - component2/overlay
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: PersistentVolumeClaim

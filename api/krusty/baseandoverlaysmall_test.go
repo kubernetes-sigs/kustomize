@@ -14,7 +14,7 @@ import (
 
 func TestOrderPreserved(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: b-
 resources:
 - namespace.yaml
@@ -22,50 +22,50 @@ resources:
 - service.yaml
 - deployment.yaml
 `)
-	th.WriteF("/app/base/service.yaml", `
+	th.WriteF("base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
   name: myService
 `)
-	th.WriteF("/app/base/namespace.yaml", `
+	th.WriteF("base/namespace.yaml", `
 apiVersion: v1
 kind: Namespace
 metadata:
   name: myNs
 `)
-	th.WriteF("/app/base/role.yaml", `
+	th.WriteF("base/role.yaml", `
 apiVersion: v1
 kind: Role
 metadata:
   name: myRole
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
   name: myDep
 `)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 namePrefix: p-
 resources:
 - ../base
 - service.yaml
 - namespace.yaml
 `)
-	th.WriteF("/app/prod/service.yaml", `
+	th.WriteF("prod/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
   name: myService2
 `)
-	th.WriteF("/app/prod/namespace.yaml", `
+	th.WriteF("prod/namespace.yaml", `
 apiVersion: v1
 kind: Namespace
 metadata:
   name: myNs2
 `)
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
+	m := th.Run("prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Namespace
@@ -101,17 +101,17 @@ metadata:
 
 func TestBaseInResourceList(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 namePrefix: b-
 resources:
 - ../base
 `)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: a-
 resources:
 - service.yaml
 `)
-	th.WriteF("/app/base/service.yaml", `
+	th.WriteF("base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -120,7 +120,7 @@ spec:
   selector:
     backend: bungie
 `)
-	m := th.Run("/app/prod", th.MakeDefaultOptions())
+	m := th.Run("prod", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
@@ -181,7 +181,7 @@ spec:
 }
 
 func writeSmallBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: a-
 commonLabels:
   app: myApp
@@ -189,7 +189,7 @@ resources:
 - deployment.yaml
 - service.yaml
 `)
-	th.WriteF("/app/base/service.yaml", `
+	th.WriteF("base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -200,7 +200,7 @@ spec:
   ports:
     - port: 7002
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -220,7 +220,7 @@ spec:
 func TestSmallBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -260,7 +260,7 @@ spec:
 func TestSmallOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 namePrefix: b-
 commonLabels:
   env: prod
@@ -275,15 +275,15 @@ images:
   newTag: 1.8.0
 `)
 
-	th.WriteF("/app/overlay/configmap/app.env", `
+	th.WriteF("overlay/configmap/app.env", `
 DB_USERNAME=admin
 DB_PASSWORD=somepw
 `)
-	th.WriteF("/app/overlay/configmap/app-init.ini", `
+	th.WriteF("overlay/configmap/app-init.ini", `
 FOO=bar
 BAR=baz
 `)
-	th.WriteF("/app/overlay/deployment/deployment.yaml", `
+	th.WriteF("overlay/deployment/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -291,7 +291,7 @@ metadata:
 spec:
   replicas: 1000
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -347,7 +347,7 @@ spec:
 func TestSharedPatchDisAllowed(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 commonLabels:
   env: prod
 resources:
@@ -355,7 +355,7 @@ resources:
 patchesStrategicMerge:
 - ../shared/deployment-patch.yaml
 `)
-	th.WriteF("/app/shared/deployment-patch.yaml", `
+	th.WriteF("shared/deployment-patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -363,14 +363,14 @@ metadata:
 spec:
   replicas: 1000
 `)
-	err := th.RunWithErr("/app/overlay", func() Options {
+	err := th.RunWithErr("overlay", func() Options {
 		o := th.MakeDefaultOptions()
 		o.LoadRestrictions = types.LoadRestrictionsRootOnly
 		return o
 	}())
 	if !strings.Contains(
 		err.Error(),
-		"security; file '/app/shared/deployment-patch.yaml' is not in or below '/app/overlay'") {
+		"security; file '/shared/deployment-patch.yaml' is not in or below '/overlay'") {
 		t.Fatalf("unexpected error: %s", err)
 	}
 }
@@ -378,7 +378,7 @@ spec:
 func TestSharedPatchAllowed(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 commonLabels:
   env: prod
 resources:
@@ -386,7 +386,7 @@ resources:
 patchesStrategicMerge:
 - ../shared/deployment-patch.yaml
 `)
-	th.WriteF("/app/shared/deployment-patch.yaml", `
+	th.WriteF("shared/deployment-patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -394,7 +394,7 @@ metadata:
 spec:
   replicas: 1000
 `)
-	m := th.Run("/app/overlay", func() Options {
+	m := th.Run("overlay", func() Options {
 		o := th.MakeDefaultOptions()
 		o.LoadRestrictions = types.LoadRestrictionsNone
 		return o
@@ -444,7 +444,7 @@ spec:
 func TestSmallOverlayJSONPatch(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeSmallBase(th)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 resources:
 - ../base
 patchesJson6902:
@@ -455,12 +455,12 @@ patchesJson6902:
   path: service-patch.yaml
 `)
 
-	th.WriteF("/app/overlay/service-patch.yaml", `
+	th.WriteF("overlay/service-patch.yaml", `
 - op: add
   path: /spec/selector/backend
   value: beagle
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

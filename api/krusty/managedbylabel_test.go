@@ -11,7 +11,7 @@ import (
 
 func TestAddManagedbyLabel(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/service.yaml", `
+	th.WriteF("service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -20,7 +20,7 @@ spec:
   ports:
   - port: 7002
 `)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
@@ -28,7 +28,7 @@ resources:
 `)
 	options := th.MakeDefaultOptions()
 	options.AddManagedbyLabel = true
-	m := th.Run("/app", options)
+	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service

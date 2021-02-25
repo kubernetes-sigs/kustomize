@@ -8,7 +8,7 @@ import (
 
 func TestKeepEmptyArray(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/resources.yaml", `
+	th.WriteF("resources.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,11 +24,11 @@ spec:
         imagePullPolicy: IfNotPresent
       imagePullSecrets: []`)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - resources.yaml`)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

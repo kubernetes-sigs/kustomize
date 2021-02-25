@@ -17,7 +17,7 @@ openapi:
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,7 +52,7 @@ openapi:
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -76,7 +76,7 @@ func TestOpenApiFieldDefaultVersion(t *testing.T) {
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -260,7 +260,7 @@ spec:
 
 func TestOpenAPIFieldFromComponentDefault(t *testing.T) {
 	input := []FileGen{writeTestBase, writeTestComponent, writeOverlayProd}
-	runPath := "/prod"
+	runPath := "prod"
 
 	th := kusttest_test.MakeHarness(t)
 	for _, f := range input {
@@ -271,11 +271,11 @@ func TestOpenAPIFieldFromComponentDefault(t *testing.T) {
 }
 
 func writeTestComponentWithOlderOpenAPIVersion(th kusttest_test.Harness) {
-	th.WriteC("/comp", `
+	th.WriteC("comp", `
 openapi:
   version: v1.18.8
 `)
-	th.WriteF("/comp/stub.yaml", `
+	th.WriteF("comp/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:

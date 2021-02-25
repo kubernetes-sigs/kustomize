@@ -11,19 +11,19 @@ import (
 
 func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", "")
-	th.WriteK("/app/overlays/aws", `
+	th.WriteK("base", "")
+	th.WriteK("overlays/aws", `
 resources:
 - ../../base
 `)
-	th.WriteK("/app/overlays/aws-nonprod", `
+	th.WriteK("overlays/aws-nonprod", `
 resources:
 - ../aws
 `)
-	th.WriteK("/app/overlays/aws-sandbox2.us-east-1", `
+	th.WriteK("overlays/aws-sandbox2.us-east-1", `
 resources:
 - ../aws-nonprod
 `)
-	m := th.Run("/app/overlays/aws-sandbox2.us-east-1", th.MakeDefaultOptions())
+	m := th.Run("overlays/aws-sandbox2.us-east-1", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, "")
 }
