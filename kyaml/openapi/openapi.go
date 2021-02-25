@@ -483,6 +483,10 @@ func initSchema() {
 		if err != nil {
 			panic("invalid schema file")
 		}
+		if err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
+			// this should never happen
+			panic(err)
+		}
 		return
 	}
 
