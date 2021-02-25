@@ -13,14 +13,14 @@ func TestInlineTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteF("/app/resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: apps/v1
 kind: ConfigMap
 metadata:
   name: whatever
 data: {}
 `)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - resource.yaml
 transformers:
@@ -44,7 +44,7 @@ metadata:
   namespace: test
 `
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expected)
 }
 
@@ -52,7 +52,7 @@ func TestInlineGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 generators:
 - |-
   apiVersion: builtin
@@ -74,6 +74,6 @@ metadata:
   name: mymap-kfd8tf729k
 `
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expected)
 }

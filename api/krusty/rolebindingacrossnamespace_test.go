@@ -10,12 +10,12 @@ func TestRoleBindingAcrossNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - resource.yaml
 nameSuffix: -ns2
 `)
-	th.WriteF("/app/resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -77,7 +77,7 @@ subjects:
     namespace: ns1
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -145,12 +145,12 @@ func TestRoleBindingAcrossNamespaceWoSubjects(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - resource.yaml
 nameSuffix: -ns2
 `)
-	th.WriteF("/app/resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -181,7 +181,7 @@ roleRef:
   name: my-role
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -219,18 +219,18 @@ roleRef:
 func TestRoleBindingWhenSubjectsAcrossNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - ./ns1
 - ./ns2
 `)
-	th.WriteK("/app/ns1", `
+	th.WriteK("ns1", `
 namespace: namespace-1
 resources:
 - role-ns1.yaml
 - rolebinding-ns1.yaml
 `)
-	th.WriteF("/app/ns1/role-ns1.yaml", `
+	th.WriteF("ns1/role-ns1.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -240,7 +240,7 @@ rules:
     resources: ["pods"]
     verbs: ["get"]
 `)
-	th.WriteF("/app/ns1/rolebinding-ns1.yaml", `
+	th.WriteF("ns1/rolebinding-ns1.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -254,13 +254,13 @@ subjects:
     name: testAccount
     namespace: namespace-2
 `)
-	th.WriteK("/app/ns2", `
+	th.WriteK("ns2", `
 namespace: namespace-2
 resources:
 - role-ns2.yaml
 - rolebinding-ns2.yaml
 `)
-	th.WriteF("/app/ns2/role-ns2.yaml", `
+	th.WriteF("ns2/role-ns2.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -270,7 +270,7 @@ rules:
     resources: ["pods"]
     verbs: ["get"]
 `)
-	th.WriteF("/app/ns2/rolebinding-ns2.yaml", `
+	th.WriteF("ns2/rolebinding-ns2.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -285,7 +285,7 @@ subjects:
     namespace: namespace-1
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

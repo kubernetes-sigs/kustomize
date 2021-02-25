@@ -10,7 +10,7 @@ import (
 )
 
 func makeResourcesForPatchTest(th kusttest_test.Harness) {
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,7 +41,7 @@ spec:
 func TestStrategicMergePatchInline(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 
@@ -58,7 +58,7 @@ patchesStrategicMerge:
           - name: nginx
             image: image1
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -90,7 +90,7 @@ spec:
 func TestJSONPatchInline(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 
@@ -105,7 +105,7 @@ patchesJson6902:
       path: /spec/template/spec/containers/0/image
       value: image1
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -137,7 +137,7 @@ spec:
 func TestExtendedPatchInlineJSON(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 
@@ -150,7 +150,7 @@ patches:
       path: /spec/template/spec/containers/0/image
       value: image1
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -182,7 +182,7 @@ spec:
 func TestExtendedPatchInlineYAML(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeResourcesForPatchTest(th)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 
@@ -202,7 +202,7 @@ patches:
             - name: nginx
               image: image1
 `)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

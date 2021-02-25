@@ -13,14 +13,14 @@ import (
 // Ref: Issue #3455
 func TestIntermediateName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/gcp", `
+	th.WriteK("gcp", `
 namePrefix: gcp-
 resources:
 - ../emea
 patchesStrategicMerge:
 - depPatch.yaml
 `)
-	th.WriteF("/app/gcp/depPatch.yaml", `
+	th.WriteF("gcp/depPatch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,21 +28,21 @@ metadata:
 spec:
   replicas: 999
 `)
-	th.WriteK("/app/emea", `
+	th.WriteK("emea", `
 namePrefix: emea-
 resources:
 - ../prod
 `)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 namePrefix: prod-
 resources:
 - ../base
 `)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,7 +53,7 @@ spec:
       containers:
       - image: whatever
 `)
-	m := th.Run("/app/gcp", th.MakeDefaultOptions())
+	m := th.Run("gcp", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -72,14 +72,14 @@ spec:
 // transformations) have the same name, there is no conflict
 func TestIntermediateNameSameNameDifferentLayer(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/gcp", `
+	th.WriteK("gcp", `
 namePrefix: gcp-
 resources:
 - ../emea
 patchesStrategicMerge:
 - depPatch.yaml
 `)
-	th.WriteF("/app/gcp/depPatch.yaml", `
+	th.WriteF("gcp/depPatch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -87,13 +87,13 @@ metadata:
 spec:
   replicas: 999
 `)
-	th.WriteK("/app/emea", `
+	th.WriteK("emea", `
 namePrefix: emea-
 resources:
 - ../prod
 - deployment.yaml
 `)
-	th.WriteF("/app/emea/deployment.yaml", `
+	th.WriteF("emea/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -104,16 +104,16 @@ spec:
       containers:
       - image: whatever
 `)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 namePrefix: prod-
 resources:
 - ../base
 `)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -124,7 +124,7 @@ spec:
       containers:
       - image: whatever
 `)
-	m := th.Run("/app/gcp", th.MakeDefaultOptions())
+	m := th.Run("gcp", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -153,14 +153,14 @@ spec:
 // instead of prod-foo
 func TestIntermediateNameAmbiguous(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/gcp", `
+	th.WriteK("gcp", `
 namePrefix: gcp-
 resources:
 - ../emea
 patchesStrategicMerge:
 - depPatch.yaml
 `)
-	th.WriteF("/app/gcp/depPatch.yaml", `
+	th.WriteF("gcp/depPatch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -168,13 +168,13 @@ metadata:
 spec:
   replicas: 999
 `)
-	th.WriteK("/app/emea", `
+	th.WriteK("emea", `
 namePrefix: emea-
 resources:
 - ../prod
 - deployment.yaml
 `)
-	th.WriteF("/app/emea/deployment.yaml", `
+	th.WriteF("emea/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -185,16 +185,16 @@ spec:
       containers:
       - image: whatever
 `)
-	th.WriteK("/app/prod", `
+	th.WriteK("prod", `
 namePrefix: prod-
 resources:
 - ../base
 `)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -205,7 +205,7 @@ spec:
       containers:
       - image: whatever
 `)
-	err := th.RunWithErr("/app/gcp", th.MakeDefaultOptions())
+	err := th.RunWithErr("gcp", th.MakeDefaultOptions())
 	assert.Error(t, err)
 }
 
@@ -220,13 +220,13 @@ namePrefix: project-
 resources:
 - app`)
 
-	th.WriteK("/app", `
+	th.WriteK("app", `
 resources:
 - resources/deployment.yaml
 - resources/xql
 `)
 
-	th.WriteK("/app/resources/xql", `
+	th.WriteK("app/resources/xql", `
 resources:
 - xql-zero
 - xql-one
@@ -234,12 +234,12 @@ configurations:
 - ./kustomizeconfig.yaml
 `)
 
-	th.WriteF("/app/resources/xql/kustomizeconfig.yaml", `
+	th.WriteF("app/resources/xql/kustomizeconfig.yaml", `
 varReference:
 - path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
 `)
 
-	th.WriteK("/app/resources/xql/xql-one", `
+	th.WriteK("app/resources/xql/xql-one", `
 namePrefix: xql-one-
 resources:
 - ../../../../bases/xql
@@ -258,11 +258,11 @@ vars:
     fieldpath: metadata.name
 `)
 
-	th.WriteF("/app/resources/xql/xql-one/config/xql-one-secret.env", `
+	th.WriteF("app/resources/xql/xql-one/config/xql-one-secret.env", `
 arg=1
 `)
 
-	th.WriteK("/app/resources/xql/xql-zero", `
+	th.WriteK("app/resources/xql/xql-zero", `
 namePrefix: xql-zero-
 resources:
 - ../../../../bases/xql
@@ -281,7 +281,7 @@ vars:
     fieldpath: metadata.name
 `)
 
-	th.WriteF("/app/resources/xql/xql-zero/config/xql-zero-secret.env", `
+	th.WriteF("app/resources/xql/xql-zero/config/xql-zero-secret.env", `
 arg=0
 `)
 
@@ -320,7 +320,7 @@ spec:
               key: password
 `)
 
-	th.WriteK("/bases/xql", `
+	th.WriteK("bases/xql", `
 secretGenerator:
 - name: xql-secret
   envs:

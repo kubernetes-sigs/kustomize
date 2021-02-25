@@ -10,7 +10,7 @@ import (
 )
 
 func writeBaseWithCrd(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 crds:
@@ -23,7 +23,7 @@ resources:
 
 namePrefix: x-
 `)
-	th.WriteF("/app/base/bee.yaml", `
+	th.WriteF("base/bee.yaml", `
 apiVersion: v1beta1
 kind: Bee
 metadata:
@@ -31,7 +31,7 @@ metadata:
 spec:
   action: fly
 `)
-	th.WriteF("/app/base/mykind.yaml", `
+	th.WriteF("base/mykind.yaml", `
 apiVersion: jingfang.example.com/v1
 kind: MyKind
 metadata:
@@ -42,7 +42,7 @@ spec:
   beeRef:
     name: bee
 `)
-	th.WriteF("/app/base/secret.yaml", `
+	th.WriteF("base/secret.yaml", `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -50,7 +50,7 @@ metadata:
 data:
   PATH: yellowBrickRoad
 `)
-	th.WriteF("/app/base/mycrd.json", `
+	th.WriteF("base/mycrd.json", `
 {
   "github.com/example/pkg/apis/jingfang/v1beta1.Bee": {
     "Schema": {
@@ -227,7 +227,7 @@ data:
 func TestCrdBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeBaseWithCrd(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -258,7 +258,7 @@ spec:
 func TestCrdWithOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeBaseWithCrd(th)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: prod-
@@ -267,7 +267,7 @@ resources:
 patchesStrategicMerge:
 - bee.yaml
 `)
-	th.WriteF("/app/overlay/bee.yaml", `
+	th.WriteF("overlay/bee.yaml", `
 apiVersion: v1beta1
 kind: Bee
 metadata:
@@ -275,7 +275,7 @@ metadata:
 spec:
   action: makehoney
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
@@ -306,7 +306,7 @@ spec:
 
 func TestCrdWithContainers(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/crd/containers", `
+	th.WriteK("crd/containers", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
@@ -316,7 +316,7 @@ images:
     newName: registry.gitlab.com/test
     newTag: latest
 `)
-	th.WriteF("/app/crd/containers/crd.yaml", `
+	th.WriteF("crd/containers/crd.yaml", `
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -337,7 +337,7 @@ spec:
           containers:
             description: Containers allows injecting additional containers
   `)
-	m := th.Run("/app/crd/containers", th.MakeDefaultOptions())
+	m := th.Run("crd/containers", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition

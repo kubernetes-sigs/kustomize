@@ -11,7 +11,7 @@ import (
 
 func TestNamespacedGenerator(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 configMapGenerator:
@@ -34,7 +34,7 @@ secretGenerator:
   literals:
   - password.txt=anotherSecret
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -74,7 +74,7 @@ type: Opaque
 
 func TestNamespacedGeneratorWithOverlays(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namespace: base
 
 configMapGenerator:
@@ -82,7 +82,7 @@ configMapGenerator:
   literals:
     - base=apple
 `)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 resources:
   - ../base
 
@@ -94,7 +94,7 @@ configMapGenerator:
     literals:
       - overlay=peach
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:

@@ -11,7 +11,7 @@ import (
 
 func TestSecretGenerator(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 secretGenerator:
 - name: bob
   literals:
@@ -23,12 +23,12 @@ secretGenerator:
   envs:
   - foo.env
 `)
-	th.WriteF("/app/foo.env", `
+	th.WriteF("foo.env", `
 MOUNTAIN=everest
 OCEAN=pacific
 `)
-	th.WriteF("/app/phrase.dat", "dat phrase")
-	m := th.Run("/app", th.MakeDefaultOptions())
+	th.WriteF("phrase.dat", "dat phrase")
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -47,7 +47,7 @@ type: Opaque
 
 func TestGeneratorOptionsWithBases(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 generatorOptions:
@@ -59,7 +59,7 @@ configMapGenerator:
   literals:
   - foo=bar
 `)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
@@ -73,7 +73,7 @@ configMapGenerator:
   literals:
   - fruit=apple
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:

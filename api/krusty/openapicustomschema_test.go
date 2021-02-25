@@ -35,13 +35,13 @@ spec:
 }
 
 func writeTestComponentWithCustomSchema(th kusttest_test.Harness) {
-	writeTestSchema(th, "/comp/")
+	writeTestSchema(th, "comp/")
 	openapi.ResetOpenAPI()
-	th.WriteC("/comp", `
+	th.WriteC("comp", `
 openapi:
   path: mycrd_schema.json
 `)
-	th.WriteF("/comp/stub.yaml", `
+	th.WriteF("comp/stub.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -93,7 +93,7 @@ resources:
 openapi:
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "/mycrd.yaml")
+	writeCustomResource(th, "mycrd.yaml")
 	writeTestSchema(th, "./")
 	openapi.ResetOpenAPI()
 	m := th.Run(".", th.MakeDefaultOptions())
@@ -111,7 +111,7 @@ openapi:
   version: v1.18.8
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "/mycrd.yaml")
+	writeCustomResource(th, "mycrd.yaml")
 	writeTestSchema(th, "./")
 	openapi.ResetOpenAPI()
 	err := th.RunWithErr(".", th.MakeDefaultOptions())
@@ -130,7 +130,7 @@ resources:
 openapi:
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "/mycrd.yaml")
+	writeCustomResource(th, "mycrd.yaml")
 	openapi.ResetOpenAPI()
 	err := th.RunWithErr(".", th.MakeDefaultOptions())
 	assert.Error(t, err)
@@ -152,7 +152,7 @@ resources:
 - ../base
 `+customSchemaPatch)
 	writeCustomResource(th, "base/mycrd.yaml")
-	writeTestSchema(th, "/base/")
+	writeTestSchema(th, "base/")
 	openapi.ResetOpenAPI()
 	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, patchedCustomResource)
@@ -173,7 +173,7 @@ openapi:
   path: mycrd_schema.json
 `+customSchemaPatch)
 	writeCustomResource(th, "base/mycrd.yaml")
-	writeTestSchema(th, "/overlay/")
+	writeTestSchema(th, "overlay/")
 	openapi.ResetOpenAPI()
 	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, patchedCustomResource)
@@ -196,7 +196,7 @@ openapi:
   version: v1.19.1
 `+customSchemaPatch)
 	writeCustomResource(th, "base/mycrd.yaml")
-	writeTestSchema(th, "/base/")
+	writeTestSchema(th, "base/")
 	openapi.ResetOpenAPI()
 	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
