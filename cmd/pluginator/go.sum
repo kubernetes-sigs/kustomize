@@ -270,5 +270,7 @@ sigs.k8s.io/kustomize/api v0.8.2 h1:YrFKmhRgpkqa3Il2Geh+BflrRwN4vvyLH+DlKmREteU=
 sigs.k8s.io/kustomize/api v0.8.2/go.mod h1:yHAkpXolD4n+m7YoostNPYTEyDjwdNNGRQ0Mitxihrc=
 sigs.k8s.io/kustomize/kyaml v0.10.11 h1:7KzaMS6TtwhGQW6hkw8umC2zFtSGAQPdAMagfautnkw=
 sigs.k8s.io/kustomize/kyaml v0.10.11/go.mod h1:uD7q6dIrZV02fBV6D7FOgdOBcLfUmhG3ExxDIGbUM3w=
+sigs.k8s.io/kustomize/kyaml v0.10.12 h1:1lUvuSVETthZspl4X+Xdic/FgPAfxUbc7MKtc1vcO2c=
+sigs.k8s.io/kustomize/kyaml v0.10.12/go.mod h1:uD7q6dIrZV02fBV6D7FOgdOBcLfUmhG3ExxDIGbUM3w=
 sigs.k8s.io/yaml v1.2.0 h1:kr/MCeFWJWTwyaHoR9c8EjH9OumOmoF9YGiZd7lFm/Q=
 sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
