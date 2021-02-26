@@ -92,10 +92,11 @@ func (c Copier) CopyFile(dir, name string) error {
 	for scanner.Scan() {
 		l := scanner.Text()
 		// Disallow recursive generation.
-		if strings.HasPrefix(l, "//go:generate") {
+		if strings.HasPrefix(l, "//go:generate") ||
+			strings.HasPrefix(l, "// +k8s:") {
 			continue
 		}
-		// Don't want it to appear double generated.
+		// When copying generated code, drop the old 'generated' message.
 		if strings.HasPrefix(l, "// Code generated") {
 			continue
 		}

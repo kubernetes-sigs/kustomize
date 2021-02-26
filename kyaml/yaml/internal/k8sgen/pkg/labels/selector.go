@@ -121,7 +121,6 @@ func (a ByKey) Less(i, j int) bool { return a[i].key < a[j].key }
 // The zero value of Requirement is invalid.
 // Requirement implements both set based match and exact match
 // Requirement should be initialized via NewRequirement constructor for creating a valid Requirement.
-// +k8s:deepcopy-gen=true
 type Requirement struct {
 	key      string
 	operator selection.Operator
