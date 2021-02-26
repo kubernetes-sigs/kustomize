@@ -306,5 +306,7 @@ sigs.k8s.io/kustomize/cmd/config v0.9.3 h1:hzpeK4tiWUsGhazh8HT9fWU5/wj0RTZmH2RcC
 sigs.k8s.io/kustomize/cmd/config v0.9.3/go.mod h1:UvkycBEfyyVK49Xiy546K2y9GsxFgWYQ/sGZQ8eCQAM=
 sigs.k8s.io/kustomize/kyaml v0.10.11 h1:7KzaMS6TtwhGQW6hkw8umC2zFtSGAQPdAMagfautnkw=
 sigs.k8s.io/kustomize/kyaml v0.10.11/go.mod h1:uD7q6dIrZV02fBV6D7FOgdOBcLfUmhG3ExxDIGbUM3w=
+sigs.k8s.io/kustomize/kyaml v0.10.12 h1:1lUvuSVETthZspl4X+Xdic/FgPAfxUbc7MKtc1vcO2c=
+sigs.k8s.io/kustomize/kyaml v0.10.12/go.mod h1:uD7q6dIrZV02fBV6D7FOgdOBcLfUmhG3ExxDIGbUM3w=
 sigs.k8s.io/yaml v1.2.0 h1:kr/MCeFWJWTwyaHoR9c8EjH9OumOmoF9YGiZd7lFm/Q=
 sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
