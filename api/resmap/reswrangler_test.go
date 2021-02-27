@@ -339,6 +339,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-alice",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
 					"config.kubernetes.io/previousNames":      "alice",
 					"config.kubernetes.io/previousNamespaces": "default",
 				},
@@ -351,6 +352,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-bob",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap,ConfigMap",
 					"config.kubernetes.io/previousNames":      "bob,bob2",
 					"config.kubernetes.io/previousNamespaces": "default,default",
 				},
@@ -364,6 +366,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"name":      "new-bob",
 				"namespace": "new-happy",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
 					"config.kubernetes.io/previousNames":      "bob",
 					"config.kubernetes.io/previousNamespaces": "happy",
 				},
@@ -377,6 +380,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"name":      "charlie",
 				"namespace": "happy",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
 					"config.kubernetes.io/previousNames":      "charlie",
 					"config.kubernetes.io/previousNamespaces": "default",
 				},

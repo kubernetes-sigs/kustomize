@@ -33,17 +33,26 @@ type Resource struct {
 }
 
 const (
+	buildAnnotationPreviousKinds      = konfig.ConfigAnnoDomain + "/previousKinds"
 	buildAnnotationPreviousNames      = konfig.ConfigAnnoDomain + "/previousNames"
 	buildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
 	buildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
 	buildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
+
+	// the following are only for patches, to specify whether they can change names
+	// and kinds of their targets
+	buildAnnotationAllowNameChange = konfig.ConfigAnnoDomain + "/allowNameChange"
+	buildAnnotationAllowKindChange = konfig.ConfigAnnoDomain + "/allowKindChange"
 )
 
 var buildAnnotations = []string{
+	buildAnnotationPreviousKinds,
 	buildAnnotationPreviousNames,
 	buildAnnotationPrefixes,
 	buildAnnotationSuffixes,
 	buildAnnotationPreviousNamespaces,
+	buildAnnotationAllowNameChange,
+	buildAnnotationAllowKindChange,
 }
 
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
@@ -155,6 +164,12 @@ func (r *Resource) SetName(n string) {
 
 func (r *Resource) SetNamespace(n string) {
 	r.kunStr.SetNamespace(n)
+}
+
+func (r *Resource) SetKind(k string) {
+	gvk := r.GetGvk()
+	gvk.Kind = k
+	r.SetGvk(gvk)
 }
 
 func (r *Resource) UnmarshalJSON(s []byte) error {
@@ -351,10 +366,39 @@ func (r *Resource) RemoveBuildAnnotations() {
 	r.SetAnnotations(annotations)
 }
 
-func (r *Resource) setPreviousNamespaceAndName(ns string, n string) *Resource {
+func (r *Resource) setPreviousId(ns string, n string, k string) *Resource {
 	r.appendCsvAnnotation(buildAnnotationPreviousNames, n)
 	r.appendCsvAnnotation(buildAnnotationPreviousNamespaces, ns)
+	r.appendCsvAnnotation(buildAnnotationPreviousKinds, k)
 	return r
+}
+
+func (r *Resource) SetAllowNameChange(value string) {
+	annotations := r.GetAnnotations()
+	annotations[buildAnnotationAllowNameChange] = value
+	r.SetAnnotations(annotations)
+}
+
+func (r *Resource) NameChangeAllowed() bool {
+	annotations := r.GetAnnotations()
+	if allowed, set := annotations[buildAnnotationAllowNameChange]; set && allowed == "true" {
+		return true
+	}
+	return false
+}
+
+func (r *Resource) SetAllowKindChange(value string) {
+	annotations := r.GetAnnotations()
+	annotations[buildAnnotationAllowKindChange] = value
+	r.SetAnnotations(annotations)
+}
+
+func (r *Resource) KindChangeAllowed() bool {
+	annotations := r.GetAnnotations()
+	if allowed, set := annotations[buildAnnotationAllowKindChange]; set && allowed == "true" {
+		return true
+	}
+	return false
 }
 
 // String returns resource as JSON.
@@ -430,14 +474,19 @@ func (r *Resource) PrevIds() []resid.ResId {
 	//     pairs on one annotation so there is no chance of error
 	names := r.getCsvAnnotation(buildAnnotationPreviousNames)
 	ns := r.getCsvAnnotation(buildAnnotationPreviousNamespaces)
-	if len(names) != len(ns) {
+	kinds := r.getCsvAnnotation(buildAnnotationPreviousKinds)
+	if len(names) != len(ns) || len(names) != len(kinds) {
 		panic(errors.New(
-			"number of previous names not equal to " +
-				"number of previous namespaces"))
+			"number of previous names, " +
+				"number of previous namespaces, " +
+				"number of previous kinds not equal"))
 	}
 	for i := range names {
+		k := kinds[i]
+		gvk := r.GetGvk()
+		gvk.Kind = k
 		ids = append(ids, resid.NewResIdWithNamespace(
-			r.GetGvk(), names[i], ns[i]))
+			gvk, names[i], ns[i]))
 	}
 	return ids
 }
@@ -445,7 +494,7 @@ func (r *Resource) PrevIds() []resid.ResId {
 // StorePreviousId stores the resource's current ID via build annotations.
 func (r *Resource) StorePreviousId() {
 	id := r.CurId()
-	r.setPreviousNamespaceAndName(id.EffectiveNamespace(), id.Name)
+	r.setPreviousId(id.EffectiveNamespace(), id.Name, id.Kind)
 }
 
 // CurId returns a ResId for the resource using the
@@ -482,7 +531,10 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 	if err != nil {
 		return err
 	}
-	n, ns := r.GetName(), r.GetNamespace()
+	n, ns, k := r.GetName(), r.GetNamespace(), r.GetKind()
+	if patch.NameChangeAllowed() || patch.KindChangeAllowed() {
+		r.StorePreviousId()
+	}
 	err = r.ApplyFilter(patchstrategicmerge.Filter{
 		Patch: node,
 	})
@@ -493,11 +545,17 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 	if err != nil {
 		return err
 	}
-	if !empty {
-		r.SetName(n)
-		r.SetNamespace(ns)
+	if empty {
+		return nil
 	}
-	return err
+	if !patch.KindChangeAllowed() {
+		r.SetKind(k)
+	}
+	if !patch.NameChangeAllowed() {
+		r.SetName(n)
+	}
+	r.SetNamespace(ns)
+	return nil
 }
 
 func (r *Resource) ApplyFilter(f kio.Filter) error {

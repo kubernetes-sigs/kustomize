@@ -85,7 +85,7 @@ func (o *removePatchOptions) RunRemovePatch(fSys filesys.FileSystem) error {
 		}
 	}
 	if len(patches) == len(m.Patches) {
-		log.Printf("patch %s doesn't exist in kustomization file", o.Patch)
+		log.Printf("patch %s doesn't exist in kustomization file", o.Patch.Patch)
 		return nil
 	}
 	m.Patches = patches
