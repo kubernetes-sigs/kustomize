@@ -33,21 +33,16 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
-
-	// When true, allow name and kind changing via a patch
-	// When false, patch name/kind don't overwrite target name/kind
-	AllowResourceIdChanges bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
 func MakeDefaultOptions() *Options {
 	return &Options{
-		DoLegacyResourceSort:   false,
-		AddManagedbyLabel:      false,
-		LoadRestrictions:       types.LoadRestrictionsRootOnly,
-		DoPrune:                false,
-		PluginConfig:           konfig.DisabledPluginConfig(),
-		AllowResourceIdChanges: false,
+		DoLegacyResourceSort: false,
+		AddManagedbyLabel:    false,
+		LoadRestrictions:     types.LoadRestrictionsRootOnly,
+		DoPrune:              false,
+		PluginConfig:         konfig.DisabledPluginConfig(),
 	}
 }
 
