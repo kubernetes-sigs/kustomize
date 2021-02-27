@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/pkg/errors v0.8.1
-	sigs.k8s.io/kustomize/api v0.8.2
+	sigs.k8s.io/kustomize/api v0.8.3
 )
 
 replace sigs.k8s.io/kustomize/kyaml => ../../../kyaml

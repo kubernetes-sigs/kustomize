@@ -6,7 +6,7 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
-	sigs.k8s.io/kustomize/api v0.8.2
+	sigs.k8s.io/kustomize/api v0.8.3
 	sigs.k8s.io/kustomize/kyaml v0.10.12
 	sigs.k8s.io/yaml v1.2.0
 )
