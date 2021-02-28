@@ -4,7 +4,7 @@
 # The files to vendor (copy).
 # See {repo}/cmd/k8scopy/main.go for more info.
 module: k8s.io/apimachinery
-version: v0.18.10
+version: v0.19.8
 packages:
 - name: pkg/api/resource
   files:
