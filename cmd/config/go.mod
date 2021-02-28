@@ -19,3 +19,5 @@ require (
 	gopkg.in/inf.v0 v0.9.1
 	sigs.k8s.io/kustomize/kyaml v0.10.13
 )
+
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
