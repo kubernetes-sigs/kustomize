@@ -14,6 +14,13 @@ import (
 
 const (
 	sigsK8sIo = "sigs.k8s.io"
+
+	// Files whose names start with prefixBad get special treatment from
+	// https://github.com/kubernetes/kubernetes/blob/master/build/common.sh
+	// (and ./hack/verify-generated-files-remake.sh, etc.).
+	// We don't want that, so modify those file names.
+	prefixBad  = "zz_generated"
+	prefixGood = "copied"
 )
 
 type Copier struct {
@@ -64,16 +71,20 @@ func NewCopier(s *ModuleSpec, prefix, pgmName string) Copier {
 	return tmp
 }
 
-func (c Copier) CopyFile(dir, name string) error {
+func (c Copier) CopyFile(dir, fName string) error {
 	inFile, err := os.Open(
-		filepath.Join(c.goModCache, c.spec.Name(), dir, name))
+		filepath.Join(c.goModCache, c.spec.Name(), dir, fName))
 	if err != nil {
 		return err
 	}
 	defer inFile.Close()
 	scanner := bufio.NewScanner(inFile)
 
-	w, err := newWriter(dir, name)
+	newName := fName
+	if strings.HasPrefix(fName, prefixBad) {
+		newName = prefixGood + fName[len(prefixBad):]
+	}
+	w, err := newWriter(dir, newName)
 	if err != nil {
 		return err
 	}
@@ -86,8 +97,8 @@ func (c Copier) CopyFile(dir, name string) error {
 			c.pgmName, c.spec.Name()))
 	w.write(
 		fmt.Sprintf(
-			"// Copied from %s\n",
-			filepath.Join(c.spec.Name(), dir, name)))
+			"// File content copied from %s\n",
+			filepath.Join(c.spec.Name(), dir, fName)))
 
 	for scanner.Scan() {
 		l := scanner.Text()
@@ -102,7 +113,9 @@ func (c Copier) CopyFile(dir, name string) error {
 		}
 		// Fix self-imports.
 		l = strings.Replace(l, c.spec.Module, c.replacementPath(), 1)
-		// Replace klog with generic log (eschewing k8s.io entirely).
+
+		// Replace k8s.io/klog with Go's log (we must avoid k8s.io entirely).
+		l = strings.Replace(l, "\"k8s.io/klog/v2\"", "\"log\"", 1)
 		l = strings.Replace(l, "\"k8s.io/klog\"", "\"log\"", 1)
 		l = strings.Replace(l, "klog.V(10).Infof(", "log.Printf(", 1)
 		w.write(l)
