@@ -23,12 +23,12 @@ func NewLoader(
 	if err == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, git.ClonerUsingGitExec)
+			repoSpec, fSys, nil, git.CachedGitCloner)
 	}
 	root, err := demandDirectoryRoot(fSys, target)
 	if err != nil {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec), nil
+		lr, root, fSys, nil, git.CachedGitCloner), nil
 }

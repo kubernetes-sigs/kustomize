@@ -203,6 +203,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 func newLoaderAtGitClone(
 	repoSpec *git.RepoSpec, fSys filesys.FileSystem,
 	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
+
 	cleaner := repoSpec.Cleaner(fSys)
 	err := cloner(repoSpec)
 	if err != nil {
@@ -232,7 +233,7 @@ func newLoaderAtGitClone(
 		repoSpec:       repoSpec,
 		fSys:           fSys,
 		cloner:         cloner,
-		cleaner:        cleaner,
+		cleaner: 		func() error { return nil},
 	}, nil
 }
 
