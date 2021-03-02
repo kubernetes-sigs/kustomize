@@ -46,6 +46,41 @@ spec:
  `,
 		},
 		{
+			name: "add-to-inline-string",
+			add: Add{
+				FieldValue: "placeholder",
+				Ref:        "#/definitions/io.k8s.cli.setters.path",
+			},
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- target:
+    kind: Something
+  patch: |
+    - op: add
+      path: placeholder
+      value: known
+    - op: replace
+      path: placeholder
+      value: known
+ `,
+			expected: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- target:
+    kind: Something
+  patch: |
+    - op: add
+      path: placeholder # {"$openapi":"path"}
+      value: known
+    - op: replace
+      path: placeholder # {"$openapi":"path"}
+      value: known
+ `,
+		},
+		{
 			name: "add-replicas-annotations",
 			add: Add{
 				FieldValue: "3",

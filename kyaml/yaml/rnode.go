@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -142,6 +143,35 @@ func NewMapRNode(values *map[string]string) *RNode {
 		})
 	}
 
+	return m
+}
+
+// NewMapListRNode returns a new List *RNode with Map *RNodes containing the provided values
+func NewMapListRNode(values *map[string]string) *RNode {
+	if values == nil || len(*values) == 0 {
+		return nil
+	}
+	m := &RNode{value: &yaml.Node{
+		Kind: yaml.SequenceNode,
+	}}
+
+	m.value.Content = append(m.value.Content, &yaml.Node{
+		Kind: yaml.MappingNode,
+	})
+	keys := make([]string, 0, len(*values))
+	for k := range *values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys) // needed for deterministic tests
+	for _, k := range keys {
+		m.value.Content[0].Content = append(m.value.Content[0].Content, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: k,
+		}, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: (*values)[k],
+		})
+	}
 	return m
 }
 

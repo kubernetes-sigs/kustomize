@@ -4,6 +4,8 @@
 package setters2
 
 import (
+	"strings"
+
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -70,9 +72,42 @@ func acceptImpl(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSch
 	case yaml.ScalarNode:
 		// Visit the scalar field
 		fieldSchema := getSchema(object, oa, "", settersSchema)
+		if strings.Contains(p, "patch") {
+			parseInlinePatch(v, object, p, oa, settersSchema)
+		}
 		return v.visitScalar(object, p, oa, fieldSchema)
 	}
 	return nil
+}
+
+// yaml.Parse will parse all inline strings as scalar nodes with a single inline string value,
+// so extra parsing work is needed to support using setters with kustomize patches
+func parseInlinePatch(v visitor, object *yaml.RNode, p string, oa *openapi.ResourceSchema, settersSchema *spec.Schema) {
+	patches := strings.Split(object.YNode().Value, "-")
+	var patchWithSetters string
+	for _, patch := range patches {
+		values := map[string]string{}
+		nodes := strings.Split(patch, "\n")
+		for _, node := range nodes {
+			mapContent := strings.Split(node, ": ")
+			if len(mapContent) >= 2 {
+				mapContent[0] = strings.Trim(mapContent[0], " ")
+				values[mapContent[0]] = mapContent[1]
+			}
+		}
+		rn := yaml.NewMapListRNode(&values)
+		if rn != nil {
+			err := acceptImpl(v, rn, p, oa, settersSchema)
+			if err != nil { // do nothing
+				return
+			}
+			str, _ := rn.String()
+			patchWithSetters += str
+		}
+	}
+	if patchWithSetters != "" {
+		object.YNode().Value = patchWithSetters
+	}
 }
 
 // getSchema returns OpenAPI schema for an RNode or field of the
