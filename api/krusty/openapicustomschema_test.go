@@ -108,7 +108,7 @@ func TestCustomOpenApiFieldBothPathAndVersion(t *testing.T) {
 resources:
 - mycrd.yaml
 openapi:
-  version: v1.18.8
+  version: v1.20.4
   path: mycrd_schema.json
 `+customSchemaPatch)
 	writeCustomResource(th, "mycrd.yaml")
@@ -193,7 +193,7 @@ openapi:
 resources:
 - ../base
 openapi:
-  version: v1.19.1
+  version: v1.20.4
 `+customSchemaPatch)
 	writeCustomResource(th, "base/mycrd.yaml")
 	writeTestSchema(th, "base/")
@@ -211,7 +211,7 @@ spec:
       - image: nginx
         name: server
 `)
-	assert.Equal(t, "v1191", openapi.GetSchemaVersion())
+	assert.Equal(t, "v1204", openapi.GetSchemaVersion())
 }
 
 func TestCustomOpenAPIFieldFromComponent(t *testing.T) {
@@ -225,6 +225,6 @@ func TestCustomOpenAPIFieldFromComponent(t *testing.T) {
 		f(th)
 	}
 	openapi.ResetOpenAPI()
-	th.Run(runPath, th.MakeDefaultOptions())
+	th.Run("prod", th.MakeDefaultOptions())
 	assert.Equal(t, "using custom schema from file provided", openapi.GetSchemaVersion())
 }
