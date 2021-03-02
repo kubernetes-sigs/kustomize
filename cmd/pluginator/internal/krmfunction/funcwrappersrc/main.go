@@ -9,7 +9,6 @@ import (
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/yaml"
 )
 
 //nolint
@@ -21,24 +20,17 @@ func main() {
 	pluginHelpers := resmap.NewPluginHelpers(
 		nil, p.GetFieldValidator(), resmapFactory)
 
-	resourceList := &framework.ResourceList{}
-	resourceList.FunctionConfig = map[string]interface{}{}
-
-	cmd := framework.Command(resourceList, func() error {
+	processor := framework.ResourceListProcessorFunc(func(resourceList *framework.ResourceList) error {
 		resMap, err := resmapFactory.NewResMapFromRNodeSlice(resourceList.Items)
 		if err != nil {
 			return err
 		}
-		dataField, err := getDataFromFunctionConfig(resourceList.FunctionConfig)
-		if err != nil {
-			return err
-		}
-		dataValue, err := yaml.Marshal(dataField)
+		dataValue, err := resourceList.FunctionConfig.Field("data").Value.String()
 		if err != nil {
 			return err
 		}
 
-		err = plugin.Config(pluginHelpers, dataValue)
+		err = plugin.Config(pluginHelpers, []byte(dataValue))
 		if err != nil {
 			return err
 		}
@@ -60,17 +52,8 @@ func main() {
 		}
 		return nil
 	})
-	if err := cmd.Execute(); err != nil {
+	if err := framework.Execute(&processor, nil); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-//nolint
-func getDataFromFunctionConfig(fc interface{}) (interface{}, error) {
-	f, ok := fc.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("function config %#v is not valid", fc)
-	}
-	return f["data"], nil
 }
