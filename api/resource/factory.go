@@ -105,6 +105,7 @@ func (rf *Factory) FromBytes(in []byte) (*Resource, error) {
 
 // SliceFromBytes unmarshals bytes into a Resource slice.
 func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
+	in = removeMultiByteChars(in)
 	kunStructs, err := rf.kf.SliceFromBytes(in)
 	if err != nil {
 		return nil, err
@@ -140,6 +141,19 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 		}
 	}
 	return result, nil
+}
+
+// yaml.v3 panics on multibyte characters, so we must remove them from the inputs
+func removeMultiByteChars(j []byte) []byte {
+	s := string(j)
+	v := make([]rune, 0, len(s))
+	for _, r := range s {
+		if len([]byte(string(r))) <= 1 {
+			v = append(v, r)
+		}
+	}
+	s = string(v)
+	return []byte(s)
 }
 
 // SliceFromBytesWithNames unmarshals bytes into a Resource slice with specified original
