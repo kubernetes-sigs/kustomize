@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/prefixsuffixtransformer
 
-go 1.15
+go 1.16
 
 require (
 	sigs.k8s.io/kustomize/api v0.8.4
