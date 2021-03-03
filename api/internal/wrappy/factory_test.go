@@ -306,13 +306,16 @@ items:
 			assert.False(t, tc.exp.isErr)
 			assert.Equal(t, len(tc.exp.out), len(rs))
 			for i := range rs {
+				rsMap, err := rs[i].Map()
+				assert.NoError(t, err)
 				assert.Equal(
-					t, fmt.Sprintf("%v", tc.exp.out[i]), fmt.Sprintf("%v", rs[i].Map()))
+					t, fmt.Sprintf("%v", tc.exp.out[i]), fmt.Sprintf("%v", rsMap))
 				if n != "listWithAnchors" {
 					// https://github.com/kubernetes-sigs/kustomize/issues/3271
-					if !reflect.DeepEqual(tc.exp.out[i], rs[i].Map()) {
+					m, _ := rs[i].Map()
+					if !reflect.DeepEqual(tc.exp.out[i], m) {
 						t.Fatalf("%s:\nexpected: %v\n  actual: %v",
-							n, tc.exp.out[i], rs[i].Map())
+							n, tc.exp.out[i], m)
 					}
 				}
 			}

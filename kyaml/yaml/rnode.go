@@ -816,17 +816,18 @@ func FromMap(m map[string]interface{}) (*RNode, error) {
 	return Parse(string(c))
 }
 
-func (rn *RNode) Map() map[string]interface{} {
+func (rn *RNode) Map() (map[string]interface{}, error) {
 	if rn == nil || rn.value == nil {
-		return make(map[string]interface{})
+		return make(map[string]interface{}), nil
 	}
 	var result map[string]interface{}
 	if err := rn.value.Decode(&result); err != nil {
 		// Should not be able to create an RNode that cannot be decoded;
 		// this is an unrecoverable error.
-		log.Fatalf("failed to decode ynode: %v", err)
+		str, _ := rn.String()
+		return nil, fmt.Errorf("received error %w for the following resource:\n%s", err, str)
 	}
-	return result
+	return result, nil
 }
 
 // ConvertJSONToYamlNode parses input json string and returns equivalent yaml node

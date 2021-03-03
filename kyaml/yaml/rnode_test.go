@@ -386,7 +386,9 @@ func TestRNodeGetValidatedMetadata(t *testing.T) {
 }
 
 func TestRNodeMapEmpty(t *testing.T) {
-	assert.Equal(t, 0, len(NewRNode(nil).Map()))
+	newRNodeMap, err := NewRNode(nil).Map()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(newRNodeMap))
 }
 
 func TestRNodeMap(t *testing.T) {
@@ -411,7 +413,8 @@ func TestRNodeMap(t *testing.T) {
 		},
 	}
 
-	actual := wn.Map()
+	actual, err := wn.Map()
+	assert.NoError(t, err)
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
 	}

@@ -30,12 +30,16 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 		return nil
 	}
 	for _, r := range m.Resources() {
-		if r.IsEmpty() {
+		empty, err := r.IsEmpty()
+		if err != nil {
+			return err
+		}
+		if empty {
 			// Don't mutate empty objects?
 			continue
 		}
 		r.StorePreviousId()
-		err := r.ApplyFilter(namespace.Filter{
+		err = r.ApplyFilter(namespace.Filter{
 			Namespace: p.Namespace,
 			FsSlice:   p.FieldSpecs,
 		})

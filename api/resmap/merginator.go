@@ -90,9 +90,14 @@ func (m *merginator) makeError(cd resource.ConflictDetector, index int) error {
 	if conflict == nil {
 		return fmt.Errorf("expected conflict for %s", m.incoming[index].OrgId())
 	}
+	conflictMap, _ := conflict.Map()
+	incomingIndexMap, _ := m.incoming[index].Map()
 	return fmt.Errorf(
 		"conflict between %#v at index %d and %#v",
-		m.incoming[index].Map(), index, conflict.Map())
+		incomingIndexMap,
+		index,
+		conflictMap,
+	)
 }
 
 // findConflict looks for a conflict in a resource slice.
