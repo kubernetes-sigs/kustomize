@@ -3,6 +3,8 @@
 
 run:
   deadline: 5m
+  skip-dirs:
+    - yaml/internal/k8sgen/pkg
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
@@ -12,7 +14,7 @@ linters:
     - bodyclose
     - deadcode
     - depguard
-    - dogsled
+    # - dogsled # uncomment after upgrading golangci-lint (Issue #3663)
     - dupl
     - errcheck
     - gochecknoinits
@@ -39,7 +41,7 @@ linters:
     - unparam
     - unused
     - varcheck
-    - whitespace
+    # - whitespace # uncomment after upgrading golangci-lint (Issue #3663)
 
 
 linters-settings:
