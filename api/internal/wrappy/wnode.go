@@ -220,7 +220,7 @@ func (wn *WNode) GetString(path string) (string, error) {
 }
 
 // Map implements ifc.Kunstructured.
-func (wn *WNode) Map() map[string]interface{} {
+func (wn *WNode) Map() (map[string]interface{}, error) {
 	return wn.node.Map()
 }
 

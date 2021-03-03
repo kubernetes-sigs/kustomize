@@ -114,7 +114,11 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 		u := kunStructs[0]
 		kunStructs = kunStructs[1:]
 		if strings.HasSuffix(u.GetKind(), "List") {
-			items := u.Map()["items"]
+			m, err := u.Map()
+			if err != nil {
+				return nil, err
+			}
+			items := m["items"]
 			itemsSlice, ok := items.([]interface{})
 			if !ok {
 				if items == nil {
