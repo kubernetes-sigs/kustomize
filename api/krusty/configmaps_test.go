@@ -194,7 +194,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  druid_segmentCache_locations: '[{"path":  "var/druid/segment-cache",  "maxSize": 32000000000,  "freeSpacePercent": 1.0}]'
+  druid_segmentCache_locations: '[{"path":  "var/druid/segment-cache",  "maxSize":
+    32000000000,  "freeSpacePercent": 1.0}]'
   v2: '[{"path": "var/druid/segment-cache"}]'
 kind: ConfigMap
 metadata:
@@ -219,8 +220,10 @@ type: Opaque
 		opts.IfApiMachineryElseKyaml(
 			fmt.Sprintf(
 				expFmt,
-				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbnVjbGVhcgo=`,
-				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aGUgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`,
+				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
+    VjbGVhcgo=`,
+				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`,
 				`ftht6hfgmb`),
 			fmt.Sprintf(
 				expFmt, `|
