@@ -9,8 +9,10 @@ export PATH := $(MYGOBIN):$(PATH)
 $(MYGOBIN)/addlicense:
 	go get github.com/google/addlicense
 
+# TODO: Issue #3663
+# Update this version of golangci-lint
 $(MYGOBIN)/golangci-lint:
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.0
 
 $(MYGOBIN)/k8scopy:
 	( cd ../cmd/k8scopy; go install . )
@@ -30,8 +32,8 @@ clean:
 
 lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
-	  --skip-dirs $(k8sGenDir) \
 	  run ./...
+
 
 license: $(MYGOBIN)/addlicense
 	$(MYGOBIN)/addlicense \

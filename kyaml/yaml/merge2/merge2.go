@@ -169,13 +169,13 @@ func (m Merger) SetComments(sources walk.Sources) error {
 		// avoid panic
 		return nil
 	}
-	if source != nil && source.YNode().FootComment != "" {
+	if source.YNode().FootComment != "" {
 		dest.YNode().FootComment = source.YNode().FootComment
 	}
-	if source != nil && source.YNode().HeadComment != "" {
+	if source.YNode().HeadComment != "" {
 		dest.YNode().HeadComment = source.YNode().HeadComment
 	}
-	if source != nil && source.YNode().LineComment != "" {
+	if source.YNode().LineComment != "" {
 		dest.YNode().LineComment = source.YNode().LineComment
 	}
 	return nil
