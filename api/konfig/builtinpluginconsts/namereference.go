@@ -130,6 +130,14 @@ nameReference:
     kind: ClusterRole
   - path: metadata/annotations/nginx.ingress.kubernetes.io\/fastcgi-params-configmap
     kind: Ingress
+  - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
+    kind: Service
+    group: serving.knative.dev
+    version: v1
+  - path: spec/template/spec/containers/envFrom/configMapRef/name
+    kind: Service
+    group: serving.knative.dev
+    version: v1
 
 - kind: Secret
   version: v1
