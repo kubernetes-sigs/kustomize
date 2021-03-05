@@ -2,5 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 env:
-  key: {{ .Key }}
-  value: {{ .Value }}
+- name: {{ .Spec.Key }}
+  value: {{ .Spec.Value }}
