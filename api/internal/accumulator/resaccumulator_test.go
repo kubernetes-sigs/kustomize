@@ -399,7 +399,8 @@ func find(name string, resMap resmap.ResMap) *resource.Resource {
 func getCommand(r *resource.Resource) string {
 	var m map[string]interface{}
 	var c []interface{}
-	m, _ = r.Map()["spec"].(map[string]interface{})
+	resourceMap, _ := r.Map()
+	m, _ = resourceMap["spec"].(map[string]interface{})
 	m, _ = m["template"].(map[string]interface{})
 	m, _ = m["spec"].(map[string]interface{})
 	c, _ = m["containers"].([]interface{})

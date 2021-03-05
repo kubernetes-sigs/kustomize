@@ -46,7 +46,11 @@ func (w Writer) WriteIndividualFiles(dirPath string, m resmap.ResMap) error {
 }
 
 func (w Writer) write(path, fName string, res *resource.Resource) error {
-	yml, err := yaml.Marshal(res.Map())
+	m, err := res.Map()
+	if err != nil {
+		return err
+	}
+	yml, err := yaml.Marshal(m)
 	if err != nil {
 		return err
 	}

@@ -76,7 +76,7 @@ type Kunstructured interface {
 	GetString(string) (string, error)
 
 	// Several uses.
-	Map() map[string]interface{}
+	Map() (map[string]interface{}, error)
 
 	// Used by Resource.AsYAML and Resource.String
 	MarshalJSON() ([]byte, error)

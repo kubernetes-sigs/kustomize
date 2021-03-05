@@ -119,7 +119,11 @@ func (m *resWrangler) Debug(title string) {
 			fmt.Println("---")
 		}
 		fmt.Printf("# %d  %s\n", i, r.OrgId())
-		blob, err := yaml.Marshal(r.Map())
+		m, err := r.Map()
+		if err != nil {
+			panic(err)
+		}
+		blob, err := yaml.Marshal(m)
 		if err != nil {
 			panic(err)
 		}
@@ -272,7 +276,8 @@ func (m *resWrangler) AsYaml() ([]byte, error) {
 	for _, res := range m.Resources() {
 		out, err := res.AsYAML()
 		if err != nil {
-			return nil, errors.Wrapf(err, "%#v", res.Map())
+			m, _ := res.Map()
+			return nil, errors.Wrapf(err, "%#v", m)
 		}
 		if firstObj {
 			firstObj = false
@@ -602,14 +607,23 @@ func (m *resWrangler) ApplySmPatch(
 				// Some unknown error, let it through.
 				return err
 			}
-			if !res.IsEmpty() {
+			empty, err := res.IsEmpty()
+			if err != nil {
+				return err
+			}
+			if !empty {
+				m, _ := res.Map()
 				return errors.Wrapf(
 					err, "with unexpectedly non-empty object map of size %d",
-					len(res.Map()))
+					len(m))
 			}
 			// Fall through to handle deleted object.
 		}
-		if !res.IsEmpty() {
+		empty, err := res.IsEmpty()
+		if err != nil {
+			return err
+		}
+		if !empty {
 			// IsEmpty means all fields have been removed from the object.
 			// This can happen if a patch required deletion of the
 			// entire resource (not just a part of it).  This means

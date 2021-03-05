@@ -98,11 +98,12 @@ func (r *Resource) GetString(p string) (string, error) {
 	return r.kunStr.GetString(p)
 }
 
-func (r *Resource) IsEmpty() bool {
-	return len(r.kunStr.Map()) == 0
+func (r *Resource) IsEmpty() (bool, error) {
+	m, err := r.kunStr.Map()
+	return len(m) == 0, err
 }
 
-func (r *Resource) Map() map[string]interface{} {
+func (r *Resource) Map() (map[string]interface{}, error) {
 	return r.kunStr.Map()
 }
 
@@ -488,7 +489,11 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 	if err != nil {
 		return err
 	}
-	if !r.IsEmpty() {
+	empty, err := r.IsEmpty()
+	if err != nil {
+		return err
+	}
+	if !empty {
 		r.SetName(n)
 		r.SetNamespace(ns)
 	}

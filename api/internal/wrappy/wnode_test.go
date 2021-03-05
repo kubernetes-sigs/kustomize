@@ -559,7 +559,9 @@ func TestGetSlice(t *testing.T) {
 }
 
 func TestMapEmpty(t *testing.T) {
-	assert.Equal(t, 0, len(NewWNode().Map()))
+	newNodeMap, err := NewWNode().Map()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(newNodeMap))
 }
 
 func TestMap(t *testing.T) {
@@ -577,7 +579,8 @@ func TestMap(t *testing.T) {
 		},
 	}
 
-	actual := wn.Map()
+	actual, err := wn.Map()
+	assert.NoError(t, err)
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
 	}
