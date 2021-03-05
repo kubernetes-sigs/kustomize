@@ -1025,7 +1025,8 @@ spec:
         - -namespace=${POD_NAMESPACE}
         - -certs-dir=/cockroach-certs
         - -type=node
-        - -addresses=localhost,127.0.0.1,${POD_IP},$(hostname -f),$(hostname -f|cut -f 1-2 -d '.'),dev-base-cockroachdb-public
+        - -addresses=localhost,127.0.0.1,${POD_IP},$(hostname -f),$(hostname -f|cut
+          -f 1-2 -d '.'),dev-base-cockroachdb-public
         - -symlink-ca-from=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         env:
         - name: POD_IP

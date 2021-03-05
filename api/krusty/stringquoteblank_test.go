@@ -66,11 +66,14 @@ spec:
         - name: SHORT_STRING_BLANK
           value: short string
         - name: LONG_STRING_BLANK
-          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas suscipit ex non molestie varius.
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            suscipit ex non molestie varius.
         - name: LONG_STRING_BLANK_WITH_SINGLE_QUOTE
-          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas suscipit ex non molestie varius.
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            suscipit ex non molestie varius.
         - name: LONG_STRING_BLANK_WITH_DOUBLE_QUOTE
-          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas suscipit ex non molestie varius.
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            suscipit ex non molestie varius.
         - name: INVALID_PLAIN_STYLE_STRING
           value: ': test'
         image: test
