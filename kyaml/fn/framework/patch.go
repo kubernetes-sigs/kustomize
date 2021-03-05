@@ -11,50 +11,205 @@ import (
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/sets"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
+	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
 
-// Applier applies some modification to a ResourceList
-type Applier interface {
-	Apply(rl *ResourceList) error
+// ResourcePatchTemplate applies a patch to a collection of resources
+type ResourcePatchTemplate struct {
+	// Templates is a function that returns a list of templates to render into one or more patches.
+	Templates TemplatesFunc
+
+	// Selector targets the rendered patches to specific resources. If no Selector is provided,
+	// all resources will be patched.
+	//
+	// Although any Filter can be used, this framework provides several especially for Selector use:
+	// framework.Selector, framework.AndSelector, framework.OrSelector. You can also use any of the
+	// framework's ResourceMatchers here directly.
+	Selector kio.Filter
+
+	// TemplateData is the data to use when rendering the templates provided by the Templates field.
+	TemplateData interface{}
 }
 
-var _ Applier = PatchTemplate{}
-
-// PatchTemplate applies a patch to a collection of Resources
-type PatchTemplate struct {
-	// Template is a template to render into one or more patches.
-	Template *template.Template
-
-	// Selector targets the rendered patch to specific resources.
-	Selector *Selector
+// DefaultTemplateData sets TemplateData to the provided default values if it has not already
+// been set.
+func (t *ResourcePatchTemplate) DefaultTemplateData(data interface{}) {
+	if t.TemplateData == nil {
+		t.TemplateData = data
+	}
 }
 
-// Apply applies the patch to all matching resources in the list.  The rl.FunctionConfig
-// is provided to the template as input.
-func (p PatchTemplate) Apply(rl *ResourceList) error {
-	if p.Selector == nil {
-		// programming error -- user shouldn't see this
-		return errors.Errorf("must specify PatchTemplate.Selector")
+// Filter applies the ResourcePatchTemplate to the appropriate resources in the input.
+// First, it applies the Selector to identify target resources. Then, it renders the Templates
+// into patches using TemplateData. Finally, it identifies applies the patch to each resource.
+func (t ResourcePatchTemplate) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
+	var err error
+	target := items
+	if t.Selector != nil {
+		target, err = t.Selector.Filter(items)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if len(target) == 0 {
+		// nothing to do
+		return items, nil
 	}
 
-	matches, err := p.Selector.GetMatches(rl)
+	if err := t.apply(target); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return items, nil
+}
+
+func (t *ResourcePatchTemplate) apply(matches []*yaml.RNode) error {
+	templates, err := t.Templates()
 	if err != nil {
-		return err
+		return errors.Wrap(err)
 	}
-	if len(matches) == 0 {
-		return nil
+	var patches []*yaml.RNode
+	for i := range templates {
+		newP, err := renderPatches(templates[i], t.TemplateData)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		patches = append(patches, newP...)
 	}
-	return p.apply(rl, p.Template, matches)
+
+	// apply the patches to the matching resources
+	for j := range matches {
+		for i := range patches {
+			matches[j], err = merge2.Merge(patches[i], matches[j], yaml.MergeOptions{})
+			if err != nil {
+				return errors.WrapPrefixf(err, "failed to apply templated patch")
+			}
+		}
+	}
+	return nil
 }
 
-func (p *PatchTemplate) apply(rl *ResourceList, t *template.Template, matches []*yaml.RNode) error {
+// ContainerPatchTemplate defines a patch to be applied to containers
+type ContainerPatchTemplate struct {
+	// Templates is a function that returns a list of templates to render into one or more
+	// patches that apply at the container level. For example, "name", "env" and "image" would be
+	// top-level fields in container patches.
+	Templates TemplatesFunc
+
+	// Selector targets the rendered patches to containers within specific resources.
+	// If no Selector is provided, all resources with containers will be patched (subject to
+	// ContainerMatcher, if provided).
+	//
+	// Although any Filter can be used, this framework provides several especially for Selector use:
+	// framework.Selector, framework.AndSelector, framework.OrSelector. You can also use any of the
+	// framework's ResourceMatchers here directly.
+	Selector kio.Filter
+
+	// TemplateData is the data to use when rendering the templates provided by the Templates field.
+	TemplateData interface{}
+
+	// ContainerMatcher targets the rendered patch to only those containers it matches.
+	// For example, it can be used with ContainerNameMatcher to patch only containers with
+	// specific names. If no ContainerMatcher is provided, all containers will be patched.
+	//
+	// The node passed to ContainerMatcher will be container-level, not a full resource node.
+	// For example, "name", "env" and "image" would be top level fields.
+	// To filter based on resource-level context, use the Selector field.
+	ContainerMatcher func(node *yaml.RNode) bool
+}
+
+// DefaultTemplateData sets TemplateData to the provided default values if it has not already
+// been set.
+func (cpt *ContainerPatchTemplate) DefaultTemplateData(data interface{}) {
+	if cpt.TemplateData == nil {
+		cpt.TemplateData = data
+	}
+}
+
+// Filter applies the ContainerPatchTemplate to the appropriate resources in the input.
+// First, it applies the Selector to identify target resources. Then, it renders the Templates
+// into patches using TemplateData. Finally, it identifies target containers and applies the
+// patches.
+func (cpt ContainerPatchTemplate) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
+	var err error
+	target := items
+	if cpt.Selector != nil {
+		target, err = cpt.Selector.Filter(items)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if len(target) == 0 {
+		// nothing to do
+		return items, nil
+	}
+
+	if err := cpt.apply(target); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+// PatchContainers applies the patch to each matching container in each resource.
+func (cpt ContainerPatchTemplate) apply(matches []*yaml.RNode) error {
+	templates, err := cpt.Templates()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	var patches []*yaml.RNode
+	for i := range templates {
+		newP, err := renderPatches(templates[i], cpt.TemplateData)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		patches = append(patches, newP...)
+	}
+
+	for i := range matches {
+		// TODO(knverey): Make this work for more Kinds and expose the helper for doing so.
+		containers, err := matches[i].Pipe(yaml.Lookup("spec", "template", "spec", "containers"))
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		if containers == nil {
+			continue
+		}
+		err = containers.VisitElements(func(node *yaml.RNode) error {
+			if cpt.ContainerMatcher != nil && !cpt.ContainerMatcher(node) {
+				return nil
+			}
+			for j := range patches {
+				merger := walk.Walker{
+					Sources:      []*yaml.RNode{node, patches[j]}, // dest, src
+					Visitor:      merge2.Merger{},
+					MergeOptions: yaml.MergeOptions{},
+					Schema: openapi.SchemaForResourceType(yaml.TypeMeta{
+						APIVersion: "v1",
+						Kind:       "Pod",
+					}).Lookup("spec", "containers").Elements(),
+				}
+				_, err = merger.Walk()
+				if err != nil {
+					return errors.WrapPrefixf(err, "failed to apply templated patch")
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return errors.Wrap(err)
+		}
+	}
+	return nil
+}
+
+func renderPatches(t *template.Template, data interface{}) ([]*yaml.RNode, error) {
 	// render the patches
 	var b bytes.Buffer
-	if err := t.Execute(&b, rl.FunctionConfig); err != nil {
-		return errors.WrapPrefixf(err, "failed to render patch template %v", t.DefinedTemplates())
+	if err := t.Execute(&b, data); err != nil {
+		return nil, errors.WrapPrefixf(err, "failed to render patch template %v", t.DefinedTemplates())
 	}
 
 	// parse the patches into RNodes
@@ -64,201 +219,25 @@ func (p *PatchTemplate) apply(rl *ResourceList, t *template.Template, matches []
 		if s == "" {
 			continue
 		}
-		newNodes, err := (&kio.ByteReader{Reader: bytes.NewBufferString(s)}).Read()
+		r := &kio.ByteReader{Reader: bytes.NewBufferString(s), OmitReaderAnnotations: true}
+		newNodes, err := r.Read()
 		if err != nil {
-			// create the debug string
-			lines := strings.Split(s, "\n")
-			for j := range lines {
-				lines[j] = fmt.Sprintf("%03d %s", j+1, lines[j])
-			}
-			s = strings.Join(lines, "\n")
-			return errors.WrapPrefixf(err, "failed to parse rendered patch template into a resource:\n%s\n", s)
+			return nil, errors.WrapPrefixf(err,
+				"failed to parse rendered patch template into a resource:\n%s\n", addLineNumbers(s))
+		}
+		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.MappingNode, newNodes...); err != nil {
+			return nil, errors.WrapPrefixf(err,
+				"failed to parse rendered patch template into a resource:\n%s\n", addLineNumbers(s))
 		}
 		nodes = append(nodes, newNodes...)
 	}
-
-	// apply the patches to the matching resources
-	var err error
-	for j := range matches {
-		for i := range nodes {
-			matches[j], err = merge2.Merge(nodes[i], p.Selector.matches[j], yaml.MergeOptions{})
-			if err != nil {
-				return errors.WrapPrefixf(err, "failed to merge templated patch")
-			}
-		}
-	}
-	return nil
+	return nodes, nil
 }
 
-// Selector matches resources.  A resource matches if and only if ALL of the Selector fields
-// match the resource.  An empty Selector matches all resources.
-type Selector struct {
-	// Names is a list of metadata.names to match.  If empty match all names.
-	// e.g. Names: ["foo", "bar"] matches if `metadata.name` is either "foo" or "bar".
-	Names []string `json:"names" yaml:"names"`
-
-	namesSet sets.String
-
-	// Namespaces is a list of metadata.namespaces to match.  If empty match all namespaces.
-	// e.g. Namespaces: ["foo", "bar"] matches if `metadata.namespace` is either "foo" or "bar".
-	Namespaces []string `json:"namespaces" yaml:"namespaces"`
-
-	namespaceSet sets.String
-
-	// Kinds is a list of kinds to match.  If empty match all kinds.
-	// e.g. Kinds: ["foo", "bar"] matches if `kind` is either "foo" or "bar".
-	Kinds []string `json:"kinds" yaml:"kinds"`
-
-	kindsSet sets.String
-
-	// APIVersions is a list of apiVersions to match.  If empty apply match all apiVersions.
-	// e.g. APIVersions: ["foo/v1", "bar/v1"] matches if `apiVersion` is either "foo/v1" or "bar/v1".
-	APIVersions []string `json:"apiVersions" yaml:"apiVersions"`
-
-	apiVersionsSet sets.String
-
-	// Labels is a collection of labels to match.  All labels must match exactly.
-	// e.g. Labels: {"foo": "bar", "baz": "buz"] matches if BOTH "foo" and "baz" labels match.
-	Labels map[string]string `json:"labels" yaml:"labels"`
-
-	// Annotations is a collection of annotations to match.  All annotations must match exactly.
-	// e.g. Annotations: {"foo": "bar", "baz": "buz"] matches if BOTH "foo" and "baz" annotations match.
-	Annotations map[string]string `json:"annotations" yaml:"annotations"`
-
-	// Filter is an arbitrary filter function to match a resource.
-	// Selector matches if the function returns true.
-	Filter func(*yaml.RNode) bool
-
-	// matches contains a list of matching reosurces.
-	matches []*yaml.RNode
-
-	// TemplatizeValues if set to true will parse the selector values as templates
-	// and execute them with the functionConfig
-	TemplatizeValues bool
-}
-
-// GetMatches returns them matching resources from rl
-func (s *Selector) GetMatches(rl *ResourceList) ([]*yaml.RNode, error) {
-	if err := s.init(rl); err != nil {
-		return nil, err
+func addLineNumbers(s string) string {
+	lines := strings.Split(s, "\n")
+	for j := range lines {
+		lines[j] = fmt.Sprintf("%03d %s", j+1, lines[j])
 	}
-	return s.matches, nil
-}
-
-// templatize templatizes the value
-func (s *Selector) templatize(value string, api interface{}) (string, error) {
-	t, err := template.New("kinds").Parse(value)
-	if err != nil {
-		return "", errors.Wrap(err)
-	}
-	var b bytes.Buffer
-	err = t.Execute(&b, api)
-	if err != nil {
-		return "", errors.Wrap(err)
-	}
-	return b.String(), nil
-}
-
-func (s *Selector) templatizeSlice(values []string, api interface{}) error {
-	var err error
-	for i := range values {
-		values[i], err = s.templatize(values[i], api)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Selector) templatizeMap(values map[string]string, api interface{}) error {
-	var err error
-	for k := range values {
-		values[k], err = s.templatize(values[k], api)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Selector) init(rl *ResourceList) error {
-	if s.TemplatizeValues {
-		// templatize the selector values from the input configuration
-		if err := s.templatizeSlice(s.Kinds, rl.FunctionConfig); err != nil {
-			return err
-		}
-		if err := s.templatizeSlice(s.APIVersions, rl.FunctionConfig); err != nil {
-			return err
-		}
-		if err := s.templatizeSlice(s.Names, rl.FunctionConfig); err != nil {
-			return err
-		}
-		if err := s.templatizeSlice(s.Namespaces, rl.FunctionConfig); err != nil {
-			return err
-		}
-		if err := s.templatizeMap(s.Labels, rl.FunctionConfig); err != nil {
-			return err
-		}
-		if err := s.templatizeMap(s.Annotations, rl.FunctionConfig); err != nil {
-			return err
-		}
-	}
-
-	// index the selectors
-	s.matches = nil
-	s.kindsSet = sets.String{}
-	s.kindsSet.Insert(s.Kinds...)
-	s.apiVersionsSet = sets.String{}
-	s.apiVersionsSet.Insert(s.APIVersions...)
-	s.namesSet = sets.String{}
-	s.namesSet.Insert(s.Names...)
-	s.namespaceSet = sets.String{}
-	s.namespaceSet.Insert(s.Namespaces...)
-
-	// check each resource that matches the patch selector
-	for i := range rl.Items {
-		if match, err := s.isMatch(rl.Items[i]); err != nil {
-			return err
-		} else if !match {
-			continue
-		}
-		s.matches = append(s.matches, rl.Items[i])
-	}
-	return nil
-}
-
-// isMatch returns true if r matches the patch selector
-func (s *Selector) isMatch(r *yaml.RNode) (bool, error) {
-	m, err := r.GetMeta()
-	if err != nil {
-		return false, errors.Wrap(err)
-	}
-	if s.kindsSet.Len() > 0 && !s.kindsSet.Has(m.Kind) {
-		return false, nil
-	}
-	if s.apiVersionsSet.Len() > 0 && !s.apiVersionsSet.Has(m.APIVersion) {
-		return false, nil
-	}
-	if s.namesSet.Len() > 0 && !s.namesSet.Has(m.Name) {
-		return false, nil
-	}
-	if s.namespaceSet.Len() > 0 && !s.namespaceSet.Has(m.Namespace) {
-		return false, nil
-	}
-	for k := range s.Labels {
-		if m.Labels == nil || m.Labels[k] != s.Labels[k] {
-			return false, nil
-		}
-	}
-	for k := range s.Annotations {
-		if m.Annotations == nil || m.Annotations[k] != s.Annotations[k] {
-			return false, nil
-		}
-	}
-	if s.Filter != nil {
-		if match := s.Filter(r); !match {
-			return false, nil
-		}
-	}
-	return true, nil
+	return strings.Join(lines, "\n")
 }
