@@ -292,7 +292,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod tempor\nincididunt ut labore et dolore magna aliqua. \n"
+  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
+    tempor\nincididunt ut labore et dolore magna aliqua. \n"
 kind: ConfigMap
 metadata:
   annotations:
