@@ -7,13 +7,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func AddFunctionFlags(set *pflag.FlagSet) {
-	set.BoolVar(
-		&theFlags.fnOptions.EnableExec, "enable-exec", false, /*do not change!*/
-		"enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
-	set.BoolVar(
-		&theFlags.fnOptions.EnableStar, "enable-star", false,
-		"enable support for starlark functions. (Alpha)")
+func AddFunctionBasicsFlags(set *pflag.FlagSet) {
 	set.BoolVar(
 		&theFlags.fnOptions.Network, "network", false,
 		"enable network access for functions that declare it")
@@ -26,4 +20,14 @@ func AddFunctionFlags(set *pflag.FlagSet) {
 	set.StringArrayVarP(
 		&theFlags.fnOptions.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
+}
+
+func AddFunctionAlphaEnablementFlags(set *pflag.FlagSet) {
+	set.BoolVar(
+		&theFlags.fnOptions.EnableExec, "enable-exec", false,
+		"enable support for exec functions (raw executables); "+
+			"do not use for untrusted configs! (Alpha)")
+	set.BoolVar(
+		&theFlags.fnOptions.EnableStar, "enable-star", false,
+		"enable support for starlark functions. (Alpha)")
 }
