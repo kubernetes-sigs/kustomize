@@ -98,20 +98,18 @@ func NewCmdBuild(
 			return err
 		},
 	}
-
 	AddFlagOutputPath(cmd.Flags())
-	AddFunctionFlags(cmd.Flags())
+	AddFunctionBasicsFlags(cmd.Flags())
 	AddFlagLoadRestrictor(cmd.Flags())
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
 	AddFlagAllowResourceIdChanges(cmd.Flags())
-
 	return cmd
 }
 
 // Validate validates build command args and flags.
-func Validate(args []string) (err error) {
+func Validate(args []string) error {
 	if len(args) > 1 {
 		return fmt.Errorf(
 			"specify one path to " +
@@ -122,8 +120,7 @@ func Validate(args []string) (err error) {
 	} else {
 		theArgs.kustomizationPath = args[0]
 	}
-	err = validateFlagLoadRestrictor()
-	if err != nil {
+	if err := validateFlagLoadRestrictor(); err != nil {
 		return err
 	}
 	return validateFlagReorderOutput()
