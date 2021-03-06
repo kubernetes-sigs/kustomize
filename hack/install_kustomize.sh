@@ -19,11 +19,8 @@
 
 set -e
 
-curl_timeout=600
-
 where=$PWD
 
-version=""
 release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 if [ -n "$1" ]; then
   if [[ "$1" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
@@ -49,7 +46,10 @@ fi
 where="$(readlink -f $where)/"
 
 if [ -f "${where}kustomize" ]; then
-  echo "A file named ${where}kustomize already exists (remove it first)."
+  echo "${where}kustomize exists. Remove it first."
+  exit 1
+elif [ -d "${where}kustomize" ]; then
+  echo "${where}kustomize exists and is a directory. Remove it first."
   exit 1
 fi
 
@@ -75,18 +75,19 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-curl -m $curl_timeout -s $release_url |\
+RELEASE_URL=$(curl -s $release_url |\
   grep browser_download.*${opsys}_${arch} |\
   cut -d '"' -f 4 |\
-  sort -V | tail -n 1 |\
-  xargs curl -m $curl_timeout -sLO
+  sort -V | tail -n 1)
 
-if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
-    tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
-else
-    echo "Error: kustomize binary with the version ${version#v} does not exist!"
-    exit 1
+if [ ! -n "$RELEASE_URL" ]; then
+  echo "Version $version does not exist."
+  exit 1
 fi
+
+curl -sLO $RELEASE_URL
+
+tar xzf ./kustomize_v*_${opsys}_${arch}.tar.gz
 
 cp ./kustomize "$where"
 
