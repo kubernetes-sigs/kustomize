@@ -73,7 +73,7 @@ function testKustomizeRepo {
   local code=$?
   if [ $code -ne 0 ]; then
     echo "**** FAILURE ******************"
-    tail -n /tmp/k.txt
+    tail /tmp/k.txt
   else
     echo "LGTM"
   fi
