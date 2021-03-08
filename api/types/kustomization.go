@@ -155,7 +155,6 @@ type Kustomization struct {
 // moving content of deprecated fields to newer
 // fields.
 func (k *Kustomization) FixKustomizationPostUnmarshalling() {
-
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
 	}
@@ -168,6 +167,20 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 	}
 	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
+	for i, g := range k.ConfigMapGenerator {
+		if g.EnvSource != "" {
+			k.ConfigMapGenerator[i].EnvSources =
+				append(g.EnvSources, g.EnvSource)
+			k.ConfigMapGenerator[i].EnvSource = ""
+		}
+	}
+	for i, g := range k.SecretGenerator {
+		if g.EnvSource != "" {
+			k.SecretGenerator[i].EnvSources =
+				append(g.EnvSources, g.EnvSource)
+			k.SecretGenerator[i].EnvSource = ""
+		}
+	}
 }
 
 // FixKustomizationPreMarshalling fixes things
