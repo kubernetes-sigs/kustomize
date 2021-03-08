@@ -9,18 +9,13 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// Demo custom configuration as a base.
-// This test shows usage of three custom configurations sitting
-// in a base, allowing them to be reused in any number of
-// kustomizations.
+// Test that a PodTemplate referencing a generated ConfigMap is generated consistently
 func TestPodTemplateWithConfigGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PrefixSuffixTransformer").
 		PrepBuiltin("AnnotationsTransformer").
 		PrepBuiltin("LabelTransformer")
 	defer th.Reset()
-
-	// First write three custom configurations for builtin plugins.
 
 	// Simple template for an app that mounts a config map
 	th.WriteF("podtemplateconfiggenerator/app.yml", `
@@ -59,7 +54,7 @@ configMapGenerator:
       - config.py
 `)
 
-    // the config map name should be consistent
+    // the config map name should be consistent. i.e., foo.metadata.name == template.spec.volumes['app-config'].configMap.name
 	m := th.Run("podtemplateconfiggenerator", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
