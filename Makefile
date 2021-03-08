@@ -152,7 +152,8 @@ _builtinplugins = \
 	ReplicaCountTransformer.go \
 	SecretGenerator.go \
 	ValueAddTransformer.go \
-	HelmChartInflationGenerator.go
+	HelmChartInflationGenerator.go \
+	KustomizeInflator.go
 
 # Maintaining this explicit list of generated files, and
 # adding it as a dependency to a few targets, to assure
@@ -179,6 +180,7 @@ $(pGen)/ReplicaCountTransformer.go: $(pSrc)/replicacounttransformer/ReplicaCount
 $(pGen)/SecretGenerator.go: $(pSrc)/secretgenerator/SecretGenerator.go
 $(pGen)/ValueAddTransformer.go: $(pSrc)/valueaddtransformer/ValueAddTransformer.go
 $(pGen)/HelmChartInflationGenerator.go: $(pSrc)/helmchartinflationgenerator/HelmChartInflationGenerator.go
+$(pGen)/KustomizeInflator.go: $(pSrc)/kustomizeinflator/KustomizeInflator.go
 
 # The (verbose but portable) Makefile way to convert to lowercase.
 toLowerCase = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
