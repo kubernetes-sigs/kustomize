@@ -8,7 +8,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	sigs.k8s.io/kustomize/api v0.8.4
-	sigs.k8s.io/kustomize/cmd/config v0.9.6
+	sigs.k8s.io/kustomize/cmd/config v0.9.7
 	sigs.k8s.io/kustomize/kyaml v0.10.15
 	sigs.k8s.io/yaml v1.2.0
 )
