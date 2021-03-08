@@ -723,12 +723,12 @@ spec:
       - name: consul
         image: "dashicorp/consul:1.9.1"
         ports:
+        - containerPort: 8500
+          name: http
         - containerPort: 8301
           protocol: "TCP"
         - containerPort: 8301
           protocol: "UDP"
-        - containerPort: 8500
-          name: http
 `,
 		},
 	}

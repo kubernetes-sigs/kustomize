@@ -338,4 +338,88 @@ kind: Deployment
 			ListIncreaseDirection: yaml.MergeOptionsListAppend,
 		},
 	},
+
+	//
+	// Test Case
+	//
+	{description: `port patch has no protocol`,
+		source: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+`,
+		dest: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+`,
+		expected: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
+
+	//
+	// Test Case
+	//
+	{description: `port patch has no protocol and different port number`,
+		source: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30901
+      targetPort: 30901
+`,
+		dest: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+`,
+		expected: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+    - port: 30901
+      targetPort: 30901
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
 }

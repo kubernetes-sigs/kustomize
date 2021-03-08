@@ -1191,26 +1191,26 @@ spec:
       - image: dashicorp/consul:1.9.1
         name: consul
         ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8501
+          name: https
         - containerPort: 8301
           name: serflan-tcp
           protocol: TCP
         - containerPort: 8301
           name: serflan-udp
           protocol: UDP
+        - containerPort: 8302
+          name: serfwan
+        - containerPort: 8300
+          name: server
         - containerPort: 8600
           name: dns-tcp
           protocol: TCP
         - containerPort: 8600
           name: dns-udp
           protocol: UDP
-        - containerPort: 8500
-          name: http
-        - containerPort: 8501
-          name: https
-        - containerPort: 8302
-          name: serfwan
-        - containerPort: 8300
-          name: server
 `)
 }
 
@@ -1260,5 +1260,115 @@ metadata:
 spec:
   groups:
   - name: rabbitmq.rules
+`)
+}
+
+// test for #3620
+func TestPatchPortHasNoProtocol(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+  - service.yaml
+patchesStrategicMerge:
+  - patch.yaml
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+  type: NodePort
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  labels:
+    service: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+  selector:
+    service: web
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: web
+  name: web
+spec:
+  ports:
+  - port: 30900
+    protocol: TCP
+    targetPort: 30900
+  selector:
+    service: web
+  type: NodePort
+`)
+}
+
+// test for #3620
+func TestPatchAddNewServicePort(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+  - service.yaml
+patchesStrategicMerge:
+  - patch.yaml
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+  type: NodePort
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  labels:
+    service: web
+spec:
+  ports:
+    - port: 30901
+      targetPort: 30901
+  selector:
+    service: web
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: web
+  name: web
+spec:
+  ports:
+  - port: 30901
+    targetPort: 30901
+  - port: 30900
+    protocol: TCP
+    targetPort: 30900
+  selector:
+    service: web
+  type: NodePort
 `)
 }
