@@ -50,6 +50,8 @@ nameReference:
   - path: spec/volumes/projected/sources/configMap/name
     version: v1
     kind: Pod
+  - path: template/spec/volumes/configMap/name
+    kind: PodTemplate
   - path: spec/template/spec/volumes/configMap/name
     kind: Deployment
   - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
