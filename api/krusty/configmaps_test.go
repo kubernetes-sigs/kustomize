@@ -132,6 +132,7 @@ configMapGenerator:
   - vegetable=broccoli
   envs:
   - foo.env
+  env: bar.env
   files:
   - passphrase=phrase.dat
   - forces.txt
@@ -153,10 +154,14 @@ secretGenerator:
   files:
   - passphrase=phrase.dat
   - forces.txt
+  env: bar.env
 `)
 	th.WriteF("foo.env", `
 MOUNTAIN=everest
 OCEAN=pacific
+`)
+	th.WriteF("bar.env", `
+BIRD=falcon
 `)
 	th.WriteF("phrase.dat", `
 Life is short.
@@ -173,6 +178,7 @@ weak nuclear
 	m := th.Run(".", opts)
 	expFmt := `apiVersion: v1
 data:
+  BIRD: falcon
   MOUNTAIN: everest
   OCEAN: pacific
   forces.txt: |2
@@ -190,7 +196,7 @@ data:
   vegetable: broccoli
 kind: ConfigMap
 metadata:
-  name: blah-bob-d87t8m8tgm
+  name: blah-bob-g9df72cd5b
 ---
 apiVersion: v1
 data:
@@ -203,6 +209,7 @@ metadata:
 ---
 apiVersion: v1
 data:
+  BIRD: ZmFsY29u
   MOUNTAIN: ZXZlcmVzdA==
   OCEAN: cGFjaWZpYw==
   forces.txt: %s
@@ -230,7 +237,7 @@ type: Opaque
     CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
     VjbGVhcgo=`, `|
     CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
-    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`, `9t25t44gg4`)))
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`, `58g62h555c`)))
 }
 
 // TODO: These should be errors instead.

@@ -28,4 +28,9 @@ type KvPairSources struct {
 	// or npm ".env" file or a ".ini" file
 	// (wikipedia.org/wiki/INI_file)
 	EnvSources []string `json:"envs,omitempty" yaml:"envs,omitempty"`
+
+	// Older, singular form of EnvSources.
+	// On edits (e.g. `kustomize fix`) this is merged into the plural form
+	// for consistency with LiteralSources and FileSources.
+	EnvSource string `json:"env,omitempty" yaml:"env,omitempty"`
 }
