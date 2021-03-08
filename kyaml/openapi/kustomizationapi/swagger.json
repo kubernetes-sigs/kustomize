@@ -111,6 +111,9 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "env": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
