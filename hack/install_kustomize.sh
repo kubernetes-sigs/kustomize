@@ -43,7 +43,30 @@ if ! test -d "$where"; then
   exit 1
 fi
 
-where="$(readlink -f $where)/"
+# Emulates `readlink -f` behavior, as this is not available by default on MacOS
+# See: https://stackoverflow.com/questions/1055671/how-can-i-get-the-behavior-of-gnus-readlink-f-on-a-mac
+function readlink_f {
+  TARGET_FILE=$1
+
+  cd "$(dirname "$TARGET_FILE")"
+  TARGET_FILE=$(basename "$TARGET_FILE")
+
+  # Iterate down a (possible) chain of symlinks
+  while [ -L "$TARGET_FILE" ]
+  do
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+      cd "$(dirname "$TARGET_FILE")"
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+  done
+
+  # Compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  PHYS_DIR=$(pwd -P)
+  RESULT=$PHYS_DIR/$TARGET_FILE
+  echo "$RESULT"
+}
+
+where="$(readlink_f $where)/"
 
 if [ -f "${where}kustomize" ]; then
   echo "${where}kustomize exists. Remove it first."
