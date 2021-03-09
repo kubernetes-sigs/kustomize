@@ -5,11 +5,13 @@ package build_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/provenance"
 	. "sigs.k8s.io/kustomize/kustomize/v4/commands/build"
 )
 
@@ -157,16 +159,17 @@ func TestBuildWithShardedOutput(t *testing.T) {
 		"someDir/v1_namespace_ns1.yaml"); err != nil {
 		t.Fatal(err)
 	}
-	expected := `apiVersion: v1
+	version := provenance.GetProvenance().Version
+	expected := fmt.Sprintf(`apiVersion: v1
 kind: Namespace
 metadata:
   annotations:
     note: This is a test annotation
   labels:
     app: nginx
-    app.kubernetes.io/managed-by: kustomize-unknown
+    app.kubernetes.io/managed-by: kustomize-%s
   name: ns1
-`
+`, version)
 	if string(data) != expected {
 		t.Fatalf("Expected:\n%s\nBut got:\n%s\n", expected, string(data))
 	}
@@ -174,7 +177,7 @@ metadata:
 		"someDir/v1_secret_foo-secret-bar-82c2g5f8f6.yaml"); err != nil {
 		t.Fatal(err)
 	}
-	expected = `apiVersion: v1
+	expected = fmt.Sprintf(`apiVersion: v1
 data:
   DB_PASSWORD: c29tZXB3
   DB_USERNAME: YWRtaW4=
@@ -184,11 +187,11 @@ metadata:
     note: This is a test annotation
   labels:
     app: nginx
-    app.kubernetes.io/managed-by: kustomize-unknown
+    app.kubernetes.io/managed-by: kustomize-%s
   name: foo-secret-bar-82c2g5f8f6
   namespace: ns1
 type: Opaque
-`
+`, version)
 	if string(data) != expected {
 		t.Fatalf("Expected:\n%s\nBut got:\n%s\n", expected, string(data))
 	}
