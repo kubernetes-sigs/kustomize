@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"fmt"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -57,7 +56,6 @@ spec:
 
 func TestPodDisruptionBudgetMerging(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	opts := th.MakeDefaultOptions()
 	th.WriteF("pdb-patch.yaml", `
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
@@ -97,26 +95,7 @@ patches:
 resources:
 - my_file.yaml
 `)
-	m := th.Run(".", opts)
-	expFmt := `
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  labels:
-    faceit-pdb: default
-  name: championships-api
-spec:
-  maxUnavailable: %s
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  labels:
-    faceit-pdb: default
-  name: championships-api-2
-spec:
-  maxUnavailable: %s
-`
+	m := th.Run(".", th.MakeDefaultOptions())
 	// In a PodDisruptionBudget, the fields maxUnavailable
 	// minAvailable are mutually exclusive, and both can hold
 	// either an integer, i.e. 10, or string that has to be
@@ -126,9 +105,23 @@ spec:
 	// the percent sign, quotes can be added and the API server will
 	// accept it, but they don't have to be added.
 	th.AssertActualEqualsExpected(
-		m,
-		// TODO(#3304): DECISION - kyaml better; not a bug.
-		opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `"1"`, `"1"`),
-			fmt.Sprintf(expFmt, `1`, `1`)))
+		m, `
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    faceit-pdb: default
+  name: championships-api
+spec:
+  maxUnavailable: 1
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    faceit-pdb: default
+  name: championships-api-2
+spec:
+  maxUnavailable: 1
+`)
 }

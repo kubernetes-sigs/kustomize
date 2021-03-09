@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -521,17 +520,9 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 						},
 					},
 				}).ResMap(),
-			// TODO(#3304): DECISION - kyaml better; not a bug.
-			expectedErr: konfig.IfApiMachineryElseKyaml(
-				`updating name reference in 'rules/resourceNames' field of `+
-					`'rbac.authorization.k8s.io_v1_ClusterRole|~X|cr'`+
-					`: considering field 'rules/resourceNames' of object
-{"apiVersion": "rbac.authorization.k8s.io/v1", "kind": "ClusterRole", "metadata": {
-    "name": "cr"}, "rules": [{"resourceNames": {"foo": "bar"}, "resources": ["secrets"]}]}
-: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`,
-				`updating name reference in 'rules/resourceNames' field of `+
-					`'rbac.authorization.k8s.io_v1_ClusterRole|~X|cr'`+
-					`: considering field 'rules/resourceNames' of object
+			expectedErr: `updating name reference in 'rules/resourceNames' field of ` +
+				`'rbac.authorization.k8s.io_v1_ClusterRole|~X|cr'` +
+				`: considering field 'rules/resourceNames' of object
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -541,7 +532,7 @@ rules:
     foo: bar
   resources:
   - secrets
-: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`)},
+: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`},
 	}
 
 	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)

@@ -4,8 +4,6 @@
 package krusty_test
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -300,7 +298,11 @@ spec:
 `)
 	opts := th.MakeDefaultOptions()
 	m := th.Run("overlay", opts)
-	expFmt := `apiVersion: apps/v1
+	th.AssertActualEqualsExpected(
+		// TODO(#3394): Should be possible to delete emptyDir with a patch.
+		// TODO(#3304): DECISION - still a bug, emptyDir should be deleted.
+		m, `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
@@ -315,21 +317,12 @@ spec:
         name: nginx
       - image: sidecar:latest
         name: sidecar
-      volumes:%s
-        name: nginx-persistent-storage
-`
-	th.AssertActualEqualsExpected(
-		// TODO(#3394): Should be possible to delete emptyDir with a patch.
-		// TODO(#3304): DECISION - still a bug, emptyDir should be deleted.
-		m, opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(expFmt, `
-      - gcePersistentDisk:
-          pdName: nginx-persistent-storage`),
-			fmt.Sprintf(expFmt, `
+      volumes:
       - emptyDir: {}
         gcePersistentDisk:
-          pdName: nginx-persistent-storage`),
-		))
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+`)
 }
 
 func TestSimpleMultiplePatches(t *testing.T) {
@@ -753,12 +746,10 @@ spec:
         - name: ENABLE_FEATURE_FOO
           value: FALSE
 `)
-	opts := th.MakeDefaultOptions()
-	if opts.UseKyaml {
-		// kyaml doesn't try to detect conflicts in patches
-		// (so ENABLE_FEATURE_FOO FALSE wins).
-		m := th.Run("overlay/staging", opts)
-		th.AssertActualEqualsExpected(m, `
+	// kyaml doesn't try to detect conflicts in patches
+	// (so ENABLE_FEATURE_FOO FALSE wins).
+	m := th.Run("overlay/staging", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -852,16 +843,6 @@ metadata:
     env: staging
   name: staging-configmap-in-overlay-dc6fm46dhm
 `)
-	} else {
-		err := th.RunWithErr("overlay/staging", opts)
-		if err == nil {
-			t.Fatalf("expected conflict")
-		}
-		if !strings.Contains(
-			err.Error(), "conflict between ") {
-			t.Fatalf("Unexpected err: %v", err)
-		}
-	}
 }
 
 func TestMultiplePatchesWithOnePatchDeleteDirective(t *testing.T) {
@@ -1029,12 +1010,10 @@ spec:
       - $patch: delete
         name: nginx
 `)
-	opt := th.MakeDefaultOptions()
-	if opt.UseKyaml {
-		// kyaml doesn't fail on conflicts in patches; both containers
-		// (nginx and sidecar) are deleted per this patching instruction.
-		m := th.Run("overlay/staging", opt)
-		th.AssertActualEqualsExpected(m, `
+	// kyaml doesn't fail on conflicts in patches; both containers
+	// (nginx and sidecar) are deleted per this patching instruction.
+	m := th.Run("overlay/staging", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1112,17 +1091,6 @@ metadata:
     env: staging
   name: staging-configmap-in-overlay-dc6fm46dhm
 `)
-	} else {
-		// No kyaml means error on a patch conflict.
-		err := th.RunWithErr("overlay/staging", opt)
-		if err == nil {
-			t.Fatalf("Expected error")
-		}
-		if !strings.Contains(
-			err.Error(), "both containing ") {
-			t.Fatalf("Unexpected err: %v", err)
-		}
-	}
 }
 
 // test for #3513

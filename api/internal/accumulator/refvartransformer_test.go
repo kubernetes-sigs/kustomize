@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
@@ -121,12 +120,7 @@ func TestRefVarTransformer(t *testing.T) {
 							"slice": []interface{}{5}, // noticeably *not* a []string
 						}}).ResMap(),
 			},
-			// TODO(#3304): DECISION - kyaml better; not a bug.
-			errMessage: konfig.IfApiMachineryElseKyaml(
-				`considering field 'data/slice' of object
-{"apiVersion": "v1", "data": {"slice": [5]}, "kind": "ConfigMap", "metadata": {"name": "cm1"}}
-: invalid value type expect a string`,
-				`considering field 'data/slice' of object
+			errMessage: `considering field 'data/slice' of object
 apiVersion: v1
 data:
   slice:
@@ -135,7 +129,6 @@ kind: ConfigMap
 metadata:
   name: cm1
 : invalid value type expect a string`,
-			),
 		},
 		"var replacement in nil": {
 			given: given{
