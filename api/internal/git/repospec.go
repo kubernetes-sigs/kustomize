@@ -78,6 +78,8 @@ func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
 	return func() error { return fSys.RemoveAll(x.Dir.String()) }
 }
 
+func DoNothingCleaner() error { return nil }
+
 // NewRepoSpecFromUrl parses git-like urls.
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract

@@ -140,7 +140,7 @@ func (th *HarnessEnhanced) ResetLoaderRoot(root string) {
 		th.t.Fatal(err)
 	}
 	ldr, err := fLdr.NewLoader(
-		fLdr.RestrictionRootOnly, root, th.fSys)
+		fLdr.RestrictionRootOnly, root, th.fSys, false)
 	if err != nil {
 		th.t.Fatalf("Unable to make loader: %v", err)
 	}

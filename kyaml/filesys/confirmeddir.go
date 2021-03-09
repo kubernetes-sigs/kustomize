@@ -6,8 +6,10 @@ package filesys
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/user"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"strings"
 )
 
@@ -34,13 +36,17 @@ func NewTmpConfirmedDir() (ConfirmedDir, error) {
 }
 
 func GitRootDir() (ConfirmedDir, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
+	var cacheHome string
+	if cacheHome = os.Getenv(konfig.XdgCacheHomeEnv); cacheHome == "" {
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		cacheHome = fmt.Sprintf("%s/%s", usr.HomeDir, konfig.XdgCacheHomeEnvDefault)
 	}
-	return ConfirmedDir(fmt.Sprintf("%s/.kustomize", usr.HomeDir)), nil
-}
 
+	return ConfirmedDir(fmt.Sprintf("%s/%s", cacheHome, "git")), nil
+}
 
 // HasPrefix returns true if the directory argument
 // is a prefix of self (d) from the point of view of

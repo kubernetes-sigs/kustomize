@@ -54,7 +54,7 @@ func TestLoader(t *testing.T) {
 	fsys := filesys.MakeFsInMemory()
 	fLdr, err := loader.NewLoader(
 		loader.RestrictionRootOnly,
-		filesys.Separator, fsys)
+		filesys.Separator, fsys, false)
 	if err != nil {
 		t.Fatal(err)
 	}

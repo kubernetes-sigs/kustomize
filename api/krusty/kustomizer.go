@@ -58,7 +58,7 @@ func (b *Kustomizer) Run(
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
 	}
-	ldr, err := fLdr.NewLoader(lr, path, fSys)
+	ldr, err := fLdr.NewLoader(lr, path, fSys, b.options.EnableGitCache)
 	if err != nil {
 		return nil, err
 	}

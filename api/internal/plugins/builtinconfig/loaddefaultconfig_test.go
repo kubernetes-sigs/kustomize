@@ -24,7 +24,7 @@ namePrefix:
 		t.Fatal(err)
 	}
 	ldr, err := loader.NewLoader(
-		loader.RestrictionRootOnly, filesys.Separator, fSys)
+		loader.RestrictionRootOnly, filesys.Separator, fSys, false)
 	if err != nil {
 		t.Fatal(err)
 	}

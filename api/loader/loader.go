@@ -18,17 +18,32 @@ import (
 // the remote bases will all be root-only restricted.
 func NewLoader(
 	lr LoadRestrictorFunc,
-	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
+	target string, fSys filesys.FileSystem, enableGitCache bool) (ifc.Loader, error) {
+
+	var gitCloner git.Cloner
+	var cleaner func() error
+
 	repoSpec, err := git.NewRepoSpecFromUrl(target)
+
+	if enableGitCache {
+		// Use cachedgit cloner, dont clean cloned dir after kustomization
+		gitCloner = git.CachedGitCloner
+		cleaner = git.DoNothingCleaner
+	} else {
+		// Use regular git cloner, clean cloned dir after kustomization
+		gitCloner = git.ClonerUsingGitExec
+		cleaner = repoSpec.Cleaner(fSys)
+	}
+
 	if err == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, git.CachedGitCloner)
+			repoSpec, fSys, nil, gitCloner, cleaner)
 	}
 	root, err := demandDirectoryRoot(fSys, target)
 	if err != nil {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.CachedGitCloner), nil
+		lr, root, fSys, nil, gitCloner), nil
 }

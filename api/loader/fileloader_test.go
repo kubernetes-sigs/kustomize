@@ -387,7 +387,7 @@ whatever
 	}
 	l, err := newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)), git.DoNothingCleaner)
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -465,8 +465,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
 	l1, err = newLoaderAtGitClone(
-		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		repoSpec, fSys, nil, git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), git.DoNothingCleaner)
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
