@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
 	. "sigs.k8s.io/kustomize/api/resmap"
@@ -391,20 +390,7 @@ spec:
 	assert.NoError(t, err)
 	yml, err = rm.AsYaml()
 	assert.NoError(t, err)
-
-	// TODO(#3304): DECISION - kyaml better; not a bug.
-	assert.Equal(t, konfig.IfApiMachineryElseKyaml(`apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    B: null
-    C: Z
-    D: W
-  baz:
-    hello: world
-`, `apiVersion: example.com/v1
+	assert.Equal(t, `apiVersion: example.com/v1
 kind: Foo
 metadata:
   name: my-foo
@@ -414,5 +400,5 @@ spec:
     D: W
   baz:
     hello: world
-`), string(yml))
+`, string(yml))
 }

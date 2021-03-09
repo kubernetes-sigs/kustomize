@@ -4,13 +4,10 @@
 package provider
 
 import (
-	"log"
-
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/conflict"
 	"sigs.k8s.io/kustomize/api/internal/validate"
 	"sigs.k8s.io/kustomize/api/internal/wrappy"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resource"
 )
 
@@ -154,15 +151,7 @@ type DepProvider struct {
 	fieldValidator           ifc.Validator
 }
 
-// The dependencies this method needs have been deleted -
-// see comments above.  This method will be deleted
-// along with DepProvider in the final step.
-func makeK8sdepBasedInstances() *DepProvider {
-	log.Fatal("This binary cannot use k8s.io code; it must use kyaml.")
-	return nil
-}
-
-func makeKyamlBasedInstances() *DepProvider {
+func NewDepProvider() *DepProvider {
 	kf := &wrappy.WNodeFactory{}
 	rf := resource.NewFactory(kf)
 	return &DepProvider{
@@ -173,15 +162,8 @@ func makeKyamlBasedInstances() *DepProvider {
 	}
 }
 
-func NewDepProvider(useKyaml bool) *DepProvider {
-	if useKyaml {
-		return makeKyamlBasedInstances()
-	}
-	return makeK8sdepBasedInstances()
-}
-
 func NewDefaultDepProvider() *DepProvider {
-	return NewDepProvider(konfig.FlagEnableKyamlDefaultValue)
+	return NewDepProvider()
 }
 
 func (dp *DepProvider) GetKunstructuredFactory() ifc.KunstructuredFactory {
