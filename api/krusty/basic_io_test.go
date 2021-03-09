@@ -11,26 +11,6 @@ import (
 
 func TestBasicIO_1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	opts := th.MakeDefaultOptions()
-	if !opts.UseKyaml {
-		// This test won't pass under apimachinery, because in the bowels of
-		// that code (see GetAnnotations in v0.17.0 of
-		// k8s.io/apimachinery/pkg/apis/meta/v1/unstructured/unstructured.go)
-		// an error returned from NestedStringMap is discarded, and an
-		// empty annotation map is silently returned, making this test fail
-		// The swallowed error arises from code like:
-		//   var v interface{}
-		//   v = true
-		//   if str, ok := v.(string); ok {
-		//     save the value in a map (doesn't happen)
-		//   } else {
-		//     return an error (that is then ignored by GetAnnotations)
-		//   }
-		// The error happens when any annotation value can be interpreted as
-		// a boolean or number.  Such annotations cannot be successfully applied
-		// to an object in a cluster unless they are quoted.
-		t.SkipNow()
-	}
 	th.WriteK(".", `
 resources:
 - service.yaml
@@ -47,7 +27,7 @@ metadata:
 spec:
   clusterIP: None
 `)
-	m := th.Run(".", opts)
+	m := th.Run(".", th.MakeDefaultOptions())
 	// The annotations are sorted by key, hence the order change.
 	// Quotes are added intentionally.
 	th.AssertActualEqualsExpected(

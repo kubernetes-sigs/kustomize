@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"fmt"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -176,7 +175,9 @@ weak nuclear
 `)
 	opts := th.MakeDefaultOptions()
 	m := th.Run(".", opts)
-	expFmt := `apiVersion: v1
+	th.AssertActualEqualsExpected(
+		m, `
+apiVersion: v1
 data:
   BIRD: falcon
   MOUNTAIN: everest
@@ -212,32 +213,19 @@ data:
   BIRD: ZmFsY29u
   MOUNTAIN: ZXZlcmVzdA==
   OCEAN: cGFjaWZpYw==
-  forces.txt: %s
+  forces.txt: |
+    CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
+    VjbGVhcgo=
   fruit: YXBwbGU=
-  passphrase: %s
+  passphrase: |
+    CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=
   vegetable: YnJvY2NvbGk=
 kind: Secret
 metadata:
-  name: blah-bob-%s
+  name: blah-bob-58g62h555c
 type: Opaque
-`
-	th.AssertActualEqualsExpected(
-		m,
-		// TODO(#3304): DECISION - kyaml better; not a bug.
-		opts.IfApiMachineryElseKyaml(
-			fmt.Sprintf(
-				expFmt,
-				`CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
-    VjbGVhcgo=`,
-				`CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
-    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`,
-				`ftht6hfgmb`),
-			fmt.Sprintf(
-				expFmt, `|
-    CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
-    VjbGVhcgo=`, `|
-    CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
-    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=`, `58g62h555c`)))
+`)
 }
 
 // TODO: These should be errors instead.

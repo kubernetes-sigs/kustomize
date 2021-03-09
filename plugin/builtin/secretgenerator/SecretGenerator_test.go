@@ -4,10 +4,8 @@
 package main_test
 
 import (
-	"fmt"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -43,32 +41,21 @@ literals:
 - FRUIT=apple
 - VEGETABLE=carrot
 `)
-
-	expFmt :=  `
+	th.AssertActualEqualsExpected(
+		rm, `
 apiVersion: v1
 data:
   DB_PASSWORD: aWxvdmV5b3U=
   FRUIT: YXBwbGU=
   ROUTER_PASSWORD: YWRtaW4=
   VEGETABLE: Y2Fycm90
-  %s
+  obscure: |
+    CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIG
+    VsaXQuCg==
 kind: Secret
 metadata:
   name: mySecret
   namespace: whatever
 type: Opaque
-`
-	th.AssertActualEqualsExpected(
-		rm,
-		// TODO(#3304): DECISION - kyaml doing better here, not a bug.
-		konfig.IfApiMachineryElseKyaml(
-			fmt.Sprintf(
-				expFmt,
-				`obscure: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==`),
-			fmt.Sprintf(
-				expFmt,
-				`obscure: |
-    CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIG
-    VsaXQuCg==`),
-			))
+`)
 }

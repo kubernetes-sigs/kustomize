@@ -9,12 +9,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // TODO(#3304): DECISION - OK to move to kyaml and not do conflict detection.
-const skipConflictDetectionTests = konfig.FlagEnableKyamlDefaultValue
+const skipConflictDetectionTests = true
 
 func errorContains(err error, possibilities ...string) bool {
 	for _, x := range possibilities {
@@ -604,25 +603,11 @@ spec:
 `)
 	assert.NoError(t, err)
 	th.AssertActualEqualsExpectedNoIdAnnotations(
-		resMap,
 		// In kyaml/yaml.merge2, the empty "B: " is dropped
 		// when patch1 and patch2 are merged, so the patch
 		// applied is effectively only patch2.yaml.
 		// So it cannot delete the "B: Y"
-		// TODO(#3304): DECISION - undecided.
-		konfig.IfApiMachineryElseKyaml(`
-apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    A: X
-    C: Z
-    D: W
-  baz:
-    hello: world
-`, `
+		resMap, `
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -635,7 +620,7 @@ spec:
     D: W
   baz:
     hello: world
-`))
+`)
 	resMap, err = th.RunTransformer(`
 apiVersion: builtin
 kind: PatchStrategicMergeTransformer
@@ -654,24 +639,9 @@ spec:
 `)
 	assert.NoError(t, err)
 	th.AssertActualEqualsExpectedNoIdAnnotations(
-		resMap,
 		// This time only patch2 was applied.  Same answer on the kyaml
 		// path, but different answer on apimachinery path (B becomes "true"?)
-		// TODO(#3304): DECISION - kyaml doing better here, not a bug.
-		konfig.IfApiMachineryElseKyaml(`
-apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    A: X
-    B: true
-    C: Z
-    D: W
-  baz:
-    hello: world
-`, `
+		resMap, `
 apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -684,7 +654,7 @@ spec:
     D: W
   baz:
     hello: world
-`))
+`)
 }
 
 func TestStrategicMergeTransformerNoSchemaMultiPatchesWithConflict(t *testing.T) {

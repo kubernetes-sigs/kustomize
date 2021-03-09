@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/konfig"
-
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -349,8 +347,7 @@ kind: List
 			// yaml, json, Resource, RNode, Unstructured etc.
 			// These conversions go away after closing #3506
 			// TODO(#3271) This shouldn't have an error, but does when kyaml is used.
-			// TODO(#3304): DECISION - still a bug, but not a blocker to #3304 or #2506
-			expectedErr: konfig.FlagEnableKyamlDefaultValue,
+			expectedErr: true,
 		},
 		{
 			name:        "listWithNoEntries",

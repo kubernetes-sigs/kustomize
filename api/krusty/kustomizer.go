@@ -36,7 +36,7 @@ type Kustomizer struct {
 func MakeKustomizer(o *Options) *Kustomizer {
 	return &Kustomizer{
 		options:     o,
-		depProvider: provider.NewDepProvider(o.UseKyaml),
+		depProvider: provider.NewDepProvider(),
 	}
 }
 

@@ -34,11 +34,6 @@ type Options struct {
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
 
-	// TODO(#3588): Delete this field (it's always true).
-	// When true, use kyaml/ packages to manipulate KRM yaml.
-	// When false, use k8sdeps/ instead (uses k8s.io/api* packages).
-	UseKyaml bool
-
 	// When true, allow name and kind changing via a patch
 	// When false, patch name/kind don't overwrite target name/kind
 	AllowResourceIdChanges bool
@@ -52,16 +47,8 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:       types.LoadRestrictionsRootOnly,
 		DoPrune:                false,
 		PluginConfig:           konfig.DisabledPluginConfig(),
-		UseKyaml:               konfig.FlagEnableKyamlDefaultValue,
 		AllowResourceIdChanges: false,
 	}
-}
-
-func (o Options) IfApiMachineryElseKyaml(s1, s2 string) string {
-	if !o.UseKyaml {
-		return s1
-	}
-	return s2
 }
 
 // GetBuiltinPluginNames returns a list of builtin plugin names
