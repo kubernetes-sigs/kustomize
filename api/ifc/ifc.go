@@ -7,6 +7,7 @@ package ifc
 import (
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Validator provides functions to validate annotations and labels
@@ -123,7 +124,7 @@ type KunstructuredFactory interface {
 // KunstructuredHasher returns a hash of the argument
 // or an error.
 type KunstructuredHasher interface {
-	Hash(Kunstructured) (string, error)
+	Hash(*yaml.RNode) (string, error)
 }
 
 // See core.v1.SecretTypeOpaque

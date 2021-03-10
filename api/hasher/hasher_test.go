@@ -32,10 +32,10 @@ func TestSortArrayAndComputeHash(t *testing.T) {
 	}
 }
 
-func TestHash(t *testing.T) {
+func Test_hex256(t *testing.T) {
 	// hash the empty string to be sure that sha256 is being used
 	expect := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sum := Hash("")
+	sum := hex256("")
 	if expect != sum {
 		t.Errorf("expected hash %q but got %q", expect, sum)
 	}
@@ -93,17 +93,17 @@ data:
 binaryData:
   two: ""`, "698h7c7t9m", ""},
 	}
-
+	h := &Hasher{}
 	for _, c := range cases {
 		node, err := yaml.Parse(c.cmYaml)
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := HashRNode(node)
+		hashed, err := h.Hash(node)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
-		if c.hash != h {
+		if c.hash != hashed {
 			t.Errorf("case %q, expect hash %q but got %q", c.desc, c.hash, h)
 		}
 	}
@@ -154,17 +154,17 @@ type: my-type
 data:
   one: ""`, "74bd68bm66", ""},
 	}
-
+	h := &Hasher{}
 	for _, c := range cases {
 		node, err := yaml.Parse(c.secretYaml)
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := HashRNode(node)
+		hashed, err := h.Hash(node)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
-		if c.hash != h {
+		if c.hash != hashed {
 			t.Errorf("case %q, expect hash %q but got %q", c.desc, c.hash, h)
 		}
 	}
@@ -191,17 +191,17 @@ spec:
   foo: 1
   bar: abc`, "59m2mdccg4", ""},
 	}
-
+	h := &Hasher{}
 	for _, c := range cases {
 		node, err := yaml.Parse(c.unstructured)
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := HashRNode(node)
+		hashed, err := h.Hash(node)
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
-		if c.hash != h {
+		if c.hash != hashed {
 			t.Errorf("case %q, expect hash %q but got %q", c.desc, c.hash, h)
 		}
 	}
@@ -334,9 +334,10 @@ data:
 	}
 }
 
-// SkipRest returns true if there was a non-nil error or if we expected an error that didn't happen,
-// and logs the appropriate error on the test object.
-// The return value indicates whether we should skip the rest of the test case due to the error result.
+// SkipRest returns true if there was a non-nil error or if we expected an
+// error that didn't happen, and logs the appropriate error on the test object.
+// The return value indicates whether we should skip the rest of the test case
+// due to the error result.
 func SkipRest(t *testing.T, desc string, err error, contains string) bool {
 	if err != nil {
 		if len(contains) == 0 {

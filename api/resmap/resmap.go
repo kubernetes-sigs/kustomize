@@ -80,6 +80,9 @@ type TransformerPlugin interface {
 // resource to transform, try the OrgId first, and if this
 // fails or finds too many, it might make sense to then try
 // the CurrId.  Depends on the situation.
+//
+// TODO: get rid of this interface (use bare resWrangler).
+// There aren't multiple implementations any more.
 type ResMap interface {
 	// Size reports the number of resources.
 	Size() int
@@ -189,6 +192,9 @@ type ResMap interface {
 	// Clear removes all resources and Ids.
 	Clear()
 
+	// DropEmpties drops empty resources from the ResMap.
+	DropEmpties()
+
 	// SubsetThatCouldBeReferencedByResource returns a ResMap subset
 	// of self with resources that could be referenced by the
 	// resource argument.
@@ -231,9 +237,8 @@ type ResMap interface {
 	// are selected by a Selector
 	Select(types.Selector) ([]*resource.Resource, error)
 
-	// ToRNodeSlice converts the resources in the resmp
-	// to a list of RNodes
-	ToRNodeSlice() ([]*yaml.RNode, error)
+	// ToRNodeSlice returns a copy of the resources as RNodes.
+	ToRNodeSlice() []*yaml.RNode
 
 	// ApplySmPatch applies a strategic-merge patch to the
 	// selected set of resources.
