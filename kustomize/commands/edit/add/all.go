@@ -7,13 +7,14 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/resource"
 )
 
 // NewCmdAdd returns an instance of 'add' subcommand.
 func NewCmdAdd(
 	fSys filesys.FileSystem,
 	ldr ifc.KvLoader,
-	kf ifc.KunstructuredFactory) *cobra.Command {
+	rf *resource.Factory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Adds an item to the kustomization file.",
@@ -53,8 +54,8 @@ func NewCmdAdd(
 		newCmdAddResource(fSys),
 		newCmdAddPatch(fSys),
 		newCmdAddComponent(fSys),
-		newCmdAddSecret(fSys, ldr, kf),
-		newCmdAddConfigMap(fSys, ldr, kf),
+		newCmdAddSecret(fSys, ldr, rf),
+		newCmdAddConfigMap(fSys, ldr, rf),
 		newCmdAddBase(fSys),
 		newCmdAddLabel(fSys, ldr.Validator().MakeLabelValidator()),
 		newCmdAddAnnotation(fSys, ldr.Validator().MakeAnnotationValidator()),

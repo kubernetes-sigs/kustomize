@@ -3,6 +3,7 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -35,5 +36,8 @@ spec:
           - name: PODINFO_UI_COLOR
             value: "#34577c"
 `)
-	th.RunWithErr(".", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
+	_, err := m.AsYaml()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mapping key \"env\" already defined")
 }

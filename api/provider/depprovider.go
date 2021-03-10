@@ -4,10 +4,10 @@
 package provider
 
 import (
+	"sigs.k8s.io/kustomize/api/hasher"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/conflict"
 	"sigs.k8s.io/kustomize/api/internal/validate"
-	"sigs.k8s.io/kustomize/api/internal/wrappy"
 	"sigs.k8s.io/kustomize/api/resource"
 )
 
@@ -145,17 +145,14 @@ import (
 // If you're reading this, plan not done.
 //
 type DepProvider struct {
-	kFactory                 ifc.KunstructuredFactory
 	resourceFactory          *resource.Factory
 	conflictDectectorFactory resource.ConflictDetectorFactory
 	fieldValidator           ifc.Validator
 }
 
 func NewDepProvider() *DepProvider {
-	kf := &wrappy.WNodeFactory{}
-	rf := resource.NewFactory(kf)
+	rf := resource.NewFactory(&hasher.Hasher{})
 	return &DepProvider{
-		kFactory:                 kf,
 		resourceFactory:          rf,
 		conflictDectectorFactory: conflict.NewFactory(),
 		fieldValidator:           validate.NewFieldValidator(),
@@ -164,10 +161,6 @@ func NewDepProvider() *DepProvider {
 
 func NewDefaultDepProvider() *DepProvider {
 	return NewDepProvider()
-}
-
-func (dp *DepProvider) GetKunstructuredFactory() ifc.KunstructuredFactory {
-	return dp.kFactory
 }
 
 func (dp *DepProvider) GetResourceFactory() *resource.Factory {

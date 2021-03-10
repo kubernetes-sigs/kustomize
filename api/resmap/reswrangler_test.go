@@ -877,13 +877,8 @@ rules:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	rnodes, err := rm.ToRNodeSlice()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
 	b := bytes.NewBufferString("")
-	for i, n := range rnodes {
+	for i, n := range rm.ToRNodeSlice() {
 		if i != 0 {
 			b.WriteString("---\n")
 		}
