@@ -30,6 +30,7 @@ import (
 type Kustomizer struct {
 	options     *Options
 	depProvider *provider.DepProvider
+	input       []byte
 }
 
 // MakeKustomizer returns an instance of Kustomizer.
@@ -38,6 +39,15 @@ func MakeKustomizer(o *Options) *Kustomizer {
 		options:     o,
 		depProvider: provider.NewDepProvider(),
 	}
+}
+
+// Set input for kustomizer
+//
+// That input will be added to resources.
+// Should be called before Run.
+// This allows to switch kustomizer to transformer-mode
+func (b *Kustomizer) SetInput(input []byte) {
+	b.input = input
 }
 
 // Run performs a kustomization.
@@ -70,6 +80,13 @@ func (b *Kustomizer) Run(
 		resmapFactory,
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory),
 	)
+	if b.input != nil {
+		res, err := resmapFactory.NewResMapFromBytes(b.input)
+		if err != nil {
+			return nil, fmt.Errorf("parsing resources from input: %v", err)
+		}
+		kt.SetInput(&res)
+	}
 	err = kt.Load()
 	if err != nil {
 		return nil, err

@@ -22,9 +22,9 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/version"
 )
 
-func makeBuildCommand(fSys filesys.FileSystem, w io.Writer) *cobra.Command {
+func makeBuildCommand(fSys filesys.FileSystem, r io.Reader, w io.Writer) *cobra.Command {
 	cmd := build.NewCmdBuild(
-		fSys, build.MakeHelp(konfig.ProgramName, "build"), w)
+		fSys, build.MakeHelp(konfig.ProgramName, "build"), r, w)
 	// Add build flags that don't appear in kubectl.
 	build.AddFunctionAlphaEnablementFlags(cmd.Flags())
 	return cmd
@@ -33,6 +33,7 @@ func makeBuildCommand(fSys filesys.FileSystem, w io.Writer) *cobra.Command {
 // NewDefaultCommand returns the default (aka root) command for kustomize command.
 func NewDefaultCommand() *cobra.Command {
 	fSys := filesys.MakeFsOnDisk()
+	stdIn := os.Stdin
 	stdOut := os.Stdout
 
 	c := &cobra.Command{
@@ -47,7 +48,7 @@ See https://sigs.k8s.io/kustomize
 	pvd := provider.NewDefaultDepProvider()
 	c.AddCommand(
 		completion.NewCommand(),
-		makeBuildCommand(fSys, stdOut),
+		makeBuildCommand(fSys, stdIn, stdOut),
 		edit.NewCmdEdit(
 			fSys, pvd.GetFieldValidator(), pvd.GetKunstructuredFactory()),
 		create.NewCmdCreate(fSys, pvd.GetKunstructuredFactory()),

@@ -30,6 +30,10 @@ type KustTarget struct {
 	validator     ifc.Validator
 	rFactory      *resmap.Factory
 	pLdr          *loader.Loader
+
+	// transformer mode: reads resources from input
+	// before executing the rest of kustomization
+	input *resmap.ResMap
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -44,6 +48,10 @@ func NewKustTarget(
 		rFactory:  rFactory,
 		pLdr:      pLdr,
 	}
+}
+
+func (kt *KustTarget) SetInput(input *resmap.ResMap) {
+	kt.input = input
 }
 
 // Load attempts to load the target's kustomization file.
@@ -153,7 +161,16 @@ func (kt *KustTarget) addHashesToNames(
 // not yet fixed.
 func (kt *KustTarget) AccumulateTarget() (
 	ra *accumulator.ResAccumulator, err error) {
-	return kt.accumulateTarget(accumulator.MakeEmptyAccumulator())
+	ra = accumulator.MakeEmptyAccumulator()
+
+	if kt.input != nil {
+		err = ra.AppendAll(*kt.input)
+		if err != nil {
+			errors.Wrapf(err, "merging resources from input")
+		}
+	}
+
+	return kt.accumulateTarget(ra)
 }
 
 // ra should be empty when this KustTarget is a Kustomization, or the ra of the parent if this KustTarget is a Component

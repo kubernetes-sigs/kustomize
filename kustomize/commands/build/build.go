@@ -6,6 +6,7 @@ package build
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -25,6 +26,7 @@ var theFlags struct {
 		resourceIdChanges bool
 		plugins           bool
 		managedByLabel    bool
+		transformerMode   bool
 	}
 	loadRestrictor string
 	reorderOutput  string
@@ -63,7 +65,7 @@ If DIR is omitted, '.' is assumed.
 
 // NewCmdBuild creates a new build command.
 func NewCmdBuild(
-	fSys filesys.FileSystem, help *Help, writer io.Writer) *cobra.Command {
+	fSys filesys.FileSystem, help *Help, reader io.Reader, writer io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          help.Use,
 		Short:        help.Short,
@@ -77,6 +79,13 @@ func NewCmdBuild(
 			k := krusty.MakeKustomizer(
 				HonorKustomizeFlags(krusty.MakeDefaultOptions()),
 			)
+			if theFlags.enable.transformerMode {
+				input, err := ioutil.ReadAll(reader)
+				if err != nil {
+					return fmt.Errorf("reading resources from stdin: %v", err)
+				}
+				k.SetInput(input)
+			}
 			m, err := k.Run(fSys, theArgs.kustomizationPath)
 			if err != nil {
 				return err
@@ -105,6 +114,7 @@ func NewCmdBuild(
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
 	AddFlagAllowResourceIdChanges(cmd.Flags())
+	AddFlagEnableTransformerMode(cmd.Flags())
 	return cmd
 }
 
