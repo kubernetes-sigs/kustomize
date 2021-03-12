@@ -270,11 +270,17 @@ func (p *HelmChartInflationGeneratorPlugin) checkHelmVersion() error {
 	if err != nil {
 		return err
 	}
-	r, err := regexp.Compile(`v\d+(\.\d+)+`)
+	r, err := regexp.Compile(`v?\d+(\.\d+)+`)
 	if err != nil {
 		return err
 	}
-	v := string(r.Find(stdout))[1:]
+	v := r.FindString(string(stdout))
+	if v == "" {
+		return fmt.Errorf("cannot find version string in %s", string(stdout))
+	}
+	if v[0] == 'v' {
+		v = v[1:]
+	}
 	majorVersion := strings.Split(v, ".")[0]
 	if majorVersion != "3" {
 		return fmt.Errorf("this plugin requires helm V3 but got v%s", v)
