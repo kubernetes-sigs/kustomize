@@ -11,7 +11,7 @@ import (
 )
 
 type HashTransformerPlugin struct {
-	hasher ifc.KunstructuredHasher
+	hasher ifc.KustHasher
 }
 
 func (p *HashTransformerPlugin) Config(

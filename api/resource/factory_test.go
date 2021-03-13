@@ -337,7 +337,7 @@ kind: List
 			// The error using kyaml is:
 			//   json: unsupported type: map[interface {}]interface {}
 			// maybe arising from too many conversions between
-			// yaml, json, Resource, RNode, Unstructured etc.
+			// yaml, json, Resource, RNode, etc.
 			// These conversions go away after closing #3506
 			// TODO(#3271) This shouldn't have an error, but does when kyaml is used.
 			expectedErr: true,
