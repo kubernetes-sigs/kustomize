@@ -170,19 +170,18 @@ data:
 	}
 }
 
-func TestUnstructuredHash(t *testing.T) {
-	cases := []struct {
-		desc         string
-		unstructured string
-		hash         string
-		err          string
+func TestBasicHash(t *testing.T) {
+	cases := map[string]struct {
+		res  string
+		hash string
+		err  string
 	}{
-		{"minimal", `
+		"minimal": {`
 apiVersion: test/v1
 kind: TestResource
 metadata:
   name: my-resource`, "244782mkb7", ""},
-		{"with spec", `
+		"with spec": {`
 apiVersion: test/v1
 kind: TestResource
 metadata:
@@ -192,18 +191,21 @@ spec:
   bar: abc`, "59m2mdccg4", ""},
 	}
 	h := &Hasher{}
-	for _, c := range cases {
-		node, err := yaml.Parse(c.unstructured)
-		if err != nil {
-			t.Fatal(err)
-		}
-		hashed, err := h.Hash(node)
-		if SkipRest(t, c.desc, err, c.err) {
-			continue
-		}
-		if c.hash != hashed {
-			t.Errorf("case %q, expect hash %q but got %q", c.desc, c.hash, h)
-		}
+	for n := range cases {
+		c := cases[n]
+		t.Run(n, func(t *testing.T) {
+			node, err := yaml.Parse(c.res)
+			if err != nil {
+				t.Fatal(err)
+			}
+			hashed, err := h.Hash(node)
+			if SkipRest(t, n, err, c.err) {
+				return
+			}
+			if c.hash != hashed {
+				t.Errorf("case %q, expect hash %q but got %q", n, c.hash, h)
+			}
+		})
 	}
 }
 

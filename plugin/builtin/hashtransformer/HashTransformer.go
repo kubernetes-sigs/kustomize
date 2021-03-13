@@ -12,7 +12,7 @@ import (
 )
 
 type plugin struct {
-	hasher ifc.KunstructuredHasher
+	hasher ifc.KustHasher
 }
 
 //noinspection GoUnusedGlobalVariable

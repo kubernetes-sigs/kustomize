@@ -21,16 +21,16 @@ import (
 
 // Factory makes instances of Resource.
 type Factory struct {
-	hasher ifc.KunstructuredHasher
+	hasher ifc.KustHasher
 }
 
 // NewFactory makes an instance of Factory.
-func NewFactory(h ifc.KunstructuredHasher) *Factory {
+func NewFactory(h ifc.KustHasher) *Factory {
 	return &Factory{hasher: h}
 }
 
-// Hasher returns an ifc.KunstructuredHasher
-func (rf *Factory) Hasher() ifc.KunstructuredHasher {
+// Hasher returns an ifc.KustHasher
+func (rf *Factory) Hasher() ifc.KustHasher {
 	return rf.hasher
 }
 
@@ -69,7 +69,7 @@ func (rf *Factory) makeOne(rn *yaml.RNode, o *types.GenArgs) *Resource {
 	if o == nil {
 		o = types.NewGenArgs(nil)
 	}
-	return &Resource{kunStr: rn, options: o}
+	return &Resource{node: rn, options: o}
 }
 
 // SliceFromPatches returns a slice of resources given a patch path

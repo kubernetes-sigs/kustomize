@@ -323,9 +323,9 @@ func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 				"id in self matches %d in other; id: %s", len(others), id)
 		}
 		r2 := others[0]
-		if !r1.KunstructEqual(r2) {
+		if !r1.NodeEqual(r2) {
 			return fmt.Errorf(
-				"kunstruct not equal: \n -- %s,\n -- %s\n\n--\n%#v\n------\n%#v\n",
+				"nodes unequal: \n -- %s,\n -- %s\n\n--\n%#v\n------\n%#v\n",
 				r1, r2, r1, r2)
 		}
 		seen[m2.indexOfResource(r2)] = true
