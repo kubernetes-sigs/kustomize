@@ -49,8 +49,8 @@ See https://sigs.k8s.io/kustomize
 		completion.NewCommand(),
 		makeBuildCommand(fSys, stdOut),
 		edit.NewCmdEdit(
-			fSys, pvd.GetFieldValidator(), pvd.GetKunstructuredFactory()),
-		create.NewCmdCreate(fSys, pvd.GetKunstructuredFactory()),
+			fSys, pvd.GetFieldValidator(), pvd.GetResourceFactory()),
+		create.NewCmdCreate(fSys, pvd.GetResourceFactory()),
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
 	)

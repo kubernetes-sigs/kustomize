@@ -146,18 +146,10 @@ func newResMapFromResourceSlice(
 }
 
 // NewResMapFromRNodeSlice returns a ResMap from a slice of RNodes
-func (rmF *Factory) NewResMapFromRNodeSlice(rnodes []*yaml.RNode) (ResMap, error) {
-	var resources []*resource.Resource
-	for _, rnode := range rnodes {
-		s, err := rnode.String()
-		if err != nil {
-			return nil, err
-		}
-		r, err := rmF.resF.SliceFromBytes([]byte(s))
-		if err != nil {
-			return nil, err
-		}
-		resources = append(resources, r...)
+func (rmF *Factory) NewResMapFromRNodeSlice(s []*yaml.RNode) (ResMap, error) {
+	rs, err := rmF.resF.ResourcesFromRNodes(s)
+	if err != nil {
+		return nil, err
 	}
-	return newResMapFromResourceSlice(resources)
+	return newResMapFromResourceSlice(rs)
 }

@@ -103,6 +103,12 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestGvkFromString(t *testing.T) {
+	for _, hey := range stringTests {
+		assert.Equal(t, hey.x, GvkFromString(hey.s))
+	}
+}
+
 func TestApiVersion(t *testing.T) {
 	for _, hey := range []struct {
 		x   Gvk

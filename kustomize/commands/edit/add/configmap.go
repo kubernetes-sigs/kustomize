@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 )
@@ -15,7 +16,7 @@ import (
 func newCmdAddConfigMap(
 	fSys filesys.FileSystem,
 	ldr ifc.KvLoader,
-	kf ifc.KunstructuredFactory) *cobra.Command {
+	rf *resource.Factory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
@@ -57,7 +58,7 @@ func newCmdAddConfigMap(
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			err = addConfigMap(ldr, kustomization, flags, kf)
+			err = addConfigMap(ldr, kustomization, flags, rf)
 			if err != nil {
 				return err
 			}
@@ -106,13 +107,13 @@ func newCmdAddConfigMap(
 func addConfigMap(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
+	flags flagsAndArgs, rf *resource.Factory) error {
 	args := findOrMakeConfigMapArgs(k, flags.Name)
 	mergeFlagsIntoCmArgs(args, flags)
 	// Validate by trying to create corev1.configmap.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)
-	_, err := kf.MakeConfigMap(ldr, args)
+	_, err := rf.MakeConfigMap(ldr, args)
 	return err
 }
 

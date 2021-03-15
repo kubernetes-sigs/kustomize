@@ -46,10 +46,7 @@ func main() {
 			}
 		}
 
-		resourceList.Items, err = resMap.ToRNodeSlice()
-		if err != nil {
-			return err
-		}
+		resourceList.Items = resMap.ToRNodeSlice()
 		return nil
 	})
 	if err := framework.Execute(&processor, nil); err != nil {

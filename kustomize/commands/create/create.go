@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
-	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/util"
 )
@@ -31,7 +31,7 @@ type createFlags struct {
 }
 
 // NewCmdCreate returns an instance of 'create' subcommand.
-func NewCmdCreate(fSys filesys.FileSystem, uf ifc.KunstructuredFactory) *cobra.Command {
+func NewCmdCreate(fSys filesys.FileSystem, rf *resource.Factory) *cobra.Command {
 	opts := createFlags{path: filesys.SelfDir}
 	c := &cobra.Command{
 		Use:     "create",
@@ -49,7 +49,7 @@ func NewCmdCreate(fSys filesys.FileSystem, uf ifc.KunstructuredFactory) *cobra.C
 	kustomize create --resources deployment.yaml,service.yaml,../base --namespace staging --nameprefix acme-
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCreate(opts, fSys, uf)
+			return runCreate(opts, fSys, rf)
 		},
 	}
 	c.Flags().StringVar(
@@ -95,7 +95,7 @@ func NewCmdCreate(fSys filesys.FileSystem, uf ifc.KunstructuredFactory) *cobra.C
 	return c
 }
 
-func runCreate(opts createFlags, fSys filesys.FileSystem, uf ifc.KunstructuredFactory) error {
+func runCreate(opts createFlags, fSys filesys.FileSystem, rf *resource.Factory) error {
 	var resources []string
 	var err error
 	if opts.resources != "" {
@@ -108,7 +108,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, uf ifc.KunstructuredFa
 		return fmt.Errorf("kustomization file already exists")
 	}
 	if opts.detectResources {
-		detected, err := detectResources(fSys, uf, opts.path, opts.detectRecursive)
+		detected, err := detectResources(fSys, rf, opts.path, opts.detectRecursive)
 		if err != nil {
 			return err
 		}
@@ -149,7 +149,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, uf ifc.KunstructuredFa
 	return mf.Write(m)
 }
 
-func detectResources(fSys filesys.FileSystem, uf ifc.KunstructuredFactory, base string, recursive bool) ([]string, error) {
+func detectResources(fSys filesys.FileSystem, rf *resource.Factory, base string, recursive bool) ([]string, error) {
 	var paths []string
 	err := fSys.Walk(base, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -176,7 +176,7 @@ func detectResources(fSys filesys.FileSystem, uf ifc.KunstructuredFactory, base 
 		if err != nil {
 			return err
 		}
-		if _, err := uf.SliceFromBytes(fContents); err != nil {
+		if _, err := rf.SliceFromBytes(fContents); err != nil {
 			return nil
 		}
 		paths = append(paths, path)
