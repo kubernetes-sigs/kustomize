@@ -596,6 +596,7 @@ func (m *resWrangler) ApplySmPatch(
 		patchCopy := patch.DeepCopy()
 		patchCopy.CopyMergeMetaDataFieldsFrom(patch)
 		patchCopy.SetGvk(res.GetGvk())
+		patchCopy.SetKind(patch.GetKind())
 		err := res.ApplySmPatch(patchCopy)
 		if err != nil {
 			// Check for an error string from UnmarshalJSON that's indicative

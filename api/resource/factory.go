@@ -41,7 +41,8 @@ func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource
 
 // FromMapWithNamespaceAndName returns a new instance with the given "original" namespace.
 func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string]interface{}) *Resource {
-	return rf.makeOne(rf.kf.FromMap(m), nil).setPreviousNamespaceAndName(ns, n)
+	r := rf.makeOne(rf.kf.FromMap(m), nil)
+	return r.setPreviousId(ns, n, r.GetKind())
 }
 
 // FromMapAndOption returns a new instance of Resource with given options.
@@ -157,7 +158,7 @@ func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resour
 		return nil, fmt.Errorf("number of names doesn't match number of resources")
 	}
 	for i, res := range result {
-		res.setPreviousNamespaceAndName(resid.DefaultNamespace, names[i])
+		res.setPreviousId(resid.DefaultNamespace, names[i], res.GetKind())
 	}
 	return result, nil
 }
