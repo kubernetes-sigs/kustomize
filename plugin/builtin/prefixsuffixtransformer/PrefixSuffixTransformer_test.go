@@ -64,6 +64,7 @@ kind: Service
 metadata:
   annotations:
     config.kubernetes.io/prefixes: baked-
+    config.kubernetes.io/previousKinds: Service
     config.kubernetes.io/previousNames: apple
     config.kubernetes.io/previousNamespaces: default
     config.kubernetes.io/suffixes: -pie
@@ -87,6 +88,7 @@ kind: ConfigMap
 metadata:
   annotations:
     config.kubernetes.io/prefixes: baked-
+    config.kubernetes.io/previousKinds: ConfigMap
     config.kubernetes.io/previousNames: cm
     config.kubernetes.io/previousNamespaces: default
     config.kubernetes.io/suffixes: -pie
@@ -138,6 +140,7 @@ kind: Deployment
 metadata:
   annotations:
     config.kubernetes.io/prefixes: test-
+    config.kubernetes.io/previousKinds: Deployment
     config.kubernetes.io/previousNames: deployment
     config.kubernetes.io/previousNamespaces: default
   name: test-deployment

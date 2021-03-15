@@ -14,7 +14,6 @@ import (
 // GVKN shouldn't change with default options
 func TestKeepOriginalGVKN(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -27,14 +26,12 @@ spec:
         - name: nginx
           image: nginx
 `)
-
 	th.WriteF("patch.yaml", `
 apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
 `)
-
 	th.WriteK(".", `
 resources:
 - deployment.yaml
@@ -44,7 +41,6 @@ patches:
   target:
     kind: Deployment
 `)
-
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
@@ -64,7 +60,6 @@ spec:
 // These tests document behavior that will change
 func TestChangeName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -77,14 +72,12 @@ spec:
         - name: nginx
           image: nginx
 `)
-
 	th.WriteF("patch.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
   name: new-name
 `)
-
 	th.WriteK(".", `
 resources:
 - deployment.yaml
@@ -93,18 +86,16 @@ patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options: 
+    allowNameChange: true
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// name should become `new-name`
 	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: old-name
+  name: new-name
 spec:
   template:
     spec:
@@ -116,7 +107,6 @@ spec:
 
 func TestChangeKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -129,32 +119,27 @@ spec:
         - name: nginx
           image: nginx
 `)
-
 	th.WriteF("patch.yaml", `
 apiVersion: v1
 kind: StatefulSet
 metadata:
   name: old-name
 `)
-
 	th.WriteK(".", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowKindChange: true
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// kind should become `StatefulSet`
 	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: old-name
 spec:
@@ -168,7 +153,6 @@ spec:
 
 func TestChangeNameAndKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -181,35 +165,30 @@ spec:
         - name: nginx
           image: nginx
 `)
-
 	th.WriteF("patch.yaml", `
 apiVersion: v1
 kind: StatefulSet
 metadata:
   name: new-name
 `)
-
 	th.WriteK(".", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowNameChange: true
+    allowKindChange: true
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// kind should become `StatefulSet`
-	// name should become `new-name`
 	m := th.Run(".", options)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: old-name
+  name: new-name
 spec:
   template:
     spec:
@@ -219,12 +198,10 @@ spec:
 `)
 }
 
-// https://github.com/kubernetes-sigs/kustomize/issues/3280
 // Should be able to refer to a resource with either its
 // original GVKN or its current one
 func TestPatchOriginalName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("base/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -246,13 +223,13 @@ metadata:
 	th.WriteK("base", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowNameChange: true
 `)
-
 	th.WriteK("overlay", `
 resources:
 - ../base
@@ -267,17 +244,13 @@ metadata:
 spec:
   replicas: 999
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// name should become `new-name`
 	m := th.Run("overlay", options)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: old-name
+  name: new-name
 spec:
   replicas: 999
   template:
@@ -290,7 +263,6 @@ spec:
 
 func TestPatchNewName(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("base/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -312,13 +284,13 @@ metadata:
 	th.WriteK("base", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowNameChange: true
 `)
-
 	th.WriteK("overlay", `
 resources:
 - ../base
@@ -333,18 +305,25 @@ metadata:
 spec:
   replicas: 999
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// depPatch cannot find target with the name `new-name`
-	// because base/patch.yaml can't yet edit the name
-	assert.Error(t, th.RunWithErr("overlay", options))
+	m := th.Run("overlay", options)
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: new-name
+spec:
+  replicas: 999
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
 }
 
 func TestPatchOriginalNameAndKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("base/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -366,13 +345,14 @@ metadata:
 	th.WriteK("base", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowNameChange: true
+    allowKindChange: true
 `)
-
 	th.WriteK("overlay", `
 resources:
 - ../base
@@ -387,18 +367,13 @@ metadata:
 spec:
   replicas: 999
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// kind should become `StatefulSet`
-	// name should become `new-name`
 	m := th.Run("overlay", options)
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: old-name
+  name: new-name
 spec:
   replicas: 999
   template:
@@ -411,7 +386,6 @@ spec:
 
 func TestPatchNewNameAndKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("base/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -433,13 +407,14 @@ metadata:
 	th.WriteK("base", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowNameChange: true
+    allowKindChange: true
 `)
-
 	th.WriteK("overlay", `
 resources:
 - ../base
@@ -454,20 +429,27 @@ metadata:
 spec:
   replicas: 999
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
-	// depPatch cannot find target with kind `StatefulSet` and name `new-name`
-	// because base/patch.yaml can't yet edit the kind or name
-	assert.Error(t, th.RunWithErr("overlay", options))
+	m := th.Run("overlay", options)
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: new-name
+spec:
+  replicas: 999
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
 }
 
 // Use original name, but new kind
 // Should fail, even after #3280 is done, because this ID is invalid
 func TestPatchOriginalNameAndNewKind(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
 	th.WriteF("base/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
@@ -489,13 +471,14 @@ metadata:
 	th.WriteK("base", `
 resources:
 - deployment.yaml
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
+  options:
+    allowNameChange: true
+    allowKindChange: true
 `)
-
 	th.WriteK("overlay", `
 resources:
 - ../base
@@ -510,10 +493,7 @@ metadata:
 spec:
   replicas: 999
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
-
 	// depPatch cannot find target with kind `Deployment` and name `new-name`
 	// because the resource never had this GVKN
 	assert.Error(t, th.RunWithErr("overlay", options))
@@ -552,12 +532,11 @@ spec:
 
 func TestBaseReuseNameAndKindConflict(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK("/app/shared", `
+	th.WriteK("shared", `
 resources:
   - deployment.yaml
 `)
-	th.WriteF("/app/shared/deployment.yaml", `
+	th.WriteF("shared/deployment.yaml", `
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -570,53 +549,139 @@ spec:
           image: nginx
 `)
 
-	th.WriteK("/app/component1/base", `
+	th.WriteK("component1/base", `
 resources:
   - ../../shared
 `)
-	th.WriteK("/app/component1/overlay", `
+	th.WriteK("component1/overlay", `
 resources:
   - ../base
-
 namePrefix: overlay-
 `)
 
-	th.WriteK("/app/component2/base", `
+	th.WriteK("component2/base", `
 resources:
   - ../../shared
-
 patches:
 - path: patch.yaml
   target:
     kind: Deployment
     name: my-deploy
+  options:
+    allowNameChange: true
+    allowKindChange: true
 `)
-	th.WriteF("/app/component2/base/patch.yaml", `
+	th.WriteF("component2/base/patch.yaml", `
 apiVersion: v1
 kind: StatefulSet
 metadata:
   name: my-stateful-set
 `)
-	th.WriteK("/app/component2/overlay", `
+	th.WriteK("component2/overlay", `
 resources:
   - ../base
-
 namePrefix: overlay-
 `)
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
   - component1/overlay
   - component2/overlay
 `)
-
 	options := th.MakeDefaultOptions()
-	options.AllowResourceIdChanges = true
+	m := th.Run(".", options)
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: overlay-my-deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: overlay-my-stateful-set
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
 
-	// Error occurs when app/component2/base tries to load the shared resources
-	// because the kind is not (yet) allowed to change yet
-	// so it loads a second Deployment with the name my-deploy
-	// instead of a StatefulSet as specified by the patch.
-	// Will be fixed by #3280.
-	assert.Error(t, th.RunWithErr("overlay", options))
+func TestNameReferenceAfterGvknChange(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("configMap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: old-name
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-name
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - valueFrom:
+            configMapKeyRef:
+              name: old-name
+              key: somekey
+        envFrom:
+        - configMapRef:
+            name: old-name
+            key: somekey
+`)
+	th.WriteK(".", `
+resources:
+- configMap.yaml
+- deployment.yaml
+patches:
+- path: patch.yaml
+  target:
+    kind: ConfigMap
+  options:
+    allowNameChange: true
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-name
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - valueFrom:
+            configMapKeyRef:
+              key: somekey
+              name: new-name
+        envFrom:
+        - configMapRef:
+            key: somekey
+            name: new-name
+`)
 }

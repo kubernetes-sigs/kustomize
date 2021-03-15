@@ -296,7 +296,6 @@ spec:
         - proxy
         - sidecar
 `)
-
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
 kind: PatchTransformer
@@ -364,6 +363,8 @@ spec:
         - sidecar
         image: docker.io/istio/proxyv2
         name: istio-proxy
+      - image: nginx
+        name: nginx
 `)
 }
 
