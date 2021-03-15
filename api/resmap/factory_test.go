@@ -336,17 +336,18 @@ metadata:
 			expected: resmaptest_test.NewRmBuilder(t, rf).ResMap(),
 		},
 	}
-	for name, tc := range testcases {
-		rnodes := []*yaml.RNode{
-			yaml.MustParse(tc.input),
-		}
-		rm, err := rmF.NewResMapFromRNodeSlice(rnodes)
-		if err != nil {
-			t.Fatalf("unexpected error in test case [%s]: %v", name, err)
-		}
-		if err = tc.expected.ErrorIfNotEqualLists(rm); err != nil {
-			t.Fatalf("error in test case [%s]: %s", name, err)
-		}
+	for name := range testcases {
+		tc := testcases[name]
+		t.Run(name, func(t *testing.T) {
+			rm, err := rmF.NewResMapFromRNodeSlice(
+				[]*yaml.RNode{yaml.MustParse(tc.input)})
+			if err != nil {
+				t.Fatalf("unexpected error in test case [%s]: %v", name, err)
+			}
+			if err = tc.expected.ErrorIfNotEqualLists(rm); err != nil {
+				t.Fatalf("error in test case [%s]: %s", name, err)
+			}
+		})
 	}
 }
 

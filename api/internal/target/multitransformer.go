@@ -37,22 +37,10 @@ func (o *multiTransformer) Transform(m resmap.ResMap) error {
 
 func (o *multiTransformer) transform(m resmap.ResMap) error {
 	for _, t := range o.transformers {
-		err := t.Transform(m)
-		if err != nil {
+		if err := t.Transform(m); err != nil {
 			return err
 		}
-	}
-	for _, r := range m.Resources() {
-		empty, err := r.IsEmpty()
-		if err != nil {
-			return err
-		}
-		if empty {
-			err := m.Remove(r.CurId())
-			if err != nil {
-				return err
-			}
-		}
+		m.DropEmpties()
 	}
 	return nil
 }
