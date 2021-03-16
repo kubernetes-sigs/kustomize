@@ -218,7 +218,17 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	return p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	rm, rmfErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	if rmfErr == nil {
+		return rm, nil
+	}
+	// try to remove the contents before first "---" because
+	// helm may produce messages to stdout before it
+	stdoutStr := string(stdout)
+	if idx := strings.Index(stdoutStr, "---"); idx != -1 {
+		return p.h.ResmapFactory().NewResMapFromBytes([]byte(stdoutStr[idx:]))
+	}
+	return nil, rmfErr
 }
 
 func (p *HelmChartInflationGeneratorPlugin) getTemplateCommandArgs() []string {
