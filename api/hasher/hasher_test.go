@@ -56,7 +56,7 @@ kind: ConfigMap`, "6ct58987ht", ""},
 		{"one key", `
 apiVersion: v1
 kind: ConfigMap
-data: 
+data:
   one: ""`, "9g67k2htb6", ""},
 		// three keys (tests sorting order)
 		{"three keys", `
@@ -224,7 +224,7 @@ kind: ConfigMap`, `{"data":"","kind":"ConfigMap","name":""}`, ""},
 		{"one key", `
 apiVersion: v1
 kind: ConfigMap
-data: 
+data:
   one: ""`, `{"data":{"one":""},"kind":"ConfigMap","name":""}`, ""},
 		// three keys (tests sorting order)
 		{"three keys", `
