@@ -1,3 +1,6 @@
+// Copyright 2019 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package krusty_test
 
 import (
@@ -183,6 +186,7 @@ openapi:
 
 func TestCustomOpenApiFieldOverlayTakesPrecedence(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
+	openapi.ResetOpenAPI()
 	th.WriteK("base", `
 resources:
 - mycrd.yaml

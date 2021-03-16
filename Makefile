@@ -26,8 +26,7 @@ verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-4.0 \
-	test-examples-kustomize-against-3.10
+	test-examples-kustomize-against-4.0
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -39,8 +38,7 @@ prow-presubmit-check: \
 	test-unit-cmd-all \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-4.0 \
-	test-examples-kustomize-against-3.10
+	test-examples-kustomize-against-4.0
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
@@ -282,11 +280,7 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 
 .PHONY:
 test-examples-kustomize-against-4.0: $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh v4@v4.0.1
-
-.PHONY:
-test-examples-kustomize-against-3.10: $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh v3@v3.10.0
+	./hack/testExamplesAgainstKustomize.sh v4@v4.0.5
 
 # linux only.
 # This is for testing an example plugin that
