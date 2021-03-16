@@ -24,6 +24,7 @@ import (
 // Resource is an RNode, representing a Kubernetes Resource Model object,
 // paired with metadata used by kustomize.
 type Resource struct {
+	// TODO: Inline RNode, dropping complexity. Resource is just a decorator.
 	node        *kyaml.RNode
 	options     *types.GenArgs
 	refBy       []resid.ResId
