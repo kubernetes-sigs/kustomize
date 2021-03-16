@@ -235,6 +235,7 @@ metadata:
 `)
 }
 
+// Goal is to remove "  emptyDir: {}" with a patch.
 func TestRemoveEmptyDirWithPatchesAtSameLevel(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
@@ -299,8 +300,6 @@ spec:
 	opts := th.MakeDefaultOptions()
 	m := th.Run("overlay", opts)
 	th.AssertActualEqualsExpected(
-		// TODO(#3394): Should be possible to delete emptyDir with a patch.
-		// TODO(#3304): DECISION - still a bug, emptyDir should be deleted.
 		m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -318,8 +317,7 @@ spec:
       - image: sidecar:latest
         name: sidecar
       volumes:
-      - emptyDir: {}
-        gcePersistentDisk:
+      - gcePersistentDisk:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
 `)
@@ -870,25 +868,23 @@ spec:
       - $patch: delete
         name: sidecar
 `
-	cases := []struct {
-		name        string
+	cases := map[string]struct {
 		patch1      string
 		patch2      string
 		expectError bool
 	}{
-		{
-			name:   "Patch with delete directive first",
+		"Patch with delete directive first": {
 			patch1: deletePatch,
 			patch2: additivePatch,
 		},
-		{
-			name:   "Patch with delete directive second",
+		"Patch with delete directive second": {
 			patch1: additivePatch,
 			patch2: deletePatch,
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for name := range cases {
+		c := cases[name]
+		t.Run(name, func(t *testing.T) {
 			th := kusttest_test.MakeHarness(t)
 			makeCommonFilesForMultiplePatchTests(th)
 			th.WriteF("overlay/staging/deployment-patch1.yaml", c.patch1)

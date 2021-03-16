@@ -32,43 +32,55 @@ func (p *plugin) Config(
 		return fmt.Errorf("empty file path and empty patch content")
 	}
 	if len(p.Paths) != 0 {
-		for _, onePath := range p.Paths {
-			// The following oddly attempts to interpret a path string as an
-			// actual patch (instead of as a path to a file containing a patch).
-			// All tests pass if this code is commented out.  This code should
-			// be deleted; the user should use the Patches field which
-			// exists for this purpose (inline patch declaration).
-			res, err := h.ResmapFactory().RF().SliceFromBytes([]byte(onePath))
-			if err == nil {
-				p.loadedPatches = append(p.loadedPatches, res...)
-				continue
-			}
-			res, err = h.ResmapFactory().RF().SliceFromPatches(
-				h.Loader(), []types.PatchStrategicMerge{onePath})
-			if err != nil {
-				return err
-			}
-			p.loadedPatches = append(p.loadedPatches, res...)
-		}
-	}
-	if p.Patches != "" {
-		res, err := h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patches))
+		patches, err := loadFromPaths(h, p.Paths)
 		if err != nil {
 			return err
 		}
-		p.loadedPatches = append(p.loadedPatches, res...)
+		p.loadedPatches = append(p.loadedPatches, patches...)
 	}
-
+	if p.Patches != "" {
+		patches, err := h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patches))
+		if err != nil {
+			return err
+		}
+		p.loadedPatches = append(p.loadedPatches, patches...)
+	}
 	if len(p.loadedPatches) == 0 {
 		return fmt.Errorf(
 			"patch appears to be empty; files=%v, Patch=%s", p.Paths, p.Patches)
 	}
-	// Merge the patches, looking for conflicts.
-	_, err = h.ResmapFactory().ConflatePatches(p.loadedPatches)
-	if err != nil {
-		return err
-	}
+	// TODO(#3723): Delete conflict detection.
+	// Since #1500 closed, the conflict detector in use doesn't do
+	// anything useful.  The resmap returned by this method hasn't
+	// been used for many releases.  Leaving code as a comment to
+	// aid in deletion (fixing #3723).
+	// _, err = h.ResmapFactory().ConflatePatches(p.loadedPatches)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
+}
+
+func loadFromPaths(
+	h *resmap.PluginHelpers,
+	paths []types.PatchStrategicMerge) (
+	result []*resource.Resource, err error) {
+	var patches []*resource.Resource
+	for _, path := range paths {
+		// For legacy reasons, attempt to treat the path string as
+		// actual patch content.
+		patches, err = h.ResmapFactory().RF().SliceFromBytes([]byte(path))
+		if err != nil {
+			// Failing that, treat it as a file path.
+			patches, err = h.ResmapFactory().RF().SliceFromPatches(
+				h.Loader(), []types.PatchStrategicMerge{path})
+			if err != nil {
+				return
+			}
+		}
+		result = append(result, patches...)
+	}
+	return
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
