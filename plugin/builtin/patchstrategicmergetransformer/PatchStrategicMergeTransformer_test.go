@@ -562,6 +562,7 @@ func TestStrategicMergeTransformerNoSchemaMultiPatchesNoConflict(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
+	// This patch wants to delete "B".
 	th.WriteF("patch1.yaml", `
 apiVersion: example.com/v1
 kind: Foo
@@ -603,10 +604,6 @@ spec:
 `)
 	assert.NoError(t, err)
 	th.AssertActualEqualsExpectedNoIdAnnotations(
-		// In kyaml/yaml.merge2, the empty "B: " is dropped
-		// when patch1 and patch2 are merged, so the patch
-		// applied is effectively only patch2.yaml.
-		// So it cannot delete the "B: Y"
 		resMap, `
 apiVersion: example.com/v1
 kind: Foo
@@ -615,7 +612,6 @@ metadata:
 spec:
   bar:
     A: X
-    B: "Y"
     C: Z
     D: W
   baz:
@@ -639,8 +635,7 @@ spec:
 `)
 	assert.NoError(t, err)
 	th.AssertActualEqualsExpectedNoIdAnnotations(
-		// This time only patch2 was applied.  Same answer on the kyaml
-		// path, but different answer on apimachinery path (B becomes "true"?)
+		// This time only patch2 is applied.
 		resMap, `
 apiVersion: example.com/v1
 kind: Foo

@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
@@ -546,18 +545,13 @@ func (r *Resource) AppendRefVarName(variable types.Var) {
 
 // ApplySmPatch applies the provided strategic merge patch.
 func (r *Resource) ApplySmPatch(patch *Resource) error {
-	node, err := filtersutil.GetRNode(patch)
-	if err != nil {
-		return err
-	}
 	n, ns, k := r.GetName(), r.GetNamespace(), r.GetKind()
 	if patch.NameChangeAllowed() || patch.KindChangeAllowed() {
 		r.StorePreviousId()
 	}
-	err = r.ApplyFilter(patchstrategicmerge.Filter{
-		Patch: node,
-	})
-	if err != nil {
+	if err := r.ApplyFilter(patchstrategicmerge.Filter{
+		Patch: patch.node,
+	}); err != nil {
 		return err
 	}
 	if r.IsEmpty() {
