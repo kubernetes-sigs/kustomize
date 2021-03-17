@@ -32,8 +32,7 @@ s/$BAR/bar baz/g
 		t.Fatal(err)
 	}
 	pvd := provider.NewDefaultDepProvider()
-	rf := resmap.NewFactory(
-		pvd.GetResourceFactory(), pvd.GetConflictDetectorFactory())
+	rf := resmap.NewFactory(pvd.GetResourceFactory())
 	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",

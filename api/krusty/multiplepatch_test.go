@@ -706,7 +706,7 @@ metadata:
 `)
 }
 
-func TestMultiplePatchesWithConflict(t *testing.T) {
+func TestNonCommutablePatches(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFilesForMultiplePatchTests(th)
 	th.WriteF("overlay/staging/deployment-patch1.yaml", `

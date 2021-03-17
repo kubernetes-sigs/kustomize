@@ -233,7 +233,7 @@ map:
 			}
 			tc.filter.Referrer = referrer
 
-			resMapFactory := resmap.NewFactory(factory, nil)
+			resMapFactory := resmap.NewFactory(factory)
 			candidatesRes, err := factory.SliceFromBytesWithNames(
 				tc.originalNames, []byte(tc.candidates))
 			if err != nil {
@@ -334,7 +334,7 @@ metadata:
 			}
 			tc.filter.Referrer = referrer
 
-			resMapFactory := resmap.NewFactory(factory, nil)
+			resMapFactory := resmap.NewFactory(factory)
 			candidatesRes, err := factory.SliceFromBytesWithNames(
 				tc.originalNames, []byte(tc.candidates))
 			if err != nil {
@@ -751,7 +751,7 @@ ref:
 			}
 			tc.filter.Referrer = referrer
 
-			resMapFactory := resmap.NewFactory(factory, nil)
+			resMapFactory := resmap.NewFactory(factory)
 			candidatesRes, err := factory.SliceFromBytesWithNames(
 				tc.originalNames, []byte(tc.candidates))
 			if err != nil {
