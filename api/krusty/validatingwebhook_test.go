@@ -9,6 +9,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+// Reproduce issue #3732
 func TestValidatingWebhookCombinedNamespaces(t *testing.T) {
   th := kusttest_test.MakeHarness(t)
   th.WriteK("base", `
