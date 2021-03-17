@@ -306,6 +306,19 @@ kind: CustomResourceDefinition
 metadata:
   name: crds.my.org
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: namespace.crds.my.org
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: crd-svc
+          namespace: random
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -406,6 +419,19 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: crds.my.org
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: namespace.crds.my.org
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: crd-svc
+          namespace: newnamespace
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
