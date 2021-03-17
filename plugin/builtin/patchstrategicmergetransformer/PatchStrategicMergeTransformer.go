@@ -49,15 +49,6 @@ func (p *plugin) Config(
 		return fmt.Errorf(
 			"patch appears to be empty; files=%v, Patch=%s", p.Paths, p.Patches)
 	}
-	// TODO(#3723): Delete conflict detection.
-	// Since #1500 closed, the conflict detector in use doesn't do
-	// anything useful.  The resmap returned by this method hasn't
-	// been used for many releases.  Leaving code as a comment to
-	// aid in deletion (fixing #3723).
-	// _, err = h.ResmapFactory().ConflatePatches(p.loadedPatches)
-	// if err != nil {
-	// 	return err
-	// }
 	return nil
 }
 
