@@ -4,8 +4,9 @@ import (
 	"context"
 	"log"
 	"os"
-	server "sigs.k8s.io/kustomize/api/internal/crawl/backend"
 	"strconv"
+
+	server "sigs.k8s.io/kustomize/api/internal/crawl/backend"
 )
 
 func main() {
