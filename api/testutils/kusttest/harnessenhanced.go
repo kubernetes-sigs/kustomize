@@ -47,8 +47,7 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	}
 	p := provider.NewDefaultDepProvider()
 	resourceFactory := p.GetResourceFactory()
-	resmapFactory := resmap.NewFactory(
-		resourceFactory, p.GetConflictDetectorFactory())
+	resmapFactory := resmap.NewFactory(resourceFactory)
 
 	result := &HarnessEnhanced{
 		Harness: MakeHarness(t),

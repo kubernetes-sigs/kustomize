@@ -21,7 +21,7 @@ import (
 
 var depProvider = provider.NewDefaultDepProvider()
 var rf = depProvider.GetResourceFactory()
-var rmF = NewFactory(rf, depProvider.GetConflictDetectorFactory())
+var rmF = NewFactory(rf)
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
 	err := w.Append(r)
