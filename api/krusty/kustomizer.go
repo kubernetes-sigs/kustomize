@@ -62,9 +62,7 @@ func (b *Kustomizer) SetInput(input []byte) {
 // and Run can be called on each of them).
 func (b *Kustomizer) Run(
 	fSys filesys.FileSystem, path string) (resmap.ResMap, error) {
-	resmapFactory := resmap.NewFactory(
-		b.depProvider.GetResourceFactory(),
-		b.depProvider.GetConflictDetectorFactory())
+	resmapFactory := resmap.NewFactory(b.depProvider.GetResourceFactory())
 	lr := fLdr.RestrictionNone
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly

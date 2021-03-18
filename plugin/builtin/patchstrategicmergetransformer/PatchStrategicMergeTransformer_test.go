@@ -12,9 +12,6 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// TODO(#3304): DECISION - OK to move to kyaml and not do conflict detection.
-const skipConflictDetectionTests = true
-
 func errorContains(err error, possibilities ...string) bool {
 	for _, x := range possibilities {
 		if strings.Contains(err.Error(), x) {
@@ -317,60 +314,6 @@ spec:
 `)
 }
 
-func TestStrategicMergeTransformerMultiplePatchesWithConflicts(t *testing.T) {
-	if skipConflictDetectionTests {
-		t.Skip("Skipping patch merge conflict tests.")
-	}
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PatchStrategicMergeTransformer")
-	defer th.Reset()
-
-	th.WriteF("patch1.yaml", `
-apiVersion: apps/v1
-metadata:
-  name: myDeploy
-kind: Deployment
-spec:
-  template:
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        env:
-        - name: SOMEENV
-          value: BAR
-`)
-
-	th.WriteF("patch2.yaml", `
-apiVersion: apps/v1
-metadata:
-  name: myDeploy
-kind: Deployment
-spec:
-  template:
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.7.9
-        env:
-        - name: ANOTHERENV
-          value: HELLO
-      - name: busybox
-        image: busybox
-`)
-	_, err := th.RunTransformer(`
-apiVersion: builtin
-kind: PatchStrategicMergeTransformer
-metadata:
-  name: notImportantHere
-paths:
-- patch1.yaml
-- patch2.yaml
-`, target)
-	if assert.Error(t, err) && !errorContains(err, "conflict") {
-		t.Fatalf("expected error to contain %q but get %v", "conflict", err)
-	}
-}
 
 func TestStrategicMergeTransformerWrongNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
@@ -558,10 +501,11 @@ spec:
 `)
 }
 
-func TestStrategicMergeTransformerNoSchemaMultiPatchesNoConflict(t *testing.T) {
+func TestStrategicMergeTransformerNoSchemaMultiPatches(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()
+	// This patch wants to delete "B".
 	th.WriteF("patch1.yaml", `
 apiVersion: example.com/v1
 kind: Foo
@@ -603,10 +547,6 @@ spec:
 `)
 	assert.NoError(t, err)
 	th.AssertActualEqualsExpectedNoIdAnnotations(
-		// In kyaml/yaml.merge2, the empty "B: " is dropped
-		// when patch1 and patch2 are merged, so the patch
-		// applied is effectively only patch2.yaml.
-		// So it cannot delete the "B: Y"
 		resMap, `
 apiVersion: example.com/v1
 kind: Foo
@@ -615,7 +555,6 @@ metadata:
 spec:
   bar:
     A: X
-    B: "Y"
     C: Z
     D: W
   baz:
@@ -639,8 +578,7 @@ spec:
 `)
 	assert.NoError(t, err)
 	th.AssertActualEqualsExpectedNoIdAnnotations(
-		// This time only patch2 was applied.  Same answer on the kyaml
-		// path, but different answer on apimachinery path (B becomes "true"?)
+		// This time only patch2 is applied.
 		resMap, `
 apiVersion: example.com/v1
 kind: Foo
@@ -655,47 +593,6 @@ spec:
   baz:
     hello: world
 `)
-}
-
-func TestStrategicMergeTransformerNoSchemaMultiPatchesWithConflict(t *testing.T) {
-	if skipConflictDetectionTests {
-		t.Skip("Skipping patch merge conflict tests.")
-	}
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PatchStrategicMergeTransformer")
-	defer th.Reset()
-
-	th.WriteF("patch1.yaml", `
-apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    C: Z
-`)
-	th.WriteF("patch2.yaml", `
-apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    C: NOT_Z
-
-`)
-	_, err := th.RunTransformer(`
-apiVersion: builtin
-kind: PatchStrategicMergeTransformer
-metadata:
-  name: notImportantHere
-paths:
-- patch1.yaml
-- patch2.yaml
-`, targetNoschema)
-	if assert.Error(t, err) && !errorContains(err, "conflict") {
-		t.Fatalf("expected error to contain %q but get %v", "conflict", err)
-	}
 }
 
 // simple utility function to add an namespace in a resource
@@ -1054,9 +951,8 @@ func TestMultiplePatches(t *testing.T) {
 				changeImagePatch(MyCRD, "nginx:latest"),
 			},
 			errorExpected: false,
-			// There is no conflict detected. It should
-			// be but the JMPConflictDector ignores it.
-			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
+			// Theses patches aren't commutable (you get a different result
+			// if they are ordered differently).  This is allowed without error.
 			expected: expectedResultJMP("nginx:latest"),
 		},
 		"noschema-latest-label-1.7.9": {
@@ -1067,134 +963,12 @@ func TestMultiplePatches(t *testing.T) {
 				changeImagePatch(MyCRD, "nginx:1.7.9"),
 			},
 			errorExpected: false,
-			// There is no conflict detected. It should
-			// be but the JMPConflictDector ignores it.
-			// See https://github.com/kubernetes-sigs/kustomize/issues/1370
+			// Theses patches aren't commutable (you get a different result
+			// if they are ordered differently).  This is allowed without error.
 			expected: expectedResultJMP("nginx:1.7.9"),
 		},
 	}
 
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PatchStrategicMergeTransformer")
-	defer th.Reset()
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			th.ResetLoaderRoot(fmt.Sprintf("/%s", name))
-			for idx, patch := range test.patch {
-				th.WriteF(fmt.Sprintf("/%s/patch%d.yaml", name, idx), patch)
-			}
-			if test.errorExpected {
-				_, err := th.RunTransformer(toConfig(test.patch...), test.base)
-				compareExpectedError(t, name, err, test.errorMsg)
-			} else {
-				th.RunTransformerAndCheckResult(
-					toConfig(test.patch...), test.base, test.expected)
-			}
-		})
-	}
-}
-
-// TestMultiplePatchesWithConflict checks that the conflict are
-// detected regardless of the order of the patches and regardless
-// of the schema availibility (SMP vs JSON)
-func TestMultiplePatchesWithConflict(t *testing.T) {
-	if skipConflictDetectionTests {
-		t.Skip("Skipping patch merge conflict tests.")
-	}
-	tests := map[string]testRecord{
-		"withschema-label-latest-1.7.9": {
-			base: baseResource(Deployment),
-			patch: []string{
-				addLabelAndEnvPatch(Deployment),
-				changeImagePatch(Deployment, "nginx:latest"),
-				changeImagePatch(Deployment, "nginx:1.7.9"),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"withschema-latest-label-1.7.9-difforder": {
-			base: baseResource(Deployment),
-			patch: []string{
-				changeImagePatch(Deployment, "nginx:latest"),
-				addLabelAndEnvPatch(Deployment),
-				changeImagePatch(Deployment, "nginx:1.7.9"),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"withschema-1.7.9-label-latest": {
-			base: baseResource(Deployment),
-			patch: []string{
-				changeImagePatch(Deployment, "nginx:1.7.9"),
-				addLabelAndEnvPatch(Deployment),
-				changeImagePatch(Deployment, "nginx:latest"),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"withschema-1.7.9-latest-label": {
-			base: baseResource(Deployment),
-			patch: []string{
-				changeImagePatch(Deployment, "nginx:1.7.9"),
-				changeImagePatch(Deployment, "nginx:latest"),
-				addLabelAndEnvPatch(Deployment),
-				changeImagePatch(Deployment, "nginx:nginx"),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"noschema-label-latest-1.7.9": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:latest"),
-				changeImagePatch(MyCRD, "nginx:1.7.9"),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"noschema-1.7.9-latest-label": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				changeImagePatch(MyCRD, "nginx:1.7.9"),
-				changeImagePatch(MyCRD, "nginx:latest"),
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:nginx"),
-			},
-			errorExpected: true,
-		},
-		"noschema-label-image-container": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:latest"),
-				addContainerAndEnvPatch(MyCRD),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"noschema-image-container-label": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				changeImagePatch(MyCRD, "nginx:latest"),
-				addContainerAndEnvPatch(MyCRD),
-				addLabelAndEnvPatch(MyCRD),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-		"noschema-container-label-image": {
-			base: baseResource(MyCRD),
-			patch: []string{
-				addContainerAndEnvPatch(MyCRD),
-				addLabelAndEnvPatch(MyCRD),
-				changeImagePatch(MyCRD, "nginx:latest"),
-			},
-			errorExpected: true,
-			errorMsg:      "conflict",
-		},
-	}
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")
 	defer th.Reset()

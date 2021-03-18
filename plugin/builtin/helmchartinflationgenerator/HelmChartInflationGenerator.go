@@ -84,7 +84,7 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		cmd := exec.Command(p.HelmBin, args...)
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
-		cmd.Env = append(cmd.Env,
+		cmd.Env = append(os.Environ(),
 			fmt.Sprintf("HELM_CONFIG_HOME=%s", p.HelmHome),
 			fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.HelmHome),
 			fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.HelmHome),
@@ -226,7 +226,17 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	return p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	rm, rmfErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	if rmfErr == nil {
+		return rm, nil
+	}
+	// try to remove the contents before first "---" because
+	// helm may produce messages to stdout before it
+	stdoutStr := string(stdout)
+	if idx := strings.Index(stdoutStr, "---"); idx != -1 {
+		return p.h.ResmapFactory().NewResMapFromBytes([]byte(stdoutStr[idx:]))
+	}
+	return nil, rmfErr
 }
 
 func (p *HelmChartInflationGeneratorPlugin) getTemplateCommandArgs() []string {
@@ -278,11 +288,17 @@ func (p *HelmChartInflationGeneratorPlugin) checkHelmVersion() error {
 	if err != nil {
 		return err
 	}
-	r, err := regexp.Compile(`v\d+(\.\d+)+`)
+	r, err := regexp.Compile(`v?\d+(\.\d+)+`)
 	if err != nil {
 		return err
 	}
-	v := string(r.Find(stdout))[1:]
+	v := r.FindString(string(stdout))
+	if v == "" {
+		return fmt.Errorf("cannot find version string in %s", string(stdout))
+	}
+	if v[0] == 'v' {
+		v = v[1:]
+	}
 	majorVersion := strings.Split(v, ".")[0]
 	if majorVersion != "3" {
 		return fmt.Errorf("this plugin requires helm V3 but got v%s", v)

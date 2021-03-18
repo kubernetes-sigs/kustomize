@@ -51,8 +51,7 @@ func TestLoader(t *testing.T) {
 		BuildGoPlugin("someteam.example.com", "v1", "SomeServiceGenerator")
 	defer th.Reset()
 	p := provider.NewDefaultDepProvider()
-	rmF := resmap.NewFactory(
-		p.GetResourceFactory(), p.GetConflictDetectorFactory())
+	rmF := resmap.NewFactory(p.GetResourceFactory())
 	fLdr, err := loader.NewLoader(
 		loader.RestrictionRootOnly,
 		filesys.Separator, filesys.MakeFsInMemory())

@@ -695,7 +695,7 @@ spec:
 	}
 }
 
-func TestResource_StorePreviousId(t *testing.T) {
+func TestResourceStorePreviousId(t *testing.T) {
 	tests := map[string]struct {
 		input    string
 		newName  string
@@ -714,6 +714,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret
     config.kubernetes.io/previousNames: oldName
     config.kubernetes.io/previousNamespaces: default
   name: newName
@@ -725,6 +726,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret
     config.kubernetes.io/previousNames: oldName
     config.kubernetes.io/previousNamespaces: default
   name: oldName2
@@ -735,6 +737,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret,Secret
     config.kubernetes.io/previousNames: oldName,oldName2
     config.kubernetes.io/previousNamespaces: default,default
   name: newName
@@ -746,6 +749,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret
     config.kubernetes.io/previousNames: oldName
     config.kubernetes.io/previousNamespaces: default
   name: oldName2
@@ -757,6 +761,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret,Secret
     config.kubernetes.io/previousNames: oldName,oldName2
     config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
@@ -806,6 +811,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret
     config.kubernetes.io/previousNames: oldName
     config.kubernetes.io/previousNamespaces: default
   name: newName
@@ -824,6 +830,7 @@ metadata:
 kind: Secret
 metadata:
   annotations:
+    config.kubernetes.io/previousKinds: Secret,Secret
     config.kubernetes.io/previousNames: oldName,oldName2
     config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
@@ -1070,5 +1077,56 @@ func TestSameEndingSubarray(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			assert.Equal(t, tc.expected, SameEndingSubarray(tc.a, tc.b))
 		})
+	}
+}
+
+func TestGetGvk(t *testing.T) {
+	r, err := factory.FromBytes([]byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 1
+`))
+	assert.NoError(t, err)
+
+	gvk := r.GetGvk()
+	expected := "apps"
+	actual := gvk.Group
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	expected = "v1"
+	actual = gvk.Version
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	expected = "Deployment"
+	actual = gvk.Kind
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+func TestSetGvk(t *testing.T) {
+	r, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 1
+`))
+	assert.NoError(t, err)
+	r.SetGvk(resid.GvkFromString("grp_ver_knd"))
+	gvk := r.GetGvk()
+	if expected, actual := "grp", gvk.Group; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "ver", gvk.Version; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "knd", gvk.Kind; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
 }

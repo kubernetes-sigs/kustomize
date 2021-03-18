@@ -12,6 +12,8 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+//add tests for https://github.com/kubernetes-sigs/kustomize/pull/3713 if you plan to re-enable tests
+
 func TestHelmChartInflationGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("HelmChartInflationGenerator")

@@ -21,7 +21,7 @@ import (
 
 var depProvider = provider.NewDefaultDepProvider()
 var rf = depProvider.GetResourceFactory()
-var rmF = NewFactory(rf, depProvider.GetConflictDetectorFactory())
+var rmF = NewFactory(rf)
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
 	err := w.Append(r)
@@ -339,6 +339,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-alice",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
 					"config.kubernetes.io/previousNames":      "alice",
 					"config.kubernetes.io/previousNamespaces": "default",
 				},
@@ -351,6 +352,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-bob",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap,ConfigMap",
 					"config.kubernetes.io/previousNames":      "bob,bob2",
 					"config.kubernetes.io/previousNamespaces": "default,default",
 				},
@@ -364,6 +366,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"name":      "new-bob",
 				"namespace": "new-happy",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
 					"config.kubernetes.io/previousNames":      "bob",
 					"config.kubernetes.io/previousNamespaces": "happy",
 				},
@@ -377,6 +380,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"name":      "charlie",
 				"namespace": "happy",
 				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
 					"config.kubernetes.io/previousNames":      "charlie",
 					"config.kubernetes.io/previousNamespaces": "default",
 				},
@@ -873,13 +877,8 @@ rules:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	rnodes, err := rm.ToRNodeSlice()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
 	b := bytes.NewBufferString("")
-	for i, n := range rnodes {
+	for i, n := range rm.ToRNodeSlice() {
 		if i != 0 {
 			b.WriteString("---\n")
 		}

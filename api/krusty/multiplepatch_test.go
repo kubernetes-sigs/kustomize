@@ -235,6 +235,7 @@ metadata:
 `)
 }
 
+// Goal is to remove "  emptyDir: {}" with a patch.
 func TestRemoveEmptyDirWithPatchesAtSameLevel(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
@@ -299,8 +300,6 @@ spec:
 	opts := th.MakeDefaultOptions()
 	m := th.Run("overlay", opts)
 	th.AssertActualEqualsExpected(
-		// TODO(#3394): Should be possible to delete emptyDir with a patch.
-		// TODO(#3304): DECISION - still a bug, emptyDir should be deleted.
 		m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -318,8 +317,7 @@ spec:
       - image: sidecar:latest
         name: sidecar
       volumes:
-      - emptyDir: {}
-        gcePersistentDisk:
+      - gcePersistentDisk:
           pdName: nginx-persistent-storage
         name: nginx-persistent-storage
 `)
@@ -708,7 +706,7 @@ metadata:
 `)
 }
 
-func TestMultiplePatchesWithConflict(t *testing.T) {
+func TestNonCommutablePatches(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFilesForMultiplePatchTests(th)
 	th.WriteF("overlay/staging/deployment-patch1.yaml", `
@@ -870,25 +868,23 @@ spec:
       - $patch: delete
         name: sidecar
 `
-	cases := []struct {
-		name        string
+	cases := map[string]struct {
 		patch1      string
 		patch2      string
 		expectError bool
 	}{
-		{
-			name:   "Patch with delete directive first",
+		"Patch with delete directive first": {
 			patch1: deletePatch,
 			patch2: additivePatch,
 		},
-		{
-			name:   "Patch with delete directive second",
+		"Patch with delete directive second": {
 			patch1: additivePatch,
 			patch2: deletePatch,
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for name := range cases {
+		c := cases[name]
+		t.Run(name, func(t *testing.T) {
 			th := kusttest_test.MakeHarness(t)
 			makeCommonFilesForMultiplePatchTests(th)
 			th.WriteF("overlay/staging/deployment-patch1.yaml", c.patch1)
@@ -1159,26 +1155,26 @@ spec:
       - image: dashicorp/consul:1.9.1
         name: consul
         ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8501
+          name: https
         - containerPort: 8301
           name: serflan-tcp
           protocol: TCP
         - containerPort: 8301
           name: serflan-udp
           protocol: UDP
+        - containerPort: 8302
+          name: serfwan
+        - containerPort: 8300
+          name: server
         - containerPort: 8600
           name: dns-tcp
           protocol: TCP
         - containerPort: 8600
           name: dns-udp
           protocol: UDP
-        - containerPort: 8500
-          name: http
-        - containerPort: 8501
-          name: https
-        - containerPort: 8302
-          name: serfwan
-        - containerPort: 8300
-          name: server
 `)
 }
 
@@ -1228,5 +1224,115 @@ metadata:
 spec:
   groups:
   - name: rabbitmq.rules
+`)
+}
+
+// test for #3620
+func TestPatchPortHasNoProtocol(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+  - service.yaml
+patchesStrategicMerge:
+  - patch.yaml
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+  type: NodePort
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  labels:
+    service: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+  selector:
+    service: web
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: web
+  name: web
+spec:
+  ports:
+  - port: 30900
+    protocol: TCP
+    targetPort: 30900
+  selector:
+    service: web
+  type: NodePort
+`)
+}
+
+// test for #3620
+func TestPatchAddNewServicePort(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+  - service.yaml
+patchesStrategicMerge:
+  - patch.yaml
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 30900
+      targetPort: 30900
+      protocol: TCP
+  type: NodePort
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  labels:
+    service: web
+spec:
+  ports:
+    - port: 30901
+      targetPort: 30901
+  selector:
+    service: web
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: web
+  name: web
+spec:
+  ports:
+  - port: 30901
+    targetPort: 30901
+  - port: 30900
+    protocol: TCP
+    targetPort: 30900
+  selector:
+    service: web
+  type: NodePort
 `)
 }

@@ -15,8 +15,7 @@ import (
 func main() {
 	var plugin resmap.Configurable
 	p := provider.NewDefaultDepProvider()
-	resmapFactory := resmap.NewFactory(
-		p.GetResourceFactory(), p.GetConflictDetectorFactory())
+	resmapFactory := resmap.NewFactory(p.GetResourceFactory())
 	pluginHelpers := resmap.NewPluginHelpers(
 		nil, p.GetFieldValidator(), resmapFactory)
 
@@ -46,10 +45,7 @@ func main() {
 			}
 		}
 
-		resourceList.Items, err = resMap.ToRNodeSlice()
-		if err != nil {
-			return err
-		}
+		resourceList.Items = resMap.ToRNodeSlice()
 		return nil
 	})
 	if err := framework.Execute(&processor, nil); err != nil {

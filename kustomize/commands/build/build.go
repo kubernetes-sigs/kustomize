@@ -23,7 +23,6 @@ var theArgs struct {
 var theFlags struct {
 	outputPath string
 	enable     struct {
-		resourceIdChanges bool
 		plugins           bool
 		managedByLabel    bool
 		transformerMode   bool
@@ -113,7 +112,6 @@ func NewCmdBuild(
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
-	AddFlagAllowResourceIdChanges(cmd.Flags())
 	AddFlagEnableTransformerMode(cmd.Flags())
 	return cmd
 }
@@ -150,6 +148,5 @@ func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
 		kOpts.PluginConfig = c
 	}
 	kOpts.AddManagedbyLabel = isManagedByLabelEnabled()
-	kOpts.AllowResourceIdChanges = theFlags.enable.resourceIdChanges
 	return kOpts
 }

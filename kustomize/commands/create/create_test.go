@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 )
 
-var factory = provider.NewDefaultDepProvider().GetKunstructuredFactory()
+var factory = provider.NewDefaultDepProvider().GetResourceFactory()
 
 func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomization {
 	kf, err := kustfile.NewKustomizationFile(fSys)

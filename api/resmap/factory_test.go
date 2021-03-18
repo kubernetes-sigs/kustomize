@@ -13,7 +13,6 @@ import (
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
 	. "sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
@@ -336,69 +335,17 @@ metadata:
 			expected: resmaptest_test.NewRmBuilder(t, rf).ResMap(),
 		},
 	}
-	for name, tc := range testcases {
-		rnodes := []*yaml.RNode{
-			yaml.MustParse(tc.input),
-		}
-		rm, err := rmF.NewResMapFromRNodeSlice(rnodes)
-		if err != nil {
-			t.Fatalf("unexpected error in test case [%s]: %v", name, err)
-		}
-		if err = tc.expected.ErrorIfNotEqualLists(rm); err != nil {
-			t.Fatalf("error in test case [%s]: %s", name, err)
-		}
+	for name := range testcases {
+		tc := testcases[name]
+		t.Run(name, func(t *testing.T) {
+			rm, err := rmF.NewResMapFromRNodeSlice(
+				[]*yaml.RNode{yaml.MustParse(tc.input)})
+			if err != nil {
+				t.Fatalf("unexpected error in test case [%s]: %v", name, err)
+			}
+			if err = tc.expected.ErrorIfNotEqualLists(rm); err != nil {
+				t.Fatalf("error in test case [%s]: %s", name, err)
+			}
+		})
 	}
-}
-
-func TestConflatePatches_Empty(t *testing.T) {
-	rm, err := rmF.ConflatePatches([]*resource.Resource{})
-	assert.NoError(t, err)
-	assert.Equal(t, 0, rm.Size())
-}
-
-func TestConflatePatches(t *testing.T) {
-	var (
-		err    error
-		yml    []byte
-		r1, r2 *resource.Resource
-	)
-	r1, err = rf.FromBytes([]byte(`apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    B:
-    C: Z
-`))
-	assert.NoError(t, err)
-
-	r2, err = rf.FromBytes([]byte(`apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    C: Z
-    D: W
-  baz:
-    hello: world
-`))
-	assert.NoError(t, err)
-
-	rm, err := rmF.ConflatePatches([]*resource.Resource{r1, r2})
-	assert.NoError(t, err)
-	yml, err = rm.AsYaml()
-	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    C: Z
-    D: W
-  baz:
-    hello: world
-`, string(yml))
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 )
@@ -15,7 +16,7 @@ import (
 func newCmdAddSecret(
 	fSys filesys.FileSystem,
 	ldr ifc.KvLoader,
-	kf ifc.KunstructuredFactory) *cobra.Command {
+	rf *resource.Factory) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "secret NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--type=Opaque|kubernetes.io/tls]",
@@ -54,7 +55,7 @@ func newCmdAddSecret(
 			}
 
 			// Add the flagsAndArgs map to the kustomization file.
-			err = addSecret(ldr, kustomization, flags, kf)
+			err = addSecret(ldr, kustomization, flags, rf)
 			if err != nil {
 				return err
 			}
@@ -106,13 +107,13 @@ func newCmdAddSecret(
 func addSecret(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags flagsAndArgs, kf ifc.KunstructuredFactory) error {
+	flags flagsAndArgs, rf *resource.Factory) error {
 	args := findOrMakeSecretArgs(k, flags.Name, flags.Namespace, flags.Type)
 	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)
-	_, err := kf.MakeSecret(ldr, args)
+	_, err := rf.MakeSecret(ldr, args)
 	return err
 }
 
