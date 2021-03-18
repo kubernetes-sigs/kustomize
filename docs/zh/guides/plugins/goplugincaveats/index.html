@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,12 +25,12 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/goplugincaveats/" />
-<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-25T21:41:27+05:30" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Go 插件注意事项">
 <meta itemprop="description" content="Go 插件注意事项
 ">
-<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
-<meta itemprop="wordCount" content="145">
+<meta itemprop="dateModified" content="2020-11-25T21:41:27+05:30" />
+<meta itemprop="wordCount" content="3">
 
 
 
@@ -44,8 +44,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -340,20 +340,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#the-skew-problem">The skew problem</a></li>
-    <li><a href="#为什么支持-go-插件">为什么支持 Go 插件</a>
-      <ul>
-        <li><a href="#安全">安全</a></li>
-        <li><a href="#debugging">Debugging</a></li>
-        <li><a href="#贡献单元化">贡献单元化</a></li>
-        <li><a href="#围绕生态系统发展">围绕生态系统发展</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -399,41 +385,12 @@
 <div class="td-content">
 	<h1>Go 插件注意事项</h1>
 	<div class="lead">Go 插件注意事项</div>
-	<p><em>Go 插件</em> 是一个编译产品/组件，其定义见 <a href="https://golang.org/pkg/plugin">plugin package</a>，需要特殊的构建标志，不能单独运行，必须加载到正在运行的 Go 程序中。</p>
-<blockquote>
-<p>用 Go 编写的普通程序可以作为 <em>exec 插件</em>，但是不能作为 <em>Go 插件</em>。</p>
-</blockquote>
-<p>Go 插件允许运行 kustomize 扩展，而无需在每次运行时将资源分配到子流程或从子流程中解封所有资源数据。Go 插件 API 确保一定程度的一致性，以避免混淆下游转换器。</p>
-<p>Go 插件的工作方式与 <a href="https://golang.org/pkg/plugin">plugin package</a> 中所述的相同，但与 <em>plugin</em> 一词相关的常见概念不同。</p>
-<h2 id="the-skew-problem">The skew problem</h2>
-<p>Go 插件编译会创建一个 <a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">ELF</a> 格式的 <code>.so</code> 文件，根据定义，该文件不包含有关目标代码来源的信息。</p>
-<p>主程序 ELF 和插件 ELF 的编译条件（软件包依赖项的版本 <code>GOOS</code>，<code>GOARCH</code>）之间的偏移会导致插件加载失败，并带有无用的错误消息。</p>
-<p>Exec 插件也会缺乏来源，但不会因编译不正确而失败。</p>
-<p>在任何情况下，共享插件的最好方法是使用某种 <em>捆绑包</em>（git repo URL、git 存档文件、tar 包等），其中包含可解包至 <code>$XDG_CONFIG_HOME/kustomize/plugin</code> 的源代码，测试和相关数据。</p>
-<p>对于 Go 插件，使用共享插件的最终用户 <em>必须同时编译 kustomize 和 plugin</em>。</p>
-<p>这意味着一次性运行</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8f5902;font-style:italic"># Or whatever is appropriate at time of reading</span>
-<span style="color:#000">GOPATH</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">${</span><span style="color:#000">whatever</span><span style="color:#4e9a06">}</span> <span style="color:#000">GO111MODULE</span><span style="color:#ce5c00;font-weight:bold">=</span>on go get sigs.k8s.io/kustomize/api
-</code></pre></div><p>然后使用一个正常的开发周期</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go build -buildmode plugin <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    -o <span style="color:#4e9a06">${</span><span style="color:#000">wherever</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.so <span style="color:#4e9a06">${</span><span style="color:#000">wherever</span><span style="color:#4e9a06">}</span>/<span style="color:#4e9a06">${</span><span style="color:#000">kind</span><span style="color:#4e9a06">}</span>.go
-</code></pre></div><p>并根据需要调整路径和发行版本标记（例如 <code>v3.0.0</code>）。</p>
-<p>为了进行比较，可以参考编写 <a href="https://www.tensorflow.org/guide/extend/op">tensorflow plugin</a> 必须做的事情。</p>
-<h2 id="为什么支持-go-插件">为什么支持 Go 插件</h2>
-<h3 id="安全">安全</h3>
-<p>Go 插件开发者可以操作与原生 kustomize 操作相同的 API，可确保某些语义、变量和检查等一致。exec 插件子进程通过 stdin/stdout 来处理这些问题，但对于下游的转化器和使用者来说，会更容易把事情搞砸。</p>
-<p>关键点：如果插件通过 kustomize 提供的文件 <code>Loader</code> 接口读取文件，则会受到 kustomize 文件加载限制的约束。当然，除了代码审计之外，没有什么可以阻止 Go 插件导入 io 包并执行其所需的任何操作。</p>
-<h3 id="debugging">Debugging</h3>
-<p>Go 插件开发者可以在功能测试中运行插件时，在 <em>本地</em> 调试插件，并在插件内部和其他位置设置断点。</p>
-<p>为了获得两全其美的方式（共享性和安全性），开发人员可以编写一个 <code>.go</code> 程序作为 <em>exec 插件</em>，同时可以被 <code>go generate</code> 程序处理生成 Go 插件（反之亦然）。</p>
-<h3 id="贡献单元化">贡献单元化</h3>
-<p>所有内置的生成器和转换器本身都是 Go 插件。这意味着 kustomize 维护者可以将贡献的插件升级为内置插件，而无需更改代码（超出常规代码审阅要求的范围）。</p>
-<h3 id="围绕生态系统发展">围绕生态系统发展</h3>
-<p>工具可以简化 Go 插件的 <em>共享</em>，但是这需要大量的 Go 插件的创作，而这又会导致围绕共享插件的混乱。<a href="https://github.com/golang/go/wiki/Modules">Go modules</a> 一旦被更广泛地采用，将解决共享插件最大的难题：含糊不清的插件 vs 主机依赖性。</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/guides/plugins/goplugincaveats/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

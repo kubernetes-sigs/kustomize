@@ -16,7 +16,7 @@ import (
 // src and dst should be both sequence node. key is used to call ElementSetter.
 // ElementSetter will use key-value pair to find and set the element in sequence
 // node.
-func appendListNode(dst, src *yaml.RNode, keys []string, merge3 bool) (*yaml.RNode, error) {
+func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 	var err error
 	for _, elem := range src.Content() {
 		// If key is empty, we know this is a scalar value and we can directly set the
@@ -30,10 +30,6 @@ func appendListNode(dst, src *yaml.RNode, keys []string, merge3 bool) (*yaml.RNo
 			if err != nil {
 				return nil, err
 			}
-			continue
-		}
-
-		if len(keys) > 1 && !merge3 {
 			continue
 		}
 
@@ -57,6 +53,19 @@ func appendListNode(dst, src *yaml.RNode, keys []string, merge3 bool) (*yaml.RNo
 			v = append(v, valueNode.YNode().Value)
 		}
 
+		// When there are multiple keys, ElementSetter appends the node to dst
+		// even if the output is already in dst. We remove the node from dst to
+		// prevent duplicates.
+		if len(keys) > 1 {
+			_, err = dst.Pipe(yaml.ElementSetter{
+				Keys:   keys,
+				Values: v,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// We use the key and value from elem to find the corresponding element in dst.
 		// Then we will use ElementSetter to replace the element with elem. If we cannot
 		// find the item, the element will be appended.
@@ -65,7 +74,6 @@ func appendListNode(dst, src *yaml.RNode, keys []string, merge3 bool) (*yaml.RNo
 			Keys:    keys,
 			Values:  v,
 		})
-
 		if err != nil {
 			return nil, err
 		}
@@ -73,109 +81,104 @@ func appendListNode(dst, src *yaml.RNode, keys []string, merge3 bool) (*yaml.RNo
 	return dst, nil
 }
 
-// setPrimitiveSequenceElements sets elements in a primitive list
-func (l *Walker) setPrimitiveSequenceElements(values []string, key string, dest *yaml.RNode) (*yaml.RNode, error) {
-	// itemsToBeAdded contains the items that will be added to dest
-	itemsToBeAdded := yaml.NewListRNode()
-	var schema *openapi.ResourceSchema
-	if l.Schema != nil {
-		schema = l.Schema.Elements()
-	}
-
-	for _, value := range values {
-		val, err := Walker{
-			VisitKeysAsScalars:    l.VisitKeysAsScalars,
-			InferAssociativeLists: l.InferAssociativeLists,
-			Visitor:               l,
-			Schema:                schema,
-			Sources:               l.elementValue(key, value),
-			MergeOptions:          l.MergeOptions,
-		}.Walk()
-		if err != nil {
-			return nil, err
-		}
-		// delete the node from **dest** if it's null or empty
-		if yaml.IsMissingOrNull(val) || yaml.IsEmptyMap(val) {
-			_, err = dest.Pipe(yaml.ElementSetter{Keys: []string{key}, Values: []string{value}})
-			if err != nil {
-				return nil, err
-			}
-			continue
-		}
-
-		if val.Field(key) == nil {
-			// make sure the key is set on the field
-			_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(value)))
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// Add the val to the sequence. val will replace the item in the sequence if
-		// there is an item that matches the key-value pair. Otherwise val will be appended
-		// the the sequence.
-		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{
-			Element: val.YNode(),
-			Keys:    []string{key},
-			Values:  []string{value},
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-	var err error
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		// items from patches are needed to be prepended. so we append the
-		// dest to itemsToBeAdded
-		dest, err = appendListNode(itemsToBeAdded, dest, []string{""}, len(l.Sources) > 2)
-	} else {
-		// append the items
-		dest, err = appendListNode(dest, itemsToBeAdded, []string{""}, len(l.Sources) > 2)
-	}
-	if err != nil {
-		return nil, err
-	}
-	// sequence is empty
-	if yaml.IsMissingOrNull(dest) {
-		return nil, nil
-	}
-
-	return dest, nil
-}
-
 // validateKeys returns a list of valid key-value pairs
 // if secondary merge key values are missing, use only the available merge keys
-func validateKeys(value []string, keys []string) ([]string, []string) {
+func validateKeys(valuesList [][]string, values []string, keys []string) ([]string, []string) {
 	validKeys := make([]string, 0)
 	validValues := make([]string, 0)
-	for i, v := range value {
-		if v != "" {
-			validKeys = append(validKeys, keys[i])
-			validValues = append(validValues, v)
+	validKeySet := sets.String{}
+	for _, values := range valuesList {
+		for i, v := range values {
+			if v != "" {
+				validKeySet.Insert(keys[i])
+			}
 		}
 	}
-	if len(validKeys) == 0 { // if values missing, fall back to primary keys
-		validKeys = keys
-		validValues = value
+	if validKeySet.Len() == 0 { // if values missing, fall back to primary keys
+		return keys, values
+	}
+	for _, k := range keys {
+		if validKeySet.Has(k) {
+			validKeys = append(validKeys, k)
+		}
+	}
+	for i, v := range values {
+		if v != "" || validKeySet.Has(keys[i]) {
+			validValues = append(validValues, v)
+		}
 	}
 	return validKeys, validValues
 }
 
+// mergeValues merges values together - e.g. if two containerPorts
+// have the same port and targetPort but one has an empty protocol
+// and the other doesn't, they are treated as the same containerPort
+func mergeValues(valuesList [][]string) [][]string {
+	for i, values1 := range valuesList {
+		for j, values2 := range valuesList {
+			if matched, values := match(values1, values2); matched {
+				valuesList[i] = values
+				valuesList[j] = values
+			}
+		}
+	}
+	return valuesList
+}
+
+// two values match if they have at least one common element and
+// corresponding elements only differ if one is an empty string
+func match(values1 []string, values2 []string) (bool, []string) {
+	if len(values1) != len(values2) {
+		return false, nil
+	}
+	var commonElement bool
+	var res []string
+	for i := range values1 {
+		if values1[i] == values2[i] {
+			commonElement = true
+			res = append(res, values1[i])
+			continue
+		}
+		if values1[i] != "" && values2[i] != "" {
+			return false, nil
+		}
+		if values1[i] != "" {
+			res = append(res, values1[i])
+		} else {
+			res = append(res, values2[i])
+		}
+	}
+	return commonElement, res
+}
+
 // setAssociativeSequenceElements recursively set the elements in the list
-func (l *Walker) setAssociativeSequenceElements(values [][]string, keys []string, dest *yaml.RNode) (*yaml.RNode, error) {
+func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []string, dest *yaml.RNode) (*yaml.RNode, error) {
 	// itemsToBeAdded contains the items that will be added to dest
 	itemsToBeAdded := yaml.NewListRNode()
 	var schema *openapi.ResourceSchema
 	if l.Schema != nil {
 		schema = l.Schema.Elements()
 	}
+	if len(keys) > 1 {
+		valuesList = mergeValues(valuesList)
+	}
 
-	for _, value := range values {
-		if len(value) == 0 {
+	// each element in valuesList is a list of values corresponding to the keys
+	// for example, for the following yaml:
+	//        - containerPort: 8080
+	//          protocol: UDP
+	//        - containerPort: 8080
+	//          protocol: TCP
+	// `keys` would be [containerPort, protocol]
+	// and `valuesList` would be [ [8080, UDP], [8080, TCP] ]
+	var validKeys []string
+	var validValues []string
+	for _, values := range valuesList {
+		if len(values) == 0 {
 			continue
 		}
 
-		validKeys, validValues := validateKeys(value, keys)
+		validKeys, validValues = validateKeys(valuesList, values, keys)
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
@@ -200,7 +203,7 @@ func (l *Walker) setAssociativeSequenceElements(values [][]string, keys []string
 					return nil, err
 				}
 				exit = true
-			} else if val.Field(key) == nil {
+			} else if val.Field(key) == nil && validValues[i] != "" {
 				// make sure the key is set on the field
 				_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(validValues[i])))
 				if err != nil {
@@ -226,17 +229,17 @@ func (l *Walker) setAssociativeSequenceElements(values [][]string, keys []string
 	}
 
 	var err error
-	for _, v := range values {
-		validKeys, _ := validateKeys(v, keys)
+	if len(valuesList) > 0 {
 		if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
 			// items from patches are needed to be prepended. so we append the
 			// dest to itemsToBeAdded
-			dest, err = appendListNode(itemsToBeAdded, dest, validKeys, len(l.Sources) > 2)
+			dest, err = appendListNode(itemsToBeAdded, dest, validKeys)
 		} else {
 			// append the items
-			dest, err = appendListNode(dest, itemsToBeAdded, validKeys, len(l.Sources) > 2)
+			dest, err = appendListNode(dest, itemsToBeAdded, validKeys)
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +281,7 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	}
 
 	// primitive associative list -- merge the values
-	return l.setPrimitiveSequenceElements(l.elementPrimitiveValues(), "", dest)
+	return l.setAssociativeSequenceElements(l.elementPrimitiveValues(), []string{""}, dest)
 }
 
 // elementKey returns the merge key to use for the associative list
@@ -338,9 +341,9 @@ func (l Walker) elementValues(keys []string) [][]string {
 }
 
 // elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
-func (l Walker) elementPrimitiveValues() []string {
+func (l Walker) elementPrimitiveValues() [][]string {
 	// use slice to to keep elements in the original order
-	var returnValues []string
+	var returnValues [][]string
 	seen := sets.String{}
 	// if we are doing append, dest node should be the first.
 	// otherwise dest node should be the last.
@@ -360,7 +363,7 @@ func (l Walker) elementPrimitiveValues() []string {
 			if seen.Has(item.Value) {
 				continue
 			}
-			returnValues = append(returnValues, item.Value)
+			returnValues = append(returnValues, []string{item.Value})
 			seen.Insert(item.Value)
 		}
 	}
@@ -368,20 +371,8 @@ func (l Walker) elementPrimitiveValues() []string {
 }
 
 // fieldValue returns a slice containing each source's value for fieldName
-func (l Walker) elementValue(key, value string) []*yaml.RNode {
-	var fields []*yaml.RNode
-	for i := range l.Sources {
-		if l.Sources[i] == nil {
-			fields = append(fields, nil)
-			continue
-		}
-		fields = append(fields, l.Sources[i].Element(key, value))
-	}
-	return fields
-}
-
-// fieldValue returns a slice containing each source's value for fieldName
 func (l Walker) elementValueList(keys []string, values []string) []*yaml.RNode {
+	keys, values = validateKeys([][]string{values}, values, keys)
 	var fields []*yaml.RNode
 	for i := range l.Sources {
 		if l.Sources[i] == nil {

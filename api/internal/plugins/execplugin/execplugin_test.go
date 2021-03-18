@@ -13,12 +13,10 @@ import (
 	. "sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
 	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 )
 
 func TestExecPluginConfig(t *testing.T) {
@@ -33,10 +31,8 @@ s/$BAR/bar baz/g
 	if err != nil {
 		t.Fatal(err)
 	}
-	rf := resmap.NewFactory(
-		resource.NewFactory(
-			kunstruct.NewKunstructuredFactoryImpl()), nil)
-	v := valtest_test.MakeFakeValidator()
+	pvd := provider.NewDefaultDepProvider()
+	rf := resmap.NewFactory(pvd.GetResourceFactory())
 	pluginConfig := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",
@@ -48,6 +44,7 @@ s/$BAR/bar baz/g
 			"argsFromFile": "sed-input.txt",
 		})
 
+	pluginConfig.RemoveBuildAnnotations()
 	p := NewExecPlugin(
 		pLdr.AbsolutePluginPath(
 			konfig.DisabledPluginConfig(),
@@ -62,7 +59,7 @@ s/$BAR/bar baz/g
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	p.Config(resmap.NewPluginHelpers(ldr, v, rf), yaml)
+	p.Config(resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf), yaml)
 
 	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
 	if !strings.HasSuffix(p.Path(), expected) {

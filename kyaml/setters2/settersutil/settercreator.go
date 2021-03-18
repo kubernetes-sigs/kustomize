@@ -56,6 +56,8 @@ type SetterCreator struct {
 
 	// Path to resources folder
 	ResourcesPath string
+
+	SettersSchema *spec.Schema
 }
 
 func (c *SetterCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -75,10 +77,11 @@ func (c SetterCreator) Create() error {
 	// Update the resources with the setter reference
 	inout := &kio.LocalPackageReadWriter{PackagePath: c.ResourcesPath}
 	a := &setters2.Add{
-		FieldName:  c.FieldName,
-		FieldValue: c.FieldValue,
-		Ref:        fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name,
-		Type:       c.Type,
+		FieldName:     c.FieldName,
+		FieldValue:    c.FieldValue,
+		Ref:           fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + c.Name,
+		Type:          c.Type,
+		SettersSchema: c.SettersSchema,
 	}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
@@ -103,11 +106,11 @@ func (c SetterCreator) Create() error {
 	}
 
 	// Load the updated definitions
-	clean, err := openapi.AddSchemaFromFile(c.OpenAPIPath)
+	sc, err := openapi.SchemaFromFile(c.OpenAPIPath)
 	if err != nil {
 		return err
 	}
-	defer clean()
+	c.SettersSchema = sc
 	// if the setter is of array type write the derived list values back to
 	// openAPI definitions
 	if len(a.ListValues) > 0 {
@@ -183,7 +186,7 @@ func (c SetterCreator) validateSetterInfo() error {
 		return err
 	}
 
-	subst, _ := openapi.Resolve(&ref)
+	subst, _ := openapi.Resolve(&ref, c.SettersSchema)
 	// if substitution already exists with the input setter name, throw error
 	if subst != nil {
 		return errors.Errorf("substitution with name %q already exists, "+
@@ -196,7 +199,7 @@ func (c SetterCreator) validateSetterInfo() error {
 		return err
 	}
 
-	setter, _ := openapi.Resolve(&ref)
+	setter, _ := openapi.Resolve(&ref, c.SettersSchema)
 	// if setter already exists with the input setter name, throw error
 	if setter != nil {
 		return errors.Errorf("setter with name %q already exists, "+

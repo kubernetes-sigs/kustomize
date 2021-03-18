@@ -11,7 +11,7 @@ import (
 )
 
 func writeBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - serviceaccount.yaml
 - rolebinding.yaml
@@ -20,13 +20,13 @@ resources:
 namePrefix: pfx-
 nameSuffix: -sfx
 `)
-	th.WriteF("/app/base/serviceaccount.yaml", `
+	th.WriteF("base/serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: serviceaccount
 `)
-	th.WriteF("/app/base/rolebinding.yaml", `
+	th.WriteF("base/rolebinding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -39,7 +39,7 @@ subjects:
 - kind: ServiceAccount
   name: serviceaccount
 `)
-	th.WriteF("/app/base/clusterrolebinding.yaml", `
+	th.WriteF("base/clusterrolebinding.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -52,7 +52,7 @@ subjects:
 - kind: ServiceAccount
   name: serviceaccount
 `)
-	th.WriteF("/app/base/clusterrole.yaml", `
+	th.WriteF("base/clusterrole.yaml", `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -66,13 +66,13 @@ rules:
 
 func writeMidOverlays(th kusttest_test.Harness) {
 	// Mid-level overlays
-	th.WriteK("/app/overlays/a", `
+	th.WriteK("overlays/a", `
 resources:
 - ../../base
 namePrefix: a-
 nameSuffix: -suffixA
 `)
-	th.WriteK("/app/overlays/b", `
+	th.WriteK("overlays/b", `
 resources:
 - ../../base
 namePrefix: b-
@@ -82,7 +82,7 @@ nameSuffix: -suffixB
 
 func writeTopOverlay(th kusttest_test.Harness) {
 	// Top overlay, combining the mid-level overlays
-	th.WriteK("/app/combined", `
+	th.WriteK("combined", `
 resources:
 - ../overlays/a
 - ../overlays/b
@@ -92,7 +92,7 @@ resources:
 func TestBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -143,7 +143,7 @@ func TestMidLevelA(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
-	m := th.Run("/app/overlays/a", th.MakeDefaultOptions())
+	m := th.Run("overlays/a", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -194,7 +194,7 @@ func TestMidLevelB(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeBase(th)
 	writeMidOverlays(th)
-	m := th.Run("/app/overlays/b", th.MakeDefaultOptions())
+	m := th.Run("overlays/b", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -246,7 +246,7 @@ func TestMultibasesNoConflict(t *testing.T) {
 	writeBase(th)
 	writeMidOverlays(th)
 	writeTopOverlay(th)
-	m := th.Run("/app/combined", th.MakeDefaultOptions())
+	m := th.Run("combined", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -342,7 +342,7 @@ func TestMultibasesWithConflict(t *testing.T) {
 	writeMidOverlays(th)
 	writeTopOverlay(th)
 
-	th.WriteK("/app/overlays/a", `
+	th.WriteK("overlays/a", `
 namePrefix: a-
 nameSuffix: -suffixA
 resources:
@@ -351,18 +351,18 @@ resources:
 `)
 	// Expect an error because this resource in the overlay
 	// matches a resource in the base.
-	th.WriteF("/app/overlays/a/serviceaccount.yaml", `
+	th.WriteF("overlays/a/serviceaccount.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: serviceaccount
 `)
 
-	err := th.RunWithErr("/app/combined", th.MakeDefaultOptions())
+	err := th.RunWithErr("combined", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	if !strings.Contains(err.Error(), "multiple matches for ~G_v1_ServiceAccount|~X|serviceaccount") {
+	if !strings.Contains(err.Error(), "found multiple possible referrals") {
 		t.Fatalf("unexpected error %v", err)
 	}
 }

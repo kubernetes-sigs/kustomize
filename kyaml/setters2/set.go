@@ -32,11 +32,13 @@ type Set struct {
 
 	// SetAll if set to true will set all setters regardless of name
 	SetAll bool
+
+	SettersSchema *spec.Schema
 }
 
 // Filter implements Set as a yaml.Filter
 func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	return object, accept(s, object)
+	return object, accept(s, object, s.SettersSchema)
 }
 
 // isMatch returns true if the setter with name should have the field
@@ -81,9 +83,9 @@ func (s *Set) visitSequence(object *yaml.RNode, p string, schema *openapi.Resour
 }
 
 // visitScalar
-func (s *Set) visitScalar(object *yaml.RNode, p string, oa, setterSchema *openapi.ResourceSchema) error {
+func (s *Set) visitScalar(object *yaml.RNode, p string, oa, settersSchema *openapi.ResourceSchema) error {
 	// get the openAPI for this field describing how to apply the setter
-	ext, err := getExtFromComment(setterSchema)
+	ext, err := getExtFromComment(settersSchema)
 	if err != nil {
 		return err
 	}
@@ -97,7 +99,7 @@ func (s *Set) visitScalar(object *yaml.RNode, p string, oa, setterSchema *openap
 	}
 
 	// perform a direct set of the field if it matches
-	ok, err := s.set(object, ext, k8sSchema, setterSchema.Schema)
+	ok, err := s.set(object, ext, k8sSchema, settersSchema.Schema)
 	if err != nil {
 		return err
 	}
@@ -177,7 +179,7 @@ func (s *Set) substituteUtil(ext *CliExtension, visited sets.String, nameMatch *
 		if err != nil {
 			return "", errors.Wrap(err)
 		}
-		def, err := openapi.Resolve(&ref) // resolve the def to its openAPI def
+		def, err := openapi.Resolve(&ref, s.SettersSchema) // resolve the def to its openAPI def
 		if err != nil {
 			return "", errors.Wrap(err)
 		}
@@ -264,7 +266,7 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		// document that we can use for validation.
 		var tmplText string
 		if sch.Items != nil && sch.Items.Schema != nil &&
-			sch.Items.Schema.Type.Contains("string") {
+			shouldQuoteSetterValue(ext.Setter.ListValues, sch.Items.Schema.Type) {
 			// If string is one of the legal types for the value, we
 			// output it with quotes in the yaml document to make sure it
 			// is later parsed as a string.
@@ -293,7 +295,7 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		var format string
 		// Only add quotes around the value is string is one of the
 		// types in the schema.
-		if sch.Type.Contains("string") {
+		if shouldQuoteSetterValue([]string{ext.Setter.Value}, sch.Type) {
 			format = "%s: \"%s\""
 		} else {
 			format = "%s: %s"
@@ -311,6 +313,22 @@ func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
 		return errors.Errorf("The input value doesn't validate against provided OpenAPI schema: %v\n", err.Error())
 	}
 	return nil
+}
+
+// shouldQuoteSetterValue returns true if string is one of the types in the
+// schema, or if the value ends in a ':' (the yaml parser gets confused by
+// the ':' at the end unless the value is quoted)
+func shouldQuoteSetterValue(a []string, schType spec.StringOrArray) bool {
+	if schType.Contains("string") {
+		return true
+	}
+
+	for _, s := range a {
+		if strings.HasSuffix(s, ":") {
+			return true
+		}
+	}
+	return false
 }
 
 // fixSchemaTypes traverses the schema and checks for some common

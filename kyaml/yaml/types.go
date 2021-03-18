@@ -51,7 +51,20 @@ func IsYNodeEmptyDoc(n *yaml.Node) bool {
 }
 
 func IsYNodeString(n *yaml.Node) bool {
-	return n.Kind == yaml.ScalarNode && n.Tag == NodeTagString
+	return n.Kind == yaml.ScalarNode &&
+		(n.Tag == NodeTagString || n.Tag == NodeTagEmpty)
+}
+
+// IsYNodeZero is true if all the public fields in the Node are empty.
+// Which means it's not initialized and should be omitted when marshal.
+// The Node itself has a method IsZero but it is not released
+// in yaml.v3. https://pkg.go.dev/gopkg.in/yaml.v3#Node.IsZero
+func IsYNodeZero(n *yaml.Node) bool {
+	// TODO: Change this to use IsZero when it's avaialable.
+	return n != nil && n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" &&
+		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
+		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&
+		n.Line == 0 && n.Column == 0
 }
 
 // Parser parses values into configuration.

@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 )
 
@@ -35,7 +36,7 @@ func NewListSettersRunner(parent string) *ListSettersRunner {
 		"output as github markdown")
 	c.Flags().BoolVar(&r.IncludeSubst, "include-subst", false,
 		"include substitutions in the output")
-	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
+	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", false,
 		"list setters recursively in all the nested subpackages")
 	runner.FixDocs(parent, c)
 	r.Command = c
@@ -80,9 +81,14 @@ func (r *ListSettersRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *ListSettersRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
+	sc, err := openapi.SchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName()))
+	if err != nil {
+		return err
+	}
 	r.List = setters2.List{
 		Name:            r.Name,
 		OpenAPIFileName: ext.KRMFileName(),
+		SettersSchema:   sc,
 	}
 	openAPIPath := filepath.Join(pkgPath, ext.KRMFileName())
 	if err := r.ListSetters(w, openAPIPath, pkgPath); err != nil {

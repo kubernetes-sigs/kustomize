@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -25,12 +25,12 @@
 " />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/execpluginguidedexample/" />
-<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta property="article:modified_time" content="2020-11-25T21:41:27+05:30" /><meta property="og:site_name" content="Kustomize" />
 <meta itemprop="name" content="Exec 插件示例">
 <meta itemprop="description" content="60 秒在 Linux 构建一个 Exec 插件
 ">
-<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
-<meta itemprop="wordCount" content="257">
+<meta itemprop="dateModified" content="2020-11-25T21:41:27+05:30" />
+<meta itemprop="wordCount" content="3">
 
 
 
@@ -44,8 +44,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -340,23 +340,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li></li>
-      </ul>
-    </li>
-    <li><a href="#创建一个工作空间目录">创建一个工作空间/目录</a></li>
-    <li><a href="#编写-kustomization">编写 kustomization</a></li>
-    <li><a href="#为插件创建目录">为插件创建目录</a></li>
-    <li><a href="#编写插件">编写插件</a></li>
-    <li><a href="#安装-kustomize">安装 kustomize</a></li>
-    <li><a href="#检查目录结构">检查目录结构</a></li>
-    <li><a href="#使用插件构建-app">使用插件构建 APP</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -402,143 +385,12 @@
 <div class="td-content">
 	<h1>Exec 插件示例</h1>
 	<div class="lead">60 秒在 Linux 构建一个 Exec 插件</div>
-	<p>本教程只是一个快速开始的示例，完整的插件文档请看：<a href="..">kustomize 插件</a></p>
-<p>本示例将使用 bash 编写了一个简单的 <em>exec</em> 插件，用来生成一个 <code>ConfigMap</code>。</p>
-<p>尝试本教程不会破坏你的当前设置。</p>
-<h4 id="环境要求">环境要求</h4>
-<ul>
-<li><code>linux</code></li>
-<li><code>git</code></li>
-<li><code>curl</code></li>
-<li><code>Go 1.13</code></li>
-</ul>
-<h2 id="创建一个工作空间目录">创建一个工作空间/目录</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">DEMO</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span>mktemp -d<span style="color:#204a87;font-weight:bold">)</span>
-</code></pre></div><h2 id="编写-kustomization">编写 kustomization</h2>
-<p>新建一个目录来保存所有的配置：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">MYAPP</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span>/myapp
-mkdir -p <span style="color:#000">$MYAPP</span>
-</code></pre></div><p>编写一个 Deployment 配置：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat <span style="color:#4e9a06">&lt;&lt;&#39;EOF&#39; &gt;$MYAPP/deployment.yaml
-</span><span style="color:#4e9a06">apiVersion: apps/v1
-</span><span style="color:#4e9a06">kind: Deployment
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: the-deployment
-</span><span style="color:#4e9a06">spec:
-</span><span style="color:#4e9a06">  replicas: 3
-</span><span style="color:#4e9a06">  template:
-</span><span style="color:#4e9a06">    spec:
-</span><span style="color:#4e9a06">      containers:
-</span><span style="color:#4e9a06">      - name: the-container
-</span><span style="color:#4e9a06">        image: monopole/hello:1
-</span><span style="color:#4e9a06">        command: [&#34;/hello&#34;,
-</span><span style="color:#4e9a06">                  &#34;--port=8080&#34;,
-</span><span style="color:#4e9a06">                  &#34;--date=$(THE_DATE)&#34;,
-</span><span style="color:#4e9a06">                  &#34;--enableRiskyFeature=$(ENABLE_RISKY)&#34;]
-</span><span style="color:#4e9a06">        ports:
-</span><span style="color:#4e9a06">        - containerPort: 8080
-</span><span style="color:#4e9a06">        env:
-</span><span style="color:#4e9a06">        - name: THE_DATE
-</span><span style="color:#4e9a06">          valueFrom:
-</span><span style="color:#4e9a06">            configMapKeyRef:
-</span><span style="color:#4e9a06">              name: the-map
-</span><span style="color:#4e9a06">              key: today
-</span><span style="color:#4e9a06">        - name: ALT_GREETING
-</span><span style="color:#4e9a06">          valueFrom:
-</span><span style="color:#4e9a06">            configMapKeyRef:
-</span><span style="color:#4e9a06">              name: the-map
-</span><span style="color:#4e9a06">              key: altGreeting
-</span><span style="color:#4e9a06">        - name: ENABLE_RISKY
-</span><span style="color:#4e9a06">          valueFrom:
-</span><span style="color:#4e9a06">            configMapKeyRef:
-</span><span style="color:#4e9a06">              name: the-map
-</span><span style="color:#4e9a06">              key: enableRisky
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>编写一个 service 配置：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$MYAPP/service.yaml
-</span><span style="color:#4e9a06">kind: Service
-</span><span style="color:#4e9a06">apiVersion: v1
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: the-service
-</span><span style="color:#4e9a06">spec:
-</span><span style="color:#4e9a06">  type: LoadBalancer
-</span><span style="color:#4e9a06">  ports:
-</span><span style="color:#4e9a06">  - protocol: TCP
-</span><span style="color:#4e9a06">    port: 8666
-</span><span style="color:#4e9a06">    targetPort: 8080
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>现在为您要编写的插件创建一个配置文件。</p>
-<p>这个配置文件的内容也是 k8s 资源对象。其中 <code>apiVersion</code> 和 <code>kind</code> 字段的值用于在文件系统中查找插件代码（稍后会对此进行更多介绍）。</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat <span style="color:#4e9a06">&lt;&lt;&#39;EOF&#39; &gt;$MYAPP/cmGenerator.yaml
-</span><span style="color:#4e9a06">apiVersion: myDevOpsTeam
-</span><span style="color:#4e9a06">kind: SillyConfigMapGenerator
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: whatever
-</span><span style="color:#4e9a06">argsOneLiner: Bienvenue true
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>最后在 kustomization 文件中引用以上所有内容：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat <span style="color:#4e9a06">&lt;&lt;EOF &gt;$MYAPP/kustomization.yaml
-</span><span style="color:#4e9a06">commonLabels:
-</span><span style="color:#4e9a06">  app: hello
-</span><span style="color:#4e9a06">resources:
-</span><span style="color:#4e9a06">- deployment.yaml
-</span><span style="color:#4e9a06">- service.yaml
-</span><span style="color:#4e9a06">generators:
-</span><span style="color:#4e9a06">- cmGenerator.yaml
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>检查这些文件</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -C1 <span style="color:#000">$MYAPP</span>
-</code></pre></div><h2 id="为插件创建目录">为插件创建目录</h2>
-<p>插件必须位于特定的目录，以便 Kustomize 能够找到它们。</p>
-<p>该示例将使用临时目录：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">PLUGIN_ROOT</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span>/kustomize/plugin
-</code></pre></div><p>在上面定义的插件配置 <code>$MYAPP/cmGenerator.yaml</code> 中指定：</p>
-<blockquote>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">myDevOpsTeam</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000">SillyConfigMapGenerator</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div></blockquote>
-<p>这意味着该插件必须位于以下目录中：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">MY_PLUGIN_DIR</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$PLUGIN_ROOT</span>/myDevOpsTeam/sillyconfigmapgenerator
-
-mkdir -p <span style="color:#000">$MY_PLUGIN_DIR</span>
-</code></pre></div><p>插件的目录结构为： <code>apiVersion 的 value/小写 kind 的 value</code>。</p>
-<p>插件拥有自己的目录，不但可以保存插件代码，还可以保存测试代码以需要的补充数据文件。</p>
-<h2 id="编写插件">编写插件</h2>
-<p>插件有 <em>exec</em> 和 <em>Go</em> 两种.</p>
-<p>编写一个 <em>exec</em> 插件，将其安装到正确的目录，文件名必须与插件的类型匹配（在本例中为 <code>SillyConfigMapGenerator</code>）：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat <span style="color:#4e9a06">&lt;&lt;&#39;EOF&#39; &gt;$MY_PLUGIN_DIR/SillyConfigMapGenerator
-</span><span style="color:#4e9a06">#!/bin/bash
-</span><span style="color:#4e9a06"># Skip the config file name argument.
-</span><span style="color:#4e9a06">shift
-</span><span style="color:#4e9a06">today=`date +%F`
-</span><span style="color:#4e9a06">echo &#34;
-</span><span style="color:#4e9a06">kind: ConfigMap
-</span><span style="color:#4e9a06">apiVersion: v1
-</span><span style="color:#4e9a06">metadata:
-</span><span style="color:#4e9a06">  name: the-map
-</span><span style="color:#4e9a06">data:
-</span><span style="color:#4e9a06">  today: $today
-</span><span style="color:#4e9a06">  altGreeting: &#34;$1&#34;
-</span><span style="color:#4e9a06">  enableRisky: &#34;$2&#34;
-</span><span style="color:#4e9a06">&#34;
-</span><span style="color:#4e9a06">EOF</span>
-</code></pre></div><p>根据定义，<em>exec</em> 插件必须是可执行的：</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod a+x <span style="color:#000">$MY_PLUGIN_DIR</span>/SillyConfigMapGenerator
-</code></pre></div><h2 id="安装-kustomize">安装 kustomize</h2>
-<p>根据<a href="/kustomize/zh/installation">文档</a>安装 kustomize:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -s <span style="color:#4e9a06">&#34;https://raw.githubusercontent.com/\
-</span><span style="color:#4e9a06">kubernetes-sigs/kustomize/master/hack/install_kustomize.sh&#34;</span>  <span style="color:#000;font-weight:bold">|</span> bash
-mkdir -p <span style="color:#000">$DEMO</span>/bin
-mv kustomize <span style="color:#000">$DEMO</span>/bin
-</code></pre></div><h2 id="检查目录结构">检查目录结构</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tree <span style="color:#000">$DEMO</span>
-</code></pre></div><h2 id="使用插件构建-app">使用插件构建 APP</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">XDG_CONFIG_HOME</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">$DEMO</span> <span style="color:#000">$DEMO</span>/bin/kustomize build --enable_alpha_plugins <span style="color:#000">$MYAPP</span>
-</code></pre></div><p>之前如果您已经设置了 <code>PLUGIN_ROOT=$HOME/.config/kustomize/plugin</code>，则无需在 <em>kustomize</em> 命令前使用 <code>XDG_CONFIG_HOME</code>。</p>
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/guides/plugins/execpluginguidedexample/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年07月16日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/f9ee578aed600136133c3232fff03029cdfc526e">Docs: Auto-fix markdownlint issues (f9ee578a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

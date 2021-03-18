@@ -34,7 +34,7 @@ function runTest {
   fi
   rcAccumulator=$((rcAccumulator || $code))
   if [ $code -ne 0 ]; then
-    echo "Failure in $d"
+    echo "**** FAILURE in $d"
   fi
 }
 
@@ -55,18 +55,12 @@ if onLinuxAndNotOnRemoteCI; then
   make $(go env GOPATH)/bin/kubeval
 fi
 
-for goMod in $(find ./plugin -name 'go.mod'); do
+for goMod in $(find ./plugin -name 'go.mod' -not -path "./plugin/untested/*"); do
   d=$(dirname "${goMod}")
-  if [[ "$d" == "./plugin/someteam.example.com/v1/gogetter" ]]; then
-    echo "Skipping broken $d"
-  else
-    scanDir $d
-  fi
+  scanDir $d
 done
 
 if [ $rcAccumulator -ne 0 ]; then
-  echo "FAILURE; exit code $rcAccumulator"
+  echo "FAIL; exit code $rcAccumulator"
   exit 1
 fi
-
-

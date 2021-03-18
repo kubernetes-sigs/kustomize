@@ -15,6 +15,101 @@ func TestFilter(t *testing.T) {
 		patch    *yaml.RNode
 		expected string
 	}{
+		"simple": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 1
+`,
+			patch: yaml.MustParse(`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`),
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`,
+		},
+		"nullMapEntry1": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`,
+			patch: yaml.MustParse(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`),
+			expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+		},
+		"nullMapEntry2": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+			patch: yaml.MustParse(`
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`),
+			expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+		},
 		"simple patch": {
 			input: `
 apiVersion: apps/v1
@@ -577,6 +672,63 @@ spec:
         ports:
         - containerPort: 80
         - containerPort: 8080
+`,
+		},
+
+		// Test for issue #3513
+		// Currently broken; when one port has only containerPort, the output
+		// should not merge containerPort 8301 together
+		// This occurs because when protocol is missing on the first port,
+		// the merge code uses [containerPort] as the merge key rather than
+		// [containerPort, protocol]
+		"list map keys - protocol only present on some ports": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: consul
+        image: "dashicorp/consul:1.9.1"
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8301
+          protocol: "TCP"
+        - containerPort: 8301
+          protocol: "UDP"
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  labels:
+    test: label
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  labels:
+    test: label
+spec:
+  template:
+    spec:
+      containers:
+      - name: consul
+        image: "dashicorp/consul:1.9.1"
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8301
+          protocol: "TCP"
+        - containerPort: 8301
+          protocol: "UDP"
 `,
 		},
 	}

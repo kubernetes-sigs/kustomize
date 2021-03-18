@@ -53,9 +53,13 @@ func (mgr *Manager) Pin(
 	})
 }
 
-func (mgr *Manager) UnPin(doIt bool, target misc.LaModule) error {
+func (mgr *Manager) UnPin(
+	doIt bool, target misc.LaModule, conditional misc.LaModule) error {
+	if conditional == nil {
+		conditional = target
+	}
 	return mgr.modules.Apply(func(m misc.LaModule) error {
-		if yes, oldVersion := m.DependsOn(target); yes {
+		if yes, oldVersion := m.DependsOn(conditional); yes {
 			return edit.New(m, doIt).UnPin(target, oldVersion)
 		}
 		return nil
@@ -77,8 +81,11 @@ func (mgr *Manager) List() error {
 		strconv.Itoa(mgr.modules.LenLongestName()+2) +
 		"s%-11s%-11s%17s  %s\n"
 	fmt.Printf(
-		format, "NAME", "LOCAL", "REMOTE",
+		format, "MODULE-NAME", "LOCAL", "REMOTE",
 		"HAS-UNPINNED-DEPS", "INTRA-REPO-DEPENDENCIES")
+	fmt.Printf(
+		format, "-----------", "-----", "------",
+		"-----------------", "-----------------------")
 	return mgr.modules.Apply(func(m misc.LaModule) error {
 		fmt.Printf(
 			format, m.ShortName(),

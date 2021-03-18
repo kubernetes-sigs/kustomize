@@ -59,6 +59,11 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 	}
 	if yaml.IsMissingOrNull(nodes.Dest()) {
 		// Add
+		ps, _ := determineSmpDirective(nodes.Origin())
+		if ps == smpDelete {
+			return walk.ClearNode, nil
+		}
+
 		return nodes.Origin(), nil
 	}
 	if nodes.Origin().IsTaggedNull() {
@@ -164,13 +169,13 @@ func (m Merger) SetComments(sources walk.Sources) error {
 		// avoid panic
 		return nil
 	}
-	if source != nil && source.YNode().FootComment != "" {
+	if source.YNode().FootComment != "" {
 		dest.YNode().FootComment = source.YNode().FootComment
 	}
-	if source != nil && source.YNode().HeadComment != "" {
+	if source.YNode().HeadComment != "" {
 		dest.YNode().HeadComment = source.YNode().HeadComment
 	}
-	if source != nil && source.YNode().LineComment != "" {
+	if source.YNode().LineComment != "" {
 		dest.YNode().LineComment = source.YNode().LineComment
 	}
 	return nil

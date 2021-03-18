@@ -58,6 +58,27 @@ func TestCopyYNode(t *testing.T) {
 	}
 }
 
+func TestIsYNodeString(t *testing.T) {
+	if IsYNodeTaggedNull(nil) {
+		t.Fatalf("nil cannot be tagged null")
+	}
+	if IsYNodeTaggedNull(&Node{}) {
+		t.Fatalf("untagged node is not tagged")
+	}
+	if IsYNodeString(&Node{Tag: NodeTagString}) {
+		t.Fatalf("non-scalar node is not a string")
+	}
+	if IsYNodeString(&Node{Kind: ScalarNode, Tag: NodeTagFloat}) {
+		t.Fatalf("float tagged node is not tagged")
+	}
+	if !IsYNodeString(&Node{Kind: ScalarNode}) {
+		t.Fatalf("this looks like a string - no tag implies string")
+	}
+	if !IsYNodeString(&Node{Kind: ScalarNode, Tag: NodeTagString}) {
+		t.Fatalf("this looks like a string")
+	}
+}
+
 func TestIsYNodeTaggedNull(t *testing.T) {
 	if IsYNodeTaggedNull(nil) {
 		t.Fatalf("nil cannot be tagged null")
@@ -110,5 +131,17 @@ func TestIsYNodeEmptySeq(t *testing.T) {
 	n.Content = append(n.Content, &Node{Kind: MappingNode})
 	if IsYNodeEmptySeq(n) {
 		t.Fatalf("a node with content isn't empty")
+	}
+}
+
+func TestIsYNodeZero(t *testing.T) {
+	if IsYNodeZero(nil) {
+		t.Fatalf("nil node should not be zero")
+	}
+	if !IsYNodeZero(&Node{}) {
+		t.Fatalf("node is zero")
+	}
+	if IsYNodeZero(&Node{Kind: MappingNode}) {
+		t.Fatalf("node is not zero")
 	}
 }

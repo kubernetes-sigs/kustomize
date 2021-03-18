@@ -11,7 +11,7 @@ import (
 )
 
 type HashTransformerPlugin struct {
-	hasher ifc.KunstructuredHasher
+	hasher ifc.KustHasher
 }
 
 func (p *HashTransformerPlugin) Config(
@@ -24,10 +24,11 @@ func (p *HashTransformerPlugin) Config(
 func (p *HashTransformerPlugin) Transform(m resmap.ResMap) error {
 	for _, res := range m.Resources() {
 		if res.NeedHashSuffix() {
-			h, err := p.hasher.Hash(res)
+			h, err := res.Hash(p.hasher)
 			if err != nil {
 				return err
 			}
+			res.StorePreviousId()
 			res.SetName(fmt.Sprintf("%s-%s", res.GetName(), h))
 		}
 	}

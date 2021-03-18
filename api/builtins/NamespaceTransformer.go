@@ -9,7 +9,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -35,11 +34,11 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
-		err := filtersutil.ApplyToJSON(namespace.Filter{
+		r.StorePreviousId()
+		if err := r.ApplyFilter(namespace.Filter{
 			Namespace: p.Namespace,
 			FsSlice:   p.FieldSpecs,
-		}, r)
-		if err != nil {
+		}); err != nil {
 			return err
 		}
 		matches := m.GetMatchingResourcesByCurrentId(r.CurId().Equals)

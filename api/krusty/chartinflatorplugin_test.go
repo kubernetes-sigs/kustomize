@@ -32,13 +32,13 @@ func TestChartInflatorPlugin(t *testing.T) {
 		PrepExecPlugin("someteam.example.com", "v1", "ChartInflator")
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 generators:
 - chartInflator.yaml
 namePrefix: LOOOOOOOONG-
 `)
 
-	th.WriteF("/app/chartInflator.yaml", `
+	th.WriteF("./chartInflator.yaml", `
 apiVersion: someteam.example.com/v1
 kind: ChartInflator
 metadata:
@@ -46,7 +46,7 @@ metadata:
 chartName: minecraft
 `)
 
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	chartName := regexp.MustCompile("chart: minecraft-[0-9.]+")
 	th.AssertActualEqualsExpectedWithTweak(m,
 		func(x []byte) []byte {

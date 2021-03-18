@@ -183,8 +183,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			return
 		}
 		var c struct {
-			Paths   []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
-			Patches string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
+			Paths []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 		}
 		c.Paths = kt.kustomization.PatchesStrategicMerge
 		p := f()
@@ -202,14 +201,16 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			return
 		}
 		var c struct {
-			Path   string          `json:"path,omitempty" yaml:"path,omitempty"`
-			Patch  string          `json:"patch,omitempty" yaml:"patch,omitempty"`
-			Target *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+			Path    string          `json:"path,omitempty" yaml:"path,omitempty"`
+			Patch   string          `json:"patch,omitempty" yaml:"patch,omitempty"`
+			Target  *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
+			Options map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
 		}
 		for _, pc := range kt.kustomization.Patches {
 			c.Target = pc.Target
 			c.Patch = pc.Patch
 			c.Path = pc.Path
+			c.Options = pc.Options
 			p := f()
 			err = kt.configureBuiltinPlugin(p, c, bpt)
 			if err != nil {

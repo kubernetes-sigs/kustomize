@@ -252,7 +252,6 @@ spec:
 		t.Run(test.name, func(t *testing.T) {
 			// reset the openAPI afterward
 			defer openapi.ResetOpenAPI()
-			initSchema(t, test.openapi)
 
 			f, err := ioutil.TempFile("", "k8s-cli-")
 			if !assert.NoError(t, err) {
@@ -275,7 +274,7 @@ spec:
 			}
 
 			// invoke the setter
-			instance := &List{Name: test.setter}
+			instance := &List{Name: test.setter, SettersSchema: SettersSchema(t, test.openapi)}
 			err = instance.ListSetters(f.Name(), r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()

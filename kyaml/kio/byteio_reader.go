@@ -78,6 +78,28 @@ func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
 	}.Write(nodes)
 }
 
+// ParseAll reads all of the inputs into resources
+func ParseAll(inputs ...string) ([]*yaml.RNode, error) {
+	return (&ByteReader{
+		Reader: bytes.NewBufferString(strings.Join(inputs, "\n---\n")),
+	}).Read()
+}
+
+// FromBytes reads from a byte slice.
+func FromBytes(bs []byte) ([]*yaml.RNode, error) {
+	return (&ByteReader{
+		OmitReaderAnnotations: true,
+		Reader:                bytes.NewBuffer(bs),
+	}).Read()
+}
+
+// StringAll writes all of the resources to a string
+func StringAll(resources []*yaml.RNode) (string, error) {
+	var b bytes.Buffer
+	err := (&ByteWriter{Writer: &b}).Write(resources)
+	return b.String(), err
+}
+
 // ByteReader decodes ResourceNodes from bytes.
 // By default, Read will set the config.kubernetes.io/index annotation on each RNode as it
 // is read so they can be written back in the same order.
@@ -127,6 +149,11 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 	index := 0
 	for i := range values {
+		// the Split used above will eat the tail '\n' from each resource. This may affect the
+		// literal string value since '\n' is meaningful in it.
+		if i != len(values)-1 {
+			values[i] += "\n"
+		}
 		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
 		node, err := r.decode(index, decoder)
 		if err == io.EOF {
@@ -151,7 +178,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		if !r.DisableUnwrapping &&
 			len(values) == 1 && // Only unwrap if there is only 1 value
 			(meta.Kind == ResourceListKind || meta.Kind == "List") &&
-			node.Field("items") != nil {
+			(node.Field("items") != nil || node.Field("functionConfig") != nil) {
 			r.WrappingKind = meta.Kind
 			r.WrappingAPIVersion = meta.APIVersion
 

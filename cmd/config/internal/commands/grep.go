@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
+	"sigs.k8s.io/kustomize/cmd/config/internal/commands/internal/k8sgen/pkg/api/resource"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/kio"

@@ -1,25 +1,78 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # If no argument is given -> Downloads the most recently released
 # kustomize binary to your current working directory.
 # (e.g. 'install_kustomize.sh')
 #
-# If an argument is given -> Downloads the specified version of the
-# kustomize binary to your current working directory.
-# (e.g. 'install_kustomize.sh 3.8.2')
+# If one argument is given -> 
+# If that argument is in the format of #.#.#, downloads the specified
+# version of the kustomize binary to your current working directory.
+# If that argument is something else, downloads the most recently released
+# kustomize binary to the specified directory.
+# (e.g. 'install_kustomize.sh 3.8.2' or 'install_kustomize.sh $(go env GOPATH)/bin')
+#
+# If two arguments are given -> Downloads the specified version of the
+# kustomize binary to the specified directory.
+# (e.g. 'install_kustomize.sh 3.8.2 $(go env GOPATH)/bin')
 #
 # Fails if the file already exists.
 
-release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
-
-if [ -n "$1" ]; then
-    version=v$1
-    release_url=${release_url}/tags/kustomize%2F$version
-fi
+set -e
 
 where=$PWD
-if [ -f $where/kustomize ]; then
-  echo "A file named kustomize already exists (remove it first)."
+
+release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
+if [ -n "$1" ]; then
+  if [[ "$1" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
+    version=v$1
+    release_url=${release_url}/tags/kustomize%2F$version
+  elif [ -n "$2" ]; then
+    echo "The first argument should be the requested version."
+    exit 1
+  else
+    where="$1"
+  fi
+fi
+
+if [ -n "$2" ]; then
+  where="$2"
+fi
+
+if ! test -d "$where"; then
+  echo "$where does not exist. Create it first."
+  exit 1
+fi
+
+# Emulates `readlink -f` behavior, as this is not available by default on MacOS
+# See: https://stackoverflow.com/questions/1055671/how-can-i-get-the-behavior-of-gnus-readlink-f-on-a-mac
+function readlink_f {
+  TARGET_FILE=$1
+
+  cd "$(dirname "$TARGET_FILE")"
+  TARGET_FILE=$(basename "$TARGET_FILE")
+
+  # Iterate down a (possible) chain of symlinks
+  while [ -L "$TARGET_FILE" ]
+  do
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+      cd "$(dirname "$TARGET_FILE")"
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+  done
+
+  # Compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  PHYS_DIR=$(pwd -P)
+  RESULT=$PHYS_DIR/$TARGET_FILE
+  echo "$RESULT"
+}
+
+where="$(readlink_f $where)/"
+
+if [ -f "${where}kustomize" ]; then
+  echo "${where}kustomize exists. Remove it first."
+  exit 1
+elif [ -d "${where}kustomize" ]; then
+  echo "${where}kustomize exists and is a directory. Remove it first."
   exit 1
 fi
 
@@ -33,9 +86,9 @@ function cleanup {
   rm -rf "$tmpDir"
 }
 
-trap cleanup EXIT
+trap cleanup EXIT ERR
 
-pushd $tmpDir >& /dev/null
+pushd "$tmpDir" >& /dev/null
 
 opsys=windows
 arch=amd64
@@ -45,23 +98,24 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-curl -s $release_url |\
+RELEASE_URL=$(curl -s $release_url |\
   grep browser_download.*${opsys}_${arch} |\
   cut -d '"' -f 4 |\
-  sort | tail -n 1 |\
-  xargs curl -sLO
+  sort -V | tail -n 1)
 
-if [ -e ./kustomize_v*_${opsys}_amd64.tar.gz ]; then
-    tar xzf ./kustomize_v*_${opsys}_amd64.tar.gz
-else
-    echo "Error: kustomize binary with the version ${version#v} does not exist!"
-    exit 1
+if [ ! -n "$RELEASE_URL" ]; then
+  echo "Version $version does not exist."
+  exit 1
 fi
 
-cp ./kustomize $where
+curl -sLO $RELEASE_URL
+
+tar xzf ./kustomize_v*_${opsys}_${arch}.tar.gz
+
+cp ./kustomize "$where"
 
 popd >& /dev/null
 
-./kustomize version
+${where}kustomize version
 
-echo kustomize installed to current directory.
+echo "kustomize installed to ${where}kustomize"

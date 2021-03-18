@@ -7,22 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-)
-
-const (
-	// NodeTagNull is the tag set for a yaml.Document that contains no data;
-	// e.g. it isn't a Map, Slice, Document, etc
-	NodeTagNull   = "!!null"
-	NodeTagFloat  = "!!float"
-	NodeTagString = "!!str"
-	NodeTagBool   = "!!bool"
-	NodeTagInt    = "!!int"
-	NodeTagMap    = "!!map"
-	NodeTagSeq    = "!!seq"
-	NodeTagEmpty  = ""
+	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/labels"
 )
 
 // MakeNullNode returns an RNode that represents an empty document.
@@ -50,12 +42,14 @@ func GetValue(node *RNode) string {
 	return node.YNode().Value
 }
 
-// Parse parses a yaml string into an *RNode
+// Parse parses a yaml string into an *RNode.
+// To parse multiple resources, consider a kio.ByteReader
 func Parse(value string) (*RNode, error) {
 	return Parser{Value: value}.Filter(nil)
 }
 
-// ReadFile parses a single Resource from a yaml file
+// ReadFile parses a single Resource from a yaml file.
+// To parse multiple resources, consider a kio.ByteReader
 func ReadFile(path string) (*RNode, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -107,6 +101,15 @@ func NewScalarRNode(value string) *RNode {
 			Kind:  yaml.ScalarNode,
 			Value: value,
 		}}
+}
+
+// NewStringRNode returns a new Scalar *RNode containing the provided string.
+// If the string is non-utf8, it will be base64 encoded, and the tag
+// will indicate binary data.
+func NewStringRNode(value string) *RNode {
+	n := yaml.Node{Kind: yaml.ScalarNode}
+	n.SetString(value)
+	return NewRNode(&n)
 }
 
 // NewListRNode returns a new List *RNode containing the provided scalar values.
@@ -180,17 +183,6 @@ func (rn *RNode) Copy() *RNode {
 
 var ErrMissingMetadata = fmt.Errorf("missing Resource metadata")
 
-// Field names
-const (
-	AnnotationsField = "annotations"
-	APIVersionField  = "apiVersion"
-	KindField        = "kind"
-	MetadataField    = "metadata"
-	NameField        = "name"
-	NamespaceField   = "namespace"
-	LabelsField      = "labels"
-)
-
 // IsNil is true if the node is nil, or its underlying YNode is nil.
 func (rn *RNode) IsNil() bool {
 	return rn == nil || rn.YNode() == nil
@@ -207,7 +199,8 @@ func (rn *RNode) IsNilOrEmpty() bool {
 	return rn.IsNil() ||
 		IsYNodeTaggedNull(rn.YNode()) ||
 		IsYNodeEmptyMap(rn.YNode()) ||
-		IsYNodeEmptySeq(rn.YNode())
+		IsYNodeEmptySeq(rn.YNode()) ||
+		IsYNodeZero(rn.YNode())
 }
 
 // GetMeta returns the ResourceMeta for an RNode
@@ -344,6 +337,174 @@ func (rn *RNode) SetYNode(node *yaml.Node) {
 	*rn.value = *node
 }
 
+// GetKind returns the kind.
+func (rn *RNode) GetKind() string {
+	node, err := rn.Pipe(FieldMatcher{Name: KindField})
+	if err != nil {
+		return ""
+	}
+	return GetValue(node)
+}
+
+// GetName returns the name.
+func (rn *RNode) GetName() string {
+	f := rn.Field(MetadataField)
+	if f.IsNilOrEmpty() {
+		return ""
+	}
+	f = f.Value.Field(NameField)
+	if f.IsNilOrEmpty() {
+		return ""
+	}
+	return f.Value.YNode().Value
+}
+
+// SetName sets the metadata name field.
+func (rn *RNode) SetName(name string) error {
+	return rn.SetMapField(NewScalarRNode(name), MetadataField, NameField)
+}
+
+// GetNamespace gets the metadata namespace field.
+func (rn *RNode) GetNamespace() (string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return "", err
+	}
+	return meta.Namespace, nil
+}
+
+// SetNamespace tries to set the metadata namespace field.
+func (rn *RNode) SetNamespace(ns string) error {
+	meta, err := rn.Pipe(Lookup(MetadataField))
+	if err != nil {
+		return err
+	}
+	if ns == "" {
+		if rn == nil {
+			return nil
+		}
+		return meta.PipeE(Clear(NamespaceField))
+	}
+	return rn.SetMapField(
+		NewScalarRNode(ns), MetadataField, NamespaceField)
+}
+
+// GetAnnotations gets the metadata annotations field.
+func (rn *RNode) GetAnnotations() (map[string]string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return nil, err
+	}
+	return meta.Annotations, nil
+}
+
+// SetAnnotations tries to set the metadata annotations field.
+func (rn *RNode) SetAnnotations(m map[string]string) error {
+	return rn.setMapInMetadata(m, AnnotationsField)
+}
+
+// GetLabels gets the metadata labels field.
+func (rn *RNode) GetLabels() (map[string]string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return nil, err
+	}
+	return meta.Labels, nil
+}
+
+// SetLabels sets the metadata labels field.
+func (rn *RNode) SetLabels(m map[string]string) error {
+	return rn.setMapInMetadata(m, LabelsField)
+}
+
+// This established proper quoting on string values, and sorts by key.
+func (rn *RNode) setMapInMetadata(m map[string]string, field string) error {
+	meta, err := rn.Pipe(Lookup(MetadataField))
+	if err != nil {
+		return err
+	}
+	if err = meta.PipeE(Clear(field)); err != nil {
+		return err
+	}
+	if len(m) == 0 {
+		return nil
+	}
+	mapNode, err := meta.Pipe(LookupCreate(MappingNode, field))
+	if err != nil {
+		return err
+	}
+	for _, k := range SortedMapKeys(m) {
+		if _, err := mapNode.Pipe(
+			SetField(k, NewStringRNode(m[k]))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (rn *RNode) SetMapField(value *RNode, path ...string) error {
+	return rn.PipeE(
+		LookupCreate(yaml.MappingNode, path[0:len(path)-1]...),
+		SetField(path[len(path)-1], value),
+	)
+}
+
+func (rn *RNode) GetDataMap() map[string]string {
+	n, err := rn.Pipe(Lookup(DataField))
+	if err != nil {
+		return nil
+	}
+	result := map[string]string{}
+	_ = n.VisitFields(func(node *MapNode) error {
+		result[GetValue(node.Key)] = GetValue(node.Value)
+		return nil
+	})
+	return result
+}
+
+func (rn *RNode) GetBinaryDataMap() map[string]string {
+	n, err := rn.Pipe(Lookup(BinaryDataField))
+	if err != nil {
+		return nil
+	}
+	result := map[string]string{}
+	_ = n.VisitFields(func(node *MapNode) error {
+		result[GetValue(node.Key)] = GetValue(node.Value)
+		return nil
+	})
+	return result
+}
+
+func (rn *RNode) SetDataMap(m map[string]string) {
+	if rn == nil {
+		log.Fatal("cannot set data map on nil Rnode")
+	}
+	if err := rn.PipeE(Clear(DataField)); err != nil {
+		log.Fatal(err)
+	}
+	if len(m) == 0 {
+		return
+	}
+	if err := rn.LoadMapIntoConfigMapData(m); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (rn *RNode) SetBinaryDataMap(m map[string]string) {
+	if rn == nil {
+		log.Fatal("cannot set binaryData map on nil Rnode")
+	}
+	if err := rn.PipeE(Clear(BinaryDataField)); err != nil {
+		log.Fatal(err)
+	}
+	if len(m) == 0 {
+		return
+	}
+	if err := rn.LoadMapIntoConfigMapBinaryData(m); err != nil {
+		log.Fatal(err)
+	}
+}
+
 // AppendToFieldPath appends a field name to the FieldPath.
 func (rn *RNode) AppendToFieldPath(parts ...string) {
 	rn.fieldPath = append(rn.fieldPath, parts...)
@@ -456,8 +617,8 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 	return elements, nil
 }
 
-// ElementValues returns a list of all observed values for a given field name in a
-// list of elements.
+// ElementValues returns a list of all observed values for a given field name
+// in a list of elements.
 // Returns error for non-SequenceNodes.
 func (rn *RNode) ElementValues(key string) ([]string, error) {
 	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
@@ -600,12 +761,100 @@ func (rn *RNode) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// GetValidatedMetadata returns metadata after subjecting it to some tests.
+func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
+	m, err := rn.GetMeta()
+	if err != nil {
+		return m, err
+	}
+	if m.Kind == "" {
+		return m, fmt.Errorf("missing kind in object %v", m)
+	}
+	if strings.HasSuffix(m.Kind, "List") {
+		// A list doesn't require a name.
+		return m, nil
+	}
+	if m.NameMeta.Name == "" {
+		return m, fmt.Errorf("missing metadata.name in object %v", m)
+	}
+	return m, nil
+}
+
+// MatchesAnnotationSelector returns true on a selector match to annotations.
+func (rn *RNode) MatchesAnnotationSelector(selector string) (bool, error) {
+	s, err := labels.Parse(selector)
+	if err != nil {
+		return false, err
+	}
+	slice, err := rn.GetAnnotations()
+	if err != nil {
+		return false, err
+	}
+	return s.Matches(labels.Set(slice)), nil
+}
+
+// MatchesLabelSelector returns true on a selector match to labels.
+func (rn *RNode) MatchesLabelSelector(selector string) (bool, error) {
+	s, err := labels.Parse(selector)
+	if err != nil {
+		return false, err
+	}
+	slice, err := rn.GetLabels()
+	if err != nil {
+		return false, err
+	}
+	return s.Matches(labels.Set(slice)), nil
+}
+
+// HasNilEntryInList returns true if the RNode contains a list which has
+// a nil item, along with the path to the missing item.
+// TODO(broken): This doesn't do what it claims to do.
+// (see TODO in unit test and pr 1513).
+func (rn *RNode) HasNilEntryInList() (bool, string) {
+	return hasNilEntryInList(rn.value)
+}
+
+func hasNilEntryInList(in interface{}) (bool, string) {
+	switch v := in.(type) {
+	case map[string]interface{}:
+		for key, s := range v {
+			if result, path := hasNilEntryInList(s); result {
+				return result, key + "/" + path
+			}
+		}
+	case []interface{}:
+		for index, s := range v {
+			if s == nil {
+				return true, ""
+			}
+			if result, path := hasNilEntryInList(s); result {
+				return result, "[" + strconv.Itoa(index) + "]/" + path
+			}
+		}
+	}
+	return false, ""
+}
+
 func FromMap(m map[string]interface{}) (*RNode, error) {
 	c, err := Marshal(m)
 	if err != nil {
 		return nil, err
 	}
 	return Parse(string(c))
+}
+
+func (rn *RNode) Map() (map[string]interface{}, error) {
+	if rn == nil || rn.value == nil {
+		return make(map[string]interface{}), nil
+	}
+	var result map[string]interface{}
+	if err := rn.value.Decode(&result); err != nil {
+		// Should not be able to create an RNode that cannot be decoded;
+		// this is an unrecoverable error.
+		str, _ := rn.String()
+		return nil, fmt.Errorf("received error %w for the following resource:\n%s", err, str)
+	}
+	return result, nil
 }
 
 // ConvertJSONToYamlNode parses input json string and returns equivalent yaml node
@@ -636,4 +885,124 @@ func checkKey(key string, elems []*Node) bool {
 		}
 	}
 	return count == len(elems)
+}
+
+// Deprecated: use pipes instead.
+// GetSlice returns the contents of the slice field at the given path.
+func (rn *RNode) GetSlice(path string) ([]interface{}, error) {
+	value, err := rn.GetFieldValue(path)
+	if err != nil {
+		return nil, err
+	}
+	if sliceValue, ok := value.([]interface{}); ok {
+		return sliceValue, nil
+	}
+	return nil, fmt.Errorf("node %s is not a slice", path)
+}
+
+// Deprecated: use pipes instead.
+// GetString returns the contents of the string field at the given path.
+func (rn *RNode) GetString(path string) (string, error) {
+	value, err := rn.GetFieldValue(path)
+	if err != nil {
+		return "", err
+	}
+	if v, ok := value.(string); ok {
+		return v, nil
+	}
+	return "", fmt.Errorf("node %s is not a string: %v", path, value)
+}
+
+// Deprecated: use slash paths instead.
+// GetFieldValue finds period delimited fields.
+// TODO: When doing kustomize var replacement, which is likely a
+// a primary use of this function and the reason it returns interface{}
+// rather than string, we do conversion from Nodes to Go types and back
+// to nodes.  We should figure out how to do replacement using raw nodes,
+// assuming we keep the var feature in kustomize.
+// The other end of this is: refvar.go:updateNodeValue.
+func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
+	fields := convertSliceIndex(strings.Split(path, "."))
+	rn, err := rn.Pipe(Lookup(fields...))
+	if err != nil {
+		return nil, err
+	}
+	if rn == nil {
+		return nil, NoFieldError{path}
+	}
+	yn := rn.YNode()
+
+	// If this is an alias node, resolve it
+	if yn.Kind == yaml.AliasNode {
+		yn = yn.Alias
+	}
+
+	// Return value as map for DocumentNode and MappingNode kinds
+	if yn.Kind == yaml.DocumentNode || yn.Kind == yaml.MappingNode {
+		var result map[string]interface{}
+		if err := yn.Decode(&result); err != nil {
+			return nil, err
+		}
+		return result, err
+	}
+
+	// Return value as slice for SequenceNode kind
+	if yn.Kind == yaml.SequenceNode {
+		var result []interface{}
+		if err := yn.Decode(&result); err != nil {
+			return nil, err
+		}
+		return result, nil
+	}
+	if yn.Kind != yaml.ScalarNode {
+		return nil, fmt.Errorf("expected ScalarNode, got Kind=%d", yn.Kind)
+	}
+
+	switch yn.Tag {
+	case NodeTagString:
+		return yn.Value, nil
+	case NodeTagInt:
+		return strconv.Atoi(yn.Value)
+	case NodeTagFloat:
+		return strconv.ParseFloat(yn.Value, 64)
+	case NodeTagBool:
+		return strconv.ParseBool(yn.Value)
+	default:
+		// Possibly this should be an error or log.
+		return yn.Value, nil
+	}
+}
+
+// convertSliceIndex traverses the items in `fields` and find
+// if there is a slice index in the item and change it to a
+// valid Lookup field path. For example, 'ports[0]' will be
+// converted to 'ports' and '0'.
+func convertSliceIndex(fields []string) []string {
+	var res []string
+	for _, s := range fields {
+		if !strings.HasSuffix(s, "]") {
+			res = append(res, s)
+			continue
+		}
+		re := regexp.MustCompile(`^(.*)\[(\d+)\]$`)
+		groups := re.FindStringSubmatch(s)
+		if len(groups) == 0 {
+			// no match, add to result
+			res = append(res, s)
+			continue
+		}
+		if groups[1] != "" {
+			res = append(res, groups[1])
+		}
+		res = append(res, groups[2])
+	}
+	return res
+}
+
+type NoFieldError struct {
+	Field string
+}
+
+func (e NoFieldError) Error() string {
+	return fmt.Sprintf("no field named '%s'", e.Field)
 }

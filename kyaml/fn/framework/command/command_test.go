@@ -1,0 +1,164 @@
+// Copyright 2021 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+package command_test
+
+import (
+	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/frameworktestutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+func TestCommand_dockerfile(t *testing.T) {
+	d, err := ioutil.TempDir("", "kustomize")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer os.RemoveAll(d)
+
+	// create a function
+	cmd := command.Build(&framework.SimpleProcessor{}, command.StandaloneEnabled, false)
+	// add the Dockerfile generator
+	command.AddGenerateDockerfile(cmd)
+
+	// generate the Dockerfile
+	cmd.SetArgs([]string{"gen", d})
+	if !assert.NoError(t, cmd.Execute()) {
+		t.FailNow()
+	}
+
+	b, err := ioutil.ReadFile(filepath.Join(d, "Dockerfile"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	expected := `FROM golang:1.15-alpine as builder
+ENV CGO_ENABLED=0
+WORKDIR /go/src/
+COPY . .
+RUN go build -tags netgo -ldflags '-w' -v -o /usr/local/bin/function ./
+
+FROM alpine:latest
+COPY --from=builder /usr/local/bin/function /usr/local/bin/function
+CMD ["function"]
+`
+	if !assert.Equal(t, expected, string(b)) {
+		t.FailNow()
+	}
+}
+
+// TestCommand_standalone tests the framework works in standalone mode
+func TestCommand_standalone(t *testing.T) {
+	var config struct {
+		A string `json:"a" yaml:"a"`
+	}
+
+	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+		items = append(items, yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: bar1
+ namespace: default
+ annotations:
+   foo: bar1
+`))
+		for i := range items {
+			err := items[i].PipeE(yaml.SetAnnotation("a", config.A))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return items, nil
+	}
+
+	cmdFn := func() *cobra.Command {
+		return command.Build(&framework.SimpleProcessor{Filter: kio.FilterFunc(fn), Config: &config}, command.StandaloneEnabled, false)
+	}
+
+	tc := frameworktestutil.CommandResultsChecker{Command: cmdFn}
+	tc.Assert(t)
+}
+
+func TestCommand_standalone_stdin(t *testing.T) {
+	var config struct {
+		A string `json:"a" yaml:"a"`
+	}
+
+	p := &framework.SimpleProcessor{
+		Config: &config,
+
+		Filter: kio.FilterFunc(func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+			items = append(items, yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar2
+  namespace: default
+  annotations:
+    foo: bar2
+`))
+			for i := range items {
+				err := items[i].PipeE(yaml.SetAnnotation("a", config.A))
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return items, nil
+		}),
+	}
+	cmd := command.Build(p, command.StandaloneEnabled, false)
+	cmd.SetIn(bytes.NewBufferString(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar1
+  namespace: default
+  annotations:
+    foo: bar1
+spec:
+  replicas: 1
+`))
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetArgs([]string{filepath.Join("testdata", "standalone", "config.yaml"), "-"})
+
+	require.NoError(t, cmd.Execute())
+
+	require.Equal(t, strings.TrimSpace(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar1
+  namespace: default
+  annotations:
+    foo: bar1
+    a: 'b'
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bar2
+  namespace: default
+  annotations:
+    foo: bar2
+    a: 'b'
+`), strings.TrimSpace(out.String()))
+}

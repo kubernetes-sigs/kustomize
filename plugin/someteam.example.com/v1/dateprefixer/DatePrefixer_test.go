@@ -26,7 +26,7 @@ metadata:
   name: meatball
 `)
 
-	th.AssertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(m, `
 apiVersion: apps/v1
 kind: MeatBall
 metadata:

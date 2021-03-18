@@ -3,7 +3,7 @@ FROM golang:alpine as builder
 ARG VERSION
 ARG COMMIT
 ARG DATE
-RUN mkdir /build 
+RUN mkdir /build
 ADD . /build/
 WORKDIR /build/kustomize
 RUN CGO_ENABLED=0 GO111MODULE=on go build \
@@ -13,6 +13,9 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build \
 
 # only copy binary
 FROM alpine
-COPY --from=builder /build/kustomize /app/
+# install dependencies
+RUN apk add --no-cache git openssh
+COPY --from=builder /build/kustomize/kustomize /app/
 WORKDIR /app
-ENTRYPOINT ["./kustomize"]
+ENV PATH "$PATH:/app"
+ENTRYPOINT ["/app/kustomize"]

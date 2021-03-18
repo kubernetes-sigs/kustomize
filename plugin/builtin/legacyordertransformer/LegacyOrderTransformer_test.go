@@ -65,7 +65,7 @@ metadata:
   name: apricot
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
 kind: Namespace
 metadata:

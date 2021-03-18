@@ -5,8 +5,6 @@
 package loader
 
 import (
-	"fmt"
-
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
@@ -21,25 +19,16 @@ import (
 func NewLoader(
 	lr LoadRestrictorFunc,
 	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
-
-	ldr, errGet := newLoaderAtGetter(target, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget)
-	if errGet == nil {
-		return ldr, nil
-	}
-
-	repoSpec, errGit := git.NewRepoSpecFromUrl(target)
-	if errGit == nil {
+	repoSpec, err := git.NewRepoSpecFromUrl(target)
+	if err == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget)
+			repoSpec, fSys, nil, git.ClonerUsingGitExec)
 	}
-
-	root, errDir := demandDirectoryRoot(fSys, target)
-	if errDir == nil {
-		return newLoaderAtConfirmedDir(lr, root, fSys, nil, git.ClonerUsingGitExec, getRemoteTarget), nil
+	root, err := demandDirectoryRoot(fSys, target)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, fmt.Errorf(
-		"error creating new loader with git: %v, dir: %v, get: %v",
-		errGit, errDir, errGet)
+	return newLoaderAtConfirmedDir(
+		lr, root, fSys, nil, git.ClonerUsingGitExec), nil
 }

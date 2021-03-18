@@ -15,7 +15,6 @@ func TestNamePrefixSuffixPatch(t *testing.T) {
 
 	th.WriteF("handlers/kustomization.yaml", `
 nameSuffix: -suffix
-
 resources:
 - deployment.yaml
 `)
@@ -38,7 +37,7 @@ configMapGenerator:
   literals:
   - MYSQL_USER=default
   - MYSQL_DATABASE=default
-  - PORT=3306
+  - HOST=everest
 `)
 
 	th.WriteK(".", `
@@ -82,15 +81,13 @@ patches:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
+  HOST: everest
   MYSQL_DATABASE: db
   MYSQL_PASSWORD: correct horse battery staple
   MYSQL_USER: my-user
-  PORT: "3306"
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: mysql-9792mdchtg
+  name: mysql-t7tt4cdbmf
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -104,10 +101,10 @@ spec:
         - valueFrom:
             configMapKeyRef:
               key: MYSQL_DATABASE
-              name: mysql-9792mdchtg
+              name: mysql-t7tt4cdbmf
         envFrom:
         - configMapRef:
-            name: mysql-9792mdchtg
+            name: mysql-t7tt4cdbmf
         name: handler
 `)
 }

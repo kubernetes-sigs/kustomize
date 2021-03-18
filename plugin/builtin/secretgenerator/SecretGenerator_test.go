@@ -41,15 +41,17 @@ literals:
 - FRUIT=apple
 - VEGETABLE=carrot
 `)
-
-	th.AssertActualEqualsExpected(rm, `
+	th.AssertActualEqualsExpected(
+		rm, `
 apiVersion: v1
 data:
   DB_PASSWORD: aWxvdmV5b3U=
   FRUIT: YXBwbGU=
   ROUTER_PASSWORD: YWRtaW4=
   VEGETABLE: Y2Fycm90
-  obscure: CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQuCg==
+  obscure: |
+    CkxvcmVtIGlwc3VtIGRvbG9yIHNpdCBhbWV0LApjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIG
+    VsaXQuCg==
 kind: Secret
 metadata:
   name: mySecret

@@ -52,7 +52,7 @@ EOF
 done
 
 # add info string for `kustomize openapi info` command
-OPEN_API_INFO=`echo ${info_list[@]} | tr " " ","`
+OPEN_API_INFO=`echo ${info_list[@]} | sed 's/ /\\\n/g'`
 cat <<EOF >>kubernetesapi/openapiinfo.go
 )
 
@@ -62,7 +62,7 @@ EOF
 # add map for `initSchema` in openapi.go to use
 cat <<EOF >>kubernetesapi/openapiinfo.go
 
-var OpenApiMustAsset = map[string]func(string)[]byte{
+var OpenAPIMustAsset = map[string]func(string)[]byte{
 EOF
 
 latest=""
@@ -78,7 +78,7 @@ done
 cat <<EOF >>kubernetesapi/openapiinfo.go
 }
 
-const DefaultOpenApi = "$latest"
+const DefaultOpenAPI = "$latest"
 EOF
 
 

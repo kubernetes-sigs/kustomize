@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -66,6 +67,10 @@ func (r *CreateSubstitutionRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *CreateSubstitutionRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
+	sc, err := openapi.SchemaFromFile(filepath.Join(pkgPath, ext.KRMFileName()))
+	if err != nil {
+		return err
+	}
 	r.CreateSubstitution = settersutil.SubstitutionCreator{
 		Name:               r.CreateSubstitution.Name,
 		FieldName:          r.CreateSubstitution.FieldName,
@@ -75,9 +80,10 @@ func (r *CreateSubstitutionRunner) ExecuteCmd(w io.Writer, pkgPath string) error
 		OpenAPIFileName:    ext.KRMFileName(),
 		OpenAPIPath:        filepath.Join(pkgPath, ext.KRMFileName()),
 		ResourcesPath:      pkgPath,
+		SettersSchema:      sc,
 	}
 
-	err := r.CreateSubstitution.Create()
+	err = r.CreateSubstitution.Create()
 	if err != nil {
 		// return err if RecurseSubPackages is false
 		if !r.CreateSubstitution.RecurseSubPackages {

@@ -106,9 +106,7 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 		var err error
 		found := true
 		for j := range e.Keys {
-			if j >= len(e.Values) {
-				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: ""})
-			} else {
+			if j < len(e.Values) {
 				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
 			}
 			if err != nil {
@@ -648,9 +646,15 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	// create the field
-	rn.YNode().Content = append(rn.YNode().Content,
-		&yaml.Node{Kind: yaml.ScalarNode, HeadComment: s.Comments.HeadComment,
-			LineComment: s.Comments.LineComment, FootComment: s.Comments.FootComment, Value: s.Name},
+	rn.YNode().Content = append(
+		rn.YNode().Content,
+		&yaml.Node{
+			Kind:        yaml.ScalarNode,
+			Value:       s.Name,
+			HeadComment: s.Comments.HeadComment,
+			LineComment: s.Comments.LineComment,
+			FootComment: s.Comments.FootComment,
+		},
 		s.Value.YNode())
 	return s.Value, nil
 }

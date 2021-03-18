@@ -5,14 +5,9 @@
 package main
 
 import (
-	"fmt"
-	"regexp"
-	"strings"
-
 	"sigs.k8s.io/kustomize/api/filters/imagetag"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -36,153 +31,20 @@ func (p *plugin) Config(
 func (p *plugin) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
 		// traverse all fields at first
-		err := filtersutil.ApplyToJSON(imagetag.LegacyFilter{
+		err := r.ApplyFilter(imagetag.LegacyFilter{
 			ImageTag: p.ImageTag,
-		}, r)
+		})
 		if err != nil {
 			return err
 		}
 		// then use user specified field specs
-		err = filtersutil.ApplyToJSON(imagetag.Filter{
+		err = r.ApplyFilter(imagetag.Filter{
 			ImageTag: p.ImageTag,
 			FsSlice:  p.FieldSpecs,
-		}, r)
+		})
 		if err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func (p *plugin) mutateImage(in interface{}) (interface{}, error) {
-	original, ok := in.(string)
-	if !ok {
-		return nil, fmt.Errorf("image path is not of type string but %T", in)
-	}
-
-	if !isImageMatched(original, p.ImageTag.Name) {
-		return original, nil
-	}
-	name, tag := split(original)
-	if p.ImageTag.NewName != "" {
-		name = p.ImageTag.NewName
-	}
-	if p.ImageTag.NewTag != "" {
-		tag = ":" + p.ImageTag.NewTag
-	}
-	if p.ImageTag.Digest != "" {
-		tag = "@" + p.ImageTag.Digest
-	}
-	return name + tag, nil
-}
-
-// findAndReplaceImage replaces the image name and
-// tags inside one object.
-// It searches the object for container session
-// then loops though all images inside containers
-// session, finds matched ones and update the
-// image name and tag name
-func (p *plugin) findAndReplaceImage(obj map[string]interface{}) error {
-	paths := []string{"containers", "initContainers"}
-	updated := false
-	for _, path := range paths {
-		containers, found := obj[path]
-		if found && containers != nil {
-			if _, err := p.updateContainers(containers); err != nil {
-				return err
-			}
-			updated = true
-		}
-	}
-	if !updated {
-		return p.findContainers(obj)
-	}
-	return nil
-}
-
-func (p *plugin) updateContainers(in interface{}) (interface{}, error) {
-	containers, ok := in.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf(
-			"containers path is not of type []interface{} but %T", in)
-	}
-	for i := range containers {
-		container := containers[i].(map[string]interface{})
-		containerImage, found := container["image"]
-		if !found {
-			continue
-		}
-		imageName := containerImage.(string)
-		if isImageMatched(imageName, p.ImageTag.Name) {
-			newImage, err := p.mutateImage(imageName)
-			if err != nil {
-				return nil, err
-			}
-			container["image"] = newImage
-		}
-	}
-	return containers, nil
-}
-
-func (p *plugin) findContainers(obj map[string]interface{}) error {
-	for key := range obj {
-		switch typedV := obj[key].(type) {
-		case map[string]interface{}:
-			err := p.findAndReplaceImage(typedV)
-			if err != nil {
-				return err
-			}
-		case []interface{}:
-			for i := range typedV {
-				item := typedV[i]
-				typedItem, ok := item.(map[string]interface{})
-				if ok {
-					err := p.findAndReplaceImage(typedItem)
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func isImageMatched(s, t string) bool {
-	// Tag values are limited to [a-zA-Z0-9_.{}-].
-	// Some tools like Bazel rules_k8s allow tag patterns with {} characters.
-	// More info: https://github.com/bazelbuild/rules_k8s/pull/423
-	pattern, _ := regexp.Compile("^" + t + "(@sha256)?(:[a-zA-Z0-9_.{}-]*)?$")
-	return pattern.MatchString(s)
-}
-
-// split separates and returns the name and tag parts
-// from the image string using either colon `:` or at `@` separators.
-// Note that the returned tag keeps its separator.
-func split(imageName string) (name string, tag string) {
-	// check if image name contains a domain
-	// if domain is present, ignore domain and check for `:`
-	ic := -1
-	if slashIndex := strings.Index(imageName, "/"); slashIndex < 0 {
-		ic = strings.LastIndex(imageName, ":")
-	} else {
-		lastIc := strings.LastIndex(imageName[slashIndex:], ":")
-		// set ic only if `:` is present
-		if lastIc > 0 {
-			ic = slashIndex + lastIc
-		}
-	}
-	ia := strings.LastIndex(imageName, "@")
-	if ic < 0 && ia < 0 {
-		return imageName, ""
-	}
-
-	i := ic
-	if ia > 0 {
-		i = ia
-	}
-
-	name = imageName[:i]
-	tag = imageName[i:]
-	return
 }

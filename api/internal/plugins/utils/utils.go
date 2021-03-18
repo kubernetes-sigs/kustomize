@@ -4,6 +4,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,8 +14,8 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
@@ -135,9 +136,6 @@ func GetResMapWithIDAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
 			return nil, err
 		}
 		annotations := r.GetAnnotations()
-		if annotations == nil {
-			annotations = make(map[string]string)
-		}
 		annotations[idAnnotation] = string(idString)
 		r.SetAnnotations(annotations)
 	}
@@ -147,39 +145,63 @@ func GetResMapWithIDAnnotation(rm resmap.ResMap) (resmap.ResMap, error) {
 // UpdateResMapValues updates the Resource value in the given ResMap
 // with the emitted Resource values in output.
 func UpdateResMapValues(pluginName string, h *resmap.PluginHelpers, output []byte, rm resmap.ResMap) error {
-	outputRM, err := h.ResmapFactory().NewResMapFromBytes(output)
+	mapFactory := h.ResmapFactory()
+	resFactory := mapFactory.RF()
+	resources, err := resFactory.SliceFromBytes(output)
 	if err != nil {
 		return err
 	}
-	for _, r := range outputRM.Resources() {
-		// for each emitted Resource, find the matching Resource in the original ResMap
-		// using its id
-		annotations := r.GetAnnotations()
-		idString, ok := annotations[idAnnotation]
-		if !ok {
-			return fmt.Errorf("the transformer %s should not remove annotation %s",
-				pluginName, idAnnotation)
+	// Don't use resources here, or error message will be unfriendly to plugin builders
+	newMap, err := mapFactory.NewResMapFromBytes([]byte{})
+	if err != nil {
+		return err
+	}
+
+	for _, r := range resources {
+		removeIDAnnotation(r) // stale--not manipulated by plugin transformers
+
+		// Add to the new map, checking for duplicates
+		if err := newMap.Append(r); err != nil {
+			prettyID, err := json.Marshal(r.CurId())
+			if err != nil {
+				prettyID = []byte(r.CurId().String())
+			}
+			return fmt.Errorf("plugin %s generated duplicate resource: %s", pluginName, prettyID)
 		}
-		id := resid.ResId{}
-		err := yaml.Unmarshal([]byte(idString), &id)
+
+		// Add to or update the old map
+		oldIdx, err := rm.GetIndexOfCurrentId(r.CurId())
 		if err != nil {
 			return err
 		}
-		res, err := rm.GetByCurrentId(id)
-		if err != nil {
-			return fmt.Errorf("unable to find unique match to %s", id.String())
+		if oldIdx != -1 {
+			rm.GetByIndex(oldIdx).ResetPrimaryData(r)
+		} else {
+			if err := rm.Append(r); err != nil {
+				return err
+			}
 		}
-		// remove the annotation set by Kustomize to track the resource
-		delete(annotations, idAnnotation)
-		if len(annotations) == 0 {
-			annotations = nil
-		}
-		r.SetAnnotations(annotations)
-
-		// update the resource value with the transformed object
-		res.ResetPrimaryData(r)
 	}
+
+	// Remove items the transformer deleted from the old map
+	for _, id := range rm.AllIds() {
+		newIdx, _ := newMap.GetIndexOfCurrentId(id)
+		if newIdx == -1 {
+			rm.Remove(id)
+		}
+	}
+
 	return nil
+}
+
+func removeIDAnnotation(r *resource.Resource) {
+	// remove the annotation set by Kustomize to track the resource
+	annotations := r.GetAnnotations()
+	delete(annotations, idAnnotation)
+	if len(annotations) == 0 {
+		annotations = nil
+	}
+	r.SetAnnotations(annotations)
 }
 
 // UpdateResourceOptions updates the generator options for each resource in the

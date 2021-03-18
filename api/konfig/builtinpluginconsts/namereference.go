@@ -3,6 +3,9 @@
 
 package builtinpluginconsts
 
+// TODO: rename 'fieldSpecs' to 'referrers' for clarity.
+// This will, however, break anyone using a custom config.
+
 const (
 	nameReferenceFieldSpecs = `
 nameReference:
@@ -47,6 +50,8 @@ nameReference:
   - path: spec/volumes/projected/sources/configMap/name
     version: v1
     kind: Pod
+  - path: template/spec/volumes/configMap/name
+    kind: PodTemplate
   - path: spec/template/spec/volumes/configMap/name
     kind: Deployment
   - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
@@ -121,6 +126,12 @@ nameReference:
     kind: CronJob
   - path: spec/configSource/configMap
     kind: Node
+  - path: rules/resourceNames
+    kind: Role
+  - path: rules/resourceNames
+    kind: ClusterRole
+  - path: metadata/annotations/nginx.ingress.kubernetes.io\/fastcgi-params-configmap
+    kind: Ingress
 
 - kind: Secret
   version: v1

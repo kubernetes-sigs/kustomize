@@ -6,12 +6,15 @@ package builtins
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -48,7 +51,7 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		return fmt.Errorf("chartName cannot be empty")
 	}
 	if p.ChartHome == "" {
-		p.ChartHome = path.Join(p.tmpDir, "chart")
+		p.ChartHome = filepath.Join(p.tmpDir, "chart")
 	}
 	if p.ChartRepoName == "" {
 		p.ChartRepoName = "stable"
@@ -57,10 +60,13 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		p.HelmBin = "helm"
 	}
 	if p.HelmHome == "" {
-		p.HelmHome = path.Join(p.tmpDir, ".helm")
+		p.HelmHome = filepath.Join(p.tmpDir, ".helm")
 	}
 	if p.Values == "" {
-		p.Values = path.Join(p.ChartHome, p.ChartName, "values.yaml")
+		p.Values = filepath.Join(p.ChartHome, p.ChartName, "values.yaml")
+	}
+	if p.ValuesMerge == "" {
+		p.ValuesMerge = "override"
 	}
 	// runHelmCommand will run `helm` command with args provided. Return stdout
 	// and error if there is any.
@@ -70,7 +76,7 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		cmd := exec.Command(p.HelmBin, args...)
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
-		cmd.Env = append(cmd.Env,
+		cmd.Env = append(os.Environ(),
 			fmt.Sprintf("HELM_CONFIG_HOME=%s", p.HelmHome),
 			fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.HelmHome),
 			fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.HelmHome),
@@ -86,6 +92,94 @@ func (p *HelmChartInflationGeneratorPlugin) Config(h *resmap.PluginHelpers, conf
 		return stdout.Bytes(), nil
 	}
 	return nil
+}
+
+// EncodeValues for writing
+func (p *HelmChartInflationGeneratorPlugin) EncodeValues(w io.Writer) error {
+	d, err := yaml.Marshal(p.ValuesLocal)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(d)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// useValuesLocal process (merge) inflator config provided values with chart default values.yaml
+func (p *HelmChartInflationGeneratorPlugin) useValuesLocal() error {
+	// not override, merge, none
+	if !(p.ValuesMerge == "none" || p.ValuesMerge == "no" || p.ValuesMerge == "false") {
+		var pValues []byte
+		var err error
+
+		if filepath.IsAbs(p.Values) {
+			pValues, err = ioutil.ReadFile(p.Values)
+		} else {
+			pValues, err = p.h.Loader().Load(p.Values)
+		}
+		if err != nil {
+			return err
+		}
+		chValues := make(map[string]interface{})
+		err = yaml.Unmarshal(pValues, &chValues)
+		if err != nil {
+			return err
+		}
+		if p.ValuesMerge == "override" {
+			err = mergo.Merge(&chValues, p.ValuesLocal, mergo.WithOverride)
+			if err != nil {
+				return err
+			}
+		}
+		if p.ValuesMerge == "merge" {
+			err = mergo.Merge(&chValues, p.ValuesLocal)
+			if err != nil {
+				return err
+			}
+		}
+		p.ValuesLocal = chValues
+	}
+	b, err := yaml.Marshal(p.ValuesLocal)
+	if err != nil {
+		return err
+	}
+	path, err := p.writeValuesBytes(b)
+	if err != nil {
+		return err
+	}
+	p.Values = path
+	return nil
+}
+
+// copyValues will copy the relative values file into the temp directory
+// to avoid messing up with CWD.
+func (p *HelmChartInflationGeneratorPlugin) copyValues() error {
+	// only copy when the values path is not absolute
+	if filepath.IsAbs(p.Values) {
+		return nil
+	}
+	// we must use use loader to read values file
+	b, err := p.h.Loader().Load(p.Values)
+	if err != nil {
+		return err
+	}
+	path, err := p.writeValuesBytes(b)
+	if err != nil {
+		return err
+	}
+	p.Values = path
+	return nil
+}
+
+func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(b []byte) (string, error) {
+	path := filepath.Join(p.ChartHome, p.ChartName, "kustomize-values.yaml")
+	err := ioutil.WriteFile(path, b, 0644)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
 }
 
 // Generate implements generator
@@ -104,13 +198,37 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (resmap.ResMap, error) {
 			return nil, err
 		}
 	}
+
+	// inflator config valuesLocal
+	if len(p.ValuesLocal) > 0 {
+		err := p.useValuesLocal()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := p.copyValues()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// render the charts
 	stdout, err := p.runHelmCommand(p.getTemplateCommandArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	return p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	rm, rmfErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	if rmfErr == nil {
+		return rm, nil
+	}
+	// try to remove the contents before first "---" because
+	// helm may produce messages to stdout before it
+	stdoutStr := string(stdout)
+	if idx := strings.Index(stdoutStr, "---"); idx != -1 {
+		return p.h.ResmapFactory().NewResMapFromBytes([]byte(stdoutStr[idx:]))
+	}
+	return nil, rmfErr
 }
 
 func (p *HelmChartInflationGeneratorPlugin) getTemplateCommandArgs() []string {
@@ -118,13 +236,14 @@ func (p *HelmChartInflationGeneratorPlugin) getTemplateCommandArgs() []string {
 	if p.ReleaseName != "" {
 		args = append(args, p.ReleaseName)
 	}
-	args = append(args, path.Join(p.ChartHome, p.ChartName))
+	args = append(args, filepath.Join(p.ChartHome, p.ChartName))
 	if p.ReleaseNamespace != "" {
 		args = append(args, "--namespace", p.ReleaseNamespace)
 	}
 	if p.Values != "" {
 		args = append(args, "--values", p.Values)
 	}
+	args = append(args, p.ExtraArgs...)
 	return args
 }
 
@@ -147,7 +266,7 @@ func (p *HelmChartInflationGeneratorPlugin) getPullCommandArgs() []string {
 // checkLocalChart will return true if the chart does exist in
 // local chart home.
 func (p *HelmChartInflationGeneratorPlugin) checkLocalChart() bool {
-	path := path.Join(p.ChartHome, p.ChartName)
+	path := filepath.Join(p.ChartHome, p.ChartName)
 	s, err := os.Stat(path)
 	if err != nil {
 		return false
@@ -161,11 +280,17 @@ func (p *HelmChartInflationGeneratorPlugin) checkHelmVersion() error {
 	if err != nil {
 		return err
 	}
-	r, err := regexp.Compile(`v\d+(\.\d+)+`)
+	r, err := regexp.Compile(`v?\d+(\.\d+)+`)
 	if err != nil {
 		return err
 	}
-	v := string(r.Find(stdout))[1:]
+	v := r.FindString(string(stdout))
+	if v == "" {
+		return fmt.Errorf("cannot find version string in %s", string(stdout))
+	}
+	if v[0] == 'v' {
+		v = v[1:]
+	}
 	majorVersion := strings.Split(v, ".")[0]
 	if majorVersion != "3" {
 		return fmt.Errorf("this plugin requires helm V3 but got v%s", v)

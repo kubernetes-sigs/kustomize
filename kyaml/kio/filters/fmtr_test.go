@@ -463,7 +463,7 @@ spec:
 // TestFormatInput_service verifies a Service yaml is formatted correctly
 func TestFormatInput_validatingWebhookConfiguration(t *testing.T) {
 	y := `
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: <name of this configuration object>
@@ -490,7 +490,7 @@ webhooks:
   - v1beta1
   timeoutSeconds: 1
 `
-	expected := `apiVersion: admissionregistration.k8s.io/v1beta1
+	expected := `apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: <name of this configuration object>

@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -25,15 +25,12 @@ type List struct {
 	Setters []SetterDefinition
 
 	Substitutions []SubstitutionDefinition
+
+	SettersSchema *spec.Schema
 }
 
 // ListSetters initializes l.Setters with the setters from the OpenAPI definitions in the file
 func (l *List) ListSetters(openAPIPath, resourcePath string) error {
-	clean, err := openapi.AddSchemaFromFile(openAPIPath)
-	if err != nil {
-		return err
-	}
-	defer clean()
 	y, err := yaml.ReadFile(openAPIPath)
 	if err != nil {
 		return err
@@ -43,11 +40,6 @@ func (l *List) ListSetters(openAPIPath, resourcePath string) error {
 
 // ListSubst initializes l.Substitutions with the substitutions from the OpenAPI definitions in the file
 func (l *List) ListSubst(openAPIPath string) error {
-	clean, err := openapi.AddSchemaFromFile(openAPIPath)
-	if err != nil {
-		return err
-	}
-	defer clean()
 	y, err := yaml.ReadFile(openAPIPath)
 	if err != nil {
 		return err
@@ -193,7 +185,7 @@ func (l *List) listSubst(object *yaml.RNode) error {
 // set filter is leveraged for this but the resources are not written
 // back to files as only LocalPackageReader is invoked and not writer
 func (l *List) count(path, name string) (int, error) {
-	s := &Set{Name: name}
+	s := &Set{Name: name, SettersSchema: l.SettersSchema}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: path, PackageFileName: l.OpenAPIFileName}},
 		Filters: []kio.Filter{kio.FilterAll(s)},

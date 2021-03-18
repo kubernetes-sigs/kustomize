@@ -12,6 +12,8 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+//add tests for https://github.com/kubernetes-sigs/kustomize/pull/3713 if you plan to re-enable tests
+
 func TestHelmChartInflationGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("HelmChartInflationGenerator")
@@ -23,7 +25,7 @@ kind: HelmChartInflationGenerator
 metadata:
   name: myMap
 chartName: minecraft
-chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+chartRepoUrl: https://charts.helm.sh/stable
 chartVersion: v1.2.0
 releaseName: test
 releaseNamespace: testNamespace
@@ -105,7 +107,7 @@ kind: HelmChartInflationGenerator
 metadata:
   name: myMap
 chartName: minecraft
-chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+chartRepoUrl: https://charts.helm.sh/stable
 chartVersion: v1.2.0
 helmBin: helm
 helmHome: %s
@@ -113,6 +115,14 @@ chartHome: %s
 releaseName: test
 releaseNamespace: testNamespace
 values: %s
+valuesLocal:
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 1000m
+    requests:
+      memory: 512Mi
+      cpu: 200m
 `, tempDir, tempDir, valuesPath))
 
 	th.AssertActualEqualsExpected(rm, `
@@ -282,8 +292,11 @@ spec:
           successThreshold: 1
           timeoutSeconds: 1
         resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
           requests:
-            cpu: 500m
+            cpu: 200m
             memory: 512Mi
         volumeMounts:
         - mountPath: /data

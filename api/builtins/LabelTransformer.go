@@ -7,7 +7,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/labels"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/filtersutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -25,11 +24,14 @@ func (p *LabelTransformerPlugin) Config(
 }
 
 func (p *LabelTransformerPlugin) Transform(m resmap.ResMap) error {
+	if len(p.Labels) == 0 {
+		return nil
+	}
 	for _, r := range m.Resources() {
-		err := filtersutil.ApplyToJSON(labels.Filter{
+		err := r.ApplyFilter(labels.Filter{
 			Labels:  p.Labels,
 			FsSlice: p.FieldSpecs,
-		}, r)
+		})
 		if err != nil {
 			return err
 		}

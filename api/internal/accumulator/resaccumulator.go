@@ -41,13 +41,11 @@ func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.AsSlice()
 }
 
-func (ra *ResAccumulator) AppendAll(
-	resources resmap.ResMap) error {
+func (ra *ResAccumulator) AppendAll(resources resmap.ResMap) error {
 	return ra.resMap.AppendAll(resources)
 }
 
-func (ra *ResAccumulator) AbsorbAll(
-	resources resmap.ResMap) error {
+func (ra *ResAccumulator) AbsorbAll(resources resmap.ResMap) error {
 	return ra.resMap.AbsorbAll(resources)
 }
 
@@ -61,6 +59,15 @@ func (ra *ResAccumulator) GetTransformerConfig() *builtinconfig.TransformerConfi
 	return ra.tConfig
 }
 
+// MergeVars accumulates vars into ResAccumulator.
+// A Var is a tuple of name, object reference and field reference.
+// This func takes a list of vars from the current kustomization file and
+// annotates the accumulated resources with the names of the vars that match
+// those resources.  E.g. if there's a var named "sam" that wants to get
+// its data from a ConfigMap named "james", and the resource list contains a
+// ConfigMap named "james", then that ConfigMap will be annotated with the
+// var name "sam".  Later this annotation is used to find the data for "sam"
+// by digging into a particular fieldpath of "james".
 func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	for _, v := range incoming {
 		targetId := resid.NewResIdWithNamespace(v.ObjRef.GVK(), v.ObjRef.Name, v.ObjRef.Namespace)
@@ -70,7 +77,7 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 			// wildcard search on the namespace hence we still use GvknEquals
 			idMatcher = targetId.Equals
 		}
-		matched := ra.resMap.GetMatchingResourcesByOriginalId(idMatcher)
+		matched := ra.resMap.GetMatchingResourcesByAnyId(idMatcher)
 		if len(matched) > 1 {
 			return fmt.Errorf(
 				"found %d resId matches for var %s "+
@@ -106,12 +113,10 @@ func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, e
 						"field specified in var '%v' "+
 							"not found in corresponding resource", v)
 				}
-
 				return s, nil
 			}
 		}
 	}
-
 	return "", fmt.Errorf(
 		"var '%v' cannot be mapped to a field "+
 			"in the set of known resources", v)
@@ -127,10 +132,8 @@ func (ra *ResAccumulator) makeVarReplacementMap() (map[string]interface{}, error
 		if err != nil {
 			return nil, err
 		}
-
 		result[v.Name] = s
 	}
-
 	return result, nil
 }
 
@@ -161,6 +164,6 @@ func (ra *ResAccumulator) FixBackReferences() (err error) {
 	if ra.tConfig.NameReference == nil {
 		return nil
 	}
-	return ra.Transform(newNameReferenceTransformer(
-		ra.tConfig.NameReference))
+	return ra.Transform(
+		newNameReferenceTransformer(ra.tConfig.NameReference))
 }

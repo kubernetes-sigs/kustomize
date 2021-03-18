@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // A Transformer modifies an instance of ResMap.
@@ -79,6 +80,9 @@ type TransformerPlugin interface {
 // resource to transform, try the OrgId first, and if this
 // fails or finds too many, it might make sense to then try
 // the CurrId.  Depends on the situation.
+//
+// TODO: get rid of this interface (use bare resWrangler).
+// There aren't multiple implementations any more.
 type ResMap interface {
 	// Size reports the number of resources.
 	Size() int
@@ -141,24 +145,18 @@ type ResMap interface {
 	// who's CurId is matched by the argument.
 	GetMatchingResourcesByCurrentId(matches IdMatcher) []*resource.Resource
 
-	// GetMatchingResourcesByOriginalId returns the resources
-	// who's OriginalId is matched by the argument.
-	GetMatchingResourcesByOriginalId(matches IdMatcher) []*resource.Resource
+	// GetMatchingResourcesByAnyId returns the resources
+	// who's current or previous IDs is matched by the argument.
+	GetMatchingResourcesByAnyId(matches IdMatcher) []*resource.Resource
 
 	// GetByCurrentId is shorthand for calling
 	// GetMatchingResourcesByCurrentId with a matcher requiring
 	// an exact match, returning an error on multiple or no matches.
 	GetByCurrentId(resid.ResId) (*resource.Resource, error)
 
-	// GetByOriginalId is shorthand for calling
-	// GetMatchingResourcesByOriginalId with a matcher requiring
+	// GetById is shorthand for calling
+	// GetMatchingResourcesByAnyId with a matcher requiring
 	// an exact match, returning an error on multiple or no matches.
-	GetByOriginalId(resid.ResId) (*resource.Resource, error)
-
-	// GetById is a helper function which first
-	// attempts GetByOriginalId, then GetByCurrentId,
-	// returning an error if both fail to find a single
-	// match.
 	GetById(resid.ResId) (*resource.Resource, error)
 
 	// GroupedByCurrentNamespace returns a map of namespace
@@ -193,6 +191,9 @@ type ResMap interface {
 
 	// Clear removes all resources and Ids.
 	Clear()
+
+	// DropEmpties drops empty resources from the ResMap.
+	DropEmpties()
 
 	// SubsetThatCouldBeReferencedByResource returns a ResMap subset
 	// of self with resources that could be referenced by the
@@ -235,4 +236,15 @@ type ResMap interface {
 	// Select returns a list of resources that
 	// are selected by a Selector
 	Select(types.Selector) ([]*resource.Resource, error)
+
+	// ToRNodeSlice returns a copy of the resources as RNodes.
+	ToRNodeSlice() []*yaml.RNode
+
+	// ApplySmPatch applies a strategic-merge patch to the
+	// selected set of resources.
+	ApplySmPatch(
+		selectedSet *resource.IdSet, patch *resource.Resource) error
+
+	// RemoveBuildAnnotations removes annotations created by the build process.
+	RemoveBuildAnnotations()
 }

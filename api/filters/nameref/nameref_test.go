@@ -5,24 +5,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestNamerefFilter(t *testing.T) {
 	testCases := map[string]struct {
-		input         string
-		candidates    string
-		expected      string
-		filter        Filter
-		originalNames []string
+		referrerOriginal string
+		candidates       string
+		referrerFinal    string
+		filter           Filter
+		originalNames    []string
 	}{
 		"simple scalar": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,8 +40,8 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName", ""},
-			expected: `
+			originalNames: []string{"oldName", "newName2"},
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,8 +50,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -60,7 +59,7 @@ ref:
 			},
 		},
 		"sequence": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,8 +79,8 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName1", ""},
-			expected: `
+			originalNames: []string{"oldName1", "newName2"},
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -91,8 +90,8 @@ seq:
 - oldName2
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "seq"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "seq"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -100,7 +99,7 @@ seq:
 			},
 		},
 		"mapping": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -119,8 +118,8 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName", ""},
-			expected: `
+			originalNames: []string{"oldName", "newName2"},
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -129,8 +128,8 @@ map:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "map"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "map"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -138,40 +137,47 @@ map:
 			},
 		},
 		"mapping with namespace": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dep
+  namespace: someNs
 map:
   name: oldName
-  namespace: oldNs
+  namespace: someNs
 `,
 			candidates: `
 apiVersion: apps/v1
 kind: Secret
 metadata:
   name: newName
-  namespace: oldNs
+  namespace: someNs
 ---
 apiVersion: apps/v1
 kind: NotSecret
 metadata:
   name: newName2
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: thirdName
 `,
-			originalNames: []string{"oldName", ""},
-			expected: `
+			originalNames: []string{"oldName", "oldName", "oldName"},
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dep
+  namespace: someNs
 map:
   name: newName
-  namespace: oldNs
+  namespace: someNs
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "map"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "map"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -179,7 +185,7 @@ map:
 			},
 		},
 		"null value": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -198,8 +204,8 @@ kind: NotSecret
 metadata:
   name: newName2
 `,
-			originalNames: []string{"oldName", ""},
-			expected: `
+			originalNames: []string{"oldName", "newName2"},
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -208,8 +214,8 @@ map:
   name: null
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "map"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "map"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -220,14 +226,14 @@ map:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-			referrer, err := factory.FromBytes([]byte(tc.input))
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
+			referrer, err := factory.FromBytes([]byte(tc.referrerOriginal))
 			if err != nil {
 				t.Fatal(err)
 			}
 			tc.filter.Referrer = referrer
 
-			resMapFactory := resmap.NewFactory(factory, nil)
+			resMapFactory := resmap.NewFactory(factory)
 			candidatesRes, err := factory.SliceFromBytesWithNames(
 				tc.originalNames, []byte(tc.candidates))
 			if err != nil {
@@ -237,10 +243,10 @@ map:
 			candidates := resMapFactory.FromResourceSlice(candidatesRes)
 			tc.filter.ReferralCandidates = candidates
 
+			result := filtertest_test.RunFilter(t, tc.referrerOriginal, tc.filter)
 			if !assert.Equal(t,
-				strings.TrimSpace(tc.expected),
-				strings.TrimSpace(
-					filtertest_test.RunFilter(t, tc.input, tc.filter))) {
+				strings.TrimSpace(tc.referrerFinal),
+				strings.TrimSpace(result)) {
 				t.FailNow()
 			}
 		})
@@ -249,14 +255,14 @@ map:
 
 func TestNamerefFilterUnhappy(t *testing.T) {
 	testCases := map[string]struct {
-		input         string
-		candidates    string
-		expected      string
-		filter        Filter
-		originalNames []string
+		referrerOriginal string
+		candidates       string
+		referrerFinal    string
+		filter           Filter
+		originalNames    []string
 	}{
 		"multiple match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -276,10 +282,10 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", "oldName"},
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -287,7 +293,7 @@ metadata:
 			},
 		},
 		"no name": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -307,10 +313,10 @@ metadata:
   name: newName2
 `,
 			originalNames: []string{"oldName", "oldName"},
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -321,14 +327,14 @@ metadata:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-			referrer, err := factory.FromBytes([]byte(tc.input))
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
+			referrer, err := factory.FromBytes([]byte(tc.referrerOriginal))
 			if err != nil {
 				t.Fatal(err)
 			}
 			tc.filter.Referrer = referrer
 
-			resMapFactory := resmap.NewFactory(factory, nil)
+			resMapFactory := resmap.NewFactory(factory)
 			candidatesRes, err := factory.SliceFromBytesWithNames(
 				tc.originalNames, []byte(tc.candidates))
 			if err != nil {
@@ -338,11 +344,11 @@ metadata:
 			candidates := resMapFactory.FromResourceSlice(candidatesRes)
 			tc.filter.ReferralCandidates = candidates
 
-			_, err = filtertest_test.RunFilterE(t, tc.input, tc.filter)
+			_, err = filtertest_test.RunFilterE(t, tc.referrerOriginal, tc.filter)
 			if err == nil {
 				t.Fatalf("expect an error")
 			}
-			if tc.expected != "" && !assert.EqualError(t, err, tc.expected) {
+			if tc.referrerFinal != "" && !assert.EqualError(t, err, tc.referrerFinal) {
 				t.FailNow()
 			}
 		})
@@ -351,19 +357,19 @@ metadata:
 
 func TestCandidatesWithDifferentPrefixSuffix(t *testing.T) {
 	testCases := map[string]struct {
-		input         string
-		candidates    string
-		expected      string
-		filter        Filter
-		originalNames []string
-		prefix        []string
-		suffix        []string
-		inputPrefix   string
-		inputSuffix   string
-		err           bool
+		referrerOriginal string
+		candidates       string
+		referrerFinal    string
+		filter           Filter
+		originalNames    []string
+		prefix           []string
+		suffix           []string
+		inputPrefix      string
+		inputSuffix      string
+		err              bool
 	}{
 		"prefix match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -387,7 +393,7 @@ metadata:
 			suffix:        []string{"", "suffix2"},
 			inputPrefix:   "prefix1",
 			inputSuffix:   "",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -396,8 +402,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -406,7 +412,7 @@ ref:
 			err: false,
 		},
 		"suffix match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -430,7 +436,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "",
 			inputSuffix:   "suffix1",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -439,8 +445,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -449,7 +455,7 @@ ref:
 			err: false,
 		},
 		"prefix suffix both match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -473,7 +479,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "prefix1",
 			inputSuffix:   "suffix1",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -482,8 +488,8 @@ ref:
   name: newName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -492,7 +498,7 @@ ref:
 			err: false,
 		},
 		"multiple match: both": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -516,10 +522,10 @@ metadata:
 			suffix:        []string{"suffix", "suffix"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -528,7 +534,7 @@ metadata:
 			err: true,
 		},
 		"multiple match: only prefix": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -552,10 +558,10 @@ metadata:
 			suffix:        []string{"", ""},
 			inputPrefix:   "prefix",
 			inputSuffix:   "",
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -564,7 +570,7 @@ metadata:
 			err: true,
 		},
 		"multiple match: only suffix": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -588,10 +594,10 @@ metadata:
 			suffix:        []string{"suffix", "suffix"},
 			inputPrefix:   "",
 			inputSuffix:   "suffix",
-			expected:      "",
+			referrerFinal: "",
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -600,7 +606,7 @@ metadata:
 			err: true,
 		},
 		"no match: neither match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -624,7 +630,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -633,8 +639,8 @@ ref:
   name: oldName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -643,7 +649,7 @@ ref:
 			err: false,
 		},
 		"no match: prefix doesn't match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -667,7 +673,7 @@ metadata:
 			suffix:        []string{"suffix", "suffix"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -676,8 +682,8 @@ ref:
   name: oldName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -686,7 +692,7 @@ ref:
 			err: false,
 		},
 		"no match: suffix doesn't match": {
-			input: `
+			referrerOriginal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -710,7 +716,7 @@ metadata:
 			suffix:        []string{"suffix1", "suffix2"},
 			inputPrefix:   "prefix",
 			inputSuffix:   "suffix",
-			expected: `
+			referrerFinal: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -719,8 +725,8 @@ ref:
   name: oldName
 `,
 			filter: Filter{
-				FieldSpec: types.FieldSpec{Path: "ref/name"},
-				Target: resid.Gvk{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",
 					Kind:    "Secret",
@@ -732,8 +738,8 @@ ref:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			factory := resource.NewFactory(kunstruct.NewKunstructuredFactoryImpl())
-			referrer, err := factory.FromBytes([]byte(tc.input))
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
+			referrer, err := factory.FromBytes([]byte(tc.referrerOriginal))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -745,7 +751,7 @@ ref:
 			}
 			tc.filter.Referrer = referrer
 
-			resMapFactory := resmap.NewFactory(factory, nil)
+			resMapFactory := resmap.NewFactory(factory)
 			candidatesRes, err := factory.SliceFromBytesWithNames(
 				tc.originalNames, []byte(tc.candidates))
 			if err != nil {
@@ -765,13 +771,15 @@ ref:
 
 			if !tc.err {
 				if !assert.Equal(t,
-					strings.TrimSpace(tc.expected),
+					strings.TrimSpace(tc.referrerFinal),
 					strings.TrimSpace(
-						filtertest_test.RunFilter(t, tc.input, tc.filter))) {
+						filtertest_test.RunFilter(
+							t, tc.referrerOriginal, tc.filter))) {
 					t.FailNow()
 				}
 			} else {
-				_, err := filtertest_test.RunFilterE(t, tc.input, tc.filter)
+				_, err := filtertest_test.RunFilterE(
+					t, tc.referrerOriginal, tc.filter)
 				if err == nil {
 					t.Fatalf("an error is expected")
 				}

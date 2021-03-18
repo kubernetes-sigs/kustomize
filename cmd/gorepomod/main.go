@@ -27,25 +27,34 @@ func loadRepoManager(args *arguments.Args) (*repo.Manager, error) {
 	return pr.NewRepoManager(), nil
 }
 
+func findModule(
+	name misc.ModuleShortName, mgr *repo.Manager) (m misc.LaModule, err error) {
+	if name != misc.ModuleUnknown {
+		m = mgr.FindModule(name)
+		if m == nil {
+			return nil, fmt.Errorf(
+				"cannot find module %q in repo %s", name, mgr.RepoPath())
+		}
+	}
+	return
+}
+
 func actualMain() error {
 	args, err := arguments.Parse()
 	if err != nil {
 		return err
 	}
-
 	mgr, err := loadRepoManager(args)
 	if err != nil {
 		return err
 	}
-
-	var targetModule misc.LaModule = nil
-	if args.ModuleName() != misc.ModuleUnknown {
-		targetModule = mgr.FindModule(args.ModuleName())
-		if targetModule == nil {
-			return fmt.Errorf(
-				"cannot find module %q in repo %s",
-				args.ModuleName(), mgr.RepoPath())
-		}
+	targetModule, err := findModule(args.ModuleName(), mgr)
+	if err != nil {
+		return err
+	}
+	conditionalModule, err := findModule(args.ConditionalModule(), mgr)
+	if err != nil {
+		return err
 	}
 
 	switch args.GetCommand() {
@@ -60,7 +69,7 @@ func actualMain() error {
 		}
 		return mgr.Pin(args.DoIt(), targetModule, v)
 	case arguments.UnPin:
-		return mgr.UnPin(args.DoIt(), targetModule)
+		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 	case arguments.Release:
 		return mgr.Release(targetModule, args.Bump(), args.DoIt())
 	case arguments.UnRelease:

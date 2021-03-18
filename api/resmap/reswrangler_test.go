@@ -4,12 +4,14 @@
 package resmap_test
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -17,9 +19,9 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-var rf = resource.NewFactory(
-	kunstruct.NewKunstructuredFactoryImpl())
-var rmF = NewFactory(rf, nil)
+var depProvider = provider.NewDefaultDepProvider()
+var rf = depProvider.GetResourceFactory()
+var rmF = NewFactory(rf)
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
 	err := w.Append(r)
@@ -190,6 +192,8 @@ metadata:
 }
 
 func TestGetMatchingResourcesByCurrentId(t *testing.T) {
+	cmap := resid.Gvk{Version: "v1", Kind: "ConfigMap"}
+
 	r1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -320,6 +324,138 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 	}
 	for _, tst := range tests {
 		result := m.GetMatchingResourcesByCurrentId(tst.matcher)
+		if len(result) != tst.count {
+			t.Fatalf("test '%s';  actual: %d, expected: %d",
+				tst.name, len(result), tst.count)
+		}
+	}
+}
+
+func TestGetMatchingResourcesByAnyId(t *testing.T) {
+	r1 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "new-alice",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
+					"config.kubernetes.io/previousNames":      "alice",
+					"config.kubernetes.io/previousNamespaces": "default",
+				},
+			},
+		})
+	r2 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "new-bob",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap,ConfigMap",
+					"config.kubernetes.io/previousNames":      "bob,bob2",
+					"config.kubernetes.io/previousNamespaces": "default,default",
+				},
+			},
+		})
+	r3 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "new-bob",
+				"namespace": "new-happy",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
+					"config.kubernetes.io/previousNames":      "bob",
+					"config.kubernetes.io/previousNamespaces": "happy",
+				},
+			},
+		})
+	r4 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+				"annotations": map[string]interface{}{
+					"config.kubernetes.io/previousKinds":      "ConfigMap",
+					"config.kubernetes.io/previousNames":      "charlie",
+					"config.kubernetes.io/previousNamespaces": "default",
+				},
+			},
+		})
+	r5 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      "charlie",
+				"namespace": "happy",
+			},
+		})
+
+	m := resmaptest_test.NewRmBuilder(t, rf).
+		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
+
+	// nolint:goconst
+	tests := []struct {
+		name    string
+		matcher IdMatcher
+		count   int
+	}{
+		{
+			"match everything",
+			func(resid.ResId) bool { return true },
+			5,
+		},
+		{
+			"match nothing",
+			func(resid.ResId) bool { return false },
+			0,
+		},
+		{
+			"name is alice",
+			func(x resid.ResId) bool { return x.Name == "alice" },
+			1,
+		},
+		{
+			"name is charlie",
+			func(x resid.ResId) bool { return x.Name == "charlie" },
+			2,
+		},
+		{
+			"name is bob",
+			func(x resid.ResId) bool { return x.Name == "bob" },
+			2,
+		},
+		{
+			"happy namespace",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy"
+			},
+			3,
+		},
+		{
+			"happy deployment",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy" &&
+					x.Gvk.Kind == "Deployment"
+			},
+			1,
+		},
+		{
+			"happy ConfigMap",
+			func(x resid.ResId) bool {
+				return x.Namespace == "happy" &&
+					x.Gvk.Kind == "ConfigMap"
+			},
+			2,
+		},
+	}
+	for _, tst := range tests {
+		result := m.GetMatchingResourcesByAnyId(tst.matcher)
 		if len(result) != tst.count {
 			t.Fatalf("test '%s';  actual: %d, expected: %d",
 				tst.name, len(result), tst.count)
@@ -686,49 +822,529 @@ func makeMap2(b types.GenerationBehavior) ResMap {
 }
 
 func TestAbsorbAll(t *testing.T) {
+	metadata := map[string]interface{}{
+		"name": "cmap",
+	}
 	expected := rmF.FromResource(rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"annotations": map[string]interface{}{},
-				"labels":      map[string]interface{}{},
-				"name":        "cmap",
-			},
+			"metadata":   metadata,
 			"data": map[string]interface{}{
 				"a": "u",
 				"b": "v",
 				"c": "w",
 			},
-		}, &types.GeneratorArgs{
+		},
+		&types.GeneratorArgs{
 			Behavior: "create",
 		}))
 	w := makeMap1()
-	if err := w.AbsorbAll(makeMap2(types.BehaviorMerge)); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := expected.ErrorIfNotEqualLists(w); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(makeMap2(types.BehaviorMerge)))
+	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
 	w = makeMap1()
-	if err := w.AbsorbAll(nil); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w.ErrorIfNotEqualLists(makeMap1()); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(nil))
+	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1()))
+
 	w = makeMap1()
 	w2 := makeMap2(types.BehaviorReplace)
-	if err := w.AbsorbAll(w2); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if err := w2.ErrorIfNotEqualLists(w); err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, w.AbsorbAll(w2))
+	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
 	w = makeMap1()
 	w2 = makeMap2(types.BehaviorUnspecified)
 	err := w.AbsorbAll(w2)
-	if err == nil {
-		t.Fatalf("expected error with unspecified behavior")
+	assert.Error(t, err)
+	assert.True(
+		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
+}
+
+func TestToRNodeSlice(t *testing.T) {
+	input := `apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-reader
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+`
+	rm, err := rmF.NewResMapFromBytes([]byte(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
+	b := bytes.NewBufferString("")
+	for i, n := range rm.ToRNodeSlice() {
+		if i != 0 {
+			b.WriteString("---\n")
+		}
+		s, err := n.String()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		b.WriteString(s)
+	}
+
+	if !reflect.DeepEqual(input, b.String()) {
+		t.Fatalf("actual doesn't match expected.\nActual:\n%s\n===\nExpected:\n%s\n",
+			b.String(), input)
+	}
+}
+
+func TestApplySmPatch_General(t *testing.T) {
+	const (
+		myDeployment      = "Deployment"
+		myCRD             = "myCRD"
+		expectedResultSMP = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        image: nginx
+        name: nginx
+`
+	)
+	tests := map[string]struct {
+		base          []string
+		patches       []string
+		expected      []string
+		errorExpected bool
+		errorMsg      string
+	}{
+		"clown": {
+			base: []string{`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 1
+`,
+			},
+			patches: []string{`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`,
+			},
+			errorExpected: false,
+			expected: []string{
+				`apiVersion: v1
+kind: Deployment
+metadata:
+  name: clown
+spec:
+  numReplicas: 999
+`,
+			},
+		},
+		"confusion": {
+			base: []string{`apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    B: Y
+`,
+			},
+			patches: []string{`apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    B:
+    C: Z
+`, `apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+			},
+			errorExpected: false,
+			expected: []string{
+				`apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    C: Z
+    D: W
+  baz:
+    hello: world
+`,
+			},
+		},
+		"withschema-ns1-ns2-one": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+				addNamespace("ns2", baseResource(myDeployment)),
+			},
+			patches: []string{
+				addNamespace("ns1", addLabelAndEnvPatch(myDeployment)),
+				addNamespace("ns2", addLabelAndEnvPatch(myDeployment)),
+			},
+			errorExpected: false,
+			expected: []string{
+				addNamespace("ns1", expectedResultSMP),
+				addNamespace("ns2", expectedResultSMP),
+			},
+		},
+		"withschema-ns1-ns2-two": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+			patches: []string{
+				addNamespace("ns2", changeImagePatch(myDeployment)),
+			},
+			expected: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+		},
+		"withschema-ns1-ns2-three": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+			patches: []string{
+				addNamespace("ns1", changeImagePatch(myDeployment)),
+			},
+			expected: []string{
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  namespace: ns1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+`,
+			},
+		},
+		"withschema-nil-ns2": {
+			base: []string{
+				baseResource(myDeployment),
+			},
+			patches: []string{
+				addNamespace("ns2", changeImagePatch(myDeployment)),
+			},
+			expected: []string{
+				baseResource(myDeployment),
+			},
+		},
+		"withschema-ns1-nil": {
+			base: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+			patches: []string{
+				changeImagePatch(myDeployment),
+			},
+			expected: []string{
+				addNamespace("ns1", baseResource(myDeployment)),
+			},
+		},
+		"noschema-ns1-ns2-one": {
+			base: []string{
+				addNamespace("ns1", baseResource(myCRD)),
+				addNamespace("ns2", baseResource(myCRD)),
+			},
+			patches: []string{
+				addNamespace("ns1", addLabelAndEnvPatch(myCRD)),
+				addNamespace("ns2", addLabelAndEnvPatch(myCRD)),
+			},
+			errorExpected: false,
+			expected: []string{
+				addNamespace("ns1", expectedResultJMP("")),
+				addNamespace("ns2", expectedResultJMP("")),
+			},
+		},
+		"noschema-ns1-ns2-two": {
+			base:     []string{addNamespace("ns1", baseResource(myCRD))},
+			patches:  []string{addNamespace("ns2", changeImagePatch(myCRD))},
+			expected: []string{addNamespace("ns1", baseResource(myCRD))},
+		},
+		"noschema-nil-ns2": {
+			base:     []string{baseResource(myCRD)},
+			patches:  []string{addNamespace("ns2", changeImagePatch(myCRD))},
+			expected: []string{baseResource(myCRD)},
+		},
+		"noschema-ns1-nil": {
+			base:     []string{addNamespace("ns1", baseResource(myCRD))},
+			patches:  []string{changeImagePatch(myCRD)},
+			expected: []string{addNamespace("ns1", baseResource(myCRD))},
+		},
+	}
+	for n := range tests {
+		tc := tests[n]
+		t.Run(n, func(t *testing.T) {
+			m, err := rmF.NewResMapFromBytes([]byte(strings.Join(tc.base, "\n---\n")))
+			assert.NoError(t, err)
+			foundError := false
+			for _, patch := range tc.patches {
+				rp, err := rf.FromBytes([]byte(patch))
+				assert.NoError(t, err)
+				idSet := resource.MakeIdSet([]*resource.Resource{rp})
+				if err = m.ApplySmPatch(idSet, rp); err != nil {
+					foundError = true
+					break
+				}
+			}
+			if foundError {
+				assert.True(t, tc.errorExpected)
+				// compare error message?
+				return
+			}
+			assert.False(t, tc.errorExpected)
+			m.RemoveBuildAnnotations()
+			yml, err := m.AsYaml()
+			assert.NoError(t, err)
+			assert.Equal(t, strings.Join(tc.expected, "---\n"), string(yml))
+		})
+	}
+}
+
+// simple utility function to add an namespace in a resource
+// used as base, patch or expected result. Simply looks
+// for specs: in order to add namespace: xxxx before this line
+func addNamespace(namespace string, base string) string {
+	res := strings.Replace(base,
+		"\nspec:\n",
+		"\n  namespace: "+namespace+"\nspec:\n",
+		1)
+	return res
+}
+
+func TestApplySmPatch_Deletion(t *testing.T) {
+	target := `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`
+	tests := map[string]struct {
+		patch        string
+		expected     string
+		finalMapSize int
+	}{
+		"delete1": {
+			patch: `apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  replica: 2
+  template:
+    $patch: delete
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  replica: 2
+`,
+			finalMapSize: 1,
+		},
+		"delete2": {
+			patch: `apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  $patch: delete
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+`,
+			finalMapSize: 1,
+		},
+		"delete3": {
+			patch: `apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+$patch: delete
+`,
+			expected:     "",
+			finalMapSize: 0,
+		},
+	}
+	for name := range tests {
+		tc := tests[name]
+		t.Run(name, func(t *testing.T) {
+			m, err := rmF.NewResMapFromBytes([]byte(target))
+			assert.NoError(t, err, name)
+			idSet := resource.MakeIdSet(m.Resources())
+			assert.Equal(t, 1, idSet.Size(), name)
+			p, err := rf.FromBytes([]byte(tc.patch))
+			assert.NoError(t, err, name)
+			assert.NoError(t, m.ApplySmPatch(idSet, p), name)
+			assert.Equal(t, tc.finalMapSize, m.Size(), name)
+			m.RemoveBuildAnnotations()
+			yml, err := m.AsYaml()
+			assert.NoError(t, err, name)
+			assert.Equal(t, tc.expected, string(yml), name)
+		})
+	}
+}
+
+// baseResource produces a base object which used to test
+// patch transformation
+// Also the structure is matching the Deployment syntax
+// the kind can be replaced to allow testing using CRD
+// without access to the schema
+func baseResource(kind string) string {
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: %s
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, kind)
+}
+
+// addContainerAndEnvPatch produces a patch object which adds
+// an entry in the env slice of the first/nginx container
+// as well as adding a label in the metadata
+// Note that for SMP/WithSchema merge, the name:nginx entry
+// is mandatory
+func addLabelAndEnvPatch(kind string) string {
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: %s
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        some-label: some-value
+    spec:
+      containers:
+       - name: nginx
+         env:
+         - name: SOMEENV
+           value: SOMEVALUE`, kind)
+}
+
+// changeImagePatch produces a patch object which replaces
+// the value of the image field in the first/nginx container
+// Note that for SMP/WithSchema merge, the name:nginx entry
+// is mandatory
+func changeImagePatch(kind string) string {
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: %s
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: "nginx:1.7.9"`, kind)
+}
+
+// utility method building the expected output of a JMP.
+// imagename parameter allows to build a result consistent
+// with the JMP behavior which basically overrides the
+// entire "containers" list.
+func expectedResultJMP(imagename string) string {
+	if imagename == "" {
+		return `apiVersion: apps/v1
+kind: myCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        name: nginx
+`
+	}
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: myCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - image: %s
+        name: nginx
+`, imagename)
 }

@@ -11,7 +11,7 @@ import (
 
 func TestNamespacedGenerator(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 configMapGenerator:
@@ -34,7 +34,7 @@ secretGenerator:
   literals:
   - password.txt=anotherSecret
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -74,15 +74,15 @@ type: Opaque
 
 func TestNamespacedGeneratorWithOverlays(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namespace: base
 
 configMapGenerator:
 - name: testCase
   literals:
-    - base=true
+    - base=apple
 `)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 resources:
   - ../base
 
@@ -92,19 +92,17 @@ configMapGenerator:
   - name: testCase
     behavior: merge
     literals:
-      - overlay=true
+      - overlay=peach
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  base: "true"
-  overlay: "true"
+  base: apple
+  overlay: peach
 kind: ConfigMap
 metadata:
-  annotations: {}
-  labels: {}
-  name: testCase-bcbmmg48hd
+  name: testCase-gmfch8gkbt
   namespace: overlay
 `)
 }

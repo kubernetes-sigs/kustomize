@@ -4,34 +4,22 @@
 package framework
 
 import (
-	"bytes"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// ResourceList reads the function input and writes the function output.
-//
-// Adheres to the spec: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
+// ResourceList is a Kubernetes list type used as the primary data interchange format
+// in the Configuration Functions Specification:
+// https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
+// This framework facilitates building functions that receive and emit ResourceLists,
+// as required by the specification.
 type ResourceList struct {
-	// FunctionConfig is the ResourceList.functionConfig input value.  If FunctionConfig
-	// is set to a value such as a struct or map[string]interface{} before ResourceList.Read()
-	// is called, then the functionConfig will be parsed into that value.
-	// If it is nil, the functionConfig will be set to a map[string]interface{}
-	// before it is parsed.
+	// FunctionConfig is the ResourceList.functionConfig input value.
 	//
-	// e.g. given the function input:
+	// e.g. given the input:
 	//
 	//    kind: ResourceList
 	//    functionConfig:
@@ -39,11 +27,13 @@ type ResourceList struct {
 	//      spec:
 	//        foo: var
 	//
-	// FunctionConfig will contain the Example unmarshalled into its value.
-	FunctionConfig interface{}
+	// FunctionConfig will contain the RNodes for the Example:
+	//      kind: Example
+	//      spec:
+	//        foo: var
+	FunctionConfig *yaml.RNode `yaml:"functionConfig" json:"functionConfig"`
 
-	// Items is the ResourceList.items input and output value.  Items will be set by
-	// ResourceList.Read() and written by ResourceList.Write().
+	// Items is the ResourceList.items input and output value.
 	//
 	// e.g. given the function input:
 	//
@@ -55,350 +45,102 @@ type ResourceList struct {
 	//      ...
 	//
 	// Items will be a slice containing the Deployment and Service resources
-	Items []*yaml.RNode
+	// Mutating functions will alter this field during processing.
+	Items []*yaml.RNode `yaml:"items" json:"items"`
 
-	// Result is ResourceList.result output value.  Result will be written by
-	// ResourceList.Write()
-	Result *Result
-
-	// DisableStandalone if set will not support standalone mode
-	DisableStandalone bool
-
-	// Args are the command args used for standalone mode
-	Args []string
-
-	// Flags are an optional set of flags to parse the ResourceList.functionConfig.data.
-	// If non-nil, ResourceList.Read() will set the flag value for each flag name matching
-	// a ResourceList.functionConfig.data map entry.
-	//
-	// e.g. given the function input:
-	//
-	//    kind: ResourceList
-	//    functionConfig:
-	//      data:
-	//        foo: bar
-	//        a: b
-	//
-	// The flags --a=b and --foo=bar will be set in Flags.
-	Flags *pflag.FlagSet
-
-	// Reader is used to read the function input (ResourceList).
-	// Defaults to os.Stdin.
-	Reader io.Reader
-
-	// Writer is used to write the function output (ResourceList)
-	// Defaults to os.Stdout.
-	Writer io.Writer
-
-	// rw reads function input and writes function output
-	rw *kio.ByteReadWriter
-
-	// NoPrintError if set will prevent the error from being printed
-	NoPrintError bool
+	// Result is ResourceList.result output value.
+	// Validating functions can optionally use this field to communicate structured
+	// validation error data to downstream functions.
+	Result *Result `yaml:"results" json:"results"`
 }
 
-// Read reads the ResourceList
-func (r *ResourceList) Read() error {
-	// parse the inputs from the args
-	if len(r.Args) > 0 && !r.DisableStandalone {
-		// write the files as input
-		var buf bytes.Buffer
-		for i := range r.Args {
-			// the first argument is the resourceList.FunctionConfig and will be parsed
-			// separately later, the rest of the arguments are the resourceList.items
-			if i == 0 {
-				continue
-			}
-			b, err := ioutil.ReadFile(r.Args[i])
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to read input file %s", r.Args[i])
-			}
-			buf.WriteString(string(b))
-			buf.WriteString("\n---\n")
-		}
-		r.Reader = &buf
+// ResourceListProcessor is implemented by configuration functions built with this framework
+// to conform to the Configuration Functions Specification:
+// https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
+// To invoke a processor, pass it to framework.Execute, which will also handle ResourceList IO.
+//
+// This framework provides several ready-to-use ResourceListProcessors, including
+// SimpleProcessor, VersionedAPIProcessor and TemplateProcessor.
+// You can also build your own by implementing this interface.
+type ResourceListProcessor interface {
+	Process(rl *ResourceList) error
+}
+
+// ResourceListProcessorFunc converts a compatible function to a ResourceListProcessor.
+type ResourceListProcessorFunc func(rl *ResourceList) error
+
+// Process makes ResourceListProcessorFunc implement the ResourceListProcessor interface.
+func (p ResourceListProcessorFunc) Process(rl *ResourceList) error {
+	return p(rl)
+}
+
+// Defaulter is implemented by APIs to have Default invoked.
+// The standard application is to create a type to hold your FunctionConfig data, and
+// implement Defaulter on that type. All of the framework's processors will invoke Default()
+// on your type after unmarshalling the FunctionConfig data into it.
+type Defaulter interface {
+	Default() error
+}
+
+// Validator is implemented by APIs to have Validate invoked.
+// The standard application is to create a type to hold your FunctionConfig data, and
+// implement Validator on that type. All of the framework's processors will invoke Validate()
+// on your type after unmarshalling the FunctionConfig data into it.
+type Validator interface {
+	Validate() error
+}
+
+// Execute is the entrypoint for invoking configuration functions built with this framework
+// from code. See framework/command#Build for a Cobra-based command-line equivalent.
+// Execute reads a ResourceList from the given source, passes it to a ResourceListProcessor,
+// and then writes the result to the target.
+// STDIN and STDOUT will be used if no reader or writer respectively is provided.
+func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
+	// Prepare the resource list source
+	if rlSource == nil {
+		rlSource = &kio.ByteReadWriter{KeepReaderAnnotations: true}
+	}
+	if rlSource.Reader == nil {
+		rlSource.Reader = os.Stdin
+	}
+	if rlSource.Writer == nil {
+		rlSource.Writer = os.Stdout
 	}
 
-	if r.Reader == nil {
-		r.Reader = os.Stdin
-	}
-	if r.Writer == nil {
-		r.Writer = os.Stdout
-	}
-	r.rw = &kio.ByteReadWriter{
-		Reader:                r.Reader,
-		Writer:                r.Writer,
-		KeepReaderAnnotations: true,
-	}
-
-	// parse the resourceList.FunctionConfig from the first arg
-	if len(r.Args) > 0 && !r.DisableStandalone {
-		// Don't keep the reader annotations if we are in standalone mode
-		r.rw.KeepReaderAnnotations = false
-		// Don't wrap the resources in a resourceList -- we are in
-		// standalone mode and writing to stdout to be applied
-		r.rw.NoWrap = true
-
-		b, err := ioutil.ReadFile(r.Args[0])
-		if err != nil {
-			return errors.WrapPrefixf(err, "unable to read configuration file %s", r.Args[0])
-		}
-		fc, err := yaml.Parse(string(b))
-		if err != nil {
-			return errors.WrapPrefixf(err, "unable to parse configuration file %s", r.Args[0])
-		}
-		// use this as the function config used to configure the function
-		r.rw.FunctionConfig = fc
-	}
-
+	// Read the input
+	rl := ResourceList{}
 	var err error
-	r.Items, err = r.rw.Read()
-	if err != nil {
+	if rl.Items, err = rlSource.Read(); err != nil {
 		return errors.Wrap(err)
 	}
+	rl.FunctionConfig = rlSource.FunctionConfig
 
-	// parse the functionConfig
-	return func() error {
-		if r.rw.FunctionConfig == nil {
-			// no function config exists
-			return nil
-		}
-		if r.FunctionConfig == nil {
-			// set directly from r.rw
-			r.FunctionConfig = r.rw.FunctionConfig
-		} else {
-			// unmarshal the functionConfig into the provided value
-			err := yaml.Unmarshal([]byte(r.rw.FunctionConfig.MustString()), r.FunctionConfig)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-		}
+	retErr := p.Process(&rl)
 
-		// set the functionConfig values as flags so they are easy to access
-		if r.Flags == nil || !r.Flags.HasFlags() {
-			return nil
-		}
-		// flags are always set from the "data" field
-		data, err := r.rw.FunctionConfig.Pipe(yaml.Lookup("data"))
-		if err != nil || data == nil {
-			return err
-		}
-		return data.VisitFields(func(node *yaml.MapNode) error {
-			f := r.Flags.Lookup(node.Key.YNode().Value)
-			if f == nil {
-				return nil
-			}
-			return f.Value.Set(node.Value.YNode().Value)
-		})
-	}()
-}
-
-// Write writes the ResourceList
-func (r *ResourceList) Write() error {
-	// set the ResourceList.results for validating functions
-	if r.Result != nil {
-		if len(r.Result.Items) > 0 {
-			b, err := yaml.Marshal(r.Result)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			y, err := yaml.Parse(string(b))
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			r.rw.Results = y
-		}
-	}
-
-	// write the results
-	return r.rw.Write(r.Items)
-}
-
-// Command returns a cobra.Command to run a function.
-//
-// The cobra.Command will use the provided ResourceList to Read() the input,
-// run the provided function, and then Write() the output.
-//
-// The returned cobra.Command will have a "gen" subcommand which can be used to generate
-// a Dockerfile to build the function into a container image
-//
-//		go run main.go gen DIR/
-func Command(resourceList *ResourceList, function Function) cobra.Command {
-	cmd := cobra.Command{}
-	AddGenerateDockerfile(&cmd)
-	var printStack bool
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		err := execute(resourceList, function, cmd, args)
-		if err != nil && !resourceList.NoPrintError {
-			fmt.Fprintf(cmd.ErrOrStderr(), "%v", err)
-		}
-		// print the stack if requested
-		if s := errors.GetStack(err); printStack && s != "" {
-			fmt.Fprintln(cmd.ErrOrStderr(), s)
-		}
-		return err
-	}
-	cmd.Flags().BoolVar(&printStack, "stack", false, "print the stack trace on failure")
-	cmd.Args = cobra.MinimumNArgs(0)
-	cmd.SilenceErrors = true
-	cmd.SilenceUsage = true
-	return cmd
-}
-
-// TemplateCommand provides a cobra command to invoke a template
-type TemplateCommand struct {
-	// API is the function API provide to the template as input
-	API interface{}
-
-	// Template is a go template to render and is appended to Templates.
-	Template *template.Template
-
-	// Templates is a list of templates to render.
-	Templates []*template.Template
-
-	// TemplateFiles list of templates to read from disk which are appended
-	// to Templates.
-	TemplatesFiles []string
-
-	// MergeResources if set to true will apply input resources
-	// as patches to the templates
-	MergeResources bool
-
-	// PreProcess is run on the ResourceList before the template is invoked
-	PreProcess func(*ResourceList) error
-
-	// PostProcess is run on the ResourceList after the template is invoked
-	PostProcess func(*ResourceList) error
-}
-
-func (tc TemplateCommand) doTemplate(t *template.Template, rl *ResourceList) error {
-	// invoke the template
-	var b bytes.Buffer
-	err := t.Execute(&b, tc.API)
-	if err != nil {
-		return errors.WrapPrefixf(err, "failed to render template %v", t.DefinedTemplates())
-	}
-	// split the resources so the error messaging is better
-	for _, s := range strings.Split(b.String(), "\n---\n") {
-		s = strings.TrimSpace(s)
-		if s == "" {
-			continue
-		}
-		nodes, err := (&kio.ByteReader{Reader: bytes.NewBufferString(s)}).Read()
+	// Write the results
+	// Set the ResourceList.results for validating functions
+	if rl.Result != nil && len(rl.Result.Items) > 0 {
+		b, err := yaml.Marshal(rl.Result)
 		if err != nil {
-			// create the debug string
-			lines := strings.Split(s, "\n")
-			for j := range lines {
-				lines[j] = fmt.Sprintf("%03d %s", j+1, lines[j])
-			}
-			s = strings.Join(lines, "\n")
-			return errors.WrapPrefixf(err, "failed to parse rendered template into a resource:\n%s\n", s)
+			return errors.Wrap(err)
 		}
-
-		if tc.MergeResources {
-			// apply inputs as patches -- add the
-			rl.Items = append(nodes, rl.Items...)
-		} else {
-			// add to the inputs list
-			rl.Items = append(rl.Items, nodes...)
+		y, err := yaml.Parse(string(b))
+		if err != nil {
+			return errors.Wrap(err)
 		}
+		rlSource.Results = y
 	}
-	return nil
-}
-
-// GetCommand returns a new cobra command
-func (tc TemplateCommand) GetCommand() cobra.Command {
-	rl := ResourceList{
-		FunctionConfig: tc.API,
-		NoPrintError:   true,
-	}
-	c := Command(&rl, func() error {
-		// do any preprocessing
-		if tc.PreProcess != nil {
-			if err := tc.PreProcess(&rl); err != nil {
-				return err
-			}
-		}
-
-		if tc.Template != nil {
-			tc.Templates = append(tc.Templates, tc.Template)
-		}
-
-		for i := range tc.TemplatesFiles {
-			tbytes, err := ioutil.ReadFile(tc.TemplatesFiles[i])
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to read template file")
-			}
-			t, err := template.New("files").Parse(string(tbytes))
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to parse template files %v", tc.TemplatesFiles)
-			}
-			tc.Templates = append(tc.Templates, t)
-		}
-
-		for i := range tc.Templates {
-			if err := tc.doTemplate(tc.Templates[i], &rl); err != nil {
-				return err
-			}
-		}
-
-		var err error
-		if tc.MergeResources {
-			rl.Items, err = filters.MergeFilter{}.Filter(rl.Items)
-			if err != nil {
-				return err
-			}
-		}
-
-		// finish up
-		if tc.PostProcess != nil {
-			if err := tc.PostProcess(&rl); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-	return c
-}
-
-// AddGenerateDockerfile adds a "gen" subcommand to create a Dockerfile for building
-// the function as a container.
-func AddGenerateDockerfile(cmd *cobra.Command) {
-	gen := &cobra.Command{
-		Use:  "gen",
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return ioutil.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM golang:1.13-stretch
-ENV CGO_ENABLED=0
-WORKDIR /go/src/
-COPY . .
-RUN go build -v -o /usr/local/bin/function ./
-
-FROM alpine:latest
-COPY --from=0 /usr/local/bin/function /usr/local/bin/function
-CMD ["function"]
-`), 0600)
-		},
-	}
-	cmd.AddCommand(gen)
-}
-
-func execute(rl *ResourceList, function Function, cmd *cobra.Command, args []string) error {
-	rl.Reader = cmd.InOrStdin()
-	rl.Writer = cmd.OutOrStdout()
-	rl.Flags = cmd.Flags()
-	rl.Args = args
-
-	if err := rl.Read(); err != nil {
-		return err
-	}
-
-	retErr := function()
-
-	if err := rl.Write(); err != nil {
+	if err := rlSource.Write(rl.Items); err != nil {
 		return err
 	}
 
 	return retErr
+}
+
+// Filter executes the given kio.Filter and replaces the ResourceList's items with the result.
+// This can be used to help implement ResourceListProcessors. See SimpleProcessor for example.
+func (rl *ResourceList) Filter(api kio.Filter) error {
+	var err error
+	rl.Items, err = api.Filter(rl.Items)
+	return errors.Wrap(err)
 }

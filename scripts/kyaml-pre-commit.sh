@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
@@ -21,6 +21,8 @@ functions/examples/application-cr
 export KUSTOMIZE_DOCKER_E2E=${KUSTOMIZE_DOCKER_E2E:-"false"}
 
 for target in $targets; do
+  echo " "
+  echo " "
   echo "----- Making $target -----"
   pushd .
   cd $target

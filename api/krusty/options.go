@@ -4,6 +4,7 @@
 package krusty
 
 import (
+	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -32,10 +33,6 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
-
-	// When true, use kyaml/ packages to manipulate KRM yaml.
-	// When false, use k8sdeps/ instead (uses k8s.io/api* packages).
-	UseKyaml bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -46,6 +43,17 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         konfig.DisabledPluginConfig(),
-		UseKyaml:             false,
 	}
+}
+
+// GetBuiltinPluginNames returns a list of builtin plugin names
+func GetBuiltinPluginNames() []string {
+	var ret []string
+	for k := range builtinhelpers.GeneratorFactories {
+		ret = append(ret, k.String())
+	}
+	for k := range builtinhelpers.TransformerFactories {
+		ret = append(ret, k.String())
+	}
+	return ret
 }

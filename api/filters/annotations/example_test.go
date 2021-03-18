@@ -28,7 +28,9 @@ metadata:
 `)}},
 		Filters: []kio.Filter{Filter{
 			Annotations: map[string]string{
-				"foo": "bar",
+				"foo":          "bar",
+				"booleanValue": "true",
+				"numberValue":  "42",
 			},
 			FsSlice: fss,
 		}},
@@ -44,12 +46,16 @@ metadata:
 	// metadata:
 	//   name: instance
 	//   annotations:
+	//     booleanValue: "true"
 	//     foo: bar
+	//     numberValue: "42"
 	// ---
 	// apiVersion: example.com/v1
 	// kind: Bar
 	// metadata:
 	//   name: instance
 	//   annotations:
+	//     booleanValue: "true"
 	//     foo: bar
+	//     numberValue: "42"
 }

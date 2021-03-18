@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="generator" content="Hugo 0.76.5" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
@@ -39,8 +39,8 @@
 
 
 
-<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
-<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
 
 
 <script
@@ -334,13 +334,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#无需克隆源码库直接构建-kustomize-cli">无需克隆源码库直接构建 kustomize CLI</a></li>
-    <li><a href="#在本地克隆源码库构建-kustomize-cli">在本地克隆源码库构建 kustomize CLI</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -376,29 +369,9 @@
 <div class="td-content">
 	<h1>Go 源码</h1>
 	<div class="lead">使用 Go 源码安装 Kustomize。</div>
-	<p>需要先安装 <a href="https://golang.org">Go</a>。</p>
-<h2 id="无需克隆源码库直接构建-kustomize-cli">无需克隆源码库直接构建 kustomize CLI</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#000">GOBIN</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87;font-weight:bold">$(</span><span style="color:#204a87">pwd</span><span style="color:#204a87;font-weight:bold">)</span>/ <span style="color:#000">GO111MODULE</span><span style="color:#ce5c00;font-weight:bold">=</span>on go get sigs.k8s.io/kustomize/kustomize/v3
-</code></pre></div><h2 id="在本地克隆源码库构建-kustomize-cli">在本地克隆源码库构建 kustomize CLI</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8f5902;font-style:italic"># 需要 go 1.13 或更高版本</span>
-<span style="color:#204a87">unset</span> GOPATH
-<span style="color:#8f5902;font-style:italic"># 详见 https://golang.org/doc/go1.13#modules</span>
-<span style="color:#204a87">unset</span> GO111MODULES
+	<meta http-equiv="refresh" content="0; url=https://kubectl.docs.kubernetes.io/zh/installation/source/" />
+<p>Moved to <a href="https://github.com/kubernetes-sigs/cli-experimental">https://github.com/kubernetes-sigs/cli-experimental</a></p>
 
-<span style="color:#8f5902;font-style:italic"># 拉取 repo</span>
-git clone git@github.com:kubernetes-sigs/kustomize.git
-<span style="color:#8f5902;font-style:italic"># 进入目录</span>
-<span style="color:#204a87">cd</span> kustomize
-
-<span style="color:#8f5902;font-style:italic"># 如果您不想从 HEAD 开始构建， 则可以选择切换特定的标签</span>
-git checkout kustomize/v3.2.3
-
-<span style="color:#8f5902;font-style:italic"># 开始构建</span>
-<span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87">cd</span> kustomize<span style="color:#000;font-weight:bold">;</span> go install .<span style="color:#ce5c00;font-weight:bold">)</span>
-
-<span style="color:#8f5902;font-style:italic"># 运行</span>
-~/go/bin/kustomize version
-</code></pre></div>
         <div class="section-index">
     
     
@@ -421,7 +394,7 @@ git checkout kustomize/v3.2.3
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年06月15日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/518147c129f831913d33226cf17068d0d4270f41">add zh docsy (518147c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">最后修改 2020年11月25日: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/14eac6020f43cd07a86722f5e937ae8c75873e43">remove duplicate contents and redirect (14eac602)</a>
 </div>
 </div>
 

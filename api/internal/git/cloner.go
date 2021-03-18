@@ -4,10 +4,6 @@
 package git
 
 import (
-	"log"
-	"os/exec"
-
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/filesys"
 )
 
@@ -18,70 +14,29 @@ type Cloner func(repoSpec *RepoSpec) error
 // to say, some remote API, to obtain a local clone of
 // a remote repo.
 func ClonerUsingGitExec(repoSpec *RepoSpec) error {
-	gitProgram, err := exec.LookPath("git")
-	if err != nil {
-		return errors.Wrap(err, "no 'git' program on path")
-	}
-	repoSpec.Dir, err = filesys.NewTmpConfirmedDir()
+	r, err := newCmdRunner()
 	if err != nil {
 		return err
 	}
-
-	cmd := exec.Command(
-		gitProgram,
-		"clone",
-		"--depth=1",
-		repoSpec.CloneSpec(),
-		repoSpec.Dir.String())
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error cloning git repo: %s", out)
-		return errors.Wrapf(
-			err,
-			"trouble cloning git repo %v in %s",
-			repoSpec.CloneSpec(), repoSpec.Dir.String())
+	repoSpec.Dir = r.dir
+	if err = r.run("init"); err != nil {
+		return err
 	}
-
+	if err = r.run(
+		"remote", "add", "origin", repoSpec.CloneSpec()); err != nil {
+		return err
+	}
+	ref := "HEAD"
 	if repoSpec.Ref != "" {
-		cmd = exec.Command(
-			gitProgram,
-			"fetch",
-			"--depth=1",
-			"origin",
-			repoSpec.Ref)
-		cmd.Dir = repoSpec.Dir.String()
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			log.Printf("Error fetching ref: %s", out)
-			return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
-		}
-
-		cmd = exec.Command(
-			gitProgram,
-			"checkout",
-			"FETCH_HEAD")
-		cmd.Dir = repoSpec.Dir.String()
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			log.Printf("Error checking out ref: %s", out)
-			return errors.Wrapf(err, "trouble checking out %s", repoSpec.Ref)
-		}
+		ref = repoSpec.Ref
 	}
-
-	cmd = exec.Command(
-		gitProgram,
-		"submodule",
-		"update",
-		"--init",
-		"--recursive")
-	cmd.Dir = repoSpec.Dir.String()
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error fetching submodules: %s", out)
-		return errors.Wrapf(err, "trouble fetching submodules for %s", repoSpec.CloneSpec())
+	if err = r.run("fetch", "--depth=1", "origin", ref); err != nil {
+		return err
 	}
-
-	return nil
+	if err = r.run("checkout", "FETCH_HEAD"); err != nil {
+		return err
+	}
+	return r.run("submodule", "update", "--init", "--recursive")
 }
 
 // DoNothingCloner returns a cloner that only sets

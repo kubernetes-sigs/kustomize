@@ -10,7 +10,7 @@ import (
 )
 
 func writeMediumBase(th kusttest_test.Harness) {
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: baseprefix-
 commonLabels:
   foo: bar
@@ -20,7 +20,7 @@ resources:
 - deployment/deployment.yaml
 - service/service.yaml
 `)
-	th.WriteF("/app/base/service/service.yaml", `
+	th.WriteF("base/service/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -33,7 +33,7 @@ spec:
   selector:
     app: mungebot
 `)
-	th.WriteF("/app/base/deployment/deployment.yaml", `
+	th.WriteF("base/deployment/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -61,7 +61,7 @@ spec:
 func TestMediumBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeMediumBase(th)
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -115,7 +115,7 @@ spec:
 func TestMediumOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeMediumBase(th)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 namePrefix: test-infra-
 commonLabels:
   app: mungebot
@@ -140,24 +140,24 @@ images:
 - name: nginx
   newTag: 1.8.0`)
 
-	th.WriteF("/app/overlay/configmap/db.env", `
+	th.WriteF("overlay/configmap/db.env", `
 DB_USERNAME=admin
 DB_PASSWORD=somepw
 `)
-	th.WriteF("/app/overlay/configmap/units.ini", `
+	th.WriteF("overlay/configmap/units.ini", `
 LENGTH=kilometer
 ENERGY=electronvolt
 `)
-	th.WriteF("/app/overlay/configmap/food.ini", `
+	th.WriteF("overlay/configmap/food.ini", `
 FRUIT=banana
 LEGUME=chickpea
 `)
-	th.WriteF("/app/overlay/configmap/dummy.txt",
+	th.WriteF("overlay/configmap/dummy.txt",
 		`Lorem ipsum dolor sit amet, consectetur
 adipiscing elit, sed do eiusmod tempor
 incididunt ut labore et dolore magna aliqua. 
 `)
-	th.WriteF("/app/overlay/deployment/deployment.yaml", `
+	th.WriteF("overlay/deployment/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -190,7 +190,7 @@ spec:
           name: app-env
         name: app-env
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -292,7 +292,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod tempor\nincididunt ut labore et dolore magna aliqua. \n"
+  nonsense: "Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do eiusmod
+    tempor\nincididunt ut labore et dolore magna aliqua. \n"
 kind: ConfigMap
 metadata:
   annotations:

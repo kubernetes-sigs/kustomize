@@ -6,9 +6,9 @@ package target
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/yaml"
 )
 
@@ -334,20 +335,15 @@ func (kt *KustTarget) accumulateResources(
 	for _, path := range paths {
 		// try loading resource as file then as base (directory or git repository)
 		if errF := kt.accumulateFile(ra, path); errF != nil {
-			ldr, errL := kt.ldr.New(path)
-			if errL != nil {
-				return nil, multierror.Append(
-					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("loader.New error: %q", errL),
-				)
+			ldr, err := kt.ldr.New(path)
+			if err != nil {
+				return nil, errors.Wrapf(
+					err, "accumulation err='%s'", errF.Error())
 			}
-			var errD error
-			ra, errD = kt.accumulateDirectory(ra, ldr, false)
-			if errD != nil {
-				return nil, multierror.Append(
-					fmt.Errorf("accumulateFile error: %q", errF),
-					fmt.Errorf("accumulateDirector error: %q", errD),
-				)
+			ra, err = kt.accumulateDirectory(ra, ldr, false)
+			if err != nil {
+				return nil, errors.Wrapf(
+					err, "accumulation err='%s'", errF.Error())
 			}
 		}
 	}
@@ -381,6 +377,18 @@ func (kt *KustTarget) accumulateDirectory(
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "couldn't make target for path '%s'", ldr.Root())
+	}
+	var bytes []byte
+	path := ldr.Root()
+	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
+		bytes, err = ldr.Load(filepath.Join(path, openApiPath))
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = openapi.SetSchema(subKt.Kustomization().OpenAPI, bytes, false)
+	if err != nil {
+		return nil, err
 	}
 	if isComponent && subKt.kustomization.Kind != types.ComponentKind {
 		return nil, fmt.Errorf(

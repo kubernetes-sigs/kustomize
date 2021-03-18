@@ -1,6 +1,7 @@
 package types
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -15,6 +16,12 @@ func fixKustomizationPostUnmarshallingCheck(k, e *Kustomization) bool {
 func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 	var k Kustomization
 	k.Bases = append(k.Bases, "foo")
+	k.ConfigMapGenerator = []ConfigMapArgs{{GeneratorArgs{
+		KvPairSources: KvPairSources{
+			EnvSources: []string{"a", "b"},
+			EnvSource:  "c",
+		},
+	}}}
 	k.FixKustomizationPostUnmarshalling()
 
 	expected := Kustomization{
@@ -23,8 +30,15 @@ func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 			APIVersion: KustomizationVersion,
 		},
 		Resources: []string{"foo"},
+		ConfigMapGenerator: []ConfigMapArgs{{GeneratorArgs{
+			KvPairSources: KvPairSources{
+				EnvSources: []string{"a", "b", "c"},
+			},
+		}}},
 	}
-
+	if !reflect.DeepEqual(k, expected) {
+		t.Fatalf("unexpected output: %v", k)
+	}
 	if !fixKustomizationPostUnmarshallingCheck(&k, &expected) {
 		t.Fatalf("unexpected output: %v", k)
 	}

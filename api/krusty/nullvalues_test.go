@@ -11,7 +11,7 @@ import (
 
 func TestNullValues1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,13 +32,13 @@ spec:
         image: image
         name: example
 `)
-	th.WriteF("/app/kustomization.yaml", `
+	th.WriteF("kustomization.yaml", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - deployment.yaml
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1

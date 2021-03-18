@@ -6,6 +6,8 @@ package resmaptest_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/provider"
+	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 )
@@ -25,6 +27,15 @@ func NewRmBuilder(t *testing.T, rf *resource.Factory) *rmBuilder {
 	return NewSeededRmBuilder(t, rf, resmap.New())
 }
 
+func NewRmBuilderDefault(t *testing.T) *rmBuilder {
+	return NewSeededRmBuilderDefault(t, resmap.New())
+}
+
+func NewSeededRmBuilderDefault(t *testing.T, m resmap.ResMap) *rmBuilder {
+	return NewSeededRmBuilder(
+		t, provider.NewDefaultDepProvider().GetResourceFactory(), m)
+}
+
 func (rm *rmBuilder) Add(m map[string]interface{}) *rmBuilder {
 	return rm.AddR(rm.rf.FromMap(m))
 }
@@ -38,15 +49,7 @@ func (rm *rmBuilder) AddR(r *resource.Resource) *rmBuilder {
 }
 
 func (rm *rmBuilder) AddWithName(n string, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMapWithName(n, m))
-	if err != nil {
-		rm.t.Fatalf("test setup failure: %v", err)
-	}
-	return rm
-}
-
-func (rm *rmBuilder) AddWithNs(ns string, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMapWithNamespace(ns, m))
+	err := rm.m.Append(rm.rf.FromMapWithNamespaceAndName(resid.DefaultNamespace, n, m))
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}

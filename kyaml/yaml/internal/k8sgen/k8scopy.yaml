@@ -1,0 +1,30 @@
+# Copyright 2020 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+#
+# The files to vendor (copy).
+# See {repo}/cmd/k8scopy/main.go for more info.
+module: k8s.io/apimachinery
+version: v0.19.8
+packages:
+- name: pkg/labels
+  files:
+  - labels.go
+  - selector.go
+  - zz_generated.deepcopy.go
+- name: pkg/selection
+  files:
+  - operator.go
+- name: pkg/util/sets
+  files:
+  - empty.go
+  - string.go
+- name: pkg/util/errors
+  files:
+  - errors.go
+- name: pkg/util/validation
+  files:
+  - validation.go
+- name: pkg/util/validation/field
+  files:
+  - errors.go
+  - path.go

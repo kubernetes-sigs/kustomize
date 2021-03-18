@@ -12,7 +12,7 @@ import (
 
 func TestBasicVariableRef(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+	th.WriteK(".", `
 namePrefix: base-
 resources:
 - pod.yaml
@@ -26,7 +26,7 @@ vars:
     fieldpath: metadata.name
 `)
 
-	th.WriteF("/app/pod.yaml", `
+	th.WriteF("pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -42,7 +42,7 @@ spec:
       - name: FOO
         value: "$(POD_NAME)"
 `)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -63,7 +63,7 @@ spec:
 
 func TestBasicVarCollision(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base1", `
+	th.WriteK("base1", `
 namePrefix: base1-
 resources:
 - pod.yaml
@@ -76,7 +76,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base1/pod.yaml", `
+	th.WriteF("base1/pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -93,7 +93,7 @@ spec:
         value: "$(POD_NAME)"
 `)
 
-	th.WriteK("/app/base2", `
+	th.WriteK("base2", `
 namePrefix: base2-
 resources:
 - pod.yaml
@@ -106,7 +106,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base2/pod.yaml", `
+	th.WriteF("base2/pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -123,12 +123,12 @@ spec:
         value: "$(POD_NAME)"
 `)
 
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 resources:
 - ../base1
 - ../base2
 `)
-	err := th.RunWithErr("/app/overlay", th.MakeDefaultOptions())
+	err := th.RunWithErr("overlay", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("should have an error")
 	}
@@ -139,7 +139,7 @@ resources:
 
 func TestVarPropagatesUp(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base1", `
+	th.WriteK("base1", `
 namePrefix: base1-
 resources:
 - pod.yaml
@@ -152,7 +152,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base1/pod.yaml", `
+	th.WriteF("base1/pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -169,7 +169,7 @@ spec:
         value: "$(POD_NAME1)"
 `)
 
-	th.WriteK("/app/base2", `
+	th.WriteK("base2", `
 namePrefix: base2-
 resources:
 - pod.yaml
@@ -182,7 +182,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base2/pod.yaml", `
+	th.WriteF("base2/pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -199,13 +199,13 @@ spec:
         value: "$(POD_NAME2)"
 `)
 
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 resources:
 - pod.yaml
 - ../base1
 - ../base2
 `)
-	th.WriteF("/app/overlay/pod.yaml", `
+	th.WriteF("overlay/pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -224,7 +224,7 @@ spec:
       - name: P2
         value: "$(POD_NAME2)"
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
@@ -282,7 +282,7 @@ spec:
 // twice, it's a collision, so it's denied.
 func TestBug506(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: base-
 resources:
 - pod.yaml
@@ -295,7 +295,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base/pod.yaml", `
+	th.WriteF("base/pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -308,17 +308,17 @@ spec:
         - name: POD_NAME
           value: $(POD_NAME)
 `)
-	th.WriteK("/app/o1", `
+	th.WriteK("o1", `
 nameprefix: p1-
 resources:
 - ../base
 `)
-	th.WriteK("/app/o2", `
+	th.WriteK("o2", `
 nameprefix: p2-
 resources:
 - ../base
 `)
-	th.WriteK("/app/top", `
+	th.WriteK("top", `
 resources:
 - ../o1
 - ../o2
@@ -351,7 +351,7 @@ resources:
 	       name: myServer
 	   `
 	*/
-	err := th.RunWithErr("/app/top", th.MakeDefaultOptions())
+	err := th.RunWithErr("top", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("should have an error")
 	}
@@ -360,9 +360,190 @@ resources:
 	}
 }
 
+func TestSimpleServicePortVarReplace(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+- statefulset.yaml
+vars:
+ - name: THE_PORT
+   objref:
+     kind: StatefulSet
+     name: cockroachdb
+     apiVersion: apps/v1beta1
+   fieldref:
+     fieldpath: spec.template.spec.containers[0].ports[1].containerPort
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - port: $(THE_PORT)
+    targetPort: $(THE_PORT)
+    name: grpc
+`)
+	th.WriteF("statefulset.yaml", `
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:v1.1.5
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - name: grpc
+    port: 8888
+    targetPort: 8888
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - image: cockroachdb/cockroach:v1.1.5
+        name: cockroachdb
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http
+`)
+}
+
+// TODO(3449): Yield bare primitives in var replacements from configmaps.
+// The ConfigMap data field is always strings, and anything that looks
+// like a boolean or int or float must be quoted, or the API server won't
+// accept the map.  This creates a problem if one wants to use a var to
+// inject a raw number or raw boolean sourced from a configmap, because as
+// far as the configmap representation is concerned, it's a string.
+// A workaround would be to source the var from another Kind, from a field
+// that allowed unquoted vars or booleans.
+func TestIssue3449(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- workflow.yaml
+
+configurations:
+- kustomization-config.yaml
+
+configMapGenerator:
+- name: kustomize-vars
+  envs:
+  - vars.env
+
+vars:
+- name: DBT_TARGET
+  objref: &config-map-ref
+    kind: ConfigMap
+    name: kustomize-vars
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.DBT_TARGET
+- name: SUSPENDED
+  objref: *config-map-ref
+  fieldref:
+    fieldpath: data.SUSPENDED
+`)
+	th.WriteF("workflow.yaml", `
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  schedule: "45 2 * * *"
+  timezone: "Europe/Vienna"
+  concurrencyPolicy: Forbid
+  suspend: $(SUSPENDED)
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    workflowTemplateRef:
+      name: core-load-pipeline
+    arguments:
+      parameters:
+        - name: dbt_target
+          value: $(DBT_TARGET)
+`)
+	th.WriteF("kustomization-config.yaml", `
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - kind: CronWorkflow
+        version: v1alpha1
+        path: spec/workflowSpec/arguments/parameters/value
+varReference:
+  - path: spec/workflowSpec/arguments/parameters/value
+    kind: CronWorkflow
+    apiVersion: argoproj.io/v1alpha1
+  - path: spec
+    kind: CronWorkflow
+    apiVersion: argoproj.io/v1alpha1
+`)
+	th.WriteF("vars.env", `
+DBT_TARGET=development
+SUSPENDED=True
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  concurrencyPolicy: Forbid
+  schedule: 45 2 * * *
+  suspend: "True"
+  timezone: Europe/Vienna
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    arguments:
+      parameters:
+      - name: dbt_target
+        value: development
+    workflowTemplateRef:
+      name: core-load-pipeline
+---
+apiVersion: v1
+data:
+  DBT_TARGET: development
+  SUSPENDED: "True"
+kind: ConfigMap
+metadata:
+  name: kustomize-vars-7mhm8cg5kg
+`)
+}
+
 func TestVarRefBig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: base-
 resources:
 - role-stuff.yaml
@@ -412,7 +593,7 @@ vars:
         apiVersion: v1
    fieldref:
         fieldpath: metadata.name`)
-	th.WriteF("/app/base/cronjob.yaml", `
+	th.WriteF("base/cronjob.yaml", `
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -435,7 +616,7 @@ spec:
               - name: CDB_PUBLIC_SVC
                 value: "$(CDB_PUBLIC_SVC)"
 `)
-	th.WriteF("/app/base/services.yaml", `
+	th.WriteF("base/services.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -482,7 +663,7 @@ spec:
   selector:
     app: cockroachdb
 `)
-	th.WriteF("/app/base/role-stuff.yaml", `
+	th.WriteF("base/role-stuff.yaml", `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -551,7 +732,7 @@ subjects:
   name: cockroachdb
   namespace: default
 `)
-	th.WriteF("/app/base/pdb.yaml", `
+	th.WriteF("base/pdb.yaml", `
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
@@ -564,7 +745,7 @@ spec:
       app: cockroachdb
   maxUnavailable: 1
 `)
-	th.WriteF("/app/base/statefulset.yaml", `
+	th.WriteF("base/statefulset.yaml", `
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -673,12 +854,12 @@ spec:
         requests:
           storage: 1Gi
 `)
-	th.WriteK("/app/overlay/staging", `
+	th.WriteK("overlay/staging", `
 namePrefix: dev-
 resources:
 - ../../base
 `)
-	m := th.Run("/app/overlay/staging", th.MakeDefaultOptions())
+	m := th.Run("overlay/staging", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -844,7 +1025,8 @@ spec:
         - -namespace=${POD_NAMESPACE}
         - -certs-dir=/cockroach-certs
         - -type=node
-        - -addresses=localhost,127.0.0.1,${POD_IP},$(hostname -f),$(hostname -f|cut -f 1-2 -d '.'),dev-base-cockroachdb-public
+        - -addresses=localhost,127.0.0.1,${POD_IP},$(hostname -f),$(hostname -f|cut
+          -f 1-2 -d '.'),dev-base-cockroachdb-public
         - -symlink-ca-from=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         env:
         - name: POD_IP
@@ -925,9 +1107,66 @@ metadata:
 `)
 }
 
-func TestVariableRefIngress(t *testing.T) {
+func TestVariableRefIngressBasic(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK(".", `
+resources:
+- ingress.yaml
+- deployment.yaml
+
+vars:
+- name: DEPLOYMENT_NAME
+  objref:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginxDep
+  fieldref:
+    fieldpath: metadata.name
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxDep
+`)
+
+	th.WriteF("ingress.yaml", `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginxIngress
+spec:
+  rules:
+  - host: $(DEPLOYMENT_NAME).example.com
+  tls:
+  - hosts:
+    - $(DEPLOYMENT_NAME).example.com
+    secretName: $(DEPLOYMENT_NAME).example.com-tls
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginxIngress
+spec:
+  rules:
+  - host: nginxDep.example.com
+  tls:
+  - hosts:
+    - nginxDep.example.com
+    secretName: nginxDep.example.com-tls
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxDep
+`)
+}
+
+func TestVariableRefIngressOverlay(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
 resources:
 - service.yaml
 - deployment.yaml
@@ -942,7 +1181,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -965,7 +1204,7 @@ spec:
         - name: http
           containerPort: 80
 `)
-	th.WriteF("/app/base/ingress.yaml", `
+	th.WriteF("base/ingress.yaml", `
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
@@ -986,7 +1225,7 @@ spec:
     - $(DEPLOYMENT_NAME).example.com
     secretName: $(DEPLOYMENT_NAME).example.com-tls
 `)
-	th.WriteF("/app/base/service.yaml", `
+	th.WriteF("base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -1000,12 +1239,12 @@ spec:
     protocol: TCP
     targetPort: http
 `)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 nameprefix: kustomized-
 resources:
 - ../base
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Service
@@ -1066,7 +1305,7 @@ spec:
 
 func TestVariableRefMountPath(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - namespace.yaml
@@ -1079,7 +1318,7 @@ vars:
     name: my-namespace
 
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1100,14 +1339,14 @@ vars:
         - name: my-volume
           emptyDir: {}
 `)
-	th.WriteF("/app/base/namespace.yaml", `
+	th.WriteF("base/namespace.yaml", `
   apiVersion: v1
   kind: Namespace
   metadata:
     name: my-namespace
 `)
 
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -1138,7 +1377,7 @@ metadata:
 
 func TestVariableRefMaps(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - deployment.yaml
 - namespace.yaml
@@ -1149,7 +1388,7 @@ vars:
     kind: Namespace
     name: my-namespace
 `)
-	th.WriteF("/app/base/deployment.yaml", `
+	th.WriteF("base/deployment.yaml", `
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1165,14 +1404,14 @@ vars:
         - name: app
           image: busybox
 `)
-	th.WriteF("/app/base/namespace.yaml", `
+	th.WriteF("base/namespace.yaml", `
   apiVersion: v1
   kind: Namespace
   metadata:
     name: my-namespace
 `)
 
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -1198,14 +1437,14 @@ metadata:
 
 func TestVaribaleRefDifferentPrefix(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 namePrefix: base-
 resources:
 - dev
 - test
 `)
 
-	th.WriteK("/app/base/dev", `
+	th.WriteK("base/dev", `
 namePrefix: dev-
 resources:
 - elasticsearch-dev-service.yml
@@ -1219,7 +1458,7 @@ vars:
     fieldpath: metadata.name
 
 `)
-	th.WriteF("/app/base/dev/elasticsearch-dev-service.yml", `
+	th.WriteF("base/dev/elasticsearch-dev-service.yml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -1245,7 +1484,7 @@ spec:
   clusterIP: None
 `)
 
-	th.WriteK("/app/base/test", `
+	th.WriteK("base/test", `
 namePrefix: test-
 resources:
 - elasticsearch-test-service.yml
@@ -1258,7 +1497,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base/test/elasticsearch-test-service.yml", `
+	th.WriteF("base/test/elasticsearch-test-service.yml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -1284,7 +1523,7 @@ spec:
   clusterIP: None
 `)
 
-	m := th.Run("/app/base", th.MakeDefaultOptions())
+	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: StatefulSet
@@ -1338,7 +1577,7 @@ spec:
 
 func TestVariableRefNFSServer(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - pv_pvc.yaml
 - nfs_deployment.yaml
@@ -1361,7 +1600,7 @@ vars:
   fieldref:
     fieldpath: metadata.name
 `)
-	th.WriteF("/app/base/pv_pvc.yaml", `
+	th.WriteF("base/pv_pvc.yaml", `
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -1373,7 +1612,7 @@ spec:
     requests:
       storage: 10Gi
 `)
-	th.WriteF("/app/base/nfs_deployment.yaml", `
+	th.WriteF("base/nfs_deployment.yaml", `
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -1405,7 +1644,7 @@ spec:
           persistentVolumeClaim:
             claimName: shared-volume-claim
 `)
-	th.WriteF("/app/base/nfs_service.yaml", `
+	th.WriteF("base/nfs_service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -1421,7 +1660,7 @@ spec:
   selector:
     role: nfs-server
 `)
-	th.WriteF("/app/base/Deployment.yaml", `
+	th.WriteF("base/Deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1444,7 +1683,7 @@ spec:
         - name: http
           containerPort: 80
         volumeMounts:
-          - mountPath: /app/shared-files
+          - mountPath: shared-files
             name: nfs-files-vol
       volumes:
         - name: nfs-files-vol
@@ -1453,7 +1692,7 @@ spec:
             path: /
             readOnly: false
 `)
-	th.WriteF("/app/base/CronJob.yaml", `
+	th.WriteF("base/CronJob.yaml", `
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -1473,7 +1712,7 @@ spec:
             - date; echo Hello from the Kubernetes cluster
           restartPolicy: OnFailure
           volumeMounts:
-          - mountPath: /app/shared-files
+          - mountPath: shared-files
             name: nfs-files-vol
         volumes:
         - name: nfs-files-vol
@@ -1482,7 +1721,7 @@ spec:
             path: /
             readOnly: false
 `)
-	th.WriteF("/app/base/DaemonSet.yaml", `
+	th.WriteF("base/DaemonSet.yaml", `
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -1517,7 +1756,7 @@ spec:
         - name: varlibdockercontainers
           mountPath: /var/lib/docker/containers
           readOnly: true
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       terminationGracePeriodSeconds: 30
       volumes:
@@ -1533,7 +1772,7 @@ spec:
           path: /
           readOnly: false
 `)
-	th.WriteF("/app/base/ReplicaSet.yaml", `
+	th.WriteF("base/ReplicaSet.yaml", `
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
@@ -1556,7 +1795,7 @@ spec:
       - name: php-redis
         image: gcr.io/google_samples/gb-frontend:v3
         volumeMounts:
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       volumes:
       - name: nfs-files-vol
@@ -1566,7 +1805,7 @@ spec:
           readOnly: false
 `)
 
-	th.WriteF("/app/base/Job.yaml", `
+	th.WriteF("base/Job.yaml", `
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -1579,7 +1818,7 @@ spec:
         image: perl
         command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
         volumeMounts:
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       restartPolicy: Never
       volumes:
@@ -1590,7 +1829,7 @@ spec:
           readOnly: false
   backoffLimit: 4
 `)
-	th.WriteF("/app/base/StatefulSet.yaml", `
+	th.WriteF("base/StatefulSet.yaml", `
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -1626,7 +1865,7 @@ spec:
         path: /
         readOnly: false
 `)
-	th.WriteF("/app/base/Pod.yaml", `
+	th.WriteF("base/Pod.yaml", `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1642,7 +1881,7 @@ spec:
       containerPort: 80
   volumeMounts:
   - name: nfs-files-vol
-    mountPath: /app/shared-files
+    mountPath: shared-files
   volumes:
   - name: nfs-files-vol
     nfs:
@@ -1650,7 +1889,7 @@ spec:
       path: /
       readOnly: false
 `)
-	th.WriteF("/app/base/nfs_pv.yaml", `
+	th.WriteF("base/nfs_pv.yaml", `
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -1665,12 +1904,12 @@ spec:
     path: /
     readOnly: false
 `)
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 nameprefix: kustomized-
 resources:
 - ../base
 `)
-	m := th.Run("/app/overlay", th.MakeDefaultOptions())
+	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -1751,7 +1990,7 @@ spec:
         - containerPort: 80
           name: http
         volumeMounts:
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       volumes:
       - name: nfs-files-vol
@@ -1778,7 +2017,7 @@ spec:
             name: hello
           restartPolicy: OnFailure
           volumeMounts:
-          - mountPath: /app/shared-files
+          - mountPath: shared-files
             name: nfs-files-vol
         volumes:
         - name: nfs-files-vol
@@ -1819,7 +2058,7 @@ spec:
         - mountPath: /var/lib/docker/containers
           name: varlibdockercontainers
           readOnly: true
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       terminationGracePeriodSeconds: 30
       tolerations:
@@ -1859,7 +2098,7 @@ spec:
       - image: gcr.io/google_samples/gb-frontend:v3
         name: php-redis
         volumeMounts:
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       volumes:
       - name: nfs-files-vol
@@ -1918,7 +2157,7 @@ spec:
     - containerPort: 80
       name: http
   volumeMounts:
-  - mountPath: /app/shared-files
+  - mountPath: shared-files
     name: nfs-files-vol
   volumes:
   - name: nfs-files-vol
@@ -1944,7 +2183,7 @@ spec:
         image: perl
         name: pi
         volumeMounts:
-        - mountPath: /app/shared-files
+        - mountPath: shared-files
           name: nfs-files-vol
       restartPolicy: Never
       volumes:
@@ -1972,67 +2211,64 @@ spec:
 
 func TestDeploymentAnnotations(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
+	th.WriteK(".", `
 configMapGenerator:
-  - name: testConfigMap
-    envs:
-      - test.properties
+- name: theConfigMap
+  envs:
+  - test.properties
 
 vars:
-  - name: FOO
-    objref:
-      kind: ConfigMap
-      name: testConfigMap
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.foo
+- name: SOMERIVER
+  objref:
+    kind: ConfigMap
+    name: theConfigMap
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.waterway
 
 commonAnnotations:
-  foo: $(FOO)
+  river: $(SOMERIVER)
 
 resources:
-  - deployment.yaml
+- deployment.yaml
 `)
 
-	th.WriteF("/app/deployment.yaml", `
+	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test
+  name: theDeployment
 spec:
   template:
     spec:
       containers:
-        - name: test
+      - name: test
 `)
-	th.WriteF("/app/test.properties", `foo=bar`)
-	m := th.Run("/app", th.MakeDefaultOptions())
+	th.WriteF("test.properties", `waterway=mississippi`)
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    foo: bar
-  name: test
+    river: mississippi
+  name: theDeployment
 spec:
   template:
     metadata:
       annotations:
-        foo: bar
+        river: mississippi
     spec:
       containers:
       - name: test
 ---
 apiVersion: v1
 data:
-  foo: bar
+  waterway: mississippi
 kind: ConfigMap
 metadata:
   annotations:
-    foo: bar
-  name: testConfigMap-798k5k7g9f
+    river: mississippi
+  name: theConfigMap-hdd8h8cgdt
 `)
 }

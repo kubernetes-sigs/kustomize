@@ -4,7 +4,7 @@
 # Makefile for kustomize CLI and API.
 
 MYGOBIN := $(shell go env GOPATH)/bin
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 export PATH := $(MYGOBIN):$(PATH)
 MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
 
@@ -26,22 +26,19 @@ verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.8.6
+	test-examples-kustomize-against-4.0
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
 	lint-kustomize \
+	test-multi-module \
 	test-unit-kustomize-all \
 	test-unit-cmd-all \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-3.8.6
-
-# test-multi-module \
-# Temporarily removed from prow-presubmit-check
-# See https://github.com/kubernetes-sigs/kustomize/issues/3191
+	test-examples-kustomize-against-4.0
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
@@ -81,6 +78,11 @@ $(MYGOBIN)/gorepomod:
 	go install .
 
 # Build from local source.
+$(MYGOBIN)/k8scopy:
+	cd cmd/k8scopy; \
+	go install .
+
+# Build from local source.
 $(MYGOBIN)/pluginator:
 	cd cmd/pluginator; \
 	go install .
@@ -99,13 +101,13 @@ $(MYGOBIN)/kustomize:
 install-tools: \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
-	$(MYGOBIN)/gh \
 	$(MYGOBIN)/gorepomod \
+	$(MYGOBIN)/helm \
+	$(MYGOBIN)/k8scopy \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/prchecker \
-	$(MYGOBIN)/stringer \
-	$(MYGOBIN)/helm
+	$(MYGOBIN)/stringer
 
 ### Begin kustomize plugin rules.
 #
@@ -193,30 +195,37 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator
 .PHONY: generate-kustomize-builtin-plugins
 generate-kustomize-builtin-plugins: $(builtinplugins)
 
-.PHONY: kustomize-external-go-plugin-build
-kustomize-external-go-plugin-build:
+.PHONY: build-kustomize-external-go-plugin
+build-kustomize-external-go-plugin:
 	./hack/buildExternalGoPlugins.sh ./plugin
 
-.PHONY: kustomize-external-go-plugin-clean
-kustomize-external-go-plugin-clean:
+.PHONY: clean-kustomize-external-go-plugin
+clean-kustomize-external-go-plugin:
 	./hack/buildExternalGoPlugins.sh ./plugin clean
 
 ### End kustomize plugin rules.
 
 .PHONY: lint-kustomize
 lint-kustomize: install-tools $(builtinplugins)
-	cd api; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd kustomize; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../.golangci-kustomize.yml run ./...
-	cd cmd/pluginator; \
-	$(MYGOBIN)/golangci-lint-kustomize -c ../../.golangci-kustomize.yml run ./...
+	cd api; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../.golangci-kustomize.yml \
+	  run ./...
+	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../.golangci-kustomize.yml \
+	  run ./...
+	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
+	  -c ../../.golangci-kustomize.yml \
+	  run ./...
 
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
 build-kustomize-api: $(builtinplugins)
 	cd api; go build ./...
+
+.PHONY: generate-kustomize-api
+generate-kustomize-api: $(MYGOBIN)/k8scopy
+	cd api; go generate ./...
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
@@ -270,17 +279,8 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-3.8.6: $(MYGOBIN)/mdrip
-	( \
-		set -e; \
-		tag=v3.8.6; \
-		/bin/rm -f $(MYGOBIN)/kustomize; \
-		echo "Installing kustomize $$tag."; \
-		GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3@$${tag}; \
-		./hack/testExamplesAgainstKustomize.sh $$tag; \
-		echo "Reinstalling kustomize from HEAD."; \
-		cd kustomize; go install .; \
-	)
+test-examples-kustomize-against-4.0: $(MYGOBIN)/mdrip
+	./hack/testExamplesAgainstKustomize.sh v4@v4.0.5
 
 # linux only.
 # This is for testing an example plugin that
@@ -354,12 +354,14 @@ $(MYGOBIN)/gh:
 	)
 
 .PHONY: clean
-clean: kustomize-external-go-plugin-clean
+clean: clean-kustomize-external-go-plugin
 	go clean --cache
 	rm -f $(builtinplugins)
-	rm -f $(MYGOBIN)/pluginator
 	rm -f $(MYGOBIN)/kustomize
 	rm -f $(MYGOBIN)/golangci-lint-kustomize
+
+# Handle pluginator manually.
+# rm -f $(MYGOBIN)/pluginator
 
 # Nuke the site from orbit.  It's the only way to be sure.
 .PHONY: nuke

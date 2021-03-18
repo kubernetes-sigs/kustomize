@@ -9,26 +9,18 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/kusterr"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-// Merginator merges resources.
-type Merginator interface {
-	// Merge creates a new ResMap by merging incoming resources.
-	// Error if conflict found.
-	Merge([]*resource.Resource) (ResMap, error)
-}
 
 // Factory makes instances of ResMap.
 type Factory struct {
 	// Makes resources.
 	resF *resource.Factory
-	// Makes ResMaps via merging.
-	pm Merginator
 }
 
 // NewFactory returns a new resmap.Factory.
-func NewFactory(rf *resource.Factory, pm Merginator) *Factory {
-	return &Factory{resF: rf, pm: pm}
+func NewFactory(rf *resource.Factory) *Factory {
+	return &Factory{resF: rf}
 }
 
 // RF returns a resource.Factory.
@@ -131,12 +123,6 @@ func (rmF *Factory) FromSecretArgs(
 	return rmF.FromResource(res), nil
 }
 
-// Merge creates a new ResMap by merging incoming resources.
-// Error if conflict found.
-func (rmF *Factory) Merge(patches []*resource.Resource) (ResMap, error) {
-	return rmF.pm.Merge(patches)
-}
-
 func newResMapFromResourceSlice(
 	resources []*resource.Resource) (ResMap, error) {
 	result := New()
@@ -147,4 +133,13 @@ func newResMapFromResourceSlice(
 		}
 	}
 	return result, nil
+}
+
+// NewResMapFromRNodeSlice returns a ResMap from a slice of RNodes
+func (rmF *Factory) NewResMapFromRNodeSlice(s []*yaml.RNode) (ResMap, error) {
+	rs, err := rmF.resF.ResourcesFromRNodes(s)
+	if err != nil {
+		return nil, err
+	}
+	return newResMapFromResourceSlice(rs)
 }

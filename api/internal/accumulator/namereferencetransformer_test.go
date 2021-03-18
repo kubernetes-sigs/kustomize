@@ -8,17 +8,16 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
-	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 )
 
+const notEqualErrFmt = "expected (self) doesn't match actual (other): %v"
+
 func TestNameReferenceHappyRun(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmaptest_test.NewRmBuilder(t, rf).AddWithName(
+	m := resmaptest_test.NewRmBuilderDefault(t).AddWithName(
 		"cm1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -220,6 +219,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 						"secret1",
 						"secret1",
 						"secret2",
+						"cm1",
 					},
 				},
 			},
@@ -261,7 +261,8 @@ func TestNameReferenceHappyRun(t *testing.T) {
 			},
 		}).ResMap()
 
-	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).ReplaceResource(
+	expected := resmaptest_test.NewSeededRmBuilderDefault(
+		t, m.ShallowCopy()).ReplaceResource(
 		map[string]interface{}{
 			"group":      "apps",
 			"apiVersion": "v1",
@@ -422,6 +423,7 @@ func TestNameReferenceHappyRun(t *testing.T) {
 						"someprefix-secret1-somehash",
 						"someprefix-secret1-somehash",
 						"secret2",
+						"someprefix-cm1-somehash",
 					},
 				},
 			},
@@ -470,19 +472,17 @@ func TestNameReferenceHappyRun(t *testing.T) {
 	}
 
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
 func TestNameReferenceUnhappyRun(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
 	tests := []struct {
 		resMap      resmap.ResMap
 		expectedErr string
 	}{
 		{
-			resMap: resmaptest_test.NewRmBuilder(t, rf).Add(
+			resMap: resmaptest_test.NewRmBuilderDefault(t).Add(
 				map[string]interface{}{
 					"apiVersion": "rbac.authorization.k8s.io/v1",
 					"kind":       "ClusterRole",
@@ -502,7 +502,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 				}).ResMap(),
 			expectedErr: "is expected to be"},
 		{
-			resMap: resmaptest_test.NewRmBuilder(t, rf).Add(
+			resMap: resmaptest_test.NewRmBuilderDefault(t).Add(
 				map[string]interface{}{
 					"apiVersion": "rbac.authorization.k8s.io/v1",
 					"kind":       "ClusterRole",
@@ -520,7 +520,19 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 						},
 					},
 				}).ResMap(),
-			expectedErr: "cannot find field 'name' in node"},
+			expectedErr: `updating name reference in 'rules/resourceNames' field of ` +
+				`'rbac.authorization.k8s.io_v1_ClusterRole|~X|cr'` +
+				`: considering field 'rules/resourceNames' of object
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cr
+rules:
+- resourceNames:
+    foo: bar
+  resources:
+  - secrets
+: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`},
 	}
 
 	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
@@ -531,15 +543,14 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), test.expectedErr) {
-			t.Fatalf("Incorrect error.\nExpected: %s, but got %v",
+			t.Fatalf("Incorrect error.\nExpected:\n %s\nGot:\n%v",
 				test.expectedErr, err)
 		}
 	}
 }
 
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
+	rf := provider.NewDefaultDepProvider().GetResourceFactory()
 
 	v1 := rf.FromMapWithName(
 		"volume1",
@@ -590,7 +601,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	v2.AppendRefBy(c2.CurId())
 
 	if err := m1.ErrorIfNotEqualLists(m2); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -664,9 +675,7 @@ const (
 // object with the same original names (uniquename) in different namespaces
 // and with different current Id.
 func TestNameReferenceNamespace(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilderDefault(t).
 		// Add ConfigMap with the same org name in noNs, "ns1" and "ns2" namespaces
 		AddWithName(orgname, map[string]interface{}{
 			"apiVersion": "v1",
@@ -715,7 +724,7 @@ func TestNameReferenceNamespace(t *testing.T) {
 		AddWithNsAndName(ns1, orgname, deploymentMap(ns1, prefixedname, orgname, orgname)).
 		AddWithNsAndName(ns2, orgname, deploymentMap(ns2, suffixedname, orgname, orgname)).ResMap()
 
-	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+	expected := resmaptest_test.NewSeededRmBuilderDefault(t, m.ShallowCopy()).
 		ReplaceResource(deploymentMap(defaultNs, modifiedname, modifiedname, modifiedname)).
 		ReplaceResource(deploymentMap(ns1, prefixedname, prefixedname, prefixedname)).
 		ReplaceResource(deploymentMap(ns2, suffixedname, suffixedname, suffixedname)).ResMap()
@@ -726,8 +735,9 @@ func TestNameReferenceNamespace(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -735,9 +745,7 @@ func TestNameReferenceNamespace(t *testing.T) {
 // object with the same original names (uniquename) in different namespaces
 // and with different current Id.
 func TestNameReferenceClusterWide(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilderDefault(t).
 		// Add ServiceAccount with the same org name in noNs, "ns1" and "ns2" namespaces
 		AddWithName(orgname, map[string]interface{}{
 			"apiVersion": "v1",
@@ -816,7 +824,7 @@ func TestNameReferenceClusterWide(t *testing.T) {
 				},
 			}}).ResMap()
 
-	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+	expected := resmaptest_test.NewSeededRmBuilderDefault(t, m.ShallowCopy()).
 		ReplaceResource(
 			map[string]interface{}{
 				"apiVersion": "rbac.authorization.k8s.io/v1",
@@ -889,8 +897,9 @@ func TestNameReferenceClusterWide(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -898,9 +907,7 @@ func TestNameReferenceClusterWide(t *testing.T) {
 // object with the same original names (uniquename) in different namespaces
 // and with different current Id.
 func TestNameReferenceNamespaceTransformation(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilderDefault(t).
 		AddWithNsAndName(ns4, orgname, map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Secret",
@@ -964,7 +971,7 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 				},
 			}}).ResMap()
 
-	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+	expected := resmaptest_test.NewSeededRmBuilderDefault(t, m.ShallowCopy()).
 		ReplaceResource(
 			map[string]interface{}{
 				"apiVersion": "rbac.authorization.k8s.io/v1",
@@ -1017,8 +1024,9 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }
 
@@ -1026,9 +1034,7 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 // It validates the change done is IsSameFuzzyNamespace which
 // uses the IsNsEquals method instead of the simple == operator.
 func TestNameReferenceCandidateSelection(t *testing.T) {
-	rf := resource.NewFactory(
-		kunstruct.NewKunstructuredFactoryImpl())
-	m := resmaptest_test.NewRmBuilder(t, rf).
+	m := resmaptest_test.NewRmBuilderDefault(t).
 		AddWithName("cm1", map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -1045,7 +1051,7 @@ func TestNameReferenceCandidateSelection(t *testing.T) {
 		AddWithName("deploy1", deploymentMap("", "p1-deploy1", "cm1", "secret1")).
 		ResMap()
 
-	expected := resmaptest_test.NewSeededRmBuilder(t, rf, m.ShallowCopy()).
+	expected := resmaptest_test.NewSeededRmBuilderDefault(t, m.ShallowCopy()).
 		ReplaceResource(deploymentMap("", "p1-deploy1", "p1-cm1-hash", "p1-secret1-hash")).
 		ResMap()
 
@@ -1055,7 +1061,8 @@ func TestNameReferenceCandidateSelection(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
-		t.Fatalf("actual doesn't match expected: %v", err)
+		t.Fatalf(notEqualErrFmt, err)
 	}
 }

@@ -24,12 +24,12 @@ func TestPluginsNotEnabled(t *testing.T) {
 		BuildGoPlugin("someteam.example.com", "v1", "StringPrefixer")
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 transformers:
 - stringPrefixer.yaml
 `)
-	writeStringPrefixer(th, "/app/stringPrefixer.yaml", "apple")
-	err := th.RunWithErr("/app", th.MakeOptionsPluginsDisabled())
+	writeStringPrefixer(th, "stringPrefixer.yaml", "apple")
+	err := th.RunWithErr(".", th.MakeOptionsPluginsDisabled())
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -43,7 +43,7 @@ func TestSedTransformer(t *testing.T) {
 		PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - configmap.yaml
 
@@ -56,38 +56,38 @@ configMapGenerator:
   - FOO=$FOO
   - BAR=$BAR
 `)
-	th.WriteF("/app/sed-transformer.yaml", `
+	th.WriteF("sed-transformer.yaml", `
 apiVersion: someteam.example.com/v1
 kind: SedTransformer
 metadata:
   name: some-random-name
 argsFromFile: sed-input.txt
 `)
-	th.WriteF("/app/sed-input.txt", `
+	th.WriteF("sed-input.txt", `
 s/$FOO/foo/g
 s/$BAR/bar/g
 `)
 
-	th.WriteF("/app/configmap.yaml", `
+	th.WriteF("configmap.yaml", `
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: configmap-a
   annotations:
-    kustomize.k8s.io/Generated: "false"
+    fruit: peach
 data:
   foo: $FOO
 `)
 
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpectedNoIdAnnotations(m, `
 apiVersion: v1
 data:
   foo: foo
 kind: ConfigMap
 metadata:
   annotations:
-    kustomize.k8s.io/Generated: "false"
+    fruit: peach
   name: configmap-a
 ---
 apiVersion: v1
@@ -140,7 +140,7 @@ func TestOrderedTransformers(t *testing.T) {
 		BuildGoPlugin("someteam.example.com", "v1", "DatePrefixer")
 	defer th.Reset()
 
-	th.WriteK("/app", `
+	th.WriteK(".", `
 resources:
 - deployment.yaml
 transformers:
@@ -149,12 +149,12 @@ transformers:
 - applePrefixer.yaml
 - date2Prefixer.yaml
 `)
-	writeDeployment(th, "/app/deployment.yaml")
-	writeStringPrefixer(th, "/app/applePrefixer.yaml", "apple")
-	writeStringPrefixer(th, "/app/peachPrefixer.yaml", "peach")
-	writeDatePrefixer(th, "/app/date1Prefixer.yaml", "date1")
-	writeDatePrefixer(th, "/app/date2Prefixer.yaml", "date2")
-	m := th.Run("/app", th.MakeOptionsPluginsEnabled())
+	writeDeployment(th, "deployment.yaml")
+	writeStringPrefixer(th, "applePrefixer.yaml", "apple")
+	writeStringPrefixer(th, "peachPrefixer.yaml", "peach")
+	writeDatePrefixer(th, "date1Prefixer.yaml", "date1")
+	writeDatePrefixer(th, "date2Prefixer.yaml", "date2")
+	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
@@ -178,24 +178,24 @@ func TestTransformedTransformers(t *testing.T) {
 		BuildGoPlugin("someteam.example.com", "v1", "DatePrefixer")
 	defer th.Reset()
 
-	th.WriteK("/app/base", `
+	th.WriteK("base", `
 resources:
 - stringPrefixer.yaml
 transformers:
 - datePrefixer.yaml
 `)
-	writeStringPrefixer(th, "/app/base/stringPrefixer.yaml", "apple")
-	writeDatePrefixer(th, "/app/base/datePrefixer.yaml", "date")
+	writeStringPrefixer(th, "base/stringPrefixer.yaml", "apple")
+	writeDatePrefixer(th, "base/datePrefixer.yaml", "date")
 
-	th.WriteK("/app/overlay", `
+	th.WriteK("overlay", `
 resources:
 - deployment.yaml
 transformers:
 - ../base
 `)
-	writeDeployment(th, "/app/overlay/deployment.yaml")
+	writeDeployment(th, "overlay/deployment.yaml")
 
-	m := th.Run("/app/overlay", th.MakeOptionsPluginsEnabled())
+	m := th.Run("overlay", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment

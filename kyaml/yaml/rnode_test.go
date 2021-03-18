@@ -8,8 +8,418 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
+
+func TestRNodeHasNilEntryInList(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		hasNil bool
+		path   string
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp:  resultExpected{},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp:  resultExpected{},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{},
+		},
+		"listWithNil": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					nil,
+				},
+			},
+			rsExp: resultExpected{
+				hasNil: false, // TODO: This should be true.
+				path:   "this/should/be/non-empty",
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			hasNil, path := rn.HasNilEntryInList()
+			if tc.rsExp.hasNil {
+				if !assert.True(t, hasNil) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.path, path) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.False(t, hasNil) {
+					t.FailNow()
+				}
+				if !assert.Empty(t, path) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func TestRNodeNewStringRNodeText(t *testing.T) {
+	rn := NewStringRNode("cat")
+	if !assert.Equal(t, `cat
+`,
+		rn.MustString()) {
+		t.FailNow()
+	}
+}
+
+func TestRNodeNewStringRNodeBinary(t *testing.T) {
+	rn := NewStringRNode(string([]byte{
+		0xff, // non-utf8
+		0x68, // h
+		0x65, // e
+		0x6c, // l
+		0x6c, // l
+		0x6f, // o
+	}))
+	if !assert.Equal(t, `!!binary /2hlbGxv
+`,
+		rn.MustString()) {
+		t.FailNow()
+	}
+}
+
+func TestRNodeGetDataMap(t *testing.T) {
+	emptyMap := map[string]string{}
+	testCases := map[string]struct {
+		theMap   map[string]interface{}
+		expected map[string]string
+	}{
+		"actuallyNil": {
+			theMap:   nil,
+			expected: emptyMap,
+		},
+		"empty": {
+			theMap:   map[string]interface{}{},
+			expected: emptyMap,
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			expected: emptyMap,
+		},
+		"noNameConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+			},
+			expected: emptyMap,
+		},
+		"configmap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "winnie",
+				},
+				"data": map[string]string{
+					"wine":   "cabernet",
+					"truck":  "ford",
+					"rocket": "falcon9",
+					"planet": "mars",
+					"city":   "brownsville",
+				},
+			},
+			// order irrelevant, because assert.Equals is smart about maps.
+			expected: map[string]string{
+				"city":   "brownsville",
+				"wine":   "cabernet",
+				"planet": "mars",
+				"rocket": "falcon9",
+				"truck":  "ford",
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			m := rn.GetDataMap()
+			if !assert.Equal(t, tc.expected, m) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestRNodeSetDataMap(t *testing.T) {
+	testCases := map[string]struct {
+		theMap   map[string]interface{}
+		input    map[string]string
+		expected map[string]string
+	}{
+		"empty": {
+			theMap: map[string]interface{}{},
+			input: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+			expected: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+		},
+		"replace": {
+			theMap: map[string]interface{}{
+				"foo": 3,
+				"data": map[string]string{
+					"rocket": "falcon9",
+					"planet": "mars",
+				},
+			},
+			input: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+			expected: map[string]string{
+				"wine":  "cabernet",
+				"truck": "ford",
+			},
+		},
+		"clear1": {
+			theMap: map[string]interface{}{
+				"foo": 3,
+				"data": map[string]string{
+					"rocket": "falcon9",
+					"planet": "mars",
+				},
+			},
+			input:    map[string]string{},
+			expected: map[string]string{},
+		},
+		"clear2": {
+			theMap: map[string]interface{}{
+				"foo": 3,
+				"data": map[string]string{
+					"rocket": "falcon9",
+					"planet": "mars",
+				},
+			},
+			input:    nil,
+			expected: map[string]string{},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			rn.SetDataMap(tc.input)
+			m := rn.GetDataMap()
+			if !assert.Equal(t, tc.expected, m) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestRNodeGetValidatedMetadata(t *testing.T) {
+	testConfigMap := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "winnie",
+		},
+	}
+	type resultExpected struct {
+		out    ResourceMeta
+		errMsg string
+	}
+
+	testCases := map[string]struct {
+		theMap map[string]interface{}
+		rsExp  resultExpected
+	}{
+		"actuallyNil": {
+			theMap: nil,
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"empty": {
+			theMap: map[string]interface{}{},
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"mostlyEmpty": {
+			theMap: map[string]interface{}{
+				"hey": "there",
+			},
+			rsExp: resultExpected{
+				errMsg: "missing Resource metadata",
+			},
+		},
+		"noNameConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+			},
+			rsExp: resultExpected{
+				errMsg: "missing metadata.name",
+			},
+		},
+		"configmap": {
+			theMap: testConfigMap,
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMap",
+					},
+					ObjectMeta: ObjectMeta{
+						NameMeta: NameMeta{
+							Name: "winnie",
+						},
+					},
+				},
+			},
+		},
+		"list": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "List",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "List",
+					},
+				},
+			},
+		},
+		"configmaplist": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMapList",
+				"items": []interface{}{
+					testConfigMap,
+					testConfigMap,
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMapList",
+					},
+				},
+			},
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			m, err := rn.GetValidatedMetadata()
+			if tc.rsExp.errMsg == "" {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.rsExp.out, m) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.rsExp.errMsg) {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func TestRNodeMapEmpty(t *testing.T) {
+	newRNodeMap, err := NewRNode(nil).Map()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(newRNodeMap))
+}
+
+func TestRNodeMap(t *testing.T) {
+	wn := NewRNode(nil)
+	if err := wn.UnmarshalJSON([]byte(`{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "homer",
+    "namespace": "simpsons"
+  }
+}`)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+
+	expected := map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "homer",
+			"namespace": "simpsons",
+		},
+	}
+
+	actual, err := wn.Map()
+	assert.NoError(t, err)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+}
 
 func TestRNodeFromMap(t *testing.T) {
 	testConfigMap := map[string]interface{}{
@@ -19,25 +429,25 @@ func TestRNodeFromMap(t *testing.T) {
 			"name": "winnie",
 		},
 	}
-	type thingExpected struct {
+	type resultExpected struct {
 		out string
 		err error
 	}
 
 	testCases := map[string]struct {
-		theMap   map[string]interface{}
-		expected thingExpected
+		theMap map[string]interface{}
+		rsExp  resultExpected
 	}{
 		"actuallyNil": {
 			theMap: nil,
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `{}`,
 				err: nil,
 			},
 		},
 		"empty": {
 			theMap: map[string]interface{}{},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `{}`,
 				err: nil,
 			},
@@ -46,14 +456,14 @@ func TestRNodeFromMap(t *testing.T) {
 			theMap: map[string]interface{}{
 				"hey": "there",
 			},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `hey: there`,
 				err: nil,
 			},
 		},
 		"configmap": {
 			theMap: testConfigMap,
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `
 apiVersion: v1
 kind: ConfigMap
@@ -72,7 +482,7 @@ metadata:
 					testConfigMap,
 				},
 			},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `
 apiVersion: v1
 items:
@@ -98,7 +508,7 @@ kind: List
 					testConfigMap,
 				},
 			},
-			expected: thingExpected{
+			rsExp: resultExpected{
 				out: `
 apiVersion: v1
 items:
@@ -121,12 +531,12 @@ kind: ConfigMapList
 		tc := testCases[n]
 		t.Run(n, func(t *testing.T) {
 			rn, err := FromMap(tc.theMap)
-			if tc.expected.err == nil {
+			if tc.rsExp.err == nil {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
 				if !assert.Equal(t,
-					strings.TrimSpace(tc.expected.out),
+					strings.TrimSpace(tc.rsExp.out),
 					strings.TrimSpace(rn.MustString())) {
 					t.FailNow()
 				}
@@ -134,7 +544,7 @@ kind: ConfigMapList
 				if !assert.Error(t, err) {
 					t.FailNow()
 				}
-				if !assert.Equal(t, tc.expected.err, err) {
+				if !assert.Equal(t, tc.rsExp.err, err) {
 					t.FailNow()
 				}
 			}
@@ -518,5 +928,830 @@ func TestRNodeIsNilOrEmpty(t *testing.T) {
 
 	if NewListRNode("foo").IsNilOrEmpty() {
 		t.Fatalf("non-empty list should not be empty")
+	}
+
+	if !NewRNode(&Node{}).IsNilOrEmpty() {
+		t.Fatalf("zero YNode should be empty")
+	}
+}
+
+const deploymentJSON = `
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "homer",
+    "namespace": "simpsons",
+    "labels": {
+      "fruit": "apple",
+      "veggie": "carrot"
+    },
+    "annotations": {
+      "area": "51",
+      "greeting": "Take me to your leader."
+    }
+  }
+}
+`
+
+func getNamespaceOrDie(t *testing.T, n *RNode) string {
+	m, err := n.GetNamespace()
+	assert.NoError(t, err)
+	return m
+}
+
+func TestRNodeSetNamespace(t *testing.T) {
+	n := NewRNode(nil)
+	assert.Equal(t, "", getNamespaceOrDie(t, n))
+	assert.NoError(t, n.SetNamespace(""))
+	assert.Equal(t, "", getNamespaceOrDie(t, n))
+	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	assert.NoError(t, n.SetNamespace("flanders"))
+	assert.Equal(t, "flanders", getNamespaceOrDie(t, n))
+}
+
+func getLabelsOrDie(t *testing.T, n *RNode) map[string]string {
+	m, err := n.GetLabels()
+	assert.NoError(t, err)
+	return m
+}
+
+func TestRNodeSetLabels(t *testing.T) {
+	n := NewRNode(nil)
+	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+	assert.NoError(t, n.SetLabels(map[string]string{}))
+	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+
+	n = NewRNode(nil)
+	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	labels := getLabelsOrDie(t, n)
+	assert.Equal(t, 2, len(labels))
+	assert.Equal(t, "apple", labels["fruit"])
+	assert.Equal(t, "carrot", labels["veggie"])
+	assert.NoError(t, n.SetLabels(map[string]string{
+		"label1": "foo",
+		"label2": "bar",
+	}))
+	labels = getLabelsOrDie(t, n)
+	assert.Equal(t, 2, len(labels))
+	assert.Equal(t, "foo", labels["label1"])
+	assert.Equal(t, "bar", labels["label2"])
+	assert.NoError(t, n.SetLabels(map[string]string{}))
+	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+}
+
+func getAnnotationsOrDie(t *testing.T, n *RNode) map[string]string {
+	m, err := n.GetAnnotations()
+	assert.NoError(t, err)
+	return m
+}
+
+func TestRNodeGetAnnotations(t *testing.T) {
+	n := NewRNode(nil)
+	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+	assert.NoError(t, n.SetAnnotations(map[string]string{}))
+	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+
+	n = NewRNode(nil)
+	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	annotations := getAnnotationsOrDie(t, n)
+	assert.Equal(t, 2, len(annotations))
+	assert.Equal(t, "51", annotations["area"])
+	assert.Equal(t, "Take me to your leader.", annotations["greeting"])
+	assert.NoError(t, n.SetAnnotations(map[string]string{
+		"annotation1": "foo",
+		"annotation2": "bar",
+	}))
+	annotations = getAnnotationsOrDie(t, n)
+	assert.Equal(t, 2, len(annotations))
+	assert.Equal(t, "foo", annotations["annotation1"])
+	assert.Equal(t, "bar", annotations["annotation2"])
+	assert.NoError(t, n.SetAnnotations(map[string]string{}))
+	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+}
+
+func TestRNodeMatchesAnnotationSelector(t *testing.T) {
+	rn := NewRNode(nil)
+	assert.NoError(t, rn.UnmarshalJSON([]byte(deploymentJSON)))
+	testcases := map[string]struct {
+		selector string
+		matches  bool
+		errMsg   string
+	}{
+		"select_01": {
+			selector: ".*",
+			matches:  false,
+			errMsg:   "name part must consist of alphanumeric character",
+		},
+		"select_02": {
+			selector: "area=51",
+			matches:  true,
+		},
+		"select_03": {
+			selector: "area=florida",
+			matches:  false,
+		},
+		"select_04": {
+			selector: "area in (disneyland, 51, iowa)",
+			matches:  true,
+		},
+		"select_05": {
+			selector: "area in (disneyland, iowa)",
+			matches:  false,
+		},
+		"select_06": {
+			selector: "area notin (disneyland, 51, iowa)",
+			matches:  false,
+		},
+	}
+	for n, tc := range testcases {
+		gotMatch, err := rn.MatchesAnnotationSelector(tc.selector)
+		if tc.errMsg == "" {
+			assert.NoError(t, err)
+			assert.Equalf(
+				t, tc.matches, gotMatch, "test=%s selector=%v", n, tc.selector)
+		} else {
+			assert.Truef(
+				t, strings.Contains(err.Error(), tc.errMsg),
+				"test=%s selector=%v", n, tc.selector)
+		}
+	}
+}
+
+func TestRNodeMatchesLabelSelector(t *testing.T) {
+	rn := NewRNode(nil)
+	assert.NoError(t, rn.UnmarshalJSON([]byte(deploymentJSON)))
+	testcases := map[string]struct {
+		selector string
+		matches  bool
+		errMsg   string
+	}{
+		"select_01": {
+			selector: ".*",
+			matches:  false,
+			errMsg:   "name part must consist of alphanumeric character",
+		},
+		"select_02": {
+			selector: "fruit=apple",
+			matches:  true,
+		},
+		"select_03": {
+			selector: "fruit=banana",
+			matches:  false,
+		},
+		"select_04": {
+			selector: "fruit in (orange, banana, apple)",
+			matches:  true,
+		},
+		"select_05": {
+			selector: "fruit in (orange, banana)",
+			matches:  false,
+		},
+		"select_06": {
+			selector: "fruit notin (orange, banana, apple)",
+			matches:  false,
+		},
+	}
+	for n, tc := range testcases {
+		gotMatch, err := rn.MatchesLabelSelector(tc.selector)
+		if tc.errMsg == "" {
+			assert.NoError(t, err)
+			assert.Equalf(
+				t, tc.matches, gotMatch, "test=%s selector=%v", n, tc.selector)
+		} else {
+			assert.Truef(
+				t, strings.Contains(err.Error(), tc.errMsg),
+				"test=%s selector=%v", n, tc.selector)
+		}
+	}
+}
+
+const (
+	deploymentLittleJson = `{"apiVersion":"apps/v1","kind":"Deployment",` +
+		`"metadata":{"name":"homer","namespace":"simpsons"}}`
+
+	deploymentBiggerJson = `
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "homer",
+    "namespace": "simpsons",
+    "labels": {
+      "fruit": "apple",
+      "veggie": "carrot"
+    },
+    "annotations": {
+      "area": "51",
+      "greeting": "Take me to your leader."
+    }
+  },
+  "spec": {
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "CM_FOO",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "key": "somekey",
+                    "name": "myCm"
+                  }
+                }
+              },
+              {
+                "name": "SECRET_FOO",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "someKey",
+                    "name": "mySecret"
+                  }
+                }
+              }
+            ],
+            "image": "nginx:1.7.9",
+            "name": "nginx"
+          }
+        ]
+      }
+    }
+  }
+}
+`
+	bigMapYaml = `Kind: Service
+complextree:
+  - field1:
+      - boolfield: true
+        floatsubfield: 1.01
+        intsubfield: 1010
+        stringsubfield: idx1010
+      - boolfield: false
+        floatsubfield: 1.011
+        intsubfield: 1011
+        stringsubfield: idx1011
+    field2:
+      - boolfield: true
+        floatsubfield: 1.02
+        intsubfield: 1020
+        stringsubfield: idx1020
+      - boolfield: false
+        floatsubfield: 1.021
+        intsubfield: 1021
+        stringsubfield: idx1021
+  - field1:
+      - boolfield: true
+        floatsubfield: 1.11
+        intsubfield: 1110
+        stringsubfield: idx1110
+      - boolfield: false
+        floatsubfield: 1.111
+        intsubfield: 1111
+        stringsubfield: idx1111
+    field2:
+      - boolfield: true
+        floatsubfield: 1.112
+        intsubfield: 1120
+        stringsubfield: idx1120
+      - boolfield: false
+        floatsubfield: 1.1121
+        intsubfield: 1121
+        stringsubfield: idx1121
+metadata:
+    labels:
+        app: application-name
+    name: service-name
+spec:
+    ports:
+        port: 80
+that:
+  - idx0
+  - idx1
+  - idx2
+  - idx3
+these:
+  - field1:
+      - idx010
+      - idx011
+    field2:
+      - idx020
+      - idx021
+  - field1:
+      - idx110
+      - idx111
+    field2:
+      - idx120
+      - idx121
+  - field1:
+      - idx210
+      - idx211
+    field2:
+      - idx220
+      - idx221
+this:
+    is:
+        aBool: true
+        aFloat: 1.001
+        aNilValue: null
+        aNumber: 1000
+        anEmptyMap: {}
+        anEmptySlice: []
+those:
+  - field1: idx0foo
+    field2: idx0bar
+  - field1: idx1foo
+    field2: idx1bar
+  - field1: idx2foo
+    field2: idx2bar
+`
+)
+
+func TestGetFieldValueReturnsMap(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := map[string]interface{}{
+		"fruit":  "apple",
+		"veggie": "carrot",
+	}
+	actual, err := rn.GetFieldValue("metadata.labels")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+}
+
+func TestGetFieldValueReturnsStuff(t *testing.T) {
+	wn := NewRNode(nil)
+	if err := wn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := []interface{}{
+		map[string]interface{}{
+			"env": []interface{}{
+				map[string]interface{}{
+					"name": "CM_FOO",
+					"valueFrom": map[string]interface{}{
+						"configMapKeyRef": map[string]interface{}{
+							"key":  "somekey",
+							"name": "myCm",
+						},
+					},
+				},
+				map[string]interface{}{
+					"name": "SECRET_FOO",
+					"valueFrom": map[string]interface{}{
+						"secretKeyRef": map[string]interface{}{
+							"key":  "someKey",
+							"name": "mySecret",
+						},
+					},
+				},
+			},
+			"image": string("nginx:1.7.9"),
+			"name":  string("nginx"),
+		},
+	}
+	actual, err := wn.GetFieldValue("spec.template.spec.containers")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+	// Cannot go deeper yet.
+	_, err = wn.GetFieldValue("spec.template.spec.containers.env")
+	if err == nil {
+		t.Fatalf("expected err %v", err)
+	}
+}
+
+func makeBigMap() map[string]interface{} {
+	return map[string]interface{}{
+		"Kind": "Service",
+		"metadata": map[string]interface{}{
+			"labels": map[string]interface{}{
+				"app": "application-name",
+			},
+			"name": "service-name",
+		},
+		"spec": map[string]interface{}{
+			"ports": map[string]interface{}{
+				"port": int64(80),
+			},
+		},
+		"this": map[string]interface{}{
+			"is": map[string]interface{}{
+				"aNumber":      int64(1000),
+				"aFloat":       float64(1.001),
+				"aNilValue":    nil,
+				"aBool":        true,
+				"anEmptyMap":   map[string]interface{}{},
+				"anEmptySlice": []interface{}{},
+				/*
+					TODO: test for unrecognizable (e.g. a function)
+						"unrecognizable": testing.InternalExample{
+							Name: "fooBar",
+						},
+				*/
+			},
+		},
+		"that": []interface{}{
+			"idx0",
+			"idx1",
+			"idx2",
+			"idx3",
+		},
+		"those": []interface{}{
+			map[string]interface{}{
+				"field1": "idx0foo",
+				"field2": "idx0bar",
+			},
+			map[string]interface{}{
+				"field1": "idx1foo",
+				"field2": "idx1bar",
+			},
+			map[string]interface{}{
+				"field1": "idx2foo",
+				"field2": "idx2bar",
+			},
+		},
+		"these": []interface{}{
+			map[string]interface{}{
+				"field1": []interface{}{"idx010", "idx011"},
+				"field2": []interface{}{"idx020", "idx021"},
+			},
+			map[string]interface{}{
+				"field1": []interface{}{"idx110", "idx111"},
+				"field2": []interface{}{"idx120", "idx121"},
+			},
+			map[string]interface{}{
+				"field1": []interface{}{"idx210", "idx211"},
+				"field2": []interface{}{"idx220", "idx221"},
+			},
+		},
+		"complextree": []interface{}{
+			map[string]interface{}{
+				"field1": []interface{}{
+					map[string]interface{}{
+						"stringsubfield": "idx1010",
+						"intsubfield":    int64(1010),
+						"floatsubfield":  float64(1.010),
+						"boolfield":      true,
+					},
+					map[string]interface{}{
+						"stringsubfield": "idx1011",
+						"intsubfield":    int64(1011),
+						"floatsubfield":  float64(1.011),
+						"boolfield":      false,
+					},
+				},
+				"field2": []interface{}{
+					map[string]interface{}{
+						"stringsubfield": "idx1020",
+						"intsubfield":    int64(1020),
+						"floatsubfield":  float64(1.020),
+						"boolfield":      true,
+					},
+					map[string]interface{}{
+						"stringsubfield": "idx1021",
+						"intsubfield":    int64(1021),
+						"floatsubfield":  float64(1.021),
+						"boolfield":      false,
+					},
+				},
+			},
+			map[string]interface{}{
+				"field1": []interface{}{
+					map[string]interface{}{
+						"stringsubfield": "idx1110",
+						"intsubfield":    int64(1110),
+						"floatsubfield":  float64(1.110),
+						"boolfield":      true,
+					},
+					map[string]interface{}{
+						"stringsubfield": "idx1111",
+						"intsubfield":    int64(1111),
+						"floatsubfield":  float64(1.111),
+						"boolfield":      false,
+					},
+				},
+				"field2": []interface{}{
+					map[string]interface{}{
+						"stringsubfield": "idx1120",
+						"intsubfield":    int64(1120),
+						"floatsubfield":  float64(1.1120),
+						"boolfield":      true,
+					},
+					map[string]interface{}{
+						"stringsubfield": "idx1121",
+						"intsubfield":    int64(1121),
+						"floatsubfield":  float64(1.1121),
+						"boolfield":      false,
+					},
+				},
+			},
+		},
+	}
+}
+func TestBasicYamlOperationFromMap(t *testing.T) {
+	bytes, err := Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	if string(bytes) != bigMapYaml {
+		t.Fatalf("unexpected string equality")
+	}
+	rNode, err := Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rNodeString := rNode.MustString()
+	// The result from MustString has more indentation
+	// than bigMapYaml.
+	rNodeStrings := strings.Split(rNodeString, "\n")
+	bigMapStrings := strings.Split(bigMapYaml, "\n")
+	if len(rNodeStrings) != len(bigMapStrings) {
+		t.Fatalf("line count mismatch")
+	}
+	for i := range rNodeStrings {
+		s1 := strings.TrimSpace(rNodeStrings[i])
+		s2 := strings.TrimSpace(bigMapStrings[i])
+		if s1 != s2 {
+			t.Fatalf("expected '%s'=='%s'", s1, s2)
+		}
+	}
+}
+
+func TestGetFieldValueReturnsSlice(t *testing.T) {
+	bytes, err := yaml.Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rNode, err := Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	expected := []interface{}{"idx0", "idx1", "idx2", "idx3"}
+	actual, err := rNode.GetFieldValue("that")
+	if err != nil {
+		t.Fatalf("error getting slice: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
+	}
+}
+
+func TestGetFieldValueReturnsSliceOfMappings(t *testing.T) {
+	bytes, err := yaml.Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rn, err := Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	expected := []interface{}{
+		map[string]interface{}{
+			"field1": "idx0foo",
+			"field2": "idx0bar",
+		},
+		map[string]interface{}{
+			"field1": "idx1foo",
+			"field2": "idx1bar",
+		},
+		map[string]interface{}{
+			"field1": "idx2foo",
+			"field2": "idx2bar",
+		},
+	}
+	actual, err := rn.GetFieldValue("those")
+	if err != nil {
+		t.Fatalf("error getting slice: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
+	}
+}
+
+func TestGetFieldValueReturnsString(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	actual, err := rn.GetFieldValue("metadata.labels.fruit")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	v, ok := actual.(string)
+	if !ok || v != "apple" {
+		t.Fatalf("unexpected value '%v'", actual)
+	}
+}
+
+func TestGetFieldValueResolvesAlias(t *testing.T) {
+	yamlWithAlias := `
+foo: &a theValue
+bar: *a
+`
+	rn, err := Parse(yamlWithAlias)
+	if err != nil {
+		t.Fatalf("unexpected yaml parse error: %v", err)
+	}
+	actual, err := rn.GetFieldValue("bar")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	v, ok := actual.(string)
+	if !ok || v != "theValue" {
+		t.Fatalf("unexpected value '%v'", actual)
+	}
+}
+
+func TestGetString(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := "carrot"
+	actual, err := rn.GetString("metadata.labels.veggie")
+	if err != nil {
+		t.Fatalf("error getting string: %v", err)
+	}
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestGetSlice(t *testing.T) {
+	bytes, err := yaml.Marshal(makeBigMap())
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	rn, err := Parse(string(bytes))
+	if err != nil {
+		t.Fatalf("unexpected yaml.Marshal err: %v", err)
+	}
+	expected := []interface{}{"idx0", "idx1", "idx2", "idx3"}
+	actual, err := rn.GetSlice("that")
+	if err != nil {
+		t.Fatalf("error getting slice: %v", err)
+	}
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual slice does not deep equal expected slice:\n%v", diff)
+	}
+}
+
+func TestRoundTripJSON(t *testing.T) {
+	rn := NewRNode(nil)
+	err := rn.UnmarshalJSON([]byte(deploymentLittleJson))
+	if err != nil {
+		t.Fatalf("unexpected UnmarshalJSON err: %v", err)
+	}
+	data, err := rn.MarshalJSON()
+	if err != nil {
+		t.Fatalf("unexpected MarshalJSON err: %v", err)
+	}
+	actual := string(data)
+	if actual != deploymentLittleJson {
+		t.Fatalf("expected %s, got %s", deploymentLittleJson, actual)
+	}
+}
+
+func TestGettingFields(t *testing.T) {
+	rn := NewRNode(nil)
+	err := rn.UnmarshalJSON([]byte(deploymentBiggerJson))
+	if err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	expected := "Deployment"
+	actual := rn.GetKind()
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	expected = "homer"
+	actual = rn.GetName()
+	if expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	actualMap, err := rn.GetLabels()
+	if err != nil {
+		t.Fatalf("unexpected err '%v'", err)
+	}
+	v, ok := actualMap["fruit"]
+	if !ok || v != "apple" {
+		t.Fatalf("unexpected labels '%v'", actualMap)
+	}
+	actualMap, err = rn.GetAnnotations()
+	if err != nil {
+		t.Fatalf("unexpected err '%v'", err)
+	}
+	v, ok = actualMap["greeting"]
+	if !ok || v != "Take me to your leader." {
+		t.Fatalf("unexpected annotations '%v'", actualMap)
+	}
+}
+
+func TestMapEmpty(t *testing.T) {
+	newNodeMap, err := NewRNode(nil).Map()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(newNodeMap))
+}
+
+func TestMap(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentLittleJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+
+	expected := map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "homer",
+			"namespace": "simpsons",
+		},
+	}
+
+	actual, err := rn.Map()
+	assert.NoError(t, err)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Fatalf("actual map does not deep equal expected map:\n%v", diff)
+	}
+}
+
+func TestSetName(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	rn.SetName("marge")
+	if expected, actual := "marge", rn.GetName(); expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestSetNamespace(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	rn.SetNamespace("flanders")
+	meta, _ := rn.GetMeta()
+	if expected, actual := "flanders", meta.Namespace; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+func TestSetLabels(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	rn.SetLabels(map[string]string{
+		"label1": "foo",
+		"label2": "bar",
+	})
+	labels, err := rn.GetLabels()
+	assert.NoError(t, err)
+	if expected, actual := 2, len(labels); expected != actual {
+		t.Fatalf("expected '%d', got '%d'", expected, actual)
+	}
+	if expected, actual := "foo", labels["label1"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "bar", labels["label2"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+}
+
+func TestGetAnnotations(t *testing.T) {
+	rn := NewRNode(nil)
+	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+		t.Fatalf("unexpected unmarshaljson err: %v", err)
+	}
+	rn.SetAnnotations(map[string]string{
+		"annotation1": "foo",
+		"annotation2": "bar",
+	})
+	annotations, err := rn.GetAnnotations()
+	assert.NoError(t, err)
+	if expected, actual := 2, len(annotations); expected != actual {
+		t.Fatalf("expected '%d', got '%d'", expected, actual)
+	}
+	if expected, actual := "foo", annotations["annotation1"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
+	}
+	if expected, actual := "bar", annotations["annotation2"]; expected != actual {
+		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
 }

@@ -34,17 +34,15 @@ echo "Remaining args:  $remainingArgs"
 module=${fullTag%/*}
 echo "module=$module"
 
-# Obtain most recent commit hash associated with the module.
-lastCommitHash=$(
-  git log --tags=$module -1 \
-  --oneline --no-walk --pretty=format:%h)
+# Find previous tag that matches the tags module
+prevTag=$(git tag -l "$module*" --sort=-version:refname --no-contains=$fullTag | head -n 1)
 
 # Generate the changelog for this release
-# using commit hashes and commit messages.
+# using the last two tags for the module
 changeLogFile=$(mktemp)
-git log $lastCommitHash.. \
+git log $prevTag..$fullTag \
   --pretty=oneline \
-  --abbrev-commit --no-decorate --no-color \
+  --abbrev-commit --no-decorate --no-color --no-merges \
   -- $module > $changeLogFile
 echo "Release notes:"
 cat $changeLogFile
@@ -60,8 +58,6 @@ echo "pwd = $PWD"
 # Sanity check
 echo "### ls -las . ################################"
 ls -las .
-# echo "### ls -C /usr/bin ################################"
-# ls -C /usr/bin
 echo "###################################"
 
 
@@ -99,7 +95,6 @@ builds:
 
   goarch:
   - amd64
-  - arm
   - arm64
 
 checksum:
@@ -119,8 +114,14 @@ EOF
 
 cat $configFile
 
-/bin/goreleaser release \
+date
+
+time /usr/local/bin/goreleaser release \
+  --timeout 10m \
+  --parallelism 4 \
   --config=$configFile \
   --release-notes=$changeLogFile \
   --rm-dist \
-  --skip-validate $remainingArgs 
+  --skip-validate $remainingArgs
+
+date

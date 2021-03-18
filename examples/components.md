@@ -1,7 +1,7 @@
 # Demo: Components
 
 For more details regarding this feature you can read the
-[Kustomize Components KEP](https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/1802-kustomize-components.md).
+[Kustomize Components KEP](https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/1802-kustomize-components/README.md).
 
 _This example requires Kustomize ``v3.7.0`` or newer_
 
