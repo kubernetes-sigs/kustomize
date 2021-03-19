@@ -20,7 +20,7 @@ import (
 func GetTreeRunner(name string) *TreeRunner {
 	r := &TreeRunner{}
 	c := &cobra.Command{
-		Use:     "tree DIR",
+		Use:     "tree [DIR]",
 		Short:   commands.TreeShort,
 		Long:    commands.TreeLong,
 		Example: commands.TreeExamples,
@@ -83,11 +83,14 @@ func (r *TreeRunner) getMatchFilesGlob() []string {
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 	var input kio.Reader
 	var root = "."
-	if len(args) == 1 {
+	if len(args) == 0 {
+		args = append(args, root)
+	}
+	if args[0] == "-" {
+		input = &kio.ByteReader{Reader: c.InOrStdin()}
+	} else {
 		root = filepath.Clean(args[0])
 		input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: r.getMatchFilesGlob()}
-	} else {
-		input = &kio.ByteReader{Reader: c.InOrStdin()}
 	}
 
 	var fields []kio.TreeWriterField
