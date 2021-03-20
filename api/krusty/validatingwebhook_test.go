@@ -11,13 +11,13 @@ import (
 
 // Reproduce issue #3732
 func TestValidatingWebhookCombinedNamespaces(t *testing.T) {
-  th := kusttest_test.MakeHarness(t)
-  th.WriteK("base", `
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
 resources:
 - service.yaml
 - validatingwebhook.yaml
 `)
-  th.WriteF("base/service.yaml", `
+	th.WriteF("base/service.yaml", `
 apiVersion: v1
 kind: Service
 metadata:
@@ -30,7 +30,7 @@ spec:
       port: 443
       targetPort: webhook
 `)
-    th.WriteF("base/validatingwebhook.yaml", `
+	th.WriteF("base/validatingwebhook.yaml", `
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
@@ -59,14 +59,14 @@ webhooks:
         name: admission
         path: /networking/v1beta1/ingresses
 `)
-  th.WriteK("overlay", `
+	th.WriteK("overlay", `
 namespace: merge-namespace
 resources:
 - ../base
 patchesStrategicMerge:
 - validatingwebhookdelete.yaml
 `)
-    th.WriteF("overlay/validatingwebhookdelete.yaml", `
+	th.WriteF("overlay/validatingwebhookdelete.yaml", `
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
@@ -103,7 +103,7 @@ webhooks:
   clientConfig:
     service:
       name: admission
-      namespace: base-namespace
+      namespace: merge-namespace
       path: /networking/v1beta1/ingresses
   failurePolicy: Fail
   matchPolicy: Equivalent
@@ -133,5 +133,3 @@ spec:
   type: ClusterIP
 `)
 }
-
-
