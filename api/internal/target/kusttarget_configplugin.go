@@ -223,6 +223,31 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.LabelTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		for _, label := range kt.kustomization.Labels {
+			var c struct {
+				Labels     map[string]string
+				FieldSpecs []types.FieldSpec
+			}
+			c.Labels = label.Pairs
+			fss := types.FsSlice(label.FieldSpecs)
+			// merge the custom fieldSpecs with the default
+			if label.IncludeSelectors {
+				fss, err = fss.MergeAll(tc.CommonLabels)
+			} else {
+				// only add to metadata by default
+				fss, err = fss.MergeOne(types.FieldSpec{Path: "metadata/labels", CreateIfNotPresent: true})
+			}
+			if err != nil {
+				return nil, err
+			}
+			c.FieldSpecs = fss
+			p := f()
+			err = kt.configureBuiltinPlugin(p, c, bpt)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
 		var c struct {
 			Labels     map[string]string
 			FieldSpecs []types.FieldSpec
