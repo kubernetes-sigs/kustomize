@@ -22,6 +22,9 @@ func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 			EnvSource:  "c",
 		},
 	}}}
+	k.CommonLabels = map[string]string{
+		"foo": "bar",
+	}
 	k.FixKustomizationPostUnmarshalling()
 
 	expected := Kustomization{
@@ -35,6 +38,9 @@ func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 				EnvSources: []string{"a", "b", "c"},
 			},
 		}}},
+		CommonLabels: map[string]string{
+			"foo": "bar",
+		},
 	}
 	if !reflect.DeepEqual(k, expected) {
 		t.Fatalf("unexpected output: %v", k)

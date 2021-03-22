@@ -46,6 +46,9 @@ type Kustomization struct {
 	// CommonLabels to add to all objects and selectors.
 	CommonLabels map[string]string `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
 
+	// Labels to add to all objects but not selectors.
+	Labels []Label `json:"labels,omitempty" yaml:"labels,omitempty"`
+
 	// CommonAnnotations to add to all objects.
 	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 
@@ -190,6 +193,11 @@ func (k *Kustomization) FixKustomizationPreMarshalling() {
 	// PatchesJson6902 should be under the Patches field.
 	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
+
+	if l := labelFromCommonLabels(k.CommonLabels); l != nil {
+		k.Labels = append(k.Labels, *l)
+		k.CommonLabels = nil
+	}
 }
 
 func (k *Kustomization) EnforceFields() []string {
