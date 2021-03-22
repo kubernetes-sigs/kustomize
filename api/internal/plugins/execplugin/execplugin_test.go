@@ -45,10 +45,12 @@ s/$BAR/bar baz/g
 		})
 
 	pluginConfig.RemoveBuildAnnotations()
-	p := NewExecPlugin(
-		pLdr.AbsolutePluginPath(
-			konfig.DisabledPluginConfig(),
-			pluginConfig.OrgId()))
+	loader := pLdr.NewLoader(konfig.DisabledPluginConfig(), rf)
+	pluginPath, err := loader.AbsolutePluginPath(pluginConfig.OrgId())
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	p := NewExecPlugin(pluginPath)
 	// Not checking to see if the plugin is executable,
 	// because this test does not run it.
 	// This tests only covers sending configuration

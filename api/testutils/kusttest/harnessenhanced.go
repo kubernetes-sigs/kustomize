@@ -40,11 +40,8 @@ type HarnessEnhanced struct {
 func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	pte := newPluginTestEnv(t).set()
 
-	pc, err := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pc := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
 	pc.FnpLoadingOptions.EnableStar = true
-	if err != nil {
-		t.Fatal(err)
-	}
 	p := provider.NewDefaultDepProvider()
 	resourceFactory := p.GetResourceFactory()
 	resmapFactory := resmap.NewFactory(resourceFactory)

@@ -6,7 +6,6 @@ package build
 import (
 	"fmt"
 	"io"
-	"log"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -130,10 +129,7 @@ func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
 	kOpts.DoLegacyResourceSort = getFlagReorderOutput() == legacy
 	kOpts.LoadRestrictions = getFlagLoadRestrictorValue()
 	if theFlags.enable.plugins {
-		c, err := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
-		if err != nil {
-			log.Fatal(err)
-		}
+		c := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		c.FnpLoadingOptions = theFlags.fnOptions
 		kOpts.PluginConfig = c
 	}

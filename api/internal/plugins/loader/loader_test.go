@@ -66,10 +66,7 @@ func TestLoader(t *testing.T) {
 	for _, behavior := range []types.BuiltinPluginLoadingOptions{
 		/* types.BploUseStaticallyLinked,
 		types.BploLoadFromFileSys */} {
-		c, err := konfig.EnabledPluginConfig(behavior)
-		if err != nil {
-			t.Fatal(err)
-		}
+		c := konfig.EnabledPluginConfig(behavior)
 		pLdr := NewLoader(c, rmF)
 		if pLdr == nil {
 			t.Fatal("expect non-nil loader")

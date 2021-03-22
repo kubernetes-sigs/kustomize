@@ -41,28 +41,20 @@ const (
 	NoPluginHomeSentinal = "/No/non-builtin/plugins!"
 )
 
-func EnabledPluginConfig(b types.BuiltinPluginLoadingOptions) (*types.PluginConfig, error) {
-	dir, err := DefaultAbsPluginHome(filesys.MakeFsOnDisk())
-	if err != nil {
-		return nil, err
-	}
-	return MakePluginConfig(types.PluginRestrictionsNone, b, dir), nil
+func EnabledPluginConfig(b types.BuiltinPluginLoadingOptions) *types.PluginConfig {
+	return MakePluginConfig(types.PluginRestrictionsNone, b)
 }
 
 func DisabledPluginConfig() *types.PluginConfig {
 	return MakePluginConfig(
 		types.PluginRestrictionsBuiltinsOnly,
-		types.BploUseStaticallyLinked,
-		NoPluginHomeSentinal)
+		types.BploUseStaticallyLinked)
 }
 
-func MakePluginConfig(
-	pr types.PluginRestrictions,
-	b types.BuiltinPluginLoadingOptions,
-	home string) *types.PluginConfig {
+func MakePluginConfig(pr types.PluginRestrictions,
+	b types.BuiltinPluginLoadingOptions) *types.PluginConfig {
 	return &types.PluginConfig{
 		PluginRestrictions: pr,
-		AbsPluginHome:      home,
 		BpLoadingOptions:   b,
 	}
 }
@@ -77,7 +69,7 @@ type NotedFunc struct {
 // the home of kustomize plugins.
 func DefaultAbsPluginHome(fSys filesys.FileSystem) (string, error) {
 	return FirstDirThatExistsElseError(
-		"plugin home directory", fSys, []NotedFunc{
+		"plugin root", fSys, []NotedFunc{
 			{
 				Note: "homed in $" + KustomizePluginHomeEnv,
 				F: func() string {
