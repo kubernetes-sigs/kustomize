@@ -5,7 +5,6 @@ package kusttest_test
 
 import (
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -77,15 +76,7 @@ func (th Harness) MakeOptionsPluginsDisabled() krusty.Options {
 
 // Enables use of non-builtin plugins.
 func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
-	pc, err := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
-	if err != nil {
-		if strings.Contains(err.Error(), "unable to find plugin root") {
-			th.t.Log(
-				"Tests that want to run with plugins enabled must be " +
-					"bookended by calls to MakeEnhancedHarness(), Reset().")
-		}
-		th.t.Fatal(err)
-	}
+	pc := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
 	o := *krusty.MakeDefaultOptions()
 	o.PluginConfig = pc
 	return o
