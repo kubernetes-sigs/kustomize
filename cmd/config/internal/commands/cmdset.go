@@ -71,6 +71,11 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("value should set either from flag or arg")
 	}
 
+	// make sure that the value is provided either through values flag or as an arg
+	if !valueFlagSet && len(args) < 3 {
+		return errors.Errorf("value must be provided either from flag or arg")
+	}
+
 	r.Name = args[1]
 	if valueFlagSet {
 		r.Value = r.Values[0]
