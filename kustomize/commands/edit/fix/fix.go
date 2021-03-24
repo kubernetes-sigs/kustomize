@@ -39,6 +39,9 @@ func RunFix(fSys filesys.FileSystem) error {
 		return err
 	}
 
-	m.FixKustomizationPreMarshalling()
+	err = m.FixKustomizationPreMarshalling()
+	if err != nil {
+		return err
+	}
 	return mf.Write(m)
 }

@@ -175,3 +175,26 @@ kind: Kustomization
 		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
 	}
 }
+
+func TestFixOutdatedCommonLabelsDuplicate(t *testing.T) {
+	kustomizationContentWithOutdatedCommonLabels := []byte(`
+commonLabels:
+  foo: bar
+labels:
+- pairs:
+    foo: baz
+    a: b
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
+	cmd := NewCmdFix(fSys)
+	err := cmd.RunE(cmd, nil)
+	if err == nil {
+		t.Fatalf("expect error")
+	}
+	expectedErr := "label name 'foo' exists in both commonLabels and labels"
+	if err.Error() != expectedErr {
+		t.Fatalf("error message '%s' doesn't match expected", err.Error())
+	}
+}
