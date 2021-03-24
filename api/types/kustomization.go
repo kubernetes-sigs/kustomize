@@ -6,6 +6,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	"sigs.k8s.io/yaml"
 )
@@ -189,15 +190,28 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 // FixKustomizationPreMarshalling fixes things
 // that should occur after the kustomization file
 // has been processed.
-func (k *Kustomization) FixKustomizationPreMarshalling() {
+func (k *Kustomization) FixKustomizationPreMarshalling() error {
 	// PatchesJson6902 should be under the Patches field.
 	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
 
-	if l := labelFromCommonLabels(k.CommonLabels); l != nil {
-		k.Labels = append(k.Labels, *l)
+	// this fix is not in FixKustomizationPostUnmarshalling because
+	// it will break some commands like `create` and `add`. those
+	// commands depend on 'commonLabels' field
+	if cl := labelFromCommonLabels(k.CommonLabels); cl != nil {
+		// check conflicts between commonLabels and labels
+		for _, l := range k.Labels {
+			for k := range l.Pairs {
+				if _, exist := cl.Pairs[k]; exist {
+					return fmt.Errorf("label name '%s' exists in both commonLabels and labels", k)
+				}
+			}
+		}
+		k.Labels = append(k.Labels, *cl)
 		k.CommonLabels = nil
 	}
+
+	return nil
 }
 
 func (k *Kustomization) EnforceFields() []string {
