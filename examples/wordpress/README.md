@@ -86,9 +86,8 @@ The patch has following content
 >       initContainers:
 >       - name: init-command
 >         image: debian
->         command:
->         - "echo $(WORDPRESS_SERVICE)"
->         - "echo $(MYSQL_SERVICE)"
+>         command: ["/bin/sh"]
+>         args: ["-c", "echo $(WORDPRESS_SERVICE); echo $(MYSQL_SERVICE)"]
 >       containers:
 >       - name: wordpress
 >         env:
@@ -138,11 +137,13 @@ Expect this in the output:
 > ```
 > (truncated)
 > ...
->      initContainers:
->      - command:
->        - echo demo-wordpress
->        - echo demo-mysql
->        image: debian
->        name: init-command
+>     initContainers:
+>     - args:
+>       - -c
+>       - echo demo-wordpress; echo demo-mysql
+>       command:
+>       - /bin/sh
+>       image: debian
+>       name: init-command
 >
 > ```
