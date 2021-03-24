@@ -180,6 +180,43 @@ Any error messages MUST be emitted to stderr.
 An exit code of zero indicates function execution was successful.
 A non-zero exit code indicates a failure.
 
+### Output Results
+
+A function MAY return the function results in the `results` field in the
+output List resource. If present, it will contain the results that the
+function wants to pass to the orchestrator. The orchestrator MUST consider
+this field optional.
+
+An example of using `config.kubernetes.io/v1beta1/ResourceList` as output:
+
+```yaml
+apiVersion: config.kubernetes.io/v1beta1
+kind: ResourceList
+results:
+  name: foo
+  results:
+    - message: "Function successfully initialized"
+      severity: info
+    - message: "Invalid type. Expected: [integer,null], given: string"
+      severity: error
+      file:
+        path: foo/bar
+items:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: namespace-reader
+    rules:
+      - resources:
+          - namespaces
+        apiGroups:
+          - ""
+        verbs:
+          - get
+          - watch
+          - list
+```
+
 [1]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [2]: https://tools.ietf.org/html/rfc2119
 [3]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds
