@@ -145,7 +145,7 @@ cat <<EOF >>$DEMO_HOME/mycr_schema.json
           "type": "string"
         },
         "ports": {
-         "items": {
+          "items": {
             "\$ref": "#/definitions/io.k8s.api.core.v1.ContainerPort"
           },
           "type": "array",
@@ -161,7 +161,7 @@ cat <<EOF >>$DEMO_HOME/mycr_schema.json
       "type": "object"
     },
     "io.k8s.api.core.v1.ContainerPort": {
-     "properties": {
+      "properties": {
         "containerPort": {
           "format": "int32",
           "type": "integer"
