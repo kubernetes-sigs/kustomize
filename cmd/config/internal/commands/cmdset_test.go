@@ -604,6 +604,54 @@ spec:
 		},
 
 		{
+			name: "value must be provided from either flag or arg",
+			args: []string{"replicas", "--description", "hi there"},
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ `,
+			errMsg: `value must be provided either from flag or arg`,
+		},
+
+		{
 			name: "openAPI list values set by flag success",
 			args: []string{"list", "--values", "10", "--values", "11"},
 			out:  "set 1 field(s)\n",
