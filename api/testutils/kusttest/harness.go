@@ -76,7 +76,7 @@ func (th Harness) MakeOptionsPluginsDisabled() krusty.Options {
 
 // Enables use of non-builtin plugins.
 func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
-	pc := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pc := types.EnabledPluginConfig(types.BploLoadFromFileSys)
 	o := *krusty.MakeDefaultOptions()
 	o.PluginConfig = pc
 	return o

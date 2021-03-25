@@ -41,24 +41,6 @@ const (
 	NoPluginHomeSentinal = "/No/non-builtin/plugins!"
 )
 
-func EnabledPluginConfig(b types.BuiltinPluginLoadingOptions) *types.PluginConfig {
-	return MakePluginConfig(types.PluginRestrictionsNone, b)
-}
-
-func DisabledPluginConfig() *types.PluginConfig {
-	return MakePluginConfig(
-		types.PluginRestrictionsBuiltinsOnly,
-		types.BploUseStaticallyLinked)
-}
-
-func MakePluginConfig(pr types.PluginRestrictions,
-	b types.BuiltinPluginLoadingOptions) *types.PluginConfig {
-	return &types.PluginConfig{
-		PluginRestrictions: pr,
-		BpLoadingOptions:   b,
-	}
-}
-
 type NotedFunc struct {
 	Note string
 	F    func() string
@@ -79,9 +61,11 @@ func DefaultAbsPluginHome(fSys filesys.FileSystem) (string, error) {
 			{
 				Note: "homed in $" + XdgConfigHomeEnv,
 				F: func() string {
-					return filepath.Join(
-						os.Getenv(XdgConfigHomeEnv),
-						ProgramName, RelPluginHome)
+					if root := os.Getenv(XdgConfigHomeEnv); root != "" {
+						return filepath.Join(root, ProgramName, RelPluginHome)
+					}
+					// do not look in "kustomize/plugin" if XdgConfigHomeEnv is unset
+					return ""
 				},
 			},
 			{
@@ -110,11 +94,14 @@ func FirstDirThatExistsElseError(
 	pathFuncs []NotedFunc) (string, error) {
 	var nope []types.Pair
 	for _, dt := range pathFuncs {
-		dir := dt.F()
-		if fSys.Exists(dir) {
-			return dir, nil
+		if dir := dt.F(); dir != "" {
+			if fSys.Exists(dir) {
+				return dir, nil
+			}
+			nope = append(nope, types.Pair{Key: dt.Note, Value: dir})
+		} else {
+			nope = append(nope, types.Pair{Key: dt.Note, Value: "<no value>"})
 		}
-		nope = append(nope, types.Pair{Key: dt.Note, Value: dir})
 	}
 	return "", types.NewErrUnableToFind(what, nope)
 }

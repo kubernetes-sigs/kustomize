@@ -8,7 +8,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -52,9 +51,10 @@ func TestLoader(t *testing.T) {
 	defer th.Reset()
 	p := provider.NewDefaultDepProvider()
 	rmF := resmap.NewFactory(p.GetResourceFactory())
+	fsys := filesys.MakeFsInMemory()
 	fLdr, err := loader.NewLoader(
 		loader.RestrictionRootOnly,
-		filesys.Separator, filesys.MakeFsInMemory())
+		filesys.Separator, fsys)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,8 +66,8 @@ func TestLoader(t *testing.T) {
 	for _, behavior := range []types.BuiltinPluginLoadingOptions{
 		/* types.BploUseStaticallyLinked,
 		types.BploLoadFromFileSys */} {
-		c := konfig.EnabledPluginConfig(behavior)
-		pLdr := NewLoader(c, rmF)
+		c := types.EnabledPluginConfig(behavior)
+		pLdr := NewLoader(c, rmF, fsys)
 		if pLdr == nil {
 			t.Fatal("expect non-nil loader")
 		}

@@ -14,3 +14,21 @@ type PluginConfig struct {
 	// FnpLoadingOptions sets the way function-based plugin behaviors.
 	FnpLoadingOptions FnPluginLoadingOptions
 }
+
+func EnabledPluginConfig(b BuiltinPluginLoadingOptions) *PluginConfig {
+	return MakePluginConfig(PluginRestrictionsNone, b)
+}
+
+func DisabledPluginConfig() *PluginConfig {
+	return MakePluginConfig(
+		PluginRestrictionsBuiltinsOnly,
+		BploUseStaticallyLinked)
+}
+
+func MakePluginConfig(pr PluginRestrictions,
+	b BuiltinPluginLoadingOptions) *PluginConfig {
+	return &PluginConfig{
+		PluginRestrictions: pr,
+		BpLoadingOptions:   b,
+	}
+}

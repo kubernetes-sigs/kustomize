@@ -129,7 +129,7 @@ func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
 	kOpts.DoLegacyResourceSort = getFlagReorderOutput() == legacy
 	kOpts.LoadRestrictions = getFlagLoadRestrictorValue()
 	if theFlags.enable.plugins {
-		c := konfig.EnabledPluginConfig(types.BploUseStaticallyLinked)
+		c := types.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		c.FnpLoadingOptions = theFlags.fnOptions
 		kOpts.PluginConfig = c
 	}
