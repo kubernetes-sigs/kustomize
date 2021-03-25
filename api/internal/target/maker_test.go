@@ -9,11 +9,11 @@ import (
 	"sigs.k8s.io/kustomize/api/filesys"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func makeAndLoadKustTarget(
@@ -37,10 +37,10 @@ func makeKustTargetWithRf(
 		t.Fatal(err)
 	}
 	rf := resmap.NewFactory(pvd.GetResourceFactory())
-	pc := konfig.DisabledPluginConfig()
+	pc := types.DisabledPluginConfig()
 	return target.NewKustTarget(
 		ldr,
 		valtest_test.MakeFakeValidator(),
 		rf,
-		pLdr.NewLoader(pc, rf))
+		pLdr.NewLoader(pc, rf, fSys))
 }

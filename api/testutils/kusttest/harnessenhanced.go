@@ -40,7 +40,7 @@ type HarnessEnhanced struct {
 func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	pte := newPluginTestEnv(t).set()
 
-	pc := konfig.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pc := types.EnabledPluginConfig(types.BploLoadFromFileSys)
 	pc.FnpLoadingOptions.EnableStar = true
 	p := provider.NewDefaultDepProvider()
 	resourceFactory := p.GetResourceFactory()
@@ -50,7 +50,8 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 		Harness: MakeHarness(t),
 		pte:     pte,
 		rf:      resmapFactory,
-		pl:      pLdr.NewLoader(pc, resmapFactory)}
+		// The plugin configs are always located on disk, regardless of the test harness's FS
+		pl: pLdr.NewLoader(pc, resmapFactory, filesys.MakeFsOnDisk())}
 
 	// Point the file loader to the root ('/') of the in-memory file system.
 	result.ResetLoaderRoot(filesys.Separator)

@@ -13,10 +13,10 @@ import (
 	. "sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
-	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestExecPluginConfig(t *testing.T) {
@@ -45,7 +45,7 @@ s/$BAR/bar baz/g
 		})
 
 	pluginConfig.RemoveBuildAnnotations()
-	loader := pLdr.NewLoader(konfig.DisabledPluginConfig(), rf)
+	loader := pLdr.NewLoader(types.DisabledPluginConfig(), rf, fSys)
 	pluginPath, err := loader.AbsolutePluginPath(pluginConfig.OrgId())
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)

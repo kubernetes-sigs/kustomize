@@ -30,6 +30,7 @@ import (
 type Loader struct {
 	pc *types.PluginConfig
 	rf *resmap.Factory
+	fs filesys.FileSystem
 
 	// absolutePluginHome caches the location of a valid plugin root directory.
 	// It should only be set once the directory's existence has been confirmed.
@@ -37,8 +38,8 @@ type Loader struct {
 }
 
 func NewLoader(
-	pc *types.PluginConfig, rf *resmap.Factory) *Loader {
-	return &Loader{pc: pc, rf: rf}
+	pc *types.PluginConfig, rf *resmap.Factory, fs filesys.FileSystem) *Loader {
+	return &Loader{pc: pc, rf: rf, fs: fs}
 }
 
 func (l *Loader) LoadGenerators(
@@ -135,7 +136,7 @@ func (l *Loader) absPluginHome() (string, error) {
 	}
 
 	// Check default locations for a valid plugin root, and cache it if found.
-	dir, err := konfig.DefaultAbsPluginHome(filesys.MakeFsOnDisk())
+	dir, err := konfig.DefaultAbsPluginHome(l.fs)
 	if err != nil {
 		return "", err
 	}
