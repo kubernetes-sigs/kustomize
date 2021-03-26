@@ -5,7 +5,6 @@ package krusty
 
 import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -42,7 +41,7 @@ func MakeDefaultOptions() *Options {
 		AddManagedbyLabel:    false,
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
-		PluginConfig:         konfig.DisabledPluginConfig(),
+		PluginConfig:         types.DisabledPluginConfig(),
 	}
 }
 

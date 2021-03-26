@@ -8,8 +8,8 @@ import (
 )
 
 func TestFnExecGenerator(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t)
-	defer th.Reset()
+	// Function plugins should not need the env setup done by MakeEnhancedHarness
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK(".", `
 resources:
@@ -92,8 +92,8 @@ func skipIfNoDocker(t *testing.T) {
 func TestFnContainerGenerator(t *testing.T) {
 	skipIfNoDocker(t)
 
-	th := kusttest_test.MakeEnhancedHarness(t)
-	defer th.Reset()
+	// Function plugins should not need the env setup done by MakeEnhancedHarness
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK(".", `
 resources:
@@ -308,8 +308,8 @@ spec:
 func TestFnContainerTransformer(t *testing.T) {
 	skipIfNoDocker(t)
 
-	th := kusttest_test.MakeEnhancedHarness(t)
-	defer th.Reset()
+	// Function plugins should not need the env setup done by MakeEnhancedHarness
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK(".", `
 resources:
@@ -408,8 +408,8 @@ spec:
 func TestFnContainerTransformerWithConfig(t *testing.T) {
 	skipIfNoDocker(t)
 
-	th := kusttest_test.MakeEnhancedHarness(t)
-	defer th.Reset()
+	// Function plugins should not need the env setup done by MakeEnhancedHarness
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK(".", `
 resources:
@@ -468,8 +468,8 @@ metadata:
 func TestFnContainerEnvVars(t *testing.T) {
 	skipIfNoDocker(t)
 
-	th := kusttest_test.MakeEnhancedHarness(t)
-	defer th.Reset()
+	// Function plugins should not need the env setup done by MakeEnhancedHarness
+	th := kusttest_test.MakeHarness(t)
 
 	th.WriteK(".", `
 generators:
