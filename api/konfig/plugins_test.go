@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -28,6 +30,34 @@ func TestDefaultAbsPluginHome_NoKustomizePluginHomeEnv(t *testing.T) {
 	if !types.IsErrUnableToFind(err) {
 		t.Fatalf("unexpected err: %v", err)
 	}
+	for _, expectedMsg := range []string{
+		"unable to find plugin root - tried:",
+		"('<no value>'; homed in $KUSTOMIZE_PLUGIN_HOME)",
+		"; homed in $XDG_CONFIG_HOME)",
+		"/.config/kustomize/plugin'; homed in default value of $XDG_CONFIG_HOME)",
+		"/kustomize/plugin'; homed in home directory)",
+	} {
+		assert.Contains(t, err.Error(), expectedMsg)
+	}
+}
+
+func TestDefaultAbsPluginHome_EmptyKustomizePluginHomeEnv(t *testing.T) {
+	keep, isSet := os.LookupEnv(KustomizePluginHomeEnv)
+	os.Setenv(KustomizePluginHomeEnv, "")
+
+	_, err := DefaultAbsPluginHome(filesys.MakeFsInMemory())
+	if !isSet {
+		_ = os.Unsetenv(KustomizePluginHomeEnv)
+	} else {
+		_ = os.Setenv(KustomizePluginHomeEnv, keep)
+	}
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !types.IsErrUnableToFind(err) {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	assert.Contains(t, err.Error(), "('<no value>'; homed in $KUSTOMIZE_PLUGIN_HOME)")
 }
 
 func TestDefaultAbsPluginHome_WithKustomizePluginHomeEnv(t *testing.T) {
@@ -87,6 +117,25 @@ func TestDefaultAbsPluginHomeNoConfig(t *testing.T) {
 	if !types.IsErrUnableToFind(err) {
 		t.Fatalf("unexpected err: %v", err)
 	}
+}
+
+func TestDefaultAbsPluginHomeEmptyXdgConfig(t *testing.T) {
+	keep, isSet := os.LookupEnv(XdgConfigHomeEnv)
+	os.Setenv(XdgConfigHomeEnv, "")
+	if isSet {
+		_ = os.Unsetenv(XdgConfigHomeEnv)
+	}
+	_, err := DefaultAbsPluginHome(filesys.MakeFsInMemory())
+	if isSet {
+		os.Setenv(XdgConfigHomeEnv, keep)
+	}
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !types.IsErrUnableToFind(err) {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	assert.Contains(t, err.Error(), "('<no value>'; homed in $XDG_CONFIG_HOME)")
 }
 
 func TestDefaultAbsPluginHomeNoXdgWithDotConfig(t *testing.T) {
