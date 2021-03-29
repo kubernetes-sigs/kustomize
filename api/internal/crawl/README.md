@@ -130,7 +130,7 @@ From here you want to generate a new token and  have the following
 configuration:
 
 ![GitHub Token 1](
-https://sigs.k8s.io/kustomize/internal/tools/pictures/token_config.png)
+https://github.com/kubernetes-sigs/kustomize/blob/1d4b3fa36c8918ad884c7aaa6a055fa2d0fa9bf9/api/internal/crawl/pictures/token_config.png)
 
 If you have uses for any other data from this token, (org data, or something
 else) you can pick and choose, but be careful since it can grant this
