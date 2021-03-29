@@ -76,7 +76,8 @@ func (b *Kustomizer) Run(
 		ldr,
 		b.depProvider.GetFieldValidator(),
 		resmapFactory,
-		pLdr.NewLoader(b.options.PluginConfig, resmapFactory),
+		// The plugin configs are always located on disk, regardless of the fSys passed in
+		pLdr.NewLoader(b.options.PluginConfig, resmapFactory, filesys.MakeFsOnDisk()),
 	)
 	if b.input != nil {
 		res, err := resmapFactory.NewResMapFromBytes(b.input)

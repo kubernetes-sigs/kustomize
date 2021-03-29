@@ -46,6 +46,7 @@ func determineFieldOrder() []string {
 		"Namespace",
 		"Crds",
 		"CommonLabels",
+		"Labels",
 		"CommonAnnotations",
 		"PatchesStrategicMerge",
 		"PatchesJson6902",
