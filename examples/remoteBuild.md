@@ -34,7 +34,7 @@ The URL can be an archive
 
 <!-- @remoteBuild -->
 ```
-target="https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master"
+target="https://github.com/kustless/kustomize-examples/archive/refs/heads/master.zip"
 test 1 == \
   $(kustomize build $target | grep remote-cm | wc -l); \
   echo $?
@@ -98,7 +98,7 @@ resources:
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03
 
 # a subdirectory in a remote archive
-- https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master
+- https://github.com/kustless/kustomize-examples/archive/refs/heads/master.zip
 
 EOF
 ```
