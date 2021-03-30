@@ -208,7 +208,6 @@ resources:
 	}
 
 	if !assert.Equal(t, fmt.Sprintf(`%s
-├── [Kustomization]  Kustomization 
 └── [f2.yaml]  Deployment bar
 `, d), b.String()) {
 		return
@@ -307,11 +306,9 @@ openAPI:
 	}
 
 	if !assert.Equal(t, fmt.Sprintf(`%s
-├── [Krmfile]  Krmfile mainpkg
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
 └── Pkg: subpkg
-    ├── [Krmfile]  Krmfile subpkg
     └── [f2.yaml]  Deployment bar
 `, d), b.String()) {
 		return

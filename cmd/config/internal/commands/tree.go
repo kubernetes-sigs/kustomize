@@ -75,11 +75,6 @@ type TreeRunner struct {
 	structure       string
 }
 
-func (r *TreeRunner) getMatchFilesGlob() []string {
-	matchFilesGlob := append([]string{ext.KRMFileName()}, kio.DefaultMatch...)
-	return append(matchFilesGlob, "Kustomization")
-}
-
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 	var input kio.Reader
 	var root = "."
@@ -90,7 +85,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		input = &kio.ByteReader{Reader: c.InOrStdin()}
 	} else {
 		root = filepath.Clean(args[0])
-		input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: r.getMatchFilesGlob()}
+		input = kio.LocalPackageReader{PackagePath: args[0]}
 	}
 
 	var fields []kio.TreeWriterField
