@@ -11,8 +11,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.4.0
 	gopkg.in/yaml.v2 v2.4.0
-	sigs.k8s.io/kustomize/kyaml v0.10.15
+	sigs.k8s.io/kustomize/kyaml v0.10.16
 	sigs.k8s.io/yaml v1.2.0
 )
-
-replace sigs.k8s.io/kustomize/kyaml => ../kyaml
