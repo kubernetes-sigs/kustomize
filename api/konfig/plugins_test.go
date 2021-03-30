@@ -14,6 +14,8 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
+const tempDir = "whatever"
+
 func TestDefaultAbsPluginHome_NoKustomizePluginHomeEnv(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	keep, isSet := os.LookupEnv(KustomizePluginHomeEnv)
@@ -63,19 +65,27 @@ func TestDefaultAbsPluginHome_EmptyKustomizePluginHomeEnv(t *testing.T) {
 func TestDefaultAbsPluginHome_WithKustomizePluginHomeEnv(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	keep, isSet := os.LookupEnv(KustomizePluginHomeEnv)
-	if !isSet {
-		keep = "whatever"
-		setenv(t, KustomizePluginHomeEnv, keep)
+	if !isSet || keep == "" {
+		keep = tempDir
+		os.Setenv(KustomizePluginHomeEnv, keep)
 	}
-	err := fSys.Mkdir(keep)
-	require.NoError(t, err)
+	dirs := filepath.SplitList(keep)
+	for _, dir := range dirs {
+		fSys.Mkdir(dir)
+	}
 	h, err := DefaultAbsPluginHome(fSys)
 	if !isSet {
 		unsetenv(t, KustomizePluginHomeEnv)
 	}
 	require.NoError(t, err)
-	if h != keep {
-		t.Fatalf("unexpected config dir: %s", h)
+	for i, dir := range h {
+		for _, pDir := range dirs {
+			if dir != pDir && i == len(h)-1 {
+				t.Fatalf("unexpected config dirs: %v", h)
+			} else if dir == pDir {
+				return
+			}
+		}
 	}
 }
 
@@ -96,8 +106,10 @@ func TestDefaultAbsPluginHomeWithXdg(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if h != configDir {
-		t.Fatalf("unexpected config dir: %s", h)
+	for i, dir := range h {
+		if dir != configDir && i == len(h)-1 {
+			t.Fatalf("unexpected config dirs: %v", h)
+		}
 	}
 }
 
@@ -153,8 +165,10 @@ func TestDefaultAbsPluginHomeNoXdgWithDotConfig(t *testing.T) {
 	if isSet {
 		setenv(t, XdgConfigHomeEnv, keep)
 	}
-	if s != configDir {
-		t.Fatalf("unexpected config dir: %s", s)
+	for i, dir := range s {
+		if dir != configDir && i == len(s)-1 {
+			t.Fatalf("unexpected config dirs: %v", s)
+		}
 	}
 }
 
@@ -173,8 +187,10 @@ func TestDefaultAbsPluginHomeNoXdgJustHomeDir(t *testing.T) {
 	if isSet {
 		setenv(t, XdgConfigHomeEnv, keep)
 	}
-	if s != configDir {
-		t.Fatalf("unexpected config dir: %s", s)
+	for i, dir := range s {
+		if dir != configDir && i == len(s)-1 {
+			t.Fatalf("unexpected config dirs: %v", s)
+		}
 	}
 }
 
@@ -184,4 +200,73 @@ func setenv(t *testing.T, key, value string) {
 
 func unsetenv(t *testing.T, key string) {
 	require.NoError(t, os.Unsetenv(key))
+}
+
+func TestDefaultAbsPluginHomeWithXdgConfigDirs(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	keep, isSet := os.LookupEnv(XdgConfigDirs)
+	if !isSet || keep == "" {
+		keep = tempDir
+		os.Setenv(XdgConfigDirs, keep)
+	}
+	dirs := filepath.SplitList(keep)
+	var configDirs []string
+	for _, dir := range dirs {
+		configDir := filepath.Join(dir, ProgramName, RelPluginHome)
+		fSys.Mkdir(configDir)
+		configDirs = append(configDirs, configDir)
+	}
+	h, err := DefaultAbsPluginHome(fSys)
+	if !isSet {
+		_ = os.Unsetenv(XdgConfigDirs)
+	}
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	for i, dir := range h {
+		for _, cDir := range configDirs {
+			if dir != cDir && i == len(h)-1 {
+				t.Fatalf("unexpected config dirs: %v", h)
+			} else if dir == cDir {
+				return
+			}
+		}
+	}
+}
+
+func TestDefaultAbsPluginHomeNoXdgConfigDirs(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	keep, isSet := os.LookupEnv(XdgConfigDirs)
+	if isSet {
+		_ = os.Unsetenv(XdgConfigDirs)
+	}
+	_, err := DefaultAbsPluginHome(fSys)
+	if isSet {
+		os.Setenv(XdgConfigDirs, keep)
+	}
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !types.IsErrUnableToFind(err) {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestDefaultAbsPluginHomeEmptyXdgConfigDirs(t *testing.T) {
+	keep, isSet := os.LookupEnv(XdgConfigDirs)
+	os.Setenv(XdgConfigDirs, "")
+	if isSet {
+		_ = os.Unsetenv(XdgConfigDirs)
+	}
+	_, err := DefaultAbsPluginHome(filesys.MakeFsInMemory())
+	if isSet {
+		os.Setenv(XdgConfigDirs, keep)
+	}
+	if err == nil {
+		t.Fatalf("expected err")
+	}
+	if !types.IsErrUnableToFind(err) {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	assert.Contains(t, err.Error(), "('<no value>'; homed in $XDG_CONFIG_DIRS)")
 }

@@ -34,7 +34,7 @@ type Loader struct {
 
 	// absolutePluginHome caches the location of a valid plugin root directory.
 	// It should only be set once the directory's existence has been confirmed.
-	absolutePluginHome string
+	absolutePluginHome []string
 }
 
 func NewLoader(
@@ -106,12 +106,16 @@ func relativePluginPath(id resid.ResId) string {
 		strings.ToLower(id.Kind))
 }
 
-func (l *Loader) AbsolutePluginPath(id resid.ResId) (string, error) {
+func (l *Loader) AbsolutePluginPath(id resid.ResId) ([]string, error) {
+	var plugins []string
 	pluginHome, err := l.absPluginHome()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return filepath.Join(pluginHome, relativePluginPath(id), id.Kind), nil
+	for _, dir := range pluginHome {
+		plugins = append(plugins, filepath.Join(dir, relativePluginPath(id), id.Kind))
+	}
+	return plugins, nil
 }
 
 // absPluginHome is the home of kustomize Exec and Go plugins.
@@ -130,20 +134,20 @@ func (l *Loader) AbsolutePluginPath(id resid.ResId) (string, error) {
 //   - ${absPluginHome} is an absolute path, defined below.
 //   - ${pluginApiVersion} is taken from the plugin config file.
 //   - ${pluginKind} is taken from the plugin config file.
-func (l *Loader) absPluginHome() (string, error) {
+func (l *Loader) absPluginHome() ([]string, error) {
 	// External plugins are disabled--return the dummy plugin root.
 	if l.pc.PluginRestrictions != types.PluginRestrictionsNone {
-		return konfig.NoPluginHomeSentinal, nil
+		return []string{konfig.NoPluginHomeSentinal}, nil
 	}
 	// We've already determined plugin home--use the cached value.
-	if l.absolutePluginHome != "" {
+	if len(l.absolutePluginHome) > 0 && l.absolutePluginHome[0] != "" {
 		return l.absolutePluginHome, nil
 	}
 
 	// Check default locations for a valid plugin root, and cache it if found.
 	dir, err := konfig.DefaultAbsPluginHome(l.fs)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	l.absolutePluginHome = dir
 	return l.absolutePluginHome, nil
@@ -225,25 +229,34 @@ func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, err
 	if err != nil {
 		return nil, err
 	}
-	// First try to load the plugin as an executable.
-	p := execplugin.NewExecPlugin(absPluginPath)
-	if err = p.ErrIfNotExecutable(); err == nil {
-		return p, nil
-	}
-	if !os.IsNotExist(err) {
-		// The file exists, but something else is wrong,
-		// likely it's not executable.
-		// Assume the user forgot to set the exec bit,
-		// and return an error, rather than adding ".so"
-		// to the name and attempting to load it as a Go
-		// plugin, which will likely fail and result
-		// in an obscure message.
-		return nil, err
-	}
-	// Failing the above, try loading it as a Go plugin.
-	c, err := l.loadGoPlugin(resId, absPluginPath+".so")
-	if err != nil {
-		return nil, err
+	var c resmap.Configurable
+	for i, pluginPath := range absPluginPath {
+		p := execplugin.NewExecPlugin(pluginPath)
+		if err = p.ErrIfNotExecutable(); err == nil {
+			return p, nil
+		}
+		if !os.IsNotExist(err) {
+			// The file exists, but something else is wrong,
+			// likely it's not executable.
+			// Assume the user forgot to set the exec bit,
+			// and return an error, rather than adding ".so"
+			// to the name and attempting to load it as a Go
+			// plugin, which will likely fail and result
+			// in an obscure message.
+			return nil, err
+		}
+		c, err = l.loadGoPlugin(resId, pluginPath+".so")
+		// Check against each value in absPluginPath
+		// if err and its still not last element of the loop, continue checking
+		// if err and its last element of the loop, return err
+		// if !err and valid plugin found, no need to check further
+		if err != nil && i < len(absPluginPath)-1 {
+			continue
+		} else if err != nil {
+			return nil, err
+		} else {
+			break
+		}
 	}
 	return c, nil
 }

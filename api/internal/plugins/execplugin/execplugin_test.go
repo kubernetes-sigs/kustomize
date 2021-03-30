@@ -6,7 +6,6 @@ package execplugin_test
 import (
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,48 +52,45 @@ s/$BAR/bar baz/g
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	p := NewExecPlugin(pluginPath)
-	// Not checking to see if the plugin is executable,
-	// because this test does not run it.
-	// This tests only covers sending configuration
-	// to the plugin wrapper object and confirming
-	// that it's properly prepared for execution.
+	for _, pPath := range pluginPath {
+		p := NewExecPlugin(pPath)
+		// Not checking to see if the plugin is executable,
+		// because this test does not run it.
+		// This tests only covers sending configuration
+		// to the plugin wrapper object and confirming
+		// that it's properly prepared for execution.
 
-	yaml, err := pluginConfig.AsYAML()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	err = p.Config(
-		resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc),
-		yaml)
-	require.NoError(t, err)
+		yaml, err := pluginConfig.AsYAML()
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		err = p.Config(
+			resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc),
+			yaml)
+		require.NoError(t, err)
 
-	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
-	if !strings.HasSuffix(p.Path(), expected) {
-		t.Fatalf("expected suffix '%s', got '%s'", expected, p.Path())
-	}
-
-	expected = `apiVersion: someteam.example.com/v1
+		expected := `apiVersion: someteam.example.com/v1
 argsFromFile: sed-input.txt
 argsOneLiner: one two 'foo bar'
 kind: SedTransformer
 metadata:
   name: some-random-name
 `
-	if expected != string(p.Cfg()) {
-		t.Fatalf("expected cfg '%s', got '%s'", expected, string(p.Cfg()))
+		if expected != string(p.Cfg()) {
+			t.Fatalf("expected cfg '%s', got '%s'", expected, string(p.Cfg()))
 
-	}
-	if len(p.Args()) != 6 {
-		t.Fatalf("unexpected arg len %d, %#v", len(p.Args()), p.Args())
-	}
-	if p.Args()[0] != "one" ||
-		p.Args()[1] != "two" ||
-		p.Args()[2] != "foo bar" ||
-		p.Args()[3] != "s/$FOO/foo/g" ||
-		p.Args()[4] != "s/$BAR/bar baz/g" ||
-		p.Args()[5] != "\\ \\ \\ " {
-		t.Fatalf("unexpected arg array: %#v", p.Args())
+		}
+		if len(p.Args()) != 6 {
+			t.Fatalf("unexpected arg len %d, %#v", len(p.Args()), p.Args())
+		}
+		if p.Args()[0] != "one" ||
+			p.Args()[1] != "two" ||
+			p.Args()[2] != "foo bar" ||
+			p.Args()[3] != "s/$FOO/foo/g" ||
+			p.Args()[4] != "s/$BAR/bar baz/g" ||
+			p.Args()[5] != "\\ \\ \\ " {
+			t.Fatalf("unexpected arg array: %#v", p.Args())
+		}
 	}
 }
 
@@ -107,22 +103,23 @@ func TestExecPlugin_ErrIfNotExecutable(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	for _, obj := range srcRoot {
+		// Test unexecutable plugin
+		unexecutablePlugin := filepath.Join(
+			obj, "builtin", "", "secretgenerator", "SecretGenerator.so")
+		p := NewExecPlugin(unexecutablePlugin)
+		err = p.ErrIfNotExecutable()
+		if err == nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
 
-	// Test unexecutable plugin
-	unexecutablePlugin := filepath.Join(
-		srcRoot, "builtin", "", "secretgenerator", "SecretGenerator.so")
-	p := NewExecPlugin(unexecutablePlugin)
-	err = p.ErrIfNotExecutable()
-	if err == nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-
-	// Test executable plugin
-	executablePlugin := filepath.Join(
-		srcRoot, "someteam.example.com", "v1", "bashedconfigmap", "BashedConfigMap")
-	p = NewExecPlugin(executablePlugin)
-	err = p.ErrIfNotExecutable()
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
+		// Test executable plugin
+		executablePlugin := filepath.Join(
+			obj, "someteam.example.com", "v1", "bashedconfigmap", "BashedConfigMap")
+		p = NewExecPlugin(executablePlugin)
+		err = p.ErrIfNotExecutable()
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
 	}
 }

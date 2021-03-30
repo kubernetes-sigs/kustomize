@@ -34,12 +34,14 @@ func newPluginTestEnv(t *testing.T) *pluginTestEnv {
 // the FileSystem used for loading config yaml in the tests.
 func (x *pluginTestEnv) set() *pluginTestEnv {
 	var err error
-	x.pluginRoot, err = utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
+	pluginRoots, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		x.t.Error(err)
 	}
-	x.compiler = compiler.NewCompiler(x.pluginRoot)
-	x.setEnv()
+	for _, x.pluginRoot = range pluginRoots {
+		x.compiler = compiler.NewCompiler(x.pluginRoot)
+		x.setEnv()
+	}
 	return x
 }
 

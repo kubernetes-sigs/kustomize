@@ -4,7 +4,12 @@
 package compiler_test
 
 import (
+	"fmt"
+	"os"
+
+	// "os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -18,34 +23,32 @@ func TestCompiler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c := NewCompiler(srcRoot)
-
-	c.SetGVK("someteam.example.com", "v1", "DatePrefixer")
-	expectObj := filepath.Join(
-		srcRoot, "someteam.example.com", "v1", "dateprefixer", "DatePrefixer.so")
-	if expectObj != c.ObjPath() {
-		t.Errorf("Expected '%s', got '%s'", expectObj, c.ObjPath())
+	for i, obj := range srcRoot {
+		c := NewCompiler(obj)
+		c.SetGVK("someteam.example.com", "v1", "DatePrefixer")
+		err := matchOrError(c, obj, i, len(srcRoot), "someteam.example.com", "v1", "dateprefixer", "DatePrefixer.so")
+		if err != nil {
+			t.Error(err)
+		}
+		c.SetGVK("builtin", "", "SecretGenerator")
+		err = matchOrError(c, obj, i, len(srcRoot), "builtin", "", "secretgenerator", "SecretGenerator.so")
+		if err != nil {
+			t.Error(err)
+		}
 	}
-	err = c.Compile()
+}
+
+func matchOrError(c *Compiler, obj string, idx, lenOfSrcRoot int, gvk ...string) error {
+	expectObj := filepath.Join(obj, strings.Join(gvk, string(os.PathSeparator)))
+	if !strings.Contains(c.ObjPath(), expectObj) && idx == (lenOfSrcRoot-1) {
+		return fmt.Errorf("Expected '%s', got '%s'", expectObj, c.ObjPath())
+	}
+	err := c.Compile()
 	if err != nil {
-		t.Error(err)
+		return fmt.Errorf("%v", err)
 	}
 	if !utils.FileExists(expectObj) {
-		t.Errorf("didn't find expected obj file %s", expectObj)
+		return fmt.Errorf("didn't find expected obj file %s", expectObj)
 	}
-
-	c.SetGVK("builtin", "", "SecretGenerator")
-	expectObj = filepath.Join(
-		srcRoot,
-		"builtin", "", "secretgenerator", "SecretGenerator.so")
-	if expectObj != c.ObjPath() {
-		t.Errorf("Expected '%s', got '%s'", expectObj, c.ObjPath())
-	}
-	err = c.Compile()
-	if err != nil {
-		t.Error(err)
-	}
-	if !utils.FileExists(expectObj) {
-		t.Errorf("didn't find expected obj file %s", expectObj)
-	}
+	return nil
 }
