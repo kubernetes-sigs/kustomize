@@ -3,7 +3,10 @@
 
 .PHONY: generate license fix vet fmt test build tidy image
 
-GOBIN := $(shell go env GOPATH)/bin
+GOBIN = $(shell go env GOBIN)
+ifeq ($(GOBIN),)
+GOBIN = $(shell go env GOPATH)/bin
+endif
 
 build:
 	(cd image && go build -v -o $(GOBIN)/config-function .)
