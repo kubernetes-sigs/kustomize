@@ -14,9 +14,11 @@ version=$1
 
 echo "Installing kustomize ${version}"
 
+MYGOBIN=$(go env GOBIN)
+MYGOBIN="${MYGOBIN:-$(go env GOPATH)/bin}"
 # Always rebuild, never assume the installed verion is
 # the right one to test.
-rm -f $(go env GOPATH)/bin/kustomize
+rm -f $MYGOBIN/kustomize
 if [ "$version" == "HEAD" ]; then
   (cd kustomize; go install .)
 else
@@ -35,7 +37,7 @@ if onLinuxAndNotOnRemoteCI; then
   echo "On linux, and not on remote CI.  Running expensive tests."
 
   # Requires helm.
-  make $(go env GOPATH)/bin/helm
+  make $MYGOBIN/helm
   mdrip --mode test --label helmtest examples/chart.md
 fi
 
@@ -43,6 +45,6 @@ fi
 # rely on whatever this script just did.  Tests should
 # be order independent.
 echo "Removing kustomize ${version}"
-rm $(go env GOPATH)/bin/kustomize
+rm $MYGOBIN/kustomize
 
 echo "Example tests passed against ${version}."

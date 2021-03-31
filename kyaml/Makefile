@@ -1,7 +1,10 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-MYGOBIN := $(shell go env GOPATH)/bin
+MYGOBIN = $(shell go env GOBIN)
+ifeq ($(MYGOBIN),)
+MYGOBIN = $(shell go env GOPATH)/bin
+endif
 export PATH := $(MYGOBIN):$(PATH)
 
 .PHONY: generate license fix vet fmt test lint tidy clean
