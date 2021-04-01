@@ -69,9 +69,9 @@ func TestDefaulting(t *testing.T) {
 		},
 	}
 	v.Defaulting()
-	if v.FieldRef.FieldPath != defaultFieldPath {
+	if v.FieldRef.FieldPath != DefaultReplacementFieldPath {
 		t.Fatalf("expected %s, got %v",
-			defaultFieldPath, v.FieldRef.FieldPath)
+			DefaultReplacementFieldPath, v.FieldRef.FieldPath)
 	}
 }
 
@@ -127,7 +127,7 @@ func TestVarSet(t *testing.T) {
 		t.Fatalf("expected var")
 	}
 	// Confirm defaulting.
-	if v.FieldRef.FieldPath != defaultFieldPath {
+	if v.FieldRef.FieldPath != DefaultReplacementFieldPath {
 		t.Fatalf("unexpected field path: %v", v.FieldRef.FieldPath)
 	}
 	// Confirm sorting.
