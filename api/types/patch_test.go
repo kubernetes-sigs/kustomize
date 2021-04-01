@@ -9,13 +9,15 @@ import (
 
 func TestPatchEquals(t *testing.T) {
 	selector := Selector{
-		Gvk: resid.Gvk{
-			Group:   "group",
-			Version: "version",
-			Kind:    "kind",
+		KrmId: KrmId{
+			Gvk: resid.Gvk{
+				Group:   "group",
+				Version: "version",
+				Kind:    "kind",
+			},
+			Name:      "name",
+			Namespace: "namespace",
 		},
-		Name:               "name",
-		Namespace:          "namespace",
 		LabelSelector:      "selector",
 		AnnotationSelector: "selector",
 	}
@@ -38,13 +40,15 @@ func TestPatchEquals(t *testing.T) {
 				Path:  "foo",
 				Patch: "bar",
 				Target: &Selector{
-					Gvk: resid.Gvk{
-						Group:   "group",
-						Version: "version",
-						Kind:    "kind",
+					KrmId: KrmId{
+						Gvk: resid.Gvk{
+							Group:   "group",
+							Version: "version",
+							Kind:    "kind",
+						},
+						Name:      "name",
+						Namespace: "namespace",
 					},
-					Name:               "name",
-					Namespace:          "namespace",
 					LabelSelector:      "selector",
 					AnnotationSelector: "selector",
 				},
@@ -53,13 +57,15 @@ func TestPatchEquals(t *testing.T) {
 				Path:  "foo",
 				Patch: "bar",
 				Target: &Selector{
-					Gvk: resid.Gvk{
-						Group:   "group",
-						Version: "version",
-						Kind:    "kind",
+					KrmId: KrmId{
+						Gvk: resid.Gvk{
+							Group:   "group",
+							Version: "version",
+							Kind:    "kind",
+						},
+						Name:      "name",
+						Namespace: "namespace",
 					},
-					Name:               "name",
-					Namespace:          "namespace",
 					LabelSelector:      "selector",
 					AnnotationSelector: "selector",
 				},

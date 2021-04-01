@@ -96,6 +96,6 @@ func TestRangeSizes(t *testing.T) {
 	returnedResult := RangeSizes(s)
 	expectedResult := RangeWithin{uint64(2365), uint64(10000)}
 	if !reflect.DeepEqual(returnedResult, expectedResult) {
-		t.Errorf("RangeSizes expected (%v), got (%v)",expectedResult, returnedResult)
+		t.Errorf("RangeSizes expected (%v), got (%v)", expectedResult, returnedResult)
 	}
 }

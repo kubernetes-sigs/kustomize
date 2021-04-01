@@ -81,7 +81,7 @@ func (gc githubCrawler) Crawl(ctx context.Context,
 	output chan<- crawler.CrawledDocument, seen utils.SeenMap) error {
 
 	ranges := []RangeWithin{
-		RangeWithin{
+		{
 			start: uint64(0),
 			end:   githubMaxFileSize,
 		},
