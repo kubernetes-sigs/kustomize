@@ -23,7 +23,7 @@ type SourceSelector struct {
 	// Structured field path expected in the allowed object.
 	FieldPath string `json:"fieldPath" yaml:"fieldPath"`
 
-	// Used to refine the interpretation of the field
+	// Used to refine the interpretation of the field.
 	Options *FieldOptions `json:"options" yaml:"options"`
 }
 
@@ -33,20 +33,20 @@ type TargetSelector struct {
 	Select *Selector `json:"select" yaml:"select"`
 
 	// From the allowed set, remove objects that match this.
-	// TODO (#3492): Remove matches listed in the exclude field
+	// TODO (#3492): Remove matches listed in the `reject` field
 	//  Currently this field is unused
 	Reject *Selector `json:"reject" yaml:"reject"`
 
 	// Structured field paths expected in each allowed object.
 	FieldPaths []string `json:"fieldPaths" yaml:"fieldPaths"`
 
-	// Used to refine the interpretation of the field
+	// Used to refine the interpretation of the field.
 	Options *FieldOptions `json:"options" yaml:"options"`
 }
 
-// FieldPath is a structured field path to the desired object
+// FieldOptions refine the interpretation of FieldPaths.
 // TODO (#3492): Implement use of these options, they are
-//  currently used
+//  currently unused
 type FieldOptions struct {
 	// Used to split/join the field.
 	Delimiter string `json:"delimiter" yaml:"delimiter"`
@@ -54,9 +54,9 @@ type FieldOptions struct {
 	// Which position in the split to consider.
 	Index int `json:"index" yaml:"index"`
 
-	// None, Base64, URL, Hex, etc
+	// None, Base64, URL, Hex, etc.
 	Encoding string `json:"encoding" yaml:"index"`
 
-	// If field missing, add it
+	// If field missing, add it.
 	Create bool `json:"create" yaml:"create"`
 }

@@ -17,7 +17,6 @@ type Filter struct {
 }
 
 // Filter replaces values of targets with values from sources
-// TODO (#3492): Connect this to a replacement transformer plugin
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	for _, r := range f.Replacements {
 		if r.Source == nil || r.Targets == nil {
@@ -37,6 +36,9 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 
 func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.TargetSelector) ([]*yaml.RNode, error) {
 	for _, t := range targets {
+		if t.Select == nil {
+			return nil, fmt.Errorf("target must specify resources to select")
+		}
 		if len(t.FieldPaths) == 0 {
 			t.FieldPaths = []string{types.DefaultReplacementFieldPath}
 		}
@@ -54,13 +56,8 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 }
 
 func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelector) error {
-	if target.Select == nil {
-		return fmt.Errorf("target must specify resources to select")
-	}
 	for _, fp := range target.FieldPaths {
-		fieldPath := strings.Split(fp, ".")
-		// TODO (#3492): Add tests for map keys in the fieldPath (e.g. .spec.containers[name=nginx])
-		t, err := node.Pipe(yaml.Lookup(fieldPath...))
+		t, err := node.Pipe(yaml.Lookup(strings.Split(fp, ".")...))
 		if err != nil {
 			return err
 		}
@@ -83,7 +80,6 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 	}
 	fieldPath := strings.Split(r.Source.FieldPath, ".")
 
-	// TODO (#3492): Add tests for map keys in the fieldPath (e.g. .spec.containers[name=nginx])
 	rn, err := source.Pipe(yaml.Lookup(fieldPath...))
 	if err != nil {
 		return nil, err
@@ -111,10 +107,17 @@ func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yam
 }
 
 func getKrmId(n *yaml.RNode) *types.KrmId {
-	ns, _ := n.GetNamespace()
-	apiVersion := yaml.GetValue(n.Field(yaml.APIVersionField).Value)
-	group, version := resid.ParseGroupVersion(apiVersion)
-
+	ns, err := n.GetNamespace()
+	if err != nil {
+		// Resource has no metadata (no apiVersion, kind, nor metadata field).
+		// In this case, it cannot be selected.
+		return &types.KrmId{}
+	}
+	apiVersion := n.Field(yaml.APIVersionField)
+	var group, version string
+	if apiVersion != nil {
+		group, version = resid.ParseGroupVersion(yaml.GetValue(apiVersion.Value))
+	}
 	return &types.KrmId{
 		Gvk:       resid.Gvk{Group: group, Version: version, Kind: n.GetKind()},
 		Name:      n.GetName(),
