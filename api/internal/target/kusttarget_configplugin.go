@@ -116,10 +116,16 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {
-			types.HelmChartArgs
+			types.HelmGlobals
+			types.HelmChart
 		}
-		for _, args := range kt.kustomization.HelmChartInflationGenerator {
-			c.HelmChartArgs = args
+		var globals types.HelmGlobals
+		if kt.kustomization.HelmGlobals != nil {
+			globals = *kt.kustomization.HelmGlobals
+		}
+		for _, chart := range kt.kustomization.HelmCharts {
+			c.HelmGlobals = globals
+			c.HelmChart = chart
 			p := f()
 			if err = kt.configureBuiltinPlugin(p, c, bpt); err != nil {
 				return nil, err

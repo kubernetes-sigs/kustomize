@@ -3,14 +3,13 @@
 
 package krusty_test
 
-/*
 import (
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-var expected string = `
+const expectedHelm = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -18,36 +17,19 @@ kind: Secret
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-1.2.0
+    chart: minecraft-3.1.3
     heritage: Helm
     release: test
   name: test-minecraft
 type: Opaque
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  annotations:
-    volume.alpha.kubernetes.io/storage-class: default
-  labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
-    heritage: Helm
-    release: test
-  name: test-minecraft-datadir
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
 kind: Service
 metadata:
+  annotations: {}
   labels:
     app: test-minecraft
-    chart: minecraft-1.2.0
+    chart: minecraft-3.1.3
     heritage: Helm
     release: test
   name: test-minecraft
@@ -59,45 +41,43 @@ spec:
     targetPort: minecraft
   selector:
     app: test-minecraft
-  type: LoadBalancer
+  type: ClusterIP
 `
 
-func TestHelmChartInflationGenerator(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
+func TestHelmChartInflationGeneratorOld(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.WriteK(th.GetRoot(), `
 helmChartInflationGenerator:
 - chartName: minecraft
-  chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
-  chartVersion: v1.2.0
+  chartRepoUrl: https://itzg.github.io/minecraft-server-charts
+  chartVersion: 3.1.3
   releaseName: test
-  releaseNamespace: testNamespace
 `)
 
-	m := th.Run("/app", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, expected)
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, expectedHelm)
 }
 
+func TestHelmChartInflationGenerator(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
 
-func TestHelmChartInflationGeneratorAsPlugin(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/app", `
-generators:
-- helm.yaml
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: minecraft
+  repo: https://itzg.github.io/minecraft-server-charts
+  version: 3.1.3
+  releaseName: test
 `)
 
-	th.WriteF("/app/helm.yaml", `
-apiVersion: builtin
-kind: HelmChartInflationGenerator
-metadata:
-  name: myMap
-chartName: minecraft
-chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
-chartVersion: v1.2.0
-releaseName: test
-releaseNamespace: testNamespace
-`)
-
-	m := th.Run("/app", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, expected)
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, expectedHelm)
 }
-*/
