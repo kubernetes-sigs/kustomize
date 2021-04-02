@@ -17,7 +17,7 @@ func TestFilter(t *testing.T) {
 		input        string
 		replacements string
 		expected     string
-		expectedErr  bool
+		expectedErr  string
 	}{
 		"simple": {
 			input: `apiVersion: v1
@@ -37,6 +37,19 @@ apiVersion: v1
 kind: Deployment
 metadata:
   name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
 spec:
   template:
     spec:
@@ -75,6 +88,19 @@ apiVersion: v1
 kind: Deployment
 metadata:
   name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
 spec:
   template:
     spec:
@@ -295,7 +321,7 @@ spec:
   - select:
       kind: Deployment
 `,
-			expectedErr: true,
+			expectedErr: "more than one match for source ~G_~V_Deployment",
 		},
 		"replacement has no source": {
 			input: `apiVersion: v1
@@ -316,7 +342,246 @@ spec:
   - select:
       kind: Deployment
 `,
-			expectedErr: true,
+			expectedErr: "replacements must specify a source and at least one target",
+		},
+		"field paths with key-value pairs": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fieldPath: spec.template.spec.containers.[name=nginx-tagged].image
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths: 
+    - spec.template.spec.containers.[name=postgresdb].image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"select by group and version": {
+			input: `apiVersion: my-group-1/v1
+kind: Custom
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group-2/v2
+kind: Custom
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group-3/v3
+kind: Custom
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    group: my-group-2
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v3
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: my-group-1/v1
+kind: Custom
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group-2/v2
+kind: Custom
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group-3/v3
+kind: Custom
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
+		// regression test for missing metadata handling
+		"missing metadata": {
+			input: `spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group/v1
+kind: Custom
+metadata:
+  name: my-name-1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group/v1
+kind: Custom
+metadata:
+  name: my-name-2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    name: my-name-1
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      name: my-name-2
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group/v1
+kind: Custom
+metadata:
+  name: my-name-1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: my-group/v1
+kind: Custom
+metadata:
+  name: my-name-2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
 		},
 	}
 
@@ -324,11 +589,20 @@ spec:
 		t.Run(tn, func(t *testing.T) {
 			f := Filter{}
 			err := yaml.Unmarshal([]byte(tc.replacements), &f)
-			assert.NoError(t, err)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 			actual, err := filtertest.RunFilterE(t, tc.input, f)
-			assert.Equal(t, tc.expectedErr, err != nil)
-			if !tc.expectedErr &&
-				!assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
+			if err != nil {
+				if tc.expectedErr == "" {
+					t.Errorf("unexpected error: %s\n", err.Error())
+					t.FailNow()
+				}
+				if !assert.Equal(t, tc.expectedErr, err.Error()) {
+					t.FailNow()
+				}
+			}
+			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
 				t.FailNow()
 			}
 		})
