@@ -43,8 +43,6 @@ type TargetSelector struct {
 }
 
 // FieldOptions refine the interpretation of FieldPaths.
-// TODO (#3492): Implement use of these options, they are
-//  currently unused
 type FieldOptions struct {
 	// Used to split/join the field.
 	Delimiter string `json:"delimiter" yaml:"delimiter"`
@@ -52,8 +50,9 @@ type FieldOptions struct {
 	// Which position in the split to consider.
 	Index int `json:"index" yaml:"index"`
 
-	// None, Base64, URL, Hex, etc.
-	Encoding string `json:"encoding" yaml:"index"`
+	// TODO (#3492): Implement use of this option
+	// None, Base64, URL, Hex, etc
+	Encoding string `json:"encoding" yaml:"encoding"`
 
 	// If field missing, add it.
 	Create bool `json:"create" yaml:"create"`

@@ -761,6 +761,583 @@ spec:
         name: postgresdb
 `,
 		},
+		"partial string replacement - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fieldPath: spec.template.spec.containers.0.image
+    options:
+      delimiter: ':'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+    options:
+      delimiter: ':'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"partial string replacement - prefix": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group/config
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod1
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 0
+  targets:
+  - select:
+      kind: Pod
+      name: pod2
+    fieldPaths: 
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: -1
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group/config
+`,
+		},
+		"partial string replacement - suffix": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group/config
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 1
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths: 
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 2
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group/config
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group/config
+`,
+		},
+		"partial string replacement - last element": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 0
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths: 
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 1
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+		},
+		"partial string replacement - first element": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group1/config
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 0
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths: 
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 0
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2/config
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+		},
+		"options.index out of bounds": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: -1
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths: 
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 1
+`,
+			expectedErr: "options.index -1 is out of bounds for value group2",
+		},
+		"create": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+  targets:
+  - select:
+      name: deploy1
+    fieldPaths: 
+    - spec.template.spec.containers
+    options:
+      create: true
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+  targets:
+  - select:
+      name: deploy2
+    fieldPaths: 
+    - spec.template.spec.containers
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+`,
+		},
+		"complex type with delimiter in source": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers: {}
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+    options: 
+      delimiter: "/"
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths: 
+    - spec.template.spec.containers
+`,
+			expectedErr: "delimiter option can only be used with scalar nodes",
+		},
+		"complex type with delimiter in target": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers: {}
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths: 
+    - spec.template.spec.containers
+    options: 
+      delimiter: "/"
+`,
+			expectedErr: "delimiter option can only be used with scalar nodes",
+		},
 	}
 
 	for tn, tc := range testCases {
