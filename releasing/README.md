@@ -15,7 +15,7 @@
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
 
-### Release sequence
+## Release sequence
 
 The dependencies determine the release order:
 
@@ -39,6 +39,8 @@ kustomize openapi info
 
 Instructions on how to get a new OpenAPI sample can be found in the
 [OpenAPI Readme].
+
+## Prep work
 
 #### Make some helper functions
 
@@ -86,7 +88,7 @@ function testKustomizeRepo {
 ( cd cmd/gorepomod; go install . )
 ```
 
-#### Authenticate to github using [gh](https://github.com/cli/cli)
+#### Authenticate to github using [gh](https://github.com/cli/cli) (version [1.8.1](https://github.com/cli/cli/releases/tag/v1.8.1) or higher).
 
 ```
 # Use your own token
@@ -94,6 +96,8 @@ GITHUB_TOKEN=deadbeefdeadbeef
 
 echo $GITHUB_TOKEN | gh auth login --scopes repo --with-token
 ```
+
+## Release `kyaml`
 
 #### Establish clean state
 
@@ -103,7 +107,10 @@ refreshMaster
 testKustomizeRepo
 ```
 
-#### Release `kyaml`
+kyaml has no intra-repo deps, so if the tests pass,
+it can just be released.
+
+Release it:
 
 ```
 gorepomod release kyaml --doIt
@@ -118,8 +125,7 @@ Undraft the release on the [kustomize repo release page],
 make sure the version number is what you expect.
 
 
-#### Release [`cli-utils`](https://github.com/kubernetes-sigs/cli-utils)
-
+## Release [`cli-utils`](https://github.com/kubernetes-sigs/cli-utils)
 
 ```
 cd ../cli-utils
@@ -161,7 +167,7 @@ Note the version:
 versionCliUtils=v0.22.4     # EDIT THIS!
 ```
 
-#### Release `cmd/config`
+## Release `cmd/config`
 
 ```
 cd ../kustomize
@@ -226,7 +232,9 @@ Undraft the release on the [kustomize repo release page],
 make sure the version number is what you expect.
 
 
-#### Release `api` (the kustomize API, used by the CLI)
+## Release `api` 
+
+This is the kustomize API, used by the kustomize CLI.
 
 
 Pin to the new cmd/config:
@@ -273,7 +281,7 @@ Undraft the release on the [kustomize repo release page],
 make sure the version number is what you expect.
 
 
-#### Release the kustomize CLI
+## Release the kustomize CLI
 
 Pin to the new API:
 ```
@@ -311,19 +319,19 @@ gorepomod release kustomize --doIt
 
 Undraft the release on the [kustomize repo release page].
 
-### Important
+## Confirm the kustomize binary is correct
 
-[installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
+> [installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
+> 
+>  * Follow the [installation instructions] to install your new
+>    release and make sure it reports the expected version number.
+>
+>    If not, something is very wrong.
+>
+>  * Visit the [release page] and edit the release notes as desired.
 
- * Follow the [installation instructions] to install your new
-   releas and make sure it reports the expected version number.
 
-   If not, something is very wrong.
-
- * Visit the [release page] and edit the release notes as desired.
-
-
-#### Unpin everything
+## Unpin everything
 
 
 Go back into development mode, where all modules depend on in-repo code:
