@@ -146,37 +146,60 @@ func (mgr *Manager) Release(
 		"Releasing %s, stepping from %s to %s\n",
 		target.ShortName(), target.VersionLocal(), newVersion)
 
+	fmt.Printf("Assuring clean workspace\n")
 	if err := gr.AssureCleanWorkspace(); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Fetching remote\n")
 	if err := gr.FetchRemote(mgr.remoteName); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Checking out main branch\n")
 	if err := gr.CheckoutMainBranch(); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Merge from remote main\n")
 	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Assuring clean workspace\n")
 	if err := gr.AssureCleanWorkspace(); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Checking out release branch\n")
 	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	// TODO (#3780): Figure out why merging from remote main isn't working
+	fmt.Printf("Merging from remote main\n")
 	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Pushing branch to remote\n")
 	if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Creating local release tag\n")
 	if err := gr.CreateLocalReleaseTag(relTag, relBranch); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Pushing tag to remote\n")
 	if err := gr.PushTagToRemote(mgr.remoteName, relTag); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
+	fmt.Printf("Checking out main branch\n")
 	if err := gr.CheckoutMainBranch(); err != nil {
+		fmt.Printf("Received error%w\n", err)
 		return err
 	}
 	return nil

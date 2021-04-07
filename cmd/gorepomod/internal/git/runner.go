@@ -88,6 +88,8 @@ func (gr *Runner) faking(s string) {
 }
 
 func (gr *Runner) run(sl safetyLevel, args ...string) (string, error) {
+	fmt.Println("running command git with args", args)
+	fmt.Println("In dir ", gr.workDir)
 	c := exec.Command("git", args...)
 	c.Dir = gr.workDir
 	if gr.doIt || sl == noHarmDone {
