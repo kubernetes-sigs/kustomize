@@ -23,33 +23,7 @@ func TestFilter(t *testing.T) {
 			input: `apiVersion: v1
 kind: Deployment
 metadata:
-  name: deploy1
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
----
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: deploy2
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
----
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: deploy3
+  name: deploy
 spec:
   template:
     spec:
@@ -62,19 +36,19 @@ spec:
 			replacements: `replacements:
 - source:
     kind: Deployment
-    name: deploy2
+    name: deploy
     fieldPath: spec.template.spec.containers.0.image
   targets:
   - select:
       kind: Deployment
-      name: deploy1
+      name: deploy
     fieldPaths: 
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
 kind: Deployment
 metadata:
-  name: deploy1
+  name: deploy
 spec:
   template:
     spec:
@@ -82,32 +56,6 @@ spec:
       - image: nginx:1.7.9
         name: nginx-tagged
       - image: nginx:1.7.9
-        name: postgresdb
----
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: deploy2
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
----
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: deploy3
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
         name: postgresdb
 `,
 		},
@@ -580,6 +528,236 @@ spec:
       - image: nginx:1.7.9
         name: nginx-tagged
       - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
+		"reject 1": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment
+    reject:
+    - name: deploy2
+    - name: deploy3
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"reject 2": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v1
+    reject:
+    - kind: Deployment
+      name: my-name
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
+		// the only difference in the inputs between this and the previous test
+		// is the dash before `name: my-name` on line 733
+		"reject 3": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v1
+    reject:
+    - kind: Deployment
+    - name: my-name
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
         name: postgresdb
 `,
 		},

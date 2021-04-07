@@ -43,8 +43,8 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 			t.FieldPaths = []string{types.DefaultReplacementFieldPath}
 		}
 		for _, n := range nodes {
-			// TODO (#3492): Don't include matches listed in the `reject` field
-			if t.Select.KrmId.Match(getKrmId(n)) {
+			nodeId := getKrmId(n)
+			if t.Select.KrmId.Match(nodeId) && !rejectId(t.Reject, nodeId) {
 				err := applyToNode(n, value, t)
 				if err != nil {
 					return nil, err
@@ -53,6 +53,15 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 		}
 	}
 	return nodes, nil
+}
+
+func rejectId(rejects []*types.Selector, nodeId *types.KrmId) bool {
+	for _, r := range rejects {
+		if r.KrmId.Match(nodeId) {
+			return true
+		}
+	}
+	return false
 }
 
 func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelector) error {
