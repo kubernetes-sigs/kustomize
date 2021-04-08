@@ -33,9 +33,7 @@ type TargetSelector struct {
 	Select *Selector `json:"select" yaml:"select"`
 
 	// From the allowed set, remove objects that match this.
-	// TODO (#3492): Remove matches listed in the `reject` field
-	//  Currently this field is unused
-	Reject *Selector `json:"reject" yaml:"reject"`
+	Reject []*Selector `json:"reject" yaml:"reject"`
 
 	// Structured field paths expected in each allowed object.
 	FieldPaths []string `json:"fieldPaths" yaml:"fieldPaths"`
