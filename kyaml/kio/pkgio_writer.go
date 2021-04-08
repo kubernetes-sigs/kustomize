@@ -35,6 +35,10 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 	if err := kioutil.DefaultPathAndIndexAnnotation("", nodes); err != nil {
 		return err
 	}
+	// make sure there are no duplicates
+	if err := kioutil.ErrorIfDuplicateAnnotation(nodes); err != nil {
+		return err
+	}
 
 	if s, err := os.Stat(r.PackagePath); err != nil {
 		return err

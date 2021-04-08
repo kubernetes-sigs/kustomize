@@ -34,6 +34,27 @@ func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
 	return path, index, nil
 }
 
+// ErrorIfDuplicateAnnotation returns an error if the same index/path is on multiple resources
+func ErrorIfDuplicateAnnotation(nodes []*yaml.RNode) error {
+	// map has structure path -> index -> bool
+	// to keep track of paths and indexes found
+	pathIndexes := make(map[string]map[string]bool)
+	for _, node := range nodes {
+		filepath, index, err := GetFileAnnotations(node)
+		if err != nil {
+			return err
+		}
+		if pathIndexes[filepath] == nil {
+			pathIndexes[filepath] = make(map[string]bool)
+		}
+		if _, ok := pathIndexes[filepath][index]; ok {
+			return errors.Errorf("duplicate path and index %s %s", filepath, index)
+		}
+		pathIndexes[filepath][index] = true
+	}
+	return nil
+}
+
 // ErrorIfMissingAnnotation validates the provided annotations are present on the given resources
 func ErrorIfMissingAnnotation(nodes []*yaml.RNode, keys ...AnnotationKey) error {
 	for _, key := range keys {
