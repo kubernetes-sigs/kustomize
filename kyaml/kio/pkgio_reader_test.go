@@ -121,6 +121,78 @@ metadata:
 	}
 }
 
+func TestLocalPackageReader_Read_pkgAndSkipFile(t *testing.T) {
+	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+	defer s.Clean()
+	s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
+	s.WriteFile(t, filepath.Join("b_test.yaml"), readFileB)
+	s.WriteFile(t, filepath.Join("c_test.yaml"), readFileC)
+	s.WriteFile(t, filepath.Join("d_test.yaml"), readFileD)
+
+	paths := []struct {
+		path string
+	}{
+		{path: "./"},
+		{path: s.Root},
+	}
+	for _, p := range paths {
+		rfr := LocalPackageReader{
+			PackagePath: p.path,
+			FileSkipFunc: func(relPath string) bool {
+				return relPath == "d_test.yaml"
+			},
+		}
+		nodes, err := rfr.Read()
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		if !assert.Len(t, nodes, 4) {
+			return
+		}
+		expected := []string{
+			`a: b #first
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'a_test.yaml'
+`,
+			`c: d # second
+metadata:
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'a_test.yaml'
+`,
+			`# second thing
+e: f
+g:
+  h:
+  - i # has a list
+  - j
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'b_test.yaml'
+`,
+			`a: b #third
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'c_test.yaml'
+`,
+		}
+		for i := range nodes {
+			val, err := nodes[i].String()
+			if !assert.NoError(t, err) {
+				return
+			}
+			if !assert.Equal(t, expected[i], val) {
+				return
+			}
+		}
+	}
+}
+
 func TestLocalPackageReader_Read_JSON(t *testing.T) {
 	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
 	defer s.Clean()
