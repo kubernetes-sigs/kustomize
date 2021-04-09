@@ -33,8 +33,10 @@ type Configurable interface {
 }
 
 // NewPluginHelpers makes an instance of PluginHelpers.
-func NewPluginHelpers(ldr ifc.Loader, v ifc.Validator, rf *Factory) *PluginHelpers {
-	return &PluginHelpers{ldr: ldr, v: v, rf: rf}
+func NewPluginHelpers(
+	ldr ifc.Loader, v ifc.Validator, rf *Factory,
+	pc *types.PluginConfig) *PluginHelpers {
+	return &PluginHelpers{ldr: ldr, v: v, rf: rf, pc: pc}
 }
 
 // PluginHelpers holds things that any or all plugins might need.
@@ -44,6 +46,11 @@ type PluginHelpers struct {
 	ldr ifc.Loader
 	v   ifc.Validator
 	rf  *Factory
+	pc  *types.PluginConfig
+}
+
+func (c *PluginHelpers) GeneralConfig() *types.PluginConfig {
+	return c.pc
 }
 
 func (c *PluginHelpers) Loader() ifc.Loader {
