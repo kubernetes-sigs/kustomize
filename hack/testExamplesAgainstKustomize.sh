@@ -35,9 +35,8 @@ mdrip --mode test --blockTimeOut 15m \
 # TODO: make work for non-linux
 if onLinuxAndNotOnRemoteCI; then
   echo "On linux, and not on remote CI.  Running expensive tests."
-
   # Requires helm.
-  make $MYGOBIN/helm
+  make $MYGOBIN/helmV3
   mdrip --mode test --label helmtest examples/chart.md
 fi
 

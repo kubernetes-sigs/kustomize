@@ -42,6 +42,11 @@ func NewLoader(
 	return &Loader{pc: pc, rf: rf, fs: fs}
 }
 
+// Config provides the global (not plugin specific) PluginConfig data.
+func (l *Loader) Config() *types.PluginConfig {
+	return l.pc
+}
+
 func (l *Loader) LoadGenerators(
 	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]resmap.Generator, error) {
 	var result []resmap.Generator
@@ -188,7 +193,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	if err != nil {
 		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.OrgId())
 	}
-	err = c.Config(resmap.NewPluginHelpers(ldr, v, l.rf), yaml)
+	err = c.Config(resmap.NewPluginHelpers(ldr, v, l.rf, l.pc), yaml)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "plugin %s fails configuration", res.OrgId())
