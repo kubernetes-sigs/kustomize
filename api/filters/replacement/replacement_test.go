@@ -39,11 +39,11 @@ spec:
     name: deploy
     fieldPath: spec.template.spec.containers.0.image
   targets:
-  - select:
-      kind: Deployment
-      name: deploy
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
+    - select:
+        kind: Deployment
+        name: deploy
+      fieldPaths: 
+        - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
 kind: Deployment
@@ -88,15 +88,15 @@ spec:
       containers: {}
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-  targets:
-  - select:
-      kind: Deployment
-    fieldPaths: 
-    - spec.template.spec.containers
+  - source:
+      kind: Pod
+      name: pod
+      fieldPath: spec.containers
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths: 
+          - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -166,26 +166,26 @@ data:
   PORT: 8080
 `,
 			replacements: `replacements:
-- source:
-    kind: ConfigMap
-    name: cm
-    fieldPath: data.HOSTNAME
-  targets:
-  - select:
-      kind: Deployment
-    fieldPaths:
-    - spec.template.spec.containers.0.args.0
-    - spec.template.spec.containers.1.args.1
-- source:
-    kind: ConfigMap
-    name: cm
-    fieldPath: data.PORT
-  targets:
-  - select:
-      kind: Deployment
-    fieldPaths:
-    - spec.template.spec.containers.0.args.1
-    - spec.template.spec.containers.1.args.2
+  - source:
+      kind: ConfigMap
+      name: cm
+      fieldPath: data.HOSTNAME
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths:
+          - spec.template.spec.containers.0.args.0
+          - spec.template.spec.containers.1.args.1
+  - source:
+      kind: ConfigMap
+      name: cm
+      fieldPath: data.PORT
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths:
+          - spec.template.spec.containers.0.args.1
+          - spec.template.spec.containers.1.args.2
 `,
 			expected: `apiVersion: apps/v1
 kind: Deployment
@@ -263,11 +263,11 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    kind: Deployment
-  targets:
-  - select:
+  - source:
       kind: Deployment
+    targets:
+      - select:
+          kind: Deployment
 `,
 			expectedErr: "multiple matches for selector ~G_~V_Deployment|~X|~N",
 		},
@@ -286,9 +286,9 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- targets:
-  - select:
-      kind: Deployment
+  - targets:
+    - select:
+        kind: Deployment
 `,
 			expectedErr: "replacements must specify a source and at least one target",
 		},
@@ -320,16 +320,16 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    kind: Deployment
-    name: deploy2
-    fieldPath: spec.template.spec.containers.[name=nginx-tagged].image
-  targets:
-  - select:
+  - source:
       kind: Deployment
-      name: deploy1
-    fieldPaths: 
-    - spec.template.spec.containers.[name=postgresdb].image
+      name: deploy2
+      fieldPath: spec.template.spec.containers.[name=nginx-tagged].image
+    targets:
+      - select:
+          kind: Deployment
+          name: deploy1
+        fieldPaths: 
+          - spec.template.spec.containers.[name=postgresdb].image
 `,
 			expected: `apiVersion: v1
 kind: Deployment
@@ -399,14 +399,14 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    group: my-group-2
-    fieldPath: spec.template.spec.containers.0.image
-  targets:
-  - select:
-      version: v3
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
+  - source:
+      group: my-group-2
+      fieldPath: spec.template.spec.containers.0.image
+    targets:
+      - select:
+          version: v3
+        fieldPaths: 
+          - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: my-group-1/v1
 kind: Custom
@@ -486,14 +486,14 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    name: my-name-1
-    fieldPath: spec.template.spec.containers.0.image
-  targets:
-  - select:
-      name: my-name-2
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
+  - source:
+      name: my-name-1
+      fieldPath: spec.template.spec.containers.0.image
+    targets:
+      - select:
+          name: my-name-2
+        fieldPaths: 
+          - spec.template.spec.containers.1.image
 `,
 			expected: `spec:
   template:
@@ -572,18 +572,18 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    kind: Deployment
-    name: deploy2
-    fieldPath: spec.template.spec.containers.0.image
-  targets:
-  - select:
+  - source:
       kind: Deployment
-    reject:
-    - name: deploy2
-    - name: deploy3
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
+      name: deploy2
+      fieldPath: spec.template.spec.containers.0.image
+    targets:
+      - select:
+          kind: Deployment
+        reject:
+          - name: deploy2
+          - name: deploy3
+        fieldPaths: 
+          - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
 kind: Deployment
@@ -653,17 +653,17 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    kind: Deployment
-    fieldPath: spec.template.spec.containers.0.image
-  targets:
-  - select:
-      version: v1
-    reject:
-    - kind: Deployment
-      name: my-name
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
+  - source:
+      kind: Deployment
+      fieldPath: spec.template.spec.containers.0.image
+    targets:
+      - select:
+          version: v1
+        reject:
+          - kind: Deployment
+            name: my-name
+        fieldPaths: 
+          - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
 kind: Deployment
@@ -722,17 +722,17 @@ spec:
           name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    kind: Deployment
-    fieldPath: spec.template.spec.containers.0.image
-  targets:
-  - select:
-      version: v1
-    reject:
-    - kind: Deployment
-    - name: my-name
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
+  - source:
+      kind: Deployment
+      fieldPath: spec.template.spec.containers.0.image
+    targets:
+      - select:
+          version: v1
+        reject:
+          - kind: Deployment
+          - name: my-name
+        fieldPaths: 
+          - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
 kind: Deployment
@@ -770,10 +770,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -783,26 +783,26 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
-- source:
-    kind: Deployment
-    name: deploy2
-    fieldPath: spec.template.spec.containers.0.image
-    options:
-      delimiter: ':'
-  targets:
-  - select:
+  - source:
       kind: Deployment
-      name: deploy1
-    fieldPaths: 
-    - spec.template.spec.containers.1.image
-    options:
-      delimiter: ':'
+      name: deploy2
+      fieldPath: spec.template.spec.containers.0.image
+      options:
+        delimiter: ':'
+    targets:
+      - select:
+          kind: Deployment
+          name: deploy1
+        fieldPaths: 
+          - spec.template.spec.containers.1.image
+        options:
+          delimiter: ':'
 `,
 			expected: `apiVersion: v1
 kind: Deployment
@@ -812,10 +812,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -825,10 +825,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 		},
 		"partial string replacement - prefix": {
@@ -838,13 +838,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group
 ---
 apiVersion: v1
 kind: Pod
@@ -852,31 +852,31 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group/config
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod1
-    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 0
-  targets:
-  - select:
+  - source:
       kind: Pod
-      name: pod2
-    fieldPaths: 
-    - spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: -1
+      name: pod1
+      fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+      options:
+        delimiter: '/'
+        index: 0
+    targets:
+      - select:
+          kind: Pod
+          name: pod2
+        fieldPaths: 
+          - spec.volumes.0.projected.sources.0.configMap.items.0.path
+        options:
+          delimiter: '/'
+          index: -1
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -884,13 +884,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group
 ---
 apiVersion: v1
 kind: Pod
@@ -898,13 +898,13 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group/config
 `,
 		},
 		"partial string replacement - suffix": {
@@ -914,13 +914,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group
 ---
 apiVersion: v1
 kind: Pod
@@ -928,31 +928,31 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group/config
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod2
-    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 1
-  targets:
-  - select:
+  - source:
       kind: Pod
-      name: pod1
-    fieldPaths: 
-    - spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 2
+      name: pod2
+      fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+      options:
+        delimiter: '/'
+        index: 1
+    targets:
+      - select:
+          kind: Pod
+          name: pod1
+        fieldPaths: 
+          - spec.volumes.0.projected.sources.0.configMap.items.0.path
+        options:
+          delimiter: '/'
+          index: 2
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -960,13 +960,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group/config
 ---
 apiVersion: v1
 kind: Pod
@@ -974,13 +974,13 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group/config
 `,
 		},
 		"partial string replacement - last element": {
@@ -990,13 +990,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group1
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group1
 ---
 apiVersion: v1
 kind: Pod
@@ -1004,31 +1004,31 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group2
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group2
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod2
-    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 0
-  targets:
-  - select:
+  - source:
       kind: Pod
-      name: pod1
-    fieldPaths: 
-    - spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 1
+      name: pod2
+      fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+      options:
+        delimiter: '/'
+        index: 0
+    targets:
+      - select:
+          kind: Pod
+          name: pod1
+        fieldPaths: 
+          - spec.volumes.0.projected.sources.0.configMap.items.0.path
+        options:
+          delimiter: '/'
+          index: 1
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -1036,13 +1036,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group2
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group2
 ---
 apiVersion: v1
 kind: Pod
@@ -1050,13 +1050,13 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group2
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group2
 `,
 		},
 		"partial string replacement - first element": {
@@ -1066,13 +1066,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group1/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group1/config
 ---
 apiVersion: v1
 kind: Pod
@@ -1080,31 +1080,31 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group2
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group2
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod2
-    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 0
-  targets:
-  - select:
+  - source:
       kind: Pod
-      name: pod1
-    fieldPaths: 
-    - spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 0
+      name: pod2
+      fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+      options:
+        delimiter: '/'
+        index: 0
+    targets:
+      - select:
+          kind: Pod
+          name: pod1
+        fieldPaths: 
+          - spec.volumes.0.projected.sources.0.configMap.items.0.path
+        options:
+          delimiter: '/'
+          index: 0
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -1112,13 +1112,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group2/config
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group2/config
 ---
 apiVersion: v1
 kind: Pod
@@ -1126,13 +1126,13 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group2
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group2
 `,
 		},
 		"options.index out of bounds": {
@@ -1142,13 +1142,13 @@ metadata:
   name: pod1
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: my/group1
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: my/group1
 ---
 apiVersion: v1
 kind: Pod
@@ -1156,31 +1156,31 @@ metadata:
   name: pod2
 spec:
   volumes:
-  - projected:
-      sources:
-      - configMap:
-          name: myconfigmap
-          items:
-          - key: config
-            path: group2
+    - projected:
+        sources:
+          - configMap:
+              name: myconfigmap
+              items:
+                - key: config
+                  path: group2
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod2
-    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: -1
-  targets:
-  - select:
+  - source:
       kind: Pod
-      name: pod1
-    fieldPaths: 
-    - spec.volumes.0.projected.sources.0.configMap.items.0.path
-    options:
-      delimiter: '/'
-      index: 1
+      name: pod2
+      fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+      options:
+        delimiter: '/'
+        index: -1
+    targets:
+      - select:
+          kind: Pod
+          name: pod1
+        fieldPaths: 
+          - spec.volumes.0.projected.sources.0.configMap.items.0.path
+        options:
+          delimiter: '/'
+          index: 1
 `,
 			expectedErr: "options.index -1 is out of bounds for value group2",
 		},
@@ -1191,8 +1191,8 @@ metadata:
   name: pod
 spec:
   containers:
-  - image: busybox
-    name: myapp-container
+    - image: busybox
+      name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1205,26 +1205,26 @@ metadata:
   name: deploy2
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-  targets:
-  - select:
-      name: deploy1
-    fieldPaths: 
-    - spec.template.spec.containers
-    options:
-      create: true
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-  targets:
-  - select:
-      name: deploy2
-    fieldPaths: 
-    - spec.template.spec.containers
+  - source:
+      kind: Pod
+      name: pod
+      fieldPath: spec.containers
+    targets:
+      - select:
+          name: deploy1
+        fieldPaths: 
+          - spec.template.spec.containers
+        options:
+          create: true
+  - source:
+      kind: Pod
+      name: pod
+      fieldPath: spec.containers
+    targets:
+      - select:
+          name: deploy2
+        fieldPaths: 
+          - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -1232,8 +1232,8 @@ metadata:
   name: pod
 spec:
   containers:
-  - image: busybox
-    name: myapp-container
+    - image: busybox
+      name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1243,8 +1243,8 @@ spec:
   template:
     spec:
       containers:
-      - image: busybox
-        name: myapp-container
+        - image: busybox
+          name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1259,8 +1259,8 @@ metadata:
   name: pod
 spec:
   containers:
-  - image: busybox
-    name: myapp-container
+    - image: busybox
+      name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1281,17 +1281,17 @@ spec:
       containers: {}
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-    options: 
-      delimiter: "/"
-  targets:
-  - select:
-      kind: Deployment
-    fieldPaths: 
-    - spec.template.spec.containers
+  - source:
+      kind: Pod
+      name: pod
+      fieldPath: spec.containers
+      options: 
+        delimiter: "/"
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths: 
+          - spec.template.spec.containers
 `,
 			expectedErr: "delimiter option can only be used with scalar nodes",
 		},
@@ -1302,8 +1302,8 @@ metadata:
   name: pod
 spec:
   containers:
-  - image: busybox
-    name: myapp-container
+    - image: busybox
+      name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1324,17 +1324,17 @@ spec:
       containers: {}
 `,
 			replacements: `replacements:
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-  targets:
-  - select:
-      kind: Deployment
-    fieldPaths: 
-    - spec.template.spec.containers
-    options: 
-      delimiter: "/"
+  - source:
+      kind: Pod
+      name: pod
+      fieldPath: spec.containers
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths: 
+          - spec.template.spec.containers
+        options: 
+          delimiter: "/"
 `,
 			expectedErr: "delimiter option can only be used with scalar nodes",
 		},
@@ -1395,14 +1395,14 @@ metadata:
 spec:
   backendType: secretsManager
   data:
-  - key: some-prefix-example
-    name: .first
-    version: latest
-    property: first
-  - key: some-prefix-example
-    name: second
-    version: latest
-    property: second`,
+    - key: some-prefix-example
+      name: .first
+      version: latest
+      property: first
+    - key: some-prefix-example
+      name: second
+      version: latest
+      property: second`,
 		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
@@ -1466,18 +1466,18 @@ metadata:
 spec:
   backendType: secretsManager
   data:
-  - key: some-prefix-example
-    name: first
-    version: latest
-    property: first
-  - key: some-prefix-example
-    name: second
-    version: latest
-    property: second
-  - key: some-prefix-example
-    name: third
-    version: latest
-    property: third
+    - key: some-prefix-example
+      name: first
+      version: latest
+      property: first
+    - key: some-prefix-example
+      name: second
+      version: latest
+      property: second
+    - key: some-prefix-example
+      name: third
+      version: latest
+      property: third
 `,
 		},
 	}

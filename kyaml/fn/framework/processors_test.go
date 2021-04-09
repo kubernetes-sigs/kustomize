@@ -557,32 +557,32 @@ items:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: example.com/v1
-  kind: Foo
-  metadata:
-    name: source
-  spec:
-    targets:
-    - app: C
-      size: large
-      type: Ruby
-    - app: B
-      size: small
-- apiVersion: example.com/v1
-  kind: Foo
-  metadata:
-    name: example
-  spec:
-    targets:
-    - app: A
-      type: Go
-      size: small
-    - app: B
-      type: Go
-      size: small
-    - app: C
-      type: Ruby
-      size: large
+  - apiVersion: example.com/v1
+    kind: Foo
+    metadata:
+      name: source
+    spec:
+      targets:
+        - app: C
+          size: large
+          type: Ruby
+        - app: B
+          size: small
+  - apiVersion: example.com/v1
+    kind: Foo
+    metadata:
+      name: example
+    spec:
+      targets:
+        - app: A
+          type: Go
+          size: small
+        - app: B
+          type: Go
+          size: small
+        - app: C
+          type: Ruby
+          size: large
 `), strings.TrimSpace(out.String()))
 	found := openapi.SchemaForResourceType(yaml.TypeMeta{
 		APIVersion: "example.com/v1",

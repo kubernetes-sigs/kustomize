@@ -81,13 +81,14 @@ results:
       resourceRef:
         apiVersion: v1
         kind: Deployment
-        metadata:
-          name: tester
-          namespace: default
+        name: tester
+        namespace: default
       field:
         path: .spec.Replicas
         currentValue: "0"
         suggestedValue: "3"
       file:
-        path: /path/to/deployment.yaml`, strings.TrimSpace(out.String()))
+        path: /path/to/deployment.yaml
+    - message: some error
+      severity: error`, strings.TrimSpace(out.String()))
 }

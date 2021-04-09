@@ -120,10 +120,10 @@ metadata:
 spec:
   parameters:
     naming_rules:
-    - kind: Bar
-      patterns:
-      # comment 1
-      - ^(dev|prod|staging|qa|shared)$
+      - kind: Bar
+        patterns:
+          # comment 1
+          - ^(dev|prod|staging|qa|shared)$
 `,
 		},
 

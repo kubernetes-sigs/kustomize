@@ -82,6 +82,7 @@ c: d # second
 e: f
 g:
   h:
+    # has a list
     - i: [i1, i2] # line comment
       # has a list 2
     - j: j1
@@ -177,12 +178,12 @@ spec:
     spec:
       # comment 6
       containers:
-      # comment 7
-      - name: nginx
-        image: nginx:1.14.2 # comment 8
-        ports:
-        # comment 9
-        - containerPort: 80 # comment 10
+        # comment 7
+        - name: nginx
+          image: nginx:1.14.2 # comment 8
+          ports:
+            # comment 9
+            - containerPort: 80 # comment 10
 ---
 apiVersion: v1
 kind: Service
@@ -190,12 +191,12 @@ metadata:
   name: my-service
 spec:
   ports:
-  # comment 1
-  - name: etcd-server-ssl
-    port: 2380
-  # comment 2
-  - name: etcd-client-ssl
-    port: 2379
+    # comment 1
+    - name: etcd-server-ssl
+      port: 2380
+    # comment 2
+    - name: etcd-client-ssl
+      port: 2379
 ---
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: EnforceFoo
@@ -204,10 +205,10 @@ metadata:
 spec:
   parameters:
     naming_rules:
-    - kind: Folder
-      patterns:
-      # comment 1
-      - ^(dev|prod|staging|qa|shared)$
+      - kind: Folder
+        patterns:
+          # comment 1
+          - ^(dev|prod|staging|qa|shared)$
 `,
 		},
 
@@ -379,7 +380,7 @@ metadata:
 			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- {"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test.json"}}}
+  - {"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test.json"}}}
 `,
 		},
 

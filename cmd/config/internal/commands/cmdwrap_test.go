@@ -117,6 +117,7 @@ items:
         name: test
         app: nginx
       ports:
+        # This i the port.
         - name: http
           port: 8080
           targetPort: 8080
@@ -168,6 +169,7 @@ items:
         name: test
         app: nginx
       ports:
+        # This i the port.
         - name: http
           port: 8080
           targetPort: 8080
@@ -267,6 +269,7 @@ items:
         name: test
         app: nginx
       ports:
+        # This i the port.
         - name: http
           port: 8080
           targetPort: 8080

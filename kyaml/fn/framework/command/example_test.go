@@ -377,8 +377,7 @@ items:
 	//       resourceRef:
 	//         apiVersion: apps/v1
 	//         kind: Deployment
-	//         metadata:
-	//           name: foo
+	//         name: foo
 	//       field:
 	//         path: spec.replicas
 	//         suggestedValue: "1"

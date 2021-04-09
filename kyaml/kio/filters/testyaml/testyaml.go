@@ -98,8 +98,7 @@ status2:
 `)
 
 var FormattedFlowYAML1 = []byte(
-	`{"apiVersion": "example.com/v1beta1", "kind": "MyType", "spec": "a", "status": {"conditions": [
-      3, 1, 2]}}
+	`{"apiVersion": "example.com/v1beta1", "kind": "MyType", "spec": "a", "status": {"conditions": [3, 1, 2]}}
 `)
 
 var FormattedYaml3 = []byte(`apiVersion: v1

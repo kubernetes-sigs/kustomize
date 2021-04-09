@@ -411,10 +411,12 @@ spec:
         app: nginx
     spec:
       containers:
+        # this is another container
         - name: a-nginx
           image: nginx:1.7.9
           ports:
             - containerPort: 80
+        # this is a container
         - name: b-nginx
           image: nginx:1.7.9
           ports:
