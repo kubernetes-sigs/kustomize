@@ -66,15 +66,47 @@ func rejectId(rejects []*types.Selector, nodeId *types.KrmId) bool {
 
 func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelector) error {
 	for _, fp := range target.FieldPaths {
-		t, err := node.Pipe(yaml.Lookup(strings.Split(fp, ".")...))
+		fieldPath := strings.Split(fp, ".")
+		var t *yaml.RNode
+		var err error
+		if target.Options != nil && target.Options.Create {
+			t, err = node.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
+		} else {
+			t, err = node.Pipe(yaml.Lookup(fieldPath...))
+		}
 		if err != nil {
 			return err
 		}
 		if t != nil {
-			// TODO (#3492): Use the field options to refine interpretation of the field
-			t.SetYNode(value.YNode())
+			if err = setTargetValue(target.Options, t, value); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
+}
+
+func setTargetValue(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNode) error {
+	if options != nil && options.Delimiter != "" {
+
+		if t.YNode().Kind != yaml.ScalarNode {
+			return fmt.Errorf("delimiter option can only be used with scalar nodes")
+		}
+
+		tv := strings.Split(t.YNode().Value, options.Delimiter)
+		v := yaml.GetValue(value)
+		// TODO: Add a way to remove an element
+		switch {
+		case options.Index < 0: // prefix
+			tv = append([]string{v}, tv...)
+		case options.Index >= len(tv): // suffix
+			tv = append(tv, v)
+		default: // replace an element
+			tv[options.Index] = v
+		}
+		value.YNode().Value = strings.Join(tv, options.Delimiter)
+	}
+	t.SetYNode(value.YNode())
 	return nil
 }
 
@@ -93,8 +125,26 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 	if err != nil {
 		return nil, err
 	}
-	// TODO (#3492): Use the field options to refine interpretation of the field
+	if !rn.IsNilOrEmpty() {
+		return getRefinedValue(r.Source.Options, rn)
+	}
 	return rn, nil
+}
+
+func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, error) {
+	if options == nil || options.Delimiter == "" {
+		return rn, nil
+	}
+	if rn.YNode().Kind != yaml.ScalarNode {
+		return nil, fmt.Errorf("delimiter option can only be used with scalar nodes")
+	}
+	value := strings.Split(yaml.GetValue(rn), options.Delimiter)
+	if options.Index >= len(value) || options.Index < 0 {
+		return nil, fmt.Errorf("options.index %d is out of bounds for value %s", options.Index, yaml.GetValue(rn))
+	}
+	n := rn.Copy()
+	n.YNode().Value = value[options.Index]
+	return n, nil
 }
 
 // selectSourceNode finds the node that matches the selector, returning
