@@ -96,7 +96,7 @@ $(MYGOBIN)/prchecker:
 	go install .
 
 # Build from local source.
-$(MYGOBIN)/kustomize:
+$(MYGOBIN)/kustomize: build-kustomize-api
 	cd kustomize; \
 	go install .
 
@@ -105,7 +105,7 @@ install-tools: \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint-kustomize \
 	$(MYGOBIN)/gorepomod \
-	$(MYGOBIN)/helm \
+	$(MYGOBIN)/helmV3 \
 	$(MYGOBIN)/k8scopy \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
@@ -323,16 +323,12 @@ $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.4.0-linux-amd64.tar.gz; \
+		tgzFile=helm-v3.5.3-linux-amd64.tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
 		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
-
-# Default version of helm is v3.
-$(MYGOBIN)/helm: $(MYGOBIN)/helmV3
-	ln -s $(MYGOBIN)/helmV3 $(MYGOBIN)/helm
 
 $(MYGOBIN)/kind:
 	( \
