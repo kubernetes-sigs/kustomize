@@ -45,7 +45,8 @@ s/$BAR/bar baz/g
 		})
 
 	pluginConfig.RemoveBuildAnnotations()
-	loader := pLdr.NewLoader(types.DisabledPluginConfig(), rf, fSys)
+	pc := types.DisabledPluginConfig()
+	loader := pLdr.NewLoader(pc, rf, fSys)
 	pluginPath, err := loader.AbsolutePluginPath(pluginConfig.OrgId())
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
@@ -61,7 +62,9 @@ s/$BAR/bar baz/g
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	p.Config(resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf), yaml)
+	p.Config(
+		resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc),
+		yaml)
 
 	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
 	if !strings.HasSuffix(p.Path(), expected) {

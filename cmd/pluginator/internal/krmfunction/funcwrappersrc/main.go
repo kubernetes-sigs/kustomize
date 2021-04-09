@@ -8,6 +8,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
@@ -17,7 +18,7 @@ func main() {
 	p := provider.NewDefaultDepProvider()
 	resmapFactory := resmap.NewFactory(p.GetResourceFactory())
 	pluginHelpers := resmap.NewPluginHelpers(
-		nil, p.GetFieldValidator(), resmapFactory)
+		nil, p.GetFieldValidator(), resmapFactory, types.DisabledPluginConfig())
 
 	processor := framework.ResourceListProcessorFunc(func(resourceList *framework.ResourceList) error {
 		resMap, err := resmapFactory.NewResMapFromRNodeSlice(resourceList.Items)
