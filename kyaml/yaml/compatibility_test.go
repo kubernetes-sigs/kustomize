@@ -43,14 +43,14 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        args:
-        - bar
-        - on
-        image: nginx:1.7.9
-        ports:
-        - name: http
-          containerPort: "80"
+        - name: foo
+          args:
+            - bar
+            - on
+          image: nginx:1.7.9
+          ports:
+            - name: http
+              containerPort: "80"
 `)
 	s := openapi.SchemaForResourceType(
 		yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
@@ -91,14 +91,14 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        args:
-        - bar
-        - "on"
-        image: nginx:1.7.9
-        ports:
-        - name: http
-          containerPort: 80
+        - name: foo
+          args:
+            - bar
+            - "on"
+          image: nginx:1.7.9
+          ports:
+            - name: http
+              containerPort: 80
 `
 	assert.Equal(t, expected, actual)
 }

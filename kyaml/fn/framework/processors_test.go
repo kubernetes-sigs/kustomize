@@ -37,8 +37,8 @@ func TestTemplateProcessor_ResourceTemplates(t *testing.T) {
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
+  - apiVersion: v1
+    kind: Service
 functionConfig:
   image: baz
 `),
@@ -49,19 +49,19 @@ functionConfig:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-    namespace: bar
-  spec:
-    template:
-      spec:
-        containers:
-        - name: foo
-          image: baz
+  - apiVersion: v1
+    kind: Service
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+      namespace: bar
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+              image: baz
 functionConfig:
   image: baz
 `), strings.TrimSpace(out.String()))
@@ -132,29 +132,29 @@ functionConfig:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-  spec:
-    template:
-      spec:
-        containers:
-        - name: foo
-          image: baz
-    replicas: 5
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: bar
-    annotations:
-      baz: buz
-  spec:
-    template:
-      spec:
-        containers:
-        - name: foo
-          image: baz
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+              image: baz
+      replicas: 5
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: bar
+      annotations:
+        baz: buz
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+              image: baz
 functionConfig:
   spec:
     replicas: 5
@@ -185,8 +185,8 @@ func TestTemplateProcessor_ContainerPatchTemplates(t *testing.T) {
 				Selector: &framework.Selector{Names: []string{"{{.Spec.A}}"}, TemplateData: &config},
 				Templates: parser.TemplateStrings(`
 env:
-- name: Foo
-  value: Bar
+  - name: Foo
+    value: Bar
 `)},
 		},
 	}
@@ -196,30 +196,30 @@ env:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-  spec:
-    template:
-      spec:
-        containers:
-        - name: a
-          env:
-          - name: EXISTING
-            value: variable
-        - name: b
-        - name: c
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: bar
-  spec:
-    template:
-      spec:
-        containers:
-        - name: foo
-          image: baz
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+    spec:
+      template:
+        spec:
+          containers:
+            - name: a
+              env:
+                - name: EXISTING
+                  value: variable
+            - name: b
+            - name: c
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: bar
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+              image: baz
 functionConfig:
   spec:
     key: Hello
@@ -233,41 +233,41 @@ functionConfig:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-  spec:
-    template:
-      spec:
-        containers:
-        - name: a
-          env:
-          - name: EXISTING
-            value: variable
-          - name: Hello
-            value: World
-        - name: b
-          env:
-          - name: Hello
-            value: World
-        - name: c
-          env:
-          - name: Hello
-            value: World
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: bar
-  spec:
-    template:
-      spec:
-        containers:
-        - name: foo
-          image: baz
-          env:
-          - name: Foo
-            value: Bar
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+    spec:
+      template:
+        spec:
+          containers:
+            - name: a
+              env:
+                - name: EXISTING
+                  value: variable
+                - name: Hello
+                  value: World
+            - name: b
+              env:
+                - name: Hello
+                  value: World
+            - name: c
+              env:
+                - name: Hello
+                  value: World
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: bar
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+              image: baz
+              env:
+                - name: Foo
+                  value: Bar
 functionConfig:
   spec:
     key: Hello

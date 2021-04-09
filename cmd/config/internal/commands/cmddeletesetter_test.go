@@ -139,9 +139,9 @@ openAPI:
           name: list
           value: ""
           listValues:
-          - a
-          - b
-          - c
+            - a
+            - b
+            - c
           setBy: me
  `,
 			input: `
@@ -149,17 +149,17 @@ apiVersion: example.com/v1beta1
 kind: Example1
 spec:
   list: # {"$openapi":"list"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: example.com/v1beta1
 kind: Example2
 spec:
   list: # {"$openapi":"list2"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
  `,
 			out: `deleted setter "list"`,
 			expectedResources: `
@@ -167,17 +167,17 @@ apiVersion: example.com/v1beta1
 kind: Example1
 spec:
   list:
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: example.com/v1beta1
 kind: Example2
 spec:
   list: # {"$openapi":"list2"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -258,10 +258,10 @@ openAPI:
           name: image
           pattern: IMAGE_NAME:IMAGE_TAG
           values:
-          - marker: "IMAGE_NAME"
-            ref: "#/definitions/io.k8s.cli.setters.image-name"
-          - marker: "IMAGE_TAG"
-            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+            - marker: "IMAGE_NAME"
+              ref: "#/definitions/io.k8s.cli.setters.image-name"
+            - marker: "IMAGE_TAG"
+              ref: "#/definitions/io.k8s.cli.setters.image-tag"
 `,
 			expectedOpenAPI: `
 openAPI:
@@ -282,10 +282,10 @@ openAPI:
           name: image
           pattern: IMAGE_NAME:IMAGE_TAG
           values:
-          - marker: "IMAGE_NAME"
-            ref: "#/definitions/io.k8s.cli.setters.image-name"
-          - marker: "IMAGE_TAG"
-            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+            - marker: "IMAGE_NAME"
+              ref: "#/definitions/io.k8s.cli.setters.image-name"
+            - marker: "IMAGE_TAG"
+              ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `,
 			expectedResources: `
 apiVersion: apps/v1

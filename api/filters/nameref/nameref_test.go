@@ -65,8 +65,8 @@ kind: Deployment
 metadata:
   name: dep
 seq:
-- oldName1
-- oldName2
+  - oldName1
+  - oldName2
 `,
 			candidates: `
 apiVersion: apps/v1
@@ -86,8 +86,8 @@ kind: Deployment
 metadata:
   name: dep
 seq:
-- newName
-- oldName2
+  - newName
+  - oldName2
 `,
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "seq"},

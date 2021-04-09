@@ -22,8 +22,8 @@ var readFileB = []byte(`# second thing
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 `)
 
 var readFileC = []byte(`---
@@ -89,8 +89,8 @@ metadata:
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
@@ -167,8 +167,8 @@ metadata:
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
@@ -227,8 +227,7 @@ func TestLocalPackageReader_Read_JSON(t *testing.T) {
 		expected := []string{
 			`{"a": "b", metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'a_test.json'}}}
 `,
-			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0',
-      config.kubernetes.io/path: 'b_test.json'}}}
+			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'b_test.json'}}}
 `,
 		}
 		for i := range nodes {
@@ -323,8 +322,8 @@ func TestLocalPackageReader_Read_pkgOmitAnnotations(t *testing.T) {
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 `,
 		}
 		for i := range nodes {
@@ -379,8 +378,8 @@ metadata:
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
@@ -516,8 +515,8 @@ metadata:
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: '0'

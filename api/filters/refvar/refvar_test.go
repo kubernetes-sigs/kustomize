@@ -96,24 +96,24 @@ kind: Deployment
 metadata:
   name: dep
 data:
-- $(FOO)
-- $(BAR)
-- $(BAZ)
-- $(FOO)+$(BAR)
-- $(BOOL)
-- $(FLOAT)`,
+  - $(FOO)
+  - $(BAR)
+  - $(BAZ)
+  - $(FOO)+$(BAR)
+  - $(BOOL)
+  - $(FLOAT)`,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dep
 data:
-- foo
-- bar
-- $(BAZ)
-- foo+bar
-- false
-- 1.23`,
+  - foo
+  - bar
+  - $(BAZ)
+  - foo+bar
+  - false
+  - 1.23`,
 			filter: Filter{
 				MappingFunc: makeMf(map[string]interface{}{
 					"FOO":   "foo",
@@ -161,14 +161,14 @@ metadata:
   name: dep
 data:
   slice1:
-  - $(FOO)
+    - $(FOO)
   slice2:
     FOO: $(FOO)
     BAR: $(BAR)
     BOOL: false
     INT: 0
     SLICE:
-    - $(FOO)`,
+      - $(FOO)`,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
@@ -176,14 +176,14 @@ metadata:
   name: dep
 data:
   slice1:
-  - $(FOO)
+    - $(FOO)
   slice2:
     FOO: foo
     BAR: bar
     BOOL: false
     INT: 0
     SLICE:
-    - $(FOO)`,
+      - $(FOO)`,
 			filter: Filter{
 				MappingFunc: makeMf(map[string]interface{}{
 					"FOO": "foo",
@@ -242,7 +242,7 @@ metadata:
   name: dep
 data:
   slice:
-  - false`,
+    - false`,
 			expectedError: `considering field 'data/slice' of object
 apiVersion: apps/v1
 kind: Deployment
@@ -252,7 +252,7 @@ metadata:
     config.kubernetes.io/index: '0'
 data:
   slice:
-  - false
+    - false
 : invalid value type expect a string`,
 			filter: Filter{
 				MappingFunc: makeMf(map[string]interface{}{

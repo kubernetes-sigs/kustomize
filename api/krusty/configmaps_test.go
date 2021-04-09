@@ -182,22 +182,20 @@ data:
   BIRD: falcon
   MOUNTAIN: everest
   OCEAN: pacific
-  forces.txt: |2
-
+  forces.txt: |
     gravitational
     electromagnetic
     strong nuclear
     weak nuclear
   fruit: apple
-  passphrase: |2
-
+  passphrase: |
     Life is short.
     But the years are long.
     Not while the evil days come not.
   vegetable: broccoli
 kind: ConfigMap
 metadata:
-  name: blah-bob-g9df72cd5b
+  name: blah-bob-7hftd2f22b
 ---
 apiVersion: v1
 data:
@@ -266,8 +264,7 @@ radon
 apiVersion: v1
 data:
   fruit: apple
-  nobles: |2
-
+  nobles: |
     helium
     neon
     argon
@@ -277,7 +274,7 @@ data:
   vegetable: broccoli
 kind: ConfigMap
 metadata:
-  name: blah-bob-db529cg5bk
+  name: blah-bob-mkgcc9c284
 `)
 }
 

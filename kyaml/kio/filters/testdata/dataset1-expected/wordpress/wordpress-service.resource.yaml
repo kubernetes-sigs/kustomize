@@ -13,8 +13,8 @@ spec:
     app: wordpress
     tier: frontend
   ports:
-  - port: 80
-    nodePort: 30000
+    - port: 80
+      nodePort: 30000
 ---
 apiVersion: v1
 kind: Service
@@ -27,5 +27,5 @@ spec:
     app: wordpress
     tier: frontend
   ports:
-  - port: 80
-    nodePort: 30000
+    - port: 80
+      nodePort: 30000

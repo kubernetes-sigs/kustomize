@@ -62,7 +62,7 @@ metadata:
   annotations: {}
   name: some-cm
 data:
-- foo: bar
+  - foo: bar
 `)
 	if err == nil {
 		t.Fatalf("expected an error")

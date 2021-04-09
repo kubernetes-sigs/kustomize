@@ -24,8 +24,8 @@ spec:
         old-label: old-value
     spec:
       containers:
-      - image: nginx
-        name: nginx
+        - image: nginx
+          name: nginx
 `
 
 func TestSomething(t *testing.T) {
@@ -56,8 +56,8 @@ spec:
         old-label: old-value
     spec:
       containers:
-      - image: nginx
-        name: nginx
+        - image: nginx
+          name: nginx
 `,
 		},
 		{
@@ -83,12 +83,12 @@ spec:
         old-label: old-value
     spec:
       containers:
-      - command:
-        - arg1
-        - arg2
-        - arg3
-        image: nginx
-        name: my-nginx
+        - command:
+            - arg1
+            - arg2
+            - arg3
+          image: nginx
+          name: my-nginx
 `,
 		},
 		{
@@ -114,8 +114,8 @@ spec:
         old-label: old-value
     spec:
       containers:
-      - image: nginx
-        name: nginx
+        - image: nginx
+          name: nginx
 `,
 		},
 		{
@@ -150,12 +150,12 @@ spec:
         old-label: old-value
     spec:
       containers:
-      - command:
-        - arg1
-        - arg2
-        - arg3
-        image: nginx
-        name: my-nginx
+        - command:
+            - arg1
+            - arg2
+            - arg3
+          image: nginx
+          name: my-nginx
 `,
 		},
 	}

@@ -40,22 +40,22 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-      - name: app
-        image: gcr.io/project/app:version
-        command:
-        - java
-        - -jar
-        - /app.jar
-        ports:
-        - containerPort: 8080
-        envFrom:
-        - configMapRef:
-            name: app-config
-        env:
-        - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
-        imagePullPolicy: Always
+        - name: app
+          image: gcr.io/project/app:version
+          command:
+            - java
+            - -jar
+            - /app.jar
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: JAVA_OPTS
+              value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+                -Djava.security.egd=file:/dev/./urandom
+          imagePullPolicy: Always
   minReadySeconds: 5
 `), 0600)
 	if !assert.NoError(t, err) {
@@ -88,25 +88,24 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-      - name: app
-        image: gcr.io/project/app:version
-        command:
-        - java
-        - -jar
-        - /app.jar
-        - otherstuff
-        args:
-        - foo
-        ports:
-        - containerPort: 8080
-        envFrom:
-        - configMapRef:
-            name: app-config
-        env:
-        - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
-        imagePullPolicy: Always
+        - name: app
+          image: gcr.io/project/app:version
+          command:
+            - java
+            - -jar
+            - /app.jar
+            - otherstuff
+          args:
+            - foo
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: JAVA_OPTS
+              value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
+          imagePullPolicy: Always
   minReadySeconds: 20
 `), 0600)
 	if !assert.NoError(t, err) {
@@ -138,23 +137,23 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-      - name: app
-        image: gcr.io/project/app:version
-        command:
-        - java
-        - -jar
-        - /app.jar
-        - otherstuff
-        ports:
-        - containerPort: 8080
-        envFrom:
-        - configMapRef:
-            name: app-config
-        env:
-        - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
-        imagePullPolicy: Always
+        - name: app
+          image: gcr.io/project/app:version
+          command:
+            - java
+            - -jar
+            - /app.jar
+            - otherstuff
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: JAVA_OPTS
+              value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+                -Djava.security.egd=file:/dev/./urandom
+          imagePullPolicy: Always
   minReadySeconds: 5
 `), 0600)
 	if !assert.NoError(t, err) {
@@ -186,24 +185,24 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-      - name: app
-        image: gcr.io/project/app:version
-        command:
-        - java
-        - -jar
-        - /app.jar
-        args:
-        - foo
-        ports:
-        - containerPort: 8080
-        envFrom:
-        - configMapRef:
-            name: app-config
-        env:
-        - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
-        imagePullPolicy: Always
+        - name: app
+          image: gcr.io/project/app:version
+          command:
+            - java
+            - -jar
+            - /app.jar
+          args:
+            - foo
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: JAVA_OPTS
+              value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+                -Djava.security.egd=file:/dev/./urandom
+          imagePullPolicy: Always
   minReadySeconds: 20
 `), 0600)
 	if !assert.NoError(t, err) {

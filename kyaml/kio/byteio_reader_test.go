@@ -34,13 +34,13 @@ func TestByteReader(t *testing.T) {
 			input: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
--  kind: Deployment
-   spec:
-     replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 			expectedItems: []string{
 				`kind: Deployment
@@ -67,17 +67,17 @@ kind: ResourceList
 functionConfig:
   foo: bar
   elems:
-  - a
-  - b
-  - c
+    - a
+    - b
+    - c
 items:
--  kind: Deployment
-   spec:
-     replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 			expectedItems: []string{
 				`kind: Deployment
@@ -92,9 +92,9 @@ spec:
 			},
 			expectedFunctionConfig: `foo: bar
 elems:
-- a
-- b
-- c`,
+  - a
+  - b
+  - c`,
 			wrappingAPIVersion: ResourceListAPIVersion,
 			wrappingAPIKind:    ResourceListKind,
 		},
@@ -108,16 +108,16 @@ kind: ResourceList
 functionConfig:
   foo: bar
   elems:
-  - a
-  - b
-  - c
+    - a
+    - b
+    - c
 `,
 			expectedItems: []string{},
 			expectedFunctionConfig: `foo: bar
 elems:
-- a
-- b
-- c`,
+  - a
+  - b
+  - c`,
 			wrappingAPIVersion: ResourceListAPIVersion,
 			wrappingAPIKind:    ResourceListKind,
 		},
@@ -131,13 +131,13 @@ elems:
 apiVersion: v1
 kind: List
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 			expectedItems: []string{
 				`
@@ -169,7 +169,7 @@ c: d
 # second resource
 e: f
 g:
-- h
+  - h
 ---
 ---
 i: j
@@ -184,7 +184,7 @@ metadata:
 				`# second resource
 e: f
 g:
-- h
+  - h
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
@@ -210,7 +210,7 @@ c: d
 # second resource
 e: f
 g:
-- h
+  - h
 ---
 ---
 i: j
@@ -224,7 +224,7 @@ c: d
 # second resource
 e: f
 g:
-- h
+  - h
 `,
 				`
 i: j
@@ -246,7 +246,7 @@ c: d
 # second resource
 e: f
 g:
-- h
+  - h
 ---
 ---
 i: j
@@ -263,7 +263,7 @@ metadata:
 # second resource
 e: f
 g:
-- h
+  - h
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
@@ -291,7 +291,7 @@ c: d
 # second resource
 e: f
 g:
-- h
+  - h
 ---
 ---
 i: j
@@ -306,7 +306,7 @@ metadata:
 				`# second resource
 e: f
 g:
-- h
+  - h
 metadata:
   annotations:
     foo: 'bar'
@@ -338,7 +338,7 @@ metadata:
 				`# second resource
 e: f
 g:
-- h
+  - h
 metadata:
   annotations:
     foo: 'bar'
@@ -614,8 +614,8 @@ metadata:
 	labels:
 	  app: web
 testList:
-- testA
--
+  - testA
+  -
 `),
 			exp: expected{
 				isErr: true,
@@ -626,14 +626,14 @@ testList:
 apiVersion: v1
 kind: List
 items:
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: winnie
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: winnie
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: winnie
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: winnie
 `),
 			exp: expected{
 				sOut: []string{`
@@ -654,28 +654,28 @@ metadata:
 apiVersion: v1
 kind: ConfigMapList
 items:
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: winnie
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: winnie
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: winnie
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: winnie
 `),
 			exp: expected{
 				sOut: []string{`
 apiVersion: v1
 kind: ConfigMapList
 items:
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: winnie
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: winnie
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: winnie
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: winnie
 `},
 			},
 		},
@@ -684,46 +684,46 @@ items:
 apiVersion: v1
 kind: DeploymentList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-a
-  spec: &hostAliases
-    template:
-      spec:
-        hostAliases:
-        - hostnames:
-          - a.example.com
-          ip: 8.8.8.8
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-b
-  spec:
-    <<: *hostAliases
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-a
+    spec: &hostAliases
+      template:
+        spec:
+          hostAliases:
+            - hostnames:
+              - a.example.com
+              ip: 8.8.8.8
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-b
+    spec:
+      <<: *hostAliases
 `),
 			exp: expected{
 				sOut: []string{`
 apiVersion: v1
 kind: DeploymentList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-a
-  spec: &hostAliases
-    template:
-      spec:
-        hostAliases:
-        - hostnames:
-          - a.example.com
-          ip: 8.8.8.8
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-b
-  spec:
-    !!merge <<: *hostAliases
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-a
+    spec: &hostAliases
+      template:
+        spec:
+          hostAliases:
+            - hostnames:
+                - a.example.com
+              ip: 8.8.8.8
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-b
+    spec:
+      !!merge <<: *hostAliases
 `},
 			},
 		},

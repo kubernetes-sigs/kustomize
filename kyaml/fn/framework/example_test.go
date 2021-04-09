@@ -27,14 +27,14 @@ apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 # items are provided as nodes
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: foo
 functionConfig:
   apiVersion: v1
   kind: ConfigMap
@@ -63,18 +63,18 @@ functionConfig:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
-	//     annotations:
-	//       value: 'baz'
-	// - apiVersion: v1
-	//   kind: Service
-	//   metadata:
-	//     name: foo
-	//     annotations:
-	//       value: 'baz'
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
+	//       annotations:
+	//         value: 'baz'
+	//   - apiVersion: v1
+	//     kind: Service
+	//     metadata:
+	//       name: foo
+	//       annotations:
+	//         value: 'baz'
 	// functionConfig:
 	//   apiVersion: v1
 	//   kind: ConfigMap
@@ -90,10 +90,10 @@ apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 # items are provided as nodes
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
 functionConfig:
   apiVersion: example.com/v1alpha1
   kind: ExampleServiceGenerator
@@ -153,14 +153,14 @@ metadata:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
-	// - apiVersion: v1
-	//   kind: Service
-	//   metadata:
-	//     name: bar
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
+	//   - apiVersion: v1
+	//     kind: Service
+	//     metadata:
+	//       name: bar
 	// functionConfig:
 	//   apiVersion: example.com/v1alpha1
 	//   kind: ExampleServiceGenerator
@@ -404,7 +404,7 @@ metadata:
 		// PatchTemplates are applied to BOTH ResourceList input resources AND templated resources
 		PatchTemplates: []framework.PatchTemplate{
 			&framework.ResourcePatchTemplate{
-				// patch the foo resource only
+				//   patch the foo resource only
 				Selector: &framework.Selector{Names: []string{"foo"}},
 				Templates: parser.TemplateStrings(`
 metadata:
@@ -461,8 +461,8 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: example.io/team/app
+        - name: app
+          image: example.io/team/app
 `),
 		}},
 		MergeResources: true,
@@ -474,25 +474,25 @@ spec:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  apiVersion: apps/v1
-  metadata: 
-    name: custom
-  spec:
-    replicas: 6
-  selector:
-    app: custom
-  template:
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata: 
+      name: custom
     spec:
-      containers:
-      - name: app
-        image: example.io/team/custom
-- kind: Deployment
-  apiVersion: apps/v1
-  metadata:
-    name: mergeTest
-  spec:
-    replicas: 6
+      replicas: 6
+    selector:
+      app: custom
+    template:
+      spec:
+        containers:
+          - name: app
+            image: example.io/team/custom
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: mergeTest
+    spec:
+      replicas: 6
 functionConfig:
   name: mergeTest
 `)}
@@ -504,32 +504,32 @@ functionConfig:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: mergeTest
-	//   spec:
-	//     replicas: 6
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: mergeTest
+	//     spec:
+	//       replicas: 6
+	//       selector:
+	//         app: foo
+	//       template:
+	//         spec:
+	//           containers:
+	//             - name: app
+	//               image: example.io/team/app
+	//   - kind: Deployment
+	//     apiVersion: apps/v1
+	//     metadata:
+	//       name: custom
+	//     spec:
+	//       replicas: 6
 	//     selector:
-	//       app: foo
+	//       app: custom
 	//     template:
 	//       spec:
 	//         containers:
-	//         - name: app
-	//           image: example.io/team/app
-	// - kind: Deployment
-	//   apiVersion: apps/v1
-	//   metadata:
-	//     name: custom
-	//   spec:
-	//     replicas: 6
-	//   selector:
-	//     app: custom
-	//   template:
-	//     spec:
-	//       containers:
-	//       - name: app
-	//         image: example.io/team/custom
+	//           - name: app
+	//             image: example.io/team/custom
 	// functionConfig:
 	//   name: mergeTest
 }
@@ -548,16 +548,16 @@ kind: ResourceList
 functionConfig:
   kindName: Deployment
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-    namespace: default 
-- apiVersion: apps/v1
-  kind: StatefulSet
-  metadata:
-    name: bar
-    namespace: default
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+      namespace: default 
+  - apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: bar
+      namespace: default
 `),
 	}
 	config := &api{}
@@ -578,11 +578,11 @@ items:
 	// apiVersion: config.kubernetes.io/v1beta1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
-	//     namespace: default
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
+	//       namespace: default
 	// functionConfig:
 	//   kindName: Deployment
 }
@@ -600,20 +600,20 @@ kind: ResourceList
 functionConfig:
   value: bar
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-    namespace: default
-    annotations:
-      key: foo
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: bar
-    namespace: default
-    annotations:
-      key: bar
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+      namespace: default
+      annotations:
+        key: foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: bar
+      namespace: default
+      annotations:
+        key: bar
 `)}
 	config := &api{}
 	p := framework.SimpleProcessor{
@@ -632,13 +632,13 @@ items:
 	// apiVersion: config.kubernetes.io/v1beta1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: bar
-	//     namespace: default
-	//     annotations:
-	//       key: bar
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: bar
+	//       namespace: default
+	//       annotations:
+	//         key: bar
 	// functionConfig:
 	//   value: bar
 }
@@ -655,10 +655,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: a
-      - name: bar
-        image: b
+        - name: foo
+          image: a
+        - name: bar
+          image: b
 ---
 apiVersion: v1
 kind: Service
@@ -676,10 +676,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: a
-      - name: baz
-        image: b
+        - name: foo
+          image: a
+        - name: baz
+          image: b
 ---
 apiVersion: v1
 kind: Service
@@ -694,8 +694,8 @@ spec:
 			&framework.ContainerPatchTemplate{
 				Templates: parser.TemplateStrings(`
 env:
-- name: KEY
-  value: {{ .Value }}
+  - name: KEY
+    value: {{ .Value }}
 `),
 				TemplateData: struct{ Value string }{Value: "new-value"},
 			}},
@@ -714,16 +714,16 @@ env:
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: foo
-	//         image: a
-	//         env:
-	//         - name: KEY
-	//           value: new-value
-	//       - name: bar
-	//         image: b
-	//         env:
-	//         - name: KEY
-	//           value: new-value
+	//         - name: foo
+	//           image: a
+	//           env:
+	//             - name: KEY
+	//               value: new-value
+	//         - name: bar
+	//           image: b
+	//           env:
+	//             - name: KEY
+	//               value: new-value
 	// ---
 	// apiVersion: v1
 	// kind: Service
@@ -741,16 +741,16 @@ env:
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: foo
-	//         image: a
-	//         env:
-	//         - name: KEY
-	//           value: new-value
-	//       - name: baz
-	//         image: b
-	//         env:
-	//         - name: KEY
-	//           value: new-value
+	//         - name: foo
+	//           image: a
+	//           env:
+	//             - name: KEY
+	//               value: new-value
+	//         - name: baz
+	//           image: b
+	//           env:
+	//             - name: KEY
+	//               value: new-value
 	// ---
 	// apiVersion: v1
 	// kind: Service
@@ -773,13 +773,13 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: a
-        env:
-        - name: EXISTING
-          value: variable
-      - name: bar
-        image: b
+        - name: foo
+          image: a
+          env:
+            - name: EXISTING
+              value: variable
+        - name: bar
+          image: b
 ---
 apiVersion: v1
 kind: Service
@@ -797,10 +797,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: a
-      - name: baz
-        image: b
+        - name: foo
+          image: a
+        - name: baz
+          image: b
 ---
 apiVersion: v1
 kind: Service
@@ -814,12 +814,12 @@ spec:
 		TemplateData: struct{ Value string }{Value: "new-value"},
 		PatchTemplates: []framework.PatchTemplate{
 			&framework.ContainerPatchTemplate{
-				// Only patch containers named "foo"
+				//   Only patch containers named "foo"
 				ContainerMatcher: framework.ContainerNameMatcher("foo"),
 				Templates: parser.TemplateStrings(`
 env:
-- name: KEY
-  value: {{ .Value }}
+  - name: KEY
+    value: {{ .Value }}
 `),
 			}},
 	}
@@ -838,15 +838,15 @@ env:
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: foo
-	//         image: a
-	//         env:
-	//         - name: EXISTING
-	//           value: variable
-	//         - name: KEY
-	//           value: new-value
-	//       - name: bar
-	//         image: b
+	//         - name: foo
+	//           image: a
+	//           env:
+	//             - name: EXISTING
+	//               value: variable
+	//             - name: KEY
+	//               value: new-value
+	//         - name: bar
+	//           image: b
 	// ---
 	// apiVersion: v1
 	// kind: Service
@@ -864,13 +864,13 @@ env:
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: foo
-	//         image: a
-	//         env:
-	//         - name: KEY
-	//           value: new-value
-	//       - name: baz
-	//         image: b
+	//         - name: foo
+	//           image: a
+	//           env:
+	//             - name: KEY
+	//               value: new-value
+	//         - name: baz
+	//           image: b
 	// ---
 	// apiVersion: v1
 	// kind: Service
@@ -912,13 +912,13 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: {{ .Spec.Image }}
-        {{ if .Spec.Domain }}
-        ports:
-          - containerPort: 80
-            name: http
-        {{ end }}
+        - name: app
+          image: {{ .Spec.Image }}
+          {{ if .Spec.Domain }}
+          ports:
+            - containerPort: 80
+              name: http
+          {{ end }}
 
 {{ if .Spec.Domain }}
 ---
@@ -940,9 +940,9 @@ metadata:
   name:  {{ .Metadata.Name }}-ingress
 spec:
   tls:
-  - hosts:
-      - {{ .Spec.Domain }}
-    secretName: secret-tls
+    - hosts:
+        - {{ .Spec.Domain }}
+      secretName: secret-tls
   defaultBackend:
     service:
       name: {{ .Metadata.Name }}
@@ -1014,47 +1014,47 @@ functionConfig:
 	// apiVersion: config.kubernetes.io/v1beta1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: my-app
-	//     selector:
-	//       app: my-app
-	//   spec:
-	//     replicas: 3
-	//     template:
-	//       spec:
-	//         containers:
-	//         - name: app
-	//           image: example.docker.com/team/app:1.0
-	//           ports:
-	//           - containerPort: 80
-	//             name: http
-	// - apiVersion: v1
-	//   kind: Service
-	//   metadata:
-	//     name: my-app-svc
-	//   spec:
-	//     selector:
-	//       app: my-app
-	//     ports:
-	//     - protocol: TCP
-	//       port: 80
-	//       targetPort: 80
-	// - apiVersion: networking.k8s.io/v1
-	//   kind: Ingress
-	//   metadata:
-	//     name: my-app-ingress
-	//   spec:
-	//     tls:
-	//     - hosts:
-	//       - demo.example.com
-	//       secretName: secret-tls
-	//     defaultBackend:
-	//       service:
-	//         name: my-app
-	//         port:
-	//           number: 80
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: my-app
+	//       selector:
+	//         app: my-app
+	//     spec:
+	//       replicas: 3
+	//       template:
+	//         spec:
+	//           containers:
+	//             - name: app
+	//               image: example.docker.com/team/app:1.0
+	//               ports:
+	//                 - containerPort: 80
+	//                   name: http
+	//   - apiVersion: v1
+	//     kind: Service
+	//     metadata:
+	//       name: my-app-svc
+	//     spec:
+	//       selector:
+	//         app: my-app
+	//       ports:
+	//         - protocol: TCP
+	//           port: 80
+	//           targetPort: 80
+	//   - apiVersion: networking.k8s.io/v1
+	//     kind: Ingress
+	//     metadata:
+	//       name: my-app-ingress
+	//     spec:
+	//       tls:
+	//         - hosts:
+	//             - demo.example.com
+	//           secretName: secret-tls
+	//       defaultBackend:
+	//         service:
+	//           name: my-app
+	//           port:
+	//             number: 80
 	// functionConfig:
 	//   apiVersion: example.com/v1alpha1
 	//   kind: JavaSpringBoot

@@ -85,10 +85,10 @@ openAPI:
           name: project-cluster-54235872
           pattern: ${project}/${cluster}
           values:
-          - marker: ${project}
-            ref: '#/definitions/io.k8s.cli.setters.project'
-          - marker: ${cluster}
-            ref: '#/definitions/io.k8s.cli.setters.cluster'
+            - marker: ${project}
+              ref: '#/definitions/io.k8s.cli.setters.project'
+            - marker: ${cluster}
+              ref: '#/definitions/io.k8s.cli.setters.cluster'
 `,
 		},
 
@@ -169,10 +169,10 @@ openAPI:
           name: profile-team-1851878264
           pattern: ${profile}/${team}
           values:
-          - marker: ${profile}
-            ref: '#/definitions/io.k8s.cli.setters.profile'
-          - marker: ${team}
-            ref: '#/definitions/io.k8s.cli.setters.team'
+            - marker: ${profile}
+              ref: '#/definitions/io.k8s.cli.setters.profile'
+            - marker: ${team}
+              ref: '#/definitions/io.k8s.cli.setters.team'
 `,
 		},
 
@@ -218,16 +218,16 @@ openAPI:
           name: asm-3472570278
           pattern: ${asm}-team
           values:
-          - marker: ${asm}
-            ref: '#/definitions/io.k8s.cli.setters.asm'
+            - marker: ${asm}
+              ref: '#/definitions/io.k8s.cli.setters.asm'
     io.k8s.cli.substitutions.asm-3647054792:
       x-k8s-cli:
         substitution:
           name: asm-3647054792
           pattern: ${asm}-profile
           values:
-          - marker: ${asm}
-            ref: '#/definitions/io.k8s.cli.setters.asm'
+            - marker: ${asm}
+              ref: '#/definitions/io.k8s.cli.setters.asm'
 `,
 		},
 

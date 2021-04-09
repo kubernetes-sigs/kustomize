@@ -15,17 +15,17 @@ import (
 const (
 	flagsInput = `kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  spec:
-    template:
-      spec:
-        containers:
-        - name: nginx
-          image: nginx
-- apiVersion: apps/v1
-  kind: Service
-  spec: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+            - name: nginx
+              image: nginx
+  - apiVersion: apps/v1
+    kind: Service
+    spec: {}
 functionConfig:
   kind: Foo
   spec:
@@ -33,26 +33,26 @@ functionConfig:
     c: d
     e: f
   items:
-  - 1
-  - 3
-  - 2
-  - 4
+    - 1
+    - 3
+    - 2
+    - 4
 `
 
 	resourceInput = `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  spec:
-    template:
-      spec:
-        containers:
-        - name: nginx
-          image: nginx
-- apiVersion: apps/v1
-  kind: Service
-  spec: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+            - name: nginx
+              image: nginx
+  - apiVersion: apps/v1
+    kind: Service
+    spec: {}
 functionConfig:
   kind: Foo
 `
@@ -60,17 +60,17 @@ functionConfig:
 	resourceOutput = `apiVersion: v1
 kind: List
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  spec:
-    template:
-      spec:
-        containers:
-        - name: nginx
-          image: nginx
-- apiVersion: apps/v1
-  kind: Service
-  spec: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+            - name: nginx
+              image: nginx
+  - apiVersion: apps/v1
+    kind: Service
+    spec: {}
 `
 )
 

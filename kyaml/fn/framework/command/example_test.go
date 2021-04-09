@@ -41,14 +41,14 @@ apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 # items are provided as nodes
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: foo
 functionConfig:
   apiVersion: v1
   kind: ConfigMap
@@ -64,18 +64,18 @@ functionConfig:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
-	//     annotations:
-	//       value: 'baz'
-	// - apiVersion: v1
-	//   kind: Service
-	//   metadata:
-	//     name: foo
-	//     annotations:
-	//       value: 'baz'
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
+	//       annotations:
+	//         value: 'baz'
+	//   - apiVersion: v1
+	//     kind: Service
+	//     metadata:
+	//       name: foo
+	//       annotations:
+	//         value: 'baz'
 	// functionConfig:
 	//   apiVersion: v1
 	//   kind: ConfigMap
@@ -137,10 +137,10 @@ apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 # items are provided as nodes
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
 functionConfig:
   apiVersion: example.com/v1alpha1
   kind: ExampleServiceGenerator
@@ -157,14 +157,14 @@ functionConfig:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
-	// - apiVersion: v1
-	//   kind: Service
-	//   metadata:
-	//     name: bar
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
+	//   - apiVersion: v1
+	//     kind: Service
+	//     metadata:
+	//       name: bar
 	// functionConfig:
 	//   apiVersion: example.com/v1alpha1
 	//   kind: ExampleServiceGenerator
@@ -245,14 +245,14 @@ apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 # items are provided as nodes
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: bar
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: bar
 functionConfig:
   apiVersion: example.com/v1alpha1
   kind: ExampleServiceGenerator
@@ -271,16 +271,16 @@ functionConfig:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
-	// - apiVersion: v1
-	//   kind: Service
-	//   metadata:
-	//     name: bar
-	//     annotations:
-	//       a: 'b'
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
+	//   - apiVersion: v1
+	//     kind: Service
+	//     metadata:
+	//       name: bar
+	//       annotations:
+	//         a: 'b'
 	// functionConfig:
 	//   apiVersion: example.com/v1alpha1
 	//   kind: ExampleServiceGenerator
@@ -350,10 +350,10 @@ apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 # items are provided as nodes
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: foo
 `))
 
 	// run the command
@@ -365,20 +365,21 @@ items:
 	// apiVersion: config.kubernetes.io/v1alpha1
 	// kind: ResourceList
 	// items:
-	// - apiVersion: apps/v1
-	//   kind: Deployment
-	//   metadata:
-	//     name: foo
+	//   - apiVersion: apps/v1
+	//     kind: Deployment
+	//     metadata:
+	//       name: foo
 	// results:
 	//   name: replicas-validator
 	//   items:
-	//   - message: field is required
-	//     severity: error
-	//     resourceRef:
-	//       apiVersion: apps/v1
-	//       kind: Deployment
-	//       name: foo
-	//     field:
-	//       path: spec.replicas
-	//       suggestedValue: "1"
+	//     - message: field is required
+	//       severity: error
+	//       resourceRef:
+	//         apiVersion: apps/v1
+	//         kind: Deployment
+	//         metadata:
+	//           name: foo
+	//       field:
+	//         path: spec.replicas
+	//         suggestedValue: "1"
 }

@@ -138,9 +138,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo1
-      - name: foo2
-      - name: foo3
+        - name: foo1
+        - name: foo2
+        - name: foo3
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -151,7 +151,7 @@ spec:
   template:
     spec:
       containers:
-      - name: foo0
+        - name: foo0
 `),
 			expected: `
 apiVersion: apps/v1
@@ -162,10 +162,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo0
-      - name: foo1
-      - name: foo2
-      - name: foo3
+        - name: foo0
+        - name: foo1
+        - name: foo2
+        - name: foo3
 `,
 		},
 		"volumes patch": {
@@ -178,9 +178,9 @@ spec:
   template:
     spec:
       volumes:
-      - name: foo1
-      - name: foo2
-      - name: foo3
+        - name: foo1
+        - name: foo2
+        - name: foo3
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -191,7 +191,7 @@ spec:
   template:
     spec:
       volumes:
-      - name: foo0
+        - name: foo0
 `),
 			expected: `
 apiVersion: apps/v1
@@ -202,10 +202,10 @@ spec:
   template:
     spec:
       volumes:
-      - name: foo0
-      - name: foo1
-      - name: foo2
-      - name: foo3
+        - name: foo0
+        - name: foo1
+        - name: foo2
+        - name: foo3
 `,
 		},
 		"nested patch": {
@@ -216,16 +216,16 @@ metadata:
 kind: Deployment
 spec:
   containers:
-  - name: nginx
-    args:
-    - abc
+    - name: nginx
+      args:
+        - abc
 `,
 			patch: yaml.MustParse(`
 spec:
   containers:
-  - name: nginx
-    args:
-    - def
+    - name: nginx
+      args:
+        - def
 `),
 			expected: `
 apiVersion: apps/v1
@@ -234,9 +234,9 @@ metadata:
 kind: Deployment
 spec:
   containers:
-  - name: nginx
-    args:
-    - def
+    - name: nginx
+      args:
+        - def
 `,
 		},
 		"remove mapping - directive": {
@@ -249,8 +249,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
+        - name: test
+          image: test
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -261,9 +261,9 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
-        $patch: delete   
+        - name: test
+          image: test
+          $patch: delete   
 `),
 			expected: `
 apiVersion: apps/v1
@@ -286,8 +286,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
+        - name: test
+          image: test
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -299,7 +299,7 @@ spec:
     spec:
       $patch: replace
       containers:
-      - name: new
+        - name: new
 `),
 			expected: `
 apiVersion: apps/v1
@@ -310,7 +310,7 @@ spec:
   template:
     spec:
       containers:
-      - name: new
+        - name: new
 `,
 		},
 		"merge mapping - directive": {
@@ -323,8 +323,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
+        - name: test
+          image: test
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -335,9 +335,9 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test1
-        $patch: merge   
+        - name: test
+          image: test1
+          $patch: merge   
 `),
 			expected: `
 apiVersion: apps/v1
@@ -348,8 +348,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test1
+        - name: test
+          image: test1
 `,
 		},
 		"remove list - directive": {
@@ -362,8 +362,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
+        - name: test
+          image: test
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -374,8 +374,8 @@ spec:
   template:
     spec:
       containers:
-      - whatever
-      - $patch: delete
+        - whatever
+        - $patch: delete
 `),
 			expected: `
 apiVersion: apps/v1
@@ -397,8 +397,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
+        - name: test
+          image: test
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -409,9 +409,9 @@ spec:
   template:
     spec:
       containers:
-      - name: replace
-        image: replace
-      - $patch: replace   
+        - name: replace
+          image: replace
+        - $patch: replace   
 `),
 			expected: `
 apiVersion: apps/v1
@@ -422,8 +422,8 @@ spec:
   template:
     spec:
       containers:
-      - name: replace
-        image: replace
+        - name: replace
+          image: replace
 `,
 		},
 		"merge list - directive": {
@@ -436,8 +436,8 @@ spec:
   template:
     spec:
       containers:
-      - name: test
-        image: test
+        - name: test
+          image: test
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -448,9 +448,9 @@ spec:
   template:
     spec:
       containers:
-      - name: test2
-        image: test2
-      - $patch: merge   
+        - name: test2
+          image: test2
+        - $patch: merge   
 `),
 			expected: `
 apiVersion: apps/v1
@@ -461,10 +461,10 @@ spec:
   template:
     spec:
       containers:
-      - name: test2
-        image: test2
-      - name: test
-        image: test
+        - name: test2
+          image: test2
+        - name: test
+          image: test
 `,
 		},
 		"list map keys - add a port, no names": {
@@ -472,33 +472,33 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
-         protocol: TCP
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
-         protocol: UDP
-       - containerPort: 80
-         protocol: UDP
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+            - containerPort: 80
+              protocol: UDP
 `),
 			expected: `
 apiVersion: apps/v1
@@ -509,15 +509,15 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-        - containerPort: 80
-          protocol: UDP
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+            - containerPort: 80
+              protocol: UDP
+            - containerPort: 8080
+              protocol: TCP
 `,
 		},
 		"list map keys - add name to port": {
@@ -525,34 +525,34 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
-         protocol: UDP
-       - containerPort: 8080
-         protocol: TCP
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+            - containerPort: 8080
+              protocol: TCP
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
-         protocol: UDP
-         name: UDP-name-patch
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: UDP-name-patch
 `),
 			expected: `
 apiVersion: apps/v1
@@ -563,14 +563,14 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: UDP-name-patch
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: UDP-name-patch
+            - containerPort: 8080
+              protocol: TCP
 `,
 		},
 		"list map keys - replace port name": {
@@ -578,36 +578,36 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
-         protocol: UDP
-         name: UDP-name-original
-       - containerPort: 8080
-         protocol: TCP
-         name: TCP-name-original
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: UDP-name-original
+            - containerPort: 8080
+              protocol: TCP
+              name: TCP-name-original
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
-         protocol: UDP
-         name: UDP-name-patch
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: UDP-name-patch
 `),
 			expected: `
 apiVersion: apps/v1
@@ -618,15 +618,15 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: UDP-name-patch
-        - containerPort: 8080
-          protocol: TCP
-          name: TCP-name-original
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: UDP-name-patch
+            - containerPort: 8080
+              protocol: TCP
+              name: TCP-name-original
 `,
 		},
 		"list map keys - add a port, no protocol": {
@@ -634,29 +634,29 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 8080
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: test-deployment
+  name: test-deployment
 spec:
- template:
-   spec:
-     containers:
-     - image: test-image
-       name: test-deployment
-       ports:
-       - containerPort: 80
+  template:
+    spec:
+      containers:
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 80
 `),
 			expected: `
 apiVersion: apps/v1
@@ -667,11 +667,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 80
-        - containerPort: 8080
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 80
+            - containerPort: 8080
 `,
 		},
 
@@ -691,15 +691,15 @@ spec:
   template:
     spec:
       containers:
-      - name: consul
-        image: "dashicorp/consul:1.9.1"
-        ports:
-        - containerPort: 8500
-          name: http
-        - containerPort: 8301
-          protocol: "TCP"
-        - containerPort: 8301
-          protocol: "UDP"
+        - name: consul
+          image: "dashicorp/consul:1.9.1"
+          ports:
+            - containerPort: 8500
+              name: http
+            - containerPort: 8301
+              protocol: "TCP"
+            - containerPort: 8301
+              protocol: "UDP"
 `,
 			patch: yaml.MustParse(`
 apiVersion: apps/v1
@@ -720,15 +720,15 @@ spec:
   template:
     spec:
       containers:
-      - name: consul
-        image: "dashicorp/consul:1.9.1"
-        ports:
-        - containerPort: 8500
-          name: http
-        - containerPort: 8301
-          protocol: "TCP"
-        - containerPort: 8301
-          protocol: "UDP"
+        - name: consul
+          image: "dashicorp/consul:1.9.1"
+          ports:
+            - containerPort: 8500
+              name: http
+            - containerPort: 8301
+              protocol: "TCP"
+            - containerPort: 8301
+              protocol: "UDP"
 `,
 		},
 	}

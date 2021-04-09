@@ -65,14 +65,14 @@ func TestFunctionFilter_Filter(t *testing.T) {
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
 `,
 			},
 			expectedOutput: []string{
@@ -104,16 +104,16 @@ metadata:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-     config.kubernetes.io/path: 'foo.yaml'
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo.yaml'
 `,
 			},
 			expectedOutput: []string{
@@ -145,18 +145,18 @@ metadata:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo.yaml'
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: configmap-foo
-    annotations:
-      config.kubernetes.io/path: 'foo.yaml'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo.yaml'
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: configmap-foo
+      annotations:
+        config.kubernetes.io/path: 'foo.yaml'
 `,
 			},
 			input: []string{
@@ -200,33 +200,33 @@ metadata:
 				output: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
 results:
-- apiVersion: config.k8s.io/v1alpha1
-  kind: ObjectError
-  name: "some-validator"
-  items:
-  - type: error
-    message: "some message"
-    resourceRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: foo
-      namespace: bar
-    file:
-      path: deploy.yaml
-      index: 0
-    field:
-      path: "spec.template.spec.containers[3].resources.limits.cpu"
-      currentValue: "200"
-      suggestedValue: "2"
+  - apiVersion: config.k8s.io/v1alpha1
+    kind: ObjectError
+    name: "some-validator"
+    items:
+      - type: error
+        message: "some message"
+        resourceRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: foo
+          namespace: bar
+        file:
+          path: deploy.yaml
+          index: 0
+        field:
+          path: "spec.template.spec.containers[3].resources.limits.cpu"
+          currentValue: "200"
+          suggestedValue: "2"
 `,
 			},
 			expectedOutput: []string{`
@@ -250,20 +250,20 @@ metadata:
   kind: ObjectError
   name: "some-validator"
   items:
-  - type: error
-    message: "some message"
-    resourceRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: foo
-      namespace: bar
-    file:
-      path: deploy.yaml
-      index: 0
-    field:
-      path: "spec.template.spec.containers[3].resources.limits.cpu"
-      currentValue: "200"
-      suggestedValue: "2"
+    - type: error
+      message: "some message"
+      resourceRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: foo
+        namespace: bar
+      file:
+        path: deploy.yaml
+        index: 0
+      field:
+        path: "spec.template.spec.containers[3].resources.limits.cpu"
+        currentValue: "200"
+        suggestedValue: "2"
 `,
 		},
 
@@ -278,33 +278,33 @@ metadata:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
 results:
-- apiVersion: config.k8s.io/v1alpha1
-  kind: ObjectError
-  name: "some-validator"
-  items:
-  - type: error
-    message: "some message"
-    resourceRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: foo
-      namespace: bar
-    file:
-      path: deploy.yaml
-      index: 0
-    field:
-      path: "spec.template.spec.containers[3].resources.limits.cpu"
-      currentValue: "200"
-      suggestedValue: "2"
+  - apiVersion: config.k8s.io/v1alpha1
+    kind: ObjectError
+    name: "some-validator"
+    items:
+      - type: error
+        message: "some message"
+        resourceRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: foo
+          namespace: bar
+        file:
+          path: deploy.yaml
+          index: 0
+        field:
+          path: "spec.template.spec.containers[3].resources.limits.cpu"
+          currentValue: "200"
+          suggestedValue: "2"
 `,
 			},
 			expectedOutput: []string{
@@ -329,20 +329,20 @@ metadata:
   kind: ObjectError
   name: "some-validator"
   items:
-  - type: error
-    message: "some message"
-    resourceRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: foo
-      namespace: bar
-    file:
-      path: deploy.yaml
-      index: 0
-    field:
-      path: "spec.template.spec.containers[3].resources.limits.cpu"
-      currentValue: "200"
-      suggestedValue: "2"
+    - type: error
+      message: "some message"
+      resourceRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: foo
+        namespace: bar
+      file:
+        path: deploy.yaml
+        index: 0
+      field:
+        path: "spec.template.spec.containers[3].resources.limits.cpu"
+        currentValue: "200"
+        suggestedValue: "2"
     `,
 		},
 
@@ -358,33 +358,33 @@ metadata:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
 results:
-- apiVersion: config.k8s.io/v1alpha1
-  kind: ObjectError
-  name: "some-validator"
-  items:
-  - type: error
-    message: "some message"
-    resourceRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: foo
-      namespace: bar
-    file:
-      path: deploy.yaml
-      index: 0
-    field:
-      path: "spec.template.spec.containers[3].resources.limits.cpu"
-      currentValue: "200"
-      suggestedValue: "2"`,
+  - apiVersion: config.k8s.io/v1alpha1
+    kind: ObjectError
+    name: "some-validator"
+    items:
+      - type: error
+        message: "some message"
+        resourceRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: foo
+          namespace: bar
+        file:
+          path: deploy.yaml
+          index: 0
+        field:
+          path: "spec.template.spec.containers[3].resources.limits.cpu"
+          currentValue: "200"
+          suggestedValue: "2"`,
 			},
 			expectedOutput: []string{
 				`
@@ -408,20 +408,20 @@ metadata:
   kind: ObjectError
   name: "some-validator"
   items:
-  - type: error
-    message: "some message"
-    resourceRef:
-      apiVersion: apps/v1
-      kind: Deployment
-      name: foo
-      namespace: bar
-    file:
-      path: deploy.yaml
-      index: 0
-    field:
-      path: "spec.template.spec.containers[3].resources.limits.cpu"
-      currentValue: "200"
-      suggestedValue: "2"`,
+    - type: error
+      message: "some message"
+      resourceRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: foo
+        namespace: bar
+      file:
+        path: deploy.yaml
+        index: 0
+      field:
+        path: "spec.template.spec.containers[3].resources.limits.cpu"
+        currentValue: "200"
+        suggestedValue: "2"`,
 		},
 
 		{
@@ -433,17 +433,17 @@ metadata:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
 results:
-- apiVersion: config.k8s.io/v1alpha1
-  name: "some-validator"
+  - apiVersion: config.k8s.io/v1alpha1
+    name: "some-validator"
 `,
 			},
 			expectedOutput: []string{
@@ -480,13 +480,13 @@ metadata:
 				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -498,14 +498,14 @@ functionConfig:
 				output: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      new: annotation
-      config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        new: annotation
+        config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -569,13 +569,13 @@ metadata:
 				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -587,14 +587,14 @@ functionConfig:
 				output: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      new: annotation
-      config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        new: annotation
+        config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -655,20 +655,20 @@ metadata:
 				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-    annotations:
-      config.kubernetes.io/path: 'baz/bar/d.yaml'
-      config.k8s.io/id: '1'
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      config.k8s.io/id: '2'
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+      annotations:
+        config.kubernetes.io/path: 'baz/bar/d.yaml'
+        config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        config.k8s.io/id: '2'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -680,21 +680,21 @@ functionConfig:
 				output: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-    annotations:
-      config.kubernetes.io/path: 'baz/bar/d.yaml'
-      config.k8s.io/id: '1'
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      new: annotation
-      config.k8s.io/id: '2'
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+      annotations:
+        config.kubernetes.io/path: 'baz/bar/d.yaml'
+        config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        new: annotation
+        config.k8s.io/id: '2'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -825,13 +825,13 @@ metadata:
 				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        config.k8s.io/id: '1'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -843,14 +843,14 @@ functionConfig:
 				output: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/bar/s.yaml'
-      config.k8s.io/id: '1'
-      new: annotation
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/bar/s.yaml'
+        config.k8s.io/id: '1'
+        new: annotation
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -913,20 +913,20 @@ metadata:
 				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/b.yaml'
-      config.k8s.io/id: '1'
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo # name comment
-    annotations:
-      config.kubernetes.io/path: 'foo/a.yaml'
-      config.k8s.io/id: '2'
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/b.yaml'
+        config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo # name comment
+      annotations:
+        config.kubernetes.io/path: 'foo/a.yaml'
+        config.k8s.io/id: '2'
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -939,21 +939,21 @@ functionConfig:
 				output: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deployment-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/b.yaml'
-      config.k8s.io/id: '1'
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: service-foo
-    annotations:
-      config.kubernetes.io/path: 'foo/a.yaml'
-      config.k8s.io/id: '2'
-      new: annotation
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deployment-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/b.yaml'
+        config.k8s.io/id: '1'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: service-foo
+      annotations:
+        config.kubernetes.io/path: 'foo/a.yaml'
+        config.k8s.io/id: '2'
+        new: annotation
 functionConfig:
   apiVersion: example.com/v1
   kind: Example
@@ -1152,14 +1152,14 @@ metadata:
 container:
     image: foo:v1.0.0
     mounts:
-      - type: bind
-        src: /mount/path
-        dst: /local/
-      - type: volume
-        src: myvol
-        dst: /local/
-      - type: tmpfs
-        dst: /local/
+        - type: bind
+          src: /mount/path
+          dst: /local/
+        - type: volume
+          src: myvol
+          dst: /local/
+        - type: tmpfs
+          dst: /local/
 `,
 		},
 
@@ -1174,27 +1174,27 @@ metadata:
       container:
         image: foo:v1.0.0
         mounts:
-        - src: /mount/path
-          type: bind
-          dst: /local/
-        - dst: /local/
-          src: myvol
-          type: volume
-        - type: tmpfs
-          dst: /local/
+          - src: /mount/path
+            type: bind
+            dst: /local/
+          - dst: /local/
+            src: myvol
+            type: volume
+          - type: tmpfs
+            dst: /local/
 `,
 			expectedFn: `
 container:
     image: foo:v1.0.0
     mounts:
-      - type: bind
-        src: /mount/path
-        dst: /local/
-      - type: volume
-        src: myvol
-        dst: /local/
-      - type: tmpfs
-        dst: /local/
+        - type: bind
+          src: /mount/path
+          dst: /local/
+        - type: volume
+          src: myvol
+          dst: /local/
+        - type: tmpfs
+          dst: /local/
 `,
 		},
 
@@ -1468,7 +1468,7 @@ metadata:
     container:
       image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
       envs:
-      - foo=bar
+        - foo=bar
 `,
 			expected: *NewContainerEnvFromStringSlice([]string{"foo=bar"}),
 		},
@@ -1482,8 +1482,8 @@ metadata:
     container:
       image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
       envs:
-      - foo=bar
-      - baz
+        - foo=bar
+        - baz
 `,
 			expected: *NewContainerEnvFromStringSlice([]string{"foo=bar", "baz"}),
 		},
@@ -1497,7 +1497,7 @@ metadata:
     container:
       image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
       envs:
-      - KUBECONFIG
+        - KUBECONFIG
 `,
 			expected: *NewContainerEnvFromStringSlice([]string{"KUBECONFIG"}),
 		},

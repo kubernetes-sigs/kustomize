@@ -45,8 +45,8 @@ c: d # second
 	assert.Equal(t, `e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 `, string(b))
 }
 
@@ -86,8 +86,8 @@ metadata:
 	assert.Equal(t, `e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: 0
@@ -123,8 +123,8 @@ c: d # second
 	assert.Equal(t, `e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 `, string(b))
 }
 
@@ -137,8 +137,8 @@ func TestLocalPackageWriter_Write_failRelativePath(t *testing.T) {
 	node4, err := yaml.Parse(`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: 0
@@ -164,8 +164,8 @@ func TestLocalPackageWriter_Write_invalidIndex(t *testing.T) {
 	node4, err := yaml.Parse(`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: a
@@ -193,8 +193,8 @@ func TestLocalPackageWriter_Write_absPath(t *testing.T) {
 	n4 := fmt.Sprintf(`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: a
@@ -217,8 +217,8 @@ func TestLocalPackageWriter_Write_missingAnnotations(t *testing.T) {
 	node4String := `e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 kind: Foo
 metadata:
   name: bar
@@ -251,8 +251,8 @@ func TestLocalPackageWriter_Write_pathIsDir(t *testing.T) {
 	node4, err := yaml.Parse(`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/path: a/
@@ -291,8 +291,8 @@ metadata:
 	node3, err := yaml.Parse(`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: 0

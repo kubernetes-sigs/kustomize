@@ -53,10 +53,10 @@ openAPI:
           name: my.image
           pattern: ${my.image}:${my-tag}
           values:
-          - marker: ${my.image}
-            ref: '#/definitions/io.k8s.cli.setters.my.image'
-          - marker: ${my-tag}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag'
+            - marker: ${my.image}
+              ref: '#/definitions/io.k8s.cli.setters.my.image'
+            - marker: ${my-tag}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag'
     io.k8s.cli.setters.replicas:
       description: hello world
       x-k8s-cli:
@@ -75,10 +75,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx # {"$ref":"#/definitions/io.k8s.cli.setters.my.image"}
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my.image"}
-      - name: sidecar
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my.image"}
+        - name: nginx # {"$ref":"#/definitions/io.k8s.cli.setters.my.image"}
+          image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my.image"}
+        - name: sidecar
+          image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.my.image"}
  `,
 			out: `deleted substitution "my.image"`,
 			expectedResources: `
@@ -91,10 +91,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx # {"$ref":"#/definitions/io.k8s.cli.setters.my.image"}
-        image: nginx:1.7.9
-      - name: sidecar
-        image: nginx:1.7.9
+        - name: nginx # {"$ref":"#/definitions/io.k8s.cli.setters.my.image"}
+          image: nginx:1.7.9
+        - name: sidecar
+          image: nginx:1.7.9
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -144,10 +144,10 @@ openAPI:
           name: my-image-sub
           pattern: ${my-image}:${my-tag}
           values:
-          - marker: ${my-image}
-            ref: '#/definitions/io.k8s.cli.setters.my-image'
-          - marker: ${my-tag}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag'
+            - marker: ${my-image}
+              ref: '#/definitions/io.k8s.cli.setters.my-image'
+            - marker: ${my-tag}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag'
     io.k8s.cli.setters.replicas:
       description: hello world
       x-k8s-cli:
@@ -166,10 +166,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
-      - name: sidecar
-        image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
+        - name: sidecar
+          image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
  `,
 			out: `deleted substitution "my-image-sub"`,
 			expectedResources: `
@@ -182,10 +182,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
-      - name: sidecar
-        image: nginx:1.7.9
+        - name: nginx
+          image: nginx:1.7.9
+        - name: sidecar
+          image: nginx:1.7.9
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -235,10 +235,10 @@ openAPI:
           name: my-image-sub
           pattern: ${my-image}:${my-tag}
           values:
-          - marker: ${my-image}
-            ref: '#/definitions/io.k8s.cli.setters.my-image'
-          - marker: ${my-tag}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag'
+            - marker: ${my-image}
+              ref: '#/definitions/io.k8s.cli.setters.my-image'
+            - marker: ${my-tag}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag'
     io.k8s.cli.setters.replicas:
       description: hello world
       x-k8s-cli:
@@ -257,10 +257,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
-      - name: sidecar
-        image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
+        - name: sidecar
+          image: nginx:1.7.9 # {"$openapi":"my-image-sub"}
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -272,10 +272,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
-      - name: sidecar
-        image: nginx:1.7.9
+        - name: nginx
+          image: nginx:1.7.9
+        - name: sidecar
+          image: nginx:1.7.9
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -327,20 +327,20 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.substitutions.my-nested-subst:
       x-k8s-cli:
         substitution:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -357,10 +357,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -383,20 +383,20 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.substitutions.my-nested-subst:
       x-k8s-cli:
         substitution:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -413,10 +413,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 			err: `substitution "my-image-subst" is used in substitution "my-nested-subst", please delete the parent substitution first`,
 		},

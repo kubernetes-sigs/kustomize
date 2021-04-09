@@ -141,7 +141,7 @@ func TestEmptyInputWithFilter(t *testing.T) {
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- foo: bar
+  - foo: bar
 `
 
 	if !assert.Equal(t,

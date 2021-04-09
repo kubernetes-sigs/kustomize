@@ -43,19 +43,19 @@ func TestByteWriter(t *testing.T) {
 e: f
 g:
   h:
-  - i # has a list
-  - j`,
+    - i # has a list
+    - j`,
 			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- a: b #first
-- c: d # second
+  - a: b #first
+  - c: d # second
 functionConfig:
   e: f
   g:
     h:
-    - i # has a list
-    - j
+      - i # has a list
+      - j
 `,
 		},
 
@@ -69,10 +69,10 @@ functionConfig:
 				`e: f
 g:
   h:
-  # has a list
-  - i : [i1, i2] # line comment
-  # has a list 2
-  - j : j1
+# has a list
+    - i : [i1, i2] # line comment
+# has a list 2
+    - j : j1
 `,
 				`a: b #first`,
 			},
@@ -82,10 +82,9 @@ c: d # second
 e: f
 g:
   h:
-  # has a list
-  - i: [i1, i2] # line comment
-  # has a list 2
-  - j: j1
+    - i: [i1, i2] # line comment
+      # has a list 2
+    - j: j1
 ---
 a: b #first
 `,
@@ -228,8 +227,8 @@ metadata:
 				`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: 0
@@ -258,8 +257,8 @@ metadata:
 e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 metadata:
   annotations:
     config.kubernetes.io/index: 0
@@ -288,16 +287,16 @@ metadata:
 				`e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 `,
 			},
 
 			expectedOutput: `e: f
 g:
   h:
-  - i # has a list
-  - j
+    - i # has a list
+    - j
 ---
 a: b #first
 metadata:

@@ -137,54 +137,54 @@ metadata:
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: default
+  - name: default
 ---
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: default
-  namespace: foo
+  - name: default
+    namespace: foo
 ---
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: something
+  - name: something
 ---
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: something
-  namespace: foo
+  - name: something
+    namespace: foo
 `,
 		expected: `
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: default
-  namespace: bar
+  - name: default
+    namespace: bar
 metadata:
   namespace: bar
 ---
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: default
-  namespace: bar
+  - name: default
+    namespace: bar
 metadata:
   namespace: bar
 ---
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: something
+  - name: something
 metadata:
   namespace: bar
 ---
 apiVersion: example.com/v1
 kind: RoleBinding
 subjects:
-- name: something
-  namespace: foo
+  - name: something
+    namespace: foo
 metadata:
   namespace: bar
 `,
@@ -197,48 +197,48 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: default
+  - name: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: default
-  namespace: foo
+  - name: default
+    namespace: foo
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: something
+  - name: something
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: something
-  namespace: foo
+  - name: something
+    namespace: foo
 `,
 		expected: `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: default
-  namespace: bar
+  - name: default
+    namespace: bar
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: default
-  namespace: bar
+  - name: default
+    namespace: bar
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: something
+  - name: something
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 subjects:
-- name: something
-  namespace: foo
+  - name: something
+    namespace: foo
 `,
 		filter: namespace.Filter{Namespace: "bar"},
 	},

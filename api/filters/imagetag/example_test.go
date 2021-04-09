@@ -21,8 +21,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - name: FooBar
-    image: nginx
+    - name: FooBar
+      image: nginx
 ---
 apiVersion: example.com/v1
 kind: Bar
@@ -30,8 +30,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - name: BarFoo
-    image: nginx:1.2.1
+    - name: BarFoo
+      image: nginx:1.2.1
 `)}},
 		Filters: []kio.Filter{Filter{
 			ImageTag: types.Image{
@@ -58,8 +58,8 @@ spec:
 	//   name: instance
 	// spec:
 	//   containers:
-	//   - name: FooBar
-	//     image: apache@12345
+	//     - name: FooBar
+	//       image: apache@12345
 	// ---
 	// apiVersion: example.com/v1
 	// kind: Bar
@@ -67,8 +67,8 @@ spec:
 	//   name: instance
 	// spec:
 	//   containers:
-	//   - name: BarFoo
-	//     image: apache@12345
+	//     - name: BarFoo
+	//       image: apache@12345
 }
 
 func ExampleLegacyFilter() {
@@ -80,8 +80,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - name: FooBar
-    image: nginx
+    - name: FooBar
+      image: nginx
 ---
 apiVersion: example.com/v1
 kind: Bar
@@ -89,8 +89,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - name: BarFoo
-    image: nginx:1.2.1
+    - name: BarFoo
+      image: nginx:1.2.1
 `)}},
 		Filters: []kio.Filter{LegacyFilter{
 			ImageTag: types.Image{
@@ -112,8 +112,8 @@ spec:
 	//   name: instance
 	// spec:
 	//   containers:
-	//   - name: FooBar
-	//     image: apache@12345
+	//     - name: FooBar
+	//       image: apache@12345
 	// ---
 	// apiVersion: example.com/v1
 	// kind: Bar
@@ -121,6 +121,6 @@ spec:
 	//   name: instance
 	// spec:
 	//   containers:
-	//   - name: BarFoo
-	//     image: apache@12345
+	//     - name: BarFoo
+	//       image: apache@12345
 }

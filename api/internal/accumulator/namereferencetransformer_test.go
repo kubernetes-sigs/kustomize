@@ -528,10 +528,10 @@ kind: ClusterRole
 metadata:
   name: cr
 rules:
-- resourceNames:
-    foo: bar
-  resources:
-  - secrets
+  - resourceNames:
+      foo: bar
+    resources:
+      - secrets
 : visit traversal on path: [resourceNames]: path config error; no 'name' field in node`},
 	}
 

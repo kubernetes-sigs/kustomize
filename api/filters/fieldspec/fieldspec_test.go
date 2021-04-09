@@ -260,16 +260,16 @@ apiVersion: foo/v1beta1
 kind: Bar
 a:
   b:
-  - c:
-      d: a
+    - c:
+        d: a
 `,
 			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
   b:
-  - c:
-      d: e
+    - c:
+        d: e
 `,
 			filter: fieldspec.Filter{
 				SetValue: filtersutil.SetScalar("e"),
@@ -313,14 +313,14 @@ apiVersion: foo/v1beta1
 kind: Bar
 a:
   b:
-  - c: {}
+    - c: {}
 `,
 			expected: `
 apiVersion: foo/v1beta1
 kind: Bar
 a:
   b:
-  - c: {d: e}
+    - c: {d: e}
 `,
 			filter: fieldspec.Filter{
 				SetValue:   filtersutil.SetScalar("e"),
@@ -383,14 +383,14 @@ apiVersion: v1
 kind: Bar
 spec:
   containers:
-  - image: foo
+    - image: foo
 `,
 			expected: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
-  - image: bar
+    - image: bar
 `,
 			filter: fieldspec.Filter{
 				SetValue:   filtersutil.SetScalar("bar"),
@@ -409,14 +409,14 @@ apiVersion: v1
 kind: Bar
 spec:
   containers:
-  - image: foo
+    - image: foo
 `,
 			expected: `
 apiVersion: v1
 kind: Bar
 spec:
   containers:
-  - image: bar
+    - image: bar
 `,
 			filter: fieldspec.Filter{
 				SetValue:   filtersutil.SetScalar("bar"),

@@ -28,8 +28,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
+        - name: nginx
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -39,8 +39,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 `)
 
 	// fltr transforms the input using a starlark program
@@ -81,8 +81,8 @@ run(ctx.resource_list["items"])
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
+	//         - name: nginx
+	//           image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 	//---
 	// apiVersion: apps/v1
 	// kind: Deployment
@@ -95,8 +95,8 @@ run(ctx.resource_list["items"])
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
+	//         - name: nginx
+	//           image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 }
 
 func ExampleFilter_Filter_functionConfig() {
@@ -110,8 +110,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
+        - name: nginx
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -121,8 +121,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 `)
 
 	fc, err := yaml.Parse(`
@@ -173,8 +173,8 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
+	//         - name: nginx
+	//           image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 	//---
 	// apiVersion: apps/v1
 	// kind: Deployment
@@ -187,8 +187,8 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
+	//         - name: nginx
+	//           image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 }
 
 // ExampleFilter_Filter_file applies a starlark program in a local file to a collection of
@@ -210,8 +210,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
+        - name: nginx
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 `), 0600)
 	if err != nil {
 		log.Println(err)
@@ -226,8 +226,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 `), 0600)
 	if err != nil {
 		log.Println(err)
@@ -277,8 +277,8 @@ run(ctx.resource_list["items"])
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
+	//         - name: nginx
+	//           image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-1"}
 	//---
 	// apiVersion: apps/v1
 	// kind: Deployment
@@ -290,6 +290,6 @@ run(ctx.resource_list["items"])
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
+	//         - name: nginx
+	//           image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-2"}
 }

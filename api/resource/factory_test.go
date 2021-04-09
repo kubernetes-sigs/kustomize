@@ -73,13 +73,13 @@ spec:
         foo: bar
     spec:
       containers:
-      - env:
-        - name: foo
-          value: bar
-        image: nginx
-        name: nginx
-        ports:
-        - containerPort: 80
+        - env:
+            - name: foo
+              value: bar
+          image: nginx
+          name: nginx
+          ports:
+            - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -92,7 +92,7 @@ metadata:
   name: baseprefix-mungebot-service
 spec:
   ports:
-  - port: 7002
+    - port: 7002
   selector:
     app: mungebot
     foo: bar
@@ -121,13 +121,13 @@ spec:
         foo: bar
     spec:
       containers:
-      - env:
-        - name: foo
-          value: bar
-        image: nginx
-        name: nginx
-        ports:
-        - containerPort: 80
+        - env:
+            - name: foo
+              value: bar
+          image: nginx
+          name: nginx
+          ports:
+            - containerPort: 80
 `,
 				`apiVersion: v1
 kind: Service
@@ -140,7 +140,7 @@ metadata:
   name: baseprefix-mungebot-service
 spec:
   ports:
-  - port: 7002
+    - port: 7002
   selector:
     app: mungebot
     foo: bar

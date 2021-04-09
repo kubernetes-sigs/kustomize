@@ -27,7 +27,7 @@ metadata:
   name: whatever
 spec:
   containers:
-  - image: whatever
+    - image: whatever
 `,
 			expectedOutput: `
 apiVersion: apiextensions.k8s.io/v1
@@ -36,7 +36,7 @@ metadata:
   name: whatever
 spec:
   containers:
-  - image: whatever
+    - image: whatever
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -59,8 +59,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: nginx:2.1.2
+    - image: nginx:1.2.1
+    - image: nginx:2.1.2
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -69,8 +69,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache@12345
-  - image: apache@12345
+    - image: apache@12345
+    - image: apache@12345
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -93,11 +93,11 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: tomcat:1.2.3
+    - image: nginx:1.2.1
+    - image: tomcat:1.2.3
   initContainers:
-  - image: nginx:1.2.1
-  - image: apache:1.2.3
+    - image: nginx:1.2.1
+    - image: apache:1.2.3
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -106,11 +106,11 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache:3.2.1
-  - image: tomcat:1.2.3
+    - image: apache:3.2.1
+    - image: tomcat:1.2.3
   initContainers:
-  - image: apache:3.2.1
-  - image: apache:1.2.3
+    - image: apache:3.2.1
+    - image: apache:1.2.3
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -136,13 +136,13 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: tomcat:1.2.3
+    - image: nginx:1.2.1
+    - image: tomcat:1.2.3
   template:
     spec:
       initContainers:
-      - image: nginx:1.2.1
-      - image: apache:1.2.3
+        - image: nginx:1.2.1
+        - image: apache:1.2.3
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -151,13 +151,13 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache:3.2.1
-  - image: tomcat:1.2.3
+    - image: apache:3.2.1
+    - image: tomcat:1.2.3
   template:
     spec:
       initContainers:
-      - image: apache:3.2.1
-      - image: apache:1.2.3
+        - image: apache:3.2.1
+        - image: apache:1.2.3
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -214,9 +214,9 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: not_nginx@54321
-  - image: nginx:1.2.1
+    - image: nginx:1.2.1
+    - image: not_nginx@54321
+    - image: nginx:1.2.1
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -225,9 +225,9 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache:3.2.1
-  - image: not_nginx@54321
-  - image: apache:3.2.1
+    - image: apache:3.2.1
+    - image: not_nginx@54321
+    - image: apache:3.2.1
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -254,21 +254,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:latest
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:latest
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx
-        name: nginx-notag
-      - image: nginx@sha256:111111111111111111
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine`,
+        - image: nginx
+          name: nginx-notag
+        - image: nginx@sha256:111111111111111111
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine`,
 			expectedOutput: `
 group: apps
 apiVersion: v1
@@ -279,21 +279,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:v2
-        name: nginx-tagged
-      - image: nginx:v2
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:v2
+          name: nginx-tagged
+        - image: nginx:v2
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx:v2
-        name: nginx-notag
-      - image: nginx:v2
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: nginx:v2
+          name: nginx-notag
+        - image: nginx:v2
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -321,21 +321,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:latest
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:latest
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx
-        name: nginx-notag
-      - image: nginx@sha256:111111111111111111
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: nginx
+          name: nginx-notag
+        - image: nginx@sha256:111111111111111111
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			expectedOutput: `
 group: apps
@@ -347,21 +347,21 @@ spec:
   template:
     spec:
       containers:
-      - image: busybox:1.7.9
-        name: nginx-tagged
-      - image: busybox:latest
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: busybox:1.7.9
+          name: nginx-tagged
+        - image: busybox:latest
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: busybox
-        name: nginx-notag
-      - image: busybox@sha256:111111111111111111
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: busybox
+          name: nginx-notag
+        - image: busybox@sha256:111111111111111111
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -389,21 +389,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:latest
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:latest
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx
-        name: nginx-notag
-      - image: nginx@sha256:111111111111111111
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: nginx
+          name: nginx-notag
+        - image: nginx@sha256:111111111111111111
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			expectedOutput: `
 group: apps
@@ -415,21 +415,21 @@ spec:
   template:
     spec:
       containers:
-      - image: busybox:v3
-        name: nginx-tagged
-      - image: busybox:v3
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: busybox:v3
+          name: nginx-tagged
+        - image: busybox:v3
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: busybox:v3
-        name: nginx-notag
-      - image: busybox:v3
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: busybox:v3
+          name: nginx-notag
+        - image: busybox:v3
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -458,21 +458,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:latest
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:latest
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx
-        name: nginx-notag
-      - image: nginx@sha256:111111111111111111
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: nginx
+          name: nginx-notag
+        - image: nginx@sha256:111111111111111111
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			expectedOutput: `
 group: apps
@@ -484,21 +484,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx@sha256:222222222222222222
-        name: nginx-tagged
-      - image: nginx@sha256:222222222222222222
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx@sha256:222222222222222222
+          name: nginx-tagged
+        - image: nginx@sha256:222222222222222222
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx@sha256:222222222222222222
-        name: nginx-notag
-      - image: nginx@sha256:222222222222222222
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: nginx@sha256:222222222222222222
+          name: nginx-notag
+        - image: nginx@sha256:222222222222222222
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -526,21 +526,21 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:latest
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:latest
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: nginx
-        name: nginx-notag
-      - image: nginx@sha256:111111111111111111
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: nginx
+          name: nginx-notag
+        - image: nginx@sha256:111111111111111111
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			expectedOutput: `
 group: apps
@@ -552,21 +552,21 @@ spec:
   template:
     spec:
       containers:
-      - image: busybox@sha256:222222222222222222
-        name: nginx-tagged
-      - image: busybox@sha256:222222222222222222
-        name: nginx-latest
-      - image: foobar:1
-        name: replaced-with-digest
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: busybox@sha256:222222222222222222
+          name: nginx-tagged
+        - image: busybox@sha256:222222222222222222
+          name: nginx-latest
+        - image: foobar:1
+          name: replaced-with-digest
+        - image: postgres:1.8.0
+          name: postgresdb
       initContainers:
-      - image: busybox@sha256:222222222222222222
-        name: nginx-notag
-      - image: busybox@sha256:222222222222222222
-        name: nginx-sha256
-      - image: alpine:1.8.0
-        name: init-alpine
+        - image: busybox@sha256:222222222222222222
+          name: nginx-notag
+        - image: busybox@sha256:222222222222222222
+          name: nginx-sha256
+        - image: alpine:1.8.0
+          name: init-alpine
 `,
 			filter: Filter{
 				ImageTag: types.Image{
@@ -627,8 +627,8 @@ spec:
   template:
     spec:
       containers:
-      - image: some.registry.io/my-image:{GENERATED_TAG}
-        name: my-image
+        - image: some.registry.io/my-image:{GENERATED_TAG}
+          name: my-image
 `,
 			expectedOutput: `
 group: apps
@@ -640,8 +640,8 @@ spec:
   template:
     spec:
       containers:
-      - image: some.registry.io/my-image:my-fixed-tag
-        name: my-image
+        - image: some.registry.io/my-image:my-fixed-tag
+          name: my-image
 `,
 			filter: Filter{
 				ImageTag: types.Image{

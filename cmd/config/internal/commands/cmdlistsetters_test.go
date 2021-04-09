@@ -111,10 +111,10 @@ openAPI:
           name: image
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			input: `
 apiVersion: apps/v1
@@ -126,10 +126,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
-      - name: nginx2
-        image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx2
+          image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
  `,
 			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED   IS SET  
   image      nginx   me2      hello world 2   2       No         No      
@@ -173,10 +173,10 @@ openAPI:
           name: image
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			input: `
 apiVersion: apps/v1
@@ -188,10 +188,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
-      - name: nginx2
-        image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx2
+          image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -202,10 +202,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
-      - name: nginx2
-        image: nginx
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx2
+          image: nginx
 `,
 			expected: `    NAME     VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED   IS SET  
   image      nginx   me2      hello world 2   3       No         No      
@@ -250,10 +250,10 @@ openAPI:
           name: image-subst
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			input: `
 apiVersion: apps/v1
@@ -265,10 +265,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-subst"}
-      - name: nginx2
-        image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-subst"}
+        - name: nginx2
+          image: nginx # {"$ref": "#/definitions/io.k8s.cli.setters.image"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -279,10 +279,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-subst"}
-      - name: nginx2
-        image: nginx
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image-subst"}
+        - name: nginx2
+          image: nginx
 `,
 			expected: `  NAME    VALUE   SET BY    DESCRIPTION    COUNT   REQUIRED   IS SET  
   image   nginx   me2      hello world 2   3       Yes        No      
@@ -306,9 +306,9 @@ openAPI:
         setter:
           name: list
           listValues:
-          - a
-          - b
-          - c
+            - a
+            - b
+            - c
           setBy: me
           required: true
  `,
@@ -320,9 +320,9 @@ metadata:
     foo: bar
 spec:
   list: # {"$openapi":"list"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 `,
 			expected: `  NAME    VALUE    SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET  
   list   [a,b,c]   me       hello world   1       Yes        No      
@@ -342,10 +342,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 			openapi: `
 apiVersion: v1alpha1
@@ -370,20 +370,20 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.substitutions.my-nested-subst:
       x-k8s-cli:
         substitution:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:

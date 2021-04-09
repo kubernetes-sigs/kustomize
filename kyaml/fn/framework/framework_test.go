@@ -50,13 +50,13 @@ func TestExecute_Result(t *testing.T) {
 kind: ResourceList
 apiVersion: config.kubernetes.io/v1alpha1
 items:
-- kind: Deployment
-  apiVersion: v1
-  metadata:
-    name: tester
-    namespace: default
-  spec:
-    replicas: 0
+  - kind: Deployment
+    apiVersion: v1
+    metadata:
+      name: tester
+      namespace: default
+    spec:
+      replicas: 0
 `), Writer: out}
 	err := framework.Execute(p, source)
 	assert.EqualError(t, err, `[error] v1/Deployment/default/tester .spec.Replicas: bad value for replicas
@@ -66,29 +66,28 @@ items:
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  apiVersion: v1
-  metadata:
-    name: tester
-    namespace: default
-  spec:
-    replicas: 0
+  - kind: Deployment
+    apiVersion: v1
+    metadata:
+      name: tester
+      namespace: default
+    spec:
+      replicas: 0
 results:
   name: Incompatible config
   items:
-  - message: bad value for replicas
-    severity: error
-    resourceRef:
-      apiVersion: v1
-      kind: Deployment
-      name: tester
-      namespace: default
-    field:
-      path: .spec.Replicas
-      currentValue: "0"
-      suggestedValue: "3"
-    file:
-      path: /path/to/deployment.yaml
-  - message: some error
-    severity: error`, strings.TrimSpace(out.String()))
+    - message: bad value for replicas
+      severity: error
+      resourceRef:
+        apiVersion: v1
+        kind: Deployment
+        metadata:
+          name: tester
+          namespace: default
+      field:
+        path: .spec.Replicas
+        currentValue: "0"
+        suggestedValue: "3"
+      file:
+        path: /path/to/deployment.yaml`, strings.TrimSpace(out.String()))
 }

@@ -41,8 +41,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: example/sidecar:{{ .B }}
+        - name: foo
+          image: example/sidecar:{{ .B }}
 ---
 metadata:
   annotations:

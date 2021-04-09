@@ -30,10 +30,10 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
+        - name: nginx
+          image: nginx:1.7.9
+          ports:
+            - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -89,10 +89,10 @@ spec:
 	//         app: nginx
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.7.9
-	//         ports:
-	//         - containerPort: 80
+	//         - name: nginx
+	//           image: nginx:1.7.9
+	//           ports:
+	//             - containerPort: 80
 	// ---
 	// apiVersion: v1
 	// kind: Service
@@ -104,7 +104,7 @@ spec:
 	//   selector:
 	//     app: nginx
 	//   ports:
-	//   - protocol: TCP
-	//     port: 80
-	//     targetPort: 80
+	//     - protocol: TCP
+	//       port: 80
+	//       targetPort: 80
 }

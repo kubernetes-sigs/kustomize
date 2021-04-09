@@ -197,10 +197,10 @@ openAPI:
           name: image
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image-setter'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image-setter'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			input: `
 apiVersion: apps/v1
@@ -212,10 +212,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$openapi":"image"}
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: nginx:1.7.9 # {"$openapi":"image"}
+        - name: sidecar
+          image: sidecar:1.7.9
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -239,10 +239,10 @@ openAPI:
           name: image
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image-setter'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image-setter'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -254,10 +254,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.8.1 # {"$openapi":"image"}
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: nginx:1.8.1 # {"$openapi":"image"}
+        - name: sidecar
+          image: sidecar:1.7.9
 `,
 		},
 
@@ -389,10 +389,10 @@ openAPI:
           name: image
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			input: `
 apiVersion: apps/v1
@@ -404,10 +404,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        - name: sidecar
+          image: sidecar:1.7.9
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -432,10 +432,10 @@ openAPI:
           name: image
           pattern: IMAGE:TAG
           values:
-          - marker: IMAGE
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: TAG
-            ref: '#/definitions/io.k8s.cli.setters.tag'
+            - marker: IMAGE
+              ref: '#/definitions/io.k8s.cli.setters.image'
+            - marker: TAG
+              ref: '#/definitions/io.k8s.cli.setters.tag'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -447,10 +447,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image"}
+        - name: sidecar
+          image: sidecar:1.7.9
 `,
 			errMsg: "tag in body should be at least 6 chars long",
 		},
@@ -471,14 +471,14 @@ openAPI:
         setter:
           name: list
           listValues:
-          - 0
+            - 0
  `,
 			input: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - 0
+    - 0
  `,
 			expectedOpenAPI: `
 kind: Kptfile
@@ -493,14 +493,14 @@ openAPI:
         setter:
           name: list
           listValues:
-          - 0
+            - 0
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - 0
+    - 0
  `,
 			errMsg: `list in body must be of type integer: "string"
 list in body must be of type integer: "boolean"
@@ -668,14 +668,14 @@ openAPI:
         setter:
           name: list
           listValues:
-          - 0
+           - 0
  `,
 			input: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - 0
+    - 0
  `,
 			expectedOpenAPI: `
 kind: Kptfile
@@ -690,8 +690,8 @@ openAPI:
         setter:
           name: list
           listValues:
-          - "10"
-          - "11"
+            - "10"
+            - "11"
           isSet: true
  `,
 			expectedResources: `
@@ -699,8 +699,8 @@ apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - "10"
-  - "11"
+    - "10"
+    - "11"
  `,
 		},
 
@@ -720,14 +720,14 @@ openAPI:
         setter:
           name: list
           listValues:
-          - 0
+            - 0
  `,
 			input: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - 0
+    - 0
  `,
 			expectedOpenAPI: `
 kind: Kptfile
@@ -742,14 +742,14 @@ openAPI:
         setter:
           name: list
           listValues:
-          - 0
+            - 0
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - 0
+    - 0
  `,
 			errMsg: `list in body must be of type integer: "string"
 list in body must be of type integer: "boolean"
@@ -780,10 +780,10 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -795,10 +795,10 @@ openAPI:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
  `,
 			input: `
 apiVersion: apps/v1
@@ -810,10 +810,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -837,10 +837,10 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -852,10 +852,10 @@ openAPI:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -867,10 +867,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/ubuntu::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: ubuntu::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/ubuntu::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: ubuntu::1.7.9 # {"$openapi":"my-image-subst"}
 `,
 		},
 		{
@@ -897,10 +897,10 @@ openAPI:
           name: my-image-subst
           pattern: ${my-nested-subst}::${my-tag-setter}
           values:
-          - marker: ${my-nested-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-nested-subst'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-nested-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-nested-subst'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -912,10 +912,10 @@ openAPI:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
  `,
 			input: `
 apiVersion: apps/v1
@@ -927,10 +927,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 			expectedOpenAPI: `
 apiVersion: v1alpha1
@@ -953,10 +953,10 @@ openAPI:
           name: my-image-subst
           pattern: ${my-nested-subst}::${my-tag-setter}
           values:
-          - marker: ${my-nested-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-nested-subst'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-nested-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-nested-subst'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -968,10 +968,10 @@ openAPI:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -983,10 +983,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
 `,
 			errMsg: "cyclic substitution detected with name my-nested-subst",
 		},

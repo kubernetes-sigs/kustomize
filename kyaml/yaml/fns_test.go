@@ -488,9 +488,9 @@ var s = `n: o
 a:
   l: m
   b:
-  - f: g
-  - c: e
-  - h: i
+    - f: g
+    - c: e
+    - h: i
 r: s
 `
 
@@ -507,13 +507,13 @@ func TestLookup_Fn_create(t *testing.T) {
 a:
   l: m
   b:
-  - f: g
-  - c: e
-  - h: i
-  - c: d
-    t:
-      f:
-      - h
+    - f: g
+    - c: e
+    - h: i
+    - c: d
+      t:
+        f:
+          - h
 r: s
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `h
@@ -532,12 +532,12 @@ func TestLookup_Fn_create2(t *testing.T) {
 a:
   l: m
   b:
-  - f: g
-  - c: e
-  - h: i
-  - c: d
-    t:
-      f: []
+    - f: g
+    - c: e
+    - h: i
+    - c: d
+      t:
+        f: []
 r: s
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `[]
@@ -553,11 +553,11 @@ func TestLookup_Fn_create3(t *testing.T) {
 a:
   l: m
   b:
-  - f: g
-  - c: e
-  - h: i
-  - c: d
-    t: {}
+    - f: g
+    - c: e
+    - h: i
+    - c: d
+      t: {}
 r: s
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `{}
@@ -583,18 +583,18 @@ func TestLookup(t *testing.T) {
 a:
   l: m
   b:
-  - f: g
-  - c: e
-  - c: d
-    t:
-      u: v
-      f:
-      - g
-      - h
-      - i
-    j: k
-  - h: i
-    p: q
+    - f: g
+    - c: e
+    - c: d
+      t:
+        u: v
+        f:
+          - g
+          - h
+          - i
+      j: k
+    - h: i
+      p: q
 r: s
 `
 	node, err := Parse(s)
@@ -621,9 +621,9 @@ r: s
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `u: v
 f:
-- g
-- h
-- i
+  - g
+  - h
+  - i
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("a", "b", "[c=d]"))
@@ -633,9 +633,9 @@ f:
 t:
   u: v
   f:
-  - g
-  - h
-  - i
+    - g
+    - h
+    - i
 j: k
 `, assertNoErrorString(t)(rn.String()))
 
@@ -648,9 +648,9 @@ j: k
   t:
     u: v
     f:
-    - g
-    - h
-    - i
+      - g
+      - h
+      - i
   j: k
 - h: i
   p: q

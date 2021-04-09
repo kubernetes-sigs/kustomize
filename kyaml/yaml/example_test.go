@@ -57,10 +57,10 @@ metadata:
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx # first container
-	//         image: nginx
-	//       - name: nginx2 # second container
-	//         image: nginx2
+	//         - name: nginx # first container
+	//           image: nginx
+	//         - name: nginx2 # second container
+	//           image: nginx2
 	//  <nil>
 }
 
@@ -393,8 +393,8 @@ spec:
   templates:
     spec:
       containers:
-      - name: nginx
-        image: nginx:latest
+        - name: nginx
+          image: nginx:latest
 `)
 	if err != nil {
 		log.Fatal(err)
@@ -512,7 +512,7 @@ metadata:
 	//   templates:
 	//     spec:
 	//       containers:
-	//       - name: nginx
+	//         - name: nginx
 	//  <nil>
 }
 
@@ -596,8 +596,8 @@ metadata:
 	//   templates:
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: ''
+	//         - name: nginx
+	//           image: ''
 	//  <nil>
 }
 
@@ -769,10 +769,10 @@ metadata:
 	//   template:
 	//     spec:
 	//       containers:
-	//       - name: nginx # first container
-	//         image: nginx
-	//       - name: nginx2 # second container
-	//         image: nginx2
+	//         - name: nginx # first container
+	//           image: nginx
+	//         - name: nginx2 # second container
+	//           image: nginx2
 	//  <nil>
 }
 
@@ -794,10 +794,10 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
+        - name: nginx
+          image: nginx:1.7.9
+          ports:
+            - containerPort: 80
 `)
 	if err != nil {
 		// handle error
@@ -830,15 +830,15 @@ spec:
 	//         app: nginx
 	//     spec:
 	//       containers:
-	//       - name: nginx
-	//         image: nginx:1.7.9
-	//         ports:
-	//         - containerPort: 80
-	//         filter:
-	//         - foo
-	//         args:
-	//         - baz
-	//         - bar
+	//         - name: nginx
+	//           image: nginx:1.7.9
+	//           ports:
+	//             - containerPort: 80
+	//           filter:
+	//             - foo
+	//           args:
+	//             - baz
+	//             - bar
 	//  <nil>
 }
 

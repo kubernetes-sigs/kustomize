@@ -26,8 +26,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: nginx:2.1.2
+    - image: nginx:1.2.1
+    - image: nginx:2.1.2
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -36,8 +36,8 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache@12345
-  - image: apache@12345
+    - image: apache@12345
+    - image: apache@12345
 `,
 			filter: LegacyFilter{
 				ImageTag: types.Image{
@@ -55,11 +55,11 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: tomcat:1.2.3
+    - image: nginx:1.2.1
+    - image: tomcat:1.2.3
   initContainers:
-  - image: nginx:1.2.1
-  - image: apache:1.2.3
+    - image: nginx:1.2.1
+    - image: apache:1.2.3
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -68,11 +68,11 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache:3.2.1
-  - image: tomcat:1.2.3
+    - image: apache:3.2.1
+    - image: tomcat:1.2.3
   initContainers:
-  - image: apache:3.2.1
-  - image: apache:1.2.3
+    - image: apache:3.2.1
+    - image: apache:1.2.3
 `,
 			filter: LegacyFilter{
 				ImageTag: types.Image{
@@ -90,13 +90,13 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: nginx:1.2.1
-  - image: tomcat:1.2.3
+    - image: nginx:1.2.1
+    - image: tomcat:1.2.3
   template:
     spec: 
       initContainers:
-      - image: nginx:1.2.1
-      - image: apache:1.2.3
+        - image: nginx:1.2.1
+        - image: apache:1.2.3
 `,
 			expectedOutput: `
 apiVersion: example.com/v1
@@ -105,13 +105,13 @@ metadata:
   name: instance
 spec:
   containers:
-  - image: apache:3.2.1
-  - image: tomcat:1.2.3
+    - image: apache:3.2.1
+    - image: tomcat:1.2.3
   template:
     spec:
       initContainers:
-      - image: apache:3.2.1
-      - image: apache:1.2.3
+        - image: apache:3.2.1
+        - image: apache:1.2.3
 `,
 			filter: LegacyFilter{
 				ImageTag: types.Image{

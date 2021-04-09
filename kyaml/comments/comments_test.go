@@ -60,8 +60,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: bar # comment 1
+        - name: foo
+          image: bar # comment 1
 `,
 			to: `
 apiVersion: apps/v1
@@ -70,8 +70,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: bar
+        - name: foo
+          image: bar
 `,
 			expected: `
 apiVersion: apps/v1
@@ -80,8 +80,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: bar # comment 1
+        - name: foo
+          image: bar # comment 1
 `,
 		},
 
@@ -166,19 +166,19 @@ spec: # comment 1
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
+  - a # comment
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
+  - a
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
+  - a # comment
 `,
 		},
 
@@ -188,21 +188,21 @@ items:
 apiVersion: apps/v1
 kind: Deployment
 items:
-# comment
-- a
+  # comment
+  - a
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
+  - a
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-# comment
-- a
+  # comment
+  - a
 `,
 		},
 
@@ -212,25 +212,25 @@ items:
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
-- b # comment
-- c
+  - a
+  - b # comment
+  - c
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- d
-- b
-- e
+  - d
+  - b
+  - e
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- d
-- b # comment
-- e
+  - d
+  - b # comment
+  - e
 `,
 		},
 
@@ -240,25 +240,25 @@ items:
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
-- b # comment
-- c
+  - a
+  - b # comment
+  - c
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
-- c
-- b
+  - a
+  - c
+  - b
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
-- c
-- b
+  - a
+  - c
+  - b
 `,
 		},
 
@@ -268,19 +268,19 @@ items:
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
+  - a # comment
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- b
+  - b
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- b
+  - b
 `,
 		},
 
@@ -290,21 +290,21 @@ items:
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
+  - a # comment
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
-- b
+  - a
+  - b
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
-- b
+  - a # comment
+  - b
 `,
 		},
 
@@ -314,20 +314,20 @@ items:
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
-- b
+  - a # comment
+  - b
 `,
 			to: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a
+  - a
 `,
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
 items:
-- a # comment
+  - a # comment
 `,
 		},
 

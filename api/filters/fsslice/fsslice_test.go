@@ -58,14 +58,14 @@ apiVersion: foo/v1
 kind: Bar
 q:
   r:
-  - s: {}
+    - s: {}
 `,
 		expected: `
 apiVersion: foo/v1
 kind: Bar
 q:
   r:
-  - s: {t: e}
+    - s: {t: e}
 a:
   b: e
 `,

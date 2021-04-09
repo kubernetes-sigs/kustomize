@@ -28,15 +28,15 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
-      - name: sidecar
-        image: sidecar:1.0.0
-        ports:
-        - containerPort: 8081
-        - containerPort: 9090
+        - name: nginx
+          image: nginx:1.7.9
+          ports:
+            - containerPort: 80
+        - name: sidecar
+          image: sidecar:1.0.0
+          ports:
+            - containerPort: 8081
+            - containerPort: 9090
 `)
 
 	updates := []struct {
@@ -45,8 +45,8 @@ spec:
 	}{
 		{[]string{
 			"spec", "template", "spec", "containers", "[name=.*]"},
-			"- name: nginx\n  image: nginx:1.7.9\n  ports:\n  - containerPort: 80\n" +
-				"- name: sidecar\n  image: sidecar:1.0.0\n  ports:\n  - containerPort: 8081\n  - containerPort: 9090\n"},
+			"- name: nginx\n  image: nginx:1.7.9\n  ports:\n    - containerPort: 80\n" +
+				"- name: sidecar\n  image: sidecar:1.0.0\n  ports:\n    - containerPort: 8081\n    - containerPort: 9090\n"},
 		{[]string{
 			"spec", "template", "spec", "containers", "[name=.*]", "image"},
 			"- nginx:1.7.9\n- sidecar:1.0.0\n"},

@@ -35,16 +35,16 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.0.0
-        args:
-        - on
-        - 1
-        - hello
-        ports:
-        - name: http
-          targetPort: 80
-          containerPort: 80
+        - name: nginx
+          image: nginx:1.0.0
+          args:
+            - on
+            - 1
+            - hello
+          ports:
+            - name: http
+              targetPort: 80
+              containerPort: 80
 `
 
 	// keep the style on values that parse as non-string types
@@ -62,16 +62,16 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.0.0
-        args:
-        - "on"
-        - "1"
-        - hello
-        ports:
-        - name: http
-          targetPort: 80
-          containerPort: 80
+        - name: nginx
+          image: nginx:1.0.0
+          args:
+            - "on"
+            - "1"
+            - hello
+          ports:
+            - name: http
+              targetPort: 80
+              containerPort: 80
 `
 
 	buff := &bytes.Buffer{}
@@ -93,16 +93,16 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.0.0
-        args:
-        - on
-        - 1
-        - hello
-        ports:
-        - name: http
-          targetPort: 80
-          containerPort: 80
+        - name: nginx
+          image: nginx:1.0.0
+          args:
+            - on
+            - 1
+            - hello
+          ports:
+            - name: http
+              targetPort: 80
+              containerPort: 80
 kind: Deployment
 metadata:
   name: foo
@@ -129,16 +129,16 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.0.0
-        args:
-        - on
-        - 1
-        - hello
-        ports:
-        - name: http
-          targetPort: 80
-          containerPort: 80
+        - name: nginx
+          image: nginx:1.0.0
+          args:
+            - on
+            - 1
+            - hello
+          ports:
+            - name: http
+              targetPort: 80
+              containerPort: 80
 `
 
 	buff := &bytes.Buffer{}
@@ -382,17 +382,17 @@ spec:
         app: nginx
     spec:
       containers:
-      # this is a container
-      - ports:
-        # this is a port
-        - containerPort: 80
-        name: b-nginx
-        image: nginx:1.7.9
-      # this is another container
-      - name: a-nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
+        # this is a container
+        - ports:
+            # this is a port
+            - containerPort: 80
+          name: b-nginx
+          image: nginx:1.7.9
+        # this is another container
+        - name: a-nginx
+          image: nginx:1.7.9
+          ports:
+            - containerPort: 80
 `
 	expected := `apiVersion: apps/v1
 kind: Deployment
@@ -411,17 +411,15 @@ spec:
         app: nginx
     spec:
       containers:
-      # this is another container
-      - name: a-nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
-      - name: b-nginx
-        image: nginx:1.7.9
-        # this is a container
-        ports:
-        # this is a port
-        - containerPort: 80
+        - name: a-nginx
+          image: nginx:1.7.9
+          ports:
+            - containerPort: 80
+        - name: b-nginx
+          image: nginx:1.7.9
+          ports:
+            # this is a port
+            - containerPort: 80
 `
 	s, err := FormatInput(strings.NewReader(y))
 	assert.NoError(t, err)
@@ -451,9 +449,9 @@ spec:
   selector:
     app: MyApp
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 9376
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
 `
 	s, err := FormatInput(strings.NewReader(y))
 	assert.NoError(t, err)
@@ -468,54 +466,54 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: <name of this configuration object>
 webhooks:
-- name: <webhook name, e.g., pod-policy.example.io>
-  rules:
-  - apiGroups:
-    - ""
-    apiVersions:
-    - v1
-    operations:
-      - UPDATE # this list is indented by 2
-      - CREATE
-      - CONNECT
-    resources:
-    - pods # this list is not indented by 2
-    scope: "Namespaced"
-  clientConfig:
-    service:
-      namespace: <namespace of the front-end service>
-      name: <name of the front-end service>
-    caBundle: <pem encoded ca cert that signs the server cert used by the webhook>
-  admissionReviewVersions:
-  - v1beta1
-  timeoutSeconds: 1
+  - name: <webhook name, e.g., pod-policy.example.io>
+    rules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - UPDATE # this list is indented by 2
+          - CREATE
+          - CONNECT
+        resources:
+          - pods # this list is not indented by 2
+        scope: "Namespaced"
+    clientConfig:
+      service:
+        namespace: <namespace of the front-end service>
+        name: <name of the front-end service>
+      caBundle: <pem encoded ca cert that signs the server cert used by the webhook>
+    admissionReviewVersions:
+      - v1beta1
+    timeoutSeconds: 1
 `
 	expected := `apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: <name of this configuration object>
 webhooks:
-- name: <webhook name, e.g., pod-policy.example.io>
-  admissionReviewVersions:
-  - v1beta1
-  clientConfig:
-    service:
-      name: <name of the front-end service>
-      namespace: <namespace of the front-end service>
-    caBundle: <pem encoded ca cert that signs the server cert used by the webhook>
-  rules:
-  - resources:
-    - pods # this list is not indented by 2
-    apiGroups:
-    - ""
-    apiVersions:
-    - v1
-    operations:
-    - CONNECT
-    - CREATE
-    - UPDATE # this list is indented by 2
-    scope: "Namespaced"
-  timeoutSeconds: 1
+  - name: <webhook name, e.g., pod-policy.example.io>
+    admissionReviewVersions:
+      - v1beta1
+    clientConfig:
+      service:
+        name: <name of the front-end service>
+        namespace: <namespace of the front-end service>
+      caBundle: <pem encoded ca cert that signs the server cert used by the webhook>
+    rules:
+      - resources:
+          - pods # this list is not indented by 2
+        apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CONNECT
+          - CREATE
+          - UPDATE # this list is indented by 2
+        scope: "Namespaced"
+    timeoutSeconds: 1
 `
 	s, err := FormatInput(strings.NewReader(y))
 	assert.NoError(t, err)
@@ -530,14 +528,14 @@ spec:
     spec:
       # these shouldn't be sorted because the type isn't whitelisted
       containers:
-      - name: b
-      - name: a
+        - name: b
+        - name: a
   replicas: 1
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 other:
   b: a1
   a: b1
@@ -553,13 +551,13 @@ spec:
     spec:
       # these shouldn't be sorted because the type isn't whitelisted
       containers:
-      - name: b
-      - name: a
+        - name: b
+        - name: a
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 other:
   a: b1
   b: a1
@@ -607,14 +605,14 @@ spec:
   template:
     spec:
       containers:
-      - b
-      - a
+        - b
+        - a
   replicas: 1
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 other:
   b: a1
   a: b1
@@ -632,14 +630,14 @@ spec:
   template:
     spec:
       containers:
-      - a
-      - b
+        - a
+        - b
   replicas: 1
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 other:
   b: a1
   a: b1
@@ -657,14 +655,14 @@ spec:
   template:
     spec:
       containers:
-      - a
-      - b
+        - a
+        - b
   replicas: 1
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 other:
 	b: a1
 	a: b1
@@ -793,9 +791,9 @@ func TestFormatFileOrDirectory_partialKubernetesYamlFile(t *testing.T) {
 	err = ioutil.WriteFile(f.Name(), []byte(string(testyaml.UnformattedYaml1)+`---
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 spec: a
 ---
 `+string(testyaml.UnformattedYaml2)), 0600)
@@ -811,9 +809,9 @@ spec: a
 	assert.Equal(t, string(testyaml.FormattedYaml1)+`---
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 spec: a
 ---
 `+string(testyaml.FormattedYaml2), string(b))
@@ -829,9 +827,9 @@ func TestFormatFileOrDirectory_skipNonKubernetesYamlFile(t *testing.T) {
 	err = ioutil.WriteFile(f.Name(), []byte(`
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 spec: a
 `), 0600)
 	assert.NoError(t, err)
@@ -845,9 +843,9 @@ spec: a
 	assert.NoError(t, err)
 	assert.Equal(t, `status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 spec: a
 `, string(b))
 }
@@ -952,9 +950,9 @@ func TestFormatFileOrDirectory_FmtAnnotation(t *testing.T) {
 spec: a
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 apiVersion: example.com/v1beta1
 kind: MyType
 metadata:
@@ -965,9 +963,9 @@ metadata:
 spec: a
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 apiVersion: example.com/v1beta1
 kind: MyType
 metadata:
@@ -981,9 +979,9 @@ metadata:
 spec: a
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 apiVersion: example.com/v1beta1
 kind: MyType
 metadata:
@@ -999,9 +997,9 @@ metadata:
 spec: a
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 `),
 		},
 		{
@@ -1010,9 +1008,9 @@ status:
 spec: a
 status:
   conditions:
-  - 3
-  - 1
-  - 2
+    - 3
+    - 1
+    - 2
 apiVersion: example.com/v1beta1
 kind: MyType
 metadata:

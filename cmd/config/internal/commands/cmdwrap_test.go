@@ -22,257 +22,254 @@ functionConfig:
   spec:
     replicas: 11
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: test
-    labels:
-      app: nginx
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
       name: test
-  spec:
-    replicas: 5
-    selector:
-      matchLabels:
+      labels:
         app: nginx
         name: test
-    template:
-      metadata:
-        labels:
+    spec:
+      replicas: 5
+      selector:
+        matchLabels:
           app: nginx
           name: test
-      spec:
-        containers:
-        - name: test
-          image: nginx:v1.7
-          ports:
-          - containerPort: 8080
-            name: http
-          resources:
-            limits:
-              cpu: 500m
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: test
-    labels:
-      app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+            name: test
+        spec:
+          containers:
+            - name: test
+              image: nginx:v1.7
+              ports:
+                - containerPort: 8080
+                  name: http
+              resources:
+                limits:
+                  cpu: 500m
+  - apiVersion: v1
+    kind: Service
+    metadata:
       name: test
-  spec:
-    ports:
-    # This i the port.
-    - port: 8080
-      targetPort: 8080
-      name: http
-    selector:
-      app: nginx
-      name: test
+      labels:
+        app: nginx
+        name: test
+    spec:
+      ports:
+        # This i the port.
+        - port: 8080
+          targetPort: 8080
+          name: http
+      selector:
+        app: nginx
+        name: test
 `
 
 	output = `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: test
-    labels:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
       name: test
-      app: nginx
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/test_deployment.yaml'
-  spec:
-    replicas: 11
-    selector:
-      matchLabels:
+      labels:
         name: test
         app: nginx
-    template:
-      metadata:
-        labels:
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/test_deployment.yaml'
+    spec:
+      replicas: 11
+      selector:
+        matchLabels:
           name: test
           app: nginx
-      spec:
-        containers:
-        - name: test
-          image: nginx:v1.7
-          ports:
-          - name: http
-            containerPort: 8080
-          resources:
-            limits:
-              cpu: 500m
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: test
-    labels:
+      template:
+        metadata:
+          labels:
+            name: test
+            app: nginx
+        spec:
+          containers:
+            - name: test
+              image: nginx:v1.7
+              ports:
+                - name: http
+                  containerPort: 8080
+              resources:
+                limits:
+                  cpu: 500m
+  - apiVersion: v1
+    kind: Service
+    metadata:
       name: test
-      app: nginx
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/test_service.yaml'
-  spec:
-    selector:
-      name: test
-      app: nginx
-    ports:
-    - name: http
-      # This i the port.
-      port: 8080
-      targetPort: 8080
+      labels:
+        name: test
+        app: nginx
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/test_service.yaml'
+    spec:
+      selector:
+        name: test
+        app: nginx
+      ports:
+        - name: http
+          port: 8080
+          targetPort: 8080
 `
 
 	outputNoMerge = `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: test
-    labels:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
       name: test
-      app: nginx
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/test_deployment.yaml'
-  spec:
-    replicas: 11
-    selector:
-      matchLabels:
+      labels:
         name: test
         app: nginx
-    template:
-      metadata:
-        labels:
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/test_deployment.yaml'
+    spec:
+      replicas: 11
+      selector:
+        matchLabels:
           name: test
           app: nginx
-      spec:
-        containers:
-        - name: test
-          image: nginx:v1.7
-          ports:
-          - name: http
-            containerPort: 8080
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: test
-    labels:
+      template:
+        metadata:
+          labels:
+            name: test
+            app: nginx
+        spec:
+          containers:
+            - name: test
+              image: nginx:v1.7
+              ports:
+                - name: http
+                  containerPort: 8080
+  - apiVersion: v1
+    kind: Service
+    metadata:
       name: test
-      app: nginx
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/test_service.yaml'
-  spec:
-    selector:
-      name: test
-      app: nginx
-    ports:
-    - name: http
-      # This i the port.
-      port: 8080
-      targetPort: 8080
+      labels:
+        name: test
+        app: nginx
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/test_service.yaml'
+    spec:
+      selector:
+        name: test
+        app: nginx
+      ports:
+        - name: http
+          port: 8080
+          targetPort: 8080
 `
 
 	outputOverride = `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: mysql-deployment
-    namespace: myspace
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/mysql-deployment_deployment.yaml'
-  spec:
-    replicas: 3
-    template:
-      spec:
-        containers:
-        - name: mysql
-          image: mysql:1.7.9
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: nosetters-deployment
-    namespace: myspace
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/nosetters-deployment_deployment.yaml'
-  spec:
-    replicas: 4
-    template:
-      spec:
-        containers:
-        - name: nosetters
-          image: nosetters:1.7.7
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: storage-deployment
-    namespace: myspace
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/storage-deployment_deployment.yaml'
-  spec:
-    replicas: 4
-    template:
-      spec:
-        containers:
-        - name: storage
-          image: storage:1.7.7
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: test
-    labels:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: mysql-deployment
+      namespace: myspace
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/mysql-deployment_deployment.yaml'
+    spec:
+      replicas: 3
+      template:
+        spec:
+          containers:
+            - name: mysql
+              image: mysql:1.7.9
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nosetters-deployment
+      namespace: myspace
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/nosetters-deployment_deployment.yaml'
+    spec:
+      replicas: 4
+      template:
+        spec:
+          containers:
+            - name: nosetters
+              image: nosetters:1.7.7
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: storage-deployment
+      namespace: myspace
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/storage-deployment_deployment.yaml'
+    spec:
+      replicas: 4
+      template:
+        spec:
+          containers:
+            - name: storage
+              image: storage:1.7.7
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
       name: test
-      app: nginx
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/test_deployment.yaml'
-  spec:
-    replicas: 11
-    selector:
-      matchLabels:
+      labels:
         name: test
         app: nginx
-    template:
-      metadata:
-        labels:
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/test_deployment.yaml'
+    spec:
+      replicas: 11
+      selector:
+        matchLabels:
           name: test
           app: nginx
-      spec:
-        containers:
-        - name: test
-          image: nginx:v1.9
-          ports:
-          - name: http
-            containerPort: 8080
-          resources:
-            limits:
-              cpu: 500m
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: test
-    labels:
+      template:
+        metadata:
+          labels:
+            name: test
+            app: nginx
+        spec:
+          containers:
+            - name: test
+              image: nginx:v1.9
+              ports:
+                - name: http
+                  containerPort: 8080
+              resources:
+                limits:
+                  cpu: 500m
+  - apiVersion: v1
+    kind: Service
+    metadata:
       name: test
-      app: nginx
-    annotations:
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'config/test_service.yaml'
-  spec:
-    selector:
-      name: test
-      app: nginx
-    ports:
-    - name: http
-      # This i the port.
-      port: 8080
-      targetPort: 8080
+      labels:
+        name: test
+        app: nginx
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'config/test_service.yaml'
+    spec:
+      selector:
+        name: test
+        app: nginx
+      ports:
+        - name: http
+          port: 8080
+          targetPort: 8080
 `
 )
 

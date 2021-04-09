@@ -27,7 +27,7 @@ spec:
 spec:
   template:
     containers:
-    - image: nginx
+      - image: nginx
 `),
 		}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: os.Stdout}},
@@ -45,5 +45,5 @@ spec:
 	//   replicas: 3
 	//   template:
 	//     containers:
-	//     - image: nginx
+	//       - image: nginx
 }

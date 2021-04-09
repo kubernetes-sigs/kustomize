@@ -42,10 +42,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: nginx:1.7.9
+        - name: sidecar
+          image: sidecar:1.7.9
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -85,10 +85,10 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}:${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -100,10 +100,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$openapi":"my-image-subst"}
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: nginx:1.7.9 # {"$openapi":"my-image-subst"}
+        - name: sidecar
+          image: sidecar:1.7.9
  `,
 		},
 		{
@@ -120,10 +120,10 @@ openAPI:
           name: my-image
           pattern: something/${my-image-setter}::${my-tag-setter}/nginxotherthing
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
 			err: `substitution with name "my-image" already exists`,
 		},
@@ -158,10 +158,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing
+        - name: sidecar
+          image: sidecar:1.7.9
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -179,10 +179,10 @@ openAPI:
           name: my-image-subst
           pattern: something/${my-image-setter}::${my-tag-setter}/nginxotherthing
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.setters.my-image-setter:
       x-k8s-cli:
         setter:
@@ -204,10 +204,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-image-subst"}
-      - name: sidecar
-        image: sidecar:1.7.9
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-image-subst"}
+        - name: sidecar
+          image: sidecar:1.7.9
  `,
 		},
 		{
@@ -225,10 +225,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -251,10 +251,10 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
 			out: `created substitution "my-nested-subst"`,
 			expectedOpenAPI: `
@@ -278,20 +278,20 @@ openAPI:
           name: my-image-subst
           pattern: ${my-image-setter}::${my-tag-setter}
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
     io.k8s.cli.substitutions.my-nested-subst:
       x-k8s-cli:
         substitution:
           name: my-nested-subst
           pattern: something/${my-image-subst}/${my-other-setter}
           values:
-          - marker: ${my-image-subst}
-            ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
-          - marker: ${my-other-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
+            - marker: ${my-image-subst}
+              ref: '#/definitions/io.k8s.cli.substitutions.my-image-subst'
+            - marker: ${my-other-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-other-setter'
     io.k8s.cli.setters.my-other-setter:
       x-k8s-cli:
         setter:
@@ -308,10 +308,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
-      - name: sidecar
-        image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
+        - name: nginx
+          image: something/nginx::1.7.9/nginxotherthing # {"$openapi":"my-nested-subst"}
+        - name: sidecar
+          image: nginx::1.7.9 # {"$openapi":"my-image-subst"}
  `,
 		},
 		{

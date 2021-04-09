@@ -120,10 +120,10 @@ openAPI:
           name: my-image
           pattern: something/${my-image-setter}::${my-tag-setter}/nginxotherthing
           values:
-          - marker: ${my-image-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
-          - marker: ${my-tag-setter}
-            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+            - marker: ${my-image-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+            - marker: ${my-tag-setter}
+              ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
  `,
 			err: `substitution with name "my-image" already exists, substitution and setter can't have same name`,
 		},
@@ -228,17 +228,17 @@ apiVersion: example.com/v1beta1
 kind: Example1
 spec:
   list:
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: example.com/v1beta1
 kind: Example2
 spec:
   list:
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -250,10 +250,10 @@ spec:
   template:
     spec:
       containers:
-      - name: sidecar
-        image: nginx:1.7.9
-      - name: nginx
-        image: otherspace/nginx:1.7.9
+        - name: sidecar
+          image: nginx:1.7.9
+        - name: nginx
+          image: otherspace/nginx:1.7.9
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -276,9 +276,9 @@ openAPI:
           name: list
           value: ""
           listValues:
-          - a
-          - b
-          - c
+            - a
+            - b
+            - c
           setBy: me
  `,
 			expectedResources: `
@@ -286,17 +286,17 @@ apiVersion: example.com/v1beta1
 kind: Example1
 spec:
   list: # {"$openapi":"list"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: example.com/v1beta1
 kind: Example2
 spec:
   list: # {"$openapi":"list"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -308,10 +308,10 @@ spec:
   template:
     spec:
       containers:
-      - name: sidecar
-        image: nginx:1.7.9
-      - name: nginx
-        image: otherspace/nginx:1.7.9
+        - name: sidecar
+          image: nginx:1.7.9
+        - name: nginx
+          image: otherspace/nginx:1.7.9
  `,
 		},
 
@@ -324,16 +324,16 @@ apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list:
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
 ---
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list:
-  - "c"
-  - "d"
+    - "c"
+    - "d"
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -352,9 +352,9 @@ apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list:
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
  `,
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -386,9 +386,9 @@ apiVersion: example.com/v1beta1
 kind: Example
 spec:
   list: # {"$openapi":"list"}
-  - "a"
-  - "b"
-  - "c"
+    - "a"
+    - "b"
+    - "c"
  `,
 			err: `field flag must be set for array type setters`,
 		},

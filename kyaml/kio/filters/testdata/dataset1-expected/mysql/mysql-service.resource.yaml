@@ -11,8 +11,8 @@ spec:
   selector:
     app: mysql
   ports:
-  - name: mysql
-    port: 3306
+    - name: mysql
+      port: 3306
   clusterIP: None
 ---
 apiVersion: v1
@@ -25,5 +25,5 @@ spec:
   selector:
     app: mysql
   ports:
-  - name: mysql
-    port: 3306
+    - name: mysql
+      port: 3306

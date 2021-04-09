@@ -29,25 +29,25 @@ func TestByteReadWriter(t *testing.T) {
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 			expectedOutput: `
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 		},
 
@@ -57,13 +57,13 @@ items:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 functionConfig:
   a: b # something
 `,
@@ -71,13 +71,13 @@ functionConfig:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 functionConfig:
   a: b # something
 `,
@@ -89,13 +89,13 @@ functionConfig:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 results:
   a: b # something
 `,
@@ -103,13 +103,13 @@ results:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 results:
   a: b # something
 `,
@@ -121,13 +121,13 @@ results:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 foo:
   a: b # something
 `,
@@ -135,13 +135,13 @@ foo:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 		},
 
@@ -151,25 +151,25 @@ items:
 apiVersion: v1
 kind: List
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 			expectedOutput: `
 apiVersion: v1
 kind: List
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 `,
 		},
 
@@ -234,13 +234,13 @@ metadata:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 functionConfig:
   a: b # something
 `,
@@ -263,13 +263,13 @@ spec:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 functionConfig:
   a: b # something
 `,
@@ -277,13 +277,13 @@ functionConfig:
 apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  spec:
-    replicas: 1
-- kind: Service
-  spec:
-    selectors:
-      foo: bar
+  - kind: Deployment
+    spec:
+      replicas: 1
+  - kind: Service
+    spec:
+      selectors:
+        foo: bar
 functionConfig:
   c: d
 `,

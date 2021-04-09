@@ -268,10 +268,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        args:
-        - a
-        - b # {"$ref": "#/definitions/io.k8s.cli.setters.arg1"}
+        - name: nginx
+          args:
+            - a
+            - b # {"$ref": "#/definitions/io.k8s.cli.setters.arg1"}
  `,
 			expected: `
 apiVersion: apps/v1
@@ -282,10 +282,10 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        args:
-        - a
-        - some value # {"$ref": "#/definitions/io.k8s.cli.setters.arg1"}`,
+        - name: nginx
+          args:
+            - a
+            - some value # {"$ref": "#/definitions/io.k8s.cli.setters.arg1"}`,
 		},
 		{
 			name:   "substitute-image-tag",
@@ -309,10 +309,10 @@ openAPI:
           name: image
           pattern: IMAGE_NAME:IMAGE_TAG
           values:
-          - marker: "IMAGE_NAME"
-            ref: "#/definitions/io.k8s.cli.setters.image-name"
-          - marker: "IMAGE_TAG"
-            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+            - marker: "IMAGE_NAME"
+              ref: "#/definitions/io.k8s.cli.setters.image-name"
+            - marker: "IMAGE_TAG"
+              ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `,
 			input: `
 apiVersion: apps/v1
@@ -323,8 +323,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 			expected: `
 apiVersion: apps/v1
@@ -335,8 +335,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
 		{
@@ -364,10 +364,10 @@ openAPI:
           name: image
           pattern: IMAGE_NAME:IMAGE_TAG
           values:
-          - marker: "IMAGE_NAME"
-            ref: "#/definitions/io.k8s.cli.setters.image-name"
-          - marker: "IMAGE_TAG"
-            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+            - marker: "IMAGE_NAME"
+              ref: "#/definitions/io.k8s.cli.setters.image-name"
+            - marker: "IMAGE_TAG"
+              ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `,
 			input: `
 apiVersion: apps/v1
@@ -378,8 +378,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 			expected: `
 apiVersion: apps/v1
@@ -390,8 +390,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: us.gcr.io/helloworld:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: us.gcr.io/helloworld:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
 		{
@@ -421,12 +421,12 @@ openAPI:
           name: key
           pattern: https://container.googleapis.com/v1/projects/PROJECT/locations/LOCATION/clusters/CLUSTER
           values:
-          - marker: "PROJECT"
-            ref: "#/definitions/io.k8s.cli.setters.project"
-          - marker: "LOCATION"
-            ref: "#/definitions/io.k8s.cli.setters.location"
-          - marker: "CLUSTER"
-            ref: "#/definitions/io.k8s.cli.setters.cluster"
+            - marker: "PROJECT"
+              ref: "#/definitions/io.k8s.cli.setters.project"
+            - marker: "LOCATION"
+              ref: "#/definitions/io.k8s.cli.setters.location"
+            - marker: "CLUSTER"
+              ref: "#/definitions/io.k8s.cli.setters.cluster"
 `,
 			input: `
 apiVersion: apps/v1
@@ -472,12 +472,12 @@ openAPI:
           name: key
           pattern: https://container.googleapis.com/v1/projects/PROJECT/locations/LOCATION/clusters/CLUSTER
           values:
-          - marker: "PROJECT"
-            ref: "#/definitions/io.k8s.cli.setters.project"
-          - marker: "LOCATION"
-            ref: "#/definitions/io.k8s.cli.setters.location"
-          - marker: "CLUSTER"
-            ref: "#/definitions/io.k8s.cli.setters.cluster"
+            - marker: "PROJECT"
+              ref: "#/definitions/io.k8s.cli.setters.project"
+            - marker: "LOCATION"
+              ref: "#/definitions/io.k8s.cli.setters.location"
+            - marker: "CLUSTER"
+              ref: "#/definitions/io.k8s.cli.setters.cluster"
 `,
 			input: `
 apiVersion: apps/v1
@@ -518,10 +518,10 @@ openAPI:
           name: image
           pattern: IMAGE_NAME:IMAGE_TAG
           values:
-          - marker: "IMAGE_NAME"
-            ref: "#/definitions/io.k8s.cli.setters.image-name"
-          - marker: "IMAGE_TAG"
-            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+            - marker: "IMAGE_NAME"
+              ref: "#/definitions/io.k8s.cli.setters.image-name"
+            - marker: "IMAGE_TAG"
+              ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `,
 			input: `
 apiVersion: apps/v1
@@ -532,8 +532,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: nginx:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 			expected: `
 apiVersion: apps/v1
@@ -544,8 +544,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: foo:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: foo:1.7.9 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
 		{
@@ -570,10 +570,10 @@ openAPI:
           name: image
           pattern: IMAGE_NAME:IMAGE_TAG
           values:
-          - marker: "IMAGE_NAME"
-            ref: "#/definitions/io.k8s.cli.setters.image-name"
-          - marker: "IMAGE_TAG"
-            ref: "#/definitions/io.k8s.cli.setters.image-tag"
+            - marker: "IMAGE_NAME"
+              ref: "#/definitions/io.k8s.cli.setters.image-name"
+            - marker: "IMAGE_TAG"
+              ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `,
 			input: `
 apiVersion: apps/v1
@@ -584,8 +584,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: a:a # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: a:a # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 			expected: `
 apiVersion: apps/v1
@@ -596,8 +596,8 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
  `,
 		},
 		{
@@ -630,9 +630,9 @@ metadata:
 spec:
   # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
   replicas:
-  - "1"
-  - "2"
-  - "3"
+    - "1"
+    - "2"
+    - "3"
  `,
 		},
 		{
@@ -665,9 +665,9 @@ metadata:
 spec:
   # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
   replicas:
-  - "1"
-  - "2"
-  - "3"
+    - "1"
+    - "2"
+    - "3"
  `,
 		},
 		{
@@ -794,9 +794,9 @@ metadata:
 spec:
   # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
   replicas:
-  - "1:"
-  - "2:"
-  - "3:"
+    - "1:"
+    - "2:"
+    - "3:"
  `,
 		},
 	}

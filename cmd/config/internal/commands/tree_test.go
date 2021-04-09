@@ -192,7 +192,7 @@ spec:
 	err = ioutil.WriteFile(filepath.Join(d, "Kustomization"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- f2.yaml
+  - f2.yaml
 `), 0600)
 	if !assert.NoError(t, err) {
 		return

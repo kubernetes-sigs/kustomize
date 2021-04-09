@@ -28,10 +28,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -53,10 +53,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.7.9
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.7.9
+          name: postgresdb
 `,
 		},
 		"complex type": {
@@ -66,8 +66,8 @@ metadata:
   name: pod
 spec:
   containers:
-  - image: busybox
-    name: myapp-container
+    - image: busybox
+      name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -104,8 +104,8 @@ metadata:
   name: pod
 spec:
   containers:
-  - image: busybox
-    name: myapp-container
+    - image: busybox
+      name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -115,8 +115,8 @@ spec:
   template:
     spec:
       containers:
-      - image: busybox
-        name: myapp-container
+        - image: busybox
+          name: myapp-container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -126,8 +126,8 @@ spec:
   template:
     spec:
       containers:
-      - image: busybox
-        name: myapp-container
+        - image: busybox
+          name: myapp-container
 `,
 		},
 		"from ConfigMap": {
@@ -200,18 +200,18 @@ spec:
         foo: bar
     spec:
       containers:
-      - name: command-demo-container
-        image: debian
-        command: ["printenv"]
-        args:
-        - example.com
-        - 8080
-      - name: busybox
-        image: busybox:latest
-        args:
-        - echo
-        - example.com
-        - 8080
+        - name: command-demo-container
+          image: debian
+          command: ["printenv"]
+          args:
+            - example.com
+            - 8080
+        - name: busybox
+          image: busybox:latest
+          args:
+            - echo
+            - example.com
+            - 8080
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -231,10 +231,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -244,10 +244,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -257,10 +257,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -280,10 +280,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - targets:
@@ -301,10 +301,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -314,10 +314,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -339,10 +339,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.7.9
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.7.9
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -352,10 +352,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 		},
 		"select by group and version": {
@@ -367,10 +367,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group-2/v2
 kind: Custom
@@ -380,10 +380,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group-3/v3
 kind: Custom
@@ -393,10 +393,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -416,10 +416,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group-2/v2
 kind: Custom
@@ -429,10 +429,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group-3/v3
 kind: Custom
@@ -442,10 +442,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.7.9
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.7.9
+          name: postgresdb
 `,
 		},
 		// regression test for missing metadata handling
@@ -454,10 +454,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group/v1
 kind: Custom
@@ -467,10 +467,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group/v1
 kind: Custom
@@ -480,10 +480,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -499,10 +499,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group/v1
 kind: Custom
@@ -512,10 +512,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: my-group/v1
 kind: Custom
@@ -525,10 +525,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.7.9
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.7.9
+          name: postgresdb
 `,
 		},
 		"reject 1": {
@@ -540,10 +540,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -553,10 +553,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -566,10 +566,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -593,10 +593,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.7.9
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.7.9
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -606,10 +606,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: Deployment
@@ -619,10 +619,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 		},
 		"reject 2": {
@@ -634,10 +634,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: StatefulSet
@@ -647,10 +647,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -673,10 +673,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: StatefulSet
@@ -686,10 +686,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: nginx:1.7.9
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: nginx:1.7.9
+          name: postgresdb
 `,
 		},
 		// the only difference in the inputs between this and the previous test
@@ -703,10 +703,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: StatefulSet
@@ -716,10 +716,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 			replacements: `replacements:
 - source:
@@ -742,10 +742,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 ---
 apiVersion: v1
 kind: StatefulSet
@@ -755,10 +755,10 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx:1.7.9
-        name: nginx-tagged
-      - image: postgres:1.8.0
-        name: postgresdb
+        - image: nginx:1.7.9
+          name: nginx-tagged
+        - image: postgres:1.8.0
+          name: postgresdb
 `,
 		},
 		"partial string replacement - replace": {

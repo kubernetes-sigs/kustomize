@@ -170,11 +170,11 @@ metadata:
   name: nginx-deployment
 spec:
   containers:
-  - name: nginx
-    image: nginx
-    volumeMounts:
     - name: nginx
-      mountPath: /usr/share/nginx
+      image: nginx
+      volumeMounts:
+        - name: nginx
+          mountPath: /usr/share/nginx
  `,
 			expected: `
 apiVersion: apps/v1
@@ -183,11 +183,11 @@ metadata:
   name: nginx-deployment
 spec:
   containers:
-  - name: nginx
-    image: nginx
-    volumeMounts:
     - name: nginx
-      mountPath: /usr/share/nginx # {"$openapi":"mountPath"}
+      image: nginx
+      volumeMounts:
+        - name: nginx
+          mountPath: /usr/share/nginx # {"$openapi":"mountPath"}
  `,
 		},
 		{

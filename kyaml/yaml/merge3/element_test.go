@@ -17,8 +17,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:1
+        - name: foo
+          image: foo:1
 `,
 		update: `
 apiVersion: apps/v1
@@ -27,10 +27,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:1
-      - name: baz
-        image: baz:2
+        - name: foo
+          image: foo:1
+        - name: baz
+          image: baz:2
 `,
 		local: `
 apiVersion: apps/v1
@@ -39,8 +39,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:1
+        - name: foo
+          image: foo:1
 `,
 		expected: `
 apiVersion: apps/v1
@@ -49,10 +49,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:1
-      - image: baz:2
-        name: baz
+        - name: foo
+          image: foo:1
+        - image: baz:2
+          name: baz
 `},
 
 	//
@@ -70,8 +70,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		local: `
 apiVersion: apps/v1
@@ -84,8 +84,8 @@ spec:
   template:
     spec:
       containers:
-      - image: foo:bar
-        name: foo
+        - image: foo:bar
+          name: foo
 `},
 
 	{
@@ -100,8 +100,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		local: `
 apiVersion: apps/v1
@@ -110,8 +110,8 @@ spec:
   template:
     spec:
       containers:
-      - name: baz
-        image: baz:bar
+        - name: baz
+          image: baz:bar
 `,
 		expected: `
 apiVersion: apps/v1
@@ -120,10 +120,10 @@ spec:
   template:
     spec:
       containers:
-      - name: baz
-        image: baz:bar
-      - image: foo:bar
-        name: foo
+        - name: baz
+          image: baz:bar
+        - image: foo:bar
+          name: foo
 `},
 
 	//
@@ -139,8 +139,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar`,
+        - name: foo
+          image: foo:bar`,
 		update: `
 apiVersion: apps/v1
 kind: Deployment
@@ -148,10 +148,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command:
-        - run.sh
+        - name: foo
+          image: foo:bar
+          command:
+            - run.sh
 `,
 		local: `
 apiVersion: apps/v1
@@ -164,9 +164,9 @@ spec:
   template:
     spec:
       containers:
-      - command:
-        - run.sh
-        name: foo
+        - command:
+            - run.sh
+          name: foo
 `},
 
 	//
@@ -181,10 +181,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command:
-        - run.sh
+        - name: foo
+          image: foo:bar
+          command:
+            - run.sh
 `,
 		update: `
 apiVersion: apps/v1
@@ -193,10 +193,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command:
-        - run2.sh
+        - name: foo
+          image: foo:bar
+          command:
+          - run2.sh
 `,
 		local: `
 apiVersion: apps/v1
@@ -209,9 +209,9 @@ spec:
   template:
     spec:
       containers:
-      - command:
-        - run2.sh
-        name: foo
+        - command:
+            - run2.sh
+          name: foo
 `},
 
 	//
@@ -226,9 +226,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `,
 		update: `
 apiVersion: apps/v1
@@ -237,9 +237,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		local: `
 apiVersion: apps/v1
@@ -248,9 +248,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `,
 		expected: `
 apiVersion: apps/v1
@@ -259,9 +259,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `},
 
 	//
@@ -275,8 +275,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -285,9 +285,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		local: `
 apiVersion: apps/v1
@@ -296,8 +296,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		expected: `
 apiVersion: apps/v1
@@ -306,9 +306,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `},
 
 	//
@@ -323,8 +323,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -333,9 +333,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		local: `
 apiVersion: apps/v1
@@ -344,9 +344,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `,
 		expected: `
 apiVersion: apps/v1
@@ -355,9 +355,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `},
 
 	//
@@ -388,8 +388,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		expected: `
 apiVersion: apps/v1
@@ -398,8 +398,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `},
 
 	//
@@ -414,8 +414,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -442,8 +442,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -459,8 +459,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		expected: `
 apiVersion: apps/v1
@@ -482,8 +482,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -499,9 +499,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `,
 		expected: `
 apiVersion: apps/v1
@@ -523,10 +523,10 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-      - name: baz
-        image: baz:bar
+        - name: foo
+          image: foo:bar
+        - name: baz
+          image: baz:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -535,8 +535,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		local: `
 apiVersion: apps/v1
@@ -545,11 +545,11 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
-      - name: baz
-        image: baz:bar
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
+        - name: baz
+          image: baz:bar
 `,
 		expected: `
 apiVersion: apps/v1
@@ -558,9 +558,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `},
 
 	//
@@ -575,8 +575,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -593,9 +593,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `,
 		expected: `
 apiVersion: apps/v1
@@ -617,8 +617,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		update: `
 apiVersion: apps/v1
@@ -634,9 +634,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run.sh']
 `,
 		expected: `
 apiVersion: apps/v1
@@ -657,7 +657,7 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
+        - name: foo
 `,
 		update: `
 kind: Deployment
@@ -665,8 +665,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        command: ['run2.sh']
+        - name: foo
+          command: ['run2.sh']
 `,
 		local: `
 kind: Deployment
@@ -674,8 +674,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		expected: `
 kind: Deployment
@@ -683,9 +683,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		infer: true,
 	},
@@ -702,7 +702,7 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
+        - name: foo
 `,
 		update: `
 apiVersion: apps/v1
@@ -711,8 +711,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        command: ['run2.sh']
+        - name: foo
+          command: ['run2.sh']
 `,
 		local: `
 apiVersion: apps/v1
@@ -721,8 +721,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
+        - name: foo
+          image: foo:bar
 `,
 		expected: `
 apiVersion: apps/v1
@@ -731,9 +731,9 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		infer: false,
 	},
@@ -750,7 +750,7 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
+        - name: foo
 `,
 		update: `
 apiVersion: custom
@@ -759,8 +759,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        command: ['run2.sh']
+        - name: foo
+          command: ['run2.sh']
 `,
 		local: `
 apiVersion: custom
@@ -769,8 +769,8 @@ spec:
   template:
     spec:
       containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
-      - name: foo # hell ow
-        image: foo:bar
+        - name: foo # hell ow
+          image: foo:bar
 `,
 		expected: `
 apiVersion: custom
@@ -779,9 +779,9 @@ spec:
   template:
     spec:
       containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
-      - name: foo # hell ow
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo # hell ow
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		infer: false,
 	},
@@ -798,7 +798,7 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
+        - name: foo
 `,
 		update: `
 apiVersion: custom
@@ -807,8 +807,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        command: ['run2.sh']
+        - name: foo
+          command: ['run2.sh']
 `,
 		local: `
 apiVersion: custom
@@ -818,8 +818,8 @@ spec:
     spec:
       # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
       containers:
-      - name: foo # hell ow
-        image: foo:bar
+        - name: foo # hell ow
+          image: foo:bar
 `,
 		expected: `
 apiVersion: custom
@@ -829,9 +829,9 @@ spec:
     spec:
       # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
       containers:
-      - name: foo # hell ow
-        image: foo:bar
-        command: ['run2.sh']
+        - name: foo # hell ow
+          image: foo:bar
+          command: ['run2.sh']
 `,
 		infer: false,
 	},
@@ -846,32 +846,32 @@ apiVersion: custom
 kind: Deployment
 spec:
   containers:
-  - name: foo
+    - name: foo
 `,
 		update: `
 apiVersion: custom
 kind: Deployment
 spec:
   containers:
-  - name: foo
-    command: ['run2.sh']
+    - name: foo
+      command: ['run2.sh']
 `,
 		local: `
 apiVersion: custom
 kind: Deployment
 spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
   containers:
-  - name: foo # hell ow
-    image: foo:bar
+    - name: foo # hell ow
+      image: foo:bar
 `,
 		expected: `
 apiVersion: custom
 kind: Deployment
 spec: # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
   containers:
-  - name: foo # hell ow
-    image: foo:bar
-    command: ['run2.sh']
+    - name: foo # hell ow
+      image: foo:bar
+      command: ['run2.sh']
 `,
 		infer: false,
 	},
@@ -886,15 +886,15 @@ apiVersion: custom
 kind: Deployment
 spec:
   containers:
-  - name: foo
+    - name: foo
 `,
 		update: `
 apiVersion: custom
 kind: Deployment
 spec:
   containers:
-  - name: foo
-    command: ['run2.sh']
+    - name: foo
+      command: ['run2.sh']
 `,
 		local: `
 apiVersion: custom
@@ -902,8 +902,8 @@ kind: Deployment
 # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
 spec:
   containers:
-  - name: foo # hell ow
-    image: foo:bar
+    - name: foo # hell ow
+      image: foo:bar
 `,
 		expected: `
 apiVersion: custom
@@ -911,9 +911,9 @@ kind: Deployment
 # {"$ref":"#/definitions/io.k8s.api.core.v1.PodSpec"}
 spec:
   containers:
-  - name: foo # hell ow
-    image: foo:bar
-    command: ['run2.sh']
+    - name: foo # hell ow
+      image: foo:bar
+      command: ['run2.sh']
 `,
 		infer: false,
 	},
@@ -934,10 +934,10 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
 `,
 		update: `
 apiVersion: apps/v1
@@ -946,11 +946,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-        - containerPort: 80
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+            - containerPort: 80
 `,
 		local: `
 apiVersion: apps/v1
@@ -959,10 +959,10 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
 `,
 		expected: `
 apiVersion: apps/v1
@@ -971,11 +971,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-        - containerPort: 80
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+            - containerPort: 80
 `},
 
 	//
@@ -993,10 +993,10 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
 `,
 		local: `
 apiVersion: apps/v1
@@ -1005,10 +1005,10 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 80
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 80
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1017,11 +1017,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 80
-        - containerPort: 8080
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 80
+            - containerPort: 8080
 `},
 
 	//
@@ -1036,10 +1036,10 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
 `,
 		update: `
 apiVersion: apps/v1
@@ -1048,12 +1048,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          name: 8080-port-update
-        - containerPort: 80
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              name: 8080-port-update
+            - containerPort: 80
 `,
 		local: `
 apiVersion: apps/v1
@@ -1062,11 +1062,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-        - containerPort: 80
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+            - containerPort: 80
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1075,12 +1075,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          name: 8080-port-update
-        - containerPort: 80
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              name: 8080-port-update
+            - containerPort: 80
 `},
 	//
 	// Test Case
@@ -1096,11 +1096,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		update: `
 apiVersion: apps/v1
@@ -1111,11 +1111,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
 `,
 		local: `
 apiVersion: apps/v1
@@ -1126,11 +1126,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1141,11 +1141,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
 `},
 	//
 	// Test Case
@@ -1161,11 +1161,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		update: `
 apiVersion: apps/v1
@@ -1176,11 +1176,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
 `,
 		local: `
 apiVersion: apps/v1
@@ -1191,11 +1191,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 80
-          protocol: HTTP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 80
+              protocol: HTTP
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1206,13 +1206,13 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 80
-          protocol: HTTP
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 80
+              protocol: HTTP
+            - containerPort: 8080
+              protocol: TCP
 `},
 
 	{
@@ -1226,12 +1226,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: foo
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: foo
 `,
 		update: `
 apiVersion: apps/v1
@@ -1242,12 +1242,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-          name: bar
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: bar
 `,
 		local: `
 apiVersion: apps/v1
@@ -1258,12 +1258,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-          name: foo
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: foo
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1274,12 +1274,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-          name: bar
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: bar
 `},
 
 	//
@@ -1294,11 +1294,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		update: `
 apiVersion: apps/v1
@@ -1307,13 +1307,13 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+            - containerPort: 8080
+              protocol: TCP
 `,
 		local: `
 apiVersion: apps/v1
@@ -1322,11 +1322,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1335,13 +1335,13 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+            - containerPort: 8080
+              protocol: TCP
 `},
 
 	//
@@ -1359,11 +1359,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		local: `
 apiVersion: apps/v1
@@ -1372,11 +1372,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1385,13 +1385,13 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8080
+              protocol: UDP
 `},
 
 	//
@@ -1408,12 +1408,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: original
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: original
 `,
 		update: `
 apiVersion: apps/v1
@@ -1424,15 +1424,15 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: original
-        - containerPort: 8080
-          protocol: TCP
-          name: updated
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: original
+            - containerPort: 8080
+              protocol: TCP
+              name: updated
 `,
 		local: `
 apiVersion: apps/v1
@@ -1443,15 +1443,15 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: original
-        - containerPort: 8080
-          protocol: HTTP
-          name: local
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: original
+            - containerPort: 8080
+              protocol: HTTP
+              name: local
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1462,18 +1462,18 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
-          name: original
-        - containerPort: 8080
-          protocol: HTTP
-          name: local
-        - containerPort: 8080
-          name: updated
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
+              name: original
+            - containerPort: 8080
+              protocol: HTTP
+              name: local
+            - containerPort: 8080
+              name: updated
+              protocol: TCP
 `},
 
 	{
@@ -1487,11 +1487,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: UDP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: UDP
 `,
 		update: `
 apiVersion: apps/v1
@@ -1502,11 +1502,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: TCP
 `,
 		local: `
 apiVersion: apps/v1
@@ -1517,11 +1517,11 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: HTTP
+          - image: test-image
+            name: test-deployment
+            ports:
+            - containerPort: 8080
+              protocol: HTTP
 `,
 		expected: `
 apiVersion: apps/v1
@@ -1532,12 +1532,12 @@ spec:
   template:
     spec:
       containers:
-      - image: test-image
-        name: test-deployment
-        ports:
-        - containerPort: 8080
-          protocol: HTTP
-        - containerPort: 8080
-          protocol: TCP
+        - image: test-image
+          name: test-deployment
+          ports:
+            - containerPort: 8080
+              protocol: HTTP
+            - containerPort: 8080
+              protocol: TCP
 `},
 }

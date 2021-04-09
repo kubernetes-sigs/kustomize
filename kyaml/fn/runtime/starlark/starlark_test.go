@@ -37,9 +37,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 # set the foo annotation on each resource
@@ -61,9 +61,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 		},
 		{
@@ -77,9 +77,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 def run(r):
@@ -101,9 +101,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 		},
 		{
@@ -117,9 +117,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 def run(r):
@@ -140,9 +140,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 		},
 		{
@@ -158,9 +158,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 # set the foo annotation on each resource
@@ -182,9 +182,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 		},
 		{
@@ -200,9 +200,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 # set the foo annotation on each resource
@@ -223,9 +223,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 		},
 		{
@@ -241,9 +241,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -253,9 +253,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 # set the foo annotation on each resource
@@ -277,9 +277,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -292,9 +292,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}`,
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}`,
 		},
 		{
 			name: "add_resource",
@@ -307,9 +307,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			script: `
 def run(r):
@@ -334,9 +334,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -384,9 +384,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			functionConfig: `
 kind: Script
@@ -414,9 +414,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			expectedFunctionConfig: `
 kind: Script
@@ -436,9 +436,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			functionConfig: `
 kind: Script
@@ -467,9 +467,9 @@ spec:
   template:
     spec:
       containers:
-      - name: nginx
-        # head comment
-        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+        - name: nginx
+          # head comment
+          image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 			expectedFunctionConfig: `
 kind: Script

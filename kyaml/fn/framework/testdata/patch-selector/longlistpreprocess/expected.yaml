@@ -13,8 +13,8 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: example/sidecar:b
+        - name: foo
+          image: example/sidecar:b
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -35,5 +35,5 @@ spec:
   template:
     spec:
       containers:
-      - name: foo
-        image: example/sidecar:b
+        - name: foo
+          image: example/sidecar:b

@@ -566,8 +566,8 @@ spec:
   template:
     spec:
       containers:
-      - name: mysql
-        image: mysql:1.7.9
+        - name: mysql
+          image: mysql:1.7.9
 ---
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
@@ -582,8 +582,8 @@ spec:
   template:
     spec:
       containers:
-      - name: storage
-        image: storage:1.7.7
+        - name: storage
+          image: storage:1.7.7
 `,
 		},
 		{
@@ -604,8 +604,8 @@ spec:
   template:
     spec:
       containers:
-      - name: mysql
-        image: mysql:1.7.9
+        - name: mysql
+          image: mysql:1.7.9
 `,
 		},
 		{
@@ -626,8 +626,8 @@ spec:
   template:
     spec:
       containers:
-      - name: storage
-        image: storage:1.7.7
+        - name: storage
+          image: storage:1.7.7
 `,
 		},
 	}

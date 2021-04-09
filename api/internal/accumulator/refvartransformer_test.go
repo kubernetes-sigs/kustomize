@@ -124,7 +124,7 @@ func TestRefVarTransformer(t *testing.T) {
 apiVersion: v1
 data:
   slice:
-  - 5
+    - 5
 kind: ConfigMap
 metadata:
   name: cm1

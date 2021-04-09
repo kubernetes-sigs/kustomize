@@ -868,14 +868,14 @@ kind: ClusterRole
 metadata:
   name: namespace-reader
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - watch
-  - list
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - watch
+      - list
 `
 	rm, err := rmF.NewResMapFromBytes([]byte(input))
 	if err != nil {
