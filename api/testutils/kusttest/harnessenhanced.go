@@ -4,6 +4,9 @@
 package kusttest_test
 
 import (
+	"io/ioutil"
+	"os"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/filesys"
@@ -33,34 +36,66 @@ type HarnessEnhanced struct {
 	// A file loader using the Harness.fSys to read test data.
 	ldr ifc.Loader
 
+	// If true, wipe the ifc.loader root (not the plugin loader root)
+	// as part of cleanup.
+	shouldWipeLdrRoot bool
+
 	// A plugin loader that loads plugins from a (real) file system.
 	pl *pLdr.Loader
 }
 
 func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
-	pte := newPluginTestEnv(t).set()
+	r := makeBaseEnhancedHarness(t)
+	r.Harness = MakeHarnessWithFs(t, filesys.MakeFsInMemory())
+	// Point the Harness's file loader to the root ('/')
+	// of the in-memory file system.
+	r.ResetLoaderRoot(filesys.Separator)
+	return r
+}
 
-	pc := types.EnabledPluginConfig(types.BploLoadFromFileSys)
-	pc.FnpLoadingOptions.EnableStar = true
-	p := provider.NewDefaultDepProvider()
-	resourceFactory := p.GetResourceFactory()
-	resmapFactory := resmap.NewFactory(resourceFactory)
+func MakeEnhancedHarnessWithTmpRoot(t *testing.T) *HarnessEnhanced {
+	r := makeBaseEnhancedHarness(t)
+	fSys := filesys.MakeFsOnDisk()
+	r.Harness = MakeHarnessWithFs(t, fSys)
+	tmpDir, err := ioutil.TempDir("", "kust-testing-")
+	if err != nil {
+		panic("test harness cannot make tmp dir: " + err.Error())
+	}
+	r.ldr, err = fLdr.NewLoader(fLdr.RestrictionRootOnly, tmpDir, fSys)
+	if err != nil {
+		panic("test harness cannot make ldr at tmp dir: " + err.Error())
+	}
+	r.shouldWipeLdrRoot = true
+	return r
+}
 
-	result := &HarnessEnhanced{
-		Harness: MakeHarness(t),
-		pte:     pte,
-		rf:      resmapFactory,
-		// The plugin configs are always located on disk, regardless of the test harness's FS
-		pl: pLdr.NewLoader(pc, resmapFactory, filesys.MakeFsOnDisk())}
-
-	// Point the file loader to the root ('/') of the in-memory file system.
-	result.ResetLoaderRoot(filesys.Separator)
-
-	return result
+func makeBaseEnhancedHarness(t *testing.T) *HarnessEnhanced {
+	rf := resmap.NewFactory(
+		provider.NewDefaultDepProvider().GetResourceFactory())
+	return &HarnessEnhanced{
+		pte: newPluginTestEnv(t).set(),
+		rf:  rf,
+		pl: pLdr.NewLoader(
+			types.EnabledPluginConfig(types.BploLoadFromFileSys),
+			rf,
+			// Plugin configs are always located on disk,
+			// regardless of the test harness's FS
+			filesys.MakeFsOnDisk())}
 }
 
 func (th *HarnessEnhanced) Reset() {
+	if th.shouldWipeLdrRoot {
+		if !strings.HasPrefix(th.ldr.Root(), os.TempDir()) {
+			// sanity check.
+			panic("something strange about th.ldr.Root() = " + th.ldr.Root())
+		}
+		os.RemoveAll(th.ldr.Root())
+	}
 	th.pte.reset()
+}
+
+func (th *HarnessEnhanced) GetPluginConfig() *types.PluginConfig {
+	return th.pl.Config()
 }
 
 func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
@@ -105,7 +140,7 @@ func (th *HarnessEnhanced) LoadAndRunGenerator(
 	}
 	rm, err := g.Generate()
 	if err != nil {
-		th.t.Fatalf("Err: %v", err)
+		th.t.Fatalf("generate err: %v", err)
 	}
 	rm.RemoveBuildAnnotations()
 	return rm
