@@ -8,9 +8,8 @@ spec:
       initContainers:
       - name: init-command
         image: debian
-        command:
-        - "echo $(WORDPRESS_SERVICE)"
-        - "echo $(MYSQL_SERVICE)"
+        command: ["/bin/sh"]
+        args: ["-c", "echo $(WORDPRESS_SERVICE); echo $(MYSQL_SERVICE)"]
       containers:
       - name: wordpress
         env:
