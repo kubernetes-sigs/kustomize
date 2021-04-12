@@ -3,6 +3,11 @@
 
 package types
 
+type HelmConfig struct {
+	Enabled bool
+	Command string
+}
+
 // PluginConfig holds plugin configuration.
 type PluginConfig struct {
 	// PluginRestrictions distinguishes plugin restrictions.
@@ -13,11 +18,17 @@ type PluginConfig struct {
 
 	// FnpLoadingOptions sets the way function-based plugin behaviors.
 	FnpLoadingOptions FnPluginLoadingOptions
+
+	// HelmConfig contains metadata needed for allowing and running helm.
+	HelmConfig HelmConfig
 }
 
 func EnabledPluginConfig(b BuiltinPluginLoadingOptions) (pc *PluginConfig) {
 	pc = MakePluginConfig(PluginRestrictionsNone, b)
 	pc.FnpLoadingOptions.EnableStar = true
+	pc.HelmConfig.Enabled = true
+	// If this command is not on PATH, tests needing it should skip.
+	pc.HelmConfig.Command = "helmV3"
 	return
 }
 

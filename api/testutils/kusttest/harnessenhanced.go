@@ -6,6 +6,7 @@ package kusttest_test
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -81,6 +82,11 @@ func makeBaseEnhancedHarness(t *testing.T) *HarnessEnhanced {
 			// Plugin configs are always located on disk,
 			// regardless of the test harness's FS
 			filesys.MakeFsOnDisk())}
+}
+
+func (th *HarnessEnhanced) ErrIfNoHelm() error {
+	_, err := exec.LookPath(th.GetPluginConfig().HelmConfig.Command)
+	return err
 }
 
 func (th *HarnessEnhanced) GetRoot() string {

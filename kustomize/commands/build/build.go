@@ -23,7 +23,9 @@ var theFlags struct {
 	enable     struct {
 		plugins        bool
 		managedByLabel bool
+		helm           bool
 	}
+	helmCommand    string
 	loadRestrictor string
 	reorderOutput  string
 	fnOptions      types.FnPluginLoadingOptions
@@ -102,6 +104,7 @@ func NewCmdBuild(
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
+	AddFlagEnableHelm(cmd.Flags())
 	return cmd
 }
 
@@ -132,7 +135,10 @@ func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
 		c := types.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		c.FnpLoadingOptions = theFlags.fnOptions
 		kOpts.PluginConfig = c
+	} else {
+		kOpts.PluginConfig.HelmConfig.Enabled = theFlags.enable.helm
 	}
+	kOpts.PluginConfig.HelmConfig.Command = theFlags.helmCommand
 	kOpts.AddManagedbyLabel = isManagedByLabelEnabled()
 	return kOpts
 }
