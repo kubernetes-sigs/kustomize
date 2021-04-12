@@ -54,7 +54,6 @@ func MakeFakeFs(td []testData) filesys.FileSystem {
 
 func makeLoader() *fileLoader {
 	return NewFileLoaderAtRoot(MakeFakeFs(testCases))
-
 }
 
 func TestLoaderLoad(t *testing.T) {
