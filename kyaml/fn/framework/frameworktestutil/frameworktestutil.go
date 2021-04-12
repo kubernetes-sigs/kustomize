@@ -111,8 +111,8 @@ func (rc *CommandResultsChecker) compare(t *testing.T, path string) {
 	args := []string{rc.ConfigInputFilename}
 
 	expectedOutput, expectedError := getExpected(t, rc.ExpectedOutputFilename, rc.ExpectedErrorFilename)
-	if expectedError == "" && expectedOutput == "" {
-		// missing expected
+	if expectedError == "" && expectedOutput == "" && !rc.UpdateExpectedFromActual {
+		// missing expected and UpdateExpectedFromActual == false, return and skip this test
 		return
 	}
 	require.NoError(t, err)
@@ -251,8 +251,8 @@ func (rc *ProcessorResultsChecker) compare(t *testing.T, path string) {
 	require.NoError(t, err)
 
 	expectedOutput, expectedError := getExpected(t, rc.ExpectedOutputFilename, rc.ExpectedErrorFilename)
-	if expectedError == "" && expectedOutput == "" {
-		// missing expected
+	if expectedError == "" && expectedOutput == "" && !rc.UpdateExpectedFromActual {
+		// missing expected and UpdateExpectedFromActual == false, return and skip this test
 		return
 	}
 
