@@ -83,6 +83,10 @@ func makeBaseEnhancedHarness(t *testing.T) *HarnessEnhanced {
 			filesys.MakeFsOnDisk())}
 }
 
+func (th *HarnessEnhanced) GetRoot() string {
+	return th.ldr.Root()
+}
+
 func (th *HarnessEnhanced) Reset() {
 	if th.shouldWipeLdrRoot {
 		if !strings.HasPrefix(th.ldr.Root(), os.TempDir()) {
