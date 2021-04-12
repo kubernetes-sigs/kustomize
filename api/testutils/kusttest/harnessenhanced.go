@@ -59,6 +59,10 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 	return result
 }
 
+func (th *HarnessEnhanced) GetRoot() string {
+	return th.ldr.Root()
+}
+
 func (th *HarnessEnhanced) Reset() {
 	th.pte.reset()
 }
