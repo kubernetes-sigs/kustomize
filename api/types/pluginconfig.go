@@ -15,8 +15,10 @@ type PluginConfig struct {
 	FnpLoadingOptions FnPluginLoadingOptions
 }
 
-func EnabledPluginConfig(b BuiltinPluginLoadingOptions) *PluginConfig {
-	return MakePluginConfig(PluginRestrictionsNone, b)
+func EnabledPluginConfig(b BuiltinPluginLoadingOptions) (pc *PluginConfig) {
+	pc = MakePluginConfig(PluginRestrictionsNone, b)
+	pc.FnpLoadingOptions.EnableStar = true
+	return
 }
 
 func DisabledPluginConfig() *PluginConfig {
