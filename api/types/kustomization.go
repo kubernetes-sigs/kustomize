@@ -129,9 +129,14 @@ type Kustomization struct {
 	// the map will have a suffix hash generated from its contents.
 	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
 
+	// HelmGlobals contains helm configuration that isn't chart specific.
+	HelmGlobals *HelmGlobals `json:"helmGlobals,omitempty" yaml:"helmGlobals,omitempty"`
+
+	// HelmCharts is a list of helm chart configuration instances.
+	HelmCharts []HelmChart `json:"helmCharts,omitempty" yaml:"helmCharts,omitempty"`
+
 	// HelmChartInflationGenerator is a list of helm chart configurations.
-	// The resulting resource is a normal operand rendered from
-	// a remote chart by `helm template`
+	// Deprecated.  Auto-converted to HelmGlobals and HelmCharts.
 	HelmChartInflationGenerator []HelmChartArgs `json:"helmChartInflationGenerator,omitempty" yaml:"helmChartInflationGenerator,omitempty"`
 
 	// GeneratorOptions modify behavior of all ConfigMap and Secret generators.
@@ -185,6 +190,15 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 			k.SecretGenerator[i].EnvSource = ""
 		}
 	}
+	charts, globals := SplitHelmParameters(k.HelmChartInflationGenerator)
+	if k.HelmGlobals == nil {
+		if globals.ChartHome != "" || globals.ConfigHome != "" {
+			k.HelmGlobals = &globals
+		}
+	}
+	k.HelmCharts = append(k.HelmCharts, charts...)
+	// Wipe it for the fix command.
+	k.HelmChartInflationGenerator = nil
 }
 
 // FixKustomizationPreMarshalling fixes things

@@ -1,34 +1,30 @@
 package main_test
 
-/*
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-//add tests for https://github.com/kubernetes-sigs/kustomize/pull/3713 if you plan to re-enable tests
-
 func TestHelmChartInflationGenerator(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
 	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
 
 	rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
-  name: myMap
-chartName: minecraft
-chartRepoUrl: https://charts.helm.sh/stable
-chartVersion: v1.2.0
-releaseName: test
-releaseNamespace: testNamespace
+  name: myMc
+name: minecraft
+version: 3.1.3
+repo: https://itzg.github.io/minecraft-server-charts
+releaseName: moria
 `)
 
 	th.AssertActualEqualsExpected(rm, `
@@ -38,40 +34,23 @@ data:
 kind: Secret
 metadata:
   labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
+    app: moria-minecraft
+    chart: minecraft-3.1.3
     heritage: Helm
-    release: test
-  name: test-minecraft
+    release: moria
+  name: moria-minecraft
 type: Opaque
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  annotations:
-    volume.alpha.kubernetes.io/storage-class: default
-  labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
-    heritage: Helm
-    release: test
-  name: test-minecraft-datadir
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  annotations: {}
   labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
+    app: moria-minecraft
+    chart: minecraft-3.1.3
     heritage: Helm
-    release: test
-  name: test-minecraft
+    release: moria
+  name: moria-minecraft
 spec:
   ports:
   - name: minecraft
@@ -79,93 +58,35 @@ spec:
     protocol: TCP
     targetPort: minecraft
   selector:
-    app: test-minecraft
-  type: LoadBalancer
+    app: moria-minecraft
+  type: ClusterIP
 `)
 }
 
-func TestHelmChartInflationGeneratorWithValues(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-
-	tempDirConfirmed, err := filesys.NewTmpConfirmedDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	tempDir := string(tempDirConfirmed)
-	defer os.RemoveAll(tempDir)
-	valuesPath := path.Join(tempDir, "values.yaml")
-	ioutil.WriteFile(valuesPath, []byte(`
-minecraftServer:
-  eula: TRUE
-`), 0644)
-
-	rm := th.LoadAndRunGenerator(fmt.Sprintf(`
-apiVersion: builtin
-kind: HelmChartInflationGenerator
-metadata:
-  name: myMap
-chartName: minecraft
-chartRepoUrl: https://charts.helm.sh/stable
-chartVersion: v1.2.0
-helmBin: helm
-helmHome: %s
-chartHome: %s
-releaseName: test
-releaseNamespace: testNamespace
-values: %s
-valuesLocal:
-  resources:
-    limits:
-      memory: 512Mi
-      cpu: 1000m
-    requests:
-      memory: 512Mi
-      cpu: 200m
-`, tempDir, tempDir, valuesPath))
-
-	th.AssertActualEqualsExpected(rm, `
+const expectedInflationFmt = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
 kind: Secret
 metadata:
   labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
+    app: moria-minecraft
+    chart: minecraft-3.1.3
     heritage: Helm
-    release: test
-  name: test-minecraft
+    release: moria
+  name: moria-minecraft
 type: Opaque
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  annotations:
-    volume.alpha.kubernetes.io/storage-class: default
-  labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
-    heritage: Helm
-    release: test
-  name: test-minecraft-datadir
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  annotations: {}
   labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
+    app: moria-minecraft
+    chart: minecraft-3.1.3
     heritage: Helm
-    release: test
-  name: test-minecraft
+    release: moria
+  name: moria-minecraft
 spec:
   ports:
   - name: minecraft
@@ -173,28 +94,48 @@ spec:
     protocol: TCP
     targetPort: minecraft
   selector:
-    app: test-minecraft
+    app: moria-minecraft
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    app: moria-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: moria
+  name: moria-minecraft-rcon
+spec:
+  ports:
+  - name: rcon
+    port: 25575
+    protocol: TCP
+    targetPort: rcon
+  selector:
+    app: moria-minecraft
   type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: test-minecraft
-    chart: minecraft-1.2.0
+    app: moria-minecraft
+    chart: minecraft-3.1.3
     heritage: Helm
-    release: test
-  name: test-minecraft
+    release: moria
+  name: moria-minecraft
 spec:
   selector:
     matchLabels:
-      app: test-minecraft
+      app: moria-minecraft
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: test-minecraft
+        app: moria-minecraft
     spec:
       containers:
       - env:
@@ -203,9 +144,9 @@ spec:
         - name: TYPE
           value: VANILLA
         - name: VERSION
-          value: 1.14.4
+          value: LATEST
         - name: DIFFICULTY
-          value: easy
+          value: %s
         - name: WHITELIST
           value: ""
         - name: OPS
@@ -222,7 +163,7 @@ spec:
           value: "true"
         - name: ENABLE_COMMAND_BLOCK
           value: "true"
-        - name: FORCE_gameMode
+        - name: FORCE_GAMEMODE
           value: "false"
         - name: GENERATE_STRUCTURES
           value: "true"
@@ -257,47 +198,48 @@ spec:
         - name: ONLINE_MODE
           value: "true"
         - name: MEMORY
-          value: 512M
+          value: 1024M
         - name: JVM_OPTS
           value: ""
         - name: JVM_XX_OPTS
           value: ""
+        - name: ENABLE_RCON
+          value: "true"
+        - name: RCON_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: rcon-password
+              name: moria-minecraft
         image: itzg/minecraft-server:latest
         imagePullPolicy: Always
         livenessProbe:
-          exec:
-            command:
-            - mcstatus
-            - localhost:25565
-            - status
           failureThreshold: 10
           initialDelaySeconds: 30
           periodSeconds: 5
           successThreshold: 1
+          tcpSocket:
+            port: 25565
           timeoutSeconds: 1
-        name: test-minecraft
+        name: moria-minecraft
         ports:
         - containerPort: 25565
           name: minecraft
           protocol: TCP
+        - containerPort: 25575
+          name: rcon
+          protocol: TCP
         readinessProbe:
-          exec:
-            command:
-            - mcstatus
-            - localhost:25565
-            - status
           failureThreshold: 10
           initialDelaySeconds: 30
           periodSeconds: 5
           successThreshold: 1
+          tcpSocket:
+            port: 25565
           timeoutSeconds: 1
         resources:
-          limits:
-            cpu: 1000m
-            memory: 512Mi
           requests:
-            cpu: 200m
-            memory: 512Mi
+            cpu: %dm
+            memory: %dMi
         volumeMounts:
         - mountPath: /data
           name: datadir
@@ -305,9 +247,110 @@ spec:
         fsGroup: 2000
         runAsUser: 1000
       volumes:
-      - name: datadir
-        persistentVolumeClaim:
-          claimName: test-minecraft-datadir
+      - emptyDir: {}
+        name: datadir
+`
+
+func TestHelmChartInflationGeneratorWithValuesInlineOverride(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myMc
+name: minecraft
+version: 3.1.3
+repo: https://itzg.github.io/minecraft-server-charts
+releaseName: moria
+valuesInline:
+  minecraftServer:
+    eula: true
+    difficulty: hard
+    rcon:
+      enabled: true
 `)
+	th.AssertActualEqualsExpected(
+		rm, fmt.Sprintf(expectedInflationFmt,
+			"hard", // difficulty
+			500,    // cpu
+			512,    // memory
+		))
 }
-*/
+
+func TestHelmChartInflationGeneratorWithLocalValuesFile(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	th.WriteF(filepath.Join(th.GetRoot(), "myValues.yaml"), `
+minecraftServer:
+  eula: true
+  difficulty: peaceful
+  rcon:
+    enabled: true
+resources:
+  requests:
+    cpu: 888m
+    memory: 666Mi
+`)
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myMc
+name: minecraft
+version: 3.1.3
+repo: https://itzg.github.io/minecraft-server-charts
+releaseName: moria
+valuesFile: myValues.yaml
+`)
+	th.AssertActualEqualsExpected(
+		rm, fmt.Sprintf(expectedInflationFmt,
+			"peaceful", // difficulty
+			888,        // cpu
+			666,        // memory
+		))
+}
+
+func TestHelmChartInflationGeneratorWithInLineReplace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myMc
+name: minecraft
+version: 3.1.3
+repo: https://itzg.github.io/minecraft-server-charts
+releaseName: moria
+valuesInline:
+  minecraftServer:
+    eula: true
+    difficulty: OMG_PLEASE_NO
+    rcon:
+      enabled: true
+  resources:
+    requests:
+      cpu: 555m
+      memory: 111Mi
+valuesMerge: replace
+`)
+	th.AssertActualEqualsExpected(
+		rm, fmt.Sprintf(expectedInflationFmt,
+			"OMG_PLEASE_NO", // difficulty
+			555,             // cpu
+			111,             // memory
+		))
+}
