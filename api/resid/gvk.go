@@ -119,9 +119,12 @@ func (x Gvk) Equals(o Gvk) bool {
 
 // An attempt to order things to help k8s, e.g.
 // a Service should come before things that refer to it.
-// Namespace should be first.
+// Admission webhooks are first since they could possibly validate / mutate any
+// of the following kinds.
 // In some cases order just specified to provide determinism.
 var orderFirst = []string{
+	"MutatingWebhookConfiguration",
+	"ValidatingWebhookConfiguration",
 	"Namespace",
 	"ResourceQuota",
 	"StorageClass",
@@ -145,10 +148,8 @@ var orderFirst = []string{
 	"CronJob",
 	"PodDisruptionBudget",
 }
-var orderLast = []string{
-	"MutatingWebhookConfiguration",
-	"ValidatingWebhookConfiguration",
-}
+var orderLast = []string{}
+
 var typeOrders = func() map[string]int {
 	m := map[string]int{}
 	for i, n := range orderFirst {

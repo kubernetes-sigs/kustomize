@@ -4,8 +4,9 @@
 package main_test
 
 import (
-	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"testing"
+
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 func TestLegacyOrderTransformer(t *testing.T) {
@@ -20,6 +21,11 @@ metadata:
   name: notImportantHere
 `, `
 apiVersion: v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: pomegranate
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: papaya
@@ -28,11 +34,6 @@ apiVersion: v1
 kind: Role
 metadata:
   name: banana
----
-apiVersion: v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: pomegranate
 ---
 apiVersion: v1
 kind: LimitRange
@@ -67,6 +68,11 @@ metadata:
 
 	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
 apiVersion: v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: pomegranate
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: apple
@@ -105,10 +111,5 @@ apiVersion: v1
 kind: Ingress
 metadata:
   name: durian
----
-apiVersion: v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: pomegranate
 `)
 }
