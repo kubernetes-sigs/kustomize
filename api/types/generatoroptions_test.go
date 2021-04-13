@@ -34,6 +34,7 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				Labels:                map[string]string{"pet": "dog"},
 				Annotations:           map[string]string{"fruit": "apple"},
 				DisableNameSuffixHash: false,
+				Immutable:             false,
 			},
 		},
 		{
@@ -47,6 +48,7 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				Labels:                map[string]string{"pet": "dog"},
 				Annotations:           map[string]string{"fruit": "apple"},
 				DisableNameSuffixHash: false,
+				Immutable:             false,
 			},
 		},
 		{
@@ -76,42 +78,52 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 					"tesla": "Y",
 				},
 				DisableNameSuffixHash: false,
+				Immutable:             false,
 			},
 		},
 		{
 			name: "global disable trumps local",
 			local: &GeneratorOptions{
 				DisableNameSuffixHash: false,
+				Immutable:             false,
 			},
 			global: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 			expected: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 		},
 		{
 			name: "local disable works",
 			local: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 			global: &GeneratorOptions{
 				DisableNameSuffixHash: false,
+				Immutable:             false,
 			},
 			expected: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 		},
 		{
 			name: "everyone wants disable",
 			local: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 			global: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 			expected: &GeneratorOptions{
 				DisableNameSuffixHash: true,
+				Immutable:             true,
 			},
 		},
 	}
