@@ -163,6 +163,7 @@ data:
 							"river": "Missouri",
 							"city":  "Iowa City",
 						},
+						Immutable: true,
 					},
 				},
 			},
@@ -183,6 +184,7 @@ data:
   b: y
   c: Hello World
   d: "true"
+immutable: true
 `,
 			},
 		},

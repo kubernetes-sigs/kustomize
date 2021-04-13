@@ -170,6 +170,7 @@ data:
 							"river": "Missouri",
 							"city":  "Iowa City",
 						},
+						Immutable: true,
 					},
 				},
 			},
@@ -191,6 +192,7 @@ data:
   b: eQ==
   c: SGVsbG8gV29ybGQ=
   d: dHJ1ZQ==
+immutable: true
 `,
 			},
 		},
