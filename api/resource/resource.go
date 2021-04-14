@@ -57,6 +57,10 @@ func (r *Resource) AsRNode() *kyaml.RNode {
 	return r.node.Copy()
 }
 
+func (r *Resource) Node() *kyaml.RNode {
+	return r.node
+}
+
 func (r *Resource) ResetPrimaryData(incoming *Resource) {
 	r.node = incoming.node.Copy()
 }
