@@ -82,23 +82,17 @@ Here are some example urls
 ```
 DEMO_HOME=$(mktemp -d)
 
-cat <<EOF >$DEMO_HOME/kustomization.yaml
+cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 resources:
-
 # a repo with a root level kustomization.yaml
 - github.com/Liujingfang1/mysql
-
 # a repo with a root level kustomization.yaml on branch test
 - github.com/Liujingfang1/mysql?ref=test
-
 # a subdirectory in a repo on branch repoUrl2
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2
-
 # a subdirectory in a repo on commit `7050a45134e9848fca214ad7e7007e96e5042c03`
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03
-
 # a subdirectory in a remote archive
 - https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master
-
 EOF
 ```
