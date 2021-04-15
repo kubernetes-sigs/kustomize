@@ -145,7 +145,7 @@ diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
 ```
 
 If you prefer YAML to JSON, the patch can be expressed
-in YAML format (neverthless following [JSON patch] rules):
+in YAML format (nevertheless following [JSON patch] rules):
 
 <!-- @writeYamlPatch @testAgainstLatestRelease -->
 ```
