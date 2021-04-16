@@ -28,6 +28,7 @@ const (
 	SecretGenerator
 	ValueAddTransformer
 	HelmChartInflationGenerator
+	KustomizeInflator
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
@@ -59,6 +60,7 @@ var GeneratorFactories = map[BuiltinPluginType]func() resmap.GeneratorPlugin{
 	ConfigMapGenerator:          builtins.NewConfigMapGeneratorPlugin,
 	SecretGenerator:             builtins.NewSecretGeneratorPlugin,
 	HelmChartInflationGenerator: builtins.NewHelmChartInflationGeneratorPlugin,
+	KustomizeInflator:           builtins.NewKustomizeInflatorPlugin,
 }
 
 var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin{
