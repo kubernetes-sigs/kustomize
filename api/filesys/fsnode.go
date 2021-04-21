@@ -38,8 +38,8 @@ type fsNode struct {
 	// if this node is a file, this is the content.
 	content []byte
 
-	// if offset is nil the file is open and buf tracks
-	// the current file contents and offset.
+	// if offset is not nil the file is open and it tracks
+	// the current file offset.
 	offset *int
 }
 
