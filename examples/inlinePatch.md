@@ -5,7 +5,7 @@
 
 A kustomization file supports patching in three ways:
 - patchesStrategicMerge: A list of patch files where each file is parsed as a [Strategic Merge Patch].
-- patchesJSON6902: A list of patches and associated targetes, where each file is parsed as a [JSON Patch] and can only be applied to one target resource.
+- patchesJSON6902: A list of patches and associated targets, where each file is parsed as a [JSON Patch] and can only be applied to one target resource.
 - patches: A list of patches and their associated targets. The patch can be applied to multiple objects. It auto detects whether the patch is a [Strategic Merge Patch] or [JSON Patch].
 
 Since 3.2.0, all three support inline patch, where the patch content is put inside the kustomization file as a single string. With this feature, no separate patch files need to be created.
