@@ -163,6 +163,7 @@ func (n *fsNode) AddFile(
 }
 
 func (n *fsNode) addDir(path string) (result *fsNode, err error) {
+
 	parent := n
 	dName, subDirName := mySplit(path)
 	if dName != "" {
@@ -390,6 +391,9 @@ func (n *fsNode) ReadFile(path string) (c []byte, err error) {
 	}
 	if result == nil {
 		return nil, fmt.Errorf("cannot find '%s' to read it", path)
+	}
+	if result.isNodeADir() {
+		return nil, fmt.Errorf("cannot read content from non-file '%s'", n.Path())
 	}
 	c = make([]byte, len(result.content))
 	copy(c, result.content)
