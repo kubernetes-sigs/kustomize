@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -782,7 +782,7 @@ metadata:
   name: nginx-deployment
 spec:
   # {"$ref": "#/definitions/io.k8s.cli.setters.args"}
-  replicas: 
+  replicas:
     - 4
     - 5
  `,
