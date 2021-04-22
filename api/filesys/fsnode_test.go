@@ -5,7 +5,9 @@ package filesys
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"sort"
@@ -799,5 +801,54 @@ func TestCleanedAbs(t *testing.T) {
 		if name != item.name {
 			t.Fatalf("%s; expected name=%s, got '%s'", item.what, item.name, name)
 		}
+	}
+}
+
+func TestFileOps(t *testing.T) {
+	const path = "foo.txt"
+	content := strings.Repeat("longest content", 100)
+
+	fs := MakeFsInMemory()
+	f, err := fs.Create(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, err := fs.Open(path); err == nil {
+		t.Fatalf("expected already opened error, got nil")
+	}
+	if _, err := fmt.Fprint(f, content); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if err := f.Close(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := f.Close(); err == nil {
+		t.Fatalf("expected already closed error, got nil")
+	}
+
+	f, err = fs.Open(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer f.Close()
+
+	for {
+		buf := make([]byte, rand.Intn(10))
+		n, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if content[:n] != string(buf[:n]) {
+			t.Fatalf("unexpected read: expected %q got %q", content[:n], buf[:n])
+		}
+		content = content[n:]
+		if err != io.EOF {
+			continue
+		}
+		if len(content) == 0 {
+			break
+		}
+		t.Fatalf("unexpected EOF: remaining %d bytes", len(content))
 	}
 }
