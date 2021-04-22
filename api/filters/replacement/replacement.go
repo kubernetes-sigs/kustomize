@@ -13,7 +13,7 @@ import (
 )
 
 type Filter struct {
-	Replacements []types.Replacement
+	Replacements []types.Replacement `json:"replacements,omitempty" yaml:"replacements,omitempty"`
 }
 
 // Filter replaces values of targets with values from sources
