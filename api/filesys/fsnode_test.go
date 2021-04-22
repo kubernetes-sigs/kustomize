@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"testing/iotest"
 )
 
 const content = `
@@ -218,7 +219,7 @@ func TestFileOps(t *testing.T) {
 	if _, err := fs.Open(path); err == nil {
 		t.Fatalf("expected already opened error, got nil")
 	}
-	if _, err := fmt.Fprintln(f, content); err != nil {
+	if _, err := fmt.Fprint(f, content); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -235,22 +236,8 @@ func TestFileOps(t *testing.T) {
 	}
 	defer f.Close()
 
-	buf := make([]byte, 3)
-	if n, err := f.Read(buf); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if n != len(buf) {
-		t.Fatalf("expected reading 3 bytes, read %d", n)
-	}
-	if string(buf) != "lon" {
-		t.Fatalf("expected reading 'lon', got '%s'", buf)
-	}
-	if n, err := f.Read(buf); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if n != len(buf) {
-		t.Fatalf("expected reading 3 bytes, read %d", n)
-	}
-	if string(buf) != "ges" {
-		t.Fatalf("expected reading 'lon', got '%s'", buf)
+	if err := iotest.TestReader(f, []byte(content)); err != nil {
+		t.Fatalf("test reader failed: %v", err)
 	}
 }
 

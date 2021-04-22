@@ -358,7 +358,17 @@ func (n *fsNode) Size() int64 {
 }
 
 // Open implements FileSystem.
-// Open opens the node for reading (just marks it).
+// Open opens the node in read-write mode and sets the offset its start.
+// Writing right after opening the file will replace the original content
+// and move the offset forward, as with a file opened with O_RDWR | O_CREATE.
+//
+// As an example, let's consider a file with content "content":
+// - open: sets offset to start, content is "content"
+// - write "@": offset increases by one, the content is now "@ontent"
+// - read the rest: since offset is 1, the read operation returns "ontent"
+// - write "$": offset is at EOF, so "$" is appended and content is now "@ontent$"
+// - read the rest: returns 0 bytes and EOF
+// - close: the content is still "@ontent$"
 func (n *fsNode) Open(path string) (File, error) {
 	result, err := n.Find(path)
 	if err != nil {
