@@ -5,6 +5,9 @@ package filesys
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"sort"
@@ -91,7 +94,6 @@ func TestMakeFsInMemory(t *testing.T) {
 func runBasicOperations(
 	t *testing.T, tName string, isFSysRooted bool,
 	cases []pathCase, fSys FileSystem) {
-	buff := make([]byte, 500)
 	for _, c := range cases {
 		err := fSys.WriteFile(c.arg, []byte(content))
 		if c.errStr != "" {
@@ -128,26 +130,40 @@ func runBasicOperations(
 		if fi.Name() != c.name {
 			t.Fatalf("%s; expected name '%s', got '%s'", c.what, c.name, fi.Name())
 		}
-		count, err := f.Read(buff)
+		buff, err := ioutil.ReadAll(f)
 		if err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
 		}
-		if string(buff[:count]) != content {
+		if string(buff) != content {
 			t.Fatalf("%s; unexpected buff '%s'", c.what, buff)
 		}
-		count, err = f.Write([]byte(shortContent))
+		count, err := f.Write([]byte(shortContent))
 		if err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
 		}
 		if count != len(shortContent) {
 			t.Fatalf("%s; unexpected count: %d", c.what, len(shortContent))
 		}
+		if err := f.Close(); err != nil {
+			t.Fatalf("%s; unexpected error: %v", c.what, err)
+		}
+		stuff, err = fSys.ReadFile(c.path)
+		if err != nil {
+			t.Fatalf("%s; unexpected error: %v", c.what, err)
+		}
+		both := content + shortContent
+		if string(stuff) != both {
+			t.Fatalf("%s; unexpected content '%s', expected '%s'", c.what, stuff, both)
+		}
+		if err := fSys.WriteFile(c.path, []byte(shortContent)); err != nil {
+			t.Fatalf("%s; unexpected error: %v", c.what, err)
+		}
 		stuff, err = fSys.ReadFile(c.path)
 		if err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
 		}
 		if string(stuff) != shortContent {
-			t.Fatalf("%s; unexpected content '%s'", c.what, stuff)
+			t.Fatalf("%s; unexpected content '%s', expected '%s'", c.what, stuff, shortContent)
 		}
 	}
 
@@ -589,6 +605,7 @@ func TestGlob(t *testing.T) {
 }
 
 func assertEqualStringSlices(t *testing.T, expected, actual []string, message string) {
+	t.Helper()
 	if len(expected) != len(actual) {
 		t.Fatalf(
 			"%s; unequal sizes; len(expected)=%d, len(actual)=%d\n%+v\n%+v\n",
@@ -784,5 +801,54 @@ func TestCleanedAbs(t *testing.T) {
 		if name != item.name {
 			t.Fatalf("%s; expected name=%s, got '%s'", item.what, item.name, name)
 		}
+	}
+}
+
+func TestFileOps(t *testing.T) {
+	const path = "foo.txt"
+	content := strings.Repeat("longest content", 100)
+
+	fs := MakeFsInMemory()
+	f, err := fs.Create(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, err := fs.Open(path); err == nil {
+		t.Fatalf("expected already opened error, got nil")
+	}
+	if _, err := fmt.Fprint(f, content); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if err := f.Close(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := f.Close(); err == nil {
+		t.Fatalf("expected already closed error, got nil")
+	}
+
+	f, err = fs.Open(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer f.Close()
+
+	for {
+		buf := make([]byte, rand.Intn(10))
+		n, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if content[:n] != string(buf[:n]) {
+			t.Fatalf("unexpected read: expected %q got %q", content[:n], buf[:n])
+		}
+		content = content[n:]
+		if err != io.EOF {
+			continue
+		}
+		if len(content) == 0 {
+			break
+		}
+		t.Fatalf("unexpected EOF: remaining %d bytes", len(content))
 	}
 }

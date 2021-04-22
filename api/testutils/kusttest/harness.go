@@ -42,27 +42,36 @@ func (th Harness) GetFSys() filesys.FileSystem {
 }
 
 func (th Harness) WriteK(path string, content string) {
-	th.fSys.WriteFile(
+	err := th.fSys.WriteFile(
 		filepath.Join(
 			path,
 			konfig.DefaultKustomizationFileName()), []byte(`
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `+content))
+	if err != nil {
+		th.t.Fatalf("unexpected error while writing Kustomization to %s: %v", path, err)
+	}
 }
 
 func (th Harness) WriteC(path string, content string) {
-	th.fSys.WriteFile(
+	err := th.fSys.WriteFile(
 		filepath.Join(
 			path,
 			konfig.DefaultKustomizationFileName()), []byte(`
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 `+content))
+	if err != nil {
+		th.t.Fatalf("unexpected error while writing Component to %s: %v", path, err)
+	}
 }
 
 func (th Harness) WriteF(path string, content string) {
-	th.fSys.WriteFile(path, []byte(content))
+	err := th.fSys.WriteFile(path, []byte(content))
+	if err != nil {
+		th.t.Fatalf("unexpected error while writing file to %s: %v", path, err)
+	}
 }
 
 func (th Harness) MakeDefaultOptions() krusty.Options {
