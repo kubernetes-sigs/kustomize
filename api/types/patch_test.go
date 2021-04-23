@@ -9,7 +9,7 @@ import (
 
 func TestPatchEquals(t *testing.T) {
 	selector := Selector{
-		KrmId: KrmId{
+		ResId: resid.ResId{
 			Gvk: resid.Gvk{
 				Group:   "group",
 				Version: "version",
@@ -40,7 +40,7 @@ func TestPatchEquals(t *testing.T) {
 				Path:  "foo",
 				Patch: "bar",
 				Target: &Selector{
-					KrmId: KrmId{
+					ResId: resid.ResId{
 						Gvk: resid.Gvk{
 							Group:   "group",
 							Version: "version",
@@ -57,7 +57,7 @@ func TestPatchEquals(t *testing.T) {
 				Path:  "foo",
 				Patch: "bar",
 				Target: &Selector{
-					KrmId: KrmId{
+					ResId: resid.ResId{
 						Gvk: resid.Gvk{
 							Group:   "group",
 							Version: "version",

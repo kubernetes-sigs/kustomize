@@ -61,13 +61,13 @@ func TestFindPatchTargets(t *testing.T) {
 	}{
 		"select_01": {
 			target: types.Selector{
-				KrmId: types.KrmId{Name: "name.*"},
+				ResId: resid.ResId{Name: "name.*"},
 			},
 			count: 3,
 		},
 		"select_02": {
 			target: types.Selector{
-				KrmId:              types.KrmId{Name: "name.*"},
+				ResId:              resid.ResId{Name: "name.*"},
 				AnnotationSelector: "foo=bar",
 			},
 			count: 2,
@@ -80,7 +80,7 @@ func TestFindPatchTargets(t *testing.T) {
 		},
 		"select_04": {
 			target: types.Selector{
-				KrmId: types.KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Kind: "Kind1",
 					},
@@ -91,31 +91,31 @@ func TestFindPatchTargets(t *testing.T) {
 		},
 		"select_05": {
 			target: types.Selector{
-				KrmId: types.KrmId{Name: "NotMatched"},
+				ResId: resid.ResId{Name: "NotMatched"},
 			},
 			count: 0,
 		},
 		"select_06": {
 			target: types.Selector{
-				KrmId: types.KrmId{Name: ""},
+				ResId: resid.ResId{Name: ""},
 			},
 			count: 4,
 		},
 		"select_07": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "default"},
+				ResId: resid.ResId{Namespace: "default"},
 			},
 			count: 2,
 		},
 		"select_08": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: ""},
+				ResId: resid.ResId{Namespace: ""},
 			},
 			count: 4,
 		},
 		"select_09": {
 			target: types.Selector{
-				KrmId: types.KrmId{
+				ResId: resid.ResId{
 					Namespace: "default",
 					Name:      "name.*",
 					Gvk: resid.Gvk{
@@ -127,55 +127,55 @@ func TestFindPatchTargets(t *testing.T) {
 		},
 		"select_10": {
 			target: types.Selector{
-				KrmId: types.KrmId{Name: "^name.*"},
+				ResId: resid.ResId{Name: "^name.*"},
 			},
 			count: 3,
 		},
 		"select_11": {
 			target: types.Selector{
-				KrmId: types.KrmId{Name: "name.*$"},
+				ResId: resid.ResId{Name: "name.*$"},
 			},
 			count: 3,
 		},
 		"select_12": {
 			target: types.Selector{
-				KrmId: types.KrmId{Name: "^name.*$"},
+				ResId: resid.ResId{Name: "^name.*$"},
 			},
 			count: 3,
 		},
 		"select_13": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "^def.*"},
+				ResId: resid.ResId{Namespace: "^def.*"},
 			},
 			count: 2,
 		},
 		"select_14": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "def.*$"},
+				ResId: resid.ResId{Namespace: "def.*$"},
 			},
 			count: 2,
 		},
 		"select_15": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "^def.*$"},
+				ResId: resid.ResId{Namespace: "^def.*$"},
 			},
 			count: 2,
 		},
 		"select_16": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "default"},
+				ResId: resid.ResId{Namespace: "default"},
 			},
 			count: 2,
 		},
 		"select_17": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "NotMatched"},
+				ResId: resid.ResId{Namespace: "NotMatched"},
 			},
 			count: 0,
 		},
 		"select_18": {
 			target: types.Selector{
-				KrmId: types.KrmId{Namespace: "ns1"},
+				ResId: resid.ResId{Namespace: "ns1"},
 			},
 			count: 1,
 		},

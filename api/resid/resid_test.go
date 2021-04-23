@@ -360,6 +360,100 @@ var ids = []ResId{
 	},
 }
 
+func TestResIdIsSelected(t *testing.T) {
+	type selectable struct {
+		id             ResId
+		expectSelected bool
+	}
+	var testCases = []struct {
+		selector    ResId
+		selectables []selectable
+	}{
+		{
+			selector: ResId{
+				Namespace: "X",
+				Name:      "nm",
+				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+			},
+			selectables: []selectable{
+				{
+					id: ResId{
+						Namespace: "X",
+						Name:      "nm",
+						Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+					},
+					expectSelected: true,
+				},
+				{
+					id: ResId{
+						Namespace: "x",
+						Name:      "nm",
+						Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+					},
+					expectSelected: false,
+				},
+				{
+					id: ResId{
+						Name: "nm",
+						Gvk:  Gvk{Group: "g", Version: "v", Kind: "k"},
+					},
+					expectSelected: false,
+				},
+			},
+		},
+		{
+			selector: ResId{
+				/* Namespace wildcard */
+				Name: "nm",
+				Gvk:  Gvk{Group: "g" /* Version wildcard */, Kind: "k"},
+			},
+			selectables: []selectable{
+				{
+					id: ResId{
+						Namespace: "X",
+						Name:      "nm",
+						Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+					},
+					expectSelected: true,
+				},
+				{
+					id: ResId{
+						Namespace: "x",
+						Name:      "nm",
+						Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+					},
+					expectSelected: true,
+				},
+				{
+					id: ResId{
+						Name: "nm",
+						Gvk:  Gvk{Group: "g", Version: "VVV", Kind: "k"},
+					},
+					expectSelected: true,
+				},
+			},
+		},
+	}
+
+	for _, tst := range testCases {
+		for _, pair := range tst.selectables {
+			if pair.id.IsSelectedBy(tst.selector) {
+				if !pair.expectSelected {
+					t.Fatalf(
+						"expected id %s to NOT be selected by %s",
+						pair.id, tst.selector)
+				}
+			} else {
+				if pair.expectSelected {
+					t.Fatalf(
+						"expected id %s to be selected by %s",
+						pair.id, tst.selector)
+				}
+			}
+		}
+	}
+}
+
 func TestFromString(t *testing.T) {
 	for _, id := range ids {
 		newId := FromString(id.String())

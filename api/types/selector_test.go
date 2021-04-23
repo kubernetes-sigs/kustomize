@@ -15,7 +15,7 @@ func TestSelectorRegexMatchGvk(t *testing.T) {
 	}{
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Group:   "group",
 						Version: "version",
@@ -32,7 +32,7 @@ func TestSelectorRegexMatchGvk(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Group:   "group",
 						Version: "",
@@ -49,7 +49,7 @@ func TestSelectorRegexMatchGvk(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Group:   "group",
 						Version: "version",
@@ -66,7 +66,7 @@ func TestSelectorRegexMatchGvk(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Group:   "group",
 						Version: "version",
@@ -83,7 +83,7 @@ func TestSelectorRegexMatchGvk(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Group:   "g.*",
 						Version: "\\d+",
@@ -100,7 +100,7 @@ func TestSelectorRegexMatchGvk(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Gvk: resid.Gvk{
 						Group:   "g.*",
 						Version: "\\d+",
@@ -137,7 +137,7 @@ func TestSelectorRegexMatchName(t *testing.T) {
 	}{
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Name:      "foo",
 					Namespace: "bar",
 				},
@@ -147,7 +147,7 @@ func TestSelectorRegexMatchName(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Name:      "foo",
 					Namespace: "bar",
 				},
@@ -157,7 +157,7 @@ func TestSelectorRegexMatchName(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Name: "f.*",
 				},
 			},
@@ -166,7 +166,7 @@ func TestSelectorRegexMatchName(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Name: "b.*",
 				},
 			},
@@ -194,7 +194,7 @@ func TestSelectorRegexMatchNamespace(t *testing.T) {
 	}{
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Name:      "bar",
 					Namespace: "foo",
 				},
@@ -204,7 +204,7 @@ func TestSelectorRegexMatchNamespace(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Name:      "foo",
 					Namespace: "bar",
 				},
@@ -214,7 +214,7 @@ func TestSelectorRegexMatchNamespace(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Namespace: "f.*",
 				},
 			},
@@ -223,7 +223,7 @@ func TestSelectorRegexMatchNamespace(t *testing.T) {
 		},
 		{
 			S: Selector{
-				KrmId: KrmId{
+				ResId: resid.ResId{
 					Namespace: "b.*",
 				},
 			},

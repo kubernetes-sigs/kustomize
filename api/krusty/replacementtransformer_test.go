@@ -68,8 +68,7 @@ resources:
 replacements:
 - path: replacement.yaml
 `)
-	th.WriteF("replacement.yaml",
-		`
+	th.WriteF("replacement.yaml", `
 source: 
   kind: Deployment
   fieldPath: spec.template.spec.containers.0.image
@@ -115,8 +114,7 @@ func TestReplacementTransformerWithDiamondShape(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteF("base/deployment.yaml",
-		`
+	th.WriteF("base/deployments.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -150,21 +148,18 @@ spec:
       - image: nginx:newtagB
         name: nginx
 `)
-	th.WriteF("base/kustomization.yaml",
-		`
+	th.WriteK("base", `
 resources:
-- deployment.yaml
+- deployments.yaml
 `)
-	th.WriteF("a/kustomization.yaml",
-		`
+	th.WriteK("a", `
 namePrefix: a-
 resources:
 - ../base
 replacements:
 - path: replacement.yaml
 `)
-	th.WriteF("a/replacement.yaml",
-		`
+	th.WriteF("a/replacement.yaml", `
 source:
   name: a-sourceA
   fieldPath: spec.template.spec.containers.0.image
@@ -174,16 +169,14 @@ targets:
   fieldPaths:
   - spec.template.spec.containers.[name=nginx].image
 `)
-	th.WriteF("b/kustomization.yaml",
-		`
+	th.WriteK("b", `
 namePrefix: b-
 resources:
 - ../base
 replacements:
 - path: replacement.yaml
 `)
-	th.WriteF("b/replacement.yaml",
-		`
+	th.WriteF("b/replacement.yaml", `
 source:
   name: b-sourceB
   fieldPath: spec.template.spec.containers.0.image
@@ -193,14 +186,13 @@ targets:
   fieldPaths:
   - spec.template.spec.containers.[name=nginx].image
 `)
-	th.WriteF("combined/kustomization.yaml",
-		`
+	th.WriteK(".", `
 resources:
-- ../a
-- ../b
+- a
+- b
 `)
 
-	m := th.Run("combined", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
 kind: Deployment
