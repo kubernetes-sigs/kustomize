@@ -1,15 +1,14 @@
 aliases:
   kustomize-admins:
+    - knverey
     - monopole
-    - pwittrock
   kustomize-maintainers:
     - droot
     - justinsb
     - liujingfang1
-    - mengqiy
     - monopole
-    - pwittrock
     - mortent
-    - phanimarupaka
-    - Shell32-Natsu
     - natasha41575
+    - phanimarupaka
+    - pwittrock
+    - Shell32-Natsu
