@@ -90,6 +90,13 @@ func (id ResId) GvknEquals(o ResId) bool {
 	return id.Name == o.Name && id.Gvk.Equals(o.Gvk)
 }
 
+// IsSelectedBy returns true if self is selected by the argument.
+func (id ResId) IsSelectedBy(selector ResId) bool {
+	return (selector.Name == "" || selector.Name == id.Name) &&
+		(selector.Namespace == "" || selector.IsNsEquals(id)) &&
+		id.Gvk.IsSelected(&selector.Gvk)
+}
+
 // Equals returns true if the other id matches
 // namespace/Group/Version/Kind/name.
 func (id ResId) Equals(o ResId) bool {

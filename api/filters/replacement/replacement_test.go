@@ -269,7 +269,7 @@ spec:
   - select:
       kind: Deployment
 `,
-			expectedErr: "more than one match for source ~G_~V_Deployment",
+			expectedErr: "multiple matches for selector ~G_~V_Deployment|~X|~N",
 		},
 		"replacement has no source": {
 			input: `apiVersion: v1
