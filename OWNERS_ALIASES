@@ -5,11 +5,13 @@ aliases:
   kustomize-maintainers:
     - droot
     - justinsb
-    - liujingfang1
-    - mengqiy
+    - knverey
     - monopole
-    - pwittrock
     - mortent
-    - phanimarupaka
-    - Shell32-Natsu
     - natasha41575
+    - phanimarupaka
+    - pwittrock
+    - Shell32-Natsu
+# emeritus
+#    - liujingfang1
+#    - mengqiy
