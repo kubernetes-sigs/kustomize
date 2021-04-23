@@ -228,7 +228,7 @@ func demandOneMatch(
 	if len(r) > 1 {
 		return nil, fmt.Errorf("multiple matches for %s %s", s, id)
 	}
-	return nil, fmt.Errorf("no matches for %sId %s", s, id)
+	return nil, fmt.Errorf("no matches for %s %s", s, id)
 }
 
 // GroupedByCurrentNamespace implements ResMap.GroupByCurrentNamespace
