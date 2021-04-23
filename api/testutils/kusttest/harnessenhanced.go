@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -91,6 +92,12 @@ func (th *HarnessEnhanced) ErrIfNoHelm() error {
 
 func (th *HarnessEnhanced) GetRoot() string {
 	return th.ldr.Root()
+}
+
+func (th *HarnessEnhanced) MkDir(path string) string {
+	dir := filepath.Join(th.ldr.Root(), path)
+	th.GetFSys().Mkdir(dir)
+	return dir
 }
 
 func (th *HarnessEnhanced) Reset() {
