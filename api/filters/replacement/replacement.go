@@ -43,8 +43,8 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 			t.FieldPaths = []string{types.DefaultReplacementFieldPath}
 		}
 		for _, n := range nodes {
-			nodeId := getKrmId(n)
-			if t.Select.KrmId.Match(nodeId) && !rejectId(t.Reject, nodeId) {
+			id := makeResId(n)
+			if id.IsSelectedBy(t.Select.ResId) && !rejectId(t.Reject, id) {
 				err := applyToNode(n, value, t)
 				if err != nil {
 					return nil, err
@@ -55,9 +55,9 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 	return nodes, nil
 }
 
-func rejectId(rejects []*types.Selector, nodeId *types.KrmId) bool {
+func rejectId(rejects []*types.Selector, id *resid.ResId) bool {
 	for _, r := range rejects {
-		if r.KrmId.Match(nodeId) {
+		if id.IsSelectedBy(r.ResId) {
 			return true
 		}
 	}
@@ -152,32 +152,33 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yaml.RNode, error) {
 	var matches []*yaml.RNode
 	for _, n := range nodes {
-		if selector.KrmId.Match(getKrmId(n)) {
+		if makeResId(n).IsSelectedBy(selector.ResId) {
 			if len(matches) > 0 {
-				return nil, fmt.Errorf("more than one match for source %v", selector)
+				return nil, fmt.Errorf(
+					"multiple matches for selector %s", selector)
 			}
 			matches = append(matches, n)
 		}
 	}
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("found no matches for source %v", selector)
+		return nil, fmt.Errorf("nothing selected by %s", selector)
 	}
 	return matches[0], nil
 }
 
-func getKrmId(n *yaml.RNode) *types.KrmId {
+// makeResId makes a ResId from an RNode.
+func makeResId(n *yaml.RNode) *resid.ResId {
 	ns, err := n.GetNamespace()
 	if err != nil {
 		// Resource has no metadata (no apiVersion, kind, nor metadata field).
-		// In this case, it cannot be selected.
-		return &types.KrmId{}
+		return nil
 	}
 	apiVersion := n.Field(yaml.APIVersionField)
 	var group, version string
 	if apiVersion != nil {
 		group, version = resid.ParseGroupVersion(yaml.GetValue(apiVersion.Value))
 	}
-	return &types.KrmId{
+	return &resid.ResId{
 		Gvk:       resid.Gvk{Group: group, Version: version, Kind: n.GetKind()},
 		Name:      n.GetName(),
 		Namespace: ns,
