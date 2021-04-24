@@ -1,7 +1,0 @@
-wget <log-file-url> -O log
-go build .
-./log-parser log >out
-cat out | grep "kind \`" | cut -d\` -f2 | tail -n 50
-cat out | grep "kind \`" | awk '{print $6}' | tail -n 50
-cat out | grep "feature \`" | grep -v "\`resources\`" | grep -v -e "\`apiVersion\`" | grep -v -e "\`apiversion\`" | cut -d\` -f2
-cat out | grep "feature \`" | grep -v "\`resources\`" | grep -v -e "\`apiVersion\`" | grep -v -e "\`apiversion\`" | awk '{print $6}'
