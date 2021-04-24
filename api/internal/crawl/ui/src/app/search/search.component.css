@@ -1,8 +1,0 @@
-.json_query > * {
-  width: 100%;
-  font-family: monospace;
-}
-
-mat-expansion-panel-header {
-  padding: 20px;
-}
