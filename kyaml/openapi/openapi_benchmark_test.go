@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/go-openapi/spec"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 )
 

@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-openapi/spec"
 	"github.com/spf13/cobra"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"

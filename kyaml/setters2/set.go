@@ -8,10 +8,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-openapi/spec"
-	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/validate"
 	goyaml "gopkg.in/yaml.v3"
+	"k8s.io/kube-openapi/pkg/validation/spec"
+	"k8s.io/kube-openapi/pkg/validation/strfmt"
+	"k8s.io/kube-openapi/pkg/validation/validate"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
