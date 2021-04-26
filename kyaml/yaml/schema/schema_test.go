@@ -6,8 +6,8 @@ package schema_test
 import (
 	"testing"
 
-	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	. "sigs.k8s.io/kustomize/kyaml/yaml/schema"
