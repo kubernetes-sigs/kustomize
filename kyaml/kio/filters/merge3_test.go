@@ -44,6 +44,7 @@ func TestMerge3_Merge(t *testing.T) {
 		OriginalPath: filepath.Join(datadir, "dataset1"),
 		UpdatedPath:  filepath.Join(datadir, "dataset1-remoteupdates"),
 		DestPath:     filepath.Join(dir, "dataset1"),
+		Matcher:      &filters.DefaultGVKNNMatcher{MergeOnPath: false},
 	}.Merge()
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -89,7 +90,6 @@ func TestMerge3_Merge_path(t *testing.T) {
 		OriginalPath: filepath.Join(datadir, "dataset1"),
 		UpdatedPath:  filepath.Join(datadir, "dataset1-remoteupdates"),
 		DestPath:     filepath.Join(dir, "dataset1"),
-		MergeOnPath:  true,
 	}.Merge()
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -135,6 +135,7 @@ func TestMerge3_Merge_fail(t *testing.T) {
 		OriginalPath: filepath.Join(datadir, "dataset1"),
 		UpdatedPath:  filepath.Join(datadir, "dataset1-remoteupdates"),
 		DestPath:     filepath.Join(dir, "dataset1"),
+		Matcher:      &filters.DefaultGVKNNMatcher{MergeOnPath: false},
 	}.Merge()
 	if !assert.Error(t, err) {
 		t.FailNow()

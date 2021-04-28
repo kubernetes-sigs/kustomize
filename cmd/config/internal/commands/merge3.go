@@ -46,12 +46,13 @@ type Merge3Runner struct {
 	path     bool
 }
 
-func (r *Merge3Runner) runE(c *cobra.Command, args []string) error {
+func (r *Merge3Runner) runE(_ *cobra.Command, _ []string) error {
+	matcher := filters.DefaultGVKNNMatcher{MergeOnPath: r.path}
 	err := filters.Merge3{
 		OriginalPath: r.ancestor,
 		UpdatedPath:  r.fromDir,
 		DestPath:     r.toDir,
-		MergeOnPath:  r.path,
+		Matcher:      &matcher,
 	}.Merge()
 	if err != nil {
 		return err
