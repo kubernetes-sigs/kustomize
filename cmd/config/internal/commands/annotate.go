@@ -102,10 +102,9 @@ func (r *AnnotateRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		// return err if there is only package
 		if !r.RecurseSubPackages {
 			return err
-		} else {
-			// print error message and continue if there are multiple packages to annotate
-			fmt.Fprintf(w, "%s\n", err.Error())
 		}
+		// print error message and continue if there are multiple packages to annotate
+		fmt.Fprintf(w, "%s\n", err.Error())
 	} else {
 		fmt.Fprint(w, "added annotations in the package\n")
 	}
