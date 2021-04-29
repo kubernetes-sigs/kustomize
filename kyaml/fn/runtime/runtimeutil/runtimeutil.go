@@ -238,15 +238,18 @@ func (c *FunctionFilter) setComments(nodes []*yaml.RNode) error {
 }
 
 func (c *FunctionFilter) doResults(r *kio.ByteReader) error {
-	// Print results to stdout in human readable format if results file is not configured
-	if c.ResultsFile == "" && r.Results != nil {
+	if r.Results == nil {
+		return nil
+	}
+
+	if c.ResultsFile == "" {
+		// Print results to stdout in human readable format if results file is not configured
 		err := printResults(r.Results, os.Stdout)
 		if err != nil {
 			return err
 		}
-	}
-	// Write the results to a file if configured to do so
-	if c.ResultsFile != "" && r.Results != nil {
+	} else {
+		// Write the results to a file if configured to do so
 		results, err := r.Results.String()
 		if err != nil {
 			return err
@@ -257,9 +260,7 @@ func (c *FunctionFilter) doResults(r *kio.ByteReader) error {
 		}
 	}
 
-	if r.Results != nil {
-		c.results = r.Results
-	}
+	c.results = r.Results
 	return nil
 }
 
