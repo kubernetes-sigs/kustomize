@@ -55,7 +55,7 @@ items:
     replicas: 0
 `), Writer: out}
 	err := framework.Execute(p, source)
-	assert.EqualError(t, err, "[error] v1/Deployment/default/tester .spec."+
+	assert.EqualError(t, err, "[error] /path/to/deployment.yaml v1/Deployment/default/tester .spec."+
 		"Replicas: bad value for replicas")
 	assert.Equal(t, 1, err.(*framework.Result).ExitCode())
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1

@@ -4,6 +4,7 @@
 package runtimeutil
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -1511,4 +1512,54 @@ metadata:
 		fn := GetFunctionSpec(cfg)
 		assert.Equal(t, tc.expected, *NewContainerEnvFromStringSlice(fn.Container.Env))
 	}
+}
+
+func TestPrintResults(t *testing.T) {
+	resNode, _ := yaml.Parse(`
+name: search-replace
+items:
+  - message: Mutated field value to "my-nginx"
+    severity: info
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        namespace: my-space
+        name: my-deployment
+    field:
+      path: spec.selector.matchLabels.app
+    file:
+      path: path/to/deployment.yaml
+  - message: Mutated field value to "my-nginx"
+    severity: info
+    resourceRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        namespace: my-space
+        name: my-deployment
+    field:
+      path: spec.template.metadata.labels.app
+    file:
+      path: path/to/deployment.yaml
+  - message: Mutated field value to "my-nginx"
+    severity: info
+    resourceRef:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        namespace: my-space
+        name: my-svc
+    field:
+      path: spec.selector.app
+    file:
+      path: path/to/svc.yaml`)
+
+	out := &bytes.Buffer{}
+	err := printResults(resNode, out)
+	assert.NoError(t, err)
+	assert.Equal(t, `[info] path/to/deployment.yaml apps/v1/Deployment/my-space/my-deployment spec.selector.matchLabels.app: Mutated field value to "my-nginx"
+[info] path/to/deployment.yaml apps/v1/Deployment/my-space/my-deployment spec.template.metadata.labels.app: Mutated field value to "my-nginx"
+[info] path/to/svc.yaml v1/Service/my-space/my-svc spec.selector.app: Mutated field value to "my-nginx"
+`, out.String())
 }

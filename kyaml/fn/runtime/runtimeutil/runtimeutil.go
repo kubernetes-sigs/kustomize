@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -237,6 +238,13 @@ func (c *FunctionFilter) setComments(nodes []*yaml.RNode) error {
 }
 
 func (c *FunctionFilter) doResults(r *kio.ByteReader) error {
+	// Print results to stdout in human readable format if results file is not configured
+	if c.ResultsFile == "" && r.Results != nil {
+		err := printResults(r.Results, os.Stdout)
+		if err != nil {
+			return err
+		}
+	}
 	// Write the results to a file if configured to do so
 	if c.ResultsFile != "" && r.Results != nil {
 		results, err := r.Results.String()
@@ -251,6 +259,23 @@ func (c *FunctionFilter) doResults(r *kio.ByteReader) error {
 
 	if r.Results != nil {
 		c.results = r.Results
+	}
+	return nil
+}
+
+// printResults prints the results yaml node to writer in human readable format
+func printResults(results *yaml.RNode, w io.Writer) error {
+	res := framework.Result{}
+	rs, err := results.String()
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal([]byte(rs), &res)
+	if err != nil {
+		return err
+	}
+	for _, item := range res.Items {
+		fmt.Fprintf(w, "%s\n", item.String())
 	}
 	return nil
 }

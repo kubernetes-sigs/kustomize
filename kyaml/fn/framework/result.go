@@ -44,7 +44,7 @@ type ResultItem struct {
 func (i ResultItem) String() string {
 	identifier := i.ResourceRef.GetIdentifier()
 	idString := strings.Join([]string{identifier.GetAPIVersion(), identifier.GetKind(), identifier.GetNamespace(), identifier.GetName()}, "/")
-	return fmt.Sprintf("[%s] %s %s: %s", i.Severity, idString, i.Field.Path, i.Message)
+	return fmt.Sprintf("[%s] %s %s %s: %s", i.Severity, i.File.Path, idString, i.Field.Path, i.Message)
 }
 
 // File references a file containing a resource
