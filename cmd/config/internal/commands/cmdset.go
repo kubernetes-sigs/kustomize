@@ -128,10 +128,9 @@ func (r *SetRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		// return err if RecurseSubPackages is false
 		if !r.Set.RecurseSubPackages {
 			return err
-		} else {
-			// print error message and continue if RecurseSubPackages is true
-			fmt.Fprintf(w, "%s\n", err.Error())
 		}
+		// print error message and continue if RecurseSubPackages is true
+		fmt.Fprintf(w, "%s\n", err.Error())
 	} else {
 		fmt.Fprintf(w, "set %d field(s) of setter %q to value %q\n", count, r.Set.Name, r.Set.Value)
 	}
