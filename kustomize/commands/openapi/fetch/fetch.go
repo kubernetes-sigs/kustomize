@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -28,31 +27,17 @@ in the user's kubeconfig`,
 }
 
 func printSchema(w io.Writer) {
-	fmt.Fprintln(w, "Fetching schema from cluster")
 	errMsg := `
 Error fetching schema from cluster.
-Please make sure port 8081 is available, kubectl is installed, and its context is set correctly.
+Please make sure kubectl is installed and its context is set correctly.
 Installation and setup instructions: https://kubernetes.io/docs/tasks/tools/install-kubectl/`
 
-	command := exec.Command("kubectl", []string{"proxy", "--port=8081", "&"}...)
+	command := exec.Command("kubectl", []string{"get", "--raw", "/openapi/v2"}...)
 	var stderr bytes.Buffer
-	command.Stderr = &stderr
-	err := command.Start()
-	defer killProcess(command)
-
-	// give the proxy a second to start up
-	time.Sleep(time.Second)
-
-	if err != nil || stderr.String() != "" {
-		fmt.Fprintln(w, err, stderr.String()+errMsg)
-		return
-	}
-
-	commandCurl := exec.Command("curl", []string{"http://localhost:8081/openapi/v2"}...)
 	var stdout bytes.Buffer
-	commandCurl.Stdout = &stdout
-	commandCurl.Stderr = &stderr
-	err = commandCurl.Run()
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	err := command.Run()
 	if err != nil || stdout.String() == "" {
 		fmt.Fprintln(w, err, stderr.String()+errMsg)
 		return
@@ -64,10 +49,4 @@ Installation and setup instructions: https://kubernetes.io/docs/tasks/tools/inst
 	json.Unmarshal(output, &jsonSchema)
 	output, _ = json.MarshalIndent(jsonSchema, "", "  ")
 	fmt.Fprintln(w, string(output))
-}
-
-func killProcess(command *exec.Cmd) {
-	if command.Process != nil {
-		command.Process.Kill()
-	}
 }
