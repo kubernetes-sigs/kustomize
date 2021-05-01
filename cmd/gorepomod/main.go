@@ -24,7 +24,7 @@ func loadRepoManager(args *arguments.Args) (*repo.Manager, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pr.NewRepoManager(), nil
+	return pr.NewRepoManager(args.AllowedReplacements()), nil
 }
 
 func findModule(
@@ -71,8 +71,7 @@ func actualMain() error {
 	case arguments.UnPin:
 		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 	case arguments.Release:
-		return mgr.Release(
-			targetModule, args.Bump(), args.AllowedReplacements(), args.DoIt())
+		return mgr.Release(targetModule, args.Bump(), args.DoIt())
 	case arguments.UnRelease:
 		return mgr.UnRelease(targetModule, args.DoIt())
 	case arguments.Debug:
