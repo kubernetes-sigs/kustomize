@@ -314,7 +314,6 @@ spec:
 `)
 }
 
-
 func TestStrategicMergeTransformerWrongNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchStrategicMergeTransformer")

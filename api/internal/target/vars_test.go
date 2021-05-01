@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/resid"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 // To simplify tests, these vars specified in alphabetical order.

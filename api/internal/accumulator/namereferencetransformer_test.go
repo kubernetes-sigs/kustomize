@@ -9,9 +9,9 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/provider"
-	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 const notEqualErrFmt = "expected (self) doesn't match actual (other): %v"
