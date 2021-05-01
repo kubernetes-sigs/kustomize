@@ -37,6 +37,10 @@ var (
 		"releasing",
 		"site",
 	}
+	// TODO: make this a PATH-like flag
+	allowedReplacements = []string {
+		"gopkg.in/yaml.v3",
+	}
 )
 
 type Command int
@@ -62,6 +66,14 @@ type Args struct {
 
 func (a *Args) GetCommand() Command {
 	return a.cmd
+}
+
+func (a *Args) AllowedReplacements() (result []string) {
+	// Make sure the list has no repeats.
+	for k := range utils.SliceToSet(allowedReplacements) {
+		result = append(result, k)
+	}
+	return
 }
 
 func (a *Args) Bump() semver.SvBump {
