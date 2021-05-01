@@ -71,7 +71,8 @@ func actualMain() error {
 	case arguments.UnPin:
 		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 	case arguments.Release:
-		return mgr.Release(targetModule, args.Bump(), args.DoIt())
+		return mgr.Release(
+			targetModule, args.Bump(), args.AllowedReplacements(), args.DoIt())
 	case arguments.UnRelease:
 		return mgr.UnRelease(targetModule, args.DoIt())
 	case arguments.Debug:

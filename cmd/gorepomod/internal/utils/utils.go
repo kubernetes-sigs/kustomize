@@ -3,6 +3,7 @@ package utils
 import (
 	"log"
 	"os"
+	"strings"
 )
 
 func DirExists(name string) bool {
@@ -23,4 +24,21 @@ func SliceToSet(slice []string) map[string]bool {
 		}
 	}
 	return result
+}
+
+func ExtractModule(m string) string {
+	k := strings.Index(m, " => ")
+	if k < 0 {
+		return m
+	}
+	return m[:k]
+}
+
+func SliceContains(slice []string, target string) bool {
+	for _, x := range slice {
+		if x == target {
+			return true
+		}
+	}
+	return false
 }
