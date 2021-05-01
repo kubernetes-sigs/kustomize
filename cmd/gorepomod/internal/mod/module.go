@@ -7,6 +7,7 @@ import (
 	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
+	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/utils"
 )
 
 // Module is an immutable representation of a Go module.
@@ -76,4 +77,15 @@ func (m *Module) GetReplacements() (result []string) {
 			result, fmt.Sprintf("%s => %s", r.Old.String(), r.New.String()))
 	}
 	return
+}
+
+func (m *Module) GetDisallowedReplacements(
+	allowedReplacements []string) (badReps []string) {
+	for _, r := range m.GetReplacements() {
+		m := utils.ExtractModule(r)
+		if !utils.SliceContains(allowedReplacements, m) {
+			badReps = append(badReps, r)
+		}
+	}
+	return badReps
 }

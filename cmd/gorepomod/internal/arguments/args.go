@@ -38,7 +38,7 @@ var (
 		"site",
 	}
 	// TODO: make this a PATH-like flag
-	allowedReplacements = []string {
+	allowedReplacements = []string{
 		"gopkg.in/yaml.v3",
 	}
 )

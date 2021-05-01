@@ -8,7 +8,6 @@ import (
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
-	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/utils"
 )
 
 // Manager manages a git repo.
@@ -23,6 +22,9 @@ type Manager struct {
 
 	// The list of known Go modules in the repo.
 	modules misc.LesModules
+
+	// List of globally allowed module replacements.
+	allowedReplacements []string
 }
 
 func (mgr *Manager) AbsPath() string {
@@ -67,8 +69,8 @@ func (mgr *Manager) UnPin(
 	})
 }
 
-func hasUnPinnedDeps(m misc.LaModule) string {
-	if len(m.GetReplacements()) > 0 {
+func (mgr *Manager) hasUnPinnedDeps(m misc.LaModule) string {
+	if len(m.GetDisallowedReplacements(mgr.allowedReplacements)) > 0 {
 		return "yes"
 	}
 	return ""
@@ -92,7 +94,7 @@ func (mgr *Manager) List() error {
 			format, m.ShortName(),
 			m.VersionLocal().Pretty(),
 			m.VersionRemote().Pretty(),
-			hasUnPinnedDeps(m),
+			mgr.hasUnPinnedDeps(m),
 			mgr.modules.InternalDeps(m))
 		return nil
 	})
@@ -119,16 +121,13 @@ func (mgr *Manager) Debug(_ misc.LaModule, doIt bool) error {
 // * Each minor release gets its own branch.
 //
 func (mgr *Manager) Release(
-	target misc.LaModule, bump semver.SvBump,
-	allowedReplacements []string, doIt bool) error {
+	target misc.LaModule, bump semver.SvBump, doIt bool) error {
 
-	if reps := target.GetReplacements(); len(reps) > 0 {
-		badReps := findDisallowedReplacements(reps, allowedReplacements)
-		if len(badReps) > 0 {
-			return fmt.Errorf(
-				"to release %q, first pin these replacements: %v",
-				target.ShortName(), badReps)
-		}
+	if reps := target.GetDisallowedReplacements(
+		mgr.allowedReplacements); len(reps) > 0 {
+		return fmt.Errorf(
+			"to release %q, first pin these replacements: %v",
+			target.ShortName(), reps)
 	}
 
 	newVersion := target.VersionLocal().Bump(bump)
@@ -185,18 +184,6 @@ func (mgr *Manager) Release(
 		return err
 	}
 	return nil
-}
-
-func findDisallowedReplacements(
-	reps []string, allowedReplacements []string) []string {
-	var badReps []string
-	for _, r := range reps {
-		km := utils.ExtractModule(r)
-		if !utils.SliceContains(allowedReplacements, km) {
-			badReps = append(badReps, r)
-		}
-	}
-	return badReps
 }
 
 func (mgr *Manager) UnRelease(target misc.LaModule, doIt bool) error {
