@@ -76,10 +76,9 @@ func (p *PatchTransformerPlugin) Config(
 func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
 	if p.loadedPatch == nil {
 		return p.transformJson6902(m, p.decodedPatch)
-	} else {
-		// The patch was a strategic merge patch
-		return p.transformStrategicMerge(m, p.loadedPatch)
 	}
+	// The patch was a strategic merge patch
+	return p.transformStrategicMerge(m, p.loadedPatch)
 }
 
 // transformStrategicMerge applies the provided strategic merge patch
