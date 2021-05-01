@@ -15,7 +15,7 @@ type ManagerFactory struct {
 	versionMapRemote misc.VersionMap
 }
 
-func (mf *ManagerFactory) NewRepoManager() *Manager {
+func (mf *ManagerFactory) NewRepoManager(allowedReplacements []string) *Manager {
 	result := &Manager{
 		dg:         mf.dg,
 		remoteName: mf.remoteName,
@@ -31,5 +31,6 @@ func (mf *ManagerFactory) NewRepoManager() *Manager {
 				mf.versionMapRemote.Latest(shortName)))
 	}
 	result.modules = modules
+	result.allowedReplacements = allowedReplacements
 	return result
 }

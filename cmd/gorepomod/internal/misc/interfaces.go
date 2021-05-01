@@ -50,6 +50,9 @@ type LaModule interface {
 
 	// GetReplacements returns a list of replacements.
 	GetReplacements() []string
+
+	// GetDisallowedReplacements returns a list of disallowed replacements.
+	GetDisallowedReplacements([]string) []string
 }
 
 // VersionMap holds the versions associated with modules.
