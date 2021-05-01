@@ -33,7 +33,7 @@ var (
 		"docs",
 		"examples",
 		"hack",
-		"plugin",
+		//		"plugin",
 		"releasing",
 		"site",
 	}
