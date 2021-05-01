@@ -160,8 +160,8 @@ target:
   name: myDeploy
 path: jsonpatch.json
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -206,8 +206,8 @@ target:
   name: myDeploy
 path: jsonpatch.json
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -246,8 +246,8 @@ target:
   name: myDeploy
 jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -286,8 +286,8 @@ jsonOp: |-
     path: /spec/template/spec/dnsPolicy
     value: ClusterFirst
 `,
-target,
-`
+		target,
+		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
