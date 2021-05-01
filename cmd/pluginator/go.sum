@@ -230,10 +230,6 @@ k8s.io/gengo v0.0.0-20200413195148-3a45101e95ac/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8
 k8s.io/klog/v2 v2.0.0/go.mod h1:PBfzABfn139FHAV07az/IF9Wp1bkk3vpT2XSJ76fSDE=
 k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e h1:KLHHjkdQFomZy8+06csTWZ0m1343QqxZhR2LJ1OxCYM=
 k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e/go.mod h1:vHXdDvt9+2spS2Rx9ql3I8tycm3H9FDfdUoIuKCefvw=
-sigs.k8s.io/kustomize/api v0.8.9 h1:3wc+6xjC1DhGcWNgRCnfI3zsF4I0dq99tXLY9meA9H8=
-sigs.k8s.io/kustomize/api v0.8.9/go.mod h1:OTaWCS8krICmepGNRxSdhOuywXAl7AieML4y2gLk9Aw=
-sigs.k8s.io/kustomize/kyaml v0.10.18 h1:Cuf4KiVULTttfo/2Vls2H9fA7eH8Xll1w6RgGdL+tR8=
-sigs.k8s.io/kustomize/kyaml v0.10.18/go.mod h1:h94DSoDbmnN4BTc6VTX7tGNGXZy29rbPo+R4jGMvA8U=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.2/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/yaml v1.2.0 h1:kr/MCeFWJWTwyaHoR9c8EjH9OumOmoF9YGiZd7lFm/Q=
 sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
