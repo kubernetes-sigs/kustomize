@@ -6,6 +6,7 @@ package main
 
 import (
 	"errors"
+
 	"sigs.k8s.io/kustomize/api/filters/prefixsuffix"
 	"sigs.k8s.io/kustomize/api/resid"
 	"sigs.k8s.io/kustomize/api/resmap"

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/resid"
 	. "sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 var mergeTests = []struct {

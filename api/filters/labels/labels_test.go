@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/resid"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 func TestLabels_Filter(t *testing.T) {

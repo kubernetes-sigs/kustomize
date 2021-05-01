@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 // Selector specifies a set of resources.
