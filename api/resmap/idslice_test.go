@@ -21,7 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 func TestLess(t *testing.T) {
