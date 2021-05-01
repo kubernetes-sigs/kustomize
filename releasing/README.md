@@ -22,12 +22,11 @@ The dependencies determine the release order:
 | module | depends on |
 | ---    | ---        |
 | `sigs.k8s.io/kustomize/kyaml`      | no local dependencies |
-| `sigs.k8s.io/cli-utils`            | `kyaml`               |
-| `sigs.k8s.io/kustomize/cmd/config` | `kyaml`, `cli-utils`  |
+| `sigs.k8s.io/kustomize/cmd/config` | `kyaml`,              |
 | `sigs.k8s.io/kustomize/api`        | `kyaml`               |
 | `sigs.k8s.io/kustomize/kustomize`  | `cmd/config`, `api`   |
 
-Thus, do `kyaml` first, then `cli-utils`, etc.
+Thus, do `kyaml` first, then `cmd/config`, etc.
 
 #### Consider fetching new OpenAPI data
 The Kubernetes OpenAPI data changes no more frequently than once per quarter.
@@ -125,48 +124,6 @@ Undraft the release on the [kustomize repo release page],
 make sure the version number is what you expect.
 
 
-## Release [`cli-utils`](https://github.com/kubernetes-sigs/cli-utils)
-
-```
-cd ../cli-utils
-```
-
-Pin to the new version of kyaml you just released:
-```
-go mod edit -require sigs.k8s.io/kustomize/kyaml@$versionKyaml
-```
-
-Test it
-```
-make test
-make test-e2e
-```
-
-Create the PR
-```
-title="Pin cli-utils to kyaml $versionKyaml"
-createBranch pinKyaml
-createPr
-```
-
-Wait for tests to pass, then merge the PR:
-```
-gh pr status
-gh pr merge -m
-```
-
-Release it:
-```
-git co master
-git rebase upstream/master
-gorepomod release {top} --doIt
-```
-
-Note the version:
-```
-versionCliUtils=v0.22.4     # EDIT THIS!
-```
-
 ## Release `cmd/config`
 
 ```
@@ -179,25 +136,10 @@ Pin to the most recent kyaml.
 gorepomod pin kyaml --doIt
 ```
 
-If there is a cli-utils dependence,
-pin to the version of cli-utils you just created
-([releases](https://github.com/kubernetes-sigs/cli-utils/releases))
-
-```
-(cd cmd/config; \
- go mod edit -require=sigs.k8s.io/cli-utils@$versionCliUtils)
-```
-
-Test it.
-
-```
-testKustomizeRepo
-```
-
 Create the PR:
 ```
-title="Pin to kyaml $versionKyaml and cli-utils $versionCliUtils"
-createBranch pinToKyamlAndCliUtils
+title="Pin to kyaml $versionKyaml"
+createBranch pinToKyaml
 createPr
 ```
 
@@ -399,7 +341,6 @@ Older notes follow:
 
 ## Public Modules
 
-[`sigs.k8s.io/cli-utils`]: #sigsk8siocli-utils
 [`sigs.k8s.io/kustomize/api`]: #sigsk8siokustomizeapi
 [`sigs.k8s.io/kustomize/kustomize`]: #sigsk8siokustomizekustomize
 [`sigs.k8s.io/kustomize/kyaml`]: #sigsk8siokustomizekyaml
@@ -409,7 +350,6 @@ Older notes follow:
 
 | Module Name                          | Module Description         | Example Tag         | Example Branch Name         |
 | ------                               | ---                        | ---                 | ---                         |
-| [`sigs.k8s.io/cli-utils`]            | General cli-utils          | _cli-utils/v0.20.2_ | _release-cli-utils-v0.20.2_ |
 | [`sigs.k8s.io/kustomize/kustomize`]  | kustomize executable       | _kustomize/v3.2.2_  | _release-kustomize-v3.2.2_  |
 | [`sigs.k8s.io/kustomize/api`]        | kustomize API              | _api/v0.1.0_        | _release-api-v0.1_          |
 | [`sigs.k8s.io/kustomize/kyaml`]      | k8s-specific yaml editting | _kyaml/v0.3.3_      | _release-kyaml-v0.2_        |
