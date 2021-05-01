@@ -8,6 +8,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
+	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/utils"
 )
 
 // Manager manages a git repo.
@@ -116,14 +117,18 @@ func (mgr *Manager) Debug(_ misc.LaModule, doIt bool) error {
 //
 // * All development happens in the branch named "master".
 // * Each minor release gets its own branch.
-// *
+//
 func (mgr *Manager) Release(
-	target misc.LaModule, bump semver.SvBump, doIt bool) error {
+	target misc.LaModule, bump semver.SvBump,
+	allowedReplacements []string, doIt bool) error {
 
 	if reps := target.GetReplacements(); len(reps) > 0 {
-		return fmt.Errorf(
-			"to release %q, first pin these replacements: %v",
-			target.ShortName(), reps)
+		badReps := findDisallowedReplacements(reps, allowedReplacements)
+		if len(badReps) > 0 {
+			return fmt.Errorf(
+				"to release %q, first pin these replacements: %v",
+				target.ShortName(), badReps)
+		}
 	}
 
 	newVersion := target.VersionLocal().Bump(bump)
@@ -180,6 +185,18 @@ func (mgr *Manager) Release(
 		return err
 	}
 	return nil
+}
+
+func findDisallowedReplacements(
+	reps []string, allowedReplacements []string) []string {
+	var badReps []string
+	for _, r := range reps {
+		km := utils.ExtractModule(r)
+		if !utils.SliceContains(allowedReplacements, km) {
+			badReps = append(badReps, r)
+		}
+	}
+	return badReps
 }
 
 func (mgr *Manager) UnRelease(target misc.LaModule, doIt bool) error {
