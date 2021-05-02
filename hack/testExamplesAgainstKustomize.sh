@@ -35,11 +35,8 @@ mdrip --mode test --blockTimeOut 15m \
 # TODO: make work for non-linux
 if onLinuxAndNotOnRemoteCI; then
   echo "On linux, and not on remote CI.  Running expensive tests."
-  # TODO: remove the HEAD check once --enable-helm flag released.
-  if [ "$version" == "HEAD" ]; then
-    make $MYGOBIN/helmV3
-    mdrip --mode test --label testHelm examples/chart.md
-  fi
+  make $MYGOBIN/helmV3
+  mdrip --mode test --label testHelm examples/chart.md
 fi
 
 # Force outside logic to rebuild kustomize rather than
