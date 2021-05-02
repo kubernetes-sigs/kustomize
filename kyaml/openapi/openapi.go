@@ -273,6 +273,15 @@ func IsNamespaceScoped(typeMeta yaml.TypeMeta) (bool, bool) {
 	return isNamespaceScoped, found
 }
 
+// IsCertainlyClusterScoped returns true for Node, Namespace, etc. and
+// false for Pod, Deployment, etc. and kinds that aren't recognized in the
+// openapi data. See:
+// https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
+func IsCertainlyClusterScoped(typeMeta yaml.TypeMeta) bool {
+	nsScoped, found := IsNamespaceScoped(typeMeta)
+	return found && !nsScoped
+}
+
 // SuppressBuiltInSchemaUse can be called to prevent using the built-in Kubernetes
 // schema as part of the global schema.
 // Must be called before the schema is used.

@@ -238,8 +238,8 @@ func (m *resWrangler) GroupedByCurrentNamespace() map[string][]*resource.Resourc
 	return items
 }
 
-// NonNamespaceable implements ResMap.NonNamespaceable
-func (m *resWrangler) NonNamespaceable() []*resource.Resource {
+// ClusterScoped implements ResMap.ClusterScoped
+func (m *resWrangler) ClusterScoped() []*resource.Resource {
 	return m.groupedByCurrentNamespace()[resid.TotallyNotANamespace]
 }
 
@@ -388,7 +388,7 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	referrer *resource.Resource) ResMap {
 	referrerId := referrer.CurId()
-	if !referrerId.IsNamespaceableKind() {
+	if referrerId.IsClusterScoped() {
 		// A cluster scoped resource can refer to anything.
 		return m
 	}
@@ -396,7 +396,7 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	roleBindingNamespaces := getNamespacesForRoleBinding(referrer)
 	for _, possibleTarget := range m.rList {
 		id := possibleTarget.CurId()
-		if !id.IsNamespaceableKind() {
+		if id.IsClusterScoped() {
 			// A cluster-scoped resource can be referred to by anything.
 			result.append(possibleTarget)
 			continue

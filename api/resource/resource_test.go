@@ -87,11 +87,13 @@ func TestResourceId(t *testing.T) {
 		{
 			in: testConfigMap,
 			id: resid.NewResIdWithNamespace(
-				resid.Gvk{Version: "v1", Kind: "ConfigMap"}, "winnie", "hundred-acre-wood"),
+				resid.NewGvk("", "v1", "ConfigMap"),
+				"winnie", "hundred-acre-wood"),
 		},
 		{
 			in: testDeployment,
-			id: resid.NewResId(resid.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}, "pooh"),
+			id: resid.NewResId(
+				resid.NewGvk("apps", "v1", "Deployment"), "pooh"),
 		},
 	}
 	for _, test := range tests {
