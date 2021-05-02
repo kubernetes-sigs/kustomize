@@ -87,12 +87,7 @@ func (r *Resource) GetBinaryDataMap() map[string]string {
 }
 
 func (r *Resource) GetGvk() resid.Gvk {
-	meta, err := r.node.GetMeta()
-	if err != nil {
-		return resid.GvkFromString("")
-	}
-	g, v := resid.ParseGroupVersion(meta.APIVersion)
-	return resid.Gvk{Group: g, Version: v, Kind: meta.Kind}
+	return resid.GvkFromNode(r.node)
 }
 
 func (r *Resource) Hash(h ifc.KustHasher) (string, error) {

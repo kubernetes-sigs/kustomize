@@ -337,13 +337,34 @@ func (rn *RNode) SetYNode(node *yaml.Node) {
 	*rn.value = *node
 }
 
-// GetKind returns the kind.
+// GetKind returns the kind, if it exists, else empty string.
 func (rn *RNode) GetKind() string {
-	node, err := rn.Pipe(FieldMatcher{Name: KindField})
-	if err != nil {
-		return ""
+	if node := rn.getMapFieldValue(KindField); node != nil {
+		return node.Value
 	}
-	return GetValue(node)
+	return ""
+}
+
+// GetApiVersion returns the apiversion, if it exists, else empty string.
+func (rn *RNode) GetApiVersion() string {
+	if node := rn.getMapFieldValue(APIVersionField); node != nil {
+		return node.Value
+	}
+	return ""
+}
+
+// getMapFieldValue returns the value (*yaml.Node) of a mapping field.
+// The value might be nil.  Also, the function returns nil, not an error,
+// if this node is not a mapping node, or if this node does not have the
+// given field, so this function cannot be used to make distinctions
+// between these cases.
+func (rn *RNode) getMapFieldValue(field string) *yaml.Node {
+	for i := 0; i < len(rn.Content()); i = IncrementFieldIndex(i) {
+		if rn.Content()[i].Value == field {
+			return rn.Content()[i+1]
+		}
+	}
+	return nil
 }
 
 // GetName returns the name.

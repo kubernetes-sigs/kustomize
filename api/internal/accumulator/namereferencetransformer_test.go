@@ -885,9 +885,9 @@ func TestNameReferenceClusterWide(t *testing.T) {
 			}).ResMap()
 
 	clusterRoleId := resid.NewResId(
-		resid.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"}, modifiedname)
+		resid.NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRole"), modifiedname)
 	clusterRoleBindingId := resid.NewResId(
-		resid.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}, modifiedname)
+		resid.NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRoleBinding"), modifiedname)
 	clusterRole, _ := expected.GetByCurrentId(clusterRoleId)
 	clusterRole.AppendRefBy(clusterRoleBindingId)
 
@@ -1012,9 +1012,11 @@ func TestNameReferenceNamespaceTransformation(t *testing.T) {
 			}).ResMap()
 
 	clusterRoleId := resid.NewResId(
-		resid.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"}, modifiedname)
+		resid.NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRole"),
+		modifiedname)
 	clusterRoleBindingId := resid.NewResId(
-		resid.Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"}, modifiedname)
+		resid.NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRoleBinding"),
+		modifiedname)
 	clusterRole, _ := expected.GetByCurrentId(clusterRoleId)
 	clusterRole.AppendRefBy(clusterRoleBindingId)
 
