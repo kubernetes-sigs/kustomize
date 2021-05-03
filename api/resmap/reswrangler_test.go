@@ -192,7 +192,7 @@ metadata:
 }
 
 func TestGetMatchingResourcesByCurrentId(t *testing.T) {
-	cmap := resid.Gvk{Version: "v1", Kind: "ConfigMap"}
+	cmap := resid.NewGvk("", "v1", "ConfigMap")
 
 	r1 := rf.FromMap(
 		map[string]interface{}{

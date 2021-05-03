@@ -46,10 +46,11 @@ xxx:
 		"empty path": {
 			fieldSpec: `
 group: foo
+version: v1
 kind: Bar
 `,
 			input: `
-apiVersion: foo
+apiVersion: foo/v1
 kind: Bar
 xxx:
 `,
@@ -59,7 +60,7 @@ kind: Bar
 xxx:
 `,
 			error: `considering field '' of object
-apiVersion: foo
+apiVersion: foo/v1
 kind: Bar
 xxx:
 : cannot set or create an empty field name`,
@@ -196,10 +197,13 @@ kind: Bar
 a:
   b: c
 `,
+			expected: `
+a:
+  b: c
+`,
 			filter: fieldspec.Filter{
 				SetValue: filtersutil.SetScalar("e"),
 			},
-			error: "missing Resource metadata",
 		},
 
 		"miss-match-type": {

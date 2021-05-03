@@ -464,42 +464,42 @@ func TestFromString(t *testing.T) {
 }
 
 func TestEffectiveNamespace(t *testing.T) {
-	var test = []struct {
+	var testCases = map[string]struct {
 		id       ResId
 		expected string
 	}{
-		{
+		"tst1": {
 			id: ResId{
-				Gvk:  Gvk{Group: "", Version: "v1", Kind: "Node"},
+				Gvk:  NewGvk("", "v1", "Node"),
 				Name: "nm",
 			},
 			expected: TotallyNotANamespace,
 		},
-		{
+		"tst2": {
 			id: ResId{
 				Namespace: "foo",
-				Gvk:       Gvk{Group: "", Version: "v1", Kind: "Node"},
+				Gvk:       NewGvk("", "v1", "Node"),
 				Name:      "nm",
 			},
 			expected: TotallyNotANamespace,
 		},
-		{
+		"tst3": {
 			id: ResId{
 				Namespace: "foo",
-				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       NewGvk("g", "v", "k"),
 				Name:      "nm",
 			},
 			expected: "foo",
 		},
-		{
+		"tst4": {
 			id: ResId{
 				Namespace: "",
-				Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
+				Gvk:       NewGvk("g", "v", "k"),
 				Name:      "nm",
 			},
 			expected: DefaultNamespace,
 		},
-		{
+		"tst5": {
 			id: ResId{
 				Gvk:  Gvk{Group: "g", Version: "v", Kind: "k"},
 				Name: "nm",
@@ -508,10 +508,12 @@ func TestEffectiveNamespace(t *testing.T) {
 		},
 	}
 
-	for _, tst := range test {
-		if actual := tst.id.EffectiveNamespace(); actual != tst.expected {
-			t.Fatalf("EffectiveNamespace was %s, expected %s",
-				actual, tst.expected)
-		}
+	for n, tst := range testCases {
+		t.Run(n, func(t *testing.T) {
+			if actual := tst.id.EffectiveNamespace(); actual != tst.expected {
+				t.Fatalf("EffectiveNamespace was %s, expected %s",
+					actual, tst.expected)
+			}
+		})
 	}
 }
