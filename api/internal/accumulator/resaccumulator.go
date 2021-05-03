@@ -72,7 +72,7 @@ func (ra *ResAccumulator) MergeVars(incoming []types.Var) error {
 	for _, v := range incoming {
 		targetId := resid.NewResIdWithNamespace(v.ObjRef.GVK(), v.ObjRef.Name, v.ObjRef.Namespace)
 		idMatcher := targetId.GvknEquals
-		if targetId.Namespace != "" || !targetId.IsNamespaceableKind() {
+		if targetId.Namespace != "" || targetId.IsClusterScoped() {
 			// Preserve backward compatibility. An empty namespace means
 			// wildcard search on the namespace hence we still use GvknEquals
 			idMatcher = targetId.Equals

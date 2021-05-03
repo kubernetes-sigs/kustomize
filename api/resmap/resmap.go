@@ -168,8 +168,7 @@ type ResMap interface {
 
 	// GroupedByCurrentNamespace returns a map of namespace
 	// to a slice of *Resource in that namespace.
-	// Resources for whom IsNamespaceableKind is false are
-	// are not included at all (see NonNamespaceable).
+	// Cluster-scoped Resources are not included (see ClusterScoped).
 	// Resources with an empty namespace are placed
 	// in the resid.DefaultNamespace entry.
 	GroupedByCurrentNamespace() map[string][]*resource.Resource
@@ -179,10 +178,10 @@ type ResMap interface {
 	// one to perform the grouping.
 	GroupedByOriginalNamespace() map[string][]*resource.Resource
 
-	// NonNamespaceable returns a slice of resources that
+	// ClusterScoped returns a slice of resources that
 	// cannot be placed in a namespace, e.g.
 	// Node, ClusterRole, Namespace itself, etc.
-	NonNamespaceable() []*resource.Resource
+	ClusterScoped() []*resource.Resource
 
 	// AllIds returns all CurrentIds.
 	AllIds() []resid.ResId

@@ -257,8 +257,7 @@ func previousIdSelectedByGvk(gvk *resid.Gvk) sieveFunc {
 
 // If the we are updating a 'roleRef/name' field, the 'apiGroup' and 'kind'
 // fields in the same 'roleRef' map must be considered.
-// If either object is cluster-scoped (!IsNamespaceableKind), there
-// can be a referral.
+// If either object is cluster-scoped, there can be a referral.
 // E.g. a RoleBinding (which exists in a namespace) can refer
 // to a ClusterRole (cluster-scoped) object.
 // https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
@@ -285,12 +284,12 @@ func prefixSuffixEquals(other resource.ResCtx) sieveFunc {
 
 func (f Filter) sameCurrentNamespaceAsReferrer() sieveFunc {
 	referrerCurId := f.Referrer.CurId()
-	if !referrerCurId.IsNamespaceableKind() {
+	if referrerCurId.IsClusterScoped() {
 		// If the referrer is cluster-scoped, let anything through.
 		return acceptAll
 	}
 	return func(r *resource.Resource) bool {
-		if !r.CurId().IsNamespaceableKind() {
+		if r.CurId().IsClusterScoped() {
 			// Allow cluster-scoped through.
 			return true
 		}

@@ -259,30 +259,45 @@ func TestSelectByGVK(t *testing.T) {
 	}
 }
 
-func TestIsNamespaceableKind(t *testing.T) {
+func TestIsClusterScoped(t *testing.T) {
 	testCases := []struct {
-		name     string
-		gvk      Gvk
-		expected bool
+		name            string
+		gvk             Gvk
+		isClusterScoped bool
 	}{
 		{
-			"namespaceable resource",
-			Gvk{Group: "apps", Version: "v1", Kind: "Deployment"},
-			true,
-		},
-		{
-			"clusterscoped resource",
-			Gvk{Group: "", Version: "v1", Kind: "Namespace"},
+			"deployment is namespaceable",
+			NewGvk("apps", "v1", "Deployment"),
 			false,
 		},
 		{
-			"unknown resource (should default to namespaceable)",
-			Gvk{Group: "example1.com", Version: "v1", Kind: "Bar"},
+			"clusterscoped resource",
+			NewGvk("", "v1", "Namespace"),
 			true,
 		},
 		{
 			"unknown resource (should default to namespaceable)",
-			Gvk{Group: "apps", Version: "v1", Kind: "ClusterRoleBinding"},
+			NewGvk("example1.com", "v1", "BoatyMcBoatface"),
+			false,
+		},
+		{
+			"node is cluster scoped",
+			NewGvk("", "v1", "Node"),
+			true,
+		},
+		{
+			"Role is namespace scoped",
+			NewGvk("rbac.authorization.k8s.io", "v1", "Role"),
+			false,
+		},
+		{
+			"ClusterRole is cluster scoped",
+			NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRole"),
+			true,
+		},
+		{
+			"ClusterRoleBinding is cluster scoped",
+			NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRoleBinding"),
 			true,
 		},
 	}
@@ -290,8 +305,7 @@ func TestIsNamespaceableKind(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			isNamespaceable := test.gvk.IsNamespaceableKind()
-			assert.Equal(t, test.expected, isNamespaceable)
+			assert.Equal(t, test.isClusterScoped, test.gvk.IsClusterScoped())
 		})
 	}
 }
