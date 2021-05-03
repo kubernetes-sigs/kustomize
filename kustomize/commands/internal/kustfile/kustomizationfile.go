@@ -53,6 +53,8 @@ func determineFieldOrder() []string {
 		"Patches",
 		"ConfigMapGenerator",
 		"SecretGenerator",
+		"HelmCharts",
+		"HelmChartInflationGenerator",
 		"GeneratorOptions",
 		"Vars",
 		"Images",
