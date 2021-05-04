@@ -35,6 +35,8 @@ func TestFieldOrder(t *testing.T) {
 		"Patches",
 		"ConfigMapGenerator",
 		"SecretGenerator",
+		"HelmCharts",
+		"HelmChartInflationGenerator",
 		"GeneratorOptions",
 		"Vars",
 		"Images",
