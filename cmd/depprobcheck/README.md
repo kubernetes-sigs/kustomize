@@ -1,7 +1,7 @@
-# A TEST PROGRAM
+## Checking openapi build issues
 
-Edit this to see what builds in various combinations of cli-runtime
-and kube-openapi.
+Edit the `main.go` and `go.mod` in this dir to see what builds
+with various combinations of cli-runtime kube-openapi.
 
 ####
 
