@@ -90,6 +90,7 @@ func skipIfNoDocker(t *testing.T) {
 }
 
 func TestFnContainerGenerator(t *testing.T) {
+	t.Skip("wait for #3881")
 	skipIfNoDocker(t)
 
 	// Function plugins should not need the env setup done by MakeEnhancedHarness
@@ -306,6 +307,7 @@ spec:
 }
 
 func TestFnContainerTransformer(t *testing.T) {
+	t.Skip("wait for #3881")
 	skipIfNoDocker(t)
 
 	// Function plugins should not need the env setup done by MakeEnhancedHarness

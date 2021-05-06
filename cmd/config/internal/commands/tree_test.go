@@ -84,11 +84,11 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`.
+	if !assert.Equal(t, `.
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
 └── [f2.yaml]  Deployment bar
-`), b.String()) {
+`, b.String()) {
 		return
 	}
 }

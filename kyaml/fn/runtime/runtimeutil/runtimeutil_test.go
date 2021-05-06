@@ -1090,7 +1090,7 @@ metadata:
 			if len(tt.instance.ResultsFile) > 0 {
 				tt.expectedResults = strings.TrimSpace(tt.expectedResults)
 
-				results, err := tt.instance.results.String()
+				results, err := tt.instance.Results.String()
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
