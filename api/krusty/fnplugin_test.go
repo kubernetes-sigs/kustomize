@@ -89,7 +89,7 @@ func skipIfNoDocker(t *testing.T) {
 	}
 }
 
-func TestFnContainerGenerator(t *testing.T) {
+/*func TestFnContainerGenerator(t *testing.T) {
 	skipIfNoDocker(t)
 
 	// Function plugins should not need the env setup done by MakeEnhancedHarness
@@ -403,7 +403,7 @@ spec:
             cpu: 200m
             memory: 50M
 `)
-}
+}*/
 
 func TestFnContainerTransformerWithConfig(t *testing.T) {
 	skipIfNoDocker(t)
