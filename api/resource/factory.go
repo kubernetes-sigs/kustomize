@@ -69,7 +69,7 @@ func (rf *Factory) makeOne(rn *yaml.RNode, o *types.GenArgs) *Resource {
 	if o == nil {
 		o = types.NewGenArgs(nil)
 	}
-	return &Resource{node: rn, options: o}
+	return &Resource{RNode: *rn, options: o}
 }
 
 // SliceFromPatches returns a slice of resources given a patch path
