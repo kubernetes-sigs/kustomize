@@ -196,8 +196,8 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"kustomizationapi": &bintree{nil, map[string]*bintree{
-		"swagger.json": &bintree{kustomizationapiSwaggerJson, map[string]*bintree{}},
+	"kustomizationapi": {nil, map[string]*bintree{
+		"swagger.json": {kustomizationapiSwaggerJson, map[string]*bintree{}},
 	}},
 }}
 
