@@ -6,6 +6,7 @@ package resmap
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -42,7 +43,7 @@ func (m *resWrangler) Clear() {
 func (m *resWrangler) DropEmpties() {
 	var rList []*resource.Resource
 	for _, r := range m.rList {
-		if !r.IsEmpty() {
+		if !r.IsNilOrEmpty() {
 			rList = append(rList, r)
 		}
 	}
@@ -324,7 +325,7 @@ func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 				"id in self matches %d in other; id: %s", len(others), id)
 		}
 		r2 := others[0]
-		if !r1.NodeEqual(r2) {
+		if !reflect.DeepEqual(r1.RNode, r2.RNode) {
 			return fmt.Errorf(
 				"nodes unequal: \n -- %s,\n -- %s\n\n--\n%#v\n------\n%#v\n",
 				r1, r2, r1, r2)
@@ -587,7 +588,7 @@ func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
 func (m *resWrangler) ToRNodeSlice() []*kyaml.RNode {
 	result := make([]*kyaml.RNode, len(m.rList))
 	for i := range m.rList {
-		result[i] = m.rList[i].AsRNode()
+		result[i] = m.rList[i].Copy()
 	}
 	return result
 }
@@ -606,7 +607,7 @@ func (m *resWrangler) ApplySmPatch(
 				return err
 			}
 		}
-		if !res.IsEmpty() {
+		if !res.IsNilOrEmpty() {
 			list = append(list, res)
 		}
 	}
@@ -625,7 +626,7 @@ func (m *resWrangler) ApplyFilter(f kio.Filter) error {
 	reverseLookup := make(map[*kyaml.RNode]*resource.Resource, len(m.rList))
 	nodes := make([]*kyaml.RNode, len(m.rList))
 	for i, r := range m.rList {
-		ptr := r.Node()
+		ptr := &(r.RNode)
 		nodes[i] = ptr
 		reverseLookup[ptr] = r
 	}
@@ -646,11 +647,13 @@ func (m *resWrangler) ApplyFilter(f kio.Filter) error {
 		res, ok := reverseLookup[rn]
 		if !ok {
 			// A node was created; make a Resource to wrap it.
-			// Leave remaining Resource fields empty.
-			// At time of writing, seeking to eliminate those fields.
-			// Alternatively, could just return error on creation attempt
-			// until remaining fields eliminated.
-			res = resource.NewResource(rn)
+			res = &resource.Resource{
+				RNode: *rn,
+				// Leave remaining fields empty.
+				// At at time of writing, seeking to eliminate those fields.
+				// Alternatively, could just return error on creation attempt
+				// until remaining fields eliminated.
+			}
 		}
 		nRList = append(nRList, res)
 	}

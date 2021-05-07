@@ -345,12 +345,22 @@ func (rn *RNode) GetKind() string {
 	return ""
 }
 
+// SetKind sets the kind.
+func (rn *RNode) SetKind(k string) {
+	rn.SetMapField(NewScalarRNode(k), KindField)
+}
+
 // GetApiVersion returns the apiversion, if it exists, else empty string.
 func (rn *RNode) GetApiVersion() string {
 	if node := rn.getMapFieldValue(APIVersionField); node != nil {
 		return node.Value
 	}
 	return ""
+}
+
+// SetApiVersion sets the apiVersion.
+func (rn *RNode) SetApiVersion(av string) {
+	rn.SetMapField(NewScalarRNode(av), APIVersionField)
 }
 
 // getMapFieldValue returns the value (*yaml.Node) of a mapping field.
@@ -367,17 +377,43 @@ func (rn *RNode) getMapFieldValue(field string) *yaml.Node {
 	return nil
 }
 
-// GetName returns the name.
+// GetName returns the name, or empty string if
+// field not found.  The setter is more restrictive.
 func (rn *RNode) GetName() string {
-	f := rn.Field(MetadataField)
+	return rn.getMetaStringField(NameField)
+}
+
+// getMetaStringField returns the value of a string field in metadata.
+func (rn *RNode) getMetaStringField(fName string) string {
+	md := rn.getMetaData()
+	if md == nil {
+		return ""
+	}
+	f := md.Field(fName)
 	if f.IsNilOrEmpty() {
 		return ""
 	}
-	f = f.Value.Field(NameField)
-	if f.IsNilOrEmpty() {
-		return ""
+	return GetValue(f.Value)
+}
+
+// getMetaData returns the RNode holding the value of the metadata field.
+// Return nil if field not found (no error).
+func (rn *RNode) getMetaData() *RNode {
+	if IsMissingOrNull(rn) {
+		return nil
 	}
-	return f.Value.YNode().Value
+	var n *RNode
+	if rn.YNode().Kind == DocumentNode {
+		// get the content if this is the document node
+		n = NewRNode(rn.Content()[0])
+	} else {
+		n = rn
+	}
+	mf := n.Field(MetadataField)
+	if mf.IsNilOrEmpty() {
+		return nil
+	}
+	return mf.Value
 }
 
 // SetName sets the metadata name field.
@@ -385,16 +421,14 @@ func (rn *RNode) SetName(name string) error {
 	return rn.SetMapField(NewScalarRNode(name), MetadataField, NameField)
 }
 
-// GetNamespace gets the metadata namespace field.
-func (rn *RNode) GetNamespace() (string, error) {
-	meta, err := rn.GetMeta()
-	if err != nil {
-		return "", err
-	}
-	return meta.Namespace, nil
+// GetNamespace gets the metadata namespace field, or empty string if
+// field not found.  The setter is more restrictive.
+func (rn *RNode) GetNamespace() string {
+	return rn.getMetaStringField(NamespaceField)
 }
 
-// SetNamespace tries to set the metadata namespace field.
+// SetNamespace tries to set the metadata namespace field.  If the argument
+// is empty, the field is dropped.
 func (rn *RNode) SetNamespace(ns string) error {
 	meta, err := rn.Pipe(Lookup(MetadataField))
 	if err != nil {
@@ -411,12 +445,14 @@ func (rn *RNode) SetNamespace(ns string) error {
 }
 
 // GetAnnotations gets the metadata annotations field.
-func (rn *RNode) GetAnnotations() (map[string]string, error) {
-	meta, err := rn.GetMeta()
-	if err != nil {
-		return nil, err
+// If the field is missing, returns an empty map.
+// Use another method to check for missing metadata.
+func (rn *RNode) GetAnnotations() map[string]string {
+	meta := rn.getMetaData()
+	if meta == nil {
+		return make(map[string]string)
 	}
-	return meta.Annotations, nil
+	return rn.getMapFromMeta(meta, AnnotationsField)
 }
 
 // SetAnnotations tries to set the metadata annotations field.
@@ -425,12 +461,26 @@ func (rn *RNode) SetAnnotations(m map[string]string) error {
 }
 
 // GetLabels gets the metadata labels field.
-func (rn *RNode) GetLabels() (map[string]string, error) {
-	meta, err := rn.GetMeta()
-	if err != nil {
-		return nil, err
+// If the field is missing, returns an empty map.
+// Use another method to check for missing metadata.
+func (rn *RNode) GetLabels() map[string]string {
+	meta := rn.getMetaData()
+	if meta == nil {
+		return make(map[string]string)
 	}
-	return meta.Labels, nil
+	return rn.getMapFromMeta(meta, LabelsField)
+}
+
+// getMapFromMeta returns map, sometimes empty, from metadata.
+func (rn *RNode) getMapFromMeta(meta *RNode, fName string) map[string]string {
+	result := make(map[string]string)
+	if f := meta.Field(fName); !f.IsNilOrEmpty() {
+		_ = f.Value.VisitFields(func(node *MapNode) error {
+			result[GetValue(node.Key)] = GetValue(node.Value)
+			return nil
+		})
+	}
+	return result
 }
 
 // SetLabels sets the metadata labels field.
@@ -440,7 +490,7 @@ func (rn *RNode) SetLabels(m map[string]string) error {
 
 // This established proper quoting on string values, and sorts by key.
 func (rn *RNode) setMapInMetadata(m map[string]string, field string) error {
-	meta, err := rn.Pipe(Lookup(MetadataField))
+	meta, err := rn.Pipe(LookupCreate(MappingNode, MetadataField))
 	if err != nil {
 		return err
 	}
@@ -807,11 +857,7 @@ func (rn *RNode) MatchesAnnotationSelector(selector string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	slice, err := rn.GetAnnotations()
-	if err != nil {
-		return false, err
-	}
-	return s.Matches(labels.Set(slice)), nil
+	return s.Matches(labels.Set(rn.GetAnnotations())), nil
 }
 
 // MatchesLabelSelector returns true on a selector match to labels.
@@ -820,11 +866,7 @@ func (rn *RNode) MatchesLabelSelector(selector string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	slice, err := rn.GetLabels()
-	if err != nil {
-		return false, err
-	}
-	return s.Matches(labels.Set(slice)), nil
+	return s.Matches(labels.Set(rn.GetLabels())), nil
 }
 
 // HasNilEntryInList returns true if the RNode contains a list which has
