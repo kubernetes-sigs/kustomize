@@ -158,7 +158,8 @@ func UpdateResMapValues(pluginName string, h *resmap.PluginHelpers, output []byt
 	}
 
 	for _, r := range resources {
-		removeIDAnnotation(r) // stale--not manipulated by plugin transformers
+		// stale--not manipulated by plugin transformers
+		removeIDAnnotation(r)
 
 		// Add to the new map, checking for duplicates
 		if err := newMap.Append(r); err != nil {
