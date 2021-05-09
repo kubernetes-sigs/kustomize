@@ -41,6 +41,7 @@ const (
 	// and kinds of their targets
 	buildAnnotationAllowNameChange = konfig.ConfigAnnoDomain + "/allowNameChange"
 	buildAnnotationAllowKindChange = konfig.ConfigAnnoDomain + "/allowKindChange"
+	allowed                        = "allowed"
 )
 
 var buildAnnotations = []string{
@@ -210,11 +211,11 @@ func (r *Resource) DeepCopy() *Resource {
 	rc := &Resource{
 		node: r.node.Copy(),
 	}
-	rc.copyOtherFields(r)
+	rc.copyKustomizeSpecificFields(r)
 	return rc
 }
 
-// CopyMergeMetaDataFields copies everything but the non-metadata in
+// CopyMergeMetaDataFieldsFrom copies everything but the non-metadata in
 // the resource.
 func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) {
 	r.SetLabels(mergeStringMaps(other.GetLabels(), r.GetLabels()))
@@ -222,10 +223,10 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) {
 		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations()))
 	r.SetName(other.GetName())
 	r.SetNamespace(other.GetNamespace())
-	r.copyOtherFields(other)
+	r.copyKustomizeSpecificFields(other)
 }
 
-func (r *Resource) copyOtherFields(other *Resource) {
+func (r *Resource) copyKustomizeSpecificFields(other *Resource) {
 	r.options = other.options
 	r.refBy = other.copyRefBy()
 	r.refVarNames = copyStringSlice(other.refVarNames)
@@ -390,32 +391,28 @@ func (r *Resource) setPreviousId(ns string, n string, k string) *Resource {
 	return r
 }
 
-func (r *Resource) SetAllowNameChange(value string) {
+func (r *Resource) AllowNameChange() {
 	annotations := r.GetAnnotations()
-	annotations[buildAnnotationAllowNameChange] = value
+	annotations[buildAnnotationAllowNameChange] = allowed
 	r.SetAnnotations(annotations)
 }
 
 func (r *Resource) NameChangeAllowed() bool {
 	annotations := r.GetAnnotations()
-	if allowed, set := annotations[buildAnnotationAllowNameChange]; set && allowed == "true" {
-		return true
-	}
-	return false
+	v, ok := annotations[buildAnnotationAllowNameChange]
+	return ok && v == allowed
 }
 
-func (r *Resource) SetAllowKindChange(value string) {
+func (r *Resource) AllowKindChange() {
 	annotations := r.GetAnnotations()
-	annotations[buildAnnotationAllowKindChange] = value
+	annotations[buildAnnotationAllowKindChange] = allowed
 	r.SetAnnotations(annotations)
 }
 
 func (r *Resource) KindChangeAllowed() bool {
 	annotations := r.GetAnnotations()
-	if allowed, set := annotations[buildAnnotationAllowKindChange]; set && allowed == "true" {
-		return true
-	}
-	return false
+	v, ok := annotations[buildAnnotationAllowKindChange]
+	return ok && v == allowed
 }
 
 // String returns resource as JSON.

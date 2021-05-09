@@ -62,10 +62,10 @@ func (p *PatchTransformerPlugin) Config(
 	if errSM == nil {
 		p.loadedPatch = patchSM
 		if p.Options["allowNameChange"] {
-			p.loadedPatch.SetAllowNameChange("true")
+			p.loadedPatch.AllowNameChange()
 		}
 		if p.Options["allowKindChange"] {
-			p.loadedPatch.SetAllowKindChange("true")
+			p.loadedPatch.AllowKindChange()
 		}
 	} else {
 		p.decodedPatch = patchJson
