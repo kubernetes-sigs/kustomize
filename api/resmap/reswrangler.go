@@ -231,14 +231,14 @@ func demandOneMatch(
 	return nil, fmt.Errorf("no matches for %s %s", s, id)
 }
 
-// GroupedByCurrentNamespace implements ResMap.GroupByCurrentNamespace
+// GroupedByCurrentNamespace implements ResMap.
 func (m *resWrangler) GroupedByCurrentNamespace() map[string][]*resource.Resource {
 	items := m.groupedByCurrentNamespace()
 	delete(items, resid.TotallyNotANamespace)
 	return items
 }
 
-// ClusterScoped implements ResMap.ClusterScoped
+// ClusterScoped implements ResMap.
 func (m *resWrangler) ClusterScoped() []*resource.Resource {
 	return m.groupedByCurrentNamespace()[resid.TotallyNotANamespace]
 }
@@ -255,7 +255,7 @@ func (m *resWrangler) groupedByCurrentNamespace() map[string][]*resource.Resourc
 	return byNamespace
 }
 
-// GroupedByNamespace implements ResMap.GroupByOrginalNamespace
+// GroupedByOriginalNamespace implements ResMap.
 func (m *resWrangler) GroupedByOriginalNamespace() map[string][]*resource.Resource {
 	items := m.groupedByOriginalNamespace()
 	delete(items, resid.TotallyNotANamespace)
@@ -336,7 +336,7 @@ func (m *resWrangler) ErrorIfNotEqualSets(other ResMap) error {
 	return nil
 }
 
-// ErrorIfNotEqualList implements ResMap.
+// ErrorIfNotEqualLists implements ResMap.
 func (m *resWrangler) ErrorIfNotEqualLists(other ResMap) error {
 	m2, ok := other.(*resWrangler)
 	if !ok {
@@ -409,8 +409,7 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 		// The two objects are namespaced (not cluster-scoped), AND
 		// are in different namespaces.
 		// There's still a chance they can refer to each other.
-		ns := possibleTarget.GetNamespace()
-		if roleBindingNamespaces[ns] {
+		if roleBindingNamespaces[possibleTarget.GetNamespace()] {
 			result.append(possibleTarget)
 		}
 	}
