@@ -9,7 +9,6 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/replacement"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -50,14 +49,9 @@ func (p *ReplacementTransformerPlugin) Config(
 }
 
 func (p *ReplacementTransformerPlugin) Transform(m resmap.ResMap) (err error) {
-	var nodes []*kyaml.RNode
-	for _, r := range m.Resources() {
-		nodes = append(nodes, r.Node())
-	}
-	_, err = replacement.Filter{
+	return m.ApplyFilter(replacement.Filter{
 		Replacements: p.Replacements,
-	}.Filter(nodes)
-	return err
+	})
 }
 
 func NewReplacementTransformerPlugin() resmap.TransformerPlugin {
