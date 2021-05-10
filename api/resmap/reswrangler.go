@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -423,6 +424,7 @@ func getNamespacesForRoleBinding(r *resource.Resource) map[string]bool {
 	if r.GetKind() != "RoleBinding" {
 		return result
 	}
+	//nolint staticcheck
 	subjects, err := r.GetSlice("subjects")
 	if err != nil || subjects == nil {
 		return result
@@ -616,4 +618,42 @@ func (m *resWrangler) RemoveBuildAnnotations() {
 	for _, r := range m.rList {
 		r.RemoveBuildAnnotations()
 	}
+}
+
+// ApplyFilter implements ResMap.
+func (m *resWrangler) ApplyFilter(f kio.Filter) error {
+	reverseLookup := make(map[*kyaml.RNode]*resource.Resource, len(m.rList))
+	nodes := make([]*kyaml.RNode, len(m.rList))
+	for i, r := range m.rList {
+		ptr := r.Node()
+		nodes[i] = ptr
+		reverseLookup[ptr] = r
+	}
+	// The filter can modify nodes, but also delete and create them.
+	// The filtered list might be smaller or larger than the nodes list.
+	filtered, err := f.Filter(nodes)
+	if err != nil {
+		return err
+	}
+	// Rebuild the resmap from the filtered RNodes.
+	var nRList []*resource.Resource
+	for _, rn := range filtered {
+		if rn.IsNilOrEmpty() {
+			// A node might make it through the filter as an object,
+			// but still be empty.  Drop such entries.
+			continue
+		}
+		res, ok := reverseLookup[rn]
+		if !ok {
+			// A node was created; make a Resource to wrap it.
+			// Leave remaining Resource fields empty.
+			// At time of writing, seeking to eliminate those fields.
+			// Alternatively, could just return error on creation attempt
+			// until remaining fields eliminated.
+			res = resource.NewResource(rn)
+		}
+		nRList = append(nRList, res)
+	}
+	m.rList = nRList
+	return nil
 }

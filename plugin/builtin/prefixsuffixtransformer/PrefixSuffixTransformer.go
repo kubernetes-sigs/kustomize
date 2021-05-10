@@ -77,12 +77,11 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 					r.StorePreviousId()
 				}
 			}
-			err := r.ApplyFilter(prefixsuffix.Filter{
+			if err := r.ApplyFilter(prefixsuffix.Filter{
 				Prefix:    p.Prefix,
 				Suffix:    p.Suffix,
 				FieldSpec: fs,
-			})
-			if err != nil {
+			}); err != nil {
 				return err
 			}
 		}
