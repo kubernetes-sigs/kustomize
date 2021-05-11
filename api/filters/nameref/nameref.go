@@ -184,7 +184,7 @@ func (f Filter) recordTheReferral(referral *resource.Resource) {
 
 // getRoleRefGvk returns a Gvk in the roleRef field. Return error
 // if the roleRef, roleRef/apiGroup or roleRef/kind is missing.
-func getRoleRefGvk(n *yaml.RNode) (*resid.Gvk, error) {
+func getRoleRefGvk(n *resource.Resource) (*resid.Gvk, error) {
 	roleRef, err := n.Pipe(yaml.Lookup("roleRef"))
 	if err != nil {
 		return nil, err
@@ -269,7 +269,7 @@ func (f Filter) roleRefFilter() sieveFunc {
 	if !strings.HasSuffix(f.NameFieldToUpdate.Path, "roleRef/name") {
 		return acceptAll
 	}
-	roleRefGvk, err := getRoleRefGvk(f.Referrer.AsRNode())
+	roleRefGvk, err := getRoleRefGvk(f.Referrer)
 	if err != nil {
 		return acceptAll
 	}

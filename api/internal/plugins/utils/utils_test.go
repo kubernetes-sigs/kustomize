@@ -45,7 +45,9 @@ func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *strin
 		annotations[HashAnnotation] = *hashValue
 	}
 	if len(annotations) > 0 {
-		r.SetAnnotations(annotations)
+		if err := r.SetAnnotations(annotations); err != nil {
+			panic(err)
+		}
 	}
 	return r
 }

@@ -954,41 +954,29 @@ const deploymentJSON = `
 }
 `
 
-func getNamespaceOrDie(t *testing.T, n *RNode) string {
-	m, err := n.GetNamespace()
-	assert.NoError(t, err)
-	return m
-}
-
 func TestRNodeSetNamespace(t *testing.T) {
 	n := NewRNode(nil)
-	assert.Equal(t, "", getNamespaceOrDie(t, n))
+	assert.Equal(t, "", n.GetNamespace())
 	assert.NoError(t, n.SetNamespace(""))
-	assert.Equal(t, "", getNamespaceOrDie(t, n))
+	assert.Equal(t, "", n.GetNamespace())
 	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
 	assert.NoError(t, n.SetNamespace("flanders"))
-	assert.Equal(t, "flanders", getNamespaceOrDie(t, n))
-}
-
-func getLabelsOrDie(t *testing.T, n *RNode) map[string]string {
-	m, err := n.GetLabels()
-	assert.NoError(t, err)
-	return m
+	assert.Equal(t, "flanders", n.GetNamespace())
 }
 
 func TestRNodeSetLabels(t *testing.T) {
 	n := NewRNode(nil)
-	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+	assert.Equal(t, 0, len(n.GetLabels()))
 	assert.NoError(t, n.SetLabels(map[string]string{}))
-	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
+	assert.Equal(t, 0, len(n.GetLabels()))
 
 	n = NewRNode(nil)
 	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
-	labels := getLabelsOrDie(t, n)
+	labels := n.GetLabels()
 	assert.Equal(t, 2, len(labels))
 	assert.Equal(t, "apple", labels["fruit"])
 	assert.Equal(t, "carrot", labels["veggie"])
@@ -996,31 +984,25 @@ func TestRNodeSetLabels(t *testing.T) {
 		"label1": "foo",
 		"label2": "bar",
 	}))
-	labels = getLabelsOrDie(t, n)
+	labels = n.GetLabels()
 	assert.Equal(t, 2, len(labels))
 	assert.Equal(t, "foo", labels["label1"])
 	assert.Equal(t, "bar", labels["label2"])
 	assert.NoError(t, n.SetLabels(map[string]string{}))
-	assert.Equal(t, 0, len(getLabelsOrDie(t, n)))
-}
-
-func getAnnotationsOrDie(t *testing.T, n *RNode) map[string]string {
-	m, err := n.GetAnnotations()
-	assert.NoError(t, err)
-	return m
+	assert.Equal(t, 0, len(n.GetLabels()))
 }
 
 func TestRNodeGetAnnotations(t *testing.T) {
 	n := NewRNode(nil)
-	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+	assert.Equal(t, 0, len(n.GetAnnotations()))
 	assert.NoError(t, n.SetAnnotations(map[string]string{}))
-	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+	assert.Equal(t, 0, len(n.GetAnnotations()))
 
 	n = NewRNode(nil)
 	if err := n.UnmarshalJSON([]byte(deploymentJSON)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
-	annotations := getAnnotationsOrDie(t, n)
+	annotations := n.GetAnnotations()
 	assert.Equal(t, 2, len(annotations))
 	assert.Equal(t, "51", annotations["area"])
 	assert.Equal(t, "Take me to your leader.", annotations["greeting"])
@@ -1028,12 +1010,12 @@ func TestRNodeGetAnnotations(t *testing.T) {
 		"annotation1": "foo",
 		"annotation2": "bar",
 	}))
-	annotations = getAnnotationsOrDie(t, n)
+	annotations = n.GetAnnotations()
 	assert.Equal(t, 2, len(annotations))
 	assert.Equal(t, "foo", annotations["annotation1"])
 	assert.Equal(t, "bar", annotations["annotation2"])
 	assert.NoError(t, n.SetAnnotations(map[string]string{}))
-	assert.Equal(t, 0, len(getAnnotationsOrDie(t, n)))
+	assert.Equal(t, 0, len(n.GetAnnotations()))
 }
 
 func TestRNodeMatchesAnnotationSelector(t *testing.T) {
@@ -1644,18 +1626,12 @@ func TestGettingFields(t *testing.T) {
 	if expected != actual {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
-	actualMap, err := rn.GetLabels()
-	if err != nil {
-		t.Fatalf("unexpected err '%v'", err)
-	}
+	actualMap := rn.GetLabels()
 	v, ok := actualMap["fruit"]
 	if !ok || v != "apple" {
 		t.Fatalf("unexpected labels '%v'", actualMap)
 	}
-	actualMap, err = rn.GetAnnotations()
-	if err != nil {
-		t.Fatalf("unexpected err '%v'", err)
-	}
+	actualMap = rn.GetAnnotations()
 	v, ok = actualMap["greeting"]
 	if !ok || v != "Take me to your leader." {
 		t.Fatalf("unexpected annotations '%v'", actualMap)
@@ -1717,12 +1693,11 @@ func TestSetLabels(t *testing.T) {
 	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
-	rn.SetLabels(map[string]string{
+	assert.NoError(t, rn.SetLabels(map[string]string{
 		"label1": "foo",
 		"label2": "bar",
-	})
-	labels, err := rn.GetLabels()
-	assert.NoError(t, err)
+	}))
+	labels := rn.GetLabels()
 	if expected, actual := 2, len(labels); expected != actual {
 		t.Fatalf("expected '%d', got '%d'", expected, actual)
 	}
@@ -1739,12 +1714,11 @@ func TestGetAnnotations(t *testing.T) {
 	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
-	rn.SetAnnotations(map[string]string{
+	assert.NoError(t, rn.SetAnnotations(map[string]string{
 		"annotation1": "foo",
 		"annotation2": "bar",
-	})
-	annotations, err := rn.GetAnnotations()
-	assert.NoError(t, err)
+	}))
+	annotations := rn.GetAnnotations()
 	if expected, actual := 2, len(annotations); expected != actual {
 		t.Fatalf("expected '%d', got '%d'", expected, actual)
 	}
