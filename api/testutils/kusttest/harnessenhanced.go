@@ -102,7 +102,10 @@ func (th *HarnessEnhanced) MkDir(path string) string {
 
 func (th *HarnessEnhanced) Reset() {
 	if th.shouldWipeLdrRoot {
-		if !strings.HasPrefix(th.ldr.Root(), os.TempDir()) {
+		root, _ := filepath.EvalSymlinks(th.ldr.Root())
+		tmpdir, _ := filepath.EvalSymlinks(os.TempDir())
+
+		if !strings.HasPrefix(root, tmpdir) {
 			// sanity check.
 			panic("something strange about th.ldr.Root() = " + th.ldr.Root())
 		}
