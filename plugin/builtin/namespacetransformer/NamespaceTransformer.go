@@ -34,7 +34,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		return nil
 	}
 	for _, r := range m.Resources() {
-		if r.IsEmpty() {
+		if r.IsNilOrEmpty() {
 			// Don't mutate empty objects?
 			continue
 		}

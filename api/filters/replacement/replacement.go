@@ -168,11 +168,6 @@ func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yam
 
 // makeResId makes a ResId from an RNode.
 func makeResId(n *yaml.RNode) *resid.ResId {
-	ns, err := n.GetNamespace()
-	if err != nil {
-		// Resource has no metadata (no apiVersion, kind, nor metadata field).
-		return nil
-	}
 	apiVersion := n.Field(yaml.APIVersionField)
 	var group, version string
 	if apiVersion != nil {
@@ -181,6 +176,6 @@ func makeResId(n *yaml.RNode) *resid.ResId {
 	return &resid.ResId{
 		Gvk:       resid.Gvk{Group: group, Version: version, Kind: n.GetKind()},
 		Name:      n.GetName(),
-		Namespace: ns,
+		Namespace: n.GetNamespace(),
 	}
 }
