@@ -11,12 +11,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/filters/labels"
 	"sigs.k8s.io/kustomize/api/provider"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var depProvider = provider.NewDefaultDepProvider()
@@ -1142,6 +1146,186 @@ func addNamespace(namespace string, base string) string {
 		"\n  namespace: "+namespace+"\nspec:\n",
 		1)
 	return res
+}
+
+// DeleteOddsFilter deletes the odd entries, removing nodes.
+// This is a ridiculous filter for testing.
+type DeleteOddsFilter struct{}
+
+func (f DeleteOddsFilter) Filter(
+	nodes []*yaml.RNode) (result []*yaml.RNode, err error) {
+	for i := range nodes {
+		if i%2 == 0 {
+			// Keep the even entries, drop the odd entries.
+			result = append(result, nodes[i])
+		}
+	}
+	return
+}
+
+// CloneOddsFilter deletes even entries and clones odd entries,
+// making new nodes.
+// This is a ridiculous filter for testing.
+type CloneOddsFilter struct{}
+
+func (f CloneOddsFilter) Filter(
+	nodes []*yaml.RNode) (result []*yaml.RNode, err error) {
+	for i := range nodes {
+		if i%2 != 0 {
+			newNode := nodes[i].Copy()
+			// Add suffix to the name, so that it's unique (w/r to this test).
+			newNode.SetName(newNode.GetName() + "Clone")
+			// Return a ptr to the copy.
+			result = append(result, nodes[i], newNode)
+		}
+	}
+	return
+}
+
+func TestApplyFilter(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		f        kio.Filter
+		expected string
+	}{
+		"labels": {
+			input: `
+apiVersion: example.com/v1
+kind: Beans
+metadata:
+  name: myBeans
+---
+apiVersion: example.com/v1
+kind: Franks
+metadata:
+  name: myFranks
+`,
+			f: labels.Filter{
+				Labels: map[string]string{
+					"a": "foo",
+					"b": "bar",
+				},
+				FsSlice: types.FsSlice{
+					{
+						Gvk:                resid.NewGvk("example.com", "v1", "Beans"),
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+				},
+			},
+			expected: `
+apiVersion: example.com/v1
+kind: Beans
+metadata:
+  labels:
+    a: foo
+    b: bar
+  name: myBeans
+---
+apiVersion: example.com/v1
+kind: Franks
+metadata:
+  name: myFranks
+`,
+		},
+		"deleteOddNodes": {
+			input: `
+apiVersion: example.com/v1
+kind: Zero
+metadata:
+  name: r0
+---
+apiVersion: example.com/v1
+kind: One
+metadata:
+  name: r1
+---
+apiVersion: example.com/v1
+kind: Two
+metadata:
+  name: r2
+---
+apiVersion: example.com/v1
+kind: Three
+metadata:
+  name: r3
+`,
+			f: DeleteOddsFilter{},
+			expected: `
+apiVersion: example.com/v1
+kind: Zero
+metadata:
+  name: r0
+---
+apiVersion: example.com/v1
+kind: Two
+metadata:
+  name: r2
+`,
+		},
+		"cloneOddNodes": {
+			// input list has five entries
+			input: `
+apiVersion: example.com/v1
+kind: Zero
+metadata:
+  name: r0
+---
+apiVersion: example.com/v1
+kind: One
+metadata:
+  name: r1
+---
+apiVersion: example.com/v1
+kind: Two
+metadata:
+  name: r2
+---
+apiVersion: example.com/v1
+kind: Three
+metadata:
+  name: r3
+---
+apiVersion: example.com/v1
+kind: Four
+metadata:
+  name: r4
+`,
+			f: CloneOddsFilter{},
+			// output has four, but half are newly created nodes.
+			expected: `
+apiVersion: example.com/v1
+kind: One
+metadata:
+  name: r1
+---
+apiVersion: example.com/v1
+kind: One
+metadata:
+  name: r1Clone
+---
+apiVersion: example.com/v1
+kind: Three
+metadata:
+  name: r3
+---
+apiVersion: example.com/v1
+kind: Three
+metadata:
+  name: r3Clone
+`,
+		},
+	}
+	for name := range tests {
+		tc := tests[name]
+		t.Run(name, func(t *testing.T) {
+			m, err := rmF.NewResMapFromBytes([]byte(tc.input))
+			assert.NoError(t, err)
+			assert.NoError(t, m.ApplyFilter(tc.f))
+			kusttest_test.AssertActualEqualsExpectedWithTweak(
+				t, m, nil, tc.expected)
+		})
+	}
 }
 
 func TestApplySmPatch_Deletion(t *testing.T) {

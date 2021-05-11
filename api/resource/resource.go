@@ -54,6 +54,10 @@ var buildAnnotations = []string{
 	buildAnnotationAllowKindChange,
 }
 
+func NewResource(rn *kyaml.RNode) *Resource {
+	return &Resource{node: rn}
+}
+
 func (r *Resource) AsRNode() *kyaml.RNode {
 	return r.node.Copy()
 }

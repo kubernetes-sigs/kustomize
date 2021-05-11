@@ -19,8 +19,15 @@ func assertActualEqualsExpectedWithTweak(
 	ht hasGetT,
 	m resmap.ResMap,
 	tweaker func([]byte) []byte, expected string) {
+	AssertActualEqualsExpectedWithTweak(ht.GetT(), m, tweaker, expected)
+}
+
+func AssertActualEqualsExpectedWithTweak(
+	t *testing.T,
+	m resmap.ResMap,
+	tweaker func([]byte) []byte, expected string) {
 	if m == nil {
-		ht.GetT().Fatalf("Map should not be nil.")
+		t.Fatalf("Map should not be nil.")
 	}
 	// Ignore leading linefeed in expected value
 	// to ease readability of tests.
@@ -29,13 +36,13 @@ func assertActualEqualsExpectedWithTweak(
 	}
 	actual, err := m.AsYaml()
 	if err != nil {
-		ht.GetT().Fatalf("Unexpected err: %v", err)
+		t.Fatalf("Unexpected err: %v", err)
 	}
 	if tweaker != nil {
 		actual = tweaker(actual)
 	}
 	if string(actual) != expected {
-		reportDiffAndFail(ht.GetT(), actual, expected)
+		reportDiffAndFail(t, actual, expected)
 	}
 }
 
