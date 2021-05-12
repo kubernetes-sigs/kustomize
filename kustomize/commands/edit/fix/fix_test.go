@@ -4,10 +4,10 @@
 package fix
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 )
@@ -17,20 +17,13 @@ func TestFix(t *testing.T) {
 	testutils_test.WriteTestKustomizationWith(fSys, []byte(`nameprefix: some-prefix-`))
 
 	cmd := NewCmdFix(fSys)
-	err := cmd.RunE(cmd, nil)
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
-	if !strings.Contains(string(content), "apiVersion: ") {
-		t.Errorf("expected apiVersion in kustomization")
-	}
-	if !strings.Contains(string(content), "kind: Kustomization") {
-		t.Errorf("expected kind in kustomization")
-	}
+	assert.NoError(t, err)
+
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
 }
 
 func TestFixOutdatedPatchesFieldTitle(t *testing.T) {
@@ -62,20 +55,12 @@ patches:
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
 	cmd := NewCmdFix(fSys)
-	err := cmd.RunE(cmd, nil)
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
-	if !strings.Contains(string(content), "apiVersion: ") {
-		t.Errorf("expected apiVersion in kustomization")
-	}
-	if !strings.Contains(string(content), "kind: Kustomization") {
-		t.Errorf("expected kind in kustomization")
-	}
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
 
 	if diff := cmp.Diff(expected, content); diff != "" {
 		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
@@ -114,20 +99,12 @@ kind: Kustomization
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
 	cmd := NewCmdFix(fSys)
-	err := cmd.RunE(cmd, nil)
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
-	if !strings.Contains(string(content), "apiVersion: ") {
-		t.Errorf("expected apiVersion in kustomization")
-	}
-	if !strings.Contains(string(content), "kind: Kustomization") {
-		t.Errorf("expected kind in kustomization")
-	}
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
 
 	if diff := cmp.Diff(expected, content); diff != "" {
 		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
@@ -156,20 +133,12 @@ kind: Kustomization
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
 	cmd := NewCmdFix(fSys)
-	err := cmd.RunE(cmd, nil)
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
-	if !strings.Contains(string(content), "apiVersion: ") {
-		t.Errorf("expected apiVersion in kustomization")
-	}
-	if !strings.Contains(string(content), "kind: Kustomization") {
-		t.Errorf("expected kind in kustomization")
-	}
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
 
 	if diff := cmp.Diff(expected, content); diff != "" {
 		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
@@ -190,11 +159,6 @@ labels:
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
 	cmd := NewCmdFix(fSys)
 	err := cmd.RunE(cmd, nil)
-	if err == nil {
-		t.Fatalf("expect error")
-	}
-	expectedErr := "label name 'foo' exists in both commonLabels and labels"
-	if err.Error() != expectedErr {
-		t.Fatalf("error message '%s' doesn't match expected", err.Error())
-	}
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "label name 'foo' exists in both commonLabels and labels")
 }
