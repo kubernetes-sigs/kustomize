@@ -13,10 +13,11 @@ import (
 	"text/template"
 
 	"github.com/markbates/pkger"
-
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -204,12 +205,30 @@ type TemplateProcessor struct {
 	// PostProcessFilters provides a hook to manipulate the ResourceList's items after template
 	// filters are applied.
 	PostProcessFilters []kio.Filter
+
+	// AdditionalSchemas is a function that returns a list of schema definitions to add to openapi.
+	// This enables correct merging of custom resource fields.
+	AdditionalSchemas SchemaDefinitionFunc
 }
+
+// SchemaDefinitionFunc is a function that provides a list of schema definitions.
+// TemplateProcessor uses this to defer loading of schemas to the point where they are used.
+type SchemaDefinitionFunc func() ([]*spec.Definitions, error)
 
 // Filter implements the kio.Filter interface, enabling you to use TemplateProcessor
 // as part of a higher-level ResourceListProcessor like VersionedAPIProcessor.
 // It sets up all the features of TemplateProcessors as a pipeline of filters and executes them.
 func (tp TemplateProcessor) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
+	if tp.AdditionalSchemas != nil {
+		defs, err := tp.AdditionalSchemas()
+		if err != nil {
+			return nil, errors.WrapPrefixf(err, "parsing AdditionalSchemas")
+		}
+		for i := range defs {
+			openapi.AddDefinitions(*defs[i])
+		}
+	}
+
 	buf := &kio.PackageBuffer{Nodes: items}
 	pipeline := kio.Pipeline{
 		Inputs: []kio.Reader{buf},
@@ -355,8 +374,7 @@ func TemplatesFromFile(files ...string) TemplatesFunc {
 	return func() ([]*template.Template, error) {
 		var templates []*template.Template
 		for i := range files {
-			n := filepath.Base(files[i])
-			t, err := template.New(n).ParseFiles(files[i])
+			t, err := parseTemplate(files[i])
 			if err != nil {
 				return nil, err
 			}
@@ -364,6 +382,24 @@ func TemplatesFromFile(files ...string) TemplatesFunc {
 		}
 		return templates, nil
 	}
+}
+
+func parseTemplate(filename string) (*template.Template, error) {
+	f, err := pkger.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	bs, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := template.New(filepath.Base(filename)).Parse(string(bs))
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 // TemplatesFromDir returns a TemplatesFunc that will generate templates from the provided
@@ -382,18 +418,7 @@ func TemplatesFromDir(dirs ...pkger.Dir) TemplatesFunc {
 				if !strings.HasSuffix(info.Name(), ".template.yaml") {
 					return nil
 				}
-				name := path.Join(dir, info.Name())
-				f, err := pkger.Open(name)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-
-				b, err := ioutil.ReadAll(f)
-				if err != nil {
-					return err
-				}
-				t, err := template.New(info.Name()).Parse(string(b))
+				t, err := parseTemplate(path.Join(dir, info.Name()))
 				if err != nil {
 					return err
 				}
@@ -407,4 +432,72 @@ func TemplatesFromDir(dirs ...pkger.Dir) TemplatesFunc {
 		}
 		return pt, nil
 	}
+}
+
+// SchemaDefinitionsFromFile returns a SchemaDefinitionFunc that will load schemas from the provided files.
+// This is a helper to facilitate providing custom resource schemas to a TemplateProcessor.
+func SchemaDefinitionsFromFile(files ...string) SchemaDefinitionFunc {
+	return func() ([]*spec.Definitions, error) {
+		var defs []*spec.Definitions
+		for _, filename := range files {
+			def, err := readSchemaJSON(filename)
+			if err != nil {
+				return nil, err
+			}
+			defs = append(defs, &def)
+		}
+		return defs, nil
+	}
+}
+
+// SchemaDefinitionsFromDir returns a SchemaDefinitionFunc that will load schemas from the provided directories.
+// This is a helper to facilitate providing custom resource schemas to a TemplateProcessor.
+func SchemaDefinitionsFromDir(dirs ...pkger.Dir) SchemaDefinitionFunc {
+	return func() ([]*spec.Definitions, error) {
+		var defs []*spec.Definitions
+		for i := range dirs {
+			dir := string(dirs[i])
+			err := pkger.Walk(dir, func(p string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if !strings.HasSuffix(info.Name(), ".json") {
+					return nil
+				}
+				def, err := readSchemaJSON(path.Join(dir, info.Name()))
+				if err != nil {
+					return err
+				}
+				defs = append(defs, &def)
+				return nil
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		return defs, nil
+	}
+}
+
+func readSchemaJSON(filename string) (spec.Definitions, error) {
+	f, err := pkger.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	var schema spec.Schema
+	err = schema.UnmarshalJSON(b)
+	if err != nil {
+		return nil, err
+	}
+
+	if schema.Definitions != nil {
+		return schema.Definitions, nil
+	}
+	return nil, errors.Errorf("schema did not contain any definitions")
 }
