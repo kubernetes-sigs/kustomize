@@ -1,0 +1,14 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: example
+spec:
+  targets:
+  - app: A
+    type: Go
+    size: small
+  - app: B
+    type: Go

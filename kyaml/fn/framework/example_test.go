@@ -9,6 +9,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/markbates/pkger"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
@@ -221,7 +222,7 @@ func ExampleTemplateProcessor_generate_files() {
 		// Templates
 		ResourceTemplates: []framework.ResourceTemplate{{
 			Templates: framework.TemplatesFromFile(
-				filepath.Join("testdata", "example", "templatefiles", "deployment.template"),
+				pkger.Include("/fn/framework/testdata/example/templatefiles/deployment.template"),
 			),
 		}},
 	}
