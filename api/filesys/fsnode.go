@@ -600,3 +600,27 @@ func (n *fsNode) Glob(pattern string) ([]string, error) {
 	sort.Strings(result)
 	return result, nil
 }
+
+func (n *fsNode) deepCopy(parent *fsNode) *fsNode {
+	result := &fsNode{
+		parent:        parent,
+		nilParentName: n.nilParentName,
+		content:       n.content,
+	}
+	if n.offset != nil {
+		*result.offset = *n.offset
+	}
+
+	if n.dir != nil {
+		result.dir = make(map[string]*fsNode)
+		for name, node := range n.dir {
+			result.dir[name] = node.deepCopy(result)
+		}
+	}
+	return result
+}
+
+// DeepCopy implements FileSystem
+func (n *fsNode) DeepCopy() FileSystem {
+	return n.deepCopy(n.parent)
+}

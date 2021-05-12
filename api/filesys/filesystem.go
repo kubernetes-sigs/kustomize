@@ -19,9 +19,9 @@ const (
 type FileSystem interface {
 	// Create a file.
 	Create(path string) (File, error)
-	// MkDir makes a directory.
+	// Mkdir makes a directory.
 	Mkdir(path string) error
-	// MkDirAll makes a directory path, creating intervening directories.
+	// MkdirAll makes a directory path, creating intervening directories.
 	MkdirAll(path string) error
 	// RemoveAll removes path and any children it contains.
 	RemoveAll(path string) error
@@ -47,4 +47,6 @@ type FileSystem interface {
 	WriteFile(path string, data []byte) error
 	// Walk walks the file system with the given WalkFunc.
 	Walk(path string, walkFn filepath.WalkFunc) error
+	// DeepCopy returns a copy of the given filesystem
+	DeepCopy() FileSystem
 }
