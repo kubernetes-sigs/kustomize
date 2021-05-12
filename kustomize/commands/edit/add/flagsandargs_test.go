@@ -7,23 +7,20 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"sigs.k8s.io/kustomize/api/filesys"
 )
 
 func TestDataValidation_NoName(t *testing.T) {
 	fa := flagsAndArgs{}
-
-	if fa.Validate([]string{}) == nil {
-		t.Fatal("Validation should fail if no name is specified")
-	}
+	assert.Error(t, fa.Validate([]string{}))
 }
 
 func TestDataValidation_MoreThanOneName(t *testing.T) {
 	fa := flagsAndArgs{}
 
-	if fa.Validate([]string{"name", "othername"}) == nil {
-		t.Fatal("Validation should fail if more than one name is specified")
-	}
+	assert.Error(t, fa.Validate([]string{"name", "othername"}))
 }
 
 func TestDataConfigValidation_Flags(t *testing.T) {
@@ -80,10 +77,11 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if test.fa.Validate([]string{"name"}) == nil && test.shouldFail {
-			t.Fatalf("Validation should fail if %s", test.name)
-		} else if test.fa.Validate([]string{"name"}) != nil && !test.shouldFail {
-			t.Fatalf("Validation should succeed if %s", test.name)
+		err := test.fa.Validate([]string{"name"})
+		if test.shouldFail {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
 		}
 	}
 }
