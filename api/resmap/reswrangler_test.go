@@ -927,7 +927,6 @@ spec:
 		patches       []string
 		expected      []string
 		errorExpected bool
-		errorMsg      string
 	}{
 		"clown": {
 			base: []string{`apiVersion: v1

@@ -869,9 +869,8 @@ spec:
         name: sidecar
 `
 	cases := map[string]struct {
-		patch1      string
-		patch2      string
-		expectError bool
+		patch1 string
+		patch2 string
 	}{
 		"Patch with delete directive first": {
 			patch1: deletePatch,

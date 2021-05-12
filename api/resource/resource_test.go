@@ -381,7 +381,6 @@ func TestApplySmPatch(t *testing.T) {
 		patch         []string
 		expected      string
 		errorExpected bool
-		errorMsg      string
 	}{
 		"withschema-label-image-container": {
 			base: baseResource(myDeployment),

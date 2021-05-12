@@ -281,6 +281,7 @@ func doSanityChecksAndDropIntoBase(
 	return l
 }
 
+//nolint: gosimple
 func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 	dir, fSys, err := commonSetupForLoaderRestrictionTest()
 	if err != nil {
@@ -314,6 +315,7 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 	}
 }
 
+//nolint: gosimple
 func TestRestrictionNoneInRealLoader(t *testing.T) {
 	dir, fSys, err := commonSetupForLoaderRestrictionTest()
 	if err != nil {
@@ -415,6 +417,7 @@ whatever
 	}
 }
 
+//nolint: gosimple
 func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// Define an overlay-base structure in the file system.
 	topDir := "/whatever"

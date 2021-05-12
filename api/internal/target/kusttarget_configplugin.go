@@ -359,6 +359,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		return
 	},
 	// No kustomization file keyword for this yet.
+	// nolint: unparam
 	builtinhelpers.ValueAddTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
