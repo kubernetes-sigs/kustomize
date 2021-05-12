@@ -11,7 +11,9 @@ import (
 	"github.com/markbates/pkger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -27,7 +29,7 @@ func TestTemplateProcessor_ResourceTemplates(t *testing.T) {
 		TemplateData: &API{},
 		ResourceTemplates: []framework.ResourceTemplate{{
 			Templates: framework.TemplatesFromDir(pkger.Dir(
-				"/fn/framework/testdata/template-processor/templates")),
+				"/fn/framework/testdata/template-processor/templates/basic")),
 		}},
 	}
 
@@ -81,7 +83,7 @@ func TestTemplateProcessor_PatchTemplates(t *testing.T) {
 			// Patch from dir with no selector templating
 			&framework.ResourcePatchTemplate{
 				Templates: framework.TemplatesFromDir(pkger.Dir(
-					"/fn/framework/testdata/template-processor/patches")),
+					"/fn/framework/testdata/template-processor/patches/basic")),
 				Selector: &framework.Selector{Names: []string{"foo"}},
 			},
 			// Patch from string with selector templating
@@ -524,4 +526,77 @@ spec:
 			assert.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+func TestTemplateProcessor_AdditionalSchemas(t *testing.T) {
+	p := framework.TemplateProcessor{
+		AdditionalSchemas: func() ([]*spec.Definitions, error) {
+			// This adds the same thing twice, just to exercise both the ...FromDir and the ...FromFile helpers
+			c1, err := framework.SchemaDefinitionsFromDir("/fn/framework/testdata/template-processor/schemas")()
+			if err != nil {
+				return nil, errors.WrapPrefixf(err, "schema from dir")
+			}
+			c2, err := framework.SchemaDefinitionsFromFile("/fn/framework/testdata/template-processor/schemas/foo.json")()
+			if err != nil {
+				return nil, errors.WrapPrefixf(err, "schema from file")
+			}
+			return append(c1, c2...), nil
+		},
+		ResourceTemplates: []framework.ResourceTemplate{{
+			Templates: framework.TemplatesFromFile("/fn/framework/testdata/template-processor/templates/custom-resource/foo.yaml"),
+		}},
+		PatchTemplates: []framework.PatchTemplate{
+			&framework.ResourcePatchTemplate{
+				Templates: framework.TemplatesFromFile("/fn/framework/testdata/template-processor/patches/custom-resource/patch.template.yaml")},
+		},
+	}
+	out := new(bytes.Buffer)
+
+	rw := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: example.com/v1
+  kind: Foo
+  metadata:
+    name: source
+  spec:
+    targets:
+    - app: C
+      size: medium
+`),
+		Writer: out}
+	defer openapi.ResetOpenAPI()
+	require.NoError(t, framework.Execute(p, rw))
+	require.Equal(t, strings.TrimSpace(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: example.com/v1
+  kind: Foo
+  metadata:
+    name: source
+  spec:
+    targets:
+    - app: C
+      size: large
+      type: Ruby
+    - app: B
+      size: small
+- apiVersion: example.com/v1
+  kind: Foo
+  metadata:
+    name: example
+  spec:
+    targets:
+    - app: A
+      type: Go
+      size: small
+    - app: B
+      type: Go
+      size: small
+    - app: C
+      type: Ruby
+      size: large
+`), strings.TrimSpace(out.String()))
 }
