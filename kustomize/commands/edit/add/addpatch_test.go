@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 )
@@ -42,18 +43,11 @@ func TestAddPatchWithFilePath(t *testing.T) {
 		"--label-selector", labelSelector,
 	}
 	cmd.SetArgs(args)
-	err := cmd.Execute()
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.Execute())
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
+	assert.NoError(t, err)
 	for i := 1; i < len(args); i += 2 {
-		if !strings.Contains(string(content), args[i]) {
-			t.Errorf("expected flag value of %s in kustomization but got\n%s", args[i-1], content)
-		}
+		assert.Contains(t, string(content), args[i])
 	}
 }
 
@@ -74,18 +68,11 @@ func TestAddPatchWithPatchContent(t *testing.T) {
 		"--label-selector", labelSelector,
 	}
 	cmd.SetArgs(args)
-	err := cmd.Execute()
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.Execute())
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
+	assert.NoError(t, err)
 	for i := 1; i < len(args); i += 2 {
-		if !strings.Contains(string(content), strings.Trim(args[i], " \n")) {
-			t.Errorf("expected flag value of %s in kustomization but got\n%s", args[i-1], content)
-		}
+		assert.Contains(t, string(content), strings.Trim(args[i], " \n"))
 	}
 }
 
@@ -106,16 +93,10 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 		"--label-selector", labelSelector,
 	}
 	cmd.SetArgs(args)
-	err := cmd.Execute()
-	if err != nil {
-		t.Fatalf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.Execute())
 
 	// adding an existing patch shouldn't return an error
-	err = cmd.Execute()
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.Execute())
 }
 
 func TestAddPatchNoArgs(t *testing.T) {
@@ -123,10 +104,6 @@ func TestAddPatchNoArgs(t *testing.T) {
 
 	cmd := newCmdAddPatch(fSys)
 	err := cmd.Execute()
-	if err == nil {
-		t.Errorf("expected error: %v", err)
-	}
-	if err.Error() != "must provide either patch or path" {
-		t.Errorf("incorrect error: %v", err.Error())
-	}
+	assert.Error(t, err)
+	assert.Equal(t, "must provide either patch or path", err.Error())
 }

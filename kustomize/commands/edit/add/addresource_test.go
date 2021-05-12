@@ -4,9 +4,9 @@
 package add
 
 import (
-	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/filesys"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 )
@@ -27,20 +27,11 @@ func TestAddResourceHappyPath(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName + "*"}
-	err := cmd.RunE(cmd, args)
-	if err != nil {
-		t.Errorf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
-	if !strings.Contains(string(content), resourceFileName) {
-		t.Errorf("expected resource name in kustomization")
-	}
-	if !strings.Contains(string(content), resourceFileName+"another") {
-		t.Errorf("expected resource name in kustomization")
-	}
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), resourceFileName)
+	assert.Contains(t, string(content), resourceFileName+"another")
 }
 
 func TestAddResourceAlreadyThere(t *testing.T) {
@@ -50,16 +41,10 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName}
-	err := cmd.RunE(cmd, args)
-	if err != nil {
-		t.Fatalf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, args))
 
 	// adding an existing resource doesn't return an error
-	err = cmd.RunE(cmd, args)
-	if err != nil {
-		t.Errorf("unexpected cmd error :%v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, args))
 }
 
 func TestAddKustomizationFileAsResource(t *testing.T) {
@@ -69,19 +54,12 @@ func TestAddKustomizationFileAsResource(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName}
-	err := cmd.RunE(cmd, args)
-	if err != nil {
-		t.Fatalf("unexpected cmd error: %v", err)
-	}
+	assert.NoError(t, cmd.RunE(cmd, args))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	if err != nil {
-		t.Errorf("unexpected read error: %v", err)
-	}
+	assert.NoError(t, err)
 
-	if strings.Contains(string(content), resourceFileName) {
-		t.Errorf("%v shouldn't be in the list of the resources", resourceFileName)
-	}
+	assert.NotContains(t, string(content), resourceFileName)
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
@@ -89,10 +67,6 @@ func TestAddResourceNoArgs(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	err := cmd.Execute()
-	if err == nil {
-		t.Errorf("expected error: %v", err)
-	}
-	if err.Error() != "must specify a resource file" {
-		t.Errorf("incorrect error: %v", err.Error())
-	}
+	assert.Error(t, err)
+	assert.Equal(t, "must specify a resource file", err.Error())
 }
