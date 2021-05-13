@@ -224,6 +224,7 @@ func (tp TemplateProcessor) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
 		if err != nil {
 			return nil, errors.WrapPrefixf(err, "parsing AdditionalSchemas")
 		}
+		defer openapi.ResetOpenAPI()
 		for i := range defs {
 			openapi.AddDefinitions(*defs[i])
 		}
@@ -368,6 +369,10 @@ func StringTemplates(data ...string) TemplatesFunc {
 }
 
 // TemplatesFromFile returns a TemplatesFunc that will generate templates from the provided files.
+// Paths must be absolute using the module root as the filesystem root:
+//   TemplatesFromFile(filepath.FromSlash("/kyaml/fn/framework/templates/foo.template.yaml")).
+// This function works with pkger-embedded static files. To use pkger's auto-detection feature:
+//   TemplatesFromFile(filepath.FromSlash(pkger.Include("/kyaml/fn/framework/templates/foo.template.yaml")))
 // This is a helper to facilitate providing ResourceTemplates, PatchTemplates and
 // ContainerPatchTemplates to a TemplateProcessor.
 func TemplatesFromFile(files ...string) TemplatesFunc {
@@ -404,13 +409,16 @@ func parseTemplate(filename string) (*template.Template, error) {
 
 // TemplatesFromDir returns a TemplatesFunc that will generate templates from the provided
 // directories. Only files suffixed with .template.yaml will be included.
+// Paths must be absolute using the module root as the filesystem root:
+//   TemplatesFromDir(filepath.FromSlash("/kyaml/fn/framework/templates")).
+// This function works with pkger-embedded static dirs. To use pkger's auto-detection feature:
+//   TemplatesFromDir(filepath.FromSlash(pkger.Include("/kyaml/fn/framework/templates")))
 // This is a helper to facilitate providing ResourceTemplates, PatchTemplates and
 // ContainerPatchTemplates to a TemplateProcessor.
-func TemplatesFromDir(dirs ...pkger.Dir) TemplatesFunc {
+func TemplatesFromDir(dirs ...string) TemplatesFunc {
 	return func() ([]*template.Template, error) {
 		var pt []*template.Template
-		for i := range dirs {
-			dir := string(dirs[i])
+		for _, dir := range dirs {
 			err := pkger.Walk(dir, func(p string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
@@ -435,6 +443,10 @@ func TemplatesFromDir(dirs ...pkger.Dir) TemplatesFunc {
 }
 
 // SchemaDefinitionsFromFile returns a SchemaDefinitionFunc that will load schemas from the provided files.
+// Paths must be absolute using the module root as the filesystem root:
+//   SchemaDefinitionsFromFile(filepath.FromSlash("/kyaml/fn/framework/foo/schema.json")).
+// This function works with pkger-embedded static files. To use pkger's auto-detection feature:
+//   SchemaDefinitionsFromFile(filepath.FromSlash(pkger.Include("/kyaml/fn/framework/foo/schema.json")))
 // This is a helper to facilitate providing custom resource schemas to a TemplateProcessor.
 func SchemaDefinitionsFromFile(files ...string) SchemaDefinitionFunc {
 	return func() ([]*spec.Definitions, error) {
@@ -451,12 +463,15 @@ func SchemaDefinitionsFromFile(files ...string) SchemaDefinitionFunc {
 }
 
 // SchemaDefinitionsFromDir returns a SchemaDefinitionFunc that will load schemas from the provided directories.
+// Paths must be absolute using the module root as the filesystem root:
+//   SchemaDefinitionsFromDir(filepath.FromSlash("/kyaml/fn/framework/schemas")).
+// This function works with pkger-embedded static dirs. To use pkger's auto-detection feature:
+//   SchemaDefinitionsFromDir(filepath.FromSlash(pkger.Include("/kyaml/fn/framework/schemas")))
 // This is a helper to facilitate providing custom resource schemas to a TemplateProcessor.
-func SchemaDefinitionsFromDir(dirs ...pkger.Dir) SchemaDefinitionFunc {
+func SchemaDefinitionsFromDir(dirs ...string) SchemaDefinitionFunc {
 	return func() ([]*spec.Definitions, error) {
 		var defs []*spec.Definitions
-		for i := range dirs {
-			dir := string(dirs[i])
+		for _, dir := range dirs {
 			err := pkger.Walk(dir, func(p string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err

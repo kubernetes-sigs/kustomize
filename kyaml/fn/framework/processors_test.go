@@ -5,10 +5,10 @@ package framework_test
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/markbates/pkger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/kube-openapi/pkg/validation/spec"
@@ -28,8 +28,8 @@ func TestTemplateProcessor_ResourceTemplates(t *testing.T) {
 	p := framework.TemplateProcessor{
 		TemplateData: &API{},
 		ResourceTemplates: []framework.ResourceTemplate{{
-			Templates: framework.TemplatesFromDir(pkger.Dir(
-				"/fn/framework/testdata/template-processor/templates/basic")),
+			Templates: framework.TemplatesFromDir(
+				filepath.FromSlash("/fn/framework/testdata/template-processor/templates/basic")),
 		}},
 	}
 
@@ -82,7 +82,7 @@ func TestTemplateProcessor_PatchTemplates(t *testing.T) {
 		PatchTemplates: []framework.PatchTemplate{
 			// Patch from dir with no selector templating
 			&framework.ResourcePatchTemplate{
-				Templates: framework.TemplatesFromDir(pkger.Dir(
+				Templates: framework.TemplatesFromDir(filepath.FromSlash(
 					"/fn/framework/testdata/template-processor/patches/basic")),
 				Selector: &framework.Selector{Names: []string{"foo"}},
 			},
@@ -179,7 +179,7 @@ func TestTemplateProcessor_ContainerPatchTemplates(t *testing.T) {
 		PatchTemplates: []framework.PatchTemplate{
 			// patch from dir with no selector templating
 			&framework.ContainerPatchTemplate{
-				Templates: framework.TemplatesFromDir(pkger.Dir(
+				Templates: framework.TemplatesFromDir(filepath.FromSlash(
 					"/fn/framework/testdata/template-processor/container-patches")),
 				Selector: &framework.Selector{Names: []string{"foo"}},
 			},
@@ -532,22 +532,22 @@ func TestTemplateProcessor_AdditionalSchemas(t *testing.T) {
 	p := framework.TemplateProcessor{
 		AdditionalSchemas: func() ([]*spec.Definitions, error) {
 			// This adds the same thing twice, just to exercise both the ...FromDir and the ...FromFile helpers
-			c1, err := framework.SchemaDefinitionsFromDir("/fn/framework/testdata/template-processor/schemas")()
+			c1, err := framework.SchemaDefinitionsFromDir(filepath.FromSlash("/fn/framework/testdata/template-processor/schemas"))()
 			if err != nil {
 				return nil, errors.WrapPrefixf(err, "schema from dir")
 			}
-			c2, err := framework.SchemaDefinitionsFromFile("/fn/framework/testdata/template-processor/schemas/foo.json")()
+			c2, err := framework.SchemaDefinitionsFromFile(filepath.FromSlash("/fn/framework/testdata/template-processor/schemas/foo.json"))()
 			if err != nil {
 				return nil, errors.WrapPrefixf(err, "schema from file")
 			}
 			return append(c1, c2...), nil
 		},
 		ResourceTemplates: []framework.ResourceTemplate{{
-			Templates: framework.TemplatesFromFile("/fn/framework/testdata/template-processor/templates/custom-resource/foo.yaml"),
+			Templates: framework.TemplatesFromFile(filepath.FromSlash("/fn/framework/testdata/template-processor/templates/custom-resource/foo.yaml")),
 		}},
 		PatchTemplates: []framework.PatchTemplate{
 			&framework.ResourcePatchTemplate{
-				Templates: framework.TemplatesFromFile("/fn/framework/testdata/template-processor/patches/custom-resource/patch.template.yaml")},
+				Templates: framework.TemplatesFromFile(filepath.FromSlash("/fn/framework/testdata/template-processor/patches/custom-resource/patch.template.yaml"))},
 		},
 	}
 	out := new(bytes.Buffer)
@@ -566,7 +566,6 @@ items:
       size: medium
 `),
 		Writer: out}
-	defer openapi.ResetOpenAPI()
 	require.NoError(t, framework.Execute(p, rw))
 	require.Equal(t, strings.TrimSpace(`
 apiVersion: config.kubernetes.io/v1alpha1
@@ -599,4 +598,9 @@ items:
       type: Ruby
       size: large
 `), strings.TrimSpace(out.String()))
+	found := openapi.SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "example.com/v1",
+		Kind:       "Foo",
+	})
+	require.Nil(t, found, "openAPI schema was not reset")
 }
