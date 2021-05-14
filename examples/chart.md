@@ -88,6 +88,7 @@ Define this base the usual way by creating a
 cat <<'EOF' >$DEMO_HOME/base/kustomization.yaml
 helmCharts:
 - name: minecraft
+  includeCRDs: false
   valuesInline:
     minecraftServer:
       eula: true
@@ -104,6 +105,10 @@ The only thing in this particular file is a `helmCharts`
 field, specifying a single chart.
 
 The `valuesInline` field overrides some native chart values.
+
+The `includeCRDs` field instructs Helm to generate 
+`CustomResourceDefinitions`. 
+See the [Helm docs for further info](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/)
 
 Check the directory layout:
 
