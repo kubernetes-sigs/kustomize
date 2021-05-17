@@ -5,14 +5,13 @@ package framework_test
 
 import (
 	"bytes"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
@@ -28,8 +27,7 @@ func TestTemplateProcessor_ResourceTemplates(t *testing.T) {
 	p := framework.TemplateProcessor{
 		TemplateData: &API{},
 		ResourceTemplates: []framework.ResourceTemplate{{
-			Templates: framework.TemplatesFromDir(
-				filepath.FromSlash("/fn/framework/testdata/template-processor/templates/basic")),
+			Templates: parser.TemplateFiles("testdata/template-processor/templates/basic"),
 		}},
 	}
 
@@ -82,14 +80,13 @@ func TestTemplateProcessor_PatchTemplates(t *testing.T) {
 		PatchTemplates: []framework.PatchTemplate{
 			// Patch from dir with no selector templating
 			&framework.ResourcePatchTemplate{
-				Templates: framework.TemplatesFromDir(filepath.FromSlash(
-					"/fn/framework/testdata/template-processor/patches/basic")),
-				Selector: &framework.Selector{Names: []string{"foo"}},
+				Templates: parser.TemplateFiles("testdata/template-processor/patches/basic"),
+				Selector:  &framework.Selector{Names: []string{"foo"}},
 			},
 			// Patch from string with selector templating
 			&framework.ResourcePatchTemplate{
 				Selector: &framework.Selector{Names: []string{"{{.Spec.A}}"}, TemplateData: &config},
-				Templates: framework.StringTemplates(`
+				Templates: parser.TemplateStrings(`
 metadata:
   annotations:
     baz: buz
@@ -179,14 +176,13 @@ func TestTemplateProcessor_ContainerPatchTemplates(t *testing.T) {
 		PatchTemplates: []framework.PatchTemplate{
 			// patch from dir with no selector templating
 			&framework.ContainerPatchTemplate{
-				Templates: framework.TemplatesFromDir(filepath.FromSlash(
-					"/fn/framework/testdata/template-processor/container-patches")),
-				Selector: &framework.Selector{Names: []string{"foo"}},
+				Templates: parser.TemplateFiles("testdata/template-processor/container-patches"),
+				Selector:  &framework.Selector{Names: []string{"foo"}},
 			},
 			// patch from string with selector templating
 			&framework.ContainerPatchTemplate{
 				Selector: &framework.Selector{Names: []string{"{{.Spec.A}}"}, TemplateData: &config},
-				Templates: framework.StringTemplates(`
+				Templates: parser.TemplateStrings(`
 env:
 - name: Foo
   value: Bar
@@ -430,7 +426,7 @@ func TestTemplateProcessor_Process_Error(t *testing.T) {
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ResourcePatchTemplate{
-						Templates: framework.StringTemplates(`aString
+						Templates: parser.TemplateStrings(`aString
 another`),
 					}},
 			},
@@ -444,7 +440,7 @@ another`),
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ResourcePatchTemplate{
-						Templates: framework.StringTemplates("foo: {{ .OOPS }}"),
+						Templates: parser.TemplateStrings("foo: {{ .OOPS }}"),
 					}},
 			},
 			wantErr: "can't evaluate field OOPS",
@@ -454,7 +450,7 @@ another`),
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ContainerPatchTemplate{
-						Templates: framework.StringTemplates(`aString
+						Templates: parser.TemplateStrings(`aString
 another`),
 					}},
 			},
@@ -468,7 +464,7 @@ another`),
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ContainerPatchTemplate{
-						Templates: framework.StringTemplates("foo: {{ .OOPS }}"),
+						Templates: parser.TemplateStrings("foo: {{ .OOPS }}"),
 					}},
 			},
 			wantErr: "can't evaluate field OOPS",
@@ -477,7 +473,7 @@ another`),
 			name: "ResourceTemplate is not a resource",
 			processor: framework.TemplateProcessor{
 				ResourceTemplates: []framework.ResourceTemplate{{
-					Templates: framework.StringTemplates(`aString
+					Templates: parser.TemplateStrings(`aString
 another`),
 				}},
 			},
@@ -490,7 +486,7 @@ another`),
 			name: "ResourceTemplate is invalid template",
 			processor: framework.TemplateProcessor{
 				ResourceTemplates: []framework.ResourceTemplate{{
-					Templates: framework.StringTemplates("foo: {{ .OOPS }}"),
+					Templates: parser.TemplateStrings("foo: {{ .OOPS }}"),
 				}},
 			},
 			wantErr: "can't evaluate field OOPS",
@@ -530,24 +526,13 @@ spec:
 
 func TestTemplateProcessor_AdditionalSchemas(t *testing.T) {
 	p := framework.TemplateProcessor{
-		AdditionalSchemas: func() ([]*spec.Definitions, error) {
-			// This adds the same thing twice, just to exercise both the ...FromDir and the ...FromFile helpers
-			c1, err := framework.SchemaDefinitionsFromDir(filepath.FromSlash("/fn/framework/testdata/template-processor/schemas"))()
-			if err != nil {
-				return nil, errors.WrapPrefixf(err, "schema from dir")
-			}
-			c2, err := framework.SchemaDefinitionsFromFile(filepath.FromSlash("/fn/framework/testdata/template-processor/schemas/foo.json"))()
-			if err != nil {
-				return nil, errors.WrapPrefixf(err, "schema from file")
-			}
-			return append(c1, c2...), nil
-		},
+		AdditionalSchemas: parser.SchemaFiles("testdata/template-processor/schemas"),
 		ResourceTemplates: []framework.ResourceTemplate{{
-			Templates: framework.TemplatesFromFile(filepath.FromSlash("/fn/framework/testdata/template-processor/templates/custom-resource/foo.yaml")),
+			Templates: parser.TemplateFiles("testdata/template-processor/templates/custom-resource/foo.template.yaml"),
 		}},
 		PatchTemplates: []framework.PatchTemplate{
 			&framework.ResourcePatchTemplate{
-				Templates: framework.TemplatesFromFile(filepath.FromSlash("/fn/framework/testdata/template-processor/patches/custom-resource/patch.template.yaml"))},
+				Templates: parser.TemplateFiles("testdata/template-processor/patches/custom-resource/patch.template.yaml")},
 		},
 	}
 	out := new(bytes.Buffer)

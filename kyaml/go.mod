@@ -7,7 +7,6 @@ require (
 	github.com/go-errors/errors v1.0.1
 	github.com/google/go-cmp v0.4.0
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/markbates/pkger v0.17.1
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.1.0
