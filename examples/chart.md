@@ -108,7 +108,7 @@ The `valuesInline` field overrides some native chart values.
 
 The `includeCRDs` field instructs Helm to generate 
 `CustomResourceDefinitions`. 
-See the [Helm docs for further info](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/)
+See [the Helm documentation](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/) for details.
 
 Check the directory layout:
 

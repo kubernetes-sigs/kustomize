@@ -69,7 +69,7 @@ type HelmChart struct {
 	// Defaults to 'override'.
 	ValuesMerge string `json:"valuesMerge,omitempty" yaml:"valuesMerge,omitempty"`
 
-	// InstallCRDs specifies if Helm should also generate CustomResourceDefinitions.
+	// IncludeCRDs specifies if Helm should also generate CustomResourceDefinitions.
 	// Defaults to 'false'.
 	IncludeCRDs bool `json:"includeCRDs,omitempty" yaml:"includeCRDs,omitempty"`
 }
