@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package main contains an example using the the framework.
-// The example annotates all resources in the input with the value provided as a flag.
+// The example annotates all resources in the input with the value provided as a flag,
+// and adds all resources in the templates/ directory to the list.
 //
 // To execute the function, run:
 //
-//   $ cat input/cm.yaml | go run ./main.go --value=foo
+//   $ cat testdata/basic/input.yaml | go run ./main.go --value=foo
+//
+// Alternatively, you can provide the value via a config file instead of a flag:
+//
+//   $ go run ./main.go testdata/basic/config.yaml testdata/basic/input.yaml
 //
 // To generate the Dockerfile for the function image run:
 //
