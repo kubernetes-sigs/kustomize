@@ -4,19 +4,13 @@
 package framework
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
 	"strings"
-	"text/template"
 
-	"github.com/markbates/pkger"
-
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -204,12 +198,37 @@ type TemplateProcessor struct {
 	// PostProcessFilters provides a hook to manipulate the ResourceList's items after template
 	// filters are applied.
 	PostProcessFilters []kio.Filter
+
+	// AdditionalSchemas is a function that returns a list of schema definitions to add to openapi.
+	// This enables correct merging of custom resource fields.
+	AdditionalSchemas SchemaParser
+}
+
+type SchemaParser interface {
+	Parse() ([]*spec.Definitions, error)
+}
+
+type SchemaParserFunc func() ([]*spec.Definitions, error)
+
+func (s SchemaParserFunc) Parse() ([]*spec.Definitions, error) {
+	return s()
 }
 
 // Filter implements the kio.Filter interface, enabling you to use TemplateProcessor
 // as part of a higher-level ResourceListProcessor like VersionedAPIProcessor.
 // It sets up all the features of TemplateProcessors as a pipeline of filters and executes them.
 func (tp TemplateProcessor) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
+	if tp.AdditionalSchemas != nil {
+		defs, err := tp.AdditionalSchemas.Parse()
+		if err != nil {
+			return nil, errors.WrapPrefixf(err, "parsing AdditionalSchemas")
+		}
+		defer openapi.ResetOpenAPI()
+		for i := range defs {
+			openapi.AddDefinitions(*defs[i])
+		}
+	}
+
 	buf := &kio.PackageBuffer{Nodes: items}
 	pipeline := kio.Pipeline{
 		Inputs: []kio.Reader{buf},
@@ -239,10 +258,6 @@ func (tp TemplateProcessor) Process(rl *ResourceList) error {
 	}
 	return errors.Wrap(rl.Filter(tp))
 }
-
-// TemplatesFunc is a function that provides a list of templates.
-// TemplateProcessor uses this to defer loading of templates to the point where they are used.
-type TemplatesFunc func() ([]*template.Template, error)
 
 // PatchTemplate is implemented by kio.Filters that work by rendering patches and applying them to
 // the given resource nodes.
@@ -329,82 +344,4 @@ func (tp *TemplateProcessor) doPatchTemplates(items []*yaml.RNode) ([]*yaml.RNod
 		}
 	}
 	return items, nil
-}
-
-// StringTemplates returns a TemplatesFunc that will generate templates from the provided strings.
-// This is a helper to facilitate providing ResourceTemplates, PatchTemplates and
-// ContainerPatchTemplates to a TemplateProcessor.
-func StringTemplates(data ...string) TemplatesFunc {
-	return func() ([]*template.Template, error) {
-		var templates []*template.Template
-		for i := range data {
-			t, err := template.New(fmt.Sprintf("inline%d", i)).Parse(data[i])
-			if err != nil {
-				return nil, err
-			}
-			templates = append(templates, t)
-		}
-		return templates, nil
-	}
-}
-
-// TemplatesFromFile returns a TemplatesFunc that will generate templates from the provided files.
-// This is a helper to facilitate providing ResourceTemplates, PatchTemplates and
-// ContainerPatchTemplates to a TemplateProcessor.
-func TemplatesFromFile(files ...string) TemplatesFunc {
-	return func() ([]*template.Template, error) {
-		var templates []*template.Template
-		for i := range files {
-			n := filepath.Base(files[i])
-			t, err := template.New(n).ParseFiles(files[i])
-			if err != nil {
-				return nil, err
-			}
-			templates = append(templates, t)
-		}
-		return templates, nil
-	}
-}
-
-// TemplatesFromDir returns a TemplatesFunc that will generate templates from the provided
-// directories. Only files suffixed with .template.yaml will be included.
-// This is a helper to facilitate providing ResourceTemplates, PatchTemplates and
-// ContainerPatchTemplates to a TemplateProcessor.
-func TemplatesFromDir(dirs ...pkger.Dir) TemplatesFunc {
-	return func() ([]*template.Template, error) {
-		var pt []*template.Template
-		for i := range dirs {
-			dir := string(dirs[i])
-			err := pkger.Walk(dir, func(p string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if !strings.HasSuffix(info.Name(), ".template.yaml") {
-					return nil
-				}
-				name := path.Join(dir, info.Name())
-				f, err := pkger.Open(name)
-				if err != nil {
-					return err
-				}
-				defer f.Close()
-
-				b, err := ioutil.ReadAll(f)
-				if err != nil {
-					return err
-				}
-				t, err := template.New(info.Name()).Parse(string(b))
-				if err != nil {
-					return err
-				}
-
-				pt = append(pt, t)
-				return nil
-			})
-			if err != nil {
-				return nil, err
-			}
-		}
-		return pt, nil
-	}
 }

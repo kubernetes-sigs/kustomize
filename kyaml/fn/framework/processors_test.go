@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/markbates/pkger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -26,8 +27,7 @@ func TestTemplateProcessor_ResourceTemplates(t *testing.T) {
 	p := framework.TemplateProcessor{
 		TemplateData: &API{},
 		ResourceTemplates: []framework.ResourceTemplate{{
-			Templates: framework.TemplatesFromDir(pkger.Dir(
-				"/fn/framework/testdata/template-processor/templates")),
+			Templates: parser.TemplateFiles("testdata/template-processor/templates/basic"),
 		}},
 	}
 
@@ -80,14 +80,13 @@ func TestTemplateProcessor_PatchTemplates(t *testing.T) {
 		PatchTemplates: []framework.PatchTemplate{
 			// Patch from dir with no selector templating
 			&framework.ResourcePatchTemplate{
-				Templates: framework.TemplatesFromDir(pkger.Dir(
-					"/fn/framework/testdata/template-processor/patches")),
-				Selector: &framework.Selector{Names: []string{"foo"}},
+				Templates: parser.TemplateFiles("testdata/template-processor/patches/basic"),
+				Selector:  &framework.Selector{Names: []string{"foo"}},
 			},
 			// Patch from string with selector templating
 			&framework.ResourcePatchTemplate{
 				Selector: &framework.Selector{Names: []string{"{{.Spec.A}}"}, TemplateData: &config},
-				Templates: framework.StringTemplates(`
+				Templates: parser.TemplateStrings(`
 metadata:
   annotations:
     baz: buz
@@ -177,14 +176,13 @@ func TestTemplateProcessor_ContainerPatchTemplates(t *testing.T) {
 		PatchTemplates: []framework.PatchTemplate{
 			// patch from dir with no selector templating
 			&framework.ContainerPatchTemplate{
-				Templates: framework.TemplatesFromDir(pkger.Dir(
-					"/fn/framework/testdata/template-processor/container-patches")),
-				Selector: &framework.Selector{Names: []string{"foo"}},
+				Templates: parser.TemplateFiles("testdata/template-processor/container-patches"),
+				Selector:  &framework.Selector{Names: []string{"foo"}},
 			},
 			// patch from string with selector templating
 			&framework.ContainerPatchTemplate{
 				Selector: &framework.Selector{Names: []string{"{{.Spec.A}}"}, TemplateData: &config},
-				Templates: framework.StringTemplates(`
+				Templates: parser.TemplateStrings(`
 env:
 - name: Foo
   value: Bar
@@ -428,7 +426,7 @@ func TestTemplateProcessor_Process_Error(t *testing.T) {
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ResourcePatchTemplate{
-						Templates: framework.StringTemplates(`aString
+						Templates: parser.TemplateStrings(`aString
 another`),
 					}},
 			},
@@ -442,7 +440,7 @@ another`),
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ResourcePatchTemplate{
-						Templates: framework.StringTemplates("foo: {{ .OOPS }}"),
+						Templates: parser.TemplateStrings("foo: {{ .OOPS }}"),
 					}},
 			},
 			wantErr: "can't evaluate field OOPS",
@@ -452,7 +450,7 @@ another`),
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ContainerPatchTemplate{
-						Templates: framework.StringTemplates(`aString
+						Templates: parser.TemplateStrings(`aString
 another`),
 					}},
 			},
@@ -466,7 +464,7 @@ another`),
 			processor: framework.TemplateProcessor{
 				PatchTemplates: []framework.PatchTemplate{
 					&framework.ContainerPatchTemplate{
-						Templates: framework.StringTemplates("foo: {{ .OOPS }}"),
+						Templates: parser.TemplateStrings("foo: {{ .OOPS }}"),
 					}},
 			},
 			wantErr: "can't evaluate field OOPS",
@@ -475,7 +473,7 @@ another`),
 			name: "ResourceTemplate is not a resource",
 			processor: framework.TemplateProcessor{
 				ResourceTemplates: []framework.ResourceTemplate{{
-					Templates: framework.StringTemplates(`aString
+					Templates: parser.TemplateStrings(`aString
 another`),
 				}},
 			},
@@ -488,7 +486,7 @@ another`),
 			name: "ResourceTemplate is invalid template",
 			processor: framework.TemplateProcessor{
 				ResourceTemplates: []framework.ResourceTemplate{{
-					Templates: framework.StringTemplates("foo: {{ .OOPS }}"),
+					Templates: parser.TemplateStrings("foo: {{ .OOPS }}"),
 				}},
 			},
 			wantErr: "can't evaluate field OOPS",
@@ -524,4 +522,70 @@ spec:
 			assert.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+func TestTemplateProcessor_AdditionalSchemas(t *testing.T) {
+	p := framework.TemplateProcessor{
+		AdditionalSchemas: parser.SchemaFiles("testdata/template-processor/schemas"),
+		ResourceTemplates: []framework.ResourceTemplate{{
+			Templates: parser.TemplateFiles("testdata/template-processor/templates/custom-resource/foo.template.yaml"),
+		}},
+		PatchTemplates: []framework.PatchTemplate{
+			&framework.ResourcePatchTemplate{
+				Templates: parser.TemplateFiles("testdata/template-processor/patches/custom-resource/patch.template.yaml")},
+		},
+	}
+	out := new(bytes.Buffer)
+
+	rw := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: example.com/v1
+  kind: Foo
+  metadata:
+    name: source
+  spec:
+    targets:
+    - app: C
+      size: medium
+`),
+		Writer: out}
+	require.NoError(t, framework.Execute(p, rw))
+	require.Equal(t, strings.TrimSpace(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- apiVersion: example.com/v1
+  kind: Foo
+  metadata:
+    name: source
+  spec:
+    targets:
+    - app: C
+      size: large
+      type: Ruby
+    - app: B
+      size: small
+- apiVersion: example.com/v1
+  kind: Foo
+  metadata:
+    name: example
+  spec:
+    targets:
+    - app: A
+      type: Go
+      size: small
+    - app: B
+      type: Go
+      size: small
+    - app: C
+      type: Ruby
+      size: large
+`), strings.TrimSpace(out.String()))
+	found := openapi.SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "example.com/v1",
+		Kind:       "Foo",
+	})
+	require.Nil(t, found, "openAPI schema was not reset")
 }
