@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
@@ -233,26 +234,134 @@ func TestIsAzureHost(t *testing.T) {
 
 func TestPeelQuery(t *testing.T) {
 	testcases := []struct {
-		input  string
-		expect [2]string
+		input string
+
+		path       string
+		ref        string
+		submodules bool
+		timeout    time.Duration
 	}{
 		{
-			input:  "somerepos?ref=v1.0.0",
-			expect: [2]string{"somerepos", "v1.0.0"},
+			// All empty.
+			input:      "somerepos",
+			path:       "somerepos",
+			ref:        "",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
 		},
 		{
-			input:  "somerepos?version=master",
-			expect: [2]string{"somerepos", "master"},
+			input:      "somerepos?ref=v1.0.0",
+			path:       "somerepos",
+			ref:        "v1.0.0",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
 		},
 		{
-			input:  "somerepos",
-			expect: [2]string{"somerepos", ""},
+			input:      "somerepos?version=master",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			// A ref value takes precedence over a version value.
+			input:      "somerepos?version=master&ref=v1.0.0",
+			path:       "somerepos",
+			ref:        "v1.0.0",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			// Empty submodules value uses default.
+			input:      "somerepos?version=master&submodules=",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			// Malformed submodules value uses default.
+			input:      "somerepos?version=master&submodules=maybe",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			input:      "somerepos?version=master&submodules=true",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: true,
+			timeout:    defaultTimeout,
+		},
+		{
+			input:      "somerepos?version=master&submodules=false",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: false,
+			timeout:    defaultTimeout,
+		},
+		{
+			// Empty timeout value uses default.
+			input:      "somerepos?version=master&timeout=",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			// Malformed timeout value uses default.
+			input:      "somerepos?version=master&timeout=jiffy",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			// Zero timeout value uses default.
+			input:      "somerepos?version=master&timeout=0",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			input:      "somerepos?version=master&timeout=0s",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			input:      "somerepos?version=master&timeout=61",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    61 * time.Second,
+		},
+		{
+			input:      "somerepos?version=master&timeout=1m1s",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    61 * time.Second,
+		},
+		{
+			input:      "somerepos?version=master&submodules=false&timeout=1m1s",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: false,
+			timeout:    61 * time.Second,
 		},
 	}
+
 	for _, testcase := range testcases {
-		path, ref := peelQuery(testcase.input)
-		if path != testcase.expect[0] || ref != testcase.expect[1] {
-			t.Errorf("peelQuery: expected (%s, %s) got (%s, %s) on %s", testcase.expect[0], testcase.expect[1], path, ref, testcase.input)
+		path, ref, timeout, submodules := peelQuery(testcase.input)
+		if path != testcase.path || ref != testcase.ref || timeout != testcase.timeout || submodules != testcase.submodules {
+			t.Errorf("peelQuery: expected (%s, %s, %v, %v) got (%s, %s, %v, %v) on %s",
+				testcase.path, testcase.ref, testcase.timeout, testcase.submodules,
+				path, ref, timeout, submodules,
+				testcase.input)
 		}
 	}
 }
