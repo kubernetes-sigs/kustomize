@@ -165,7 +165,7 @@ func TestLoadCRDs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	err := fSys.WriteFile("/testpath/crd.json", []byte(crdContent))
 	require.NoError(t, err)
-	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys, false)
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys, false, true)
 	require.NoError(t, err)
 
 	actualTc, err := LoadConfigFromCRDs(ldr, []string{"crd.json"})

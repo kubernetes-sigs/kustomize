@@ -63,7 +63,7 @@ func MakeEnhancedHarnessWithTmpRoot(t *testing.T) *HarnessEnhanced {
 	if err != nil {
 		panic("test harness cannot make tmp dir: " + err.Error())
 	}
-	r.ldr, err = fLdr.NewLoader(fLdr.RestrictionRootOnly, tmpDir, fSys)
+	r.ldr, err = fLdr.NewLoader(fLdr.RestrictionRootOnly, tmpDir, fSys, false, true)
 	if err != nil {
 		panic("test harness cannot make ldr at tmp dir: " + err.Error())
 	}
@@ -139,8 +139,7 @@ func (th *HarnessEnhanced) ResetLoaderRoot(root string) {
 	if err := th.fSys.Mkdir(root); err != nil {
 		th.t.Fatal(err)
 	}
-	ldr, err := fLdr.NewLoader(
-		fLdr.RestrictionRootOnly, root, th.fSys, false)
+	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, th.fSys, false, false)
 	if err != nil {
 		th.t.Fatalf("Unable to make loader: %v", err)
 	}

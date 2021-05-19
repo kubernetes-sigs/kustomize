@@ -4,12 +4,8 @@
 package filesys
 
 import (
-	"fmt"
 	"io/ioutil"
-	"os"
-	"os/user"
 	"path/filepath"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"strings"
 )
 
@@ -33,19 +29,6 @@ func NewTmpConfirmedDir() (ConfirmedDir, error) {
 	// resolve the real absolute path.
 	deLinked, err := filepath.EvalSymlinks(n)
 	return ConfirmedDir(deLinked), err
-}
-
-func GitRootDir() (ConfirmedDir, error) {
-	var cacheHome string
-	if cacheHome = os.Getenv(konfig.XdgCacheHomeEnv); cacheHome == "" {
-		usr, err := user.Current()
-		if err != nil {
-			return "", err
-		}
-		cacheHome = fmt.Sprintf("%s/%s", usr.HomeDir, konfig.XdgCacheHomeEnvDefault)
-	}
-
-	return ConfirmedDir(fmt.Sprintf("%s/%s", cacheHome, "git")), nil
 }
 
 // HasPrefix returns true if the directory argument

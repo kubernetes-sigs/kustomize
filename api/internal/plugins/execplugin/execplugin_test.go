@@ -29,7 +29,7 @@ s/$BAR/bar baz/g
 `))
 	require.NoError(t, err)
 	ldr, err := fLdr.NewLoader(
-		fLdr.RestrictionRootOnly, filesys.Separator, fSys, false)
+		fLdr.RestrictionRootOnly, filesys.Separator, fSys, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

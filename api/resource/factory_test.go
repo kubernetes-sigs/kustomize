@@ -302,7 +302,7 @@ kind: List
 	fSys.WriteFile(string(patchList4), []byte(patch7))
 
 	ldr, err := loader.NewLoader(
-		loader.RestrictionRootOnly, filesys.Separator, fSys, false)
+		loader.RestrictionRootOnly, filesys.Separator, fSys, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

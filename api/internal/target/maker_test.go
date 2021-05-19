@@ -32,7 +32,7 @@ func makeKustTargetWithRf(
 	fSys filesys.FileSystem,
 	root string,
 	pvd *provider.DepProvider) *target.KustTarget {
-	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys, false)
+	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}

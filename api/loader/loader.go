@@ -18,7 +18,7 @@ import (
 // the remote bases will all be root-only restricted.
 func NewLoader(
 	lr LoadRestrictorFunc,
-	target string, fSys filesys.FileSystem, enableGitCache bool) (ifc.Loader, error) {
+	target string, fSys filesys.FileSystem, enableGitCache bool, enableGitBranchesRef bool) (ifc.Loader, error) {
 
 	var gitCloner git.Cloner
 	var cleaner func() error
@@ -37,8 +37,7 @@ func NewLoader(
 
 	if err == nil {
 		// The target qualifies as a remote git target.
-		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, gitCloner, cleaner)
+		return newLoaderAtGitClone(repoSpec, fSys, nil, gitCloner, cleaner, enableGitBranchesRef)
 	}
 	root, err := demandDirectoryRoot(fSys, target)
 	if err != nil {

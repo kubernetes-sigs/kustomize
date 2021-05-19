@@ -66,7 +66,7 @@ metadata:
 	assert.NoError(t, fSys.WriteFile("deployment.yaml", []byte(resourceStr)))
 
 	ldr, err := loader.NewLoader(
-		loader.RestrictionRootOnly, filesys.Separator, fSys, false)
+		loader.RestrictionRootOnly, filesys.Separator, fSys, false, true)
 	assert.NoError(t, err)
 
 	m, err := rmF.FromFile(ldr, "deployment.yaml")
@@ -119,8 +119,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 	}
 
 	fSys := filesys.MakeFsInMemory()
-	ldr, err := loader.NewLoader(
-		loader.RestrictionRootOnly, filesys.Separator, fSys, false)
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, filesys.Separator, fSys, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -177,7 +177,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		if err = fl.errIfRepoCycle(repoSpec); err != nil {
 			return nil, err
 		}
-		return newLoaderAtGitClone(repoSpec, fl.fSys, fl, fl.cloner, repoSpec.Cleaner(fl.fSys))
+		return newLoaderAtGitClone(repoSpec, fl.fSys, fl, fl.cloner, repoSpec.Cleaner(fl.fSys), true)
 	}
 
 	if filepath.IsAbs(path) {
@@ -199,12 +199,11 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
-func newLoaderAtGitClone(
-	repoSpec *git.RepoSpec, fSys filesys.FileSystem,
-	referrer *fileLoader, cloner git.Cloner, cleaner func() error) (ifc.Loader, error) {
+func newLoaderAtGitClone(repoSpec *git.RepoSpec, fSys filesys.FileSystem, referrer *fileLoader, cloner git.Cloner,
+	cleaner func() error, acceptGitBranchesRef bool) (ifc.Loader, error) {
 
 	repoCleaner := repoSpec.Cleaner(fSys)
-	err := cloner(repoSpec)
+	err := cloner(repoSpec, acceptGitBranchesRef)
 	if err != nil {
 		repoCleaner()
 		return nil, err
@@ -232,7 +231,7 @@ func newLoaderAtGitClone(
 		repoSpec:       repoSpec,
 		fSys:           fSys,
 		cloner:         cloner,
-		cleaner: 		cleaner,
+		cleaner:        cleaner,
 	}, nil
 }
 

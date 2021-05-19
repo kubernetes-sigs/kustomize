@@ -44,6 +44,9 @@ type RepoSpec struct {
 	// Branch or tag reference.
 	Ref string
 
+	// true if it is a branch ref
+	IsBranchRef bool
+
 	// e.g. .git or empty in case of _git is present
 	GitSuffix string
 
