@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
@@ -35,7 +36,7 @@ func TestResourcePatchTemplate_ComplexSelectors(t *testing.T) {
 		}
 		pt1 := framework.ResourcePatchTemplate{
 			// Apply these rendered patches
-			Templates: framework.StringTemplates(`
+			Templates: parser.TemplateStrings(`
 spec:
   template:
     spec:
@@ -56,7 +57,7 @@ metadata:
 
 		pt2 := framework.ResourcePatchTemplate{
 			// Apply these rendered patches
-			Templates: framework.StringTemplates(`
+			Templates: parser.TemplateStrings(`
 metadata:
   annotations:
     filterPatched: '{{ .A }}'

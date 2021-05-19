@@ -111,7 +111,7 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 	rl := ResourceList{}
 	var err error
 	if rl.Items, err = rlSource.Read(); err != nil {
-		return errors.Wrap(err)
+		return errors.WrapPrefixf(err, "failed to read ResourceList input")
 	}
 	rl.FunctionConfig = rlSource.FunctionConfig
 
