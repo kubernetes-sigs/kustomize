@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/cmd/clientgocheck
+module sigs.k8s.io/kustomize/cmd/depprobcheck
 
 go 1.16
 
