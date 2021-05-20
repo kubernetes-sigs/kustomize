@@ -216,7 +216,7 @@ gorepomod release api --doIt
 
 Note the version:
 ```
-versionApi=v0.7.2   # EDIT THIS!
+versionApi=v0.8.10 # EDIT THIS!
 ```
 
 Undraft the release on the [kustomize repo release page],
