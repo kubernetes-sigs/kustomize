@@ -22,7 +22,7 @@ REPO_NAME := "kustomize"
 endif
 
 .PHONY: all
-all: verify-kustomize
+all: install-tools verify-kustomize
 
 .PHONY: verify-kustomize
 verify-kustomize: \
@@ -35,6 +35,7 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
+	install-tools \
 	lint-kustomize \
 	test-multi-module \
 	test-unit-kustomize-all \
@@ -48,32 +49,21 @@ verify-kustomize-e2e: test-examples-e2e-kustomize
 
 # Other builds in this repo might want a different linter version.
 # Without one Makefile to rule them all, the different makes
-# cannot assume that golanci-lint is at the version they want
-# since everything uses the same implicit GOPATH.
-# This installs in a temp dir to avoid overwriting someone else's
-# linter, then installs in MYGOBIN with a new name.
-# Version pinned by hack/go.mod
+# cannot assume that golanci-lint is at the version they want.
+# This installs what kustomize wants to use.
 $(MYGOBIN)/golangci-lint-kustomize:
-	( \
-		set -e; \
-		cd hack; \
-		GO111MODULE=on go build -tags=tools -o $(MYGOBIN)/golangci-lint-kustomize github.com/golangci/golangci-lint/cmd/golangci-lint; \
-	)
+	rm -f $(CURDIR)/hack/golangci-lint
+	GOBIN=$(CURDIR)/hack go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.23.8
+	mv $(CURDIR)/hack/golangci-lint $(MYGOBIN)/golangci-lint-kustomize
 
-# Install from version specified in api/go.mod.
 $(MYGOBIN)/mdrip:
-	cd api; \
-	go install github.com/monopole/mdrip
+	go install github.com/monopole/mdrip@v1.0.2
 
-# Install from version specified in api/go.mod.
 $(MYGOBIN)/stringer:
-	cd api; \
-	go install golang.org/x/tools/cmd/stringer
+	go get golang.org/x/tools/cmd/stringer
 
-# Install from version specified in api/go.mod.
 $(MYGOBIN)/goimports:
-	cd api; \
-	go install golang.org/x/tools/cmd/goimports
+	go get golang.org/x/tools/cmd/goimports
 
 # Build from local source.
 $(MYGOBIN)/gorepomod:
@@ -211,7 +201,7 @@ clean-kustomize-external-go-plugin:
 ### End kustomize plugin rules.
 
 .PHONY: lint-kustomize
-lint-kustomize: install-tools $(builtinplugins)
+lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
 	cd api; $(MYGOBIN)/golangci-lint-kustomize \
 	  -c ../.golangci-kustomize.yml \
 	  run ./...
@@ -358,8 +348,12 @@ $(MYGOBIN)/gh:
 clean: clean-kustomize-external-go-plugin
 	go clean --cache
 	rm -f $(builtinplugins)
-	rm -f $(MYGOBIN)/kustomize
+	rm -f $(MYGOBIN)/goimports
 	rm -f $(MYGOBIN)/golangci-lint-kustomize
+	rm -f $(MYGOBIN)/kustomize
+	rm -f $(MYGOBIN)/mdrip
+	rm -f $(MYGOBIN)/prchecker
+	rm -f $(MYGOBIN)/stringer
 
 # Handle pluginator manually.
 # rm -f $(MYGOBIN)/pluginator
