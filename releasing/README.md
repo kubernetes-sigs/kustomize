@@ -117,7 +117,7 @@ gorepomod release kyaml --doIt
 
 Note the version:
 ```
-versionKyaml=v0.10.6   # EDIT THIS!
+versionKyaml=v0.10.20   # EDIT THIS!
 ```
 
 Undraft the release on the [kustomize repo release page],
