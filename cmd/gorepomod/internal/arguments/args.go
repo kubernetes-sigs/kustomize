@@ -26,14 +26,14 @@ var (
 
 	// TODO: make this a PATH-like flag
 	// e.g.: --excludes ".git:.idea:site:docs"
-	excSlice = []string{
+	exclusions = []string{
 		".git",
 		".github",
 		".idea",
 		"docs",
 		"examples",
 		"hack",
-		//		"plugin",
+		"plugin",
 		"releasing",
 		"site",
 	}
@@ -94,7 +94,7 @@ func (a *Args) ConditionalModule() misc.ModuleShortName {
 
 func (a *Args) Exclusions() (result []string) {
 	// Make sure the list has no repeats.
-	for k := range utils.SliceToSet(excSlice) {
+	for k := range utils.SliceToSet(exclusions) {
 		result = append(result, k)
 	}
 	return
