@@ -90,19 +90,25 @@ func (b *Kustomizer) Run(
 		return nil, err
 	}
 	if b.options.DoLegacyResourceSort {
-		builtins.NewLegacyOrderTransformerPlugin().Transform(m)
+		err = builtins.NewLegacyOrderTransformerPlugin().Transform(m)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if b.options.AddManagedbyLabel {
 		t := builtins.LabelTransformerPlugin{
 			Labels: map[string]string{
-				konfig.ManagedbyLabelKey: fmt.Sprintf(
-					"kustomize-%s", provenance.GetProvenance().Semver())},
+				konfig.ManagedbyLabelKey: fmt.Sprintf("kustomize-%s", provenance.GetProvenance().Semver()),
+			},
 			FieldSpecs: []types.FieldSpec{{
 				Path:               "metadata/labels",
 				CreateIfNotPresent: true,
 			}},
 		}
-		t.Transform(m)
+		err = t.Transform(m)
+		if err != nil {
+			return nil, err
+		}
 	}
 	m.RemoveBuildAnnotations()
 	return m, nil
