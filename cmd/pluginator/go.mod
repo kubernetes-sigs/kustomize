@@ -9,3 +9,7 @@ require (
 	sigs.k8s.io/kustomize/api v0.8.10
 	sigs.k8s.io/kustomize/kyaml v0.10.20
 )
+
+replace sigs.k8s.io/kustomize/api => ../../api
+
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
