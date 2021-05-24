@@ -854,6 +854,7 @@ func TestFormatFileOrDirectory_skipJsonExtFile(t *testing.T) {
 func TestFormatFileOrDirectory_directory(t *testing.T) {
 	d, err := ioutil.TempDir("", "yamlfmt")
 	assert.NoError(t, err)
+	defer os.RemoveAll(d)
 
 	err = os.Mkdir(filepath.Join(d, "config"), 0700)
 	assert.NoError(t, err)
