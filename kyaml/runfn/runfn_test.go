@@ -1110,6 +1110,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	}
 
 	outDir, err := ioutil.TempDir("", "kustomize-test")
+	defer os.RemoveAll(outDir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
