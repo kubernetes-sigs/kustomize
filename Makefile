@@ -241,10 +241,10 @@ test-unit-kustomize-all: \
 	test-unit-kustomize-plugins
 
 test-unit-cmd-all:
-	./scripts/kyaml-pre-commit.sh
+	./hack/kyaml-pre-commit.sh
 
 test-go-mod:
-	./scripts/check-go-mod.sh
+	./hack/check-go-mod.sh
 
 # Environment variables are defined at
 # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
@@ -256,7 +256,7 @@ test-multi-module: $(MYGOBIN)/prchecker
 		export REPO_NAME=$(REPO_NAME); \
 		export PULL_NUMBER=$(PULL_NUMBER); \
 		export MODULES=$(MODULES); \
-		./scripts/check-multi-module.sh; \
+		./hack/check-multi-module.sh; \
 	)
 
 .PHONY:
