@@ -6,8 +6,318 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
+
+func TestPatchesInOneFile(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- namespace.yaml
+- deployment-controller-manager.yaml
+- deployment-audit-manager.yaml
+`)
+	th.WriteF("base/namespace.yaml", `
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+    admission.gatekeeper.sh/ignore: no-self-managing
+  name: system
+`)
+	th.WriteF("base/deployment-controller-manager.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+  labels:
+    control-plane: controller-manager
+    gatekeeper.sh/operation: webhook
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      gatekeeper.sh/operation: webhook
+  replicas: 3
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: controller-manager
+        gatekeeper.sh/operation: webhook
+    spec:
+      containers:
+        - command:
+            - /manager
+          args:
+            - "--port=8443"
+            - "--logtostderr"
+            - "--exempt-namespace=gatekeeper-system"
+            - "--operation=webhook"
+          image: openpolicyagent/gatekeeper:v3.4.0
+          imagePullPolicy: Always
+          name: manager
+      terminationGracePeriodSeconds: 60
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+`)
+	th.WriteF("base/deployment-audit-manager.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit
+  namespace: system
+  labels:
+    control-plane: audit-controller
+    gatekeeper.sh/operation: audit
+spec:
+  selector:
+    matchLabels:
+      control-plane: audit-controller
+      gatekeeper.sh/operation: audit
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        control-plane: audit-controller
+        gatekeeper.sh/operation: audit
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - --operation=audit
+            - --operation=status
+            - --logtostderr
+          command:
+            - /manager
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          image: openpolicyagent/gatekeeper:v3.4.0
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+          name: manager
+      serviceAccountName: gatekeeper-admin
+      terminationGracePeriodSeconds: 60
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+`)
+	const imagePatchAuditManager = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - image: AUDIT_IMAGE
+        name: manager
+        args:
+        - --port=8443
+        - --logtostderr
+        - --emit-admission-events
+        - --exempt-namespace=gatekeeper-system
+        - --operation=webhook
+        - --disable-opa-builtin=http.send
+`
+	const imagePatchControllerManager = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - image: CONTROLLER_IMAGE
+        name: manager
+        args:
+        - --emit-audit-events
+        - --operation=audit
+        - --operation=status
+        - --logtostderr
+`
+	th.WriteF(
+		"overlay/image_patch_audit_manager.yaml",
+		imagePatchAuditManager)
+	th.WriteF(
+		"overlay/image_patch_controller_manager.yaml",
+		imagePatchControllerManager)
+	const expected = `
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    admission.gatekeeper.sh/ignore: no-self-managing
+    control-plane: controller-manager
+  name: system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+    gatekeeper.sh/operation: webhook
+  name: controller-manager
+  namespace: system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      gatekeeper.sh/operation: webhook
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: controller-manager
+        gatekeeper.sh/operation: webhook
+    spec:
+      containers:
+      - args:
+        - --emit-audit-events
+        - --operation=audit
+        - --operation=status
+        - --logtostderr
+        command:
+        - /manager
+        image: CONTROLLER_IMAGE
+        imagePullPolicy: Always
+        name: manager
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: audit-controller
+    gatekeeper.sh/operation: audit
+  name: audit
+  namespace: system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: audit-controller
+      gatekeeper.sh/operation: audit
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: audit-controller
+        gatekeeper.sh/operation: audit
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - args:
+        - --port=8443
+        - --logtostderr
+        - --emit-admission-events
+        - --exempt-namespace=gatekeeper-system
+        - --operation=webhook
+        - --disable-opa-builtin=http.send
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: AUDIT_IMAGE
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+        name: manager
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: gatekeeper-admin
+      terminationGracePeriodSeconds: 60
+`
+	// Technique 1: "patchesStrategicMerge:" field, two patch files.
+	th.WriteK("overlay", `
+resources:
+- ../base
+patchesStrategicMerge:
+- image_patch_controller_manager.yaml
+- image_patch_audit_manager.yaml
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
+
+	// Technique 2: "patches:" field, two patch files.
+	th.WriteK("overlay", `
+resources:
+- ../base
+patches:
+- path: image_patch_controller_manager.yaml
+- path: image_patch_audit_manager.yaml
+`)
+	m = th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
+
+	// Technique 3: "patchesStrategicMerge:" field, one patch file.
+	th.WriteK("overlay", `
+resources:
+- ../base
+patchesStrategicMerge:
+- twoPatchesInOneFile.yaml
+`)
+	th.WriteF(
+		"overlay/twoPatchesInOneFile.yaml",
+		imagePatchAuditManager+"\n---\n"+imagePatchControllerManager)
+	m = th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
+
+	// Technique 4: "patches:" field, one patch file.  Fails.
+	th.WriteK("overlay", `
+resources:
+- ../base
+patches:
+- path: twoPatchesInOneFile.yaml
+`)
+	err := th.RunWithErr("overlay", th.MakeDefaultOptions())
+	assert.Error(t, err)
+	// This should fail, because the semantics of the `patches` field.
+	// That field allows specific patch targeting to a list of targets,
+	// while the `patchesStrategicMerge` field accepts patches that
+	// implicitly identify their targets via GVKN.
+	assert.Contains(t, err.Error(), "unable to parse SM or JSON patch from ")
+}
 
 func TestRemoveEmptyDirWithNullFieldInSmp(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
