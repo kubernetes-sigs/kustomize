@@ -131,6 +131,7 @@ pSrc=plugin/builtin
 _builtinplugins = \
 	AnnotationsTransformer.go \
 	ConfigMapGenerator.go \
+	IAMPolicyGenerator.go \
 	HashTransformer.go \
 	ImageTagTransformer.go \
 	LabelTransformer.go \
@@ -158,6 +159,7 @@ builtinplugins = $(patsubst %,$(pGen)/%,$(_builtinplugins))
 # that file, will be recreated.
 $(pGen)/AnnotationsTransformer.go: $(pSrc)/annotationstransformer/AnnotationsTransformer.go
 $(pGen)/ConfigMapGenerator.go: $(pSrc)/configmapgenerator/ConfigMapGenerator.go
+$(pGen)/GkeSaGenerator.go: $(pSrc)/gkesagenerator/GkeSaGenerator.go
 $(pGen)/HashTransformer.go: $(pSrc)/hashtransformer/HashTransformer.go
 $(pGen)/ImageTagTransformer.go: $(pSrc)/imagetagtransformer/ImageTagTransformer.go
 $(pGen)/LabelTransformer.go: $(pSrc)/labeltransformer/LabelTransformer.go
