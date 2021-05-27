@@ -1338,6 +1338,54 @@ spec:
 `,
 			expectedErr: "delimiter option can only be used with scalar nodes",
 		},
+		// Test for https://github.com/kubernetes-sigs/kustomize/issues/3928
+		// When specifying an element of a list with [name=something], kyaml
+		// throws an error. TODO: Fix this.
+		"list index contains '.' character": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+data:
+  value: example
+---
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: some-secret
+spec:
+  backendType: secretsManager
+  data:
+    - key: some-prefix-replaceme
+      name: .first
+      version: latest
+      property: first
+    - key: some-prefix-replaceme
+      name: second
+      version: latest
+      property: second
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    version: v1
+    name: source
+    fieldPath: data.value
+  targets:
+  - select:
+      group: kubernetes-client.io
+      version: v1
+      kind: ExternalSecret
+      name: some-secret
+    fieldPaths:
+    - spec.data.[name=.first].key
+    - spec.data.[name=second].key
+    options:
+      delimiter: "-"
+      index: 2
+`,
+			expectedErr: "wrong Node Kind for spec.data expected: MappingNode was SequenceNode",
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -1353,7 +1401,7 @@ spec:
 					t.Errorf("unexpected error: %s\n", err.Error())
 					t.FailNow()
 				}
-				if !assert.Equal(t, tc.expectedErr, err.Error()) {
+				if !assert.Contains(t, err.Error(), tc.expectedErr) {
 					t.FailNow()
 				}
 			}
