@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -44,8 +45,9 @@ type CommandResultsChecker struct {
 	// nor ExpectedErrorFilename will be skipped.
 	ExpectedOutputFilename string
 
-	// ExpectedErrorFilename is the file containing part of an expected error message
-	// Defaults to "error.yaml".  Directories containing neither this file
+	// ExpectedErrorFilename is the file containing elements of an expected error message.
+	// Each line of the file will be treated as a regex that must match the actual error.
+	// Defaults to "errors.txt".  Directories containing neither this file
 	// nor ExpectedOutputFilename will be skipped.
 	ExpectedErrorFilename string
 
@@ -71,7 +73,7 @@ func (rc *CommandResultsChecker) Assert(t *testing.T) bool {
 		rc.ExpectedOutputFilename = "expected.yaml"
 	}
 	if rc.ExpectedErrorFilename == "" {
-		rc.ExpectedErrorFilename = "error.yaml"
+		rc.ExpectedErrorFilename = "errors.txt"
 	}
 	if rc.InputFilenameGlob == "" {
 		rc.InputFilenameGlob = "input*.yaml"
@@ -187,8 +189,9 @@ type ProcessorResultsChecker struct {
 	// nor ExpectedErrorFilename will be skipped.
 	ExpectedOutputFilename string
 
-	// ExpectedErrorFilename is the file containing part of an expected error message
-	// Defaults to "error.yaml".  Directories containing neither this file
+	// ExpectedErrorFilename is the file containing elements of an expected error message.
+	// Each line of the file will be treated as a regex that must match the actual error.
+	// Defaults to "errors.txt".  Directories containing neither this file
 	// nor ExpectedOutputFilename will be skipped.
 	ExpectedErrorFilename string
 
@@ -214,7 +217,7 @@ func (rc *ProcessorResultsChecker) Assert(t *testing.T) bool {
 		rc.ExpectedOutputFilename = "expected.yaml"
 	}
 	if rc.ExpectedErrorFilename == "" {
-		rc.ExpectedErrorFilename = "error.yaml"
+		rc.ExpectedErrorFilename = "errors.txt"
 	}
 
 	err := filepath.Walk(rc.TestDataDirectory, func(path string, info os.FileInfo, err error) error {
@@ -283,11 +286,12 @@ func (rc *ProcessorResultsChecker) compare(t *testing.T, path string) {
 
 		// Compare the results
 		if expectedError != "" {
-			// We expected an error, so make sure there was one and it matches
+			// We expected an error, so make sure there was one
 			require.Error(t, err, actualOutput.String())
-			require.Contains(t,
-				standardizeSpacing(err.Error()),
-				standardizeSpacing(expectedError), actualOutput.String())
+			// Check that each expected line matches the output
+			for _, msg := range strings.Split(standardizeSpacing(expectedError), "\n") {
+				require.Regexp(t, regexp.MustCompile(msg), err.Error(), actualOutput.String())
+			}
 		} else {
 			// We didn't expect an error, and the output should match
 			require.NoError(t, err)

@@ -1,0 +1,5 @@
+JavaSpringBoot had 4 errors:
+\[\d\] replicas must be less than 10
+\[\d\] name is required
+\[\d\] image should not have latest tag
+\[\d\] domain must be a subdomain of example.com

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/frameworktestutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -588,4 +589,20 @@ items:
 		Kind:       "Foo",
 	})
 	require.Nil(t, found, "openAPI schema was not reset")
+}
+
+func TestTemplateProcessor_Validator(t *testing.T) {
+	// This test proves the Validate method is called when implemented
+	// and demonstrates the use of ProcessorResultsChecker's error matching
+	p := func() framework.ResourceListProcessor {
+		return &framework.VersionedAPIProcessor{FilterProvider: framework.GVKFilterMap{
+			"JavaSpringBoot": {
+				"example.com/v1alpha1": &v1alpha1JavaSpringBoot{},
+			}}}
+	}
+	c := frameworktestutil.ProcessorResultsChecker{
+		TestDataDirectory: "testdata/validation",
+		Processor:         p,
+	}
+	c.Assert(t)
 }
