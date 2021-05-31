@@ -6,7 +6,7 @@ package kio
 import (
 	"encoding/json"
 	"io"
-
+	"path/filepath"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -56,8 +56,23 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	}
 
 	encoder := yaml.NewEncoder(w.Writer)
+	// keep
+	hasJSONPathExt := make([]bool, len(nodes))
 	defer encoder.Close()
 	for i := range nodes {
+		// Check if the output file is a JSON file so we can force JSON encoding in that case.
+		// YAML flow style encoding may not be compatible because of newlines introduced by the
+		// YAML marshaller in long double quoted string values. These newlines are insignificant
+		// when interpreted as YAML but invalid when interpreted as JSON.
+		if path, _, _ := kioutil.GetFileAnnotations(nodes[i]); path != "" {
+			filename := filepath.Base(path)
+			for _, glob := range JSONMatch {
+				if match, _ := filepath.Match(glob, filename); match {
+					hasJSONPathExt[i] = true
+					break
+				}
+			}
+		}
 		// clean resources by removing annotations set by the Reader
 		if !w.KeepReaderAnnotations {
 			_, err := nodes[i].Pipe(yaml.ClearAnnotation(kioutil.IndexAnnotation))
@@ -84,7 +99,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	// don't wrap the elements
 	if w.WrappingKind == "" {
 		for i := range nodes {
-			if err := w.encode(encoder, nodes[i].Document()); err != nil {
+			if err := w.encode(encoder, hasJSONPathExt[i], nodes[i].Document()); err != nil {
 				return err
 			}
 		}
@@ -118,20 +133,24 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
-	err := w.encode(encoder, doc)
+	err := w.encode(encoder, false, doc)
 	yaml.UndoSerializationHacksOnNodes(nodes)
 	return err
 }
 
 // encode encodes the input document node to appropriate node format
-func (w ByteWriter) encode(encoder *yaml.Encoder, doc *yaml.Node) error {
+func (w ByteWriter) encode(encoder *yaml.Encoder, forceJSON bool, doc *yaml.Node) error {
 	rNode := &yaml.RNode{}
 	rNode.SetYNode(doc)
-	str, err := rNode.String()
-	if err != nil {
-		return errors.Wrap(err)
+	useJSONEncoder := forceJSON
+	if !forceJSON {
+		str, err := rNode.String()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		useJSONEncoder = json.Valid([]byte(str))
 	}
-	if json.Valid([]byte(str)) {
+	if useJSONEncoder {
 		je := json.NewEncoder(w.Writer)
 		je.SetIndent("", "  ")
 		return errors.Wrap(je.Encode(rNode))
