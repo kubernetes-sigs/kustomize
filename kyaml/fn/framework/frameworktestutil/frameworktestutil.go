@@ -142,7 +142,7 @@ func (rc *CommandResultsChecker) compare(t *testing.T, path string) {
 			if actualOutput.String() != "" {
 				assert.NoError(t, ioutil.WriteFile(rc.ExpectedOutputFilename, actualOutput.Bytes(), 0600))
 			}
-			return
+			t.Skip("Updated fixtures for test case")
 		}
 
 		// Compare the results
