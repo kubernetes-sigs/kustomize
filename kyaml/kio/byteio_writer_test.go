@@ -26,7 +26,7 @@ func TestByteWriter(t *testing.T) {
 
 	testCases := []testCase{
 		//
-		//
+		// Test Case
 		//
 		{
 			name: "wrap_resource_list",
@@ -60,7 +60,7 @@ functionConfig:
 		},
 
 		//
-		//
+		// Test Case
 		//
 		{
 			name: "multiple_items",
@@ -188,6 +188,32 @@ metadata:
   annotations:
     config.kubernetes.io/path: "a/b/a_test.yaml"
 `,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name:     "encode_valid_json",
+			items: []string{
+				`{
+  "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `{
+  "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
 		},
 	}
 
