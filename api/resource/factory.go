@@ -23,9 +23,10 @@ import (
 type Factory struct {
 	hasher ifc.KustHasher
 
-	// IncludeLocalConfigs indicates should resource factory ignore
-	// the resources which have annotation 'config.kubernetes.io/local-config'.
-	// By default it's false.
+	// When set to true, IncludeLocalConfigs indicates
+	// that Factory should include resources with the
+	// annotation 'config.kubernetes.io/local-config'.
+	// By default these resources are ignored.
 	IncludeLocalConfigs bool
 }
 
