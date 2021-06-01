@@ -198,9 +198,9 @@ metadata:
 			items: []string{
 				`{
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
-  "metadata": {
-    "annotations": {
-      "config.kubernetes.io/path": "test.json"
+  metadata: {
+    annotations: {
+      config.kubernetes.io/path: test.json
     }
   }
 }`,
@@ -214,6 +214,65 @@ metadata:
     }
   }
 }`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name:     "encode_wrapped_json_as_yaml",
+			instance: ByteWriter{
+				Sort:               true,
+				WrappingKind:       ResourceListKind,
+				WrappingAPIVersion: ResourceListAPIVersion,
+			},
+			items: []string{
+				`{
+  "a": "b",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- {"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test.json"}}}
+`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name:     "encode_multi_doc_json_as_yaml",
+			items: []string{
+				`{
+  "a": "b",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test-1.json"
+    }
+  }
+}`,
+				`{
+  "c": "d",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test-2.json"
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `
+{"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test-1.json"}}}
+---
+{"c": "d", "metadata": {"annotations": {"config.kubernetes.io/path": "test-2.json"}}}
+`,
 		},
 	}
 
