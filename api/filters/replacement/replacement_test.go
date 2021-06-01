@@ -1381,7 +1381,28 @@ spec:
       delimiter: "-"
       index: 2
 `,
-			expectedErr: "wrong Node Kind for spec.data expected: MappingNode was SequenceNode: value: {- key: some-prefix-replaceme",
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+data:
+  value: example
+---
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: some-secret
+spec:
+  backendType: secretsManager
+  data:
+  - key: some-prefix-example
+    name: .first
+    version: latest
+    property: first
+  - key: some-prefix-example
+    name: second
+    version: latest
+    property: second`,
 		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1

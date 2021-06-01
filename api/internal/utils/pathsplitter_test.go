@@ -44,6 +44,47 @@ func TestPathSplitter(t *testing.T) {
 				"nginx.ingress.kubernetes.io/auth-secret"},
 		},
 	} {
-		assert.Equal(t, tc.exp, PathSplitter(tc.path))
+		assert.Equal(t, tc.exp, PathSplitter(tc.path, "/"))
+	}
+}
+
+func TestSmarterPathSplitter(t *testing.T) {
+	testCases := map[string]struct {
+		input    string
+		expected []string
+	}{
+		"simple": {
+			input:    "spec.replicas",
+			expected: []string{"spec", "replicas"},
+		},
+		"sequence": {
+			input:    "spec.data.[name=first].key",
+			expected: []string{"spec", "data", "[name=first]", "key"},
+		},
+		"key, value with . prefix": {
+			input:    "spec.data.[.name=.first].key",
+			expected: []string{"spec", "data", "[.name=.first]", "key"},
+		},
+		"key, value with . suffix": {
+			input:    "spec.data.[name.=first.].key",
+			expected: []string{"spec", "data", "[name.=first.]", "key"},
+		},
+		"multiple '.' in value": {
+			input:    "spec.data.[name=f.i.r.s.t.].key",
+			expected: []string{"spec", "data", "[name=f.i.r.s.t.]", "key"},
+		},
+		"with escaped delimiter": {
+			input:    `spec\.replicas`,
+			expected: []string{`spec.replicas`},
+		},
+		"unmatched bracket": {
+			input:    "spec.data.[name=f.i.[r.s.t..key",
+			expected: []string{"spec", "data", "[name=f.i.[r.s.t..key"},
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			assert.Equal(t, tc.expected, SmarterPathSplitter(tc.input, "."))
+		})
 	}
 }
