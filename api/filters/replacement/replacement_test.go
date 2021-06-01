@@ -1436,7 +1436,7 @@ kind: ConfigMap
 metadata:
   name: source
 data:
-  value: some-prefix-some-prefix-some-prefix-example
+  value: example
 ---
 apiVersion: kubernetes-client.io/v1
 kind: ExternalSecret
@@ -1449,11 +1449,11 @@ spec:
     name: first
     version: latest
     property: first
-  - key: some-prefix-some-prefix-example
+  - key: some-prefix-example
     name: second
     version: latest
     property: second
-  - key: some-prefix-some-prefix-some-prefix-example
+  - key: some-prefix-example
     name: third
     version: latest
     property: third
