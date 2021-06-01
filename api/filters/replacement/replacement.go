@@ -87,6 +87,8 @@ func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelect
 }
 
 func setTargetValue(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNode) error {
+	value = value.Copy()
+
 	if options != nil && options.Delimiter != "" {
 
 		if t.YNode().Kind != yaml.ScalarNode {
