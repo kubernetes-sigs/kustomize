@@ -17,7 +17,7 @@ type Selector struct {
 	// ResId refers to a GVKN/Ns of a resource.
 	resid.ResId `json:",inline,omitempty" yaml:",inline,omitempty"`
 
-	// AnnotationSelector is a string that follows the label selection expression
+	// AnnotationSelector is a string that follows equality-based label selection requirements.
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#api
 	// It matches with the resource annotations.
 	AnnotationSelector string `json:"annotationSelector,omitempty" yaml:"annotationSelector,omitempty"`
