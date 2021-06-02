@@ -305,7 +305,7 @@ be supported by any conforming function).
 A function MUST be implemented as a container.
 
 A function container MUST be capable of running as a non-root user `nobody` if
-it does not require access to host filesystem or makes network calls.
+it does not require access to host filesystem.
 
 ### stderr
 
