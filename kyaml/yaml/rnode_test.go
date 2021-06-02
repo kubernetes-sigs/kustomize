@@ -1029,26 +1029,19 @@ func TestRNodeMatchesAnnotationSelector(t *testing.T) {
 		"select_01": {
 			selector: ".*",
 			matches:  false,
-			errMsg:   "name part must consist of alphanumeric character",
+			errMsg:   "invalid selector:",
 		},
 		"select_02": {
+			selector: "invalid/annotation/name=fail",
+			matches:  false,
+			errMsg:   "Invalid value:",
+		},
+		"select_03": {
 			selector: "area=51",
 			matches:  true,
 		},
-		"select_03": {
-			selector: "area=florida",
-			matches:  false,
-		},
 		"select_04": {
-			selector: "area in (disneyland, 51, iowa)",
-			matches:  true,
-		},
-		"select_05": {
-			selector: "area in (disneyland, iowa)",
-			matches:  false,
-		},
-		"select_06": {
-			selector: "area notin (disneyland, 51, iowa)",
+			selector: "area=florida",
 			matches:  false,
 		},
 	}
