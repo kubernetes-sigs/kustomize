@@ -186,6 +186,12 @@ func TestFindPatchTargets(t *testing.T) {
 			},
 			count: 1,
 		},
+		"select_20": {
+			target: types.Selector{
+				AnnotationSelector: "foo=bar,bar=baz",
+			},
+			count: 0,
+		},
 	}
 	for n, testcase := range testcases {
 		actual, err := rm.Select(testcase.target)
