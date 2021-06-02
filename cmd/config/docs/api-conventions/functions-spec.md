@@ -1,4 +1,4 @@
-# KRM Configuration Functions Specification
+# KRM Functions Specification
 
 _apiVersion: v1_
 
@@ -111,6 +111,8 @@ definitions:
 
           A function will read this field in the input ResourceList and populate
           this field in the output ResourceList.
+        items:
+          type: object
       functionConfig:
         type: object
         description: |
@@ -216,6 +218,7 @@ definitions:
         description: |
           Tags is an unstructured key value map stored with a result that may be set
           by external tools to store and retrieve arbitrary metadata.
+paths: {}
 ```
 
 #### Examples
@@ -320,19 +323,20 @@ A function MAY Create, Update, or Delete any number of items in the `items`
 field and output the resultant list in the corresponding `items` field of the
 output.
 
-A function MAY modify annotations with prefix `config.kubernetes.io`, but must
-be careful about doing so since they’re used for orchestration purposes and will
-likely impact subsequent functions in the pipeline. Several annotations and
-their semantics are listed below.
-
 A function SHOULD preserve comments when input serialization format is YAML.
 This allows for human authoring of configuration to coexist with changes made by
 functions.
 
 ### Annotations
 
-The orchestrator and function can communicate on a per-resource basis using the
-following annotations:
+The orchestrator annotates resources in the wire format with annotation prefix
+`config.kubernetes.io`. These annotations are not persisted when the
+orchestrator writes the resources to the filesystem. The orchestrator sets this
+annotation when reading files from the local filesystem and removes the
+annotation when writing the output of functions back to the filesystem.
+
+In general, a function MUST NOT modify these annotations except the ones
+explicitly listed below.
 
 #### `config.kubernetes.io/path`
 
@@ -340,10 +344,7 @@ Records the slash-delimited, OS-agnostic, relative file path to a resource. The
 path is relative to a fix location on the filesystem. Different orchestrator
 implementations can choose different fixed points.
 
-This annotation only exists in the wire format and is not persisted to the
-filesystem. The orchestrator sets this annotation when reading files from the
-local filesystem and removes the annotation when writing the output of functions
-back to the filesystem.
+A function SHOULD NOT modify this annotation.
 
 Example:
 
@@ -360,8 +361,7 @@ are separated by three dashes (`---`), and the index represents the position of
 the Resource starting from zero. When this annotation is not specified, it
 implies a value of `0`.
 
-Similar to `path` annotation, this annotation is not persisted when writing
-configurations files on the file system.
+A function SHOULD NOT modify this annotation.
 
 Example:
 
@@ -373,19 +373,6 @@ metadata:
 ```
 
 This represents the third resource in the file.
-
-#### `config.kubernetes.io/local-config`
-
-This annotation declares that the resource is not meant to be applied to a
-Kubernetes api server. It is only used for client-side tooling.
-
-Example:
-
-```yaml
-metadata:
-  annotations:
-    config.kubernetes.io/local-config: "true"
-```
 
 [1]:
   https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
