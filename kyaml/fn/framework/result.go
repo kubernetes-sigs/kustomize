@@ -31,7 +31,7 @@ type ResultItem struct {
 	Severity Severity `yaml:"severity,omitempty"`
 
 	// ResourceRef is a reference to a resource
-	ResourceRef yaml.ResourceMeta `yaml:"resourceRef,omitempty"`
+	ResourceRef yaml.ResourceIdentifier `yaml:"resourceRef,omitempty"`
 
 	// Field is a reference to the field in a resource this result refers to
 	Field Field `yaml:"field,omitempty"`
@@ -42,7 +42,7 @@ type ResultItem struct {
 
 // String provides a human-readable message for the result item
 func (i ResultItem) String() string {
-	identifier := i.ResourceRef.GetIdentifier()
+	identifier := i.ResourceRef
 	var idStringList []string
 	if identifier.APIVersion != "" {
 		idStringList = append(idStringList, identifier.APIVersion)
