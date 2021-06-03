@@ -261,3 +261,84 @@ spec:
         name: nginx
 `)
 }
+
+func TestReplacementTransformerWithOriginalName(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("base/deployments.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: target
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:oldtag
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: source
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx
+`)
+	th.WriteK("base", `
+resources:
+- deployments.yaml
+`)
+	th.WriteK("overlay", `
+namePrefix: prefix1-
+resources:
+- ../base
+`)
+
+	th.WriteK(".", `
+namePrefix: prefix2-
+resources:
+- overlay
+replacements:
+- path: replacement.yaml
+`)
+	th.WriteF("replacement.yaml", `
+source:
+  name: source
+  fieldPath: spec.template.spec.containers.0.image
+targets:
+- select:
+    name: prefix1-target
+  fieldPaths:
+  - spec.template.spec.containers.[name=nginx].image
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefix2-prefix1-target
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefix2-prefix1-source
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx
+`)
+}
