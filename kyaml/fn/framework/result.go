@@ -43,8 +43,24 @@ type ResultItem struct {
 // String provides a human-readable message for the result item
 func (i ResultItem) String() string {
 	identifier := i.ResourceRef.GetIdentifier()
-	idString := strings.Join([]string{identifier.GetAPIVersion(), identifier.GetKind(), identifier.GetNamespace(), identifier.GetName()}, "/")
-	return fmt.Sprintf("[%s] %s %s: %s", i.Severity, idString, i.Field.Path, i.Message)
+	var idStringList []string
+	if identifier.APIVersion != "" {
+		idStringList = append(idStringList, identifier.APIVersion)
+	}
+	if identifier.Kind != "" {
+		idStringList = append(idStringList, identifier.Kind)
+	}
+	if identifier.Namespace != "" {
+		idStringList = append(idStringList, identifier.Namespace)
+	}
+	if identifier.Name != "" {
+		idStringList = append(idStringList, identifier.Name)
+	}
+	if len(idStringList) > 0 {
+		idString := strings.Join(idStringList, "/")
+		return fmt.Sprintf("[%s] %s %s: %s", i.Severity, idString, i.Field.Path, i.Message)
+	}
+	return fmt.Sprintf("[%s] %s: %s", i.Severity, i.Field.Path, i.Message)
 }
 
 // File references a file containing a resource
