@@ -1,0 +1,14 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+kind: ResourceList
+apiVersion: config.kubernetes.io/v1alpha1
+functionConfig:
+  apiVersion: example.com/v1alpha1
+  kind: JavaSpringBoot
+  metadata:
+    name: ""
+  spec:
+    replicas: 1000
+    image: foo:latest
+    domain: bad
