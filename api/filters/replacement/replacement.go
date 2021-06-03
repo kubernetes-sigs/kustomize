@@ -44,11 +44,17 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 			t.FieldPaths = []string{types.DefaultReplacementFieldPath}
 		}
 		for _, n := range nodes {
-			id := makeResId(n)
-			if id.IsSelectedBy(t.Select.ResId) && !rejectId(t.Reject, id) {
-				err := applyToNode(n, value, t)
-				if err != nil {
-					return nil, err
+			ids, err := utils.MakeResIds(n)
+			if err != nil {
+				return nil, err
+			}
+			for _, id := range ids {
+				if id.IsSelectedBy(t.Select.ResId) && !rejectId(t.Reject, &id) {
+					err := applyToNode(n, value, t)
+					if err != nil {
+						return nil, err
+					}
+					break
 				}
 			}
 		}
@@ -152,30 +158,23 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yaml.RNode, error) {
 	var matches []*yaml.RNode
 	for _, n := range nodes {
-		if makeResId(n).IsSelectedBy(selector.ResId) {
-			if len(matches) > 0 {
-				return nil, fmt.Errorf(
-					"multiple matches for selector %s", selector)
+		ids, err := utils.MakeResIds(n)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			if id.IsSelectedBy(selector.ResId) {
+				if len(matches) > 0 {
+					return nil, fmt.Errorf(
+						"multiple matches for selector %s", selector)
+				}
+				matches = append(matches, n)
+				break
 			}
-			matches = append(matches, n)
 		}
 	}
 	if len(matches) == 0 {
 		return nil, fmt.Errorf("nothing selected by %s", selector)
 	}
 	return matches[0], nil
-}
-
-// makeResId makes a ResId from an RNode.
-func makeResId(n *yaml.RNode) *resid.ResId {
-	apiVersion := n.Field(yaml.APIVersionField)
-	var group, version string
-	if apiVersion != nil {
-		group, version = resid.ParseGroupVersion(yaml.GetValue(apiVersion.Value))
-	}
-	return &resid.ResId{
-		Gvk:       resid.Gvk{Group: group, Version: version, Kind: n.GetKind()},
-		Name:      n.GetName(),
-		Namespace: n.GetNamespace(),
-	}
 }
