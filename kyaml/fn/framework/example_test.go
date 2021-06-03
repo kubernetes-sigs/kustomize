@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -962,10 +963,27 @@ func (a *v1alpha1JavaSpringBoot) Default() error {
 }
 
 func (a *v1alpha1JavaSpringBoot) Validate() error {
+	var messages []string
 	if a.Metadata.Name == "" {
-		return errors.Errorf("Name is required")
+		messages = append(messages, "name is required")
 	}
-	return nil
+	if a.Spec.Replicas > 10 {
+		messages = append(messages, "replicas must be less than 10")
+	}
+	if !strings.HasSuffix(a.Spec.Domain, "example.com") {
+		messages = append(messages, "domain must be a subdomain of example.com")
+	}
+	if strings.HasSuffix(a.Spec.Image, ":latest") {
+		messages = append(messages, "image should not have latest tag")
+	}
+	if len(messages) == 0 {
+		return nil
+	}
+	errMsg := fmt.Sprintf("JavaSpringBoot had %d errors:\n", len(messages))
+	for i, msg := range messages {
+		errMsg += fmt.Sprintf("  [%d] %s\n", i+1, msg)
+	}
+	return errors.Errorf(errMsg)
 }
 
 // ExampleVersionedAPIProcessor shows how to use the VersionedAPIProcessor and TemplateProcessor to
