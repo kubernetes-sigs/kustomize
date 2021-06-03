@@ -22,11 +22,9 @@ func TestExecute_Result(t *testing.T) {
 				{
 					Message:  "bad value for replicas",
 					Severity: framework.Error,
-					ResourceRef: yaml.ResourceMeta{
+					ResourceRef: yaml.ResourceIdentifier{
 						TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "Deployment"},
-						ObjectMeta: yaml.ObjectMeta{
-							NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
-						},
+						NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
 					},
 					Field: framework.Field{
 						Path:           ".spec.Replicas",
@@ -83,9 +81,8 @@ results:
     resourceRef:
       apiVersion: v1
       kind: Deployment
-      metadata:
-        name: tester
-        namespace: default
+      name: tester
+      namespace: default
     field:
       path: .spec.Replicas
       currentValue: "0"
