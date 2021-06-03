@@ -18,25 +18,31 @@ func TestExecute_Result(t *testing.T) {
 	p := framework.ResourceListProcessorFunc(func(rl *framework.ResourceList) error {
 		err := &framework.Result{
 			Name: "Incompatible config",
-			Items: []framework.ResultItem{{
-				Message:  "bad value for replicas",
-				Severity: framework.Error,
-				ResourceRef: yaml.ResourceMeta{
-					TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "Deployment"},
-					ObjectMeta: yaml.ObjectMeta{
-						NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
+			Items: []framework.ResultItem{
+				{
+					Message:  "bad value for replicas",
+					Severity: framework.Error,
+					ResourceRef: yaml.ResourceMeta{
+						TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "Deployment"},
+						ObjectMeta: yaml.ObjectMeta{
+							NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
+						},
+					},
+					Field: framework.Field{
+						Path:           ".spec.Replicas",
+						CurrentValue:   "0",
+						SuggestedValue: "3",
+					},
+					File: framework.File{
+						Path:  "/path/to/deployment.yaml",
+						Index: 0,
 					},
 				},
-				Field: framework.Field{
-					Path:           ".spec.Replicas",
-					CurrentValue:   "0",
-					SuggestedValue: "3",
+				{
+					Message:  "some error",
+					Severity: framework.Error,
 				},
-				File: framework.File{
-					Path:  "/path/to/deployment.yaml",
-					Index: 0,
-				},
-			}},
+			},
 		}
 		rl.Result = err
 		return err
@@ -55,8 +61,9 @@ items:
     replicas: 0
 `), Writer: out}
 	err := framework.Execute(p, source)
-	assert.EqualError(t, err, "[error] v1/Deployment/default/tester .spec."+
-		"Replicas: bad value for replicas")
+	assert.EqualError(t, err, `[error] v1/Deployment/default/tester .spec.Replicas: bad value for replicas
+
+[error] : some error`)
 	assert.Equal(t, 1, err.(*framework.Result).ExitCode())
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
@@ -84,5 +91,7 @@ results:
       currentValue: "0"
       suggestedValue: "3"
     file:
-      path: /path/to/deployment.yaml`, strings.TrimSpace(out.String()))
+      path: /path/to/deployment.yaml
+  - message: some error
+    severity: error`, strings.TrimSpace(out.String()))
 }
