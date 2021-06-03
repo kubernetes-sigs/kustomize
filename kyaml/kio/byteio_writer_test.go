@@ -194,7 +194,7 @@ metadata:
 		// Test Case
 		//
 		{
-			name:     "encode_valid_json",
+			name: "encode_valid_json",
 			items: []string{
 				`{
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
@@ -220,7 +220,7 @@ metadata:
 		// Test Case
 		//
 		{
-			name:     "encode_wrapped_json_as_yaml",
+			name: "encode_wrapped_json_as_yaml",
 			instance: ByteWriter{
 				Sort:               true,
 				WrappingKind:       ResourceListKind,
@@ -248,7 +248,7 @@ items:
 		// Test Case
 		//
 		{
-			name:     "encode_multi_doc_json_as_yaml",
+			name: "encode_multi_doc_json_as_yaml",
 			items: []string{
 				`{
   "a": "b",
