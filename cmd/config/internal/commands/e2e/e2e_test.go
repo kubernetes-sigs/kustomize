@@ -87,8 +87,18 @@ metadata:
 			expectedFiles: func(d string) map[string]string {
 				return map[string]string{
 					"deployment.json": `
-{"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"name": "foo", annotations: {
-      a-string-value: '', a-int-value: '0', a-bool-value: 'false'}}}
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "annotations": {
+      "a-bool-value": "false",
+      "a-int-value": "0",
+      "a-string-value": ""
+    },
+    "name": "foo"
+  }
+}
 `,
 				}
 			},

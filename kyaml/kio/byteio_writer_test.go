@@ -26,7 +26,7 @@ func TestByteWriter(t *testing.T) {
 
 	testCases := []testCase{
 		//
-		//
+		// Test Case
 		//
 		{
 			name: "wrap_resource_list",
@@ -60,7 +60,7 @@ functionConfig:
 		},
 
 		//
-		//
+		// Test Case
 		//
 		{
 			name: "multiple_items",
@@ -187,6 +187,110 @@ c: d # second
 metadata:
   annotations:
     config.kubernetes.io/path: "a/b/a_test.yaml"
+`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name: "encode_valid_json",
+			items: []string{
+				`{
+  "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
+  metadata: {
+    annotations: {
+      config.kubernetes.io/path: test.json
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `{
+  "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name: "encode_unformatted_valid_json",
+			items: []string{
+				`{ "a": "b", metadata: { annotations: { config.kubernetes.io/path: test.json } } }`,
+			},
+
+			expectedOutput: `{
+  "a": "b",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name: "encode_wrapped_json_as_yaml",
+			instance: ByteWriter{
+				Sort:               true,
+				WrappingKind:       ResourceListKind,
+				WrappingAPIVersion: ResourceListAPIVersion,
+			},
+			items: []string{
+				`{
+  "a": "b",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- {"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test.json"}}}
+`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name: "encode_multi_doc_json_as_yaml",
+			items: []string{
+				`{
+  "a": "b",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test-1.json"
+    }
+  }
+}`,
+				`{
+  "c": "d",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test-2.json"
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `
+{"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test-1.json"}}}
+---
+{"c": "d", "metadata": {"annotations": {"config.kubernetes.io/path": "test-2.json"}}}
 `,
 		},
 	}

@@ -743,8 +743,8 @@ func TestFormatFileOrDirectory_ymlExtFile(t *testing.T) {
 	assert.Equal(t, string(testyaml.FormattedYaml1), string(b))
 }
 
-// TestFormatFileOrDirectory_skipYamlExtFileWithJson verifies that the json content is formatted
-// as yaml
+// TestFormatFileOrDirectory_YamlExtFileWithJson verifies that the JSON compatible flow style
+// YAML content is formatted as such.
 func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	// write the unformatted JSON file contents
 	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
@@ -760,7 +760,27 @@ func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	// check the result is formatted as yaml
 	b, err := ioutil.ReadFile(f.Name())
 	assert.NoError(t, err)
-	assert.Equal(t, string(testyaml.FormattedJSON1), string(b))
+	assert.Equal(t, string(testyaml.FormattedFlowYAML1), string(b))
+}
+
+// TestFormatFileOrDirectory_JsonExtFileWithNotModified verifies that a file with .json extensions
+// and JSON contents won't be modified.
+func TestFormatFileOrDirectory_JsonExtFileWithNotModified(t *testing.T) {
+	// write the unformatted JSON file contents
+	f, err := ioutil.TempFile("", "yamlfmt*.json")
+	assert.NoError(t, err)
+	defer os.Remove(f.Name())
+	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
+	assert.NoError(t, err)
+
+	// format the file
+	err = FormatFileOrDirectory(f.Name())
+	assert.NoError(t, err)
+
+	// check the result is formatted as yaml
+	b, err := ioutil.ReadFile(f.Name())
+	assert.NoError(t, err)
+	assert.Equal(t, string(testyaml.UnformattedJSON1), string(b))
 }
 
 // TestFormatFileOrDirectory_partialKubernetesYamlFile verifies that if a yaml file contains both
