@@ -12,7 +12,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// ByteWriter writes ResourceNodes to bytes.
+// ByteWriter writes ResourceNodes to bytes. Generally YAML encoding will be used but in the special
+// case of writing a single, bare yaml.RNode that has a kioutil.PathAnnotation indicating that the
+// target is a JSON file JSON encoding is used. See shouldJSONEncodeSingleBareNode below for more
+// information.
 type ByteWriter struct {
 	// Writer is where ResourceNodes are encoded.
 	Writer io.Writer
@@ -55,22 +58,8 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		}
 	}
 
-	// Check if the output is a single JSON file so we can force JSON encoding in that case.
-	// YAML flow style encoding may not be compatible because of unquoted strings and newlines
-	// introduced by the YAML marshaller in long string values. These newlines are insignificant
-	// when interpreted as YAML but invalid when interpreted as JSON.
-	jsonEncodeSingleNode := false
-	if w.WrappingKind == "" && len(nodes) == 1 {
-		if path, _, _ := kioutil.GetFileAnnotations(nodes[0]); path != "" {
-			filename := filepath.Base(path)
-			for _, glob := range JSONMatch {
-				if match, _ := filepath.Match(glob, filename); match {
-					jsonEncodeSingleNode = true
-					break
-				}
-			}
-		}
-	}
+	// Even though we use the this value further down we must check this before removing annotations
+	jsonEncodeSingleBareNode := w.shouldJSONEncodeSingleBareNode(nodes)
 
 	for i := range nodes {
 		// clean resources by removing annotations set by the Reader
@@ -96,7 +85,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		}
 	}
 
-	if jsonEncodeSingleNode {
+	if jsonEncodeSingleBareNode {
 		encoder := json.NewEncoder(w.Writer)
 		encoder.SetIndent("", "  ")
 		return errors.Wrap(encoder.Encode(nodes[0]))
@@ -144,4 +133,28 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	err := encoder.Encode(doc)
 	yaml.UndoSerializationHacksOnNodes(nodes)
 	return err
+}
+
+// shouldJSONEncodeSingleBareNode determines if nodes contain a single node that should not be
+// wrapped and has a JSON file extension, which in turn means that the node should be JSON encoded.
+// Note 1: this must be checked before any annotations to avoid losing information about the target
+//         filename extension.
+// Note 2: JSON encoding should only be used for single, unwrapped nodes because multiple unwrapped
+//         nodes cannot be represented in JSON (no multi doc support). Furthermore, the typical use
+//         cases for wrapping nodes would likely not include later writing the whole wrapper to a
+//         .json file, i.e. there is no point risking any edge case information loss e.g. comments
+//         disappearing, that could come from JSON encoding the whole wrapper just to ensure that
+//         one (or all nodes) can be read as JSON.
+func (w ByteWriter) shouldJSONEncodeSingleBareNode(nodes []*yaml.RNode) bool {
+	if w.WrappingKind == "" && len(nodes) == 1 {
+		if path, _, _ := kioutil.GetFileAnnotations(nodes[0]); path != "" {
+			filename := filepath.Base(path)
+			for _, glob := range JSONMatch {
+				if match, _ := filepath.Match(glob, filename); match {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

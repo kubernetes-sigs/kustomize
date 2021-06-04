@@ -220,6 +220,25 @@ metadata:
 		// Test Case
 		//
 		{
+			name: "encode_unformatted_valid_json",
+			items: []string{
+				`{ "a": "b", metadata: { annotations: { config.kubernetes.io/path: test.json } } }`,
+			},
+
+			expectedOutput: `{
+  "a": "b",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+		},
+
+		//
+		// Test Case
+		//
+		{
 			name: "encode_wrapped_json_as_yaml",
 			instance: ByteWriter{
 				Sort:               true,
