@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 )
@@ -21,8 +22,10 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
 func TestAddComponentHappyPath(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	fSys.WriteFile(componentFileName, []byte(componentFileContent))
-	fSys.WriteFile(componentFileName+"another", []byte(componentFileContent))
+	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
+	require.NoError(t, err)
+	err = fSys.WriteFile(componentFileName+"another", []byte(componentFileContent))
+	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddComponent(fSys)
@@ -36,7 +39,8 @@ func TestAddComponentHappyPath(t *testing.T) {
 
 func TestAddComponentAlreadyThere(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	fSys.WriteFile(componentFileName, []byte(componentFileContent))
+	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
+	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddComponent(fSys)
@@ -49,15 +53,16 @@ func TestAddComponentAlreadyThere(t *testing.T) {
 
 func TestAddKustomizationFileAsComponent(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	fSys.WriteFile(componentFileName, []byte(componentFileContent))
+	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
+	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddComponent(fSys)
 	args := []string{componentFileName}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotContains(t, string(content), componentFileName)
 }
 
@@ -66,6 +71,5 @@ func TestAddComponentNoArgs(t *testing.T) {
 
 	cmd := newCmdAddComponent(fSys)
 	err := cmd.Execute()
-	assert.Error(t, err)
-	assert.Equal(t, "must specify a component file", err.Error())
+	assert.EqualError(t, err, "must specify a component file")
 }

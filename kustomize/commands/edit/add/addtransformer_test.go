@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
@@ -22,8 +23,10 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
 func TestAddTransformerHappyPath(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	fSys.WriteFile(transformerFileName, []byte(transformerFileContent))
-	fSys.WriteFile(transformerFileName+"another", []byte(transformerFileContent))
+	err := fSys.WriteFile(transformerFileName, []byte(transformerFileContent))
+	require.NoError(t, err)
+	err = fSys.WriteFile(transformerFileName+"another", []byte(transformerFileContent))
+	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddTransformer(fSys)
@@ -37,7 +40,8 @@ func TestAddTransformerHappyPath(t *testing.T) {
 
 func TestAddTransformerAlreadyThere(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	fSys.WriteFile(transformerFileName, []byte(transformerFileName))
+	err := fSys.WriteFile(transformerFileName, []byte(transformerFileName))
+	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddTransformer(fSys)
@@ -61,18 +65,18 @@ func TestAddTransformerNoArgs(t *testing.T) {
 
 	cmd := newCmdAddTransformer(fSys)
 	err := cmd.Execute()
-	assert.Error(t, err)
-	assert.Equal(t, "must specify a transformer file", err.Error())
+	assert.EqualError(t, err, "must specify a transformer file")
 }
 
 func TestAddTransformerMissingKustomizationYAML(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	fSys.WriteFile(transformerFileName, []byte(transformerFileContent))
-	fSys.WriteFile(transformerFileName+"another", []byte(transformerFileContent))
+	err := fSys.WriteFile(transformerFileName, []byte(transformerFileContent))
+	require.NoError(t, err)
+	err = fSys.WriteFile(transformerFileName+"another", []byte(transformerFileContent))
+	require.NoError(t, err)
 
 	cmd := newCmdAddTransformer(fSys)
 	args := []string{transformerFileName + "*"}
-	err := cmd.RunE(cmd, args)
-	assert.Error(t, err)
-	assert.Equal(t, "Missing kustomization file 'kustomization.yaml'.\n", err.Error())
+	err = cmd.RunE(cmd, args)
+	assert.EqualError(t, err, "Missing kustomization file 'kustomization.yaml'.\n")
 }

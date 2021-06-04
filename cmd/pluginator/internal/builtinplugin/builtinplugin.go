@@ -27,7 +27,7 @@ const (
 
 // ConvertToBuiltInPlugin converts the input plugin file to
 // kustomize builtin plugin and writes it to proper directory
-func ConvertToBuiltInPlugin() error {
+func ConvertToBuiltInPlugin() (retErr error) {
 	root, err := inputFileRoot()
 	if err != nil {
 		return err
@@ -47,7 +47,12 @@ func ConvertToBuiltInPlugin() error {
 	if err != nil {
 		return err
 	}
-	defer w.close()
+	defer func() {
+		closeErr := w.Close()
+		if retErr == nil {
+			retErr = closeErr
+		}
+	}()
 
 	// This particular phrasing is required.
 	w.write(
@@ -139,10 +144,10 @@ func makeOutputFileName(root string) string {
 		"..", "..", "..", "api", packageForGeneratedCode, root+".go")
 }
 
-func (w *writer) close() {
+func (w *writer) Close() error {
 	// Do this for debugging.
 	// fmt.Println("Generated " + makeOutputFileName(w.root))
-	w.f.Close()
+	return w.f.Close()
 }
 
 func (w *writer) write(line string) {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -1671,7 +1672,8 @@ func TestSetName(t *testing.T) {
 	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
-	rn.SetName("marge")
+	err := rn.SetName("marge")
+	require.NoError(t, err)
 	if expected, actual := "marge", rn.GetName(); expected != actual {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
@@ -1682,12 +1684,15 @@ func TestSetNamespace(t *testing.T) {
 	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
 		t.Fatalf("unexpected unmarshaljson err: %v", err)
 	}
-	rn.SetNamespace("flanders")
-	meta, _ := rn.GetMeta()
+	err := rn.SetNamespace("flanders")
+	require.NoError(t, err)
+	meta, err := rn.GetMeta()
+	require.NoError(t, err)
 	if expected, actual := "flanders", meta.Namespace; expected != actual {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
 }
+
 func TestSetLabels(t *testing.T) {
 	rn := NewRNode(nil)
 	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {

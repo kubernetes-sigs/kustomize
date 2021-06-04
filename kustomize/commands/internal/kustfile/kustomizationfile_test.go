@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
@@ -125,7 +125,8 @@ configMapGenerator:
 `
 	for _, n := range konfig.RecognizedKustomizationFileNames() {
 		fSys := filesys.MakeFsInMemory()
-		fSys.WriteFile(n, []byte(kcontent))
+		err := fSys.WriteFile(n, []byte(kcontent))
+		require.NoError(t, err)
 		k, err := NewKustomizationFile(fSys)
 		if err != nil {
 			t.Fatalf("Unexpected Error: %v", err)

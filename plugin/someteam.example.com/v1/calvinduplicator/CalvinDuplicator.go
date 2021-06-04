@@ -37,11 +37,20 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		if r.GetName() == p.Name {
 			for i := 1; i <= p.Count; i++ {
 				c := r.DeepCopy()
-				c.SetName(fmt.Sprintf("%s-%d", p.Name, i))
-				m.Append(c)
+				err := c.SetName(fmt.Sprintf("%s-%d", p.Name, i))
+				if err != nil {
+					return err
+				}
+				err = m.Append(c)
+				if err != nil {
+					return err
+				}
 			}
 		} else {
-			m.Append(r)
+			err := m.Append(r)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
