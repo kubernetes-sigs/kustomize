@@ -1,7 +1,20 @@
-## Checking openapi build issues
+# Checking openapi build issues
+
+If you see the error
+
+> cannot use api.Schema.SchemaProps.Properties
+
+then you have a set of incompatible dependencies.  This doc describes the problem and a fix.
+
+tl;dr A mix of old and new is bad.
+
+Anyone depending on k8s.io `v0.20.x` or _older_ packages must avoid depending on anything that depends
+on `k8s.io/kube-openapi` newer than v0.0.0-20210323165736-1a6458611d18.
+
+This dir exists to test the problem.
 
 Edit the `main.go` and `go.mod` in this dir to see what builds
-with various combinations of cli-runtime kube-openapi.
+with various combinations of `cli-runtime` and `kube-openapi`.
 
 ####
 
@@ -16,9 +29,9 @@ means that anyone depending on
 and _any other package that imports kube-openapi_ (e.g. kyaml)
 may see a build error like
 
-   ~/go/pkg/mod/sigs.k8s.io/kustomize@v2.0.3+incompatible/pkg/transformers/config/factorycrd.go:71:47:
-   cannot use api.Schema.SchemaProps.Properties (type map[string]"k8s.io/kube-openapi/pkg/validation/spec".Schema)
-   as type myProperties in argument to looksLikeAk8sType
+>   ~/go/pkg/mod/sigs.k8s.io/kustomize@v2.0.3+incompatible/pkg/transformers/config/factorycrd.go:71:47:
+>   cannot use api.Schema.SchemaProps.Properties (type map[string]"k8s.io/kube-openapi/pkg/validation/spec".Schema)
+>   as type myProperties in argument to looksLikeAk8sType
 
 ## Why?
 
