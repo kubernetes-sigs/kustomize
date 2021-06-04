@@ -1,4 +1,5 @@
-# Checking openapi build issues
+# Troubles with dependencies on openapi
+
 
 If you see the error
 
@@ -10,6 +11,8 @@ tl;dr A mix of old and new is bad.
 
 Anyone depending on k8s.io `v0.20.x` or _older_ packages must avoid depending on anything that depends
 on `k8s.io/kube-openapi` newer than v0.0.0-20210323165736-1a6458611d18.
+
+> More context in https://github.com/kubernetes/cli-runtime/issues/19
 
 This dir exists to test the problem.
 
