@@ -192,7 +192,9 @@ func UpdateResMapValues(pluginName string, h *resmap.PluginHelpers, output []byt
 	for _, id := range rm.AllIds() {
 		newIdx, _ := newMap.GetIndexOfCurrentId(id)
 		if newIdx == -1 {
-			rm.Remove(id)
+			if err = rm.Remove(id); err != nil {
+				return err
+			}
 		}
 	}
 

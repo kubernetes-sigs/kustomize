@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
@@ -21,11 +22,12 @@ import (
 
 func TestExecPluginConfig(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	fSys.WriteFile("sed-input.txt", []byte(`
+	err := fSys.WriteFile("sed-input.txt", []byte(`
 s/$FOO/foo/g
 s/$BAR/bar baz/g
  \ \ \ 
 `))
+	require.NoError(t, err)
 	ldr, err := fLdr.NewLoader(
 		fLdr.RestrictionRootOnly, filesys.Separator, fSys)
 	if err != nil {
@@ -62,9 +64,10 @@ s/$BAR/bar baz/g
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	p.Config(
+	err = p.Config(
 		resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc),
 		yaml)
+	require.NoError(t, err)
 
 	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
 	if !strings.HasSuffix(p.Path(), expected) {
