@@ -34,9 +34,14 @@ mdrip --mode test --blockTimeOut 15m \
 
 # TODO: make work for non-linux
 if onLinuxAndNotOnRemoteCI; then
-  echo "On linux, and not on remote CI.  Running expensive tests."
-  make $MYGOBIN/helmV3
-  mdrip --mode test --label testHelm examples/chart.md
+  if [ "$version" == "HEAD" ]; then
+    echo "On linux, and not on remote CI.  Running helm tests."
+    make $MYGOBIN/helmV3
+    mdrip --mode test --label testHelm examples/chart.md
+  else
+    echo "Skipping helm tests against $version."
+    echo "Helm chart inflator has new features (includeCRD) only in HEAD."
+  fi
 fi
 
 # Force outside logic to rebuild kustomize rather than
