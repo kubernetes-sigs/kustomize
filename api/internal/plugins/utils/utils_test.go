@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -86,8 +87,10 @@ func TestUpdateResourceOptions(t *testing.T) {
 	}
 	for i, c := range cases {
 		name := fmt.Sprintf("test%d", i)
-		in.Append(makeConfigMap(rf, name, c.behavior, c.hashValue))
-		expected.Append(makeConfigMapOptions(rf, name, c.behavior, !c.needsHash))
+		err := in.Append(makeConfigMap(rf, name, c.behavior, c.hashValue))
+		require.NoError(t, err)
+		err = expected.Append(makeConfigMapOptions(rf, name, c.behavior, !c.needsHash))
+		require.NoError(t, err)
 	}
 	actual, err := UpdateResourceOptions(in)
 	assert.NoError(t, err)
@@ -105,10 +108,9 @@ func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {
 	for i, c := range cases {
 		name := fmt.Sprintf("test%d", i)
 		in := resmap.New()
-		in.Append(makeConfigMap(rf, name, "", &c))
-		_, err := UpdateResourceOptions(in)
-		if err == nil {
-			t.Errorf("expected error from value %q", c)
-		}
+		err := in.Append(makeConfigMap(rf, name, "", &c))
+		require.NoError(t, err)
+		_, err = UpdateResourceOptions(in)
+		require.Error(t, err)
 	}
 }

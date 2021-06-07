@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	. "sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
@@ -162,16 +163,13 @@ func TestLoadCRDs(t *testing.T) {
 	}
 
 	fSys := filesys.MakeFsInMemory()
-	fSys.WriteFile("/testpath/crd.json", []byte(crdContent))
+	err := fSys.WriteFile("/testpath/crd.json", []byte(crdContent))
+	require.NoError(t, err)
 	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys)
-	if err != nil {
-		t.Fatalf("unexpected error:%v", err)
-	}
+	require.NoError(t, err)
 
 	actualTc, err := LoadConfigFromCRDs(ldr, []string{"crd.json"})
-	if err != nil {
-		t.Fatalf("unexpected error:%v", err)
-	}
+	require.NoError(t, err)
 	if !reflect.DeepEqual(actualTc, expectedTc) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expectedTc, actualTc)
 	}

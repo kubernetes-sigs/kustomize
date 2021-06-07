@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	ldr "sigs.k8s.io/kustomize/api/loader"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -83,7 +84,8 @@ func TestKeyValuesFromFileSources(t *testing.T) {
 	}
 
 	fSys := filesys.MakeFsInMemory()
-	fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
+	err := fSys.WriteFile("/files/app-init.ini", []byte("FOO=bar"))
+	require.NoError(t, err)
 	kvl := makeKvLoader(fSys)
 	for _, tc := range tests {
 		kvs, err := kvl.keyValuesFromFileSources(tc.sources)

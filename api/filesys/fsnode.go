@@ -560,7 +560,7 @@ func isLegalFileNameForCreation(n string) bool {
 func (n *fsNode) RegExpGlob(pattern string) ([]string, error) {
 	var result []string
 	var expression = regexp.MustCompile(pattern)
-	n.WalkMe(func(path string, info os.FileInfo, err error) error {
+	err := n.WalkMe(func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -571,6 +571,9 @@ func (n *fsNode) RegExpGlob(pattern string) ([]string, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	sort.Strings(result)
 	return result, nil
 }
@@ -582,7 +585,7 @@ func (n *fsNode) RegExpGlob(pattern string) ([]string, error) {
 // This is how /bin/ls behaves.
 func (n *fsNode) Glob(pattern string) ([]string, error) {
 	var result []string
-	n.WalkMe(func(path string, info os.FileInfo, err error) error {
+	err := n.WalkMe(func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -597,6 +600,9 @@ func (n *fsNode) Glob(pattern string) ([]string, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	sort.Strings(result)
 	return result, nil
 }

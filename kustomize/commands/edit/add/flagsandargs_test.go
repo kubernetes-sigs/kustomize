@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 )
 
@@ -88,13 +88,17 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 
 func TestExpandFileSource(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	fSys.Create("dir/fa1")
-	fSys.Create("dir/fa2")
-	fSys.Create("dir/readme")
+	_, err := fSys.Create("dir/fa1")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/fa2")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/readme")
+	require.NoError(t, err)
 	fa := flagsAndArgs{
 		FileSources: []string{"dir/fa*"},
 	}
-	fa.ExpandFileSource(fSys)
+	err = fa.ExpandFileSource(fSys)
+	require.NoError(t, err)
 	expected := []string{
 		"dir/fa1",
 		"dir/fa2",
@@ -106,14 +110,19 @@ func TestExpandFileSource(t *testing.T) {
 
 func TestExpandFileSourceWithKey(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	fSys.Create("dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc")
-	fSys.Create("dir/foobar")
-	fSys.Create("dir/simplebar")
-	fSys.Create("dir/readme")
+	_, err := fSys.Create("dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/foobar")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/simplebar")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/readme")
+	require.NoError(t, err)
 	fa := flagsAndArgs{
 		FileSources: []string{"foo-key=dir/fa*", "bar-key=dir/foobar", "dir/simplebar"},
 	}
-	fa.ExpandFileSource(fSys)
+	err = fa.ExpandFileSource(fSys)
+	require.NoError(t, err)
 	expected := []string{
 		"foo-key=dir/faaaaaaaaaabbbbbbbbbccccccccccccccccc",
 		"bar-key=dir/foobar",
@@ -126,13 +135,16 @@ func TestExpandFileSourceWithKey(t *testing.T) {
 
 func TestExpandFileSourceWithKeyAndError(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	fSys.Create("dir/fa1")
-	fSys.Create("dir/fa2")
-	fSys.Create("dir/readme")
+	_, err := fSys.Create("dir/fa1")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/fa2")
+	require.NoError(t, err)
+	_, err = fSys.Create("dir/readme")
+	require.NoError(t, err)
 	fa := flagsAndArgs{
 		FileSources: []string{"foo-key=dir/fa*"},
 	}
-	err := fa.ExpandFileSource(fSys)
+	err = fa.ExpandFileSource(fSys)
 	if err == nil {
 		t.Fatalf("FileSources should not be correctly expanded: %v", fa.FileSources)
 	}
