@@ -163,7 +163,7 @@ func TestLoadCRDs(t *testing.T) {
 
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile("/testpath/crd.json", []byte(crdContent))
-	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys)
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys, false, true)
 	if err != nil {
 		t.Fatalf("unexpected error:%v", err)
 	}

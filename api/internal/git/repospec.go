@@ -44,6 +44,9 @@ type RepoSpec struct {
 	// Branch or tag reference.
 	Ref string
 
+	// true if it is a branch ref
+	IsBranchRef bool
+
 	// e.g. .git or empty in case of _git is present
 	GitSuffix string
 
@@ -77,6 +80,8 @@ func (x *RepoSpec) AbsPath() string {
 func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
 	return func() error { return fSys.RemoveAll(x.Dir.String()) }
 }
+
+func DoNothingCleaner() error { return nil }
 
 // NewRepoSpecFromUrl parses git-like urls.
 // From strings like git@github.com:someOrg/someRepo.git or

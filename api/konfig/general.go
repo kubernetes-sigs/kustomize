@@ -28,6 +28,14 @@ const (
 	// Use this when XdgConfigHomeEnv not defined.
 	XdgConfigHomeEnvDefault = ".config"
 
+	// An environment variable to consult for kustomization
+	// cached data.  See:
+	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	XdgCacheHomeEnv = "XDG_CACHE_HOME"
+
+	// Use this when XdgCacheHomeEnv not defined.
+	XdgCacheHomeEnvDefault = ".cache"
+
 	// A program name, for use in help, finding the XDG_CONFIG_DIR, etc.
 	ProgramName = "kustomize"
 

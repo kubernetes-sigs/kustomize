@@ -27,7 +27,7 @@ s/$BAR/bar baz/g
  \ \ \ 
 `))
 	ldr, err := fLdr.NewLoader(
-		fLdr.RestrictionRootOnly, filesys.Separator, fSys)
+		fLdr.RestrictionRootOnly, filesys.Separator, fSys, false, true)
 	if err != nil {
 		t.Fatal(err)
 	}
