@@ -52,10 +52,7 @@ var _ Writer = ByteWriter{}
 
 func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// Copy the nodes to prevent writer from mutating the original nodes.
-	var nodes []*yaml.RNode
-	for i := range inputNodes {
-		nodes = append(nodes, inputNodes[i].Copy())
-	}
+	nodes := copyRNodes(inputNodes)
 	yaml.DoSerializationHacksOnNodes(nodes)
 	if w.Sort {
 		if err := kioutil.SortNodes(nodes); err != nil {
@@ -135,8 +132,15 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
-	err := encoder.Encode(doc)
-	return err
+	return encoder.Encode(doc)
+}
+
+func copyRNodes(in []*yaml.RNode) []*yaml.RNode {
+	out := make([]*yaml.RNode, len(in))
+	for i := range in {
+		out[i] = in[i].Copy()
+	}
+	return out
 }
 
 // shouldJSONEncodeSingleBareNode determines if nodes contain a single node that should not be
