@@ -40,6 +40,7 @@ func DoSerializationHacks(node *yaml.Node) {
 				}
 				node.Content[0].HeadComment = ""
 			}
+			DoSerializationHacks(node)
 		}
 	}
 }
