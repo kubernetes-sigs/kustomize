@@ -178,9 +178,12 @@ func loadCrdIntoConfig(
 			}
 		}
 		if property.Ref.GetURL() != nil {
-			loadCrdIntoConfig(
+			err = loadCrdIntoConfig(
 				theConfig, theGvk, theMap,
 				property.Ref.String(), append(path, propName))
+			if err != nil {
+				return
+			}
 		}
 	}
 	return nil

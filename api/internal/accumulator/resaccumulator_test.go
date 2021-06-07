@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -224,20 +225,26 @@ func TestResolveVarConflicts(t *testing.T) {
 	// create accumulators holding apparently conflicting vars that are not
 	// actually in conflict because they point to the same concrete value.
 	rm0 := resmap.New()
-	rm0.Append(rf.FromMap(fooAws))
+	err := rm0.Append(rf.FromMap(fooAws))
+	require.NoError(t, err)
 	ac0 := MakeEmptyAccumulator()
-	ac0.AppendAll(rm0)
-	ac0.MergeVars([]types.Var{varFoo})
+	err = ac0.AppendAll(rm0)
+	require.NoError(t, err)
+	err = ac0.MergeVars([]types.Var{varFoo})
+	require.NoError(t, err)
 
 	rm1 := resmap.New()
-	rm1.Append(rf.FromMap(barAws))
+	err = rm1.Append(rf.FromMap(barAws))
+	require.NoError(t, err)
 	ac1 := MakeEmptyAccumulator()
-	ac1.AppendAll(rm1)
-	ac1.MergeVars([]types.Var{varBar})
+	err = ac1.AppendAll(rm1)
+	require.NoError(t, err)
+	err = ac1.MergeVars([]types.Var{varBar})
+	require.NoError(t, err)
 
 	// validate that two vars of the same name which reference the same concrete
 	// value do not produce a conflict.
-	err := ac0.MergeAccumulator(ac1)
+	err = ac0.MergeAccumulator(ac1)
 	if err == nil {
 		t.Fatalf("see bug gh-1600")
 	}
@@ -246,10 +253,13 @@ func TestResolveVarConflicts(t *testing.T) {
 	// two above (because it contains a variable whose name is used in the other
 	// accumulators AND whose concrete values are different).
 	rm2 := resmap.New()
-	rm2.Append(rf.FromMap(barGcp))
+	err = rm2.Append(rf.FromMap(barGcp))
+	require.NoError(t, err)
 	ac2 := MakeEmptyAccumulator()
-	ac2.AppendAll(rm2)
-	ac2.MergeVars([]types.Var{varBar})
+	err = ac2.AppendAll(rm2)
+	require.NoError(t, err)
+	err = ac2.MergeVars([]types.Var{varBar})
+	require.NoError(t, err)
 	err = ac1.MergeAccumulator(ac2)
 	if err == nil {
 		t.Fatalf("dupe vars w/ different concrete values should conflict")

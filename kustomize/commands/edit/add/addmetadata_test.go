@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filesys"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
@@ -163,8 +164,9 @@ func TestAddAnnotationForce(t *testing.T) {
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddAnnotation(fSys, v.Validator)
-	cmd.Flag("force").Value.Set("true")
-	assert.NoError(t, cmd.RunE(cmd, args))
+	err = cmd.Flag("force").Value.Set("true")
+	require.NoError(t, err)
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -266,7 +268,8 @@ func TestAddLabelForce(t *testing.T) {
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddLabel(fSys, v.Validator)
-	cmd.Flag("force").Value.Set("true")
+	err = cmd.Flag("force").Value.Set("true")
+	require.NoError(t, err)
 	assert.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
