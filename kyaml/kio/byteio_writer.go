@@ -50,7 +50,12 @@ type ByteWriter struct {
 
 var _ Writer = ByteWriter{}
 
-func (w ByteWriter) Write(nodes []*yaml.RNode) error {
+func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
+	// Copy the nodes to prevent writer from mutating the original nodes.
+	var nodes []*yaml.RNode
+	for i := range inputNodes {
+		nodes = append(nodes, inputNodes[i].Copy())
+	}
 	yaml.DoSerializationHacksOnNodes(nodes)
 	if w.Sort {
 		if err := kioutil.SortNodes(nodes); err != nil {
@@ -131,7 +136,6 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
 	err := encoder.Encode(doc)
-	yaml.UndoSerializationHacksOnNodes(nodes)
 	return err
 }
 
