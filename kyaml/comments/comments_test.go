@@ -86,6 +86,48 @@ spec:
 		},
 
 		{
+			name: "associative_list_2",
+			from: `
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: EnforceFoo
+metadata:
+  name: enforce-foo
+spec:
+  parameters:
+    naming_rules:
+    - kind: Bar
+      patterns:
+      # comment 1
+      - ^(dev|prod|staging|qa|shared)$
+`,
+			to: `
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: EnforceFoo
+metadata:
+  name: enforce-foo
+spec:
+  parameters:
+    naming_rules:
+    - kind: Bar
+      patterns:
+      - ^(dev|prod|staging|qa|shared)$
+`,
+			expected: `
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: EnforceFoo
+metadata:
+  name: enforce-foo
+spec:
+  parameters:
+    naming_rules:
+    - kind: Bar
+      patterns:
+      # comment 1
+      - ^(dev|prod|staging|qa|shared)$
+`,
+		},
+
+		{
 			name: "keep_comments",
 			from: `# A
 #

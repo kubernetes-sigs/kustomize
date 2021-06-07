@@ -54,7 +54,10 @@ func (c *copier) VisitList(s walk.Sources, _ *openapi.ResourceSchema, _ walk.Lis
 		origin := originItems[i]
 
 		if dest.Value == origin.Value {
-			copy(yaml.NewRNode(dest), yaml.NewRNode(origin))
+			// We should do it recursively on each node in the list.
+			if err := CopyComments(yaml.NewRNode(dest), yaml.NewRNode(origin)); err != nil {
+				return nil, err
+			}
 		}
 	}
 
