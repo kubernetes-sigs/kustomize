@@ -1,15 +1,16 @@
+# Keep *-admins and *-maintainers list in sync with corresponding lists in
+# https://github.com/kubernetes/org/blob/main/config/kubernetes-sigs/sig-cli/teams.yaml
 aliases:
-  kustomize-admins: # Please keep in sync with kustomize-admins in https://github.com/kubernetes/org/blob/main/config/kubernetes-sigs/sig-cli/teams.yaml
+  kustomize-admins:
+    - knverey
     - monopole
     - pwittrock
-  kustomize-maintainers: # Please keep in sync with kustomize-maintainers in https://github.com/kubernetes/org/blob/main/config/kubernetes-sigs/sig-cli/teams.yaml
-    - droot
+  kustomize-maintainers:
     - justinsb
-    - knverey
     - mortent
     - natasha41575
     - phanimarupaka
     - Shell32-Natsu
   emeritus-maintainers:
-   - liujingfang1
-   - mengqiy
+    - liujingfang1
+    - mengqiy
