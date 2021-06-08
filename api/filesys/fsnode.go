@@ -349,6 +349,29 @@ func (n *fsNode) IsDir(path string) bool {
 	return result.isNodeADir()
 }
 
+// ReadDir implements FileSystem.
+func (n *fsNode) ReadDir(path string) ([]string, error) {
+	if !n.IsDir(path) {
+		return nil, fmt.Errorf("%s is not a directory", path)
+	}
+
+	dir, err := n.Find(path)
+	if err != nil {
+		return nil, err
+	}
+	if dir == nil {
+		return nil, fmt.Errorf("could not find directory %s", path)
+	}
+
+	keys := make([]string, len(dir.dir))
+	i := 0
+	for k := range dir.dir {
+		keys[i] = k
+		i++
+	}
+	return keys, nil
+}
+
 // Size returns the size of the node.
 func (n *fsNode) Size() int64 {
 	if n.isNodeADir() {
