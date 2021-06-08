@@ -20,6 +20,20 @@ We have full documentation on how to get started contributing here:
 
 - [Mentoring Initiatives](https://git.k8s.io/community/mentoring) - We have a diverse set of mentorship programs available that are always looking for volunteers!
 
+## Contributor Ladder
+
+Kustomize generally follows the [Kubernetes Community Membership](https://github.com/kubernetes/community/blob/master/community-membership.md) contributor ladder. Roles are as follows:
+
+1. Contributor: Anyone who actively contributes code, issues or reviews to the project. There are no Kustomize-specific requirements for this status. All contributors must [sign the CLA](https://github.com/kubernetes/community/tree/master/contributors/guide#prerequisites).
+1. Member/Reviewer: All Kubernetes-SIGs org members have LGTM rights on the Kustomize repo. There are no Kustomize-specific requirements. Kustomize does not currently have any formal reviewers, but the role will be created if there is interest.
+1. Maintainer/Approver: Highly experienced active reviewer and contributor to Kustomize. Has both LTGM and approval rights on the Kustomize repo, as well as [Github "maintain" rights](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization#repository-access-for-each-permission-level).
+1. Admin/Owner: Maintainer who sets technical direction and makes or approves design decisions for the project. Has LGTM and approval rights on the Kustomize repo as well as [Github "admin" rights](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization#repository-access-for-each-permission-level).
+
+Administrative notes:
+- Maintainers and admins must be added to the appropriate list both [in the Kustomize repo](https://github.com/kubernetes-sigs/kustomize/blob/8049f7b1af52e8a7ec26faf6cf714f560d0043c5/OWNERS_ALIASES) and [in the community repo](https://github.com/kubernetes/org/blob/main/config/kubernetes-sigs/sig-cli/teams.yaml). If this isn't done, the individual in question will lack either PR approval rights (Kustomize list) or the appropriate Github repository permissions (community list).
+- The spec for the OWNERS file is [in the community repo](https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md).
+
+
 ## Contact Information
 
 - [Slack channel](https://kubernetes.slack.com/messages/sig-cli)
