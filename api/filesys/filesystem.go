@@ -28,6 +28,8 @@ type FileSystem interface {
 	Open(path string) (File, error)
 	// IsDir returns true if the path is a directory.
 	IsDir(path string) bool
+	// ReadDir returns a list of files and directories within a directory.
+	ReadDir(path string) ([]string, error)
 	// CleanedAbs converts the given path into a
 	// directory and a file name, where the directory
 	// is represented as a ConfirmedDir and all that implies.
