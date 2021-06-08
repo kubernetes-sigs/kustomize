@@ -100,6 +100,19 @@ func (fsOnDisk) IsDir(name string) bool {
 	return info.IsDir()
 }
 
+// ReadDir delegates to os.ReadDir
+func (fsOnDisk) ReadDir(name string) ([]string, error) {
+	dirEntries, err := os.ReadDir(name)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, len(dirEntries))
+	for i := range dirEntries {
+		result[i] = dirEntries[i].Name()
+	}
+	return result, nil
+}
+
 // ReadFile delegates to ioutil.ReadFile.
 func (fsOnDisk) ReadFile(name string) ([]byte, error) { return ioutil.ReadFile(name) }
 
