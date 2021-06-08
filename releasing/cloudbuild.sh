@@ -96,6 +96,7 @@ builds:
   goarch:
   - amd64
   - arm64
+  - ppc64le
 
 checksum:
   name_template: 'checksums.txt'
