@@ -95,6 +95,127 @@ a: b #first
 		// Test Case
 		//
 		{
+			name: "handle_comments",
+			items: []string{
+				`# comment 0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+  namespace: my-space
+  labels:
+    env: dev
+    foo: bar
+spec:
+  # comment 1
+  replicas: 3
+  selector:
+    # comment 2
+    matchLabels: # comment 3
+      # comment 4
+      app: nginx # comment 5
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # comment 6
+      containers:
+        # comment 7
+        - name: nginx
+          image: nginx:1.14.2 # comment 8
+          ports:
+            # comment 9
+            - containerPort: 80 # comment 10
+`,
+				`apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  ports:
+    # comment 1
+    - name: etcd-server-ssl
+      port: 2380
+    # comment 2
+    - name: etcd-client-ssl
+      port: 2379
+`,
+				`apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: EnforceFoo
+metadata:
+  name: enforce-foo
+spec:
+  parameters:
+    naming_rules:
+      - kind: Folder
+        patterns:
+          # comment 1
+          - ^(dev|prod|staging|qa|shared)$
+`,
+			},
+			expectedOutput: `# comment 0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+  namespace: my-space
+  labels:
+    env: dev
+    foo: bar
+spec:
+  # comment 1
+  replicas: 3
+  selector:
+    # comment 2
+    matchLabels: # comment 3
+      # comment 4
+      app: nginx # comment 5
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # comment 6
+      containers:
+      # comment 7
+      - name: nginx
+        image: nginx:1.14.2 # comment 8
+        ports:
+        # comment 9
+        - containerPort: 80 # comment 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  ports:
+  # comment 1
+  - name: etcd-server-ssl
+    port: 2380
+  # comment 2
+  - name: etcd-client-ssl
+    port: 2379
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: EnforceFoo
+metadata:
+  name: enforce-foo
+spec:
+  parameters:
+    naming_rules:
+    - kind: Folder
+      patterns:
+      # comment 1
+      - ^(dev|prod|staging|qa|shared)$
+`,
+		},
+
+		//
+		// Test Case
+		//
+		{
 			name:     "sort_keep_annotation",
 			instance: ByteWriter{Sort: true, KeepReaderAnnotations: true},
 			items: []string{
