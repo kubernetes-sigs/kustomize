@@ -1480,6 +1480,54 @@ spec:
     property: third
 `,
 		},
+		"using a previous ID": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: pre-deploy
+  annotations: 
+    config.kubernetes.io/previousNames: deploy,deploy
+    config.kubernetes.io/previousKinds: CronJob,Deployment
+    config.kubernetes.io/previousNamespaces: default,default
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: CronJob
+    name: deploy
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: pre-deploy
+  annotations:
+    config.kubernetes.io/previousNames: deploy,deploy
+    config.kubernetes.io/previousKinds: CronJob,Deployment
+    config.kubernetes.io/previousNamespaces: default,default
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
