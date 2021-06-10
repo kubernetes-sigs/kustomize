@@ -236,7 +236,7 @@ func (n *fsNode) CleanedAbs(path string) (ConfirmedDir, string, error) {
 		return "", "", errors.Wrap(err, "unable to clean")
 	}
 	if node == nil {
-		return "", "", fmt.Errorf("'%s' doesn't exist", path)
+		return "", "", fmt.Errorf("'%s' doesn't exist: %w", path, os.ErrNotExist)
 	}
 	if node.isNodeADir() {
 		return ConfirmedDir(node.Path()), "", nil
@@ -309,7 +309,8 @@ func (n *fsNode) RemoveAll(path string) error {
 		return err
 	}
 	if result == nil {
-		return fmt.Errorf("cannot find '%s' to remove it", path)
+		// If the path doesn't exist, no need to remove anything.
+		return nil
 	}
 	return result.Remove()
 }
@@ -351,6 +352,9 @@ func (n *fsNode) IsDir(path string) bool {
 
 // ReadDir implements FileSystem.
 func (n *fsNode) ReadDir(path string) ([]string, error) {
+	if !n.Exists(path) {
+		return nil, fmt.Errorf("%s does not exist: %w", path, os.ErrNotExist)
+	}
 	if !n.IsDir(path) {
 		return nil, fmt.Errorf("%s is not a directory", path)
 	}
@@ -398,7 +402,7 @@ func (n *fsNode) Open(path string) (File, error) {
 		return nil, err
 	}
 	if result == nil {
-		return nil, fmt.Errorf("cannot find '%s' to open it", path)
+		return nil, fmt.Errorf("cannot find '%s' to open it: %w", path, os.ErrNotExist)
 	}
 	if result.offset != nil {
 		return nil, fmt.Errorf("cannot open previously opened file '%s'", path)
@@ -423,7 +427,7 @@ func (n *fsNode) ReadFile(path string) (c []byte, err error) {
 		return nil, err
 	}
 	if result == nil {
-		return nil, fmt.Errorf("cannot find '%s' to read it", path)
+		return nil, fmt.Errorf("cannot find '%s' to read it: %w", path, os.ErrNotExist)
 	}
 	if result.isNodeADir() {
 		return nil, fmt.Errorf("cannot read content from non-file '%s'", n.Path())
@@ -490,7 +494,7 @@ func (n *fsNode) Walk(path string, walkFn filepath.WalkFunc) error {
 		return err
 	}
 	if result == nil {
-		return fmt.Errorf("cannot find '%s' to walk it", path)
+		return fmt.Errorf("cannot find '%s' to walk it: %w", path, os.ErrNotExist)
 	}
 	return result.WalkMe(walkFn)
 }

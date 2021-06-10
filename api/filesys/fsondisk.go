@@ -57,7 +57,7 @@ func (x fsOnDisk) CleanedAbs(
 	deLinked, err := filepath.EvalSymlinks(absRoot)
 	if err != nil {
 		return "", "", fmt.Errorf(
-			"evalsymlink failure on '%s' : %v", path, err)
+			"evalsymlink failure on '%s' : %w", path, err)
 	}
 	if x.IsDir(deLinked) {
 		return ConfirmedDir(deLinked), "", nil
