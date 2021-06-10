@@ -49,3 +49,69 @@ type FileSystem interface {
 	// Walk walks the file system with the given WalkFunc.
 	Walk(path string, walkFn filepath.WalkFunc) error
 }
+
+// FileSystemWithOnDiskDefault satisfies the FileSystem interface by forwarding
+// all of its method calls to the given FileSystem whenever it's not nil.
+// If it's nil, the call is forwarded to the OS's underlying file system.
+type FileSystemWithOnDiskDefault struct {
+	FileSystem FileSystem
+}
+
+func (fs FileSystemWithOnDiskDefault) fs() FileSystem {
+	if fs.FileSystem != nil {
+		return fs.FileSystem
+	}
+	return MakeFsOnDisk()
+}
+
+func (fs FileSystemWithOnDiskDefault) Create(path string) (File, error) {
+	return fs.fs().Create(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) Mkdir(path string) error {
+	return fs.fs().Mkdir(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) MkdirAll(path string) error {
+	return fs.fs().MkdirAll(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) RemoveAll(path string) error {
+	return fs.fs().RemoveAll(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) Open(path string) (File, error) {
+	return fs.fs().Open(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) IsDir(path string) bool {
+	return fs.fs().IsDir(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) ReadDir(path string) ([]string, error) {
+	return fs.fs().ReadDir(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) CleanedAbs(path string) (ConfirmedDir, string, error) {
+	return fs.fs().CleanedAbs(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) Exists(path string) bool {
+	return fs.fs().Exists(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) Glob(pattern string) ([]string, error) {
+	return fs.fs().Glob(pattern)
+}
+
+func (fs FileSystemWithOnDiskDefault) ReadFile(path string) ([]byte, error) {
+	return fs.fs().ReadFile(path)
+}
+
+func (fs FileSystemWithOnDiskDefault) WriteFile(path string, data []byte) error {
+	return fs.fs().WriteFile(path, data)
+}
+
+func (fs FileSystemWithOnDiskDefault) Walk(path string, walkFn filepath.WalkFunc) error {
+	return fs.fs().Walk(path, walkFn)
+}
