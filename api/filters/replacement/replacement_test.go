@@ -1357,7 +1357,14 @@ metadata:
     fieldPaths: 
     - metadata.annotations.[f.g.h/i-j]
 `,
-			expectedErr: "list path element must contain fieldName=fieldValue for element to match",
+			expected: `apiVersion: v1
+kind: Custom
+metadata:
+  name: custom
+  annotations:
+    a.b.c/d-e: source
+    f.g.h/i-j: source
+`,
 		},
 		"list index contains '.' character": {
 			input: `apiVersion: v1

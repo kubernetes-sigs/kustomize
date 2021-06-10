@@ -23,12 +23,17 @@ func PathSplitter(path string, delimiter string) []string {
 	return res
 }
 
-// SmarterPathSplitter splits a path, retaining bracketed list entry identifiers.
-// E.g. [name=com.foo.someapp] survives as one thing after splitting
+// SmarterPathSplitter splits a path, retaining bracketed elements.
+// If the element is a list entry identifier (defined by the '='),
+// it will retain the brackets.
+// E.g. "[name=com.foo.someapp]" survives as one thing after splitting
 // "spec.template.spec.containers.[name=com.foo.someapp].image"
 // See kyaml/yaml/match.go for use of list entry identifiers.
-// This function uses `PathSplitter`, so it respects list entry identifiers
-// and escaped delimiters.
+// If the element is a mapping entry identifier, it will remove the
+// brackets.
+// E.g. "a.b.c" survives as one thing after splitting
+// "metadata.annotations.[a.b.c]
+// This function uses `PathSplitter`, so it also respects escaped delimiters.
 func SmarterPathSplitter(path string, delimiter string) []string {
 	var result []string
 	split := PathSplitter(path, delimiter)
@@ -45,7 +50,12 @@ func SmarterPathSplitter(path string, delimiter string) []string {
 					break
 				}
 			}
-			result = append(result, strings.Join(bracketed, delimiter))
+			bracketedStr := strings.Join(bracketed, delimiter)
+			if strings.Contains(bracketedStr, "=") {
+				result = append(result, bracketedStr)
+			} else {
+				result = append(result, strings.Trim(bracketedStr, "[]"))
+			}
 		} else {
 			result = append(result, elem)
 		}
