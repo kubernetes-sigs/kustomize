@@ -81,6 +81,10 @@ func TestSmarterPathSplitter(t *testing.T) {
 			input:    "spec.data.[name=f.i.[r.s.t..key",
 			expected: []string{"spec", "data", "[name=f.i.[r.s.t..key"},
 		},
+		"mapping value with .": {
+			input:    "metadata.annotations.[a.b.c/d.e.f-g.]",
+			expected: []string{"metadata", "annotations", "a.b.c/d.e.f-g."},
+		},
 	}
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
