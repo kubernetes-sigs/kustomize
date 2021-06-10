@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/provider"
 	. "sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -1077,7 +1078,7 @@ func TestSameEndingSubarray(t *testing.T) {
 	for n := range testCases {
 		tc := testCases[n]
 		t.Run(n, func(t *testing.T) {
-			assert.Equal(t, tc.expected, SameEndingSubarray(tc.a, tc.b))
+			assert.Equal(t, tc.expected, utils.SameEndingSubSlice(tc.a, tc.b))
 		})
 	}
 }
