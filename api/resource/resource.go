@@ -199,22 +199,6 @@ func (r *Resource) appendCsvAnnotation(name, value string) {
 	}
 }
 
-func SameEndingSubarray(shortest, longest []string) bool {
-	if len(shortest) > len(longest) {
-		longest, shortest = shortest, longest
-	}
-	diff := len(longest) - len(shortest)
-	if len(shortest) == 0 {
-		return diff == 0
-	}
-	for i := len(shortest) - 1; i >= 0; i-- {
-		if longest[i+diff] != shortest[i] {
-			return false
-		}
-	}
-	return true
-}
-
 // Implements ResCtx GetNamePrefixes
 func (r *Resource) GetNamePrefixes() []string {
 	return r.getCsvAnnotation(utils.BuildAnnotationPrefixes)
@@ -237,7 +221,8 @@ func (r *Resource) getCsvAnnotation(name string) []string {
 // as OutermostPrefixSuffix but performs a deeper comparison
 // of the suffix and prefix slices.
 func (r *Resource) PrefixesSuffixesEquals(o ResCtx) bool {
-	return SameEndingSubarray(r.GetNamePrefixes(), o.GetNamePrefixes()) && SameEndingSubarray(r.GetNameSuffixes(), o.GetNameSuffixes())
+	return utils.SameEndingSubSlice(r.GetNamePrefixes(), o.GetNamePrefixes()) &&
+		utils.SameEndingSubSlice(r.GetNameSuffixes(), o.GetNameSuffixes())
 }
 
 // RemoveBuildAnnotations removes annotations created by the build process.
