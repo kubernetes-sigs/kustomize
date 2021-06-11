@@ -2272,3 +2272,84 @@ metadata:
   name: theConfigMap-hdd8h8cgdt
 `)
 }
+
+func TestValidatingWebhookConfiguration(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+secretGenerator:
+- name: cert
+  files:
+    - val1=ca_bundle1.file
+    - val2=ca_bundle2.file
+
+vars:
+- name: CA_BUNDLE1
+  objref:
+    kind: Secret
+    name: cert
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.val1
+- name: CA_BUNDLE2
+  objref:
+    kind: Secret
+    name: cert
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.val2
+
+resources:
+- webhook.yaml
+`)
+
+	th.WriteF("webhook.yaml", `
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: $(CA_BUNDLE1)
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-endpoint-one
+- clientConfig:
+    caBundle: $(CA_BUNDLE2)
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-endpoint-two
+`)
+	th.WriteF("ca_bundle1.file", `test`)
+	th.WriteF("ca_bundle2.file", `test2`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: dGVzdA==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-endpoint-one
+- clientConfig:
+    caBundle: dGVzdDI=
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-endpoint-two
+---
+apiVersion: v1
+data:
+  val1: dGVzdA==
+  val2: dGVzdDI=
+kind: Secret
+metadata:
+  name: cert-k2kfccm29t
+type: Opaque
+`)
+}

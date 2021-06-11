@@ -216,6 +216,9 @@ varReference:
 - path: spec/nfs/server
   kind: PersistentVolume
 
+- path: webhooks[]/clientConfig/caBundle
+  kind: ValidatingWebhookConfiguration
+
 - path: metadata/labels
 
 - path: metadata/annotations
