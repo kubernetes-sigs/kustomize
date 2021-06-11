@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestIgnoreFilesMatcher_readIgnoreFile(t *testing.T) {
@@ -30,35 +32,52 @@ func TestIgnoreFilesMatcher_readIgnoreFile(t *testing.T) {
 		},
 	}
 
-	for i := range testCases {
-		test := testCases[i]
-		t.Run(test.name, func(t *testing.T) {
+	const (
+		ignoreFileName = ".krmignore"
+		testFileName   = "testfile.yaml"
+		ignoreFileBody = "\n" + testFileName + "\n"
+	)
+
+	fsMakers := map[string]func(bool) (string, filesys.FileSystem){
+		// onDisk creates a temp directory and returns a nil FileSystem, testing
+		// the normal conditions under which ignoreFileMatcher is used.
+		"onDisk": func(writeIgnoreFile bool) (string, filesys.FileSystem) {
 			dir, err := ioutil.TempDir("", "kyaml-test")
-			if !assert.NoError(t, err) {
-				assert.FailNow(t, err.Error())
-			}
+			require.NoError(t, err)
 
-			if test.writeIgnoreFile {
-				ignoreFilePath := filepath.Join(dir, ".krmignore")
-				err = ioutil.WriteFile(ignoreFilePath, []byte(`
-testfile.yaml
-`), 0600)
-				if !assert.NoError(t, err) {
-					assert.FailNow(t, err.Error())
-				}
+			if writeIgnoreFile {
+				ignoreFilePath := filepath.Join(dir, ignoreFileName)
+				require.NoError(t, ioutil.WriteFile(ignoreFilePath, []byte(ignoreFileBody), 0600))
 			}
-			testFilePath := filepath.Join(dir, "testfile.yaml")
-			err = ioutil.WriteFile(testFilePath, []byte{}, 0600)
-			if !assert.NoError(t, err) {
-				assert.FailNow(t, err.Error())
-			}
+			testFilePath := filepath.Join(dir, testFileName)
+			require.NoError(t, ioutil.WriteFile(testFilePath, []byte{}, 0600))
+			return dir, nil
+		},
 
-			ignoreFilesMatcher := ignoreFilesMatcher{}
-			err = ignoreFilesMatcher.readIgnoreFile(dir)
-			if !assert.NoError(t, err) {
-				t.FailNow()
+		// inMem creates an in-memory FileSystem and returns it.
+		"inMem": func(writeIgnoreFile bool) (string, filesys.FileSystem) {
+			fs := filesys.MakeEmptyDirInMemory()
+			if writeIgnoreFile {
+				require.NoError(t, fs.WriteFile(ignoreFileName, []byte(ignoreFileBody)))
 			}
-			assert.Equal(t, test.isMatch, ignoreFilesMatcher.matchFile(testFilePath))
+			require.NoError(t, fs.WriteFile(testFileName, nil))
+			return ".", fs
+		},
+	}
+
+	for name, fsMaker := range fsMakers {
+		t.Run(name, func(t *testing.T) {
+			fsMaker := fsMaker
+			for i := range testCases {
+				test := testCases[i]
+				dir, fs := fsMaker(test.writeIgnoreFile)
+				t.Run(test.name, func(t *testing.T) {
+					m := ignoreFilesMatcher{}
+					m.fs.Set(fs)
+					require.NoError(t, m.readIgnoreFile(dir))
+					require.Equal(t, test.isMatch, m.matchFile(filepath.Join(dir, testFileName)))
+				})
+			}
 		})
 	}
 }
