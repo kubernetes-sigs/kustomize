@@ -1338,6 +1338,34 @@ spec:
 `,
 			expectedErr: "delimiter option can only be used with scalar nodes",
 		},
+		"mapping value contains '.' character": {
+			input: `apiVersion: v1
+kind: Custom
+metadata:
+  name: custom
+  annotations:
+    a.b.c/d-e: source
+    f.g.h/i-j: target
+`,
+			replacements: `replacements:
+- source:
+    name: custom
+    fieldPath: metadata.annotations.[a.b.c/d-e]
+  targets:
+  - select:
+      name: custom
+    fieldPaths: 
+    - metadata.annotations.[f.g.h/i-j]
+`,
+			expected: `apiVersion: v1
+kind: Custom
+metadata:
+  name: custom
+  annotations:
+    a.b.c/d-e: source
+    f.g.h/i-j: source
+`,
+		},
 		"list index contains '.' character": {
 			input: `apiVersion: v1
 kind: ConfigMap
