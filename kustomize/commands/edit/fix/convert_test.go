@@ -1077,3 +1077,69 @@ spec:
           value: SOME_SECRET_NAME_PLACEHOLDER
 `, string(content))
 }
+
+func TestFixVarsWithDot(t *testing.T) {
+	kustomization := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- pod.yaml
+
+vars:
+- name: SOME_SECRET_NAME
+  objref:
+    kind: Secret
+    name: my-secret
+    apiVersion: v1
+`)
+	pod := []byte(`
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  annotations:
+    a.b.c: $(SOME_SECRET_NAME)
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
+	fSys.WriteFile("pod.yaml", pod)
+	cmd := NewCmdFix(fSys, os.Stdout)
+	assert.NoError(t, cmd.Flags().Set("vars", "true"))
+	assert.NoError(t, cmd.RunE(cmd, nil))
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	assert.NoError(t, err)
+
+	assert.Equal(t, `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- pod.yaml
+
+replacements:
+- source:
+    kind: Secret
+    name: my-secret
+    version: v1
+  targets:
+  - fieldPaths:
+    - metadata.annotations.[a.b.c]
+    select:
+      kind: Pod
+      name: my-pod
+      version: v1
+`, string(content))
+
+	content, err = fSys.ReadFile("pod.yaml")
+	assert.NoError(t, err)
+	assert.Equal(t, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  annotations:
+    a.b.c: SOME_SECRET_NAME_PLACEHOLDER
+`, string(content))
+}
