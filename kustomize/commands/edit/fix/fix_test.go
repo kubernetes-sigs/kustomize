@@ -4,6 +4,7 @@
 package fix
 
 import (
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -16,7 +17,7 @@ func TestFix(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, []byte(`nameprefix: some-prefix-`))
 
-	cmd := NewCmdFix(fSys)
+	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.RunE(cmd, nil))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
@@ -54,7 +55,7 @@ patches:
 `)
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys)
+	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.RunE(cmd, nil))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
@@ -98,7 +99,7 @@ kind: Kustomization
 `)
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys)
+	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.RunE(cmd, nil))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
@@ -132,7 +133,7 @@ kind: Kustomization
 `)
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
-	cmd := NewCmdFix(fSys)
+	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.RunE(cmd, nil))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
@@ -157,7 +158,7 @@ labels:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
-	cmd := NewCmdFix(fSys)
+	cmd := NewCmdFix(fSys, os.Stdout)
 	err := cmd.RunE(cmd, nil)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), "label name 'foo' exists in both commonLabels and labels")
