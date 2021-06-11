@@ -40,6 +40,7 @@ func TestFieldOrder(t *testing.T) {
 		"GeneratorOptions",
 		"Vars",
 		"Images",
+		"Replacements",
 		"Replicas",
 		"Configurations",
 		"Generators",
