@@ -327,16 +327,22 @@ A function SHOULD preserve comments when input serialization format is YAML.
 This allows for human authoring of configuration to coexist with changes made by
 functions.
 
-### Annotations
+### Internal Annotations
 
-The orchestrator annotates resources in the wire format with annotation prefix
-`config.kubernetes.io`. These annotations are not persisted when the
-orchestrator writes the resources to the filesystem. The orchestrator sets this
-annotation when reading files from the local filesystem and removes the
-annotation when writing the output of functions back to the filesystem.
+For orchestration purposes, the orchestrator will use a set of annotations,
+referred to as _internal annotations_, on resources in `Resources.items`. These
+annotations are not persisted to resource manifests on the filesystem: The
+orchestrator sets this annotation when reading files from the local filesystem
+and removes the annotation when writing the output of functions back to the
+filesystem.
 
-In general, a function MUST NOT modify these annotations except the ones
-explicitly listed below.
+Annotation prefix `internal.config.kubernetes.io` is reserved for use for
+internal annotations. In general, a function MUST NOT modify these annotations.
+This enables orchestrator to add additional internal annotations in the future,
+without requiring changes to existing functions.
+
+For legacy reasons, a few internal annotations do not use this annotation
+prefix. These are listed below:
 
 #### `config.kubernetes.io/path`
 
