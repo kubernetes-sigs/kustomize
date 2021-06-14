@@ -8,9 +8,9 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/util"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type addTransformerOptions struct {
