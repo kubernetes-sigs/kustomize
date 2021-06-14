@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // A simple usage example to shows what happens when
