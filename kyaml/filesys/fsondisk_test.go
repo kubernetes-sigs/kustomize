@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package filesys_test
+package filesys
 
 import (
 	"io/ioutil"
@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
-
-	. "sigs.k8s.io/kustomize/api/filesys"
 )
 
 func makeTestDir(t *testing.T) (FileSystem, string) {

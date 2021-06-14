@@ -1,14 +1,12 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package filesys_test
+package filesys
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	. "sigs.k8s.io/kustomize/api/filesys"
 )
 
 func TestJoin(t *testing.T) {
