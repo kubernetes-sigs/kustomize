@@ -57,7 +57,7 @@ const (
 // what should be the result in dest if a resource has been deleted from
 // upstream.
 type ResourceHandler interface {
-	Handle(original, updated, dest *yaml.RNode) ResourceMergeStrategy
+	Handle(original, updated, dest *yaml.RNode) (ResourceMergeStrategy, error)
 }
 
 // Merge3 performs a 3-way merge on the original, updated, and destination packages.
@@ -125,7 +125,10 @@ func (m Merge3) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	var output []*yaml.RNode
 	for i := range tl.list {
 		t := tl.list[i]
-		strategy := handler.Handle(t.original, t.updated, t.dest)
+		strategy, err := handler.Handle(t.original, t.updated, t.dest)
+		if err != nil {
+			return nil, err
+		}
 		switch strategy {
 		case Merge:
 			node, err := t.merge()
@@ -287,22 +290,22 @@ func duplicateError(source, filePath string) error {
 // * Otherwise merge.
 type DefaultResourceHandler struct{}
 
-func (*DefaultResourceHandler) Handle(original, updated, dest *yaml.RNode) ResourceMergeStrategy {
+func (*DefaultResourceHandler) Handle(original, updated, dest *yaml.RNode) (ResourceMergeStrategy, error) {
 	switch {
 	case original == nil && updated == nil && dest != nil:
 		// added locally -- keep dest
-		return KeepDest
+		return KeepDest, nil
 	case updated != nil && dest == nil:
 		// added in the update -- add update
-		return KeepUpdated
+		return KeepUpdated, nil
 	case original != nil && updated == nil:
 		// deleted in the update
-		return Skip
+		return Skip, nil
 	case original != nil && dest == nil:
 		// deleted locally
-		return Skip
+		return Skip, nil
 	default:
 		// dest and updated are non-nil -- merge them
-		return Merge
+		return Merge, nil
 	}
 }
