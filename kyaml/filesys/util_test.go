@@ -1,6 +1,8 @@
 // Copyright 2021 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// +build !windows
+
 package filesys
 
 import (
