@@ -72,7 +72,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		&r.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
-		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
+		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid of the command executor to run the function in the container")
 	return r
 }
 
