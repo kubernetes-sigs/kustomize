@@ -169,6 +169,9 @@ func findVarName(node *kyaml.RNode, varName string, path []string) ([]string, []
 	case kyaml.MappingNode:
 		err := node.VisitFields(func(n *kyaml.MapNode) error {
 			nextPathItem := strings.TrimSpace(n.Key.MustString())
+			if strings.Contains(nextPathItem, ".") {
+				nextPathItem = fmt.Sprintf("[%s]", nextPathItem)
+			}
 			fieldPathsToAdd, optionsToAdd, err := findVarName(n.Value.Copy(),
 				varName, append(path, nextPathItem))
 			if err != nil {
