@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestFieldOrder(t *testing.T) {

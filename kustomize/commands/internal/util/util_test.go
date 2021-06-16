@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestConvertToMap(t *testing.T) {

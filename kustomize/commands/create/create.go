@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/util"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type createFlags struct {

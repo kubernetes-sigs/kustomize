@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/internal/plugins/compiler"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // pluginTestEnv manages compiling plugins for tests.

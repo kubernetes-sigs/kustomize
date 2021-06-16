@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/api/filesys"
 	ldr "sigs.k8s.io/kustomize/api/loader"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func makeKvLoader(fSys filesys.FileSystem) *loader {

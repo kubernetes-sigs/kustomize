@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // The PrintPluginEnv plugin is a toy plugin that emits
