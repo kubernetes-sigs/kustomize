@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/filesys"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -17,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/listbuiltin"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/remove"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/set"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // NewCmdEdit returns an instance of 'edit' subcommand.
