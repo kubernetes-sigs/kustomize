@@ -22,15 +22,21 @@ This tool is sponsored by [sig-cli] ([KEP]).
 
 The kustomize build flow at [v2.0.3] was added
 to [kubectl v1.14][kubectl announcement].  The kustomize
-flow in kubectl has remained frozen at v2.0.3 while work
-to extract kubectl from the k/k repo, and work to remove
-kustomize's dependence on core k/k code ([#2506]) has proceeded.
-The reintegration effort is tracked in [#1500] (and its blocking
-issues).
+flow in kubectl remained frozen at v2.0.3 until kubectl v1.21,
+which [updated it to v4.0.5][kust-in-kubectl update]. It will
+be updated on a regular basis going forward, and such updates
+will be reflected in the Kubernetes release notes.
+
+| Kubectl version | Kustomize version |
+| --- | --- |
+| < v1.14 | n/a |
+| v1.14-v1.20 | v2.0.3 |
+| v1.21 | v4.0.5 |
 
 [v2.0.3]: /../../tree/v2.0.3
 [#2506]: https://github.com/kubernetes-sigs/kustomize/issues/2506
 [#1500]: https://github.com/kubernetes-sigs/kustomize/issues/1500
+[kust-in-kubectl update]: https://github.com/kubernetes/kubernetes/blob/4d75a6238a6e330337526e0513e67d02b1940b63/CHANGELOG/CHANGELOG-1.21.md#kustomize-updates-in-kubectl
 
 For examples and guides for using the kubectl integration please
 see the [kubectl book] or the [kubernetes documentation].
