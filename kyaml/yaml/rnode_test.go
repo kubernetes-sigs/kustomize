@@ -1171,88 +1171,88 @@ const (
 `
 	bigMapYaml = `Kind: Service
 complextree:
-  - field1:
-      - boolfield: true
-        floatsubfield: 1.01
-        intsubfield: 1010
-        stringsubfield: idx1010
-      - boolfield: false
-        floatsubfield: 1.011
-        intsubfield: 1011
-        stringsubfield: idx1011
-    field2:
-      - boolfield: true
-        floatsubfield: 1.02
-        intsubfield: 1020
-        stringsubfield: idx1020
-      - boolfield: false
-        floatsubfield: 1.021
-        intsubfield: 1021
-        stringsubfield: idx1021
-  - field1:
-      - boolfield: true
-        floatsubfield: 1.11
-        intsubfield: 1110
-        stringsubfield: idx1110
-      - boolfield: false
-        floatsubfield: 1.111
-        intsubfield: 1111
-        stringsubfield: idx1111
-    field2:
-      - boolfield: true
-        floatsubfield: 1.112
-        intsubfield: 1120
-        stringsubfield: idx1120
-      - boolfield: false
-        floatsubfield: 1.1121
-        intsubfield: 1121
-        stringsubfield: idx1121
+- field1:
+  - boolfield: true
+    floatsubfield: 1.01
+    intsubfield: 1010
+    stringsubfield: idx1010
+  - boolfield: false
+    floatsubfield: 1.011
+    intsubfield: 1011
+    stringsubfield: idx1011
+  field2:
+  - boolfield: true
+    floatsubfield: 1.02
+    intsubfield: 1020
+    stringsubfield: idx1020
+  - boolfield: false
+    floatsubfield: 1.021
+    intsubfield: 1021
+    stringsubfield: idx1021
+- field1:
+  - boolfield: true
+    floatsubfield: 1.11
+    intsubfield: 1110
+    stringsubfield: idx1110
+  - boolfield: false
+    floatsubfield: 1.111
+    intsubfield: 1111
+    stringsubfield: idx1111
+  field2:
+  - boolfield: true
+    floatsubfield: 1.112
+    intsubfield: 1120
+    stringsubfield: idx1120
+  - boolfield: false
+    floatsubfield: 1.1121
+    intsubfield: 1121
+    stringsubfield: idx1121
 metadata:
-    labels:
-        app: application-name
-    name: service-name
+  labels:
+    app: application-name
+  name: service-name
 spec:
-    ports:
-        port: 80
+  ports:
+    port: 80
 that:
-  - idx0
-  - idx1
-  - idx2
-  - idx3
+- idx0
+- idx1
+- idx2
+- idx3
 these:
-  - field1:
-      - idx010
-      - idx011
-    field2:
-      - idx020
-      - idx021
-  - field1:
-      - idx110
-      - idx111
-    field2:
-      - idx120
-      - idx121
-  - field1:
-      - idx210
-      - idx211
-    field2:
-      - idx220
-      - idx221
+- field1:
+  - idx010
+  - idx011
+  field2:
+  - idx020
+  - idx021
+- field1:
+  - idx110
+  - idx111
+  field2:
+  - idx120
+  - idx121
+- field1:
+  - idx210
+  - idx211
+  field2:
+  - idx220
+  - idx221
 this:
-    is:
-        aBool: true
-        aFloat: 1.001
-        aNilValue: null
-        aNumber: 1000
-        anEmptyMap: {}
-        anEmptySlice: []
+  is:
+    aBool: true
+    aFloat: 1.001
+    aNilValue: null
+    aNumber: 1000
+    anEmptyMap: {}
+    anEmptySlice: []
 those:
-  - field1: idx0foo
-    field2: idx0bar
-  - field1: idx1foo
-    field2: idx1bar
-  - field1: idx2foo
-    field2: idx2bar
+- field1: idx0foo
+  field2: idx0bar
+- field1: idx1foo
+  field2: idx1bar
+- field1: idx2foo
+  field2: idx2bar
 `
 )
 

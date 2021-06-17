@@ -1133,7 +1133,7 @@ metadata:
 `,
 			expectedFn: `
 container:
-    image: foo:v1.0.0`,
+  image: foo:v1.0.0`,
 		},
 
 		{
@@ -1150,16 +1150,16 @@ metadata:
 `,
 			expectedFn: `
 container:
-    image: foo:v1.0.0
-    mounts:
-      - type: bind
-        src: /mount/path
-        dst: /local/
-      - type: volume
-        src: myvol
-        dst: /local/
-      - type: tmpfs
-        dst: /local/
+  image: foo:v1.0.0
+  mounts:
+  - type: bind
+    src: /mount/path
+    dst: /local/
+  - type: volume
+    src: myvol
+    dst: /local/
+  - type: tmpfs
+    dst: /local/
 `,
 		},
 
@@ -1185,16 +1185,16 @@ metadata:
 `,
 			expectedFn: `
 container:
-    image: foo:v1.0.0
-    mounts:
-      - type: bind
-        src: /mount/path
-        dst: /local/
-      - type: volume
-        src: myvol
-        dst: /local/
-      - type: tmpfs
-        dst: /local/
+  image: foo:v1.0.0
+  mounts:
+  - type: bind
+    src: /mount/path
+    dst: /local/
+  - type: volume
+    src: myvol
+    dst: /local/
+  - type: tmpfs
+    dst: /local/
 `,
 		},
 
@@ -1212,8 +1212,8 @@ metadata:
 `,
 			expectedFn: `
 container:
-    image: foo:v1.0.0
-    network: true
+  image: foo:v1.0.0
+  network: true
 `,
 		},
 
@@ -1232,7 +1232,7 @@ metadata:
 			// path should be erased
 			expectedFn: `
 container:
-    image: foo:v1.0.0
+  image: foo:v1.0.0
 `,
 		},
 
@@ -1251,7 +1251,7 @@ metadata:
 			// network should be erased
 			expectedFn: `
 container:
-    image: foo:v1.0.0
+  image: foo:v1.0.0
 `,
 		},
 
@@ -1267,7 +1267,7 @@ metadata:
 `,
 			expectedFn: `
 container:
-    image: foo:v1.0.0
+  image: foo:v1.0.0
 `,
 		},
 
