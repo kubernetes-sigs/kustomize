@@ -23,7 +23,6 @@ import (
 type Resource struct {
 	kyaml.RNode
 	options     *types.GenArgs
-	refBy       []resid.ResId
 	refVarNames []string
 }
 
@@ -35,6 +34,7 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationPreviousNamespaces,
 	utils.BuildAnnotationAllowNameChange,
 	utils.BuildAnnotationAllowKindChange,
+	utils.BuildAnnotationsRefBy,
 }
 
 func (r *Resource) ResetRNode(incoming *Resource) {
@@ -102,7 +102,6 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 
 func (r *Resource) copyKustomizeSpecificFields(other *Resource) {
 	r.options = other.options
-	r.refBy = other.copyRefBy()
 	r.refVarNames = copyStringSlice(other.refVarNames)
 }
 
@@ -144,25 +143,16 @@ func (r *Resource) ErrIfNotEquals(o *Resource) error {
 func (r *Resource) ReferencesEqual(other *Resource) bool {
 	setSelf := make(map[resid.ResId]bool)
 	setOther := make(map[resid.ResId]bool)
-	for _, ref := range other.refBy {
+	for _, ref := range other.GetRefBy() {
 		setOther[ref] = true
 	}
-	for _, ref := range r.refBy {
+	for _, ref := range r.GetRefBy() {
 		if _, ok := setOther[ref]; !ok {
 			return false
 		}
 		setSelf[ref] = true
 	}
 	return len(setSelf) == len(setOther)
-}
-
-func (r *Resource) copyRefBy() []resid.ResId {
-	if r.refBy == nil {
-		return nil
-	}
-	s := make([]resid.ResId, len(r.refBy))
-	copy(s, r.refBy)
-	return s
 }
 
 func copyStringSlice(s []string) []string {
@@ -363,12 +353,18 @@ func (r *Resource) CurId() resid.ResId {
 
 // GetRefBy returns the ResIds that referred to current resource
 func (r *Resource) GetRefBy() []resid.ResId {
-	return r.refBy
+	var resIds []resid.ResId
+	asStrings := r.getCsvAnnotation(utils.BuildAnnotationsRefBy)
+	for _, s := range asStrings {
+		resIds = append(resIds, resid.FromString(s))
+	}
+	return resIds
 }
 
 // AppendRefBy appends a ResId into the refBy list
-func (r *Resource) AppendRefBy(id resid.ResId) {
-	r.refBy = append(r.refBy, id)
+// Using any type except fmt.Stringer here results in a compilation error
+func (r *Resource) AppendRefBy(id fmt.Stringer) {
+	r.appendCsvAnnotation(utils.BuildAnnotationsRefBy, id.String())
 }
 
 // GetRefVarNames returns vars that refer to current resource
