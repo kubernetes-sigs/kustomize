@@ -547,10 +547,10 @@ func (rn *RNode) GetBinaryDataMap() map[string]string {
 }
 
 // GetValidatedDataMap retrieves the data map and returns an error if the data
-// map contains entries which are not included in the expected set
-func (rn *RNode) GetValidatedDataMap(expected []string) (map[string]string, error) {
+// map contains entries which are not included in the expectedKeys set.
+func (rn *RNode) GetValidatedDataMap(expectedKeys []string) (map[string]string, error) {
 	dataMap := rn.GetDataMap()
-	err := rn.validateDataMap(dataMap, expected)
+	err := rn.validateDataMap(dataMap, expectedKeys)
 	return dataMap, err
 }
 
