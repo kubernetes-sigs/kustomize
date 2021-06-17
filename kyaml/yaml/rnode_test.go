@@ -4,6 +4,7 @@
 package yaml
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -179,6 +180,105 @@ func TestRNodeGetDataMap(t *testing.T) {
 			}
 			m := rn.GetDataMap()
 			if !assert.Equal(t, tc.expected, m) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestRNodeGetValidatedDataMap(t *testing.T) {
+	emptyMap := map[string]string{}
+	testCases := map[string]struct {
+		theMap         map[string]interface{}
+		theAllowedKeys []string
+		expected       map[string]string
+		expectedError  error
+	}{
+		"nilResultEmptyKeys": {
+			theMap:         nil,
+			theAllowedKeys: []string{},
+			expected:       emptyMap,
+			expectedError:  nil,
+		},
+		"empty": {
+			theMap:         map[string]interface{}{},
+			theAllowedKeys: []string{},
+			expected:       emptyMap,
+			expectedError:  nil,
+		},
+		"expectedKeysMatch": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "winnie",
+				},
+				"data": map[string]string{
+					"wine":   "cabernet",
+					"truck":  "ford",
+					"rocket": "falcon9",
+					"planet": "mars",
+					"city":   "brownsville",
+				},
+			},
+			theAllowedKeys: []string{
+				"wine",
+				"truck",
+				"rocket",
+				"planet",
+				"city",
+				"plane",
+				"country",
+			},
+			// order irrelevant, because assert.Equals is smart about maps.
+			expected: map[string]string{
+				"city":   "brownsville",
+				"wine":   "cabernet",
+				"planet": "mars",
+				"rocket": "falcon9",
+				"truck":  "ford",
+			},
+			expectedError: nil,
+		},
+		"unexpectedKeyInConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "winnie",
+				},
+				"data": map[string]string{
+					"wine":   "cabernet",
+					"truck":  "ford",
+					"rocket": "falcon9",
+				},
+			},
+			theAllowedKeys: []string{
+				"wine",
+				"truck",
+			},
+			// order irrelevant, because assert.Equals is smart about maps.
+			expected: map[string]string{
+				"wine":   "cabernet",
+				"rocket": "falcon9",
+				"truck":  "ford",
+			},
+			expectedError: fmt.Errorf("an unexpected key (rocket) was found"),
+		},
+	}
+
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			rn, err := FromMap(tc.theMap)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			m, err := rn.GetValidatedDataMap(tc.theAllowedKeys)
+			if !assert.Equal(t, tc.expected, m) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, tc.expectedError, err) {
 				t.FailNow()
 			}
 		})

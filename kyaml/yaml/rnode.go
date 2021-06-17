@@ -546,6 +546,27 @@ func (rn *RNode) GetBinaryDataMap() map[string]string {
 	return result
 }
 
+func (rn *RNode) GetValidatedDataMap(expected []string) (map[string]string, error) {
+	dataMap := rn.GetDataMap()
+	err := rn.validateDataMap(dataMap, expected)
+	return dataMap, err
+}
+
+func (rn *RNode) validateDataMap(dataMap map[string]string, expectedKeys []string) error {
+	for key := range dataMap {
+		found := false
+		for _, expected := range expectedKeys {
+			if expected == key {
+				found = true
+			}
+		}
+		if !found {
+			return fmt.Errorf("an unexpected key (%v) was found", key)
+		}
+	}
+	return nil
+}
+
 func (rn *RNode) SetDataMap(m map[string]string) {
 	if rn == nil {
 		log.Fatal("cannot set data map on nil Rnode")
