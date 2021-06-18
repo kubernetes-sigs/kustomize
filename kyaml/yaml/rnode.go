@@ -555,6 +555,9 @@ func (rn *RNode) GetValidatedDataMap(expectedKeys []string) (map[string]string, 
 }
 
 func (rn *RNode) validateDataMap(dataMap map[string]string, expectedKeys []string) error {
+	if dataMap == nil {
+		return fmt.Errorf("The datamap is unassigned")
+	}
 	for key := range dataMap {
 		found := false
 		for _, expected := range expectedKeys {
