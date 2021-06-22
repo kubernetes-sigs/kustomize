@@ -40,10 +40,7 @@ lint: $(MYGOBIN)/golangci-lint
 
 
 license: $(MYGOBIN)/addlicense
-	$(MYGOBIN)/addlicense \
-	  -y 2021 \
-	  -c "The Kubernetes Authors." \
-	  -f LICENSE_TEMPLATE .
+	( find . -type f -not -path "*/internal/forked/github.com/go-yaml*" -exec bash -c "$(MYGOBIN)/addlicense -y 2021 -c 'The Kubernetes Authors.' -f LICENSE_TEMPLATE {}" ";" )
 
 test:
 	go test -cover ./...
@@ -52,10 +49,10 @@ fix:
 	go fix ./...
 
 fmt:
-	go fmt ./...
+	go fmt $(shell go list ./... | grep -v "/kyaml/internal/forked/github.com/go-yaml/yaml")
 
 tidy:
 	go mod tidy
 
 vet:
-	go vet ./...
+	go vet $(shell go list ./... | grep -v "/kyaml/internal/forked/github.com/go-yaml/yaml")
