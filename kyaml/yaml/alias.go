@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"io"
 
-	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 )
 
 // Expose the yaml.v3 functions so this package can be used as a replacement

@@ -16,8 +16,8 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e
 )
 

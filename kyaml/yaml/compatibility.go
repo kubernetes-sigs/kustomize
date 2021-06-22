@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	y1_1 "gopkg.in/yaml.v2"
-	y1_2 "gopkg.in/yaml.v3"
 	"k8s.io/kube-openapi/pkg/validation/spec"
+	y1_2 "sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 )
 
 // typeToTag maps OpenAPI schema types to yaml 1.2 tags
