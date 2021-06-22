@@ -3,7 +3,7 @@
 
 package yaml
 
-import "gopkg.in/yaml.v3"
+import "sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 
 func DoSerializationHacksOnNodes(nodes []*RNode) {
 	for _, node := range nodes {
