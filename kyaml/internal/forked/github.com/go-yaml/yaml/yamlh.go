@@ -742,6 +742,8 @@ type yaml_emitter_t struct {
 
 	indent int // The current indentation level.
 
+	compact_sequence_indent bool // Is '- ' is considered part of the indentation for sequence elements?
+
 	flow_level int // The current flow level.
 
 	root_context       bool // Is it the document root context?
