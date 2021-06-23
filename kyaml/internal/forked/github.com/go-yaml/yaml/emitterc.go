@@ -226,7 +226,7 @@ func yaml_emitter_append_tag_directive(emitter *yaml_emitter_t, value *yaml_tag_
 }
 
 // Increase the indentation level.
-func yaml_emitter_increase_indent(emitter *yaml_emitter_t, flow, indentless bool) bool {
+func yaml_emitter_increase_indent(emitter *yaml_emitter_t, flow, indentless bool, compact_seq bool) bool {
 	emitter.indents = append(emitter.indents, emitter.indent)
 	if emitter.indent < 0 {
 		if flow {
@@ -242,6 +242,9 @@ func yaml_emitter_increase_indent(emitter *yaml_emitter_t, flow, indentless bool
 		} else {
 			// Everything else aligns to the chosen indentation.
 			emitter.indent = emitter.best_indent*((emitter.indent+emitter.best_indent)/emitter.best_indent)
+		}
+		if compact_seq {
+			emitter.indent = emitter.indent - 2
 		}
 	}
 	return true
@@ -534,7 +537,7 @@ func yaml_emitter_emit_flow_sequence_item(emitter *yaml_emitter_t, event *yaml_e
 		if !yaml_emitter_write_indicator(emitter, []byte{'['}, true, true, false) {
 			return false
 		}
-		if !yaml_emitter_increase_indent(emitter, true, false) {
+		if !yaml_emitter_increase_indent(emitter, true, false, false) {
 			return false
 		}
 		emitter.flow_level++
@@ -617,7 +620,7 @@ func yaml_emitter_emit_flow_mapping_key(emitter *yaml_emitter_t, event *yaml_eve
 		if !yaml_emitter_write_indicator(emitter, []byte{'{'}, true, true, false) {
 			return false
 		}
-		if !yaml_emitter_increase_indent(emitter, true, false) {
+		if !yaml_emitter_increase_indent(emitter, true, false, false) {
 			return false
 		}
 		emitter.flow_level++
@@ -728,7 +731,9 @@ func yaml_emitter_emit_flow_mapping_value(emitter *yaml_emitter_t, event *yaml_e
 // Expect a block item node.
 func yaml_emitter_emit_block_sequence_item(emitter *yaml_emitter_t, event *yaml_event_t, first bool) bool {
 	if first {
-		if !yaml_emitter_increase_indent(emitter, false, false) {
+		seq := emitter.mapping_context && (emitter.column == 0 || !emitter.indention) &&
+			emitter.compact_sequence_indent
+		if !yaml_emitter_increase_indent(emitter, false, false, seq){
 			return false
 		}
 	}
@@ -764,7 +769,7 @@ func yaml_emitter_emit_block_sequence_item(emitter *yaml_emitter_t, event *yaml_
 // Expect a block key node.
 func yaml_emitter_emit_block_mapping_key(emitter *yaml_emitter_t, event *yaml_event_t, first bool) bool {
 	if first {
-		if !yaml_emitter_increase_indent(emitter, false, false) {
+		if !yaml_emitter_increase_indent(emitter, false, false, false) {
 			return false
 		}
 	}
@@ -896,7 +901,7 @@ func yaml_emitter_emit_scalar(emitter *yaml_emitter_t, event *yaml_event_t) bool
 	if !yaml_emitter_process_tag(emitter) {
 		return false
 	}
-	if !yaml_emitter_increase_indent(emitter, true, false) {
+	if !yaml_emitter_increase_indent(emitter, true, false, false) {
 		return false
 	}
 	if !yaml_emitter_process_scalar(emitter) {
