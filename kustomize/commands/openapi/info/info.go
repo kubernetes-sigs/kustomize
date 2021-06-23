@@ -13,7 +13,6 @@ import (
 
 // NewCmdInfo makes a new info command.
 func NewCmdInfo(w io.Writer) *cobra.Command {
-
 	infoCmd := cobra.Command{
 		Use:     "info",
 		Short:   "Prints the `info` field from the kubernetes OpenAPI data",
@@ -21,8 +20,6 @@ func NewCmdInfo(w io.Writer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Fprintln(w, kubernetesapi.Info)
 		},
-		Hidden: true,
 	}
-
 	return &infoCmd
 }
