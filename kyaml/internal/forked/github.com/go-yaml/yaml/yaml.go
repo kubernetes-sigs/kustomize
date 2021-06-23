@@ -278,6 +278,11 @@ func (e *Encoder) SetIndent(spaces int) {
 	e.encoder.indent = spaces
 }
 
+// CompactSeqIndent makes it so that '- ' is considered part of the indentation.
+func (e *Encoder) CompactSeqIndent() {
+	e.encoder.emitter.compact_sequence_indent = true
+}
+
 // Close closes the encoder by writing any remaining data.
 // It does not write a stream terminating string "...".
 func (e *Encoder) Close() (err error) {
