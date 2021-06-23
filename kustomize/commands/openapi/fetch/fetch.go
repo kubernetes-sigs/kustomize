@@ -20,9 +20,7 @@ in the user's kubeconfig`,
 		Run: func(cmd *cobra.Command, args []string) {
 			printSchema(w)
 		},
-		Hidden: true,
 	}
-
 	return &infoCmd
 }
 
