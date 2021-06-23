@@ -656,6 +656,37 @@ func (s *S) TestSetIndent(c *C) {
 	c.Assert(buf.String(), Equals, "a:\n        b:\n                c: d\n")
 }
 
+func (s *S) TestCompactSeqIndentDefault(c *C) {
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.CompactSeqIndent()
+	err := enc.Encode(map[string]interface{}{"a": []string{"b", "c"}})
+	c.Assert(err, Equals, nil)
+	err = enc.Close()
+	c.Assert(err, Equals, nil)
+	// The default indent is 4, so these sequence elements get 2 indents as before
+	c.Assert(buf.String(), Equals, `a:
+  - b
+  - c
+`)
+}
+
+func (s *S) TestCompactSequenceWithSetIndent(c *C) {
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.CompactSeqIndent()
+	enc.SetIndent(2)
+	err := enc.Encode(map[string]interface{}{"a": []string{"b", "c"}})
+	c.Assert(err, Equals, nil)
+	err = enc.Close()
+	c.Assert(err, Equals, nil)
+	// The sequence indent is 2, so these sequence elements don't get indented at all
+	c.Assert(buf.String(), Equals, `a:
+- b
+- c
+`)
+}
+
 func (s *S) TestSortedOutput(c *C) {
 	order := []interface{}{
 		false,
