@@ -35,96 +35,127 @@ var marshalIntTest = 123
 var marshalTests = []struct {
 	value interface{}
 	data  string
+	compact string
 }{
 	{
 		nil,
 		"null\n",
+		"null\n",
 	}, {
 		(*marshalerType)(nil),
+		"null\n",
 		"null\n",
 	}, {
 		&struct{}{},
 		"{}\n",
+		"{}\n",
 	}, {
 		map[string]string{"v": "hi"},
+		"v: hi\n",
 		"v: hi\n",
 	}, {
 		map[string]interface{}{"v": "hi"},
 		"v: hi\n",
+		"v: hi\n",
 	}, {
 		map[string]string{"v": "true"},
+		"v: \"true\"\n",
 		"v: \"true\"\n",
 	}, {
 		map[string]string{"v": "false"},
 		"v: \"false\"\n",
+		"v: \"false\"\n",
 	}, {
 		map[string]interface{}{"v": true},
+		"v: true\n",
 		"v: true\n",
 	}, {
 		map[string]interface{}{"v": false},
 		"v: false\n",
+		"v: false\n",
 	}, {
 		map[string]interface{}{"v": 10},
+		"v: 10\n",
 		"v: 10\n",
 	}, {
 		map[string]interface{}{"v": -10},
 		"v: -10\n",
+		"v: -10\n",
 	}, {
 		map[string]uint{"v": 42},
+		"v: 42\n",
 		"v: 42\n",
 	}, {
 		map[string]interface{}{"v": int64(4294967296)},
 		"v: 4294967296\n",
+		"v: 4294967296\n",
 	}, {
 		map[string]int64{"v": int64(4294967296)},
+		"v: 4294967296\n",
 		"v: 4294967296\n",
 	}, {
 		map[string]uint64{"v": 4294967296},
 		"v: 4294967296\n",
+		"v: 4294967296\n",
 	}, {
 		map[string]interface{}{"v": "10"},
+		"v: \"10\"\n",
 		"v: \"10\"\n",
 	}, {
 		map[string]interface{}{"v": 0.1},
 		"v: 0.1\n",
+		"v: 0.1\n",
 	}, {
 		map[string]interface{}{"v": float64(0.1)},
+		"v: 0.1\n",
 		"v: 0.1\n",
 	}, {
 		map[string]interface{}{"v": float32(0.99)},
 		"v: 0.99\n",
+		"v: 0.99\n",
 	}, {
 		map[string]interface{}{"v": -0.1},
+		"v: -0.1\n",
 		"v: -0.1\n",
 	}, {
 		map[string]interface{}{"v": math.Inf(+1)},
 		"v: .inf\n",
+		"v: .inf\n",
 	}, {
 		map[string]interface{}{"v": math.Inf(-1)},
+		"v: -.inf\n",
 		"v: -.inf\n",
 	}, {
 		map[string]interface{}{"v": math.NaN()},
 		"v: .nan\n",
+		"v: .nan\n",
 	}, {
 		map[string]interface{}{"v": nil},
+		"v: null\n",
 		"v: null\n",
 	}, {
 		map[string]interface{}{"v": ""},
 		"v: \"\"\n",
+		"v: \"\"\n",
 	}, {
-		map[string][]string{"v": []string{"A", "B"}},
+		map[string][]string{"v": {"A", "B"}},
 		"v:\n    - A\n    - B\n",
+		"v:\n  - A\n  - B\n",
 	}, {
-		map[string][]string{"v": []string{"A", "B\nC"}},
+		map[string][]string{"v": {"A", "B\nC"}},
 		"v:\n    - A\n    - |-\n      B\n      C\n",
+		"v:\n  - A\n  - |-\n    B\n    C\n",
 	}, {
-		map[string][]interface{}{"v": []interface{}{"A", 1, map[string][]int{"B": []int{2, 3}}}},
+		map[string][]interface{}{"v": {"A", 1, map[string][]int{"B": {2, 3}}}},
 		"v:\n    - A\n    - 1\n    - B:\n        - 2\n        - 3\n",
+		"v:\n  - A\n  - 1\n  - B:\n      - 2\n      - 3\n",
 	}, {
 		map[string]interface{}{"a": map[interface{}]interface{}{"b": "c"}},
 		"a:\n    b: c\n",
+		"a:\n    b: c\n",
 	}, {
 		map[string]interface{}{"a": "-"},
+		"a: '-'\n",
 		"a: '-'\n",
 	},
 
@@ -132,11 +163,13 @@ var marshalTests = []struct {
 	{
 		&marshalIntTest,
 		"123\n",
+		"123\n",
 	},
 
 	// Structures
 	{
 		&struct{ Hello string }{"world"},
+		"hello: world\n",
 		"hello: world\n",
 	}, {
 		&struct {
@@ -145,12 +178,14 @@ var marshalTests = []struct {
 			}
 		}{struct{ B string }{"c"}},
 		"a:\n    b: c\n",
+		"a:\n    b: c\n",
 	}, {
 		&struct {
 			A *struct {
 				B string
 			}
 		}{&struct{ B string }{"c"}},
+		"a:\n    b: c\n",
 		"a:\n    b: c\n",
 	}, {
 		&struct {
@@ -159,28 +194,36 @@ var marshalTests = []struct {
 			}
 		}{},
 		"a: null\n",
+		"a: null\n",
 	}, {
 		&struct{ A int }{1},
+		"a: 1\n",
 		"a: 1\n",
 	}, {
 		&struct{ A []int }{[]int{1, 2}},
 		"a:\n    - 1\n    - 2\n",
+		"a:\n  - 1\n  - 2\n",
 	}, {
 		&struct{ A [2]int }{[2]int{1, 2}},
 		"a:\n    - 1\n    - 2\n",
+		"a:\n  - 1\n  - 2\n",
 	}, {
 		&struct {
 			B int "a"
 		}{1},
 		"a: 1\n",
+		"a: 1\n",
 	}, {
 		&struct{ A bool }{true},
+		"a: true\n",
 		"a: true\n",
 	}, {
 		&struct{ A string }{"true"},
 		"a: \"true\"\n",
+		"a: \"true\"\n",
 	}, {
 		&struct{ A string }{"off"},
+		"a: \"off\"\n",
 		"a: \"off\"\n",
 	},
 
@@ -191,42 +234,50 @@ var marshalTests = []struct {
 			B int "b,omitempty"
 		}{1, 0},
 		"a: 1\n",
+		"a: 1\n",
 	}, {
 		&struct {
 			A int "a,omitempty"
 			B int "b,omitempty"
 		}{0, 0},
 		"{}\n",
+		"{}\n",
 	}, {
 		&struct {
 			A *struct{ X, y int } "a,omitempty,flow"
 		}{&struct{ X, y int }{1, 2}},
+		"a: {x: 1}\n",
 		"a: {x: 1}\n",
 	}, {
 		&struct {
 			A *struct{ X, y int } "a,omitempty,flow"
 		}{nil},
 		"{}\n",
+		"{}\n",
 	}, {
 		&struct {
 			A *struct{ X, y int } "a,omitempty,flow"
 		}{&struct{ X, y int }{}},
+		"a: {x: 0}\n",
 		"a: {x: 0}\n",
 	}, {
 		&struct {
 			A struct{ X, y int } "a,omitempty,flow"
 		}{struct{ X, y int }{1, 2}},
 		"a: {x: 1}\n",
+		"a: {x: 1}\n",
 	}, {
 		&struct {
 			A struct{ X, y int } "a,omitempty,flow"
 		}{struct{ X, y int }{0, 1}},
+		"{}\n",
 		"{}\n",
 	}, {
 		&struct {
 			A float64 "a,omitempty"
 			B float64 "b,omitempty"
 		}{1, 0},
+		"a: 1\n",
 		"a: 1\n",
 	},
 	{
@@ -240,12 +291,14 @@ var marshalTests = []struct {
 			T4: newTime(time.Date(2098, 1, 9, 10, 40, 47, 0, time.UTC)),
 		},
 		"t2: 2018-01-09T10:40:47Z\nt4: 2098-01-09T10:40:47Z\n",
+		"t2: 2018-01-09T10:40:47Z\nt4: 2098-01-09T10:40:47Z\n",
 	},
 	// Nil interface that implements Marshaler.
 	{
 		map[string]yaml.Marshaler{
 			"a": nil,
 		},
+		"a: null\n",
 		"a: null\n",
 	},
 
@@ -255,10 +308,12 @@ var marshalTests = []struct {
 			A []int "a,flow"
 		}{[]int{1, 2}},
 		"a: [1, 2]\n",
+		"a: [1, 2]\n",
 	}, {
 		&struct {
 			A map[string]string "a,flow"
 		}{map[string]string{"b": "c", "d": "e"}},
+		"a: {b: c, d: e}\n",
 		"a: {b: c, d: e}\n",
 	}, {
 		&struct {
@@ -267,10 +322,12 @@ var marshalTests = []struct {
 			} "a,flow"
 		}{struct{ B, D string }{"c", "e"}},
 		"a: {b: c, d: e}\n",
+		"a: {b: c, d: e}\n",
 	}, {
 		&struct {
 			A string "a,flow"
 		}{"b\nc"},
+		"a: \"b\\nc\"\n",
 		"a: \"b\\nc\"\n",
 	},
 
@@ -281,6 +338,7 @@ var marshalTests = []struct {
 			A int
 		}{0, 1},
 		"a: 1\n",
+		"a: 1\n",
 	},
 
 	// Ignored field
@@ -289,6 +347,7 @@ var marshalTests = []struct {
 			A int
 			B int "-"
 		}{1, 2},
+		"a: 1\n",
 		"a: 1\n",
 	},
 
@@ -299,6 +358,7 @@ var marshalTests = []struct {
 			C inlineB `yaml:",inline"`
 		}{1, inlineB{2, inlineC{3}}},
 		"a: 1\nb: 2\nc: 3\n",
+		"a: 1\nb: 2\nc: 3\n",
 	},
 	// Struct inlining as a pointer
 	{
@@ -307,17 +367,20 @@ var marshalTests = []struct {
 			C *inlineB `yaml:",inline"`
 		}{1, &inlineB{2, inlineC{3}}},
 		"a: 1\nb: 2\nc: 3\n",
+		"a: 1\nb: 2\nc: 3\n",
 	}, {
 		&struct {
 			A int
 			C *inlineB `yaml:",inline"`
 		}{1, nil},
 		"a: 1\n",
+		"a: 1\n",
 	}, {
 		&struct {
 			A int
 			D *inlineD `yaml:",inline"`
 		}{1, &inlineD{&inlineC{3}, 4}},
+		"a: 1\nc: 3\nd: 4\n",
 		"a: 1\nc: 3\nd: 4\n",
 	},
 
@@ -328,17 +391,20 @@ var marshalTests = []struct {
 			C map[string]int `yaml:",inline"`
 		}{1, map[string]int{"b": 2, "c": 3}},
 		"a: 1\nb: 2\nc: 3\n",
+		"a: 1\nb: 2\nc: 3\n",
 	},
 
 	// Duration
 	{
 		map[string]time.Duration{"a": 3 * time.Second},
 		"a: 3s\n",
+		"a: 3s\n",
 	},
 
 	// Issue #24: bug in map merging logic.
 	{
 		map[string]string{"a": "<foo>"},
+		"a: <foo>\n",
 		"a: <foo>\n",
 	},
 
@@ -347,17 +413,21 @@ var marshalTests = []struct {
 	{
 		map[string]string{"a": "1:1"},
 		"a: \"1:1\"\n",
+		"a: \"1:1\"\n",
 	},
 
 	// Binary data.
 	{
 		map[string]string{"a": "\x00"},
 		"a: \"\\0\"\n",
+		"a: \"\\0\"\n",
 	}, {
 		map[string]string{"a": "\x80\x81\x82"},
 		"a: !!binary gIGC\n",
+		"a: !!binary gIGC\n",
 	}, {
 		map[string]string{"a": strings.Repeat("\x90", 54)},
+		"a: !!binary |\n    " + strings.Repeat("kJCQ", 17) + "kJ\n    CQ\n",
 		"a: !!binary |\n    " + strings.Repeat("kJCQ", 17) + "kJ\n    CQ\n",
 	},
 
@@ -365,30 +435,36 @@ var marshalTests = []struct {
 	{
 		map[string]string{"a": "你好"},
 		"a: 你好\n",
+		"a: 你好\n",
 	},
 
 	// Support encoding.TextMarshaler.
 	{
 		map[string]net.IP{"a": net.IPv4(1, 2, 3, 4)},
 		"a: 1.2.3.4\n",
+		"a: 1.2.3.4\n",
 	},
 	// time.Time gets a timestamp tag.
 	{
 		map[string]time.Time{"a": time.Date(2015, 2, 24, 18, 19, 39, 0, time.UTC)},
 		"a: 2015-02-24T18:19:39Z\n",
+		"a: 2015-02-24T18:19:39Z\n",
 	},
 	{
 		map[string]*time.Time{"a": newTime(time.Date(2015, 2, 24, 18, 19, 39, 0, time.UTC))},
+		"a: 2015-02-24T18:19:39Z\n",
 		"a: 2015-02-24T18:19:39Z\n",
 	},
 	{
 		// This is confirmed to be properly decoded in Python (libyaml) without a timestamp tag.
 		map[string]time.Time{"a": time.Date(2015, 2, 24, 18, 19, 39, 123456789, time.FixedZone("FOO", -3*60*60))},
 		"a: 2015-02-24T18:19:39.123456789-03:00\n",
+		"a: 2015-02-24T18:19:39.123456789-03:00\n",
 	},
 	// Ensure timestamp-like strings are quoted.
 	{
 		map[string]string{"a": "2015-02-24T18:19:39Z"},
+		"a: \"2015-02-24T18:19:39Z\"\n",
 		"a: \"2015-02-24T18:19:39Z\"\n",
 	},
 
@@ -396,15 +472,18 @@ var marshalTests = []struct {
 	{
 		map[string]string{"a": "b: c"},
 		"a: 'b: c'\n",
+		"a: 'b: c'\n",
 	},
 
 	// Containing hash mark ('#') in string should be quoted
 	{
 		map[string]string{"a": "Hello #comment"},
 		"a: 'Hello #comment'\n",
+		"a: 'Hello #comment'\n",
 	},
 	{
 		map[string]string{"a": "你好 #comment"},
+		"a: '你好 #comment'\n",
 		"a: '你好 #comment'\n",
 	},
 
@@ -412,8 +491,10 @@ var marshalTests = []struct {
 	{
 		&marshalerType{marshalerType{true}},
 		"true\n",
+		"true\n",
 	}, {
 		&marshalerType{&marshalerType{true}},
+		"true\n",
 		"true\n",
 	},
 
@@ -421,17 +502,20 @@ var marshalTests = []struct {
 	{
 		map[string]interface{}{"a": map[string]interface{}{"b": []map[string]int{{"c": 1, "d": 2}}}},
 		"a:\n    b:\n        - c: 1\n          d: 2\n",
+		"a:\n    b:\n      - c: 1\n        d: 2\n",
 	},
 
 	// Strings with tabs were disallowed as literals (issue #471).
 	{
 		map[string]string{"a": "\tB\n\tC\n"},
 		"a: |\n    \tB\n    \tC\n",
+		"a: |\n    \tB\n    \tC\n",
 	},
 
 	// Ensure that strings do not wrap
 	{
 		map[string]string{"a": "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 "},
+		"a: 'abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 '\n",
 		"a: 'abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 '\n",
 	},
 
@@ -448,6 +532,7 @@ var marshalTests = []struct {
 			},
 		},
 		"value: 'foo'\n",
+		"value: 'foo'\n",
 	}, {
 		yaml.Node{
 			Kind:  yaml.ScalarNode,
@@ -455,6 +540,7 @@ var marshalTests = []struct {
 			Value: "foo",
 			Style: yaml.SingleQuotedStyle,
 		},
+		"'foo'\n",
 		"'foo'\n",
 	},
 
@@ -471,6 +557,7 @@ var marshalTests = []struct {
 			},
 		},
 		"value: !!str foo\n",
+		"value: !!str foo\n",
 	}, {
 		&struct {
 			Value yaml.Node
@@ -481,6 +568,7 @@ var marshalTests = []struct {
 				Tag:   "!!map",
 			},
 		},
+		"value: !!map {}\n",
 		"value: !!map {}\n",
 	}, {
 		&struct {
@@ -493,6 +581,7 @@ var marshalTests = []struct {
 			},
 		},
 		"value: !!seq []\n",
+		"value: !!seq []\n",
 	},
 }
 
@@ -504,6 +593,20 @@ func (s *S) TestMarshal(c *C) {
 		data, err := yaml.Marshal(item.value)
 		c.Assert(err, IsNil)
 		c.Assert(string(data), Equals, item.data)
+	}
+}
+
+func (s *S) TestEncoderCompactIndents(c *C) {
+	for i, item := range marshalTests {
+		c.Logf("test %d. %q", i, item.data)
+		var buf bytes.Buffer
+		enc := yaml.NewEncoder(&buf)
+		enc.CompactSeqIndent()
+		err := enc.Encode(item.value)
+		c.Assert(err, Equals, nil)
+		err = enc.Close()
+		c.Assert(err, Equals, nil)
+		c.Assert(buf.String(), Equals, item.compact)
 	}
 }
 
