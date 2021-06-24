@@ -177,7 +177,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		if err = fl.errIfRepoCycle(repoSpec); err != nil {
 			return nil, err
 		}
-		return newLoaderAtGitClone(repoSpec, fl.fSys, fl, fl.cloner, repoSpec.Cleaner(fl.fSys), true)
+		return newLoaderAtGitClone(repoSpec, fl.fSys, fl, fl.cloner, fl.cleaner, true)
 	}
 
 	if filepath.IsAbs(path) {

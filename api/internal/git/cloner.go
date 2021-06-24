@@ -107,6 +107,7 @@ func CachedGitCloner(repoSpec *RepoSpec, acceptBranches bool) error {
 
 		} else { // we found it and it is an immutable
 			targetDir = filesys.ConfirmedDir(permanentGitRefPath)
+			log.Printf("found cached target %s", permanentGitRefPath)
 		}
 	} else {
 		if !acceptBranches {
@@ -114,6 +115,7 @@ func CachedGitCloner(repoSpec *RepoSpec, acceptBranches bool) error {
 		}
 		//we found it and it is a mutable
 		targetDir = filesys.ConfirmedDir(mutableGitRefPath)
+		log.Printf("found cached target %s", mutableGitRefPath)
 
 		//TODO decide if we should clean old copy, update, or let the user clean the cache when he want
 	}
@@ -189,7 +191,7 @@ func isMutableRepoRef(repoSpec *RepoSpec) (bool, error) {
 		return false, err
 	}
 
-	remoteBranches := strings.Split(origin, "Remote branches:")[1]
+	remoteBranches := strings.Split(origin, "Remote branch")[1]
 
 	return strings.Contains(remoteBranches, "tracked"), nil
 }
