@@ -800,3 +800,74 @@ metadata:
   namespace: iter8-monitoring
 `)
 }
+
+func TestNamespacedRoleBindings(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("crb.yaml", `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-role
+subjects:
+- kind: ServiceAccount
+  name: server
+  namespace: old
+`)
+	th.WriteF("rb.yaml", `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: server
+  namespace: old
+`)
+
+	th.WriteK(".", `
+resources:
+- crb.yaml
+- rb.yaml
+namespace: new
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+
+	// the namespace under subjects isn't updated
+	th.AssertActualEqualsExpected(m, `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-role
+subjects:
+- kind: ServiceAccount
+  name: server
+  namespace: old
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb
+  namespace: new
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: server
+  namespace: old
+`)
+}
