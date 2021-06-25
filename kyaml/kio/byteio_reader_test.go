@@ -372,6 +372,62 @@ metadata:
 			},
 			instance: ByteReader{},
 		},
+
+		//
+		//
+		//
+		{
+			name: "white_space_after_document_separator_should_be_ignored",
+			input: `
+a: b
+---         
+c: d
+`,
+			expectedItems: []string{
+				`
+a: b
+`,
+				`
+c: d
+`,
+			},
+			instance: ByteReader{OmitReaderAnnotations: true},
+		},
+
+		//
+		//
+		//
+		{
+			name: "comment_after_document_separator_should_be_ignored",
+			input: `
+a: b
+--- #foo
+c: d
+`,
+			expectedItems: []string{
+				`
+a: b
+`,
+				`
+c: d
+`,
+			},
+			instance: ByteReader{OmitReaderAnnotations: true},
+		},
+
+		//
+		//
+		//
+		{
+			name: "anything_after_document_separator_other_than_white_space_or_comment_is_an_error",
+			input: `
+a: b
+--- foo
+c: d
+`,
+			err:      "invalid document separator: --- foo",
+			instance: ByteReader{OmitReaderAnnotations: true},
+		},
 	}
 
 	for i := range testCases {
