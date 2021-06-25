@@ -10,6 +10,8 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.10.20
 )
 
+replace gopkg.in/yaml.v3 => github.com/natasha41575/yaml v0.0.0-20210623011331-77123dad73ab
+
 replace sigs.k8s.io/kustomize/api => ../../api
 
 replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
