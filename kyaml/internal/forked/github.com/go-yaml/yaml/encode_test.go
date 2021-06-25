@@ -790,6 +790,20 @@ func (s *S) TestCompactSequenceWithSetIndent(c *C) {
 `)
 }
 
+func (s *S) TestNewLinePreserved(c *C) {
+	obj := &marshalerValue{}
+	obj.Field.value = "a:\n        b:\n                c: d\n"
+	data, err := yaml.Marshal(obj)
+	c.Assert(err, IsNil)
+	c.Assert(string(data), Equals, "_: |\n    a:\n            b:\n                    c: d\n")
+
+	obj.Field.value = "\na:\n        b:\n                c: d\n"
+	data, err = yaml.Marshal(obj)
+	c.Assert(err, IsNil)
+	// the newline at the start of the file should be preserved
+	c.Assert(string(data), Equals, "_: |4\n\n    a:\n            b:\n                    c: d\n")
+}
+
 func (s *S) TestSortedOutput(c *C) {
 	order := []interface{}{
 		false,
