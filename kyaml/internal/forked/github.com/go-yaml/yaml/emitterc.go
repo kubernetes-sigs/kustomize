@@ -491,7 +491,7 @@ func yaml_emitter_emit_document_content(emitter *yaml_emitter_t, event *yaml_eve
 	if !yaml_emitter_emit_node(emitter, event, true, false, false, false) {
 		return false
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, false) {
 		return false
 	}
 	if !yaml_emitter_process_foot_comment(emitter) {
@@ -560,7 +560,7 @@ func yaml_emitter_emit_flow_sequence_item(emitter *yaml_emitter_t, event *yaml_e
 		if !yaml_emitter_write_indicator(emitter, []byte{']'}, false, false, false) {
 			return false
 		}
-		if !yaml_emitter_process_line_comment(emitter) {
+		if !yaml_emitter_process_line_comment(emitter, false) {
 			return false
 		}
 		if !yaml_emitter_process_foot_comment(emitter) {
@@ -605,7 +605,7 @@ func yaml_emitter_emit_flow_sequence_item(emitter *yaml_emitter_t, event *yaml_e
 			return false
 		}
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, false) {
 		return false
 	}
 	if !yaml_emitter_process_foot_comment(emitter) {
@@ -646,7 +646,7 @@ func yaml_emitter_emit_flow_mapping_key(emitter *yaml_emitter_t, event *yaml_eve
 		if !yaml_emitter_write_indicator(emitter, []byte{'}'}, false, false, false) {
 			return false
 		}
-		if !yaml_emitter_process_line_comment(emitter) {
+		if !yaml_emitter_process_line_comment(emitter, false) {
 			return false
 		}
 		if !yaml_emitter_process_foot_comment(emitter) {
@@ -719,7 +719,7 @@ func yaml_emitter_emit_flow_mapping_value(emitter *yaml_emitter_t, event *yaml_e
 			return false
 		}
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, false) {
 		return false
 	}
 	if !yaml_emitter_process_foot_comment(emitter) {
@@ -757,7 +757,7 @@ func yaml_emitter_emit_block_sequence_item(emitter *yaml_emitter_t, event *yaml_
 	if !yaml_emitter_emit_node(emitter, event, false, true, false, false) {
 		return false
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, false) {
 		return false
 	}
 	if !yaml_emitter_process_foot_comment(emitter) {
@@ -833,7 +833,7 @@ func yaml_emitter_emit_block_mapping_value(emitter *yaml_emitter_t, event *yaml_
 		} else if event.sequence_style() != yaml_FLOW_SEQUENCE_STYLE && (event.typ == yaml_MAPPING_START_EVENT || event.typ == yaml_SEQUENCE_START_EVENT) {
 			// An indented block follows, so write the comment right now.
 			emitter.line_comment, emitter.key_line_comment = emitter.key_line_comment, emitter.line_comment
-			if !yaml_emitter_process_line_comment(emitter) {
+			if !yaml_emitter_process_line_comment(emitter, false) {
 				return false
 			}
 			emitter.line_comment, emitter.key_line_comment = emitter.key_line_comment, emitter.line_comment
@@ -843,7 +843,7 @@ func yaml_emitter_emit_block_mapping_value(emitter *yaml_emitter_t, event *yaml_
 	if !yaml_emitter_emit_node(emitter, event, false, false, true, false) {
 		return false
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, false) {
 		return false
 	}
 	if !yaml_emitter_process_foot_comment(emitter) {
@@ -1149,8 +1149,11 @@ func yaml_emitter_process_head_comment(emitter *yaml_emitter_t) bool {
 }
 
 // Write an line comment.
-func yaml_emitter_process_line_comment(emitter *yaml_emitter_t) bool {
+func yaml_emitter_process_line_comment(emitter *yaml_emitter_t, linebreak bool) bool {
 	if len(emitter.line_comment) == 0 {
+		if linebreak && !put_break(emitter) {
+			return false
+		}
 		return true
 	}
 	if !emitter.whitespace {
@@ -1899,7 +1902,7 @@ func yaml_emitter_write_literal_scalar(emitter *yaml_emitter_t, value []byte) bo
 	if !yaml_emitter_write_block_scalar_hints(emitter, value) {
 		return false
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, true) {
 		return false
 	}
 	//emitter.indention = true
@@ -1936,7 +1939,7 @@ func yaml_emitter_write_folded_scalar(emitter *yaml_emitter_t, value []byte) boo
 	if !yaml_emitter_write_block_scalar_hints(emitter, value) {
 		return false
 	}
-	if !yaml_emitter_process_line_comment(emitter) {
+	if !yaml_emitter_process_line_comment(emitter, true) {
 		return false
 	}
 
