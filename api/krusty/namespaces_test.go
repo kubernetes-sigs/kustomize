@@ -840,8 +840,6 @@ namespace: new
 `)
 
 	m := th.Run(".", th.MakeDefaultOptions())
-
-	// the namespace under subjects isn't updated
 	th.AssertActualEqualsExpected(m, `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -854,7 +852,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: server
-  namespace: old
+  namespace: new
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -868,6 +866,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: server
-  namespace: old
+  namespace: new
 `)
 }

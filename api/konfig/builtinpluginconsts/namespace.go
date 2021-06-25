@@ -11,9 +11,9 @@ namespace:
 - path: metadata/name
   kind: Namespace
   create: true
-- path: subjects
+- path: subjects[]/namespace
   kind: RoleBinding
-- path: subjects
+- path: subjects[]/namespace
   kind: ClusterRoleBinding
 - path: spec/service/namespace
   group: apiregistration.k8s.io
