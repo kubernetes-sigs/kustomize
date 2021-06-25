@@ -19,6 +19,8 @@ exclude (
 	sigs.k8s.io/kustomize/cmd/config v0.2.0
 )
 
+replace gopkg.in/yaml.v3 => github.com/natasha41575/yaml v0.0.0-20210625180258-d648d2e6eae5
+
 replace sigs.k8s.io/kustomize/api => ../api
 
 replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config

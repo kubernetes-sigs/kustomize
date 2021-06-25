@@ -15,6 +15,6 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
-
 replace sigs.k8s.io/kustomize/kyaml => ../kyaml
+
+replace gopkg.in/yaml.v3 => github.com/natasha41575/yaml v0.0.0-20210625180258-d648d2e6eae5
