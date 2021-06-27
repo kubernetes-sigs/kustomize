@@ -1048,3 +1048,52 @@ metadata:
 		})
 	}
 }
+
+func TestFormatInput_NullCases(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: null
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: ~
+    nodePort: null
+  allocateLoadBalancerNodePorts: null
+`
+
+	// keep the style on values that parse as non-string types
+	expected := `apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: null
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: ~
+    nodePort: null
+  allocateLoadBalancerNodePorts: null
+`
+
+	buff := &bytes.Buffer{}
+	err := kio.Pipeline{
+		Inputs: []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(y)}},
+		Filters: []kio.Filter{FormatFilter{
+			UseSchema: true,
+		}},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
+	}.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, buff.String())
+}
