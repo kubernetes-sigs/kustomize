@@ -36,7 +36,7 @@ steps:
 
 # Run goreleaser indirectly via a shell script
 # to configure it properly.
-- name: goreleaser/goreleaser:v0.155.0
+- name: goreleaser/goreleaser:v0.172.1
   timeout: 12m
   entrypoint: /bin/sh
   dir: myClone
