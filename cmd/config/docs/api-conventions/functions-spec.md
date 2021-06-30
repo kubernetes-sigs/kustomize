@@ -337,45 +337,40 @@ and removes the annotation when writing the output of functions back to the
 filesystem.
 
 Annotation prefix `internal.config.kubernetes.io` is reserved for use for
-internal annotations. In general, a function MUST NOT modify these annotations.
-This enables orchestrator to add additional internal annotations in the future,
+internal annotations. In general, a function SHOULD NOT modify these annotations.
+This enables orchestrator to add additional internal annotations,
 without requiring changes to existing functions.
 
-For legacy reasons, a few internal annotations do not use this annotation
-prefix. These are listed below:
+Specific internal annotations is discussed below:
 
-#### `config.kubernetes.io/path`
+#### `internal.config.kubernetes.io/path`
 
 Records the slash-delimited, OS-agnostic, relative file path to a resource. The
 path is relative to a fix location on the filesystem. Different orchestrator
 implementations can choose different fixed points.
-
-A function SHOULD NOT modify this annotation.
 
 Example:
 
 ```yaml
 metadata:
   annotations:
-    config.kubernetes.io/path: "relative/file/path.yaml"
+    internal.config.kubernetes.io/path: "relative/file/path.yaml"
 ```
 
-#### `config.kubernetes.io/index`
+#### `internal.config.kubernetes.io/index`
 
 Records the index of a Resource in file. In a multi-object YAML file, resources
 are separated by three dashes (`---`), and the index represents the position of
 the Resource starting from zero. When this annotation is not specified, it
 implies a value of `0`.
 
-A function SHOULD NOT modify this annotation.
-
 Example:
 
 ```yaml
 metadata:
   annotations:
-    config.kubernetes.io/path: "relative/file/path.yaml"
-    config.kubernetes.io/index: 2
+    internal.config.kubernetes.io/path: "relative/file/path.yaml"
+    internal.config.kubernetes.io/index: 2
 ```
 
 This represents the third resource in the file.
