@@ -72,8 +72,9 @@ if [[ "$module" == "kustomize" || "$module" == "pluginator" ]]; then
   skipBuild=false
 fi
 
-configFile=$(mktemp)
-cat <<EOF >$configFile
+goReleaserConfigFile=$(mktemp)
+
+cat <<EOF >$goReleaserConfigFile
 project_name: $module
 
 archives:
@@ -81,6 +82,8 @@ archives:
 
 builds:
 - skip: $skipBuild
+
+  gobinary: "go1.16.5"
 
   ldflags: >
     -s
@@ -112,14 +115,14 @@ release:
 
 EOF
 
-cat $configFile
+cat $goReleaserConfigFile
 
 date
 
 time /usr/local/bin/goreleaser release \
   --timeout 10m \
   --parallelism 4 \
-  --config=$configFile \
+  --config=$goReleaserConfigFile \
   --release-notes=$changeLogFile \
   --rm-dist \
   --skip-validate $remainingArgs
