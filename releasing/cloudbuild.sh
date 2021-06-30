@@ -83,8 +83,6 @@ archives:
 builds:
 - skip: $skipBuild
 
-  gobinary: "go1.16.5"
-
   ldflags: >
     -s
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
@@ -94,7 +92,6 @@ builds:
   goos:
   - linux
   - darwin
-  - windows
 
   goarch:
   - amd64

@@ -29,14 +29,17 @@ cp releasing/cloudbuild.yaml $config
 # in the kustomize/dist directory.
 sed -i "s|# - '--snapshot|- '--snapshot|" $config
 
-echo "Executing cloud-build-local with:"
+echo "Executing cloud-build-local with config file $config :"
 echo "========================="
 cat $config
 echo "========================="
 
+workspace=~/cloud-build-local-workspace
+
 cloud-build-local \
     --config=$config \
     --substitutions=TAG_NAME=$1 \
+    --write-workspace=$workspace \
     --dryrun=false \
     .
 
@@ -46,4 +49,6 @@ echo " "
 echo "Result of local build:"
 echo "##########################################"
 tree ./$module/dist
+echo "##########################################"
+tree ./$workspace
 echo "##########################################"
