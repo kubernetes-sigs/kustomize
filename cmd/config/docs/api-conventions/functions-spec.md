@@ -337,17 +337,16 @@ and removes the annotation when writing the output of functions back to the
 filesystem.
 
 Annotation prefix `internal.config.kubernetes.io` is reserved for use for
-internal annotations. In general, a function SHOULD NOT modify these annotations.
-This enables orchestrator to add additional internal annotations,
-without requiring changes to existing functions.
-
-Specific internal annotations is discussed below:
+internal annotations. In general, a function MUT NOT modify these annotations with
+exceptions of specific annotation listed below. This enables orchestrator to add additional internal annotations, without requiring changes to existing functions.
 
 #### `internal.config.kubernetes.io/path`
 
 Records the slash-delimited, OS-agnostic, relative file path to a resource. The
 path is relative to a fix location on the filesystem. Different orchestrator
 implementations can choose different fixed points.
+
+A function SHOULD NOT modify these annotations.
 
 Example:
 
@@ -363,6 +362,8 @@ Records the index of a Resource in file. In a multi-object YAML file, resources
 are separated by three dashes (`---`), and the index represents the position of
 the Resource starting from zero. When this annotation is not specified, it
 implies a value of `0`.
+
+A function SHOULD NOT modify these annotations.
 
 Example:
 
