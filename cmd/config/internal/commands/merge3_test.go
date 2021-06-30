@@ -53,8 +53,7 @@ spec:
             name: app-config
         env:
         - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
         imagePullPolicy: Always
   minReadySeconds: 5
 `), 0600)
@@ -104,8 +103,7 @@ spec:
             name: app-config
         env:
         - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
         imagePullPolicy: Always
   minReadySeconds: 20
 `), 0600)
@@ -152,8 +150,7 @@ spec:
             name: app-config
         env:
         - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
         imagePullPolicy: Always
   minReadySeconds: 5
 `), 0600)
@@ -201,8 +198,7 @@ spec:
             name: app-config
         env:
         - name: JAVA_OPTS
-          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
-            -Djava.security.egd=file:/dev/./urandom
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Djava.security.egd=file:/dev/./urandom
         imagePullPolicy: Always
   minReadySeconds: 20
 `), 0600)
