@@ -99,8 +99,9 @@ find kyaml/internal/forked/github.com/go-yaml/yaml -name "*.go" -type f | xargs 
 rm kyaml/internal/forked/github.com/go-yaml/yaml/go.mod
 git commit --all -m "Internalize forked code"
 
-explain "Cherry-picking the commits from our test fixes in Kustomize PR"
-cherry-pick https://github.com/kubernetes-sigs/kustomize $KUSTOMIZE_PR
+# This is only necessary in the initial forking of the code
+# explain "Cherry-picking the commits from our test fixes in Kustomize PR"
+# cherry-pick https://github.com/kubernetes-sigs/kustomize $KUSTOMIZE_PR
 
 explain "SUCCEEDED."
 exit 0

@@ -30,6 +30,7 @@ type Node = yaml.Node
 type Style = yaml.Style
 type TypeError = yaml.TypeError
 type Unmarshaler = yaml.Unmarshaler
+
 var Marshal = func(in interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	err := NewEncoder(&buf).Encode(in)
