@@ -53,7 +53,6 @@ var _ Writer = ByteWriter{}
 func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// Copy the nodes to prevent writer from mutating the original nodes.
 	nodes := copyRNodes(inputNodes)
-	yaml.DoSerializationHacksOnNodes(nodes)
 	if w.Sort {
 		if err := kioutil.SortNodes(nodes); err != nil {
 			return errors.Wrap(err)
