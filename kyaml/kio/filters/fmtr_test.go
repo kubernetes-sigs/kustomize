@@ -416,9 +416,9 @@ spec:
         image: nginx:1.7.9
         ports:
         - containerPort: 80
+      # this is a container
       - name: b-nginx
         image: nginx:1.7.9
-        # this is a container
         ports:
         # this is a port
         - containerPort: 80
