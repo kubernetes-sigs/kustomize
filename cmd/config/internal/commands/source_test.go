@@ -194,13 +194,8 @@ func TestSourceCommandJSON(t *testing.T) {
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
-    "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json'}},
-  "spec": {"replicas": 1}}
-- {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {
-      "config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n",
-      "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0',
-      config.kubernetes.io/path: 'f2.json'}}, "spec": {"replicas": 3}}
+- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
+- {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {"config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n", "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f2.json'}}, "spec": {"replicas": 3}}
 `, b.String()) {
 		return
 	}
@@ -307,9 +302,7 @@ func TestSourceCommandJSON_Stdin(t *testing.T) {
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
-    "annotations": {"app": "nginx2", config.kubernetes.io/index: '0'}}, "spec": {
-    "replicas": 1}}
+- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0'}}, "spec": {"replicas": 1}}
 `, out.String()) {
 		return
 	}

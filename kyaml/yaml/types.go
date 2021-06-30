@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
