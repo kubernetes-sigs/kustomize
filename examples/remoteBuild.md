@@ -1,10 +1,30 @@
 # remote targets
 
-`kustomize build` can be run on a URL.
+`kustomize build` can be run on a URL. Resources can also reference other
+kustomization directories via URLs too.
 
-A [lite version of go-getter module](https://github.com/yujunz/go-getter) is
-leveraged to get remote content, then running `kustomize build` against the
-desired directory in the local copy.
+The URL format is an HTTPS or SSH `git clone` URL with an optional directory and
+some query string parameters. The directory is specified by appending a `//`
+after the repo URL. The following query string parameters can also be specified:
+
+ * `ref` - a `git fetch`-able ref, typically a branch, tag, or full commit hash
+   (short hashes are not supported)
+ * `timeout` (default `27s`) - a number in seconds, or a go duration. specifies
+   the timeout for fetching the resource
+ * `submodules` (default `true`) - a boolean specifying whether to clone
+   submodules or not
+
+For example,
+`https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6`
+will essentially clone the git repo via HTTPS, checkout `v1.0.6` and run
+`kustomize build` inside the `examples/multibases/dev` directory.
+
+SSH clones are also supported either with `git@github.com:owner/repo` or
+`ssh://git@github.com/owner/repo` URLs.
+
+`file:///` clones are not supported.
+
+# Examples
 
 To try this immediately, run a build against the kustomization
 in the [multibases](multibases/README.md) example.  There's
@@ -12,7 +32,7 @@ one pod in the output:
 
 <!-- @remoteOverlayBuild @testAgainstLatestRelease -->
 ```
-target="github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
 test 1 == \
   $(kustomize build $target | grep dev-myapp-pod | wc -l); \
   echo $?
@@ -24,25 +44,13 @@ someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @testAgainstLatestRelease -->
 ```
-target="https://github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
 ```
 
-The URL can be an archive
-
-<!-- @remoteBuild -->
-```
-target="https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master"
-test 1 == \
-  $(kustomize build $target | grep remote-cm | wc -l); \
-  echo $?
-```
-
-Note the kustomize root path inside archive must be appended after `//`.
-
-A base can be a URL:
+A remote kustomization directory resource can also be a URL:
 
 <!-- @createOverlay @testAgainstLatestRelease -->
 ```
@@ -50,7 +58,7 @@ DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
-- github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
+- https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
 namePrefix: remote-
 EOF
 ```
@@ -65,18 +73,16 @@ test 3 == \
   echo $?
 ```
 
-## URL format
+## Legacy URL format
 
-The url should follow
-[hashicorp/go-getter URL format](https://github.com/hashicorp/go-getter#url-format).
+Historically, kustomize has supported a modified [hashicorp/go-getter URL format](https://github.com/hashicorp/go-getter#url-format).
 
-Note that using `//` in the url will only copy the directory specified by the path
-after `//`, which means some relative paths, like `../xxx`, may not work. Using `/` to copy
-entire repo. For more details please see [go-getter documentation](https://github.com/hashicorp/go-getter#subdirectories).
+This is still supported for backwards compatibility but is no longer recommended
+to be used as kustomize supports different query parameters and the semantics of
+what gets fetched in `go-getter` itself are different (particularly with
+subdirectories).
 
-Note that S3 and GCS are NOT supported to avoid introducing massive dependency.
-
-Here are some example urls
+Here are some examples of legacy urls
 
 <!-- @createOverlay @testAgainstLatestRelease -->
 ```
@@ -92,7 +98,5 @@ resources:
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=repoUrl2
 # a subdirectory in a repo on commit `7050a45134e9848fca214ad7e7007e96e5042c03`
 - github.com/Liujingfang1/kustomize/examples/helloWorld?ref=7050a45134e9848fca214ad7e7007e96e5042c03
-# a subdirectory in a remote archive
-- https://github.com/kustless/kustomize-examples/archive/master.zip//kustomize-examples-master
 EOF
 ```
