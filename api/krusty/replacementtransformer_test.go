@@ -342,3 +342,78 @@ spec:
         name: nginx
 `)
 }
+
+func TestReplacementTransformerWithNamePrefixOverlay(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("base/deployments.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: target
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:oldtag
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: source
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx
+`)
+	th.WriteF("base/replacement.yaml", `
+source:
+  name: source
+  kind: Deployment
+targets:
+- select:
+    name: target
+  fieldPaths:
+  - spec.template.spec.containers.[name=nginx].image
+`)
+	th.WriteK("base", `
+replacements:
+- path: replacement.yaml
+resources:
+- deployments.yaml
+`)
+
+	th.WriteK(".", `
+namePrefix: prefix-
+resources:
+- base
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefix-target
+spec:
+  template:
+    spec:
+      containers:
+      - image: prefix-source
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefix-source
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx
+`)
+}
