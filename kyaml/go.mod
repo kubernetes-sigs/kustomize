@@ -19,6 +19,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e
+	sigs.k8s.io/yaml v1.2.0
 )
 
 // These can be removed after upgrading golangci-lint (Issue #3663)
