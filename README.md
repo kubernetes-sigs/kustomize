@@ -151,7 +151,7 @@ is governed by the [Kubernetes Code of Conduct].
 [`make`]: https://www.gnu.org/software/make
 [`sed`]: https://www.gnu.org/software/sed
 [DAM]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#declarative-application-management
-[KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/0008-kustomize.md
+[KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/2377-Kustomize/README.md
 [Kubernetes Code of Conduct]: code-of-conduct.md
 [applied]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#apply
 [base]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#base
