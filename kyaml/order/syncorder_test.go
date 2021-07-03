@@ -118,6 +118,7 @@ metadata:
   name: after
 spec:
   containers:
+  # ports comment
   - ports:
     - containerPort: 80
       protocol: TCP # tcp protocol
@@ -133,6 +134,7 @@ metadata:
   name: after
 spec:
   containers:
+  # ports comment
   # nginx container
   - name: nginx
     # nginx image

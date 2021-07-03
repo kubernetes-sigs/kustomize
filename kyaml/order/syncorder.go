@@ -105,8 +105,15 @@ func rearrangeHeadCommentOfSeqNode(node *yaml.Node) {
 			// for each child mapping node, transfer the head comment of it's
 			// first child scalar node to the head comment of itself
 			if len(node.Content) > 0 && node.Content[0].Kind == yaml.ScalarNode {
-				node.HeadComment = node.Content[0].HeadComment
-				node.Content[0].HeadComment = ""
+				if node.HeadComment == "" {
+					node.HeadComment = node.Content[0].HeadComment
+					continue
+				}
+
+				if node.Content[0].HeadComment != "" {
+					node.HeadComment += "\n" + node.Content[0].HeadComment
+					node.Content[0].HeadComment = ""
+				}
 			}
 		}
 	}
