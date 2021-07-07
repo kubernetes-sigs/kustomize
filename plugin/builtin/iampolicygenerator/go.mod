@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/plugin/builtin/configmapgenerator
+module sigs.k8s.io/kustomize/plugin/builtin/iampolicypgenerator
 
 go 1.16
 
