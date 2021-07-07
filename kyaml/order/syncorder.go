@@ -10,34 +10,36 @@ import (
 
 // SyncOrder recursively sorts the map node keys in 'to' node to match the order of
 // map node keys in 'from' node at same tree depth, additional keys are moved to the end
+// Field order might be altered due to round-tripping in arbitrary functions.
+// This functionality helps to retain the original order of fields to avoid unnecessary diffs.
 func SyncOrder(from, to *yaml.RNode) error {
-	if err := syncOrderRecursive(from, to); err != nil {
+	if err := syncOrder(from, to); err != nil {
 		return errors.Errorf("failed to sync field order: %q", err.Error())
 	}
 	rearrangeHeadCommentOfSeqNode(to.YNode())
 	return nil
 }
 
-func syncOrderRecursive(from, to *yaml.RNode) error {
+func syncOrder(from, to *yaml.RNode) error {
 	if from.IsNilOrEmpty() || to.IsNilOrEmpty() {
 		return nil
 	}
 	switch from.YNode().Kind {
 	case yaml.DocumentNode:
 		// Traverse the child of the documents
-		return syncOrderRecursive(yaml.NewRNode(from.YNode()), yaml.NewRNode(to.YNode()))
+		return syncOrder(yaml.NewRNode(from.YNode()), yaml.NewRNode(to.YNode()))
 	case yaml.MappingNode:
 		return VisitFields(from, to, func(fNode, tNode *yaml.MapNode) error {
 			// Traverse each field value
 			if fNode == nil || tNode == nil {
 				return nil
 			}
-			return syncOrderRecursive(fNode.Value, tNode.Value)
+			return syncOrder(fNode.Value, tNode.Value)
 		})
 	case yaml.SequenceNode:
 		return VisitElements(from, to, func(fNode, tNode *yaml.RNode) error {
 			// Traverse each list element
-			return syncOrderRecursive(fNode, tNode)
+			return syncOrder(fNode, tNode)
 		})
 	}
 	return nil

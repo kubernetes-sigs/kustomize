@@ -98,7 +98,7 @@ metadata:
 `,
 		},
 		{
-			name: "sort containers list node with comments",
+			name: "sort containers list node with sequence head comments preservation",
 			from: `apiVersion: apps/v1
 kind: Deployment
 metadata:
