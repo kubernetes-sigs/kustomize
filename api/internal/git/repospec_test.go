@@ -5,6 +5,7 @@ package git
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 	"testing"
@@ -90,11 +91,18 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 }
 
 var badData = [][]string{
-	{"/tmp", "uri looks like abs path"},
+	{absPrefix() + "tmp", "uri looks like abs path"},
 	{"iauhsdiuashduas", "url lacks orgRepo"},
 	{"htxxxtp://github.com/", "url lacks host"},
 	{"ssh://git.example.com", "url lacks orgRepo"},
 	{"git::___", "url lacks orgRepo"},
+}
+
+func absPrefix() string {
+	if os.PathSeparator == '\\' {
+		return "C:\\"
+	}
+	return string(os.PathSeparator)
 }
 
 func TestNewRepoSpecFromUrlErrors(t *testing.T) {
