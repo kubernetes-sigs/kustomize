@@ -19,6 +19,16 @@ const DefaultSequenceStyle = CompactSequenceStyle
 var sequenceIndentationStyle = DefaultSequenceStyle
 var indent = DefaultIndent
 
+// SetSequenceIndentationStyle sets the sequenceIndentationStyle variable
+func SetSequenceIndentationStyle(style string) {
+	sequenceIndentationStyle = style
+}
+
+// SequenceIndentationStyle returns the value of sequenceIndentationStyle
+func SequenceIndentationStyle() string {
+	return sequenceIndentationStyle
+}
+
 // Expose the yaml.v3 functions so this package can be used as a replacement
 
 type Decoder = yaml.Decoder

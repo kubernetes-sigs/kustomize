@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -47,12 +48,16 @@ type ByteReadWriter struct {
 	NoWrap             bool
 	WrappingAPIVersion string
 	WrappingKind       string
+
+	// RetainSeqIndent if true retains the sequence indentation of
+	RetainSeqIndent bool
 }
 
 func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
-		Reader:                rw.Reader,
-		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+		Reader:                 rw.Reader,
+		OmitReaderAnnotations:  rw.OmitReaderAnnotations,
+		AddSeqIndentAnnotation: rw.RetainSeqIndent,
 	}
 	val, err := b.Read()
 	if rw.FunctionConfig == nil {
@@ -130,6 +135,9 @@ type ByteReader struct {
 	// WrappingKind is set by Read(), and is the kind of the object that
 	// the read objects were originally wrapped in.
 	WrappingKind string
+
+	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
+	AddSeqIndentAnnotation bool
 }
 
 var _ Reader = &ByteReader{}
@@ -195,6 +203,13 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		if err == io.EOF {
 			continue
 		}
+
+		if r.AddSeqIndentAnnotation {
+			if err := addSeqIndentAnno(values[i], node); err != nil {
+				return nil, errors.Wrap(err)
+			}
+		}
+
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
@@ -243,6 +258,55 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		index++
 	}
 	return output, nil
+}
+
+// addSeqIndentAnno adds the sequence indentation annotation to the resource
+// value is the input yaml string and node is the decoded equivalent of value
+// the annotation value is decided by deriving the existing sequence indentation of resource
+func addSeqIndentAnno(value string, node *yaml.RNode) error {
+	anno := node.GetAnnotations()
+	if anno[kioutil.SeqIndentAnnotation] != "" {
+		// the annotation already exists, so don't change it
+		return nil
+	}
+
+	currentDefaultIndent := yaml.SequenceIndentationStyle()
+	defer yaml.SetSequenceIndentationStyle(currentDefaultIndent)
+
+	// encode the node to string with default 2 space sequence indentation and calculate the diff
+	yaml.SetSequenceIndentationStyle(yaml.WideSequenceStyle)
+	n, err := yaml.Parse(value)
+	if err != nil {
+		return err
+	}
+	out, err := n.String()
+	if err != nil {
+		return err
+	}
+	twoSpaceIndentDiff := copyutil.PrettyFileDiff(out, value)
+
+	// encode the node to string with compact 0 space sequence indentation and calculate the diff
+	yaml.SetSequenceIndentationStyle(yaml.CompactSequenceStyle)
+	n, err = yaml.Parse(value)
+	if err != nil {
+		return err
+	}
+	out, err = n.String()
+	if err != nil {
+		return err
+	}
+	noIndentDiff := copyutil.PrettyFileDiff(out, value)
+
+	var style string
+	if len(noIndentDiff) <= len(twoSpaceIndentDiff) {
+		style = yaml.CompactSequenceStyle
+	} else {
+		style = yaml.WideSequenceStyle
+	}
+
+	return node.PipeE(
+		yaml.LookupCreate(yaml.MappingNode, yaml.MetadataField, yaml.AnnotationsField),
+		yaml.SetField(kioutil.SeqIndentAnnotation, yaml.NewScalarRNode(style)))
 }
 
 func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
