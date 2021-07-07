@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/order"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -169,8 +170,8 @@ func (c *FunctionFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 		return nil, err
 	}
 
-	// copy the comments from the inputs to the outputs
-	if err := c.setComments(output); err != nil {
+	// copy the comments and sync the order of fields from the inputs to the outputs
+	if err := c.copyCommentsAndSyncOrder(output); err != nil {
 		return nil, err
 	}
 
@@ -210,7 +211,7 @@ func (c *FunctionFilter) setIds(nodes []*yaml.RNode) error {
 	return nil
 }
 
-func (c *FunctionFilter) setComments(nodes []*yaml.RNode) error {
+func (c *FunctionFilter) copyCommentsAndSyncOrder(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		node := nodes[i]
 		anID, err := node.Pipe(yaml.GetAnnotation(idAnnotation))
@@ -227,6 +228,9 @@ func (c *FunctionFilter) setComments(nodes []*yaml.RNode) error {
 			continue
 		}
 		if err := comments.CopyComments(in, node); err != nil {
+			return errors.Wrap(err)
+		}
+		if err := order.SyncOrder(in, node); err != nil {
 			return errors.Wrap(err)
 		}
 		if err := node.PipeE(yaml.ClearAnnotation(idAnnotation)); err != nil {

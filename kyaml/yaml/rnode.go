@@ -14,6 +14,7 @@ import (
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/sliceutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/labels"
 )
 
@@ -144,6 +145,50 @@ func NewMapRNode(values *map[string]string) *RNode {
 	}
 
 	return m
+}
+
+// SyncMapNodesOrder sorts the map node keys in 'to' node to match the order of
+// map node keys in 'from' node, additional keys are moved to the end
+func SyncMapNodesOrder(from, to *RNode) {
+	to.Copy()
+	res := &RNode{value: &yaml.Node{
+		Kind:        to.YNode().Kind,
+		Style:       to.YNode().Style,
+		Tag:         to.YNode().Tag,
+		Anchor:      to.YNode().Anchor,
+		Alias:       to.YNode().Alias,
+		HeadComment: to.YNode().HeadComment,
+		LineComment: to.YNode().LineComment,
+		FootComment: to.YNode().FootComment,
+		Line:        to.YNode().Line,
+		Column:      to.YNode().Column,
+	}}
+
+	fromFieldNames, err := from.Fields()
+	if err != nil {
+		return
+	}
+
+	toFieldNames, err := to.Fields()
+	if err != nil {
+		return
+	}
+
+	for _, fieldName := range fromFieldNames {
+		if !sliceutil.Contains(toFieldNames, fieldName) {
+			continue
+		}
+		// append the common nodes in the order defined in 'from' node
+		res.value.Content = append(res.value.Content, to.Field(fieldName).Key.YNode(), to.Field(fieldName).Value.YNode())
+		toFieldNames = sliceutil.Remove(toFieldNames, fieldName)
+	}
+
+	for _, fieldName := range toFieldNames {
+		// append the residual nodes which are not present in 'from' node
+		res.value.Content = append(res.value.Content, to.Field(fieldName).Key.YNode(), to.Field(fieldName).Value.YNode())
+	}
+
+	to.SetYNode(res.YNode())
 }
 
 // NewRNode returns a new RNode pointer containing the provided Node.
