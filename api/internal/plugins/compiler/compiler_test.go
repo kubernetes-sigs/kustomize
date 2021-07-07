@@ -1,6 +1,8 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// +build !windows
+
 package compiler_test
 
 import (
