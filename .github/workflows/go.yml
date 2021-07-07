@@ -101,10 +101,9 @@ jobs:
         run: go test -cover ./...
         working-directory: ./kyaml
 
-      # TODO: uncomment once Windows tests are passing.
-      # - name: Test api
-      #   run: go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-      #   working-directory: ./api
+      - name: Test api
+        run: go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
+        working-directory: ./api
 
       - name: Test cmd/config
         run: go test -cover ./...
