@@ -542,13 +542,13 @@ kind: Input
 metadata:
   name: foo
   annotations:
-    a-bool-value: true
-    a-int-value: 2
-    a-string-value: a
     config.kubernetes.io/function: |
       starlark:
         path: script.star
         name: fn
+    a-bool-value: true
+    a-int-value: 2
+    a-string-value: a
 data:
   boolValue: true
   intValue: 2
