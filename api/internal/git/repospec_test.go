@@ -182,6 +182,12 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 			absPath:   notCloned.String(),
 			ref:       "",
 		},
+		"t12": {
+			input:     "https://bitbucket.example.com/scm/project/repository.git",
+			cloneSpec: "https://bitbucket.example.com/scm/project/repository.git",
+			absPath:   notCloned.String(),
+			ref:       "",
+		},
 	}
 	for tn, tc := range testcases {
 		t.Run(tn, func(t *testing.T) {
