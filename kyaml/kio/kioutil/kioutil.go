@@ -22,6 +22,9 @@ const (
 
 	// PathAnnotation records the path to the file the Resource was read from
 	PathAnnotation AnnotationKey = "config.kubernetes.io/path"
+
+	// SeqIndentAnnotation records the path to the file the Resource was read from
+	SeqIndentAnnotation AnnotationKey = "internal.config.kubernetes.io/seqindent"
 )
 
 func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {

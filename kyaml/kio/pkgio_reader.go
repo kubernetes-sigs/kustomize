@@ -177,6 +177,8 @@ type LocalPackageReader struct {
 	// FileSkipFunc is a function which returns true if reader should ignore
 	// the file
 	FileSkipFunc LocalPackageSkipFileFunc
+
+	RetainSeqIndent bool
 }
 
 var _ Reader = LocalPackageReader{}
@@ -263,10 +265,11 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 	defer f.Close()
 
 	rr := &ByteReader{
-		DisableUnwrapping:     true,
-		Reader:                f,
-		OmitReaderAnnotations: r.OmitReaderAnnotations,
-		SetAnnotations:        r.SetAnnotations,
+		DisableUnwrapping:      true,
+		Reader:                 f,
+		OmitReaderAnnotations:  r.OmitReaderAnnotations,
+		SetAnnotations:         r.SetAnnotations,
+		AddSeqIndentAnnotation: r.RetainSeqIndent,
 	}
 	return rr.Read()
 }

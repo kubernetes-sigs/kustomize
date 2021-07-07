@@ -805,3 +805,122 @@ items:
 		})
 	}
 }
+
+func TestByteReader_RetainSeqIndent(t *testing.T) {
+	type testCase struct {
+		name           string
+		err            string
+		input          string
+		expectedOutput string
+	}
+
+	testCases := []testCase{
+		{
+			name: "read with wide indentation",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+metadata:
+  annotations:
+    internal.config.kubernetes.io/seqindent: wide
+`,
+		},
+		{
+			name: "read with compact indentation",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+metadata:
+  annotations:
+    internal.config.kubernetes.io/seqindent: compact
+`,
+		},
+		{
+			name: "read with mixed indentation, wide wins",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+env:
+- foo
+- bar
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+- foo
+- bar
+metadata:
+  annotations:
+    internal.config.kubernetes.io/seqindent: wide
+`,
+		},
+		{
+			name: "read with mixed indentation, compact wins",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+  - foo
+  - bar
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+- foo
+- bar
+metadata:
+  annotations:
+    internal.config.kubernetes.io/seqindent: compact
+`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			rNodes, err := (&ByteReader{
+				OmitReaderAnnotations:  true,
+				AddSeqIndentAnnotation: true,
+				Reader:                 bytes.NewBuffer([]byte(tc.input)),
+			}).Read()
+			assert.NoError(t, err)
+			actual, err := rNodes[0].String()
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedOutput, actual)
+		})
+	}
+}
