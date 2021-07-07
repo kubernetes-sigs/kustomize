@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -183,7 +183,7 @@ func parseFileSource(source string) (keyName, filePath string, err error) {
 	numSeparators := strings.Count(source, "=")
 	switch {
 	case numSeparators == 0:
-		return path.Base(source), source, nil
+		return filepath.Base(source), source, nil
 	case numSeparators == 1 && strings.HasPrefix(source, "="):
 		return "", "", fmt.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
 	case numSeparators == 1 && strings.HasSuffix(source, "="):
