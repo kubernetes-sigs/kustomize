@@ -5,7 +5,7 @@ package git
 
 import (
 	"fmt"
-	"path/filepath"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -37,9 +37,9 @@ var hostNamesRawAndNormalized = [][]string{
 	{"git@github.com/", "git@github.com:"},
 }
 
-func makeUrl(hostFmt, orgRepo, path, href string) string {
-	if len(path) > 0 {
-		orgRepo = filepath.Join(orgRepo, path)
+func makeUrl(hostFmt, orgRepo, p, href string) string {
+	if len(p) > 0 {
+		orgRepo = path.Join(orgRepo, p)
 	}
 	url := hostFmt + orgRepo
 	if href != "" {
@@ -59,7 +59,7 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 					uri := makeUrl(hostRaw, orgRepo, pathName, hrefArg)
 					rs, err := NewRepoSpecFromUrl(uri)
 					if err != nil {
-						t.Errorf("problem %v", err)
+						t.Errorf("problem: %v, url: %s", err, uri)
 					}
 					if rs.Host != hostSpec {
 						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
