@@ -89,6 +89,9 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	if jsonEncodeSingleBareNode {
 		encoder := json.NewEncoder(w.Writer)
 		encoder.SetIndent("", "  ")
+		if err := nodes[0].DeleteAnnotation(kioutil.SeqIndentAnnotation); err != nil {
+			return errors.Wrap(err)
+		}
 		return errors.Wrap(encoder.Encode(nodes[0]))
 	}
 
@@ -97,8 +100,7 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// don't wrap the elements
 	if w.WrappingKind == "" {
 		for i := range nodes {
-			setSeqIndent(nodes[i], encoder)
-			if err := encoder.Encode(nodes[i].Document()); err != nil {
+			if err := unwrapAndEncodeYAML(nodes[i], encoder); err != nil {
 				return err
 			}
 		}
@@ -135,23 +137,21 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	return encoder.Encode(doc)
 }
 
-// setSeqIndent reads the SeqIndentAnnotation from node and sets the sequence indentation
-// in the encoder
-// if the resource doesn't have SeqIndentAnnotation it will use CompactSeqIndent
-func setSeqIndent(node *yaml.RNode, encoder *yaml.Encoder) {
+// unwrapAndEncodeYAML encodes the yaml RNode in unwrapped format,
+// as a pre-step, it clears the sets the sequence indentation for encoder,
+// based on the kioutil.SeqIndentAnnotation and clears it before encoding.
+func unwrapAndEncodeYAML(node *yaml.RNode, encoder *yaml.Encoder) error {
 	anno := node.GetAnnotations()
 	seqIndent := anno[kioutil.SeqIndentAnnotation]
-	if seqIndent == yaml.WideSequenceStyle {
+	if seqIndent == string(yaml.WideSeqIndent) {
 		encoder.DefaultSeqIndent()
 	} else {
 		encoder.CompactSeqIndent()
 	}
-	if err := node.PipeE(yaml.ClearAnnotation(kioutil.SeqIndentAnnotation)); err != nil {
-		return
+	if err := node.DeleteAnnotation(kioutil.SeqIndentAnnotation); err != nil {
+		return errors.Wrap(err)
 	}
-	if err := yaml.ClearEmptyAnnotations(node); err != nil {
-		return
-	}
+	return encoder.Encode(node.Document())
 }
 
 func copyRNodes(in []*yaml.RNode) []*yaml.RNode {

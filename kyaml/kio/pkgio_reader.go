@@ -178,7 +178,8 @@ type LocalPackageReader struct {
 	// the file
 	FileSkipFunc LocalPackageSkipFileFunc
 
-	RetainSeqIndent bool
+	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
+	AddSeqIndentAnnotation bool
 }
 
 var _ Reader = LocalPackageReader{}
@@ -269,7 +270,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		Reader:                 f,
 		OmitReaderAnnotations:  r.OmitReaderAnnotations,
 		SetAnnotations:         r.SetAnnotations,
-		AddSeqIndentAnnotation: r.RetainSeqIndent,
+		AddSeqIndentAnnotation: r.AddSeqIndentAnnotation,
 	}
 	return rr.Read()
 }

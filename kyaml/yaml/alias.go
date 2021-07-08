@@ -10,24 +10,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 )
 
-const CompactSequenceStyle = "compact"
-const WideSequenceStyle = "wide"
+const (
+	WideSeqIndent    SeqIndentType = "wide"
+	CompactSeqIndent SeqIndentType = "compact"
+	DefaultMapIndent               = 2
+)
 
-const DefaultIndent = 2
-const DefaultSequenceStyle = CompactSequenceStyle
-
-var sequenceIndentationStyle = DefaultSequenceStyle
-var indent = DefaultIndent
-
-// SetSequenceIndentationStyle sets the sequenceIndentationStyle variable
-func SetSequenceIndentationStyle(style string) {
-	sequenceIndentationStyle = style
-}
-
-// SequenceIndentationStyle returns the value of sequenceIndentationStyle
-func SequenceIndentationStyle() string {
-	return sequenceIndentationStyle
-}
+// SeqIndentType holds the indentation style for sequence nodes
+type SeqIndentType string
 
 // Expose the yaml.v3 functions so this package can be used as a replacement
 
@@ -53,11 +43,31 @@ var Unmarshal = yaml.Unmarshal
 var NewDecoder = yaml.NewDecoder
 var NewEncoder = func(w io.Writer) *yaml.Encoder {
 	e := yaml.NewEncoder(w)
-	e.SetIndent(indent)
-	if sequenceIndentationStyle == CompactSequenceStyle {
-		e.CompactSeqIndent()
-	}
+	e.SetIndent(DefaultMapIndent)
+	e.CompactSeqIndent()
 	return e
+}
+
+// MarshalWithIndent marshals the input interface with provided indents
+func MarshalWithIndent(in interface{}, mapIndent int, seqIndent SeqIndentType) ([]byte, error) {
+	var buf bytes.Buffer
+	err := NewEncoderWithIndent(&buf, mapIndent, seqIndent).Encode(in)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// NewEncoderWithIndent returns the encoder with configurable indents
+func NewEncoderWithIndent(w io.Writer, mapIndent int, seqIndent SeqIndentType) *yaml.Encoder {
+	encoder := NewEncoder(w)
+	encoder.SetIndent(mapIndent)
+	if seqIndent == WideSeqIndent {
+		encoder.DefaultSeqIndent()
+	} else {
+		encoder.CompactSeqIndent()
+	}
+	return encoder
 }
 
 var AliasNode yaml.Kind = yaml.AliasNode

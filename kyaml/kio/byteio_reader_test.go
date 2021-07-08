@@ -806,7 +806,7 @@ items:
 	}
 }
 
-func TestByteReader_RetainSeqIndent(t *testing.T) {
+func TestByteReader_AddSeqIndent(t *testing.T) {
 	type testCase struct {
 		name           string
 		err            string
