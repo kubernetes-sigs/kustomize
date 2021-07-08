@@ -38,6 +38,9 @@ type ByteReadWriter struct {
 	// the Resources, otherwise they will be cleared.
 	KeepReaderAnnotations bool
 
+	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
+	AddSeqIndentAnnotation bool
+
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
 
@@ -48,16 +51,13 @@ type ByteReadWriter struct {
 	NoWrap             bool
 	WrappingAPIVersion string
 	WrappingKind       string
-
-	// RetainSeqIndent if true retains the sequence indentation of
-	RetainSeqIndent bool
 }
 
 func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
 		Reader:                 rw.Reader,
 		OmitReaderAnnotations:  rw.OmitReaderAnnotations,
-		AddSeqIndentAnnotation: rw.RetainSeqIndent,
+		AddSeqIndentAnnotation: rw.AddSeqIndentAnnotation,
 	}
 	val, err := b.Read()
 	if rw.FunctionConfig == nil {
@@ -117,6 +117,9 @@ type ByteReader struct {
 	// annotation on Resources as they are Read.
 	OmitReaderAnnotations bool
 
+	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
+	AddSeqIndentAnnotation bool
+
 	// SetAnnotations is a map of caller specified annotations to set on resources as they are read
 	// These are independent of the annotations controlled by OmitReaderAnnotations
 	SetAnnotations map[string]string
@@ -135,9 +138,6 @@ type ByteReader struct {
 	// WrappingKind is set by Read(), and is the kind of the object that
 	// the read objects were originally wrapped in.
 	WrappingKind string
-
-	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
-	AddSeqIndentAnnotation bool
 }
 
 var _ Reader = &ByteReader{}
@@ -264,46 +264,35 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 // value is the input yaml string and node is the decoded equivalent of value
 // the annotation value is decided by deriving the existing sequence indentation of resource
 func addSeqIndentAnno(value string, node *yaml.RNode) error {
+	// step 1: derive the sequence indentation of the node
 	anno := node.GetAnnotations()
 	if anno[kioutil.SeqIndentAnnotation] != "" {
 		// the annotation already exists, so don't change it
 		return nil
 	}
 
-	currentDefaultIndent := yaml.SequenceIndentationStyle()
-	defer yaml.SetSequenceIndentationStyle(currentDefaultIndent)
+	// marshal the node with 2 space sequence indentation and calculate the diff
+	out, err := yaml.MarshalWithIndent(node.Document(), yaml.DefaultMapIndent, yaml.WideSeqIndent)
+	if err != nil {
+		return err
+	}
+	twoSpaceIndentDiff := copyutil.PrettyFileDiff(string(out), value)
 
-	// encode the node to string with default 2 space sequence indentation and calculate the diff
-	yaml.SetSequenceIndentationStyle(yaml.WideSequenceStyle)
-	n, err := yaml.Parse(value)
+	// marshal the node with 0 space sequence indentation and calculate the diff
+	out, err = yaml.MarshalWithIndent(node.Document(), yaml.DefaultMapIndent, yaml.CompactSeqIndent)
 	if err != nil {
 		return err
 	}
-	out, err := n.String()
-	if err != nil {
-		return err
-	}
-	twoSpaceIndentDiff := copyutil.PrettyFileDiff(out, value)
-
-	// encode the node to string with compact 0 space sequence indentation and calculate the diff
-	yaml.SetSequenceIndentationStyle(yaml.CompactSequenceStyle)
-	n, err = yaml.Parse(value)
-	if err != nil {
-		return err
-	}
-	out, err = n.String()
-	if err != nil {
-		return err
-	}
-	noIndentDiff := copyutil.PrettyFileDiff(out, value)
+	noIndentDiff := copyutil.PrettyFileDiff(string(out), value)
 
 	var style string
 	if len(noIndentDiff) <= len(twoSpaceIndentDiff) {
-		style = yaml.CompactSequenceStyle
+		style = string(yaml.CompactSeqIndent)
 	} else {
-		style = yaml.WideSequenceStyle
+		style = string(yaml.WideSeqIndent)
 	}
 
+	// step 2: add the annotation to the node
 	return node.PipeE(
 		yaml.LookupCreate(yaml.MappingNode, yaml.MetadataField, yaml.AnnotationsField),
 		yaml.SetField(kioutil.SeqIndentAnnotation, yaml.NewScalarRNode(style)))
