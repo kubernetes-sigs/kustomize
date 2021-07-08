@@ -199,15 +199,9 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			values[i] += "\n"
 		}
 		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
-		node, err := r.decode(index, decoder)
+		node, err := r.decode(values[i], index, decoder)
 		if err == io.EOF {
 			continue
-		}
-
-		if r.AddSeqIndentAnnotation {
-			if err := addSeqIndentAnno(values[i], node); err != nil {
-				return nil, errors.Wrap(err)
-			}
 		}
 
 		if err != nil {
@@ -260,45 +254,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	return output, nil
 }
 
-// addSeqIndentAnno adds the sequence indentation annotation to the resource
-// value is the input yaml string and node is the decoded equivalent of value
-// the annotation value is decided by deriving the existing sequence indentation of resource
-func addSeqIndentAnno(value string, node *yaml.RNode) error {
-	// step 1: derive the sequence indentation of the node
-	anno := node.GetAnnotations()
-	if anno[kioutil.SeqIndentAnnotation] != "" {
-		// the annotation already exists, so don't change it
-		return nil
-	}
-
-	// marshal the node with 2 space sequence indentation and calculate the diff
-	out, err := yaml.MarshalWithIndent(node.Document(), yaml.DefaultMapIndent, yaml.WideSeqIndent)
-	if err != nil {
-		return err
-	}
-	twoSpaceIndentDiff := copyutil.PrettyFileDiff(string(out), value)
-
-	// marshal the node with 0 space sequence indentation and calculate the diff
-	out, err = yaml.MarshalWithIndent(node.Document(), yaml.DefaultMapIndent, yaml.CompactSeqIndent)
-	if err != nil {
-		return err
-	}
-	noIndentDiff := copyutil.PrettyFileDiff(string(out), value)
-
-	var style string
-	if len(noIndentDiff) <= len(twoSpaceIndentDiff) {
-		style = string(yaml.CompactSeqIndent)
-	} else {
-		style = string(yaml.WideSeqIndent)
-	}
-
-	// step 2: add the annotation to the node
-	return node.PipeE(
-		yaml.LookupCreate(yaml.MappingNode, yaml.MetadataField, yaml.AnnotationsField),
-		yaml.SetField(kioutil.SeqIndentAnnotation, yaml.NewScalarRNode(style)))
-}
-
-func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
+func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
 	node := &yaml.Node{}
 	err := decoder.Decode(node)
 	if err == io.EOF {
@@ -321,6 +277,14 @@ func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, erro
 	}
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
+
+		if r.AddSeqIndentAnnotation {
+			// derive and add the seqindent annotation
+			seqIndentStyle := seqIndentAnno(node, originalYAML)
+			if seqIndentStyle != "" {
+				r.SetAnnotations[kioutil.SeqIndentAnnotation] = fmt.Sprintf("%s", seqIndentStyle)
+			}
+		}
 	}
 	var keys []string
 	for k := range r.SetAnnotations {
@@ -334,4 +298,47 @@ func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, erro
 		}
 	}
 	return yaml.NewRNode(node), nil
+}
+
+// seqIndentAnno derives the sequence indentation annotation value for the resource,
+// originalYAML is the input yaml string and node is the decoded equivalent of originalYAML,
+// the annotation value is decided by deriving the existing sequence indentation of resource
+func seqIndentAnno(node *yaml.Node, originalYAML string) string {
+	rNode := &yaml.RNode{}
+	rNode.SetYNode(node)
+	// step 1: derive the sequence indentation of the node
+	anno := rNode.GetAnnotations()
+	if anno[kioutil.SeqIndentAnnotation] != "" {
+		// the annotation already exists, so don't change it
+		return ""
+	}
+
+	// marshal the node with 2 space sequence indentation and calculate the diff
+	out, err := yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{
+		MapIndent: yaml.DefaultMapIndent,
+		SeqIndent: yaml.WideSeqIndent,
+	})
+	if err != nil {
+		return ""
+	}
+	twoSpaceIndentDiff := copyutil.PrettyFileDiff(string(out), originalYAML)
+
+	// marshal the node with 0 space sequence indentation and calculate the diff
+	out, err = yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{
+		MapIndent: yaml.DefaultMapIndent,
+		SeqIndent: yaml.CompactSeqIndent,
+	})
+	if err != nil {
+		return ""
+	}
+	noIndentDiff := copyutil.PrettyFileDiff(string(out), originalYAML)
+
+	var style string
+	if len(noIndentDiff) <= len(twoSpaceIndentDiff) {
+		style = string(yaml.CompactSeqIndent)
+	} else {
+		style = string(yaml.WideSeqIndent)
+	}
+
+	return style
 }

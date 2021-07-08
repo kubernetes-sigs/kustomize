@@ -505,14 +505,6 @@ func (rn *RNode) SetAnnotations(m map[string]string) error {
 	return rn.setMapInMetadata(m, AnnotationsField)
 }
 
-// DeleteAnnotation tries to delete the annotation and clears the empty metadata field.
-func (rn *RNode) DeleteAnnotation(annotation string) error {
-	if err := rn.PipeE(ClearAnnotation(annotation)); err != nil {
-		return err
-	}
-	return ClearEmptyAnnotations(rn)
-}
-
 // GetLabels gets the metadata labels field.
 // If the field is missing, returns an empty map.
 // Use another method to check for missing metadata.

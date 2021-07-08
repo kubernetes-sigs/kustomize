@@ -337,6 +337,69 @@ g:
 	}
 }
 
+func TestLocalPackageReader_Read_addSeqIndentAnnotation(t *testing.T) {
+	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+	defer s.Clean()
+	s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
+	s.WriteFile(t, filepath.Join("b_test.yaml"), readFileB)
+
+	paths := []struct {
+		path string
+	}{
+		{path: "./"},
+		{path: s.Root},
+	}
+	for _, p := range paths {
+		// empty path
+		rfr := LocalPackageReader{PackagePath: p.path, AddSeqIndentAnnotation: true}
+		nodes, err := rfr.Read()
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		if !assert.Len(t, nodes, 3) {
+			return
+		}
+		expected := []string{
+			`a: b #first
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'a_test.yaml'
+    internal.config.kubernetes.io/seqindent: 'compact'
+`,
+			`c: d # second
+metadata:
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'a_test.yaml'
+    internal.config.kubernetes.io/seqindent: 'compact'
+`,
+			`# second thing
+e: f
+g:
+  h:
+  - i # has a list
+  - j
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'b_test.yaml'
+    internal.config.kubernetes.io/seqindent: 'compact'
+`,
+		}
+		for i := range nodes {
+			val, err := nodes[i].String()
+			if !assert.NoError(t, err) {
+				return
+			}
+			if !assert.Equal(t, expected[i], val) {
+				return
+			}
+		}
+	}
+}
+
 func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
 	defer s.Clean()

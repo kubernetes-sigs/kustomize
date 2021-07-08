@@ -832,7 +832,8 @@ spec:
 - baz
 metadata:
   annotations:
-    internal.config.kubernetes.io/seqindent: wide
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/seqindent: 'wide'
 `,
 		},
 		{
@@ -852,7 +853,8 @@ spec:
 - baz
 metadata:
   annotations:
-    internal.config.kubernetes.io/seqindent: compact
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/seqindent: 'compact'
 `,
 		},
 		{
@@ -878,7 +880,8 @@ env:
 - bar
 metadata:
   annotations:
-    internal.config.kubernetes.io/seqindent: wide
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/seqindent: 'wide'
 `,
 		},
 		{
@@ -904,7 +907,8 @@ env:
 - bar
 metadata:
   annotations:
-    internal.config.kubernetes.io/seqindent: compact
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/seqindent: 'compact'
 `,
 		},
 	}
@@ -913,7 +917,7 @@ metadata:
 		tc := testCases[i]
 		t.Run(tc.name, func(t *testing.T) {
 			rNodes, err := (&ByteReader{
-				OmitReaderAnnotations:  true,
+				OmitReaderAnnotations:  false,
 				AddSeqIndentAnnotation: true,
 				Reader:                 bytes.NewBuffer([]byte(tc.input)),
 			}).Read()

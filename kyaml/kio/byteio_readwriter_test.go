@@ -289,47 +289,6 @@ functionConfig:
 `,
 			instance: kio.ByteReadWriter{FunctionConfig: yaml.MustParse(`c: d`)},
 		},
-		{
-			name: "ResourceList indentation doesn't matter",
-			input: `
-apiVersion: config.kubernetes.io/v1alpha1
-kind: ResourceList
-items:
-  - kind: Deployment
-    metadata:
-      annotations:
-        internal.config.kubernetes.io/seqindent: "compact"
-    spec:
-      - foo
-      - bar
-  - kind: Service
-    metadata:
-      annotations:
-        internal.config.kubernetes.io/seqindent: "wide"
-    spec:
-      - foo
-      - bar
-`,
-			expectedOutput: `
-apiVersion: config.kubernetes.io/v1alpha1
-kind: ResourceList
-items:
-- kind: Deployment
-  metadata:
-    annotations:
-      internal.config.kubernetes.io/seqindent: "compact"
-  spec:
-  - foo
-  - bar
-- kind: Service
-  metadata:
-    annotations:
-      internal.config.kubernetes.io/seqindent: "wide"
-  spec:
-  - foo
-  - bar
-`,
-		},
 	}
 
 	for i := range testCases {

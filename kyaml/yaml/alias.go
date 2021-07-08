@@ -19,6 +19,15 @@ const (
 // SeqIndentType holds the indentation style for sequence nodes
 type SeqIndentType string
 
+// EncoderOptions are options that can be used to configure the encoder
+type EncoderOptions struct {
+	// MapIndent is the indentation for YAML Mapping nodes
+	MapIndent int
+
+	// SeqIndent is the indentation style for YAML Sequence nodes
+	SeqIndent SeqIndentType
+}
+
 // Expose the yaml.v3 functions so this package can be used as a replacement
 
 type Decoder = yaml.Decoder
@@ -48,21 +57,21 @@ var NewEncoder = func(w io.Writer) *yaml.Encoder {
 	return e
 }
 
-// MarshalWithIndent marshals the input interface with provided indents
-func MarshalWithIndent(in interface{}, mapIndent int, seqIndent SeqIndentType) ([]byte, error) {
+// MarshalWithOptions marshals the input interface with provided options
+func MarshalWithOptions(in interface{}, opts *EncoderOptions) ([]byte, error) {
 	var buf bytes.Buffer
-	err := NewEncoderWithIndent(&buf, mapIndent, seqIndent).Encode(in)
+	err := NewEncoderWithOptions(&buf, opts).Encode(in)
 	if err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
-// NewEncoderWithIndent returns the encoder with configurable indents
-func NewEncoderWithIndent(w io.Writer, mapIndent int, seqIndent SeqIndentType) *yaml.Encoder {
+// NewEncoderWithOptions returns the encoder with provided options
+func NewEncoderWithOptions(w io.Writer, opts *EncoderOptions) *yaml.Encoder {
 	encoder := NewEncoder(w)
-	encoder.SetIndent(mapIndent)
-	if seqIndent == WideSeqIndent {
+	encoder.SetIndent(opts.MapIndent)
+	if opts.SeqIndent == WideSeqIndent {
 		encoder.DefaultSeqIndent()
 	} else {
 		encoder.CompactSeqIndent()
