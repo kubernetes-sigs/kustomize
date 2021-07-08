@@ -27,6 +27,8 @@ func NewAnnotateRunner(parent string) *AnnotateRunner {
 		Long:    commands.AnnotateLong,
 		Example: commands.AnnotateExamples,
 		RunE:    r.runE,
+		Deprecated:
+			"use the `commonAnnotations` field in your kustomization file.",
 	}
 	runner.FixDocs(parent, c)
 	r.Command = c

@@ -525,7 +525,7 @@ test/testdata/dataset-with-setters/mysql/
 			// normalize path format for windows
 			actualNormalized := strings.Replace(actual.String(), "\\", "/", -1)
 
-			if !assert.Equal(t, strings.TrimSpace(test.expected), strings.TrimSpace(actualNormalized)) {
+			if !assert.Contains(t, strings.TrimSpace(actualNormalized), strings.TrimSpace(test.expected)) {
 				t.FailNow()
 			}
 		})

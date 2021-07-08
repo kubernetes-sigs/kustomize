@@ -506,7 +506,7 @@ created substitution "image-tag"`,
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Contains(t, strings.TrimSpace(actualNormalized), strings.TrimSpace(expectedNormalized), ) {
 				t.FailNow()
 			}
 		})
