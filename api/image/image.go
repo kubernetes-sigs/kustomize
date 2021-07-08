@@ -18,6 +18,14 @@ func IsImageMatched(s, t string) bool {
 	return pattern.MatchString(s)
 }
 
+// NewImageName creates new image name with name used as pattern for
+// replacement of original image name and newName as a replacement
+// that accepts subMatch (capture groups)
+func NewImageName(pattern, name, newName string) string {
+	re, _ := regexp.Compile("^" + pattern + ".*$")
+	return re.ReplaceAllString(name, newName)
+}
+
 // Split separates and returns the name and tag parts
 // from the image string using either colon `:` or at `@` separators.
 // Note that the returned tag keeps its separator.
