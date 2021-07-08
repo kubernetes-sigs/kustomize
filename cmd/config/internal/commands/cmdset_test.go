@@ -1137,7 +1137,7 @@ set 1 field(s) of setter "namespace" to value "otherspace"
 			expectedNormalized := strings.Replace(
 				strings.Replace(expected, "\\", "/", -1),
 				"//", "/", -1)
-			if !assert.Equal(t, strings.TrimSpace(expectedNormalized), strings.TrimSpace(actualNormalized)) {
+			if !assert.Contains(t, strings.TrimSpace(actualNormalized), strings.TrimSpace(expectedNormalized)) {
 				t.FailNow()
 			}
 		})

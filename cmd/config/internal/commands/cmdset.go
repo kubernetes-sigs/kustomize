@@ -27,6 +27,8 @@ func NewSetRunner(parent string) *SetRunner {
 		Example: commands.SetExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
+		Deprecated: "setter commands will no longer be available in kustomize v5.\n" +
+			"See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.",
 	}
 	runner.FixDocs(parent, c)
 	r.Command = c
