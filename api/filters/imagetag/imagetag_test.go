@@ -658,6 +658,52 @@ spec:
 				},
 			},
 		},
+		"newNameWithRegex": {
+			input: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: some.registry.io/image-one:1.0
+        name: image-one
+      - image: some.registry.io/image-two:2.0
+        name: image-two
+`,
+			expectedOutput: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: other.registry.io/namespace/image-one:1.0
+        name: image-one
+      - image: other.registry.io/namespace/image-two:2.0
+        name: image-two
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "some.registry.io/(.*)",
+					NewName: "other.registry.io/namespace/$1",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/template/spec/containers[]/image",
+				},
+				{
+					Path: "spec/template/spec/initContainers[]/image",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
