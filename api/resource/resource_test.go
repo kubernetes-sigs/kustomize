@@ -284,6 +284,84 @@ spec:
 `, string(bytes))
 }
 
+func TestApplySmPatchShouldPreserveInitContainerOrder(t *testing.T) {
+	resource, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+    - name: myapp-container
+      image: busybox:1.28
+      command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+    - name: init-mydb
+      image: busybox:1.28
+      command: ['sh', '-c', "sleep 3600"]
+    - name: init-myservice
+      image: busybox:1.28
+      command: ['sh', '-c', "sleep 7200"]
+`))
+	assert.NoError(t, err)
+	patch, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Pod
+metadata:
+  name: doesNotMatter
+spec:
+  initContainers:
+    - name: init-myservice
+      env:
+        - name: HTTP_ADDR
+          value: 10.1.2.3:8501
+    - name: init-mydb
+      env:
+        - name: HTTP_ADDR
+          value: 10.1.2.3:8501
+`))
+	assert.NoError(t, err)
+	assert.NoError(t, resource.ApplySmPatch(patch))
+	bytes, err := resource.AsYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: myapp
+  name: myapp-pod
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - echo The app is running! && sleep 3600
+    image: busybox:1.28
+    name: myapp-container
+  initContainers:
+  - command:
+    - sh
+    - -c
+    - sleep 3600
+    env:
+    - name: HTTP_ADDR
+      value: 10.1.2.3:8501
+    image: busybox:1.28
+    name: init-mydb
+  - command:
+    - sh
+    - -c
+    - sleep 7200
+    env:
+    - name: HTTP_ADDR
+      value: 10.1.2.3:8501
+    image: busybox:1.28
+    name: init-myservice
+`, string(bytes))
+}
+
 func TestMergeDataMapFrom(t *testing.T) {
 	resource, err := factory.FromBytes([]byte(`
 apiVersion: v1
@@ -681,20 +759,22 @@ spec:
 	}
 
 	for name, test := range tests {
-		resource, err := factory.FromBytes([]byte(test.base))
-		assert.NoError(t, err)
-		for _, p := range test.patch {
-			patch, err := factory.FromBytes([]byte(p))
-			assert.NoError(t, err, name)
-			assert.NoError(t, resource.ApplySmPatch(patch), name)
-		}
-		bytes, err := resource.AsYAML()
-		if test.errorExpected {
-			assert.Error(t, err, name)
-		} else {
-			assert.NoError(t, err, name)
-			assert.Equal(t, test.expected, string(bytes), name)
-		}
+		t.Run(name, func(t *testing.T) {
+			resource, err := factory.FromBytes([]byte(test.base))
+			assert.NoError(t, err)
+			for _, p := range test.patch {
+				patch, err := factory.FromBytes([]byte(p))
+				assert.NoError(t, err, name)
+				assert.NoError(t, resource.ApplySmPatch(patch), name)
+			}
+			bytes, err := resource.AsYAML()
+			if test.errorExpected {
+				assert.Error(t, err, name)
+			} else {
+				assert.NoError(t, err, name)
+				assert.Equal(t, test.expected, string(bytes), name)
+			}
+		})
 	}
 }
 
@@ -971,12 +1051,12 @@ spec:
         some-label: some-value
     spec:
       containers:
+      - image: anotherimage
+        name: anothercontainer
       - env:
         %s
         image: nginx:latest
         name: nginx
-      - image: anotherimage
-        name: anothercontainer
 `
 	if reversed {
 		return fmt.Sprintf(pattern, kind, `- name: SOMEENV

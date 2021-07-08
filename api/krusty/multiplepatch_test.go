@@ -519,12 +519,12 @@ spec:
         - mountPath: /tmp/ps
           name: fancyDisk
       volumes:
-      - gcePersistentDisk:
-          pdName: fancyDisk
-        name: fancyDisk
       - configMap:
           name: overlayCm-dc6fm46dhm
         name: overlayCm
+      - gcePersistentDisk:
+          pdName: fancyDisk
+        name: fancyDisk
       - configMap:
           name: baseCm-798k5k7g9f
         name: baseCm

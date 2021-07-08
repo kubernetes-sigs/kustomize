@@ -224,6 +224,16 @@ spec:
         repo: test-infra
     spec:
       containers:
+      - envFrom:
+        - configMapRef:
+            name: someConfigMap
+        - configMapRef:
+            name: test-infra-app-env-8h5mh7f7ch
+        image: busybox
+        name: busybox
+        volumeMounts:
+        - mountPath: /tmp/env
+          name: app-env
       - env:
         - name: FOO
           valueFrom:
@@ -236,16 +246,6 @@ spec:
         name: nginx
         ports:
         - containerPort: 80
-      - envFrom:
-        - configMapRef:
-            name: someConfigMap
-        - configMapRef:
-            name: test-infra-app-env-8h5mh7f7ch
-        image: busybox
-        name: busybox
-        volumeMounts:
-        - mountPath: /tmp/env
-          name: app-env
       volumes:
       - configMap:
           name: test-infra-app-env-8h5mh7f7ch
