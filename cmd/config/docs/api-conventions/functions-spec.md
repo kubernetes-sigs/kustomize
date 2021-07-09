@@ -338,7 +338,7 @@ filesystem.
 
 Annotation prefix `internal.config.kubernetes.io` is reserved for use for
 internal annotations. In general, a function MUST NOT modify these annotations with
-exceptions of specific annotation listed below. This enables orchestrator to add additional internal annotations, without requiring changes to existing functions.
+the exception of the specific annotations listed below. This enables orchestrators to add additional internal annotations, without requiring changes to existing functions.
 
 #### `internal.config.kubernetes.io/path`
 
