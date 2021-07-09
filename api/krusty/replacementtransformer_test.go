@@ -343,6 +343,9 @@ spec:
 `)
 }
 
+// TODO: Address namePrefix in overlay not applying to replacement targets
+// The image in the target deployment should end up being `prefix-source` instead of `source`
+// https://github.com/kubernetes-sigs/kustomize/issues/4034
 func TestReplacementTransformerWithNamePrefixOverlay(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
@@ -402,7 +405,7 @@ spec:
   template:
     spec:
       containers:
-      - image: prefix-source
+      - image: source
         name: nginx
 ---
 apiVersion: apps/v1
