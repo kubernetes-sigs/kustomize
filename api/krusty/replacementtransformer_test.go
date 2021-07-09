@@ -344,79 +344,135 @@ spec:
 }
 
 // TODO: Address namePrefix in overlay not applying to replacement targets
-// The image in the target deployment should end up being `prefix-source` instead of `source`
+// The name in the target deployment should end up being `prefix-source` instead of `source`
 // https://github.com/kubernetes-sigs/kustomize/issues/4034
 func TestReplacementTransformerWithNamePrefixOverlay(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
 
-	th.WriteF("base/deployments.yaml", `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: target
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:oldtag
-        name: nginx
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: source
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:newtag
-        name: nginx
-`)
-	th.WriteF("base/replacement.yaml", `
-source:
-  name: source
-  kind: Deployment
-targets:
-- select:
-    name: target
-  fieldPaths:
-  - spec.template.spec.containers.[name=nginx].image
-`)
 	th.WriteK("base", `
+generatorOptions:
+ disableNameSuffixHash: true
+configMapGenerator:
+- name: blue
+- name: red
 replacements:
-- path: replacement.yaml
-resources:
-- deployments.yaml
+- source:
+    kind: ConfigMap
+    name: blue
+    fieldPath: metadata.name
+  targets:
+  - select:
+      name: red
+    fieldPaths:
+    - data.blue-name
+    options:
+      create: true
 `)
 
 	th.WriteK(".", `
-namePrefix: prefix-
+namePrefix: overlay-
 resources:
 - base
 `)
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: prefix-target
-spec:
-  template:
-    spec:
-      containers:
-      - image: source
-        name: nginx
+  name: overlay-blue
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+data:
+  blue-name: blue
+kind: ConfigMap
 metadata:
-  name: prefix-source
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:newtag
-        name: nginx
+  name: overlay-red
+`)
+}
+
+func TestReplacementTransformerWithNamespaceOverlay(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK("base", `
+namespace: base-namespace
+generatorOptions:
+ disableNameSuffixHash: true
+configMapGenerator:
+- name: blue
+- name: red
+replacements:
+- source:
+    kind: ConfigMap
+    name: blue
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      name: red
+    fieldPaths:
+    - data.blue-namespace
+    options:
+      create: true
+`)
+
+	th.WriteK(".", `
+namespace: overlay-namespace
+resources:
+- base
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue
+  namespace: overlay-namespace
+---
+apiVersion: v1
+data:
+  blue-namespace: base-namespace
+kind: ConfigMap
+metadata:
+  name: red
+  namespace: overlay-namespace
+`)
+}
+
+func TestReplacementTransformerWithConfigMapGenerator(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK(".", `
+configMapGenerator:
+- name: blue
+- name: red
+replacements:
+- source:
+    kind: ConfigMap
+    name: blue
+    fieldPath: metadata.name
+  targets:
+  - select:
+      name: red
+    fieldPaths:
+    - data.blue-name
+    options:
+      create: true
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-6ct58987ht
+---
+apiVersion: v1
+data:
+  blue-name: blue
+kind: ConfigMap
+metadata:
+  name: red-dc6gc5btkc
 `)
 }
