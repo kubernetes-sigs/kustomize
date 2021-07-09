@@ -15,6 +15,7 @@ const (
 	BuildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
 	BuildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
 	BuildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
+	BuildAnnotationsRefBy             = konfig.ConfigAnnoDomain + "/refBy"
 
 	// the following are only for patches, to specify whether they can change names
 	// and kinds of their targets

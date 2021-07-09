@@ -897,7 +897,9 @@ func TestNameReferenceClusterWide(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	expected.RemoveBuildAnnotations()
 	m.RemoveBuildAnnotations()
+
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf(notEqualErrFmt, err)
 	}
