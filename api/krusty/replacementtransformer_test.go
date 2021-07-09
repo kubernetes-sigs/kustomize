@@ -344,7 +344,7 @@ spec:
 }
 
 // TODO: Address namePrefix in overlay not applying to replacement targets
-// The name in the target deployment should end up being `prefix-source` instead of `source`
+// The property `data.blue-name` should end up being `overlay-blue` instead of `blue`
 // https://github.com/kubernetes-sigs/kustomize/issues/4034
 func TestReplacementTransformerWithNamePrefixOverlay(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
@@ -391,6 +391,9 @@ metadata:
 `)
 }
 
+// TODO: Address namespace in overlay not applying to replacement targets
+// The property `data.blue-namespace` should end up being `overlay-namespace` instead of `base-namespace`
+// https://github.com/kubernetes-sigs/kustomize/issues/4034
 func TestReplacementTransformerWithNamespaceOverlay(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
@@ -439,6 +442,9 @@ metadata:
 `)
 }
 
+// TODO: Address configMapGenerator suffix not applying to replacement targets
+// The property `data.blue-name` should end up being `blue-6ct58987ht` instead of `blue`
+// https://github.com/kubernetes-sigs/kustomize/issues/4034
 func TestReplacementTransformerWithConfigMapGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
