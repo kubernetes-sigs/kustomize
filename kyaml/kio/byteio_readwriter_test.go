@@ -425,7 +425,7 @@ spec:
 `,
 		},
 		{
-			name: "round_trip with mixed indentations in same resource, least diff wins",
+			name: "round_trip with mixed indentations in same resource, wide wins",
 			input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -450,7 +450,7 @@ env:
 `,
 		},
 		{
-			name: "round_trip with mixed indentations in same resource, least diff wins",
+			name: "round_trip with mixed indentations in same resource, compact wins",
 			input: `
 apiVersion: apps/v1
 kind: Deployment

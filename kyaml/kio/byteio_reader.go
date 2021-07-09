@@ -114,7 +114,7 @@ type ByteReader struct {
 	Reader io.Reader
 
 	// OmitReaderAnnotations will configures Read to skip setting the config.kubernetes.io/index
-	// annotation on Resources as they are Read.
+	// and internal.config.kubernetes.io/seqindent annotations on Resources as they are Read.
 	OmitReaderAnnotations bool
 
 	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
@@ -314,20 +314,14 @@ func seqIndentAnno(node *yaml.Node, originalYAML string) string {
 	}
 
 	// marshal the node with 2 space sequence indentation and calculate the diff
-	out, err := yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{
-		MapIndent: yaml.DefaultMapIndent,
-		SeqIndent: yaml.WideSeqIndent,
-	})
+	out, err := yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{SeqIndent: yaml.WideSeqIndent})
 	if err != nil {
 		return ""
 	}
 	twoSpaceIndentDiff := copyutil.PrettyFileDiff(string(out), originalYAML)
 
 	// marshal the node with 0 space sequence indentation and calculate the diff
-	out, err = yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{
-		MapIndent: yaml.DefaultMapIndent,
-		SeqIndent: yaml.CompactSeqIndent,
-	})
+	out, err = yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{SeqIndent: yaml.CompactSeqIndent})
 	if err != nil {
 		return ""
 	}
