@@ -540,7 +540,7 @@ spec:
 			w := tc.instance
 			w.Writer = &out
 			w.Reader = &in
-			w.AddSeqIndentAnnotation = true
+			w.PreserveSeqIndent = true
 
 			nodes, err := w.Read()
 			if !assert.NoError(t, err) {

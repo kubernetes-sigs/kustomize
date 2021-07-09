@@ -806,12 +806,17 @@ items:
 	}
 }
 
-func TestByteReader_AddSeqIndent(t *testing.T) {
+// TestByteReader_AddSeqIndentAnnotation tests if the internal.config.kubernetes.io/seqindent
+// annotation is added to resources appropriately, the expectedOutput indentation may not
+// match with the annotation as it is not using byteio_writer, this test will only verify
+// byteio_reader behavior to add annotation
+func TestByteReader_AddSeqIndentAnnotation(t *testing.T) {
 	type testCase struct {
-		name           string
-		err            string
-		input          string
-		expectedOutput string
+		name                  string
+		err                   string
+		input                 string
+		expectedOutput        string
+		OmitReaderAnnotations bool
 	}
 
 	testCases := []testCase{
@@ -911,16 +916,46 @@ metadata:
     internal.config.kubernetes.io/seqindent: 'compact'
 `,
 		},
+		{
+			name: "error if conflicting options",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+  - foo
+  - bar
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+  - foo
+  - bar
+`,
+			OmitReaderAnnotations: true,
+			err:                   `"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`,
+		},
 	}
 
 	for i := range testCases {
 		tc := testCases[i]
 		t.Run(tc.name, func(t *testing.T) {
 			rNodes, err := (&ByteReader{
-				OmitReaderAnnotations:  false,
-				AddSeqIndentAnnotation: true,
-				Reader:                 bytes.NewBuffer([]byte(tc.input)),
+				OmitReaderAnnotations: tc.OmitReaderAnnotations,
+				PreserveSeqIndent:     true,
+				Reader:                bytes.NewBuffer([]byte(tc.input)),
 			}).Read()
+			if tc.err != "" {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+				return
+			}
 			assert.NoError(t, err)
 			actual, err := rNodes[0].String()
 			assert.NoError(t, err)
