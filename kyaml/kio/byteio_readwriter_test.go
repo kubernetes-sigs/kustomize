@@ -530,6 +530,31 @@ spec:
   - bar
 `,
 		},
+		{
+			name: "round_trip with mixed indentations in same resource, wide wins as it is first",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+env:
+- foo
+- bar
+- baz
+`,
+			expectedOutput: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+env:
+  - foo
+  - bar
+  - baz
+`,
+		},
 	}
 
 	for i := range testCases {

@@ -11,7 +11,6 @@ import (
 	"sort"
 	"strings"
 
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -284,7 +283,7 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 
 		if r.PreserveSeqIndent {
 			// derive and add the seqindent annotation
-			seqIndentStyle := seqIndentAnno(node, originalYAML)
+			seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
 			if seqIndentStyle != "" {
 				r.SetAnnotations[kioutil.SeqIndentAnnotation] = fmt.Sprintf("%s", seqIndentStyle)
 			}
@@ -302,41 +301,4 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 		}
 	}
 	return yaml.NewRNode(node), nil
-}
-
-// seqIndentAnno derives the sequence indentation annotation value for the resource,
-// originalYAML is the input yaml string and node is the decoded equivalent of originalYAML,
-// the annotation value is decided by deriving the existing sequence indentation of resource
-func seqIndentAnno(node *yaml.Node, originalYAML string) string {
-	rNode := &yaml.RNode{}
-	rNode.SetYNode(node)
-	// step 1: derive the sequence indentation of the node
-	anno := rNode.GetAnnotations()
-	if anno[kioutil.SeqIndentAnnotation] != "" {
-		// the annotation already exists, so don't change it
-		return ""
-	}
-
-	// marshal the node with 2 space sequence indentation and calculate the diff
-	out, err := yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{SeqIndent: yaml.WideSeqIndent})
-	if err != nil {
-		return ""
-	}
-	twoSpaceIndentDiff := copyutil.PrettyFileDiff(string(out), originalYAML)
-
-	// marshal the node with 0 space sequence indentation and calculate the diff
-	out, err = yaml.MarshalWithOptions(rNode.Document(), &yaml.EncoderOptions{SeqIndent: yaml.CompactSeqIndent})
-	if err != nil {
-		return ""
-	}
-	noIndentDiff := copyutil.PrettyFileDiff(string(out), originalYAML)
-
-	var style string
-	if len(noIndentDiff) <= len(twoSpaceIndentDiff) {
-		style = string(yaml.CompactSeqIndent)
-	} else {
-		style = string(yaml.WideSeqIndent)
-	}
-
-	return style
 }
