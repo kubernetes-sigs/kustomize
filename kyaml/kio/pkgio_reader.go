@@ -40,6 +40,9 @@ type LocalPackageReadWriter struct {
 
 	KeepReaderAnnotations bool `yaml:"keepReaderAnnotations,omitempty"`
 
+	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
+	AddSeqIndentAnnotation bool
+
 	// PackagePath is the path to the package directory.
 	PackagePath string `yaml:"path,omitempty"`
 
@@ -79,13 +82,14 @@ type LocalPackageReadWriter struct {
 
 func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 	nodes, err := LocalPackageReader{
-		PackagePath:         r.PackagePath,
-		MatchFilesGlob:      r.MatchFilesGlob,
-		IncludeSubpackages:  r.IncludeSubpackages,
-		ErrorIfNonResources: r.ErrorIfNonResources,
-		SetAnnotations:      r.SetAnnotations,
-		PackageFileName:     r.PackageFileName,
-		FileSkipFunc:        r.FileSkipFunc,
+		PackagePath:            r.PackagePath,
+		MatchFilesGlob:         r.MatchFilesGlob,
+		IncludeSubpackages:     r.IncludeSubpackages,
+		ErrorIfNonResources:    r.ErrorIfNonResources,
+		SetAnnotations:         r.SetAnnotations,
+		PackageFileName:        r.PackageFileName,
+		FileSkipFunc:           r.FileSkipFunc,
+		AddSeqIndentAnnotation: r.AddSeqIndentAnnotation,
 	}.Read()
 	if err != nil {
 		return nil, errors.Wrap(err)
