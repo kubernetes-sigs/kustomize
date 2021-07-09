@@ -337,7 +337,7 @@ and removes the annotation when writing the output of functions back to the
 filesystem.
 
 Annotation prefix `internal.config.kubernetes.io` is reserved for use for
-internal annotations. In general, a function MUT NOT modify these annotations with
+internal annotations. In general, a function MUST NOT modify these annotations with
 exceptions of specific annotation listed below. This enables orchestrator to add additional internal annotations, without requiring changes to existing functions.
 
 #### `internal.config.kubernetes.io/path`
