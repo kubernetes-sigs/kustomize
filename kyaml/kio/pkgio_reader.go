@@ -40,8 +40,8 @@ type LocalPackageReadWriter struct {
 
 	KeepReaderAnnotations bool `yaml:"keepReaderAnnotations,omitempty"`
 
-	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
-	AddSeqIndentAnnotation bool
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 
 	// PackagePath is the path to the package directory.
 	PackagePath string `yaml:"path,omitempty"`
@@ -82,14 +82,14 @@ type LocalPackageReadWriter struct {
 
 func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 	nodes, err := LocalPackageReader{
-		PackagePath:            r.PackagePath,
-		MatchFilesGlob:         r.MatchFilesGlob,
-		IncludeSubpackages:     r.IncludeSubpackages,
-		ErrorIfNonResources:    r.ErrorIfNonResources,
-		SetAnnotations:         r.SetAnnotations,
-		PackageFileName:        r.PackageFileName,
-		FileSkipFunc:           r.FileSkipFunc,
-		AddSeqIndentAnnotation: r.AddSeqIndentAnnotation,
+		PackagePath:         r.PackagePath,
+		MatchFilesGlob:      r.MatchFilesGlob,
+		IncludeSubpackages:  r.IncludeSubpackages,
+		ErrorIfNonResources: r.ErrorIfNonResources,
+		SetAnnotations:      r.SetAnnotations,
+		PackageFileName:     r.PackageFileName,
+		FileSkipFunc:        r.FileSkipFunc,
+		PreserveSeqIndent:   r.PreserveSeqIndent,
 	}.Read()
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -182,8 +182,8 @@ type LocalPackageReader struct {
 	// the file
 	FileSkipFunc LocalPackageSkipFileFunc
 
-	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
-	AddSeqIndentAnnotation bool
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 }
 
 var _ Reader = LocalPackageReader{}
@@ -270,11 +270,11 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 	defer f.Close()
 
 	rr := &ByteReader{
-		DisableUnwrapping:      true,
-		Reader:                 f,
-		OmitReaderAnnotations:  r.OmitReaderAnnotations,
-		SetAnnotations:         r.SetAnnotations,
-		AddSeqIndentAnnotation: r.AddSeqIndentAnnotation,
+		DisableUnwrapping:     true,
+		Reader:                f,
+		OmitReaderAnnotations: r.OmitReaderAnnotations,
+		SetAnnotations:        r.SetAnnotations,
+		PreserveSeqIndent:     r.PreserveSeqIndent,
 	}
 	return rr.Read()
 }

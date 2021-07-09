@@ -38,8 +38,8 @@ type ByteReadWriter struct {
 	// the Resources, otherwise they will be cleared.
 	KeepReaderAnnotations bool
 
-	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
-	AddSeqIndentAnnotation bool
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
@@ -55,9 +55,9 @@ type ByteReadWriter struct {
 
 func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
-		Reader:                 rw.Reader,
-		OmitReaderAnnotations:  rw.OmitReaderAnnotations,
-		AddSeqIndentAnnotation: rw.AddSeqIndentAnnotation,
+		Reader:                rw.Reader,
+		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+		PreserveSeqIndent:     rw.PreserveSeqIndent,
 	}
 	val, err := b.Read()
 	if rw.FunctionConfig == nil {
@@ -117,8 +117,8 @@ type ByteReader struct {
 	// and internal.config.kubernetes.io/seqindent annotations on Resources as they are Read.
 	OmitReaderAnnotations bool
 
-	// AddSeqIndentAnnotation if true adds kioutil.SeqIndentAnnotation to each resource
-	AddSeqIndentAnnotation bool
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 
 	// SetAnnotations is a map of caller specified annotations to set on resources as they are read
 	// These are independent of the annotations controlled by OmitReaderAnnotations
@@ -174,6 +174,10 @@ func splitDocuments(s string) ([]string, error) {
 }
 
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
+	if r.PreserveSeqIndent && r.OmitReaderAnnotations {
+		return nil, errors.Errorf(`"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
+	}
+
 	output := ResourceNodeSlice{}
 
 	// by manually splitting resources -- otherwise the decoder will get the Resource
@@ -278,7 +282,7 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
 
-		if r.AddSeqIndentAnnotation {
+		if r.PreserveSeqIndent {
 			// derive and add the seqindent annotation
 			seqIndentStyle := seqIndentAnno(node, originalYAML)
 			if seqIndentStyle != "" {

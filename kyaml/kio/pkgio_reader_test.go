@@ -337,7 +337,7 @@ g:
 	}
 }
 
-func TestLocalPackageReader_Read_addSeqIndentAnnotation(t *testing.T) {
+func TestLocalPackageReader_Read_PreserveSeqIndent(t *testing.T) {
 	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
 	defer s.Clean()
 	s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
@@ -351,7 +351,7 @@ func TestLocalPackageReader_Read_addSeqIndentAnnotation(t *testing.T) {
 	}
 	for _, p := range paths {
 		// empty path
-		rfr := LocalPackageReader{PackagePath: p.path, AddSeqIndentAnnotation: true}
+		rfr := LocalPackageReader{PackagePath: p.path, PreserveSeqIndent: true}
 		nodes, err := rfr.Read()
 		if !assert.NoError(t, err) {
 			return
