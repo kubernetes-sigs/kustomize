@@ -531,3 +531,59 @@ metadata:
   name: secret-example-7hf4fh868h
 `)
 }
+
+func TestUnrelatedNameReferenceReplacementIssue4054(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+
+	// The cluster-autoscaler lease name should not be changed.
+	th.WriteF("role.yaml", `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  resourceNames: ["cluster-autoscaler"]
+  verbs: ["get","update"]
+`)
+
+	th.WriteK(".", `
+resources:
+- role.yaml
+configMapGenerator:
+- name: cluster-autoscaler
+  namespace: kube-system
+  literals:
+  - AWS_REGION="us-east-1"
+`)
+	// The resourceNames for the leases resource in the ClusterRole should not be
+	// updated with the name suffix, because it's not targeting the generated
+	// configmap
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels: null
+  name: cluster-autoscaler
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resourceNames:
+  - cluster-autoscaler
+  resources:
+  - leases
+  verbs:
+  - get
+  - update
+---
+apiVersion: v1
+data:
+  AWS_REGION: us-east-1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-h8mmcct52k
+  namespace: kube-system
+`)
+}
