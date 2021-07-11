@@ -21,3 +21,7 @@
 *.DS_store
 
 .bin
+
+# build
+dist
+kustomize/.go-build-flags
