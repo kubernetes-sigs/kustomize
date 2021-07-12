@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/qri-io/starlib/util"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -96,20 +97,28 @@ func (sf *Filter) Run(reader io.Reader, writer io.Writer) error {
 		return errors.Wrap(err)
 	}
 
-	// run the starlark as program as transformation function
-	thread := &starlark.Thread{Name: sf.Name}
-
-	ctx := &Context{resourceList: value}
-	pd, err := ctx.predeclared()
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	_, err = starlark.ExecFile(thread, sf.Name, sf.Program, pd)
+	err = runStarlark(sf.Name, sf.Program, value)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
 	return sf.writeResourceList(value, writer)
+}
+
+func runStarlark(name, starlarkProgram string, resourceList starlark.Value) error {
+	// run the starlark as program as transformation function
+	thread := &starlark.Thread{Name: name}
+
+	ctx := &Context{resourceList: resourceList}
+	pd, err := ctx.predeclared()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	_, err = starlark.ExecFile(thread, name, starlarkProgram, pd)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
 }
 
 // inputToResourceList transforms input into a starlark.Value
@@ -124,8 +133,11 @@ func (sf *Filter) readResourceList(reader io.Reader) (starlark.Value, error) {
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+	return rnodeToStarlarkValue(rn)
+}
 
-	// convert to a starlark value
+// rnodeToStarlarkValue converts a RNode to a starlark value.
+func rnodeToStarlarkValue(rn *yaml.RNode) (starlark.Value, error) {
 	b, err := yaml.Marshal(rn.Document()) // convert to bytes
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -139,19 +151,23 @@ func (sf *Filter) readResourceList(reader io.Reader) (starlark.Value, error) {
 }
 
 // resourceListToOutput converts the output of the starlark program to the filter output
-func (sf *Filter) writeResourceList(value starlark.Value, writer io.Writer) error {
+func starlarkValueToRNode(value starlark.Value) (*yaml.RNode, error) {
 	// convert the modified resourceList back into a slice of RNodes
 	// by first converting to a map[string]interface{}
 	out, err := util.Unmarshal(value)
 	if err != nil {
-		return errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	b, err := yaml.Marshal(out)
 	if err != nil {
-		return errors.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 
-	rl, err := yaml.Parse(string(b))
+	return yaml.Parse(string(b))
+}
+
+func (sf *Filter) writeResourceList(value starlark.Value, writer io.Writer) error {
+	rl, err := starlarkValueToRNode(value)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -178,4 +194,46 @@ func (sf *Filter) writeResourceList(value starlark.Value, writer io.Writer) erro
 
 	_, err = writer.Write([]byte(s))
 	return err
+}
+
+type SimpleFilter struct {
+	Name string
+
+	// Program is a starlark script which will be run against the resources
+	Program string
+
+	FnConfig *yaml.RNode
+}
+
+func (sf *SimpleFilter) String() string {
+	return fmt.Sprintf(
+		"name: %v program: %v", sf.Name, sf.Program)
+}
+
+func (sf *SimpleFilter) FunctionConfig(fc *yaml.RNode) *SimpleFilter {
+	sf.FnConfig = fc
+	return sf
+}
+
+func (sf *SimpleFilter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	in, err := kioutil.WrapResources(nodes, sf.FnConfig)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	value, err := rnodeToStarlarkValue(in)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	err = runStarlark(sf.Name, sf.Program, value)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	rn, err := starlarkValueToRNode(value)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	updatedNodes, _, err := kioutil.UnwrapResources(rn)
+	return updatedNodes, err
 }
