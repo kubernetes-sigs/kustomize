@@ -302,6 +302,8 @@ spec:
         old-label: old-value
     spec:
       containers:
+      - image: busybox
+        name: busybox
       - env:
         - name: ANOTHERENV
           value: HELLO
@@ -309,8 +311,6 @@ spec:
           value: BAR
         image: nginx:latest
         name: nginx
-      - image: busybox
-        name: busybox
 `)
 }
 
@@ -800,6 +800,8 @@ spec:
         some-label: some-value
     spec:
       containers:
+      - image: anotherimage
+        name: anothercontainer
       - env:
         - name: ANOTHERENV
           value: ANOTHERVALUE
@@ -807,8 +809,6 @@ spec:
           value: SOMEVALUE
         image: nginx:latest
         name: nginx
-      - image: anotherimage
-        name: anothercontainer
 `
 
 	reversedres := `apiVersion: apps/v1
@@ -823,6 +823,8 @@ spec:
         some-label: some-value
     spec:
       containers:
+      - image: anotherimage
+        name: anothercontainer
       - env:
         - name: SOMEENV
           value: SOMEVALUE
@@ -830,8 +832,6 @@ spec:
           value: ANOTHERVALUE
         image: nginx:latest
         name: nginx
-      - image: anotherimage
-        name: anothercontainer
 `
 
 	if reversed {
