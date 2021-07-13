@@ -29,6 +29,7 @@ fi
 # We test against the latest release, and HEAD, and presumably
 # any branch using this label, so it should probably get
 # a new value.
+export MYGOBIN
 mdrip --mode test --blockTimeOut 15m \
     --label testAgainstLatestRelease examples
 

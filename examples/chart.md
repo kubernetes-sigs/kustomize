@@ -32,7 +32,7 @@ chart repository.
 This example defines the `helm` command as
 <!-- @defineHelmCommand @testHelm -->
 ```
-helmCommand=~/go/bin/helmV3
+helmCommand=${MYGOBIN:-~/go/bin}/helmV3
 ```
 
 This value is needed for testing this example in CI/CD.
