@@ -40,6 +40,9 @@ type LocalPackageReadWriter struct {
 
 	KeepReaderAnnotations bool `yaml:"keepReaderAnnotations,omitempty"`
 
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
+
 	// PackagePath is the path to the package directory.
 	PackagePath string `yaml:"path,omitempty"`
 
@@ -86,6 +89,7 @@ func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 		SetAnnotations:      r.SetAnnotations,
 		PackageFileName:     r.PackageFileName,
 		FileSkipFunc:        r.FileSkipFunc,
+		PreserveSeqIndent:   r.PreserveSeqIndent,
 	}.Read()
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -177,6 +181,9 @@ type LocalPackageReader struct {
 	// FileSkipFunc is a function which returns true if reader should ignore
 	// the file
 	FileSkipFunc LocalPackageSkipFileFunc
+
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 }
 
 var _ Reader = LocalPackageReader{}
@@ -267,6 +274,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		Reader:                f,
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
+		PreserveSeqIndent:     r.PreserveSeqIndent,
 	}
 	return rr.Read()
 }
