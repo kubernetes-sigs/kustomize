@@ -327,49 +327,51 @@ A function SHOULD preserve comments when input serialization format is YAML.
 This allows for human authoring of configuration to coexist with changes made by
 functions.
 
-### Annotations
+### Internal Annotations
 
-The orchestrator annotates resources in the wire format with annotation prefix
-`config.kubernetes.io`. These annotations are not persisted when the
-orchestrator writes the resources to the filesystem. The orchestrator sets this
-annotation when reading files from the local filesystem and removes the
-annotation when writing the output of functions back to the filesystem.
+For orchestration purposes, the orchestrator will use a set of annotations,
+referred to as _internal annotations_, on resources in `Resources.items`. These
+annotations are not persisted to resource manifests on the filesystem: The
+orchestrator sets this annotation when reading files from the local filesystem
+and removes the annotation when writing the output of functions back to the
+filesystem.
 
-In general, a function MUST NOT modify these annotations except the ones
-explicitly listed below.
+Annotation prefix `internal.config.kubernetes.io` is reserved for use for
+internal annotations. In general, a function MUST NOT modify these annotations with
+the exception of the specific annotations listed below. This enables orchestrators to add additional internal annotations, without requiring changes to existing functions.
 
-#### `config.kubernetes.io/path`
+#### `internal.config.kubernetes.io/path`
 
 Records the slash-delimited, OS-agnostic, relative file path to a resource. The
 path is relative to a fix location on the filesystem. Different orchestrator
 implementations can choose different fixed points.
 
-A function SHOULD NOT modify this annotation.
+A function SHOULD NOT modify these annotations.
 
 Example:
 
 ```yaml
 metadata:
   annotations:
-    config.kubernetes.io/path: "relative/file/path.yaml"
+    internal.config.kubernetes.io/path: "relative/file/path.yaml"
 ```
 
-#### `config.kubernetes.io/index`
+#### `internal.config.kubernetes.io/index`
 
 Records the index of a Resource in file. In a multi-object YAML file, resources
 are separated by three dashes (`---`), and the index represents the position of
 the Resource starting from zero. When this annotation is not specified, it
 implies a value of `0`.
 
-A function SHOULD NOT modify this annotation.
+A function SHOULD NOT modify these annotations.
 
 Example:
 
 ```yaml
 metadata:
   annotations:
-    config.kubernetes.io/path: "relative/file/path.yaml"
-    config.kubernetes.io/index: 2
+    internal.config.kubernetes.io/path: "relative/file/path.yaml"
+    internal.config.kubernetes.io/index: 2
 ```
 
 This represents the third resource in the file.
