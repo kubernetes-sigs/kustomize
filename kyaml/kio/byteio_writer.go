@@ -108,7 +108,7 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// don't wrap the elements
 	if w.WrappingKind == "" {
 		for i := range nodes {
-			if seqIndentsForNodes[i] == string(yaml.WideSeqIndent) {
+			if seqIndentsForNodes[i] == string(yaml.WideSequenceStyle) {
 				encoder.DefaultSeqIndent()
 			} else {
 				encoder.CompactSeqIndent()

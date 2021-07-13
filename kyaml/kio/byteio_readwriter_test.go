@@ -425,14 +425,12 @@ spec:
 `,
 		},
 		{
-			name: "round_trip with mixed indentations in same resource, wide wins",
+			name: "round_trip with mixed indentations in same resource, wide wins as it is first",
 			input: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
   - foo
-  - bar
-  - baz
 env:
 - foo
 - bar
@@ -442,22 +440,18 @@ apiVersion: apps/v1
 kind: Deployment
 spec:
   - foo
-  - bar
-  - baz
 env:
   - foo
   - bar
 `,
 		},
 		{
-			name: "round_trip with mixed indentations in same resource, compact wins",
+			name: "round_trip with mixed indentations in same resource, compact wins as it is first",
 			input: `
 apiVersion: apps/v1
 kind: Deployment
 spec:
 - foo
-- bar
-- baz
 env:
   - foo
   - bar
@@ -467,31 +461,6 @@ apiVersion: apps/v1
 kind: Deployment
 spec:
 - foo
-- bar
-- baz
-env:
-- foo
-- bar
-`,
-		},
-		{
-			name: "round_trip with mixed indentations in same resource, compact in case of a tie",
-			input: `
-apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
-env:
-  - foo
-  - bar
-`,
-			expectedOutput: `
-apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
 env:
 - foo
 - bar

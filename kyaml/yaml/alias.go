@@ -11,19 +11,19 @@ import (
 )
 
 const (
-	WideSeqIndent    SeqIndentType = "wide"
-	CompactSeqIndent SeqIndentType = "compact"
-	DefaultIndent                  = 2
+	WideSequenceStyle    SequenceIndentStyle = "wide"
+	CompactSequenceStyle SequenceIndentStyle = "compact"
+	DefaultIndent                            = 2
 )
 
 // SeqIndentType holds the indentation style for sequence nodes
-type SeqIndentType string
+type SequenceIndentStyle string
 
 // EncoderOptions are options that can be used to configure the encoder,
 // do not expose new options without considerable justification
 type EncoderOptions struct {
 	// SeqIndent is the indentation style for YAML Sequence nodes
-	SeqIndent SeqIndentType
+	SeqIndent SequenceIndentStyle
 }
 
 // Expose the yaml.v3 functions so this package can be used as a replacement
@@ -69,7 +69,7 @@ func MarshalWithOptions(in interface{}, opts *EncoderOptions) ([]byte, error) {
 func NewEncoderWithOptions(w io.Writer, opts *EncoderOptions) *yaml.Encoder {
 	encoder := NewEncoder(w)
 	encoder.SetIndent(DefaultIndent)
-	if opts.SeqIndent == WideSeqIndent {
+	if opts.SeqIndent == WideSequenceStyle {
 		encoder.DefaultSeqIndent()
 	} else {
 		encoder.CompactSeqIndent()
