@@ -53,16 +53,16 @@ func DeriveSeqIndentStyle(originalYAML string) string {
 func keyLineBeforeSeqElem(lines []string, seqElemIndex int) string {
 	// start with the previous line of sequence element
 	i := seqElemIndex - 1
-	for i >= 0 {
-		// split the line into 2 parts, non-comment and comment
-		// SplitN always ensure that the result array is at least of size 1
-		keyLine := strings.SplitN(lines[i], "#", 2)[0]
-		// check if the non-comment is not just spaces
-		if len(strings.Trim(keyLine, " ")) != 0 {
-			return keyLine
+	for ; i >= 0; i-- {
+		line := lines[i]
+		trimmedLine := strings.Trim(line, " ")
+		if strings.HasPrefix(trimmedLine, "#") { // commented line
+			continue
 		}
-		// keep going up, till we find a non-comment line
-		i--
+		// we have a non-commented line which can have a trailing comment
+		parts := strings.SplitN(line, "#", 2)
+		return parts[0] // throw away the trailing comment part
 	}
 	return ""
+
 }
