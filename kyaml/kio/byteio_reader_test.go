@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
 func TestByteReader(t *testing.T) {
@@ -807,15 +808,13 @@ items:
 }
 
 // TestByteReader_AddSeqIndentAnnotation tests if the internal.config.kubernetes.io/seqindent
-// annotation is added to resources appropriately, the expectedOutput indentation may not
-// match with the annotation as it is not using byteio_writer, this test will only verify
-// byteio_reader behavior to add annotation
+// annotation is added to resources appropriately
 func TestByteReader_AddSeqIndentAnnotation(t *testing.T) {
 	type testCase struct {
 		name                  string
 		err                   string
 		input                 string
-		expectedOutput        string
+		expectedAnnoValue     string
 		OmitReaderAnnotations bool
 	}
 
@@ -829,17 +828,7 @@ spec:
   - bar
   - baz
 `,
-			expectedOutput: `apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
-- baz
-metadata:
-  annotations:
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/seqindent: 'wide'
-`,
+			expectedAnnoValue: "wide",
 		},
 		{
 			name: "read with compact indentation",
@@ -850,17 +839,7 @@ spec:
 - bar
 - baz
 `,
-			expectedOutput: `apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
-- baz
-metadata:
-  annotations:
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/seqindent: 'compact'
-`,
+			expectedAnnoValue: "compact",
 		},
 		{
 			name: "read with mixed indentation, wide wins",
@@ -874,20 +853,7 @@ env:
 - foo
 - bar
 `,
-			expectedOutput: `apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
-- baz
-env:
-- foo
-- bar
-metadata:
-  annotations:
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/seqindent: 'wide'
-`,
+			expectedAnnoValue: "wide",
 		},
 		{
 			name: "read with mixed indentation, compact wins",
@@ -901,34 +867,11 @@ env:
   - foo
   - bar
 `,
-			expectedOutput: `apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
-- baz
-env:
-- foo
-- bar
-metadata:
-  annotations:
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/seqindent: 'compact'
-`,
+			expectedAnnoValue: "compact",
 		},
 		{
 			name: "error if conflicting options",
 			input: `apiVersion: apps/v1
-kind: Deployment
-spec:
-- foo
-- bar
-- baz
-env:
-  - foo
-  - bar
-`,
-			expectedOutput: `apiVersion: apps/v1
 kind: Deployment
 spec:
 - foo
@@ -957,9 +900,8 @@ env:
 				return
 			}
 			assert.NoError(t, err)
-			actual, err := rNodes[0].String()
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedOutput, actual)
+			actual := rNodes[0].GetAnnotations()[kioutil.SeqIndentAnnotation]
+			assert.Equal(t, tc.expectedAnnoValue, actual)
 		})
 	}
 }

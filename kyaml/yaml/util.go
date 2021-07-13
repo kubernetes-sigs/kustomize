@@ -29,20 +29,21 @@ func DeriveSeqIndentStyle(originalYAML string) string {
 
 		numSpacesBeforeKeyElem := len(keyLine) - len(strings.TrimLeft(keyLine, " "))
 		trimmedKeyLine := strings.Trim(keyLine, " ")
-		if strings.HasSuffix(trimmedKeyLine, "|") || strings.HasSuffix(trimmedKeyLine, "|-") {
+		if strings.Count(trimmedKeyLine, ":") != 1 || !strings.HasSuffix(trimmedKeyLine, ":") {
+			// if the key line doesn't contain only one : that too at the end,
 			// this is not a sequence node, it is a wrapped sequence node string
 			// ignore it
 			continue
 		}
 
 		if numSpacesBeforeSeqElem == numSpacesBeforeKeyElem {
-			return string(CompactSeqIndent)
+			return string(CompactSequenceStyle)
 		}
 
 		if numSpacesBeforeSeqElem-numSpacesBeforeKeyElem == 2 {
-			return string(WideSeqIndent)
+			return string(WideSequenceStyle)
 		}
 	}
 
-	return string(CompactSeqIndent)
+	return string(CompactSequenceStyle)
 }

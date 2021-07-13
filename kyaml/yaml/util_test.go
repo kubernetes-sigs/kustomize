@@ -79,16 +79,42 @@ env:
 			expectedOutput: `compact`,
 		},
 		{
-			name: "skip wrapped sequence strings",
+			name: "skip wrapped sequence strings, pipe hyphen",
 			input: `apiVersion: apps/v1
 kind: Deployment
 spec: |-
   - foo
   - bar
-env:
-- foo
-- bar
-- baz
+`,
+			expectedOutput: `compact`,
+		},
+		{
+			name: "skip wrapped sequence strings, pipe",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec: |
+  - foo
+  - bar
+`,
+			expectedOutput: `compact`,
+		},
+		{
+			name: "skip wrapped sequence strings, right angle bracket",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec: >
+  - foo
+  - bar
+`,
+			expectedOutput: `compact`,
+		},
+		{
+			name: "skip wrapped sequence strings, plus",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec: +
+  - foo
+  - bar
 `,
 			expectedOutput: `compact`,
 		},
