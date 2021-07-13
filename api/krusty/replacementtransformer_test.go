@@ -342,3 +342,143 @@ spec:
         name: nginx
 `)
 }
+
+// TODO: Address namePrefix in overlay not applying to replacement targets
+// The property `data.blue-name` should end up being `overlay-blue` instead of `blue`
+// https://github.com/kubernetes-sigs/kustomize/issues/4034
+func TestReplacementTransformerWithNamePrefixOverlay(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK("base", `
+generatorOptions:
+ disableNameSuffixHash: true
+configMapGenerator:
+- name: blue
+- name: red
+replacements:
+- source:
+    kind: ConfigMap
+    name: blue
+    fieldPath: metadata.name
+  targets:
+  - select:
+      name: red
+    fieldPaths:
+    - data.blue-name
+    options:
+      create: true
+`)
+
+	th.WriteK(".", `
+namePrefix: overlay-
+resources:
+- base
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: overlay-blue
+---
+apiVersion: v1
+data:
+  blue-name: blue
+kind: ConfigMap
+metadata:
+  name: overlay-red
+`)
+}
+
+// TODO: Address namespace in overlay not applying to replacement targets
+// The property `data.blue-namespace` should end up being `overlay-namespace` instead of `base-namespace`
+// https://github.com/kubernetes-sigs/kustomize/issues/4034
+func TestReplacementTransformerWithNamespaceOverlay(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK("base", `
+namespace: base-namespace
+generatorOptions:
+ disableNameSuffixHash: true
+configMapGenerator:
+- name: blue
+- name: red
+replacements:
+- source:
+    kind: ConfigMap
+    name: blue
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      name: red
+    fieldPaths:
+    - data.blue-namespace
+    options:
+      create: true
+`)
+
+	th.WriteK(".", `
+namespace: overlay-namespace
+resources:
+- base
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue
+  namespace: overlay-namespace
+---
+apiVersion: v1
+data:
+  blue-namespace: base-namespace
+kind: ConfigMap
+metadata:
+  name: red
+  namespace: overlay-namespace
+`)
+}
+
+// TODO: Address configMapGenerator suffix not applying to replacement targets
+// The property `data.blue-name` should end up being `blue-6ct58987ht` instead of `blue`
+// https://github.com/kubernetes-sigs/kustomize/issues/4034
+func TestReplacementTransformerWithConfigMapGenerator(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK(".", `
+configMapGenerator:
+- name: blue
+- name: red
+replacements:
+- source:
+    kind: ConfigMap
+    name: blue
+    fieldPath: metadata.name
+  targets:
+  - select:
+      name: red
+    fieldPaths:
+    - data.blue-name
+    options:
+      create: true
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-6ct58987ht
+---
+apiVersion: v1
+data:
+  blue-name: blue
+kind: ConfigMap
+metadata:
+  name: red-dc6gc5btkc
+`)
+}
