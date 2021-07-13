@@ -62,10 +62,21 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// Even though we use the this value further down we must check this before removing annotations
 	jsonEncodeSingleBareNode := w.shouldJSONEncodeSingleBareNode(nodes)
 
+	// store seqindent annotation value for each node in order to set the encoder indentation
+	var seqIndentsForNodes []string
+	for i := range nodes {
+		seqIndentsForNodes = append(seqIndentsForNodes, nodes[i].GetAnnotations()[kioutil.SeqIndentAnnotation])
+	}
+
 	for i := range nodes {
 		// clean resources by removing annotations set by the Reader
 		if !w.KeepReaderAnnotations {
 			_, err := nodes[i].Pipe(yaml.ClearAnnotation(kioutil.IndexAnnotation))
+			if err != nil {
+				return errors.Wrap(err)
+			}
+
+			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.SeqIndentAnnotation))
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -97,8 +108,13 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// don't wrap the elements
 	if w.WrappingKind == "" {
 		for i := range nodes {
+			if seqIndentsForNodes[i] == string(yaml.WideSequenceStyle) {
+				encoder.DefaultSeqIndent()
+			} else {
+				encoder.CompactSeqIndent()
+			}
 			if err := encoder.Encode(nodes[i].Document()); err != nil {
-				return err
+				return errors.Wrap(err)
 			}
 		}
 		return nil

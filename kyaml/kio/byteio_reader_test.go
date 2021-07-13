@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
 func TestByteReader(t *testing.T) {
@@ -802,6 +803,105 @@ items:
 					t, strings.TrimSpace(tc.exp.sOut[i]),
 					strings.TrimSpace(json), n)
 			}
+		})
+	}
+}
+
+// TestByteReader_AddSeqIndentAnnotation tests if the internal.config.kubernetes.io/seqindent
+// annotation is added to resources appropriately
+func TestByteReader_AddSeqIndentAnnotation(t *testing.T) {
+	type testCase struct {
+		name                  string
+		err                   string
+		input                 string
+		expectedAnnoValue     string
+		OmitReaderAnnotations bool
+	}
+
+	testCases := []testCase{
+		{
+			name: "read with wide indentation",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+`,
+			expectedAnnoValue: "wide",
+		},
+		{
+			name: "read with compact indentation",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+`,
+			expectedAnnoValue: "compact",
+		},
+		{
+			name: "read with mixed indentation, wide wins",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+env:
+- foo
+- bar
+`,
+			expectedAnnoValue: "wide",
+		},
+		{
+			name: "read with mixed indentation, compact wins",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+  - foo
+  - bar
+`,
+			expectedAnnoValue: "compact",
+		},
+		{
+			name: "error if conflicting options",
+			input: `apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+- baz
+env:
+  - foo
+  - bar
+`,
+			OmitReaderAnnotations: true,
+			err:                   `"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			rNodes, err := (&ByteReader{
+				OmitReaderAnnotations: tc.OmitReaderAnnotations,
+				PreserveSeqIndent:     true,
+				Reader:                bytes.NewBuffer([]byte(tc.input)),
+			}).Read()
+			if tc.err != "" {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			actual := rNodes[0].GetAnnotations()[kioutil.SeqIndentAnnotation]
+			assert.Equal(t, tc.expectedAnnoValue, actual)
 		})
 	}
 }

@@ -37,6 +37,9 @@ type ByteReadWriter struct {
 	// the Resources, otherwise they will be cleared.
 	KeepReaderAnnotations bool
 
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
+
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
 
@@ -53,6 +56,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
 		Reader:                rw.Reader,
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+		PreserveSeqIndent:     rw.PreserveSeqIndent,
 	}
 	val, err := b.Read()
 	if rw.FunctionConfig == nil {
@@ -109,8 +113,11 @@ type ByteReader struct {
 	Reader io.Reader
 
 	// OmitReaderAnnotations will configures Read to skip setting the config.kubernetes.io/index
-	// annotation on Resources as they are Read.
+	// and internal.config.kubernetes.io/seqindent annotations on Resources as they are Read.
 	OmitReaderAnnotations bool
+
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 
 	// SetAnnotations is a map of caller specified annotations to set on resources as they are read
 	// These are independent of the annotations controlled by OmitReaderAnnotations
@@ -166,6 +173,10 @@ func splitDocuments(s string) ([]string, error) {
 }
 
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
+	if r.PreserveSeqIndent && r.OmitReaderAnnotations {
+		return nil, errors.Errorf(`"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
+	}
+
 	output := ResourceNodeSlice{}
 
 	// by manually splitting resources -- otherwise the decoder will get the Resource
@@ -191,10 +202,11 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			values[i] += "\n"
 		}
 		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
-		node, err := r.decode(index, decoder)
+		node, err := r.decode(values[i], index, decoder)
 		if err == io.EOF {
 			continue
 		}
+
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
@@ -245,7 +257,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	return output, nil
 }
 
-func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
+func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
 	node := &yaml.Node{}
 	err := decoder.Decode(node)
 	if err == io.EOF {
@@ -268,6 +280,14 @@ func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, erro
 	}
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
+
+		if r.PreserveSeqIndent {
+			// derive and add the seqindent annotation
+			seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
+			if seqIndentStyle != "" {
+				r.SetAnnotations[kioutil.SeqIndentAnnotation] = fmt.Sprintf("%s", seqIndentStyle)
+			}
+		}
 	}
 	var keys []string
 	for k := range r.SetAnnotations {

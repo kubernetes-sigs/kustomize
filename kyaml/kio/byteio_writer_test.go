@@ -315,6 +315,67 @@ metadata:
 		// Test Case
 		//
 		{
+			name:     "keep_annotation_seqindent",
+			instance: ByteWriter{KeepReaderAnnotations: true},
+			items: []string{
+				`a: b #first
+metadata:
+  annotations:
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: "compact"
+`,
+				`e: f
+g:
+  h:
+  - i # has a list
+  - j
+metadata:
+  annotations:
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/seqindent: "wide"
+`,
+				`c: d # second
+metadata:
+  annotations:
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/seqindent: "compact"
+`,
+			},
+
+			expectedOutput: `a: b #first
+metadata:
+  annotations:
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: "compact"
+---
+e: f
+g:
+  h:
+    - i # has a list
+    - j
+metadata:
+  annotations:
+    config.kubernetes.io/index: 0
+    config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/seqindent: "wide"
+---
+c: d # second
+metadata:
+  annotations:
+    config.kubernetes.io/index: 1
+    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/seqindent: "compact"
+`,
+		},
+
+		//
+		// Test Case
+		//
+		{
 			name: "encode_valid_json",
 			items: []string{
 				`{
@@ -322,6 +383,34 @@ metadata:
   metadata: {
     annotations: {
       config.kubernetes.io/path: test.json
+    }
+  }
+}`,
+			},
+
+			expectedOutput: `{
+  "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
+  "metadata": {
+    "annotations": {
+      "config.kubernetes.io/path": "test.json"
+    }
+  }
+}`,
+		},
+
+		//
+		// Test Case
+		//
+		{
+			name: "encode_valid_json_remove_seqindent_annotation",
+			items: []string{
+				`{
+  "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
+  metadata: {
+    annotations: {
+      "internal.config.kubernetes.io/seqindent": "compact",
+      "config.kubernetes.io/index": "0",
+      "config.kubernetes.io/path": "test.json"
     }
   }
 }`,
