@@ -51,6 +51,50 @@ items:
 `,
 		},
 
+		// TODO: See issue #https://github.com/kubernetes-sigs/kustomize/issues/4066
+		//  the line breaks in scalar values are lost.
+		{
+			name: "round_trip_with_multiline_scalar",
+			input: `
+apiVersion: custom
+kind: Custom
+metadata:
+  name: my-resource
+spec:
+  validation:
+    openAPIV3Schema:
+      description: CanonicalService is the Schema for the canonicalservices API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+`,
+			expectedOutput: `
+apiVersion: custom
+kind: Custom
+metadata:
+  name: my-resource
+spec:
+  validation:
+    openAPIV3Schema:
+      description: CanonicalService is the Schema for the canonicalservices API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+`,
+		},
+
 		{
 			name: "function_config",
 			input: `
