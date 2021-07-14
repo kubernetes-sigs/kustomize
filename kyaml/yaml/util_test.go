@@ -119,6 +119,21 @@ spec: +
 			expectedOutput: `compact`,
 		},
 		{
+			name: "handle comments",
+			input: `apiVersion: v1
+kind: Service
+spec:
+  ports: # comment 1
+    # comment 2
+    - name: etcd-server-ssl
+      port: 2380
+    # comment 3
+    - name: etcd-client-ssl
+      port: 2379
+`,
+			expectedOutput: `wide`,
+		},
+		{
 			name: "nested wide vs compact",
 			input: `apiVersion: apps/v1
 kind: Deployment
@@ -138,6 +153,15 @@ abc:
 		{
 			name:           "invalid resource but valid yaml sequence",
 			input:          `  - foo`,
+			expectedOutput: `compact`,
+		},
+		{
+			name: "invalid resource but valid yaml sequence with comments",
+			input: `
+# comment 1
+  # comment 2
+  - foo
+`,
 			expectedOutput: `compact`,
 		},
 		{
