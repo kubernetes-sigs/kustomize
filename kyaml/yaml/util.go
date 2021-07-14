@@ -20,13 +20,13 @@ func DeriveSeqIndentStyle(originalYAML string) string {
 		}
 		numSpacesBeforeSeqElem := len(elems[0])
 
-		if i == 0 {
+		// keyLine is the line before the first sequence element
+		keyLine := keyLineBeforeSeqElem(lines, i)
+		if keyLine == "" {
+			// there is no keyLine for this sequence node
+			// all of those lines are comments
 			continue
 		}
-
-		// keyLine is the line before the first sequence element
-		keyLine := lines[i-1]
-
 		numSpacesBeforeKeyElem := len(keyLine) - len(strings.TrimLeft(keyLine, " "))
 		trimmedKeyLine := strings.Trim(keyLine, " ")
 		if strings.Count(trimmedKeyLine, ":") != 1 || !strings.HasSuffix(trimmedKeyLine, ":") {
@@ -46,4 +46,23 @@ func DeriveSeqIndentStyle(originalYAML string) string {
 	}
 
 	return string(CompactSequenceStyle)
+}
+
+// keyLineBeforeSeqElem iterates through the lines before the first seqElement
+// and tries to find the non-comment key line for the sequence node
+func keyLineBeforeSeqElem(lines []string, seqElemIndex int) string {
+	// start with the previous line of sequence element
+	i := seqElemIndex - 1
+	for ; i >= 0; i-- {
+		line := lines[i]
+		trimmedLine := strings.Trim(line, " ")
+		if strings.HasPrefix(trimmedLine, "#") { // commented line
+			continue
+		}
+		// we have a non-commented line which can have a trailing comment
+		parts := strings.SplitN(line, "#", 2)
+		return parts[0] // throw away the trailing comment part
+	}
+	return ""
+
 }
