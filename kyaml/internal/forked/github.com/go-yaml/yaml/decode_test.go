@@ -47,6 +47,9 @@ var unmarshalTests = []struct {
 	}, {
 		"v: hi", map[string]interface{}{"v": "hi"},
 	}, {
+		"v: 'hi\nthis is a\nmultiline string\n'",
+		map[string]interface {}{"v":"hi\nthis is a\nmultiline string\n"},
+	}, {
 		"v: true",
 		map[string]string{"v": "true"},
 	}, {
