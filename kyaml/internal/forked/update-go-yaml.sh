@@ -18,13 +18,12 @@ blue=$(tput setaf 4)
 normal=$(tput sgr0)
 
 # This should be the version of go-yaml v3 used by kubectl
- # In the original fork, this is 496545a6307b2a7d7a710fd516e5e16e8ab62dbc
- export GOYAML_SHA=$1
- export GOYAML_REF="goyaml-$GOYAML_SHA"
+# In the original fork, this is 496545a6307b2a7d7a710fd516e5e16e8ab62dbc
+export GOYAML_SHA=$1
+export GOYAML_REF="goyaml-$GOYAML_SHA"
 
 # The PRs we need to cherry-pick onto the above commit
-declare -r GO_YAML_PR=753
-declare -r KUSTOMIZE_PR=4004
+declare -r GO_YAML_PRS=(753 766)
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 declare -r REPO_ROOT
@@ -77,8 +76,11 @@ function cherry-pick(){
 subtree_commit_flag=""
 
 explain "Removing the fork's tree from git, if it exists. We'll write over this commit in a moment, but \`read-tree\` requires a clean directory."
-if [[ $(find  kyaml/internal/forked/github.com/go-yaml/yaml -type f -delete) ]]; then
-  git commit --all -m "Temporarily remove go-yaml fork"
+find  kyaml/internal/forked/github.com/go-yaml/yaml -type f -delete
+
+if [[ $(git diff --exit-code kyaml/internal/forked/github.com/go-yaml/yaml) ]]; then
+  git add kyaml/internal/forked/github.com/go-yaml/yaml
+  git commit -m "Temporarily remove go-yaml fork"
   subtree_commit_flag="--amend"
 fi
 
@@ -87,21 +89,20 @@ git fetch --depth=1 https://github.com/go-yaml/yaml.git "$GOYAML_SHA:$GOYAML_REF
 
 explain "Inserting the content we just pulled as a subtree of this repository and squash the changes into the last commit."
 git read-tree --prefix=kyaml/internal/forked/github.com/go-yaml/yaml/ -u "$GOYAML_REF"
-git commit $subtree_commit_flag --all -m "Internal copy of go-yaml at $GOYAML_SHA"
+git add kyaml/internal/forked/github.com/go-yaml/yaml
+git commit $subtree_commit_flag -m "Internal copy of go-yaml at $GOYAML_SHA"
 
 explain "Subtree creation successful."
 
-explain "Cherry-picking the commits from our go-yaml/yaml PR"
-cherry-pick https://github.com/go-yaml/yaml $GO_YAML_PR
+explain "Cherry-picking the commits from our go-yaml/yaml PRs"
+for pr in "${GO_YAML_PRS[@]}" ; do
+  cherry-pick https://github.com/go-yaml/yaml "$pr"
+done
 
 explain "Converting module to be internal."
 find kyaml/internal/forked/github.com/go-yaml/yaml -name "*.go" -type f | xargs sed -i '' s+"gopkg.in/yaml.v3"+"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"+g
 rm kyaml/internal/forked/github.com/go-yaml/yaml/go.mod
 git commit --all -m "Internalize forked code"
-
-# This is only necessary in the initial forking of the code
-# explain "Cherry-picking the commits from our test fixes in Kustomize PR"
-# cherry-pick https://github.com/kubernetes-sigs/kustomize $KUSTOMIZE_PR
 
 explain "SUCCEEDED."
 exit 0
