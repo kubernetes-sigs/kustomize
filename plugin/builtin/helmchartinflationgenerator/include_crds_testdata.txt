@@ -20,16 +20,14 @@ spec:
       description: Workspace is the Schema for the workspaces API
       properties:
         apiVersion:
-          description: |-
-            APIVersion defines the versioned schema of this representation
+          description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: |-
-            Kind is a string value representing the REST resource this
+          description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -113,9 +111,8 @@ spec:
                             description: The key to select.
                             type: string
                           name:
-                            description: |-
-                              Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              TODO: Add other useful fields. apiVersion, kind, uid?
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
                             type: string
                           optional:
                             description: Specify whether the ConfigMap or its key
@@ -125,11 +122,10 @@ spec:
                         - key
                         type: object
                       fieldRef:
-                        description: |-
-                          Selects a field of the pod: supports metadata.name,
+                        description: 'Selects a field of the pod: supports metadata.name,
                           metadata.namespace, metadata.labels, metadata.annotations,
                           spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP,
-                          status.podIPs.
+                          status.podIPs.'
                         properties:
                           apiVersion:
                             description: Version of the schema the FieldPath is written
@@ -143,16 +139,14 @@ spec:
                         - fieldPath
                         type: object
                       resourceFieldRef:
-                        description: |-
-                          Selects a resource of the container: only resources
+                        description: 'Selects a resource of the container: only resources
                           limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage,
                           requests.cpu, requests.memory and requests.ephemeral-storage)
-                          are currently supported.
+                          are currently supported.'
                         properties:
                           containerName:
-                            description: |-
-                              Container name: required for volumes, optional
-                              for env vars
+                            description: 'Container name: required for volumes, optional
+                              for env vars'
                             type: string
                           divisor:
                             anyOf:
@@ -176,9 +170,8 @@ spec:
                               be a valid secret key.
                             type: string
                           name:
-                            description: |-
-                              Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              TODO: Add other useful fields. apiVersion, kind, uid?
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
                             type: string
                           optional:
                             description: Specify whether the Secret or its key must

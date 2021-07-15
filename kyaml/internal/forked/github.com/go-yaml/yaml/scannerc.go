@@ -2653,7 +2653,7 @@ func yaml_parser_scan_flow_scalar(parser *yaml_parser_t, token *yaml_token_t, si
 			// Do we need to fold line breaks?
 			if len(leading_break) > 0 && leading_break[0] == '\n' {
 				if len(trailing_breaks) == 0 {
-					s = append(s, '\n')
+					s = append(s, ' ')
 				} else {
 					s = append(s, trailing_breaks...)
 				}
