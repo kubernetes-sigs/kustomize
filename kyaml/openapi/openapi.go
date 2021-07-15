@@ -15,8 +15,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
-	"sigs.k8s.io/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+	k8syaml "sigs.k8s.io/yaml"
 )
 
 // globalSchema contains global state information about the openapi
@@ -35,11 +35,11 @@ type openapiData struct {
 	schema spec.Schema
 
 	// schemaForResourceType is a map of Resource types to their schemas
-	schemaByResourceType map[kyaml.TypeMeta]*spec.Schema
+	schemaByResourceType map[yaml.TypeMeta]*spec.Schema
 
 	// namespaceabilityByResourceType stores whether a given Resource type
 	// is namespaceable or not
-	namespaceabilityByResourceType map[kyaml.TypeMeta]bool
+	namespaceabilityByResourceType map[yaml.TypeMeta]bool
 
 	// noUseBuiltInSchema stores whether we want to prevent using the built-n
 	// Kubernetes schema as part of the global schema
@@ -68,7 +68,7 @@ func (rs *ResourceSchema) IsMissingOrNull() bool {
 // TODO(pwittrock): create a version of this function that will return a schema
 // which can be used for duck-typed Resources -- e.g. contains common fields such
 // as metadata, replicas and spec.template.spec
-func SchemaForResourceType(t kyaml.TypeMeta) *ResourceSchema {
+func SchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
 	initSchema()
 	rs, found := globalSchema.schemaByResourceType[t]
 	if !found {
@@ -109,8 +109,8 @@ func DefinitionRefs(openAPIPath string) ([]string, error) {
 
 // definitionRefsFromRNode returns the list of openAPI definitions keys from input
 // yaml RNode
-func definitionRefsFromRNode(object *kyaml.RNode) ([]string, error) {
-	definitions, err := object.Pipe(kyaml.Lookup(SupplementaryOpenAPIFieldName, Definitions))
+func definitionRefsFromRNode(object *yaml.RNode) ([]string, error) {
+	definitions, err := object.Pipe(yaml.Lookup(SupplementaryOpenAPIFieldName, Definitions))
 	if definitions == nil {
 		return nil, err
 	}
@@ -121,13 +121,13 @@ func definitionRefsFromRNode(object *kyaml.RNode) ([]string, error) {
 }
 
 // parseOpenAPI reads openAPIPath yaml and converts it to RNode
-func parseOpenAPI(openAPIPath string) (*kyaml.RNode, error) {
+func parseOpenAPI(openAPIPath string) (*yaml.RNode, error) {
 	b, err := ioutil.ReadFile(openAPIPath)
 	if err != nil {
 		return nil, err
 	}
 
-	object, err := kyaml.Parse(string(b))
+	object, err := yaml.Parse(string(b))
 	if err != nil {
 		return nil, errors.Errorf("invalid file %q: %v", openAPIPath, err)
 	}
@@ -136,7 +136,7 @@ func parseOpenAPI(openAPIPath string) (*kyaml.RNode, error) {
 
 // addSchemaUsingField parses the OpenAPI definitions from the specified field.
 // If field is the empty string, use the whole document as OpenAPI.
-func schemaUsingField(object *kyaml.RNode, field string) (*spec.Schema, error) {
+func schemaUsingField(object *yaml.RNode, field string) (*spec.Schema, error) {
 	if field != "" {
 		// get the field containing the openAPI
 		m := object.Field(field)
@@ -155,7 +155,7 @@ func schemaUsingField(object *kyaml.RNode, field string) (*spec.Schema, error) {
 	// convert the yaml openAPI to a JSON string by unmarshalling it to an
 	// interface{} and the marshalling it to a string
 	var o interface{}
-	err = kyaml.Unmarshal([]byte(oAPI), &o)
+	err = yaml.Unmarshal([]byte(oAPI), &o)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func ResetOpenAPI() {
 func AddDefinitions(definitions spec.Definitions) {
 	// initialize values if they have not yet been set
 	if globalSchema.schemaByResourceType == nil {
-		globalSchema.schemaByResourceType = map[kyaml.TypeMeta]*spec.Schema{}
+		globalSchema.schemaByResourceType = map[yaml.TypeMeta]*spec.Schema{}
 	}
 	if globalSchema.schema.Definitions == nil {
 		globalSchema.schema.Definitions = spec.Definitions{}
@@ -219,10 +219,10 @@ func AddDefinitions(definitions spec.Definitions) {
 	}
 }
 
-func toTypeMeta(ext interface{}) (kyaml.TypeMeta, bool) {
+func toTypeMeta(ext interface{}) (yaml.TypeMeta, bool) {
 	m, ok := ext.(map[string]interface{})
 	if !ok {
-		return kyaml.TypeMeta{}, false
+		return yaml.TypeMeta{}, false
 	}
 
 	g := m[groupKey].(string)
@@ -230,7 +230,7 @@ func toTypeMeta(ext interface{}) (kyaml.TypeMeta, bool) {
 	if g != "" {
 		apiVersion = g + "/" + apiVersion
 	}
-	return kyaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}, true
+	return yaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}, true
 }
 
 // Resolve resolves the reference against the global schema
@@ -268,7 +268,7 @@ func GetSchema(s string, schema *spec.Schema) (*ResourceSchema, error) {
 // resource is not known. If the type if found, the first return value will
 // be true if the resource is namespace-scoped, and false if the type is
 // cluster-scoped.
-func IsNamespaceScoped(typeMeta kyaml.TypeMeta) (bool, bool) {
+func IsNamespaceScoped(typeMeta yaml.TypeMeta) (bool, bool) {
 	initSchema()
 	isNamespaceScoped, found := globalSchema.namespaceabilityByResourceType[typeMeta]
 	return isNamespaceScoped, found
@@ -278,7 +278,7 @@ func IsNamespaceScoped(typeMeta kyaml.TypeMeta) (bool, bool) {
 // false for Pod, Deployment, etc. and kinds that aren't recognized in the
 // openapi data. See:
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
-func IsCertainlyClusterScoped(typeMeta kyaml.TypeMeta) bool {
+func IsCertainlyClusterScoped(typeMeta yaml.TypeMeta) bool {
 	nsScoped, found := IsNamespaceScoped(typeMeta)
 	return found && !nsScoped
 }
@@ -540,9 +540,9 @@ func parse(b []byte) error {
 	s := string(b)
 	if len(s) > 0 && s[0] != '{' {
 		var err error
-		b, err = yaml.YAMLToJSON(b)
+		b, err = k8syaml.YAMLToJSON(b)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 	if err := swagger.UnmarshalJSON(b); err != nil {
@@ -561,7 +561,7 @@ func parse(b []byte) error {
 // parameter, the resource is namespace-scoped.
 func findNamespaceability(paths *spec.Paths) {
 	if globalSchema.namespaceabilityByResourceType == nil {
-		globalSchema.namespaceabilityByResourceType = make(map[kyaml.TypeMeta]bool)
+		globalSchema.namespaceabilityByResourceType = make(map[yaml.TypeMeta]bool)
 	}
 
 	if paths == nil {

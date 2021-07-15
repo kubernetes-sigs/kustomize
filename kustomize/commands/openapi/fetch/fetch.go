@@ -49,7 +49,7 @@ Installation and setup instructions: https://kubernetes.io/docs/tasks/tools/inst
 	command.Stderr = &stderr
 	err := command.Run()
 	if err != nil {
-		return fmt.Errorf(err.Error(), stderr.String()+errMsg)
+		return fmt.Errorf("%w\n%s", err, stderr.String()+errMsg)
 	} else if stdout.String() == "" {
 		return fmt.Errorf(stderr.String() + errMsg)
 	}
