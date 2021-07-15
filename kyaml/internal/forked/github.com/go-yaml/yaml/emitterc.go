@@ -1699,8 +1699,8 @@ func yaml_emitter_write_single_quoted_scalar(emitter *yaml_emitter_t, value []by
 				if !put_break(emitter) {
 					return false
 				}
-				i++
-			} else if !write_break(emitter, value, &i) {
+			}
+			if !write_break(emitter, value, &i) {
 				return false
 			}
 			//emitter.indention = true

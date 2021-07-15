@@ -23,7 +23,7 @@ export GOYAML_SHA=$1
 export GOYAML_REF="goyaml-$GOYAML_SHA"
 
 # The PRs we need to cherry-pick onto the above commit
-declare -r GO_YAML_PRS=(753 766)
+declare -r GO_YAML_PRS=(753)
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 declare -r REPO_ROOT
