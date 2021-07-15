@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	k8syaml "sigs.k8s.io/yaml"
 )
 
 // globalSchema contains global state information about the openapi
@@ -536,7 +537,14 @@ func parseBuiltinSchema(version string) {
 // parse parses and indexes a single json schema
 func parse(b []byte) error {
 	var swagger spec.Swagger
-
+	s := string(b)
+	if len(s) > 0 && s[0] != '{' {
+		var err error
+		b, err = k8syaml.YAMLToJSON(b)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+	}
 	if err := swagger.UnmarshalJSON(b); err != nil {
 		return errors.Wrap(err)
 	}
