@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 )
 
@@ -49,43 +51,50 @@ func TestLocalPackageReader_Read_empty(t *testing.T) {
 }
 
 func TestLocalPackageReader_Read_pkg(t *testing.T) {
-	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
-	defer s.Clean()
-	s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
-	s.WriteFile(t, filepath.Join("b_test.yaml"), readFileB)
-	s.WriteFile(t, filepath.Join("c_test.yaml"), readFileC)
-	s.WriteFile(t, filepath.Join("d_test.yaml"), readFileD)
+	t.Run("on_disk", func(t *testing.T) {
+		s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+		defer s.Clean()
+		s.WriteFile(t, "a_test.yaml", readFileA)
+		s.WriteFile(t, "b_test.yaml", readFileB)
+		s.WriteFile(t, "c_test.yaml", readFileC)
+		s.WriteFile(t, "d_test.yaml", readFileD)
 
-	paths := []struct {
-		path string
-	}{
-		{path: "./"},
-		{path: s.Root},
-	}
-	for _, p := range paths {
-		rfr := LocalPackageReader{PackagePath: p.path}
-		nodes, err := rfr.Read()
-		if !assert.NoError(t, err) {
-			return
-		}
+		testLocalPackageReaderReadPkg(t, "./", nil)
+		testLocalPackageReaderReadPkg(t, s.Root, nil)
+	})
 
-		if !assert.Len(t, nodes, 5) {
-			return
-		}
-		expected := []string{
-			`a: b #first
+	t.Run("on_mem", func(t *testing.T) {
+		fs := filesys.MakeFsInMemory()
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "b")))
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "c")))
+		require.NoError(t, fs.WriteFile("a_test.yaml", readFileA))
+		require.NoError(t, fs.WriteFile("b_test.yaml", readFileB))
+		require.NoError(t, fs.WriteFile("c_test.yaml", readFileC))
+		require.NoError(t, fs.WriteFile("d_test.yaml", readFileD))
+		testLocalPackageReaderReadPkg(t, "/", fs)
+	})
+}
+
+func testLocalPackageReaderReadPkg(t *testing.T, path string, mockFS filesys.FileSystem) {
+	rfr := LocalPackageReader{PackagePath: path}
+	rfr.FileSystem.Set(mockFS)
+	nodes, err := rfr.Read()
+	require.NoError(t, err)
+	require.Len(t, nodes, 5)
+	expected := []string{
+		`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
-			`c: d # second
+		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
-			`# second thing
+		`# second thing
 e: f
 g:
   h:
@@ -96,28 +105,23 @@ metadata:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'b_test.yaml'
 `,
-			`a: b #third
+		`a: b #third
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'c_test.yaml'
 `,
-			`a: b #forth
+		`a: b #forth
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'd_test.yaml'
 `,
-		}
-		for i := range nodes {
-			val, err := nodes[i].String()
-			if !assert.NoError(t, err) {
-				return
-			}
-			if !assert.Equal(t, expected[i], val) {
-				return
-			}
-		}
+	}
+	for i := range nodes {
+		val, err := nodes[i].String()
+		require.NoError(t, err)
+		require.Equal(t, expected[i], val)
 	}
 }
 
