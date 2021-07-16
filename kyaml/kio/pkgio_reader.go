@@ -214,11 +214,11 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 	ignoreFilesMatcher := &ignoreFilesMatcher{
 		fs: r.FileSystem,
 	}
-	dir, _, err := r.FileSystem.CleanedAbs(r.PackagePath)
+	dir, file, err := r.FileSystem.CleanedAbs(r.PackagePath)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	r.PackagePath = string(dir)
+	r.PackagePath = filepath.Join(string(dir), file)
 	err = r.FileSystem.Walk(r.PackagePath, func(
 		path string, info os.FileInfo, err error) error {
 		if err != nil {
