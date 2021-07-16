@@ -328,11 +328,8 @@ func (r *LocalPackageReader) shouldSkipDir(path string, matcher *ignoreFilesMatc
 		return nil
 	}
 	// check if this is a subpackage
-	_, err := os.Stat(filepath.Join(path, r.PackageFileName))
-	if os.IsNotExist(err) {
+	if !r.FileSystem.Exists(filepath.Join(path, r.PackageFileName)) {
 		return nil
-	} else if err != nil {
-		return errors.Wrap(err)
 	}
 	if !r.IncludeSubpackages {
 		return filepath.SkipDir
