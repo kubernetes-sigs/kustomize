@@ -79,6 +79,9 @@ type LocalPackageReadWriter struct {
 	// FileSkipFunc is a function which returns true if reader should ignore
 	// the file
 	FileSkipFunc LocalPackageSkipFileFunc
+
+	// FileSystem can be used to mock the disk file system.
+	FileSystem filesys.FileSystemOrOnDisk
 }
 
 func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
@@ -91,6 +94,7 @@ func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 		PackageFileName:     r.PackageFileName,
 		FileSkipFunc:        r.FileSkipFunc,
 		PreserveSeqIndent:   r.PreserveSeqIndent,
+		FileSystem:          r.FileSystem,
 	}.Read()
 	if err != nil {
 		return nil, errors.Wrap(err)
