@@ -117,7 +117,7 @@ func TestSetAnnotationNoValue(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "key doesn't match annotation rules fo keys" {
+	if err.Error() != "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
