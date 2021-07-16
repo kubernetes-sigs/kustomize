@@ -123,11 +123,11 @@ func (n *fsNode) addFile(name string, c []byte) (result *fsNode, err error) {
 		if result.offset != nil {
 			return nil, fmt.Errorf("cannot add already opened file '%s'", n.Path())
 		}
-		result.content = c
+		result.content = append(result.content[:0], c...)
 		return result, nil
 	}
 	result = &fsNode{
-		content: c,
+		content: append([]byte(nil), c...),
 		parent:  parent,
 	}
 	parent.dir[fileName] = result
