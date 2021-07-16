@@ -21,7 +21,7 @@ type setAnnotationOptions struct {
 	mapValidator func(map[string]string) error
 }
 
-// first part for prefix segment (DNS1123Label) of an annotation followed by a slash, second part for name segment of an annotation
+// IsValidKey checks key against regex. First part for prefix segment (DNS1123Label) of an annotation followed by a slash, second part for name segment of an annotation
 var IsValidKey = regexp.MustCompile(`^([a-z0-9]([-a-z0-9]*[a-z0-9])?\/)?[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?$`).MatchString
 
 // newCmdSetAnnotation sets one or more commonAnnotations to the kustomization file.
@@ -75,7 +75,7 @@ func (o *setAnnotationOptions) validateAndParse(args []string) error {
 		return err
 	}
 	for key := range m {
-		if IsValidKey(key) == false {
+		if !IsValidKey(key) {
 			fmt.Println("Key is: " + key)
 			return errors.New("key doesn't match annotation rules fo keys")
 		}
