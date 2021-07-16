@@ -71,6 +71,7 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 		require.NoError(t, fs.WriteFile("b_test.yaml", readFileB))
 		require.NoError(t, fs.WriteFile("c_test.yaml", readFileC))
 		require.NoError(t, fs.WriteFile("d_test.yaml", readFileD))
+
 		testLocalPackageReaderReadPkg(t, "/", fs)
 	})
 }
@@ -126,48 +127,61 @@ metadata:
 }
 
 func TestLocalPackageReader_Read_pkgAndSkipFile(t *testing.T) {
-	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
-	defer s.Clean()
-	s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
-	s.WriteFile(t, filepath.Join("b_test.yaml"), readFileB)
-	s.WriteFile(t, filepath.Join("c_test.yaml"), readFileC)
-	s.WriteFile(t, filepath.Join("d_test.yaml"), readFileD)
+	t.Run("on_disk", func(t *testing.T) {
+		s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+		defer s.Clean()
+		s.WriteFile(t, "a_test.yaml", readFileA)
+		s.WriteFile(t, "b_test.yaml", readFileB)
+		s.WriteFile(t, "c_test.yaml", readFileC)
+		s.WriteFile(t, "d_test.yaml", readFileD)
 
-	paths := []struct {
-		path string
-	}{
-		{path: "./"},
-		{path: s.Root},
+		testLocalPackageReaderReadPkgAndSkipFile(t, "./", nil)
+		testLocalPackageReaderReadPkgAndSkipFile(t, s.Root, nil)
+	})
+
+	t.Run("on_mem", func(t *testing.T) {
+		fs := filesys.MakeFsInMemory()
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "b")))
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "c")))
+		require.NoError(t, fs.WriteFile("a_test.yaml", readFileA))
+		require.NoError(t, fs.WriteFile("b_test.yaml", readFileB))
+		require.NoError(t, fs.WriteFile("c_test.yaml", readFileC))
+		require.NoError(t, fs.WriteFile("d_test.yaml", readFileD))
+
+		testLocalPackageReaderReadPkgAndSkipFile(t, "/", fs)
+	})
+}
+
+func testLocalPackageReaderReadPkgAndSkipFile(t *testing.T, path string, mockFS filesys.FileSystem) {
+	rfr := LocalPackageReader{
+		PackagePath: path,
+		FileSkipFunc: func(relPath string) bool {
+			return relPath == "d_test.yaml"
+		},
+		FileSystem: filesys.FileSystemOrOnDisk{FileSystem: mockFS},
 	}
-	for _, p := range paths {
-		rfr := LocalPackageReader{
-			PackagePath: p.path,
-			FileSkipFunc: func(relPath string) bool {
-				return relPath == "d_test.yaml"
-			},
-		}
-		nodes, err := rfr.Read()
-		if !assert.NoError(t, err) {
-			return
-		}
+	nodes, err := rfr.Read()
+	if !assert.NoError(t, err) {
+		return
+	}
 
-		if !assert.Len(t, nodes, 4) {
-			return
-		}
-		expected := []string{
-			`a: b #first
+	if !assert.Len(t, nodes, 4) {
+		return
+	}
+	expected := []string{
+		`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
-			`c: d # second
+		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
-			`# second thing
+		`# second thing
 e: f
 g:
   h:
@@ -178,118 +192,120 @@ metadata:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'b_test.yaml'
 `,
-			`a: b #third
+		`a: b #third
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'c_test.yaml'
 `,
-		}
-		for i := range nodes {
-			val, err := nodes[i].String()
-			if !assert.NoError(t, err) {
-				return
-			}
-			if !assert.Equal(t, expected[i], val) {
-				return
-			}
-		}
+	}
+	for i := range nodes {
+		val, err := nodes[i].String()
+		require.NoError(t, err)
+		require.Equal(t, expected[i], val)
 	}
 }
 
 func TestLocalPackageReader_Read_JSON(t *testing.T) {
-	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
-	defer s.Clean()
+	aTestJSON := []byte(`{
+		"a": "b"
+	  }`)
+	bTestJSON := []byte(`{
+		"e": "f",
+		"g": {
+		  "h": ["i", "j"]
+		}
+	  }`)
 
-	s.WriteFile(t, filepath.Join("a_test.json"), []byte(`{
-  "a": "b"
-}`))
-	s.WriteFile(t, filepath.Join("b_test.json"), []byte(`{
-  "e": "f",
-  "g": {
-    "h": ["i", "j"]
-  }
-}`))
+	t.Run("on_disk", func(t *testing.T) {
+		s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+		defer s.Clean()
 
-	paths := []struct {
-		path string
-	}{
-		{path: "./"},
-		{path: s.Root},
+		s.WriteFile(t, "a_test.json", aTestJSON)
+		s.WriteFile(t, "b_test.json", bTestJSON)
+
+		testLocalPackageReaderReadJSON(t, "./", nil)
+		testLocalPackageReaderReadJSON(t, s.Root, nil)
+	})
+
+	t.Run("on_mem", func(t *testing.T) {
+		fs := filesys.MakeFsInMemory()
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "b")))
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "c")))
+		require.NoError(t, fs.WriteFile("a_test.json", aTestJSON))
+		require.NoError(t, fs.WriteFile("b_test.json", bTestJSON))
+
+		testLocalPackageReaderReadJSON(t, "/", fs)
+	})
+}
+
+func testLocalPackageReaderReadJSON(t *testing.T, path string, mockFS filesys.FileSystem) {
+	rfr := LocalPackageReader{PackagePath: path, MatchFilesGlob: []string{"*.json"}}
+	rfr.FileSystem.Set(mockFS)
+	nodes, err := rfr.Read()
+	require.NoError(t, err)
+	require.Len(t, nodes, 2)
+	expected := []string{
+		`{"a": "b", metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'a_test.json'}}}
+`,
+		`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'b_test.json'}}}
+`,
 	}
-	for _, p := range paths {
-		rfr := LocalPackageReader{PackagePath: p.path, MatchFilesGlob: []string{"*.json"}}
-		nodes, err := rfr.Read()
-		if !assert.NoError(t, err) {
-			return
-		}
-
-		if !assert.Len(t, nodes, 2) {
-			t.FailNow()
-		}
-		expected := []string{
-			`{"a": "b", metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'a_test.json'}}}
-`,
-			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'b_test.json'}}}
-`,
-		}
-		for i := range nodes {
-			val, err := nodes[i].String()
-			if !assert.NoError(t, err) {
-				return
-			}
-			if !assert.Equal(t, expected[i], val) {
-				return
-			}
-		}
+	for i := range nodes {
+		val, err := nodes[i].String()
+		require.NoError(t, err)
+		require.Equal(t, expected[i], val)
 	}
 }
 
 func TestLocalPackageReader_Read_file(t *testing.T) {
-	s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
-	defer s.Clean()
-	s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
-	s.WriteFile(t, filepath.Join("b_test.yaml"), readFileB)
+	t.Run("on_disk", func(t *testing.T) {
+		s := SetupDirectories(t, filepath.Join("a", "b"), filepath.Join("a", "c"))
+		defer s.Clean()
+		s.WriteFile(t, filepath.Join("a_test.yaml"), readFileA)
+		s.WriteFile(t, filepath.Join("b_test.yaml"), readFileB)
 
-	paths := []struct {
-		path string
-	}{
-		{path: "./"},
-		{path: s.Root},
+		testLocalPackageReaderReadFile(t, "./", nil)
+		testLocalPackageReaderReadFile(t, s.Root, nil)
+	})
+
+	t.Run("on_mem", func(t *testing.T) {
+		fs := filesys.MakeFsInMemory()
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "b")))
+		require.NoError(t, fs.MkdirAll(filepath.Join("a", "c")))
+		require.NoError(t, fs.WriteFile("a_test.yaml", readFileA))
+		require.NoError(t, fs.WriteFile("b_test.yaml", readFileB))
+
+		testLocalPackageReaderReadFile(t, "/", fs)
+	})
+}
+
+func testLocalPackageReaderReadFile(t *testing.T, path string, mockFS filesys.FileSystem) {
+	rfr := LocalPackageReader{
+		PackagePath: filepath.Join(path, "a_test.yaml"),
+		FileSystem:  filesys.FileSystemOrOnDisk{FileSystem: mockFS},
 	}
-	for _, p := range paths {
-		rfr := LocalPackageReader{PackagePath: filepath.Join(p.path, "a_test.yaml")}
-		nodes, err := rfr.Read()
-		if !assert.NoError(t, err) {
-			return
-		}
-
-		if !assert.Len(t, nodes, 2) {
-			return
-		}
-		expected := []string{
-			`a: b #first
+	nodes, err := rfr.Read()
+	require.NoError(t, err)
+	require.Len(t, nodes, 2)
+	expected := []string{
+		`a: b #first
 metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
-			`c: d # second
+		`c: d # second
 metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'a_test.yaml'
 `,
-		}
-		for i := range nodes {
-			val, err := nodes[i].String()
-			if !assert.NoError(t, err) {
-				return
-			}
-			if !assert.Equal(t, expected[i], val) {
-				return
-			}
-		}
+	}
+	for i := range nodes {
+		val, err := nodes[i].String()
+		require.NoError(t, err)
+		require.Equal(t, expected[i], val)
 	}
 }
 
