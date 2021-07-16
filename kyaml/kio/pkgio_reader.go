@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -184,6 +185,9 @@ type LocalPackageReader struct {
 
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
+
+	// FileSystem can be used to mock the disk file system.
+	FileSystem filesys.FileSystemOrOnDisk
 }
 
 var _ Reader = LocalPackageReader{}
@@ -207,12 +211,15 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 	var operand ResourceNodeSlice
 	var pathRelativeTo string
 	var err error
-	ignoreFilesMatcher := &ignoreFilesMatcher{}
-	r.PackagePath, err = filepath.Abs(r.PackagePath)
+	ignoreFilesMatcher := &ignoreFilesMatcher{
+		fs: r.FileSystem,
+	}
+	dir, _, err := r.FileSystem.CleanedAbs(r.PackagePath)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	err = filepath.Walk(r.PackagePath, func(
+	r.PackagePath = string(dir)
+	err = r.FileSystem.Walk(r.PackagePath, func(
 		path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.Wrap(err)
@@ -263,7 +270,7 @@ func (r LocalPackageReader) Read() ([]*yaml.RNode, error) {
 
 // readFile reads the ResourceNodes from a file
 func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode, error) {
-	f, err := os.Open(path)
+	f, err := r.FileSystem.Open(path)
 	if err != nil {
 		return nil, err
 	}
