@@ -311,17 +311,11 @@ func (l Walker) elementKey() (string, error) {
 // elements missing from earlier sources appear later.
 func (l Walker) elementValues(keys []string) [][]string {
 	// use slice to to keep elements in the original order
-	var returnValues [][]string
+	var existingValues [][]string
+	var newValues [][]string
 	var seen sets.StringList
 
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+	for i, src := range l.Sources {
 		if src == nil {
 			continue
 		}
@@ -333,26 +327,29 @@ func (l Walker) elementValues(keys []string) [][]string {
 			if len(s) == 0 || seen.Has(s) {
 				continue
 			}
-			returnValues = append(returnValues, s)
+			if i == 0 {
+				existingValues = append(existingValues, s)
+			} else {
+				newValues = append(newValues, s)
+			}
 			seen = seen.Insert(s)
 		}
 	}
-	return returnValues
+
+	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+		return append(newValues, existingValues...)
+	}
+	return append(existingValues, newValues...)
 }
 
 // elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
 func (l Walker) elementPrimitiveValues() [][]string {
 	// use slice to to keep elements in the original order
-	var returnValues [][]string
+	var existingValues [][]string
+	var newValues [][]string
 	seen := sets.String{}
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+
+	for i, src := range l.Sources {
 		if src == nil {
 			continue
 		}
@@ -363,11 +360,19 @@ func (l Walker) elementPrimitiveValues() [][]string {
 			if seen.Has(item.Value) {
 				continue
 			}
-			returnValues = append(returnValues, []string{item.Value})
+			if i == 0 {
+				existingValues = append(existingValues, []string{item.Value})
+			} else {
+				newValues = append(newValues, []string{item.Value})
+			}
 			seen.Insert(item.Value)
 		}
 	}
-	return returnValues
+
+	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+		return append(newValues, existingValues...)
+	}
+	return append(existingValues, newValues...)
 }
 
 // fieldValue returns a slice containing each source's value for fieldName

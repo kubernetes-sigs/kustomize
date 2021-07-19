@@ -382,12 +382,12 @@ spec:
         - mountPath: /tmp/ps
           name: nginx-persistent-storage
       volumes:
-      - gcePersistentDisk:
-          pdName: nginx-persistent-storage
-        name: nginx-persistent-storage
       - configMap:
           name: staging-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
       - configMap:
           name: staging-team-foo-configmap-in-base-hc6g9dk6g9
         name: configmap-in-base
