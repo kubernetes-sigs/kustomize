@@ -5,6 +5,7 @@ package target_test
 
 import (
 	"encoding/base64"
+	"os"
 	"reflect"
 	"testing"
 
@@ -77,10 +78,10 @@ commonLabels:
 	}
 
 	kt := makeKustTargetWithRf(
-		t, th.GetFSys(), "/", provider.NewDefaultDepProvider())
+		t, th.GetFSys(), string(os.PathSeparator), provider.NewDefaultDepProvider())
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			th.WriteK("/", tc.content)
+			th.WriteK(string(os.PathSeparator), tc.content)
 			err := kt.Load()
 			if tc.errContains != "" {
 				require.NotNilf(t, err, "expected error containing: `%s`", tc.errContains)

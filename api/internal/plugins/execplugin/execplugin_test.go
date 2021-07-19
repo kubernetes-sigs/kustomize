@@ -69,7 +69,7 @@ s/$BAR/bar baz/g
 		yaml)
 	require.NoError(t, err)
 
-	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
+	expected := filepath.Join("someteam.example.com", "v1", "sedtransformer", "SedTransformer")
 	if !strings.HasSuffix(p.Path(), expected) {
 		t.Fatalf("expected suffix '%s', got '%s'", expected, p.Path())
 	}

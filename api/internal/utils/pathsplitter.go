@@ -3,7 +3,9 @@
 
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 // TODO: Move these to kyaml
 

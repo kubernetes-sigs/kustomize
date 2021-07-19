@@ -5,7 +5,8 @@ package git
 
 import (
 	"fmt"
-	"path/filepath"
+	"os"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -37,9 +38,9 @@ var hostNamesRawAndNormalized = [][]string{
 	{"git@github.com/", "git@github.com:"},
 }
 
-func makeUrl(hostFmt, orgRepo, path, href string) string {
-	if len(path) > 0 {
-		orgRepo = filepath.Join(orgRepo, path)
+func makeUrl(hostFmt, orgRepo, p, href string) string {
+	if len(p) > 0 {
+		orgRepo = path.Join(orgRepo, p)
 	}
 	url := hostFmt + orgRepo
 	if href != "" {
@@ -59,7 +60,7 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 					uri := makeUrl(hostRaw, orgRepo, pathName, hrefArg)
 					rs, err := NewRepoSpecFromUrl(uri)
 					if err != nil {
-						t.Errorf("problem %v", err)
+						t.Errorf("problem: %v, url: %s", err, uri)
 					}
 					if rs.Host != hostSpec {
 						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
@@ -90,11 +91,18 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 }
 
 var badData = [][]string{
-	{"/tmp", "uri looks like abs path"},
+	{absPrefix() + "tmp", "uri looks like abs path"},
 	{"iauhsdiuashduas", "url lacks orgRepo"},
 	{"htxxxtp://github.com/", "url lacks host"},
 	{"ssh://git.example.com", "url lacks orgRepo"},
 	{"git::___", "url lacks orgRepo"},
+}
+
+func absPrefix() string {
+	if os.PathSeparator == '\\' {
+		return "C:\\"
+	}
+	return string(os.PathSeparator)
 }
 
 func TestNewRepoSpecFromUrlErrors(t *testing.T) {

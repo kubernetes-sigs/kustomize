@@ -6,6 +6,7 @@ package git
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,7 +20,7 @@ import (
 // in various outputs (especially tests). Not using an
 // actual directory name here, as that's a temporary directory
 // with a unique name that isn't created until clone time.
-const notCloned = filesys.ConfirmedDir("/notCloned")
+const notCloned = filesys.ConfirmedDir(string(os.PathSeparator) + "notCloned")
 
 // RepoSpec specifies a git repository and a branch and path therein.
 type RepoSpec struct {
