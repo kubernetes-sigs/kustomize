@@ -13,6 +13,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const invalidAnnotationKey string = "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/"
+
 func makeAnnotationKustomization(t *testing.T) *types.Kustomization {
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomization(fSys)
@@ -118,7 +120,7 @@ defghij:true`}
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" {
+	if err.Error() != invalidAnnotationKey {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -137,7 +139,7 @@ fghijkl:true`}
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" {
+	if err.Error() != invalidAnnotationKey {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -181,7 +183,7 @@ func TestSetAnnotationNoValue(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" {
+	if err.Error() != invalidAnnotationKey {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
