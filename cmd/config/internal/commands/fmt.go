@@ -25,6 +25,8 @@ func GetFmtRunner(name string) *FmtRunner {
 		Example: commands.FmtExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		Deprecated: "imperative formatting will no longer be available in kustomize v5.\n" +
+			"Declare a formatting transformer in your kustomization instead.",
 	}
 	runner.FixDocs(name, c)
 	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,

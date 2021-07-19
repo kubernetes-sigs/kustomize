@@ -26,6 +26,8 @@ func GetInitRunner(name string) *InitRunner {
 		Long:    commands.InitLong,
 		Example: commands.InitExamples,
 		RunE:    r.runE,
+		Deprecated: "setter commands and substitutions will no longer be available in kustomize v5.\n" +
+			"See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.",
 	}
 	runner.FixDocs(name, c)
 	r.Command = c

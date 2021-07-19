@@ -18,6 +18,8 @@ func GetMerge3Runner(name string) *Merge3Runner {
 		Long:    commands.Merge3Long,
 		Example: commands.Merge3Examples,
 		RunE:    r.runE,
+		Deprecated: "this will no longer be available in kustomize v5.\n" +
+			"See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.",
 	}
 	runner.FixDocs(name, c)
 	c.Flags().StringVar(&r.ancestor, "ancestor", "",

@@ -31,6 +31,8 @@ func NewListSettersRunner(parent string) *ListSettersRunner {
 		Example: commands.ListSettersExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
+		Deprecated: "setter commands will no longer be available in kustomize v5.\n" +
+			"See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.",
 	}
 	c.Flags().BoolVar(&r.Markdown, "markdown", false,
 		"output as github markdown")

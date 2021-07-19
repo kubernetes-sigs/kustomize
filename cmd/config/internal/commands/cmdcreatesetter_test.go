@@ -869,7 +869,7 @@ setter with name "namespace" already exists, if you want to modify it, please de
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, expectedNormalized, actualNormalized) {
+			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
 			}
 		})

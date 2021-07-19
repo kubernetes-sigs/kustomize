@@ -559,7 +559,7 @@ added annotations in the package
 
 			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
 			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
-			if !assert.Equal(t, expectedNormalized, actualNormalized) {
+			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
 			}
 		})
