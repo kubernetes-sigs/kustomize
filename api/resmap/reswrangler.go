@@ -531,6 +531,20 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	}
 }
 
+// AnnotateAll implements ResMap
+func (m *resWrangler) AnnotateAll(key string, value string) error {
+	return m.ApplyFilter(
+		kio.FilterFunc(func(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+			for _, rn := range nodes {
+				_, err := rn.Pipe(kyaml.SetAnnotation(key, value))
+				if err != nil {
+					return nil, err
+				}
+			}
+			return nodes, nil
+		}))
+}
+
 // Select returns a list of resources that
 // are selected by a Selector
 func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {

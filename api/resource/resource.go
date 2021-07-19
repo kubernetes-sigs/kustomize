@@ -8,6 +8,8 @@ import (
 	"log"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/konfig"
+
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/utils"
@@ -36,6 +38,8 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationAllowKindChange,
 	utils.BuildAnnotationsRefBy,
 }
+
+const OriginAnnotation = konfig.ConfigAnnoDomain + "/origin"
 
 func (r *Resource) ResetRNode(incoming *Resource) {
 	r.RNode = *incoming.Copy()
