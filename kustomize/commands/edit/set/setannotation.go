@@ -23,7 +23,7 @@ type setAnnotationOptions struct {
 
 // IsValidKey checks key against regex. First part for prefix segment (DNS1123Label) of an annotation followed by a slash, second part for name segment of an annotation
 // see https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-var IsValidKey = regexp.MustCompile(`^([a-z0-9](([-a-z0-9]{0,251})[a-z0-9])?\/)?[a-zA-Z0-9]([-a-zA-Z0-9_.]{0,61}[a-zA-Z0-9])?$`).MatchString
+var IsValidKey = regexp.MustCompile(`^([a-zA-Z](([-a-zA-Z0-9.]{0,251})[a-zA-Z0-9])?\/)?[a-zA-Z0-9]([-a-zA-Z0-9_.]{0,61}[a-zA-Z0-9])?$`).MatchString
 
 // newCmdSetAnnotation sets one or more commonAnnotations to the kustomization file.
 func newCmdSetAnnotation(fSys filesys.FileSystem, v func(map[string]string) error) *cobra.Command {

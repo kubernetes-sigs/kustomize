@@ -78,6 +78,70 @@ func TestSetAnnotationInvalidFormat(t *testing.T) {
 	}
 }
 
+func TestSetAnnotationPrefixColonName(t *testing.T) {
+	var o setAnnotationOptions
+	o.metadata = map[string]string{"internal.config.kubernetes.io/options": "true"}
+
+	m := makeAnnotationKustomization(t)
+	err := o.setAnnotations(m)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+}
+
+func TestSetAnnotation253Prefix63Name(t *testing.T) {
+	var o setAnnotationOptions
+	o.metadata = map[string]string{`abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu
+vwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcde
+fghijklmnopqrstuvwxyzabcdefghijklmnopqrs/abcdefghijklmnopqrstuvwxyzabcdefghijklmnop
+qrstuvwxyzabcdefghijk`: "true"}
+
+	m := makeAnnotationKustomization(t)
+	err := o.setAnnotations(m)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err.Error())
+	}
+}
+
+func TestSetAnnotation254Prefix62Name(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdSetAnnotation(fSys, v.Validator)
+	args := []string{`abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi
+jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn
+opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs
+tuvwxyzabcdefghijklmnopqrst/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabc
+defghij:true`}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
+func TestSetAnnotation252Prefix64Name(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdSetAnnotation(fSys, v.Validator)
+	args := []string{`abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi
+jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn
+opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs
+tuvwxyzabcdefghijklmnopqr/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcde
+fghijkl:true`}
+	err := cmd.RunE(cmd, args)
+	v.VerifyCall()
+	if err == nil {
+		t.Errorf("expected an error")
+	}
+	if err.Error() != "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/" {
+		t.Errorf("incorrect error: %v", err.Error())
+	}
+}
+
 func TestSetAnnotationNoKey(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	v := valtest_test.MakeHappyMapValidator(t)
