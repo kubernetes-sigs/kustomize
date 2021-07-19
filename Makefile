@@ -47,6 +47,14 @@ prow-presubmit-check: \
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
 
+.PHONY: kustomize
+kustomize:
+	make -C ./kustomize build
+
+.PHONY: kustomize-crossbuild
+kustomize-crossbuild:
+	make -C ./kustomize crossbuild
+
 # Other builds in this repo might want a different linter version.
 # Without one Makefile to rule them all, the different makes
 # cannot assume that golanci-lint is at the version they want.
@@ -356,6 +364,7 @@ clean: clean-kustomize-external-go-plugin
 	rm -f $(MYGOBIN)/mdrip
 	rm -f $(MYGOBIN)/prchecker
 	rm -f $(MYGOBIN)/stringer
+	rm -f dist/
 
 # Handle pluginator manually.
 # rm -f $(MYGOBIN)/pluginator
