@@ -16,6 +16,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/sliceutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/labels"
+	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/util/validation"
+	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/util/validation/field"
 )
 
 // MakeNullNode returns an RNode that represents an empty document.
@@ -924,10 +926,29 @@ func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
 
 // MatchesAnnotationSelector returns true on a selector match to annotations.
 func (rn *RNode) MatchesAnnotationSelector(selector string) (bool, error) {
-	s, err := labels.Parse(selector)
-	if err != nil {
-		return false, err
+	annotationsMap := labels.Set{}
+
+	if len(selector) == 0 {
+		return true, nil
 	}
+
+	annotations := strings.Split(selector, ",")
+	for _, annotation := range annotations {
+		a := strings.Split(annotation, "=")
+		if len(a) != 2 {
+			return false, fmt.Errorf("invalid selector: %s", a)
+		}
+
+		key := strings.TrimSpace(a[0])
+		if errs := validation.IsQualifiedName(key); len(errs) != 0 {
+			return false, field.Invalid(&field.Path{}, key, strings.Join(errs, "; "))
+		}
+
+		value := strings.TrimSpace(a[1])
+		annotationsMap[key] = value
+	}
+
+	s := labels.SelectorFromSet(annotationsMap)
 	return s.Matches(labels.Set(rn.GetAnnotations())), nil
 }
 

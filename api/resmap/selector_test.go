@@ -23,6 +23,7 @@ metadata:
     app: name1
   annotations:
     foo: bar
+    cert-manager.io/inject-ca-from: capi-webhook-system/capi-serving-cert
 ---
 apiVersion: group1/v1
 kind: Kind1
@@ -178,6 +179,18 @@ func TestFindPatchTargets(t *testing.T) {
 				ResId: resid.ResId{Namespace: "ns1"},
 			},
 			count: 1,
+		},
+		"select_19": {
+			target: types.Selector{
+				AnnotationSelector: "cert-manager.io/inject-ca-from=capi-webhook-system/capi-serving-cert",
+			},
+			count: 1,
+		},
+		"select_20": {
+			target: types.Selector{
+				AnnotationSelector: "foo=bar,bar=baz",
+			},
+			count: 0,
 		},
 	}
 	for n, testcase := range testcases {
