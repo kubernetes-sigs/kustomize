@@ -32,63 +32,63 @@ func GoBin() string {
 
 // DeterminePluginSrcRoot guesses where the user
 // has her ${g}/${v}/$lower(${k})/${k}.go files.
-func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
+func DeterminePluginSrcRoot(fSys filesys.FileSystem) ([]string, error) {
 	return konfig.FirstDirThatExistsElseError(
 		"plugin src root", fSys, []konfig.NotedFunc{
 			{
 				Note: "relative to unit test",
-				F: func() string {
-					return filepath.Clean(
+				F: func() []string {
+					return []string{filepath.Clean(
 						filepath.Join(
 							os.Getenv("PWD"),
 							"..", "..",
-							konfig.RelPluginHome))
+							konfig.RelPluginHome))}
 				},
 			},
 			{
 				Note: "relative to unit test (internal pkg)",
-				F: func() string {
-					return filepath.Clean(
+				F: func() []string {
+					return []string{filepath.Clean(
 						filepath.Join(
 							os.Getenv("PWD"),
 							"..", "..", "..", "..",
-							konfig.RelPluginHome))
+							konfig.RelPluginHome))}
 				},
 			},
 			{
 				Note: "relative to api package",
-				F: func() string {
-					return filepath.Clean(
+				F: func() []string {
+					return []string{filepath.Clean(
 						filepath.Join(
 							os.Getenv("PWD"),
 							"..", "..", "..",
-							konfig.RelPluginHome))
+							konfig.RelPluginHome))}
 				},
 			},
 			{
 				Note: "old style $GOPATH",
-				F: func() string {
-					return filepath.Join(
+				F: func() []string {
+					return []string{filepath.Join(
 						os.Getenv("GOPATH"),
 						"src", konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
+						konfig.ProgramName, konfig.RelPluginHome)}
 				},
 			},
 			{
 				Note: "HOME with literal 'gopath'",
-				F: func() string {
-					return filepath.Join(
+				F: func() []string {
+					return []string{filepath.Join(
 						konfig.HomeDir(), "gopath",
 						"src", konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
+						konfig.ProgramName, konfig.RelPluginHome)}
 				},
 			},
 			{
 				Note: "home directory",
-				F: func() string {
-					return filepath.Join(
+				F: func() []string {
+					return []string{filepath.Join(
 						konfig.HomeDir(), konfig.DomainName,
-						konfig.ProgramName, konfig.RelPluginHome)
+						konfig.ProgramName, konfig.RelPluginHome)}
 				},
 			},
 		})

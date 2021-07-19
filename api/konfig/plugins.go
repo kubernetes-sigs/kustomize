@@ -43,44 +43,70 @@ const (
 
 type NotedFunc struct {
 	Note string
-	F    func() string
+	F    func() []string
 }
 
 // DefaultAbsPluginHome returns the absolute path in the given file
 // system to first directory that looks like a good candidate for
 // the home of kustomize plugins.
-func DefaultAbsPluginHome(fSys filesys.FileSystem) (string, error) {
+func DefaultAbsPluginHome(fSys filesys.FileSystem) ([]string, error) {
 	return FirstDirThatExistsElseError(
 		"plugin root", fSys, []NotedFunc{
 			{
 				Note: "homed in $" + KustomizePluginHomeEnv,
-				F: func() string {
-					return os.Getenv(KustomizePluginHomeEnv)
+				F: func() []string {
+					if os.Getenv(KustomizePluginHomeEnv) != "" {
+						return filepath.SplitList(os.Getenv(KustomizePluginHomeEnv))
+					}
+					return []string{""}
 				},
 			},
 			{
 				Note: "homed in $" + XdgConfigHomeEnv,
-				F: func() string {
+				F: func() []string {
 					if root := os.Getenv(XdgConfigHomeEnv); root != "" {
-						return filepath.Join(root, ProgramName, RelPluginHome)
+						return []string{filepath.Join(root, ProgramName, RelPluginHome)}
 					}
 					// do not look in "kustomize/plugin" if XdgConfigHomeEnv is unset
-					return ""
+					return []string{""}
 				},
 			},
 			{
 				Note: "homed in default value of $" + XdgConfigHomeEnv,
-				F: func() string {
-					return filepath.Join(
+				F: func() []string {
+					return []string{filepath.Join(
 						HomeDir(), XdgConfigHomeEnvDefault,
-						ProgramName, RelPluginHome)
+						ProgramName, RelPluginHome)}
 				},
 			},
 			{
 				Note: "homed in home directory",
-				F: func() string {
-					return filepath.Join(
-						HomeDir(), ProgramName, RelPluginHome)
+				F: func() []string {
+					return []string{filepath.Join(
+						HomeDir(), ProgramName, RelPluginHome)}
+				},
+			},
+			{
+				Note: "homed in $" + XdgConfigDirs,
+				F: func() []string {
+					if os.Getenv(XdgConfigDirs) != "" {
+						root := filepath.SplitList(os.Getenv(XdgConfigDirs))
+						for i, dir := range root {
+							root[i] = filepath.Join(dir, ProgramName, RelPluginHome)
+						}
+						return root
+					}
+					return []string{""}
+				},
+			},
+			{
+				Note: "homed in default value of $" + XdgConfigDirs,
+				F: func() []string {
+					root := filepath.SplitList(XdgConfigDirsDefault)
+					for i, dir := range root {
+						root[i] = filepath.Join(dir, ProgramName, RelPluginHome)
+					}
+					return root
 				},
 			},
 		})
@@ -91,19 +117,25 @@ func DefaultAbsPluginHome(fSys filesys.FileSystem) (string, error) {
 func FirstDirThatExistsElseError(
 	what string,
 	fSys filesys.FileSystem,
-	pathFuncs []NotedFunc) (string, error) {
+	pathFuncs []NotedFunc) ([]string, error) {
+	var result []string
 	var nope []types.Pair
 	for _, dt := range pathFuncs {
-		if dir := dt.F(); dir != "" {
-			if fSys.Exists(dir) {
-				return dir, nil
+		for _, dir := range dt.F() {
+			if dir != "" {
+				if fSys.Exists(dir) {
+					result = append(result, dir)
+				}
+				nope = append(nope, types.Pair{Key: dt.Note, Value: dir})
+			} else {
+				nope = append(nope, types.Pair{Key: dt.Note, Value: "<no value>"})
 			}
-			nope = append(nope, types.Pair{Key: dt.Note, Value: dir})
-		} else {
-			nope = append(nope, types.Pair{Key: dt.Note, Value: "<no value>"})
 		}
 	}
-	return "", types.NewErrUnableToFind(what, nope)
+	if result != nil {
+		return result, nil
+	}
+	return result, types.NewErrUnableToFind(what, nope)
 }
 
 func HomeDir() string {

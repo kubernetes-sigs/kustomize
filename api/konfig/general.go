@@ -28,6 +28,13 @@ const (
 	// Use this when XdgConfigHomeEnv not defined.
 	XdgConfigHomeEnvDefault = ".config"
 
+	// The preference-ordered set of base directories to search for configuration files in addition to
+	// $XDG_CONFIG_HOME directory
+	XdgConfigDirs = "XDG_CONFIG_DIRS"
+
+	// Use this when XDG_CONFIG_DIRS is not set
+	XdgConfigDirsDefault = "/etc/xdg"
+
 	// A program name, for use in help, finding the XDG_CONFIG_DIR, etc.
 	ProgramName = "kustomize"
 

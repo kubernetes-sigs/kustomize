@@ -20,15 +20,17 @@ import (
 )
 
 func TestDeterminePluginSrcRoot(t *testing.T) {
-	actual, err := DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
+	actuals, err := DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)
 	}
-	if !filepath.IsAbs(actual) {
-		t.Errorf("expected absolute path, but got '%s'", actual)
-	}
-	if !strings.HasSuffix(actual, konfig.RelPluginHome) {
-		t.Errorf("expected suffix '%s' in '%s'", konfig.RelPluginHome, actual)
+	for _, actual := range actuals {
+		if !filepath.IsAbs(actual) {
+			t.Errorf("expected absolute path, but got '%s'", actual)
+		}
+		if !strings.HasSuffix(actual, konfig.RelPluginHome) {
+			t.Errorf("expected suffix '%s' in '%s'", konfig.RelPluginHome, actual)
+		}
 	}
 }
 
