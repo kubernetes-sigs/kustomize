@@ -44,3 +44,13 @@ func (g *GenArgs) Behavior() GenerationBehavior {
 	}
 	return NewGenerationBehavior(g.args.Behavior)
 }
+
+// IsNilOrEmpty returns true if g is nil or if the args are empty
+func (g *GenArgs) IsNilOrEmpty() bool {
+	return g == nil || g.args == nil
+}
+
+// GetArgs returns a copy of the underlying GeneratorArgs
+func (g *GenArgs) GetArgs() GeneratorArgs {
+	return *g.args
+}

@@ -166,6 +166,24 @@ func (th *HarnessEnhanced) LoadAndRunGenerator(
 	return rm
 }
 
+func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
+	config string) resmap.ResMap {
+	res, err := th.rf.RF().FromBytes([]byte(config))
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	g, err := th.pl.LoadGenerator(
+		th.ldr, valtest_test.MakeFakeValidator(), res)
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	rm, err := g.Generate()
+	if err != nil {
+		th.t.Fatalf("generate err: %v", err)
+	}
+	return rm
+}
+
 func (th *HarnessEnhanced) LoadAndRunTransformer(
 	config, input string) resmap.ResMap {
 	resMap, err := th.RunTransformer(config, input)

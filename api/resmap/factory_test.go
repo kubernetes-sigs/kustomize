@@ -219,8 +219,10 @@ BAR=baz
 		}
 		r, err := rmF.NewResMapFromConfigMapArgs(kvLdr, tc.input)
 		assert.NoError(t, err, tc.description)
+		r.RemoveBuildAnnotations()
 		rYaml, err := r.AsYaml()
 		assert.NoError(t, err, tc.description)
+		tc.expected.RemoveBuildAnnotations()
 		expYaml, err := tc.expected.AsYaml()
 		assert.NoError(t, err, tc.description)
 		assert.Equal(t, expYaml, rYaml)
@@ -252,6 +254,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
 	assert.NoError(t, err)
 
