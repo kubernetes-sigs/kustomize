@@ -34,6 +34,7 @@ func makeBuildCommand(fSys filesys.FileSystem, w io.Writer) *cobra.Command {
 func NewDefaultCommand() *cobra.Command {
 	fSys := filesys.MakeFsOnDisk()
 	stdOut := os.Stdout
+	bigC := "."
 
 	c := &cobra.Command{
 		Use:   konfig.ProgramName,
@@ -57,6 +58,11 @@ See https://sigs.k8s.io/kustomize
 	configcobra.AddCommands(c, konfig.ProgramName)
 
 	c.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	c.PersistentFlags().StringVarP(&bigC, "cwd", "C", ".", "path to current working directory")
+
+	c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		return os.Chdir(bigC)
+	}
 
 	// Workaround for this issue:
 	// https://github.com/kubernetes/kubernetes/issues/17162
