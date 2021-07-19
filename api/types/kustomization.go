@@ -91,6 +91,13 @@ type Kustomization struct {
 	// value of the specified field has been determined.
 	Vars []Var `json:"vars,omitempty" yaml:"vars,omitempty"`
 
+	// SortOrder changes the order that kustomize outputs resources.
+	SortOrder *SortOrder `json:"sortOrder,omitempty" yaml:"sortOrder,omitempty"`
+
+	// LegacySortOptions configure the order that kustomize uses to print
+	// output resources, when using the "legacy" sort option.
+	LegacySortOptions *LegacySortOptions `json:"legacySortOptions,omitempty" yaml:"legacySortOptions,omitempty"`
+
 	//
 	// Operands - what kustomize operates on.
 	//

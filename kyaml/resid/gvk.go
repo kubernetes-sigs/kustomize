@@ -133,7 +133,7 @@ func (x Gvk) Equals(o Gvk) bool {
 // a Service should come before things that refer to it.
 // Namespace should be first.
 // In some cases order just specified to provide determinism.
-var orderFirst = []string{
+var OrderFirst = []string{
 	"Namespace",
 	"ResourceQuota",
 	"StorageClass",
@@ -157,16 +157,16 @@ var orderFirst = []string{
 	"CronJob",
 	"PodDisruptionBudget",
 }
-var orderLast = []string{
+var OrderLast = []string{
 	"MutatingWebhookConfiguration",
 	"ValidatingWebhookConfiguration",
 }
 var typeOrders = func() map[string]int {
 	m := map[string]int{}
-	for i, n := range orderFirst {
-		m[n] = -len(orderFirst) + i
+	for i, n := range OrderFirst {
+		m[n] = -len(OrderFirst) + i
 	}
-	for i, n := range orderLast {
+	for i, n := range OrderLast {
 		m[n] = 1 + i
 	}
 	return m

@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 // Kustomizer performs kustomizations.
@@ -89,8 +90,16 @@ func (b *Kustomizer) Run(
 	if err != nil {
 		return nil, err
 	}
-	if b.options.DoLegacyResourceSort {
-		err = builtins.NewLegacyOrderTransformerPlugin().Transform(m)
+	if b.options.DoLegacyResourceSort &&
+		kt.Kustomization().LegacySortOptions == nil &&
+		kt.Kustomization().SortOrder == nil {
+		pl := &builtins.LegacyOrderTransformerPlugin{
+			LegacySortOptions: &types.LegacySortOptions{
+				OrderFirst: resid.OrderFirst,
+				OrderLast:  resid.OrderLast,
+			},
+		}
+		err = pl.Transform(m)
 		if err != nil {
 			return nil, err
 		}

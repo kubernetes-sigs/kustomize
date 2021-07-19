@@ -160,6 +160,11 @@ func (kt *KustTarget) AccumulateTarget() (
 // (or empty if the Component does not have a parent).
 func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	resRa *accumulator.ResAccumulator, err error) {
+	if kt.Kustomization().LegacySortOptions != nil &&
+		kt.Kustomization().SortOrder != nil &&
+		*kt.Kustomization().SortOrder != types.LegacySortOrder {
+		return nil, errors.Errorf("'legacySortOptions' can't be set if 'sortOrder' is '%s'", types.LegacySortOrder)
+	}
 	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
 		return nil, errors.Wrap(err, "accumulating resources")

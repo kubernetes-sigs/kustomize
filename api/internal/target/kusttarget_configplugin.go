@@ -47,7 +47,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 func (kt *KustTarget) configureBuiltinTransformers(
 	tc *builtinconfig.TransformerConfig) (
 	result []resmap.Transformer, err error) {
-	for _, bpt := range []builtinhelpers.BuiltinPluginType{
+	bpts := []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.PatchStrategicMergeTransformer,
 		builtinhelpers.PatchTransformer,
 		builtinhelpers.NamespaceTransformer,
@@ -58,7 +58,11 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		builtinhelpers.ReplicaCountTransformer,
 		builtinhelpers.ImageTagTransformer,
 		builtinhelpers.ReplacementTransformer,
-	} {
+	}
+	if kt.kustomization.SortOrder != nil && *kt.kustomization.SortOrder == types.LegacySortOrder {
+		bpts = append(bpts, builtinhelpers.LegacyOrderTransformer)
+	}
+	for _, bpt := range bpts {
 		r, err := transformerConfigurators[bpt](
 			kt, bpt, builtinhelpers.TransformerFactories[bpt], tc)
 		if err != nil {
@@ -333,6 +337,17 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		c.Replacements = kt.kustomization.Replacements
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+		return result, nil
+	},
+	builtinhelpers.LegacyOrderTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		p := f()
+		err = kt.configureBuiltinPlugin(p, kt.kustomization, bpt)
 		if err != nil {
 			return nil, err
 		}
