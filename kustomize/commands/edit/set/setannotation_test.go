@@ -13,7 +13,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const invalidAnnotationKey string = "invalid annotation key: see the syntax and character set rules at https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/"
+const invalidAnnotationKey string = "invalid annotation key: see the syntax and character set rules at " +
+	"https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/"
 
 func makeAnnotationKustomization(t *testing.T) *types.Kustomization {
 	fSys := filesys.MakeFsInMemory()
