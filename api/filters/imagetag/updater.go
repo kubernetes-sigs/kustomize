@@ -18,6 +18,8 @@ type imageTagUpdater struct {
 }
 
 func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+	// FIXME for some reason, the fuction is invoked twice for each image
+	//       with the value in yamlRNode already modified
 	if err := yaml.ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 		return nil, err
 	}
@@ -30,7 +32,7 @@ func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
 
 	name, tag := image.Split(value)
 	if u.ImageTag.NewName != "" {
-		name = u.ImageTag.NewName
+		name = image.NewImageName(u.ImageTag.Name, name, u.ImageTag.NewName)
 	}
 	if u.ImageTag.NewTag != "" {
 		tag = ":" + u.ImageTag.NewTag
