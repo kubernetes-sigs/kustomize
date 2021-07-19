@@ -1514,9 +1514,9 @@ kind: Deployment
 metadata:
   name: pre-deploy
   annotations: 
-    config.kubernetes.io/previousNames: deploy,deploy
-    config.kubernetes.io/previousKinds: CronJob,Deployment
-    config.kubernetes.io/previousNamespaces: default,default
+    internal.config.kubernetes.io/previousNames: deploy,deploy
+    internal.config.kubernetes.io/previousKinds: CronJob,Deployment
+    internal.config.kubernetes.io/previousNamespaces: default,default
 spec:
   template:
     spec:
@@ -1543,9 +1543,9 @@ kind: Deployment
 metadata:
   name: pre-deploy
   annotations:
-    config.kubernetes.io/previousNames: deploy,deploy
-    config.kubernetes.io/previousKinds: CronJob,Deployment
-    config.kubernetes.io/previousNamespaces: default,default
+    internal.config.kubernetes.io/previousNames: deploy,deploy
+    internal.config.kubernetes.io/previousKinds: CronJob,Deployment
+    internal.config.kubernetes.io/previousNamespaces: default,default
 spec:
   template:
     spec:

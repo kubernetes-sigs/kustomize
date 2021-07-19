@@ -149,6 +149,13 @@ func (th *HarnessEnhanced) ResetLoaderRoot(root string) {
 
 func (th *HarnessEnhanced) LoadAndRunGenerator(
 	config string) resmap.ResMap {
+	rm := th.LoadAndRunGeneratorWithBuildAnnotations(config)
+	rm.RemoveBuildAnnotations()
+	return rm
+}
+
+func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
+	config string) resmap.ResMap {
 	res, err := th.rf.RF().FromBytes([]byte(config))
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
@@ -162,7 +169,6 @@ func (th *HarnessEnhanced) LoadAndRunGenerator(
 	if err != nil {
 		th.t.Fatalf("generate err: %v", err)
 	}
-	rm.RemoveBuildAnnotations()
 	return rm
 }
 
