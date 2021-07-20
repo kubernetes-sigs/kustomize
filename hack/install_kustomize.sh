@@ -19,6 +19,10 @@
 
 set -e
 
+# Unset CDPATH to restore default cd behavior. An exported CDPATH can
+# cause cd to output the current directory to STDOUT.
+unset CDPATH
+
 where=$PWD
 
 release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
