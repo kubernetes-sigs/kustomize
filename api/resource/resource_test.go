@@ -717,9 +717,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: newName
 `,
 		},
@@ -729,9 +729,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: oldName2
 `,
 			newName: "newName",
@@ -740,9 +740,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret,Secret
-    config.kubernetes.io/previousNames: oldName,oldName2
-    config.kubernetes.io/previousNamespaces: default,default
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,default
   name: newName
 `,
 		},
@@ -752,9 +752,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: oldName2
   namespace: oldNamespace
 `,
@@ -764,9 +764,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret,Secret
-    config.kubernetes.io/previousNames: oldName,oldName2
-    config.kubernetes.io/previousNamespaces: default,oldNamespace
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
   namespace: newNamespace
 `,
@@ -814,9 +814,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: newName
 `,
 			expected: []resid.ResId{
@@ -833,9 +833,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret,Secret
-    config.kubernetes.io/previousNames: oldName,oldName2
-    config.kubernetes.io/previousNamespaces: default,oldNamespace
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
   namespace: newNamespace
 `,
@@ -1150,7 +1150,7 @@ kind: Deployment
 metadata:
   name: clown
   annotations:
-    config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1
+    internal.config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1
 spec:
   numReplicas: 1
 `)
@@ -1162,7 +1162,7 @@ kind: Deployment
 metadata:
   name: clown
   annotations:
-    config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1,gr2_ver2_knd2|ns2|name2
+    internal.config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1,gr2_ver2_knd2|ns2|name2
 spec:
   numReplicas: 1
 `)
