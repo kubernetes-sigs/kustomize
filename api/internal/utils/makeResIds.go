@@ -10,17 +10,17 @@ import (
 )
 
 const (
-	BuildAnnotationPreviousKinds      = konfig.ConfigAnnoDomain + "/previousKinds"
-	BuildAnnotationPreviousNames      = konfig.ConfigAnnoDomain + "/previousNames"
-	BuildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
-	BuildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
-	BuildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
-	BuildAnnotationsRefBy             = konfig.ConfigAnnoDomain + "/refBy"
+	BuildAnnotationPreviousKinds      = konfig.InternalConfigAnnoDomain + "/previousKinds"
+	BuildAnnotationPreviousNames      = konfig.InternalConfigAnnoDomain + "/previousNames"
+	BuildAnnotationPreviousNamespaces = konfig.InternalConfigAnnoDomain + "/previousNamespaces"
+	BuildAnnotationPrefixes           = konfig.InternalConfigAnnoDomain + "/prefixes"
+	BuildAnnotationSuffixes           = konfig.InternalConfigAnnoDomain + "/suffixes"
+	BuildAnnotationsRefBy             = konfig.InternalConfigAnnoDomain + "/refBy"
 
 	// the following are only for patches, to specify whether they can change names
 	// and kinds of their targets
-	BuildAnnotationAllowNameChange = konfig.ConfigAnnoDomain + "/allowNameChange"
-	BuildAnnotationAllowKindChange = konfig.ConfigAnnoDomain + "/allowKindChange"
+	BuildAnnotationAllowNameChange = konfig.InternalConfigAnnoDomain + "/allowNameChange"
+	BuildAnnotationAllowKindChange = konfig.InternalConfigAnnoDomain + "/allowKindChange"
 	Allowed                        = "allowed"
 )
 

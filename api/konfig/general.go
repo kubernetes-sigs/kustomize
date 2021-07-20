@@ -34,6 +34,9 @@ const (
 	// ConfigAnnoDomain is configuration-related annotation namespace.
 	ConfigAnnoDomain = "config.kubernetes.io"
 
+	// InternalConfigAnnoDomain is internal configuration-related annotation namespace.
+	InternalConfigAnnoDomain = "internal.config.kubernetes.io"
+
 	// If a resource has this annotation, kustomize will drop it.
 	IgnoredByKustomizeAnnotation = ConfigAnnoDomain + "/local-config"
 
