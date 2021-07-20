@@ -22,7 +22,6 @@ import (
 // paired with metadata used by kustomize.
 type Resource struct {
 	kyaml.RNode
-	options     *types.GenArgs
 	refVarNames []string
 }
 
@@ -35,6 +34,7 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationAllowNameChange,
 	utils.BuildAnnotationAllowKindChange,
 	utils.BuildAnnotationsRefBy,
+	utils.BuildAnnotationsGenOptions,
 }
 
 func (r *Resource) ResetRNode(incoming *Resource) {
@@ -101,7 +101,6 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 }
 
 func (r *Resource) copyKustomizeSpecificFields(other *Resource) {
-	r.options = other.options
 	r.refVarNames = copyStringSlice(other.refVarNames)
 }
 
@@ -274,7 +273,7 @@ func (r *Resource) String() string {
 	if err != nil {
 		return "<" + err.Error() + ">"
 	}
-	return strings.TrimSpace(string(bs)) + r.options.String()
+	return strings.TrimSpace(string(bs))
 }
 
 // AsYAML returns the resource in Yaml form.
@@ -296,20 +295,37 @@ func (r *Resource) MustYaml() string {
 	return string(yml)
 }
 
+func (r *Resource) getOptions() *types.GenArgs {
+	annotations := r.GetAnnotations()
+	if genOptsAnno, ok := annotations[utils.BuildAnnotationsGenOptions]; ok {
+		var genOpts types.GeneratorArgs
+		yaml.Unmarshal([]byte(genOptsAnno), &genOpts)
+		return types.NewGenArgs(&genOpts)
+	}
+	return &types.GenArgs{}
+}
+
 // SetOptions updates the generator options for the resource.
 func (r *Resource) SetOptions(o *types.GenArgs) {
-	r.options = o
+	if o.IsNilOrEmpty() {
+		return
+	}
+	annotations := r.GetAnnotations()
+	b, _ := yaml.Marshal(o.GetArgs())
+	annotations[utils.BuildAnnotationsGenOptions] = string(b)
+	r.SetAnnotations(annotations)
 }
 
 // Behavior returns the behavior for the resource.
 func (r *Resource) Behavior() types.GenerationBehavior {
-	return r.options.Behavior()
+	return r.getOptions().Behavior()
 }
 
 // NeedHashSuffix returns true if a resource content
 // hash should be appended to the name of the resource.
 func (r *Resource) NeedHashSuffix() bool {
-	return r.options != nil && r.options.ShouldAddHashSuffixToName()
+	options := r.getOptions()
+	return options != nil && options.ShouldAddHashSuffixToName()
 }
 
 // OrgId returns the original, immutable ResId for the resource.

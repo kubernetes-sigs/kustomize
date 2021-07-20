@@ -291,6 +291,8 @@ configMapGenerator:
     behavior: merge
     literals:
     - ANOTHER_ENV_VARIABLE="bar"
+    options:
+      disableNameSuffixHash: true
 `)
 	th.WriteF("cm.yaml", `
 apiVersion: v1
