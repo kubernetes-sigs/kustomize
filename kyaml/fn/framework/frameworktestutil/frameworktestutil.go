@@ -74,6 +74,8 @@ type CommandResultsChecker struct {
 
 	// Command provides the function to run.
 	Command func() *cobra.Command
+
+	*checkerCore
 }
 
 // Assert runs the command with the input provided in each valid test directory
@@ -85,37 +87,49 @@ func (rc *CommandResultsChecker) Assert(t *testing.T) bool {
 	if rc.InputFilenameGlob == "" {
 		rc.InputFilenameGlob = DefaultInputFilenameGlob
 	}
-
-	checker := newResultsChecker(
-		rc.TestDataDirectory, rc.ExpectedOutputFilename, rc.ExpectedErrorFilename,
-		rc.OutputAssertionFunc, rc.ErrorAssertionFunc,
-		rc.UpdateExpectedFromActual,
-	)
-	checker.assert(t, func() (string, string) {
-		_, err := os.Stat(rc.ConfigInputFilename)
-		if os.IsNotExist(err) {
-			t.Errorf("Test case is missing FunctionConfig input file (default: %s)", DefaultConfigInputFilename)
-		}
-		require.NoError(t, err)
-		args := []string{rc.ConfigInputFilename}
-
-		if rc.InputFilenameGlob != "" {
-			inputs, err := filepath.Glob(rc.InputFilenameGlob)
-			require.NoError(t, err)
-			args = append(args, inputs...)
-		}
-
-		var stdOut, stdErr bytes.Buffer
-		cmd := rc.Command()
-		cmd.SetArgs(args)
-		cmd.SetOut(&stdOut)
-		cmd.SetErr(&stdErr)
-
-		err = cmd.Execute()
-		return stdOut.String(), stdErr.String()
-	})
-
+	rc.checkerCore = &checkerCore{
+		testDataDirectory:        rc.TestDataDirectory,
+		expectedOutputFilename:   rc.ExpectedOutputFilename,
+		expectedErrorFilename:    rc.ExpectedErrorFilename,
+		updateExpectedFromActual: rc.UpdateExpectedFromActual,
+		outputAssertionFunc:      rc.OutputAssertionFunc,
+		errorAssertionFunc:       rc.ErrorAssertionFunc,
+	}
+	rc.checkerCore.setDefaults()
+	runAllTestCases(t, rc)
 	return true
+}
+
+func (rc *CommandResultsChecker) isTestDir(path string) bool {
+	return atLeastOneFileExists(
+		filepath.Join(path, rc.ConfigInputFilename),
+		filepath.Join(path, rc.checkerCore.expectedOutputFilename),
+		filepath.Join(path, rc.checkerCore.expectedErrorFilename),
+	)
+}
+
+func (rc *CommandResultsChecker) runInCurrentDir(t *testing.T) (string, string) {
+	_, err := os.Stat(rc.ConfigInputFilename)
+	if os.IsNotExist(err) {
+		t.Errorf("Test case is missing FunctionConfig input file (default: %s)", DefaultConfigInputFilename)
+	}
+	require.NoError(t, err)
+	args := []string{rc.ConfigInputFilename}
+
+	if rc.InputFilenameGlob != "" {
+		inputs, err := filepath.Glob(rc.InputFilenameGlob)
+		require.NoError(t, err)
+		args = append(args, inputs...)
+	}
+
+	var stdOut, stdErr bytes.Buffer
+	cmd := rc.Command()
+	cmd.SetArgs(args)
+	cmd.SetOut(&stdOut)
+	cmd.SetErr(&stdErr)
+
+	_ = cmd.Execute()
+	return stdOut.String(), stdErr.String()
 }
 
 // ProcessorResultsChecker tests a processor function by running it with predefined inputs
@@ -159,6 +173,8 @@ type ProcessorResultsChecker struct {
 
 	// Processor returns a ResourceListProcessor to run.
 	Processor func() framework.ResourceListProcessor
+
+	*checkerCore
 }
 
 // Assert runs the processor with the input provided in each valid test directory
@@ -167,35 +183,48 @@ func (rc *ProcessorResultsChecker) Assert(t *testing.T) bool {
 	if rc.InputFilename == "" {
 		rc.InputFilename = DefaultInputFilename
 	}
-
-	checker := newResultsChecker(
-		rc.TestDataDirectory, rc.ExpectedOutputFilename, rc.ExpectedErrorFilename,
-		rc.OutputAssertionFunc, rc.ErrorAssertionFunc,
-		rc.UpdateExpectedFromActual,
-	)
-	checker.assert(t, func() (string, string) {
-		_, err := os.Stat(rc.InputFilename)
-		if os.IsNotExist(err) {
-			t.Error("Test case is missing input file")
-		}
-		require.NoError(t, err)
-
-		actualOutput := bytes.NewBuffer([]byte{})
-		rlBytes, err := ioutil.ReadFile(rc.InputFilename)
-		require.NoError(t, err)
-
-		rw := kio.ByteReadWriter{
-			Reader: bytes.NewBuffer(rlBytes),
-			Writer: actualOutput,
-		}
-		err = framework.Execute(rc.Processor(), &rw)
-		if err != nil {
-			require.NotEmptyf(t, err.Error(), "processor returned error with empty message")
-			return actualOutput.String(), err.Error()
-		}
-		return actualOutput.String(), ""
-	})
+	rc.checkerCore = &checkerCore{
+		testDataDirectory:        rc.TestDataDirectory,
+		expectedOutputFilename:   rc.ExpectedOutputFilename,
+		expectedErrorFilename:    rc.ExpectedErrorFilename,
+		updateExpectedFromActual: rc.UpdateExpectedFromActual,
+		outputAssertionFunc:      rc.OutputAssertionFunc,
+		errorAssertionFunc:       rc.ErrorAssertionFunc,
+	}
+	rc.checkerCore.setDefaults()
+	runAllTestCases(t, rc)
 	return true
+}
+
+func (rc *ProcessorResultsChecker) isTestDir(path string) bool {
+	return atLeastOneFileExists(
+		filepath.Join(path, rc.InputFilename),
+		filepath.Join(path, rc.checkerCore.expectedOutputFilename),
+		filepath.Join(path, rc.checkerCore.expectedErrorFilename),
+	)
+}
+
+func (rc *ProcessorResultsChecker) runInCurrentDir(t *testing.T) (string, string) {
+	_, err := os.Stat(rc.InputFilename)
+	if os.IsNotExist(err) {
+		t.Errorf("Test case is missing input file (default: %s)", DefaultInputFilename)
+	}
+	require.NoError(t, err)
+
+	actualOutput := bytes.NewBuffer([]byte{})
+	rlBytes, err := ioutil.ReadFile(rc.InputFilename)
+	require.NoError(t, err)
+
+	rw := kio.ByteReadWriter{
+		Reader: bytes.NewBuffer(rlBytes),
+		Writer: actualOutput,
+	}
+	err = framework.Execute(rc.Processor(), &rw)
+	if err != nil {
+		require.NotEmptyf(t, err.Error(), "processor returned error with empty message")
+		return actualOutput.String(), err.Error()
+	}
+	return actualOutput.String(), ""
 }
 
 type AssertionFunc func(t *testing.T, expected string, actual string)
@@ -223,8 +252,35 @@ func standardizeSpacing(s string) string {
 	return strings.ReplaceAll(strings.TrimSpace(s), "\r\n", "\n")
 }
 
-// resultsChecker implements the core logic shared by all results checking types.
-type resultsChecker struct {
+// resultsChecker is implemented by ProcessorResultsChecker and CommandResultsChecker, partially via checkerCore
+type resultsChecker interface {
+	// TestCasesRun returns a list of the test case directories that have been seen.
+	TestCasesRun() (paths []string)
+
+	// rootDir is the root of the tree of test directories to be searched for fixtures.
+	rootDir() string
+	// isTestDir takes the name of directory and returns whether or not it contains the files required to be a test case.
+	isTestDir(dir string) bool
+	// runInCurrentDir executes the code the checker is checking in the context of the current working directory.
+	runInCurrentDir(t *testing.T) (stdOut, stdErr string)
+	// resetTestCasesRun resets the list of test case directories seen.
+	resetTestCasesRun()
+	// recordTestCase adds to the list of test case directories seen.
+	recordTestCase(path string)
+	// readAssertionFiles returns the contents of the output and error fixtures
+	readAssertionFiles(t *testing.T) (expectedOutput string, expectedError string)
+	// shouldUpdateFixtures indicates whether or not this checker is currently being used to update fixtures instead of run them.
+	shouldUpdateFixtures() bool
+	// updateFixtures modifies the test fixture files to match the given content
+	updateFixtures(t *testing.T, actualOutput string, actualError string)
+	// assertOutputMatches compares the expected output to the output recieved.
+	assertOutputMatches(t *testing.T, expected string, actual string)
+	// assertErrorMatches compares teh expected error to the error received.
+	assertErrorMatches(t *testing.T, expected string, actual string)
+}
+
+// checkerCore implements the resultsChecker methods that are shared between the two checker types
+type checkerCore struct {
 	testDataDirectory        string
 	expectedOutputFilename   string
 	expectedErrorFilename    string
@@ -232,20 +288,10 @@ type resultsChecker struct {
 	outputAssertionFunc      AssertionFunc
 	errorAssertionFunc       AssertionFunc
 
-	testsCasesRun int
+	testsCasesRun []string
 }
 
-func newResultsChecker(testDataDir string, outputFilename string, errorFilename string,
-	outputAsserter AssertionFunc, errorAsserter AssertionFunc,
-	updateFixtures bool) *resultsChecker {
-	rc := resultsChecker{
-		testDataDirectory:        testDataDir,
-		expectedOutputFilename:   outputFilename,
-		expectedErrorFilename:    errorFilename,
-		updateExpectedFromActual: updateFixtures,
-		outputAssertionFunc:      outputAsserter,
-		errorAssertionFunc:       errorAsserter,
-	}
+func (rc *checkerCore) setDefaults() {
 	if rc.testDataDirectory == "" {
 		rc.testDataDirectory = DefaultTestDataDirectory
 	}
@@ -261,73 +307,47 @@ func newResultsChecker(testDataDir string, outputFilename string, errorFilename 
 	if rc.errorAssertionFunc == nil {
 		rc.errorAssertionFunc = RequireEachLineMatches
 	}
-	return &rc
 }
 
-// assert traverses TestDataDirectory to find test cases, calls getResult to invoke the function
-// under test in each directory, and then runs assertions on the returned output and error results.
-// It triggers a test failure if no valid test directories were found.
-func (rc *resultsChecker) assert(t *testing.T, getResult func() (string, string)) {
-	err := filepath.Walk(rc.testDataDirectory,
-		func(path string, info os.FileInfo, err error) error {
-			require.NoError(t, err)
-			if !info.IsDir() {
-				// skip non-directories
-				return nil
-			}
-			rc.runDirectoryTestCase(t, path, getResult)
-			return nil
-		})
-	require.NoError(t, err)
-	require.NotZero(t, rc.testsCasesRun, "No complete test cases found in %s", rc.testDataDirectory)
+func (rc *checkerCore) rootDir() string {
+	return rc.testDataDirectory
 }
 
-func (rc *resultsChecker) runDirectoryTestCase(t *testing.T, path string, getResult func() (string, string)) {
-	// cd into the directory so we can test functions that refer
-	// local files by relative paths
-	d, err := os.Getwd()
-	require.NoError(t, err)
+func (rc *checkerCore) TestCasesRun() []string {
+	return rc.testsCasesRun
+}
 
-	defer func() { require.NoError(t, os.Chdir(d)) }()
-	require.NoError(t, os.Chdir(path))
+func (rc *checkerCore) resetTestCasesRun() {
+	rc.testsCasesRun = []string{}
+}
 
-	expectedOutput, expectedError := rc.readAssertionFiles(t)
-	if expectedError == "" && expectedOutput == "" && !rc.updateExpectedFromActual {
-		// not a test directory: missing expectations and updateExpectedFromActual == false
-		return
+func (rc *checkerCore) recordTestCase(s string) {
+	rc.testsCasesRun = append(rc.testsCasesRun, s)
+}
+
+func (rc *checkerCore) shouldUpdateFixtures() bool {
+	return rc.updateExpectedFromActual
+}
+
+func (rc *checkerCore) updateFixtures(t *testing.T, actualOutput string, actualError string) {
+	if actualError != "" {
+		require.NoError(t, ioutil.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600))
 	}
-
-	// run the test
-	t.Run(path, func(t *testing.T) {
-		rc.testsCasesRun += 1
-		actualOutput, actualError := getResult()
-
-		// Configured to update the assertion files instead of comparing them
-		if rc.updateExpectedFromActual {
-			if actualError != "" {
-				require.NoError(t, ioutil.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600))
-			}
-			if len(actualOutput) > 0 {
-				require.NoError(t, ioutil.WriteFile(rc.expectedOutputFilename, []byte(actualOutput), 0600))
-			}
-			t.Skip("Updated fixtures for test case")
-		}
-
-		// Compare the results to the assertion files
-		if expectedError != "" {
-			// We expected an error, so make sure there was one
-			require.NotEmptyf(t, actualError, "test expected an error but message was empty, and output was:\n%s", actualOutput)
-			rc.errorAssertionFunc(t, expectedError, actualError)
-		} else {
-			// We didn't expect an error, and the output should match
-			require.Emptyf(t, actualError, "test expected no error but got an error message, and output was:\n%s", actualOutput)
-			rc.outputAssertionFunc(t, expectedOutput, actualOutput)
-		}
-	})
+	if len(actualOutput) > 0 {
+		require.NoError(t, ioutil.WriteFile(rc.expectedOutputFilename, []byte(actualOutput), 0600))
+	}
+	t.Skip("Updated fixtures for test case")
 }
 
-// readAssertionFiles reads the expected results and error files
-func (rc *resultsChecker) readAssertionFiles(t *testing.T) (string, string) {
+func (rc *checkerCore) assertOutputMatches(t *testing.T, expected string, actual string) {
+	rc.outputAssertionFunc(t, expected, actual)
+}
+
+func (rc *checkerCore) assertErrorMatches(t *testing.T, expected string, actual string) {
+	rc.errorAssertionFunc(t, expected, actual)
+}
+
+func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
 	// read the expected results
 	var expectedOutput, expectedError string
 	if rc.expectedOutputFilename != "" {
@@ -359,4 +379,66 @@ func (rc *resultsChecker) readAssertionFiles(t *testing.T) (string, string) {
 		}
 	}
 	return expectedOutput, expectedError
+}
+
+// runAllTestCases traverses rootDir to find test cases, calls getResult to invoke the function
+// under test in each directory, and then runs assertions on the returned output and error results.
+// It triggers a test failure if no valid test directories were found.
+func runAllTestCases(t *testing.T, checker resultsChecker) {
+	checker.resetTestCasesRun()
+	err := filepath.Walk(checker.rootDir(),
+		func(path string, info os.FileInfo, err error) error {
+			require.NoError(t, err)
+			if info.IsDir() && checker.isTestDir(path) {
+				runDirectoryTestCase(t, path, checker)
+			}
+			return nil
+		})
+	require.NoError(t, err)
+	require.NotZero(t, len(checker.TestCasesRun()), "No complete test cases found in %s", checker.rootDir())
+}
+
+func runDirectoryTestCase(t *testing.T, path string, checker resultsChecker) {
+	// cd into the directory so we can test functions that refer to local files by relative paths
+	d, err := os.Getwd()
+	require.NoError(t, err)
+
+	defer func() { require.NoError(t, os.Chdir(d)) }()
+	require.NoError(t, os.Chdir(path))
+
+	expectedOutput, expectedError := checker.readAssertionFiles(t)
+	if expectedError == "" && expectedOutput == "" && !checker.shouldUpdateFixtures() {
+		t.Fatalf("test directory %s must include either expected output or expected error fixture", path)
+	}
+
+	// run the test
+	t.Run(path, func(t *testing.T) {
+		checker.recordTestCase(path)
+		actualOutput, actualError := checker.runInCurrentDir(t)
+
+		// Configured to update the assertion files instead of comparing them
+		if checker.shouldUpdateFixtures() {
+			checker.updateFixtures(t, actualOutput, actualError)
+		}
+
+		// Compare the results to the assertion files
+		if expectedError != "" {
+			// We expected an error, so make sure there was one
+			require.NotEmptyf(t, actualError, "test expected an error but message was empty, and output was:\n%s", actualOutput)
+			checker.assertErrorMatches(t, expectedError, actualError)
+		} else {
+			// We didn't expect an error, and the output should match
+			require.Emptyf(t, actualError, "test expected no error but got an error message, and output was:\n%s", actualOutput)
+			checker.assertOutputMatches(t, expectedOutput, actualOutput)
+		}
+	})
+}
+
+func atLeastOneFileExists(files ...string) bool {
+	for _, file := range files {
+		if _, err := os.Stat(file); err == nil {
+			return true
+		}
+	}
+	return false
 }

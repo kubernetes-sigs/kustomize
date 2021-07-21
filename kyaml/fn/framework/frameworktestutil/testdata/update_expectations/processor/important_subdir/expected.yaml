@@ -1,0 +1,20 @@
+apiVersion:
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: test-1
+    annotations:
+      updated: "true"
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: test-2
+    annotations:
+      updated: "true"
+functionConfig:
+  apiVersion: example.com/v1alpha1
+  kind: Demo
+  spec:
+    value: a
