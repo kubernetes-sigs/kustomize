@@ -60,6 +60,7 @@ func TestSetAnnotationNoArgs(t *testing.T) {
 	v.VerifyNoCall()
 	if err == nil {
 		t.Errorf("expected an error")
+		t.FailNow()
 	}
 	if err.Error() != "must specify annotation" {
 		t.Errorf("incorrect error: %v", err.Error())
@@ -75,6 +76,7 @@ func TestSetAnnotationInvalidFormat(t *testing.T) {
 	v.VerifyCall()
 	if err == nil {
 		t.Errorf("expected an error")
+		t.FailNow()
 	}
 	if err.Error() != valtest_test.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
@@ -94,11 +96,11 @@ func TestSetAnnotationPrefixColonName(t *testing.T) {
 
 func TestSetAnnotation253Prefix63Name(t *testing.T) {
 	var o setAnnotationOptions
-	o.metadata = map[string]string{`abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu
-vwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
-abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcde
-fghijklmnopqrstuvwxyzabcdefghijklmnopqrs/abcdefghijklmnopqrstuvwxyzabcdefghijklmnop
-qrstuvwxyzabcdefghijk`: "true"}
+	o.metadata = map[string]string{"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu" +
+		"vwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
+		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcde" +
+		"fghijklmnopqrstuvwxyzabcdefghijklmnopqrs/abcdefghijklmnopqrstuvwxyzabcdefghijklmnop" +
+		"qrstuvwxyzabcdefghijk": "true"}
 
 	m := makeAnnotationKustomization(t)
 	err := o.setAnnotations(m)
@@ -111,15 +113,16 @@ func TestSetAnnotation254Prefix62Name(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
-	args := []string{`abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi
-jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn
-opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs
-tuvwxyzabcdefghijklmnopqrst/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabc
-defghij:true`}
+	args := []string{"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi" +
+		"jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
+		"opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs" +
+		"tuvwxyzabcdefghijklmnopqrst/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabc" +
+		"defghij:true"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
 	if err == nil {
 		t.Errorf("expected an error")
+		t.FailNow()
 	}
 	if err.Error() != invalidAnnotationKey {
 		t.Errorf("incorrect error: %v", err.Error())
@@ -130,15 +133,16 @@ func TestSetAnnotation252Prefix64Name(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
-	args := []string{`abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi
-jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn
-opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs
-tuvwxyzabcdefghijklmnopqr/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcde
-fghijkl:true`}
+	args := []string{"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi" +
+		"jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
+		"opqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrs" +
+		"tuvwxyzabcdefghijklmnopqr/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcde" +
+		"fghijkl:true"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
 	if err == nil {
 		t.Errorf("expected an error")
+		t.FailNow()
 	}
 	if err.Error() != invalidAnnotationKey {
 		t.Errorf("incorrect error: %v", err.Error())
@@ -154,6 +158,7 @@ func TestSetAnnotationNoKey(t *testing.T) {
 	v.VerifyNoCall()
 	if err == nil {
 		t.Errorf("expected an error")
+		t.FailNow()
 	}
 	if err.Error() != "invalid annotation: ':nokey' (need k:v pair where v may be quoted)" {
 		t.Errorf("incorrect error: %v", err.Error())
@@ -183,6 +188,7 @@ func TestSetAnnotationNoValue(t *testing.T) {
 	v.VerifyCall()
 	if err == nil {
 		t.Errorf("expected an error")
+		t.FailNow()
 	}
 	if err.Error() != invalidAnnotationKey {
 		t.Errorf("incorrect error: %v", err.Error())
