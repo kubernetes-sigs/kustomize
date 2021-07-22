@@ -43,7 +43,9 @@ kind: Krmfile
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, "", b.String()) {
+	if !assert.Equal(t, `Command "init" is deprecated, setter commands and substitutions will no longer be available in kustomize v5.
+See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.
+`, b.String()) {
 		t.FailNow()
 	}
 }
@@ -78,7 +80,9 @@ kind: Krmfile
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, "", b.String()) {
+	if !assert.Equal(t, `Command "init" is deprecated, setter commands and substitutions will no longer be available in kustomize v5.
+See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.
+`, b.String()) {
 		t.FailNow()
 	}
 }
