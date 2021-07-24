@@ -21,14 +21,13 @@ import (
 func NewAnnotateRunner(parent string) *AnnotateRunner {
 	r := &AnnotateRunner{}
 	c := &cobra.Command{
-		Use:     "annotate [DIR]",
-		Args:    cobra.MaximumNArgs(1),
-		Short:   commands.AnnotateShort,
-		Long:    commands.AnnotateLong,
-		Example: commands.AnnotateExamples,
-		RunE:    r.runE,
-		Deprecated:
-			"use the `commonAnnotations` field in your kustomization file.",
+		Use:        "annotate [DIR]",
+		Args:       cobra.MaximumNArgs(1),
+		Short:      commands.AnnotateShort,
+		Long:       commands.AnnotateLong,
+		Example:    commands.AnnotateExamples,
+		RunE:       r.runE,
+		Deprecated: "use the `commonAnnotations` field in your kustomization file.",
 	}
 	runner.FixDocs(parent, c)
 	r.Command = c
