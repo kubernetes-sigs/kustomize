@@ -6,6 +6,8 @@ package types
 import (
 	"strconv"
 	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // GenArgs is a facade over GeneratorArgs, exposing a few readonly properties.
@@ -43,4 +45,17 @@ func (g *GenArgs) Behavior() GenerationBehavior {
 		return BehaviorUnspecified
 	}
 	return NewGenerationBehavior(g.args.Behavior)
+}
+
+// IsNilOrEmpty returns true if g is nil or if the args are empty
+func (g *GenArgs) IsNilOrEmpty() bool {
+	return g == nil || g.args == nil
+}
+
+// AsYaml returns a yaml marshalling of the underlying Genargs
+func (g *GenArgs) AsYaml() ([]byte, error) {
+	if g == nil {
+		return yaml.Marshal(nil)
+	}
+	return yaml.Marshal(g.args)
 }

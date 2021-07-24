@@ -28,10 +28,10 @@ var testConfigMap = factory.FromMap(
 		},
 	})
 
-const genArgOptions = "{nsfx:false,beh:unspecified}"
-
 //nolint:gosec
 const configMapAsString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
+const configMapAsStringWithOptions = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"annotations":` +
+	`{"internal.config.kubernetes.io/generatorOptions":"{}\n"},"name":"winnie","namespace":"hundred-acre-wood"}}`
 
 var testDeployment = factory.FromMap(
 	map[string]interface{}{
@@ -43,6 +43,8 @@ var testDeployment = factory.FromMap(
 	})
 
 const deploymentAsString = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
+const deploymentAsStringWithOptions = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":` +
+	`{"internal.config.kubernetes.io/generatorOptions":"{}\n"},"name":"pooh"}}`
 
 func TestAsYAML(t *testing.T) {
 	expected := `apiVersion: apps/v1
@@ -66,17 +68,37 @@ func TestResourceString(t *testing.T) {
 	}{
 		{
 			in: testConfigMap,
-			s:  configMapAsString + genArgOptions,
+			s:  configMapAsString,
 		},
 		{
 			in: testDeployment,
-			s:  deploymentAsString + genArgOptions,
+			s:  deploymentAsString,
 		},
 	}
 	for _, test := range tests {
-		if test.in.String() != test.s {
-			t.Fatalf("Expected %s == %s", test.in.String(), test.s)
-		}
+		assert.Equal(t, test.in.String(), test.s)
+	}
+}
+
+func TestResourceStringWithOptionsAnnotations(t *testing.T) {
+	tests := []struct {
+		in *Resource
+		s  string
+	}{
+		{
+			in: testConfigMap,
+			s:  configMapAsStringWithOptions,
+		},
+		{
+			in: testDeployment,
+			s:  deploymentAsStringWithOptions,
+		},
+	}
+	for _, test := range tests {
+		args := &types.GeneratorArgs{}
+		options := types.NewGenArgs(args)
+		test.in.SetOptions(options)
+		assert.Equal(t, test.in.String(), test.s)
 	}
 }
 
@@ -717,9 +739,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: newName
 `,
 		},
@@ -729,9 +751,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: oldName2
 `,
 			newName: "newName",
@@ -740,9 +762,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret,Secret
-    config.kubernetes.io/previousNames: oldName,oldName2
-    config.kubernetes.io/previousNamespaces: default,default
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,default
   name: newName
 `,
 		},
@@ -752,9 +774,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: oldName2
   namespace: oldNamespace
 `,
@@ -764,9 +786,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret,Secret
-    config.kubernetes.io/previousNames: oldName,oldName2
-    config.kubernetes.io/previousNamespaces: default,oldNamespace
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
   namespace: newNamespace
 `,
@@ -814,9 +836,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret
-    config.kubernetes.io/previousNames: oldName
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/previousKinds: Secret
+    internal.config.kubernetes.io/previousNames: oldName
+    internal.config.kubernetes.io/previousNamespaces: default
   name: newName
 `,
 			expected: []resid.ResId{
@@ -833,9 +855,9 @@ metadata:
 kind: Secret
 metadata:
   annotations:
-    config.kubernetes.io/previousKinds: Secret,Secret
-    config.kubernetes.io/previousNames: oldName,oldName2
-    config.kubernetes.io/previousNamespaces: default,oldNamespace
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,oldNamespace
   name: newName
   namespace: newNamespace
 `,
@@ -1150,7 +1172,7 @@ kind: Deployment
 metadata:
   name: clown
   annotations:
-    config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1
+    internal.config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1
 spec:
   numReplicas: 1
 `)
@@ -1162,7 +1184,7 @@ kind: Deployment
 metadata:
   name: clown
   annotations:
-    config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1,gr2_ver2_knd2|ns2|name2
+    internal.config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1,gr2_ver2_knd2|ns2|name2
 spec:
   numReplicas: 1
 `)
@@ -1170,4 +1192,36 @@ spec:
 		resid.FromString("gr1_ver1_knd1|ns1|name1"),
 		resid.FromString("gr2_ver2_knd2|ns2|name2"),
 	})
+}
+
+func TestOptions(t *testing.T) {
+	r, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-configmap-test
+`))
+	assert.NoError(t, err)
+
+	args := &types.GeneratorArgs{
+		Behavior: "merge",
+		Options: &types.GeneratorOptions{
+			DisableNameSuffixHash: true,
+		},
+	}
+
+	options := types.NewGenArgs(args)
+	r.SetOptions(options)
+	assert.Equal(t, r.RNode.MustString(), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-configmap-test
+  annotations:
+    internal.config.kubernetes.io/generatorOptions: |
+      behavior: merge
+      options:
+        disableNameSuffixHash: true
+`)
+	assert.Equal(t, r.Behavior(), types.BehaviorMerge)
+	assert.Equal(t, r.NeedHashSuffix(), !args.Options.DisableNameSuffixHash)
 }

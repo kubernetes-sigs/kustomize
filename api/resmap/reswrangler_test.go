@@ -343,9 +343,9 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-alice",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/previousKinds":      "ConfigMap",
-					"config.kubernetes.io/previousNames":      "alice",
-					"config.kubernetes.io/previousNamespaces": "default",
+					"internal.config.kubernetes.io/previousKinds":      "ConfigMap",
+					"internal.config.kubernetes.io/previousNames":      "alice",
+					"internal.config.kubernetes.io/previousNamespaces": "default",
 				},
 			},
 		})
@@ -356,9 +356,9 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"name": "new-bob",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/previousKinds":      "ConfigMap,ConfigMap",
-					"config.kubernetes.io/previousNames":      "bob,bob2",
-					"config.kubernetes.io/previousNamespaces": "default,default",
+					"internal.config.kubernetes.io/previousKinds":      "ConfigMap,ConfigMap",
+					"internal.config.kubernetes.io/previousNames":      "bob,bob2",
+					"internal.config.kubernetes.io/previousNamespaces": "default,default",
 				},
 			},
 		})
@@ -370,9 +370,9 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"name":      "new-bob",
 				"namespace": "new-happy",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/previousKinds":      "ConfigMap",
-					"config.kubernetes.io/previousNames":      "bob",
-					"config.kubernetes.io/previousNamespaces": "happy",
+					"internal.config.kubernetes.io/previousKinds":      "ConfigMap",
+					"internal.config.kubernetes.io/previousNames":      "bob",
+					"internal.config.kubernetes.io/previousNamespaces": "happy",
 				},
 			},
 		})
@@ -384,9 +384,9 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"name":      "charlie",
 				"namespace": "happy",
 				"annotations": map[string]interface{}{
-					"config.kubernetes.io/previousKinds":      "ConfigMap",
-					"config.kubernetes.io/previousNames":      "charlie",
-					"config.kubernetes.io/previousNamespaces": "default",
+					"internal.config.kubernetes.io/previousKinds":      "ConfigMap",
+					"internal.config.kubernetes.io/previousNames":      "charlie",
+					"internal.config.kubernetes.io/previousNamespaces": "default",
 				},
 			},
 		})
@@ -845,6 +845,8 @@ func TestAbsorbAll(t *testing.T) {
 		}))
 	w := makeMap1()
 	assert.NoError(t, w.AbsorbAll(makeMap2(types.BehaviorMerge)))
+	expected.RemoveBuildAnnotations()
+	w.RemoveBuildAnnotations()
 	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
 	w = makeMap1()
 	assert.NoError(t, w.AbsorbAll(nil))
@@ -853,6 +855,7 @@ func TestAbsorbAll(t *testing.T) {
 	w = makeMap1()
 	w2 := makeMap2(types.BehaviorReplace)
 	assert.NoError(t, w.AbsorbAll(w2))
+	w2.RemoveBuildAnnotations()
 	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
 	w = makeMap1()
 	w2 = makeMap2(types.BehaviorUnspecified)

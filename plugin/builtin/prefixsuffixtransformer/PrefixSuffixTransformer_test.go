@@ -63,11 +63,11 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    config.kubernetes.io/prefixes: baked-
-    config.kubernetes.io/previousKinds: Service
-    config.kubernetes.io/previousNames: apple
-    config.kubernetes.io/previousNamespaces: default
-    config.kubernetes.io/suffixes: -pie
+    internal.config.kubernetes.io/prefixes: baked-
+    internal.config.kubernetes.io/previousKinds: Service
+    internal.config.kubernetes.io/previousNames: apple
+    internal.config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/suffixes: -pie
   name: baked-apple-pie
 spec:
   ports:
@@ -87,11 +87,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
-    config.kubernetes.io/prefixes: baked-
-    config.kubernetes.io/previousKinds: ConfigMap
-    config.kubernetes.io/previousNames: cm
-    config.kubernetes.io/previousNamespaces: default
-    config.kubernetes.io/suffixes: -pie
+    internal.config.kubernetes.io/prefixes: baked-
+    internal.config.kubernetes.io/previousKinds: ConfigMap
+    internal.config.kubernetes.io/previousNames: cm
+    internal.config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/suffixes: -pie
   name: baked-cm-pie
 `)
 
@@ -139,10 +139,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    config.kubernetes.io/prefixes: test-
-    config.kubernetes.io/previousKinds: Deployment
-    config.kubernetes.io/previousNames: deployment
-    config.kubernetes.io/previousNamespaces: default
+    internal.config.kubernetes.io/prefixes: test-
+    internal.config.kubernetes.io/previousKinds: Deployment
+    internal.config.kubernetes.io/previousNames: deployment
+    internal.config.kubernetes.io/previousNamespaces: default
   name: test-deployment
 spec:
   template:
