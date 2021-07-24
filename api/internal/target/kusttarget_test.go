@@ -255,5 +255,5 @@ metadata:
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
 	assert.NoError(t, err)
-	assert.Equal(t, expYaml, actYaml)
+	assert.Equal(t, string(expYaml), string(actYaml))
 }

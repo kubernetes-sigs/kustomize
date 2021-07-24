@@ -22,7 +22,6 @@ import (
 // paired with metadata used by kustomize.
 type Resource struct {
 	kyaml.RNode
-	options     *types.GenArgs
 	refVarNames []string
 }
 
@@ -35,6 +34,7 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationAllowNameChange,
 	utils.BuildAnnotationAllowKindChange,
 	utils.BuildAnnotationsRefBy,
+	utils.BuildAnnotationsGenOptions,
 }
 
 func (r *Resource) ResetRNode(incoming *Resource) {
@@ -80,6 +80,8 @@ func (r *Resource) DeepCopy() *Resource {
 // CopyMergeMetaDataFieldsFrom copies everything but the non-metadata in
 // the resource.
 // TODO: move to RNode, use GetMeta to improve performance.
+// TODO: make a version of mergeStringMaps that is build-annotation aware
+//   to avoid repeatedly setting refby and genargs annotations
 // Must remove the kustomize bit at the end.
 func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 	if err := r.SetLabels(
@@ -87,7 +89,7 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 		return fmt.Errorf("copyMerge cannot set labels - %w", err)
 	}
 	if err := r.SetAnnotations(
-		mergeStringMaps(other.GetAnnotations(), r.GetAnnotations())); err != nil {
+		mergeStringMapsWithBuildAnnotations(other.GetAnnotations(), r.GetAnnotations())); err != nil {
 		return fmt.Errorf("copyMerge cannot set annotations - %w", err)
 	}
 	if err := r.SetName(other.GetName()); err != nil {
@@ -101,7 +103,6 @@ func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 }
 
 func (r *Resource) copyKustomizeSpecificFields(other *Resource) {
-	r.options = other.options
 	r.refVarNames = copyStringSlice(other.refVarNames)
 }
 
@@ -274,7 +275,7 @@ func (r *Resource) String() string {
 	if err != nil {
 		return "<" + err.Error() + ">"
 	}
-	return strings.TrimSpace(string(bs)) + r.options.String()
+	return strings.TrimSpace(string(bs))
 }
 
 // AsYAML returns the resource in Yaml form.
@@ -296,20 +297,43 @@ func (r *Resource) MustYaml() string {
 	return string(yml)
 }
 
+func (r *Resource) getGenArgs() *types.GenArgs {
+	annotations := r.GetAnnotations()
+	if genOptsAnno, ok := annotations[utils.BuildAnnotationsGenOptions]; ok {
+		var genOpts types.GeneratorArgs
+		yaml.Unmarshal([]byte(genOptsAnno), &genOpts)
+		return types.NewGenArgs(&genOpts)
+	}
+	return nil
+}
+
 // SetOptions updates the generator options for the resource.
 func (r *Resource) SetOptions(o *types.GenArgs) {
-	r.options = o
+	annotations := r.GetAnnotations()
+	if o.IsNilOrEmpty() {
+		if len(annotations) == 0 {
+			return
+		}
+		if o == nil {
+			delete(annotations, utils.BuildAnnotationsGenOptions)
+		}
+	} else {
+		b, _ := o.AsYaml()
+		annotations[utils.BuildAnnotationsGenOptions] = string(b)
+	}
+	r.SetAnnotations(annotations)
 }
 
 // Behavior returns the behavior for the resource.
 func (r *Resource) Behavior() types.GenerationBehavior {
-	return r.options.Behavior()
+	return r.getGenArgs().Behavior()
 }
 
 // NeedHashSuffix returns true if a resource content
 // hash should be appended to the name of the resource.
 func (r *Resource) NeedHashSuffix() bool {
-	return r.options != nil && r.options.ShouldAddHashSuffixToName()
+	options := r.getGenArgs()
+	return options != nil && options.ShouldAddHashSuffixToName()
 }
 
 // OrgId returns the original, immutable ResId for the resource.
@@ -417,6 +441,20 @@ func mergeStringMaps(maps ...map[string]string) map[string]string {
 		for key, value := range m {
 			result[key] = value
 		}
+	}
+	return result
+}
+
+func mergeStringMapsWithBuildAnnotations(maps ...map[string]string) map[string]string {
+	result := mergeStringMaps(maps...)
+	for i := range BuildAnnotations {
+		if len(maps) > 0 {
+			if v, ok := maps[0][BuildAnnotations[i]]; ok {
+				result[BuildAnnotations[i]] = v
+				continue
+			}
+		}
+		delete(result, BuildAnnotations[i])
 	}
 	return result
 }
