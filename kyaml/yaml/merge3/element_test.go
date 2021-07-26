@@ -1469,11 +1469,11 @@ spec:
           protocol: UDP
           name: original
         - containerPort: 8080
-          protocol: HTTP
-          name: local
-        - containerPort: 8080
           name: updated
           protocol: TCP
+        - containerPort: 8080
+          protocol: HTTP
+          name: local
 `},
 
 	{

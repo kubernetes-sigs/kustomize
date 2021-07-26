@@ -310,64 +310,134 @@ func (l Walker) elementKey() (string, error) {
 // Return value slice is ordered using the original ordering from the elements, where
 // elements missing from earlier sources appear later.
 func (l Walker) elementValues(keys []string) [][]string {
-	// use slice to to keep elements in the original order
-	var returnValues [][]string
-	var seen sets.StringList
+	returnValues := make([][]string, 0)
 
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
-		if src == nil {
+	// Start by adding the elements from the destination (index 0)
+	src := l.Sources[0]
+	items, _ := src.ElementValuesList(keys)
+	for _, value := range items {
+		if len(value) == 0 {
 			continue
 		}
+		returnValues = append(returnValues, value)
+	}
 
-		// add the value of the field for each element
-		// don't check error, we know this is a list node
-		values, _ := src.ElementValuesList(keys)
-		for _, s := range values {
-			if len(s) == 0 || seen.Has(s) {
+	// Iterate through each of the remaining sources and update returnValues by appending, prepending, and reordering
+	patchSources := l.Sources[1:]
+	for _, src := range patchSources {
+		items, _ = src.ElementValuesList(keys)
+		var previous []string
+		for _, value := range items {
+			if len(value) == 0 {
 				continue
 			}
-			returnValues = append(returnValues, s)
-			seen = seen.Insert(s)
+
+			// Attempt to locate this value in returnValues
+			i := indexOf(returnValues, value)
+
+			if previous == nil {
+				// If the value dost not yet exist and there is no previous value, then add it to the beginning or end
+				// of returnValues, depending on ListIncreaseDirection
+				if i == -1 {
+					if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+						returnValues = append([][]string{value}, returnValues...)
+					} else {
+						returnValues = append(returnValues, value)
+					}
+				}
+			} else {
+				// If there is a previous value and this value already exists in returnValues, remove it and reinsert
+				// it at the position directly after the previous value. If the value does not yet exist in
+				// returnValues, insert it directly after the previous value.
+				if i >= 0 {
+					returnValues = append(returnValues[:i], returnValues[i+1:]...)
+				}
+				p := indexOf(returnValues, previous)
+				returnValues = append(returnValues[:p+1], append([][]string{value}, returnValues[p+1:]...)...)
+			}
+
+			// Keep track of the previous value within this source, so that subsequent values can be inserted in
+			// the correct position
+			previous = value
 		}
 	}
+
 	return returnValues
 }
 
 // elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
 func (l Walker) elementPrimitiveValues() [][]string {
-	// use slice to to keep elements in the original order
-	var returnValues [][]string
-	seen := sets.String{}
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
-		if src == nil {
-			continue
-		}
+	returnValues := make([][]string, 0)
 
-		// add the value of the field for each element
-		// don't check error, we know this is a list node
-		for _, item := range src.YNode().Content {
-			if seen.Has(item.Value) {
-				continue
+	// Start by adding the elements from the destination (index 0)
+	src := l.Sources[0]
+	items := src.YNode().Content
+	for _, item := range items {
+		value := []string{item.Value}
+		returnValues = append(returnValues, value)
+	}
+
+	// Iterate through each of the remaining sources and update returnValues by appending, prepending, and reordering
+	patchSources := l.Sources[1:]
+	for _, src := range patchSources {
+		items = src.YNode().Content
+		var previous []string
+		for _, item := range items {
+			value := []string{item.Value}
+			// Attempt to locate this value in returnValues
+			i := indexOf(returnValues, value)
+
+			if previous == nil {
+				// If the value dost not yet exist and there is no previous value, then add it to the beginning or end
+				// of returnValues, depending on ListIncreaseDirection
+				if i == -1 {
+					if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
+						returnValues = append([][]string{value}, returnValues...)
+					} else {
+						returnValues = append(returnValues, value)
+					}
+				}
+			} else {
+				// If there is a previous value and this value already exists in returnValues, remove it and reinsert
+				// it at the position directly after the previous value. If the value does not yet exist in
+				// returnValues, insert it directly after the previous value.
+				if i >= 0 {
+					returnValues = append(returnValues[:i], returnValues[i+1:]...)
+				}
+				p := indexOf(returnValues, previous)
+				returnValues = append(returnValues[:p+1], append([][]string{value}, returnValues[p+1:]...)...)
 			}
-			returnValues = append(returnValues, []string{item.Value})
-			seen.Insert(item.Value)
+
+			// Keep track of the previous value within this source, so that subsequent values can be inserted in
+			// the correct position
+			previous = value
 		}
 	}
+
 	return returnValues
+}
+
+func indexOf(values [][]string, valueToFind []string) int {
+	if valueToFind != nil {
+		for i, s := range values {
+			if isStringSliceEqual(s, valueToFind) {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+func isStringSliceEqual(s, t []string) bool {
+	if len(s) != len(t) {
+		return false
+	}
+	for i := range s {
+		if s[i] != t[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // fieldValue returns a slice containing each source's value for fieldName
