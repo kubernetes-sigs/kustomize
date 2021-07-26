@@ -5,6 +5,7 @@ package kio_test
 
 import (
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -534,6 +535,11 @@ func testOnDiskAndOnMem(t *testing.T, files []mockFile, f func(t *testing.T, pat
 		f(t, "./", nil)
 		f(t, s.Root, nil)
 	})
+
+	// TODO: Once fsnode supports Windows, we should also run the tests below.
+	if runtime.GOOS == "windows" {
+		return
+	}
 
 	t.Run("on_mem", func(t *testing.T) {
 		fs := filesys.MakeFsInMemory()
