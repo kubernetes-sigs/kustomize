@@ -6,7 +6,9 @@ package kio_test
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -282,7 +284,10 @@ metadata:
 
 func testWriterOnDiskAndOnMem(t *testing.T, f func(t *testing.T, fs filesys.FileSystem)) {
 	t.Run("on_disk", func(t *testing.T) { f(t, filesys.MakeFsOnDisk()) })
-	t.Run("on_mem", func(t *testing.T) { f(t, filesys.MakeFsInMemory()) })
+	// TODO: Once fsnode supports Windows, these tests should also be run.
+	if runtime.GOOS != "windows" {
+		t.Run("on_mem", func(t *testing.T) { f(t, filesys.MakeFsInMemory()) })
+	}
 }
 
 func getWriterInputs(t *testing.T, mockFS filesys.FileSystem) (string, *yaml.RNode, *yaml.RNode, *yaml.RNode, func()) {
@@ -312,8 +317,9 @@ metadata:
 `)
 	require.NoError(t, err)
 
+	// These two lines are similar to calling ioutil.TempDir, but we don't actually create any directory.
 	rand.Seed(time.Now().Unix())
-	path := fmt.Sprintf("/tmp/kyaml-test%d", rand.Int31())
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("kyaml-test%d", rand.Int31()))
 	require.NoError(t, mockFS.MkdirAll(filepath.Join(path, "a")))
 	return path, node1, node2, node3, func() { require.NoError(t, mockFS.RemoveAll(path)) }
 }
