@@ -32,6 +32,7 @@ will be reflected in the Kubernetes release notes.
 | < v1.14 | n/a |
 | v1.14-v1.20 | v2.0.3 |
 | v1.21 | v4.0.5 |
+| v1.22 | v4.2.0 |
 
 [v2.0.3]: /../../tree/v2.0.3
 [#2506]: https://github.com/kubernetes-sigs/kustomize/issues/2506
