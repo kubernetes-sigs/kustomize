@@ -4,6 +4,8 @@
 package imagetag
 
 import (
+	"regexp"
+
 	"sigs.k8s.io/kustomize/api/image"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -23,6 +25,15 @@ func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	value := rn.YNode().Value
+
+	// RegexpName are preferred
+	if u.ImageTag.RegexpName != "" && u.ImageTag.NewRegexpName != "" {
+		re, err := regexp.Compile(u.ImageTag.RegexpName)
+		if err == nil {
+			name := re.ReplaceAll([]byte(value), []byte(u.ImageTag.NewRegexpName))
+			return rn.Pipe(yaml.FieldSetter{StringValue: string(name)})
+		}
+	}
 
 	if !image.IsImageMatched(value, u.ImageTag.Name) {
 		return rn, nil

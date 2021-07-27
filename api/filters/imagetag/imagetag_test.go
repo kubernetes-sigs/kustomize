@@ -658,6 +658,42 @@ spec:
 				},
 			},
 		},
+
+		"multiple matches by regexpName": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  containers:
+  - image: hub.my.com/nginx:1.2.1
+  - image: not_nginx@54321
+  - image: hub.my.com/redis:2.3.4
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  containers:
+  - image: hub.you.com/ci/nginx:1.2.1
+  - image: not_nginx@54321
+  - image: hub.you.com/ci/redis:2.3.4
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					RegexpName:    "hub.my.com/",
+					NewRegexpName: "hub.you.com/ci/",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/containers/image",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {

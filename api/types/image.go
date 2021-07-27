@@ -18,4 +18,10 @@ type Image struct {
 	// Digest is the value used to replace the original image tag.
 	// If digest is present NewTag value is ignored.
 	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
+
+	// RegexpName is a regexp string match image name.
+	RegexpName string `json:"regexpName,omitempty" yaml:"regexpName,omitempty"`
+
+	// NewRegexpName is the value used to regexp replace the original name.
+	NewRegexpName string `json:"newRegexpName,omitempty" yaml:"newRegexpName,omitempty"`
 }
