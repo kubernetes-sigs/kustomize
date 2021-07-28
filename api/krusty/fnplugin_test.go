@@ -63,7 +63,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    config.kubernetes.io/path: deployment_nginx.yaml
     tshirt-size: small
   labels:
     app: nginx
@@ -146,8 +145,6 @@ type: Opaque
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
-  annotations:
-    config.kubernetes.io/path: config/demo-budget_poddisruptionbudget.yaml
   labels:
     app: cockroachdb
     name: demo
@@ -162,8 +159,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    config.kubernetes.io/path: config/demo-public_service.yaml
   labels:
     app: cockroachdb
     name: demo
@@ -184,7 +179,6 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    config.kubernetes.io/path: config/demo_service.yaml
     prometheus.io/path: _status/vars
     prometheus.io/port: "8080"
     prometheus.io/scrape: "true"
@@ -209,8 +203,6 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  annotations:
-    config.kubernetes.io/path: config/demo_statefulset.yaml
   labels:
     app: cockroachdb
     name: demo
@@ -383,7 +375,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    config.kubernetes.io/path: deployment_nginx.yaml
     tshirt-size: small
   labels:
     app: nginx
@@ -450,8 +441,6 @@ data:
 apiVersion: v1
 kind: Namespace
 metadata:
-  annotations:
-    config.kubernetes.io/path: namespace_my-namespace.yaml
   labels:
     my-ns-name: function-test
   name: my-namespace
@@ -459,8 +448,6 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  annotations:
-    config.kubernetes.io/path: namespace_another-namespace.yaml
   labels:
     my-ns-name: function-test
   name: another-namespace
@@ -508,8 +495,6 @@ data:
   value: value
 kind: ConfigMap
 metadata:
-  annotations:
-    config.kubernetes.io/path: configmap_env.yaml
   name: env
 `)
 }
