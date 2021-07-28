@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
@@ -35,6 +36,10 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationAllowKindChange,
 	utils.BuildAnnotationsRefBy,
 	utils.BuildAnnotationsGenOptions,
+
+	kioutil.PathAnnotation,
+	kioutil.IndexAnnotation,
+	kioutil.SeqIndentAnnotation,
 }
 
 func (r *Resource) ResetRNode(incoming *Resource) {
