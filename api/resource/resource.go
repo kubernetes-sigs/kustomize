@@ -35,7 +35,8 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationAllowNameChange,
 	utils.BuildAnnotationAllowKindChange,
 	utils.BuildAnnotationsRefBy,
-	utils.BuildAnnotationsGenOptions,
+	utils.BuildAnnotationsGenBehavior,
+	utils.BuildAnnotationsGenAddHashSuffix,
 
 	kioutil.PathAnnotation,
 	kioutil.IndexAnnotation,
@@ -246,32 +247,36 @@ func (r *Resource) setPreviousId(ns string, n string, k string) *Resource {
 
 // AllowNameChange allows name changes to the resource.
 func (r *Resource) AllowNameChange() {
-	annotations := r.GetAnnotations()
-	annotations[utils.BuildAnnotationAllowNameChange] = utils.Allowed
-	if err := r.SetAnnotations(annotations); err != nil {
-		panic(err)
-	}
+	r.enable(utils.BuildAnnotationAllowNameChange)
 }
 
+// NameChangeAllowed checks if a patch resource is allowed to change another resource's name.
 func (r *Resource) NameChangeAllowed() bool {
-	annotations := r.GetAnnotations()
-	v, ok := annotations[utils.BuildAnnotationAllowNameChange]
-	return ok && v == utils.Allowed
+	return r.isEnabled(utils.BuildAnnotationAllowNameChange)
 }
 
 // AllowKindChange allows kind changes to the resource.
 func (r *Resource) AllowKindChange() {
+	r.enable(utils.BuildAnnotationAllowKindChange)
+}
+
+// KindChangeAllowed checks if a patch resource is allowed to change another resource's kind.
+func (r *Resource) KindChangeAllowed() bool {
+	return r.isEnabled(utils.BuildAnnotationAllowKindChange)
+}
+
+func (r *Resource) isEnabled(annoKey string) bool {
 	annotations := r.GetAnnotations()
-	annotations[utils.BuildAnnotationAllowKindChange] = utils.Allowed
+	v, ok := annotations[annoKey]
+	return ok && v == utils.Enabled
+}
+
+func (r *Resource) enable(annoKey string) {
+	annotations := r.GetAnnotations()
+	annotations[annoKey] = utils.Enabled
 	if err := r.SetAnnotations(annotations); err != nil {
 		panic(err)
 	}
-}
-
-func (r *Resource) KindChangeAllowed() bool {
-	annotations := r.GetAnnotations()
-	v, ok := annotations[utils.BuildAnnotationAllowKindChange]
-	return ok && v == utils.Allowed
 }
 
 // String returns resource as JSON.
@@ -302,43 +307,34 @@ func (r *Resource) MustYaml() string {
 	return string(yml)
 }
 
-func (r *Resource) getGenArgs() *types.GenArgs {
-	annotations := r.GetAnnotations()
-	if genOptsAnno, ok := annotations[utils.BuildAnnotationsGenOptions]; ok {
-		var genOpts types.GeneratorArgs
-		yaml.Unmarshal([]byte(genOptsAnno), &genOpts)
-		return types.NewGenArgs(&genOpts)
-	}
-	return nil
-}
-
-// SetOptions updates the generator options for the resource.
-func (r *Resource) SetOptions(o *types.GenArgs) {
-	annotations := r.GetAnnotations()
-	if o.IsNilOrEmpty() {
-		if len(annotations) == 0 {
-			return
-		}
-		if o == nil {
-			delete(annotations, utils.BuildAnnotationsGenOptions)
-		}
-	} else {
-		b, _ := o.AsYaml()
-		annotations[utils.BuildAnnotationsGenOptions] = string(b)
-	}
-	r.SetAnnotations(annotations)
-}
-
 // Behavior returns the behavior for the resource.
 func (r *Resource) Behavior() types.GenerationBehavior {
-	return r.getGenArgs().Behavior()
+	annotations := r.GetAnnotations()
+	if v, ok := annotations[utils.BuildAnnotationsGenBehavior]; ok {
+		return types.NewGenerationBehavior(v)
+	}
+	return types.NewGenerationBehavior("")
+}
+
+// SetBehavior sets the behavior for the resource.
+func (r *Resource) SetBehavior(behavior types.GenerationBehavior) {
+	annotations := r.GetAnnotations()
+	annotations[utils.BuildAnnotationsGenBehavior] = behavior.String()
+	if err := r.SetAnnotations(annotations); err != nil {
+		panic(err)
+	}
 }
 
 // NeedHashSuffix returns true if a resource content
 // hash should be appended to the name of the resource.
 func (r *Resource) NeedHashSuffix() bool {
-	options := r.getGenArgs()
-	return options != nil && options.ShouldAddHashSuffixToName()
+	return r.isEnabled(utils.BuildAnnotationsGenAddHashSuffix)
+}
+
+// EnableHashSuffix marks the resource as needing a content
+// hash to be appended to the name of the resource.
+func (r *Resource) EnableHashSuffix() {
+	r.enable(utils.BuildAnnotationsGenAddHashSuffix)
 }
 
 // OrgId returns the original, immutable ResId for the resource.

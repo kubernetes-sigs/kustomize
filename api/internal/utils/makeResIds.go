@@ -16,13 +16,14 @@ const (
 	BuildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
 	BuildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
 	BuildAnnotationsRefBy             = konfig.ConfigAnnoDomain + "/refBy"
-	BuildAnnotationsGenOptions        = konfig.ConfigAnnoDomain + "/generatorOptions"
+	BuildAnnotationsGenBehavior       = konfig.ConfigAnnoDomain + "/generatorBehavior"
+	BuildAnnotationsGenAddHashSuffix  = konfig.ConfigAnnoDomain + "/needsHashSuffix"
 
 	// the following are only for patches, to specify whether they can change names
 	// and kinds of their targets
 	BuildAnnotationAllowNameChange = konfig.ConfigAnnoDomain + "/allowNameChange"
 	BuildAnnotationAllowKindChange = konfig.ConfigAnnoDomain + "/allowKindChange"
-	Allowed                        = "allowed"
+	Enabled                        = "enabled"
 )
 
 // MakeResIds returns all of an RNode's current and previous Ids
