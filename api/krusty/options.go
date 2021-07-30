@@ -32,6 +32,9 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// Parse yaml in strict mode
+	UniqueKeys bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -42,6 +45,7 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         types.DisabledPluginConfig(),
+		UniqueKeys:           true,
 	}
 }
 

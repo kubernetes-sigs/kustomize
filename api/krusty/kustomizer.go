@@ -4,6 +4,7 @@
 package krusty
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 
@@ -18,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Kustomizer performs kustomizations.
@@ -57,6 +59,15 @@ func (b *Kustomizer) Run(
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
 		lr = fLdr.RestrictionRootOnly
 	}
+
+	if !b.options.UniqueKeys {
+		yaml.Unmarshal = func(in []byte, out interface{}) (err error) {
+			dec := yaml.NewDecoder(bytes.NewBuffer(in))
+			dec.DisableUniqueKeys(true)
+			return dec.Decode(out)
+		}
+	}
+
 	ldr, err := fLdr.NewLoader(lr, path, fSys)
 	if err != nil {
 		return nil, err

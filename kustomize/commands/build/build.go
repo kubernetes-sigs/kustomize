@@ -24,6 +24,7 @@ var theFlags struct {
 		plugins        bool
 		managedByLabel bool
 		helm           bool
+		uniqueKeys     bool
 	}
 	helmCommand    string
 	loadRestrictor string
@@ -77,6 +78,7 @@ func NewCmdBuild(
 			k := krusty.MakeKustomizer(
 				HonorKustomizeFlags(krusty.MakeDefaultOptions()),
 			)
+
 			m, err := k.Run(fSys, theArgs.kustomizationPath)
 			if err != nil {
 				return err
@@ -104,6 +106,7 @@ func NewCmdBuild(
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
+	AddFlagDisableStrictParse(cmd.Flags())
 	AddFlagEnableHelm(cmd.Flags())
 	return cmd
 }
@@ -131,6 +134,7 @@ func Validate(args []string) error {
 func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
 	kOpts.DoLegacyResourceSort = getFlagReorderOutput() == legacy
 	kOpts.LoadRestrictions = getFlagLoadRestrictorValue()
+	kOpts.UniqueKeys = isUniqueKeysEnabled()
 	if theFlags.enable.plugins {
 		c := types.EnabledPluginConfig(types.BploUseStaticallyLinked)
 		c.FnpLoadingOptions = theFlags.fnOptions
