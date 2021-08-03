@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestByteReader(t *testing.T) {
@@ -805,6 +806,84 @@ items:
 			}
 		})
 	}
+}
+
+// This test is just an exploration of the low level (go-yaml)
+// representation of a small doc with an anchor. The anchor
+// structure is there, in the sense that an alias pointer is
+// readily available when a node's kind is an AliasNode.
+// That is, the anchor mapping has already been recognized.
+// However, the github.com/go-yaml/yaml/encoder.go code doesn't
+// appear to have an option to perform anchor replacements when
+// encoding (instead it emits the anchor definitions and
+// references, which is not a bad thing but not desired here).
+func TestByteReader_AnchorBehavior(t *testing.T) {
+	const input = `
+data:
+  color: &color-used blue
+  feeling: *color-used
+`
+	expected := strings.TrimSpace(`
+data:
+  color: &color-used blue
+  feeling: *color-used
+`)
+	var rNode *yaml.RNode
+	{
+		rNodes, err := FromBytes([]byte(input))
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(rNodes))
+		rNode = rNodes[0]
+	}
+	// Confirm internal representation.
+	{
+		yNode := rNode.YNode()
+
+		// The high level object is a map of "data" to some value.
+		assert.Equal(t, yaml.NodeTagMap, yNode.Tag)
+
+		yNodes := yNode.Content
+		assert.Equal(t, 2, len(yNodes))
+
+		// Confirm that the key is "data".
+		assert.Equal(t, yaml.NodeTagString, yNodes[0].Tag)
+		assert.Equal(t, "data", yNodes[0].Value)
+
+		assert.Equal(t, yaml.NodeTagMap, yNodes[1].Tag)
+
+		// The value of the "data" key.
+		yNodes = yNodes[1].Content
+		// Expect two name-value pairs.
+		assert.Equal(t, 4, len(yNodes))
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[0].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[0].Tag)
+		assert.Equal(t, "color", yNodes[0].Value)
+		assert.Equal(t, "", yNodes[0].Anchor)
+		assert.Nil(t, yNodes[0].Alias)
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[1].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[1].Tag)
+		assert.Equal(t, "blue", yNodes[1].Value)
+		assert.Equal(t, "color-used", yNodes[1].Anchor)
+		assert.Nil(t, yNodes[1].Alias)
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[2].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[2].Tag)
+		assert.Equal(t, "feeling", yNodes[2].Value)
+		assert.Equal(t, "", yNodes[2].Anchor)
+		assert.Nil(t, yNodes[2].Alias)
+
+		assert.Equal(t, yaml.AliasNode, yNodes[3].Kind)
+		assert.Equal(t, "", yNodes[3].Tag)
+		assert.Equal(t, "color-used", yNodes[3].Value)
+		assert.Equal(t, "", yNodes[3].Anchor)
+		assert.NotNil(t, yNodes[3].Alias)
+	}
+
+	yaml, err := rNode.String()
+	assert.NoError(t, err)
+	assert.Equal(t, expected, strings.TrimSpace(yaml))
 }
 
 // TestByteReader_AddSeqIndentAnnotation tests if the internal.config.kubernetes.io/seqindent
