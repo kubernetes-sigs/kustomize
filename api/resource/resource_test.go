@@ -306,6 +306,266 @@ spec:
 `, string(bytes))
 }
 
+func TestApplySmPatchShouldOutputListItemsInCorrectOrder(t *testing.T) {
+	cases := []struct {
+		name           string
+		skip           bool
+		patch          string
+		expectedOutput string
+	}{
+		{
+			name: "Order should not change when patch has foo only",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+    - name: foo
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+  - name: foo
+  - name: bar
+`,
+		},
+		{
+			name: "Order changes when patch has bar only",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+    - name: bar
+`,
+			// This test records current behavior, but this behavior might be undesirable.
+			// If so, feel free to change the test to pass with some improved algorithm.
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+  - name: bar
+  - name: foo
+`,
+		},
+		{
+			name: "Order should not change and should include a new item at the beginning when patch has a new list item",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+    - name: baz
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+  - name: baz
+  - name: foo
+  - name: bar
+`,
+		},
+		{
+			name: "Order should not change when patch has foo and bar in same order",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+    - name: foo
+    - name: bar
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+  - name: foo
+  - name: bar
+`,
+		},
+		{
+			name: "Order should change when patch has foo and bar in different order",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+    - name: bar
+    - name: foo
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+  - name: bar
+  - name: foo
+`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.skip {
+				t.Skip()
+			}
+
+			resource, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+    - name: foo
+    - name: bar
+`))
+			assert.NoError(t, err)
+
+			patch, err := factory.FromBytes([]byte(tc.patch))
+			assert.NoError(t, err)
+			assert.NoError(t, resource.ApplySmPatch(patch))
+			bytes, err := resource.AsYAML()
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedOutput, string(bytes))
+		})
+	}
+}
+
+func TestApplySmPatchShouldOutputPrimitiveListItemsInCorrectOrder(t *testing.T) {
+	cases := []struct {
+		name           string
+		skip           bool
+		patch          string
+		expectedOutput string
+	}{
+		{
+			name: "Order should not change when patch has foo only",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  finalizers: ["foo"]
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  finalizers:
+  - foo
+  - bar
+  name: test
+`,
+		},
+		{
+			name: "Order should not change when patch has bar only",
+			skip: true, // TODO: This test should pass but fails currently. Fix the problem and unskip this test
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+ finalizers: ["bar"]
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+ finalizers:
+ - foo
+ - bar
+ name: test
+`,
+		},
+		{
+			name: "Order should not change and should include a new item at the beginning when patch has a new list item",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  finalizers: ["baz"]
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  finalizers:
+  - baz
+  - foo
+  - bar
+  name: test
+`,
+		},
+		{
+			name: "Order should not change when patch has foo and bar in same order",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  finalizers: ["foo", "bar"]
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  finalizers:
+  - foo
+  - bar
+  name: test
+`,
+		},
+		{
+			name: "Order should change when patch has foo and bar in different order",
+			patch: `apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  finalizers: ["bar", "foo"]
+`,
+			expectedOutput: `apiVersion: v1
+kind: Pod
+metadata:
+  finalizers:
+  - bar
+  - foo
+  name: test
+`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.skip {
+				t.Skip()
+			}
+
+			resource, err := factory.FromBytes([]byte(`
+kind: Pod
+metadata:
+  name: test
+  finalizers: ["foo", "bar"]
+`))
+			assert.NoError(t, err)
+
+			patch, err := factory.FromBytes([]byte(tc.patch))
+			assert.NoError(t, err)
+			assert.NoError(t, resource.ApplySmPatch(patch))
+			bytes, err := resource.AsYAML()
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedOutput, string(bytes))
+		})
+	}
+}
+
 func TestMergeDataMapFrom(t *testing.T) {
 	resource, err := factory.FromBytes([]byte(`
 apiVersion: v1
