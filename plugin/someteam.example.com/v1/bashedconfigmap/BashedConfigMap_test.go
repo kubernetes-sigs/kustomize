@@ -29,8 +29,8 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    internal.config.kubernetes.io/generatorOptions: |
-      options: {}
+    internal.config.kubernetes.io/generatorBehavior: unspecified
+    internal.config.kubernetes.io/needsHashSuffix: enabled
   name: example-configmap-test
 `)
 	if m.Resources()[0].NeedHashSuffix() != true {
