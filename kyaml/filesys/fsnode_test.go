@@ -157,9 +157,13 @@ func runBasicOperations(
 		if string(stuff) != both {
 			t.Fatalf("%s; unexpected content '%s', expected '%s'", c.what, stuff, both)
 		}
-		if err := fSys.WriteFile(c.path, []byte(shortContent)); err != nil {
+
+		content := []byte(shortContent)
+		if err := fSys.WriteFile(c.path, content); err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
 		}
+		// This ensures that modifying the original slice does not change the contents of the file.
+		content[0] = '@'
 		stuff, err = fSys.ReadFile(c.path)
 		if err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
