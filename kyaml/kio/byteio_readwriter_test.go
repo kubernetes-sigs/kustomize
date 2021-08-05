@@ -289,6 +289,34 @@ functionConfig:
 `,
 			instance: kio.ByteReadWriter{FunctionConfig: yaml.MustParse(`c: d`)},
 		},
+		{
+			name: "anchors_not_inflated",
+			input: `
+kind: ConfigMap
+metadata:
+  name: foo
+data:
+  color: &color-used blue
+  feeling: *color-used
+`,
+			// If YAML anchors were automagically inflated,
+			// the expectedOutput would be something like
+			//
+			// kind: ConfigMap
+			// metadata:
+			//   name: foo
+			// data:
+			//   color: blue
+			//   feeling: blue
+			expectedOutput: `
+kind: ConfigMap
+metadata:
+  name: foo
+data:
+  color: &color-used blue
+  feeling: *color-used
+`,
+		},
 	}
 
 	for i := range testCases {
