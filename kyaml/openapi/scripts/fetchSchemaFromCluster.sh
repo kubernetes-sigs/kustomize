@@ -8,7 +8,7 @@ VERSION=$1
 
 cp $HOME/.kube/config /tmp/kubeconfig.txt | true
 $MYGOBIN/kind create cluster --image kindest/node:$VERSION --name=getopenapidata
-$MYGOBIN/kpt live  fetch-k8s-schema  --pretty-print > /tmp/new_swagger.json
+$MYGOBIN/kustomize openapi fetch > /tmp/new_swagger.json
 $MYGOBIN/kind delete cluster --name=getopenapidata
 cp /tmp/kubeconfig.txt $HOME/.kube/config | true
 mkdir -p kubernetesapi/"${VERSION//.}"
