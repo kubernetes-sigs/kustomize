@@ -16,7 +16,7 @@ func TestOpenApiFieldBasicUsage(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
 openapi:
-  version: v1.20.4
+  version: v1.21.2
 resources:
 - deployment.yaml
 `)
@@ -44,7 +44,8 @@ spec:
       containers:
       - image: whatever
 `)
-	assert.Equal(t, "v1204", openapi.GetSchemaVersion())
+	assert.Equal(t, "v1212", openapi.GetSchemaVersion())
+	openapi.ResetOpenAPI()
 }
 
 func TestOpenApiFieldNotBuiltin(t *testing.T) {
@@ -71,6 +72,7 @@ spec:
 	if err == nil {
 		t.Fatalf("expected an error")
 	}
+	openapi.ResetOpenAPI()
 }
 
 func TestOpenApiFieldDefaultVersion(t *testing.T) {
@@ -104,4 +106,5 @@ spec:
       - image: whatever
 `)
 	assert.Equal(t, kubernetesapi.DefaultOpenAPI, openapi.GetSchemaVersion())
+	openapi.ResetOpenAPI()
 }
