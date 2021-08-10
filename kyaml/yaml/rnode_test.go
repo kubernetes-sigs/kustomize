@@ -696,6 +696,31 @@ spec:
 	}
 }
 
+func TestDeAnchor(t *testing.T) {
+	rn, err := Parse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wildcard
+data:
+  color: &color-used blue
+  feeling: *color-used
+`)
+	assert.NoError(t, err)
+	assert.NoError(t, rn.DeAnchor())
+	actual, err := rn.String()
+	assert.NoError(t, err)
+	assert.Equal(t, strings.TrimSpace(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wildcard
+data:
+  color: blue
+  feeling: blue
+`), strings.TrimSpace(actual))
+}
+
 func TestRNode_UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
 		testName string
