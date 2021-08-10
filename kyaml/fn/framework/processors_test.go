@@ -5,6 +5,7 @@ package framework_test
 
 import (
 	"bytes"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -274,6 +275,57 @@ functionConfig:
     value: World
     a: bar
 `), strings.TrimSpace(out.String()))
+}
+
+func TestTemplateProcessor_ContainerPatchTemplates_MultipleWorkloadKinds(t *testing.T) {
+	type API struct {
+		Spec struct {
+			Key   string `json:"key" yaml:"key"`
+			Value string `json:"value" yaml:"value"`
+			A     string `json:"a" yaml:"a"`
+		}
+	}
+	config := &API{}
+	p := framework.TemplateProcessor{
+		TemplateData: config,
+		ResourceTemplates: []framework.ResourceTemplate{{
+			Templates: parser.TemplateFiles("testdata/template-processor/templates/container-sources"),
+		}},
+		PatchTemplates: []framework.PatchTemplate{
+			&framework.ContainerPatchTemplate{
+				Templates: parser.TemplateFiles("testdata/template-processor/container-patches"),
+			},
+		},
+	}
+
+	out := new(bytes.Buffer)
+	rw := &kio.ByteReadWriter{Writer: out, Reader: bytes.NewBufferString(`
+apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items: []
+functionConfig:
+  spec:
+    key: Hello
+    value: World
+    a: bar
+`)}
+
+	require.NoError(t, framework.Execute(p, rw))
+	resources, err := (&kio.ByteReader{Reader: out}).Read()
+	require.NoError(t, err)
+	envRegex := regexp.MustCompile(strings.TrimSpace(`
+\s+ env:
+\s+ - name: EXISTING
+\s+   value: variable
+\s+ - name: Hello
+\s+   value: World
+`))
+	require.Equal(t, 9, len(resources))
+	for i, r := range resources {
+		t.Run(r.GetKind(), func(t *testing.T) {
+			assert.Regexp(t, envRegex, resources[i].MustString())
+		})
+	}
 }
 
 func TestSimpleProcessor_Process_loads_config(t *testing.T) {
