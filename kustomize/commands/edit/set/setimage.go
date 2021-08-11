@@ -31,6 +31,7 @@ var (
 	errImageInvalidArgs = errors.New(`invalid format of image, use one of the following options:
 - <image>=<newimage>:<newtag>
 - <image>=<newimage>@<digest>
+- <image>=<newimage>:<newtag>@<digest>
 - <image>=<newimage>
 - <image>:<newtag>
 - <image>@<digest>`)
@@ -210,7 +211,8 @@ func parse(arg string) (types.Image, error) {
 
 	// matches if there is an image name to overwrite
 	// <image>=<new-image><:|@><new-tag>
-	if s := strings.Split(arg, separator); len(s) == 2 {
+	s := strings.Split(arg, separator)
+	if len(s) == 2 {
 		p, err := parseOverwrite(s[1], true)
 		return types.Image{
 			Name:    s[0],
@@ -235,10 +237,21 @@ func parse(arg string) (types.Image, error) {
 func parseOverwrite(arg string, overwriteImage bool) (overwrite, error) {
 	// match <image>@<digest>
 	if d := strings.Split(arg, "@"); len(d) > 1 {
+		if t := pattern.FindStringSubmatch(d[0]); len(t) == 3 {
+			name := t[1]
+			tag := t[2]
+
+			return overwrite{
+				name:   name,
+				digest: d[1],
+				tag:    tag,
+			}, nil
+		}
 		return overwrite{
 			name:   d[0],
 			digest: d[1],
 		}, nil
+
 	}
 
 	// match <image>:<tag>
