@@ -4,6 +4,7 @@
 # Makefile for kustomize CLI and API.
 
 SHELL := /usr/bin/env bash
+UNAME := $(shell uname | tr [:upper:] [:lower:])
 MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
@@ -289,8 +290,8 @@ $(MYGOBIN)/kubeval:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz; \
-		tar xf kubeval-linux-amd64.tar.gz; \
+		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-$(UNAME)-amd64.tar.gz; \
+		tar xf kubeval-$(UNAME)-amd64.tar.gz; \
 		mv kubeval $(MYGOBIN); \
 		rm -rf $$d; \
 	)
@@ -304,10 +305,10 @@ $(MYGOBIN)/helmV2:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v2.13.1-linux-amd64.tar.gz; \
+		tgzFile=helm-v2.13.1-$(UNAME)-amd64.tar.gz; \
 		wget https://storage.googleapis.com/kubernetes-helm/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
-		mv linux-amd64/helm $(MYGOBIN)/helmV2; \
+		mv $(UNAME)-amd64/helm $(MYGOBIN)/helmV2; \
 		rm -rf $$d \
 	)
 
@@ -317,10 +318,10 @@ $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.5.3-linux-amd64.tar.gz; \
+		tgzFile=helm-v3.5.3-$(UNAME)-amd64.tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
-		mv linux-amd64/helm $(MYGOBIN)/helmV3; \
+		mv $(UNAME)-amd64/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
 
@@ -328,7 +329,7 @@ $(MYGOBIN)/kind:
 	( \
         set -e; \
         d=$(shell mktemp -d); cd $$d; \
-        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(shell uname)-amd64; \
+        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(UNAME)-amd64; \
         chmod +x ./kind; \
         mv ./kind $(MYGOBIN); \
         rm -rf $$d; \
