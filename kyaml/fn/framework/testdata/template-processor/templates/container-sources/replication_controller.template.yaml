@@ -1,0 +1,22 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: hello
+spec:
+  selector:
+    app: hello
+  template:
+    metadata:
+      name: hello
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: hello
+        image: nginx
+        env:
+        - name: EXISTING
+          value: variable
