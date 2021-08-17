@@ -168,8 +168,7 @@ func (cpt ContainerPatchTemplate) apply(matches []*yaml.RNode) error {
 	}
 
 	for i := range matches {
-		// TODO(knverey): Make this work for more Kinds and expose the helper for doing so.
-		containers, err := matches[i].Pipe(yaml.Lookup("spec", "template", "spec", "containers"))
+		containers, err := matches[i].Pipe(yaml.LookupFirstMatch(yaml.ConventionalContainerPaths))
 		if err != nil {
 			return errors.Wrap(err)
 		}

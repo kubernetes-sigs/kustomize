@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	. "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -722,6 +723,72 @@ j: k
 	assert.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
+}
+
+func TestLookupFirstMatch(t *testing.T) {
+	tests := []struct {
+		name     string
+		paths    [][]string
+		wantPath []string
+	}{
+		{
+			name:     "finds path that exists",
+			paths:    [][]string{{"spec", "jobTemplate", "spec", "template", "spec", "containers"}},
+			wantPath: []string{"spec", "jobTemplate", "spec", "template", "spec", "containers"},
+		},
+		{
+			name:     "chooses first path when multiple exist: containers example",
+			paths:    ConventionalContainerPaths,
+			wantPath: []string{"spec", "template", "spec", "containers"},
+		},
+		{
+			name: "chooses first path when multiple exist: annotations example",
+			paths: [][]string{
+				{"metadata", "annotations", "example.kustomize.io/new"},
+				{"metadata", "annotations", "example.kustomize.io/deprecated"},
+			},
+			wantPath: []string{"metadata", "annotations", "example.kustomize.io/new"},
+		},
+		{
+			name: "returns nil when path does not exist",
+			paths: [][]string{
+				{"metadata", "annotations", "example.kustomize.io/does-not-exist"},
+				{"metadata", "annotations", "example.kustomize.io/also-not-exist"},
+			},
+			wantPath: nil,
+		},
+	}
+	for _, tt := range tests {
+		s := `
+apiVersion: example.kustomize.io/v1
+kind: Custom
+metadata:
+  annotations:
+    example.kustomize.io/deprecated: foo
+    example.kustomize.io/new: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo
+`
+		resource := MustParse(s)
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := LookupFirstMatch(tt.paths).Filter(resource)
+			require.NoError(t, err)
+			if tt.wantPath != nil {
+				assert.Equal(t, tt.wantPath, result.FieldPath())
+			} else {
+				assert.Nil(t, result)
+			}
+		})
+	}
 }
 
 func TestFieldSetter(t *testing.T) {

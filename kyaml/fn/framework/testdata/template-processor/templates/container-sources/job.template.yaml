@@ -1,0 +1,16 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - name: hello
+        image: nginx
+        env:
+        - name: EXISTING
+          value: variable
