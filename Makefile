@@ -4,7 +4,8 @@
 # Makefile for kustomize CLI and API.
 
 SHELL := /usr/bin/env bash
-UNAME := $(shell uname | tr [:upper:] [:lower:])
+GOOS = $(shell go env GOOS)
+GOARCH = $(shell go env GOARCH)
 MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
@@ -290,8 +291,8 @@ $(MYGOBIN)/kubeval:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-$(UNAME)-amd64.tar.gz; \
-		tar xf kubeval-$(UNAME)-amd64.tar.gz; \
+		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-$(GOOS)-$(GOARCH).tar.gz; \
+		tar xf kubeval-$(GOOS)-$(GOARCH).tar.gz; \
 		mv kubeval $(MYGOBIN); \
 		rm -rf $$d; \
 	)
@@ -305,10 +306,10 @@ $(MYGOBIN)/helmV2:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v2.13.1-$(UNAME)-amd64.tar.gz; \
+		tgzFile=helm-v2.13.1-$(GOOS)-$(GOARCH).tar.gz; \
 		wget https://storage.googleapis.com/kubernetes-helm/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
-		mv $(UNAME)-amd64/helm $(MYGOBIN)/helmV2; \
+		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV2; \
 		rm -rf $$d \
 	)
 
@@ -318,10 +319,10 @@ $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.5.3-$(UNAME)-amd64.tar.gz; \
+		tgzFile=helm-v3.5.3-$(GOOS)-$(GOARCH).tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
-		mv $(UNAME)-amd64/helm $(MYGOBIN)/helmV3; \
+		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)
 
@@ -329,7 +330,7 @@ $(MYGOBIN)/kind:
 	( \
         set -e; \
         d=$(shell mktemp -d); cd $$d; \
-        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(UNAME)-amd64; \
+        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(GOOS)-$(GOARCH); \
         chmod +x ./kind; \
         mv ./kind $(MYGOBIN); \
         rm -rf $$d; \
@@ -340,10 +341,10 @@ $(MYGOBIN)/gh:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=gh_1.0.0_linux_amd64.tar.gz; \
+		tgzFile=gh_1.0.0_$(GOOS)_$(GOARCH).tar.gz; \
 		wget https://github.com/cli/cli/releases/download/v1.0.0/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
-		mv gh_1.0.0_linux_amd64/bin/gh  $(MYGOBIN)/gh; \
+		mv gh_1.0.0_$(GOOS)_$(GOARCH)/bin/gh  $(MYGOBIN)/gh; \
 		rm -rf $$d \
 	)
 
