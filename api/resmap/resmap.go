@@ -123,6 +123,10 @@ type ResMap interface {
 	// failing on any CurId collision.
 	AppendAll(ResMap) error
 
+	// AnnotateAll annotates all resources in the ResMap with
+	// the provided key value pair.
+	AnnotateAll(key string, value string) error
+
 	// AbsorbAll appends, replaces or merges the contents
 	// of another ResMap into self,
 	// allowing and sometimes demanding ID collisions.

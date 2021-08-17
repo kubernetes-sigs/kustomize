@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/yaml"
 )
@@ -262,7 +263,12 @@ func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) 
 	if err != nil {
 		return nil, err
 	}
-	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
+	m := ra.ResMap()
+	err = m.AnnotateAll(kioutil.PathAnnotation, kt.ldr.Root())
+	if err != nil {
+		return nil, err
+	}
+	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, m)
 }
 
 func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {

@@ -1,10 +1,16 @@
 package krusty_test
 
 import (
+	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/internal/utils"
+	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestFnExecGenerator(t *testing.T) {
@@ -80,6 +86,125 @@ spec:
       - image: nginx
         name: nginx
 `)
+}
+
+func TestFnExecGeneratorWithOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+	b := krusty.MakeKustomizer(&o)
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "kustomization.yaml"), []byte(`
+resources:
+- short_secret.yaml
+generators:
+- gener.yaml
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(prod, "kustomization.yaml"), []byte(`
+resources:
+- ../base
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "short_secret.yaml"), []byte(`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "exec.sh"), []byte(`#!/bin/sh
+
+cat <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+  annotations:
+    tshirt-size: small # this injects the resource reservations
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+EOF
+`)))
+	assert.NoError(t, os.Chmod(filepath.Join(base, "exec.sh"), 0777))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "gener.yaml"), []byte(`
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./exec.sh
+spec:
+`)))
+
+	m, err := b.Run(
+		fSys,
+		prod)
+	if utils.IsErrTimeout(err) {
+		// Don't fail on timeouts.
+		t.SkipNow()
+	}
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func skipIfNoDocker(t *testing.T) {

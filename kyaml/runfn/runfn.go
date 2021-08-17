@@ -507,7 +507,19 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		ef := &exec.Filter{Path: spec.Exec.Path}
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+
+		wd, _, err := kioutil.GetFileAnnotations(api)
+		if err != nil || wd == "" || wd == "/" {
+			wd = currentDir
+		}
+		ef := &exec.Filter{
+			Path: spec.Exec.Path,
+			WorkingDir: wd,
+		}
 
 		ef.FunctionConfig = api
 		ef.GlobalScope = r.GlobalScope

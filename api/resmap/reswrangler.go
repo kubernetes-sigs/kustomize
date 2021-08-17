@@ -88,6 +88,19 @@ func (m *resWrangler) append(res *resource.Resource) {
 	m.rList = append(m.rList, res)
 }
 
+// AnnotateAll implements ResMap
+func (m *resWrangler) AnnotateAll(key string, value string) error {
+	return m.ApplyFilter(annotations.Filter{
+		Annotations: map[string]string{
+			key: value,
+		},
+		FsSlice: []types.FieldSpec{{
+			Path:               "metadata/annotations",
+			CreateIfNotPresent: true,
+		}},
+	})
+}
+
 // Remove implements ResMap.
 func (m *resWrangler) Remove(adios resid.ResId) error {
 	var rList []*resource.Resource

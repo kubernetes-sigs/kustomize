@@ -19,6 +19,10 @@ type Filter struct {
 	// Args are the arguments to the executable
 	Args []string `yaml:"args,omitempty"`
 
+	// WorkingDir is the working directory that the executable
+	// should run in
+	WorkingDir string
+
 	runtimeutil.FunctionFilter
 }
 
@@ -28,6 +32,15 @@ func (c *Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 func (c *Filter) Run(reader io.Reader, writer io.Writer) error {
+	if c.WorkingDir != "" {
+		p, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		os.Chdir(c.WorkingDir)
+		defer os.Chdir(p)
+	}
+
 	cmd := exec.Command(c.Path, c.Args...)
 	cmd.Stdin = reader
 	cmd.Stdout = writer
