@@ -25,6 +25,10 @@ const (
 
 	// SeqIndentAnnotation records the sequence nodes indentation of the input resource
 	SeqIndentAnnotation AnnotationKey = "internal.config.kubernetes.io/seqindent"
+
+	// WorkingDirAnnotation records the directory of the kustomization that
+	// refers to the resource
+	WorkingDirAnnotation AnnotationKey = "internal.config.kubernetes.io/working-dir"
 )
 
 func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {

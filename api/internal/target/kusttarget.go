@@ -264,7 +264,7 @@ func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) 
 		return nil, err
 	}
 	m := ra.ResMap()
-	err = m.AnnotateAll(kioutil.PathAnnotation, kt.ldr.Root())
+	err = m.AnnotateAll(kioutil.WorkingDirAnnotation, kt.ldr.Root())
 	if err != nil {
 		return nil, err
 	}
@@ -300,12 +300,17 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]re
 		}
 		ra.AppendAll(rm)
 	}
-	ra, err := kt.accumulateResources(ra, transformerPaths, &resource.Origin{})
 
+	ra, err := kt.accumulateResources(ra, transformerPaths, &resource.Origin{})
 	if err != nil {
 		return nil, err
 	}
-	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, ra.ResMap())
+	m := ra.ResMap()
+	err = m.AnnotateAll(kioutil.WorkingDirAnnotation, kt.ldr.Root())
+	if err != nil {
+		return nil, err
+	}
+	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, m)
 }
 
 func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {

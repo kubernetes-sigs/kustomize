@@ -32,18 +32,12 @@ func (c *Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 func (c *Filter) Run(reader io.Reader, writer io.Writer) error {
-	if c.WorkingDir != "" {
-		p, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		os.Chdir(c.WorkingDir)
-		defer os.Chdir(p)
-	}
-
 	cmd := exec.Command(c.Path, c.Args...)
 	cmd.Stdin = reader
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
+	if c.WorkingDir != "" {
+		cmd.Dir = c.WorkingDir
+	}
 	return cmd.Run()
 }

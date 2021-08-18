@@ -7,17 +7,46 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/api/internal/utils"
-	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func TestFnExecGenerator(t *testing.T) {
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
-	th := kusttest_test.MakeHarness(t)
+const execFile = `#!/bin/sh
 
-	th.WriteK(".", `
+cat <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+  annotations:
+    tshirt-size: small # this injects the resource reservations
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+EOF
+`
+
+func TestFnExecGenerator(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	th.WriteK(tmpDir.String(), `
 resources:
 - short_secret.yaml
 generators:
@@ -25,7 +54,8 @@ generators:
 `)
 
 	// Create some additional resource just to make sure everything is added
-	th.WriteF("short_secret.yaml", `
+	th.WriteF(filepath.Join(tmpDir.String(), "short_secret.yaml"),
+		`
 apiVersion: v1
 kind: Secret
 metadata:
@@ -38,22 +68,25 @@ stringData:
     bootcmd:
     - mkdir /mnt/vda
 `)
+	th.WriteF(filepath.Join(tmpDir.String(), "exec.sh"), execFile)
 
-	th.WriteF("gener.yaml", `
+	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "exec.sh"), 0777))
+	th.WriteF(filepath.Join(tmpDir.String(), "gener.yaml"), `
 kind: executable
 metadata:
   name: demo
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: ./fnplugin_test/fnexectest.sh
+        path: ./exec.sh
 spec:
 `)
-	o := th.MakeOptionsPluginsEnabled()
-	o.PluginConfig.FnpLoadingOptions.EnableExec = true
-	m := th.Run(".", o)
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+
+	m := th.Run(tmpDir.String(), o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
   labels:
@@ -85,15 +118,16 @@ spec:
       containers:
       - image: nginx
         name: nginx
-`)
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestFnExecGeneratorWithOverlay(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
-	th := kusttest_test.MakeHarness(t)
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
 	o := th.MakeOptionsPluginsEnabled()
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
-	b := krusty.MakeKustomizer(&o)
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
 	assert.NoError(t, err)
@@ -101,17 +135,18 @@ func TestFnExecGeneratorWithOverlay(t *testing.T) {
 	prod := filepath.Join(tmpDir.String(), "prod")
 	assert.NoError(t, fSys.Mkdir(base))
 	assert.NoError(t, fSys.Mkdir(prod))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "kustomization.yaml"), []byte(`
+	th.WriteK(base, `
 resources:
 - short_secret.yaml
 generators:
 - gener.yaml
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(prod, "kustomization.yaml"), []byte(`
+`)
+	th.WriteK(prod, `
 resources:
 - ../base
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "short_secret.yaml"), []byte(`
+`)
+	th.WriteF(filepath.Join(base, "short_secret.yaml"),
+		`
 apiVersion: v1
 kind: Secret
 metadata:
@@ -123,34 +158,11 @@ stringData:
   userData: |
     bootcmd:
     - mkdir /mnt/vda
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "exec.sh"), []byte(`#!/bin/sh
+`)
+	th.WriteF(filepath.Join(base, "exec.sh"), execFile)
 
-cat <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-  labels:
-    app: nginx
-  annotations:
-    tshirt-size: small # this injects the resource reservations
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-EOF
-`)))
 	assert.NoError(t, os.Chmod(filepath.Join(base, "exec.sh"), 0777))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(base, "gener.yaml"), []byte(`
+	th.WriteF(filepath.Join(base, "gener.yaml"), `
 kind: executable
 metadata:
   name: demo
@@ -159,15 +171,9 @@ metadata:
       exec:
         path: ./exec.sh
 spec:
-`)))
+`)
 
-	m, err := b.Run(
-		fSys,
-		prod)
-	if utils.IsErrTimeout(err) {
-		// Don't fail on timeouts.
-		t.SkipNow()
-	}
+	m := th.Run(prod, o)
 	assert.NoError(t, err)
 	yml, err := m.AsYaml()
 	assert.NoError(t, err)

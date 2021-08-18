@@ -507,15 +507,11 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		currentDir, err := os.Getwd()
+		wd, err := getWorkingDirectory(api)
 		if err != nil {
 			return nil, err
 		}
 
-		wd, _, err := kioutil.GetFileAnnotations(api)
-		if err != nil || wd == "" || wd == "/" {
-			wd = currentDir
-		}
 		ef := &exec.Filter{
 			Path: spec.Exec.Path,
 			WorkingDir: wd,
@@ -529,4 +525,26 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	return nil, nil
+}
+
+func getWorkingDirectory(api *yaml.RNode) (string, error) {
+	annotations := api.GetAnnotations()
+	wd, ok := annotations[kioutil.WorkingDirAnnotation]
+	if !ok {
+		var err error
+		wd, err = os.Getwd()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		if !filepath.IsAbs(wd) || !path.IsAbs(wd) {
+			return "", errors.Errorf(
+				"relative working directory %s not allowed", wd)
+		}
+		if wd == "/" {
+			return "", errors.Errorf(
+				"root working directory '/' not allowed")
+		}
+	}
+	return wd, nil
 }

@@ -545,19 +545,6 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	}
 }
 
-// AnnotateAll implements ResMap
-func (m *resWrangler) AnnotateAll(key string, value string) error {
-	return m.ApplyFilter(annotations.Filter{
-		Annotations: map[string]string{
-			key: value,
-		},
-		FsSlice: []types.FieldSpec{{
-			Path:               "metadata/annotations",
-			CreateIfNotPresent: true,
-		}},
-	})
-}
-
 // Select returns a list of resources that
 // are selected by a Selector
 func (m *resWrangler) Select(s types.Selector) ([]*resource.Resource, error) {
