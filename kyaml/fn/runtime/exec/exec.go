@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -37,6 +39,14 @@ func (c *Filter) Run(reader io.Reader, writer io.Writer) error {
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
 	if c.WorkingDir != "" {
+		if !filepath.IsAbs(c.WorkingDir) {
+			return errors.Errorf(
+				"relative working directory %s not allowed", c.WorkingDir)
+		}
+		if c.WorkingDir == "/" {
+			return errors.Errorf(
+				"root working directory '/' not allowed")
+		}
 		cmd.Dir = c.WorkingDir
 	}
 	return cmd.Run()

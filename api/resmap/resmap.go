@@ -66,10 +66,6 @@ func (c *PluginHelpers) Validator() ifc.Validator {
 	return c.v
 }
 
-func (c *PluginHelpers) WorkingDir() string {
-	return c.pc.FnpLoadingOptions.WorkingDir
-}
-
 type GeneratorPlugin interface {
 	Generator
 	Configurable

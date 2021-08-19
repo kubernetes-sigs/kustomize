@@ -102,9 +102,8 @@ type RunFns struct {
 	// function in the list.
 	ContinueOnEmptyResult bool
 
-	// WorkDir specifies which working directory an exec function should run in.
-	// If this is empty, fall back to the current working directory.
-	WorkDir string
+	// WorkingDir specifies which working directory an exec function should run in.
+	WorkingDir string
 }
 
 // Execute runs the command
@@ -511,14 +510,13 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		wd, err := getWorkingDirectory(r.WorkDir)
-		if err != nil {
-			return nil, err
+		if r.WorkingDir == "" {
+			return nil, fmt.Errorf("no working directory set for exec function")
 		}
 
 		ef := &exec.Filter{
 			Path:       spec.Exec.Path,
-			WorkingDir: wd,
+			WorkingDir: r.WorkingDir,
 		}
 
 		ef.FunctionConfig = api
@@ -529,21 +527,4 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	return nil, nil
-}
-
-func getWorkingDirectory(wd string) (string, error) {
-	if wd == "" {
-		return os.Getwd()
-	}
-
-	if !filepath.IsAbs(wd) {
-		return "", errors.Errorf(
-			"relative working directory %s not allowed", wd)
-	}
-	if wd == "/" {
-		return "", errors.Errorf(
-			"root working directory '/' not allowed")
-	}
-
-	return wd, nil
 }

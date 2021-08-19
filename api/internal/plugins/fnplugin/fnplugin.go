@@ -79,6 +79,7 @@ func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
 			StorageMounts:  toStorageMounts(o.Mounts),
 			Env:            o.Env,
 			AsCurrentUser:  o.AsCurrentUser,
+			WorkingDir:     o.WorkingDir,
 		},
 	}
 }
@@ -187,7 +188,6 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	p.runFns.Input = bytes.NewReader(input)
 	p.runFns.Functions = append(p.runFns.Functions, functionConfig)
 	p.runFns.Output = &ouputBuffer
-	p.runFns.WorkDir = p.h.WorkingDir()
 
 	err = p.runFns.Execute()
 	if err != nil {

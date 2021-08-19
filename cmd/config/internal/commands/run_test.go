@@ -11,13 +11,14 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
+	wd, err := os.Getwd()
+	assert.NoError(t, err)
 	tests := []struct {
 		name           string
 		args           []string
@@ -201,6 +202,7 @@ apiVersion: v1
 				Path:           "dir",
 				EnableStarlark: true,
 				Env:            []string{},
+				WorkingDir:     wd,
 			},
 		},
 		{
@@ -254,6 +256,7 @@ apiVersion: v1
 				Path:       "dir",
 				ResultsDir: "foo/",
 				Env:        []string{},
+				WorkingDir: wd,
 			},
 			expected: `
 metadata:
@@ -286,9 +289,10 @@ apiVersion: v1
 			args: []string{"run", "dir", "--log-steps"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:     "dir",
-				LogSteps: true,
-				Env:      []string{},
+				Path:       "dir",
+				LogSteps:   true,
+				Env:        []string{},
+				WorkingDir: wd,
 			},
 		},
 		{
@@ -296,8 +300,9 @@ apiVersion: v1
 			args: []string{"run", "dir", "--env", "FOO=BAR", "-e", "BAR"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path: "dir",
-				Env:  []string{"FOO=BAR", "BAR"},
+				Path:       "dir",
+				Env:        []string{"FOO=BAR", "BAR"},
+				WorkingDir: wd,
 			},
 		},
 		{
@@ -308,6 +313,7 @@ apiVersion: v1
 				Path:          "dir",
 				AsCurrentUser: true,
 				Env:           []string{},
+				WorkingDir:    wd,
 			},
 		},
 	}

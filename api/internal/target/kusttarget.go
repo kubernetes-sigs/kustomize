@@ -296,7 +296,6 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]re
 		}
 		ra.AppendAll(rm)
 	}
-
 	ra, err := kt.accumulateResources(ra, transformerPaths, &resource.Origin{})
 	if err != nil {
 		return nil, err
