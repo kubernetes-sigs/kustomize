@@ -4,26 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-)
-
-const (
-	BuildAnnotationPreviousKinds      = konfig.ConfigAnnoDomain + "/previousKinds"
-	BuildAnnotationPreviousNames      = konfig.ConfigAnnoDomain + "/previousNames"
-	BuildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
-	BuildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
-	BuildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
-	BuildAnnotationsRefBy             = konfig.ConfigAnnoDomain + "/refBy"
-	BuildAnnotationsGenBehavior       = konfig.ConfigAnnoDomain + "/generatorBehavior"
-	BuildAnnotationsGenAddHashSuffix  = konfig.ConfigAnnoDomain + "/needsHashSuffix"
-
-	// the following are only for patches, to specify whether they can change names
-	// and kinds of their targets
-	BuildAnnotationAllowNameChange = konfig.ConfigAnnoDomain + "/allowNameChange"
-	BuildAnnotationAllowKindChange = konfig.ConfigAnnoDomain + "/allowKindChange"
-	Enabled                        = "enabled"
 )
 
 // MakeResIds returns all of an RNode's current and previous Ids
