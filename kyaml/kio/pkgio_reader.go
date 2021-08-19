@@ -122,13 +122,14 @@ func (r *LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
 		PackagePath:           r.PackagePath,
 		ClearAnnotations:      clear,
 		KeepReaderAnnotations: r.KeepReaderAnnotations,
+		FileSystem:            r.FileSystem,
 	}.Write(nodes)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 	deleteFiles := r.files.Difference(newFiles)
 	for f := range deleteFiles {
-		if err = os.Remove(filepath.Join(r.PackagePath, f)); err != nil {
+		if err = r.FileSystem.RemoveAll(filepath.Join(r.PackagePath, f)); err != nil {
 			return errors.Wrap(err)
 		}
 	}
