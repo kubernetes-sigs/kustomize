@@ -136,6 +136,10 @@ type ResMap interface {
 	// self, then its behavior _cannot_ be merge or replace.
 	AbsorbAll(ResMap) error
 
+	// AnnotateAll annotates all resources in the ResMap with
+	// the provided key value pair.
+	AnnotateAll(key string, value string) error
+
 	// AsYaml returns the yaml form of resources.
 	AsYaml() ([]byte, error)
 
