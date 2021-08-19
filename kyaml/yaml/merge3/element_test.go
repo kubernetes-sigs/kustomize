@@ -1476,6 +1476,181 @@ spec:
           protocol: TCP
 `},
 
+	//
+	// Test Case
+	//
+	{
+		description: `Add single container port and add another container port after an existing container port`,
+		origin: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8001
+          name: A
+          protocol: TCP
+        - containerPort: 8002
+          name: B
+          protocol: TCP
+`,
+		update: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8004
+          name: D
+          protocol: TCP
+`,
+		local: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8001
+          name: A
+          protocol: TCP
+        - containerPort: 8003
+          name: C
+          protocol: TCP
+`,
+		// This test records current behavior, but this behavior might be undesirable.
+		// If so, feel free to change the test to pass with some improved algorithm.
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8003
+          name: C
+          protocol: TCP
+        - containerPort: 8004
+          name: D
+          protocol: TCP
+`},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Add new container port after existing container ports and add another container port between existing container ports`,
+		origin: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8001
+          name: A
+          protocol: TCP
+        - containerPort: 8002
+          name: B
+          protocol: TCP
+`,
+		update: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8001
+          name: A
+          protocol: TCP
+        - containerPort: 8002
+          name: B
+          protocol: TCP
+        - containerPort: 8004
+          name: D
+          protocol: TCP
+`,
+		local: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8001
+          name: A
+          protocol: TCP
+        - containerPort: 8003
+          name: C
+          protocol: TCP
+        - containerPort: 8002
+          name: B
+          protocol: TCP
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+        ports:
+        - containerPort: 8001
+          name: A
+          protocol: TCP
+        - containerPort: 8003
+          name: C
+          protocol: TCP
+        - containerPort: 8002
+          name: B
+          protocol: TCP
+        - containerPort: 8004
+          name: D
+          protocol: TCP
+`},
+
 	{
 		description: `Retain local protocol`,
 		origin: `
