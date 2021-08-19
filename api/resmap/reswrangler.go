@@ -88,19 +88,6 @@ func (m *resWrangler) append(res *resource.Resource) {
 	m.rList = append(m.rList, res)
 }
 
-// AnnotateAll implements ResMap
-func (m *resWrangler) AnnotateAll(key string, value string) error {
-	return m.ApplyFilter(annotations.Filter{
-		Annotations: map[string]string{
-			key: value,
-		},
-		FsSlice: []types.FieldSpec{{
-			Path:               "metadata/annotations",
-			CreateIfNotPresent: true,
-		}},
-	})
-}
-
 // Remove implements ResMap.
 func (m *resWrangler) Remove(adios resid.ResId) error {
 	var rList []*resource.Resource
@@ -543,6 +530,19 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 			"found multiple objects %v that could accept merge of %v",
 			matches, id)
 	}
+}
+
+// AnnotateAll implements ResMap
+func (m *resWrangler) AnnotateAll(key string, value string) error {
+	return m.ApplyFilter(annotations.Filter{
+		Annotations: map[string]string{
+			key: value,
+		},
+		FsSlice: []types.FieldSpec{{
+			Path:               "metadata/annotations",
+			CreateIfNotPresent: true,
+		}},
+	})
 }
 
 // Select returns a list of resources that

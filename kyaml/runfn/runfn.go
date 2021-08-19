@@ -531,20 +531,17 @@ func getWorkingDirectory(api *yaml.RNode) (string, error) {
 	annotations := api.GetAnnotations()
 	wd, ok := annotations[kioutil.WorkingDirAnnotation]
 	if !ok {
-		var err error
-		wd, err = os.Getwd()
-		if err != nil {
-			return "", err
-		}
-	} else {
-		if !filepath.IsAbs(wd) || !path.IsAbs(wd) {
-			return "", errors.Errorf(
-				"relative working directory %s not allowed", wd)
-		}
-		if wd == "/" {
-			return "", errors.Errorf(
-				"root working directory '/' not allowed")
-		}
+		return os.Getwd()
 	}
+
+	if !filepath.IsAbs(wd) {
+		return "", errors.Errorf(
+			"relative working directory %s not allowed", wd)
+	}
+	if wd == "/" {
+		return "", errors.Errorf(
+			"root working directory '/' not allowed")
+	}
+
 	return wd, nil
 }

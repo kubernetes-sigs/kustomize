@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const execFile = `#!/bin/sh
+const generateDeploymentDotSh = `#!/bin/sh
 
 cat <<EOF
 apiVersion: apps/v1
@@ -68,9 +68,9 @@ stringData:
     bootcmd:
     - mkdir /mnt/vda
 `)
-	th.WriteF(filepath.Join(tmpDir.String(), "exec.sh"), execFile)
+	th.WriteF(filepath.Join(tmpDir.String(), "generateDeployment.sh"), generateDeploymentDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "exec.sh"), 0777))
+	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
 	th.WriteF(filepath.Join(tmpDir.String(), "gener.yaml"), `
 kind: executable
 metadata:
@@ -78,7 +78,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: ./exec.sh
+        path: ./generateDeployment.sh
 spec:
 `)
 
@@ -159,9 +159,9 @@ stringData:
     bootcmd:
     - mkdir /mnt/vda
 `)
-	th.WriteF(filepath.Join(base, "exec.sh"), execFile)
+	th.WriteF(filepath.Join(base, "generateDeployment.sh"), generateDeploymentDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(base, "exec.sh"), 0777))
+	assert.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
 	th.WriteF(filepath.Join(base, "gener.yaml"), `
 kind: executable
 metadata:
@@ -169,7 +169,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       exec:
-        path: ./exec.sh
+        path: ./generateDeployment.sh
 spec:
 `)
 
