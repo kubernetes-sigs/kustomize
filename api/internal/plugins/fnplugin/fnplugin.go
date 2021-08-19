@@ -187,6 +187,7 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 	p.runFns.Input = bytes.NewReader(input)
 	p.runFns.Functions = append(p.runFns.Functions, functionConfig)
 	p.runFns.Output = &ouputBuffer
+	p.runFns.WorkDir = p.h.WorkingDir()
 
 	err = p.runFns.Execute()
 	if err != nil {

@@ -21,7 +21,6 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/yaml"
 )
@@ -41,11 +40,13 @@ func NewKustTarget(
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
 	pLdr *loader.Loader) *KustTarget {
+	pLdrCopy := *pLdr
+	pLdrCopy.SetWorkDir(ldr.Root())
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
-		pLdr:      pLdr,
+		pLdr:      &pLdrCopy,
 	}
 }
 
@@ -263,12 +264,7 @@ func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) 
 	if err != nil {
 		return nil, err
 	}
-	m := ra.ResMap()
-	err = m.AnnotateAll(kioutil.WorkingDirAnnotation, kt.ldr.Root())
-	if err != nil {
-		return nil, err
-	}
-	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, m)
+	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
 }
 
 func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
@@ -305,12 +301,7 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]re
 	if err != nil {
 		return nil, err
 	}
-	m := ra.ResMap()
-	err = m.AnnotateAll(kioutil.WorkingDirAnnotation, kt.ldr.Root())
-	if err != nil {
-		return nil, err
-	}
-	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, m)
+	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, ra.ResMap())
 }
 
 func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {

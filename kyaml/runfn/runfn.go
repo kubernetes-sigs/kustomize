@@ -101,6 +101,10 @@ type RunFns struct {
 	// If it is true, the empty result will be provided as input to the next
 	// function in the list.
 	ContinueOnEmptyResult bool
+
+	// WorkDir specifies which working directory an exec function should run in.
+	// If this is empty, fall back to the current working directory.
+	WorkDir string
 }
 
 // Execute runs the command
@@ -507,13 +511,13 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		wd, err := getWorkingDirectory(api)
+		wd, err := getWorkingDirectory(r.WorkDir)
 		if err != nil {
 			return nil, err
 		}
 
 		ef := &exec.Filter{
-			Path: spec.Exec.Path,
+			Path:       spec.Exec.Path,
 			WorkingDir: wd,
 		}
 
@@ -527,10 +531,8 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	return nil, nil
 }
 
-func getWorkingDirectory(api *yaml.RNode) (string, error) {
-	annotations := api.GetAnnotations()
-	wd, ok := annotations[kioutil.WorkingDirAnnotation]
-	if !ok {
+func getWorkingDirectory(wd string) (string, error) {
+	if wd == "" {
 		return os.Getwd()
 	}
 
