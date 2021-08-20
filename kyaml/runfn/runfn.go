@@ -510,10 +510,6 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		if r.WorkingDir == "" {
-			return nil, fmt.Errorf("no working directory set for exec function")
-		}
-
 		ef := &exec.Filter{
 			Path:       spec.Exec.Path,
 			WorkingDir: r.WorkingDir,
