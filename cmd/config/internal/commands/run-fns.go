@@ -6,6 +6,7 @@ package commands
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -73,6 +74,7 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid of the command executor to run the function in the container")
+
 	return r
 }
 
@@ -302,6 +304,11 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// parse mounts to set storageMounts
 	storageMounts := toStorageMounts(r.Mounts)
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	r.RunFns = runfn.RunFns{
 		FunctionPaths:  r.FnPaths,
 		GlobalScope:    r.GlobalScope,
@@ -317,6 +324,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		LogSteps:       r.LogSteps,
 		Env:            r.Env,
 		AsCurrentUser:  r.AsCurrentUser,
+		WorkingDir:     wd,
 	}
 
 	// don't consider args for the function
