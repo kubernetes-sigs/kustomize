@@ -4,15 +4,19 @@
 package exec_test
 
 import (
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestFunctionFilter_Filter(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
 	var tests = []struct {
 		name           string
 		input          []string
@@ -51,8 +55,9 @@ metadata:
 			},
 			expectedError: "",
 			instance: exec.Filter{
-				Path: "sed",
-				Args: []string{"s/Deployment/StatefulSet/g"},
+				Path:       "sed",
+				Args:       []string{"s/Deployment/StatefulSet/g"},
+				WorkingDir: wd,
 			},
 		},
 	}

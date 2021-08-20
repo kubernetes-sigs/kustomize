@@ -6,6 +6,8 @@ package container
 import (
 	"bytes"
 	"fmt"
+	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -128,7 +130,7 @@ metadata:
 			instance := NewContainer(tt.containerSpec, tt.UIDGID)
 			instance.Exec.FunctionConfig = cfg
 			instance.Env = append(instance.Env, "KYAML_TEST=FOO")
-			instance.setupExec()
+			assert.NoError(t, instance.setupExec())
 
 			tt.expectedArgs = append(tt.expectedArgs,
 				runtimeutil.NewContainerEnvFromStringSlice(instance.Env).GetDockerFlags()...)
@@ -173,6 +175,8 @@ metadata:
 	instance.Exec.FunctionConfig = cfg
 	instance.Exec.Path = "sed"
 	instance.Exec.Args = []string{"s/Deployment/StatefulSet/g"}
+	instance.Exec.WorkingDir = getWorkingDir(t)
+
 	output, err := instance.Filter(input)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -219,6 +223,7 @@ func TestFilter_ExitCode(t *testing.T) {
 	instance := Filter{}
 	instance.Exec.Path = "/not/real/command"
 	instance.Exec.DeferFailure = true
+	instance.Exec.WorkingDir = getWorkingDir(t)
 	_, err := instance.Filter(nil)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -230,4 +235,10 @@ func TestFilter_ExitCode(t *testing.T) {
 	if !assert.Contains(t, instance.GetExit().Error(), "/not/real/command") {
 		t.FailNow()
 	}
+}
+
+func getWorkingDir(t *testing.T) string {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	return wd
 }

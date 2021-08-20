@@ -38,16 +38,17 @@ func (c *Filter) Run(reader io.Reader, writer io.Writer) error {
 	cmd.Stdin = reader
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
-	if c.WorkingDir != "" {
-		if !filepath.IsAbs(c.WorkingDir) {
-			return errors.Errorf(
-				"relative working directory %s not allowed", c.WorkingDir)
-		}
-		if c.WorkingDir == "/" {
-			return errors.Errorf(
-				"root working directory '/' not allowed")
-		}
-		cmd.Dir = c.WorkingDir
+	if c.WorkingDir == "" {
+		return errors.Errorf("no working directory set for exec function")
 	}
+	if !filepath.IsAbs(c.WorkingDir) {
+		return errors.Errorf(
+			"relative working directory %s not allowed", c.WorkingDir)
+	}
+	if c.WorkingDir == "/" {
+		return errors.Errorf(
+			"root working directory '/' not allowed")
+	}
+	cmd.Dir = c.WorkingDir
 	return cmd.Run()
 }
