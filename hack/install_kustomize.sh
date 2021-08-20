@@ -25,11 +25,54 @@ unset CDPATH
 
 where=$PWD
 
+function getTagName () {
+    local res=""
+    local modName="kustomize"
+    
+    # first version with kustomize binary in its own module
+    local init="3.2.1"
+    
+    if [[ $1 == $init ]]
+    then
+        # res=kustomize/v$init
+        echo "$modName/v$1"
+        return
+    fi
+    
+    local IFS=.
+    local ver=($1) iVer=($init)
+    
+    for ((i=${#ver[@]}; i<${#iVer[@]}; i++))
+    do
+        ver[i]=0
+    done
+    
+    for ((i=0; i<${#ver[@]}; i++))
+    do
+        if [[ -z ${iVer[i]} ]]
+        then
+            iVer[i]=0
+        fi
+        if ((10#${ver[i]} > 10#${iVer[i]}))
+        then
+            res=kustomize/v$1
+            echo "$modName/v$1"
+            return 0
+        fi
+        if ((10#${ver[i]} < 10#${iVer[i]}))
+        then
+            res=v$1
+            echo "v$1"
+            return 0
+        fi
+    done
+}
+
 release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 if [ -n "$1" ]; then
   if [[ "$1" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
-    version=v$1
-    release_url=${release_url}/tags/kustomize%2F$version
+    tagName=$(getTagName $1)
+    release_url=${release_url}/tags/$tagName
   elif [ -n "$2" ]; then
     echo "The first argument should be the requested version."
     exit 1
