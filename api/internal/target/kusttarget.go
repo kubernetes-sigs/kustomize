@@ -40,11 +40,13 @@ func NewKustTarget(
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
 	pLdr *loader.Loader) *KustTarget {
+	pLdrCopy := *pLdr
+	pLdrCopy.SetWorkDir(ldr.Root())
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
-		pLdr:      pLdr,
+		pLdr:      &pLdrCopy,
 	}
 }
 
@@ -295,7 +297,6 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]re
 		ra.AppendAll(rm)
 	}
 	ra, err := kt.accumulateResources(ra, transformerPaths, &resource.Origin{})
-
 	if err != nil {
 		return nil, err
 	}
