@@ -186,6 +186,27 @@ pipeline:
 `,
 		},
 		{
+			name: "sort fields with null value",
+			from: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: workspaces.app.terraform.io
+`,
+			to: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workspaces.app.terraform.io
+  creationTimestamp: null
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: workspaces.app.terraform.io
+`,
+		},
+		{
 			name: "Complex ASM reorder example",
 			from: `apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
