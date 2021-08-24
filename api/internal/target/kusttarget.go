@@ -205,6 +205,9 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator, origin *r
 	if err != nil {
 		return nil, err
 	}
+	if err = ra.DeAnchor(); err != nil {
+		return nil, err
+	}
 	err = kt.runTransformers(ra)
 	if err != nil {
 		return nil, err

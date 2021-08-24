@@ -36,6 +36,11 @@ func (ra *ResAccumulator) ResMap() resmap.ResMap {
 	return ra.resMap.ShallowCopy()
 }
 
+// DeAnchor expands YAML anchor aliases with what they reference.
+func (ra *ResAccumulator) DeAnchor() error {
+	return ra.resMap.DeAnchor()
+}
+
 // Vars returns a copy of underlying vars.
 func (ra *ResAccumulator) Vars() []types.Var {
 	return ra.varSet.AsSlice()
