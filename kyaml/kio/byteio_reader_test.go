@@ -808,15 +808,13 @@ items:
 	}
 }
 
-// This test is just an exploration of the low level (go-yaml)
-// representation of a small doc with an anchor. The anchor
-// structure is there, in the sense that an alias pointer is
-// readily available when a node's kind is an AliasNode.
-// That is, the anchor mapping has already been recognized.
-// However, the github.com/go-yaml/yaml/encoder.go code doesn't
-// appear to have an option to perform anchor replacements when
-// encoding (instead it emits the anchor definitions and
-// references, which is not a bad thing but not desired here).
+// This test shows the lower level (go-yaml) representation of a small doc
+// with an anchor. The anchor structure is there, in the sense that an
+// alias pointer is readily available when a node's kind is an AliasNode.
+// I.e. the anchor mapping name -> object was noted during unmarshalling.
+// However, at the time of writing github.com/go-yaml/yaml/encoder.go
+// doesn't appear to have an option to perform anchor replacements when
+// encoding.  It emits anchor definitions and references (aliases) intact.
 func TestByteReader_AnchorBehavior(t *testing.T) {
 	const input = `
 data:
