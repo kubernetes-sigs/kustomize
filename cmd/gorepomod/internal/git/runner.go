@@ -278,12 +278,13 @@ func (gr *Runner) CheckoutReleaseBranch(
 		return nil
 	}
 	gr.comment("creating branch")
-	// The branch doesn't exist.  Create it.
-	out, err := gr.run(noHarmDone, "checkout", "-b", branch)
+	// The branch doesn't exist remotely.  Create or reset it locally.
+	out, err := gr.run(noHarmDone, "checkout", "-B", branch)
 	if err != nil {
 		return err
 	}
-	if !strings.Contains(out, "Switched to a new branch ") {
+	// Expected strings: "Switched to a new branch" or "Switched to and reset branch"
+	if !strings.Contains(out, "Switched to") {
 		return fmt.Errorf("unexpected branch creation output: %q", out)
 	}
 	return nil
