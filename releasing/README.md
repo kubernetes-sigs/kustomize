@@ -15,6 +15,20 @@
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
 
+#### semver review
+
+Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
+
+| major | minor | patch |
+| :---:   | :---:  | :---: |
+| API change | enhancements | bug fixes |
+| manual update | maybe auto-update | auto-update encouraged |
+
+ - If there are only bug fixes or refactors, increment `patch` from whatever it is now.
+ - If there are new features, increment  `minor`.
+ - If there's an API change (either the Go API or the CLI behavior
+   with respect to CLI arguments and flags), increment `major`.
+
 ## Release sequence
 
 The dependencies determine the release order:
@@ -28,10 +42,17 @@ The dependencies determine the release order:
 
 Thus, do `kyaml` first, then `cmd/config`, etc.
 
+## Prep work
+
+#### Prepare your source directory
+
+The release scripts expect Kustomize code to be cloned at a path ending in `sigs.k8s.io/kustomize`. Run all commands from that directory unless otherwise specified.
+
 #### Consider fetching new OpenAPI data
 The Kubernetes OpenAPI data changes no more frequently than once per quarter.
 You can check the current builtin versions that kustomize is using with the
 following command.
+
 ```
 kustomize openapi info
 ```
@@ -39,46 +60,10 @@ kustomize openapi info
 Instructions on how to get a new OpenAPI sample can be found in the
 [OpenAPI Readme].
 
-## Prep work
-
-#### Make some helper functions
+#### Load some helper functions
 
 ```
-function createBranch {
-  branch=$1
-  echo "Making branch $branch : \"$title\""
-  git branch -D $branch  # delete if it exists
-  git checkout -b $branch
-  git commit -a -m "$title"
-  git push -f origin $branch
-}
-```
-
-```
-function createPr {
-  gh pr create --title "$title" --body "ALLOW_MODULE_SPAN" --base master
-}
-```
-
-```
-function refreshMaster {
-  git checkout master
-  git fetch upstream
-  git rebase upstream/master
-}
-```
-
-```
-function testKustomizeRepo {
-  make prow-presubmit-check >& /tmp/k.txt
-  local code=$?
-  if [ $code -ne 0 ]; then
-    echo "**** FAILURE ******************"
-    tail /tmp/k.txt
-  else
-    echo "LGTM"
-  fi
-}
+source releasing/helpers.sh
 ```
 
 #### Install the release tool
@@ -101,18 +86,21 @@ echo $GITHUB_TOKEN | gh auth login --scopes repo --with-token
 #### Establish clean state
 
 ```
-cd ~/gopath/src/sigs.k8s.io/kustomize
 refreshMaster
 testKustomizeRepo
 ```
 
+While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+
 kyaml has no intra-repo deps, so if the tests pass,
 it can just be released.
 
-Release it:
+#### Release it
+
+The default increment is a new patch version.
 
 ```
-gorepomod release kyaml --doIt
+gorepomod release kyaml [patch|minor|major] --doIt
 ```
 
 Note the version:
@@ -120,26 +108,27 @@ Note the version:
 versionKyaml=v0.10.20   # EDIT THIS!
 ```
 
-Undraft the release on the [kustomize repo release page],
-make sure the version number is what you expect.
+Undraft the release on the [kustomize repo release page]:
+* Make sure the version number is what you expect.
+* Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
+* Make sure each commit left in the release notes includes a PR reference.
 
 
 ## Release `cmd/config`
 
-```
-cd ../kustomize
-```
-
-Pin to the most recent kyaml.
+#### Pin to the most recent kyaml
 
 ```
 gorepomod pin kyaml --doIt
+go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/prefixsuffixtransformer/go.mod
+go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/replicacounttransformer/go.mod
+
 ```
 
 Create the PR:
 ```
 title="Pin to kyaml $versionKyaml"
-createBranch pinToKyaml
+createBranch pinToKyaml $title
 createPr
 ```
 
@@ -160,9 +149,12 @@ refreshMaster
 testKustomizeRepo
 ```
 
-Release it:
+While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+
+#### Release it
+
 ```
-gorepomod release cmd/config --doIt
+gorepomod release cmd/config [patch|minor|major] --doIt
 ```
 
 Note the version:
@@ -170,8 +162,10 @@ Note the version:
 versionCmdConfig=v0.9.12 # EDIT THIS!
 ```
 
-Undraft the release on the [kustomize repo release page],
-make sure the version number is what you expect.
+Undraft the release on the [kustomize repo release page]:
+* Make sure the version number is what you expect.
+* Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
+* Make sure each commit left in the release notes includes a PR reference.
 
 
 ## Release `api` 
@@ -179,7 +173,7 @@ make sure the version number is what you expect.
 This is the kustomize API, used by the kustomize CLI.
 
 
-Pin to the new cmd/config:
+#### Pin to the new cmd/config
 
 ```
 gorepomod pin cmd/config --doIt
@@ -188,7 +182,7 @@ gorepomod pin cmd/config --doIt
 Create the PR:
 ```
 title="Pin to cmd/config $versionCmdConfig"
-createBranch pinToCmdConfig
+createBranch pinToCmdConfig $title
 createPr
 ```
 
@@ -209,9 +203,12 @@ refreshMaster
 testKustomizeRepo
 ```
 
-Release it:
+While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+
+#### Release it
+
 ```
-gorepomod release api --doIt
+gorepomod release api [patch|minor|major] --doIt
 ```
 
 Note the version:
@@ -219,13 +216,16 @@ Note the version:
 versionApi=v0.8.10 # EDIT THIS!
 ```
 
-Undraft the release on the [kustomize repo release page],
-make sure the version number is what you expect.
+Undraft the release on the [kustomize repo release page]:
+* Make sure the version number is what you expect.
+* Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
+* Make sure each commit left in the release notes includes a PR reference.
 
 
 ## Release the kustomize CLI
 
-Pin to the new API:
+#### Pin to the new API
+
 ```
 gorepomod pin api --doIt
 ```
@@ -233,7 +233,7 @@ gorepomod pin api --doIt
 Create the PR:
 ```
 title="Pin to api $versionApi"
-createBranch pinToApi
+createBranch pinToApi $title
 createPr
 ```
 
@@ -254,12 +254,18 @@ refreshMaster
 testKustomizeRepo
 ```
 
-Release it:
+While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+
+#### Release it
+
 ```
-gorepomod release kustomize --doIt
+gorepomod release kustomize [patch|minor|major] --doIt
 ```
 
-Undraft the release on the [kustomize repo release page].
+Undraft the release on the [kustomize repo release page]:
+* Make sure the version number is what you expect.
+* Remove references to commits that aren't relevant to end users of the CLI (e.g. test commits, refactors, changes that only surface in Go).
+* Make sure each commit left in the release notes includes a PR reference.
 
 ## Confirm the kustomize binary is correct
 
@@ -308,10 +314,31 @@ refreshMaster
 testKustomizeRepo
 ```
 
-### Publish Official Docker Image
+## Update example test target
+
+[Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
+
+Edit the `prow-presubmit-target` in the [Makefile]
+to test examples against your new release.
+
+```
+sed -i "" "s/LATEST_V4_RELEASE=.*/LATEST_V4_RELEASE=v4.3.0/" Makefile
+title="Test examples against latest release"
+createBranch updateProwExamplesTarget $title
+createPr
+```
+
+Wait for tests to pass, then merge the PR:
+```
+gh pr status  # rinse, repeat
+gh pr merge -m
+```
+
+
+## Publish Official Docker Image
 
 [k8s.io]: https://github.com/kubernetes/k8s.io
-[k8s-staging-kustomize]: https://pantheon.corp.google.com/gcr/images/k8s-staging-kustomize?project=k8s-staging-kustomize
+[k8s-staging-kustomize]: https://console.cloud.google.com/gcr/images/k8s-staging-kustomize?project=k8s-staging-kustomize
 
 Fork and clone the [k8s.io] repo.
 
@@ -325,13 +352,6 @@ project [k8s-staging-kustomize].
 
 Commit and push your changes. Then create a PR to [k8s.io] to promote
 new images. Assign the PR to @monopole and @Shell32-natsu.
-
-### Finally
-
-[Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
-
-Edit the `prow-presubmit-target` in the [Makefile]
-to test examples against your new release.
 
 ----
 
@@ -461,21 +481,6 @@ Set the version you want:
 ```
 major=0; minor=1; patch=0
 ```
-
-#### semver review
-
-Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
-
-| major | minor | patch |
-| :---:   | :---:  | :---: |
-| API change | enhancements | bug fixes |
-| manual update | maybe auto-update | auto-update encouraged |
-
- - If there are only bug fixes or refactors, increment `patch` from whatever it is now.
- - If there are new features, increment  `minor`.
- - If there's an API change (either the Go API or the CLI behavior
-   with respect to CLI arguments and flags), increment `major`.
-
 
 
 ### Create the release branch
