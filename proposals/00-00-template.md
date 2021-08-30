@@ -13,38 +13,37 @@ To get started with this template:
 
 # Your short, descriptive title
 
-**Authors**:
+**Authors**: <!-- Your github handle -->
 
-**Reviewers**:
+**Reviewers**: <!-- List at least one Kustomize approver (https://github.com/kubernetes-sigs/kustomize/blob/master/OWNERS#L2) -->
 
 **Status**: implementable
 <!--
-In general, all proposals made should be merged for the record, whether or not they are accepted. Use the status field to record the results of the latest review:
+In general, all proposals made should be merged for the record, whether or not they are accepted.
+Use the status field to record the results of the latest review:
 - implementable: The default for this repo. If the proposal is merged, you can start working on it.
-- deferred: The proposal may be accepted in the future, but it has been shelved for the time being. A new PR must be opened to update the proposal and gain reviewer consensus before work can begin.
-- withdrawn: The author changed their mind and no longer wants to pursue the proposal. A new PR must be opened to update the proposal and gain reviewer consensus before work can begin.
+- deferred: The proposal may be accepted in the future, but it has been shelved for the time being.
+A new PR must be opened to update the proposal and gain reviewer consensus before work can begin.
+- withdrawn: The author changed their mind and no longer wants to pursue the proposal.
+A new PR must be opened to update the proposal and gain reviewer consensus before work can begin.
 - rejected: This proposal should not be implemented.
-- replaced: If you submit a new proposal that supersedes an older one, update the older one's status to "replaced by <link>".
+- replaced: If you submit a new proposal that supersedes an older one,
+update the older one's status to "replaced by <link>".
 -->
 
 ## Summary
 
 <!--
-This section is incredibly important for producing high-quality, user-focused
-documentation such as release notes or a development roadmap.
-A good summary is probably at least a paragraph in length.
+In one short paragraph, summarize why this change is important to Kustomize users.
 -->
 
 ## Motivation
 
 <!--
-This section is for explicitly listing the motivation, goals, and non-goals of
-this proposal.  Describe why the change is important and the benefits to users. If this
-proposal is an expansion of an existing GitHub issue, link to it here.
+If this proposal is an expansion of an existing GitHub issue, link to it here.
 -->
 
-### Goals
-
+**Goals:**
 <!--
 List the specific goals of the proposal. What is it trying to achieve? How will we
 know that this has succeeded?
@@ -52,8 +51,8 @@ know that this has succeeded?
 1. A goal
 1. Another goal
 
-### Non-Goals
 
+**Non-goals:**
 <!--
 What is out of scope for this proposal? Listing non-goals helps to focus discussion
 and make progress.
@@ -63,10 +62,18 @@ and make progress.
 
 ## Proposal
 
-Proof of concept PR (optional):
-
 <!--
-This is where we get down to the specifics of what the proposal actually is. What is the plan for implementing this feature? Does this proposal require new kinds, fields or flags? What do they look like?
+This is where we get down to the specifics of what the proposal actually is.
+Include enough information to illustrate your proposal, but try not to
+overwhelm reviewers with details. Focus on APIs and interfaces rather than implementation details,
+e.g.:
+- Does this proposal require new kinds, fields or CLI flags?
+- Will this feature require extending the public interface of Kustomize's Go packages?
+(it's ok if you're not sure yet)
+
+A proof of concept PR is NOT required but is preferable to including large amounts of code
+inline here, if you feel such implementation details are required to adequately explain your design.
+If you have a PR, link to it at the top of this section.
 -->
 
 ### User Stories
@@ -98,8 +105,8 @@ and config they'll use.
 ### Risks and Mitigations
 <!--
 What are the risks of this proposal, and how do we mitigate? Think broadly.
-For example, consider both security and how this will impact the larger
-Kubernetes ecosystem.
+For example, consider both security, end-user privacy, and how this will
+impact the larger Kubernetes ecosystem.
 -->
 
 ### Dependencies
