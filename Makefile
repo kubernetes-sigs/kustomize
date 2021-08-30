@@ -12,6 +12,7 @@ MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
 MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
+LATEST_V4_RELEASE=v4.3.0
 
 # Provide defaults for REPO_OWNER and REPO_NAME if not present.
 # Typically these values would be provided by Prow.
@@ -31,7 +32,7 @@ verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-4.1
+	test-examples-kustomize-against-v4-release
 
 # The following target referenced by a file in
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
@@ -44,7 +45,7 @@ prow-presubmit-check: \
 	test-unit-cmd-all \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-4.1
+	test-examples-kustomize-against-v4-release
 
 .PHONY: verify-kustomize-e2e
 verify-kustomize-e2e: test-examples-e2e-kustomize
@@ -278,8 +279,8 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-4.1: $(MYGOBIN)/mdrip
-	./hack/testExamplesAgainstKustomize.sh v4@v4.1.2
+test-examples-kustomize-against-v4-release: $(MYGOBIN)/mdrip
+	./hack/testExamplesAgainstKustomize.sh v4@$(LATEST_V4_RELEASE)
 
 # linux only.
 # This is for testing an example plugin that
