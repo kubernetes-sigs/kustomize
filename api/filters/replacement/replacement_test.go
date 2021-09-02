@@ -1556,6 +1556,40 @@ spec:
         name: postgresdb
 `,
 		},
+
+		"replacement source.fieldPath does not exist": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+data:
+  grpcPort: 8081
+`,
+			replacements: `replacements:
+# failing case
+- source:
+    kind: ConfigMap
+    name: ports-from
+    fieldPath: data.httpPort
+  targets:
+  - select:
+      kind: ConfigMap
+      name: ports-to
+    fieldPaths:
+    - data.grpcPort
+    options:
+      create: true
+`,
+			// this test currently panics instead of throwing an error
+			expectedErr: "fieldPath data.httpPort is missing for source ~G_~V_ConfigMap|~X|ports-from:data.httpPort",
+		},
 	}
 
 	for tn, tc := range testCases {
