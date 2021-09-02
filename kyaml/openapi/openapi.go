@@ -207,15 +207,17 @@ func AddDefinitions(definitions spec.Definitions) {
 		}
 		// cast the extension to a []map[string]string
 		exts, ok := gvk.([]interface{})
-		if !ok || len(exts) != 1 {
-			continue
-		}
-
-		typeMeta, ok := toTypeMeta(exts[0])
 		if !ok {
 			continue
 		}
-		globalSchema.schemaByResourceType[typeMeta] = &d
+
+		for i := range exts {
+			typeMeta, ok := toTypeMeta(exts[i])
+			if !ok {
+				continue
+			}
+			globalSchema.schemaByResourceType[typeMeta] = &d
+		}
 	}
 }
 

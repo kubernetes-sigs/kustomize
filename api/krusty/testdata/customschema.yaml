@@ -22,6 +22,9 @@ definitions:
       - group: example.com
         kind: MyCRD
         version: v1alpha1
+      - group: ""
+        kind: MyCRD
+        version: v1alpha1
   io.k8s.api.core.v1.PodTemplateSpec:
     properties:
       metadata:
