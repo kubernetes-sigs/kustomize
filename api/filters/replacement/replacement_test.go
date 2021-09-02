@@ -1573,7 +1573,6 @@ data:
   grpcPort: 8081
 `,
 			replacements: `replacements:
-# failing case
 - source:
     kind: ConfigMap
     name: ports-from
@@ -1587,8 +1586,7 @@ data:
     options:
       create: true
 `,
-			// this test currently panics instead of throwing an error
-			expectedErr: "fieldPath data.httpPort is missing for source ~G_~V_ConfigMap|~X|ports-from:data.httpPort",
+			expectedErr: "fieldPath `data.httpPort` is missing for replacement source ~G_~V_ConfigMap|~X|ports-from:data.httpPort",
 		},
 	}
 
