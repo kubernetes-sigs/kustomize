@@ -685,3 +685,167 @@ spec:
             name: new-name
 `)
 }
+
+func TestNameReferenceAfterJsonPatch(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("resources.yaml", `
+apiVersion: v1
+data:
+  bar: bar
+kind: ConfigMap
+metadata:
+  name: cm
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: foo
+spec:
+  selector:
+    matchLabels:
+      foo: foo
+  template:
+    metadata:
+      labels:
+        foo: foo
+    spec:
+      containers:
+      - name: foo
+        image: example
+        volumeMounts:
+        - mountPath: /path
+          name: myvol
+      volumes:
+      - configMap:
+          name: cm
+        name: myvol
+`)
+	th.WriteK(".", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: foo-
+resources:
+- resources.yaml
+patches:
+- target:
+    group: apps
+    version: v1
+    name: foo
+  patch: |
+    - op: replace
+      path: /kind
+      value: Deployment
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  bar: bar
+kind: ConfigMap
+metadata:
+  name: foo-cm
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo-foo
+spec:
+  selector:
+    matchLabels:
+      foo: foo
+  template:
+    metadata:
+      labels:
+        foo: foo
+    spec:
+      containers:
+      - image: example
+        name: foo
+        volumeMounts:
+        - mountPath: /path
+          name: myvol
+      volumes:
+      - configMap:
+          name: foo-cm
+        name: myvol
+`)
+}
+
+func TestNameReferenceAfterJsonPatchConfigMapGenerator(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("statefulset.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: foo
+spec:
+  selector:
+    matchLabels:
+      foo: foo
+  template:
+    metadata:
+      labels:
+        foo: foo
+    spec:
+      containers:
+      - name: foo
+        image: example
+        volumeMounts:
+        - mountPath: /path
+          name: myvol
+      volumes:
+      - configMap:
+          name: cm
+        name: myvol
+`)
+	th.WriteK(".", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- statefulset.yaml
+patches:
+- target:
+    group: apps
+    version: v1
+    name: foo
+  patch: |
+    - op: replace
+      path: /kind
+      value: Deployment
+configMapGenerator:
+- name: cm
+  literals:
+  - bar=bar
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  selector:
+    matchLabels:
+      foo: foo
+  template:
+    metadata:
+      labels:
+        foo: foo
+    spec:
+      containers:
+      - image: example
+        name: foo
+        volumeMounts:
+        - mountPath: /path
+          name: myvol
+      volumes:
+      - configMap:
+          name: cm-8hm8224gfd
+        name: myvol
+---
+apiVersion: v1
+data:
+  bar: bar
+kind: ConfigMap
+metadata:
+  name: cm-8hm8224gfd
+`)
+}
