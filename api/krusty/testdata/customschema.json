@@ -34,6 +34,11 @@
           "group": "example.com",
           "kind": "MyCRD",
           "version": "v1alpha1"
+        },
+        {
+          "group": "",
+          "kind": "MyCRD",
+          "version": "v1alpha1"
         }
       ]
     },
