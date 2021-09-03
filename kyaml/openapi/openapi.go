@@ -52,6 +52,8 @@ type openapiData struct {
 
 // precomputedIsNamespaceScoped precomputes IsNamespaceScoped for known types. This avoids Schema creation,
 // which is expensive
+// The test output from TestIsNamespaceScopedPrecompute shows the expected map in go syntax,and can be copy and pasted
+// from the failure if it changes.
 var precomputedIsNamespaceScoped = map[yaml.TypeMeta]bool{
 	{APIVersion: "admissionregistration.k8s.io/v1", Kind: "MutatingWebhookConfiguration"}:        false,
 	{APIVersion: "admissionregistration.k8s.io/v1", Kind: "ValidatingWebhookConfiguration"}:      false,
@@ -352,7 +354,7 @@ func GetSchema(s string, schema *spec.Schema) (*ResourceSchema, error) {
 // cluster-scoped by looking at the information in the openapi schema.
 // The second return value tells whether the provided type could be found
 // in the openapi schema. If the value is false here, the scope of the
-// resource is not known. If the type if found, the first return value will
+// resource is not known. If the type is found, the first return value will
 // be true if the resource is namespace-scoped, and false if the type is
 // cluster-scoped.
 func IsNamespaceScoped(typeMeta yaml.TypeMeta) (bool, bool) {
