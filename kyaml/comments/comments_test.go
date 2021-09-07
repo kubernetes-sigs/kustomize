@@ -353,6 +353,30 @@ data:
   somekey: "012345678901234567890123456789012345678901234567890123456789012345678901234" # x
 `,
 		},
+		{
+			name: "sort fields with null value",
+			from: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workspaces.app.terraform.io
+  creationTimestamp: null # this field is null
+  namespace: staging
+`,
+			to: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workspaces.app.terraform.io
+  creationTimestamp: null
+  namespace: staging
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workspaces.app.terraform.io
+  creationTimestamp: null # this field is null
+  namespace: staging
+`,
+		},
 	}
 
 	for i := range testCases {
@@ -378,7 +402,16 @@ data:
 				t.FailNow()
 			}
 
+			actualFrom, err := from.String()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
 			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, strings.TrimSpace(tc.from), strings.TrimSpace(actualFrom)) {
 				t.FailNow()
 			}
 		})
