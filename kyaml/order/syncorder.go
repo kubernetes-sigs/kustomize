@@ -13,7 +13,9 @@ import (
 // Field order might be altered due to round-tripping in arbitrary functions.
 // This functionality helps to retain the original order of fields to avoid unnecessary diffs.
 func SyncOrder(from, to *yaml.RNode) error {
-	if err := syncOrder(from, to); err != nil {
+	// from node should not be modified, it should be just used as a reference
+	fromCopy := from.Copy()
+	if err := syncOrder(fromCopy, to); err != nil {
 		return errors.Errorf("failed to sync field order: %q", err.Error())
 	}
 	rearrangeHeadCommentOfSeqNode(to.YNode())

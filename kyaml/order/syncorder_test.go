@@ -5,6 +5,7 @@ package order
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -411,6 +412,15 @@ status:
 			}
 
 			if !assert.Equal(t, tc.expected, out.String()) {
+				t.FailNow()
+			}
+
+			actualFrom, err := from.String()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, strings.TrimSpace(tc.from), strings.TrimSpace(actualFrom)) {
 				t.FailNow()
 			}
 		})
