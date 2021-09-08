@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  value: test
+kind: ConfigMap
+metadata:
+  labels:
+    env: development
+    org: Kubernetes
+    parent-label: applied
+  name: myapp

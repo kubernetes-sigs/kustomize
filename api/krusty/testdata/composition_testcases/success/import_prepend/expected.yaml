@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  source: baseComposition
+kind: ConfigMap
+metadata:
+  labels:
+    labelled-by-base: "true"
+  name: myapp
+---
+apiVersion: v1
+data:
+  source: prodComposition
+kind: ConfigMap
+metadata:
+  name: myapp2

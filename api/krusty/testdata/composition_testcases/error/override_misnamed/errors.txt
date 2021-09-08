@@ -1,0 +1,2 @@
+failed to consolidate Composition at path /testdata/composition_testcases/error/override_misnamed
+no transformer found for override "~G_builtin_ResourceGenerator|default|local-resources-oops"

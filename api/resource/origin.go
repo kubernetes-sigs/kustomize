@@ -26,6 +26,8 @@ type Origin struct {
 	Ref string
 }
 
+const OriginAnnotation = "config.kubernetes.io/origin"
+
 // Copy returns a copy of origin
 func (origin *Origin) Copy() Origin {
 	return *origin

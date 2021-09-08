@@ -1,0 +1,2 @@
+failed to consolidate Composition at path /testdata/composition_testcases/error/invalid_composition/overrides_missing_fields
+no transformer found for override "~G_builtin_~K|default|~N"

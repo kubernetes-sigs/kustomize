@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformers:
+- metadata:
+    name: env-labeller
+  kind: LabelTransformer
+  labels:
+    env: development
+  fieldSpecs:
+  - path: metadata/labels
+    create: true
+
+- metadata:
+    name: org-labeller
+  kind: LabelTransformer
+  labels:
+    org: "Kubernetes"
+  fieldSpecs:
+  - path: metadata/labels
+    create: true
+- metadata:
+    name: local-resources
+  kind: ResourceGenerator
+  files:
+    - config_map.yaml
+
+transformerOrder:
+- name: local-resources
+- name: org-labeller
+- name: env-labeller

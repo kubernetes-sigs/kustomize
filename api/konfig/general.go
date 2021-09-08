@@ -3,8 +3,16 @@
 
 package konfig
 
+// RecognizedKustTargetFileNames is a list of file names
+// that kustomize recognizes as containing an inflation target.
+// To avoid ambiguity, a kustomization directory may not
+// contain more than one match to this list.
+func RecognizedKustTargetFileNames() []string {
+	return append(RecognizedKustomizationFileNames(), RecognizedCompositionFileNames()...)
+}
+
 // RecognizedKustomizationFileNames is a list of file names
-// that kustomize recognizes.
+// that kustomize recognizes as containing a Kustomization.
 // To avoid ambiguity, a kustomization directory may not
 // contain more than one match to this list.
 func RecognizedKustomizationFileNames() []string {
@@ -13,6 +21,19 @@ func RecognizedKustomizationFileNames() []string {
 		"kustomization.yml",
 		"Kustomization",
 	}
+}
+
+// RecognizedCompositionFileNames is a list of file names
+// that kustomize recognizes as containing a Composition.
+func RecognizedCompositionFileNames() []string {
+	return []string{
+		"composition.yaml",
+		"composition.yml",
+	}
+}
+
+func DefaultCompositionFileName() string {
+	return RecognizedCompositionFileNames()[0]
 }
 
 func DefaultKustomizationFileName() string {

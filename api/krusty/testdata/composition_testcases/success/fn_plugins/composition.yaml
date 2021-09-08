@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformersFrom:
+- path: base
+
+transformers:
+# This module has the same name but a different API group than the import
+- apiVersion: other.example.co/v1alpha1
+  kind: Labeller
+  runtime:
+    starlark:
+      path: testdata/composition_testcases/labeller.star
+  spec:
+    key: labelled-by-overlay
+    value: "true"

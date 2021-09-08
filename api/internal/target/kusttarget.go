@@ -53,20 +53,29 @@ func NewKustTarget(
 
 // Load attempts to load the target's kustomization file.
 func (kt *KustTarget) Load() error {
-	content, err := loadKustFile(kt.ldr)
+	content, kind, err := loadKustFile(kt.ldr)
 	if err != nil {
 		return err
 	}
-	content, err = types.FixKustomizationPreUnmarshalling(content)
-	if err != nil {
-		return err
-	}
+
 	var k types.Kustomization
-	err = k.Unmarshal(content)
-	if err != nil {
-		return err
+	if kind == types.CompositionKind {
+		kFromC, err := kustomizationFromComposition(kt.ldr, content)
+		if err != nil {
+			return err
+		}
+		k = *kFromC
+	} else {
+		content, err = types.FixKustomizationPreUnmarshalling(content)
+		if err != nil {
+			return err
+		}
+		err = k.Unmarshal(content)
+		if err != nil {
+			return err
+		}
+		k.FixKustomizationPostUnmarshalling()
 	}
-	k.FixKustomizationPostUnmarshalling()
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
 		return fmt.Errorf(
@@ -77,6 +86,30 @@ func (kt *KustTarget) Load() error {
 	return nil
 }
 
+func kustomizationFromComposition(ldr ifc.Loader, content []byte) (*types.Kustomization, error) {
+	f := CompositionConsolidator{ldr: ldr, content: content}
+	if err := f.Read(); err != nil {
+		return nil, err
+	}
+	c, err := f.Consolidate()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to consolidate %s at path %s", types.CompositionKind, ldr.Root())
+	}
+	k := types.Kustomization{TypeMeta: types.TypeMeta{
+		Kind:       types.KustomizationKind,
+		APIVersion: types.KustomizationVersion},
+		Transformers: make([]string, len(c.Transformers)),
+	}
+	for i := range c.Transformers {
+		yamlString, err := c.Transformers[i].AsYAML()
+		if err != nil {
+			return nil, err
+		}
+		k.Transformers[i] = yamlString
+	}
+	return &k, nil
+}
+
 // Kustomization returns a copy of the immutable, internal kustomization object.
 func (kt *KustTarget) Kustomization() types.Kustomization {
 	var result types.Kustomization
@@ -85,8 +118,9 @@ func (kt *KustTarget) Kustomization() types.Kustomization {
 	return result
 }
 
-func loadKustFile(ldr ifc.Loader) ([]byte, error) {
+func loadKustFile(ldr ifc.Loader) ([]byte, string, error) {
 	var content []byte
+	kind := types.KustomizationKind
 	match := 0
 	for _, kf := range konfig.RecognizedKustomizationFileNames() {
 		c, err := ldr.Load(kf)
@@ -95,13 +129,21 @@ func loadKustFile(ldr ifc.Loader) ([]byte, error) {
 			content = c
 		}
 	}
+	for _, kf := range konfig.RecognizedCompositionFileNames() {
+		c, err := ldr.Load(kf)
+		if err == nil {
+			match += 1
+			content = c
+			kind = types.CompositionKind
+		}
+	}
 	switch match {
 	case 0:
-		return nil, NewErrMissingKustomization(ldr.Root())
+		return nil, "", NewErrMissingKustomization(ldr.Root())
 	case 1:
-		return content, nil
+		return content, kind, nil
 	default:
-		return nil, fmt.Errorf(
+		return nil, "", fmt.Errorf(
 			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
 }
@@ -461,7 +503,7 @@ func (kt *KustTarget) accumulateFile(
 	}
 	if utils.StringSliceContains(kt.kustomization.BuildMetadata, "originAnnotations") {
 		origin = origin.Append(path)
-		err = resources.AnnotateAll(utils.OriginAnnotation, origin.String())
+		err = resources.AnnotateAll(resource.OriginAnnotation, origin.String())
 		if err != nil {
 			return errors.Wrapf(err, "cannot add path annotation for '%s'", path)
 		}

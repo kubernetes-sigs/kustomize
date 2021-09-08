@@ -17,7 +17,5 @@ const (
 	BuildAnnotationAllowNameChange = konfig.ConfigAnnoDomain + "/allowNameChange"
 	BuildAnnotationAllowKindChange = konfig.ConfigAnnoDomain + "/allowKindChange"
 
-	OriginAnnotation = "config.kubernetes.io/origin"
-
 	Enabled = "enabled"
 )

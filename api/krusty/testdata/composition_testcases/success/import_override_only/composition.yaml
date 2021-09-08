@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformersFrom:
+- path: base
+
+transformerOverrides:
+# The value provided here will override the value provided in the imported module by the same name
+- metadata:
+    name: environment-label
+  kind: LabelTransformer
+  labels:
+    environment: production
+  fieldSpecs:
+  - path: metadata/labels
+    create: true

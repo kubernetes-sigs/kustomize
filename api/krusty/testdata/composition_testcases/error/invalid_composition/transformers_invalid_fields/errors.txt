@@ -1,0 +1,3 @@
+failed to decode Composition at path /testdata/composition_testcases/error/invalid_composition/transformers_invalid_fields
+line 18: cannot unmarshal !!bool `true` into runtimeutil.ContainerSpec
+line 19: cannot unmarshal !!bool `false` into runtimeutil.StarlarkSpec

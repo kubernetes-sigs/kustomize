@@ -1,0 +1,2 @@
+failed to consolidate Composition at path /testdata/composition_testcases/error/invalid_composition/transformersFrom_invalid_mode
+invalid import mode "insert" specified for transformers from /testdata/composition_testcases/error/invalid_composition/transformersFrom_invalid_mode/base

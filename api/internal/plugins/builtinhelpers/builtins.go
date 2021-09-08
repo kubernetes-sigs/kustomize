@@ -30,6 +30,7 @@ const (
 	ValueAddTransformer
 	HelmChartInflationGenerator
 	ReplacementTransformer
+	ResourceGenerator
 )
 
 var stringToBuiltinPluginTypeMap map[string]BuiltinPluginType
@@ -65,6 +66,7 @@ var GeneratorFactories = map[BuiltinPluginType]func() resmap.GeneratorPlugin{
 }
 
 var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin{
+	ResourceGenerator:              builtins.NewResourceGeneratorPlugin,
 	AnnotationsTransformer:         builtins.NewAnnotationsTransformerPlugin,
 	HashTransformer:                builtins.NewHashTransformerPlugin,
 	ImageTagTransformer:            builtins.NewImageTagTransformerPlugin,

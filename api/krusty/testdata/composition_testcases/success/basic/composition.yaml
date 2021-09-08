@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformers:
+- kind: ResourceGenerator
+  files:
+    - resources/config_map.yaml
+    - resources/service.yaml
+- kind: LabelTransformer
+  labels:
+    org: Kubernetes
+  fieldSpecs:
+  - path: metadata/labels
+    create: true

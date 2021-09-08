@@ -18,7 +18,7 @@ type errMissingKustomization struct {
 func (e *errMissingKustomization) Error() string {
 	return fmt.Sprintf(
 		"unable to find one of %v in directory '%s'",
-		commaOr(quoted(konfig.RecognizedKustomizationFileNames())),
+		commaOr(quoted(konfig.RecognizedKustTargetFileNames())),
 		e.path)
 }
 

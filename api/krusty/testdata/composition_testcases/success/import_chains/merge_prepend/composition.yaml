@@ -1,0 +1,26 @@
+# this (prepends then merges) -> prepend (prepends) -> prepend/base
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformersFrom:
+- path: prepend
+
+transformerOverrides:
+# These resources will replace the resources defined in the imported composition.
+- metadata:
+    name: middle-resources
+  kind: ResourceGenerator
+  files:
+    - top_config_map.yaml
+
+transformers:
+# This label will be applied to all resources.
+- metadata:
+    name: top-labeller
+  kind: LabelTransformer
+  labels:
+    labelled-by-top: "true"
+  fieldSpecs:
+  - path: metadata/labels
+    create: true
+

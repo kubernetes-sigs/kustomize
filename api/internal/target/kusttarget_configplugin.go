@@ -58,6 +58,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		builtinhelpers.ReplicaCountTransformer,
 		builtinhelpers.ImageTagTransformer,
 		builtinhelpers.ReplacementTransformer,
+		builtinhelpers.ResourceGenerator,
 	} {
 		r, err := transformerConfigurators[bpt](
 			kt, bpt, builtinhelpers.TransformerFactories[bpt], tc)
@@ -363,5 +364,16 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		return nil, fmt.Errorf("valueadd keyword not yet defined")
+	},
+	builtinhelpers.ResourceGenerator: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c types.ResourceGeneratorArgs
+		p := f()
+		if err = kt.configureBuiltinPlugin(p, c, bpt); err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+		return
 	},
 }

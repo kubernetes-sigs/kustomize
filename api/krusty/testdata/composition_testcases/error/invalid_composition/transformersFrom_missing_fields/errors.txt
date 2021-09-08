@@ -1,0 +1,2 @@
+invalid Composition at path /testdata/composition_testcases/error/invalid_composition/transformersFrom_missing_fields
+transformersFrom entry is missing the path field

@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformersFrom:
+- path: base
+  importMode: append
+
+transformers:
+# These resources will receive all labels, including from the imported labeller
+- metadata:
+    name: middle-resources
+  kind: ResourceGenerator
+  files:
+    - middle_config_map.yaml
+
+# This label will be applied to the resources above, but not the imported ones
+- kind: LabelTransformer
+  metadata:
+    name: middle-labeller
+  labels:
+    labelled-by-middle: "true"
+  fieldSpecs:
+  - path: metadata/labels
+    create: true

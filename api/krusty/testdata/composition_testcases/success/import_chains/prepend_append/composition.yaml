@@ -1,0 +1,27 @@
+# this (prepends) -> append (appends) -> append/base
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformersFrom:
+- path: append
+  importMode: prepend
+
+transformers:
+# These resources will receive only the labels from the labeller below.
+- metadata:
+    name: top-resources
+  kind: ResourceGenerator
+  apiVersion: builtin
+  files:
+    - top_config_map.yaml
+
+# This label will be applied to all of the resources, including the imported ones.
+- metadata:
+    name: top-labeller
+  kind: LabelTransformer
+  labels:
+    labelled-by-top: "true"
+  fieldSpecs:
+  - path: metadata/labels
+    create: true
+

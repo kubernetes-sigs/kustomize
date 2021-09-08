@@ -4,7 +4,10 @@
 package kusttest_test
 
 import (
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -12,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -64,6 +68,19 @@ kind: Component
 `+content))
 	if err != nil {
 		th.t.Fatalf("unexpected error while writing Component to %s: %v", path, err)
+	}
+}
+
+func (th Harness) WriteComposition(path string, content string) {
+	err := th.fSys.WriteFile(
+		filepath.Join(
+			path,
+			konfig.DefaultCompositionFileName()), []byte(`
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+`+content))
+	if err != nil {
+		th.t.Fatalf("unexpected error while writing Composition to %s: %v", path, err)
 	}
 }
 
@@ -134,4 +151,30 @@ func (th Harness) AssertActualEqualsExpectedNoIdAnnotations(m resmap.ResMap, exp
 func (th Harness) AssertActualEqualsExpectedWithTweak(
 	m resmap.ResMap, tweaker func([]byte) []byte, expected string) {
 	assertActualEqualsExpectedWithTweak(th, m, tweaker, expected)
+}
+
+func (th Harness) CopyAllToFs(rootPath string) error {
+	return filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return errors.WrapPrefixf(err, "failed walking directory")
+		}
+		if info.IsDir() {
+			err := th.fSys.Mkdir(path)
+			if err != nil {
+				return errors.WrapPrefixf(err, "failed to create directory")
+			}
+			return nil
+		}
+		if !strings.HasPrefix(info.Name(), ".") {
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				return errors.WrapPrefixf(err, "failed to read content of %s", path)
+			}
+			err = th.fSys.WriteFile(path, data)
+			if err != nil {
+				return errors.WrapPrefixf(err, "failed to write %s to test FS", path)
+			}
+		}
+		return nil
+	})
 }

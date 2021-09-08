@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  source: topComposition
+kind: ConfigMap
+metadata:
+  labels:
+    environment: production
+    labelled-by-top: "true"
+  name: myapp3
+---
+apiVersion: v1
+data:
+  source: baseComposition
+kind: ConfigMap
+metadata:
+  labels:
+    environment: production
+  name: myapp

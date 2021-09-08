@@ -1,0 +1,2 @@
+failed to decode Composition at path /testdata/composition_testcases/error/invalid_composition/transformersFrom_unrecognized_fields
+line 6: field invalid not found in type types.TransformerSource

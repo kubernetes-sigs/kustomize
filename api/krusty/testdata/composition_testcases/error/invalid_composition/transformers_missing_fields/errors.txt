@@ -1,0 +1,3 @@
+failed to consolidate Composition at path /testdata/composition_testcases/error/invalid_composition/transformers_missing_fields
+transformers field is invalid
+transformer identifier "~G_builtin_~K|default|~N" must include a name

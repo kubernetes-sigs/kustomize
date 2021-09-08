@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformers:
+- kind: ResourceGenerator
+  files:
+    - resources/config_map.yaml
+    - resources/service.yaml
+- metadata:
+    name: labeller
+  apiVersion: transformers.example.co/v1alpha1
+  kind: Labeller
+  runtime:
+    starlark:
+      path: testdata/composition_testcases/labeller.star
+  spec:
+    key: labelled-by-base
+    value: "true"

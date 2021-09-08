@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformersFrom:
+- path: base
+  importMode: append
+
+transformers:
+# These resources will receive all labels, including from the imported labeller
+- metadata:
+    name: prod-resources
+  kind: ResourceGenerator
+  files:
+    - config_map.yaml
+
+# This label will be applied to the resources above, but not the imported ones
+- kind: LabelTransformer
+  metadata:
+    name: env-labeller
+  labels:
+    environment: production
+  fieldSpecs:
+  - path: metadata/labels
+    create: true

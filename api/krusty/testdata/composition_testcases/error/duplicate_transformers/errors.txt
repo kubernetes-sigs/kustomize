@@ -1,0 +1,3 @@
+failed to consolidate Composition at path /testdata/composition_testcases/error/duplicate_transformers
+transformers field is invalid
+list contains multiple "~G_builtin_LabelTransformer|default|top-labeller" transformers

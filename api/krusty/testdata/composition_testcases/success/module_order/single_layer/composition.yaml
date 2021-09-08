@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Composition
+
+transformers:
+- metadata:
+    name: labeller
+  kind: LabelTransformer
+  labels:
+    labelled-by-builtin: "true"
+  fieldSpecs:
+  - path: metadata/labels
+    create: true
+- metadata:
+    name: labeller
+  apiVersion: transformers.example.co/v1alpha1
+  kind: Labeller
+  runtime:
+    starlark:
+      path: testdata/composition_testcases/labeller.star
+  spec:
+    key: labelled-by-extension
+    value: "true"
+- metadata:
+    name: local-resources
+  kind: ResourceGenerator
+  files:
+    - resources/config_map.yaml
+    - resources/service.yaml
+
+transformerOrder:
+- name: local-resources
+- name: labeller
+  kind: Labeller
+  group: transformers.example.co
+- name: labeller
+  kind: LabelTransformer
+  version: builtin
+  namespace: default
