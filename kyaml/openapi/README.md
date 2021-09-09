@@ -39,6 +39,12 @@ The above command will update the [OpenAPI schema] and the [Kustomization schema
 create a directory kubernetesapi/v1212 and store the resulting
 swagger.json and swagger.go files there.
 
+#### Precomputations
+
+To avoid expensive schema lookups, some functions have precomputed results based on the schema. Unit tests
+ensure these are kept in sync with the schema; if these tests fail you will need to follow the suggested diff
+to update the precomputed results.
+
 ### Run all tests
 
 At the top of the repository, run the tests.
