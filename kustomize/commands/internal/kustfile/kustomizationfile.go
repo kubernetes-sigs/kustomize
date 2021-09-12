@@ -212,7 +212,7 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 			if matched {
 				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments)})
 				comments = [][]byte{}
-			} else if len(comments) > 0 {
+			} else if len(comments) > 0 && len(mf.originalFields) > 0 {
 				mf.originalFields[len(mf.originalFields)-1].appendComment(squash(comments))
 				comments = [][]byte{}
 			}
