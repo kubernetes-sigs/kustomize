@@ -39,7 +39,7 @@ func NewCmdAdd(
 	kustomize edit add base <filepath>
 	kustomize edit add base <filepath1>,<filepath2>,<filepath3>
 
-	# Adds one or more commonLabels to the kustomization
+	# Adds one or more labels or commonLabels to the kustomization
 	kustomize edit add label {labelKey1:labelValue1},{labelKey2:labelValue2}
 
 	# Adds one or more commonAnnotations to the kustomization

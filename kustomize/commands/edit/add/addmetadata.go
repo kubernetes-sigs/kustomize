@@ -34,10 +34,11 @@ func (k kindOfAdd) String() string {
 }
 
 type addMetadataOptions struct {
-	force        bool
-	metadata     map[string]string
-	mapValidator func(map[string]string) error
-	kind         kindOfAdd
+	force            bool
+	includeSelectors bool
+	metadata         map[string]string
+	mapValidator     func(map[string]string) error
+	kind             kindOfAdd
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
@@ -68,7 +69,7 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use: "label",
-		Short: "Adds one or more commonLabels to " +
+		Short: "Adds one or more labels or commonLabels to " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
 		add label {labelKey1:labelValue1} {labelKey2:labelValue2}`,
@@ -78,6 +79,9 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 	}
 	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
 		"overwrite commonLabel if it already exists",
+	)
+	cmd.Flags().BoolVarP(&o.includeSelectors, "include-selectors", "s", true,
+		"include label in selectors",
 	)
 	return cmd
 }
@@ -127,10 +131,38 @@ func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
 }
 
 func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
-	if m.CommonLabels == nil {
-		m.CommonLabels = make(map[string]string)
+	if o.includeSelectors {
+		if m.CommonLabels == nil {
+			m.CommonLabels = make(map[string]string)
+		}
+		return o.writeToMap(m.CommonLabels, label)
 	}
-	return o.writeToMap(m.CommonLabels, label)
+	if m.Labels == nil {
+		m.Labels = make([]types.Label, 0)
+	}
+	return o.writeToLabelsSlice(&m.Labels)
+}
+
+func (o *addMetadataOptions) writeToLabelsSlice(klabels *[]types.Label) error {
+	for k, v := range o.metadata {
+		isPresent := false
+		for _, kl := range *klabels {
+			if _, isPresent = kl.Pairs[k]; isPresent && !o.force {
+				return fmt.Errorf("%s %s already in kustomization file", label, k)
+			} else if isPresent && o.force {
+				kl.Pairs[k] = v
+			}
+		}
+		if !isPresent {
+			*klabels = append(*klabels, types.Label{
+				Pairs: map[string]string{
+					k: v,
+				},
+				IncludeSelectors: o.includeSelectors,
+			})
+		}
+	}
+	return nil
 }
 
 func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) error {
