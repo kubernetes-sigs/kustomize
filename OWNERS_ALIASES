@@ -1,16 +1,30 @@
-# Keep *-admins and *-maintainers list in sync with corresponding lists in
+# Keep *-owners and *-approvers lists in sync with *-admins and *-maintainers in
 # https://github.com/kubernetes/org/blob/main/config/kubernetes-sigs/sig-cli/teams.yaml
 aliases:
-  kustomize-admins:
+  kustomize-owners:
     - knverey
     - monopole
     - pwittrock
-  kustomize-maintainers:
+  kustomize-approvers:
     - justinsb
-    - mortent
+    - knverey
+    - monopole
     - natasha41575
-    - phanimarupaka
-    - Shell32-Natsu
-  emeritus-maintainers:
-    - liujingfang1
+    - pwittrock
+  kustomize-reviewers:
+    - knverey
+    - monopole
+    - natasha41575
+
+  kyaml-approvers:
     - mengqiy
+    - mortent
+    - phanimarupaka
+  kyaml-reviewers:
+    - mengqiy
+    - mortent
+    - phanimarupaka
+
+  emeritus-approvers:
+    - liujingfang1
+    - Shell32-Natsu
