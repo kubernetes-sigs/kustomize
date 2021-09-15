@@ -143,7 +143,7 @@ func (rf *Factory) resourcesFromRNodes(
 	return
 }
 
-func (rf *Factory) RNodesFromBytes(b []byte) (result []*yaml.RNode, err error) {
+func (rf *Factory) RNodesFromBytes(b []byte) ([]*yaml.RNode, error) {
 	nodes, err := kio.FromBytes(b)
 	if err != nil {
 		return nil, err
@@ -152,9 +152,17 @@ func (rf *Factory) RNodesFromBytes(b []byte) (result []*yaml.RNode, err error) {
 	if err != nil {
 		return nil, err
 	}
+	return rf.inlineAnyEmbeddedLists(nodes)
+}
+
+// inlineAnyEmbeddedLists scans the RNode slice for nodes named FooList.
+// Such nodes are expected to be lists of resources, each of type Foo.
+// These lists are replaced in the result by their inlined resources.
+func (rf *Factory) inlineAnyEmbeddedLists(
+	nodes []*yaml.RNode) (result []*yaml.RNode, err error) {
+	var n0 *yaml.RNode
 	for len(nodes) > 0 {
-		n0 := nodes[0]
-		nodes = nodes[1:]
+		n0, nodes = nodes[0], nodes[1:]
 		kind := n0.GetKind()
 		if !strings.HasSuffix(kind, "List") {
 			result = append(result, n0)
@@ -164,7 +172,7 @@ func (rf *Factory) RNodesFromBytes(b []byte) (result []*yaml.RNode, err error) {
 		var m map[string]interface{}
 		m, err = n0.Map()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("trouble expanding list of %s; %w", kind, err)
 		}
 		items, ok := m["items"]
 		if !ok {
