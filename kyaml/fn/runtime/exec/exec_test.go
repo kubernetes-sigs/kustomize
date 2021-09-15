@@ -43,6 +43,7 @@ kind: StatefulSet
 metadata:
   name: deployment-foo
   annotations:
+    internal.config.kubernetes.io/path: 'statefulset_deployment-foo.yaml'
     config.kubernetes.io/path: 'statefulset_deployment-foo.yaml'
 `,
 				`apiVersion: v1
@@ -50,6 +51,7 @@ kind: Service
 metadata:
   name: service-foo
   annotations:
+    internal.config.kubernetes.io/path: 'service_service-foo.yaml'
     config.kubernetes.io/path: 'service_service-foo.yaml'
 `,
 			},

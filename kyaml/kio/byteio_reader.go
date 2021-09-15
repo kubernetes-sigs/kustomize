@@ -280,6 +280,7 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 	}
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
+		r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
 
 		if r.PreserveSeqIndent {
 			// derive and add the seqindent annotation

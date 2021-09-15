@@ -320,6 +320,7 @@ func (r *LocalPackageReader) initReaderAnnotations(path string, _ os.FileInfo) {
 	}
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.PathAnnotation] = path
+		r.SetAnnotations[kioutil.LegacyPathAnnotation] = path
 	}
 }
 

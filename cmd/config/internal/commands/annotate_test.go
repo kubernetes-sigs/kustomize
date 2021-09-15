@@ -164,6 +164,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -175,6 +177,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -191,6 +195,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: bar
 spec:
   replicas: 3
@@ -206,6 +212,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: foo
 spec:
   replicas: 3
@@ -222,6 +230,8 @@ metadata:
     c: 'd'
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -234,6 +244,8 @@ metadata:
     c: 'd'
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -251,6 +263,8 @@ metadata:
     c: 'd'
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: bar
 spec:
   replicas: 3
@@ -267,6 +281,8 @@ metadata:
     c: 'd'
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: foo
 spec:
   replicas: 3
@@ -281,6 +297,8 @@ metadata:
     app: nginx2
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -292,6 +310,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -307,6 +327,8 @@ metadata:
     config.kubernetes.io/local-config: "true"
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: bar
 spec:
   replicas: 3
@@ -321,6 +343,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: foo
 spec:
   replicas: 3
@@ -335,6 +359,8 @@ metadata:
     app: nginx2
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -345,6 +371,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -361,6 +389,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: bar
 spec:
   replicas: 3
@@ -375,6 +405,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: foo
 spec:
   replicas: 3
@@ -389,6 +421,8 @@ metadata:
     app: nginx2
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -399,6 +433,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -414,6 +450,8 @@ metadata:
     config.kubernetes.io/local-config: "true"
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: bar
 spec:
   replicas: 3
@@ -429,6 +467,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: foo
 spec:
   replicas: 3
@@ -443,6 +483,8 @@ metadata:
     app: nginx2
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -453,6 +495,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -469,6 +513,8 @@ metadata:
     a: 'b'
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: bar
 spec:
   replicas: 3
@@ -483,6 +529,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f2.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f2.yaml'
   namespace: foo
 spec:
   replicas: 3

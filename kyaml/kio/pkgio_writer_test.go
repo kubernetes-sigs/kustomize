@@ -73,14 +73,18 @@ func TestLocalPackageWriter_Write_keepReaderAnnotations(t *testing.T) {
 		require.Equal(t, `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: "0"
     config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/path: 'a/b/a_test.yaml'
+    internal.config.kubernetes.io/index: '0'
 ---
 c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
+    config.kubernetes.io/index: "1"
     config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/path: 'a/b/a_test.yaml'
+    internal.config.kubernetes.io/index: '1'
 `, string(b))
 
 		b, err = fs.ReadFile(filepath.Join(d, "a", "b", "b_test.yaml"))
@@ -92,8 +96,10 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: "0"
     config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/path: 'a/b/b_test.yaml'
+    internal.config.kubernetes.io/index: '0'
 `, string(b))
 	})
 }
@@ -268,7 +274,7 @@ g:
 metadata:
   annotations:
     config.kubernetes.io/path: a/
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: "0"
 `)
 		require.NoError(t, err)
 
@@ -294,14 +300,14 @@ func getWriterInputs(t *testing.T, mockFS filesys.FileSystem) (string, *yaml.RNo
 	node1, err := yaml.Parse(`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: "0"
     config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	require.NoError(t, err)
 	node2, err := yaml.Parse(`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
+    config.kubernetes.io/index: "1"
     config.kubernetes.io/path: "a/b/a_test.yaml"
 `)
 	require.NoError(t, err)
@@ -312,7 +318,7 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
+    config.kubernetes.io/index: "0"
     config.kubernetes.io/path: "a/b/b_test.yaml"
 `)
 	require.NoError(t, err)
