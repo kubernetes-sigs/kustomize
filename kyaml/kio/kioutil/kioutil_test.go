@@ -98,6 +98,7 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'foo/b/bar_a.yaml'
     config.kubernetes.io/path: 'foo/b/bar_a.yaml'
 `, `with namespace`},
 		{
@@ -112,6 +113,7 @@ kind: Bar
 metadata:
   name: a
   annotations:
+    internal.config.kubernetes.io/path: 'foo/bar_a.yaml'
     config.kubernetes.io/path: 'foo/bar_a.yaml'
 `, `without namespace`},
 
@@ -129,6 +131,7 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'b/bar_a.yaml'
     config.kubernetes.io/path: 'b/bar_a.yaml'
 `, `without dir`},
 		{
@@ -139,6 +142,7 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
     config.kubernetes.io/path: 'a/b.yaml'
 `,
 			`apiVersion: v1
@@ -147,6 +151,7 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
     config.kubernetes.io/path: 'a/b.yaml'
 `, `skip`},
 	}
@@ -184,7 +189,9 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'foo/b/bar_a.yaml'
     config.kubernetes.io/path: 'foo/b/bar_a.yaml'
+    internal.config.kubernetes.io/index: '0'
     config.kubernetes.io/index: '0'
 `, `with namespace`},
 		{
@@ -199,7 +206,9 @@ kind: Bar
 metadata:
   name: a
   annotations:
+    internal.config.kubernetes.io/path: 'foo/bar_a.yaml'
     config.kubernetes.io/path: 'foo/bar_a.yaml'
+    internal.config.kubernetes.io/index: '0'
     config.kubernetes.io/index: '0'
 `, `without namespace`},
 
@@ -217,7 +226,9 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'b/bar_a.yaml'
     config.kubernetes.io/path: 'b/bar_a.yaml'
+    internal.config.kubernetes.io/index: '0'
     config.kubernetes.io/index: '0'
 `, `without dir`},
 		{
@@ -228,7 +239,9 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
     config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
     config.kubernetes.io/index: '5'
 `,
 			`apiVersion: v1
@@ -237,7 +250,9 @@ metadata:
   name: a
   namespace: b
   annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
     config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
     config.kubernetes.io/index: '5'
 `, `skip`},
 	}

@@ -128,6 +128,7 @@ metadata:
   annotations:
     key: foo-a
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
   labels:
     key: foo-l
 `
@@ -141,6 +142,7 @@ metadata:
   annotations:
     key: bar-a
     config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/index: '1'
   labels:
     key: bar-l
 `
