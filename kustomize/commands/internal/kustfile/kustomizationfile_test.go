@@ -356,6 +356,53 @@ kind: Kustomization
 	}
 }
 
+func TestCommentsWithDocumentSeperatorAtBeginning(t *testing.T) {
+	kustomizationContentWithComments := []byte(`
+
+    
+# Some comments
+# This is some comment we should preserve
+# don't delete it
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mynamespace
+`)
+
+	expected := []byte(`
+
+    
+# Some comments
+# This is some comment we should preserve
+# don't delete it
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mynamespace
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(
+		fSys, kustomizationContentWithComments)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
 func TestUnknownFieldInKustomization(t *testing.T) {
 	kContent := []byte(`
 foo:
