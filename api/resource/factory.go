@@ -124,14 +124,34 @@ func (rf *Factory) SliceFromBytes(in []byte) ([]*Resource, error) {
 	return rf.resourcesFromRNodes(nodes), nil
 }
 
+// DropLocalNodes removes the local nodes by default. Local nodes are detected via the annotation `config.kubernetes.io/local-config: "true"`
+func (rf *Factory) DropLocalNodes(nodes []*yaml.RNode) ([]*Resource, error) {
+	var result []*yaml.RNode
+	for _, node := range nodes {
+		if node.IsNilOrEmpty() {
+			continue
+		}
+		md, err := node.GetValidatedMetadata()
+		if err != nil {
+			return nil, err
+		}
+
+		if rf.IncludeLocalConfigs {
+			result = append(result, node)
+			continue
+		}
+		localConfig, exist := md.ObjectMeta.Annotations[konfig.IgnoredByKustomizeAnnotation]
+		if !exist || localConfig == "false" {
+			result = append(result, node)
+		}
+	}
+	return rf.resourcesFromRNodes(result), nil
+}
+
 // ResourcesFromRNodes converts RNodes to Resources.
 func (rf *Factory) ResourcesFromRNodes(
 	nodes []*yaml.RNode) (result []*Resource, err error) {
-	nodes, err = rf.dropBadNodes(nodes)
-	if err != nil {
-		return nil, err
-	}
-	return rf.resourcesFromRNodes(nodes), nil
+	return rf.DropLocalNodes(nodes)
 }
 
 // resourcesFromRNode assumes all nodes are good.
@@ -216,36 +236,18 @@ func (rf *Factory) convertObjectSliceToNodeSlice(
 func (rf *Factory) dropBadNodes(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	var result []*yaml.RNode
 	for _, n := range nodes {
-		ignore, err := rf.shouldIgnore(n)
-		if err != nil {
+		if n.IsNilOrEmpty() {
+			continue
+		}
+		if _, err := n.GetValidatedMetadata(); err != nil {
 			return nil, err
 		}
-		if !ignore {
-			result = append(result, n)
+		if foundNil, path := n.HasNilEntryInList(); foundNil {
+			return nil, fmt.Errorf("empty item at %v in object %v", path, n)
 		}
+		result = append(result, n)
 	}
 	return result, nil
-}
-
-// shouldIgnore returns true if there's some reason to ignore the node.
-func (rf *Factory) shouldIgnore(n *yaml.RNode) (bool, error) {
-	if n.IsNilOrEmpty() {
-		return true, nil
-	}
-	if !rf.IncludeLocalConfigs {
-		md, err := n.GetValidatedMetadata()
-		if err != nil {
-			return true, err
-		}
-		_, ignore := md.ObjectMeta.Annotations[konfig.IgnoredByKustomizeAnnotation]
-		if ignore {
-			return true, nil
-		}
-	}
-	if foundNil, path := n.HasNilEntryInList(); foundNil {
-		return true, fmt.Errorf("empty item at %v in object %v", path, n)
-	}
-	return false, nil
 }
 
 // SliceFromBytesWithNames unmarshals bytes into a Resource slice with specified original
