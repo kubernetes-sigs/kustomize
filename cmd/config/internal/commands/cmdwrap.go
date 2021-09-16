@@ -5,6 +5,7 @@ package commands
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -47,6 +48,7 @@ Environment Variables:
 
 `,
 		RunE:               r.runE,
+		PreRunE:            r.preRunE,
 		SilenceUsage:       true,
 		FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 		Args:               cobra.MinimumNArgs(1),
@@ -76,6 +78,12 @@ const (
 
 func WrapCommand() *cobra.Command {
 	return GetWrapRunner().Command
+}
+
+func (r *WrapRunner) preRunE(_ *cobra.Command, _ []string) error {
+	_, err := fmt.Fprintln(os.Stderr, `Command "wrap" is deprecated, this will no longer be available in kustomize v5.
+See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.`)
+	return err
 }
 
 func (r *WrapRunner) runE(c *cobra.Command, args []string) error {

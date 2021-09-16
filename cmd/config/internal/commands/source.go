@@ -5,6 +5,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
@@ -22,6 +23,7 @@ func GetSourceRunner(name string) *SourceRunner {
 		Long:    commands.SourceLong,
 		Example: commands.SourceExamples,
 		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 	runner.FixDocs(name, c)
 	c.Flags().StringVar(&r.WrapKind, "wrap-kind", kio.ResourceListKind,
@@ -45,6 +47,12 @@ type SourceRunner struct {
 	WrapApiVersion string
 	FunctionConfig string
 	Command        *cobra.Command
+}
+
+func (r *SourceRunner) preRunE(c *cobra.Command, args []string) error {
+	_, err := fmt.Fprintln(os.Stderr, `Command "source" is deprecated, this will no longer be available in kustomize v5.
+See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.`)
+	return err
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
