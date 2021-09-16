@@ -4,6 +4,9 @@
 package commands
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
@@ -20,6 +23,7 @@ func GetSinkRunner(name string) *SinkRunner {
 		Long:    commands.SinkLong,
 		Example: commands.SinkExamples,
 		RunE:    r.runE,
+		PreRunE: r.preRunE,
 		Args:    cobra.MaximumNArgs(1),
 	}
 	runner.FixDocs(name, c)
@@ -34,6 +38,12 @@ func SinkCommand(name string) *cobra.Command {
 // SinkRunner contains the run function
 type SinkRunner struct {
 	Command *cobra.Command
+}
+
+func (r *SinkRunner) preRunE(c *cobra.Command, args []string) error {
+	_, err := fmt.Fprintln(os.Stderr, `Command "sink" is deprecated, this will no longer be available in kustomize v5.
+See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.`)
+	return err
 }
 
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
