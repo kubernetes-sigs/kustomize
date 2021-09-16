@@ -42,6 +42,26 @@ spec:
 `)
 }
 
+func writeOtherCustomResource(th kusttest_test.Harness, filepath string) {
+	th.WriteF(filepath, `
+apiVersion: v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  template:
+    spec:
+      containers:
+      - name: server
+        image: server
+        command: example
+        ports:
+        - name: grpc
+          protocol: TCP
+          containerPort: 8080
+`)
+}
+
 func writeTestComponentWithCustomSchema(th kusttest_test.Harness) {
 	writeTestSchema(th, "comp/")
 	openapi.ResetOpenAPI()
@@ -63,6 +83,32 @@ const customSchemaPatch = `
 patchesStrategicMerge:
 - |-
   apiVersion: example.com/v1alpha1
+  kind: MyCRD
+  metadata:
+    name: service
+  spec:
+    template:
+      spec:
+        containers:
+        - name: server
+          image: nginx
+`
+
+const customSchemaPatchMultipleGvks = `
+patchesStrategicMerge:
+- |-
+  apiVersion: example.com/v1alpha1
+  kind: MyCRD
+  metadata:
+    name: service
+  spec:
+    template:
+      spec:
+        containers:
+        - name: server
+          image: nginx
+- |-
+  apiVersion: v1alpha1
   kind: MyCRD
   metadata:
     name: service
@@ -106,6 +152,54 @@ openapi:
 	openapi.ResetOpenAPI()
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, patchedCustomResource)
+}
+
+func TestCustomOpenApiFieldWithTwoGvks(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- mycrd.yaml
+- myothercrd.yaml
+openapi:
+  path: mycrd_schema.json
+`+customSchemaPatchMultipleGvks)
+	writeCustomResource(th, "mycrd.yaml")
+	writeOtherCustomResource(th, "myothercrd.yaml")
+	writeTestSchema(th, "./")
+	openapi.ResetOpenAPI()
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  template:
+    spec:
+      containers:
+      - command: example
+        image: nginx
+        name: server
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+---
+apiVersion: v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  template:
+    spec:
+      containers:
+      - command: example
+        image: nginx
+        name: server
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+`)
 }
 
 func TestCustomOpenApiFieldYaml(t *testing.T) {
