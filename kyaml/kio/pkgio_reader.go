@@ -82,6 +82,13 @@ type LocalPackageReadWriter struct {
 
 	// FileSystem can be used to mock the disk file system.
 	FileSystem filesys.FileSystemOrOnDisk
+
+	// WrapBareSeqNode wraps the bare sequence node document with map node,
+	// kyaml uses reader annotations to track resources, it is not possible to
+	// add them to bare sequence nodes, this option enables wrapping such bare
+	// sequence nodes into map node with key yaml.BareSeqNodeWrappingKey
+	// note that this wrapping is different and not related to ResourceList wrapping
+	WrapBareSeqNode bool
 }
 
 func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
@@ -95,6 +102,7 @@ func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 		FileSkipFunc:        r.FileSkipFunc,
 		PreserveSeqIndent:   r.PreserveSeqIndent,
 		FileSystem:          r.FileSystem,
+		WrapBareSeqNode:     r.WrapBareSeqNode,
 	}.Read()
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -193,6 +201,13 @@ type LocalPackageReader struct {
 
 	// FileSystem can be used to mock the disk file system.
 	FileSystem filesys.FileSystemOrOnDisk
+
+	// WrapBareSeqNode wraps the bare sequence node document with map node,
+	// kyaml uses reader annotations to track resources, it is not possible to
+	// add them to bare sequence nodes, this option enables wrapping such bare
+	// sequence nodes into map node with key yaml.BareSeqNodeWrappingKey
+	// note that this wrapping is different and not related to ResourceList wrapping
+	WrapBareSeqNode bool
 }
 
 var _ Reader = LocalPackageReader{}
@@ -287,6 +302,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
 		PreserveSeqIndent:     r.PreserveSeqIndent,
+		WrapBareSeqNode:       r.WrapBareSeqNode,
 	}
 	return rr.Read()
 }

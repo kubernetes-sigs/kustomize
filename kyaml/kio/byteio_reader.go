@@ -43,6 +43,13 @@ type ByteReadWriter struct {
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
 
+	// WrapBareSeqNode wraps the bare sequence node document with map node,
+	// kyaml uses reader annotations to track resources, it is not possible to
+	// add them to bare sequence nodes, this option enables wrapping such bare
+	// sequence nodes into map node with key yaml.BareSeqNodeWrappingKey
+	// note that this wrapping is different and not related to ResourceList wrapping
+	WrapBareSeqNode bool
+
 	FunctionConfig *yaml.RNode
 
 	Results *yaml.RNode
@@ -57,6 +64,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 		Reader:                rw.Reader,
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
 		PreserveSeqIndent:     rw.PreserveSeqIndent,
+		WrapBareSeqNode:       rw.WrapBareSeqNode,
 	}
 	val, err := b.Read()
 	if rw.FunctionConfig == nil {
@@ -137,6 +145,13 @@ type ByteReader struct {
 	// WrappingKind is set by Read(), and is the kind of the object that
 	// the read objects were originally wrapped in.
 	WrappingKind string
+
+	// WrapBareSeqNode wraps the bare sequence node document with map node,
+	// kyaml uses reader annotations to track resources, it is not possible to
+	// add them to bare sequence nodes, this option enables wrapping such bare
+	// sequence nodes into map node with key yaml.BareSeqNodeWrappingKey
+	// note that this wrapping is different and not related to ResourceList wrapping
+	WrapBareSeqNode bool
 }
 
 var _ Reader = &ByteReader{}
@@ -208,6 +223,10 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		}
 
 		if err != nil {
+			if r.WrapBareSeqNode {
+				// continue reading other resources if failed to parse a resource
+				continue
+			}
 			return nil, errors.Wrap(err)
 		}
 		if yaml.IsMissingOrNull(node) {
@@ -275,6 +294,14 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 	// sort the annotations by key so the output Resources is consistent (otherwise the
 	// annotations will be in a random order)
 	n := yaml.NewRNode(node)
+	wrappedNode := yaml.NewRNode(&yaml.Node{
+		Kind: yaml.MappingNode,
+	})
+	if r.WrapBareSeqNode && node.Kind == yaml.DocumentNode && node.Content[0].Kind == yaml.SequenceNode {
+		wrappedNode.PipeE(yaml.SetField(yaml.BareSeqNodeWrappingKey, n))
+	} else {
+		wrappedNode = n
+	}
 	if r.SetAnnotations == nil {
 		r.SetAnnotations = map[string]string{}
 	}
@@ -295,10 +322,10 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		_, err = n.Pipe(yaml.SetAnnotation(k, r.SetAnnotations[k]))
+		_, err = wrappedNode.Pipe(yaml.SetAnnotation(k, r.SetAnnotations[k]))
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
 	}
-	return yaml.NewRNode(node), nil
+	return wrappedNode, nil
 }

@@ -589,3 +589,153 @@ env:
 		})
 	}
 }
+
+func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
+	type testCase struct {
+		name            string
+		readerErr       string
+		writerErr       string
+		input           string
+		wrapBareSeqNode bool
+		expectedOutput  string
+		instance        kio.ByteReadWriter
+	}
+
+	testCases := []testCase{
+		{
+			name:            "round_trip bare seq node simple",
+			wrapBareSeqNode: true,
+			input: `
+- foo
+- bar
+`,
+			expectedOutput: `
+- foo
+- bar
+`,
+		},
+		{
+			name:            "round_trip bare seq node",
+			wrapBareSeqNode: true,
+			input: `# Use the old CRD because of the quantity validation issue:
+# https://github.com/kubeflow/kubeflow/issues/5722
+- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
+    names:
+      kind: Notebook
+      plural: notebooks
+      singular: notebook
+    scope: Namespaced
+    subresources:
+      status: {}
+    versions:
+    - name: v1alpha1
+      served: true
+      storage: false
+`,
+			expectedOutput: `# Use the old CRD because of the quantity validation issue:
+# https://github.com/kubeflow/kubeflow/issues/5722
+- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
+    names:
+      kind: Notebook
+      plural: notebooks
+      singular: notebook
+    scope: Namespaced
+    subresources:
+      status: {}
+    versions:
+    - name: v1alpha1
+      served: true
+      storage: false
+`,
+		},
+		{
+			name:            "error round_trip bare seq node simple",
+			wrapBareSeqNode: false,
+			input: `
+- foo
+- bar
+`,
+			readerErr: "wrong Node Kind for  expected: MappingNode was SequenceNode",
+		},
+		{
+			name:            "error k fround_trip bare seq node",
+			wrapBareSeqNode: false,
+			input: `# Use the old CRD because of the quantity validation issue:
+# https://github.com/kubeflow/kubeflow/issues/5722
+- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
+    names:
+      kind: Notebook
+      plural: notebooks
+      singular: notebook
+    scope: Namespaced
+    subresources:
+      status: {}
+    versions:
+    - name: v1alpha1
+      served: true
+      storage: false
+`,
+			readerErr: "wrong Node Kind for  expected: MappingNode was SequenceNode",
+		},
+		{
+			name:            "round_trip bare seq node json",
+			wrapBareSeqNode: true,
+			input:           `[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--namespaced"}]`,
+			expectedOutput:  `[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--namespaced"}]`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			var in, out bytes.Buffer
+			in.WriteString(tc.input)
+			w := tc.instance
+			w.Writer = &out
+			w.Reader = &in
+			w.PreserveSeqIndent = true
+			w.WrapBareSeqNode = tc.wrapBareSeqNode
+
+			nodes, err := w.Read()
+			if tc.readerErr != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.readerErr) {
+					t.FailNow()
+				}
+				return
+			}
+
+			w.WrappingKind = ""
+			err = w.Write(nodes)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if tc.writerErr != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.writerErr) {
+					t.FailNow()
+				}
+				return
+			}
+
+			if !assert.Equal(t,
+				strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String())) {
+				t.FailNow()
+			}
+		})
+	}
+}
