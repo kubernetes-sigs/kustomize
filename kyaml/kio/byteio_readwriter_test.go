@@ -664,7 +664,7 @@ func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
 			readerErr: "wrong Node Kind for  expected: MappingNode was SequenceNode",
 		},
 		{
-			name:            "error k fround_trip bare seq node",
+			name:            "error round_trip bare seq node",
 			wrapBareSeqNode: false,
 			input: `# Use the old CRD because of the quantity validation issue:
 # https://github.com/kubeflow/kubeflow/issues/5722
@@ -691,6 +691,12 @@ func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
 			wrapBareSeqNode: true,
 			input:           `[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--namespaced"}]`,
 			expectedOutput:  `[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--namespaced"}]`,
+		},
+		{
+			name:            "error round_trip invalid yaml node",
+			wrapBareSeqNode: false,
+			input:           "I am not valid",
+			readerErr:       "wrong Node Kind for  expected: MappingNode was ScalarNode",
 		},
 	}
 
