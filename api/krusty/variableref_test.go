@@ -1135,6 +1135,8 @@ apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: nginxIngress
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: $(DEPLOYMENT_NAME).example.com
 spec:
   rules:
   - host: $(DEPLOYMENT_NAME).example.com
@@ -1149,6 +1151,8 @@ apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: nginxIngress
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: nginxDep.example.com
 spec:
   rules:
   - host: nginxDep.example.com
@@ -1211,6 +1215,8 @@ metadata:
   name: nginx
   labels:
     app.kubernetes.io/component: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: $(DEPLOYMENT_NAME).example.com
 spec:
   rules:
   - host: $(DEPLOYMENT_NAME).example.com
@@ -1284,6 +1290,8 @@ spec:
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: kustomized-nginx.example.com
   labels:
     app.kubernetes.io/component: nginx
   name: kustomized-nginx
