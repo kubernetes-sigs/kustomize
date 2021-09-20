@@ -14,6 +14,10 @@ const (
 	WideSequenceStyle    SequenceIndentStyle = "wide"
 	CompactSequenceStyle SequenceIndentStyle = "compact"
 	DefaultIndent                            = 2
+	// BareSeqNodeWrappingKey kyaml uses reader annotations to track resources, it is not possible to
+	// add them to bare sequence nodes, this key is used to wrap such bare
+	// sequence nodes into map node, byteio_writer unwraps it while writing back
+	BareSeqNodeWrappingKey = "bareSeqNodeWrappingKey"
 )
 
 // SeqIndentType holds the indentation style for sequence nodes

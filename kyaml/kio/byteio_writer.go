@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"path/filepath"
+
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -113,7 +114,7 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 			} else {
 				encoder.CompactSeqIndent()
 			}
-			if err := encoder.Encode(nodes[i].Document()); err != nil {
+			if err := encoder.Encode(upWrapBareSequenceNode(nodes[i].Document())); err != nil {
 				return errors.Wrap(err)
 			}
 		}
@@ -180,4 +181,14 @@ func (w ByteWriter) shouldJSONEncodeSingleBareNode(nodes []*yaml.RNode) bool {
 		}
 	}
 	return false
+}
+
+// upWrapBareSequenceNode unwraps the bare sequence nodes wrapped by yaml.BareSeqNodeWrappingKey
+func upWrapBareSequenceNode(node *yaml.Node) *yaml.Node {
+	rNode := yaml.NewRNode(node)
+	seqNode, err := rNode.Pipe(yaml.Lookup(yaml.BareSeqNodeWrappingKey))
+	if err == nil && !seqNode.IsNilOrEmpty() {
+		return seqNode.YNode()
+	}
+	return node
 }
