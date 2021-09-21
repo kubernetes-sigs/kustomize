@@ -281,3 +281,12 @@ func (rf *Factory) MakeSecret(kvLdr ifc.KvLoader, args *types.SecretArgs) (*Reso
 	}
 	return rf.makeOne(rn, &args.GeneratorArgs), nil
 }
+
+// MakeVaultSecret makes an instance of Resource for Vault Secret
+func (rf *Factory) MakeVaultSecret(kvLdr ifc.KvLoader, args *types.VaultSecretArgs) (*Resource, error) {
+	rn, err := generators.MakeVaultSecret(kvLdr, args)
+	if err != nil {
+		return nil, err
+	}
+	return rf.makeOne(rn, &args.GeneratorArgs), nil
+}

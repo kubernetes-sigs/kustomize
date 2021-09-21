@@ -85,6 +85,7 @@ func (b *Kustomizer) Run(
 		return nil, err
 	}
 	var m resmap.ResMap
+	// here is where the resmaps are returned
 	m, err = kt.MakeCustomizedResMap()
 	if err != nil {
 		return nil, err

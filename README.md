@@ -18,6 +18,92 @@ This tool is sponsored by [sig-cli] ([KEP]).
 [![Build Status](https://prow.k8s.io/badge.svg?jobs=kustomize-presubmit-master)](https://prow.k8s.io/job-history/kubernetes-jenkins/pr-logs/directory/kustomize-presubmit-master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
 
+## Hashicorp Vault Integration with Kustomize
+
+This fork of Kustomize allows for integration with [Hashicorp Vault](https://www.vaultproject.io/) by reading secrets from Vault and 
+dropping the secrets into a `ConfigMap`. It does so by exposing a `vaultSecretGenerator` as an option in your `kustomization.yml`. Each
+entry in the generator corresponds to a secret in an instance of Hashicorp Vault that you provision yourself, which will then be accessible
+as a ConfigMap in your `base` or `overlays`.
+
+For instance, let's say you have a base with an application that wants access to an instance of MongoDB, and want to mount the secret in your
+kubernetes manifest:
+
+`~/base/manifest.yml`
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: some-app
+  name: some-app-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: some-app
+  template:
+    metadata:
+      labels:
+        app: some-app
+    spec:
+      containers:
+        - command: [ "/bin/bash", "-c", "--" ]
+          args: [ "while true; do sleep 30; done;" ]
+          volumeMounts:
+          - name: example-secret
+            mountPath: /etc/config/secrets
+            readOnly: true
+          image: busybox
+          imagePullPolicy: Always
+          name: some-app
+      volumes:
+      - name: example-secret
+        configMap:
+          name: mongo
+```
+
+Then you would reference it in your overlay kustomization file as such:
+
+`~/overlay/kustomization.yml`
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+  - ../base
+
+vaultSecretGenerator:
+- name: mongo
+  path: secrets/environment/mongo
+  secretKey: value
+```
+
+***NOTE***: this assumes that you have a secret mounted in your vault cluster at the `path` designated as `secrets/environment/mongo`, 
+and with a secret keyed at the `secretKey` value of `value`. It also assumes that the path enabled is running the V1 Secret Engine.
+
+Read more about Vault Secret engines [here](https://www.vaultproject.io/docs/secrets/kv/kv-v1).
+
+### Environment Variables for Vault Access
+
+This version of kustomize relies on a few environment variables to be set.
+
+- `VAULT_ADDR`: Public/Private Address where your Vault Cluster is located
+- `VAULT_USERNAME`: Username to access the cluster
+- `VAULT_PASSWORD`: Password to access the cluster
+
+***Without these variables set, this plugin will fail.***
+
+### End Result - Vault Access
+
+After applying this in my own kubernetes cluster, I was able to then exec into the kubernetes Pod and check the contents
+that were mounted into the pod from Hashicorp Vault.
+
+```bash
+(⎈ |stage-eks:default)➜  staging git:(master) ✗ kubectl exec -it some-app-deployment-84bfc64b8d-vvvjq -- sh
+$ cat /etc/config/secrets/mongo
+this is a vault secret!
+
+```
+
 ## kubectl integration
 
 The kustomize build flow at [v2.0.3] was added

@@ -1,0 +1,84 @@
+--- FAIL: TestVaultSecretConfigMap (0.00s)
+    --- FAIL: TestVaultSecretConfigMap/construct_config_map_from_literal_with_GeneratorOptions_in_ConfigMapArgs (0.00s)
+        vaultsecrets_test.go:201: 
+            	Error Trace:	vaultsecrets_test.go:201
+            	Error:      	Not equal: 
+            	            	expected: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: literalConfigMap2\n  labels:\n    cat: 'annoying'\n    dog: 'beagle'\n    veggie: 'celery'\n  annotations:\n    city: 'Iowa City'\n    river: 'Missouri'\ndata:\n  a: x\n  b: y\n  c: Hello World\n  d: \"true\"\nimmutable: true\n"
+            	            	actual  : "apiVersion: v1\nkind: VaultSecret\nmetadata:\n  name: literalConfigMap2\n  labels:\n    cat: 'annoying'\n    dog: 'beagle'\n    veggie: 'celery'\n  annotations:\n    city: 'Iowa City'\n    river: 'Missouri'\ndata:\n  a: x\n  b: y\n  c: Hello World\n  d: \"true\"\nimmutable: true\n"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 apiVersion: v1
+            	            	-kind: ConfigMap
+            	            	+kind: VaultSecret
+            	            	 metadata:
+            	Test:       	TestVaultSecretConfigMap/construct_config_map_from_literal_with_GeneratorOptions_in_ConfigMapArgs
+    --- FAIL: TestVaultSecretConfigMap/construct_config_map_from_env (0.00s)
+        vaultsecrets_test.go:201: 
+            	Error Trace:	vaultsecrets_test.go:201
+            	Error:      	Not equal: 
+            	            	expected: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: envConfigMap\ndata:\n  DB_PASSWORD: qwerty\n  DB_USERNAME: admin\n"
+            	            	actual  : "apiVersion: v1\nkind: VaultSecret\nmetadata:\n  name: envConfigMap\ndata:\n  DB_PASSWORD: qwerty\n  DB_USERNAME: admin\n"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 apiVersion: v1
+            	            	-kind: ConfigMap
+            	            	+kind: VaultSecret
+            	            	 metadata:
+            	Test:       	TestVaultSecretConfigMap/construct_config_map_from_env
+    --- FAIL: TestVaultSecretConfigMap/construct_config_map_from_text_file (0.00s)
+        vaultsecrets_test.go:201: 
+            	Error Trace:	vaultsecrets_test.go:201
+            	Error:      	Not equal: 
+            	            	expected: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: fileConfigMap1\ndata:\n  app-init.ini: |\n    FOO=bar\n    BAR=baz\n"
+            	            	actual  : "apiVersion: v1\nkind: VaultSecret\nmetadata:\n  name: fileConfigMap1\ndata:\n  app-init.ini: |\n    FOO=bar\n    BAR=baz\n"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 apiVersion: v1
+            	            	-kind: ConfigMap
+            	            	+kind: VaultSecret
+            	            	 metadata:
+            	Test:       	TestVaultSecretConfigMap/construct_config_map_from_text_file
+    --- FAIL: TestVaultSecretConfigMap/construct_config_map_from_text_and_binary_file (0.00s)
+        vaultsecrets_test.go:201: 
+            	Error Trace:	vaultsecrets_test.go:201
+            	Error:      	Not equal: 
+            	            	expected: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: fileConfigMap2\ndata:\n  app-init.ini: |\n    FOO=bar\n    BAR=baz\nbinaryData:\n  app.bin: |\n    /2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbG\n    xv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hl\n    bGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2\n    hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv\n"
+            	            	actual  : "apiVersion: v1\nkind: VaultSecret\nmetadata:\n  name: fileConfigMap2\ndata:\n  app-init.ini: |\n    FOO=bar\n    BAR=baz\nbinaryData:\n  app.bin: |\n    /2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbG\n    xv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hl\n    bGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2\n    hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv\n"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 apiVersion: v1
+            	            	-kind: ConfigMap
+            	            	+kind: VaultSecret
+            	            	 metadata:
+            	Test:       	TestVaultSecretConfigMap/construct_config_map_from_text_and_binary_file
+    --- FAIL: TestVaultSecretConfigMap/construct_config_map_from_literal (0.00s)
+        vaultsecrets_test.go:201: 
+            	Error Trace:	vaultsecrets_test.go:201
+            	Error:      	Not equal: 
+            	            	expected: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: literalConfigMap1\n  labels:\n    foo: 'bar'\ndata:\n  a: x\n  b: y\n  c: Hello World\n  d: \"true\"\n"
+            	            	actual  : "apiVersion: v1\nkind: VaultSecret\nmetadata:\n  name: literalConfigMap1\n  labels:\n    foo: 'bar'\ndata:\n  a: x\n  b: y\n  c: Hello World\n  d: \"true\"\n"
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 apiVersion: v1
+            	            	-kind: ConfigMap
+            	            	+kind: VaultSecret
+            	            	 metadata:
+            	Test:       	TestVaultSecretConfigMap/construct_config_map_from_literal
+FAIL
+exit status 1
+FAIL	sigs.k8s.io/kustomize/api/internal/generators	0.157s

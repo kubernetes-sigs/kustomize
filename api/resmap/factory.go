@@ -135,6 +135,16 @@ func newResMapFromResourceSlice(
 	return result, nil
 }
 
+// FromVaultSecretArgs creates a new ResMap containing one secret mapped from
+// a hashicorp vault server
+func (rmF *Factory) FromVaultSecretArgs(kvLdr ifc.KvLoader, args types.VaultSecretArgs) (ResMap, error) {
+	res, err := rmF.resF.MakeVaultSecret(kvLdr, &args)
+	if err != nil {
+		return nil, err
+	}
+	return rmF.FromResource(res), nil
+}
+
 // NewResMapFromRNodeSlice returns a ResMap from a slice of RNodes
 func (rmF *Factory) NewResMapFromRNodeSlice(s []*yaml.RNode) (ResMap, error) {
 	rs, err := rmF.resF.ResourcesFromRNodes(s)

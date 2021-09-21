@@ -133,6 +133,10 @@ type Kustomization struct {
 	// the map will have a suffix hash generated from its contents.
 	SecretGenerator []SecretArgs `json:"secretGenerator,omitempty" yaml:"secretGenerator,omitempty"`
 
+	// VaultSecretGenerator loads a file that has a list of secrets to pull from
+	// an external instance of vault.
+	VaultSecretGenerator []VaultSecretArgs `json:"vaultSecretGenerator,omitempty" yaml:"vaultSecretGenerator,omitempty"`
+
 	// HelmGlobals contains helm configuration that isn't chart specific.
 	HelmGlobals *HelmGlobals `json:"helmGlobals,omitempty" yaml:"helmGlobals,omitempty"`
 

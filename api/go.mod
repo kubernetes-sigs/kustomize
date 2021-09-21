@@ -6,6 +6,7 @@ require (
 	github.com/evanphx/json-patch v4.11.0+incompatible
 	github.com/go-errors/errors v1.0.1
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/hashicorp/vault/api v1.1.1 // indirect
 	github.com/imdario/mergo v0.3.5
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.5.1

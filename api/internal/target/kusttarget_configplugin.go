@@ -33,6 +33,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 		builtinhelpers.ConfigMapGenerator,
 		builtinhelpers.SecretGenerator,
 		builtinhelpers.HelmChartInflationGenerator,
+		builtinhelpers.VaultSecretGenerator,
 	} {
 		r, err := generatorConfigurators[bpt](
 			kt, bpt, builtinhelpers.GeneratorFactories[bpt])
@@ -129,6 +130,23 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			c.HelmChart = chart
 			p := f()
 			if err = kt.configureBuiltinPlugin(p, c, bpt); err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
+
+	builtinhelpers.VaultSecretGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
+		result []resmap.Generator, err error) {
+		var c struct {
+			types.VaultSecretArgs
+		}
+
+		for _, args := range kt.kustomization.VaultSecretGenerator {
+			c.VaultSecretArgs = args
+			p := f()
+			if err := kt.configureBuiltinPlugin(p, c, bpt); err != nil {
 				return nil, err
 			}
 			result = append(result, p)

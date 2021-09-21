@@ -26,6 +26,7 @@ func _() {
 	_ = x[ValueAddTransformer-15]
 	_ = x[HelmChartInflationGenerator-16]
 	_ = x[ReplacementTransformer-17]
+	_ = x[VaultSecretGenerator-18]
 }
 
 const _BuiltinPluginType_name = "UnknownAnnotationsTransformerConfigMapGeneratorIAMPolicyGeneratorHashTransformerImageTagTransformerLabelTransformerLegacyOrderTransformerNamespaceTransformerPatchJson6902TransformerPatchStrategicMergeTransformerPatchTransformerPrefixSuffixTransformerReplicaCountTransformerSecretGeneratorValueAddTransformerHelmChartInflationGeneratorReplacementTransformer"
