@@ -1,4 +1,4 @@
-# kustomize
+# kustomize With Hashicorp Vault Integration
 
 `kustomize` lets you customize raw, template-free YAML
 files for multiple purposes, leaving the original YAML
@@ -18,7 +18,7 @@ This tool is sponsored by [sig-cli] ([KEP]).
 [![Build Status](https://prow.k8s.io/badge.svg?jobs=kustomize-presubmit-master)](https://prow.k8s.io/job-history/kubernetes-jenkins/pr-logs/directory/kustomize-presubmit-master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/kustomize)](https://goreportcard.com/report/github.com/kubernetes-sigs/kustomize)
 
-## Hashicorp Vault Integration with Kustomize
+## Native Vault Integration
 
 This fork of Kustomize allows for integration with [Hashicorp Vault](https://www.vaultproject.io/) by reading secrets from Vault and 
 dropping the secrets into a `ConfigMap`. It does so by exposing a `vaultSecretGenerator` as an option in your `kustomization.yml`. Each
@@ -103,6 +103,20 @@ $ cat /etc/config/secrets/mongo
 this is a vault secret!
 
 ```
+
+### Benefits to this approach 
+
+1. Secrets are no longer a run time dependency. They are either pulled, read and then mounted into your k8s manifest, 
+or we don’t update the deployment because the external connection to your secrets manager is failing for some reason. Secrets management 
+shouldn't bring down your live deployments!
+
+2. Whenever you have any doubt about whether a secret is being loaded, one can just exec into the pod and look 
+to see what exactly is there. This greatly increases debugging capabilities in production environments, but at the cost of
+having to ensure you leverage access restrictions to your k8s Cluster.
+
+3. [GoPlugins are notorious for being incredible hard for developers to work with.](https://www.reddit.com/r/golang/comments/b6h8qq/is_anyone_actually_using_go_plugins/)
+With this approach, the Vault integration is built right in with the other builtin generators. You won't need to worry about any sorts of
+build issues or other pains that you would normally deal with in a kustomize version, as Vault support is now native to Kustomize.
 
 ## kubectl integration
 
