@@ -758,7 +758,7 @@ items:
   metadata:
     name: deployment-b
   spec:
-    <<: *hostAliases
+    *hostAliases
 `),
 			exp: expected{
 				sOut: []string{`
@@ -769,7 +769,7 @@ items:
   kind: Deployment
   metadata:
     name: deployment-a
-  spec: &hostAliases
+  spec:
     template:
       spec:
         hostAliases:
@@ -781,7 +781,12 @@ items:
   metadata:
     name: deployment-b
   spec:
-    !!merge <<: *hostAliases
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
 `},
 			},
 		},
@@ -808,27 +813,21 @@ items:
 	}
 }
 
-// This test shows the lower level (go-yaml) representation of a small doc
-// with an anchor. The anchor structure is there, in the sense that an
-// alias pointer is readily available when a node's kind is an AliasNode.
-// I.e. the anchor mapping name -> object was noted during unmarshalling.
-// However, at the time of writing github.com/go-yaml/yaml/encoder.go
-// doesn't appear to have an option to perform anchor replacements when
-// encoding.  It emits anchor definitions and references (aliases) intact.
-func TestByteReader_AnchorBehavior(t *testing.T) {
+// Show the low level (go-yaml) representation of a small doc with a
+// YAML anchor and alias after reading it with anchor expansion on or off.
+func TestByteReader_AnchorsAweigh(t *testing.T) {
 	const input = `
 data:
   color: &color-used blue
   feeling: *color-used
 `
-	expected := strings.TrimSpace(`
-data:
-  color: &color-used blue
-  feeling: *color-used
-`)
 	var rNode *yaml.RNode
 	{
-		rNodes, err := FromBytes([]byte(input))
+		rNodes, err := (&ByteReader{
+			OmitReaderAnnotations: true,
+			AnchorsAweigh:         false,
+			Reader:                bytes.NewBuffer([]byte(input)),
+		}).Read()
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(rNodes))
 		rNode = rNodes[0]
@@ -857,7 +856,7 @@ data:
 		assert.Equal(t, yaml.ScalarNode, yNodes[0].Kind)
 		assert.Equal(t, yaml.NodeTagString, yNodes[0].Tag)
 		assert.Equal(t, "color", yNodes[0].Value)
-		assert.Equal(t, "", yNodes[0].Anchor)
+		assert.Empty(t, yNodes[0].Anchor)
 		assert.Nil(t, yNodes[0].Alias)
 
 		assert.Equal(t, yaml.ScalarNode, yNodes[1].Kind)
@@ -869,19 +868,82 @@ data:
 		assert.Equal(t, yaml.ScalarNode, yNodes[2].Kind)
 		assert.Equal(t, yaml.NodeTagString, yNodes[2].Tag)
 		assert.Equal(t, "feeling", yNodes[2].Value)
-		assert.Equal(t, "", yNodes[2].Anchor)
+		assert.Empty(t, yNodes[2].Anchor)
 		assert.Nil(t, yNodes[2].Alias)
 
 		assert.Equal(t, yaml.AliasNode, yNodes[3].Kind)
-		assert.Equal(t, "", yNodes[3].Tag)
+		assert.Empty(t, yNodes[3].Tag)
 		assert.Equal(t, "color-used", yNodes[3].Value)
-		assert.Equal(t, "", yNodes[3].Anchor)
+		assert.Empty(t, yNodes[3].Anchor)
 		assert.NotNil(t, yNodes[3].Alias)
 	}
 
-	yaml, err := rNode.String()
+	str, err := rNode.String()
 	assert.NoError(t, err)
-	assert.Equal(t, expected, strings.TrimSpace(yaml))
+	// The string version matches the input (it still has anchors and aliases).
+	assert.Equal(t, strings.TrimSpace(input), strings.TrimSpace(str))
+
+	// Now do same thing again, but this time set AnchorsAweigh = true.
+	{
+		rNodes, err := (&ByteReader{
+			OmitReaderAnnotations: true,
+			AnchorsAweigh:         true,
+			Reader:                bytes.NewBuffer([]byte(input)),
+		}).Read()
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(rNodes))
+		rNode = rNodes[0]
+	}
+	// Again make assertions on the internals.
+	{
+		yNode := rNode.YNode()
+
+		assert.Equal(t, yaml.NodeTagMap, yNode.Tag)
+
+		yNodes := yNode.Content
+		assert.Equal(t, 2, len(yNodes))
+
+		assert.Equal(t, yaml.NodeTagString, yNodes[0].Tag)
+		assert.Equal(t, "data", yNodes[0].Value)
+
+		assert.Equal(t, yaml.NodeTagMap, yNodes[1].Tag)
+
+		yNodes = yNodes[1].Content
+		assert.Equal(t, 4, len(yNodes))
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[0].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[0].Tag)
+		assert.Equal(t, "color", yNodes[0].Value)
+		assert.Empty(t, yNodes[0].Anchor)
+		assert.Nil(t, yNodes[0].Alias)
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[1].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[1].Tag)
+		assert.Equal(t, "blue", yNodes[1].Value)
+		assert.Empty(t, yNodes[1].Anchor)
+		assert.Nil(t, yNodes[1].Alias)
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[2].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[2].Tag)
+		assert.Equal(t, "feeling", yNodes[2].Value)
+		assert.Empty(t, yNodes[2].Anchor)
+		assert.Nil(t, yNodes[2].Alias)
+
+		assert.Equal(t, yaml.ScalarNode, yNodes[3].Kind)
+		assert.Equal(t, yaml.NodeTagString, yNodes[3].Tag)
+		assert.Equal(t, "blue", yNodes[3].Value)
+		assert.Empty(t, yNodes[3].Anchor)
+		assert.Nil(t, yNodes[3].Alias)
+	}
+
+	str, err = rNode.String()
+	assert.NoError(t, err)
+	// This time, the alias has been replaced with the anchor definition.
+	assert.Equal(t, strings.TrimSpace(`
+data:
+  color: blue
+  feeling: blue
+`), strings.TrimSpace(str))
 }
 
 // TestByteReader_AddSeqIndentAnnotation tests if the internal.config.kubernetes.io/seqindent

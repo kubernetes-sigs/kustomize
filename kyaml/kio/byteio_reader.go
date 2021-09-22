@@ -102,6 +102,7 @@ func ParseAll(inputs ...string) ([]*yaml.RNode, error) {
 func FromBytes(bs []byte) ([]*yaml.RNode, error) {
 	return (&ByteReader{
 		OmitReaderAnnotations: true,
+		AnchorsAweigh:         true,
 		Reader:                bytes.NewBuffer(bs),
 	}).Read()
 }
@@ -152,6 +153,10 @@ type ByteReader struct {
 	// sequence nodes into map node with key yaml.BareSeqNodeWrappingKey
 	// note that this wrapping is different and not related to ResourceList wrapping
 	WrapBareSeqNode bool
+
+	// AnchorsAweigh set to true attempts to replace all YAML anchor aliases
+	// with their definitions (anchor values) immediately after the read.
+	AnchorsAweigh bool
 }
 
 var _ Reader = &ByteReader{}
@@ -268,6 +273,13 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 		// increment the index annotation value
 		index++
+	}
+	if r.AnchorsAweigh {
+		for _, n := range output {
+			if err = n.DeAnchor(); err != nil {
+				return nil, err
+			}
+		}
 	}
 	return output, nil
 }
