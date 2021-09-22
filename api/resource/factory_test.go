@@ -639,17 +639,14 @@ data:
   feeling: *color-used
 `),
 			exp: expected{
-				// TODO(#3675) : the anchor should be replaced.
-				// Anchors are replaced in the List above due to a different code path
-				// (when the list is inlined).
 				out: []string{`
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: wildcard
 data:
-  color: &color-used blue
-  feeling: *color-used
+  color: blue
+  feeling: blue
 `},
 			},
 		},
