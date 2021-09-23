@@ -152,6 +152,7 @@ var orderFirst = []string{
 	"PriorityClass",
 	"PersistentVolume",
 	"PersistentVolumeClaim",
+	"TargetGroupBinding",
 	"Deployment",
 	"StatefulSet",
 	"CronJob",
