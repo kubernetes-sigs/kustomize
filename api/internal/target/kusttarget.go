@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
@@ -218,7 +219,24 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator, origin *r
 		return nil, errors.Wrapf(
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
+	err = kt.IgnoreLocal(ra)
+	if err != nil {
+		return nil, err
+	}
 	return ra, nil
+}
+
+// IgnoreLocal drops the local resource by checking the annotation "config.kubernetes.io/local-config".
+func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
+	rf := kt.rFactory.RF()
+	if rf.IncludeLocalConfigs {
+		return nil
+	}
+	remainRes, err := rf.DropLocalNodes(ra.ResMap().ToRNodeSlice())
+	if err != nil {
+		return err
+	}
+	return ra.Intersection(kt.rFactory.FromResourceSlice(remainRes))
 }
 
 func (kt *KustTarget) runGenerators(
