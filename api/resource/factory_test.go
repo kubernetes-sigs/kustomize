@@ -13,6 +13,7 @@ import (
 	. "sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 func TestRNodesFromBytes(t *testing.T) {
@@ -470,30 +471,6 @@ metadata:
 `},
 			},
 		},
-		"localConfigYaml": {
-			input: []byte(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie-skip
-  annotations:
-    # this annotation causes the Resource to be ignored by kustomize
-    config.kubernetes.io/local-config: ""
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
-`),
-			exp: expected{
-				out: []string{`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: winnie
-`},
-			},
-		},
 		"garbageInOneOfTwoObjects": {
 			input: []byte(`
 apiVersion: v1
@@ -666,6 +643,96 @@ data:
 				assert.NoError(t, err)
 				assert.Equal(
 					t, strings.TrimSpace(tc.exp.out[i]), strings.TrimSpace(actual))
+			}
+		})
+	}
+}
+
+func TestDropLocalNodes(t *testing.T) {
+	testCases := map[string]struct {
+		input    []byte
+		expected []byte
+	}{
+		"localConfigUnset": {
+			input: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+			expected: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+		},
+		"localConfigSet": {
+			input: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie-skip
+  annotations:
+     # this annotation causes the Resource to be ignored by kustomize
+     config.kubernetes.io/local-config: ""
+`),
+			expected: nil,
+		},
+		"localConfigSetToTrue": {
+			input: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie-skip
+  annotations:
+	 config.kubernetes.io/local-config: "true"
+		`),
+			expected: nil,
+		},
+		"localConfigSetToFalse": {
+			input: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+  annotations:
+    config.kubernetes.io/local-config: "false"
+`),
+			expected: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/local-config: "false"
+  name: winnie
+`),
+		},
+		"localConfigMultiInput": {
+			input: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie-skip
+  annotations:
+    config.kubernetes.io/local-config: "true"
+`),
+			expected: []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: winnie
+`),
+		},
+	}
+	for n := range testCases {
+		tc := testCases[n]
+		t.Run(n, func(t *testing.T) {
+			nin, _ := kio.FromBytes(tc.input)
+			res, err := factory.DropLocalNodes(nin)
+			assert.NoError(t, err)
+			if tc.expected == nil {
+				assert.Equal(t, 0, len(res))
+			} else {
+				actual, _ := res[0].AsYAML()
+				assert.Equal(t, tc.expected, actual)
 			}
 		})
 	}
