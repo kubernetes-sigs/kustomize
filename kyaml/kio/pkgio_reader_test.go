@@ -631,6 +631,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'e_test.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'e_test.yaml'
 `,
 			`bareSeqNodeWrappingKey:
 - foo # second
@@ -639,6 +641,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'e_test.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'e_test.yaml'
 `,
 		}
 		for i := range nodes {
