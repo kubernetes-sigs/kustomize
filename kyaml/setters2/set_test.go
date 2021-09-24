@@ -862,6 +862,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'cluster.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'cluster.yaml'
 spec:
   replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `, `
@@ -872,6 +874,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'cluster.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'cluster.yaml'
 spec:
   replicas: 10
  `},
@@ -883,6 +887,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'cluster.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'cluster.yaml'
 spec:
   replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `, `
@@ -893,6 +899,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'cluster.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'cluster.yaml'
 spec:
   replicas: 10
  `},
@@ -917,6 +925,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'cluster.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'cluster.yaml'
 spec:
   replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `, `
@@ -927,6 +937,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'another_cluster.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'another_cluster.yaml'
 spec:
   replicas: 10
  `},
@@ -938,6 +950,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'cluster.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'cluster.yaml'
 spec:
   replicas: 4 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
  `},

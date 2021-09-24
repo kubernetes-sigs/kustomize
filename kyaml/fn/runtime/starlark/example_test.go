@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -76,6 +77,7 @@ run(ctx.resource_list["items"])
 	//   name: deployment-1
 	//   annotations:
 	//     foo: bar
+	//     internal.config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	//     config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	// spec:
 	//   template:
@@ -90,6 +92,7 @@ run(ctx.resource_list["items"])
 	//   name: deployment-2
 	//   annotations:
 	//     foo: bar
+	//     internal.config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	//     config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	// spec:
 	//   template:
@@ -168,6 +171,7 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   name: deployment-1
 	//   annotations:
 	//     foo: hello world
+	//     internal.config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	//     config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	// spec:
 	//   template:
@@ -182,6 +186,7 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   name: deployment-2
 	//   annotations:
 	//     foo: hello world
+	//     internal.config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	//     config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	// spec:
 	//   template:
@@ -257,8 +262,11 @@ run(ctx.resource_list["items"])
 		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: d}},
 		Filters: []kio.Filter{fltr},
 		Outputs: []kio.Writer{&kio.ByteWriter{
-			Writer:           output,
-			ClearAnnotations: []string{"config.kubernetes.io/path"},
+			Writer: output,
+			ClearAnnotations: []string{
+				kioutil.PathAnnotation,
+				kioutil.LegacyPathAnnotation,
+			},
 		}}}.Execute()
 	if err != nil {
 		log.Println(err)

@@ -250,6 +250,7 @@ metadata:
   name: dep
   annotations:
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
 data:
   slice:
   - false
@@ -276,6 +277,7 @@ metadata:
   name: dep
   annotations:
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
 data:
   1: str
 : invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,

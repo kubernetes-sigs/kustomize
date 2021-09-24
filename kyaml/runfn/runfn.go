@@ -343,6 +343,12 @@ func sortFns(buff *kio.PackageBuffer) error {
 	// sort the nodes so that we traverse them depth first
 	// functions deeper in the file system tree should be run first
 	sort.Slice(buff.Nodes, func(i, j int) bool {
+		if err := kioutil.CopyLegacyAnnotations(buff.Nodes[i]); err != nil {
+			return false
+		}
+		if err := kioutil.CopyLegacyAnnotations(buff.Nodes[j]); err != nil {
+			return false
+		}
 		mi, _ := buff.Nodes[i].GetMeta()
 		pi := filepath.ToSlash(mi.Annotations[kioutil.PathAnnotation])
 
@@ -487,7 +493,12 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 
 		var p string
 		if spec.Starlark.Path != "" {
-			p = filepath.ToSlash(path.Clean(m.Annotations[kioutil.PathAnnotation]))
+			pathAnno := m.Annotations[kioutil.PathAnnotation]
+			if pathAnno == "" {
+				pathAnno = m.Annotations[kioutil.LegacyPathAnnotation]
+			}
+			p = filepath.ToSlash(path.Clean(pathAnno))
+
 			spec.Starlark.Path = filepath.ToSlash(path.Clean(spec.Starlark.Path))
 			if filepath.IsAbs(spec.Starlark.Path) || path.IsAbs(spec.Starlark.Path) {
 				return nil, errors.Errorf(

@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -182,7 +183,7 @@ func (r *CatRunner) out(w io.Writer) ([]kio.Writer, error) {
 
 	// remove this annotation explicitly, the ByteWriter won't clear it by
 	// default because it doesn't set it
-	clear := []string{"config.kubernetes.io/path"}
+	clear := []string{kioutil.LegacyPathAnnotation, kioutil.PathAnnotation}
 	if r.KeepAnnotations {
 		clear = nil
 	}

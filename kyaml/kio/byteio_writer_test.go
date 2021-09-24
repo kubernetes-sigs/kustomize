@@ -222,8 +222,8 @@ spec:
 				`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
 `,
 				`e: f
 g:
@@ -232,28 +232,32 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/b_test.yaml"
 `,
 				`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 1
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
 `,
 			},
 
 			expectedOutput: `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
+    config.kubernetes.io/index: '0'
 ---
 c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 1
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
+    config.kubernetes.io/index: '1'
 ---
 e: f
 g:
@@ -262,8 +266,10 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/b_test.yaml"
+    config.kubernetes.io/path: 'a/b/b_test.yaml'
+    config.kubernetes.io/index: '0'
 `,
 		},
 
@@ -277,13 +283,13 @@ metadata:
 				`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
 `,
 				`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 1
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
 `,
 				`e: f
 g:
@@ -293,21 +299,23 @@ g:
 `,
 			},
 
-			expectedOutput: `e: f
-g:
-  h:
-  - i # has a list
-  - j
----
-a: b #first
+			expectedOutput: `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
 ---
 c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    config.kubernetes.io/path: 'a/b/a_test.yaml'
+---
+e: f
+g:
+  h:
+  - i # has a list
+  - j
 `,
 		},
 
@@ -321,8 +329,8 @@ metadata:
 				`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
     internal.config.kubernetes.io/index: "compact"
 `,
 				`e: f
@@ -332,15 +340,15 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/b_test.yaml"
     internal.config.kubernetes.io/seqindent: "wide"
 `,
 				`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 1
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
     internal.config.kubernetes.io/seqindent: "compact"
 `,
 			},
@@ -348,8 +356,8 @@ metadata:
 			expectedOutput: `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
     internal.config.kubernetes.io/index: "compact"
 ---
 e: f
@@ -359,15 +367,15 @@ g:
     - j
 metadata:
   annotations:
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/b_test.yaml"
     internal.config.kubernetes.io/seqindent: "wide"
 ---
 c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/index: 1
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
     internal.config.kubernetes.io/seqindent: "compact"
 `,
 		},
@@ -382,7 +390,7 @@ metadata:
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
   metadata: {
     annotations: {
-      config.kubernetes.io/path: test.json
+      internal.config.kubernetes.io/path: test.json
     }
   }
 }`,
@@ -392,7 +400,8 @@ metadata:
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json"
+      "config.kubernetes.io/path": "test.json",
+      "internal.config.kubernetes.io/path": "test.json"
     }
   }
 }`,
@@ -409,8 +418,8 @@ metadata:
   metadata: {
     annotations: {
       "internal.config.kubernetes.io/seqindent": "compact",
-      "config.kubernetes.io/index": "0",
-      "config.kubernetes.io/path": "test.json"
+      "internal.config.kubernetes.io/index": "0",
+      "internal.config.kubernetes.io/path": "test.json"
     }
   }
 }`,
@@ -420,7 +429,8 @@ metadata:
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json"
+      "config.kubernetes.io/path": "test.json",
+      "internal.config.kubernetes.io/path": "test.json"
     }
   }
 }`,
@@ -432,14 +442,15 @@ metadata:
 		{
 			name: "encode_unformatted_valid_json",
 			items: []string{
-				`{ "a": "b", metadata: { annotations: { config.kubernetes.io/path: test.json } } }`,
+				`{ "a": "b", metadata: { annotations: { internal.config.kubernetes.io/path: test.json } } }`,
 			},
 
 			expectedOutput: `{
   "a": "b",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json"
+      "config.kubernetes.io/path": "test.json",
+      "internal.config.kubernetes.io/path": "test.json"
     }
   }
 }`,
@@ -460,7 +471,7 @@ metadata:
   "a": "b",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json"
+      "internal.config.kubernetes.io/path": "test.json"
     }
   }
 }`,
@@ -469,7 +480,7 @@ metadata:
 			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- {"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test.json"}}}
+- {"a": "b", "metadata": {"annotations": {"internal.config.kubernetes.io/path": "test.json"}}}
 `,
 		},
 
@@ -483,7 +494,7 @@ items:
   "a": "b",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test-1.json"
+      "internal.config.kubernetes.io/path": "test-1.json"
     }
   }
 }`,
@@ -491,16 +502,16 @@ items:
   "c": "d",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test-2.json"
+      "internal.config.kubernetes.io/path": "test-2.json"
     }
   }
 }`,
 			},
 
 			expectedOutput: `
-{"a": "b", "metadata": {"annotations": {"config.kubernetes.io/path": "test-1.json"}}}
+{"a": "b", "metadata": {"annotations": {"internal.config.kubernetes.io/path": "test-1.json"}}}
 ---
-{"c": "d", "metadata": {"annotations": {"config.kubernetes.io/path": "test-2.json"}}}
+{"c": "d", "metadata": {"annotations": {"internal.config.kubernetes.io/path": "test-2.json"}}}
 `,
 		},
 	}

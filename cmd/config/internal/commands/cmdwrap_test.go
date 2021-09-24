@@ -81,6 +81,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/test_deployment.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/test_deployment.yaml'
   spec:
     replicas: 11
     selector:
@@ -112,6 +114,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/test_service.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/test_service.yaml'
   spec:
     selector:
       name: test
@@ -136,6 +140,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/test_deployment.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/test_deployment.yaml'
   spec:
     replicas: 11
     selector:
@@ -164,6 +170,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/test_service.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/test_service.yaml'
   spec:
     selector:
       name: test
@@ -186,6 +194,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/mysql-deployment_deployment.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/mysql-deployment_deployment.yaml'
   spec:
     replicas: 3
     template:
@@ -201,6 +211,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/nosetters-deployment_deployment.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/nosetters-deployment_deployment.yaml'
   spec:
     replicas: 4
     template:
@@ -216,6 +228,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/storage-deployment_deployment.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/storage-deployment_deployment.yaml'
   spec:
     replicas: 4
     template:
@@ -233,6 +247,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/test_deployment.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/test_deployment.yaml'
   spec:
     replicas: 11
     selector:
@@ -264,6 +280,8 @@ items:
     annotations:
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'config/test_service.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'config/test_service.yaml'
   spec:
     selector:
       name: test
