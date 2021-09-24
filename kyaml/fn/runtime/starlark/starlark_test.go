@@ -56,6 +56,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: bar
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
@@ -96,6 +97,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: annotation-value
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
@@ -135,6 +137,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: Deployment enables declarative updates for Pods and ReplicaSets.
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
@@ -177,6 +180,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: bar
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
@@ -218,6 +222,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
@@ -272,6 +277,7 @@ metadata:
   name: nginx-deployment-1
   annotations:
     foo: bar
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
 spec:
   template:
@@ -287,6 +293,7 @@ metadata:
   name: nginx-deployment-2
   annotations:
     foo: bar
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment-2.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment-2.yaml'
 spec:
   template:
@@ -329,6 +336,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
 spec:
   template:
@@ -343,6 +351,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment-2
   annotations:
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment-2.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment-2.yaml'
 `,
 		},
@@ -370,6 +379,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment-1.yaml'
 `,
 		},
@@ -409,6 +419,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: hello world
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:
@@ -462,6 +473,7 @@ metadata:
   name: nginx-deployment
   annotations:
     foo: hello world
+    internal.config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
     config.kubernetes.io/path: 'deployment_nginx-deployment.yaml'
 spec:
   template:

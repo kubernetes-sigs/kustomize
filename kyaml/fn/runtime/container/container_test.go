@@ -194,6 +194,8 @@ metadata:
   name: deployment-foo
   annotations:
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'statefulset_deployment-foo.yaml'
     config.kubernetes.io/path: 'statefulset_deployment-foo.yaml'
 ---
 apiVersion: v1
@@ -202,6 +204,8 @@ metadata:
   name: service-foo
   annotations:
     config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'service_service-foo.yaml'
     config.kubernetes.io/path: 'service_service-foo.yaml'
 `, b.String()) {
 		t.FailNow()

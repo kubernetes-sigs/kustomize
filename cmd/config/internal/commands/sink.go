@@ -53,7 +53,7 @@ func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 	} else {
 		outputs = []kio.Writer{&kio.ByteWriter{
 			Writer:           c.OutOrStdout(),
-			ClearAnnotations: []string{kioutil.PathAnnotation}},
+			ClearAnnotations: []string{kioutil.PathAnnotation, kioutil.LegacyPathAnnotation}},
 		}
 	}
 

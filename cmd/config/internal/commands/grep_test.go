@@ -79,6 +79,8 @@ metadata:
     app: nginx2
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   replicas: 1
 ---
@@ -89,6 +91,8 @@ metadata:
     app: nginx
     config.kubernetes.io/index: '1'
     config.kubernetes.io/path: 'f1.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'f1.yaml'
 spec:
   selector:
     app: nginx
@@ -146,6 +150,7 @@ metadata:
   annotations:
     app: nginx2
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
 spec:
   replicas: 1
 ---
@@ -155,6 +160,7 @@ metadata:
   annotations:
     app: nginx
     config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/index: '1'
 spec:
   selector:
     app: nginx
@@ -295,6 +301,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'deployment.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'deployment.yaml'
 spec:
   replicas: 3
   template:
@@ -314,6 +322,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'deployment.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'deployment.yaml'
 spec:
   replicas: 4
   template:
@@ -339,6 +349,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'deployment.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'deployment.yaml'
 spec:
   replicas: 3
   template:
@@ -364,6 +376,8 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     config.kubernetes.io/path: 'deployment.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'deployment.yaml'
 spec:
   replicas: 4
   template:

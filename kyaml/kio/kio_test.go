@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	. "sigs.k8s.io/kustomize/kyaml/kio"
@@ -185,5 +185,349 @@ func TestContinueOnEmptyBehavior(t *testing.T) {
 			tc.expected, strings.TrimSpace(actual.String())) {
 			t.Fail()
 		}
+	}
+}
+
+func TestLegacyAnnotationReconciliation(t *testing.T) {
+	noopFilter1 := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		return nodes, nil
+	}
+	noopFilter2 := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		return nodes, nil
+	}
+	changeInternalAnnos := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, rn := range nodes {
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, "new")); err != nil {
+				return nil, err
+			}
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.IndexAnnotation, "new")); err != nil {
+				return nil, err
+			}
+		}
+		return nodes, nil
+	}
+	changeLegacyAnnos := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, rn := range nodes {
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, "new")); err != nil {
+				return nil, err
+			}
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyIndexAnnotation, "new")); err != nil {
+				return nil, err
+			}
+		}
+		return nodes, nil
+	}
+	changeLegacyId := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, rn := range nodes {
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyIdAnnotation, "new")); err != nil {
+				return nil, err
+			}
+		}
+		return nodes, nil
+	}
+	changeInternalId := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, rn := range nodes {
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.IdAnnotation, "new")); err != nil {
+				return nil, err
+			}
+		}
+		return nodes, nil
+	}
+
+	noops := []Filter{
+		FilterFunc(noopFilter1),
+		FilterFunc(noopFilter2),
+	}
+	internal := []Filter{FilterFunc(changeInternalAnnos)}
+	legacy := []Filter{FilterFunc(changeLegacyAnnos)}
+	legacyId := []Filter{FilterFunc(changeLegacyId)}
+	internalId := []Filter{FilterFunc(changeInternalId)}
+
+	testCases := map[string]struct {
+		input    string
+		filters  []Filter
+		expected string
+	}{
+		// the orchestrator should copy the legacy annotations to the new
+		// annotations
+		"legacy annotations only": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "configmap.yaml"
+    config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+			filters: noops,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '0'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "configmap.yaml"
+    config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+		},
+		// the orchestrator should copy the new annotations to the
+		// legacy annotations
+		"new annotations only": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '0'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    internal.config.kubernetes.io/path: "configmap.yaml"
+    internal.config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+			filters: noops,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    internal.config.kubernetes.io/path: "configmap.yaml"
+    internal.config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+		},
+		// the orchestrator should detect that the legacy annotations
+		// have been changed by the function, and should update the
+		// new internal annotations to reflect the same change
+		"change only legacy annotations": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "configmap.yaml"
+    config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+			filters: legacy,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'new'
+    config.kubernetes.io/index: 'new'
+    internal.config.kubernetes.io/path: 'new'
+    internal.config.kubernetes.io/index: 'new'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "new"
+    config.kubernetes.io/index: 'new'
+    internal.config.kubernetes.io/path: 'new'
+    internal.config.kubernetes.io/index: 'new'
+data:
+  grpcPort: 8081
+`,
+		},
+		// the orchestrator should detect that the new internal annotations
+		// have been changed by the function, and should update the
+		// legacy annotations to reflect the same change
+		"change only internal annotations": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "configmap.yaml"
+    config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+			filters: internal,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'new'
+    config.kubernetes.io/index: 'new'
+    internal.config.kubernetes.io/path: 'new'
+    internal.config.kubernetes.io/index: 'new'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "new"
+    config.kubernetes.io/index: 'new'
+    internal.config.kubernetes.io/path: 'new'
+    internal.config.kubernetes.io/index: 'new'
+data:
+  grpcPort: 8081
+`,
+		},
+		// the orchestrator should detect that the new internal id annotation
+		// has been changed, and copy it over to the legacy one, and also
+		// copy the path and index legacy annotations to the new internal
+		// ones
+		"change only internal id when original legacy set": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+    config.k8s.io/id: '1'
+data:
+  grpcPort: 8080
+`,
+			filters: internalId,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+    config.k8s.io/id: 'new'
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/id: 'new'
+data:
+  grpcPort: 8080
+`,
+		},
+		// the orchestrator should detect that the legacy id annotation
+		// has been changed, and copy it over to the internal one, and also
+		// copy the path and index internal annotations to the legacy
+		// ones
+		"change only legacy id when internal legacy set": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/id: '1'
+data:
+  grpcPort: 8080
+`,
+			filters: legacyId,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    internal.config.kubernetes.io/path: 'configmap.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/id: 'new'
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
+    config.k8s.io/id: 'new'
+data:
+  grpcPort: 8080
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			var out bytes.Buffer
+			input := ByteReadWriter{
+				Reader:                bytes.NewBufferString(tc.input),
+				Writer:                &out,
+				OmitReaderAnnotations: true,
+				KeepReaderAnnotations: true,
+			}
+			p := Pipeline{
+				Inputs:  []Reader{&input},
+				Filters: tc.filters,
+				Outputs: []Writer{&input},
+			}
+			assert.NoError(t, p.Execute())
+			assert.Equal(t, tc.expected, out.String())
+		})
 	}
 }

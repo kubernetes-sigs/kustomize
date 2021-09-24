@@ -53,6 +53,7 @@ metadata:
   name: foo1
   namespace: bar
   annotations:
+    internal.config.kubernetes.io/path: 'foo1_deployment.yaml'
     config.kubernetes.io/path: 'foo1_deployment.yaml'
 ---
 apiVersion: v1
@@ -60,6 +61,7 @@ kind: Service
 metadata:
   name: foo1
   annotations:
+    internal.config.kubernetes.io/path: 'foo1_service.yaml'
     config.kubernetes.io/path: 'foo1_service.yaml'
 ---
 apiVersion: apps/v1
@@ -67,6 +69,7 @@ kind: Deployment
 metadata:
   name: foo2
   annotations:
+    internal.config.kubernetes.io/path: 'foo2_deployment.yaml'
     config.kubernetes.io/path: 'foo2_deployment.yaml'
 ---
 apiVersion: v1
@@ -75,6 +78,7 @@ metadata:
   name: foo2
   namespace: bar
   annotations:
+    internal.config.kubernetes.io/path: 'foo2_service.yaml'
     config.kubernetes.io/path: 'foo2_service.yaml'
 `, out.String())
 }
@@ -97,6 +101,7 @@ kind: Service
 metadata:
   name: foo1
   annotations:
+    internal.config.kubernetes.io/path: 'foo1__service.yaml'
     config.kubernetes.io/path: 'foo1__service.yaml'
 ---
 apiVersion: apps/v1
@@ -105,6 +110,7 @@ metadata:
   name: foo1
   namespace: bar
   annotations:
+    internal.config.kubernetes.io/path: 'foo1_bar_deployment.yaml'
     config.kubernetes.io/path: 'foo1_bar_deployment.yaml'
 ---
 apiVersion: apps/v1
@@ -112,6 +118,7 @@ kind: Deployment
 metadata:
   name: foo2
   annotations:
+    internal.config.kubernetes.io/path: 'foo2__deployment.yaml'
     config.kubernetes.io/path: 'foo2__deployment.yaml'
 ---
 apiVersion: v1
@@ -120,6 +127,7 @@ metadata:
   name: foo2
   namespace: bar
   annotations:
+    internal.config.kubernetes.io/path: 'foo2_bar_service.yaml'
     config.kubernetes.io/path: 'foo2_bar_service.yaml'
 `, out.String())
 }
@@ -143,6 +151,7 @@ metadata:
   name: foo1
   namespace: bar
   annotations:
+    internal.config.kubernetes.io/path: 'resource.yaml'
     config.kubernetes.io/path: 'resource.yaml'
 ---
 apiVersion: apps/v1
@@ -150,6 +159,7 @@ kind: Deployment
 metadata:
   name: foo2
   annotations:
+    internal.config.kubernetes.io/path: 'resource.yaml'
     config.kubernetes.io/path: 'resource.yaml'
 ---
 apiVersion: v1
@@ -158,6 +168,7 @@ metadata:
   name: foo2
   namespace: bar
   annotations:
+    internal.config.kubernetes.io/path: 'resource.yaml'
     config.kubernetes.io/path: 'resource.yaml'
 ---
 apiVersion: v1
@@ -165,6 +176,7 @@ kind: Service
 metadata:
   name: foo1
   annotations:
+    internal.config.kubernetes.io/path: 'resource.yaml'
     config.kubernetes.io/path: 'resource.yaml'
 `, out.String())
 }
