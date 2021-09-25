@@ -37,10 +37,13 @@ func NewDefaultCommand() *cobra.Command {
 
 	c := &cobra.Command{
 		Use:   konfig.ProgramName,
-		Short: "Manages declarative configuration of Kubernetes",
+		Short: "Manages declarative configuration of Kubernetes and leverages secret mounting with Hashicorp Vault",
 		Long: `
 Manages declarative configuration of Kubernetes.
 See https://sigs.k8s.io/kustomize
+
+Ability to Mount secrets from a Hashicorp Vault Secrets Engine.
+See https://github.com/benmorehouse/kustomize-vault#native-vault-integration 
 `,
 	}
 
