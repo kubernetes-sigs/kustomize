@@ -418,6 +418,7 @@ openapi:
   path: openapi.json
 `)
 
+	openapi.ResetOpenAPI()
 	m := th.Run("overlays/overlay-component-openapi", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
@@ -427,17 +428,23 @@ spec:
   template:
     spec:
       containers:
-      - name: container
+      - env:
+        - name: foo
+          value: bar
+        name: container
         volumeMounts:
         - mountPath: /mnt
           name: additional-cm
+        - mountPath: /opt/cm
+          name: cm
       initContainers:
       - name: init
       volumes:
       - configMap:
           name: additional-cm
         name: additional-cm
+      - configMap:
+          name: cm
+        name: cm
 `)
-
-
 }
