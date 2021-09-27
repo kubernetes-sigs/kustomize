@@ -87,7 +87,7 @@ echo $GITHUB_TOKEN | gh auth login --scopes repo --with-token
 #### Establish clean state
 
 ```
-refreshMaster
+refreshMaster &&
 testKustomizeRepo
 ```
 
@@ -123,16 +123,16 @@ Undraft the release on the [kustomize repo release page]:
 #### Pin to the most recent kyaml
 
 ```
-gorepomod pin kyaml --doIt
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/prefixsuffixtransformer/go.mod
+gorepomod pin kyaml --doIt &&
+go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/prefixsuffixtransformer/go.mod &&
 go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/replicacounttransformer/go.mod
-
 ```
 
 Create the PR:
 ```
-title="Pin to kyaml $versionKyaml"
-createBranch pinToKyaml $title
+createBranch pinToKyaml "Pin to kyaml $versionKyaml"
+```
+```
 createPr
 ```
 
@@ -144,12 +144,14 @@ testKustomizeRepo
 Wait for tests to pass, then merge the PR:
 ```
 gh pr status
+```
+```
 gh pr merge -m
 ```
 
 Get back on master and do paranoia test:
 ```
-refreshMaster
+refreshMaster &&
 testKustomizeRepo
 ```
 
@@ -188,8 +190,7 @@ gorepomod pin cmd/config --doIt
 
 Create the PR:
 ```
-title="Pin to cmd/config $versionCmdConfig"
-createBranch pinToCmdConfig $title
+createBranch pinToCmdConfig "Pin to cmd/config $versionCmdConfig" &&
 createPr
 ```
 
@@ -201,12 +202,14 @@ testKustomizeRepo
 Wait for tests to pass, then merge the PR:
 ```
 gh pr status  # rinse, repeat
+```
+```
 gh pr merge -m
 ```
 
 Get back on master and do paranoia test:
 ```
-refreshMaster
+refreshMaster &&
 testKustomizeRepo
 ```
 
@@ -242,8 +245,7 @@ gorepomod pin api --doIt
 
 Create the PR:
 ```
-title="Pin to api $versionApi"
-createBranch pinToApi $title
+createBranch pinToApi "Pin to api $versionApi" &&
 createPr
 ```
 
@@ -255,12 +257,14 @@ testKustomizeRepo
 Wait for tests to pass, then merge the PR:
 ```
 gh pr status  # rinse, repeat
+```
+```
 gh pr merge -m
 ```
 
 Get back on master and do paranoia test:
 ```
-refreshMaster
+refreshMaster &&
 testKustomizeRepo
 ```
 
@@ -282,14 +286,14 @@ Undraft the release on the [kustomize repo release page]:
 
 ## Confirm the kustomize binary is correct
 
-> [installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
-> 
->  * Follow the [installation instructions] to install your new
->    release and make sure it reports the expected version number.
->
->    If not, something is very wrong.
->
->  * Visit the [release page] and edit the release notes as desired.
+[installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
+
+* Follow the [installation instructions] to install your new
+  release and make sure it reports the expected version number.
+
+  If not, something is very wrong.
+
+* Visit the [release page] and edit the release notes as desired.
 
 
 ## Unpin everything
@@ -298,15 +302,14 @@ Undraft the release on the [kustomize repo release page]:
 Go back into development mode, where all modules depend on in-repo code:
 
 ```
-gorepomod unpin api         --doIt
-gorepomod unpin cmd/config  --doIt
+gorepomod unpin api         --doIt &&
+gorepomod unpin cmd/config  --doIt &&
 gorepomod unpin kyaml       --doIt
 ```
 
 Create the PR:
 ```
-title="Back to development mode; unpin the modules"
-createBranch unpinEverything
+createBranch unpinEverything "Back to development mode; unpin the modules" &&
 createPr
 ```
 
@@ -318,12 +321,14 @@ testKustomizeRepo
 Wait for tests to pass, then merge the PR:
 ```
 gh pr status  # rinse, repeat
+```
+```
 gh pr merge -m
 ```
 
 Get back on master and do paranoia test:
 ```
-refreshMaster
+refreshMaster &&
 testKustomizeRepo
 ```
 
@@ -336,14 +341,17 @@ to test examples against your new release.
 
 ```
 sed -i "" "s/LATEST_V4_RELEASE=.*/LATEST_V4_RELEASE=v4.3.0/" Makefile
-title="Test examples against latest release"
-createBranch updateProwExamplesTarget $title
+```
+```
+createBranch updateProwExamplesTarget "Test examples against latest release" &&
 createPr
 ```
 
 Wait for tests to pass, then merge the PR:
 ```
 gh pr status  # rinse, repeat
+```
+```
 gh pr merge -m
 ```
 
