@@ -547,6 +547,9 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 		return nil
 	}
 
+	// if the schema is changed, initSchema should parse the new schema
+	defer func() { globalSchema.schemaInit = false }()
+
 	version, exists := openAPIField["version"]
 	if exists && schema != nil {
 		return fmt.Errorf("builtin version and custom schema provided, cannot use both")
