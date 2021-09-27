@@ -1,0 +1,13 @@
+apiVersion: krm.dev/v1alpha1
+kind: Krmfile
+metadata:
+  name: storage
+packageMetadata:
+  shortDescription: sample description
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: myspace

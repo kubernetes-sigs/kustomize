@@ -1,0 +1,16 @@
+resources:
+- resources.yaml
+
+namePrefix: test-
+
+commonLabels:
+  foo: bar
+
+vars:
+- name: BEE_ACTION
+  objref:
+    kind: Bee
+    name: bee
+    apiVersion: v1beta1
+  fieldref:
+    fieldpath: spec.action

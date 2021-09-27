@@ -1,0 +1,45 @@
+<!--
+ Copyright 2019 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<p>
+    
+    <asciinema-player
+            src="{{ .Site.BaseURL }}/casts/{{ with .Get "key" | safeURL}}{{ . }}{{ end }}.cast"
+            {{ if .Get "autoplay" }}autoplay="{{ .Get "autoplay" }}"{{ end }}
+            {{ if .Get "preload" }}preload="{{ .Get "preload" }}"{{ end }}
+            {{ if .Get "loop" }}loop="{{ .Get "loop" }}"{{ end }}
+            start-at="{{ if .Get "start-at" }}{{ .Get "start-at" }}{{ else }}0{{ end }}"
+            speed="{{ if .Get "speed" }}{{ .Get "speed" }}{{ else }}1{{ end }}"
+            {{ if .Get "idle-time-limit" }}idle-time-limit="{{ .Get "idle-time-limit" }}"{{ end }}
+            {{ if .Get "poster" }}poster="{{ .Get "poster" | safeURL }}"{{ end }}
+            {{ if .Get "font-size" }}font-size="{{ .Get "font-size" }}"{{ end }}
+            {{ if .Get "theme" }}theme="{{ .Get "theme" | safeURL }}"{{ end }}
+            {{ if .Get "title" }}title="{{ .Get "title" | safeURL }}"{{ end }}
+            {{ if .Get "author" }}author="{{ .Get "author" | safeURL }}"{{ end }}
+            {{ if .Get "author-url" }}author-url="{{ .Get "author-url" | safeURL }}"{{ end }}
+            {{ if .Get "author-img-url" }}author-img-url="{{ .Get "author-img-url" | safeURL }}"{{ end }}
+    ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
+</p>

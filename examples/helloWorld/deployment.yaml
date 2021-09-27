@@ -4,6 +4,9 @@ metadata:
   name: the-deployment
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      deployment: hello
   template:
     metadata:
       labels:

@@ -1,22 +1,24 @@
-[patch]: ../../docs/glossary.md#patch
-[resource]: ../../docs/glossary.md#resource
-[variant]: ../../docs/glossary.md#variant
+[patch]: ../docs/glossary.md#patch
+[resource]: ../docs/glossary.md#resource
+[variant]: ../docs/glossary.md#variant
 
 ## ConfigMap generation and rolling updates
 
-Kustomize provides two ways of adding ConfigMap in one `kustomization`, either by declaring ConfigMap as a [resource] or declaring ConfigMap from a ConfigMapGenerator. The formats inside `kustomization.yaml` are 
+Kustomize provides two ways of adding ConfigMap in one `kustomization`, either by declaring ConfigMap as a [resource] or declaring ConfigMap from a ConfigMapGenerator. The formats inside `kustomization.yaml` are
 
 > ```
 > # declare ConfigMap as a resource
 > resources:
 > - configmap.yaml
-> 
+>
 > # declare ConfigMap from a ConfigMapGenerator
 > configMapGenerator:
 > - name: a-configmap
 >   files:
+>     # configfile is used as key
 >     - configs/configfile
->     - configs/another_configfile
+>     # configkey is used as key
+>     - configkey=configs/another_configfile
 > ```
 
 The ConfigMaps declared as [resource] are treated the same way as other resources. Kustomize doesn't append any hash to the ConfigMap name. The ConfigMap declared from a ConfigMapGenerator is treated differently. A hash is appended to the name and any change in the ConfigMap will trigger a rolling update.
@@ -26,7 +28,7 @@ In this demo, the same [hello_world](helloWorld/README.md) is used while the Con
 ### Establish base and staging
 
 Establish the base with a `configMapGenerator`:
-<!-- @establishBase @test -->
+<!-- @establishBase @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -44,30 +46,33 @@ commonLabels:
 resources:
 - deployment.yaml
 - service.yaml
-configMapGenerator:	
-- name: the-map	
-  literals:	
-    - altGreeting=Good Morning!	
+configMapGenerator:
+- name: the-map
+  literals:
+    - altGreeting=Good Morning!
     - enableRisky="false"
 EOF
 ```
 
 Establish the staging with a patch applied to the ConfigMap
-<!-- @establishStaging @test -->
+
+<!-- @establishStaging @testAgainstLatestRelease -->
+
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
 
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
+nameSuffix: -v1
 commonLabels:
   variant: staging
   org: acmeCorporation
 commonAnnotations:
   note: Hello, I am staging!
-bases:
+resources:
 - ../../base
-patches:
+patchesStrategicMerge:
 - map.yaml
 EOF
 
@@ -89,8 +94,8 @@ configured with data from a ConfigMap.
 
 The deployment refers to this map by name:
 
+<!-- @showDeployment @testAgainstLatestRelease -->
 
-<!-- @showDeployment @test -->
 ```
 grep -C 2 configMapKeyRef $BASE/deployment.yaml
 ```
@@ -103,20 +108,21 @@ changed, so such updates have no effect.
 The recommended way to change a deployment's
 configuration is to
 
- 1. create a new ConfigMap with a new name,
- 1. patch the _deployment_, modifying the name value of
+1.  create a new ConfigMap with a new name,
+1.  patch the _deployment_, modifying the name value of
     the appropriate `configMapKeyRef` field.
 
 This latter change initiates rolling update to the pods
-in the deployment.  The older ConfigMap, when no longer
-referenced by any other resource, is eventually garbage
-collected.
+in the deployment. The older ConfigMap, when no longer
+referenced by any other resource, is eventually [garbage
+collected](/../../issues/242).
 
 ### How this works with kustomize
 
 The _staging_ [variant] here has a ConfigMap [patch]:
 
-<!-- @showMapPatch @test -->
+<!-- @showMapPatch @testAgainstLatestRelease -->
+
 ```
 cat $OVERLAYS/staging/map.yaml
 ```
@@ -127,7 +133,8 @@ resource spec.
 
 The ConfigMap it modifies is declared from a `configMapGenerator`.
 
-<!-- @showMapBase @test -->
+<!-- @showMapBase @testAgainstLatestRelease -->
+
 ```
 grep -C 4 configMapGenerator $BASE/kustomization.yaml
 ```
@@ -136,11 +143,12 @@ For a patch to work, the names in the `metadata/name`
 fields must match.
 
 However, the name values specified in the file are
-_not_ what gets used in the cluster.  By design,
-kustomize modifies names of ConfigMaps declared from ConfigMapGenerator.  To see the names
+_not_ what gets used in the cluster. By design,
+kustomize modifies names of ConfigMaps declared from ConfigMapGenerator. To see the names
 ultimately used in the cluster, just run kustomize:
 
-<!-- @grepStagingName @test -->
+<!-- @grepStagingName @testAgainstLatestRelease -->
+
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
@@ -150,21 +158,27 @@ The ConfigMap name is prefixed by _staging-_, per the
 `namePrefix` field in
 `$OVERLAYS/staging/kustomization.yaml`.
 
+The ConfigMap name is suffixed by _-v1_, per the
+`nameSuffix` field in
+`$OVERLAYS/staging/kustomization.yaml`.
+
 The suffix to the ConfigMap name is generated from a
 hash of the maps content - in this case the name suffix
-is _hhhhkfmgmk_:
+is _5276h4th55_:
 
-<!-- @grepStagingHash @test -->
+<!-- @grepStagingHash @testAgainstLatestRelease -->
+
 ```
-kustomize build $OVERLAYS/staging | grep hhhhkfmgmk
+kustomize build $OVERLAYS/staging | grep 5276h4th55
 ```
 
 Now modify the map patch, to change the greeting
 the server will use:
 
-<!-- @changeMap @test -->
+<!-- @changeMap @testAgainstLatestRelease -->
+
 ```
-sed -i 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
+sed -i.bak 's/pineapple/kiwi/' $OVERLAYS/staging/map.yaml
 ```
 
 See the new greeting:
@@ -176,28 +190,30 @@ kustomize build $OVERLAYS/staging |\
 
 Run kustomize again to see the new ConfigMap names:
 
-<!-- @grepStagingName @test -->
+<!-- @grepStagingName @testAgainstLatestRelease -->
+
 ```
 kustomize build $OVERLAYS/staging |\
     grep -B 8 -A 1 staging-the-map
 ```
 
 Confirm that the change in ConfigMap content resulted
-in three new names ending in _khk45ktkd9_ - one in the
+in three new names ending in _c2g8fcbf88_ - one in the
 ConfigMap name itself, and two in the deployment that
 uses the map:
 
-<!-- @countHashes @test -->
+<!-- @countHashes @testAgainstLatestRelease -->
+
 ```
 test 3 == \
-  $(kustomize build $OVERLAYS/staging | grep khk45ktkd9 | wc -l); \
+  $(kustomize build $OVERLAYS/staging | grep c2g8fcbf88 | wc -l); \
   echo $?
 ```
 
 Applying these resources to the cluster will result in
 a rolling update of the deployments pods, retargetting
-them from the _hhhhkfmgmk_ maps to the _khk45ktkd9_
-maps.  The system will later garbage collect the
+them from the _5276h4th55_ maps to the _c2g8fcbf88_
+maps. The system will later garbage collect the
 unused maps.
 
 ## Rollback

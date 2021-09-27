@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+echo "
+kind: GeneratedEnv
+apiVersion: v1
+metadata:
+  name: hello
+env:
+  pwd: $PWD
+  kustomize_plugin_home: $KUSTOMIZE_PLUGIN_HOME
+  kustomize_plugin_config_root: $KUSTOMIZE_PLUGIN_CONFIG_ROOT
+"

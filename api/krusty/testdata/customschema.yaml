@@ -1,0 +1,78 @@
+definitions:
+  v1alpha1.MyCRD:
+    properties:
+      apiVersion:
+        type: string
+      kind:
+        type: string
+      metadata:
+        type: object
+      spec:
+        properties:
+          template:
+            "$ref": "#/definitions/io.k8s.api.core.v1.PodTemplateSpec"
+        type: object
+      status:
+        properties:
+          success:
+            type: boolean
+        type: object
+    type: object
+    x-kubernetes-group-version-kind:
+      - group: example.com
+        kind: MyCRD
+        version: v1alpha1
+      - group: ""
+        kind: MyCRD
+        version: v1alpha1
+  io.k8s.api.core.v1.PodTemplateSpec:
+    properties:
+      metadata:
+        "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
+      spec:
+        "$ref": "#/definitions/io.k8s.api.core.v1.PodSpec"
+    type: object
+  io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta:
+    properties:
+      name:
+        type: string
+    type: object
+  io.k8s.api.core.v1.PodSpec:
+    properties:
+      containers:
+        items:
+          "$ref": "#/definitions/io.k8s.api.core.v1.Container"
+        type: array
+        x-kubernetes-patch-merge-key: name
+        x-kubernetes-patch-strategy: merge
+    type: object
+  io.k8s.api.core.v1.Container:
+    properties:
+      command:
+        items:
+          type: string
+        type: array
+      image:
+        type: string
+      name:
+        type: string
+      ports:
+        items:
+          "$ref": "#/definitions/io.k8s.api.core.v1.ContainerPort"
+        type: array
+        x-kubernetes-list-map-keys:
+          - containerPort
+          - protocol
+        x-kubernetes-list-type: map
+        x-kubernetes-patch-merge-key: containerPort
+        x-kubernetes-patch-strategy: merge
+    type: object
+  io.k8s.api.core.v1.ContainerPort:
+    properties:
+      containerPort:
+        type: integer
+      name:
+        type: string
+      protocol:
+        type: string
+    type: object

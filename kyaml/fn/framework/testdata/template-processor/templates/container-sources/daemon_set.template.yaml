@@ -1,0 +1,23 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: hello
+spec:
+  selector:
+    matchLabels:
+      name: hello
+  template:
+    metadata:
+      labels:
+        name: hello
+    spec:
+      containers:
+      - name: hello
+        image: nginx
+        env:
+        - name: EXISTING
+          value: variable
+

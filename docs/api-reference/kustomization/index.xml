@@ -1,0 +1,287 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kustomize – kustomization.yaml</title>
+    <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/</link>
+    <description>Recent content in kustomization.yaml on Kustomize</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Api-Reference: bases</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/bases/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/bases/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/bases/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: commonAnnotations</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonannotations/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonannotations/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/commonannotations/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: commonLabels</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonlabels/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/commonlabels/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/commonlabels/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: components</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/components/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/components/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/components/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: configMapGenerator</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/configmapgenerator/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/configmapgenerator/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/configmapgenerator/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: crds</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/crds/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/crds/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/crds/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: generatorOptions</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/generatoroptions/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/generatoroptions/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/generatoroptions/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: images</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/images/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/images/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/images/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: namePrefix</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/nameprefix/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/nameprefix/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/nameprefix/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: namespace</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/namespace/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/namespace/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/namespace/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: nameSuffix</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/namesuffix/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/namesuffix/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/namesuffix/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: patches</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patches/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patches/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patches/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: patchesJson6902</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patchesjson6902/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patchesjson6902/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patchesjson6902/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: patchesStrategicMerge</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patchesstrategicmerge/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patchesstrategicmerge/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/patchesstrategicmerge/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: replicas</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/replicas/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/replicas/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/replicas/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: resources</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/resources/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/resources/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/resources/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: secretGenerator</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/secretegenerator/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/secretegenerator/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/secretegenerator/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Api-Reference: vars</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/vars/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/vars/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/references/kustomize/vars/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,6 +1,6 @@
-bases:
+resources:
 - ../../base
-patches:
+patchesStrategicMerge:
 - patch.yaml
 - healthcheck_patch.yaml
 - memorylimit_patch.yaml

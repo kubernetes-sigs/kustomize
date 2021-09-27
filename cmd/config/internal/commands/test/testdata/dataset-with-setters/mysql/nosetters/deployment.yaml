@@ -1,0 +1,15 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: myspace
+  name: nosetters-deployment
+spec:
+  replicas: 4
+  template:
+    spec:
+      containers:
+      - name: nosetters
+        image: nosetters:1.7.7

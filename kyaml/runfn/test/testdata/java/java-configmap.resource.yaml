@@ -1,0 +1,10 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  labels:
+    app.kubernetes.io/component: undefined
+    app.kubernetes.io/instance: undefined
+data: {}

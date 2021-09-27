@@ -1,0 +1,13 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: examples.config.kubernetes.io/v1beta1 # call `kustomize config run` on a directory containing this file
+kind: Nginx
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-nginx:v0.2.0
+spec:
+  replicas: 4

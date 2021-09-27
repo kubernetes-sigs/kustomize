@@ -1,0 +1,33 @@
+apiVersion: krm.dev/v1alpha1
+kind: Krmfile
+metadata:
+  name: mysql
+packageMetadata:
+  shortDescription: sample description
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: myspace
+    io.k8s.cli.substitutions.image-tag:
+      x-k8s-cli:
+        substitution:
+          name: image-tag
+          pattern: ${image}:${tag}
+          values:
+          - marker: ${image}
+            ref: '#/definitions/io.k8s.cli.setters.image'
+          - marker: ${tag}
+            ref: '#/definitions/io.k8s.cli.setters.tag'
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: image
+          value: mysql
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: tag
+          value: 1.7.9

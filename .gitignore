@@ -5,8 +5,19 @@
 *.so
 *.dylib
 
+.idea
+*.iml
+
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# We use sed -i.bak when doing in-line replace, because it works better cross-platform
+.bak
+
+# macOS
+*.DS_store
+
+.bin

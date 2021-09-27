@@ -1,0 +1,33 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: Kubeval
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-validator-kubeval:v0.1.0
+spec:
+  strict: true
+  ignoreMissingSchemas: true
+
+  # TODO: Update this to use network/volumes features.
+  # Relevant issues:
+  #   - https://github.com/kubernetes-sigs/kustomize/issues/1901
+  #   - https://github.com/kubernetes-sigs/kustomize/issues/1902
+  kubernetesVersion: "1.16.0"
+  schemaLocation: "file:///schemas"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  prots: # Fix this typo ("ports") to pass validation.
+  - port: 2380
+    name: etcd-server-ssl
+  - port: 2379
+    name: etcd-client-ssl

@@ -1,9 +1,0 @@
-bases:
-- myapp/mycomponent
-- myapp/mycomponent2
-configMapGenerator:
-- name: com1
-  behavior: merge
-  literals:
-    - foo=bar
-    - baz=qux

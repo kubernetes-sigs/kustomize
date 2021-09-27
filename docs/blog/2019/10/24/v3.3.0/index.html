@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.74.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>v3.3.0 | Kustomize</title><meta property="og:title" content="v3.3.0" />
+<meta property="og:description" content="Kustomize v3.3.0
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/blog/2019/10/24/v3.3.0/" />
+<meta property="article:published_time" content="2019-10-24T00:00:00+00:00" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="v3.3.0">
+<meta itemprop="description" content="Kustomize v3.3.0
+">
+<meta itemprop="datePublished" content="2019-10-24T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
+<meta itemprop="wordCount" content="863">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="v3.3.0"/>
+<meta name="twitter:description" content="Kustomize v3.3.0
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>v3.3.0 | Kustomize</title>
+  </head>
+  <body class="td-page td-blog">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/guides/" ><span>Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/api-reference/" ><span>API Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/blog/" ><span class="active">Blog</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/contributing/" ><span>Contributing</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/blog/2019/10/24/v3.3.0/">简体中文</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/blog/2019/10/24/v3.3.0/">简体中文</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/blog/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Blog</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeblog">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/blog/releases/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Releases</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeblogreleases">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page  active" id="m-kustomizeblog20191024v330" href="/kustomize/blog/2019/10/24/v3.3.0/">v3.3.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190926v321" href="/kustomize/blog/2019/09/26/v3.2.1/">v3.2.1</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190917v320" href="/kustomize/blog/2019/09/17/v3.2.0/">v3.2.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190726v310" href="/kustomize/blog/2019/07/26/v3.1.0/">v3.1.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190703v300" href="/kustomize/blog/2019/07/03/v3.0.0/">v3.0.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190618v210" href="/kustomize/blog/2019/06/18/v2.1.0/">v2.1.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190205v200" href="/kustomize/blog/2019/02/05/v2.0.0/">v2.0.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20180521v101" href="/kustomize/blog/2018/05/21/v1.0.1/">v1.0.1</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/blog/releases/v3.3.0.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=v3.3.0" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#summary-of-changes">Summary of changes</a>
+      <ul>
+        <li><a href="#first-release-of-the-go-api-only-module">First release of the Go API-only module</a></li>
+        <li><a href="#change-log-since-v320">Change log since v3.2.0</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5 pr-md-4" role="main">
+            <a class="btn btn-lg -bg-orange td-rss-button d-none d-lg-block" href="https://kubernetes-sigs.github.io/kustomize/blog/releases/index.xml" target="_blank">
+              RSS <i class="fa fa-rss ml-2 "></i>
+            </a>
+            
+<div class="td-content">
+	<h1>v3.3.0</h1>
+	<div class="lead">Kustomize v3.3.0</div>
+	<div class="td-byline mb-4">
+		
+		<time datetime="2019-10-24" class="text-muted">Thursday, October 24, 2019</time>
+	</div>
+	<h2 id="summary-of-changes">Summary of changes</h2>
+<h3 id="first-release-of-the-go-api-only-module">First release of the Go API-only module</h3>
+<p>Many of the PRs since the last vrelease were
+around restructuring the <em>sigs.k8s.io/kustomize</em>
+repository into three Go modules instead of just one.</p>
+<p>The reasons for this are detailed in the <a href="/site/content/en/faq/versioningPolicy.md">versioning
+policy documentation</a>, and what it means for releasing
+is explained in the <a href="/releasing">release process documentation</a>.</p>
+<p>The tl;dr is that the top level module
+<code>sigs.k8s.io/kustomize</code> now defines the kustomize Go
+API, and the <em>kustomize</em> CLI sits below it in an
+independent module <code>sigs.k8s.io/kustomize/kustomize</code>.</p>
+<p>The modules release independently, though in practice a
+new release of the kustomize Go API will likely be
+followed quickly by a new release of the <code>kustomize</code>
+executable.</p>
+<p>This is a necessary step to creating a much smaller
+kustomize Go API surface that has some hope of
+conforming to semantic versioning and being of some use
+to clients.</p>
+<p>The kustomize CLI will see the same kustomize Go API as
+any other client.</p>
+<p>The new semver-able API will begin with <code>v4.0.0</code> (not
+yet released) and be a clean break with <code>v3</code> etc.</p>
+<h3 id="change-log-since-v320">Change log since v3.2.0</h3>
+<pre><code>3c9d828f - Have kustomize CLI depend on kustomize Go API v3.3.0 (Jeffrey Regan)
+5d800f0b - Merge pull request #1595 from monopole/threeReleases (Jeff Regan)
+4eb2d5bc - Three builders. (Jeffrey Regan)
+988af1ff - Update README.md (Jeff Regan)
+1617183e - Merge pull request #1590 from monopole/releaseProcessUpdate (Kubernetes Prow Robot)
+ee727464 - update release process doc (jregan)
+c9e7dc3b - Merge pull request #1589 from monopole/moreTestsAroundKustFileName (Jeff Regan)
+07e0e46a - improve tests for alternative kustomization file names (Jeffrey Regan)
+404d2d63 - Merge pull request #1587 from monopole/reducePgmconfig (Jeff Regan)
+baa0296a - Reduce size of pgmconfig package (Jeffrey Regan)
+0f665ac1 - Merge pull request #1544 from ptux/add-transformer-href (Jeff Regan)
+14b0a650 - Merge pull request #1581 from monopole/refactorFs (Jeff Regan)
+2d58f8b8 - Break the dep between fs and pgmconfig. (Jeffrey Regan)
+9a43ca53 - Merge pull request #1578 from nlamirault/fix/build-plugins-doc (Jeff Regan)
+5372fc6f - Merge pull request #1579 from monopole/fsPackageCleanup (Jeff Regan)
+86bc3440 - Merge pull request #1513 from nimohunter/fix_empty_list_item (Kubernetes Prow Robot)
+a014f7d4 - Merge pull request #1561 from beautytiger/dev-190925 (Jeff Regan)
+9a94bcb8 - Improve fs package and doc in prep to officially go public (Jeffrey Regan)
+07634ef0 - Merge pull request #1575 from monopole/versioning (Jeff Regan)
+995f88d6 - Update versioning notes. (jregan)
+334a6467 - Fix: documentation link for plugins (Nicolas Lamirault)
+08963ba5 - improve test code coverage in transformers (Guangming Wang)
+326fb689 - Merge pull request #1570 from bzub/1234-go_plugin_doc (Jeff Regan)
+970ce67c - Update goPluginCaveats.md (Jeff Regan)
+98d18930 - Update INSTALL.md (Jeff Regan)
+d89b448c - Fix git tag recovery in cloud build. (Jeff Regan)
+17bf9d32 - Update releasing README. (Jeff Regan)
+a99aff1d - Merge pull request #1571 from monopole/updateCloudBuildProcess (Kubernetes Prow Robot)
+a694ac7b - Update cloud build process for kustomize. (Jeffrey Regan)
+b5b11ef6 - Fix compile kustomize example. (bzub)
+fa1af6f5 - Merge pull request #1473 from richardmarshall/execpluginhash (Jeff Regan)
+9288dec0 - Fix failing BashedConfigMapTest (Jeff Regan)
+1a45dd0b - Merge pull request #1566 from monopole/releaseNotes3.2.1 (Kubernetes Prow Robot)
+592c5acf - docs: Exec plugin generator options (Richard Marshall)
+ac9424fa - tests: Add unit tests for update resource options (Richard Marshall)
+79fbe7c4 - Support resource generator options in exec plugins (Richard Marshall)
+f69d526f - v3.2.1 release notes (Jeff Regan)
+07a95a60 - Merge pull request #1565 from monopole/tweakBinaryDepsBeforeTagging (Jeff Regan)
+032b3857 - Pin the kustomize binary's dependence on kustomize libs. (jregan)
+81062959 - Merge pull request #1564 from monopole/moveKustomizeBinaryToOwnModule (Kubernetes Prow Robot)
+b82a8fd3 - Move the kustomize binary to its own module. (Jeffrey Regan)
+2d0c22d6 - Merge pull request #1562 from keleustes/tools (Kubernetes Prow Robot)
+aa342def - Pin tool versions using go modules (Ian Howell)
+10786ec0 - Merge pull request #1554 from keleustes/readme (Kubernetes Prow Robot)
+7c705687 - Update README.md to include Kubernetes 1.16 (Jerome Brette)
+e8933d97 - Merge pull request #1560 from monopole/precommitTuneup (Jeff Regan)
+9d7b6544 - Make pre-commit more portable and less tricky. (jregan)
+7a0946a9 - Merge pull request #1558 from monopole/dependOnNewPluginatorModule (Jeff Regan)
+def4f045 - Depend on new pluginator location. (Jeffrey Regan)
+2f2408f1 - Merge pull request #1559 from monopole/compressCopyright (Jeff Regan)
+3b9bcc48 - Compress copyright in the commands package. (Jeffrey Regan)
+d0429ff4 - Merge pull request #1557 from monopole/pluginatorModule (Jeff Regan)
+33deefc3 - Copy pluginator to its own module. (Jeffrey Regan)
+9b3de82b - Merge pull request #1506 from Liujingfang1/release (Jeff Regan)
+d217074f - Merge pull request #1550 from keleustes/apiversion (Kubernetes Prow Robot)
+1d90ba7c - Fix typo in apiVersion yaml declaration (Jerome Brette)
+eeeb4c36 - Merge pull request #1547 from keleustes/extensions (Kubernetes Prow Robot)
+b1faa989 - Update Ingress apiVersion to networking.k8s.io/v1beta1 (Jerome Brette)
+d8250c9e - move test case (nimohunter)
+c9500466 - add transformer href (Wang(わん))
+0c32691e - Merge pull request #1537 from jaypipes/gomod-install-note (Kubernetes Prow Robot)
+88b1d627 - Merge pull request #1541 from rtnpro/patch-1 (Jeff Regan)
+aec82066 - Update INSTALL.md (Jeff Regan)
+20c2b53a - Merge pull request #1542 from monopole/tweakFilePathsInTest (Jeff Regan)
+274b5c3b - Tweak file path handling and logging in test. (Jeffrey Regan)
+b1fdaa23 - Fix typo in transformerconfigs README (Ratnadeep Debnath)
+b5d5e70b - empty list or map item return error (nimohunter)
+2e829853 - empty list or map item return error (nimohunter)
+55941f57 - add note about GO111MODULE for source install (Jay Pipes)
+9e226001 - empty list or map item return error (nimohunter)
+77b63f96 - add release note for v3.2.0 (jingfangliu)
+</code></pre>
+	
+
+	<ul class="list-unstyled d-flex justify-content-between align-items-center mb-0 pt-5">
+  <li>
+    <a href="/kustomize/blog/2019/09/26/v3.2.1/" class="btn btn-primary "><span class="mr-1">←</span> Previous</a>
+  </li>
+    <a  class="btn btn-primary  disabled">Next <span class="ml-1">→</span></a>
+  </li>
+</ul>
+
+</div>
+
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

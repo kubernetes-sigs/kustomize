@@ -1,0 +1,31 @@
+# Copyright 2020 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: Validator
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.2.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+  annotations:
+    tshirt-size: small # this injects the resource reservations
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx

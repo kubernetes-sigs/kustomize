@@ -1,0 +1,6 @@
+# See https://github.com/kubernetes/community/blob/master/community-membership.md
+approvers:
+  - kyaml-approvers
+
+reviewers:
+  - kyaml-reviewers
