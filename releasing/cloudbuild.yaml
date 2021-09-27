@@ -57,6 +57,6 @@ timeout: 14m
 # The base64 of that is shown below.  It's decrypted by cloud build
 # and provided back to goreleaser.
 secrets:
-- kmsKeyName: projects/jregan-corp-gke-dev/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
+- kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
   secretEnv:
-    GITHUB_TOKEN: CiQAwfbOkSP4tJf3ZJZMjzHaRPZ2RxiQhORZ3xxlVtpoy8631uQSUACk6WMKjtkpsRkRl+uxWUVvN29M5qveyXjaDDO094/qwsSc8RiYlHYt7Ii1bWkkz3P1kG0nHfG7Fd46A+GJ6R5NhmNfingd/nu9iKrNwLXK
+    GITHUB_TOKEN: CiQAJ+XRL07Aror04bf6N0PpMDxRpxzs1PXVVDztB+HNu3fW7FESUQA2EggaBGI1cpFJC1YT93h9r50WzyLMD28LDDBTO8QJxZsU6UEToBfpVDr0ohnSazBTbvCcy5NJK0ooKyDifFsKzkT5ym3LPyHzPIXiejCmAg==
