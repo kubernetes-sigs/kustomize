@@ -346,3 +346,98 @@ func TestCustomOpenAPIFieldFromComponent(t *testing.T) {
 	th.Run("prod", th.MakeDefaultOptions())
 	assert.Equal(t, "using custom schema from file provided", openapi.GetSchemaVersion())
 }
+
+// test for https://github.com/kubernetes-sigs/kustomize/issues/4179
+// kustomize is not seeing the openapi field from the component defined in the overlay
+func TestCustomOpenAPIFieldFromComponentWithOverlays(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+
+	// overlay declaring the component
+	th.WriteK("overlays/overlay-component-openapi", `resources:
+- ../base/
+components:
+- ../../components/dc-openapi
+`)
+
+	// base kustomization
+	th.WriteK("overlays/base", `resources:
+- dc.yml
+`)
+
+	// resource declared in the base kustomization
+	th.WriteF("overlays/base/dc.yml", `apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: my-dc
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: init
+      containers:
+        - name: container
+          env:
+            - name: foo
+              value: bar
+          volumeMounts:
+            - name: cm
+              mountPath: /opt/cm
+      volumes:
+        - name: cm
+          configMap:
+            name: cm
+`)
+
+	// openapi schema referred to by the component
+	bytes, _ := ioutil.ReadFile("testdata/openshiftschema.json")
+	th.WriteF("components/dc-openapi/openapi.json", string(bytes))
+
+	// patch referred to by the component
+	th.WriteF("components/dc-openapi/patch.yml", `apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: my-dc
+spec:
+  template:
+    spec:
+      containers:
+        - name: container
+          volumeMounts:
+            - name: additional-cm
+              mountPath: /mnt
+      volumes:
+        - name: additional-cm
+          configMap:
+             name: additional-cm
+`)
+
+	// component declared in overlay with custom schema and patch
+	th.WriteC("components/dc-openapi", `patches:
+  - patch.yml
+openapi:
+  path: openapi.json
+`)
+
+	m := th.Run("overlays/overlay-component-openapi", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: my-dc
+spec:
+  template:
+    spec:
+      containers:
+      - name: container
+        volumeMounts:
+        - mountPath: /mnt
+          name: additional-cm
+      initContainers:
+      - name: init
+      volumes:
+      - configMap:
+          name: additional-cm
+        name: additional-cm
+`)
+
+
+}
