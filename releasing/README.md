@@ -11,6 +11,7 @@
 [`cloudbuild.yaml`]: cloudbuild.yaml
 [kustomize repo release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [OpenAPI Readme]: ../kyaml/openapi/README.md
+[project cloud build history page]: https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-kustomize
 
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
@@ -108,6 +109,9 @@ Note the version:
 versionKyaml=v0.10.20   # EDIT THIS!
 ```
 
+See the process of the cloud build job
+on the [project cloud build history page].
+
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
 * Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
@@ -161,6 +165,9 @@ Note the version:
 ```
 versionCmdConfig=v0.9.12 # EDIT THIS!
 ```
+
+See the process of the cloud build job
+on the [project cloud build history page].
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
@@ -216,6 +223,9 @@ Note the version:
 versionApi=v0.8.10 # EDIT THIS!
 ```
 
+See the process of the cloud build job
+on the [project cloud build history page].
+
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
 * Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
@@ -261,6 +271,9 @@ While you're waiting for the tests, review the commit log. Based on the changes 
 ```
 gorepomod release kustomize [patch|minor|major] --doIt
 ```
+
+See the process of the cloud build job
+on the [project cloud build history page].
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
