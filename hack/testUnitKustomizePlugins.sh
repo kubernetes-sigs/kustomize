@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+# Run this script with no arguments from the repo root
+# to test all the plugins.
+
+# Want this to keep going even if one test fails,
+# to see how many pass, so do not errexit.
+set -o nounset
+# set -o errexit
+set -o pipefail
+
+rcAccumulator=0
+
+MYGOBIN=$(go env GOBIN)
+MYGOBIN="${MYGOBIN:-$(go env GOPATH)/bin}"
+
+# All hack scripts should run from top level.
+. hack/shellHelpers.sh
+
+function runTest {
+  local file=$1
+  local code=0
+  if grep -q "// +build notravis" "$file"; then
+    if onLinuxAndNotOnRemoteCI; then
+      go test -v -tags=notravis $file
+      code=$?
+    else
+      # TODO: make work for non-linux
+      echo "Not on linux or on remote CI; skipping $file"
+    fi
+  else
+    go test -v $file
+    code=$?
+  fi
+  rcAccumulator=$((rcAccumulator || $code))
+  if [ $code -ne 0 ]; then
+    echo "**** FAILURE in $d"
+  fi
+}
+
+function scanDir {
+  pushd $1 >& /dev/null
+  echo "Testing $1"
+  for t in $(find . -name '*_test.go'); do
+    runTest $t
+  done
+  popd >& /dev/null
+}
+
+if onLinuxAndNotOnRemoteCI; then
+  # Some of these tests have special deps.
+  make $MYGOBIN/helmV2
+  make $MYGOBIN/helmV3
+  make $MYGOBIN/helm
+  make $MYGOBIN/kubeval
+fi
+
+for goMod in $(find ./plugin -name 'go.mod' -not -path "./plugin/untested/*"); do
+  d=$(dirname "${goMod}")
+  scanDir $d
+done
+
+if [ $rcAccumulator -ne 0 ]; then
+  echo "FAIL; exit code $rcAccumulator"
+  exit 1
+fi

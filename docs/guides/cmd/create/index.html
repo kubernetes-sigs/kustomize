@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.76.5" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://kubernetes-sigs.github.io/kustomize/guides/cmd/create/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>create | Kustomize</title><meta property="og:title" content="create" />
+<meta property="og:description" content="Create a new kustomization in the current directory
+" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/guides/cmd/create/" />
+<meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="create">
+<meta itemprop="description" content="Create a new kustomization in the current directory
+">
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="create"/>
+<meta name="twitter:description" content="Create a new kustomization in the current directory
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" as="style">
+<link href="/kustomize/scss/main.min.0084926537b5667d9dea1d1fd692923ad85f8bcab133e53e7ec8af9ce8dd2ca5.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>create | Kustomize</title>
+  </head>
+  <body class="td-section">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/guides/" ><span class="active">Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/api-reference/" ><span>API Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/blog/" ><span>Blog</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/contributing/" ><span>Contributing</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/">简体中文</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/">简体中文</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeguides">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/bespoke/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bespoke Application</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidesbespoke">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/offtheshelf/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Off The Shelf Application</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidesofftheshelf">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/plugins/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize Plugins</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidesplugins">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsbuiltins" href="/kustomize/guides/plugins/builtins/">Builtin Plugins</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsexecpluginguidedexample" href="/kustomize/guides/plugins/execpluginguidedexample/">Exec plugin on linux</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsgoplugincaveats" href="/kustomize/guides/plugins/goplugincaveats/">Go plugin Caveats</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeguidespluginsgopluginguidedexample" href="/kustomize/guides/plugins/gopluginguidedexample/">Go plugin example</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Command Line Options</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeguidescmd">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">build</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdbuild">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/cfg/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">cfg</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdcfg">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/create/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">create</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeguidescmdcreate">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/edit/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">edit</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdedit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/fn/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fn</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdfn">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/help/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">help</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdhelp">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/install-completion/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">install-completion</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdinstall-completion">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/live/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">live</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdlive">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/cmd/version/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">version</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescmdversion">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/guides/components/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize Components</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kustomizeguidescomponents">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/guides/cmd/create/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=create" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/guides/">Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://kubernetes-sigs.github.io/kustomize/guides/cmd/">Command Line Options</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://kubernetes-sigs.github.io/kustomize/guides/cmd/create/">create</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>create</h1>
+	<div class="lead">Create a new kustomization in the current directory</div>
+	
+        <div class="section-index">
+    
+    
+    
+    
+    <hr class="panel-line">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 5, 2020: <a  href="https://github.com/kubernetes-sigs/kustomize/commit/5a4e2c289847a34770feafb00fd9b9af71bcec35">Add basic structure for command line options for users to be able to place info into them (5a4e2c28)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

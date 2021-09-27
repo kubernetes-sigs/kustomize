@@ -1,0 +1,34 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: Validator
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-validator:v0.1.0
+---
+apiVersion: apps/v1 # this should fail validation
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        # uncomment these to pass validation
+#        resources:
+#          requests:
+#            cpu: 100m
+#            memory: 300MiB

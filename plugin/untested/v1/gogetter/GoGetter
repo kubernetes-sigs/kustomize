@@ -1,0 +1,54 @@
+#!/bin/bash
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+# HashiCorp go-getter
+#
+# Reads a file like this
+#
+#  apiVersion: someteam.example.com/v1
+#  kind: GoGetter
+#  metadata:
+#    name: example
+#  url: github.com/kustless/kustomize-examples.git
+#  # subPath: base # (optional) relative path in the package
+#  # command: cat *.yaml # (optional) build command, default `kustomize build $subPath`
+#
+# download kustomize layes and build it to stdout
+#
+# Example execution:
+# ./plugin/someteam.example.com/v1/gogetter/GoGetter configFile.yaml
+#
+# TODO: cache downloads
+
+set -e
+
+# YAML parsing function borrowed from ChartInflator
+function parseYaml {
+  local file=$1
+  while read -r line
+  do
+    local k=${line%%:*}
+    local v=${line#*:}
+    local t=${v#"${v%%[![:space:]]*}"}  # trim leading space
+
+    if [ "$k" == "url" ]; then url=$t
+    elif [ "$k" == "subPath" ]; then subPath=$t
+    elif [ "$k" == "command" ]; then command=$t
+    fi
+  done <"$file"
+}
+
+TMP_DIR=$(mktemp -d)
+
+parseYaml $1
+
+if [ -z "$command" ]; then
+  command="kustomize build"
+fi
+
+go-getter $url $TMP_DIR/got 2> /dev/null
+
+(cd $TMP_DIR/got/$subPath; $command)
+
+/bin/rm -rf $TMP_DIR

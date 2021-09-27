@@ -1,5 +1,5 @@
-bases:
+resources:
   - ../../base
-patches:
+patchesStrategicMerge:
   - deployment.yaml
 namePrefix: production-

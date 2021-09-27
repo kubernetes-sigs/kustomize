@@ -1,0 +1,77 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kustomize – Kustomize Plugins</title>
+    <link>https://kubernetes-sigs.github.io/kustomize/guides/plugins/</link>
+    <description>Recent content in Kustomize Plugins on Kustomize</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://kubernetes-sigs.github.io/kustomize/guides/plugins/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Guides: Builtin Plugins</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/plugins/builtins/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/plugins/builtins/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/builtins&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Exec plugin on linux</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/plugins/execpluginguidedexample/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/plugins/execpluginguidedexample/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/execpluginguidedexample&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Go plugin Caveats</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/plugins/goplugincaveats/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/plugins/goplugincaveats/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/goplugincaveats&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Go plugin example</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/guides/plugins/gopluginguidedexample/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/guides/plugins/gopluginguidedexample/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/guides/extending_kustomize/gopluginguidedexample&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

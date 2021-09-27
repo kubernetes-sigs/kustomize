@@ -1,0 +1,8 @@
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: tshirt
+metadata:
+  name: tshirt
+  annotations:
+    config.kubernetes.io/function: |-
+      container:
+        image: gcr.io/kustomize-functions/example-tshirt:v0.2.0

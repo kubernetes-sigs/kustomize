@@ -1,0 +1,22 @@
+{{ if or .Site.Params.gcs_engine_id .Site.Params.algolia_docsearch }}
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 {{ T "ui_search" }}" aria-label="{{ T "ui_search" }}" autocomplete="off">
+{{ else if .Site.Params.offlineSearch }}
+{{ $offlineSearchIndex := resources.Get "json/offline-search-index.json" | resources.ExecuteAsTemplate "offline-search-index.json" . }}
+{{ $offlineSearchIndexFingerprint := $offlineSearchIndex | resources.Fingerprint "sha512" }}
+<input
+  type="search"
+  class="form-control td-search-input"
+  placeholder="&#xf002; {{ T "ui_search" }}"
+  aria-label="{{ T "ui_search" }}"
+  autocomplete="off"
+  {{/* 
+    The data attribute name of the json file URL must end with `src` since
+    Hugo's absurlreplacer requires `src`, `href`, `action` or `srcset` suffix for the attribute name.
+    If the absurlreplacer is not applied, the URL will start with `/`.
+    It causes the json file loading error when when relativeURLs is enabled.
+    https://github.com/google/docsy/issues/181
+  */}}
+  data-offline-search-index-json-src="{{ $offlineSearchIndexFingerprint.RelPermalink }}"
+  data-offline-search-base-href="/"
+>
+{{ end }}

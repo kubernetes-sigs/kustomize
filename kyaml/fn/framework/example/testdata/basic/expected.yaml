@@ -1,0 +1,21 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tester
+  annotations:
+    value: foo
+data:
+  some: data
+---
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: foo
+  annotations:
+    value: foo

@@ -92,9 +92,9 @@ secret holding them (not covering that here).
 <!--
 secretGenerator:
 - name: app-tls
-  commands:
-    tls.crt: "cat tls.cert"
-    tls.key: "cat tls.key"
+  files:
+    tls.crt=tls.cert
+    tls.key=tls.key
   type: "kubernetes.io/tls"
 EOF
 -->
@@ -128,7 +128,7 @@ defined in the [helloworld] demo.
 
 It will all live in this work directory:
 
-<!-- @makeWorkplace @test -->
+<!-- @makeWorkplace @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -139,7 +139,7 @@ DEMO_HOME=$(mktemp -d)
 
 Make a place to put the base configuration:
 
-<!-- @baseDir @test -->
+<!-- @baseDir @testAgainstLatestRelease -->
 ```
 mkdir -p $DEMO_HOME/base
 ```
@@ -150,7 +150,7 @@ environments. Here we're only defining a java
 properties file, and a `kustomization` file that
 references it.
 
-<!-- @baseKustomization @test -->
+<!-- @baseKustomization @testAgainstLatestRelease -->
 ```
 cat <<EOF >$DEMO_HOME/base/common.properties
 color=blue
@@ -171,14 +171,14 @@ EOF
 Make an abbreviation for the parent of the overlay
 directories:
 
-<!-- @overlays @test -->
+<!-- @overlays @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 ```
 
 Create the files that define the _development_ overlay:
 
-<!-- @developmentFiles @test -->
+<!-- @developmentFiles @testAgainstLatestRelease -->
 ```
 mkdir -p $OVERLAYS/development
 
@@ -191,9 +191,10 @@ dbpassword=mothersMaidenName
 EOF
 
 cat <<EOF >$OVERLAYS/development/kustomization.yaml
-bases:
+resources:
 - ../../base
 namePrefix: dev-
+nameSuffix: -v1
 configMapGenerator:
 - name: my-configmap
   behavior: merge
@@ -205,7 +206,7 @@ EOF
 
 One can now generate the configMaps for development:
 
-<!-- @runDev @test -->
+<!-- @runDev @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/development
 ```
@@ -215,11 +216,12 @@ kustomize build $OVERLAYS/development
 The name of the generated `ConfigMap` is visible in this
 output.
 
-The name should be something like `dev-my-configmap-b5m75ck895`:
+The name should be something like `dev-my-configmap-v1-2gccmccgd5`:
 
  * `"dev-"` comes from the `namePrefix` field,
  * `"my-configmap"` comes from the `configMapGenerator/name` field,
- * `"-b5m75ck895"` comes from a deterministic hash that `kustomize`
+ * `"-v1"` comes from the `nameSuffix` field,
+ * `"-2gccmccgd5"` comes from a deterministic hash that `kustomize`
     computes from the contents of the configMap.
 
 The hash suffix is critical.  If the configMap content
@@ -249,8 +251,15 @@ specification of the cluster's desired state to
 point deployments to _new_ configMaps with _new_ names.
 `kustomize` makes this easy with its
 `configMapGenerator` directive and associated naming
-controls.  A GC process in the k8s master eventually
-deletes unused configMaps.
+controls. 
+
+To remove outdated configMaps add a label
+to your resource, for example, kustomize-cleanup="true",
+and then you can use `kustomize` to prune old resources^
+
+> ```
+> kustomize build | kubectl apply --prune -f- -l kustomize-cleanup="true" 
+> ```
 
 
 ### Create and use the overlay for _production_
@@ -258,7 +267,7 @@ deletes unused configMaps.
 Next, create the files for the _production_ overlay:
 
 
-<!-- @productionFiles @test -->
+<!-- @productionFiles @testAgainstLatestRelease -->
 ```
 mkdir -p $OVERLAYS/production
 
@@ -271,7 +280,7 @@ dbpassword=thisShouldProbablyBeInASecretInstead
 EOF
 
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
-bases:
+resources:
 - ../../base
 namePrefix: prod-
 configMapGenerator:
@@ -285,13 +294,13 @@ EOF
 
 One can now generate the configMaps for production:
 
-<!-- @runProd @test -->
+<!-- @runProd @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/production
 ```
 
 A CICD process could apply this directly to
-the cluser using:
+the cluster using:
 
 > ```
 > kustomize build $OVERLAYS/production | kubectl apply -f -

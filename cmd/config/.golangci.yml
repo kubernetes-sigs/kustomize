@@ -1,0 +1,54 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+run:
+  deadline: 5m
+
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+#    - dogsled
+    - dupl
+#    - errcheck
+#    - funlen
+#    - gochecknoinits
+#    - goconst
+#    - gocritic
+#    - gocyclo
+    - gofmt
+    - goimports
+#    - golint
+#    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+#    - lll
+    - misspell
+    - nakedret
+#    - scopelint
+    - staticcheck
+    - structcheck
+#    - stylecheck
+    - typecheck
+    - unconvert
+#    - unparam
+    - unused
+    - varcheck
+#    - whitespace
+
+
+linters-settings:
+  dupl:
+    threshold: 400
+  lll:
+    line-length: 170
+  gocyclo:
+    min-complexity: 30
+  golint:
+    min-confidence: 0.85

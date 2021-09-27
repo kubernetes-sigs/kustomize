@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.74.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>v2.1.0 | Kustomize</title><meta property="og:title" content="v2.1.0" />
+<meta property="og:description" content="Kustomize v2.1.0
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/blog/2019/06/18/v2.1.0/" />
+<meta property="article:published_time" content="2019-06-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2020-07-16T12:57:18-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="v2.1.0">
+<meta itemprop="description" content="Kustomize v2.1.0
+">
+<meta itemprop="datePublished" content="2019-06-18T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2020-07-16T12:57:18-07:00" />
+<meta itemprop="wordCount" content="920">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="v2.1.0"/>
+<meta name="twitter:description" content="Kustomize v2.1.0
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>v2.1.0 | Kustomize</title>
+  </head>
+  <body class="td-page td-blog">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/guides/" ><span>Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/api-reference/" ><span>API Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/blog/" ><span class="active">Blog</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/contributing/" ><span>Contributing</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/blog/2019/06/18/v2.1.0/">简体中文</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/blog/2019/06/18/v2.1.0/">简体中文</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/blog/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Blog</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeblog">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/blog/releases/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Releases</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeblogreleases">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20191024v330" href="/kustomize/blog/2019/10/24/v3.3.0/">v3.3.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190926v321" href="/kustomize/blog/2019/09/26/v3.2.1/">v3.2.1</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190917v320" href="/kustomize/blog/2019/09/17/v3.2.0/">v3.2.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190726v310" href="/kustomize/blog/2019/07/26/v3.1.0/">v3.1.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190703v300" href="/kustomize/blog/2019/07/03/v3.0.0/">v3.0.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page  active" id="m-kustomizeblog20190618v210" href="/kustomize/blog/2019/06/18/v2.1.0/">v2.1.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190205v200" href="/kustomize/blog/2019/02/05/v2.0.0/">v2.0.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20180521v101" href="/kustomize/blog/2018/05/21/v1.0.1/">v1.0.1</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/blog/releases/v2.1.0.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=v2.1.0" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#go-modules">Go modules</a></li>
+    <li><a href="#resource-ordering">Resource ordering</a></li>
+    <li><a href="#generator-and-transformer-plugins">Generator and transformer plugins</a></li>
+    <li><a href="#remove-load-restrictions">Remove load restrictions</a></li>
+    <li><a href="#inventory-generation-for-pruning">Inventory generation for pruning</a></li>
+    <li><a href="#field-changes--deprecations">Field changes / deprecations</a>
+      <ul>
+        <li><a href="#resources-expanded-bases-deprecated"><code>resources</code> expanded, <code>bases</code> deprecated</a></li>
+        <li><a href="#replicas-field"><code>replicas</code> field</a></li>
+        <li><a href="#envs-field"><code>envs</code> field</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5 pr-md-4" role="main">
+            <a class="btn btn-lg -bg-orange td-rss-button d-none d-lg-block" href="https://kubernetes-sigs.github.io/kustomize/blog/releases/index.xml" target="_blank">
+              RSS <i class="fa fa-rss ml-2 "></i>
+            </a>
+            
+<div class="td-content">
+	<h1>v2.1.0</h1>
+	<div class="lead">Kustomize v2.1.0</div>
+	<div class="td-byline mb-4">
+		
+		<time datetime="2019-06-18" class="text-muted">Tuesday, June 18, 2019</time>
+	</div>
+	<p>Go modules, resource ordering respected, generator and transformer plugins, eased
+loading restrictions, the notion of inventory, eased replica count modification.
+About ~90 issues closed since <a href="https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.0.3">v2.0.3</a> in ~400 commits.</p>
+<p>Download <a href="https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.1.0">here</a>.</p>
+<h2 id="go-modules">Go modules</h2>
+<p><img src="/kustomize/images/goModules.png" alt="gopher with boxes"></p>
+<p>Kustomize now defines its dependencies in a top
+level <code>go.mod</code> file.  This is the first step
+towards a package structure intentially exported
+as one or more <a href="https://github.com/golang/go/wiki/Modules">Go modules</a> for use in other
+programs (kubectl, kubebuilder, etc.) and in
+kustomize plugins (see below).</p>
+<h2 id="resource-ordering">Resource ordering</h2>
+<p><img src="/kustomize/images/sorted.png" alt="sort order retained"></p>
+<p>Kustomize now retains the depth-first order of
+resources as read, a frequently requested
+feature.</p>
+<p>This means resource order can be controlled
+by editting kustomization files.  This is
+also vital to applying user-defined
+transformations (plugins) in a particular
+order.</p>
+<p>Nothing needs to be done to activate this;
+it happens automatically.</p>
+<p>The <code>build</code> command now accepts a <code>--reorder</code>
+flag with values <code>legacy</code> and <code>none</code>,
+with a default value of <code>legacy</code>.</p>
+<p><code>legacy</code> means apply an ordering based on
+GVK, that currently emits <code>Namespace</code> objects
+first, and <code>ValidatingWebhookConfiguration</code>
+objects last.  This means that despite
+automatic retention of load order, your
+<code>build</code> output won&rsquo;t change by default.</p>
+<p><code>none</code> means <em>don&rsquo;t</em> reorder the resources before
+output.  Specify this to see output order
+respect input order.</p>
+<h2 id="generator-and-transformer-plugins">Generator and transformer plugins</h2>
+<p><img src="/kustomize/images/plugins.png" alt="kid putting knife in electrical outlet"></p>
+<p>Since the beginning (as <code>kinflate</code> back in Sep
+2017), kustomize has read or generated resources,
+applied a series of pipelined transformation to
+them, and emitted the result to <code>stdout</code>.</p>
+<p>At that time, the only way to change the behavior
+of a generator (e.g. a secret generator), or
+change the behavior of a transformer (e.g. a name
+changer, or json patcher), was to modify source
+code and put out a release.</p>
+<p><a href="https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9">v1.0.9</a> introduced <a href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples/generatorOptions.md">generator options</a> as a means
+to change the behavior of the only two generators
+available at the time - Secret and ConfigMap
+generators.  It also introduced
+<a href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples/transformerconfigs">transformer configs</a> as a way to fine tune the
+targets of transformations (e.g. to which fields
+<em>selectors</em> should be added).  Most of the feature
+requests for kustomize revolve around changing the
+behavior of the builtin generators and
+transformers.</p>
+<p><a href="https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.1.0">v2.1.0</a> adds an <em>alpha</em> plugin framework, that
+encourages users to write their own generators or
+transformers, <em>declaring them as kubernetes
+objects just like everything else</em>, and apply them
+as part of the <code>kustomize build</code> process.</p>
+<p>To inform the API exposed to plugins, and to
+confirm that the plugin framework can offer plugin
+authors the same capabilities as builtin
+operations, all the builtin generators and
+tranformers have been converted to plugin form
+(with one exceptions awaiting Go module
+refinements).  This means that adding, say, a
+<code>secretGenerator</code> or <code>commonAnnotations</code> directive
+to your kustomization will (in <a href="https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.1.0">v2.1.0</a>) trigger
+execution of
+<a href="https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin">code committed as a plugin</a>.</p>
+<p>For more information, see the
+<a href="plugins">kustomize plugin documentation</a>.</p>
+<h2 id="remove-load-restrictions">Remove load restrictions</h2>
+<p><img src="/kustomize/images/abandonedTrainingWheels.png" alt="removed training wheels"></p>
+<p>The following usage:</p>
+<pre><code>kustomize build --load_restrictor none $target
+</code></pre><p>allows a <code>kustomization.yaml</code> file used in this
+build to refer to files outside its own directory
+(i.e. outside its <a href="/kustomize/api-reference/glossary#kustomization-root">root</a>).</p>
+<p>This is an opt-in to suppress a security feature
+that denies this precise behavior.</p>
+<p>This feature should only be used to allow multiple
+overlays (e.g. prod, staging and dev) to share a
+patch file.  To share <em>resources</em>, use a relative
+path or URL to a kustomization directory in the
+<code>resources</code> directive.</p>
+<h2 id="inventory-generation-for-pruning">Inventory generation for pruning</h2>
+<p><img src="/kustomize/images/pruning.png" alt="pruning dead branches"></p>
+<p><em>Alpha</em></p>
+<p>Users can add an <code>inventory</code> stanza to their
+kustomization file, to add a special <em>inventory
+object</em> to the <code>build</code> result.</p>
+<p>This object applies to the cluster along with
+everything else in the build result and can be
+used by other clients to intelligently <em>prune</em>
+orphaned cluster resources.</p>
+<p>For more information see the
+<a href="https://github.com/kubernetes-sigs/kustomize/tree/master/docs/inventory_object.md">kustomize inventory object documentation</a>.</p>
+<h2 id="field-changes--deprecations">Field changes / deprecations</h2>
+<h3 id="resources-expanded-bases-deprecated"><code>resources</code> expanded, <code>bases</code> deprecated</h3>
+<p>The <code>resources</code> field has been generalized; it now
+accepts what formerly could only be specified in
+the <code>bases</code> field.</p>
+<p>This change was made to allow users fine control
+over resource processing order.  With a distinct
+<code>bases</code> field, bases had to be loaded separately
+from resources as a group.  Now, base loading may
+be interleaved as desired with the loading of
+resource files from the current
+directory. <a href="#resource-ordering">Resource ordering</a>
+had to be respected before this feature could be
+introduced.</p>
+<p>The <code>bases</code> field is now deprecated, and will be
+deleted in some future major release.  Manage the
+deprecation simply moving the arguments of the
+<code>bases</code> field to the <code>resources</code> field in the
+desired order, e.g.</p>
+<blockquote>
+<pre><code>resources:
+- someResouceFile.yaml
+- someOtherResourceFile.yaml
+bases:
+- ../../someBaseDir
+</code></pre></blockquote>
+<p>could become</p>
+<blockquote>
+<pre><code>resources:
+- someResouceFile.yaml
+- ../../someBaseDir
+- someOtherResourceFile.yaml
+</code></pre></blockquote>
+<p>The <code>kustomized edit fix</code> command will do this for
+you, though it will always put the bases at the
+end.</p>
+<p>As an aside, the <code>resources</code>, <code>generators</code> and
+<code>transformers</code> fields now all accept the same
+argument format.</p>
+<blockquote>
+<p>Each field&rsquo;s argument is a <em>string list</em>,
+where each entry is either a <em>resource</em> (a
+relative path to a YAML file) or a
+<a href="/kustomize/api-reference/glossary#kustomization"><em>kustomization</em></a> (a path or URL
+pointing to a directory with a kustomization
+file).  A kustomization directory used in this
+context is called a <a href="/kustomize/api-reference/glossary#base"><em>base</em></a>.</p>
+</blockquote>
+<p>The fact that the <code>generators</code> and <code>transformers</code>
+field accept <a href="/kustomize/api-reference/glossary#base">bases</a> and the fact that generator
+and transformer configuration objects are just
+normal k8s resources means that one can generate
+or transform a generator or a transformer (see
+<a href="https://github.com/kubernetes-sigs/kustomize/tree/master/api/internal/target/transformerplugin_test.go">TestTransformerTransformers</a>).</p>
+<h3 id="replicas-field"><code>replicas</code> field</h3>
+<p>The common task of patching a deployment to edit
+the number of replicas is now made easier
+with the new <a href="/kustomize/api-reference/kustomization/replicas">replicas</a> field.</p>
+<h3 id="envs-field"><code>envs</code> field</h3>
+<p>An <code>envs</code> sub-field has been added to both
+<code>configMapGenerator</code> and <code>secretGenerator</code>,
+replacing the now deprecated (and singular)
+<code>env</code> field.  The new field accepts lists, just
+like its sibling fields <code>files</code> and <code>literals</code>.</p>
+<p>Optionally use <code>kustomize edit fix</code> to merge
+singular <code>env</code> field into a plural field.</p>
+
+	
+
+	<ul class="list-unstyled d-flex justify-content-between align-items-center mb-0 pt-5">
+  <li>
+    <a href="/kustomize/blog/2019/02/05/v2.0.0/" class="btn btn-primary "><span class="mr-1">←</span> Previous</a>
+  </li>
+    <a href="/kustomize/blog/2019/07/03/v3.0.0/" class="btn btn-primary ">Next <span class="ml-1">→</span></a>
+  </li>
+</ul>
+
+</div>
+
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

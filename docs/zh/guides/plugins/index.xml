@@ -1,0 +1,77 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kustomize – Kustomize 插件</title>
+    <link>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/</link>
+    <description>Recent content in Kustomize 插件 on Kustomize</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Guides: 内置插件</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/builtins/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/builtins/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/zh/guides/plugins/builtins/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Exec 插件示例</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/execpluginguidedexample/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/execpluginguidedexample/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/zh/guides/plugins/execpluginguidedexample/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Go 插件注意事项</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/goplugincaveats/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/goplugincaveats/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/zh/guides/plugins/goplugincaveats/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Go 插件示例</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/gopluginguidedexample/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/zh/guides/plugins/gopluginguidedexample/</guid>
+      <description>
+        
+        
+        &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0; url=https://kubectl.docs.kubernetes.io/zh/guides/plugins/gopluginguidedexample/&#34; /&gt;
+&lt;p&gt;Moved to &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-experimental&#34;&gt;https://github.com/kubernetes-sigs/cli-experimental&lt;/a&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.74.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kustomize/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kustomize/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kustomize/favicons/android-192x192.png" sizes="192x192">
+
+<title>v3.2.1 | Kustomize</title><meta property="og:title" content="v3.2.1" />
+<meta property="og:description" content="Kustomize v3.2.1
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kubernetes-sigs.github.io/kustomize/blog/2019/09/26/v3.2.1/" />
+<meta property="article:published_time" content="2019-09-26T00:00:00+00:00" />
+<meta property="article:modified_time" content="2020-06-07T21:07:46-07:00" /><meta property="og:site_name" content="Kustomize" />
+<meta itemprop="name" content="v3.2.1">
+<meta itemprop="description" content="Kustomize v3.2.1
+">
+<meta itemprop="datePublished" content="2019-09-26T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2020-06-07T21:07:46-07:00" />
+<meta itemprop="wordCount" content="63">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="v3.2.1"/>
+<meta name="twitter:description" content="Kustomize v3.2.1
+"/>
+
+
+
+
+
+<link rel="preload" href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kustomize/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://kubernetes-sigs.github.io/kustomize//css/asciinema-player.css" />
+
+    <title>v3.2.1 | Kustomize</title>
+  </head>
+  <body class="td-page td-blog">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kustomize/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kustomize</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/guides/" ><span>Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/api-reference/" ><span>API Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				<a class="nav-link" href="https://github.com/kubernetes-sigs/kustomize/tree/master/examples" target="_blank" ><span>Example</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kustomize/blog/" ><span class="active">Blog</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kustomize/contributing/" ><span>Contributing</span></a>
+			</li>
+			
+			
+			
+			<li class="nav-item dropdown d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/blog/2019/09/26/v3.2.1/">简体中文</a>
+	
+</div>
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    <div class="nav-item dropdown d-block d-lg-none">
+      
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	English
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/kustomize/zh/blog/2019/09/26/v3.2.1/">简体中文</a>
+	
+</div>
+    </div>
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/blog/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Blog</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeblog">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kustomize/blog/releases/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Releases</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kustomizeblogreleases">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20191024v330" href="/kustomize/blog/2019/10/24/v3.3.0/">v3.3.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page  active" id="m-kustomizeblog20190926v321" href="/kustomize/blog/2019/09/26/v3.2.1/">v3.2.1</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190917v320" href="/kustomize/blog/2019/09/17/v3.2.0/">v3.2.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190726v310" href="/kustomize/blog/2019/07/26/v3.1.0/">v3.1.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190703v300" href="/kustomize/blog/2019/07/03/v3.0.0/">v3.0.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190618v210" href="/kustomize/blog/2019/06/18/v2.1.0/">v2.1.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20190205v200" href="/kustomize/blog/2019/02/05/v2.0.0/">v2.0.0</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kustomizeblog20180521v101" href="/kustomize/blog/2018/05/21/v1.0.1/">v1.0.1</a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/edit/master/site/content/en/blog/releases/v3.2.1.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new?title=v3.2.1" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/kubernetes-sigs/kustomize/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5 pr-md-4" role="main">
+            <a class="btn btn-lg -bg-orange td-rss-button d-none d-lg-block" href="https://kubernetes-sigs.github.io/kustomize/blog/releases/index.xml" target="_blank">
+              RSS <i class="fa fa-rss ml-2 "></i>
+            </a>
+            
+<div class="td-content">
+	<h1>v3.2.1</h1>
+	<div class="lead">Kustomize v3.2.1</div>
+	<div class="td-byline mb-4">
+		
+		<time datetime="2019-09-26" class="text-muted">Thursday, September 26, 2019</time>
+	</div>
+	<p>This is a patch release, with no new features from 3.2.0.</p>
+<p>It reflects a change in dependence.</p>
+<p>The kustomize binary is now built as a client, with no special
+consideration, of the set of public packages represented by the Go
+module at [https://github.com/kubernetes-sigs/kustomize].</p>
+<p>kustomize the binary is now a client of the kustomize API
+represented by the public package surface presented by
+<code>https://github.com/kubernetes-sigs/kustomize/v{whatever}</code></p>
+
+	
+
+	<ul class="list-unstyled d-flex justify-content-between align-items-center mb-0 pt-5">
+  <li>
+    <a href="/kustomize/blog/2019/09/17/v3.2.0/" class="btn btn-primary "><span class="mr-1">←</span> Previous</a>
+  </li>
+    <a href="/kustomize/blog/2019/10/24/v3.3.0/" class="btn btn-primary ">Next <span class="ml-1">→</span></a>
+  </li>
+</ul>
+
+</div>
+
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kubernetes-sig-cli">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/kubernetes-sigs/kustomize">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Kubernetes Authors All Rights Reserved</small>
+        
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kustomize/js/main.min.35b203b3c2114e187f6e4bbf0903c511aaaac5535186321e3b5e364656b6de0c.js" integrity="sha256-NbIDs8IRThh/bku/CQPFEaqqxVNRhjIeO142Rla23gw=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://kubernetes-sigs.github.io/kustomize//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

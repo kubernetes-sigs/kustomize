@@ -1,0 +1,664 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kustomize – Kustomize</title>
+    <link>https://kubernetes-sigs.github.io/kustomize/</link>
+    <description>Recent content on Kustomize</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://kubernetes-sigs.github.io/kustomize/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+      
+    
+    
+    <item>
+      <title>Blog: v3.3.0</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/10/24/v3.3.0/</link>
+      <pubDate>Thu, 24 Oct 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/10/24/v3.3.0/</guid>
+      <description>
+        
+        
+        &lt;h2 id=&#34;summary-of-changes&#34;&gt;Summary of changes&lt;/h2&gt;
+&lt;h3 id=&#34;first-release-of-the-go-api-only-module&#34;&gt;First release of the Go API-only module&lt;/h3&gt;
+&lt;p&gt;Many of the PRs since the last vrelease were
+around restructuring the &lt;em&gt;sigs.k8s.io/kustomize&lt;/em&gt;
+repository into three Go modules instead of just one.&lt;/p&gt;
+&lt;p&gt;The reasons for this are detailed in the &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/site/content/en/faq/versioningPolicy.md&#34;&gt;versioning
+policy documentation&lt;/a&gt;, and what it means for releasing
+is explained in the &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/releasing&#34;&gt;release process documentation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The tl;dr is that the top level module
+&lt;code&gt;sigs.k8s.io/kustomize&lt;/code&gt; now defines the kustomize Go
+API, and the &lt;em&gt;kustomize&lt;/em&gt; CLI sits below it in an
+independent module &lt;code&gt;sigs.k8s.io/kustomize/kustomize&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The modules release independently, though in practice a
+new release of the kustomize Go API will likely be
+followed quickly by a new release of the &lt;code&gt;kustomize&lt;/code&gt;
+executable.&lt;/p&gt;
+&lt;p&gt;This is a necessary step to creating a much smaller
+kustomize Go API surface that has some hope of
+conforming to semantic versioning and being of some use
+to clients.&lt;/p&gt;
+&lt;p&gt;The kustomize CLI will see the same kustomize Go API as
+any other client.&lt;/p&gt;
+&lt;p&gt;The new semver-able API will begin with &lt;code&gt;v4.0.0&lt;/code&gt; (not
+yet released) and be a clean break with &lt;code&gt;v3&lt;/code&gt; etc.&lt;/p&gt;
+&lt;h3 id=&#34;change-log-since-v320&#34;&gt;Change log since v3.2.0&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;3c9d828f - Have kustomize CLI depend on kustomize Go API v3.3.0 (Jeffrey Regan)
+5d800f0b - Merge pull request #1595 from monopole/threeReleases (Jeff Regan)
+4eb2d5bc - Three builders. (Jeffrey Regan)
+988af1ff - Update README.md (Jeff Regan)
+1617183e - Merge pull request #1590 from monopole/releaseProcessUpdate (Kubernetes Prow Robot)
+ee727464 - update release process doc (jregan)
+c9e7dc3b - Merge pull request #1589 from monopole/moreTestsAroundKustFileName (Jeff Regan)
+07e0e46a - improve tests for alternative kustomization file names (Jeffrey Regan)
+404d2d63 - Merge pull request #1587 from monopole/reducePgmconfig (Jeff Regan)
+baa0296a - Reduce size of pgmconfig package (Jeffrey Regan)
+0f665ac1 - Merge pull request #1544 from ptux/add-transformer-href (Jeff Regan)
+14b0a650 - Merge pull request #1581 from monopole/refactorFs (Jeff Regan)
+2d58f8b8 - Break the dep between fs and pgmconfig. (Jeffrey Regan)
+9a43ca53 - Merge pull request #1578 from nlamirault/fix/build-plugins-doc (Jeff Regan)
+5372fc6f - Merge pull request #1579 from monopole/fsPackageCleanup (Jeff Regan)
+86bc3440 - Merge pull request #1513 from nimohunter/fix_empty_list_item (Kubernetes Prow Robot)
+a014f7d4 - Merge pull request #1561 from beautytiger/dev-190925 (Jeff Regan)
+9a94bcb8 - Improve fs package and doc in prep to officially go public (Jeffrey Regan)
+07634ef0 - Merge pull request #1575 from monopole/versioning (Jeff Regan)
+995f88d6 - Update versioning notes. (jregan)
+334a6467 - Fix: documentation link for plugins (Nicolas Lamirault)
+08963ba5 - improve test code coverage in transformers (Guangming Wang)
+326fb689 - Merge pull request #1570 from bzub/1234-go_plugin_doc (Jeff Regan)
+970ce67c - Update goPluginCaveats.md (Jeff Regan)
+98d18930 - Update INSTALL.md (Jeff Regan)
+d89b448c - Fix git tag recovery in cloud build. (Jeff Regan)
+17bf9d32 - Update releasing README. (Jeff Regan)
+a99aff1d - Merge pull request #1571 from monopole/updateCloudBuildProcess (Kubernetes Prow Robot)
+a694ac7b - Update cloud build process for kustomize. (Jeffrey Regan)
+b5b11ef6 - Fix compile kustomize example. (bzub)
+fa1af6f5 - Merge pull request #1473 from richardmarshall/execpluginhash (Jeff Regan)
+9288dec0 - Fix failing BashedConfigMapTest (Jeff Regan)
+1a45dd0b - Merge pull request #1566 from monopole/releaseNotes3.2.1 (Kubernetes Prow Robot)
+592c5acf - docs: Exec plugin generator options (Richard Marshall)
+ac9424fa - tests: Add unit tests for update resource options (Richard Marshall)
+79fbe7c4 - Support resource generator options in exec plugins (Richard Marshall)
+f69d526f - v3.2.1 release notes (Jeff Regan)
+07a95a60 - Merge pull request #1565 from monopole/tweakBinaryDepsBeforeTagging (Jeff Regan)
+032b3857 - Pin the kustomize binary&#39;s dependence on kustomize libs. (jregan)
+81062959 - Merge pull request #1564 from monopole/moveKustomizeBinaryToOwnModule (Kubernetes Prow Robot)
+b82a8fd3 - Move the kustomize binary to its own module. (Jeffrey Regan)
+2d0c22d6 - Merge pull request #1562 from keleustes/tools (Kubernetes Prow Robot)
+aa342def - Pin tool versions using go modules (Ian Howell)
+10786ec0 - Merge pull request #1554 from keleustes/readme (Kubernetes Prow Robot)
+7c705687 - Update README.md to include Kubernetes 1.16 (Jerome Brette)
+e8933d97 - Merge pull request #1560 from monopole/precommitTuneup (Jeff Regan)
+9d7b6544 - Make pre-commit more portable and less tricky. (jregan)
+7a0946a9 - Merge pull request #1558 from monopole/dependOnNewPluginatorModule (Jeff Regan)
+def4f045 - Depend on new pluginator location. (Jeffrey Regan)
+2f2408f1 - Merge pull request #1559 from monopole/compressCopyright (Jeff Regan)
+3b9bcc48 - Compress copyright in the commands package. (Jeffrey Regan)
+d0429ff4 - Merge pull request #1557 from monopole/pluginatorModule (Jeff Regan)
+33deefc3 - Copy pluginator to its own module. (Jeffrey Regan)
+9b3de82b - Merge pull request #1506 from Liujingfang1/release (Jeff Regan)
+d217074f - Merge pull request #1550 from keleustes/apiversion (Kubernetes Prow Robot)
+1d90ba7c - Fix typo in apiVersion yaml declaration (Jerome Brette)
+eeeb4c36 - Merge pull request #1547 from keleustes/extensions (Kubernetes Prow Robot)
+b1faa989 - Update Ingress apiVersion to networking.k8s.io/v1beta1 (Jerome Brette)
+d8250c9e - move test case (nimohunter)
+c9500466 - add transformer href (Wang(わん))
+0c32691e - Merge pull request #1537 from jaypipes/gomod-install-note (Kubernetes Prow Robot)
+88b1d627 - Merge pull request #1541 from rtnpro/patch-1 (Jeff Regan)
+aec82066 - Update INSTALL.md (Jeff Regan)
+20c2b53a - Merge pull request #1542 from monopole/tweakFilePathsInTest (Jeff Regan)
+274b5c3b - Tweak file path handling and logging in test. (Jeffrey Regan)
+b1fdaa23 - Fix typo in transformerconfigs README (Ratnadeep Debnath)
+b5d5e70b - empty list or map item return error (nimohunter)
+2e829853 - empty list or map item return error (nimohunter)
+55941f57 - add note about GO111MODULE for source install (Jay Pipes)
+9e226001 - empty list or map item return error (nimohunter)
+77b63f96 - add release note for v3.2.0 (jingfangliu)
+&lt;/code&gt;&lt;/pre&gt;
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v3.2.1</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/09/26/v3.2.1/</link>
+      <pubDate>Thu, 26 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/09/26/v3.2.1/</guid>
+      <description>
+        
+        
+        &lt;p&gt;This is a patch release, with no new features from 3.2.0.&lt;/p&gt;
+&lt;p&gt;It reflects a change in dependence.&lt;/p&gt;
+&lt;p&gt;The kustomize binary is now built as a client, with no special
+consideration, of the set of public packages represented by the Go
+module at [https://github.com/kubernetes-sigs/kustomize].&lt;/p&gt;
+&lt;p&gt;kustomize the binary is now a client of the kustomize API
+represented by the public package surface presented by
+&lt;code&gt;https://github.com/kubernetes-sigs/kustomize/v{whatever}&lt;/code&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v3.2.0</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/09/17/v3.2.0/</link>
+      <pubDate>Tue, 17 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/09/17/v3.2.0/</guid>
+      <description>
+        
+        
+        &lt;h2 id=&#34;inline-patch&#34;&gt;Inline Patch&lt;/h2&gt;
+&lt;p&gt;Since this version, Kustomize allows inline patches in all three of &lt;code&gt;patchesStrategicMerge&lt;/code&gt;, &lt;code&gt;patchesJson6902&lt;/code&gt; and &lt;code&gt;patches&lt;/code&gt;. Take a look at &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/examples/examples/inlinePatch.md&#34;&gt;inline patch&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;new-subcommand&#34;&gt;New Subcommand&lt;/h2&gt;
+&lt;p&gt;Since this version, one can create a kustomization.yaml file in a directory through a &lt;code&gt;create&lt;/code&gt; subcommand.&lt;/p&gt;
+&lt;p&gt;Create a new overlay from the base ../base&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;kustomize create --resources ../base
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Create a new kustomization detecing resources in the current directory&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;kustomize create --autodetect
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Once can also add all resources in the current directory recursively by&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;kustomize create --autodetect --recursive
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;new-example-generator&#34;&gt;New Example Generator&lt;/h3&gt;
+&lt;p&gt;A new example generator of using go-getter to download resources is added. Take a look at &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/examples/goGetterGeneratorPlugin.md&#34;&gt;go-getter generator&lt;/a&gt;.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v3.1.0</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/07/26/v3.1.0/</link>
+      <pubDate>Fri, 26 Jul 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/07/26/v3.1.0/</guid>
+      <description>
+        
+        
+        &lt;h2 id=&#34;extended-patches&#34;&gt;Extended patches&lt;/h2&gt;
+&lt;p&gt;Since this version, Kustomize allows applying one patch to multiple resources. This works for both Strategic Merge Patch and JSON Patch. Take a look at &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/examples/patchMultipleObjects.md&#34;&gt;patch multiple objects&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;improved-resource-matching&#34;&gt;Improved Resource Matching&lt;/h2&gt;
+&lt;p&gt;Multiple improvements have been made to allow the user to leverage &amp;ldquo;namespace&amp;rdquo;
+instead/or with &amp;ldquo;name suffix/prefix&amp;rdquo; to segregate resources.&lt;/p&gt;
+&lt;h3 id=&#34;patch-resolution-improvement&#34;&gt;Patch resolution improvement&lt;/h3&gt;
+&lt;p&gt;The following example demonstrates how using the namespace field in the patch definition,
+will let the user define two different patches against two different Deployment having the
+same &amp;ldquo;deploy1&amp;rdquo; name but in different namespaces in the same Kustomize context/folder.
+Unless the &lt;code&gt;namespace:&lt;/code&gt; field has been specified in the kustomization.yaml, no namespace
+value will be handled as Kubernetes &lt;code&gt;default&lt;/code&gt; namespace.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;apps/v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;deploy1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;main&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;template&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;containers&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;nginx&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ANOTHERENV&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;TESTVALUE&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;---&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;apps/v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;deploy1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;production&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;template&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;containers&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;main&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ANOTHERENV&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PRODVALUE&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;variable-resolution-improvement&#34;&gt;Variable resolution improvement&lt;/h3&gt;
+&lt;p&gt;It is possible to add namespace field to the variable declaration. In the following example,
+two &lt;code&gt;Service&lt;/code&gt; objects with the same &lt;code&gt;elasticsearch&lt;/code&gt; name have been declared.
+Specifying the namespace in the objRef of the corresponding varriables, allows Kustomize to
+resovlve thoses variables.
+If the namespace is not specified, Kustomize will handle it has a &amp;ldquo;wildcard&amp;rdquo; value.&lt;/p&gt;
+&lt;p&gt;Extract of kustomization.yaml:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;vars&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;elasticsearch-test-protocol&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;objref&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Service&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;elasticsearch&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;test&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;fieldref&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;fieldpath&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;spec.ports&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;]&lt;/span&gt;.protocol&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;elasticsearch-dev-protocol&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;objref&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Service&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;elasticsearch&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;dev&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;fieldref&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;fieldpath&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;spec.ports&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;]&lt;/span&gt;.protocol&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;simultaneous-change-of-names-and-namespaces&#34;&gt;Simultaneous change of names and namespaces&lt;/h3&gt;
+&lt;p&gt;Kustomize is now able to deal with simultaneous changes of name and namespace.
+Special attention has been paid the handling of:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ClusterRoleBinding/RoleBinding &amp;ldquo;subjects&amp;rdquo; field,&lt;/li&gt;
+&lt;li&gt;ValidatingWebhookConfiguration &amp;ldquo;webhooks&amp;rdquo; field.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The user should be able to use a kustomization.yaml as shown in the example bellow
+even if ClusterRoleBind,RoleBinding and ValidatingWebookConfiguration are part of the
+resources he needs to declare.&lt;/p&gt;
+&lt;p&gt;Extract of kustomization.yaml:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namePrefix&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;pfx-&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;nameSuffix&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;-sfx&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;testnamespace&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;resources&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;resource-and-kustomize-context-matching&#34;&gt;Resource and Kustomize Context matching&lt;/h3&gt;
+&lt;p&gt;Kustomize is now able to support more aggregation patterns.&lt;/p&gt;
+&lt;p&gt;If for instance, the top level of kustomization.yaml, is simply
+combining sub-components, (as in the following example), Kustomize has improved
+resource matching capabilities. This removes some of the constraints which were
+present on the utilization of prefix/suffix and namespace transformers in the
+individual components.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;resources&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- ../component1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- ../component2&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;- ../component3&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;other-improvements&#34;&gt;Other improvements&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Image transformation has been improved. This allows the user to update the sha256 of
+an image with another sha256.&lt;/li&gt;
+&lt;li&gt;Multiple default transformer configuration entries have been added, removing the need for the
+user to add them as part of the &lt;code&gt;configurations:&lt;/code&gt; section of the kustomization.yaml.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;kustomize&lt;/code&gt; help command has been tidied up.&lt;/li&gt;
+&lt;/ul&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v3.0.0</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/07/03/v3.0.0/</link>
+      <pubDate>Wed, 03 Jul 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/07/03/v3.0.0/</guid>
+      <description>
+        
+        
+        &lt;p&gt;This release is basically &lt;a href=&#34;v2.1.0.md&#34;&gt;v2.1.0&lt;/a&gt;,
+with many post-v2.1.0 bugs fixed (in about 150
+commits) and a &lt;code&gt;v3&lt;/code&gt; in Go package paths.&lt;/p&gt;
+&lt;p&gt;The major version increment to &lt;code&gt;v3&lt;/code&gt; puts a new
+floor on a stable API for &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/docs/plugins&#34;&gt;plugin&lt;/a&gt; developers
+(both &lt;em&gt;Go&lt;/em&gt; plugin developers and &lt;em&gt;exec&lt;/em&gt; plugin
+developers who happen to use Go).&lt;/p&gt;
+&lt;h3 id=&#34;why-so-soon-after-v210&#34;&gt;Why so soon after v2.1.0&lt;/h3&gt;
+&lt;p&gt;We made a mistake - v2.1.0 should have been
+v3.0.0.  Per the &lt;a href=&#34;https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher&#34;&gt;Go modules doc&lt;/a&gt; (which have
+improved a great deal recently), a release that&amp;rsquo;s
+already tagged v2 or higher should increment the
+major version when performing their first Go
+module-based release.&lt;/p&gt;
+&lt;p&gt;This advice applies to kustomize, since it was
+already at major version 2 when it began using Go
+modules to state &lt;em&gt;its own&lt;/em&gt; dependencies in v2.1.0.&lt;/p&gt;
+&lt;p&gt;But the more important reason for &lt;code&gt;v3&lt;/code&gt; is a change
+to the kustomize &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/faq/versioningpolicy&#34;&gt;versioning policy&lt;/a&gt;, forced by
+the introduction of plugins.&lt;/p&gt;
+&lt;p&gt;Historically, kustomize&amp;rsquo;s &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/faq/versioningpolicy&#34;&gt;versioning policy&lt;/a&gt;
+didn&amp;rsquo;t involve Go modules and addressed &lt;em&gt;only&lt;/em&gt; the
+command line tool&amp;rsquo;s behavior and the fields in a
+kustomization file.  The underlying packages were
+an implementation detail, not under semantic
+versioning, because they weren&amp;rsquo;t intended for
+export (and should have all been under
+&lt;code&gt;internal&lt;/code&gt;).  Thus although the v2.1.0 CLI is
+backward compatible with v2.0.3, the underlying
+package APIs are not.&lt;/p&gt;
+&lt;p&gt;With Go modules, the &lt;code&gt;go&lt;/code&gt; tool must assume that Go
+packages respect &lt;a href=&#34;https://semver.org&#34;&gt;semantic versioning&lt;/a&gt;, so it can
+perform &lt;a href=&#34;https://research.swtch.com/vgo-mvs&#34;&gt;minimal version selection&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;With the introduction of alpha plugins, kustomize
+sub-packages - in particular &lt;code&gt;loader&lt;/code&gt; and
+&lt;code&gt;resmap&lt;/code&gt; - become part of an API formally exposed
+to plugin authors, and so must be semantically
+versioned.  This allows plugins defined in other
+repositories to clarify that they depend on
+kustomize v3.0.0, and not see confusing errors
+arising from incompatibilities between v2.1.0 and
+v2.0.3.  Hence, the jump to v3.&lt;/p&gt;
+&lt;p&gt;Aside - the set of kustomize packages outside
+&lt;code&gt;internal&lt;/code&gt; is too large, and over time, informed
+by package use, this API surface must shrink.
+Such shrinkage will trigger a major version
+increment.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v2.1.0</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/06/18/v2.1.0/</link>
+      <pubDate>Tue, 18 Jun 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/06/18/v2.1.0/</guid>
+      <description>
+        
+        
+        &lt;p&gt;Go modules, resource ordering respected, generator and transformer plugins, eased
+loading restrictions, the notion of inventory, eased replica count modification.
+About ~90 issues closed since &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.0.3&#34;&gt;v2.0.3&lt;/a&gt; in ~400 commits.&lt;/p&gt;
+&lt;p&gt;Download &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.1.0&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;go-modules&#34;&gt;Go modules&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/images/goModules.png&#34; alt=&#34;gopher with boxes&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Kustomize now defines its dependencies in a top
+level &lt;code&gt;go.mod&lt;/code&gt; file.  This is the first step
+towards a package structure intentially exported
+as one or more &lt;a href=&#34;https://github.com/golang/go/wiki/Modules&#34;&gt;Go modules&lt;/a&gt; for use in other
+programs (kubectl, kubebuilder, etc.) and in
+kustomize plugins (see below).&lt;/p&gt;
+&lt;h2 id=&#34;resource-ordering&#34;&gt;Resource ordering&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/images/sorted.png&#34; alt=&#34;sort order retained&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Kustomize now retains the depth-first order of
+resources as read, a frequently requested
+feature.&lt;/p&gt;
+&lt;p&gt;This means resource order can be controlled
+by editting kustomization files.  This is
+also vital to applying user-defined
+transformations (plugins) in a particular
+order.&lt;/p&gt;
+&lt;p&gt;Nothing needs to be done to activate this;
+it happens automatically.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;build&lt;/code&gt; command now accepts a &lt;code&gt;--reorder&lt;/code&gt;
+flag with values &lt;code&gt;legacy&lt;/code&gt; and &lt;code&gt;none&lt;/code&gt;,
+with a default value of &lt;code&gt;legacy&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;legacy&lt;/code&gt; means apply an ordering based on
+GVK, that currently emits &lt;code&gt;Namespace&lt;/code&gt; objects
+first, and &lt;code&gt;ValidatingWebhookConfiguration&lt;/code&gt;
+objects last.  This means that despite
+automatic retention of load order, your
+&lt;code&gt;build&lt;/code&gt; output won&amp;rsquo;t change by default.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;none&lt;/code&gt; means &lt;em&gt;don&amp;rsquo;t&lt;/em&gt; reorder the resources before
+output.  Specify this to see output order
+respect input order.&lt;/p&gt;
+&lt;h2 id=&#34;generator-and-transformer-plugins&#34;&gt;Generator and transformer plugins&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/images/plugins.png&#34; alt=&#34;kid putting knife in electrical outlet&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Since the beginning (as &lt;code&gt;kinflate&lt;/code&gt; back in Sep
+2017), kustomize has read or generated resources,
+applied a series of pipelined transformation to
+them, and emitted the result to &lt;code&gt;stdout&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;At that time, the only way to change the behavior
+of a generator (e.g. a secret generator), or
+change the behavior of a transformer (e.g. a name
+changer, or json patcher), was to modify source
+code and put out a release.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9&#34;&gt;v1.0.9&lt;/a&gt; introduced &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/examples/generatorOptions.md&#34;&gt;generator options&lt;/a&gt; as a means
+to change the behavior of the only two generators
+available at the time - Secret and ConfigMap
+generators.  It also introduced
+&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/examples/transformerconfigs&#34;&gt;transformer configs&lt;/a&gt; as a way to fine tune the
+targets of transformations (e.g. to which fields
+&lt;em&gt;selectors&lt;/em&gt; should be added).  Most of the feature
+requests for kustomize revolve around changing the
+behavior of the builtin generators and
+transformers.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.1.0&#34;&gt;v2.1.0&lt;/a&gt; adds an &lt;em&gt;alpha&lt;/em&gt; plugin framework, that
+encourages users to write their own generators or
+transformers, &lt;em&gt;declaring them as kubernetes
+objects just like everything else&lt;/em&gt;, and apply them
+as part of the &lt;code&gt;kustomize build&lt;/code&gt; process.&lt;/p&gt;
+&lt;p&gt;To inform the API exposed to plugins, and to
+confirm that the plugin framework can offer plugin
+authors the same capabilities as builtin
+operations, all the builtin generators and
+tranformers have been converted to plugin form
+(with one exceptions awaiting Go module
+refinements).  This means that adding, say, a
+&lt;code&gt;secretGenerator&lt;/code&gt; or &lt;code&gt;commonAnnotations&lt;/code&gt; directive
+to your kustomization will (in &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/releases/tag/v1.0.9releases/tag/v2.1.0&#34;&gt;v2.1.0&lt;/a&gt;) trigger
+execution of
+&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/plugin/builtin&#34;&gt;code committed as a plugin&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For more information, see the
+&lt;a href=&#34;plugins&#34;&gt;kustomize plugin documentation&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;remove-load-restrictions&#34;&gt;Remove load restrictions&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/images/abandonedTrainingWheels.png&#34; alt=&#34;removed training wheels&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The following usage:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;kustomize build --load_restrictor none $target
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;allows a &lt;code&gt;kustomization.yaml&lt;/code&gt; file used in this
+build to refer to files outside its own directory
+(i.e. outside its &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/glossary#kustomization-root&#34;&gt;root&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;This is an opt-in to suppress a security feature
+that denies this precise behavior.&lt;/p&gt;
+&lt;p&gt;This feature should only be used to allow multiple
+overlays (e.g. prod, staging and dev) to share a
+patch file.  To share &lt;em&gt;resources&lt;/em&gt;, use a relative
+path or URL to a kustomization directory in the
+&lt;code&gt;resources&lt;/code&gt; directive.&lt;/p&gt;
+&lt;h2 id=&#34;inventory-generation-for-pruning&#34;&gt;Inventory generation for pruning&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/images/pruning.png&#34; alt=&#34;pruning dead branches&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Alpha&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Users can add an &lt;code&gt;inventory&lt;/code&gt; stanza to their
+kustomization file, to add a special &lt;em&gt;inventory
+object&lt;/em&gt; to the &lt;code&gt;build&lt;/code&gt; result.&lt;/p&gt;
+&lt;p&gt;This object applies to the cluster along with
+everything else in the build result and can be
+used by other clients to intelligently &lt;em&gt;prune&lt;/em&gt;
+orphaned cluster resources.&lt;/p&gt;
+&lt;p&gt;For more information see the
+&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/docs/inventory_object.md&#34;&gt;kustomize inventory object documentation&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;field-changes--deprecations&#34;&gt;Field changes / deprecations&lt;/h2&gt;
+&lt;h3 id=&#34;resources-expanded-bases-deprecated&#34;&gt;&lt;code&gt;resources&lt;/code&gt; expanded, &lt;code&gt;bases&lt;/code&gt; deprecated&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;resources&lt;/code&gt; field has been generalized; it now
+accepts what formerly could only be specified in
+the &lt;code&gt;bases&lt;/code&gt; field.&lt;/p&gt;
+&lt;p&gt;This change was made to allow users fine control
+over resource processing order.  With a distinct
+&lt;code&gt;bases&lt;/code&gt; field, bases had to be loaded separately
+from resources as a group.  Now, base loading may
+be interleaved as desired with the loading of
+resource files from the current
+directory. &lt;a href=&#34;#resource-ordering&#34;&gt;Resource ordering&lt;/a&gt;
+had to be respected before this feature could be
+introduced.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;bases&lt;/code&gt; field is now deprecated, and will be
+deleted in some future major release.  Manage the
+deprecation simply moving the arguments of the
+&lt;code&gt;bases&lt;/code&gt; field to the &lt;code&gt;resources&lt;/code&gt; field in the
+desired order, e.g.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;resources:
+- someResouceFile.yaml
+- someOtherResourceFile.yaml
+bases:
+- ../../someBaseDir
+&lt;/code&gt;&lt;/pre&gt;&lt;/blockquote&gt;
+&lt;p&gt;could become&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;resources:
+- someResouceFile.yaml
+- ../../someBaseDir
+- someOtherResourceFile.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/blockquote&gt;
+&lt;p&gt;The &lt;code&gt;kustomized edit fix&lt;/code&gt; command will do this for
+you, though it will always put the bases at the
+end.&lt;/p&gt;
+&lt;p&gt;As an aside, the &lt;code&gt;resources&lt;/code&gt;, &lt;code&gt;generators&lt;/code&gt; and
+&lt;code&gt;transformers&lt;/code&gt; fields now all accept the same
+argument format.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Each field&amp;rsquo;s argument is a &lt;em&gt;string list&lt;/em&gt;,
+where each entry is either a &lt;em&gt;resource&lt;/em&gt; (a
+relative path to a YAML file) or a
+&lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/glossary#kustomization&#34;&gt;&lt;em&gt;kustomization&lt;/em&gt;&lt;/a&gt; (a path or URL
+pointing to a directory with a kustomization
+file).  A kustomization directory used in this
+context is called a &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/glossary#base&#34;&gt;&lt;em&gt;base&lt;/em&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The fact that the &lt;code&gt;generators&lt;/code&gt; and &lt;code&gt;transformers&lt;/code&gt;
+field accept &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/glossary#base&#34;&gt;bases&lt;/a&gt; and the fact that generator
+and transformer configuration objects are just
+normal k8s resources means that one can generate
+or transform a generator or a transformer (see
+&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/tree/master/api/internal/target/transformerplugin_test.go&#34;&gt;TestTransformerTransformers&lt;/a&gt;).&lt;/p&gt;
+&lt;h3 id=&#34;replicas-field&#34;&gt;&lt;code&gt;replicas&lt;/code&gt; field&lt;/h3&gt;
+&lt;p&gt;The common task of patching a deployment to edit
+the number of replicas is now made easier
+with the new &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/api-reference/kustomization/replicas&#34;&gt;replicas&lt;/a&gt; field.&lt;/p&gt;
+&lt;h3 id=&#34;envs-field&#34;&gt;&lt;code&gt;envs&lt;/code&gt; field&lt;/h3&gt;
+&lt;p&gt;An &lt;code&gt;envs&lt;/code&gt; sub-field has been added to both
+&lt;code&gt;configMapGenerator&lt;/code&gt; and &lt;code&gt;secretGenerator&lt;/code&gt;,
+replacing the now deprecated (and singular)
+&lt;code&gt;env&lt;/code&gt; field.  The new field accepts lists, just
+like its sibling fields &lt;code&gt;files&lt;/code&gt; and &lt;code&gt;literals&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Optionally use &lt;code&gt;kustomize edit fix&lt;/code&gt; to merge
+singular &lt;code&gt;env&lt;/code&gt; field into a plural field.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v2.0.0</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2019/02/05/v2.0.0/</link>
+      <pubDate>Tue, 05 Feb 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2019/02/05/v2.0.0/</guid>
+      <description>
+        
+        
+        &lt;p&gt;After security review, a field used in secret
+generation (see below) was removed from the
+definition of a kustomization file with no
+mechanism to convert it to a new form.  Also, the
+set of files accessible from a kustomization file
+has been further constrained.&lt;/p&gt;
+&lt;p&gt;Per the &lt;a href=&#34;https://kubernetes-sigs.github.io/kustomize/kustomize/faq/versioningpolicy&#34;&gt;versioning policy&lt;/a&gt;,
+backward incompatible changes trigger an increment
+of the major version number, hence we go
+from 1.0.11 to 2.0.0. We&amp;rsquo;re taking this major
+version increment opportunity to remove some
+already deprecated fields, and the code paths
+associated with them.&lt;/p&gt;
+&lt;h2 id=&#34;backward-incompatible-changes&#34;&gt;Backward Incompatible Changes&lt;/h2&gt;
+&lt;h3 id=&#34;kustomization-path-constraints&#34;&gt;Kustomization Path Constraints&lt;/h3&gt;
+&lt;p&gt;A kustomization file can specify paths to other
+files, including resources, patches, configmap
+generation data, secret generation data and
+bases. In the case of a base, the path can be a
+git URL instead.&lt;/p&gt;
+&lt;p&gt;In 1.x, these paths had to be relative to the
+current kustomization directory (the location of
+the kustomization file used in the &lt;code&gt;build&lt;/code&gt;
+command).&lt;/p&gt;
+&lt;p&gt;In 2.0, bases can continue to specify, via
+relative paths, kustomizations outside the current
+kustomization directory.  But non-base paths are
+constrained to terminate in or below the current
+kustomization directory. Further, bases specified
+via a git URL may not reference files outside of
+the directory used to clone the repository.&lt;/p&gt;
+&lt;h3 id=&#34;kustomization-field-removals&#34;&gt;Kustomization Field Removals&lt;/h3&gt;
+&lt;h4 id=&#34;patches&#34;&gt;patches&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;patches&lt;/code&gt; was deprecated and replaced by
+&lt;code&gt;patchesStrategicMerge&lt;/code&gt; when &lt;code&gt;patchesJson6902&lt;/code&gt; was
+introduced.  In Kustomize 2.0.0, &lt;code&gt;patches&lt;/code&gt; is
+removed. Please use &lt;code&gt;patchesStrategicMerge&lt;/code&gt;
+instead.&lt;/p&gt;
+&lt;h4 id=&#34;imagetags&#34;&gt;imageTags&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;imageTags&lt;/code&gt; is replaced by &lt;code&gt;images&lt;/code&gt; since &lt;code&gt;images&lt;/code&gt;
+can provide more features to change image names,
+registries, tags and digests.&lt;/p&gt;
+&lt;h4 id=&#34;secretgeneratorcommands&#34;&gt;secretGenerator/commands&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;commands&lt;/code&gt; is removed from SecretGenerator due to
+a &lt;a href=&#34;https://docs.google.com/document/d/1FYgLVdq-siB_Cef9yuQBmit0PbrE8lsyTBdGI2eA2y8/edit&#34;&gt;security concern&lt;/a&gt;. One can use &lt;code&gt;files&lt;/code&gt; or
+&lt;code&gt;literals&lt;/code&gt;, similar to ConfigMapGenerator, to
+generate a secret.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;secretGenerator:
+- name: app-tls
+  files:
+    - secret/tls.cert
+    - secret/tls.key
+  type: &amp;quot;kubernetes.io/tls&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;compatible-changes-new-features&#34;&gt;Compatible Changes (New Features)&lt;/h2&gt;
+&lt;p&gt;As this release is triggered by a security change,
+there are no major new features to announce. A few
+things that are worth mentioning in this release
+are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;More than &lt;em&gt;40&lt;/em&gt; issues closed since 1.0.11
+release (including many extensions to
+transformation rules).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Users can run &lt;code&gt;kustomize edit fix&lt;/code&gt; to migrate a
+kustomization file working with previous
+versions to one working with 2.0.0. For example,
+a kustomization.yaml with following content&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;patches:
+  - deployment-patch.yaml
+imageTags:
+  - name: postgres
+    newTag: v1
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;will be converted to&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesStrategicMerge:
+  - deployment-patch.yaml
+images:
+  - name: postgres
+    newTag: v1
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Kustomization filename&lt;/p&gt;
+&lt;p&gt;In previous versions, the name of a
+kustomization file had to be
+&lt;code&gt;kustomization.yaml&lt;/code&gt;.
+Kustomize allows &lt;code&gt;kustomization.yaml&lt;/code&gt;,
+&lt;code&gt;kustomization.yml&lt;/code&gt; and
+&lt;code&gt;Kustomization&lt;/code&gt;. In a directory, only one of
+those filenames is allowed. If there are more
+than one found, Kustomize will exit with an
+error. Please select the best filename for your
+use cases.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Cancelled plans to deprecate applying prefix/suffix to namespace.
+The deprecation warning&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Adding nameprefix and namesuffix to Namespace resource will be deprecated in next release.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;was removed.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: v1.0.1</title>
+      <link>https://kubernetes-sigs.github.io/kustomize/blog/2018/05/21/v1.0.1/</link>
+      <pubDate>Mon, 21 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>https://kubernetes-sigs.github.io/kustomize/blog/2018/05/21/v1.0.1/</guid>
+      <description>
+        
+        
+        &lt;p&gt;Initial release after move from github.com/kubernetes/kubectl to github.com/kubernetes-sigs/kustomize.&lt;/p&gt;
+&lt;p&gt;History&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;May 2018: v1.0 after move to github.com/kubernetes-sigs/kubectl
+from github.com/kubernetes/kubectl.
+Has kustomization file, bases, overlays, basic transforms.&lt;/li&gt;
+&lt;li&gt;Apr 2018: s/kinflate/kustomize/, s/manifest/kustomization/&lt;/li&gt;
+&lt;li&gt;Oct 2017: s/kexpand/kinflate/&lt;/li&gt;
+&lt;li&gt;Sep 2017: kexpand &lt;a href=&#34;https://github.com/kubernetes/kubectl/pull/65&#34;&gt;starts&lt;/a&gt;
+in github.com/kubernetes/kubectl&lt;/li&gt;
+&lt;li&gt;Aug 2017: &lt;a href=&#34;https://docs.google.com/document/d/1cLPGweVEYrVqQvBLJg6sxV-TrE5Rm2MNOBA_cxZP2WU&#34;&gt;DAM&lt;/a&gt; authored by Brian Grant&lt;/li&gt;
+&lt;/ul&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

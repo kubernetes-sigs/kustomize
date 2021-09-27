@@ -1,0 +1,48 @@
+# This cloud build job is only used to build kustomize docker image and push
+# it to gcr.io repo.
+steps:
+  - name: "bash"
+    args:
+      - "echo"
+      - "Cloud build substitution check: "
+      - "BUILD_ID=$BUILD_ID"
+      - "PROJECT_ID=$PROJECT_ID"
+      - "_GIT_TAG=$_GIT_TAG"
+      - "_PULL_BASE_REF=$_PULL_BASE_REF"
+# We need to use bash to configure the build date and version properly.
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: /bin/bash
+    args:
+      - -c
+      - >
+        docker
+        build
+        -t
+        gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}
+        -t
+        gcr.io/$PROJECT_ID/kustomize:latest
+        -f
+        kustomize.Dockerfile
+        --build-arg
+        VERSION=${_PULL_BASE_REF}
+        --build-arg
+        COMMIT=$(git rev-parse HEAD)
+        --build-arg
+        DATE=$(date -u +%FT%TZ)
+        .
+
+images:
+  - "gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}"
+  - "gcr.io/$PROJECT_ID/kustomize:latest"
+
+substitutions:
+  # _GIT_TAG will be filled with a git-based tag for the image, of the form vYYYYMMDD-hash, and
+  # can be used as a substitution
+  _GIT_TAG: "12345"
+  # _PULL_BASE_REF will contain the ref that was pushed to to trigger this build -
+  # a branch like 'master' or 'release-0.2', or a tag like 'v0.2'.
+  _PULL_BASE_REF: "master"
+  # Other substitutions will not be evaluated
+
+options:
+  substitution_option: ALLOW_LOOSE

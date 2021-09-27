@@ -1,0 +1,17 @@
+# Copyright 2021 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: PodTemplate
+metadata:
+  name: hello
+  labels:
+    tier: hello
+template:
+  spec:
+    containers:
+    - name: hello
+      image: nginx
+      env:
+      - name: EXISTING
+        value: variable

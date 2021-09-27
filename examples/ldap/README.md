@@ -18,7 +18,7 @@ Steps:
 
 First define a place to work:
 
-<!-- @makeWorkplace @test -->
+<!-- @makeWorkplace @testAgainstLatestRelease -->
 ```
 DEMO_HOME=$(mktemp -d)
 ```
@@ -38,7 +38,7 @@ To keep this document shorter, the base resources are
 off in a supplemental data directory rather than
 declared here as HERE documents.  Download them:
 
-<!-- @downloadBase @test -->
+<!-- @downloadBase @testAgainstLatestRelease -->
 ```
 BASE=$DEMO_HOME/base
 mkdir -p $BASE
@@ -53,7 +53,7 @@ curl -s -o "$BASE/#1" "$CONTENT/base\
 
 Look at the directory:
 
-<!-- @runTree @test -->
+<!-- @runTree -->
 ```
 tree $DEMO_HOME
 ```
@@ -84,7 +84,7 @@ would only recognize the resource files.
 
 The `base` directory has a [kustomization] file:
 
-<!-- @showKustomization @test -->
+<!-- @showKustomization @testAgainstLatestRelease -->
 ```
 more $BASE/kustomization.yaml
 ```
@@ -92,7 +92,7 @@ more $BASE/kustomization.yaml
 Optionally, run `kustomize` on the base to emit
 customized resources to `stdout`:
 
-<!-- @buildBase @test -->
+<!-- @buildBase @testAgainstLatestRelease -->
 ```
 kustomize build $BASE
 ```
@@ -101,14 +101,14 @@ kustomize build $BASE
 
 A first customization step could be to set the name prefix to all resources:
 
-<!-- @namePrefix @test -->
+<!-- @namePrefix @testAgainstLatestRelease -->
 ```
 cd $BASE
 kustomize edit set nameprefix "my-"
 ```
 
 See the effect:
-<!-- @checkNameprefix @test -->
+<!-- @checkNameprefix @testAgainstLatestRelease -->
 ```
 kustomize build $BASE | grep -C 3 "my-"
 ```
@@ -121,7 +121,7 @@ Create a _staging_ and _production_ [overlay]:
  * _Production_ has a higher replica count and a persistent disk.
  * [variants] will differ from each other.
 
-<!-- @overlayDirectories @test -->
+<!-- @overlayDirectories @testAgainstLatestRelease -->
 ```
 OVERLAYS=$DEMO_HOME/overlays
 mkdir -p $OVERLAYS/staging
@@ -132,7 +132,7 @@ mkdir -p $OVERLAYS/production
 
 Download the staging customization and patch.
 
-<!-- @downloadStagingKustomization @test -->
+<!-- @downloadStagingKustomization @testAgainstLatestRelease -->
 ```
 curl -s -o "$OVERLAYS/staging/#1" "$CONTENT/overlays/staging\
 /{config.env,deployment.yaml,kustomization.yaml}"
@@ -148,7 +148,7 @@ The staging customization adds a configMap.
 > ```
 as well as 2 replica
 > ```cat $OVERLAYS/staging/deployment.yaml
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: ldap
@@ -159,7 +159,7 @@ as well as 2 replica
 #### Production Kustomization
 
 Download the production customization and patch.
-<!-- @downloadProductionKustomization @test -->
+<!-- @downloadProductionKustomization @testAgainstLatestRelease -->
 ```
 curl -s -o "$OVERLAYS/production/#1" "$CONTENT/overlays/production\
 /{deployment.yaml,kustomization.yaml}"
@@ -167,7 +167,7 @@ curl -s -o "$OVERLAYS/production/#1" "$CONTENT/overlays/production\
 
 The production customization adds 6 replica as well as a consistent disk.
 > ```cat $OVERLAYS/production/deployment.yaml
-> apiVersion: apps/v1beta2
+> apiVersion: apps/v1
 > kind: Deployment
 > metadata:
 >   name: ldap
@@ -196,7 +196,7 @@ The production customization adds 6 replica as well as a consistent disk.
 
 Review the directory structure and differences:
 
-<!-- @listFiles @test -->
+<!-- @listFiles -->
 ```
 tree $DEMO_HOME
 ```
@@ -258,12 +258,12 @@ The difference output should look something like
 
 The individual resource sets are:
 
-<!-- @buildStaging @test -->
+<!-- @buildStaging @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/staging
 ```
 
-<!-- @buildProduction @test -->
+<!-- @buildProduction @testAgainstLatestRelease -->
 ```
 kustomize build $OVERLAYS/production
 ```

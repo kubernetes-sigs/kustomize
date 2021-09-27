@@ -1,0 +1,15 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: myspace
+  name: mysql-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:1.7.9
