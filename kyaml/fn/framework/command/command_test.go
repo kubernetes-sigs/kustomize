@@ -45,15 +45,17 @@ func TestCommand_dockerfile(t *testing.T) {
 		t.FailNow()
 	}
 
-	expected := `FROM golang:1.15-alpine as builder
+	expected := `FROM golang:1.16-alpine as builder
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-RUN go build -tags netgo -ldflags '-w' -v -o /usr/local/bin/function ./
+RUN go build -ldflags '-w -s' -v -o /usr/local/bin/function ./
 
 FROM alpine:latest
 COPY --from=builder /usr/local/bin/function /usr/local/bin/function
-CMD ["function"]
+ENTRYPOINT ["function"]
 `
 	if !assert.Equal(t, expected, string(b)) {
 		t.FailNow()
