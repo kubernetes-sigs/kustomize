@@ -5,6 +5,7 @@ package krusty_test
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -350,6 +351,10 @@ func TestCustomOpenAPIFieldFromComponent(t *testing.T) {
 // test for https://github.com/kubernetes-sigs/kustomize/issues/4179
 // kustomize is not seeing the openapi field from the component defined in the overlay
 func TestCustomOpenAPIFieldFromComponentWithOverlays(t *testing.T) {
+	if val, ok := os.LookupEnv("OPENAPI_TEST"); !ok || val != "true" {
+		t.SkipNow()
+	}
+
 	th := kusttest_test.MakeHarness(t)
 
 	// overlay declaring the component
