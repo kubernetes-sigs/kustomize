@@ -32,6 +32,7 @@ use (
 	./plugin/builtin/replacementtransformer
 	./plugin/builtin/replicacounttransformer
 	./plugin/builtin/secretgenerator
+	./plugin/builtin/sortordertransformer
 	./plugin/builtin/suffixtransformer
 	./plugin/builtin/valueaddtransformer
 	./plugin/someteam.example.com/v1/bashedconfigmap
