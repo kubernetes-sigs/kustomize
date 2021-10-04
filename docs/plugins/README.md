@@ -1,2 +1,2 @@
 
-Moved to [https://kubernetes-sigs.github.io/kustomize](https://kubectl.docs.kubernetes.io/guides/extending_kustomize/)
+Moved to [https://kubectl.docs.kubernetes.io/guides/extending_kustomize/](https://kubectl.docs.kubernetes.io/guides/extending_kustomize/)
