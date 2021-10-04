@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"plugin"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -116,7 +118,21 @@ func (l *Loader) AbsolutePluginPath(id resid.ResId) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(pluginHome, relativePluginPath(id), id.Kind), nil
+
+	pluginPath := filepath.Join(pluginHome, relativePluginPath(id), id.Kind)
+	// On Windows, the exec plugin file must have an executable file extension
+	// (e.g. .exe). In order to find the path with the proper executable
+	// extension, utilize the LookPath function like the Start method of the Cmd
+	// type in the os/exec package does.
+	// https://github.com/golang/go/blob/go1.17.1/src/os/exec/exec.go#L382-L390
+	if runtime.GOOS == "windows" {
+		winPluginPath, err := exec.LookPath(pluginPath)
+		if err == nil {
+			return winPluginPath, nil
+		}
+	}
+
+	return pluginPath, nil
 }
 
 // absPluginHome is the home of kustomize Exec and Go plugins.
