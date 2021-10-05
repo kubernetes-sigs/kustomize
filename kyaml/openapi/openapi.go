@@ -555,6 +555,8 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 	if schema != nil { // use custom schema
 		customSchema = schema
 		kubernetesOpenAPIVersion = "custom"
+		// if the schema is changed, initSchema should parse the new schema
+		globalSchema.schemaInit = false
 		return nil
 	}
 
@@ -567,6 +569,8 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 		return fmt.Errorf("the specified OpenAPI version is not built in")
 	}
 	customSchema = nil
+	// if the schema is changed, initSchema should parse the new schema
+	globalSchema.schemaInit = false
 	return nil
 }
 
