@@ -6,7 +6,6 @@
 package filesys
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -166,11 +165,11 @@ func TestReadFilesRealFS(t *testing.T) {
 	}
 
 	// adding all files in every directory that we had defined
-	for _,d := range dirs {
+	for _, d := range dirs {
 		if !fSys.IsDir(d) {
 			t.Fatalf("Expected %s to be a dir\n", d)
 		}
-		for _,f := range files {
+		for _, f := range files {
 			err = fSys.WriteFile(path.Join(d, f), []byte(f))
 			if err != nil {
 				t.Fatalf("unexpected error %s", err)
@@ -181,7 +180,7 @@ func TestReadFilesRealFS(t *testing.T) {
 		}
 	}
 
-	tests := map[string]struct{
+	tests := map[string]struct {
 		globPattern   string
 		expectedFiles []string
 		expectedDirs  map[string][]string // glob returns directories as well, so we need to add those to expected files
@@ -195,7 +194,7 @@ func TestReadFilesRealFS(t *testing.T) {
 			},
 			expectedDirs: map[string][]string{
 				testDir: []string{dir},
-				dir: []string{nestedDir},
+				dir:     []string{nestedDir},
 			},
 		},
 		"AllHiddenFiles": {
@@ -224,11 +223,11 @@ func TestReadFilesRealFS(t *testing.T) {
 		},
 	}
 
-	for n,c := range tests {
+	for n, c := range tests {
 		t.Run(n, func(t *testing.T) {
-			for _,d := range dirs {
+			for _, d := range dirs {
 				var expectedPaths []string
-				for _,f := range c.expectedFiles {
+				for _, f := range c.expectedFiles {
 					expectedPaths = append(expectedPaths, path.Join(d, f))
 				}
 				if c.expectedDirs != nil {

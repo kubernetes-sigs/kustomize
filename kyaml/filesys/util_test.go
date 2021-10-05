@@ -378,8 +378,8 @@ func TestStripLeadingSeps(t *testing.T) {
 }
 
 func TestIsHiddenFilePath(t *testing.T) {
-	tests := map[string]struct{
-		paths 		 []string
+	tests := map[string]struct {
+		paths        []string
 		expectHidden bool
 	}{
 		"hiddenGlobs": {

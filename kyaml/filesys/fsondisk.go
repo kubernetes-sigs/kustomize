@@ -90,10 +90,10 @@ func (fsOnDisk) Exists(name string) bool {
 func (fsOnDisk) Glob(pattern string) ([]string, error) {
 	var result []string
 	allFilePaths, err := filepath.Glob(pattern)
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
-	if (IsHiddenFilePath(pattern)) {
+	if IsHiddenFilePath(pattern) {
 		result = allFilePaths
 	} else {
 		result = RemoveHiddenFiles(allFilePaths)
