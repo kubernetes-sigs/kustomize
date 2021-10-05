@@ -636,17 +636,6 @@ func TestGlob(t *testing.T) {
 			assertEqualStringSlices(t, c.expectedFiles, paths, "glob test")
 		})
 	}
-
-	// expected := []string{
-	// 	filepath.Join("b", "d", "x"),
-	// 	filepath.Join("b", "d", "y"),
-	// 	filepath.Join("b", "d", "z"),
-	// }
-	// paths, err := n.Glob("b/d/*")
-	// if err != nil {
-	// 	t.Fatalf("glob error: %v", err)
-	// }
-	// assertEqualStringSlices(t, expected, paths, "glob test")
 }
 
 func assertEqualStringSlices(t *testing.T, expected, actual []string, message string) {
