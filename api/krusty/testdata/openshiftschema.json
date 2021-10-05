@@ -1,0 +1,76 @@
+{
+  "definitions": {
+    "com.github.openshift.api.apps.v1.DeploymentConfig": {
+      "type": "object",
+      "required": [
+        "spec"
+      ],
+      "properties": {
+        "apiVersion": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/com.github.openshift.api.apps.v1.DeploymentConfigSpec"
+        }
+      },
+      "x-kubernetes-group-version-kind": [
+        {
+          "group": "apps.openshift.io",
+          "kind": "DeploymentConfig",
+          "version": "v1"
+        }
+      ]
+    },
+    "com.github.openshift.api.apps.v1.DeploymentConfigSpec": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/io.k8s.api.core.v1.PodTemplateSpec"
+        }
+      }
+    },
+    "io.k8s.api.core.v1.Volume": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configMap": {
+          "$ref": "#/definitions/io.k8s.api.core.v1.ConfigMapVolumeSource"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "io.k8s.api.core.v1.VolumeMount": {
+      "type": "object",
+      "required": [
+        "name",
+        "mountPath"
+      ],
+      "properties": {
+        "mountPath": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

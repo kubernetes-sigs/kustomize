@@ -229,7 +229,8 @@ generate-kustomize-api: $(MYGOBIN)/k8scopy
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
-	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
+	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"; \
+	cd krusty; OPENAPI_TEST=true go test -run TestCustomOpenAPIFieldFromComponentWithOverlays
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
