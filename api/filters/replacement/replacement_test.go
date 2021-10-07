@@ -1588,6 +1588,80 @@ data:
 `,
 			expectedErr: "fieldPath `data.httpPort` is missing for replacement source ~G_~V_ConfigMap|~X|ports-from:data.httpPort",
 		},
+		"annotationSelector": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy-1
+  annotations:
+    foo: bar-1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy-2
+  annotations:
+    foo: bar-2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy-1
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      annotationSelector: foo=bar-1
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy-1
+  annotations:
+    foo: bar-1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy-2
+  annotations:
+    foo: bar-2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
