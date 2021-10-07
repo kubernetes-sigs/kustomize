@@ -1,0 +1,74 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+  - apiVersion: examples.config.kubernetes.io/v1beta1
+    kind: Validator
+    metadata:
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/kustomize-functions/example-resourcelist-results:v0.1.0
+  - # This Deployment creates a "Result" because it has no image tag version
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-unversioned
+      labels:
+        app: nginx-unversioned
+    spec:
+      selector:
+        matchLabels:
+          app: nginx-unversioned
+      template:
+        metadata:
+          labels:
+            app: nginx-unversioned
+        spec:
+          containers:
+            - name: nginx
+              image: nginx
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 300MiB
+  - # This Deployment is ok because it has a version
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-versioned
+      labels:
+        app: nginx-versioned
+    spec:
+      selector:
+        matchLabels:
+          app: nginx-versioned
+      template:
+        metadata:
+          labels:
+            app: nginx-versioned
+        spec:
+          containers:
+            - name: nginx
+              image: nginx:1.14.2
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 300MiB
+  - # Only Deployments are considered in _this_ case, so Pods are ignored.
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nginx-pod
+      labels:
+        app: nginx-pod
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          resources:
+            limits:
+              cpu: 100m
+              memory: 300MiB
