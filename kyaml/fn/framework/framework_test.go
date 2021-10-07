@@ -15,8 +15,8 @@ import (
 )
 
 func TestExecute_Result(t *testing.T) {
-	p := framework.ResourceListProcessorFunc(func(rl *framework.ResourceList) error {
-		err := &framework.Results{
+	p := framework.SimpleProcessor{Filter: kio.FilterFunc(func(in []*yaml.RNode) ([]*yaml.RNode, error) {
+		return in, framework.Results{
 			{
 				Message:  "bad value for replicas",
 				Severity: framework.Error,
@@ -40,9 +40,7 @@ func TestExecute_Result(t *testing.T) {
 				Tags:     map[string]string{"foo": "bar"},
 			},
 		}
-		rl.Results = *err
-		return err
-	})
+	})}
 	out := new(bytes.Buffer)
 	source := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
 kind: ResourceList
@@ -57,10 +55,7 @@ items:
     replicas: 0
 `), Writer: out}
 	err := framework.Execute(p, source)
-	assert.EqualError(t, err, `[error] v1/Deployment/default/tester .spec.Replicas: bad value for replicas
-
-[error]: some error`)
-	assert.Equal(t, 1, err.(*framework.Results).ExitCode())
+	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:

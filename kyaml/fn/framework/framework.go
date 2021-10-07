@@ -4,6 +4,7 @@
 package framework
 
 import (
+	goerrors "errors"
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -140,8 +141,19 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 
 // Filter executes the given kio.Filter and replaces the ResourceList's items with the result.
 // This can be used to help implement ResourceListProcessors. See SimpleProcessor for example.
+//
+// Filters that return a Result as error will store the result in the ResourceList instead of
+// and continue processing instead of erroring out.
 func (rl *ResourceList) Filter(api kio.Filter) error {
 	var err error
 	rl.Items, err = api.Filter(rl.Items)
-	return errors.Wrap(err)
+	if err != nil {
+		var r Results
+		if goerrors.As(err, &r) {
+			rl.Results = append(rl.Results, r...)
+			return nil
+		}
+		return errors.Wrap(err)
+	}
+	return nil
 }
