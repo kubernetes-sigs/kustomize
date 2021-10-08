@@ -3,6 +3,7 @@ package builtins
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -28,22 +29,32 @@ const (
 	VaultPasswordEnv = "VAULT_PASSWORD"
 )
 
+// vaultClientConnectionRetries holds how many times kustomize tries to connect to vault
+const vaultClientConnectionRetries = 5
+
+// secretClient is the client that actually holds the connection to your vault instance
+// It is a global variable to prevent multiple connections
+var secretClient *vault.Client
+
 // VaultSecretGeneratorPlugin manifests vault secrets into Kubernetes configs, which is
 // driven by the main kustomize cli
 type VaultSecretGeneratorPlugin struct {
 	h                *resmap.PluginHelpers
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	types.VaultSecretArgs
-
-	secretClient *vault.Client
 }
 
 // Config will load in configuration variables that the plugin uses to get secrets, and also
 // initialize the connection with the vault server
 func (p *VaultSecretGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
-	if err := p.connectToVault(); err != nil {
-		return fmt.Errorf("error_connecting_to_vault: %s", err)
+	if secretClient == nil {
+		for try := 0; try < vaultClientConnectionRetries; try++ {
+			if err := p.connectToVault(); err != nil {
+				return fmt.Errorf("error_connecting_to_vault: %s", err)
+			}
+		}
 	}
+
 	p.VaultSecretArgs = types.VaultSecretArgs{}
 	if err = yaml.Unmarshal(config, p); err != nil {
 		return fmt.Errorf("error_unmarshal_kustomization_config: %s", err)
@@ -67,7 +78,7 @@ func (p *VaultSecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	args.Path = p.Path
 
 	// first we need to read the secret from Vault
-	data, err := p.secretClient.Logical().Read(p.Path)
+	data, err := secretClient.Logical().Read(p.Path)
 	if err != nil {
 		return nil, fmt.Errorf("error_loading_secret: %s; secret_path: %s", err, p.Path)
 	}
@@ -83,7 +94,20 @@ func (p *VaultSecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
 		kv.NewLoader(p.h.Loader(), p.h.Validator()), args)
 }
 
-func (p *VaultSecretGeneratorPlugin) connectToVault() error {
+func (p *VaultSecretGeneratorPlugin) connectToVault() (err error) {
+	for try := 0; try < vaultClientConnectionRetries; try++ {
+		err = p.connect()
+		if err != nil {
+			log.Printf("failed_vault_connection: %s  ...retrying...", err)
+			time.Sleep(time.Second * 2)
+			continue
+		}
+		return nil
+	}
+	return fmt.Errorf("failed_vault_connection_after_%d_retries: %s", vaultClientConnectionRetries, err)
+}
+
+func (p *VaultSecretGeneratorPlugin) connect() error {
 	vaultAddr := os.Getenv(VaultAddressEnv)
 	if vaultAddr == "" {
 		return errors.New("vault_address_environment_variable_not_set: VAULT_ADDR")
@@ -118,7 +142,7 @@ func (p *VaultSecretGeneratorPlugin) connectToVault() error {
 	}
 	client.SetToken(secret.Auth.ClientToken)
 
-	p.secretClient = client
+	secretClient = client
 	return nil
 }
 
