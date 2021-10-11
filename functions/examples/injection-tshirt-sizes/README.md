@@ -17,7 +17,7 @@ Resource configuration, and looks for invalid configuration.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This exits non-zero if there is an error.
 
@@ -25,11 +25,11 @@ This exits non-zero if there is an error.
 
 Run the validator with:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This will add resource reservations to the Deployment.  Change the `tshirt-size`
 annotation from `medium` to `small` and rerun:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 Observe that the reservations have changed.
