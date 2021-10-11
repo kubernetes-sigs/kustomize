@@ -17,7 +17,7 @@ Resource configuration, and looks for invalid configuration.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
-    kustomize config run local-resource/ --fn-path config/
+    kustomize fn run local-resource/ --fn-path config/
 
 This exits non-zero if there is an error.
 
@@ -25,6 +25,6 @@ This exits non-zero if there is an error.
 
 Run the validator with:
 
-    kustomize config run local-resource/ --fn-path config/
+    kustomize fn run local-resource/ --fn-path config/
 
 This will append an Application CR.  

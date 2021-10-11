@@ -1,7 +1,7 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-apiVersion: examples.config.kubernetes.io/v1beta1 # call `kustomize config run` on a directory containing this file
+apiVersion: examples.config.kubernetes.io/v1beta1 # call `kustomize fn run` on a directory containing this file
 kind: Nginx
 metadata:
   name: demo

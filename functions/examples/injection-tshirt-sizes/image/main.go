@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package main implements an injection function for resource reservations and
-// is run with `kustomize config run -- DIR/`.
+// is run with `kustomize fn run -- DIR/`.
 package main
 
 import (

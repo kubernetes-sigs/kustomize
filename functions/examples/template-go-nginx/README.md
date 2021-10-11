@@ -27,7 +27,7 @@ function input, and writing the function output.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This generates the `local-resource/config` directory containing the template output.
 
@@ -41,7 +41,7 @@ This generates the `local-resource/config` directory containing the template out
 
 Run the config with:
 
-     kustomize config run local-resource/
+     kustomize fn run local-resource/
 
 This will create the directory
 
@@ -50,6 +50,6 @@ This will create the directory
 Add an annotation to the Deployment Resource and change the replica count of the
 `kind: Nginx` Resource in `example-use.yaml`.  Rerun the template:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 The replica count should be updated, but your annotation should remain.

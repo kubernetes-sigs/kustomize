@@ -2,6 +2,7 @@
 package tutorials
 
 var ConfigurationBasicsShort = `### Synopsis`
+
 var ConfigurationBasicsLong = `
 ` + "`" + `kustomize cfg` + "`" + ` provides tools for working with local configuration directories.
 
@@ -274,9 +275,10 @@ var ConfigurationBasicsLong = `
     │               └── image: <YOUR-CONTAINER>
     ...`
 
-var FunctionBasicsShort = `### Synopsis`
-var FunctionBasicsLong = `
-  ` + "`" + `kustomize config` + "`" + ` enables encapsulating function for manipulating Resource
+var (
+	FunctionBasicsShort = `### Synopsis`
+	FunctionBasicsLong  = `
+  ` + "`" + `kustomize fn` + "`" + ` enables encapsulating function for manipulating Resource
   configuration inside containers, which are run using ` + "`" + `run` + "`" + `.
 
   First fetch the kustomize repository, which contains a collection of example
@@ -288,7 +290,7 @@ var FunctionBasicsLong = `
 ### Templating -- CockroachDB
 
   This section demonstrates how to leverage templating based solutions from
-  ` + "`" + `kustomize config` + "`" + `.  The templating function is implemented as a ` + "`" + `bash` + "`" + ` script
+  ` + "`" + `kustomize fn` + "`" + `.  The templating function is implemented as a ` + "`" + `bash` + "`" + ` script
   using a ` + "`" + `heredoc` + "`" + `.
 
   #### 1: Generate the Resources
@@ -455,3 +457,4 @@ Functions may be composed together.  Try putting the Injection (tshirt-size) and
 Validation functions together in the same .yaml file (separated by ` + "`" + `---` + "`" + `).  Run
 ` + "`" + `run` + "`" + ` and observe that the first function in the file is applied to the Resources,
 and then the second function in the file is applied.`
+)
