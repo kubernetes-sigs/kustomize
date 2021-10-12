@@ -100,7 +100,7 @@ metadata:
 spec:
   replicas: 0`
 	resourceListDeployment := `kind: ResourceList
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 items:
 - kind: Deployment
   apiVersion: v1
@@ -109,7 +109,7 @@ items:
     namespace: default
   spec:
     replicas: 0`
-	outputResourceList := `apiVersion: config.kubernetes.io/v1alpha1
+	outputResourceList := `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -120,23 +120,25 @@ items:
   spec:
     replicas: 0
 results:
-  name: Incompatible config
-  items:
-  - message: bad value for replicas
-    severity: error
-    resourceRef:
-      apiVersion: v1
-      kind: Deployment
-      name: tester
-      namespace: default
-    field:
-      path: .spec.Replicas
-      currentValue: "0"
-      suggestedValue: "3"
-    file:
-      path: /path/to/deployment.yaml
-  - message: some error
-    severity: error`
+- message: bad value for replicas
+  severity: error
+  resourceRef:
+    apiVersion: v1
+    kind: Deployment
+    name: tester
+    namespace: default
+  field:
+    path: .spec.Replicas
+    currentValue: "0"
+    proposedValue: "3"
+  file:
+    path: /path/to/deployment.yaml
+- message: some error
+  severity: error`
+	outputOtherWrap := strings.NewReplacer(
+		"kind: ResourceList", "kind: SomethingElse",
+		"apiVersion: config.kubernetes.io/v1", "apiVersion: fakeVersion",
+	).Replace(outputResourceList)
 
 	testCases := []struct {
 		desc           string
@@ -176,35 +178,47 @@ results:
 			input:          singleDeployment,
 			want:           outputResourceList,
 		},
+		{
+			desc:           "no wrap has precedence",
+			noWrap:         true,
+			wrapKind:       kio.ResourceListKind,
+			wrapAPIVersion: kio.ResourceListAPIVersion,
+			input:          singleDeployment,
+			want:           singleDeployment,
+		},
+		{
+			desc:           "honor specified wrapping kind",
+			wrapKind:       "SomethingElse",
+			wrapAPIVersion: "fakeVersion",
+			input:          resourceListDeployment,
+			want:           outputOtherWrap,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			p := framework.ResourceListProcessorFunc(func(rl *framework.ResourceList) error {
-				rl.Result = &framework.Result{
-					Name: "Incompatible config",
-					Items: []framework.ResultItem{
-						{
-							Message:  "bad value for replicas",
-							Severity: framework.Error,
-							ResourceRef: yaml.ResourceIdentifier{
-								TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "Deployment"},
-								NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
-							},
-							Field: framework.Field{
-								Path:           ".spec.Replicas",
-								CurrentValue:   "0",
-								SuggestedValue: "3",
-							},
-							File: framework.File{
-								Path:  "/path/to/deployment.yaml",
-								Index: 0,
-							},
+				rl.Results = framework.Results{
+					{
+						Message:  "bad value for replicas",
+						Severity: framework.Error,
+						ResourceRef: yaml.ResourceIdentifier{
+							TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "Deployment"},
+							NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
 						},
-						{
-							Message:  "some error",
-							Severity: framework.Error,
+						Field: framework.Field{
+							Path:          ".spec.Replicas",
+							CurrentValue:  "0",
+							ProposedValue: "3",
 						},
+						File: framework.File{
+							Path:  "/path/to/deployment.yaml",
+							Index: 0,
+						},
+					},
+					{
+						Message:  "some error",
+						Severity: framework.Error,
 					},
 				}
 				return nil

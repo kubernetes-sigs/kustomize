@@ -67,12 +67,12 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 		WrapBareSeqNode:       rw.WrapBareSeqNode,
 	}
 	val, err := b.Read()
+	rw.Results = b.Results
+
 	if rw.FunctionConfig == nil {
 		rw.FunctionConfig = b.FunctionConfig
 	}
-	rw.Results = b.Results
-
-	if !rw.NoWrap {
+	if !rw.NoWrap && rw.WrappingKind == "" {
 		rw.WrappingAPIVersion = b.WrappingAPIVersion
 		rw.WrappingKind = b.WrappingKind
 	}
@@ -80,15 +80,18 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 }
 
 func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
-	return ByteWriter{
+	w := ByteWriter{
 		Writer:                rw.Writer,
 		KeepReaderAnnotations: rw.KeepReaderAnnotations,
 		Style:                 rw.Style,
 		FunctionConfig:        rw.FunctionConfig,
 		Results:               rw.Results,
-		WrappingAPIVersion:    rw.WrappingAPIVersion,
-		WrappingKind:          rw.WrappingKind,
-	}.Write(nodes)
+	}
+	if !rw.NoWrap {
+		w.WrappingAPIVersion = rw.WrappingAPIVersion
+		w.WrappingKind = rw.WrappingKind
+	}
+	return w.Write(nodes)
 }
 
 // ParseAll reads all of the inputs into resources
