@@ -181,6 +181,10 @@ func storeInternalAnnotations(result []*yaml.RNode) (map[string]map[string]strin
 		if err != nil {
 			return nil, err
 		}
+		if err := checkMismatchedAnnos(meta); err != nil {
+			return nil, err
+		}
+
 		path := meta.Annotations[kioutil.PathAnnotation]
 		index := meta.Annotations[kioutil.IndexAnnotation]
 		id := meta.Annotations[kioutil.IdAnnotation]
@@ -191,6 +195,29 @@ func storeInternalAnnotations(result []*yaml.RNode) (map[string]map[string]strin
 		nodeAnnosMap[path][index] = id
 	}
 	return nodeAnnosMap, nil
+}
+
+func checkMismatchedAnnos(meta yaml.ResourceMeta) error {
+	path := meta.Annotations[kioutil.PathAnnotation]
+	index := meta.Annotations[kioutil.IndexAnnotation]
+	id := meta.Annotations[kioutil.IdAnnotation]
+
+	legacyPath := meta.Annotations[kioutil.LegacyPathAnnotation]
+	legacyIndex := meta.Annotations[kioutil.LegacyIndexAnnotation]
+	legacyId := meta.Annotations[kioutil.LegacyIdAnnotation]
+
+	// if prior to running the functions, the legacy and internal annotations differ,
+	// throw an error as we cannot infer the user's intent.
+	if path != legacyPath {
+		return fmt.Errorf("resource input to function has mismatched legacy and internal path annotations")
+	}
+	if index != legacyIndex {
+		return fmt.Errorf("resource input to function has mismatched legacy and internal index annotations")
+	}
+	if id != legacyId {
+		return fmt.Errorf("resource input to function has mismatched legacy and internal id annotations")
+	}
+	return nil
 }
 
 type nodeAnnotations struct {
@@ -217,9 +244,12 @@ func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[string]
 		if err != nil {
 			return err
 		}
-		// if the annotations are still somehow out of sync, prefer the internal annotations
-		// and copy them to the legacy ones
-		err = kioutil.CopyLegacyAnnotations(node)
+		// if the annotations are still somehow out of sync, throw an error
+		meta, err = node.GetMeta()
+		if err != nil {
+			return err
+		}
+		err = checkMismatchedAnnos(meta)
 		if err != nil {
 			return err
 		}

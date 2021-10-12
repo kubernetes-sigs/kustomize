@@ -233,6 +233,17 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 		}
 		return nodes, nil
 	}
+	changeBothPathAnnos := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, rn := range nodes {
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, "legacy")); err != nil {
+				return nil, err
+			}
+			if err := rn.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, "new")); err != nil {
+				return nil, err
+			}
+		}
+		return nodes, nil
+	}
 
 	noops := []Filter{
 		FilterFunc(noopFilter1),
@@ -242,11 +253,13 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 	legacy := []Filter{FilterFunc(changeLegacyAnnos)}
 	legacyId := []Filter{FilterFunc(changeLegacyId)}
 	internalId := []Filter{FilterFunc(changeInternalId)}
+	changeBoth := []Filter{FilterFunc(changeBothPathAnnos), FilterFunc(noopFilter1)}
 
 	testCases := map[string]struct {
-		input    string
-		filters  []Filter
-		expected string
+		input       string
+		filters     []Filter
+		expected    string
+		expectedErr string
 	}{
 		// the orchestrator should copy the legacy annotations to the new
 		// annotations
@@ -510,6 +523,32 @@ data:
   grpcPort: 8080
 `,
 		},
+		// the function changes both the legacy and new path annotation,
+		// so we should get an error
+		"change both": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-from
+  annotations:
+    config.kubernetes.io/path: 'configmap.yaml'
+    internal.kubernetes.io/path: 'configmap.yaml'
+data:
+  grpcPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ports-to
+  annotations:
+    config.kubernetes.io/path: "configmap.yaml"
+    config.kubernetes.io/index: '1'
+data:
+  grpcPort: 8081
+`,
+			filters:     changeBoth,
+			expectedErr: "resource input to function has mismatched legacy and internal path annotations",
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -526,8 +565,16 @@ data:
 				Filters: tc.filters,
 				Outputs: []Writer{&input},
 			}
-			assert.NoError(t, p.Execute())
-			assert.Equal(t, tc.expected, out.String())
+
+			err := p.Execute()
+			if tc.expectedErr == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expected, out.String())
+			} else {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedErr, err.Error())
+			}
+
 		})
 	}
 }

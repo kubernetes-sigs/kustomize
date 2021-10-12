@@ -55,6 +55,10 @@ func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
 func CopyLegacyAnnotations(rn *yaml.RNode) error {
 	meta, err := rn.GetMeta()
 	if err != nil {
+		if err == yaml.ErrMissingMetadata {
+			// resource has no metadata, this should be a no-op
+			return nil
+		}
 		return err
 	}
 	if err := copyAnnotations(meta, rn, LegacyPathAnnotation, PathAnnotation); err != nil {
@@ -71,12 +75,14 @@ func CopyLegacyAnnotations(rn *yaml.RNode) error {
 
 func copyAnnotations(meta yaml.ResourceMeta, rn *yaml.RNode, legacyKey string, newKey string) error {
 	newValue := meta.Annotations[newKey]
+	legacyValue := meta.Annotations[legacyKey]
 	if newValue != "" {
-		if err := rn.PipeE(yaml.SetAnnotation(legacyKey, newValue)); err != nil {
-			return err
+		if legacyValue == "" {
+			if err := rn.PipeE(yaml.SetAnnotation(legacyKey, newValue)); err != nil {
+				return err
+			}
 		}
 	} else {
-		legacyValue := meta.Annotations[legacyKey]
 		if legacyValue != "" {
 			if err := rn.PipeE(yaml.SetAnnotation(newKey, legacyValue)); err != nil {
 				return err
