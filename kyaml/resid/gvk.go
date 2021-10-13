@@ -148,6 +148,7 @@ var orderFirst = []string{
 	"Secret",
 	"Endpoints",
 	"Service",
+	"HorizontalPodAutoscaler",
 	"LimitRange",
 	"PriorityClass",
 	"PersistentVolume",
