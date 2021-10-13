@@ -236,6 +236,7 @@ func TestPeelQuery(t *testing.T) {
 		path       string
 		ref        string
 		submodules bool
+		cached     bool
 		timeout    time.Duration
 	}{
 		"t1": {
@@ -350,14 +351,24 @@ func TestPeelQuery(t *testing.T) {
 			submodules: false,
 			timeout:    61 * time.Second,
 		},
+		"t16": {
+			input:      "somerepos?version=master&cache=true",
+			path:       "somerepos",
+			ref:        "master",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+			cached:     true,
+		},
 	}
+
 	for tn, tc := range testcases {
 		t.Run(tn, func(t *testing.T) {
-			path, ref, timeout, submodules := peelQuery(tc.input)
+			path, ref, timeout, submodules, cached := peelQuery(tc.input)
 			assert.Equal(t, tc.path, path, "path mismatch")
 			assert.Equal(t, tc.ref, ref, "ref mismatch")
 			assert.Equal(t, tc.timeout, timeout, "timeout mismatch")
 			assert.Equal(t, tc.submodules, submodules, "submodules mismatch")
+			assert.Equal(t, tc.cached, cached, "cache mismatch")
 		})
 	}
 }

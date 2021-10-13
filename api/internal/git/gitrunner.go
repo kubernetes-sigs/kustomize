@@ -21,14 +21,10 @@ type gitRunner struct {
 
 // newCmdRunner returns a gitRunner if it can find the binary.
 // It also creats a temp directory for cloning repos.
-func newCmdRunner(timeout time.Duration) (*gitRunner, error) {
+func newCmdRunner(dir filesys.ConfirmedDir, timeout time.Duration) (*gitRunner, error) {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
 		return nil, errors.Wrap(err, "no 'git' program on path")
-	}
-	dir, err := filesys.NewTmpConfirmedDir()
-	if err != nil {
-		return nil, err
 	}
 	return &gitRunner{
 		gitProgram: gitProgram,
