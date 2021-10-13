@@ -316,6 +316,10 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 		r.SetAnnotations = map[string]string{}
 	}
 	if !r.OmitReaderAnnotations {
+		err := kioutil.CopyLegacyAnnotations(n)
+		if err != nil {
+			return nil, err
+		}
 		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
 		r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
 

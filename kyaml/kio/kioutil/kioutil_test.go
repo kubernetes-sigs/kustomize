@@ -374,3 +374,80 @@ func TestCreatePathAnnotationValue(t *testing.T) {
 		}
 	}
 }
+
+func TestCopyLegacyAnnotations(t *testing.T) {
+	var tests = []struct {
+		input    string
+		expected string
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foobar
+  annotations:
+    config.kubernetes.io/path: 'a/b.yaml'
+    config.kubernetes.io/index: '5'
+`,
+			expected: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foobar
+  annotations:
+    config.kubernetes.io/path: 'a/b.yaml'
+    config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+`,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foobar
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+`,
+			expected: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foobar
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    config.kubernetes.io/path: 'a/b.yaml'
+    config.kubernetes.io/index: '5'
+`,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+ name: foobar
+ annotations:
+   internal.config.kubernetes.io/path: 'a/b.yaml'
+   config.kubernetes.io/path: 'c/d.yaml'
+`,
+			expected: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foobar
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    config.kubernetes.io/path: 'c/d.yaml'
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		rw := kio.ByteReadWriter{
+			Reader:                bytes.NewBufferString(tc.input),
+			OmitReaderAnnotations: true,
+		}
+		nodes, err := rw.Read()
+		assert.NoError(t, err)
+		assert.NoError(t, kioutil.CopyLegacyAnnotations(nodes[0]))
+		assert.Equal(t, tc.expected, nodes[0].MustString())
+	}
+}

@@ -299,7 +299,13 @@ g:
 `,
 			},
 
-			expectedOutput: `a: b #first
+			expectedOutput: `e: f
+g:
+  h:
+  - i # has a list
+  - j
+---
+a: b #first
 metadata:
   annotations:
     internal.config.kubernetes.io/path: "a/b/a_test.yaml"
@@ -310,12 +316,6 @@ metadata:
   annotations:
     internal.config.kubernetes.io/path: "a/b/a_test.yaml"
     config.kubernetes.io/path: 'a/b/a_test.yaml'
----
-e: f
-g:
-  h:
-  - i # has a list
-  - j
 `,
 		},
 
