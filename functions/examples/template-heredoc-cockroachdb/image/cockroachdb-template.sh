@@ -3,18 +3,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-# use `kustomize config run wrap` to parse the container stdin into
+# use `kustomize fn run wrap` to parse the container stdin into
 # environment variables, and to merge the template output into the
 # input Resources.
 if [ -z ${WRAPPED} ]; then
   export WRAPPED=true
-  kustomize config run wrap -- $0
+  kustomize fn run wrap -- $0
   exit $?
 fi
 
 # this is the template for a cockroachdb instance
 # environment variables are parsed from the input functionConfig by
-# `kustomize config run wrap`
+# `kustomize fn run wrap`
 cat <<End-of-message
 apiVersion: v1
 kind: Service

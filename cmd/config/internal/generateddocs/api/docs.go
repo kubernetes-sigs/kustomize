@@ -61,15 +61,16 @@ Example:
 	  annotations:
 	    config.kubernetes.io/local-config: "true"`
 
-var FunctionsImplShort = `Following is an example for implementing an nginx abstraction using a configuration`
-var FunctionsImplLong = `# Running Configuration Functions using kustomize CLI
+var (
+	FunctionsImplShort = `Following is an example for implementing an nginx abstraction using a configuration`
+	FunctionsImplLong  = `# Running Configuration Functions using kustomize CLI
 
 Configuration functions can be implemented using any toolchain and invoked using any
 container workflow orchestrator including Tekton, Cloud Build, or run directly using ` + "`" + `docker run` + "`" + `.
 
 Run ` + "`" + `config help docs-fn-spec` + "`" + ` to see the Configuration Functions Specification.
 
-` + "`" + `kustomize config run` + "`" + ` is an example orchestrator for invoking Configuration Functions. This
+` + "`" + `kustomize fn run` + "`" + ` is an example orchestrator for invoking Configuration Functions. This
 document describes how to implement and invoke an example function.
 
 function.
@@ -88,7 +89,7 @@ The script wraps itself using ` + "`" + `config run wrap -- $0` + "`" + ` which 
 4. Format the output
 
 	#!/bin/bash
-	# script must run wrapped by "kustomize config run wrap"
+	# script must run wrapped by "kustomize fn run wrap"
 	# for parsing input the functionConfig into env vars
 	if [ -z ${WRAPPED} ]; then
 	  export WRAPPED=true
@@ -141,7 +142,7 @@ The script wraps itself using ` + "`" + `config run wrap -- $0` + "`" + ` which 
 
 ### Dockerfile
 
-` + "`" + `Dockerfile` + "`" + ` installs ` + "`" + `kustomize config` + "`" + ` and copies the script into the container image.
+` + "`" + `Dockerfile` + "`" + ` installs ` + "`" + `kustomize fn` + "`" + ` and copies the script into the container image.
 
 	FROM golang:1.13-stretch
 	RUN go get sigs.k8s.io/kustomize/cmd/config
@@ -151,9 +152,9 @@ The script wraps itself using ` + "`" + `config run wrap -- $0` + "`" + ` which 
 
 ## Example Function Usage
 
-Following is an example of running the ` + "`" + `kustomize config run` + "`" + ` using the preceding API.
+Following is an example of running the ` + "`" + `kustomize fn run` + "`" + ` using the preceding API.
 
-When run by ` + "`" + `kustomize config run` + "`" + `, functions are run in containers with the
+When run by ` + "`" + `kustomize fn run` + "`" + `, functions are run in containers with the
 following environment:
 
 - Network: ` + "`" + `none` + "`" + `
@@ -184,7 +185,7 @@ are passed to the Function through the ` + "`" + `ResourceList.functionConfig` +
 
 ### Output
 
-The function is invoked using byrunning ` + "`" + `kustomize config run dir/` + "`" + `.
+The function is invoked using byrunning ` + "`" + `kustomize fn run dir/` + "`" + `.
 
 ` + "`" + `dir/my-instance_deployment.yaml` + "`" + ` contains the Deployment:
 
@@ -230,9 +231,11 @@ The function is invoked using byrunning ` + "`" + `kustomize config run dir/` + 
 	  selector:
 	    app: nginx
 	    instance: my-instance`
+)
 
-var FunctionsSpecShort = `_Configuration functions_ enable shift-left practices (client-side) through:`
-var FunctionsSpecLong = `# Configuration Functions Specification
+var (
+	FunctionsSpecShort = `_Configuration functions_ enable shift-left practices (client-side) through:`
+	FunctionsSpecLong  = `# Configuration Functions Specification
 
 This document specifies a standard for client-side functions that operate on
 Kubernetes declarative configurations. This standard enables creating
@@ -408,6 +411,7 @@ A non-zero exit code indicates a failure.
 [1]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [2]: https://tools.ietf.org/html/rfc2119
 [3]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds`
+)
 
 var Merge2Long = `# Merge (2-way)
 

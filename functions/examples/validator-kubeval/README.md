@@ -20,7 +20,7 @@ the `API` struct definition in [main.go](image/main.go) for documentation.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This exists non-zero if kubeval detects an invalid Resource.
 
@@ -28,7 +28,7 @@ This exists non-zero if kubeval detects an invalid Resource.
 
 Run the validator with:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This will return an error:
 
@@ -39,6 +39,6 @@ This will return an error:
 Now fix the typo in [example-use.yaml](local-resource/example-use.yaml) and
 run:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This will return success (no output).

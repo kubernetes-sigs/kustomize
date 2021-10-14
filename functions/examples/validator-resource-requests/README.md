@@ -17,7 +17,7 @@ Resource configuration, and looks for invalid configuration.
 The function is invoked by authoring a [local Resource](local-resource)
 with `metadata.annotations.[config.kubernetes.io/function]` and running:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This exists non-zero if there is an error.
 
@@ -25,7 +25,7 @@ This exists non-zero if there is an error.
 
 Run the validator with:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This will return an error:
 
@@ -33,6 +33,6 @@ This will return an error:
 
 Now uncomment the resource reservations and run again:
 
-    kustomize config run local-resource/
+    kustomize fn run local-resource/
 
 This will return success

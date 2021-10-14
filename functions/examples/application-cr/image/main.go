@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package main implements adding an Application CR to a group of resources and
-// is run with `kustomize config run -- DIR/`.
+// is run with `kustomize fn run -- DIR/`.
 package main
 
 import (
@@ -82,7 +82,6 @@ func (f appCRFilter) Filter(in []*yaml.RNode) ([]*yaml.RNode, error) {
 		return append(in, app), nil
 	}
 	return in, nil
-
 }
 
 // parseAPI parses the functionConfig into an API struct.
