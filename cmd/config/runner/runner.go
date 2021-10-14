@@ -129,7 +129,7 @@ var ExitOnError bool
 // StackOnError if true, will print a stack trace on failure.
 var StackOnError bool
 
-const cmdName = "kustomize config"
+const cmdName = "kustomize fn"
 
 // FixDocs replaces instances of old with new in the docs for c
 func FixDocs(new string, c *cobra.Command) {

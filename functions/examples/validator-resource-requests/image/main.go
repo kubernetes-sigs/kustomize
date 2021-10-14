@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package main implements a validator function run by `kustomize config run`
+// Package main implements a validator function run by `kustomize fn run`
 package main
 
 import (
@@ -18,7 +18,8 @@ func main() {
 	p := kio.Pipeline{
 		Inputs:  []kio.Reader{rw},       // read the inputs into a slice
 		Filters: []kio.Filter{filter{}}, // run the filter against the inputs
-		Outputs: []kio.Writer{rw}}       // copy the inputs to the output
+		Outputs: []kio.Writer{rw},       // copy the inputs to the output
+	}
 	if err := p.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
@@ -59,7 +60,6 @@ func validate(r *yaml.RNode) error {
 
 	// visit each container in the list and validate
 	return containers.VisitElements(func(node *yaml.RNode) error {
-
 		// check cpu is non-nil
 		f, err := node.Pipe(yaml.Lookup("resources", "requests", "cpu"))
 		if err != nil {

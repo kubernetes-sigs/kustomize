@@ -2,7 +2,7 @@
 
 ### Synopsis
 
-  `kustomize config` enables encapsulating function for manipulating Resource
+  `kustomize fn` enables encapsulating function for manipulating Resource
   configuration inside containers, which are run using `run`.
 
   First fetch the kustomize repository, which contains a collection of example
@@ -14,7 +14,7 @@
 ### Templating -- CockroachDB
 
   This section demonstrates how to leverage templating based solutions from
-  `kustomize config`.  The templating function is implemented as a `bash` script
+  `kustomize fn`.  The templating function is implemented as a `bash` script
   using a `heredoc`.
 
   #### 1: Generate the Resources
