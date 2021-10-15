@@ -550,6 +550,7 @@ metadata:
 `)
 }
 
+// regression test for https://github.com/kubernetes-sigs/kustomize/issues/4233
 func TestDataEndsWithQuotes(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
@@ -562,14 +563,12 @@ configMapGenerator:
 `)
 
 	m := th.Run(".", th.MakeDefaultOptions())
-	// The annotations are sorted by key, hence the order change.
-	// Quotes are added intentionally.
 	th.AssertActualEqualsExpected(
 		m, `apiVersion: v1
 data:
-  TEST: this is a 'test
+  TEST: this is a 'test'
 kind: ConfigMap
 metadata:
-  name: test-k7hhfb697g
+  name: test-k9cc55dfm5
 `)
 }
