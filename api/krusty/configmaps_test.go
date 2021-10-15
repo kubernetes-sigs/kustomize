@@ -549,3 +549,27 @@ metadata:
   name: testing-tt4769fb52
 `)
 }
+
+func TestDataEndsWithQuotes(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+  - name: test
+    literals:
+      - TEST=this is a 'test'
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	// The annotations are sorted by key, hence the order change.
+	// Quotes are added intentionally.
+	th.AssertActualEqualsExpected(
+		m, `apiVersion: v1
+data:
+  TEST: this is a 'test
+kind: ConfigMap
+metadata:
+  name: test-k7hhfb697g
+`)
+}
