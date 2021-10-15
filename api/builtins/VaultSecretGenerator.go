@@ -101,6 +101,12 @@ func (p *VaultSecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error_loading_secret: %s; secret_path: %s", err, p.Path)
 	}
+	if data == nil {
+		return nil, fmt.Errorf("secret_does_not_exist; secret_path: %s", p.Path)
+	}
+	if _, exists := data.Data[p.SecretKey]; !exists {
+		return nil, fmt.Errorf("secret_does_not_exist; secret_path: %s", p.Path)
+	}
 
 	value, ok := data.Data[p.SecretKey].(string)
 	if !ok {
