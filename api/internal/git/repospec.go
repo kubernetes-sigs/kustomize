@@ -201,7 +201,7 @@ func parseHostSpec(n string) (string, string) {
 	// Start accumulating the host part.
 	for _, p := range []string{
 		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://",
+		"git::", "gh:", "ssh://", "https://", "http://", "file://",
 		"git@", "github.com:", "github.com/"} {
 		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
 			n = n[len(p):]
