@@ -35,7 +35,7 @@ func TestTemplateProcessor_ResourceTemplates(t *testing.T) {
 
 	out := new(bytes.Buffer)
 	rw := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -47,7 +47,7 @@ functionConfig:
 
 	require.NoError(t, framework.Execute(p, rw))
 	require.Equal(t, strings.TrimSpace(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -98,7 +98,7 @@ metadata:
 	out := new(bytes.Buffer)
 
 	rw := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -130,7 +130,7 @@ functionConfig:
 
 	require.NoError(t, framework.Execute(p, rw))
 	require.Equal(t, strings.TrimSpace(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -194,7 +194,7 @@ env:
 
 	out := new(bytes.Buffer)
 	rw := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -231,7 +231,7 @@ functionConfig:
 
 	require.NoError(t, framework.Execute(p, rw))
 	require.Equal(t, strings.TrimSpace(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -300,7 +300,7 @@ func TestTemplateProcessor_ContainerPatchTemplates_MultipleWorkloadKinds(t *test
 
 	out := new(bytes.Buffer)
 	rw := &kio.ByteReadWriter{Writer: out, Reader: bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items: []
 functionConfig:
@@ -591,7 +591,7 @@ func TestTemplateProcessor_AdditionalSchemas(t *testing.T) {
 	out := new(bytes.Buffer)
 
 	rw := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: example.com/v1
@@ -606,7 +606,7 @@ items:
 		Writer: out}
 	require.NoError(t, framework.Execute(p, rw))
 	require.Equal(t, strings.TrimSpace(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: example.com/v1

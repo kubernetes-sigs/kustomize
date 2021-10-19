@@ -97,7 +97,7 @@ func TestEmptyInput(t *testing.T) {
 	}
 
 	expected := `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items: []
 `
@@ -138,7 +138,7 @@ func TestEmptyInputWithFilter(t *testing.T) {
 	}
 
 	expected := `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - foo: bar

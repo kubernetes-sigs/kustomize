@@ -45,7 +45,7 @@ g:
   h:
   - i # has a list
   - j`,
-			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
+			expectedOutput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - a: b #first
@@ -477,7 +477,7 @@ metadata:
 }`,
 			},
 
-			expectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
+			expectedOutput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - {"a": "b", "metadata": {"annotations": {"internal.config.kubernetes.io/path": "test.json"}}}
