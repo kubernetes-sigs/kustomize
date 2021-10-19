@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 kind: ResourceList
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 functionConfig:
   apiVersion: example.com/v1alpha1
   kind: JavaSpringBoot

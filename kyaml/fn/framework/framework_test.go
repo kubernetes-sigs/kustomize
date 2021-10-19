@@ -48,7 +48,7 @@ func TestExecute_Result(t *testing.T) {
 	out := new(bytes.Buffer)
 	source := &kio.ByteReadWriter{Reader: bytes.NewBufferString(`
 kind: ResourceList
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 items:
 - kind: Deployment
   apiVersion: v1
@@ -63,7 +63,7 @@ items:
 
 [error] : some error`)
 	assert.Equal(t, 1, err.(*framework.Result).ExitCode())
-	assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment

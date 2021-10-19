@@ -39,7 +39,7 @@ functionConfig:
   - 4
 `
 
-	resourceInput = `apiVersion: config.kubernetes.io/v1alpha1
+	resourceInput = `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1

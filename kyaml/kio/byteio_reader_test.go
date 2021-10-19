@@ -33,7 +33,7 @@ func TestByteReader(t *testing.T) {
 		//
 		{
 			name: "wrapped_resource_list",
-			input: `apiVersion: config.kubernetes.io/v1alpha1
+			input: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 -  kind: Deployment
@@ -64,7 +64,7 @@ spec:
 		//
 		{
 			name: "wrapped_resource_list_function_config",
-			input: `apiVersion: config.kubernetes.io/v1alpha1
+			input: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 functionConfig:
   foo: bar
@@ -105,7 +105,7 @@ elems:
 		//
 		{
 			name: "wrapped_resource_list_function_config_without_items",
-			input: `apiVersion: config.kubernetes.io/v1alpha1
+			input: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 functionConfig:
   foo: bar
