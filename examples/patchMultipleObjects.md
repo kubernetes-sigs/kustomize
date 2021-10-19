@@ -15,6 +15,8 @@ a _target selector_:
 [strategic merge patch]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
 [json patch]: jsonpatch.md
 
+Note that a strategic merge patch must still have a `metadata.name` field even if the `patch`'s `target.name` overrides it. Its value will be ignored, but it must be present.
+
 > ```yaml
 > patches:
 >   - path: <relative path to file containing patch>
@@ -55,6 +57,11 @@ Deployments that also have the _label_ `app=hello`
 >   labelSelector: app=hello
 > ```
 
+To apply the same patch to targets that match any of the
+specifiers ("OR"-like), just add multiple patch list
+entries with different targets that reference the same
+patch file.
+  
 ### Demo
 
 The example below shows how to inject a
@@ -216,3 +223,32 @@ diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
 
 To see how to do this with JSON patches,
 try the [JSON patch] demo.
+
+### Limitations
+  
+Kustomize `patches` may be applied to multiple resources using
+target-specifiers, but a single patch cannot apply to multiple
+parts of the same resource's configuration. This is true for
+both strategic merge patches and json patches.
+  
+For example, there is presently no way to express the operation
+"append a new entry to the `env` list for every container in a
+`Deployment`'s `spec.template.spec.containers` list" as a Kustomize
+patch:
+* A [JSON patch](http://jsonpatch.com/) must identify a single specific subject in a
+  json document using a [json pointer](http://tools.ietf.org/html/rfc6901),
+  e.g. `/spec/template/spec/containers/0/imagePullPolicy`. This is not
+  JSONPath expression. There is no wildcard or pattern match that can
+  replace the `/0/` path-component, and the target must already exist,
+  so it can't patch objects that appear within some target resources but
+  not others.
+* A strategic merge patch does not have any support for applying a
+  subtree over multiple members of a list or the values of multiple
+  keys of an object. It can only append, delete, replace or merge.
+
+If you need more powerful configuration transformations than are presently offered
+by Kustomize patches then [transformers](transformerconfigs/README.md)
+may be suitable. A number of built-in transformers already exist,
+to e.g. rename and/or re-tag images referenced in Deployments, to change
+name-references to a specific object type, to apply custom labels or annotations,
+etc.
