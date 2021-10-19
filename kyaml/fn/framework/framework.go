@@ -17,6 +17,22 @@ import (
 // This framework facilitates building functions that receive and emit ResourceLists,
 // as required by the specification.
 type ResourceList struct {
+	// Items is the ResourceList.items input and output value.
+	//
+	// e.g. given the function input:
+	//
+	//    kind: ResourceList
+	//    items:
+	//    - kind: Deployment
+	//      ...
+	//    - kind: Service
+	//      ...
+	//
+	// Items will be a slice containing the Deployment and Service resources
+	// Mutating functions will alter this field during processing.
+	// This field is required.
+	Items []*yaml.RNode `yaml:"items" json:"items"`
+
 	// FunctionConfig is the ResourceList.functionConfig input value.
 	//
 	// e.g. given the input:
@@ -33,25 +49,10 @@ type ResourceList struct {
 	//        foo: var
 	FunctionConfig *yaml.RNode `yaml:"functionConfig" json:"functionConfig"`
 
-	// Items is the ResourceList.items input and output value.
-	//
-	// e.g. given the function input:
-	//
-	//    kind: ResourceList
-	//    items:
-	//    - kind: Deployment
-	//      ...
-	//    - kind: Service
-	//      ...
-	//
-	// Items will be a slice containing the Deployment and Service resources
-	// Mutating functions will alter this field during processing.
-	Items []*yaml.RNode `yaml:"items" json:"items"`
-
-	// Result is ResourceList.result output value.
+	// Results is ResourceList.results output value.
 	// Validating functions can optionally use this field to communicate structured
 	// validation error data to downstream functions.
-	Result *Result `yaml:"results" json:"results"`
+	Results Results `yaml:"results" json:"results"`
 }
 
 // ResourceListProcessor is implemented by configuration functions built with this framework
@@ -119,8 +120,8 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 
 	// Write the results
 	// Set the ResourceList.results for validating functions
-	if rl.Result != nil && len(rl.Result.Items) > 0 {
-		b, err := yaml.Marshal(rl.Result)
+	if len(rl.Results) > 0 {
+		b, err := yaml.Marshal(rl.Results)
 		if err != nil {
 			return errors.Wrap(err)
 		}

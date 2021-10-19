@@ -296,7 +296,7 @@ functionConfig:
 func ExampleBuild_validate() {
 	fn := func(rl *framework.ResourceList) error {
 		// validation results
-		var validationResults []framework.ResultItem
+		var validationResults framework.Results
 
 		// validate that each Deployment resource has spec.replicas set
 		for i := range rl.Items {
@@ -319,7 +319,7 @@ func ExampleBuild_validate() {
 			if r != nil {
 				continue
 			}
-			validationResults = append(validationResults, framework.ResultItem{
+			validationResults = append(validationResults, &framework.Result{
 				Severity: framework.Error,
 				Message:  "field is required",
 				ResourceRef: yaml.ResourceIdentifier{
@@ -327,20 +327,17 @@ func ExampleBuild_validate() {
 					NameMeta: meta.ObjectMeta.NameMeta,
 				},
 				Field: framework.Field{
-					Path:           "spec.replicas",
-					SuggestedValue: "1",
+					Path:          "spec.replicas",
+					ProposedValue: "1",
 				},
 			})
 		}
 
 		if len(validationResults) > 0 {
-			rl.Result = &framework.Result{
-				Name:  "replicas-validator",
-				Items: validationResults,
-			}
+			rl.Results = validationResults
 		}
 
-		return rl.Result
+		return rl.Results
 	}
 
 	cmd := command.Build(framework.ResourceListProcessorFunc(fn), command.StandaloneDisabled, true)
@@ -370,15 +367,13 @@ items:
 	//   metadata:
 	//     name: foo
 	// results:
-	//   name: replicas-validator
-	//   items:
-	//   - message: field is required
-	//     severity: error
-	//     resourceRef:
-	//       apiVersion: apps/v1
-	//       kind: Deployment
-	//       name: foo
-	//     field:
-	//       path: spec.replicas
-	//       suggestedValue: "1"
+	// - message: field is required
+	//   severity: error
+	//   resourceRef:
+	//     apiVersion: apps/v1
+	//     kind: Deployment
+	//     name: foo
+	//   field:
+	//     path: spec.replicas
+	//     proposedValue: "1"
 }
