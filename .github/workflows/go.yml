@@ -46,8 +46,8 @@ jobs:
         working-directory: ./kyaml
 
       - name: Test api
-        run: go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-        working-directory: ./api
+        run: make install-tools test-unit-kustomize-api #go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
+        working-directory: ./
 
       - name: Test cmd/config
         run: go test -cover ./...

@@ -59,4 +59,16 @@ type FnPluginLoadingOptions struct {
 	AsCurrentUser bool
 	// Run in this working directory
 	WorkingDir string
+	// Use Kubectl as backend for containers instead of Docker to run krm-function
+	UseKubectl bool
+	// List of global arguments for kubectl, e.g. -n for namespace & etc
+	KubectlGlobalArgs string
+	// Name of PodTemplate (must exist in the same namespace where pod will start) to use
+	// for creation of Pod to run krm function. That allows to set Mounted Volumes,
+	// Network Policies and etc.
+	// Can be empty - default template will be used
+	PodTemplateName string
+	// Maximum time to wait until the pod start. Can be nil in that case default (60s)
+	// will be used
+	PodStartTimeout string
 }

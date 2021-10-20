@@ -37,21 +37,31 @@ type ContainerEnv struct {
 	VarsToExport []string
 }
 
-// GetDockerFlags returns docker run style env flags
-func (ce *ContainerEnv) GetDockerFlags() []string {
+func (ce *ContainerEnv) getEnvs() map[string]string {
 	envs := ce.EnvVars
 	if envs == nil {
 		envs = make(map[string]string)
 	}
+	return envs
+}
 
-	flags := []string{}
-	// return in order to keep consistent among different runs
+func (ce *ContainerEnv) getSortedKeys() []string {
+	envs := ce.getEnvs()
+
 	keys := []string{}
 	for k := range envs {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	for _, key := range keys {
+	return keys
+}
+
+// GetDockerFlags returns docker run style env flags
+func (ce *ContainerEnv) GetDockerFlags() []string {
+	envs := ce.getEnvs()
+
+	flags := []string{}
+	for _, key := range ce.getSortedKeys() {
 		flags = append(flags, "-e", key+"="+envs[key])
 	}
 
@@ -60,6 +70,21 @@ func (ce *ContainerEnv) GetDockerFlags() []string {
 	}
 
 	return flags
+}
+
+// GetPodEnvConfig returns k8s pod style env data
+func (ce *ContainerEnv) GetPodEnvConfig() string {
+	envs := ce.getEnvs()
+
+	config := "["
+	for _, key := range ce.getSortedKeys() {
+		config += fmt.Sprintf(`{"name": "%s", "value": "%s"}, `, key, envs[key])
+	}
+
+	for _, key := range ce.VarsToExport {
+		config += fmt.Sprintf(`{"name": "%s", "value": "%s"}, `, key, os.Getenv(key))
+	}
+	return config + "]"
 }
 
 // AddKeyValue adds a key-value pair into the envs

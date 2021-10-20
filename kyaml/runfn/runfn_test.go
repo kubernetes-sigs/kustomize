@@ -68,7 +68,7 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody")
+	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody", false, "", nil, nil)
 	cf := &c
 	cf.Exec.FunctionConfig = api
 	assert.Equal(t, cf, filter)
@@ -98,7 +98,7 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "1:2")
+	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "1:2", false, "", nil, nil)
 	cf := &c
 	cf.Exec.FunctionConfig = api
 	assert.Equal(t, cf, filter)
@@ -129,7 +129,7 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody")
+	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody", false, "", nil, nil)
 	cf := &c
 	cf.Exec.FunctionConfig = api
 	cf.Exec.GlobalScope = true

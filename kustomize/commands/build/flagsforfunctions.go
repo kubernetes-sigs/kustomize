@@ -33,4 +33,23 @@ func AddFunctionAlphaEnablementFlags(set *pflag.FlagSet) {
 	set.BoolVar(
 		&theFlags.fnOptions.EnableStar, "enable-star", false,
 		"enable support for starlark functions. (Alpha)")
+
+	set.BoolVar(
+		&theFlags.fnOptions.UseKubectl, "enable-in-a-pod", false,
+		"enable support for krm-functions running in pod instead of docker; "+
+			"requires kubectl. (Alpha)")
+	set.StringVar(
+		&theFlags.fnOptions.KubectlGlobalArgs, "pod-kubectl-args", "",
+		"list of global arguments to be used to run krm-functions in pod, "+
+			"e.g. -n namespace. (Alpha)")
+
+	set.StringVar(
+		&theFlags.fnOptions.PodTemplateName, "pod-template-name", "",
+		"тame of PodTemplate that will be used for creation of the pod to"+
+			"run krm-function. Must exist in the same namespace where"+
+			"krm-function is going to be ran (Alpha)")
+
+	set.StringVar(
+		&theFlags.fnOptions.PodStartTimeout, "pod-start-timeout", "",
+		"Maximum amount of time to wait until the pod start. (Alpha)")
 }

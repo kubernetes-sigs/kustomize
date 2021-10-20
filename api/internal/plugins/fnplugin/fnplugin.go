@@ -6,8 +6,11 @@ package fnplugin
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
+
+	"github.com/google/shlex"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -70,16 +73,31 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 
 // NewFnPlugin creates a FnPlugin struct
 func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
+	// parse kubectl params
+	kubectlGlobalArgs, err := shlex.Split(o.KubectlGlobalArgs)
+	if err != nil {
+		kubectlGlobalArgs = []string{}
+	}
+	// parse podTimeout from string
+	var podStartTimeout *time.Duration
+	parsedValue, err := time.ParseDuration(o.PodStartTimeout)
+	if err == nil {
+		podStartTimeout = &parsedValue
+	}
 	return &FnPlugin{
 		runFns: runfn.RunFns{
-			Functions:      []*yaml.RNode{},
-			Network:        o.Network,
-			EnableStarlark: o.EnableStar,
-			EnableExec:     o.EnableExec,
-			StorageMounts:  toStorageMounts(o.Mounts),
-			Env:            o.Env,
-			AsCurrentUser:  o.AsCurrentUser,
-			WorkingDir:     o.WorkingDir,
+			Functions:         []*yaml.RNode{},
+			Network:           o.Network,
+			EnableStarlark:    o.EnableStar,
+			EnableExec:        o.EnableExec,
+			StorageMounts:     toStorageMounts(o.Mounts),
+			Env:               o.Env,
+			AsCurrentUser:     o.AsCurrentUser,
+			WorkingDir:        o.WorkingDir,
+			UseKubectl:        o.UseKubectl,
+			KubectlGlobalArgs: kubectlGlobalArgs,
+			PodTemplateName:   o.PodTemplateName,
+			PodStartTimeout:   podStartTimeout,
 		},
 	}
 }

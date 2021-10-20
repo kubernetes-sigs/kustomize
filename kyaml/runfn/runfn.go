@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
@@ -104,6 +105,19 @@ type RunFns struct {
 
 	// WorkingDir specifies which working directory an exec function should run in.
 	WorkingDir string
+
+	// Use Kubectl as backend for containers instead of Docker to run krm-function
+	UseKubectl bool
+	// List of global arguments for kubectl, e.g. -n for namespace & etc
+	KubectlGlobalArgs []string
+	// Name of PodTemplate (must exist in the same namespace where pod will start) to use
+	// for creation of Pod to run krm function. That allows to set Mounted Volumes,
+	// Network Policies and etc.
+	// Can be empty - default template will be used
+	PodTemplateName string
+	// Maximum time to wait until the pod start. Can be nil in that case default (60s)
+	// will be used
+	PodStartTimeout *time.Duration
 }
 
 // Execute runs the command
@@ -476,6 +490,10 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 				Env:           spec.Container.Env,
 			},
 			uidgid,
+			r.UseKubectl,
+			r.PodTemplateName,
+			r.KubectlGlobalArgs,
+			r.PodStartTimeout,
 		)
 		cf := &c
 		cf.Exec.FunctionConfig = api

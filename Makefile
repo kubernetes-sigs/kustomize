@@ -103,7 +103,9 @@ install-tools: \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/prchecker \
-	$(MYGOBIN)/stringer
+	$(MYGOBIN)/stringer \
+	$(MYGOBIN)/kind \
+	$(MYGOBIN)/kubectl
 
 ### Begin kustomize plugin rules.
 #
@@ -227,10 +229,19 @@ build-kustomize-api: $(builtinplugins)
 generate-kustomize-api: $(MYGOBIN)/k8scopy
 	cd api; go generate ./...
 
+# test-unit-kustomize-api contains api/krusty/fnplugin_test
+# that tests krm-function run with docker and kubectl backend
+# and this requeres kind installed + docker/kubectl in PATH
+# NOTE: `which docker && ...` is needed to create kind cluster
+# only when docker is available
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
-	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"; \
-	cd krusty; OPENAPI_TEST=true go test -run TestCustomOpenAPIFieldFromComponentWithOverlays
+	export PATH=$${PATH}:$(MYGOBIN); \
+	which docker && $(MYGOBIN)/kind create cluster --name kustomize-api-test --wait 2m && \
+	kubectl --context kind-kustomize-api-test -n kube-system wait --for=condition=Ready --timeout=2m pods --all; \
+	cd api; go test -cover ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"; \
+	cd krusty; OPENAPI_TEST=true go test -run TestCustomOpenAPIFieldFromComponentWithOverlays; exitCode=$$?; \
+	which docker && $(MYGOBIN)/kind delete cluster --name kustomize-api-test; exit $${exitCode};
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
@@ -330,13 +341,23 @@ $(MYGOBIN)/helmV3:
 
 $(MYGOBIN)/kind:
 	( \
-        set -e; \
-        d=$(shell mktemp -d); cd $$d; \
-        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(GOOS)-$(GOARCH); \
-        chmod +x ./kind; \
-        mv ./kind $(MYGOBIN); \
-        rm -rf $$d; \
+        	set -e; \
+        	d=$(shell mktemp -d); cd $$d; \
+        	wget -O ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-$(GOOS)-$(GOARCH); \
+        	chmod +x ./kind; \
+        	mv ./kind $(MYGOBIN); \
+        	rm -rf $$d; \
 	)
+
+$(MYGOBIN)/kubectl:
+	( \
+		set -e; \
+                d=$(shell mktemp -d); cd $$d; \
+		wget -O ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/$(GOOS)/$(GOARCH)/kubectl; \
+		chmod +x ./kubectl; \
+		mv ./kubectl $(MYGOBIN); \
+		rm -rf $$d; \
+        )
 
 # linux only.
 $(MYGOBIN)/gh:
@@ -360,6 +381,8 @@ clean: clean-kustomize-external-go-plugin
 	rm -f $(MYGOBIN)/mdrip
 	rm -f $(MYGOBIN)/prchecker
 	rm -f $(MYGOBIN)/stringer
+	rm -f $(MYGOBIN)/kind
+	rm -f $(MYGOBIN)/kubectl
 
 # Handle pluginator manually.
 # rm -f $(MYGOBIN)/pluginator
