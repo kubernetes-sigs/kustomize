@@ -549,3 +549,26 @@ metadata:
   name: testing-tt4769fb52
 `)
 }
+
+// regression test for https://github.com/kubernetes-sigs/kustomize/issues/4233
+func TestDataEndsWithQuotes(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+  - name: test
+    literals:
+      - TEST=this is a 'test'
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(
+		m, `apiVersion: v1
+data:
+  TEST: this is a 'test'
+kind: ConfigMap
+metadata:
+  name: test-k9cc55dfm5
+`)
+}
