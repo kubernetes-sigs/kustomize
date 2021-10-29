@@ -166,6 +166,7 @@ func (r *CatRunner) catFilters() []kio.Filter {
 	return fltrs
 }
 
+// nolint
 func (r *CatRunner) out(w io.Writer) ([]kio.Writer, error) {
 	var outputs []kio.Writer
 	var functionConfig *yaml.RNode

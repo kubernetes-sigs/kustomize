@@ -17,25 +17,29 @@ import (
 type AnnotationKey = string
 
 const (
+	// internalPrefix is the prefix given to internal annotations that are used
+	// internally by the orchestrator
+	internalPrefix string = "internal.config.kubernetes.io/"
+
 	// IndexAnnotation records the index of a specific resource in a file or input stream.
-	IndexAnnotation AnnotationKey = "internal.config.kubernetes.io/index"
+	IndexAnnotation AnnotationKey = internalPrefix + "index"
 
 	// PathAnnotation records the path to the file the Resource was read from
-	PathAnnotation AnnotationKey = "internal.config.kubernetes.io/path"
+	PathAnnotation AnnotationKey = internalPrefix + "path"
 
 	// SeqIndentAnnotation records the sequence nodes indentation of the input resource
-	SeqIndentAnnotation AnnotationKey = "internal.config.kubernetes.io/seqindent"
+	SeqIndentAnnotation AnnotationKey = internalPrefix + "seqindent"
 
 	// IdAnnotation records the id of the resource to map inputs to outputs
-	IdAnnotation = "internal.config.kubernetes.io/id"
+	IdAnnotation AnnotationKey = internalPrefix + "id"
 
-	// LegacyIndexAnnotation is the deprecated annotation key for resource index
+	// Deprecated: Use IndexAnnotation instead.
 	LegacyIndexAnnotation AnnotationKey = "config.kubernetes.io/index"
 
-	// LegacyPathAnnotation is the deprecated annotation key for resource path
+	// Deprecated: use PathAnnotation instead.
 	LegacyPathAnnotation AnnotationKey = "config.kubernetes.io/path"
 
-	// LegacyIdAnnotation is the deprecated annotation key for resource ids
+	// Deprecated: use IdAnnotation instead.
 	LegacyIdAnnotation = "config.k8s.io/id"
 )
 
@@ -310,4 +314,88 @@ func SortNodes(nodes []*yaml.RNode) error {
 		return false
 	})
 	return errors.Wrap(err)
+}
+
+// CopyInternalAnnotations copies the annotations that begin with the prefix
+// `internal.config.kubernetes.io` from the source RNode to the destination RNode.
+// It takes a parameter exclusions, which is a list of annotation keys to ignore.
+func CopyInternalAnnotations(src *yaml.RNode, dst *yaml.RNode, exclusions ...AnnotationKey) error {
+	srcAnnotations := GetInternalAnnotations(src)
+	for k, v := range srcAnnotations {
+		if stringSliceContains(exclusions, k) {
+			continue
+		}
+		if err := dst.PipeE(yaml.SetAnnotation(k, v)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ConfirmInternalAnnotationUnchanged compares the annotations of the RNodes that begin with the prefix
+// `internal.config.kubernetes.io`, throwing an error if they differ. It takes a parameter exclusions,
+// which is a list of annotation keys to ignore.
+func ConfirmInternalAnnotationUnchanged(r1 *yaml.RNode, r2 *yaml.RNode, exclusions ...AnnotationKey) error {
+	r1Annotations := GetInternalAnnotations(r1)
+	r2Annotations := GetInternalAnnotations(r2)
+
+	// this is a map to prevent duplicates
+	diffAnnos := make(map[string]bool)
+
+	for k, v1 := range r1Annotations {
+		if stringSliceContains(exclusions, k) {
+			continue
+		}
+		if v2, ok := r2Annotations[k]; !ok || v1 != v2 {
+			diffAnnos[k] = true
+		}
+	}
+
+	for k, v2 := range r2Annotations {
+		if stringSliceContains(exclusions, k) {
+			continue
+		}
+		if v1, ok := r1Annotations[k]; !ok || v2 != v1 {
+			diffAnnos[k] = true
+		}
+	}
+
+	if len(diffAnnos) > 0 {
+		keys := make([]string, 0, len(diffAnnos))
+		for k := range diffAnnos {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		errorString := "internal annotations differ: "
+		for _, key := range keys {
+			errorString = errorString + key + ", "
+		}
+		return errors.Errorf(errorString[0 : len(errorString)-2])
+	}
+
+	return nil
+}
+
+// GetInternalAnnotations returns a map of all the annotations of the provided RNode that begin
+// with the prefix `internal.config.kubernetes.io`
+func GetInternalAnnotations(rn *yaml.RNode) map[string]string {
+	annotations := rn.GetAnnotations()
+	result := make(map[string]string)
+	for k, v := range annotations {
+		if strings.HasPrefix(k, internalPrefix) {
+			result[k] = v
+		}
+	}
+	return result
+}
+
+// stringSliceContains returns true if the slice has the string.
+func stringSliceContains(slice []string, str string) bool {
+	for _, s := range slice {
+		if s == str {
+			return true
+		}
+	}
+	return false
 }
