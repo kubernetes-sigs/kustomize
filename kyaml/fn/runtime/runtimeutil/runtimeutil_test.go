@@ -62,7 +62,7 @@ func TestFunctionFilter_Filter(t *testing.T) {
 			name: "default_file_path_annotation",
 			run: testRun{
 				output: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -103,7 +103,7 @@ metadata:
 			name: "no_default_file_path_annotation",
 			run: testRun{
 				output: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -146,7 +146,7 @@ metadata:
 			name: "write_read",
 			run: testRun{
 				output: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -203,7 +203,7 @@ metadata:
 		{
 			name: "write_results_file",
 			run: testRun{
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -283,7 +283,7 @@ metadata:
 			run: testRun{
 				err: fmt.Errorf("failed"),
 				output: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -363,7 +363,7 @@ metadata:
 			run: testRun{
 				err: fmt.Errorf("failed"),
 				output: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -440,7 +440,7 @@ metadata:
 			noMakeResultsFile: true,
 			run: testRun{
 				output: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -487,7 +487,7 @@ metadata:
 		{
 			name: "scope_resources_by_directory",
 			run: testRun{
-				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -506,7 +506,7 @@ functionConfig:
     annotations:
       config.kubernetes.io/path: 'foo/bar.yaml'
 `,
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -578,7 +578,7 @@ metadata:
 		{
 			name: "scope_resources_by_directory_resources_missing_path",
 			run: testRun{
-				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -597,7 +597,7 @@ functionConfig:
     annotations:
       config.kubernetes.io/path: 'foo/bar.yaml'
 `,
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -666,7 +666,7 @@ metadata:
 			name:     "scope_resources_global",
 			instance: FunctionFilter{GlobalScope: true},
 			run: testRun{
-				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -693,7 +693,7 @@ functionConfig:
     annotations:
       config.kubernetes.io/path: 'foo/bar.yaml'
 `,
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -770,7 +770,7 @@ metadata:
 		{
 			name: "scope_no_resources",
 			run: testRun{
-				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items: []
 functionConfig:
@@ -781,7 +781,7 @@ functionConfig:
     annotations:
       config.kubernetes.io/path: 'foo/bar.yaml'
 `,
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items: []
 functionConfig:
@@ -840,7 +840,7 @@ metadata:
 		{
 			name: "scope_functions_dir",
 			run: testRun{
-				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -859,7 +859,7 @@ functionConfig:
     annotations:
       config.kubernetes.io/path: 'foo/functions/bar.yaml'
 `,
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1
@@ -931,7 +931,7 @@ metadata:
 		{
 			name: "copy_comments",
 			run: testRun{
-				expectedInput: `apiVersion: config.kubernetes.io/v1alpha1
+				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -959,7 +959,7 @@ functionConfig:
       config.kubernetes.io/path: 'foo/f.yaml'
 `,
 				// delete the comment
-				output: `apiVersion: config.kubernetes.io/v1alpha1
+				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1

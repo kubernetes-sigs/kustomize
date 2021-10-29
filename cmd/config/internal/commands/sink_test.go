@@ -22,7 +22,7 @@ func TestSinkCommand(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	r := commands.GetSinkRunner("")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -144,7 +144,7 @@ func TestSinkCommandJSON(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	r := commands.GetSinkRunner("")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
@@ -191,7 +191,7 @@ func TestSinkCommand_Stdout(t *testing.T) {
 	// fmt the files
 	out := &bytes.Buffer{}
 	r := commands.GetSinkRunner("")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -305,7 +305,7 @@ func TestSinkCommandJSON_Stdout(t *testing.T) {
 	// fmt the files
 	out := &bytes.Buffer{}
 	r := commands.GetSinkRunner("")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",

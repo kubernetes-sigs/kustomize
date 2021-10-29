@@ -26,7 +26,7 @@ func TestByteReadWriter(t *testing.T) {
 		{
 			name: "round_trip",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -38,7 +38,7 @@ items:
       foo: bar
 `,
 			expectedOutput: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -54,7 +54,7 @@ items:
 		{
 			name: "function_config",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -68,7 +68,7 @@ functionConfig:
   a: b # something
 `,
 			expectedOutput: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -86,7 +86,7 @@ functionConfig:
 		{
 			name: "results",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -100,7 +100,7 @@ results:
   a: b # something
 `,
 			expectedOutput: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -118,7 +118,7 @@ results:
 		{
 			name: "drop_invalid_resource_list_field",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -132,7 +132,7 @@ foo:
   a: b # something
 `,
 			expectedOutput: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -233,7 +233,7 @@ metadata:
 		{
 			name: "manual_override_wrap",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -262,7 +262,7 @@ spec:
 		{
 			name: "manual_override_function_config",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -276,7 +276,7 @@ functionConfig:
   a: b # something
 `,
 			expectedOutput: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -499,7 +499,7 @@ env:
 		{
 			name: "unwrap ResourceList with annotations",
 			input: `
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - kind: Deployment
