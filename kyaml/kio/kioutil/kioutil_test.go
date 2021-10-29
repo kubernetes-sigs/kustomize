@@ -451,3 +451,253 @@ metadata:
 		assert.Equal(t, tc.expected, nodes[0].MustString())
 	}
 }
+
+func TestCopyInternalAnnotations(t *testing.T) {
+	var tests = []struct {
+		input      string
+		exclusions []kioutil.AnnotationKey
+		expected   string
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: src
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/foo: 'bar'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: dst
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+`,
+			expected: `apiVersion: v1
+kind: Foo
+metadata:
+  name: dst
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/foo: 'bar'
+`,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: src
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/foo: 'bar-src'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: dst
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+    internal.config.kubernetes.io/foo: 'bar-dst'
+`,
+			exclusions: []kioutil.AnnotationKey{
+				kioutil.PathAnnotation,
+				kioutil.IndexAnnotation,
+			},
+			expected: `apiVersion: v1
+kind: Foo
+metadata:
+  name: dst
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+    internal.config.kubernetes.io/foo: 'bar-src'
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		rw := kio.ByteReadWriter{
+			Reader:                bytes.NewBufferString(tc.input),
+			OmitReaderAnnotations: true,
+		}
+		nodes, err := rw.Read()
+		assert.NoError(t, err)
+		assert.NoError(t, kioutil.CopyInternalAnnotations(nodes[0], nodes[1], tc.exclusions...))
+		assert.Equal(t, tc.expected, nodes[1].MustString())
+	}
+}
+
+func TestConfirmInternalAnnotationUnchanged(t *testing.T) {
+	var tests = []struct {
+		input       string
+		exclusions  []kioutil.AnnotationKey
+		expectedErr string
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-1
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-2
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+`,
+			expectedErr: `internal annotations differ: internal.config.kubernetes.io/index, internal.config.kubernetes.io/path`,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-1
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-2
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+`,
+			exclusions: []kioutil.AnnotationKey{
+				kioutil.PathAnnotation,
+				kioutil.IndexAnnotation,
+			},
+			expectedErr: ``,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-1
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/foo: 'bar-1'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-2
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+    internal.config.kubernetes.io/foo: 'bar-2'
+`,
+			exclusions: []kioutil.AnnotationKey{
+				kioutil.PathAnnotation,
+				kioutil.IndexAnnotation,
+			},
+			expectedErr: `internal annotations differ: internal.config.kubernetes.io/foo`,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-1
+  annotations:
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/foo: 'bar-1'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-2
+  annotations:
+    internal.config.kubernetes.io/path: 'c/d.yaml'
+    internal.config.kubernetes.io/index: '10'
+    internal.config.kubernetes.io/foo: 'bar-1'
+`,
+			expectedErr: `internal annotations differ: internal.config.kubernetes.io/index, internal.config.kubernetes.io/path`,
+		},
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-1
+  annotations:
+    internal.config.kubernetes.io/a: 'b'
+    internal.config.kubernetes.io/c: 'd'
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo-2
+  annotations:
+    internal.config.kubernetes.io/e: 'f'
+    internal.config.kubernetes.io/g: 'h'
+`,
+			expectedErr: `internal annotations differ: internal.config.kubernetes.io/a, internal.config.kubernetes.io/c, internal.config.kubernetes.io/e, internal.config.kubernetes.io/g`,
+		},
+	}
+
+	for _, tc := range tests {
+		rw := kio.ByteReadWriter{
+			Reader:                bytes.NewBufferString(tc.input),
+			OmitReaderAnnotations: true,
+		}
+		nodes, err := rw.Read()
+		assert.NoError(t, err)
+		err = kioutil.ConfirmInternalAnnotationUnchanged(nodes[0], nodes[1], tc.exclusions...)
+		if tc.expectedErr == "" {
+			assert.NoError(t, err)
+		} else {
+			if err == nil {
+				t.Fatalf("expected error: %s\n", tc.expectedErr)
+			}
+			assert.Equal(t, tc.expectedErr, err.Error())
+		}
+	}
+}
+
+func TestGetInternalAnnotations(t *testing.T) {
+	var tests = []struct {
+		input    string
+		expected map[string]string
+	}{
+		{
+			input: `apiVersion: v1
+kind: Foo
+metadata:
+  name: foobar
+  annotations:
+    foo: bar
+    internal.config.kubernetes.io/path: 'a/b.yaml'
+    internal.config.kubernetes.io/index: '5'
+    internal.config.kubernetes.io/foo: 'bar'
+`,
+			expected: map[string]string{
+				"internal.config.kubernetes.io/path":  "a/b.yaml",
+				"internal.config.kubernetes.io/index": "5",
+				"internal.config.kubernetes.io/foo":   "bar",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		rw := kio.ByteReadWriter{
+			Reader:                bytes.NewBufferString(tc.input),
+			OmitReaderAnnotations: true,
+		}
+		nodes, err := rw.Read()
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expected, kioutil.GetInternalAnnotations(nodes[0]))
+	}
+}

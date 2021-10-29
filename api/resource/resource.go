@@ -26,6 +26,7 @@ type Resource struct {
 	refVarNames []string
 }
 
+// nolint
 var BuildAnnotations = []string{
 	utils.BuildAnnotationPreviousKinds,
 	utils.BuildAnnotationPreviousNames,
