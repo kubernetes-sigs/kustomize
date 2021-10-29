@@ -37,7 +37,7 @@ func ExampleBuild_modify() {
 
 	// for testing purposes only -- normally read from stdin when Executing
 	cmd.SetIn(bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 # items are provided as nodes
 items:
@@ -61,7 +61,7 @@ functionConfig:
 	}
 
 	// Output:
-	// apiVersion: config.kubernetes.io/v1alpha1
+	// apiVersion: config.kubernetes.io/v1
 	// kind: ResourceList
 	// items:
 	// - apiVersion: apps/v1
@@ -133,7 +133,7 @@ metadata:
 
 	// for testing purposes only -- normally read from stdin when Executing
 	cmd.SetIn(bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 # items are provided as nodes
 items:
@@ -154,7 +154,7 @@ functionConfig:
 	}
 
 	// Output:
-	// apiVersion: config.kubernetes.io/v1alpha1
+	// apiVersion: config.kubernetes.io/v1
 	// kind: ResourceList
 	// items:
 	// - apiVersion: apps/v1
@@ -241,7 +241,7 @@ metadata:
 
 	// for testing purposes only -- normally read from stdin when Executing
 	cmd.SetIn(bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 # items are provided as nodes
 items:
@@ -268,7 +268,7 @@ functionConfig:
 	}
 
 	// Output:
-	// apiVersion: config.kubernetes.io/v1alpha1
+	// apiVersion: config.kubernetes.io/v1
 	// kind: ResourceList
 	// items:
 	// - apiVersion: apps/v1
@@ -346,7 +346,7 @@ func ExampleBuild_validate() {
 	cmd := command.Build(framework.ResourceListProcessorFunc(fn), command.StandaloneDisabled, true)
 	// for testing purposes only -- normally read from stdin when Executing
 	cmd.SetIn(bytes.NewBufferString(`
-apiVersion: config.kubernetes.io/v1alpha1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 # items are provided as nodes
 items:
@@ -362,7 +362,7 @@ items:
 	}
 
 	// Output:
-	// apiVersion: config.kubernetes.io/v1alpha1
+	// apiVersion: config.kubernetes.io/v1
 	// kind: ResourceList
 	// items:
 	// - apiVersion: apps/v1

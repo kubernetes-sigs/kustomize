@@ -74,7 +74,7 @@ func (p *plugin) Transform(rm resmap.ResMap) error {
 
 func getTransformerInputResource() []byte {
 	return []byte(`
-apiVersion: config.kubernetes.io/v1beta1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 functionConfig:
   apiVersion: foo-corp.com/v1
@@ -128,7 +128,7 @@ func TestTransformerConverter(t *testing.T) {
 	assert.NoError(t, err)
 
 	output := runKrmFunction(t, getTransformerInputResource(), filepath.Join(dir, "output"))
-	assert.Equal(t, `apiVersion: config.kubernetes.io/v1beta1
+	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -193,7 +193,7 @@ func (p *plugin) Generate() (resmap.ResMap, error) {
 
 func getGeneratorInputResource() []byte {
 	return []byte(`
-apiVersion: config.kubernetes.io/v1beta1
+apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 functionConfig:
   apiVersion: foo-corp.com/v1
@@ -224,7 +224,7 @@ func TestGeneratorConverter(t *testing.T) {
 	err := c.Convert()
 	assert.NoError(t, err)
 	output := runKrmFunction(t, getGeneratorInputResource(), filepath.Join(dir, "output"))
-	assert.Equal(t, `apiVersion: config.kubernetes.io/v1beta1
+	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: v1

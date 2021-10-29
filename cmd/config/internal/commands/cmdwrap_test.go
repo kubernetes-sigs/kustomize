@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	input = `apiVersion: config.kubernetes.io/v1alpha1
+	input = `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 functionConfig:
   metadata:
@@ -68,7 +68,7 @@ items:
       name: test
 `
 
-	output = `apiVersion: config.kubernetes.io/v1alpha1
+	output = `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -127,7 +127,7 @@ items:
       targetPort: 8080
 `
 
-	outputNoMerge = `apiVersion: config.kubernetes.io/v1alpha1
+	outputNoMerge = `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
@@ -183,7 +183,7 @@ items:
       targetPort: 8080
 `
 
-	outputOverride = `apiVersion: config.kubernetes.io/v1alpha1
+	outputOverride = `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - apiVersion: apps/v1
