@@ -22,17 +22,17 @@ a _target selector_:
 >       group: <optional group>
 >       version: <optional version>
 >       kind: <optional kind>
->       name: <optional name>
+>       name: <optional name or regex pattern>
 >       namespace: <optional namespace>
 >       labelSelector: <optional label selector>
 >       annotationSelector: <optional annotation selector>
 > ```
 
-E.g. select resources with _name_ matching `foo*`:
+E.g. select resources with _name_ matching the regular expression `foo.*`:
 
 > ```yaml
 > target:
->   name: foo*
+>   name: foo.*
 > ```
 
 Select all resources of _kind_ `Deployment`:
