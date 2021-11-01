@@ -9,7 +9,8 @@ steps:
       - "PROJECT_ID=$PROJECT_ID"
       - "_GIT_TAG=$_GIT_TAG"
       - "_PULL_BASE_REF=$_PULL_BASE_REF"
-# We need to use bash to configure the build date and version properly.
+      - "_SEVERITY=$_SEVERITY"
+  # We need to use bash to configure the build date and version properly.
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: /bin/bash
     args:
@@ -30,6 +31,23 @@ steps:
         --build-arg
         DATE=$(date -u +%FT%TZ)
         .
+  - id: scan
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: /bin/bash
+    args:
+    - -c
+    - |
+      gcloud artifacts docker images scan gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG} \
+      --format='value(response.scan)' > /workspace/scan_id.txt
+  - id: severity check
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: /bin/bash
+    args:
+    - -c
+    - |
+      gcloud artifacts docker images list-vulnerabilities $(cat /workspace/scan_id.txt) \
+      --format='value(vulnerability.effectiveSeverity)' | if grep -Fxq ${_SEVERITY}; \
+      then echo 'Failed vulnerability check' && exit 1; else exit 0; fi
 
 images:
   - "gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}"
@@ -42,6 +60,7 @@ substitutions:
   # _PULL_BASE_REF will contain the ref that was pushed to to trigger this build -
   # a branch like 'master' or 'release-0.2', or a tag like 'v0.2'.
   _PULL_BASE_REF: "master"
+  _SEVERITY: "high"
   # Other substitutions will not be evaluated
 
 options:
