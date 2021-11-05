@@ -2,7 +2,7 @@
 
 **Authors**: alexey.odinokov.82@gmail.com
 
-**Reviewers**: <!-- List at least one Kustomize approver (https://github.com/kubernetes-sigs/kustomize/blob/master/OWNERS#L2) -->
+**Reviewers**: mengqiy@google.com
 
 **Status**: implementable
 
@@ -36,6 +36,7 @@ on `docker` and makes `kubectl` self-sufficient to run krm-function based plugin
 1. To enrich container-based plugin-extension implementation by introducing the new backend that
 will be an alternative to `docker` and that will allow to run krm-functions inside k8s using its native mechanisms to run containers
 1. To use k8s-native mechanisms to control access of krm-function to the environment it is running in
+1. To allow user to switch between `docker` and `kubectl` backends without modifying kustomizations.yaml and related config files where it's possible
 
 
 **Non-goals:**
@@ -73,7 +74,8 @@ Unfortunately, it's not possible to completely block network for a pod - network
 it's possible to apply NetworkPolicies to the pod that match to it by labels. Since NetworkPolicy is a standard method
 to restrict pods, the user can apply one or more of them to the pods that run krm-function.
 NetworkPolicies can be applied only to the pods that match the label or expression that consists of set of labels.
-That means we have to give ability to user to set an arbitrary label(s) for the created pod.
+That means we have to give ability to user to set an arbitrary label(s) for the created pod. For that purpose
+we'll add a standard label `"app": "krm-pod"` and provide a guideline about how to setup the `NetworkPolicies` in the cluster to disallow network access for krm-pod.
 
 To make pod-based implementation compatible with major number of already existing set of krm-functions
 it's necessary for some of them to allow mounted files/directories if the user explicitly sets that.
@@ -82,6 +84,10 @@ k8s doesn't allow to do this. That means that some krm-functions that require mo
 just won't work with `--enable-as-a-pod` when they run from the client host. BUT if kustomize is ran from
 another pod that uses k8s volume, it will be possible to re-share the same volume that kustomize is using to
 the pod where krm-function is running. That means we have to give ability to user to configure a set of volumes for the pod.
+
+Going forward we may still want to try to extend compatibility between `docker` and `kubectl` reaction to `--mount` flags:
+we may want to parse mount flag and in case of mounting files or directories we can generate ConfigMap that includes
+the files (may use `data` or even `binaryData` fields). That will allow us to emulate read-only mount `docker` behavior for `kubectl`.
 
 Keeping all that in mind now we can speak about the implementation options:
 
@@ -95,22 +101,21 @@ in addition to the existing volumes passed with arguments, the user should be ab
 mounted. That approach leads us to ability to create PodTemplate in advance and to use it to build krm-function pod.
 It will have a very similar outcome from security perspective with default values, but since it allows the user
 much more flexibility doing things in k8s-native way, this approach is selected to be implemented.
-It is implemented in [this PR](https://github.com/kubernetes-sigs/kustomize/pull/4260), but the current implementation
-doesn't allow to set the pod label via PodTemplate(TBD). To be able to do so we can either copy labels from PodTemplate, always set the as
+To be able to do so we can either copy labels from PodTemplate, always set the as
 constant fields, or introduce one more extra argument. Since it's desired to minimize the number of arguments, the first option
-with copying labels from template will be selected. User may set the PodTemplate name with `--pod-template-name` argument and the pod
+with copying labels from template is selected. 
+It is implemented in [this PR](https://github.com/kubernetes-sigs/kustomize/pull/4260).
+User may set the PodTemplate name with `--pod-template-name` argument and the pod
 template must exist in the same namespace where krm-function pod is going to be ran. The user may skip that parameter and by
 default the [following PodTemplate](https://github.com/kubernetes-sigs/kustomize/pull/4260/files#diff-bcc3694e89726203de4e763f2130891ec669833ab26f3856bcddde18c6514a9fR27)
-will be used. Env variables are put to that template already (TBD: maybe it's better to append env vars, rather than just replace the env vars already presented in the
-template). `--mount` flag is ignored as of now in case kubectl-backend is used, but there is a possible option to take what the set of volumes from PodTemplate
+will be used. Env variables from PodTemplate are merged with those provided by flags or func-spec. `--mount` flag is ignored as of now in case kubectl-backend is used, but there is a possible option to take what the set of volumes from PodTemplate
 and to append that with data from `--mount` flag - this is a potential topic for discussion.
 
 There is one more potential improvement that should be taken into account: with docker backend krm-function couldn't run
-another krm-functions. For that reason kustomize krm-function was deleted - kustomize couldn't run
-krm-functions without docker-in-docker. With kubectl backend if we could specify service account for the pod
+another krm-functions. Some time ago the originally proposed [kustomize build krm-function](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/959291b6d1275a21c2c9799f1ff9d92c3a40de55/functions/ts/src/kustomize_build.ts) was [deleted](https://github.com/GoogleContainerTools/kpt/issues/1078) - kustomize couldn't run krm-functions without docker-in-docker. With kubectl backend if we could specify service account for the pod
 running krm-function we could run another krm-function initiated by the original krm-function and our
 example with kustomize-krm-function could become possible and security-aspects could be controlled with
-standard k8s-native configuration in the PodTemplate + couple of additional k8s resources.
+standard k8s-native configuration in the PodTemplate + couple of additional k8s resource.
 This is one more benefit of the approach with `--pod-template-name` flag.
 
 The proposed implementation has one more flag `--pod-start-timeout`. It was added, because depending on the cluster and the image size to pull the
@@ -128,6 +133,9 @@ We're using the following sequence to run krm-function in the pod:
 1. Waiting maximum PodStartTimeout for the pod up and running
 1. using kubectl attach -q to send input and to get output
 1. deleting the created pod (deferred)
+
+To avoid pod name collision it's possible to use the same apporach that k8s operators follow:
+generate unique pod-names. For that purpose [this](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiserver/pkg/storage/names/generate.go#L45) and [this](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/util/rand/rand.go#L98) from k8s was copied to [generates pod names](https://github.com/aodinokov/kustomize/blob/k8sbackend/kyaml/fn/runtime/kubectl/kubectl.go#L266). There is one more strategy to avoid the collision completely - each user should use hei own namespace, that is possible to set via `--pod-kubectl-args` flag.
 
 One of the possible alternatives was to implement kubectl backend via k8s API instead of just simple calls to kubectl binary.
 There are pros and cons of each approach.
