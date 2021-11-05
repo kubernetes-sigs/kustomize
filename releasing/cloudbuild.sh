@@ -96,6 +96,7 @@ builds:
   goarch:
   - amd64
   - arm64
+  - s390x
 
 checksum:
   name_template: 'checksums.txt'
