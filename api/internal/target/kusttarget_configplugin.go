@@ -285,7 +285,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			if label.IncludeSelectors {
 				fss, err = fss.MergeAll(tc.CommonLabels)
 			} else {
-				// only add to metadata by default
+				// only add to metadata and spec/template/metadata by default
 				fss, err = fss.MergeAll([]types.FieldSpec{
 					{Path: "metadata/labels", CreateIfNotPresent: true},
 					{Path: "spec/template/metadata/labels", CreateIfNotPresent: false},
