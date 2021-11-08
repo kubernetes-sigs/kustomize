@@ -53,8 +53,6 @@ resources:
 # There could be secrets in Base, if just using a fork/rebase workflow
 replacements:
 - path: replacement.yaml
-  source: null
-  targets: null
 `)
 }
 
