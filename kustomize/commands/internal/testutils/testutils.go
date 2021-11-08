@@ -28,6 +28,8 @@ resources: []
 configMapGenerator: []
 # There could be secrets in Base, if just using a fork/rebase workflow
 secretGenerator: []
+replacements:
+  - path: replacement.yaml
 `
 )
 
