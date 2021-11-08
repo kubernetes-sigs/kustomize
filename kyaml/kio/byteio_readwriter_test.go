@@ -747,3 +747,122 @@ func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
 		})
 	}
 }
+
+func TestByteReadWriter_ResourceListWrapping(t *testing.T) {
+	singleDeployment := `kind: Deployment
+apiVersion: v1
+metadata:
+  name: tester
+  namespace: default
+spec:
+  replicas: 0`
+	resourceList := `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- kind: Deployment
+  apiVersion: v1
+  metadata:
+    name: tester
+    namespace: default
+  spec:
+    replicas: 0`
+	resourceListWithError := `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- kind: Deployment
+  apiVersion: v1
+  metadata:
+    name: tester
+    namespace: default
+  spec:
+    replicas: 0
+results:
+- message: some error
+  severity: error`
+	resourceListDifferentWrapper := strings.NewReplacer(
+		"kind: ResourceList", "kind: SomethingElse",
+		"apiVersion: config.kubernetes.io/v1", "apiVersion: fakeVersion",
+	).Replace(resourceList)
+
+	testCases := []struct {
+		desc           string
+		noWrap         bool
+		wrapKind       string
+		wrapAPIVersion string
+		input          string
+		want           string
+	}{
+		{
+			desc:  "resource list",
+			input: resourceList,
+			want:  resourceList,
+		},
+		{
+			desc:  "individual resources",
+			input: singleDeployment,
+			want:  singleDeployment,
+		},
+		{
+			desc:           "no nested wrapping",
+			wrapKind:       kio.ResourceListKind,
+			wrapAPIVersion: kio.ResourceListAPIVersion,
+			input:          resourceList,
+			want:           resourceList,
+		},
+		{
+			desc:   "unwrap resource list",
+			noWrap: true,
+			input:  resourceList,
+			want:   singleDeployment,
+		},
+		{
+			desc:           "wrap individual resources",
+			wrapKind:       kio.ResourceListKind,
+			wrapAPIVersion: kio.ResourceListAPIVersion,
+			input:          singleDeployment,
+			want:           resourceList,
+		},
+		{
+			desc:           "NoWrap has precedence",
+			noWrap:         true,
+			wrapKind:       kio.ResourceListKind,
+			wrapAPIVersion: kio.ResourceListAPIVersion,
+			input:          singleDeployment,
+			want:           singleDeployment,
+		},
+		{
+			desc:           "honor specified wrapping kind",
+			wrapKind:       "SomethingElse",
+			wrapAPIVersion: "fakeVersion",
+			input:          resourceList,
+			want:           resourceListDifferentWrapper,
+		},
+		{
+			desc:  "passthrough results",
+			input: resourceListWithError,
+			want:  resourceListWithError,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.desc, func(t *testing.T) {
+			var got bytes.Buffer
+			rw := kio.ByteReadWriter{
+				Reader:             strings.NewReader(tc.input),
+				Writer:             &got,
+				NoWrap:             tc.noWrap,
+				WrappingAPIVersion: tc.wrapAPIVersion,
+				WrappingKind:       tc.wrapKind,
+			}
+
+			rnodes, err := rw.Read()
+			assert.NoError(t, err)
+
+			err = rw.Write(rnodes)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tc.want, strings.TrimSpace(got.String()))
+		})
+	}
+}
