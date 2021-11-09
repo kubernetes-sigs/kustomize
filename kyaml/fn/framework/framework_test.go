@@ -20,16 +20,16 @@ func TestExecute_Result(t *testing.T) {
 			{
 				Message:  "bad value for replicas",
 				Severity: framework.Error,
-				ResourceRef: yaml.ResourceIdentifier{
+				ResourceRef: &yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "Deployment"},
 					NameMeta: yaml.NameMeta{Name: "tester", Namespace: "default"},
 				},
-				Field: framework.Field{
+				Field: &framework.Field{
 					Path:          ".spec.Replicas",
 					CurrentValue:  "0",
 					ProposedValue: "3",
 				},
-				File: framework.File{
+				File: &framework.File{
 					Path:  "/path/to/deployment.yaml",
 					Index: 0,
 				},
@@ -59,7 +59,7 @@ items:
 	err := framework.Execute(p, source)
 	assert.EqualError(t, err, `[error] v1/Deployment/default/tester .spec.Replicas: bad value for replicas
 
-[error] : some error`)
+[error]: some error`)
 	assert.Equal(t, 1, err.(*framework.Results).ExitCode())
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
