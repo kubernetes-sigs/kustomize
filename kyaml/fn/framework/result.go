@@ -32,13 +32,13 @@ type Result struct {
 
 	// ResourceRef is a reference to a resource.
 	// Required fields: apiVersion, kind, name.
-	ResourceRef yaml.ResourceIdentifier `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
+	ResourceRef *yaml.ResourceIdentifier `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
 
 	// Field is a reference to the field in a resource this result refers to
-	Field Field `yaml:"field,omitempty" json:"field,omitempty"`
+	Field *Field `yaml:"field,omitempty" json:"field,omitempty"`
 
 	// File references a file containing the resource this result refers to
-	File File `yaml:"file,omitempty" json:"file,omitempty"`
+	File *File `yaml:"file,omitempty" json:"file,omitempty"`
 
 	// Tags is an unstructured key value map stored with a result that may be set
 	// by external tools to store and retrieve arbitrary metadata
@@ -49,23 +49,33 @@ type Result struct {
 func (i Result) String() string {
 	identifier := i.ResourceRef
 	var idStringList []string
-	if identifier.APIVersion != "" {
-		idStringList = append(idStringList, identifier.APIVersion)
+	if identifier != nil {
+		if identifier.APIVersion != "" {
+			idStringList = append(idStringList, identifier.APIVersion)
+		}
+		if identifier.Kind != "" {
+			idStringList = append(idStringList, identifier.Kind)
+		}
+		if identifier.Namespace != "" {
+			idStringList = append(idStringList, identifier.Namespace)
+		}
+		if identifier.Name != "" {
+			idStringList = append(idStringList, identifier.Name)
+		}
 	}
-	if identifier.Kind != "" {
-		idStringList = append(idStringList, identifier.Kind)
-	}
-	if identifier.Namespace != "" {
-		idStringList = append(idStringList, identifier.Namespace)
-	}
-	if identifier.Name != "" {
-		idStringList = append(idStringList, identifier.Name)
-	}
+	formatString := "[%s]"
+	list := []interface{}{i.Severity}
 	if len(idStringList) > 0 {
-		idString := strings.Join(idStringList, "/")
-		return fmt.Sprintf("[%s] %s %s: %s", i.Severity, idString, i.Field.Path, i.Message)
+		formatString += " %s"
+		list = append(list, strings.Join(idStringList, "/"))
 	}
-	return fmt.Sprintf("[%s] %s: %s", i.Severity, i.Field.Path, i.Message)
+	if i.Field != nil {
+		formatString += " %s"
+		list = append(list, i.Field.Path)
+	}
+	formatString += ": %s"
+	list = append(list, i.Message)
+	return fmt.Sprintf(formatString, list...)
 }
 
 // File references a file containing a resource
