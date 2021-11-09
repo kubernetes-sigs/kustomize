@@ -47,12 +47,12 @@ type ResourceList struct {
 	//      kind: Example
 	//      spec:
 	//        foo: var
-	FunctionConfig *yaml.RNode `yaml:"functionConfig" json:"functionConfig"`
+	FunctionConfig *yaml.RNode `yaml:"functionConfig,omitempty" json:"functionConfig,omitempty"`
 
 	// Results is ResourceList.results output value.
 	// Validating functions can optionally use this field to communicate structured
 	// validation error data to downstream functions.
-	Results Results `yaml:"results" json:"results"`
+	Results Results `yaml:"results,omitempty" json:"results,omitempty"`
 }
 
 // ResourceListProcessor is implemented by configuration functions built with this framework

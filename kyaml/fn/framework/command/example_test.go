@@ -322,11 +322,11 @@ func ExampleBuild_validate() {
 			validationResults = append(validationResults, &framework.Result{
 				Severity: framework.Error,
 				Message:  "field is required",
-				ResourceRef: yaml.ResourceIdentifier{
+				ResourceRef: &yaml.ResourceIdentifier{
 					TypeMeta: meta.TypeMeta,
 					NameMeta: meta.ObjectMeta.NameMeta,
 				},
-				Field: framework.Field{
+				Field: &framework.Field{
 					Path:          "spec.replicas",
 					ProposedValue: "1",
 				},
