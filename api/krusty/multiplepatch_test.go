@@ -1646,3 +1646,64 @@ spec:
   type: NodePort
 `)
 }
+
+// test for #4111, currently demonstrates incorrect behaviour
+func TestPatchPreservesInternalAnnotations(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+nameSuffix: -abc
+resources:
+  - fluentd.yaml
+patchesJson6902:
+  - path: patch.yaml
+    target:
+      name: fluentd-sa
+      kind: ServiceAccount
+      version: v1
+`)
+	th.WriteF("fluentd.yaml", `
+apiVersion: v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+spec:
+  template:
+    spec:
+      containers:
+        - image: fluentd:latest 
+          name: fluentd
+      serviceAccountName: fluentd-sa
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluentd-sa
+`)
+	th.WriteF("patch.yaml", `
+- op: add
+  path: /metadata/annotations
+  value:
+    note: this is a test annotation
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: DaemonSet
+metadata:
+  name: fluentd-abc
+spec:
+  template:
+    spec:
+      containers:
+      - image: fluentd:latest
+        name: fluentd
+      serviceAccountName: fluentd-sa
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    note: this is a test annotation
+  name: fluentd-sa-abc
+`)
+}
