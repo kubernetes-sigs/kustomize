@@ -9,6 +9,7 @@ package filesys
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -374,5 +375,92 @@ func TestStripLeadingSeps(t *testing.T) {
 				"in '%s', got dir='%s' (expected '%s')",
 				p.full, dir, p.rem)
 		}
+	}
+}
+
+func TestIsHiddenFilePath(t *testing.T) {
+	tests := map[string]struct {
+		paths        []string
+		expectHidden bool
+	}{
+		"hiddenGlobs": {
+			expectHidden: true,
+			paths: []string{
+				".*",
+				"/.*",
+				"dir/.*",
+				"dir1/dir2/dir3/.*",
+				"../../.*",
+				"../../dir/.*",
+			},
+		},
+		"visibleGlobes": {
+			expectHidden: false,
+			paths: []string{
+				"*",
+				"/*",
+				"dir/*",
+				"dir1/dir2/dir3/*",
+				"../../*",
+				"../../dir/*",
+			},
+		},
+		"hiddenFiles": {
+			expectHidden: true,
+			paths: []string{
+				".root_file.xtn",
+				"/.file_1.xtn",
+				"dir/.file_2.xtn",
+				"dir1/dir2/dir3/.file_3.xtn",
+				"../../.file_4.xtn",
+				"../../dir/.file_5.xtn",
+			},
+		},
+		"visibleFiles": {
+			expectHidden: false,
+			paths: []string{
+				"root_file.xtn",
+				"/file_1.xtn",
+				"dir/file_2.xtn",
+				"dir1/dir2/dir3/file_3.xtn",
+				"../../file_4.xtn",
+				"../../dir/file_5.xtn",
+			},
+		},
+	}
+	for n, c := range tests {
+		t.Run(n, func(t *testing.T) {
+			for _, path := range c.paths {
+				actual := IsHiddenFilePath(path)
+				if actual != c.expectHidden {
+					t.Fatalf("For file path %q, expected hidden: %v, got hidden: %v", path, c.expectHidden, actual)
+				}
+			}
+		})
+	}
+}
+
+func TestRemoveHiddenFiles(t *testing.T) {
+	paths := []string{
+		"file1.xtn",
+		".file2.xtn",
+		"dir/fa1",
+		"dir/fa2",
+		"dir/.fa3",
+		"../../.fa4",
+		"../../fa5",
+		"../../dir/fa6",
+		"../../dir/.fa7",
+	}
+	result := RemoveHiddenFiles(paths)
+	expected := []string{
+		"file1.xtn",
+		"dir/fa1",
+		"dir/fa2",
+		"../../fa5",
+		"../../dir/fa6",
+	}
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("Hidden dirs not correctly removed, expected %v but got %v\n", expected, result)
 	}
 }
