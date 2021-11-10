@@ -72,6 +72,10 @@ type HelmChart struct {
 	// IncludeCRDs specifies if Helm should also generate CustomResourceDefinitions.
 	// Defaults to 'false'.
 	IncludeCRDs bool `json:"includeCRDs,omitempty" yaml:"includeCRDs,omitempty"`
+
+	// SkipTests specifies whether Helm exclude tests in the chart.
+	// Defaults to 'false'.
+	SkipTests bool `json:"skipTests,omitempty" yaml:"skipTests,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.

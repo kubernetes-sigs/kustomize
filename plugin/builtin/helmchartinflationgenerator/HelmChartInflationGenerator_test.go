@@ -548,3 +548,72 @@ valuesInline:
 `)
 	th.AssertActualEqualsExpected(rm, "")
 }
+
+func TestHelmChartInflationGeneratorWithSkipTests(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	// with `skipTests: true` in generator config and `tests.enabled: true` in helm values,
+	// the output expects same as include_crds_testdata.txt, `skipTests: false` and `tests.enabled: false`
+	testData, err := ioutil.ReadFile("include_crds_testdata.txt")
+	if err != nil {
+		t.Errorf("unable to read test data for skipTests: %w", err)
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: terraform
+name: terraform
+version: 1.0.0
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars
+includeCRDs: true
+skipTests: true
+valuesInline:
+  global:
+    enabled: false
+  tests:
+    enabled: true
+`)
+	th.AssertActualEqualsExpected(rm, string(testData))
+}
+
+func TestHelmChartInflationGeneratorWithoutSkipTests(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	// with `skipTests: false` and `tests.enabled: true`,
+	// tests are included in the output.
+	testData, err := ioutil.ReadFile("skip_tests_testdata.txt")
+	if err != nil {
+		t.Errorf("unable to read test data for skipTests: %w", err)
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: terraform
+name: terraform
+version: 1.0.0
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars
+includeCRDs: true
+valuesInline:
+  global:
+    enabled: false
+  tests:
+  enabled: true
+`)
+	th.AssertActualEqualsExpected(rm, string(testData))
+}

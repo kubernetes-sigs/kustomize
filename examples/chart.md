@@ -89,6 +89,7 @@ cat <<'EOF' >$DEMO_HOME/base/kustomization.yaml
 helmCharts:
 - name: minecraft
   includeCRDs: false
+  skipTests: true
   valuesInline:
     minecraftServer:
       eula: true

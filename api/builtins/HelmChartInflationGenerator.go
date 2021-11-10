@@ -283,6 +283,9 @@ func (p *HelmChartInflationGeneratorPlugin) templateCommand() []string {
 	if p.IncludeCRDs {
 		args = append(args, "--include-crds")
 	}
+	if p.SkipTests {
+		args = append(args, "--skip-tests")
+	}
 	return args
 }
 
