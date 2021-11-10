@@ -464,6 +464,13 @@ var bunchOfFiles = []struct {
 	{
 		path: filepath.Join("b", "d", "a", "c", "u"),
 	},
+	{
+		path: filepath.Join("b", "d", ".hidden_file"),
+	},
+	{
+		path:     filepath.Join("b", "d", ".hidden_dir"),
+		addAsDir: true,
+	},
 }
 
 func makeLoadedFileTree(t *testing.T) *fsNode {
@@ -580,6 +587,7 @@ func TestExists(t *testing.T) {
 func TestRegExpGlob(t *testing.T) {
 	n := makeLoadedFileTree(t)
 	expected := []string{
+		filepath.Join("b", "d", ".hidden_file"),
 		filepath.Join("b", "d", "a", "c", "i", "beans"),
 		filepath.Join("b", "d", "a", "c", "m"),
 		filepath.Join("b", "d", "a", "c", "u"),
@@ -599,16 +607,36 @@ func TestRegExpGlob(t *testing.T) {
 
 func TestGlob(t *testing.T) {
 	n := makeLoadedFileTree(t)
-	expected := []string{
-		filepath.Join("b", "d", "x"),
-		filepath.Join("b", "d", "y"),
-		filepath.Join("b", "d", "z"),
+
+	tests := map[string]struct {
+		globPattern   string
+		expectedFiles []string
+	}{
+		"VisibleFiles": {
+			globPattern: "b/d/*",
+			expectedFiles: []string{
+				filepath.Join("b", "d", "x"),
+				filepath.Join("b", "d", "y"),
+				filepath.Join("b", "d", "z"),
+			},
+		},
+		"HiddenFiles": {
+			globPattern: "b/d/.*",
+			expectedFiles: []string{
+				filepath.Join("b", "d", ".hidden_file"),
+			},
+		},
 	}
-	paths, err := n.Glob("b/d/*")
-	if err != nil {
-		t.Fatalf("glob error: %v", err)
+
+	for test, c := range tests {
+		t.Run(test, func(t *testing.T) {
+			paths, err := n.Glob(c.globPattern)
+			if err != nil {
+				t.Fatalf("glob error: %v", err)
+			}
+			assertEqualStringSlices(t, c.expectedFiles, paths, "glob test")
+		})
 	}
-	assertEqualStringSlices(t, expected, paths, "glob test")
 }
 
 func assertEqualStringSlices(t *testing.T, expected, actual []string, message string) {
