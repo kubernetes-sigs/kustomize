@@ -613,7 +613,7 @@ valuesInline:
   global:
     enabled: false
   tests:
-  enabled: true
+    enabled: true
 `)
 	th.AssertActualEqualsExpected(rm, string(testData))
 }
