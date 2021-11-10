@@ -1647,7 +1647,7 @@ spec:
 `)
 }
 
-// test for #4111, currently demonstrates incorrect behaviour
+// test for #4111
 func TestPatchPreservesInternalAnnotations(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
@@ -1697,7 +1697,7 @@ spec:
       containers:
       - image: fluentd:latest
         name: fluentd
-      serviceAccountName: fluentd-sa
+      serviceAccountName: fluentd-sa-abc
 ---
 apiVersion: v1
 kind: ServiceAccount
