@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -115,12 +116,19 @@ func (p *plugin) transformJson6902(m resmap.ResMap, patch jsonpatch.Patch) error
 	}
 	for _, res := range resources {
 		res.StorePreviousId()
+		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
 		err = res.ApplyFilter(patchjson6902.Filter{
 			Patch: p.Patch,
 		})
 		if err != nil {
 			return err
 		}
+
+		annotations := res.GetAnnotations()
+		for key, value := range internalAnnotations {
+			annotations[key] = value
+		}
+		err = res.SetAnnotations(annotations)
 	}
 	return nil
 }
