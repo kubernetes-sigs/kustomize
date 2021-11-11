@@ -595,6 +595,24 @@ git push upstream :latest_kustomize
 git tag -a latest_kustomize
 ```
 
+### Optionally build locally
+
+[localbuild.sh]: localbuild.sh
+
+Load the same version of `goreleaser` referenced in `cloudbuild.yaml` via docker and run [localbuild.sh] from the container's command line:
+
+```
+# Get goreleaser image from cloudbuild.yaml 
+export GORELEASER_IMAGE=goreleaser/goreleaser:v0.172.1
+
+# Drop into a shell
+docker run -it --entrypoint=/bin/bash  -v $(pwd):/go/src/github.com/kubernetes-sigs/kustomize -w /go/src/github.com/kubernetes-sigs/kustomize $GORELEASER_IMAGE
+
+# Run build
+./releasing/localbuild.sh TAG [--snapshot]
+```
+
+
 ### Optionally build and release locally
 
 [cloudbuild-local.sh]: cloudbuild-local.sh
