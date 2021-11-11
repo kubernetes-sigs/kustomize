@@ -595,14 +595,32 @@ git push upstream :latest_kustomize
 git tag -a latest_kustomize
 ```
 
-### Optionally build a release locally
+### Optionally build locally
 
 [localbuild.sh]: localbuild.sh
 
-Install [`cloud-build-local`], then run [localbuild.sh]:
+Load the same version of `goreleaser` referenced in `cloudbuild.yaml` via docker and run [localbuild.sh] from the container's command line:
 
 ```
-./releasing/localbuild.sh $module
+# Get goreleaser image from cloudbuild.yaml 
+export GORELEASER_IMAGE=goreleaser/goreleaser:v0.172.1
+
+# Drop into a shell
+docker run -it --entrypoint=/bin/bash  -v $(pwd):/go/src/github.com/kubernetes-sigs/kustomize -w /go/src/github.com/kubernetes-sigs/kustomize $GORELEASER_IMAGE
+
+# Run build
+./releasing/localbuild.sh TAG [--snapshot]
+```
+
+
+### Optionally build and release locally
+
+[cloudbuild-local.sh]: cloudbuild-local.sh
+
+Install [`cloud-build-local`], then run [cloudbuild-local.sh]:
+
+```
+./releasing/cloudbuild-local.sh $module
 ```
 
 This should create release artifacts in a local directory.

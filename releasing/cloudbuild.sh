@@ -92,6 +92,7 @@ builds:
   goos:
   - linux
   - darwin
+  - windows
 
   goarch:
   - amd64
@@ -117,6 +118,7 @@ cat $goReleaserConfigFile
 date
 
 time /usr/local/bin/goreleaser release \
+  --debug \
   --timeout 10m \
   --parallelism 4 \
   --config=$goReleaserConfigFile \
