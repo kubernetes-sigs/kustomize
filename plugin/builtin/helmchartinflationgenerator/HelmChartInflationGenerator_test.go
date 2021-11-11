@@ -570,6 +570,7 @@ kind: HelmChartInflationGenerator
 metadata:
   name: terraform
 name: terraform
+namespace: default
 version: 1.0.0
 repo: https://helm.releases.hashicorp.com
 releaseName: terraforming-mars
@@ -605,6 +606,7 @@ kind: HelmChartInflationGenerator
 metadata:
   name: terraform
 name: terraform
+namespace: default
 version: 1.0.0
 repo: https://helm.releases.hashicorp.com
 releaseName: terraforming-mars

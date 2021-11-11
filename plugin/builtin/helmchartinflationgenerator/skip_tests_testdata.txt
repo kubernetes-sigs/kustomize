@@ -265,7 +265,7 @@ apiVersion: v1
 data:
   backend: |
     organization = tf-operator
-    workspaces { name = "cosmo-user-jinu-terraforming-mars-terraform-test" }
+    workspaces { name = "default-terraforming-mars-terraform-test" }
   some_key: for random pets
 kind: ConfigMap
 metadata:
