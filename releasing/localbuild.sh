@@ -1,8 +1,10 @@
 #!/bin/bash
 #
+# Works exactly like cloudbuild.sh but doesn't perform a release.
+#
 # Usage (from top of repo):
 #
-#  releasing/cloudbuild.sh TAG [--snapshot]
+#  releasing/localbuild.sh TAG [--snapshot]
 #
 # Where TAG is in the form
 #
@@ -11,13 +13,8 @@
 #   cmd/config/v1.2.3
 #   ... etc.
 #
-# Cloud build should be configured to trigger on tags
-# matching:
+# This script runs a build through goreleaser (http://goreleaser.com) but nothing else.
 #
-#   [\w/]+/v\d+\.\d+\.\d+
-#
-# This script runs goreleaser (http://goreleaser.com),
-# presumably from a cloudbuild.yaml step that installed it.
 
 set -e
 set -x
@@ -117,12 +114,11 @@ cat $goReleaserConfigFile
 
 date
 
-time /usr/local/bin/goreleaser release \
+time /usr/local/bin/goreleaser build \
   --debug \
   --timeout 10m \
   --parallelism 4 \
   --config=$goReleaserConfigFile \
-  --release-notes=$changeLogFile \
   --rm-dist \
   --skip-validate $remainingArgs
 
