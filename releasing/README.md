@@ -595,14 +595,14 @@ git push upstream :latest_kustomize
 git tag -a latest_kustomize
 ```
 
-### Optionally build a release locally
+### Optionally build and release locally
 
-[localbuild.sh]: localbuild.sh
+[cloudbuild-local.sh]: cloudbuild-local.sh
 
-Install [`cloud-build-local`], then run [localbuild.sh]:
+Install [`cloud-build-local`], then run [cloudbuild-local.sh]:
 
 ```
-./releasing/localbuild.sh $module
+./releasing/cloudbuild-local.sh $module
 ```
 
 This should create release artifacts in a local directory.

@@ -8,7 +8,7 @@
 #
 # Usage: from the repo root, enter:
 #
-#   ./releasing/localbuild.sh kustomize/v1.2.3
+#   ./releasing/cloudbuild-local.sh kustomize/v1.2.3
 #
 # or some other valid tag value.
 #
