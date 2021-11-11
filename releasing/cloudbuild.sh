@@ -97,6 +97,8 @@ builds:
   goarch:
   - amd64
   - arm64
+  - s390x
+  - ppc64le
 
 checksum:
   name_template: 'checksums.txt'
@@ -120,7 +122,7 @@ date
 time /usr/local/bin/goreleaser release \
   --debug \
   --timeout 10m \
-  --parallelism 4 \
+  --parallelism 7 \
   --config=$goReleaserConfigFile \
   --release-notes=$changeLogFile \
   --rm-dist \
