@@ -142,7 +142,7 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 // Filter executes the given kio.Filter and replaces the ResourceList's items with the result.
 // This can be used to help implement ResourceListProcessors. See SimpleProcessor for example.
 //
-// Filters that return a Result as error will store the result in the ResourceList instead of
+// Filters that return a Result as error will store the result in the ResourceList
 // and continue processing instead of erroring out.
 func (rl *ResourceList) Filter(api kio.Filter) error {
 	var err error
