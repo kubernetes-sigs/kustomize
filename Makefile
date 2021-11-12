@@ -12,7 +12,7 @@ MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
 MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
-LATEST_V4_RELEASE=v4.4.0
+LATEST_V4_RELEASE=v4.4.1
 
 # Provide defaults for REPO_OWNER and REPO_NAME if not present.
 # Typically these values would be provided by Prow.
