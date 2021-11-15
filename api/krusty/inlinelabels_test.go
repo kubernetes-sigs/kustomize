@@ -14,7 +14,13 @@ kind: Deployment
 metadata:
   name: my-deployment
 spec:
+  selector:
+    matchLabels:
+      my: deployment
   template:
+    metadata:
+      labels:
+        my: deployment
     spec:
       containers:
       - name: my-deployment
@@ -66,11 +72,14 @@ spec:
   selector:
     matchLabels:
       a: b
+      my: deployment
   template:
     metadata:
       labels:
         a: b
         c: d
+        foo: bar
+        my: deployment
     spec:
       containers:
       - livenessProbe:
