@@ -400,7 +400,6 @@ metadata:
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json",
       "internal.config.kubernetes.io/path": "test.json"
     }
   }
@@ -429,7 +428,6 @@ metadata:
   "a": "a long string that would certainly see a newline introduced by the YAML marshaller abcd123",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json",
       "internal.config.kubernetes.io/path": "test.json"
     }
   }
@@ -449,7 +447,6 @@ metadata:
   "a": "b",
   "metadata": {
     "annotations": {
-      "config.kubernetes.io/path": "test.json",
       "internal.config.kubernetes.io/path": "test.json"
     }
   }

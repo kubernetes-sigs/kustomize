@@ -217,22 +217,6 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 		}
 		return nodes, nil
 	}
-	changeLegacyId := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-		for _, rn := range nodes {
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyIdAnnotation, "new")); err != nil {
-				return nil, err
-			}
-		}
-		return nodes, nil
-	}
-	changeInternalId := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-		for _, rn := range nodes {
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.IdAnnotation, "new")); err != nil {
-				return nil, err
-			}
-		}
-		return nodes, nil
-	}
 	changeBothPathAnnos := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 		for _, rn := range nodes {
 			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, "legacy")); err != nil {
@@ -251,8 +235,6 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 	}
 	internal := []Filter{FilterFunc(changeInternalAnnos)}
 	legacy := []Filter{FilterFunc(changeLegacyAnnos)}
-	legacyId := []Filter{FilterFunc(changeLegacyId)}
-	internalId := []Filter{FilterFunc(changeInternalId)}
 	changeBoth := []Filter{FilterFunc(changeBothPathAnnos), FilterFunc(noopFilter1)}
 
 	testCases := map[string]struct {
@@ -457,70 +439,6 @@ metadata:
     internal.config.kubernetes.io/index: 'new'
 data:
   grpcPort: 8081
-`,
-		},
-		// the orchestrator should detect that the new internal id annotation
-		// has been changed, and copy it over to the legacy one, and also
-		// copy the path and index legacy annotations to the new internal
-		// ones
-		"change only internal id when original legacy set": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-    config.k8s.io/id: '1'
-data:
-  grpcPort: 8080
-`,
-			filters: internalId,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-    config.k8s.io/id: 'new'
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/id: 'new'
-data:
-  grpcPort: 8080
-`,
-		},
-		// the orchestrator should detect that the legacy id annotation
-		// has been changed, and copy it over to the internal one, and also
-		// copy the path and index internal annotations to the legacy
-		// ones
-		"change only legacy id when internal legacy set": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/id: '1'
-data:
-  grpcPort: 8080
-`,
-			filters: legacyId,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/id: 'new'
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-    config.k8s.io/id: 'new'
-data:
-  grpcPort: 8080
 `,
 		},
 		// the function changes both the legacy and new path annotation,
