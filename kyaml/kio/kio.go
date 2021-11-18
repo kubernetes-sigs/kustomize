@@ -7,6 +7,7 @@ package kio
 
 import (
 	"fmt"
+
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -116,7 +117,7 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 	for i := range p.Filters {
 		// Not all RNodes passed through kio.Pipeline have metadata nor should
 		// they all be required to.
-		nodeAnnos, err := StoreInternalAnnotations(result)
+		nodeAnnos, err := GetInternalAnnotationsFromResourceList(result)
 		if err != nil {
 			return err
 		}
@@ -163,11 +164,11 @@ func FilterAll(filter yaml.Filter) Filter {
 	})
 }
 
-// StoreInternalAnnotations stores the original path, index, and id annotations so that we can reconcile
+// GetInternalAnnotationsFromResourceList stores the original path, index, and id annotations so that we can reconcile
 // it later. This is necessary because currently both internal-prefixed annotations
 // and legacy annotations are currently supported, and a change to one must be
 // reflected in the other.
-func StoreInternalAnnotations(result []*yaml.RNode) (map[nodeAnnotations]map[string]string, error) {
+func GetInternalAnnotationsFromResourceList(result []*yaml.RNode) (map[nodeAnnotations]map[string]string, error) {
 	nodeAnnosMap := make(map[nodeAnnotations]map[string]string)
 
 	for i := range result {
@@ -224,10 +225,14 @@ func ReconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnn
 	return reconcileInternalAnnotations(result, nodeAnnosMap, true)
 }
 
-func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnnotations]map[string]string, enforceAnnotationsFormat bool) error {
+// reconcileInternalAnnotations reconciles the annotation format for path, index and id annotations.
+// If formatAnnotations is true, we will ensure the output annotation format matches the format
+// in the input. e.g. if the input format uses the legacy format and the output will be converted to
+// the legacy format if it's not.
+func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnnotations]map[string]string, formatAnnotations bool) error {
 	var useInternal, useLegacy bool
 	var err error
-	if enforceAnnotationsFormat {
+	if formatAnnotations {
 		if useInternal, useLegacy, err = determineAnnotationsFormat(nodeAnnosMap); err != nil {
 			return err
 		}
@@ -246,8 +251,11 @@ func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnn
 		if err != nil {
 			return err
 		}
-		if enforceAnnotationsFormat {
-			err = enforceConsistentAnnotationFormat(result[i], useInternal, useLegacy)
+		if formatAnnotations {
+			// We invoke determineAnnotationsFormat to find out if the original annotations
+			// use the internal or (and) the legacy format. We format the resources to
+			// make them consistent with original format.
+			err = formatInternalAnnotations(result[i], useInternal, useLegacy)
 			if err != nil {
 				return err
 			}
@@ -392,7 +400,7 @@ func checkAnnotationsAltered(rn *yaml.RNode, nodeAnnosMap map[nodeAnnotations]ma
 	return nil
 }
 
-func enforceConsistentAnnotationFormat(rn *yaml.RNode, useInternal, useLegacy bool) error {
+func formatInternalAnnotations(rn *yaml.RNode, useInternal, useLegacy bool) error {
 	if !useInternal {
 		if err := rn.PipeE(yaml.ClearAnnotation(kioutil.IdAnnotation)); err != nil {
 			return err
