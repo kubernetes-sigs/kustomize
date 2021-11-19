@@ -41,6 +41,11 @@ const (
 
 	// Deprecated: use IdAnnotation instead.
 	LegacyIdAnnotation = "config.k8s.io/id"
+
+	// InternalAnnotationsMigrationResourceIDAnnotation is used to uniquely identify
+	// resources during round trip to and from a function execution. We will use it
+	// to track the internal annotations and reconcile them if needed.
+	InternalAnnotationsMigrationResourceIDAnnotation = "internal.config.k8s.io/annotations-migration-resource-id"
 )
 
 func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
