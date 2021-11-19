@@ -7,11 +7,16 @@ package kio
 
 import (
 	"fmt"
+	"strconv"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// resourceIDAnnotation is used to uniquely identify the resource during round trip
+// to and from a function execution.
+const resourceIDAnnotation = "internal.config.k8s.io/annotations-migration-resource-id"
 
 // Reader reads ResourceNodes. Analogous to io.Reader.
 type Reader interface {
@@ -117,7 +122,7 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 	for i := range p.Filters {
 		// Not all RNodes passed through kio.Pipeline have metadata nor should
 		// they all be required to.
-		nodeAnnos, err := GetInternalAnnotationsFromResourceList(result)
+		nodeAnnos, err := PreprocessResourcesForInternalAnnotationMigration(result)
 		if err != nil {
 			return err
 		}
@@ -136,7 +141,7 @@ func (p Pipeline) ExecuteWithCallback(callback PipelineExecuteCallbackFunc) erro
 
 		// If either the internal annotations for path, index, and id OR the legacy
 		// annotations for path, index, and id are changed, we have to update the other.
-		err = reconcileInternalAnnotations(result, nodeAnnos, false)
+		err = ReconcileInternalAnnotations(result, nodeAnnos)
 		if err != nil {
 			return err
 		}
@@ -164,31 +169,29 @@ func FilterAll(filter yaml.Filter) Filter {
 	})
 }
 
-// GetInternalAnnotationsFromResourceList stores the original path, index, and id annotations so that we can reconcile
-// it later. This is necessary because currently both internal-prefixed annotations
+// PreprocessResourcesForInternalAnnotationMigration returns a mapping from id to all
+// internal annotations, so that we can use it to reconcile the annotations
+// later. This is necessary because currently both internal-prefixed annotations
 // and legacy annotations are currently supported, and a change to one must be
-// reflected in the other.
-func GetInternalAnnotationsFromResourceList(result []*yaml.RNode) (map[nodeAnnotations]map[string]string, error) {
-	nodeAnnosMap := make(map[nodeAnnotations]map[string]string)
-
+// reflected in the other if needed.
+func PreprocessResourcesForInternalAnnotationMigration(result []*yaml.RNode) (map[string]map[string]string, error) {
+	idToAnnosMap := make(map[string]map[string]string)
 	for i := range result {
-		id := kioutil.GetIdAnnotation(result[i])
-		path, index, _ := kioutil.GetFileAnnotations(result[i])
-		annoKey := nodeAnnotations{
-			path:  path,
-			index: index,
-			id:    id,
-		}
-		nodeAnnosMap[annoKey] = kioutil.GetInternalAnnotations(result[i])
-		if err := kioutil.CopyLegacyAnnotations(result[i]); err != nil {
+		idStr := strconv.Itoa(i)
+		err := result[i].PipeE(yaml.SetAnnotation(resourceIDAnnotation, idStr))
+		if err != nil {
 			return nil, err
 		}
-
-		if err := checkMismatchedAnnos(result[i].GetAnnotations()); err != nil {
+		idToAnnosMap[idStr] = kioutil.GetInternalAnnotations(result[i])
+		if err = kioutil.CopyLegacyAnnotations(result[i]); err != nil {
+			return nil, err
+		}
+		meta, _ := result[i].GetMeta()
+		if err = checkMismatchedAnnos(meta.Annotations); err != nil {
 			return nil, err
 		}
 	}
-	return nodeAnnosMap, nil
+	return idToAnnosMap, nil
 }
 
 func checkMismatchedAnnos(annotations map[string]string) error {
@@ -221,26 +224,17 @@ type nodeAnnotations struct {
 }
 
 // ReconcileInternalAnnotations reconciles the annotation format for path, index and id annotations.
-func ReconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnnotations]map[string]string) error {
-	return reconcileInternalAnnotations(result, nodeAnnosMap, true)
-}
-
-// reconcileInternalAnnotations reconciles the annotation format for path, index and id annotations.
-// If formatAnnotations is true, we will ensure the output annotation format matches the format
-// in the input. e.g. if the input format uses the legacy format and the output will be converted to
-// the legacy format if it's not.
-func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnnotations]map[string]string, formatAnnotations bool) error {
-	var useInternal, useLegacy bool
-	var err error
-	if formatAnnotations {
-		if useInternal, useLegacy, err = determineAnnotationsFormat(nodeAnnosMap); err != nil {
-			return err
-		}
+// It will ensure the output annotation format matches the format in the input. e.g. if the input
+// format uses the legacy format and the output will be converted to the legacy format if it's not.
+func ReconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[string]map[string]string) error {
+	useInternal, useLegacy, err := determineAnnotationsFormat(nodeAnnosMap)
+	if err != nil {
+		return err
 	}
 
 	for i := range result {
 		// if only one annotation is set, set the other.
-		err := missingInternalOrLegacyAnnotations(result[i])
+		err = missingInternalOrLegacyAnnotations(result[i])
 		if err != nil {
 			return err
 		}
@@ -251,18 +245,21 @@ func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnn
 		if err != nil {
 			return err
 		}
-		if formatAnnotations {
-			// We invoke determineAnnotationsFormat to find out if the original annotations
-			// use the internal or (and) the legacy format. We format the resources to
-			// make them consistent with original format.
-			err = formatInternalAnnotations(result[i], useInternal, useLegacy)
-			if err != nil {
-				return err
-			}
+		// We invoke determineAnnotationsFormat to find out if the original annotations
+		// use the internal or (and) the legacy format. We format the resources to
+		// make them consistent with original format.
+		err = formatInternalAnnotations(result[i], useInternal, useLegacy)
+		if err != nil {
+			return err
 		}
 		// if the annotations are still somehow out of sync, throw an error
-		err = checkMismatchedAnnos(result[i].GetAnnotations())
+		meta, _ := result[i].GetMeta()
+		err = checkMismatchedAnnos(meta.Annotations)
 		if err != nil {
+			return err
+		}
+
+		if _, err = result[i].Pipe(yaml.ClearAnnotation(resourceIDAnnotation)); err != nil {
 			return err
 		}
 	}
@@ -270,7 +267,7 @@ func reconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[nodeAnn
 }
 
 // determineAnnotationsFormat determines if the resources are using one of the internal and legacy annotation format or both of them.
-func determineAnnotationsFormat(nodeAnnosMap map[nodeAnnotations]map[string]string) (useInternal, useLegacy bool, err error) {
+func determineAnnotationsFormat(nodeAnnosMap map[string]map[string]string) (useInternal, useLegacy bool, err error) {
 	if len(nodeAnnosMap) == 0 {
 		return true, true, nil
 	}
@@ -280,24 +277,31 @@ func determineAnnotationsFormat(nodeAnnosMap map[nodeAnnotations]map[string]stri
 		_, foundPath := annos[kioutil.PathAnnotation]
 		_, foundIndex := annos[kioutil.IndexAnnotation]
 		_, foundId := annos[kioutil.IdAnnotation]
+		_, foundLegacyPath := annos[kioutil.LegacyPathAnnotation]
+		_, foundLegacyIndex := annos[kioutil.LegacyIndexAnnotation]
+		_, foundLegacyId := annos[kioutil.LegacyIdAnnotation]
+
+		if !(foundPath || foundIndex || foundId || foundLegacyPath || foundLegacyIndex || foundLegacyId) {
+			continue
+		}
+
 		foundOneOf := foundPath || foundIndex || foundId
 		if internal == nil {
-			internal = &foundOneOf
+			f := foundOneOf
+			internal = &f
 		}
 		if (foundOneOf && !*internal) || (!foundOneOf && *internal) {
-			err = fmt.Errorf("the formatting in the input resources is not consistent")
+			err = fmt.Errorf("the annotation formatting in the input resources is not consistent")
 			return
 		}
 
-		_, foundPath = annos[kioutil.LegacyPathAnnotation]
-		_, foundIndex = annos[kioutil.LegacyIndexAnnotation]
-		_, foundId = annos[kioutil.LegacyIdAnnotation]
-		foundOneOf = foundPath || foundIndex || foundId
+		foundOneOf = foundLegacyPath || foundLegacyIndex || foundLegacyId
 		if legacy == nil {
-			legacy = &foundOneOf
+			f := foundOneOf
+			legacy = &f
 		}
 		if (foundOneOf && !*legacy) || (!foundOneOf && *legacy) {
-			err = fmt.Errorf("the formatting in the input resources is not consistent")
+			err = fmt.Errorf("the annotation formatting in the input resources is not consistent")
 			return
 		}
 	}
@@ -324,8 +328,10 @@ func missingInternalOrLegacyAnnotations(rn *yaml.RNode) error {
 }
 
 func missingInternalOrLegacyAnnotation(rn *yaml.RNode, newKey string, legacyKey string) error {
-	value := rn.GetAnnotations()[newKey]
-	legacyValue := rn.GetAnnotations()[legacyKey]
+	meta, _ := rn.GetMeta()
+	annotations := meta.Annotations
+	value := annotations[newKey]
+	legacyValue := annotations[legacyKey]
 
 	if value == "" && legacyValue == "" {
 		// do nothing
@@ -346,8 +352,9 @@ func missingInternalOrLegacyAnnotation(rn *yaml.RNode, newKey string, legacyKey 
 	return nil
 }
 
-func checkAnnotationsAltered(rn *yaml.RNode, nodeAnnosMap map[nodeAnnotations]map[string]string) error {
-	annotations := rn.GetAnnotations()
+func checkAnnotationsAltered(rn *yaml.RNode, nodeAnnosMap map[string]map[string]string) error {
+	meta, _ := rn.GetMeta()
+	annotations := meta.Annotations
 	// get the resource's current path, index, and ids from the new annotations
 	internal := nodeAnnotations{
 		path:  annotations[kioutil.PathAnnotation],
@@ -362,16 +369,19 @@ func checkAnnotationsAltered(rn *yaml.RNode, nodeAnnosMap map[nodeAnnotations]ma
 		id:    annotations[kioutil.LegacyIdAnnotation],
 	}
 
-	originalAnnotations, found := nodeAnnosMap[internal]
+	rid := annotations[resourceIDAnnotation]
+	originalAnnotations, found := nodeAnnosMap[rid]
 	if !found {
-		originalAnnotations, found = nodeAnnosMap[legacy]
+		return nil
 	}
 	originalPath, found := originalAnnotations[kioutil.PathAnnotation]
 	if !found {
 		originalPath = originalAnnotations[kioutil.LegacyPathAnnotation]
 	}
 	if originalPath != "" {
-		if originalPath != internal.path {
+		if originalPath != internal.path && originalPath != legacy.path && internal.path != legacy.path {
+			return fmt.Errorf("resource input to function has mismatched legacy and internal path annotations")
+		} else if originalPath != internal.path {
 			if _, err := rn.Pipe(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, internal.path)); err != nil {
 				return err
 			}
@@ -387,7 +397,9 @@ func checkAnnotationsAltered(rn *yaml.RNode, nodeAnnosMap map[nodeAnnotations]ma
 		originalIndex = originalAnnotations[kioutil.LegacyIndexAnnotation]
 	}
 	if originalIndex != "" {
-		if originalIndex != internal.index {
+		if originalIndex != internal.index && originalIndex != legacy.index && internal.index != legacy.index {
+			return fmt.Errorf("resource input to function has mismatched legacy and internal index annotations")
+		} else if originalIndex != internal.index {
 			if _, err := rn.Pipe(yaml.SetAnnotation(kioutil.LegacyIndexAnnotation, internal.index)); err != nil {
 				return err
 			}
