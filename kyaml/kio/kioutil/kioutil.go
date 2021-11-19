@@ -44,7 +44,8 @@ const (
 )
 
 func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
-	annotations := rn.GetAnnotations()
+	rm, _ := rn.GetMeta()
+	annotations := rm.Annotations
 	path, found := annotations[PathAnnotation]
 	if !found {
 		path = annotations[LegacyPathAnnotation]
@@ -57,7 +58,8 @@ func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
 }
 
 func GetIdAnnotation(rn *yaml.RNode) string {
-	annotations := rn.GetAnnotations()
+	rm, _ := rn.GetMeta()
+	annotations := rm.Annotations
 	id, found := annotations[IdAnnotation]
 	if !found {
 		id = annotations[LegacyIdAnnotation]
@@ -391,7 +393,8 @@ func ConfirmInternalAnnotationUnchanged(r1 *yaml.RNode, r2 *yaml.RNode, exclusio
 // `internal.config.kubernetes.io` 2) is one of `config.kubernetes.io/path`,
 // `config.kubernetes.io/index` and `config.k8s.io/id`.
 func GetInternalAnnotations(rn *yaml.RNode) map[string]string {
-	annotations := rn.GetAnnotations()
+	meta, _ := rn.GetMeta()
+	annotations := meta.Annotations
 	result := make(map[string]string)
 	for k, v := range annotations {
 		if strings.HasPrefix(k, internalPrefix) || k == LegacyPathAnnotation || k == LegacyIndexAnnotation || k == LegacyIdAnnotation {

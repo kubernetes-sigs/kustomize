@@ -117,7 +117,7 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 	rl.FunctionConfig = rlSource.FunctionConfig
 
 	// We store the original
-	nodeAnnos, err := kio.GetInternalAnnotationsFromResourceList(rl.Items)
+	nodeAnnos, err := kio.PreprocessResourcesForInternalAnnotationMigration(rl.Items)
 	if err != nil {
 		return err
 	}
