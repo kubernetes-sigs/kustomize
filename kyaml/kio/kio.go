@@ -14,10 +14,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// resourceIDAnnotation is used to uniquely identify the resource during round trip
-// to and from a function execution.
-const resourceIDAnnotation = "internal.config.k8s.io/annotations-migration-resource-id"
-
 // Reader reads ResourceNodes. Analogous to io.Reader.
 type Reader interface {
 	Read() ([]*yaml.RNode, error)
@@ -178,7 +174,7 @@ func PreprocessResourcesForInternalAnnotationMigration(result []*yaml.RNode) (ma
 	idToAnnosMap := make(map[string]map[string]string)
 	for i := range result {
 		idStr := strconv.Itoa(i)
-		err := result[i].PipeE(yaml.SetAnnotation(resourceIDAnnotation, idStr))
+		err := result[i].PipeE(yaml.SetAnnotation(kioutil.InternalAnnotationsMigrationResourceIDAnnotation, idStr))
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +255,7 @@ func ReconcileInternalAnnotations(result []*yaml.RNode, nodeAnnosMap map[string]
 			return err
 		}
 
-		if _, err = result[i].Pipe(yaml.ClearAnnotation(resourceIDAnnotation)); err != nil {
+		if _, err = result[i].Pipe(yaml.ClearAnnotation(kioutil.InternalAnnotationsMigrationResourceIDAnnotation)); err != nil {
 			return err
 		}
 	}
@@ -369,7 +365,7 @@ func checkAnnotationsAltered(rn *yaml.RNode, nodeAnnosMap map[string]map[string]
 		id:    annotations[kioutil.LegacyIdAnnotation],
 	}
 
-	rid := annotations[resourceIDAnnotation]
+	rid := annotations[kioutil.InternalAnnotationsMigrationResourceIDAnnotation]
 	originalAnnotations, found := nodeAnnosMap[rid]
 	if !found {
 		return nil
