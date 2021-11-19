@@ -63,6 +63,9 @@ xxx:
 apiVersion: foo/v1
 kind: Bar
 xxx:
+metadata:
+  annotations:
+    internal.config.k8s.io/annotations-migration-resource-id: '0'
 : cannot set or create an empty field name`,
 			filter: fieldspec.Filter{
 				SetValue: filtersutil.SetScalar("e"),
@@ -220,6 +223,9 @@ a:
 kind: Bar
 a:
   b: a
+metadata:
+  annotations:
+    internal.config.k8s.io/annotations-migration-resource-id: '0'
 : expected sequence or mapping node`,
 			filter: fieldspec.Filter{
 				SetValue: filtersutil.SetScalar("e"),
