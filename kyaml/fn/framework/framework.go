@@ -116,7 +116,20 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 	}
 	rl.FunctionConfig = rlSource.FunctionConfig
 
+	// We store the original
+	nodeAnnos, err := kio.PreprocessResourcesForInternalAnnotationMigration(rl.Items)
+	if err != nil {
+		return err
+	}
+
 	retErr := p.Process(&rl)
+
+	// If either the internal annotations for path, index, and id OR the legacy
+	// annotations for path, index, and id are changed, we have to update the other.
+	err = kio.ReconcileInternalAnnotations(rl.Items, nodeAnnos)
+	if err != nil {
+		return err
+	}
 
 	// Write the results
 	// Set the ResourceList.results for validating functions
