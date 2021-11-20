@@ -4,12 +4,18 @@
 package namespace
 
 import (
+	"strconv"
+
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+const (
+	LiteralSubjectAnnotation = "kustomize.config.k8s.io/literal-subject"
 )
 
 type Filter struct {
@@ -101,6 +107,18 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 func (ns Filter) roleBindingHack(obj *yaml.RNode, gvk resid.Gvk) error {
 	if gvk.Kind != roleBindingKind && gvk.Kind != clusterRoleBindingKind {
 		return nil
+	}
+
+	annotations := obj.GetAnnotations()
+	if val, ok := annotations[LiteralSubjectAnnotation]; ok {
+		b, err := strconv.ParseBool(val)
+		if err != nil {
+			return err
+		}
+
+		if b {
+			return nil
+		}
 	}
 
 	// Lookup the namespace field on all elements.

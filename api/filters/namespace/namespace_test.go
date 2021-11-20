@@ -242,7 +242,31 @@ subjects:
 `,
 		filter: namespace.Filter{Namespace: "bar"},
 	},
-
+	{
+		name: "update-rolebinding-literal-subject",
+		input: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kustomize.config.k8s.io/literal-subject: "true"
+subjects:
+- name: default
+  namespace: foo
+`,
+		expected: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kustomize.config.k8s.io/literal-subject: "true"
+  namespace: bar
+subjects:
+- name: default
+  namespace: foo
+`,
+		filter: namespace.Filter{Namespace: "bar"},
+	},
 	{
 		name: "data-fieldspecs",
 		input: `
