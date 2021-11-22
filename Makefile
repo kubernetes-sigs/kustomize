@@ -127,7 +127,7 @@ install-tools: \
 #   module (it's linked into the api).
 
 # Where all generated builtin plugin code should go.
-pGen=api/builtins
+pGen=api/internal/builtins
 # Where the builtin Go plugin modules live.
 pSrc=plugin/builtin
 

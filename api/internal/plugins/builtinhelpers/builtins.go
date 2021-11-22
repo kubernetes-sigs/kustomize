@@ -4,7 +4,7 @@
 package builtinhelpers
 
 import (
-	"sigs.k8s.io/kustomize/api/builtins"
+	"sigs.k8s.io/kustomize/api/internal/builtins"
 	"sigs.k8s.io/kustomize/api/resmap"
 )
 
