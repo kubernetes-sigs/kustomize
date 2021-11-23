@@ -141,7 +141,7 @@ func newWriter(r string) (*writer, error) {
 //   $HOME/kustomize/api/builtins
 func makeOutputFileName(root string) string {
 	return filepath.Join(
-		"..", "..", "..", "api", packageForGeneratedCode, root+".go")
+		"..", "..", "..", "api/internal", packageForGeneratedCode, root+".go")
 }
 
 func (w *writer) Close() error {

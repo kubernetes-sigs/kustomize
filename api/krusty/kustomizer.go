@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"sigs.k8s.io/kustomize/api/builtins"
+	"sigs.k8s.io/kustomize/api/internal/builtins"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
