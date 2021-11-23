@@ -64,7 +64,12 @@ func (i Result) String() string {
 		}
 	}
 	formatString := "[%s]"
-	list := []interface{}{i.Severity}
+	severity := i.Severity
+	// We default Severity to Info when converting a result to a message.
+	if i.Severity == "" {
+		severity = Info
+	}
+	list := []interface{}{severity}
 	if len(idStringList) > 0 {
 		formatString += " %s"
 		list = append(list, strings.Join(idStringList, "/"))

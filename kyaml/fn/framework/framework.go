@@ -4,6 +4,7 @@
 package framework
 
 import (
+	goerrors "errors"
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -116,7 +117,20 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 	}
 	rl.FunctionConfig = rlSource.FunctionConfig
 
+	// We store the original
+	nodeAnnos, err := kio.PreprocessResourcesForInternalAnnotationMigration(rl.Items)
+	if err != nil {
+		return err
+	}
+
 	retErr := p.Process(&rl)
+
+	// If either the internal annotations for path, index, and id OR the legacy
+	// annotations for path, index, and id are changed, we have to update the other.
+	err = kio.ReconcileInternalAnnotations(rl.Items, nodeAnnos)
+	if err != nil {
+		return err
+	}
 
 	// Write the results
 	// Set the ResourceList.results for validating functions
@@ -140,8 +154,19 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 
 // Filter executes the given kio.Filter and replaces the ResourceList's items with the result.
 // This can be used to help implement ResourceListProcessors. See SimpleProcessor for example.
+//
+// Filters that return a Result as error will store the result in the ResourceList
+// and continue processing instead of erroring out.
 func (rl *ResourceList) Filter(api kio.Filter) error {
 	var err error
 	rl.Items, err = api.Filter(rl.Items)
-	return errors.Wrap(err)
+	if err != nil {
+		var r Results
+		if goerrors.As(err, &r) {
+			rl.Results = append(rl.Results, r...)
+			return nil
+		}
+		return errors.Wrap(err)
+	}
+	return nil
 }

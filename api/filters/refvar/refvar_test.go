@@ -251,6 +251,7 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/index: '0'
+    internal.config.k8s.io/annotations-migration-resource-id: '0'
 data:
   slice:
   - false
@@ -278,6 +279,7 @@ metadata:
   annotations:
     config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/index: '0'
+    internal.config.k8s.io/annotations-migration-resource-id: '0'
 data:
   1: str
 : invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,
