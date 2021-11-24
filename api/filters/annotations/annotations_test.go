@@ -11,16 +11,36 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var annosFs = builtinconfig.MakeDefaultConfig().CommonAnnotations
 
+type setEntryArg struct {
+	Key      string
+	Value    string
+	Tag      string
+	NodePath []string
+}
+
+var setEntryArgs []setEntryArg
+
+func setEntryCallbackStub(key, value, tag string, node *yaml.RNode) {
+	setEntryArgs = append(setEntryArgs, setEntryArg{
+		Key:      key,
+		Value:    value,
+		Tag:      tag,
+		NodePath: node.FieldPath(),
+	})
+}
+
 func TestAnnotations_Filter(t *testing.T) {
 	testCases := map[string]struct {
-		input          string
-		expectedOutput string
-		filter         Filter
-		fsslice        types.FsSlice
+		input                string
+		expectedOutput       string
+		filter               Filter
+		fsslice              types.FsSlice
+		expectedSetEntryArgs []setEntryArg
 	}{
 		"add": {
 			input: `
@@ -210,15 +230,83 @@ metadata:
 				"b": "b1",
 			}},
 		},
+
+		// test usage of SetEntryCallback
+		"set_entry_callback": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  annotations:
+    a: a1
+    b: b1
+spec:
+  template:
+    metadata:
+      annotations:
+        a: a1
+        b: b1
+`,
+			filter: Filter{
+				Annotations: annoMap{
+					"a": "a1",
+					"b": "b1",
+				},
+				SetEntryCallback: setEntryCallbackStub,
+			},
+			fsslice: []types.FieldSpec{
+				{
+					Path:               "spec/template/metadata/annotations",
+					CreateIfNotPresent: true,
+				},
+			},
+			expectedSetEntryArgs: []setEntryArg{
+				{
+					Key:      "a",
+					Value:    "a1",
+					Tag:      "!!str",
+					NodePath: []string{"metadata", "annotations"},
+				},
+				{
+					Key:      "a",
+					Value:    "a1",
+					Tag:      "!!str",
+					NodePath: []string{"spec", "template", "metadata", "annotations"},
+				},
+				{
+					Key:      "b",
+					Value:    "b1",
+					Tag:      "!!str",
+					NodePath: []string{"metadata", "annotations"},
+				},
+				{
+					Key:      "b",
+					Value:    "b1",
+					Tag:      "!!str",
+					NodePath: []string{"spec", "template", "metadata", "annotations"},
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
+		setEntryArgs = nil
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
 			filter.FsSlice = append(annosFs, tc.fsslice...)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, filter))) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, tc.expectedSetEntryArgs, setEntryArgs) {
 				t.FailNow()
 			}
 		})
