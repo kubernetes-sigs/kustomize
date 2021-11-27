@@ -436,7 +436,9 @@ func getNamespacesForRoleBinding(r *resource.Resource) map[string]bool {
 		if ns, ok1 := subject["namespace"]; ok1 {
 			if kind, ok2 := subject["kind"]; ok2 {
 				if kind.(string) == "ServiceAccount" {
-					result[ns.(string)] = true
+					if n, ok3 := ns.(string); ok3 {
+						result[n] = true
+					}
 				}
 			}
 		}
