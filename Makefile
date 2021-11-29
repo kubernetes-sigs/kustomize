@@ -144,6 +144,7 @@ _builtinplugins = \
 	PatchStrategicMergeTransformer.go \
 	PatchTransformer.go \
 	PrefixSuffixTransformer.go \
+	PrefixTransformer.go \
 	ReplacementTransformer.go \
 	ReplicaCountTransformer.go \
 	SecretGenerator.go \
@@ -172,6 +173,7 @@ $(pGen)/PatchJson6902Transformer.go: $(pSrc)/patchjson6902transformer/PatchJson6
 $(pGen)/PatchStrategicMergeTransformer.go: $(pSrc)/patchstrategicmergetransformer/PatchStrategicMergeTransformer.go
 $(pGen)/PatchTransformer.go: $(pSrc)/patchtransformer/PatchTransformer.go
 $(pGen)/PrefixSuffixTransformer.go: $(pSrc)/prefixsuffixtransformer/PrefixSuffixTransformer.go
+$(pGen)/PrefixTransformer.go: $(pSrc)/prefixtransformer/PrefixTransformer.go
 $(pGen)/ReplacementTransformer.go: $(pSrc)/replacementtransformer/ReplacementTransformer.go
 $(pGen)/ReplicaCountTransformer.go: $(pSrc)/replicacounttransformer/ReplicaCountTransformer.go
 $(pGen)/SecretGenerator.go: $(pSrc)/secretgenerator/SecretGenerator.go

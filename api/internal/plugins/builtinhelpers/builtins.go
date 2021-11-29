@@ -25,6 +25,7 @@ const (
 	PatchStrategicMergeTransformer
 	PatchTransformer
 	PrefixSuffixTransformer
+	PrefixTransformer
 	ReplicaCountTransformer
 	SecretGenerator
 	ValueAddTransformer
@@ -75,6 +76,7 @@ var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin
 	PatchStrategicMergeTransformer: builtins.NewPatchStrategicMergeTransformerPlugin,
 	PatchTransformer:               builtins.NewPatchTransformerPlugin,
 	PrefixSuffixTransformer:        builtins.NewPrefixSuffixTransformerPlugin,
+	PrefixTransformer:              builtins.NewPrefixTransformerPlugin,
 	ReplacementTransformer:         builtins.NewReplacementTransformerPlugin,
 	ReplicaCountTransformer:        builtins.NewReplicaCountTransformerPlugin,
 	ValueAddTransformer:            builtins.NewValueAddTransformerPlugin,

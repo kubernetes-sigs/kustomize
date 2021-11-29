@@ -22,6 +22,7 @@ type (
 	PatchStrategicMergeTransformerPlugin = internal.PatchStrategicMergeTransformerPlugin
 	PatchTransformerPlugin               = internal.PatchTransformerPlugin
 	PrefixSuffixTransformerPlugin        = internal.PrefixSuffixTransformerPlugin
+	PrefixTransformerPlugin              = internal.PrefixTransformerPlugin
 	ReplacementTransformerPlugin         = internal.ReplacementTransformerPlugin
 	ReplicaCountTransformerPlugin        = internal.ReplicaCountTransformerPlugin
 	SecretGeneratorPlugin                = internal.SecretGeneratorPlugin
@@ -42,6 +43,7 @@ var (
 	NewPatchStrategicMergeTransformerPlugin = internal.NewPatchStrategicMergeTransformerPlugin
 	NewPatchTransformerPlugin               = internal.NewPatchTransformerPlugin
 	NewPrefixSuffixTransformerPlugin        = internal.NewPrefixSuffixTransformerPlugin
+	NewPrefixTransformerPlugin              = internal.NewPrefixTransformerPlugin
 	NewReplacementTransformerPlugin         = internal.NewReplacementTransformerPlugin
 	NewReplicaCountTransformerPlugin        = internal.NewReplicaCountTransformerPlugin
 	NewSecretGeneratorPlugin                = internal.NewSecretGeneratorPlugin

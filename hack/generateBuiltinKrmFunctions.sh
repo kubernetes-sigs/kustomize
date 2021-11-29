@@ -11,6 +11,7 @@ builtinPlugins=(AnnotationsTransformer \
 	PatchStrategicMergeTransformer \
 	PatchTransformer \
 	PrefixSuffixTransformer \
+	PrefixTransformer \
 	ReplicaCountTransformer \
 	SecretGenerator \
 	ValueAddTransformer \
