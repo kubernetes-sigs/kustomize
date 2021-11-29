@@ -53,6 +53,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		builtinhelpers.NamespaceTransformer,
 		builtinhelpers.PrefixSuffixTransformer,
 		builtinhelpers.PrefixTransformer,
+		builtinhelpers.SuffixTransformer,
 		builtinhelpers.LabelTransformer,
 		builtinhelpers.AnnotationsTransformer,
 		builtinhelpers.PatchJson6902Transformer,
@@ -313,6 +314,23 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		}
 		c.Prefix = kt.kustomization.NamePrefix
 		c.FieldSpecs = tc.NamePrefix
+		p := f()
+		err = kt.configureBuiltinPlugin(p, c, bpt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, p)
+		return
+	},
+	builtinhelpers.SuffixTransformer: func(
+		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
+		result []resmap.Transformer, err error) {
+		var c struct {
+			Suffix     string            `json:"suffix,omitempty" yaml:"suffix,omitempty"`
+			FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+		}
+		c.Suffix = kt.kustomization.NameSuffix
+		c.FieldSpecs = tc.NameSuffix
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {

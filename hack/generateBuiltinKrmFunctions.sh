@@ -12,6 +12,7 @@ builtinPlugins=(AnnotationsTransformer \
 	PatchTransformer \
 	PrefixSuffixTransformer \
 	PrefixTransformer \
+	SuffixTransformer \
 	ReplicaCountTransformer \
 	SecretGenerator \
 	ValueAddTransformer \
