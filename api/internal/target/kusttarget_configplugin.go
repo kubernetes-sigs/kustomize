@@ -51,7 +51,6 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		builtinhelpers.PatchStrategicMergeTransformer,
 		builtinhelpers.PatchTransformer,
 		builtinhelpers.NamespaceTransformer,
-		builtinhelpers.PrefixSuffixTransformer,
 		builtinhelpers.PrefixTransformer,
 		builtinhelpers.SuffixTransformer,
 		builtinhelpers.LabelTransformer,
@@ -288,28 +287,11 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		result = append(result, p)
 		return
 	},
-	builtinhelpers.PrefixSuffixTransformer: func(
-		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
-		result []resmap.Transformer, err error) {
-		var c struct {
-			Prefix     string            `json:"prefix,omitempty" yaml:"prefix,omitempty"`
-			FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
-		}
-		c.Prefix = kt.kustomization.NamePrefix
-		c.FieldSpecs = tc.NamePrefix
-		p := f()
-		err = kt.configureBuiltinPlugin(p, c, bpt)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, p)
-		return
-	},
 	builtinhelpers.PrefixTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
 		var c struct {
-			Prefix     string `json:"prefix,omitempty" yaml:"prefix,omitempty"`
+			Prefix     string            `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 			FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 		}
 		c.Prefix = kt.kustomization.NamePrefix
