@@ -4,6 +4,7 @@
 package main_test
 
 import (
+	"sigs.k8s.io/kustomize/api/types"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -148,9 +149,8 @@ spec:
 }
 
 func TestMatchesCurrentID(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PrefixSuffixTransformer").
-		PrepBuiltin("ReplicaCountTransformer")
+	th := kusttest_test.MakeEnhancedHarness(t)
+	th.GetPluginConfig().BpLoadingOptions = types.BploUseStaticallyLinked
 	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`

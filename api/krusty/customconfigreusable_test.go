@@ -6,6 +6,8 @@ package krusty_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/types"
+
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -15,9 +17,9 @@ import (
 // kustomizations.
 func TestReusableCustomTransformers(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PrefixSuffixTransformer").
 		PrepBuiltin("AnnotationsTransformer").
 		PrepBuiltin("LabelTransformer")
+	th.GetPluginConfig().BpLoadingOptions = types.BploUseStaticallyLinked
 	defer th.Reset()
 
 	// First write three custom configurations for builtin plugins.
