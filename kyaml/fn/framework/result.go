@@ -5,6 +5,7 @@ package framework
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -125,4 +126,62 @@ func (e Results) ExitCode() int {
 		}
 	}
 	return 0
+}
+
+// Sort performs an in place stable sort of Results
+func (e Results) Sort() {
+	sort.SliceStable(e, func(i, j int) bool {
+		if fileLess(e, i, j) != 0 {
+			return fileLess(e, i, j) < 0
+		}
+		if severityLess(e, i, j) != 0 {
+			return severityLess(e, i, j) < 0
+		}
+		return resultToString(*e[i]) < resultToString(*e[j])
+	})
+}
+
+func severityLess(items Results, i, j int) int {
+	severityToNumber := map[Severity]int{
+		Error:   0,
+		Warning: 1,
+		Info:    2,
+	}
+
+	severityLevelI, found := severityToNumber[items[i].Severity]
+	if !found {
+		severityLevelI = 3
+	}
+	severityLevelJ, found := severityToNumber[items[j].Severity]
+	if !found {
+		severityLevelJ = 3
+	}
+	return severityLevelI - severityLevelJ
+}
+
+func fileLess(items Results, i, j int) int {
+	var fileI, fileJ File
+	if items[i].File == nil {
+		fileI = File{}
+	} else {
+		fileI = *items[i].File
+	}
+	if items[j].File == nil {
+		fileJ = File{}
+	} else {
+		fileJ = *items[j].File
+	}
+	if fileI.Path != fileJ.Path {
+		if fileI.Path < fileJ.Path {
+			return -1
+		} else {
+			return 1
+		}
+	}
+	return fileI.Index - fileJ.Index
+}
+
+func resultToString(item Result) string {
+	return fmt.Sprintf("resource-ref:%s,field:%s,message:%s",
+		item.ResourceRef, item.Field, item.Message)
 }
