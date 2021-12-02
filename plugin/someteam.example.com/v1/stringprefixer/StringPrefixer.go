@@ -1,9 +1,13 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Deprecated: StringPrefixer will be removed with kustomize/api v1.
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/builtins"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -55,5 +59,9 @@ func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
+	_, err := fmt.Fprintln(os.Stderr, "Deprecated: StringPrefixer will be removed with kustomize/api v1.")
+	if err != nil {
+		return err
+	}
 	return p.t.Transform(m)
 }
