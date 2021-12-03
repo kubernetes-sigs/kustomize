@@ -294,7 +294,7 @@ kind: Deployment
 metadata:
   name: foo
   annotations:
-    internal.config.k8s.io/annotations-migration-resource-id: '1'
+    internal.config.kubernetes.io/annotations-migration-resource-id: '1'
 `,
 				}
 			},
