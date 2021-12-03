@@ -593,15 +593,18 @@ bla
 	th.AssertActualEqualsExpected(
 		m, `apiVersion: v1
 data:
-  cfg.text: "bla\nbla\nbla \n"
+  cfg.text: |
+    bla
+    bla
+    bla
 kind: ConfigMap
 metadata:
-  name: config_bla-d6m295b8c5
+  name: config_bla-4k548khbf5
 `)
 }
 
 // regression test to record the behavior prior to the fix for https://github.com/kubernetes-sigs/kustomize/issues/4287
-// so that the fix does not affect leading and trailing newlines in ConfigMap data
+// to ensure that the fix does not affect leading and trailing newlines in ConfigMap data
 func TestMultilineDataEndsLeadingAndTrailingNewlines(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
