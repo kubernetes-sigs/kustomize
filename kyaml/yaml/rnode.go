@@ -1063,7 +1063,6 @@ func checkKey(key string, elems []*Node) bool {
 	return count == len(elems)
 }
 
-// Deprecated: use pipes instead.
 // GetSlice returns the contents of the slice field at the given path.
 func (rn *RNode) GetSlice(path string) ([]interface{}, error) {
 	value, err := rn.GetFieldValue(path)
@@ -1076,7 +1075,6 @@ func (rn *RNode) GetSlice(path string) ([]interface{}, error) {
 	return nil, fmt.Errorf("node %s is not a slice", path)
 }
 
-// Deprecated: use pipes instead.
 // GetString returns the contents of the string field at the given path.
 func (rn *RNode) GetString(path string) (string, error) {
 	value, err := rn.GetFieldValue(path)
@@ -1089,7 +1087,6 @@ func (rn *RNode) GetString(path string) (string, error) {
 	return "", fmt.Errorf("node %s is not a string: %v", path, value)
 }
 
-// Deprecated: use slash paths instead.
 // GetFieldValue finds period delimited fields.
 // TODO: When doing kustomize var replacement, which is likely a
 // a primary use of this function and the reason it returns interface{}
