@@ -6,6 +6,7 @@ package resource_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/api/resource"
 )
 
@@ -34,10 +35,9 @@ repo: https://github.com/kubernetes-sigs/kustomize
 		},
 	}
 	for _, test := range tests {
-		actual := test.in.Append(test.path).String()
-		if actual != test.expected {
-			t.Fatalf("Expected %v, but got %v\n", test.expected, actual)
-		}
+		actual, err := test.in.Append(test.path).String()
+		assert.NoError(t, err)
+		assert.Equal(t, actual, test.expected)
 	}
 }
 
@@ -76,8 +76,8 @@ repo: github.com/kubernetes-sigs/kustomize/examples/multibases/dev/
 	}
 
 	for _, test := range tests {
-		if test.in.String() != test.expected {
-			t.Fatalf("Expected %v, but got %v\n", test.expected, test.in.String())
-		}
+		actual, err := test.in.String()
+		assert.NoError(t, err)
+		assert.Equal(t, actual, test.expected)
 	}
 }
