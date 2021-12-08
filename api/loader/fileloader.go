@@ -11,10 +11,13 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 // fileLoader is a kustomization's interface to files.
@@ -306,7 +309,12 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 		if fl.http != nil {
 			hc = fl.http
 		} else {
-			hc = &http.Client{}
+			rc := retryablehttp.NewClient()
+			rc.Logger = nil
+			rc.RetryWaitMin = time.Second
+			rc.RetryWaitMax = time.Second * 5
+			rc.RetryMax = 5
+			hc = rc.StandardClient()
 		}
 		resp, err := hc.Get(path)
 		if err != nil {
