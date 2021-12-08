@@ -366,6 +366,9 @@ func (kt *KustTarget) accumulateResources(
 	for _, path := range paths {
 		// try loading resource as file then as base (directory or git repository)
 		if errF := kt.accumulateFile(ra, path, origin); errF != nil {
+			if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
+				return nil, errF
+			}
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
 				return nil, errors.Wrapf(
