@@ -314,7 +314,7 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode < 200 || resp.StatusCode > 299 {
-			return nil, fmt.Errorf("URL returned error %d (%s)", resp.StatusCode, http.StatusText(resp.StatusCode))
+			return nil, fmt.Errorf("%w: status code %d (%s)", ErrorHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
