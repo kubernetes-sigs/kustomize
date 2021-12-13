@@ -29,6 +29,7 @@ import (
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
 	kustomization *types.Kustomization
+	kustFileName  string
 	ldr           ifc.Loader
 	validator     ifc.Validator
 	rFactory      *resmap.Factory
@@ -53,7 +54,7 @@ func NewKustTarget(
 
 // Load attempts to load the target's kustomization file.
 func (kt *KustTarget) Load() error {
-	content, err := loadKustFile(kt.ldr)
+	content, kustFileName, err := loadKustFile(kt.ldr)
 	if err != nil {
 		return err
 	}
@@ -74,6 +75,7 @@ func (kt *KustTarget) Load() error {
 				strings.Join(errs, "\n"), kt.ldr.Root())
 	}
 	kt.kustomization = &k
+	kt.kustFileName = kustFileName
 	return nil
 }
 
@@ -85,23 +87,25 @@ func (kt *KustTarget) Kustomization() types.Kustomization {
 	return result
 }
 
-func loadKustFile(ldr ifc.Loader) ([]byte, error) {
+func loadKustFile(ldr ifc.Loader) ([]byte, string, error) {
 	var content []byte
 	match := 0
+	var kustFileName string
 	for _, kf := range konfig.RecognizedKustomizationFileNames() {
 		c, err := ldr.Load(kf)
 		if err == nil {
 			match += 1
 			content = c
+			kustFileName = kf
 		}
 	}
 	switch match {
 	case 0:
-		return nil, NewErrMissingKustomization(ldr.Root())
+		return nil, "", NewErrMissingKustomization(ldr.Root())
 	case 1:
-		return content, nil
+		return content, kustFileName, nil
 	default:
-		return nil, fmt.Errorf(
+		return nil, "", fmt.Errorf(
 			"Found multiple kustomization files under: %s\n", ldr.Root())
 	}
 }
@@ -206,7 +210,7 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator, origin *r
 		return nil, errors.Wrapf(
 			err, "merging CRDs %v", crdTc)
 	}
-	err = kt.runGenerators(ra)
+	err = kt.runGenerators(ra, origin)
 	if err != nil {
 		return nil, err
 	}
@@ -244,22 +248,33 @@ func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
 }
 
 func (kt *KustTarget) runGenerators(
-	ra *accumulator.ResAccumulator) error {
+	ra *accumulator.ResAccumulator, origin *resource.Origin) error {
 	var generators []resmap.Generator
-	gs, err := kt.configureBuiltinGenerators()
+	var origins []*resource.Origin
+	gs, os, err := kt.configureBuiltinGenerators(origin)
 	if err != nil {
 		return err
 	}
 	generators = append(generators, gs...)
-	gs, err = kt.configureExternalGenerators()
+	origins = append(origins, os...)
+
+	gs, os, err = kt.configureExternalGenerators(origin)
 	if err != nil {
 		return errors.Wrap(err, "loading generator plugins")
 	}
 	generators = append(generators, gs...)
-	for _, g := range generators {
+	origins = append(origins, os...)
+
+	for i, g := range generators {
 		resMap, err := g.Generate()
 		if err != nil {
 			return err
+		}
+		if resMap != nil && i < len(origins) {
+			err = resMap.AddOriginAnnotation(origins[i])
+			if err != nil {
+				return errors.Wrapf(err, "adding origin annotations for generator %v", g)
+			}
 		}
 		err = ra.AbsorbAll(resMap)
 		if err != nil {
@@ -269,7 +284,8 @@ func (kt *KustTarget) runGenerators(
 	return nil
 }
 
-func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) {
+func (kt *KustTarget) configureExternalGenerators(origin *resource.Origin) ([]resmap.Generator,
+	[]*resource.Origin, error) {
 	ra := accumulator.MakeEmptyAccumulator()
 	var generatorPaths []string
 	for _, p := range kt.kustomization.Generators {
@@ -282,9 +298,9 @@ func (kt *KustTarget) configureExternalGenerators() ([]resmap.Generator, error) 
 		}
 		ra.AppendAll(rm)
 	}
-	ra, err := kt.accumulateResources(ra, generatorPaths, &resource.Origin{})
+	ra, err := kt.accumulateResources(ra, generatorPaths, origin)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
 }

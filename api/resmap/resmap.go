@@ -136,6 +136,11 @@ type ResMap interface {
 	// self, then its behavior _cannot_ be merge or replace.
 	AbsorbAll(ResMap) error
 
+	// AddOriginAnnotation will add the provided origin as
+	// an annotation to all resources in the Resmap, if
+	// the origin is not nil.
+	AddOriginAnnotation(origin *resource.Origin) error
+
 	// AnnotateAll annotates all resources in the ResMap with
 	// the provided key value pair.
 	AnnotateAll(key string, value string) error

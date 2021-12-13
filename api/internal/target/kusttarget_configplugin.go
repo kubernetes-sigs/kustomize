@@ -5,11 +5,14 @@ package target
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Functions dedicated to configuring the builtin
@@ -27,8 +30,28 @@ import (
 // image tag transforms.  In these cases, we'll need
 // N plugin instances with differing configurations.
 
-func (kt *KustTarget) configureBuiltinGenerators() (
-	result []resmap.Generator, err error) {
+var builtinKinds = map[builtinhelpers.BuiltinPluginType]string{
+	builtinhelpers.AnnotationsTransformer:         "AnnotationTransformer",
+	builtinhelpers.ConfigMapGenerator:             "ConfigMapGenerator",
+	builtinhelpers.IAMPolicyGenerator:             "IAMPolicyGenerator",
+	builtinhelpers.HashTransformer:                "HashTransformer",
+	builtinhelpers.ImageTagTransformer:            "ImageTagTransformer",
+	builtinhelpers.LabelTransformer:               "LabelTransformer",
+	builtinhelpers.LegacyOrderTransformer:         "LegacyOrderTransformer",
+	builtinhelpers.NamespaceTransformer:           "NamespaceTransformer",
+	builtinhelpers.PatchJson6902Transformer:       "PatchJson6902Transformer",
+	builtinhelpers.PatchStrategicMergeTransformer: "PatchStrategicMergeTransformer",
+	builtinhelpers.PatchTransformer:               "PatchTransformer",
+	builtinhelpers.PrefixSuffixTransformer:        "PrefixSuffixTransformer",
+	builtinhelpers.ReplicaCountTransformer:        "ReplicaCountTransformer",
+	builtinhelpers.SecretGenerator:                "SecretGenerator",
+	builtinhelpers.ValueAddTransformer:            "ValueAddTransformer",
+	builtinhelpers.HelmChartInflationGenerator:    "HelmChartInflationGenerator",
+	builtinhelpers.ReplacementTransformer:         "ReplacementTransformer",
+}
+
+func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
+	result []resmap.Generator, origins []*resource.Origin, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.ConfigMapGenerator,
 		builtinhelpers.SecretGenerator,
@@ -37,11 +60,30 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 		r, err := generatorConfigurators[bpt](
 			kt, bpt, builtinhelpers.GeneratorFactories[bpt])
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		result = append(result, r...)
+
+		var generatorOrigin *resource.Origin
+		if origin != nil {
+			generatorOrigin = &resource.Origin{
+				Repo:         origin.Repo,
+				Ref:          origin.Ref,
+				ConfiguredIn: filepath.Join(origin.Path, kt.kustFileName),
+				ConfiguredBy: yaml.ResourceIdentifier{
+					TypeMeta: yaml.TypeMeta{
+						APIVersion: "builtin",
+						Kind:       builtinKinds[bpt],
+					},
+				},
+			}
+		}
+
+		for i := range r {
+			origins = append(origins, generatorOrigin)
+			result = append(result, r[i])
+		}
 	}
-	return result, nil
+	return result, origins, nil
 }
 
 func (kt *KustTarget) configureBuiltinTransformers(

@@ -484,6 +484,25 @@ func (m *resWrangler) AbsorbAll(other ResMap) error {
 	return nil
 }
 
+// AddOriginAnnotation implements ResMap.
+func (m *resWrangler) AddOriginAnnotation(origin *resource.Origin) error {
+	if origin == nil {
+		return nil
+	}
+	for _, res := range m.rList {
+		or, err := res.GetOrigin()
+		if or != nil || err != nil {
+			// if any resources already have an origin annotation,
+			// skip it
+			continue
+		}
+		if err := res.SetOrigin(origin); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	id := res.CurId()
 	matches := m.GetMatchingResourcesByAnyId(id.Equals)
@@ -510,9 +529,18 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 		case types.BehaviorReplace:
 			res.CopyMergeMetaDataFieldsFrom(old)
 		case types.BehaviorMerge:
+			// ensure the origin annotation doesn't get overwritten
+			orig, err := old.GetOrigin()
+			if err != nil {
+				return err
+			}
 			res.CopyMergeMetaDataFieldsFrom(old)
 			res.MergeDataMapFrom(old)
 			res.MergeBinaryDataMapFrom(old)
+			if orig != nil {
+				res.SetOrigin(orig)
+			}
+
 		default:
 			return fmt.Errorf(
 				"id %#v exists; behavior must be merge or replace", id)

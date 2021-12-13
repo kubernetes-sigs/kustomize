@@ -4,10 +4,16 @@
 package krusty_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/internal/utils"
+	"sigs.k8s.io/kustomize/api/krusty"
 	_ "sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestAnnoOriginLocalFiles(t *testing.T) {
@@ -262,4 +268,361 @@ metadata:
   name: blah-bob-58g62h555c
 type: Opaque
 `)
+}
+
+func TestAnnoOriginLocalBuiltinGenerator(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+configMapGenerator:
+- name: bob
+  literals:
+  - fruit=Indian Gooseberry
+  - year=2020
+  - crisis=true
+buildMetadata: [originAnnotations]
+
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo
+spec:
+  clusterIP: None
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(
+		m, `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: service.yaml
+  name: demo
+spec:
+  clusterIP: None
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: bob-79t79mt227
+`)
+}
+
+func TestAnnoOriginConfigMapGeneratorMerge(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+- name: bob
+  literals:
+  - fruit=Indian Gooseberry
+  - year=2020
+  - crisis=true
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: bob
+  behavior: merge
+  literals:
+  - month=12
+buildMetadata: [originAnnotations]
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  month: "12"
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: bob-bk46gm59c6
+`)
+}
+
+func TestAnnoOriginConfigMapGeneratorReplace(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+- name: bob
+  literals:
+  - fruit=Indian Gooseberry
+  - year=2020
+  - crisis=true
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: bob
+  behavior: replace
+  literals:
+  - month=12
+buildMetadata: [originAnnotations]
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  month: "12"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: bob-f8t5fhtbhc
+`)
+}
+
+func TestAnnoOriginCustomExecGenerator(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	th.WriteK(tmpDir.String(), `
+resources:
+- short_secret.yaml
+generators:
+- gener.yaml
+buildMetadata: [originAnnotations]
+`)
+
+	// Create some additional resource just to make sure everything is added
+	th.WriteF(filepath.Join(tmpDir.String(), "short_secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "generateDeployment.sh"), generateDeploymentDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
+	th.WriteF(filepath.Join(tmpDir.String(), "gener.yaml"), `
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./generateDeployment.sh
+spec:
+`)
+
+	m := th.Run(tmpDir.String(), o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: short_secret.yaml
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: gener.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestAnnoOriginCustomExecGeneratorWithOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	th.WriteK(base, `
+resources:
+- short_secret.yaml
+generators:
+- gener.yaml
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+buildMetadata: [originAnnotations]
+`)
+	th.WriteF(filepath.Join(base, "short_secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+	th.WriteF(filepath.Join(base, "generateDeployment.sh"), generateDeploymentDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
+	th.WriteF(filepath.Join(base, "gener.yaml"), `
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./generateDeployment.sh
+spec:
+`)
+
+	m := th.Run(prod, o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: ../base/short_secret.yaml
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/gener.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestAnnoOriginRemoteBuiltinGenerator(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+resources:
+- github.com/kubernetes-sigs/kustomize/examples/ldap/base/?ref=v1.0.6
+buildMetadata: [originAnnotations]
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	if utils.IsErrTimeout(err) {
+		// Don't fail on timeouts.
+		t.SkipNow()
+	}
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Contains(t, string(yml), `kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      repo: https://github.com/kubernetes-sigs/kustomize
+      ref: v1.0.6
+      configuredIn: examples/ldap/base/kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: ldap-configmap-4d7m6k5b42`)
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
