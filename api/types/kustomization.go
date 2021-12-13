@@ -17,6 +17,7 @@ const (
 	ComponentVersion      = "kustomize.config.k8s.io/v1alpha1"
 	ComponentKind         = "Component"
 	MetadataNamespacePath = "metadata/namespace"
+	OriginAnnotations     = "originAnnotations"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
