@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/git"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Origin retains information about where resources in the output
@@ -15,19 +16,22 @@ import (
 type Origin struct {
 	// Path is the path to the resource, rooted from the directory upon
 	// which `kustomize build` was invoked
-	Path string
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 
 	// Repo is the remote repository that the resource originated from if it is
 	// not from a local file
-	Repo string
+	Repo string `json:"repo,omitempty" yaml:"repo,omitempty"`
 
 	// Ref is the ref of the remote repository that the resource originated from
 	// if it is not from a local file
-	Ref string
+	Ref string `json:"ref,omitempty" yaml:"ref,omitempty"`
 }
 
 // Copy returns a copy of origin
 func (origin *Origin) Copy() Origin {
+	if origin == nil {
+		return Origin{}
+	}
 	return *origin
 }
 
@@ -47,14 +51,7 @@ func (origin *Origin) Append(path string) *Origin {
 }
 
 // String returns a string version of origin
-func (origin *Origin) String() string {
-	var anno string
-	anno = anno + "path: " + origin.Path + "\n"
-	if origin.Repo != "" {
-		anno = anno + "repo: " + origin.Repo + "\n"
-	}
-	if origin.Ref != "" {
-		anno = anno + "ref: " + origin.Ref + "\n"
-	}
-	return anno
+func (origin *Origin) String() (string, error) {
+	anno, err := kyaml.Marshal(origin)
+	return string(anno), err
 }

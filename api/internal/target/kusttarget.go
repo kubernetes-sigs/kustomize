@@ -113,7 +113,11 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 }
 
 func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
-	ra, err := kt.AccumulateTarget(&resource.Origin{})
+	var origin *resource.Origin
+	if utils.StringSliceContains(kt.kustomization.BuildMetadata, types.OriginAnnotations) {
+		origin = &resource.Origin{}
+	}
+	ra, err := kt.AccumulateTarget(origin)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +375,11 @@ func (kt *KustTarget) accumulateResources(
 				return nil, errors.Wrapf(
 					err, "accumulation err='%s'", errF.Error())
 			}
-			ra, err = kt.accumulateDirectory(ra, ldr, origin.Append(path), false)
+			if origin != nil {
+				ra, err = kt.accumulateDirectory(ra, ldr, origin.Append(path), false)
+			} else {
+				ra, err = kt.accumulateDirectory(ra, ldr, nil, false)
+			}
 			if err != nil {
 				return nil, errors.Wrapf(
 					err, "accumulation err='%s'", errF.Error())
@@ -392,8 +400,11 @@ func (kt *KustTarget) accumulateComponents(
 			return nil, fmt.Errorf("loader.New %q", errL)
 		}
 		var errD error
-		origin.Path = filepath.Join(origin.Path, path)
-		ra, errD = kt.accumulateDirectory(ra, ldr, origin, true)
+		if origin != nil {
+			ra, errD = kt.accumulateDirectory(ra, ldr, origin.Append(path), true)
+		} else {
+			ra, errD = kt.accumulateDirectory(ra, ldr, nil, true)
+		}
 		if errD != nil {
 			return nil, fmt.Errorf("accumulateDirectory: %q", errD)
 		}
@@ -459,10 +470,13 @@ func (kt *KustTarget) accumulateFile(
 	if err != nil {
 		return errors.Wrapf(err, "accumulating resources from '%s'", path)
 	}
-	if utils.StringSliceContains(kt.kustomization.BuildMetadata, "originAnnotations") {
-		origin = origin.Append(path)
-		err = resources.AnnotateAll(utils.OriginAnnotation, origin.String())
+	if origin != nil {
+		originAnno, err := origin.Append(path).String()
 		if err != nil {
+			return errors.Wrapf(err, "cannot add path annotation for '%s'", path)
+		}
+		err = resources.AnnotateAll(utils.OriginAnnotation, originAnno)
+		if err != nil || originAnno == "" {
 			return errors.Wrapf(err, "cannot add path annotation for '%s'", path)
 		}
 	}
