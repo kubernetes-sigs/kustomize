@@ -40,7 +40,6 @@ verify-kustomize: \
 prow-presubmit-check: \
 	install-tools \
 	lint-kustomize \
-	test-multi-module \
 	test-unit-kustomize-all \
 	test-unit-cmd-all \
 	test-go-mod \
@@ -84,11 +83,6 @@ $(MYGOBIN)/pluginator:
 	go install .
 
 # Build from local source.
-$(MYGOBIN)/prchecker:
-	cd cmd/prchecker; \
-	go install .
-
-# Build from local source.
 $(MYGOBIN)/kustomize: build-kustomize-api
 	cd kustomize; \
 	go install .
@@ -102,7 +96,6 @@ install-tools: \
 	$(MYGOBIN)/k8scopy \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/pluginator \
-	$(MYGOBIN)/prchecker \
 	$(MYGOBIN)/stringer
 
 ### Begin kustomize plugin rules.
@@ -252,19 +245,6 @@ test-unit-cmd-all:
 test-go-mod:
 	./hack/check-go-mod.sh
 
-# Environment variables are defined at
-# https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
-.PHONY: test-multi-module
-test-multi-module: $(MYGOBIN)/prchecker
-	( \
-		export MYGOBIN=$(MYGOBIN); \
-		export REPO_OWNER=$(REPO_OWNER); \
-		export REPO_NAME=$(REPO_NAME); \
-		export PULL_NUMBER=$(PULL_NUMBER); \
-		export MODULES=$(MODULES); \
-		./hack/check-multi-module.sh; \
-	)
-
 .PHONY:
 test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	( \
@@ -358,7 +338,6 @@ clean: clean-kustomize-external-go-plugin
 	rm -f $(MYGOBIN)/golangci-lint-kustomize
 	rm -f $(MYGOBIN)/kustomize
 	rm -f $(MYGOBIN)/mdrip
-	rm -f $(MYGOBIN)/prchecker
 	rm -f $(MYGOBIN)/stringer
 
 # Handle pluginator manually.
