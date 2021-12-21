@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2021 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 //go:generate pluginator
@@ -8,7 +8,6 @@ import (
 	"errors"
 
 	"sigs.k8s.io/kustomize/api/filters/suffix"
-
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -24,6 +23,7 @@ type plugin struct {
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
+// TODO: Make this gvk skip list part of the config.
 var suffixFieldSpecsToSkip = types.FsSlice{
 	{Gvk: resid.Gvk{Kind: "CustomResourceDefinition"}},
 	{Gvk: resid.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"}},
@@ -69,6 +69,9 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 
 				r.AddNameSuffix(p.Suffix)
 				if p.Suffix != "" {
+					// TODO: There are multiple transformers that can change a resource's name, and each makes a call to
+					// StorePreviousID(). We should make it so that we only call StorePreviousID once per kustomization layer
+					// to avoid storing intermediate names between transformations, to prevent intermediate name conflicts.
 					r.StorePreviousId()
 				}
 			}

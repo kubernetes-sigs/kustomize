@@ -7,7 +7,6 @@ import (
 	"errors"
 
 	"sigs.k8s.io/kustomize/api/filters/prefix"
-
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -65,6 +64,9 @@ func (p *PrefixTransformerPlugin) Transform(m resmap.ResMap) error {
 
 				r.AddNamePrefix(p.Prefix)
 				if p.Prefix != "" {
+					// TODO: There are multiple transformers that can change a resource's name, and each makes a call to
+					// StorePreviousID(). We should make it so that we only call StorePreviousID once per kustomization layer
+					// to avoid storing intermediate names between transformations, to prevent intermediate name conflicts.
 					r.StorePreviousId()
 				}
 			}

@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2021 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package suffix_test
@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/api/filters/suffix"
-
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )

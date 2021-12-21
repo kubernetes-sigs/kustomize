@@ -4,10 +4,10 @@
 package main_test
 
 import (
-	"sigs.k8s.io/kustomize/api/types"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestReplicaCountTransformer(t *testing.T) {

@@ -7,9 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/filters/prefix"
-
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/filters/prefix"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
