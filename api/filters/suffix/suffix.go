@@ -1,7 +1,7 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2021 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package prefixsuffix
+package suffix
 
 import (
 	"fmt"
@@ -13,9 +13,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Filter applies resource name prefix's and suffix's using the fieldSpecs
+// Filter applies resource name suffix's using the fieldSpecs
 type Filter struct {
-	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 	Suffix string `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 
 	FieldSpec types.FieldSpec `json:"fieldSpec,omitempty" yaml:"fieldSpec,omitempty"`
@@ -39,5 +38,5 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 
 func (f Filter) evaluateField(node *yaml.RNode) error {
 	return filtersutil.SetScalar(fmt.Sprintf(
-		"%s%s%s", f.Prefix, node.YNode().Value, f.Suffix))(node)
+		"%s%s", node.YNode().Value, f.Suffix))(node)
 }

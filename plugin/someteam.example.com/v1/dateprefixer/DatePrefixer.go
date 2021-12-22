@@ -25,11 +25,10 @@ type plugin struct {
 //noinspection GoUnusedGlobalVariable
 var KustomizePlugin plugin
 
-func (p *plugin) makePrefixSuffixPluginConfig() ([]byte, error) {
+func (p *plugin) makePrefixPluginConfig() ([]byte, error) {
 	var s struct {
-		Prefix     string
-		Suffix     string
-		FieldSpecs []types.FieldSpec
+		Prefix     string            `json:"prefix,omitempty" yaml:"prefix,omitempty"`
+		FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 	}
 	s.Prefix = getDate() + "-"
 	s.FieldSpecs = []types.FieldSpec{
@@ -40,16 +39,16 @@ func (p *plugin) makePrefixSuffixPluginConfig() ([]byte, error) {
 
 func (p *plugin) Config(h *resmap.PluginHelpers, _ []byte) error {
 	// Ignore the incoming c, compute new config.
-	c, err := p.makePrefixSuffixPluginConfig()
+	c, err := p.makePrefixPluginConfig()
 	if err != nil {
 		return errors.Wrapf(
 			err, "dateprefixer makeconfig")
 	}
-	prefixer := builtins.NewPrefixSuffixTransformerPlugin()
+	prefixer := builtins.NewPrefixTransformerPlugin()
 	err = prefixer.Config(h, c)
 	if err != nil {
 		return errors.Wrapf(
-			err, "prefixsuffix configure")
+			err, "prefix configure")
 	}
 	p.t = prefixer
 	return nil
