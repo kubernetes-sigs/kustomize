@@ -172,7 +172,7 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 		return nil, err
 	}
 	if rn.IsNilOrEmpty() {
-		return nil, fmt.Errorf("fieldPath `%s` is missing for replacement source %s", r.Source.FieldPath, r.Source)
+		return nil, fmt.Errorf("fieldPath `%s` is missing for replacement source %s", r.Source.FieldPath, r.Source.ResId)
 	}
 
 	return getRefinedValue(r.Source.Options, rn)

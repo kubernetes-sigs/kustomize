@@ -37,9 +37,9 @@ func NewResIdKindOnly(k string, n string) ResId {
 }
 
 const (
-	noNamespace          = "~X"
-	noName               = "~N"
-	separator            = "|"
+	noNamespace          = "[noNs]"
+	noName               = "[noName]"
+	separator            = "/"
 	TotallyNotANamespace = "_non_namespaceable_"
 	DefaultNamespace     = "default"
 )
@@ -55,31 +55,29 @@ func (id ResId) String() string {
 		nm = noName
 	}
 	return strings.Join(
-		[]string{id.Gvk.String(), ns, nm}, separator)
+		[]string{id.Gvk.String(), strings.Join([]string{nm, ns}, fieldSep)}, separator)
 }
 
 func FromString(s string) ResId {
 	values := strings.Split(s, separator)
-	g := GvkFromString(values[0])
+	gvk := GvkFromString(values[0])
 
-	ns := values[1]
+	values = strings.Split(values[1], fieldSep)
+	last := len(values)-1
+
+	ns := values[last]
 	if ns == noNamespace {
 		ns = ""
 	}
-	nm := values[2]
+	nm := strings.Join(values[:last], fieldSep)
 	if nm == noName {
 		nm = ""
 	}
 	return ResId{
-		Gvk:       g,
+		Gvk:       gvk,
 		Namespace: ns,
 		Name:      nm,
 	}
-}
-
-// GvknString of ResId based on GVK and name
-func (id ResId) GvknString() string {
-	return id.Gvk.String() + separator + id.Name
 }
 
 // GvknEquals returns true if the other id matches

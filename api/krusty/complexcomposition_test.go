@@ -368,7 +368,7 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_StatefulSet|~X|my-sts") {
+		err.Error(), "already registered id: StatefulSet.v1.apps/my-sts.[noNs]") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
@@ -459,7 +459,7 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_StatefulSet|~X|my-sts") {
+		err.Error(), "already registered id: StatefulSet.v1.apps/my-sts.[noNs]") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
