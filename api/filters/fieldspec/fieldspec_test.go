@@ -59,14 +59,7 @@ apiVersion: foo
 kind: Bar
 xxx:
 `,
-			error: `considering field '' of object
-apiVersion: foo/v1
-kind: Bar
-xxx:
-metadata:
-  annotations:
-    internal.config.kubernetes.io/annotations-migration-resource-id: '0'
-: cannot set or create an empty field name`,
+			error: `considering field '' of object Bar.v1.foo/[noName].[noNs]: cannot set or create an empty field name`,
 			filter: fieldspec.Filter{
 				SetValue: filtersutil.SetScalar("e"),
 			},
@@ -219,14 +212,7 @@ kind: Bar
 a:
   b: a
 `,
-			error: `considering field 'a/b/c' of object
-kind: Bar
-a:
-  b: a
-metadata:
-  annotations:
-    internal.config.kubernetes.io/annotations-migration-resource-id: '0'
-: expected sequence or mapping node`,
+			error: `considering field 'a/b/c' of object Bar.[noVer].[noGrp]/[noName].[noNs]: expected sequence or mapping node`,
 			filter: fieldspec.Filter{
 				SetValue: filtersutil.SetScalar("e"),
 			},

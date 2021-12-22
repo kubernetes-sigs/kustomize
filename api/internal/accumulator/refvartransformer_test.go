@@ -120,15 +120,7 @@ func TestRefVarTransformer(t *testing.T) {
 							"slice": []interface{}{5}, // noticeably *not* a []string
 						}}).ResMap(),
 			},
-			errMessage: `considering field 'data/slice' of object
-apiVersion: v1
-data:
-  slice:
-  - 5
-kind: ConfigMap
-metadata:
-  name: cm1
-: invalid value type expect a string`,
+			errMessage: `considering field 'data/slice' of object ConfigMap.v1.[noGrp]/cm1.[noNs]: invalid value type expect a string`,
 		},
 		"var replacement in nil": {
 			given: given{
