@@ -51,9 +51,8 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	}
 	fltr.path = utils.PathSplitter(fltr.FieldSpec.Path, "/")
 	if err := fltr.filter(obj); err != nil {
-		s, _ := obj.String()
 		return nil, errors.WrapPrefixf(err,
-			"considering field '%s' of object\n%v", fltr.FieldSpec.Path, s)
+			"considering field '%s' of object %s", fltr.FieldSpec.Path, resid.FromRNode(obj))
 	}
 	return obj, nil
 }

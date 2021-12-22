@@ -243,19 +243,7 @@ metadata:
 data:
   slice:
   - false`,
-			expectedError: `considering field 'data/slice' of object
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dep
-  annotations:
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/annotations-migration-resource-id: '0'
-data:
-  slice:
-  - false
-: invalid value type expect a string`,
+			expectedError: `considering field 'data/slice' of object Deployment.v1.apps/dep.[noNs]: invalid value type expect a string`,
 			filter: Filter{
 				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),
@@ -271,18 +259,7 @@ metadata:
   name: dep
 data:
   1: str`,
-			expectedError: `considering field 'data' of object
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dep
-  annotations:
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/annotations-migration-resource-id: '0'
-data:
-  1: str
-: invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,
+			expectedError: `considering field 'data' of object Deployment.v1.apps/dep.[noNs]: invalid map key: value='1', tag='` + yaml.NodeTagInt + `'`,
 			filter: Filter{
 				MappingFunc: makeMf(map[string]interface{}{
 					"VAR": int64(5),

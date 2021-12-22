@@ -6,6 +6,8 @@ package resid
 import (
 	"reflect"
 	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // ResId is an identifier of a k8s resource object.
@@ -63,7 +65,7 @@ func FromString(s string) ResId {
 	gvk := GvkFromString(values[0])
 
 	values = strings.Split(values[1], fieldSep)
-	last := len(values)-1
+	last := len(values) - 1
 
 	ns := values[last]
 	if ns == noNamespace {
@@ -78,6 +80,13 @@ func FromString(s string) ResId {
 		Namespace: ns,
 		Name:      nm,
 	}
+}
+
+// FromRNode returns the ResId for the RNode
+func FromRNode(rn *yaml.RNode) ResId {
+	group, version := ParseGroupVersion(rn.GetApiVersion())
+	return NewResIdWithNamespace(
+		Gvk{Group: group, Version: version, Kind: rn.GetKind()}, rn.GetName(), rn.GetNamespace())
 }
 
 // GvknEquals returns true if the other id matches
