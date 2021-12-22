@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2021 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package main_test
@@ -9,18 +9,17 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestPrefixSuffixTransformer(t *testing.T) {
+func TestPrefixTransformer(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PrefixSuffixTransformer")
+		PrepBuiltin("PrefixTransformer")
 	defer th.Reset()
 
 	rm := th.LoadAndRunTransformer(`
 apiVersion: builtin
-kind: PrefixSuffixTransformer
+kind: PrefixTransformer
 metadata:
   name: notImportantHere
 prefix: baked-
-suffix: -pie
 fieldSpecs:
   - path: metadata/name
 `, `
@@ -67,8 +66,7 @@ metadata:
     internal.config.kubernetes.io/previousKinds: Service
     internal.config.kubernetes.io/previousNames: apple
     internal.config.kubernetes.io/previousNamespaces: default
-    internal.config.kubernetes.io/suffixes: -pie
-  name: baked-apple-pie
+  name: baked-apple
 spec:
   ports:
   - port: 7002
@@ -91,13 +89,12 @@ metadata:
     internal.config.kubernetes.io/previousKinds: ConfigMap
     internal.config.kubernetes.io/previousNames: cm
     internal.config.kubernetes.io/previousNamespaces: default
-    internal.config.kubernetes.io/suffixes: -pie
-  name: baked-cm-pie
+  name: baked-cm
 `)
 
 	rm = th.LoadAndRunTransformer(`
 apiVersion: builtin
-kind: PrefixSuffixTransformer
+kind: PrefixTransformer
 metadata:
   name: notImportantHere
 prefix: test-

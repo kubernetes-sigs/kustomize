@@ -6,6 +6,8 @@ package krusty_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/types"
+
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -13,8 +15,8 @@ import (
 // This is a NamePrefixer that touches Deployments
 // and Services exclusively.
 func TestCustomNamePrefixer(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PrefixSuffixTransformer")
+	th := kusttest_test.MakeEnhancedHarness(t)
+	th.GetPluginConfig().BpLoadingOptions = types.BploUseStaticallyLinked
 	defer th.Reset()
 
 	th.WriteK(".", `
