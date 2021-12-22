@@ -215,7 +215,7 @@ func (m *resWrangler) GetById(
 	if err != nil {
 		return nil, fmt.Errorf(
 			"%s; failed to find unique target for patch %s",
-			err.Error(), id.GvknString())
+			err.Error(), id.String())
 	}
 	return r, nil
 }

@@ -218,7 +218,7 @@ spec:
 		t.Fatalf("No match should return an error")
 	}
 	if err.Error() !=
-		"resource with name service does not match a config with the following GVK [~G_~V_Deployment]" {
+		"resource with name service does not match a config with the following GVK [Deployment.[noVer].[noGrp]]" {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 }

@@ -17,7 +17,7 @@ var resIdStringTests = []struct {
 			Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
 			Name:      "nm",
 		},
-		"g_v_k|ns|nm",
+		"k.v.g/nm.ns",
 	},
 	{
 		ResId{
@@ -25,7 +25,7 @@ var resIdStringTests = []struct {
 			Gvk:       Gvk{Version: "v", Kind: "k"},
 			Name:      "nm",
 		},
-		"~G_v_k|ns|nm",
+		"k.v.[noGrp]/nm.ns",
 	},
 	{
 		ResId{
@@ -33,7 +33,7 @@ var resIdStringTests = []struct {
 			Gvk:       Gvk{Kind: "k"},
 			Name:      "nm",
 		},
-		"~G_~V_k|ns|nm",
+		"k.[noVer].[noGrp]/nm.ns",
 	},
 	{
 		ResId{
@@ -41,38 +41,26 @@ var resIdStringTests = []struct {
 			Gvk:       Gvk{},
 			Name:      "nm",
 		},
-		"~G_~V_~K|ns|nm",
+		"[noKind].[noVer].[noGrp]/nm.ns",
 	},
 	{
 		ResId{
 			Gvk:  Gvk{},
 			Name: "nm",
 		},
-		"~G_~V_~K|~X|nm",
-	},
-	{
-		ResId{
-			Gvk:  Gvk{},
-			Name: "nm",
-		},
-		"~G_~V_~K|~X|nm",
+		"[noKind].[noVer].[noGrp]/nm.[noNs]",
 	},
 	{
 		ResId{
 			Gvk: Gvk{},
 		},
-		"~G_~V_~K|~X|~N",
-	},
-	{
-		ResId{
-			Gvk: Gvk{},
-		},
-		"~G_~V_~K|~X|~N",
+		"[noKind].[noVer].[noGrp]/[noName].[noNs]",
 	},
 	{
 		ResId{},
-		"~G_~V_~K|~X|~N",
+		"[noKind].[noVer].[noGrp]/[noName].[noNs]",
 	},
+
 }
 
 func TestResIdString(t *testing.T) {
@@ -83,84 +71,7 @@ func TestResIdString(t *testing.T) {
 	}
 }
 
-var gvknStringTests = []struct {
-	x ResId
-	s string
-}{
-	{
-		ResId{
-			Namespace: "ns",
-			Gvk:       Gvk{Group: "g", Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		"g_v_k|nm",
-	},
-	{
-		ResId{
-			Namespace: "ns",
-			Gvk:       Gvk{Version: "v", Kind: "k"},
-			Name:      "nm",
-		},
-		"~G_v_k|nm",
-	},
-	{
-		ResId{
-			Namespace: "ns",
-			Gvk:       Gvk{Kind: "k"},
-			Name:      "nm",
-		},
-		"~G_~V_k|nm",
-	},
-	{
-		ResId{
-			Namespace: "ns",
-			Gvk:       Gvk{},
-			Name:      "nm",
-		},
-		"~G_~V_~K|nm",
-	},
-	{
-		ResId{
-			Gvk:  Gvk{},
-			Name: "nm",
-		},
-		"~G_~V_~K|nm",
-	},
-	{
-		ResId{
-			Gvk:  Gvk{},
-			Name: "nm",
-		},
-		"~G_~V_~K|nm",
-	},
-	{
-		ResId{
-			Gvk: Gvk{},
-		},
-		"~G_~V_~K|",
-	},
-	{
-		ResId{
-			Gvk: Gvk{},
-		},
-		"~G_~V_~K|",
-	},
-	{
-		ResId{},
-		"~G_~V_~K|",
-	},
-}
-
-func TestGvknString(t *testing.T) {
-	for _, hey := range gvknStringTests {
-		if hey.x.GvknString() != hey.s {
-			t.Fatalf("Actual: %s,  Expected: '%s'", hey.x.GvknString(), hey.s)
-		}
-	}
-}
-
 func TestResIdEquals(t *testing.T) {
-
 	var GvknEqualsTest = []struct {
 		id1        ResId
 		id2        ResId
@@ -357,6 +268,24 @@ var ids = []ResId{
 	},
 	{
 		Gvk: Gvk{},
+	},
+	{
+		Gvk: Gvk{
+			Group: "rbac.authorization.k8s.io",
+			Version: "v1",
+			Kind: "ClusterRole",
+			isClusterScoped: true,
+		},
+		Name: "nm",
+	},
+	{
+		Gvk: Gvk{
+			Group: "rbac.authorization.k8s.io",
+			Version: "v1",
+			Kind: "ClusterRole",
+			isClusterScoped: true,
+		},
+		Name: "my.name",
 	},
 }
 
