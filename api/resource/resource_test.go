@@ -1377,7 +1377,7 @@ spec:
   numReplicas: 1
 `))
 	assert.NoError(t, err)
-	r.SetGvk(resid.GvkFromString("grp_ver_knd"))
+	r.SetGvk(resid.GvkFromString("knd.ver.grp"))
 	gvk := r.GetGvk()
 	if expected, actual := "grp", gvk.Group; expected != actual {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
@@ -1400,30 +1400,30 @@ spec:
   numReplicas: 1
 `))
 	assert.NoError(t, err)
-	r.AppendRefBy(resid.FromString("gr1_ver1_knd1|ns1|name1"))
+	r.AppendRefBy(resid.FromString("knd1.ver1.gr1/name1.ns1"))
 	assert.Equal(t, r.RNode.MustString(), `apiVersion: v1
 kind: Deployment
 metadata:
   name: clown
   annotations:
-    internal.config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1
+    internal.config.kubernetes.io/refBy: knd1.ver1.gr1/name1.ns1
 spec:
   numReplicas: 1
 `)
-	assert.Equal(t, r.GetRefBy(), []resid.ResId{resid.FromString("gr1_ver1_knd1|ns1|name1")})
+	assert.Equal(t, r.GetRefBy(), []resid.ResId{resid.FromString("knd1.ver1.gr1/name1.ns1")})
 
-	r.AppendRefBy(resid.FromString("gr2_ver2_knd2|ns2|name2"))
+	r.AppendRefBy(resid.FromString("knd2.ver2.gr2/name2.ns2"))
 	assert.Equal(t, r.RNode.MustString(), `apiVersion: v1
 kind: Deployment
 metadata:
   name: clown
   annotations:
-    internal.config.kubernetes.io/refBy: gr1_ver1_knd1|ns1|name1,gr2_ver2_knd2|ns2|name2
+    internal.config.kubernetes.io/refBy: knd1.ver1.gr1/name1.ns1,knd2.ver2.gr2/name2.ns2
 spec:
   numReplicas: 1
 `)
 	assert.Equal(t, r.GetRefBy(), []resid.ResId{
-		resid.FromString("gr1_ver1_knd1|ns1|name1"),
-		resid.FromString("gr2_ver2_knd2|ns2|name2"),
+		resid.FromString("knd1.ver1.gr1/name1.ns1"),
+		resid.FromString("knd2.ver2.gr2/name2.ns2"),
 	})
 }

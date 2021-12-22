@@ -521,7 +521,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 					},
 				}).ResMap(),
 			expectedErr: `updating name reference in 'rules/resourceNames' field of ` +
-				`'rbac.authorization.k8s.io_v1_ClusterRole|~X|cr'` +
+				`'ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]'` +
 				`: considering field 'rules/resourceNames' of object
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

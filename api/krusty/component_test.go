@@ -589,7 +589,7 @@ components:
 - ../comp-b`),
 			},
 			runPath:       "prod",
-			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|proxy",
+			expectedError: "may not add resource with an already registered id: Deployment.v1.[noGrp]/proxy.[noNs]",
 		},
 		"components-cannot-add-the-same-base": {
 			input: []FileGen{writeTestBase,
@@ -608,7 +608,7 @@ components:
 - ../comp-b`),
 			},
 			runPath:       "prod",
-			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|storefront",
+			expectedError: "may not add resource with an already registered id: Deployment.v1.[noGrp]/storefront.[noNs]",
 		},
 		"components-cannot-add-bases-containing-the-same-resource": {
 			input: []FileGen{writeTestBase,
@@ -639,7 +639,7 @@ components:
 - ../comp-b`),
 			},
 			runPath:       "prod",
-			expectedError: "may not add resource with an already registered id: ~G_v1_Deployment|~X|proxy",
+			expectedError: "may not add resource with an already registered id: Deployment.v1.[noGrp]/proxy.[noNs]",
 		},
 	}
 

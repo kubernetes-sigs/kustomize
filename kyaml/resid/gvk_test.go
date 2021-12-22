@@ -47,8 +47,8 @@ var lessThanTests = []struct {
 		Gvk{Group: "a", Version: "c", Kind: "ClusterRole"}},
 	{Gvk{Group: "a", Version: "c", Kind: "Namespace"},
 		Gvk{Group: "a", Version: "b", Kind: "ClusterRole"}},
-	{Gvk{Group: "a", Version: "d", Kind: "Namespace"},
-		Gvk{Group: "b", Version: "c", Kind: "Namespace"}},
+	{Gvk{Group: "b", Version: "c", Kind: "Namespace"},
+		Gvk{Group: "a", Version: "d", Kind: "Namespace"}},
 	{Gvk{Group: "a", Version: "b", Kind: orderFirst[len(orderFirst)-1]},
 		Gvk{Group: "a", Version: "b", Kind: orderLast[0]}},
 	{Gvk{Group: "a", Version: "b", Kind: orderFirst[len(orderFirst)-1]},
@@ -87,14 +87,16 @@ var stringTests = []struct {
 	s string
 	r string
 }{
-	{Gvk{}, "~G_~V_~K", ""},
-	{Gvk{Kind: "k"}, "~G_~V_k", "k"},
-	{Gvk{Version: "v"}, "~G_v_~K", "v"},
-	{Gvk{Version: "v", Kind: "k"}, "~G_v_k", "v_k"},
-	{Gvk{Group: "g"}, "g_~V_~K", "g"},
-	{Gvk{Group: "g", Kind: "k"}, "g_~V_k", "g_k"},
-	{Gvk{Group: "g", Version: "v"}, "g_v_~K", "g_v"},
-	{Gvk{Group: "g", Version: "v", Kind: "k"}, "g_v_k", "g_v_k"},
+	{Gvk{}, "[noKind].[noVer].[noGrp]", ""},
+	{Gvk{Kind: "k"}, "k.[noVer].[noGrp]", "k"},
+	{Gvk{Version: "v"}, "[noKind].v.[noGrp]", "v"},
+	{Gvk{Version: "v", Kind: "k"}, "k.v.[noGrp]", "v_k"},
+	{Gvk{Group: "g"}, "[noKind].[noVer].g", "g"},
+	{Gvk{Group: "g", Kind: "k"}, "k.[noVer].g", "g_k"},
+	{Gvk{Group: "g", Version: "v"}, "[noKind].v.g", "g_v"},
+	{Gvk{Group: "g", Version: "v", Kind: "k"}, "k.v.g", "g_v_k"},
+	{Gvk{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole", isClusterScoped: true},
+		"ClusterRole.v1.rbac.authorization.k8s.io", "rbac.authorization.k8s.io_v1_ClusterRole"},
 }
 
 func TestString(t *testing.T) {
