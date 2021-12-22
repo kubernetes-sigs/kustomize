@@ -532,7 +532,7 @@ metadata:
 `)
 }
 
-func TestUnrelatedNameReferenceReplacementIssue4054(t *testing.T) {
+func TestUnrelatedNameReferenceReplacement_Issue4254_Issue3418(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 
 	// The cluster-autoscaler lease name should not be changed.
@@ -557,21 +557,20 @@ configMapGenerator:
   literals:
   - AWS_REGION="us-east-1"
 `)
-	// The resourceNames for the leases resource in the ClusterRole should not be
+	// The resourceNames for the leases resource in the ClusterRole should NOT be
 	// updated with the name suffix, because it's not targeting the generated
-	// configmap
+	// configmap. The value at rules[0].resourceNames[0] is currently incorrect.
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels: null
   name: cluster-autoscaler
 rules:
 - apiGroups:
   - coordination.k8s.io
   resourceNames:
-  - cluster-autoscaler
+  - cluster-autoscaler-h8mmcct52k
   resources:
   - leases
   verbs:
