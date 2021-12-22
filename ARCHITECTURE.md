@@ -1,6 +1,6 @@
 # Architecture
 
-* _Updated: June 2021_
+* _Updated: December 2021_
 
 This document describes the repository organization and the kustomize
 build process. It's meant to lower the barrier to learning and
@@ -105,7 +105,6 @@ The main public packages in the [`api` module] are
 
  | package   |             |
  | --------: | :---------- |
- | `filesys` | A kustomize-specific file system abstraction, to ease writing tests. |
  | `filters` | Implementations of [`kyaml/kio.Filter`] used by kustomize to transform Kubernetes objects. |
  |  `konfig` | Configuration methods and constants in the kustomize API. |
  |  `krusty` | Primary API entry point.  Holds the kustomizer and hundreds of tests for it. |
@@ -131,6 +130,20 @@ The [`kyaml` module] is a kubernetes-focussed enhancement of [go-yaml].
 The YAML manipulation performed by a kustomize is based on these libraries.
 
 These libraries evolve independently of kustomize, and other programs depend on them.
+
+The key public packages in the [`kyaml` module] include
+
+ | package   |             |
+ | --------: | :---------- |
+ | `errors` | Wrapper for the go-errors/errors lib |
+ | `filesys` | A kustomize-specific file system abstraction, to ease writing tests |
+ | `fn/framework` | An SDK for writing KRM Functions in Go |
+ | `fn/runtime` | Implements the runtime for KRM Function extensions |
+ | `kio` | Libraries for reading and writing collections of Kubernetes resources as RNodes |
+ | `openapi` | Loads and accesses openapi schemas for schema-aware resource manipultaion |
+ | `resid` | Representations to aid in unique identification of Kubernetes resources |
+ | `yaml` | A Kubernetes-focused wrapper of [go-yaml], notably including the RNode object |
+
 
 -------
 
@@ -170,10 +183,10 @@ YAML manipulation.
     but also retains the resources in the order they were
     specified in kustomization files (list behavior).
 
-    Post-run, theq objects are fully hydrated, per the
+    Post-run, the objects are fully hydrated, per the
     instructions in the kustomization.
 
-  - Marshal the objects as YAML to files or `stdout`.
+  - Marshal the objects as YAML to a file or `stdout`.
 
 
 ### The `Run` function
@@ -191,13 +204,13 @@ YAML manipulation.
     - A plugin loader.
 
       It finds plugins (transformers, generators or validators)
-      and prepare them for running.
+      and prepares them for running.
 
     - A `KustTarget` encapsulating all of the above.
 
       A KustTarget contains one `Kustomization` and represents
 	  everything that kustomization can reach.  This will include
-	  other `KustTarget` instances, each having a smaller purvue than
+	  other `KustTarget` instances, each having a smaller purview than
 	  the one referencing it.
 
   - Call `KustTarget.Load` to load its kustomization.
@@ -224,7 +237,7 @@ YAML manipulation.
       resources.  E.g. from which repo and file the resource was
       read, the fact that kustomize touched the resource, etc.
       These kustomize-specific annotations are intended for
-      server-side data analytics, file structure tracability and
+      server-side data analytics, file structure traceability and
       reconstruction, etc.
 
 ### The `makeCustomizedResmap` function
@@ -235,7 +248,7 @@ YAML manipulation.
   - Call `ra := KustTarget.AccumulateTarget`.
 
     The result, `ra`, is a resource accumulator that contains
-    everything referred to by the current kustomization, now full
+    everything referred to by the current kustomization, now fully
     hydrated.
 
   - Uniquify names of generated objects by appending content hashes.
