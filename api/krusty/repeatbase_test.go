@@ -128,7 +128,7 @@ spec:
 
 	err := th.RunWithErr("mango", th.MakeDefaultOptions())
 	if !strings.Contains(
-		err.Error(), "multiple matches for Id apps_v1_Deployment|~X|banana; failed to find unique target for patch") {
+		err.Error(), "multiple matches for Id Deployment.v1.apps/banana.[noNs]; failed to find unique target for patch Deployment.v1.apps/banana.[noNs]") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 

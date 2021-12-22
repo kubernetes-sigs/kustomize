@@ -141,7 +141,7 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: apps_v1_Deployment|~X|my-deployment") {
+		err.Error(), "already registered id: Deployment.v1.apps/my-deployment.[noNs]") {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }

@@ -49,7 +49,7 @@ func ParseGroupVersion(apiVersion string) (group, version string) {
 // GvkFromString makes a Gvk from the output of Gvk.String().
 func GvkFromString(s string) Gvk {
 	values := strings.Split(s, fieldSep)
-	if len(values) != 3 {
+	if len(values) < 3 {
 		// ...then the string didn't come from Gvk.String().
 		return Gvk{
 			Group:   noGroup,
@@ -57,27 +57,27 @@ func GvkFromString(s string) Gvk {
 			Kind:    noKind,
 		}
 	}
-	g := values[0]
-	if g == noGroup {
-		g = ""
+	k := values[0]
+	if k == noKind {
+		k = ""
 	}
 	v := values[1]
 	if v == noVersion {
 		v = ""
 	}
-	k := values[2]
-	if k == noKind {
-		k = ""
+	g := strings.Join(values[2:], fieldSep)
+	if g == noGroup {
+		g = ""
 	}
 	return NewGvk(g, v, k)
 }
 
 // Values that are brief but meaningful in logs.
 const (
-	noGroup   = "~G"
-	noVersion = "~V"
-	noKind    = "~K"
-	fieldSep  = "_"
+	noGroup   = "[noGrp]"
+	noVersion = "[noVer]"
+	noKind    = "[noKind]"
+	fieldSep  = "."
 )
 
 // String returns a string representation of the GVK.
@@ -94,7 +94,7 @@ func (x Gvk) String() string {
 	if k == "" {
 		k = noKind
 	}
-	return strings.Join([]string{g, v, k}, fieldSep)
+	return strings.Join([]string{k, v, g}, fieldSep)
 }
 
 // ApiVersion returns the combination of Group and Version
@@ -109,7 +109,8 @@ func (x Gvk) ApiVersion() string {
 }
 
 // StringWoEmptyField returns a string representation of the GVK. Non-exist
-// fields will be omitted.
+// fields will be omitted. This is called when generating a filename for the
+// resource.
 func (x Gvk) StringWoEmptyField() string {
 	var s []string
 	if x.Group != "" {
@@ -121,7 +122,7 @@ func (x Gvk) StringWoEmptyField() string {
 	if x.Kind != "" {
 		s = append(s, x.Kind)
 	}
-	return strings.Join(s, fieldSep)
+	return strings.Join(s, "_")
 }
 
 // Equals returns true if the Gvk's have equal fields.

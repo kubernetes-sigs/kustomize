@@ -269,7 +269,7 @@ spec:
   - select:
       kind: Deployment
 `,
-			expectedErr: "multiple matches for selector ~G_~V_Deployment|~X|~N",
+			expectedErr: "multiple matches for selector Deployment.[noVer].[noGrp]/[noName].[noNs]",
 		},
 		"replacement has no source": {
 			input: `apiVersion: v1
@@ -1586,7 +1586,7 @@ data:
     options:
       create: true
 `,
-			expectedErr: "fieldPath `data.httpPort` is missing for replacement source ~G_~V_ConfigMap|~X|ports-from:data.httpPort",
+			expectedErr: "fieldPath `data.httpPort` is missing for replacement source ConfigMap.[noVer].[noGrp]/ports-from.[noNs]",
 		},
 		"annotationSelector": {
 			input: `apiVersion: v1
