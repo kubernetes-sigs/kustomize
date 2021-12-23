@@ -26,6 +26,13 @@ type Generator interface {
 	Generate() (ResMap, error)
 }
 
+// A GeneratorWithProperties contains a Generator and stores
+// some of its properties
+type GeneratorWithProperties struct {
+	Generator
+	Origin *resource.Origin
+}
+
 // Something that's configurable accepts an
 // instance of PluginHelpers and a raw config
 // object (YAML in []byte form).
@@ -135,6 +142,11 @@ type ResMap interface {
 	// be BehaviorMerge or BehaviorReplace. If X is not in
 	// self, then its behavior _cannot_ be merge or replace.
 	AbsorbAll(ResMap) error
+
+	// AddOriginAnnotation will add the provided origin as
+	// an annotation to all resources in the Resmap, if
+	// the origin is not nil.
+	AddOriginAnnotation(origin *resource.Origin) error
 
 	// AnnotateAll annotates all resources in the ResMap with
 	// the provided key value pair.

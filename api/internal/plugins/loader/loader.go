@@ -53,14 +53,18 @@ func (l *Loader) SetWorkDir(wd string) {
 }
 
 func (l *Loader) LoadGenerators(
-	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]resmap.Generator, error) {
-	var result []resmap.Generator
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) (
+	result []*resmap.GeneratorWithProperties, err error) {
 	for _, res := range rm.Resources() {
 		g, err := l.LoadGenerator(ldr, v, res)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, g)
+		generatorOrigin, err := resource.OriginFromCustomPlugin(res)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &resmap.GeneratorWithProperties{Generator: g, Origin: generatorOrigin})
 	}
 	return result, nil
 }

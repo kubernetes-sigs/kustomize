@@ -5,11 +5,14 @@ package target
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Functions dedicated to configuring the builtin
@@ -27,8 +30,8 @@ import (
 // image tag transforms.  In these cases, we'll need
 // N plugin instances with differing configurations.
 
-func (kt *KustTarget) configureBuiltinGenerators() (
-	result []resmap.Generator, err error) {
+func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
+	result []*resmap.GeneratorWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.ConfigMapGenerator,
 		builtinhelpers.SecretGenerator,
@@ -39,7 +42,25 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, r...)
+
+		var generatorOrigin *resource.Origin
+		if origin != nil {
+			generatorOrigin = &resource.Origin{
+				Repo:         origin.Repo,
+				Ref:          origin.Ref,
+				ConfiguredIn: filepath.Join(origin.Path, kt.kustFileName),
+				ConfiguredBy: yaml.ResourceIdentifier{
+					TypeMeta: yaml.TypeMeta{
+						APIVersion: "builtin",
+						Kind:       bpt.String(),
+					},
+				},
+			}
+		}
+
+		for i := range r {
+			result = append(result, &resmap.GeneratorWithProperties{Generator: r[i], Origin: generatorOrigin})
+		}
 	}
 	return result, nil
 }
