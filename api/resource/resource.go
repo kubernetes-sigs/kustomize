@@ -67,6 +67,29 @@ func (r *Resource) SetGvk(gvk resid.Gvk) {
 	r.SetApiVersion(gvk.ApiVersion())
 }
 
+func (r *Resource) GetOrigin() (*Origin, error) {
+	annotations := r.GetAnnotations()
+	originAnnotations, ok := annotations[utils.OriginAnnotation]
+	if !ok {
+		return nil, nil
+	}
+	var origin Origin
+	if err := yaml.Unmarshal([]byte(originAnnotations), &origin); err != nil {
+		return nil, err
+	}
+	return &origin, nil
+}
+
+func (r *Resource) SetOrigin(origin *Origin) error {
+	annotations := r.GetAnnotations()
+	originStr, err := origin.String()
+	if err != nil {
+		return err
+	}
+	annotations[utils.OriginAnnotation] = originStr
+	return r.SetAnnotations(annotations)
+}
+
 // ResCtx is an interface describing the contextual added
 // kept kustomize in the context of each Resource object.
 // Currently mainly the name prefix and name suffix are added.
