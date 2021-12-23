@@ -30,28 +30,8 @@ import (
 // image tag transforms.  In these cases, we'll need
 // N plugin instances with differing configurations.
 
-var builtinKinds = map[builtinhelpers.BuiltinPluginType]string{
-	builtinhelpers.AnnotationsTransformer:         "AnnotationTransformer",
-	builtinhelpers.ConfigMapGenerator:             "ConfigMapGenerator",
-	builtinhelpers.IAMPolicyGenerator:             "IAMPolicyGenerator",
-	builtinhelpers.HashTransformer:                "HashTransformer",
-	builtinhelpers.ImageTagTransformer:            "ImageTagTransformer",
-	builtinhelpers.LabelTransformer:               "LabelTransformer",
-	builtinhelpers.LegacyOrderTransformer:         "LegacyOrderTransformer",
-	builtinhelpers.NamespaceTransformer:           "NamespaceTransformer",
-	builtinhelpers.PatchJson6902Transformer:       "PatchJson6902Transformer",
-	builtinhelpers.PatchStrategicMergeTransformer: "PatchStrategicMergeTransformer",
-	builtinhelpers.PatchTransformer:               "PatchTransformer",
-	builtinhelpers.PrefixSuffixTransformer:        "PrefixSuffixTransformer",
-	builtinhelpers.ReplicaCountTransformer:        "ReplicaCountTransformer",
-	builtinhelpers.SecretGenerator:                "SecretGenerator",
-	builtinhelpers.ValueAddTransformer:            "ValueAddTransformer",
-	builtinhelpers.HelmChartInflationGenerator:    "HelmChartInflationGenerator",
-	builtinhelpers.ReplacementTransformer:         "ReplacementTransformer",
-}
-
 func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
-	result []resmap.Generator, origins []*resource.Origin, err error) {
+	result []*resmap.GeneratorWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.ConfigMapGenerator,
 		builtinhelpers.SecretGenerator,
@@ -60,7 +40,7 @@ func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
 		r, err := generatorConfigurators[bpt](
 			kt, bpt, builtinhelpers.GeneratorFactories[bpt])
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		var generatorOrigin *resource.Origin
@@ -72,18 +52,17 @@ func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",
-						Kind:       builtinKinds[bpt],
+						Kind:       bpt.String(),
 					},
 				},
 			}
 		}
 
 		for i := range r {
-			origins = append(origins, generatorOrigin)
-			result = append(result, r[i])
+			result = append(result, &resmap.GeneratorWithProperties{Generator: r[i], Origin: generatorOrigin})
 		}
 	}
-	return result, origins, nil
+	return result, nil
 }
 
 func (kt *KustTarget) configureBuiltinTransformers(

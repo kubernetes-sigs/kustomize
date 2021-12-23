@@ -249,29 +249,26 @@ func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
 
 func (kt *KustTarget) runGenerators(
 	ra *accumulator.ResAccumulator, origin *resource.Origin) error {
-	var generators []resmap.Generator
-	var origins []*resource.Origin
-	gs, os, err := kt.configureBuiltinGenerators(origin)
+	var generators []*resmap.GeneratorWithProperties
+	gs, err := kt.configureBuiltinGenerators(origin)
 	if err != nil {
 		return err
 	}
 	generators = append(generators, gs...)
-	origins = append(origins, os...)
 
-	gs, os, err = kt.configureExternalGenerators(origin)
+	gs, err = kt.configureExternalGenerators(origin)
 	if err != nil {
 		return errors.Wrap(err, "loading generator plugins")
 	}
 	generators = append(generators, gs...)
-	origins = append(origins, os...)
 
 	for i, g := range generators {
 		resMap, err := g.Generate()
 		if err != nil {
 			return err
 		}
-		if resMap != nil && i < len(origins) {
-			err = resMap.AddOriginAnnotation(origins[i])
+		if resMap != nil {
+			err = resMap.AddOriginAnnotation(generators[i].Origin)
 			if err != nil {
 				return errors.Wrapf(err, "adding origin annotations for generator %v", g)
 			}
@@ -284,8 +281,8 @@ func (kt *KustTarget) runGenerators(
 	return nil
 }
 
-func (kt *KustTarget) configureExternalGenerators(origin *resource.Origin) ([]resmap.Generator,
-	[]*resource.Origin, error) {
+func (kt *KustTarget) configureExternalGenerators(origin *resource.Origin) (
+	[]*resmap.GeneratorWithProperties, error) {
 	ra := accumulator.MakeEmptyAccumulator()
 	var generatorPaths []string
 	for _, p := range kt.kustomization.Generators {
@@ -295,12 +292,21 @@ func (kt *KustTarget) configureExternalGenerators(origin *resource.Origin) ([]re
 			// not an inline config
 			generatorPaths = append(generatorPaths, p)
 			continue
+		} else {
+			// inline config, track the origin
+			if origin != nil {
+				resources := rm.Resources()
+				for _, r := range resources {
+					r.SetOrigin(origin.Append(kt.kustFileName))
+					rm.Replace(r)
+				}
+			}
 		}
 		ra.AppendAll(rm)
 	}
 	ra, err := kt.accumulateResources(ra, generatorPaths, origin)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
 }

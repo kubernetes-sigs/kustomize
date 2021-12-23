@@ -26,6 +26,13 @@ type Generator interface {
 	Generate() (ResMap, error)
 }
 
+// A GeneratorWithProperties contains a Generator and stores
+// some of its properties
+type GeneratorWithProperties struct {
+	Generator
+	Origin *resource.Origin
+}
+
 // Something that's configurable accepts an
 // instance of PluginHelpers and a raw config
 // object (YAML in []byte form).

@@ -491,6 +491,96 @@ spec:
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
+func TestAnnoOriginCustomInlineExecGenerator(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	th.WriteK(tmpDir.String(), `
+resources:
+- short_secret.yaml
+generators:
+- |-
+  kind: executable
+  metadata:
+    name: demo
+    annotations:
+      config.kubernetes.io/function: |
+        exec:
+          path: ./generateDeployment.sh
+  spec:
+buildMetadata: [originAnnotations]
+`)
+
+	// Create some additional resource just to make sure everything is added
+	th.WriteF(filepath.Join(tmpDir.String(), "short_secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "generateDeployment.sh"), generateDeploymentDotSh)
+	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
+	m := th.Run(tmpDir.String(), o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: short_secret.yaml
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
 func TestAnnoOriginCustomExecGeneratorWithOverlay(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 
@@ -568,6 +658,102 @@ metadata:
   annotations:
     config.kubernetes.io/origin: |
       configuredIn: ../base/gener.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestAnnoOriginCustomInlineExecGeneratorWithOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	th.WriteK(base, `
+resources:
+- short_secret.yaml
+generators:
+- |-
+  kind: executable
+  metadata:
+    name: demo
+    annotations:
+      config.kubernetes.io/function: |
+        exec:
+          path: ./generateDeployment.sh
+  spec:
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+buildMetadata: [originAnnotations]
+`)
+	th.WriteF(filepath.Join(base, "short_secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+	th.WriteF(filepath.Join(base, "generateDeployment.sh"), generateDeploymentDotSh)
+	assert.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
+	m := th.Run(prod, o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: ../base/short_secret.yaml
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/kustomization.yaml
       configuredBy:
         kind: executable
         name: demo
