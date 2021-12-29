@@ -520,19 +520,10 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 						},
 					},
 				}).ResMap(),
-			expectedErr: `updating name reference in 'rules/resourceNames' field of ` +
-				`'ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]'` +
-				`: considering field 'rules/resourceNames' of object
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: cr
-rules:
-- resourceNames:
-    foo: bar
-  resources:
-  - secrets
-: visit traversal on path: [resourceNames]: path config error; no 'name' field in node`},
+			expectedErr: `updating name reference in 'rules/resourceNames' field of 'ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]': ` +
+				`considering field 'rules/resourceNames' of object ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]: visit traversal on ` +
+				`path: [resourceNames]: path config error; no 'name' field in node`,
+		},
 	}
 
 	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
