@@ -60,7 +60,6 @@ var resIdStringTests = []struct {
 		ResId{},
 		"[noKind].[noVer].[noGrp]/[noName].[noNs]",
 	},
-
 }
 
 func TestResIdString(t *testing.T) {
@@ -271,18 +270,18 @@ var ids = []ResId{
 	},
 	{
 		Gvk: Gvk{
-			Group: "rbac.authorization.k8s.io",
-			Version: "v1",
-			Kind: "ClusterRole",
+			Group:           "rbac.authorization.k8s.io",
+			Version:         "v1",
+			Kind:            "ClusterRole",
 			isClusterScoped: true,
 		},
 		Name: "nm",
 	},
 	{
 		Gvk: Gvk{
-			Group: "rbac.authorization.k8s.io",
-			Version: "v1",
-			Kind: "ClusterRole",
+			Group:           "rbac.authorization.k8s.io",
+			Version:         "v1",
+			Kind:            "ClusterRole",
 			isClusterScoped: true,
 		},
 		Name: "my.name",
