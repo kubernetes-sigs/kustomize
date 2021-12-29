@@ -503,6 +503,50 @@ func (m *resWrangler) AddOriginAnnotation(origin *resource.Origin) error {
 	return nil
 }
 
+// RemoveOriginAnnotation implements ResMap
+func (m *resWrangler) RemoveOriginAnnotations() error {
+	for _, res := range m.rList {
+		if err := res.SetOrigin(nil); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AddTransformerAnnotation implements ResMap
+func (m *resWrangler) AddTransformerAnnotation(origin *resource.Origin) error {
+	for _, res := range m.rList {
+		or, err := res.GetOrigin()
+		if err != nil {
+			return err
+		}
+		if or == nil {
+			// the resource does not have an origin annotation, so
+			// we assume that the transformer generated the resource
+			// rather than modifying it
+			err = res.SetOrigin(origin)
+		} else {
+			// the resource already has an origin annotation, so we
+			// record the provided origin as a transformation
+			err = res.AddTransformation(origin)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RemoveTransformerAnnotations implements ResMap
+func (m *resWrangler) RemoveTransformerAnnotations() error {
+	for _, res := range m.rList {
+		if err := res.ClearTransformations(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 	id := res.CurId()
 	matches := m.GetMatchingResourcesByAnyId(id.Equals)
