@@ -69,7 +69,7 @@ func (r *Resource) SetGvk(gvk resid.Gvk) {
 
 func (r *Resource) GetOrigin() (*Origin, error) {
 	annotations := r.GetAnnotations()
-	originAnnotations, ok := annotations[utils.OriginAnnotation]
+	originAnnotations, ok := annotations[utils.OriginAnnotationKey]
 	if !ok {
 		return nil, nil
 	}
@@ -82,11 +82,52 @@ func (r *Resource) GetOrigin() (*Origin, error) {
 
 func (r *Resource) SetOrigin(origin *Origin) error {
 	annotations := r.GetAnnotations()
-	originStr, err := origin.String()
+	if origin == nil {
+		delete(annotations, utils.OriginAnnotationKey)
+	} else {
+		originStr, err := origin.String()
+		if err != nil {
+			return err
+		}
+		annotations[utils.OriginAnnotationKey] = originStr
+	}
+	return r.SetAnnotations(annotations)
+}
+
+func (r *Resource) GetTransformations() (Transformations, error) {
+	annotations := r.GetAnnotations()
+	transformerAnnotations, ok := annotations[utils.TransformerAnnotationKey]
+	if !ok {
+		return nil, nil
+	}
+	var transformations Transformations
+	if err := yaml.Unmarshal([]byte(transformerAnnotations), &transformations); err != nil {
+		return nil, err
+	}
+	return transformations, nil
+}
+
+func (r *Resource) AddTransformation(origin *Origin) error {
+	annotations := r.GetAnnotations()
+	transformations, err := r.GetTransformations()
 	if err != nil {
 		return err
 	}
-	annotations[utils.OriginAnnotation] = originStr
+	if transformations == nil {
+		transformations = Transformations{}
+	}
+	transformations = append(transformations, origin)
+	transformationStr, err := transformations.String()
+	if err != nil {
+		return err
+	}
+	annotations[utils.TransformerAnnotationKey] = transformationStr
+	return r.SetAnnotations(annotations)
+}
+
+func (r *Resource) ClearTransformations() error {
+	annotations := r.GetAnnotations()
+	delete(annotations, utils.TransformerAnnotationKey)
 	return r.SetAnnotations(annotations)
 }
 
