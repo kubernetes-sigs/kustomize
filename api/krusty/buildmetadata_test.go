@@ -157,11 +157,7 @@ metadata:
 }
 
 // This is a copy of TestGeneratorBasics in configmaps_test.go,
-// except that we've enabled the addAnnoOrigin option
-// (which doesn't do anything yet).
-// TODO: Generated resources should receive the annotation
-//      config.kubernetes.io/origin: |
-//        generated-by: path/to/kustomization.yaml
+// except that we've enabled the addAnnoOrigin option.
 func TestGeneratorWithAnnoOrigin(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
@@ -196,6 +192,7 @@ secretGenerator:
   - passphrase=phrase.dat
   - forces.txt
   env: bar.env
+buildMetadata: [originAnnotations]
 `)
 	th.WriteF("foo.env", `
 MOUNTAIN=everest
@@ -239,6 +236,12 @@ data:
   vegetable: broccoli
 kind: ConfigMap
 metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
   name: blah-bob-g9df72cd5b
 ---
 apiVersion: v1
@@ -248,6 +251,12 @@ data:
   v2: '[{"path": "var/druid/segment-cache"}]'
 kind: ConfigMap
 metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
   name: blah-json-5298bc8g99
 ---
 apiVersion: v1
@@ -265,6 +274,12 @@ data:
   vegetable: YnJvY2NvbGk=
 kind: Secret
 metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: SecretGenerator
   name: blah-bob-58g62h555c
 type: Opaque
 `)
@@ -811,4 +826,182 @@ metadata:
         kind: ConfigMapGenerator
   name: ldap-configmap-4d7m6k5b42`)
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestAnnoOriginInlineBuiltinGenerator(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+generators:
+- |-
+  apiVersion: builtin
+  kind: ConfigMapGenerator
+  metadata:
+    name: notImportantHere
+  name: bob
+  literals:
+  - fruit=Indian Gooseberry
+  - year=2020
+  - crisis=true
+buildMetadata: [originAnnotations]
+`)
+
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: apple
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: service.yaml
+  name: apple
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+        name: notImportantHere
+  name: bob-79t79mt227
+`)
+}
+
+func TestAnnoOriginGeneratorFromFile(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- service.yaml
+generators:
+- configmap.yaml
+buildMetadata: [originAnnotations]
+`)
+	th.WriteF("configmap.yaml", `
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: notImportantHere
+name: bob
+literals:
+- fruit=Indian Gooseberry
+- year=2020
+- crisis=true
+`)
+	th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: apple
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: service.yaml
+  name: apple
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: configmap.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+        name: notImportantHere
+  name: bob-79t79mt227
+`)
+}
+
+func TestAnnoOriginBuiltinGeneratorFromFileWithOverlay(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- short_secret.yaml
+generators:
+- configmap.yaml
+`)
+	th.WriteF("base/configmap.yaml", `apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: notImportantHere
+name: bob
+literals:
+- fruit=Indian Gooseberry
+- year=2020
+- crisis=true
+`)
+	th.WriteK("prod", `
+resources:
+- ../base
+buildMetadata: [originAnnotations]
+`)
+	th.WriteF("base/short_secret.yaml",
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+	m := th.Run("prod", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: ../base/short_secret.yaml
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/configmap.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+        name: notImportantHere
+  name: bob-79t79mt227
+`)
 }
