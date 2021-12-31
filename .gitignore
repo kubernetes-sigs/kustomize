@@ -20,4 +20,8 @@
 # macOS
 *.DS_store
 
+# Editors
+.vscode
+
 .bin
+/kustomize/kustomize
