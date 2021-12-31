@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
+	load "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -392,6 +393,10 @@ func (kt *KustTarget) accumulateResources(
 	for _, path := range paths {
 		// try loading resource as file then as base (directory or git repository)
 		if errF := kt.accumulateFile(ra, path, origin); errF != nil {
+			// not much we can do if the error is an HTTP error so we bail out
+			if errors.Is(errF, load.ErrorHTTP) {
+				return nil, errF
+			}
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
 				return nil, errors.Wrapf(
