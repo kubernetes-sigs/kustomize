@@ -14,41 +14,41 @@ import (
 )
 
 const (
-	transformerFileName    = "myWonderfulTransformer.yaml"
-	transformerFileContent = `
+	generatorFileName    = "myWonderfulGenerator.yaml"
+	generatorFileContent = `
 Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 `
 )
 
-func TestAddTransformerHappyPath(t *testing.T) {
+func TestAddGeneratorHappyPath(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	err := fSys.WriteFile(transformerFileName, []byte(transformerFileContent))
+	err := fSys.WriteFile(generatorFileName, []byte(generatorFileContent))
 	require.NoError(t, err)
-	err = fSys.WriteFile(transformerFileName+"another", []byte(transformerFileContent))
+	err = fSys.WriteFile(generatorFileName+"another", []byte(generatorFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddTransformer(fSys)
-	args := []string{transformerFileName + "*"}
+	cmd := newCmdAddGenerator(fSys)
+	args := []string{generatorFileName + "*"}
 	assert.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
 	assert.NoError(t, err)
-	assert.Contains(t, string(content), transformerFileName)
-	assert.Contains(t, string(content), transformerFileName+"another")
+	assert.Contains(t, string(content), generatorFileName)
+	assert.Contains(t, string(content), generatorFileName+"another")
 }
 
-func TestAddTransformerAlreadyThere(t *testing.T) {
+func TestAddGeneratorAlreadyThere(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	err := fSys.WriteFile(transformerFileName, []byte(transformerFileName))
+	err := fSys.WriteFile(generatorFileName, []byte(generatorFileName))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
-	cmd := newCmdAddTransformer(fSys)
-	args := []string{transformerFileName}
+	cmd := newCmdAddGenerator(fSys)
+	args := []string{generatorFileName}
 	assert.NoError(t, cmd.RunE(cmd, args))
 
-	// adding an existing transformer shouldn't return an error
+	// adding an existing generator shouldn't return an error
 	assert.NoError(t, cmd.RunE(cmd, args))
 
 	// There can be only one. May it be the...
@@ -56,27 +56,27 @@ func TestAddTransformerAlreadyThere(t *testing.T) {
 	assert.NoError(t, err)
 	m, err := mf.Read()
 	assert.NoError(t, err)
-	assert.Equal(t, 1, len(m.Transformers))
-	assert.Equal(t, transformerFileName, m.Transformers[0])
+	assert.Equal(t, 1, len(m.Generators))
+	assert.Equal(t, generatorFileName, m.Generators[0])
 }
 
-func TestAddTransformerNoArgs(t *testing.T) {
+func TestAddGeneratorNoArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 
-	cmd := newCmdAddTransformer(fSys)
+	cmd := newCmdAddGenerator(fSys)
 	err := cmd.Execute()
-	assert.EqualError(t, err, "must specify a yaml file which contains a transformer plugin resource")
+	assert.EqualError(t, err, "must specify a yaml file which contains a generator plugin resource")
 }
 
-func TestAddTransformerMissingKustomizationYAML(t *testing.T) {
+func TestAddGeneratorMissingKustomizationYAML(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	err := fSys.WriteFile(transformerFileName, []byte(transformerFileContent))
+	err := fSys.WriteFile(generatorFileName, []byte(generatorFileContent))
 	require.NoError(t, err)
-	err = fSys.WriteFile(transformerFileName+"another", []byte(transformerFileContent))
+	err = fSys.WriteFile(generatorFileName+"another", []byte(generatorFileContent))
 	require.NoError(t, err)
 
-	cmd := newCmdAddTransformer(fSys)
-	args := []string{transformerFileName + "*"}
+	cmd := newCmdAddGenerator(fSys)
+	args := []string{generatorFileName + "*"}
 	err = cmd.RunE(cmd, args)
 	assert.EqualError(t, err, "Missing kustomization file 'kustomization.yaml'.\n")
 }
