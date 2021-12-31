@@ -98,6 +98,10 @@ install-tools: \
 	$(MYGOBIN)/pluginator \
 	$(MYGOBIN)/stringer
 
+.PHONY: go-mod-tidy
+go-mod-tidy:
+	for gomod in $$(find . -name go.mod); do (cd $$(dirname $$gomod); go mod tidy; go mod download); done
+
 ### Begin kustomize plugin rules.
 #
 # The rules to deal with builtin plugins are a bit
