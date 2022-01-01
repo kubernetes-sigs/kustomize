@@ -389,14 +389,17 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 
 // SubsetThatCouldBeReferencedByResource implements ResMap.
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
-	referrer *resource.Resource) ResMap {
+	referrer *resource.Resource) (ResMap, error) {
 	referrerId := referrer.CurId()
 	if referrerId.IsClusterScoped() {
 		// A cluster scoped resource can refer to anything.
-		return m
+		return m, nil
 	}
 	result := newOne()
-	roleBindingNamespaces := getNamespacesForRoleBinding(referrer)
+	roleBindingNamespaces, err := getNamespacesForRoleBinding(referrer)
+	if err != nil {
+		return nil, err
+	}
 	for _, possibleTarget := range m.rList {
 		id := possibleTarget.CurId()
 		if id.IsClusterScoped() {
@@ -416,20 +419,20 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 			result.append(possibleTarget)
 		}
 	}
-	return result
+	return result, nil
 }
 
 // getNamespacesForRoleBinding returns referenced ServiceAccount namespaces
 // if the resource is a RoleBinding
-func getNamespacesForRoleBinding(r *resource.Resource) map[string]bool {
+func getNamespacesForRoleBinding(r *resource.Resource) (map[string]bool, error) {
 	result := make(map[string]bool)
 	if r.GetKind() != "RoleBinding" {
-		return result
+		return result, nil
 	}
 	//nolint staticcheck
 	subjects, err := r.GetSlice("subjects")
 	if err != nil || subjects == nil {
-		return result
+		return result, nil
 	}
 	for _, s := range subjects {
 		subject := s.(map[string]interface{})
@@ -438,12 +441,14 @@ func getNamespacesForRoleBinding(r *resource.Resource) map[string]bool {
 				if kind.(string) == "ServiceAccount" {
 					if n, ok3 := ns.(string); ok3 {
 						result[n] = true
+					} else {
+						return nil, errors.New("Invalid Input: namespace is blank")
 					}
 				}
 			}
 		}
 	}
-	return result
+	return result, nil
 }
 
 // AppendAll implements ResMap.
