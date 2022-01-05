@@ -376,10 +376,44 @@ project [k8s-staging-kustomize].
 Commit and push your changes. Then create a PR to [k8s.io] to promote
 new images. Assign the PR to @monopole and @Shell32-natsu.
 
-----
+## Update kustomize-in-kubectl
+
+[kubernetes/kubernetes]: https://github.com/kubernetes/kubernetes
+[newest kustomize releases]: https://github.com/kubernetes-sigs/kustomize/releases
+
+To update the version of kustomize shipped with kubectl, first
+fork and clone the [kubernetes/kubernetes] repo.
+
+In the root of the kubernetes repo, run the following commands, modifying
+the version numbers to match the [newest kustomize releases]:
+```bash
+./hack/pin-dependency.sh sigs.k8s.io/kustomize/kyaml v0.11.0
+./hack/pin-dependency.sh sigs.k8s.io/kustomize/cmd/config v0.9.13
+./hack/pin-dependency.sh sigs.k8s.io/kustomize/api v0.8.11
+./hack/pin-dependency.sh sigs.k8s.io/kustomize/kustomize/v4 v4.2.0
+
+./hack/update-vendor.sh
+./hack/update-internal-modules.sh 
+./hack/lint-dependencies.sh 
+```
+
+If needed, manually update the kustomize attachment points in the following files:
+
+`staging/src/k8s.io/cli-runtime/pkg/resource/kustomizevisitor.go`
+
+`staging/src/k8s.io/cli-runtime/pkg/resource/kustomizevisitor_test.go`
+
+`staging/src/k8s.io/kubectl/pkg/cmd/kustomize/kustomize.go`
+
+`staging/src/k8s.io/cli-runtime/pkg/resource/builder.go`
+
+Here are some example PRs:
+
+https://github.com/kubernetes/kubernetes/pull/103419
+
+https://github.com/kubernetes/kubernetes/pull/106389
 
 ----
-
 Older notes follow:
 
 ## Public Modules
