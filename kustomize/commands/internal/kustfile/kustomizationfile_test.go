@@ -37,6 +37,7 @@ func TestFieldOrder(t *testing.T) {
 		"SecretGenerator",
 		"HelmCharts",
 		"HelmChartInflationGenerator",
+		"HelmGlobals",
 		"GeneratorOptions",
 		"Vars",
 		"Images",
