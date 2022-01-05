@@ -36,7 +36,7 @@
           "version": "v1alpha1"
         },
         {
-          "group": "",
+          "group": "crd.com",
           "kind": "MyCRD",
           "version": "v1alpha1"
         }

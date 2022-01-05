@@ -1049,9 +1049,11 @@ func TestMultipleNamespaces(t *testing.T) {
 		{
 			name:          "withschema-ns1-nil",
 			base:          []string{addNamespace("ns1", baseResource(Deployment))},
-			patch:         []string{changeImagePatch(Deployment, "nginx:1.7.9")},
-			errorExpected: true,
-			errorMsg:      "failed to find unique target for patch",
+			patch:         []string{addLabelAndEnvPatch(Deployment)},
+			errorExpected: false,
+			expected: []string{
+				addNamespace("ns1", expectedResultSMP()),
+			},
 		},
 		{
 			name:          "noschema-ns1-ns2",
@@ -1070,9 +1072,11 @@ func TestMultipleNamespaces(t *testing.T) {
 		{
 			name:          "noschema-ns1-nil",
 			base:          []string{addNamespace("ns1", baseResource(MyCRD))},
-			patch:         []string{changeImagePatch(MyCRD, "nginx:1.7.9")},
-			errorExpected: true,
-			errorMsg:      "failed to find unique target for patch",
+			patch:         []string{addLabelAndEnvPatch(MyCRD)},
+			errorExpected: false,
+			expected: []string{
+				addNamespace("ns1", expectedResultJMP("")),
+			},
 		},
 	}
 

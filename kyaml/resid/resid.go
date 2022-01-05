@@ -102,6 +102,11 @@ func (id ResId) IsSelectedBy(selector ResId) bool {
 		id.Gvk.IsSelected(&selector.Gvk)
 }
 
+// Selects return true if the argument is selected by self.
+func (id ResId) Selects(o ResId) bool {
+	return o.IsSelectedBy(id)
+}
+
 // Equals returns true if the other id matches
 // namespace/Group/Version/Kind/name.
 func (id ResId) Equals(o ResId) bool {

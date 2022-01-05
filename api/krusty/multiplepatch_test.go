@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -1734,7 +1733,6 @@ replacements:
     - metadata.annotations.test-annotation
     options:
       create: true
-
 patches:
 - patch: |-
     kind: ServiceAccount
@@ -1743,8 +1741,15 @@ patches:
       annotations: 
         test-annotation: true
 `)
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	assert.Error(t, err)
-	assert.Equal(t, err.Error(), `no matches for Id ServiceAccount.[noVer].[noGrp]/ksa-google-cas-issuer.[noNs]; failed to find unique target for patch ServiceAccount.[noVer].[noGrp]/ksa-google-cas-issuer.[noNs]`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	b, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Contains(t, string(b), `apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    test-annotation: "true"
+  name: ksa-google-cas-issuer
+  namespace: cert-manager
+`)
 }
-

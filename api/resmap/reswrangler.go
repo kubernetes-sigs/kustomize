@@ -224,7 +224,7 @@ type resFinder func(IdMatcher) []*resource.Resource
 
 func demandOneMatch(
 	f resFinder, id resid.ResId, s string) (*resource.Resource, error) {
-	r := f(id.Equals)
+	r := f(id.Selects)
 	if len(r) == 1 {
 		return r[0], nil
 	}

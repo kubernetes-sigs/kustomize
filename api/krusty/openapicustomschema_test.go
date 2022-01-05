@@ -45,7 +45,7 @@ spec:
 
 func writeOtherCustomResource(th kusttest_test.Harness, filepath string) {
 	th.WriteF(filepath, `
-apiVersion: v1alpha1
+apiVersion: crd.com/v1alpha1
 kind: MyCRD
 metadata:
   name: service
@@ -109,7 +109,7 @@ patchesStrategicMerge:
         - name: server
           image: nginx
 - |-
-  apiVersion: v1alpha1
+  apiVersion: crd.com/v1alpha1
   kind: MyCRD
   metadata:
     name: service
@@ -185,7 +185,7 @@ spec:
           name: grpc
           protocol: TCP
 ---
-apiVersion: v1alpha1
+apiVersion: crd.com/v1alpha1
 kind: MyCRD
 metadata:
   name: service
