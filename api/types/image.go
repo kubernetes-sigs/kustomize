@@ -13,12 +13,14 @@ type Image struct {
 	NewName string `json:"newName,omitempty" yaml:"newName,omitempty"`
 
 	// TagSuffix is the value used to suffix the original tag
+	// If digest or newtag is present TagSuffix value is ignored
 	TagSuffix string `json:"tagSuffix,omitempty" yaml:"tagSuffix,omitempty"`
 
 	// NewTag is the value used to replace the original tag.
+	// If newtag is present TagSuffix value is ignored
 	NewTag string `json:"newTag,omitempty" yaml:"newTag,omitempty"`
 
 	// Digest is the value used to replace the original image tag.
-	// If digest is present NewTag value is ignored.
+	// If digest is present NewTag and TagSuffix value is ignored.
 	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
 }
