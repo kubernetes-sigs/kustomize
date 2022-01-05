@@ -1707,3 +1707,44 @@ metadata:
   name: fluentd-sa-abc
 `)
 }
+
+// test for #4273
+func TestSmpWithEmptyGroupVersion(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- https://github.com/jetstack/google-cas-issuer/releases/download/v0.5.2/google-cas-issuer-v0.5.2.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: test-cm
+  literals: 
+  - annotationvalue=true
+replacements:
+- source:
+    name: test-cm
+    fieldPath: data.annotationvalue
+  targets:
+  - select: 
+      kind: ServiceAccount
+      name: ksa-google-cas-issuer
+    fieldPaths:
+    - metadata.annotations.test-annotation
+    options:
+      create: true
+
+patches:
+- patch: |-
+    kind: ServiceAccount
+    metadata:
+      name: ksa-google-cas-issuer
+      annotations: 
+        test-annotation: true
+`)
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), `no matches for Id ServiceAccount.[noVer].[noGrp]/ksa-google-cas-issuer.[noNs]; failed to find unique target for patch ServiceAccount.[noVer].[noGrp]/ksa-google-cas-issuer.[noNs]`)
+}
+
