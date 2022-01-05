@@ -55,6 +55,7 @@ func determineFieldOrder() []string {
 		"SecretGenerator",
 		"HelmCharts",
 		"HelmChartInflationGenerator",
+		"HelmGlobals",
 		"GeneratorOptions",
 		"Vars",
 		"Images",
