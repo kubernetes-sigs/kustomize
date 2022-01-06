@@ -11,13 +11,33 @@ import (
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+type setEntryArg struct {
+	Key      string
+	Value    string
+	Tag      string
+	NodePath []string
+}
+
+var setEntryArgs []setEntryArg
+
+func setEntryCallbackStub(key, value, tag string, node *yaml.RNode) {
+	setEntryArgs = append(setEntryArgs, setEntryArg{
+		Key:      key,
+		Value:    value,
+		Tag:      tag,
+		NodePath: node.FieldPath(),
+	})
+}
 
 func TestLabels_Filter(t *testing.T) {
 	testCases := map[string]struct {
-		input          string
-		expectedOutput string
-		filter         Filter
+		input                string
+		expectedOutput       string
+		filter               Filter
+		expectedSetEntryArgs []setEntryArg
 	}{
 		"add": {
 			input: `
@@ -399,13 +419,71 @@ metadata:
 				},
 			},
 		},
+
+		// test usage of SetEntryCallback
+		"set_entry_callback": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    witcher: geralt
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  labels:
+    witcher: geralt
+    mage: yennefer
+a:
+  b:
+    mage: yennefer
+`,
+			filter: Filter{
+				Labels: labelMap{
+					"mage": "yennefer",
+				},
+				FsSlice: []types.FieldSpec{
+					{
+						Path:               "metadata/labels",
+						CreateIfNotPresent: true,
+					},
+					{
+						Path:               "a/b",
+						CreateIfNotPresent: true,
+					},
+				},
+				SetEntryCallback: setEntryCallbackStub,
+			},
+			expectedSetEntryArgs: []setEntryArg{
+				{
+					Key:      "mage",
+					Value:    "yennefer",
+					Tag:      "!!str",
+					NodePath: []string{"metadata", "labels"},
+				},
+				{
+					Key:      "mage",
+					Value:    "yennefer",
+					Tag:      "!!str",
+					NodePath: []string{"a", "b"},
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
+		setEntryArgs = nil
 		t.Run(tn, func(t *testing.T) {
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, tc.filter))) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, tc.expectedSetEntryArgs, setEntryArgs) {
 				t.FailNow()
 			}
 		})
