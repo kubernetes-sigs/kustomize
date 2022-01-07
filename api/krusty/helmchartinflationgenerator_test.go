@@ -26,7 +26,6 @@ type: Opaque
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: {}
   labels:
     app: test-minecraft
     chart: minecraft-3.1.3

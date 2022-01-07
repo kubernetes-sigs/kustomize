@@ -112,5 +112,11 @@ func (b *Kustomizer) Run(
 		}
 	}
 	m.RemoveBuildAnnotations()
+	if !utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.OriginAnnotations) {
+		m.RemoveOriginAnnotations()
+	}
+	if !utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.TransformerAnnotations) {
+		m.RemoveTransformerAnnotations()
+	}
 	return m, nil
 }

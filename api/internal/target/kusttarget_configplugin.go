@@ -66,8 +66,8 @@ func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
 }
 
 func (kt *KustTarget) configureBuiltinTransformers(
-	tc *builtinconfig.TransformerConfig) (
-	result []resmap.Transformer, err error) {
+	tc *builtinconfig.TransformerConfig, origin *resource.Origin) (
+	result []*resmap.TransformerWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.PatchStrategicMergeTransformer,
 		builtinhelpers.PatchTransformer,
@@ -86,7 +86,23 @@ func (kt *KustTarget) configureBuiltinTransformers(
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, r...)
+		var transformerOrigin *resource.Origin
+		if origin != nil {
+			transformerOrigin = &resource.Origin{
+				Repo:         origin.Repo,
+				Ref:          origin.Ref,
+				ConfiguredIn: filepath.Join(origin.Path, kt.kustFileName),
+				ConfiguredBy: yaml.ResourceIdentifier{
+					TypeMeta: yaml.TypeMeta{
+						APIVersion: "builtin",
+						Kind:       bpt.String(),
+					},
+				},
+			}
+		}
+		for i := range r {
+			result = append(result, &resmap.TransformerWithProperties{Transformer: r[i], Origin: transformerOrigin})
+		}
 	}
 	return result, nil
 }
@@ -169,6 +185,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.NamespaceTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		if kt.kustomization.Namespace == "" {
+			return
+		}
 		var c struct {
 			types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 			FieldSpecs       []types.FieldSpec
@@ -252,6 +271,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.LabelTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		if len(kt.kustomization.Labels) == 0 && len(kt.kustomization.CommonLabels) == 0 {
+			return
+		}
 		for _, label := range kt.kustomization.Labels {
 			var c struct {
 				Labels     map[string]string
@@ -294,6 +316,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.AnnotationsTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		if len(kt.kustomization.CommonAnnotations) == 0 {
+			return
+		}
 		var c struct {
 			Annotations map[string]string
 			FieldSpecs  []types.FieldSpec
@@ -311,6 +336,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.PrefixTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		if kt.kustomization.NamePrefix == "" {
+			return
+		}
 		var c struct {
 			Prefix     string            `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 			FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
@@ -328,6 +356,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.SuffixTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		if kt.kustomization.NameSuffix == "" {
+			return
+		}
 		var c struct {
 			Suffix     string            `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 			FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
@@ -364,6 +395,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.ReplacementTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, _ *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
+		if len(kt.kustomization.Replacements) == 0 {
+			return
+		}
 		var c struct {
 			Replacements []types.ReplacementField
 		}

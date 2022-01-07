@@ -83,20 +83,24 @@ func (l *Loader) LoadGenerator(
 }
 
 func (l *Loader) LoadTransformers(
-	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]resmap.Transformer, error) {
-	var result []resmap.Transformer
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]*resmap.TransformerWithProperties, error) {
+	var result []*resmap.TransformerWithProperties
 	for _, res := range rm.Resources() {
 		t, err := l.LoadTransformer(ldr, v, res)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, t)
+		transformerOrigin, err := resource.OriginFromCustomPlugin(res)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &resmap.TransformerWithProperties{Transformer: t, Origin: transformerOrigin})
 	}
 	return result, nil
 }
 
 func (l *Loader) LoadTransformer(
-	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (resmap.Transformer, error) {
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (*resmap.TransformerWithProperties, error) {
 	c, err := l.loadAndConfigurePlugin(ldr, v, res)
 	if err != nil {
 		return nil, err
@@ -105,7 +109,7 @@ func (l *Loader) LoadTransformer(
 	if !ok {
 		return nil, fmt.Errorf("plugin %s not a transformer", res.OrgId())
 	}
-	return t, nil
+	return &resmap.TransformerWithProperties{Transformer: t}, nil
 }
 
 func relativePluginPath(id resid.ResId) string {

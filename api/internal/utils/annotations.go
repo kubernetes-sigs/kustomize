@@ -20,7 +20,7 @@ const (
 
 	// for keeping track of origin and transformer data
 	OriginAnnotationKey      = "config.kubernetes.io/origin"
-	TransformerAnnotationKey = "config.kubernetes.io/transformations"
+	TransformerAnnotationKey = "alpha.config.kubernetes.io/transformations"
 
 	Enabled = "enabled"
 )

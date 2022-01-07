@@ -119,7 +119,7 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 
 func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
 	var origin *resource.Origin
-	if utils.StringSliceContains(kt.kustomization.BuildMetadata, types.OriginAnnotations) {
+	if len(kt.kustomization.BuildMetadata) != 0 {
 		origin = &resource.Origin{}
 	}
 	ra, err := kt.AccumulateTarget(origin)
@@ -215,7 +215,7 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator, origin *r
 	if err != nil {
 		return nil, err
 	}
-	err = kt.runTransformers(ra)
+	err = kt.runTransformers(ra, origin)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +262,6 @@ func (kt *KustTarget) runGenerators(
 		return errors.Wrap(err, "loading generator plugins")
 	}
 	generators = append(generators, gs...)
-
 	for i, g := range generators {
 		resMap, err := g.Generate()
 		if err != nil {
@@ -293,14 +292,13 @@ func (kt *KustTarget) configureExternalGenerators(origin *resource.Origin) (
 			// not an inline config
 			generatorPaths = append(generatorPaths, p)
 			continue
-		} else {
-			// inline config, track the origin
-			if origin != nil {
-				resources := rm.Resources()
-				for _, r := range resources {
-					r.SetOrigin(origin.Append(kt.kustFileName))
-					rm.Replace(r)
-				}
+		}
+		// inline config, track the origin
+		if origin != nil {
+			resources := rm.Resources()
+			for _, r := range resources {
+				r.SetOrigin(origin.Append(kt.kustFileName))
+				rm.Replace(r)
 			}
 		}
 		ra.AppendAll(rm)
@@ -312,23 +310,27 @@ func (kt *KustTarget) configureExternalGenerators(origin *resource.Origin) (
 	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
 }
 
-func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
-	var r []resmap.Transformer
+func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator, origin *resource.Origin) error {
+	var r []*resmap.TransformerWithProperties
 	tConfig := ra.GetTransformerConfig()
-	lts, err := kt.configureBuiltinTransformers(tConfig)
+	lts, err := kt.configureBuiltinTransformers(tConfig, origin)
 	if err != nil {
 		return err
 	}
 	r = append(r, lts...)
-	lts, err = kt.configureExternalTransformers(kt.kustomization.Transformers)
+	lts, err = kt.configureExternalTransformers(kt.kustomization.Transformers, origin)
 	if err != nil {
 		return err
 	}
 	r = append(r, lts...)
-	return ra.Transform(newMultiTransformer(r))
+	err = ra.Transform(newMultiTransformer(r))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]resmap.Transformer, error) {
+func (kt *KustTarget) configureExternalTransformers(transformers []string, origin *resource.Origin) ([]*resmap.TransformerWithProperties, error) {
 	ra := accumulator.MakeEmptyAccumulator()
 	var transformerPaths []string
 	for _, p := range transformers {
@@ -339,9 +341,17 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]re
 			transformerPaths = append(transformerPaths, p)
 			continue
 		}
+		// inline config, track the origin
+		if origin != nil {
+			resources := rm.Resources()
+			for _, r := range resources {
+				r.SetOrigin(origin.Append(kt.kustFileName))
+				rm.Replace(r)
+			}
+		}
 		ra.AppendAll(rm)
 	}
-	ra, err := kt.accumulateResources(ra, transformerPaths, &resource.Origin{})
+	ra, err := kt.accumulateResources(ra, transformerPaths, origin)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +359,7 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]re
 }
 
 func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
-	validators, err := kt.configureExternalTransformers(kt.kustomization.Validators)
+	validators, err := kt.configureExternalTransformers(kt.kustomization.Validators, nil)
 	if err != nil {
 		return err
 	}

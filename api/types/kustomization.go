@@ -19,6 +19,7 @@ const (
 	MetadataNamespacePath = "metadata/namespace"
 
 	OriginAnnotations    = "originAnnotations"
+	TransformerAnnotations = "transformerAnnotations"
 	ManagedByLabelOption = "managedByLabel"
 )
 
