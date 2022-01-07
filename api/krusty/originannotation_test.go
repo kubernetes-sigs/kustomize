@@ -1004,3 +1004,142 @@ metadata:
   name: bob-79t79mt227
 `)
 }
+
+func TestAnnoOriginGeneratorInTransformersField(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	th.WriteK(tmpDir.String(), `
+transformers:
+- gener.yaml
+buildMetadata: [originAnnotations]
+`)
+
+	th.WriteF(filepath.Join(tmpDir.String(), "generateDeployment.sh"), generateDeploymentDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
+	th.WriteF(filepath.Join(tmpDir.String(), "gener.yaml"), `
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./generateDeployment.sh
+spec:
+`)
+
+	m := th.Run(tmpDir.String(), o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: gener.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestAnnoOriginGeneratorInTransformersFieldWithOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+
+	th.WriteK(base, `
+transformers:
+- gener.yaml
+`)
+
+	th.WriteF(filepath.Join(base, "generateDeployment.sh"), generateDeploymentDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
+	th.WriteF(filepath.Join(base, "gener.yaml"), `
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./generateDeployment.sh
+spec:
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+nameSuffix: -foo
+buildMetadata: [originAnnotations, transformerAnnotations]
+`)
+
+	m := th.Run(prod, o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: SuffixTransformer
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/gener.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx-foo
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
