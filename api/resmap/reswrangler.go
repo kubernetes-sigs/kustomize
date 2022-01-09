@@ -442,7 +442,7 @@ func getNamespacesForRoleBinding(r *resource.Resource) (map[string]bool, error) 
 					if n, ok3 := ns.(string); ok3 {
 						result[n] = true
 					} else {
-						return nil, errors.New("Invalid Input: namespace is blank")
+						return nil, errors.New(fmt.Sprintf("Invalid Input: namespace is blank for resource %q\n", r.CurId()))
 					}
 				}
 			}
