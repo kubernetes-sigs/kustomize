@@ -26,6 +26,34 @@ import (
 var depProvider = provider.NewDefaultDepProvider()
 var rf = depProvider.GetResourceFactory()
 var rmF = NewFactory(rf)
+var origin1 = &resource.Origin{
+	Repo:         "github.com/myrepo",
+	Ref:          "master",
+	ConfiguredIn: "config.yaml",
+	ConfiguredBy: yaml.ResourceIdentifier{
+		TypeMeta: yaml.TypeMeta{
+			APIVersion: "builtin",
+			Kind:       "Generator",
+		},
+		NameMeta: yaml.NameMeta{
+			Name:      "my-name",
+			Namespace: "my-namespace",
+		},
+	},
+}
+var origin2 = &resource.Origin{
+	ConfiguredIn: "../base/config.yaml",
+	ConfiguredBy: yaml.ResourceIdentifier{
+		TypeMeta: yaml.TypeMeta{
+			APIVersion: "builtin",
+			Kind:       "Generator",
+		},
+		NameMeta: yaml.NameMeta{
+			Name:      "my-name",
+			Namespace: "my-namespace",
+		},
+	},
+}
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
 	err := w.Append(r)
@@ -1527,6 +1555,67 @@ $patch: delete
 			assert.NoError(t, err, name)
 			assert.Equal(t, tc.expected, string(yml), name)
 		})
+	}
+}
+
+func TestOriginAnnotations(t *testing.T) {
+	w := New()
+	for i := 0; i < 3; i++ {
+		assert.NoError(t, w.Append(makeCm(i)))
+	}
+	// this should add an origin annotation to every resource
+	assert.NoError(t, w.AddOriginAnnotation(origin1))
+	resources := w.Resources()
+	for _, res := range resources {
+		or, err := res.GetOrigin()
+		assert.NoError(t, err)
+		assert.Equal(t, origin1, or)
+	}
+	// this should not overwrite the existing origin annotations
+	assert.NoError(t, w.AddOriginAnnotation(origin2))
+	for _, res := range resources {
+		or, err := res.GetOrigin()
+		assert.NoError(t, err)
+		assert.Equal(t, origin1, or)
+	}
+	// this should remove origin annotations from all resources
+	assert.NoError(t, w.RemoveOriginAnnotations())
+	for _, res := range resources {
+		or, err := res.GetOrigin()
+		assert.NoError(t, err)
+		assert.Nil(t, or)
+	}
+}
+
+func TestTransformerAnnotations(t *testing.T) {
+	w := New()
+	for i := 0; i < 3; i++ {
+		assert.NoError(t, w.Append(makeCm(i)))
+	}
+	// this should add an origin annotation to every resource
+	assert.NoError(t, w.AddTransformerAnnotation(origin1))
+	resources := w.Resources()
+	for _, res := range resources {
+		or, err := res.GetOrigin()
+		assert.NoError(t, err)
+		assert.Equal(t, origin1, or)
+	}
+	// this should add a transformer annotation to every resource
+	assert.NoError(t, w.AddTransformerAnnotation(origin2))
+	for _, res := range resources {
+		or, err := res.GetOrigin()
+		assert.NoError(t, err)
+		assert.Equal(t, origin1, or)
+		tr, err := res.GetTransformations()
+		assert.NoError(t, err)
+		assert.Equal(t, resource.Transformations{origin2}, tr)
+	}
+	// remove transformer annotations from all resources
+	assert.NoError(t, w.RemoveTransformerAnnotations())
+	for _, res := range resources {
+		tr, err := res.GetTransformations()
+		assert.NoError(t, err)
+		assert.Nil(t, tr)
 	}
 }
 
