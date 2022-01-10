@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/sliceutil"
@@ -660,9 +661,10 @@ func (rn *RNode) FieldPath() []string {
 
 // String returns string representation of the RNode
 func (rn *RNode) String() (string, error) {
-	if rn == nil {
+	if rn == nil || rn.value == nil {
 		return "", nil
 	}
+	// spew.Printf("rn.String(): %+v\n\n", rn)
 	return String(rn.value)
 }
 
@@ -927,18 +929,52 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 		}
 		yn.Anchor = ""
 	}
+	spew.Printf("yn: %#v\n\n", yn)
 	switch yn.Kind {
 	case yaml.ScalarNode:
+		spew.Printf("yn_scalar\n")
+		if yn.Tag == "!!merge" {
+			spew.Printf("\n\nSCALAR MERGE!!!!\n\n")
+			// return deAnchor(yn.Alias)
+			// return nil, nil
+		}
 		return yn, nil
 	case yaml.AliasNode:
+		spew.Printf("yn_alias\n")
 		return deAnchor(yn.Alias)
 	case yaml.DocumentNode, yaml.MappingNode, yaml.SequenceNode:
+		spew.Printf("yn_document_mapping_sequence\n")
+		newContent := make([]*yaml.Node, 0)
+		lastWasMerge := false
 		for i := range yn.Content {
-			yn.Content[i], err = deAnchor(yn.Content[i])
-			if err != nil {
-				return nil, err
+			spew.Printf("yn_content_tag %d: %#v\n\n", i, yn.Content[i].Tag)
+			spew.Printf("yn_content %d: %#v\n\n", i, yn.Content[i])
+
+			if yn.Content[i].Tag == "!!merge" {
+				spew.Printf("\n\n DOC MERGE!!!!\n\n")
+				lastWasMerge = true
+			} else {
+				if lastWasMerge {
+					if yn.Content[i].Alias != nil && yn.Content[i].Alias.Content != nil {
+						spew.Printf("\n\n MERGING!!!!\n\n")
+						newContent = append(newContent, yn.Content[i].Alias.Content...)
+					}
+				} else {
+					deAnchored, err := deAnchor(yn.Content[i])
+					if err != nil {
+						return nil, err
+					}
+					newContent = append(newContent, deAnchored)
+
+				}
+				lastWasMerge = false
 			}
+			// yn.Content[i], err = deAnchor(yn.Content[i])
+			// if err != nil {
+			// 	return nil, err
+			// }
 		}
+		yn.Content = newContent
 		return yn, nil
 	default:
 		return nil, fmt.Errorf("cannot deAnchor kind %q", yn.Kind)

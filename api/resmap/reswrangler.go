@@ -279,6 +279,7 @@ func (m *resWrangler) groupedByOriginalNamespace() map[string][]*resource.Resour
 
 // AsYaml implements ResMap.
 func (m *resWrangler) AsYaml() ([]byte, error) {
+	fmt.Printf("WAT\n")
 	firstObj := true
 	var b []byte
 	buf := bytes.NewBuffer(b)
@@ -288,6 +289,7 @@ func (m *resWrangler) AsYaml() ([]byte, error) {
 			m, _ := res.Map()
 			return nil, errors.Wrapf(err, "%#v", m)
 		}
+		fmt.Printf("AsYaml():\n%s\n\n", string(out))
 		if firstObj {
 			firstObj = false
 		} else {

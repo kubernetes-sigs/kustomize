@@ -721,6 +721,188 @@ data:
 `), strings.TrimSpace(actual))
 }
 
+func TestDeAnchorMerge(t *testing.T) {
+	testCases := []struct {
+		description string
+		input       string
+		expected    string
+	}{
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "simplest merge tag",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    <<: *color-used
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging properties",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    <<: *color-used
+    pretty: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+    pretty: true
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "overriding value",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: *color-used
+    pretty: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#FF0000"
+    pretty: true
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging multiple anchors",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor: &primary
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    <<: *color
+    <<: *primary
+    secondary: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    pretty: false
+    rgb: "#0000FF"
+    alpha: 50
+    secondary: true
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+
+		t.Run(tc.description, func(t *testing.T) {
+			rn, err := Parse(tc.input)
+
+			assert.NoError(t, err)
+			assert.NoError(t, rn.DeAnchor())
+			actual, err := rn.String()
+			assert.NoError(t, err)
+			assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual))
+
+		})
+	}
+
+	// 	rn, err := Parse(`
+	// apiVersion: v1
+	// kind: ConfigMap
+	// metadata:
+	//   name: wildcard
+	// data:
+	//   color: &color-used
+	//     foo: bar
+	//   primaryColor:
+	//     <<: *color-used
+	//     pretty: true
+	// `)
+	// 	assert.NoError(t, err)
+	// 	assert.NoError(t, rn.DeAnchor())
+	// 	actual, err := rn.String()
+	// 	assert.NoError(t, err)
+	// 	assert.Equal(t, strings.TrimSpace(`
+	// apiVersion: v1
+	// kind: ConfigMap
+	// metadata:
+	//   name: wildcard
+	// data:
+	//   color:
+	//     foo: bar
+	//   primaryColor:
+	//     foo: bar
+	//     pretty: true
+	// `), strings.TrimSpace(actual))
+}
 func TestRNode_UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
 		testName string

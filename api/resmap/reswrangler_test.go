@@ -930,6 +930,53 @@ metadata:
 `), strings.TrimSpace(string(yaml)))
 }
 
+func TestDeAnchorIntoDoc(t *testing.T) {
+	input := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probes-test
+spec:
+  template:
+    spec:
+    readinessProbe: &probe
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+      httpGet:
+        port: http
+        path: /health
+    livenessProbe:
+      <<: *probe
+`
+	rm, err := rmF.NewResMapFromBytes([]byte(input))
+	assert.NoError(t, err)
+	assert.NoError(t, rm.DeAnchor())
+	yaml, err := rm.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, strings.TrimSpace(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probes-test
+spec:
+  template:
+    spec:
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+      httpGet:
+        port: http
+        path: /health
+    livenessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+      httpGet:
+        port: http
+        path: /health
+`), strings.TrimSpace(string(yaml)))
+}
+
 // Anchor references don't cross YAML document boundaries.
 func TestDeAnchorMultiDoc(t *testing.T) {
 	input := `apiVersion: v1
