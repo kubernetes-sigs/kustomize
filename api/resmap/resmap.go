@@ -224,7 +224,7 @@ type ResMap interface {
 	// This is a filter; it excludes things that cannot be
 	// referenced by the resource, e.g. objects in other
 	// namespaces. Cluster wide objects are never excluded.
-	SubsetThatCouldBeReferencedByResource(*resource.Resource) ResMap
+	SubsetThatCouldBeReferencedByResource(*resource.Resource) (ResMap, error)
 
 	// DeAnchor replaces YAML aliases with structured data copied from anchors.
 	// This cannot be undone; if desired, call DeepCopy first.
