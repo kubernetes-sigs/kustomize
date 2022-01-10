@@ -566,7 +566,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	for name, test := range tests {
 		test := test
 		t.Run(name, func(t *testing.T) {
-			got := m.SubsetThatCouldBeReferencedByResource(test.filter)
+			got, err1 := m.SubsetThatCouldBeReferencedByResource(test.filter)
+			if err1 != nil {
+				t.Fatalf("Expected error %v: ", err1)
+			}
 			err := test.expected.ErrorIfNotEqualLists(got)
 			if err != nil {
 				test.expected.Debug("expected")
