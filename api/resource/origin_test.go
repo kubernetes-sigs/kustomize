@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/api/resource"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestOriginAppend(t *testing.T) {
@@ -78,6 +79,82 @@ repo: github.com/kubernetes-sigs/kustomize/examples/multibases/dev/
 	for _, test := range tests {
 		actual, err := test.in.String()
 		assert.NoError(t, err)
-		assert.Equal(t, actual, test.expected)
+		assert.Equal(t, test.expected, actual)
+	}
+}
+
+func TestTransformationsString(t *testing.T) {
+	origin1 := &Origin{
+		Repo:         "github.com/myrepo",
+		Ref:          "master",
+		ConfiguredIn: "config.yaml",
+		ConfiguredBy: kyaml.ResourceIdentifier{
+			TypeMeta: kyaml.TypeMeta{
+				APIVersion: "builtin",
+				Kind:       "Generator",
+			},
+			NameMeta: kyaml.NameMeta{
+				Name:      "my-name",
+				Namespace: "my-namespace",
+			},
+		},
+	}
+	origin2 := &Origin{
+		ConfiguredIn: "../base/config.yaml",
+		ConfiguredBy: kyaml.ResourceIdentifier{
+			TypeMeta: kyaml.TypeMeta{
+				APIVersion: "builtin",
+				Kind:       "Generator",
+			},
+			NameMeta: kyaml.NameMeta{
+				Name:      "my-name",
+				Namespace: "my-namespace",
+			},
+		},
+	}
+	tests := []struct {
+		in       Transformations
+		expected string
+	}{
+		{
+			in: Transformations{origin1},
+			expected: `- repo: github.com/myrepo
+  ref: master
+  configuredIn: config.yaml
+  configuredBy:
+    apiVersion: builtin
+    kind: Generator
+    name: my-name
+    namespace: my-namespace
+`,
+		},
+		{
+			in: Transformations{origin1, origin2},
+			expected: `- repo: github.com/myrepo
+  ref: master
+  configuredIn: config.yaml
+  configuredBy:
+    apiVersion: builtin
+    kind: Generator
+    name: my-name
+    namespace: my-namespace
+- configuredIn: ../base/config.yaml
+  configuredBy:
+    apiVersion: builtin
+    kind: Generator
+    name: my-name
+    namespace: my-namespace
+`,
+		},
+		{
+			in: Transformations{},
+			expected: `[]
+`,
+		},
+	}
+	for _, test := range tests {
+		actual, err := test.in.String()
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, actual)
 	}
 }

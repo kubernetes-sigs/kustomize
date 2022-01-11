@@ -502,7 +502,7 @@ func (kt *KustTarget) accumulateFile(
 		if err != nil {
 			return errors.Wrapf(err, "cannot add path annotation for '%s'", path)
 		}
-		err = resources.AnnotateAll(utils.OriginAnnotation, originAnno)
+		err = resources.AnnotateAll(utils.OriginAnnotationKey, originAnno)
 		if err != nil || originAnno == "" {
 			return errors.Wrapf(err, "cannot add path annotation for '%s'", path)
 		}
