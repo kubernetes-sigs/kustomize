@@ -755,6 +755,39 @@ data:
     foo: bar
 `,
 		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "keep comments",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    # use same color because is pretty
+    rgb: "#FF0000"
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    # use same color because is pretty
+    rgb: "#FF0000"
+`,
+		},
+		// *********
+		// Test Case
+		// *********
 		{
 			description: "works with explicit merge tag",
 			input: `
