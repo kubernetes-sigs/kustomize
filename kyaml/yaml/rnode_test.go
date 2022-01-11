@@ -886,7 +886,6 @@ data:
 	}
 
 	for _, tc := range testCases {
-
 		t.Run(tc.description, func(t *testing.T) {
 			rn, err := Parse(tc.input)
 
@@ -898,35 +897,6 @@ data:
 
 		})
 	}
-
-	// 	rn, err := Parse(`
-	// apiVersion: v1
-	// kind: ConfigMap
-	// metadata:
-	//   name: wildcard
-	// data:
-	//   color: &color-used
-	//     foo: bar
-	//   primaryColor:
-	//     <<: *color-used
-	//     pretty: true
-	// `)
-	// 	assert.NoError(t, err)
-	// 	assert.NoError(t, rn.DeAnchor())
-	// 	actual, err := rn.String()
-	// 	assert.NoError(t, err)
-	// 	assert.Equal(t, strings.TrimSpace(`
-	// apiVersion: v1
-	// kind: ConfigMap
-	// metadata:
-	//   name: wildcard
-	// data:
-	//   color:
-	//     foo: bar
-	//   primaryColor:
-	//     foo: bar
-	//     pretty: true
-	// `), strings.TrimSpace(actual))
 }
 func TestRNode_UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
