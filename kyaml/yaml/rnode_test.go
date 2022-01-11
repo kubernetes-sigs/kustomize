@@ -755,6 +755,31 @@ data:
     foo: bar
 `,
 		},
+		{
+			description: "works with explicit merge tag",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    !!merge <<: *color-used
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+`,
+		},
 		// *********
 		// Test Case
 		// *********
