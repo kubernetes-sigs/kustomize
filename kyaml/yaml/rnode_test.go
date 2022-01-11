@@ -883,6 +883,46 @@ data:
     secondary: true
 `,
 		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging on a list",
+			input: `
+apiVersion: v1
+kind: MergeTagTestList
+items:
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec: &merge-spec
+    something: true
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec:
+    <<: *merge-spec
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTestList
+items:
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec:
+    something: true
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec:
+    something: true
+`,
+		},
 	}
 
 	for _, tc := range testCases {

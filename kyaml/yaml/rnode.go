@@ -932,7 +932,7 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 		return yn, nil
 	case yaml.AliasNode:
 		return deAnchor(yn.Alias)
-	case yaml.DocumentNode, yaml.MappingNode, yaml.SequenceNode:
+	case yaml.MappingNode:
 		toMerge, err := removeMergeTags(yn)
 		if err != nil {
 			return nil, err
@@ -941,6 +941,8 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 		if err != nil {
 			return nil, err
 		}
+		fallthrough
+	case yaml.DocumentNode, yaml.SequenceNode:
 		for i := range yn.Content {
 			yn.Content[i], err = deAnchor(yn.Content[i])
 			if err != nil {
