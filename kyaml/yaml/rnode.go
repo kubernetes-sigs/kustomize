@@ -943,42 +943,96 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 		spew.Printf("yn_alias\n")
 		return deAnchor(yn.Alias)
 	case yaml.DocumentNode, yaml.MappingNode, yaml.SequenceNode:
-		spew.Printf("yn_document_mapping_sequence\n")
-		newContent := make([]*yaml.Node, 0)
-		lastWasMerge := false
-		for i := range yn.Content {
-			spew.Printf("yn_content_tag %d: %#v\n\n", i, yn.Content[i].Tag)
-			spew.Printf("yn_content %d: %#v\n\n", i, yn.Content[i])
-
-			if yn.Content[i].Tag == "!!merge" {
-				spew.Printf("\n\n DOC MERGE!!!!\n\n")
-				lastWasMerge = true
-			} else {
-				if lastWasMerge {
-					if yn.Content[i].Alias != nil && yn.Content[i].Alias.Content != nil {
-						spew.Printf("\n\n MERGING!!!!\n\n")
-						newContent = append(newContent, yn.Content[i].Alias.Content...)
-					}
-				} else {
-					deAnchored, err := deAnchor(yn.Content[i])
-					if err != nil {
-						return nil, err
-					}
-					newContent = append(newContent, deAnchored)
-
-				}
-				lastWasMerge = false
-			}
-			// yn.Content[i], err = deAnchor(yn.Content[i])
-			// if err != nil {
-			// 	return nil, err
-			// }
+		toMerge, err := removeMergeTags(yn)
+		if err != nil {
+			return nil, err
 		}
-		yn.Content = newContent
+		err = mergeAll(yn, toMerge)
+		if err != nil {
+			return nil, err
+		}
+		for i := range yn.Content {
+			yn.Content[i], err = deAnchor(yn.Content[i])
+			if err != nil {
+				return nil, err
+			}
+		}
 		return yn, nil
+		// spew.Printf("yn_document_mapping_sequence\n")
+		// newContent := make([]*yaml.Node, 0)
+		// lastWasMerge := false
+		// for i := range yn.Content {
+		// 	spew.Printf("yn_content_tag %d: %#v\n\n", i, yn.Content[i].Tag)
+		// 	spew.Printf("yn_content %d: %#v\n\n", i, yn.Content[i])
+
+		// 	if yn.Content[i].Tag == "!!merge" {
+		// 		spew.Printf("\n\n DOC MERGE!!!!\n\n")
+		// 		lastWasMerge = true
+		// 	} else {
+		// 		if lastWasMerge {
+		// 			if yn.Content[i].Alias != nil && yn.Content[i].Alias.Content != nil {
+		// 				spew.Printf("\n\n MERGING!!!!\n\n")
+		// 				newContent = append(newContent, yn.Content[i].Alias.Content...)
+		// 			}
+		// 		} else {
+		// 			deAnchored, err := deAnchor(yn.Content[i])
+		// 			if err != nil {
+		// 				return nil, err
+		// 			}
+		// 			newContent = append(newContent, deAnchored)
+
+		// 		}
+		// 		lastWasMerge = false
+		// 	}
+		// 	// yn.Content[i], err = deAnchor(yn.Content[i])
+		// 	// if err != nil {
+		// 	// 	return nil, err
+		// 	// }
+		// }
+		// yn.Content = newContent
+		// return yn, nil
 	default:
 		return nil, fmt.Errorf("cannot deAnchor kind %q", yn.Kind)
 	}
+}
+
+// removeMergeTags removes all merge tags and returns a ordered list of yaml
+// nodes to merge and a error
+func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
+	if yn == nil || yn.Content == nil {
+		return nil, nil
+	}
+	if yn.Kind != yaml.MappingNode {
+		return nil, nil
+	}
+	newContent := make([]*yaml.Node, 0)
+	toMerge := make([]*yaml.Node, 0)
+	spew.Printf("\n\n len(yn.Content): %d\n\n", len(yn.Content))
+	for i := 0; i < len(yn.Content); i += 2 {
+		if yn.Content[i].Tag == "!!merge" {
+			// check if needs this if
+			// if yn.Content[i].Alias != nil && yn.Content[i].Alias.Content != nil {
+			toMerge = append(toMerge, yn.Content[i+1].Alias)
+		} else {
+			newContent = append(newContent, yn.Content[i], yn.Content[i+1])
+		}
+	}
+	yn.Content = newContent
+	return toMerge, nil
+}
+
+func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
+	rn := NewMapRNode(&map[string]string{})
+	toMerge = append(toMerge, yn)
+	for i := range toMerge {
+		rnToMerge := NewRNode(toMerge[i]).Copy()
+		rnToMerge.VisitFields(func(node *MapNode) error {
+			rn.SetMapField(node.Value, GetValue(node.Key))
+			return nil
+		})
+	}
+	*yn = *rn.value
+	return nil
 }
 
 // GetValidatedMetadata returns metadata after subjecting it to some tests.

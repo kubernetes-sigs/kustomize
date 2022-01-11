@@ -852,8 +852,8 @@ data:
     rgb: "#0000FF"
     alpha: 50
   secondaryColor:
-    pretty: false
     rgb: "#0000FF"
+    pretty: false
     alpha: 50
     secondary: true
 `,
