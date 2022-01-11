@@ -966,15 +966,15 @@ metadata:
 spec:
   template:
     spec:
-    readinessProbe: &probe
-      periodSeconds: 5
-      timeoutSeconds: 3
-      failureThreshold: 3
-      httpGet:
-        port: http
-        path: /health
-    livenessProbe:
-      <<: *probe
+      readinessProbe: &probe
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 3
+        httpGet:
+          port: http
+          path: /health
+      livenessProbe:
+        <<: *probe
 `
 	rm, err := rmF.NewResMapFromBytes([]byte(input))
 	assert.NoError(t, err)
@@ -988,20 +988,20 @@ metadata:
 spec:
   template:
     spec:
-    readinessProbe:
-      periodSeconds: 5
-      timeoutSeconds: 3
-      failureThreshold: 3
-      httpGet:
-        port: http
-        path: /health
-    livenessProbe:
-      periodSeconds: 5
-      timeoutSeconds: 3
-      failureThreshold: 3
-      httpGet:
-        port: http
-        path: /health
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: http
+        periodSeconds: 5
+        timeoutSeconds: 3
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: http
+        periodSeconds: 5
+        timeoutSeconds: 3
 `), strings.TrimSpace(string(yaml)))
 }
 
