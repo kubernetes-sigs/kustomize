@@ -5,7 +5,6 @@ package generators
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/go-errors/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -51,11 +50,7 @@ func makeValidatedDataMap(
 			return nil, errors.Errorf(
 				"configmap %s illegally repeats the key `%s`", name, p.Key)
 		}
-		lines := strings.Split(p.Value, "\n")
-		for i := range lines {
-			lines[i] = strings.TrimSuffix(lines[i], " ")
-		}
-		knownKeys[p.Key] = strings.Join(lines, "\n")
+		knownKeys[p.Key] = p.Value
 	}
 	return knownKeys, nil
 }
