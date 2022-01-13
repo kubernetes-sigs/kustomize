@@ -4,6 +4,7 @@
 package imagetag
 
 import (
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/image"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -17,15 +18,15 @@ type imageTagUpdater struct {
 	ImageTag types.Image `yaml:"imageTag,omitempty"`
 }
 
-func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	if err := yaml.ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
-		return nil, err
+		return err
 	}
 
 	value := rn.YNode().Value
 
 	if !image.IsImageMatched(value, u.ImageTag.Name) {
-		return rn, nil
+		return nil
 	}
 
 	name, tag := image.Split(value)
@@ -39,5 +40,12 @@ func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
 		tag = "@" + u.ImageTag.Digest
 	}
 
-	return rn.Pipe(yaml.FieldSetter{StringValue: name + tag})
+	return filtersutil.SetScalar(name + tag)(rn)
+}
+
+func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+	if err := u.SetImageValue(rn); err != nil {
+		return nil, err
+	}
+	return rn, nil
 }
