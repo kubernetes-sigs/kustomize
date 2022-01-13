@@ -4,7 +4,6 @@
 package imagetag
 
 import (
-	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -41,7 +40,9 @@ func (f Filter) filter(node *yaml.RNode) (*yaml.RNode, error) {
 	}
 	if err := node.PipeE(fsslice.Filter{
 		FsSlice:  f.FsSlice,
-		SetValue: updateImageTagFn(f.ImageTag),
+		SetValue: imageTagUpdater{
+			ImageTag: f.ImageTag,
+		}.SetImageValue,
 	}); err != nil {
 		return nil, err
 	}
@@ -58,12 +59,4 @@ func (f Filter) isOnDenyList(node *yaml.RNode) bool {
 	// Ignore CRDs
 	// https://github.com/kubernetes-sigs/kustomize/issues/890
 	return meta.Kind == `CustomResourceDefinition`
-}
-
-func updateImageTagFn(imageTag types.Image) filtersutil.SetFn {
-	return func(node *yaml.RNode) error {
-		return node.PipeE(imageTagUpdater{
-			ImageTag: imageTag,
-		})
-	}
 }
