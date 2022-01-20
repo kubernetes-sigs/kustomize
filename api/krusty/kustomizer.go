@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/builtins"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provenance"
@@ -95,7 +96,7 @@ func (b *Kustomizer) Run(
 			return nil, err
 		}
 	}
-	if b.options.AddManagedbyLabel {
+	if b.options.AddManagedbyLabel || utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.ManagedByLabelOption) {
 		t := builtins.LabelTransformerPlugin{
 			Labels: map[string]string{
 				konfig.ManagedbyLabelKey: fmt.Sprintf("kustomize-%s", provenance.GetProvenance().Semver()),
