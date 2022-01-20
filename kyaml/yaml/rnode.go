@@ -982,8 +982,9 @@ func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
 }
 
 func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
-	rn := NewMapRNode(&map[string]string{})
-	rn.YNode().Style = yn.Style
+	// We only need to start with a copy of the existing node because we need to
+	// maintain duplicated keys and style
+	rn := NewRNode(yn).Copy()
 	toMerge = append(toMerge, yn)
 	for i := range toMerge {
 		rnToMerge := NewRNode(toMerge[i]).Copy()

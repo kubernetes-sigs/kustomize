@@ -759,6 +759,30 @@ data:
 		// Test Case
 		// *********
 		{
+			description: "keep duplicated keys",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: "#FF0000"
+  color: "#FF00FF"
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: "#FF0000"
+  color: "#FF00FF"
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
 			description: "keep json",
 			input:       `{"apiVersion": "v1", "kind": "MergeTagTest", "spec": {"color": {"rgb": "#FF0000"}}}`,
 			expected:    `{"apiVersion": "v1", "kind": "MergeTagTest", "spec": {"color": {"rgb": "#FF0000"}}}`,
@@ -833,7 +857,7 @@ metadata:
   name: test
 data:
   color: &color-used
-    foo: bar
+    rgb: "#FF0000"
   primaryColor:
     <<: *color-used
     pretty: true
@@ -845,10 +869,10 @@ metadata:
   name: test
 data:
   color:
-    foo: bar
+    rgb: "#FF0000"
   primaryColor:
-    foo: bar
     pretty: true
+    rgb: "#FF0000"
 `,
 		},
 		// *********
@@ -879,8 +903,8 @@ data:
     rgb: "#FF0000"
     pretty: false
   primaryColor:
-    rgb: "#FF0000"
     pretty: true
+    rgb: "#FF0000"
 `,
 		},
 		// *********
@@ -918,10 +942,10 @@ data:
     rgb: "#0000FF"
     alpha: 50
   secondaryColor:
+    secondary: true
     rgb: "#0000FF"
     pretty: false
     alpha: 50
-    secondary: true
 `,
 		},
 		// *********
