@@ -1506,7 +1506,7 @@ kind: Deployment
 metadata:
   name: clown
   annotations:
-    config.kubernetes.io/transformations: |
+    alpha.config.kubernetes.io/transformations: |
       - repo: github.com/myrepo
         ref: master
         configuredIn: config.yaml
@@ -1524,7 +1524,7 @@ kind: Deployment
 metadata:
   name: clown
   annotations:
-    config.kubernetes.io/transformations: |
+    alpha.config.kubernetes.io/transformations: |
       - repo: github.com/myrepo
         ref: master
         configuredIn: config.yaml
