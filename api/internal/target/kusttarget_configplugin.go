@@ -30,7 +30,7 @@ import (
 // image tag transforms.  In these cases, we'll need
 // N plugin instances with differing configurations.
 
-func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
+func (kt *KustTarget) configureBuiltinGenerators() (
 	result []*resmap.GeneratorWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.ConfigMapGenerator,
@@ -44,11 +44,11 @@ func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
 		}
 
 		var generatorOrigin *resource.Origin
-		if origin != nil {
+		if kt.origin != nil {
 			generatorOrigin = &resource.Origin{
-				Repo:         origin.Repo,
-				Ref:          origin.Ref,
-				ConfiguredIn: filepath.Join(origin.Path, kt.kustFileName),
+				Repo:         kt.origin.Repo,
+				Ref:          kt.origin.Ref,
+				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",
@@ -66,7 +66,7 @@ func (kt *KustTarget) configureBuiltinGenerators(origin *resource.Origin) (
 }
 
 func (kt *KustTarget) configureBuiltinTransformers(
-	tc *builtinconfig.TransformerConfig, origin *resource.Origin) (
+	tc *builtinconfig.TransformerConfig) (
 	result []*resmap.TransformerWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.PatchStrategicMergeTransformer,
@@ -87,11 +87,11 @@ func (kt *KustTarget) configureBuiltinTransformers(
 			return nil, err
 		}
 		var transformerOrigin *resource.Origin
-		if origin != nil {
+		if kt.origin != nil {
 			transformerOrigin = &resource.Origin{
-				Repo:         origin.Repo,
-				Ref:          origin.Ref,
-				ConfiguredIn: filepath.Join(origin.Path, kt.kustFileName),
+				Repo:         kt.origin.Repo,
+				Ref:          kt.origin.Ref,
+				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",
