@@ -14,7 +14,7 @@ func IsImageMatched(s, t string) bool {
 	// Tag values are limited to [a-zA-Z0-9_.{}-].
 	// Some tools like Bazel rules_k8s allow tag patterns with {} characters.
 	// More info: https://github.com/bazelbuild/rules_k8s/pull/423
-	pattern, _ := regexp.Compile("^" + t + "(@sha256)?(:[a-zA-Z0-9_.{}-]*)?$")
+	pattern, _ := regexp.Compile("^" + t + "(:[a-zA-Z0-9_.{}-]*)?(@sha256:[a-zA-Z0-9_.{}-]*)?$")
 	return pattern.MatchString(s)
 }
 
@@ -24,24 +24,31 @@ func IsImageMatched(s, t string) bool {
 func Split(imageName string) (name string, tag string) {
 	// check if image name contains a domain
 	// if domain is present, ignore domain and check for `:`
-	ic := -1
-	if slashIndex := strings.Index(imageName, "/"); slashIndex < 0 {
-		ic = strings.LastIndex(imageName, ":")
-	} else {
-		lastIc := strings.LastIndex(imageName[slashIndex:], ":")
-		// set ic only if `:` is present
-		if lastIc > 0 {
-			ic = slashIndex + lastIc
-		}
-	}
-	ia := strings.LastIndex(imageName, "@")
-	if ic < 0 && ia < 0 {
-		return imageName, ""
+	searchName := imageName
+	slashIndex := strings.Index(imageName, "/")
+	if slashIndex > 0 {
+		searchName = imageName[slashIndex:]
 	}
 
-	i := ic
-	if ia > 0 {
-		i = ia
+	i := strings.LastIndex(imageName, "@")
+	if i > 0 {
+		ic := strings.Index(searchName[:i], ":")
+		if ic > 0 {
+			if slashIndex > 0 {
+				i = slashIndex + ic
+			} else {
+				i = ic
+			}
+		}
+	} else {
+		i = strings.LastIndex(searchName, ":")
+		if i > 0 && slashIndex > 0 {
+			i = slashIndex + i
+		}
+	}
+
+	if i < 0 {
+		return imageName, ""
 	}
 
 	name = imageName[:i]

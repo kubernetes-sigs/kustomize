@@ -23,8 +23,20 @@ func TestIsImageMatched(t *testing.T) {
 			isMatched: true,
 		},
 		{
-			testName:  "name is match",
+			testName:  "name is match with tag",
 			value:     "nginx:12345",
+			name:      "nginx",
+			isMatched: true,
+		},
+		{
+			testName:  "name is match with digest",
+			value:     "nginx@sha256:xyz",
+			name:      "nginx",
+			isMatched: true,
+		},
+		{
+			testName:  "name is match with tag and digest",
+			value:     "nginx:12345@sha256:xyz",
 			name:      "nginx",
 			isMatched: true,
 		},
@@ -64,9 +76,27 @@ func TestSplit(t *testing.T) {
 		},
 		{
 			testName: "with digest",
-			value:    "nginx@12345",
+			value:    "nginx@sha256:12345",
 			name:     "nginx",
-			tag:      "@12345",
+			tag:      "@sha256:12345",
+		},
+		{
+			testName: "with tag and digest",
+			value:    "nginx:1.2.3@sha256:12345",
+			name:     "nginx",
+			tag:      ":1.2.3@sha256:12345",
+		},
+		{
+			testName: "with domain",
+			value:    "docker.io/nginx:1.2.3",
+			name:     "docker.io/nginx",
+			tag:      ":1.2.3",
+		},
+		{
+			testName: "with domain and port",
+			value:    "foo.com:443/nginx:1.2.3",
+			name:     "foo.com:443/nginx",
+			tag:      ":1.2.3",
 		},
 	}
 
