@@ -40,6 +40,7 @@ func TestAnnotations_Filter(t *testing.T) {
 		expectedOutput       string
 		filter               Filter
 		fsslice              types.FsSlice
+		setEntryCallback     func(key, value, tag string, node *yaml.RNode)
 		expectedSetEntryArgs []setEntryArg
 	}{
 		"add": {
@@ -259,8 +260,8 @@ spec:
 					"a": "a1",
 					"b": "b1",
 				},
-				SetEntryCallback: setEntryCallbackStub,
 			},
+			setEntryCallback: setEntryCallbackStub,
 			fsslice: []types.FieldSpec{
 				{
 					Path:               "spec/template/metadata/annotations",
@@ -300,6 +301,7 @@ spec:
 		setEntryArgs = nil
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
+			filter.WithMutationTracker(tc.setEntryCallback)
 			filter.FsSlice = append(annosFs, tc.fsslice...)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),

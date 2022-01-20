@@ -20,22 +20,15 @@ type Filter struct {
 	// FsSlice contains the FieldSpecs to locate the namespace field
 	FsSlice types.FsSlice
 
-	// SetEntryCallback is invoked each time an annotation is applied
-	// Example use cases:
-	//   - Tracking all paths where annotations have been applied
-	SetEntryCallback func(key, value, tag string, node *yaml.RNode)
+	trackableSetter filtersutil.TrackableSetter
 }
 
 var _ kio.Filter = Filter{}
+var _ kio.TrackableFilter = &Filter{}
 
-func (f Filter) setEntry(key, value, tag string) filtersutil.SetFn {
-	baseSetEntryFunc := filtersutil.SetEntry(key, value, tag)
-	return func(node *yaml.RNode) error {
-		if f.SetEntryCallback != nil {
-			f.SetEntryCallback(key, value, tag, node)
-		}
-		return baseSetEntryFunc(node)
-	}
+// WithMutationTracker registers a callback which will be invoked each time a field is mutated
+func (f *Filter) WithMutationTracker(callback func(key, value, tag string, node *yaml.RNode)) {
+	f.trackableSetter.WithMutationTracker(callback)
 }
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -45,7 +38,7 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 			for _, k := range keys {
 				if err := node.PipeE(fsslice.Filter{
 					FsSlice: f.FsSlice,
-					SetValue: f.setEntry(
+					SetValue: f.trackableSetter.SetEntry(
 						k, f.Annotations[k], yaml.NodeTagString),
 					CreateKind: yaml.MappingNode, // Annotations are MappingNodes.
 					CreateTag:  yaml.NodeTagMap,
