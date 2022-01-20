@@ -57,6 +57,13 @@ type Filter interface {
 	Filter([]*yaml.RNode) ([]*yaml.RNode, error)
 }
 
+// TrackableFilter is an extension of Filter which is also capable of tracking
+// which fields were mutated by the filter.
+type TrackableFilter interface {
+	Filter
+	WithMutationTracker(func(key, value, tag string, node *yaml.RNode))
+}
+
 // FilterFunc implements a Filter as a function.
 type FilterFunc func([]*yaml.RNode) ([]*yaml.RNode, error)
 
