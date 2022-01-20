@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -66,7 +65,7 @@ vars:
       apiVersion: v300
 `)
 	ra, err := makeAndLoadKustTarget(
-		t, th.GetFSys(), "/app").AccumulateTarget(&resource.Origin{})
+		t, th.GetFSys(), "/app").AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -121,7 +120,7 @@ resources:
 `)
 
 	ra, err := makeAndLoadKustTarget(
-		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget(&resource.Origin{})
+		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
 	if err != nil {
 		t.Fatalf("Err: %v", err)
 	}
@@ -178,7 +177,7 @@ resources:
 - ../o1
 `)
 	_, err := makeAndLoadKustTarget(
-		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget(&resource.Origin{})
+		t, th.GetFSys(), "/app/overlays/o2").AccumulateTarget()
 	if err == nil {
 		t.Fatalf("expected var collision")
 	}

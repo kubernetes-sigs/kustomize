@@ -18,9 +18,9 @@ const (
 	ComponentKind         = "Component"
 	MetadataNamespacePath = "metadata/namespace"
 
-	OriginAnnotations    = "originAnnotations"
+	OriginAnnotations      = "originAnnotations"
 	TransformerAnnotations = "transformerAnnotations"
-	ManagedByLabelOption = "managedByLabel"
+	ManagedByLabelOption   = "managedByLabel"
 )
 
 // Kustomization holds the information needed to generate customized k8s api resources.
