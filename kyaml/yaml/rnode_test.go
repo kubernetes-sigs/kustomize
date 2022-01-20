@@ -759,6 +759,14 @@ data:
 		// Test Case
 		// *********
 		{
+			description: "keep json",
+			input:       `{"apiVersion": "v1", "kind": "MergeTagTest", "spec": {"color": {"rgb": "#FF0000"}}}`,
+			expected:    `{"apiVersion": "v1", "kind": "MergeTagTest", "spec": {"color": {"rgb": "#FF0000"}}}`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
 			description: "keep comments",
 			input: `
 apiVersion: v1

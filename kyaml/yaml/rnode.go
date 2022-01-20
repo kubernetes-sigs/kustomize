@@ -565,6 +565,10 @@ func (rn *RNode) SetMapField(value *RNode, path ...string) error {
 	)
 }
 
+func (rn *RNode) AssocMapEntry(key, value *RNode) error {
+	return rn.PipeE(MapEntrySetter{Key: key, Value: value})
+}
+
 func (rn *RNode) GetDataMap() map[string]string {
 	n, err := rn.Pipe(Lookup(DataField))
 	if err != nil {
@@ -979,11 +983,12 @@ func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
 
 func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
 	rn := NewMapRNode(&map[string]string{})
+	rn.YNode().Style = yn.Style
 	toMerge = append(toMerge, yn)
 	for i := range toMerge {
 		rnToMerge := NewRNode(toMerge[i]).Copy()
 		rnToMerge.VisitFields(func(node *MapNode) error {
-			rn.SetMapField(node.Value, GetValue(node.Key))
+			rn.AssocMapEntry(node.Key, node.Value)
 			return nil
 		})
 	}
