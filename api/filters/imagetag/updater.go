@@ -28,14 +28,25 @@ func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
 		return rn, nil
 	}
 
-	name, tag := image.Split(value)
+	name, tag, digest := image.Split(value)
 	if u.ImageTag.NewName != "" {
 		name = u.ImageTag.NewName
 	}
-	if u.ImageTag.NewTag != "" {
-		tag = ":" + u.ImageTag.NewTag
+	// not overriding tag/digest component, keep original
+	if u.ImageTag.NewTag == "" && u.ImageTag.Digest == "" {
+		if tag != "" {
+			tag = ":" + tag
+		}
+		if digest != "" {
+			tag += "@" + digest
+		}
 	}
-	if u.ImageTag.Digest != "" {
+	// overriding tag or digest will replace both original tag and digest values
+	if u.ImageTag.NewTag != "" && u.ImageTag.Digest != "" {
+		tag = ":" + u.ImageTag.NewTag + "@" + u.ImageTag.Digest
+	} else if u.ImageTag.NewTag != "" {
+		tag = ":" + u.ImageTag.NewTag
+	} else if u.ImageTag.Digest != "" {
 		tag = "@" + u.ImageTag.Digest
 	}
 

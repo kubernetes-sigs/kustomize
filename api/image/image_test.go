@@ -61,50 +61,65 @@ func TestSplit(t *testing.T) {
 		value    string
 		name     string
 		tag      string
+		digest   string
 	}{
 		{
 			testName: "no tag",
 			value:    "nginx",
 			name:     "nginx",
 			tag:      "",
+			digest:   "",
 		},
 		{
 			testName: "with tag",
 			value:    "nginx:1.2.3",
 			name:     "nginx",
-			tag:      ":1.2.3",
+			tag:      "1.2.3",
+			digest:   "",
 		},
 		{
 			testName: "with digest",
 			value:    "nginx@sha256:12345",
 			name:     "nginx",
-			tag:      "@sha256:12345",
+			tag:      "",
+			digest:   "sha256:12345",
 		},
 		{
 			testName: "with tag and digest",
 			value:    "nginx:1.2.3@sha256:12345",
 			name:     "nginx",
-			tag:      ":1.2.3@sha256:12345",
+			tag:      "1.2.3",
+			digest:   "sha256:12345",
 		},
 		{
 			testName: "with domain",
 			value:    "docker.io/nginx:1.2.3",
 			name:     "docker.io/nginx",
-			tag:      ":1.2.3",
+			tag:      "1.2.3",
+			digest:   "",
 		},
 		{
 			testName: "with domain and port",
 			value:    "foo.com:443/nginx:1.2.3",
 			name:     "foo.com:443/nginx",
-			tag:      ":1.2.3",
+			tag:      "1.2.3",
+			digest:   "",
+		},
+		{
+			testName: "with domain, port, and digest",
+			value:    "foo.com:443/nginx:1.2.3@sha256:12345",
+			name:     "foo.com:443/nginx",
+			tag:      "1.2.3",
+			digest:   "sha256:12345",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			name, tag := Split(tc.value)
+			name, tag, digest := Split(tc.value)
 			assert.Equal(t, tc.name, name)
 			assert.Equal(t, tc.tag, tag)
+			assert.Equal(t, tc.digest, digest)
 		})
 	}
 }
