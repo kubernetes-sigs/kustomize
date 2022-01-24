@@ -37,6 +37,7 @@ func TestLabels_Filter(t *testing.T) {
 		input                string
 		expectedOutput       string
 		filter               Filter
+		setEntryCallback     func(key, value, tag string, node *yaml.RNode)
 		expectedSetEntryArgs []setEntryArg
 	}{
 		"add": {
@@ -456,8 +457,8 @@ a:
 						CreateIfNotPresent: true,
 					},
 				},
-				SetEntryCallback: setEntryCallbackStub,
 			},
+			setEntryCallback: setEntryCallbackStub,
 			expectedSetEntryArgs: []setEntryArg{
 				{
 					Key:      "mage",
@@ -478,6 +479,7 @@ a:
 	for tn, tc := range testCases {
 		setEntryArgs = nil
 		t.Run(tn, func(t *testing.T) {
+			tc.filter.WithMutationTracker(tc.setEntryCallback)
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, tc.filter))) {
