@@ -4,6 +4,7 @@
 package imagetag
 
 import (
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -22,9 +23,17 @@ type Filter struct {
 	// FsSlice contains the FieldSpecs to locate an image field,
 	// e.g. Path: "spec/myContainers[]/image"
 	FsSlice types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+
+	trackableSetter filtersutil.TrackableSetter
 }
 
 var _ kio.Filter = Filter{}
+var _ kio.TrackableFilter = &Filter{}
+
+// WithMutationTracker registers a callback which will be invoked each time a field is mutated
+func (f *Filter) WithMutationTracker(callback func(key, value, tag string, node *yaml.RNode)) {
+	f.trackableSetter.WithMutationTracker(callback)
+}
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	_, err := kio.FilterAll(yaml.FilterFunc(f.filter)).Filter(nodes)
@@ -39,9 +48,10 @@ func (f Filter) filter(node *yaml.RNode) (*yaml.RNode, error) {
 		return node, nil
 	}
 	if err := node.PipeE(fsslice.Filter{
-		FsSlice:  f.FsSlice,
+		FsSlice: f.FsSlice,
 		SetValue: imageTagUpdater{
-			ImageTag: f.ImageTag,
+			ImageTag:        f.ImageTag,
+			trackableSetter: f.trackableSetter,
 		}.SetImageValue,
 	}); err != nil {
 		return nil, err

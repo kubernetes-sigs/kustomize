@@ -14,8 +14,9 @@ import (
 // that will update the value of the yaml node based on the provided
 // ImageTag if the current value matches the format of an image reference.
 type imageTagUpdater struct {
-	Kind     string      `yaml:"kind,omitempty"`
-	ImageTag types.Image `yaml:"imageTag,omitempty"`
+	Kind            string      `yaml:"kind,omitempty"`
+	ImageTag        types.Image `yaml:"imageTag,omitempty"`
+	trackableSetter filtersutil.TrackableSetter
 }
 
 func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
@@ -40,7 +41,7 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		tag = "@" + u.ImageTag.Digest
 	}
 
-	return filtersutil.SetScalar(name + tag)(rn)
+	return u.trackableSetter.SetScalar(name + tag)(rn)
 }
 
 func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
