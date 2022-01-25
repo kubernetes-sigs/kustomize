@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package add
+package remove
 
 import (
 	"strings"
@@ -13,23 +13,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func TestAddBuildMetadata(t *testing.T) {
+func TestRemoveBuildMetadata(t *testing.T) {
 	tests := map[string]struct {
 		input       string
 		args        []string
 		expectedErr string
 	}{
 		"happy path": {
-			input: ``,
-			args:  []string{strings.Join(types.BuildMetadataOptions, ",")},
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+buildMetadata: [originAnnotations, transformerAnnotations, managedByLabel]`,
+			args: []string{types.OriginAnnotations},
 		},
 		"option already there": {
 			input: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 buildMetadata: [originAnnotations]`,
-			args:        []string{types.OriginAnnotations},
-			expectedErr: "buildMetadata option originAnnotations already in kustomization file",
+			args: []string{types.OriginAnnotations},
 		},
 		"invalid option": {
 			input:       ``,
@@ -46,7 +48,7 @@ buildMetadata: [originAnnotations]`,
 	for _, tc := range tests {
 		fSys := filesys.MakeFsInMemory()
 		testutils_test.WriteTestKustomizationWith(fSys, []byte(tc.input))
-		cmd := newCmdAddBuildMetadata(fSys)
+		cmd := newCmdRemoveBuildMetadata(fSys)
 		err := cmd.RunE(cmd, tc.args)
 		if tc.expectedErr != "" {
 			assert.Error(t, err)
@@ -56,7 +58,7 @@ buildMetadata: [originAnnotations]`,
 			content, err := testutils_test.ReadTestKustomization(fSys)
 			assert.NoError(t, err)
 			for _, opt := range strings.Split(tc.args[0], ",") {
-				assert.Contains(t, string(content), opt)
+				assert.NotContains(t, string(content), opt)
 			}
 		}
 	}
