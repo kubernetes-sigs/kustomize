@@ -23,6 +23,8 @@ const (
 	ManagedByLabelOption   = "managedByLabel"
 )
 
+var BuildMetadataOptions = []string{OriginAnnotations, TransformerAnnotations, ManagedByLabelOption}
+
 // Kustomization holds the information needed to generate customized k8s api resources.
 type Kustomization struct {
 	TypeMeta `json:",inline" yaml:",inline"`

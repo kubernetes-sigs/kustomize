@@ -42,6 +42,7 @@ func NewCmdRemove(
 		newCmdRemoveAnnotation(fSys, v.MakeAnnotationNameValidator()),
 		newCmdRemovePatch(fSys),
 		newCmdRemoveTransformer(fSys),
+		newCmdRemoveBuildMetadata(fSys),
 	)
 	return c
 }

@@ -71,7 +71,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 				if p.Prefix != "" {
 					// TODO: There are multiple transformers that can change a resource's name, and each makes a call to
 					// StorePreviousID(). We should make it so that we only call StorePreviousID once per kustomization layer
-					// to avoid storing intermediate names between transformations, to prevent intermediate name conflicts. 
+					// to avoid storing intermediate names between transformations, to prevent intermediate name conflicts.
 					r.StorePreviousId()
 				}
 			}

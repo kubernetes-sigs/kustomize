@@ -325,11 +325,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	err = ra.Transform(newMultiTransformer(r))
-	if err != nil {
-		return err
-	}
-	return nil
+	return ra.Transform(newMultiTransformer(r))
 }
 
 func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]*resmap.TransformerWithProperties, error) {
