@@ -558,3 +558,85 @@ a:
 		})
 	}
 }
+
+func TestFilter_FieldPaths(t *testing.T) {
+	testCases := map[string]struct {
+		input     string
+		fieldSpec string
+		expected  []string
+	}{
+		"fieldpath containing SequenceNode": {
+			input: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  containers:
+  - name: store
+    image: redis:6.2.6
+  - name: server
+    image: nginx:latest
+`,
+			fieldSpec: `
+path: spec/containers[]/image
+kind: Pod
+`,
+			expected: []string{
+				"spec.containers.image",
+				"spec.containers.image",
+			},
+		},
+		"fieldpath with MappingNode": {
+			input: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  containers:
+  - name: store
+    image: redis:6.2.6
+  - name: server
+    image: nginx:latest
+`,
+			fieldSpec: `
+path: metadata/name
+kind: Pod
+`,
+			expected: []string{
+				"metadata.name",
+			},
+		},
+	}
+	for name, tc := range testCases {
+		var fieldPaths []string
+		trackableSetter := filtersutil.TrackableSetter{}
+		trackableSetter.WithMutationTracker(func(key, value, tag string, node *yaml.RNode) {
+			fieldPaths = append(fieldPaths, strings.Join(node.FieldPath(), "."))
+		})
+		filter := fieldspec.Filter{
+			SetValue: trackableSetter.SetScalar("foo"),
+		}
+
+		t.Run(name, func(t *testing.T) {
+			err := yaml.Unmarshal([]byte(tc.fieldSpec), &filter.FieldSpec)
+			assert.NoError(t, err)
+			rw := &kio.ByteReadWriter{
+				Reader:                bytes.NewBufferString(tc.input),
+				Writer:                &bytes.Buffer{},
+				OmitReaderAnnotations: true,
+			}
+
+			// run the filter
+			err = kio.Pipeline{
+				Inputs:  []kio.Reader{rw},
+				Filters: []kio.Filter{kio.FilterAll(filter)},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, fieldPaths)
+		})
+	}
+}
