@@ -30,6 +30,7 @@ func NewCmdSet(fSys filesys.FileSystem, ldr ifc.KvLoader, v ifc.Validator) *cobr
 		newCmdSetNameSuffix(fSys),
 		newCmdSetNamespace(fSys, v),
 		newCmdSetImage(fSys),
+		newCmdSetBuildMetadata(fSys),
 		newCmdSetReplicas(fSys),
 		newCmdSetLabel(fSys, ldr.Validator().MakeLabelValidator()),
 		newCmdSetAnnotation(fSys, ldr.Validator().MakeAnnotationValidator()),
