@@ -5,7 +5,9 @@ go 1.16
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-errors/errors v1.0.1
+	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
+	github.com/googleapis/gnostic v0.5.1
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 	github.com/pkg/errors v0.9.1

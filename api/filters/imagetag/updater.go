@@ -4,6 +4,7 @@
 package imagetag
 
 import (
+	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/image"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -13,19 +14,20 @@ import (
 // that will update the value of the yaml node based on the provided
 // ImageTag if the current value matches the format of an image reference.
 type imageTagUpdater struct {
-	Kind     string      `yaml:"kind,omitempty"`
-	ImageTag types.Image `yaml:"imageTag,omitempty"`
+	Kind            string      `yaml:"kind,omitempty"`
+	ImageTag        types.Image `yaml:"imageTag,omitempty"`
+	trackableSetter filtersutil.TrackableSetter
 }
 
-func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	if err := yaml.ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
-		return nil, err
+		return err
 	}
 
 	value := rn.YNode().Value
 
 	if !image.IsImageMatched(value, u.ImageTag.Name) {
-		return rn, nil
+		return nil
 	}
 
 	name, tag, digest := image.Split(value)
@@ -50,5 +52,12 @@ func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
 		tag = "@" + u.ImageTag.Digest
 	}
 
-	return rn.Pipe(yaml.FieldSetter{StringValue: name + tag})
+	return u.trackableSetter.SetScalar(name + tag)(rn)
+}
+
+func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+	if err := u.SetImageValue(rn); err != nil {
+		return nil, err
+	}
+	return rn, nil
 }
