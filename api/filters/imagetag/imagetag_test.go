@@ -767,6 +767,45 @@ spec:
 				},
 			},
 		},
+		"updateimagesuffix": {
+			input: `
+groups: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+	name: deploysuffix
+spec:
+  template:
+    spec:
+      containers:
+      - image: redis:6.2.6
+        name: redis
+`,
+			expectedOutput: `
+groups: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+	name: deploysuffix
+spec:
+  template:
+    spec:
+      containers:
+      - image: redis:6.2.6-alpine
+        name: redis
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:      "redis",
+					TagSuffix: "-alpine",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/template/spec/containers/image",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
