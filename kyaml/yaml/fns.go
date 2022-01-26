@@ -796,6 +796,12 @@ func SplitIndexNameValue(p string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
+// IsMatchEveryIndex returns true if p is matching every elements.
+// e.g. "*"
+func IsMatchEveryIndex(p string) bool {
+	return p == "*"
+}
+
 // IncrementFieldIndex increments i to point to the next field name element in
 // a slice of Contents.
 func IncrementFieldIndex(i int) int {

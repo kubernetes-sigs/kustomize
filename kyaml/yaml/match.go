@@ -83,8 +83,40 @@ func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
 		// match seq elements
 		return p.doSeq(rn)
 	}
+
+	if IsMatchEveryIndex(p.Path[0]) {
+		// match every elements (*)
+		return p.doMatchEvery(rn)
+	}
 	// match a field
 	return p.doField(rn)
+}
+
+func (p *PathMatcher) doMatchEvery(rn *RNode) (*RNode, error) {
+
+	if err := rn.VisitElements(p.visitEveryElem); err != nil {
+		return nil, err
+	}
+
+	// fmt.Println(p.val.String())
+	return p.val, nil
+}
+
+func (p *PathMatcher) visitEveryElem(elem *RNode) error {
+
+	fieldName := p.Path[0]
+	// recurse on the matching element
+	pm := &PathMatcher{Path: p.Path[1:]}
+	add, err := pm.filter(elem)
+	for k, v := range pm.Matches {
+		p.Matches[k] = v
+	}
+	if err != nil || add == nil {
+		return err
+	}
+	p.append(fieldName, add.Content()...)
+
+	return nil
 }
 
 func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
