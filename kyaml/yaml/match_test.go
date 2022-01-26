@@ -77,6 +77,12 @@ spec:
 		{[]string{
 			"spec", "template", "spec", "containers", "[name=s.*]", "ports", "[containerPort=.*2]"},
 			""},
+		{[]string{
+			"spec", "template", "spec", "containers", "*", "image"},
+			"- nginx:1.7.9\n- sidecar:1.0.0\n"},
+		{[]string{
+			"spec", "template", "spec", "containers", "*", "ports", "*"},
+			"- containerPort: 80\n- containerPort: 8081\n- containerPort: 9090\n"},
 	}
 	for i, u := range updates {
 		result, err := node.Pipe(&PathMatcher{Path: u.path})
