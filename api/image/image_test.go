@@ -106,7 +106,7 @@ func TestSplit(t *testing.T) {
 			digest:   "",
 		},
 		{
-			testName: "with domain, port, and digest",
+			testName: "with domain, port, tag and digest",
 			value:    "foo.com:443/nginx:1.2.3@sha256:12345",
 			name:     "foo.com:443/nginx",
 			tag:      "1.2.3",
