@@ -679,7 +679,7 @@ spec:
 				},
 			},
 		},
-    "mutation tracker": {
+		"mutation tracker": {
 			input: `
 group: apps
 apiVersion: v1
