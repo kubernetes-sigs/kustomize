@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/kustomize/v4
+module github.com/benmorehouse/kustomize-vault/kustomize
 
 go 1.16
 
