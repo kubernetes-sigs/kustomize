@@ -3,18 +3,14 @@
 aliases:
   kustomize-owners:
     - knverey
-    - monopole
-    - pwittrock
-  kustomize-approvers:
-    - justinsb
-    - knverey
-    - monopole
     - natasha41575
-    - pwittrock
+  kustomize-approvers:
+    - knverey
+    - natasha41575
   kustomize-reviewers:
     - knverey
-    - monopole
     - natasha41575
+    - yuwenma
 
   kyaml-approvers:
     - mengqiy
@@ -28,3 +24,6 @@ aliases:
   emeritus-approvers:
     - liujingfang1
     - Shell32-Natsu
+    - justinsb
+    - monopole
+    - pwittrock
