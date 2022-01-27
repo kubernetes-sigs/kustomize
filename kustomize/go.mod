@@ -8,9 +8,10 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	sigs.k8s.io/kustomize/api v0.9.0
-	sigs.k8s.io/kustomize/cmd/config v0.10.0
-	sigs.k8s.io/kustomize/kyaml v0.11.1
+	sigs.k8s.io/kustomize/api v0.10.1
+	sigs.k8s.io/kustomize/cmd/config v0.10.2
+	sigs.k8s.io/kustomize/kustomize/v4 v4.4.1
+	sigs.k8s.io/kustomize/kyaml v0.13.0
 	sigs.k8s.io/yaml v1.2.0
 )
 
