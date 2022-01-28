@@ -12,7 +12,10 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	filtertest_test "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+var mutationTrackerStub = filtertest_test.MutationTrackerStub{}
 
 var tests = []TestCase{
 	{
@@ -283,21 +286,91 @@ a:
 			},
 		},
 	},
+
+	{
+		name: "mutation tracker",
+		input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+---
+apiVersion: example.com/v1
+kind: RoleBinding
+subjects:
+- name: default
+`,
+		expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  namespace: bar
+a:
+  b:
+    c: bar
+---
+apiVersion: example.com/v1
+kind: RoleBinding
+subjects:
+- name: default
+  namespace: bar
+metadata:
+  namespace: bar
+a:
+  b:
+    c: bar
+`,
+		filter: namespace.Filter{Namespace: "bar"},
+		fsslice: []types.FieldSpec{
+			{
+				Path:               "a/b/c",
+				CreateIfNotPresent: true,
+			},
+		},
+		mutationTracker: mutationTrackerStub.MutationTracker,
+		expectedSetValueArgs: []filtertest_test.SetValueArg{
+			{
+				Value:    "bar",
+				NodePath: []string{"metadata", "namespace"},
+			},
+			{
+				Value:    "bar",
+				NodePath: []string{"a", "b", "c"},
+			},
+			{
+				Value:    "bar",
+				NodePath: []string{"metadata", "namespace"},
+			},
+			{
+				Value:    "bar",
+				NodePath: []string{"namespace"},
+			},
+			{
+				Value:    "bar",
+				NodePath: []string{"a", "b", "c"},
+			},
+		},
+	},
 }
 
 type TestCase struct {
-	name     string
-	input    string
-	expected string
-	filter   namespace.Filter
-	fsslice  types.FsSlice
+	name                 string
+	input                string
+	expected             string
+	filter               namespace.Filter
+	fsslice              types.FsSlice
+	mutationTracker      func(key, value, tag string, node *yaml.RNode)
+	expectedSetValueArgs []filtertest_test.SetValueArg
 }
 
 var config = builtinconfig.MakeDefaultConfig()
 
 func TestNamespace_Filter(t *testing.T) {
 	for i := range tests {
+		mutationTrackerStub.Reset()
 		test := tests[i]
+		test.filter.WithMutationTracker(test.mutationTracker)
 		t.Run(test.name, func(t *testing.T) {
 			test.filter.FsSlice = append(config.NameSpace, test.fsslice...)
 			if !assert.Equal(t,
@@ -306,6 +379,7 @@ func TestNamespace_Filter(t *testing.T) {
 					filtertest_test.RunFilter(t, test.input, test.filter))) {
 				t.FailNow()
 			}
+			assert.Equal(t, test.expectedSetValueArgs, mutationTrackerStub.SetValueArgs())
 		})
 	}
 }
