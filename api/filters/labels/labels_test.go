@@ -14,31 +14,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-type setEntryArg struct {
-	Key      string
-	Value    string
-	Tag      string
-	NodePath []string
-}
-
-var setEntryArgs []setEntryArg
-
-func setEntryCallbackStub(key, value, tag string, node *yaml.RNode) {
-	setEntryArgs = append(setEntryArgs, setEntryArg{
-		Key:      key,
-		Value:    value,
-		Tag:      tag,
-		NodePath: node.FieldPath(),
-	})
-}
-
 func TestLabels_Filter(t *testing.T) {
+	mutationTrackerStub := filtertest_test.MutationTrackerStub{}
 	testCases := map[string]struct {
 		input                string
 		expectedOutput       string
 		filter               Filter
 		setEntryCallback     func(key, value, tag string, node *yaml.RNode)
-		expectedSetEntryArgs []setEntryArg
+		expectedSetEntryArgs []filtertest_test.SetValueArg
 	}{
 		"add": {
 			input: `
@@ -458,8 +441,8 @@ a:
 					},
 				},
 			},
-			setEntryCallback: setEntryCallbackStub,
-			expectedSetEntryArgs: []setEntryArg{
+			setEntryCallback: mutationTrackerStub.MutationTracker,
+			expectedSetEntryArgs: []filtertest_test.SetValueArg{
 				{
 					Key:      "mage",
 					Value:    "yennefer",
@@ -477,7 +460,7 @@ a:
 	}
 
 	for tn, tc := range testCases {
-		setEntryArgs = nil
+		mutationTrackerStub.Reset()
 		t.Run(tn, func(t *testing.T) {
 			tc.filter.WithMutationTracker(tc.setEntryCallback)
 			if !assert.Equal(t,
@@ -485,7 +468,7 @@ a:
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, tc.filter))) {
 				t.FailNow()
 			}
-			if !assert.Equal(t, tc.expectedSetEntryArgs, setEntryArgs) {
+			if !assert.Equal(t, tc.expectedSetEntryArgs, mutationTrackerStub.SetValueArgs()) {
 				t.FailNow()
 			}
 		})
