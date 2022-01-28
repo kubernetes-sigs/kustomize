@@ -1467,10 +1467,10 @@ func makeBigMap() map[string]interface{} {
 				"anEmptyMap":   map[string]interface{}{},
 				"anEmptySlice": []interface{}{},
 				/*
-					TODO: test for unrecognizable (e.g. a function)
-						"unrecognizable": testing.InternalExample{
-							Name: "fooBar",
-						},
+				   TODO: test for unrecognizable (e.g. a function)
+				     "unrecognizable": testing.InternalExample{
+				       Name: "fooBar",
+				     },
 				*/
 			},
 		},
@@ -1858,4 +1858,403 @@ func TestGetAnnotations(t *testing.T) {
 	if expected, actual := "bar", annotations["annotation2"]; expected != actual {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
+}
+
+const deploymentYaml = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
+`
+
+const configMapYaml = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: bar
+`
+
+const emptyResourceList = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+functionConfig:
+`
+
+const resourceListWithConfigMapAsFunctionConfig = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+functionConfig:
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm
+  data:
+    foo: bar
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm
+  data:
+    foo: bar
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    finalizers:
+    - foo
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+          - containerPort: 80
+`
+
+func TestGet(t *testing.T) {
+	testcases := []struct {
+		Name         string
+		Fields       []string
+		Passedin     interface{}
+		Expected     interface{}
+		Found        bool
+		ExpectError  bool
+		ErrorMessage string
+	}{
+		{
+			Name:     "get spec.replicas int from deployment",
+			Fields:   []string{"spec", "replicas"},
+			Passedin: func() *int { var in int; return &in }(),
+			Expected: func() *int { in := 3; return &in }(),
+			Found:    true,
+		},
+		{
+			Name:     "get metadata.name string from deployment",
+			Fields:   []string{"metadata", "name"},
+			Passedin: func() *string { var s string; return &s }(),
+			Expected: func() *string { s := "nginx-deployment"; return &s }(),
+			Found:    true,
+		},
+		{
+			Name:     "get spec.selector.matchLabels map[string]string from deployment",
+			Fields:   []string{"spec", "selector", "matchLabels"},
+			Passedin: &map[string]string{},
+			Expected: &map[string]string{"app": "nginx"},
+			Found:    true,
+		},
+		{
+			Name:     "get metadata.finalizers []string from deployment",
+			Fields:   []string{"metadata", "finalizers"},
+			Passedin: &[]string{},
+			Expected: &[]string{"foo"},
+			Found:    true,
+		},
+		{
+			Name:     "get a container from deployment",
+			Fields:   []string{"spec", "template", "spec", "containers", "[name=nginx]"},
+			Passedin: &ContainerCopy{},
+			Expected: &ContainerCopy{
+				Name:  "nginx",
+				Image: "nginx:1.14.2",
+			},
+			Found: true,
+		},
+		{
+			Name:         "error when passed-in doesn't match actual",
+			Fields:       []string{"spec", "replicas"},
+			Passedin:     func() *string { var s string; return &s }(),
+			ExpectError:  true,
+			ErrorMessage: "node was not a string",
+		},
+		{
+			Name:     "field not found",
+			Fields:   []string{"spec", "foo"},
+			Passedin: func() *string { var s string; return &s }(),
+			Found:    false,
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			depl, err := Parse(deploymentYaml)
+			assert.NoError(t, err)
+
+			found, err := depl.Get(tc.Passedin, tc.Fields...)
+			if tc.ExpectError {
+				// Check if the error contains the expected error message
+				assert.Contains(t, err.Error(), tc.ErrorMessage)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Found, found)
+				if tc.Found {
+					assert.Equal(t, tc.Expected, tc.Passedin)
+				}
+			}
+		})
+	}
+}
+
+func TestSet(t *testing.T) {
+	testcases := []struct {
+		Name         string
+		Fields       []string
+		Passedin     interface{}
+		ExpectError  bool
+		ErrorMessage string
+		Expected     string
+	}{
+		{
+			Name:     "set spec.replicas int",
+			Fields:   []string{"spec", "replicas"},
+			Passedin: func() *int { in := 10; return &in }(),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set metadata.name string",
+			Fields:   []string{"metadata", "name"},
+			Passedin: func() *string { s := "another-nginx"; return &s }(),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: another-nginx
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set spec.selector.matchLabels map[string]string",
+			Fields:   []string{"spec", "selector", "matchLabels"},
+			Passedin: &map[string]string{"app": "webapp", "foo": "bar"},
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+      foo: bar
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set metadata.finalizers []string",
+			Fields:   []string{"metadata", "finalizers"},
+			Passedin: &[]string{"foo", "bar"},
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+  - bar
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set image name in a container",
+			Fields:   []string{"spec", "template", "spec", "containers", "[name=nginx]", "image"},
+			Passedin: func() *string { s := "nginx:latest"; return &s }(),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:   "set image name in a container",
+			Fields: []string{"spec", "template", "spec", "containers", "[name=logger]"},
+			Passedin: &ContainerCopy{
+				Name:  "logger",
+				Image: "logger:latest",
+			},
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+      - name: logger
+        image: logger:latest
+`,
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			depl, err := Parse(deploymentYaml)
+			assert.NoError(t, err)
+
+			err = depl.Set(tc.Passedin, tc.Fields...)
+			if tc.ExpectError {
+				// Check if the error contains the expected error message
+				assert.Contains(t, err.Error(), tc.ErrorMessage)
+			} else {
+				assert.NoError(t, err)
+				str, err := depl.String()
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Expected, str)
+			}
+		})
+	}
+}
+
+func TestSetAndGetRNode(t *testing.T) {
+	cm, err := Parse(configMapYaml)
+	assert.NoError(t, err)
+	rl, err := Parse(emptyResourceList)
+	assert.NoError(t, err)
+
+	err = rl.Set(cm, "functionConfig")
+	assert.NoError(t, err)
+
+	depl, err := Parse(deploymentYaml)
+	assert.NoError(t, err)
+	err = rl.Set([]*RNode{cm, depl}, "items")
+	assert.NoError(t, err)
+
+	rlYaml, err := rl.String()
+	assert.NoError(t, err)
+	assert.Equal(t, resourceListWithConfigMapAsFunctionConfig, rlYaml)
+}
+
+func TestGetAndMutateRNode(t *testing.T) {
+	cm, err := Parse(configMapYaml)
+	assert.NoError(t, err)
+	rn := &RNode{}
+	found, err := cm.Get(rn, "metadata", "name")
+	assert.NoError(t, err)
+	assert.True(t, found)
+	rn.YNode().LineComment = "# new comment"
+	comment, err := cm.GetLineComment("metadata", "name")
+	assert.NoError(t, err)
+	assert.Equal(t, "# new comment", comment)
+}
+
+type ContainerCopy struct {
+	Name  string `json:"name" yaml:"name"`
+	Image string `json:"image,omitempty" yaml:"image,omitempty"`
 }

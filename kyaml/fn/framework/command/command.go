@@ -166,3 +166,35 @@ func (fr *deferredFileReader) Read(dest []byte) (int, error) {
 	}
 	return fr.srcReader.Read(dest)
 }
+
+// AsMain reads the resourceList in yaml format from stdin, evaluates the
+// function and write the updated resourceList in yaml to stdout. Errors if any
+// will be printed to stderr.
+func AsMain(p framework.ResourceListProcessor) error {
+	e := func() error {
+		in, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("unable to read from stdin: %v", err)
+		}
+		out, err := framework.Run(p, in)
+		if err != nil {
+			switch err.(type) {
+			case framework.Results, *framework.Results, framework.Result, *framework.Result:
+				// do nothing
+			default:
+				return err
+			}
+		}
+		// If there is an error and the error is Result(s), we don't return the
+		// error immediately. We write out to stdout before returning any error.
+		_, er := os.Stdout.Write(out)
+		if er != nil {
+			return fmt.Errorf("unable to write to stdout: %v", er)
+		}
+		return err
+	}()
+	if e != nil {
+		framework.Log(e)
+	}
+	return e
+}

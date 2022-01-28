@@ -85,3 +85,111 @@ results:
   tags:
     foo: bar`, strings.TrimSpace(out.String()))
 }
+
+const intputResourceList = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment #foo-system
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+          - containerPort: 80
+functionConfig:
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm
+  data:
+    foo: bar
+`
+
+func TestRoundtripResourceList(t *testing.T) {
+	rl, err := framework.ParseResourceList([]byte(intputResourceList))
+	assert.NoError(t, err)
+	yml, err := rl.ToYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, intputResourceList, yml)
+}
+
+const resourceListToSort = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: nginx-configmap
+  data:
+    foo: bar
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+  spec:
+    replicas: 3
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm1
+  data:
+    foo: bar
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm2
+    namespace: staging
+  data:
+    foo: bar
+`
+
+const sortedResourceList = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+  spec:
+    replicas: 3
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm1
+  data:
+    foo: bar
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: nginx-configmap
+  data:
+    foo: bar
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm2
+    namespace: staging
+  data:
+    foo: bar
+`
+
+func TestSortItems(t *testing.T) {
+	rl, err := framework.ParseResourceList([]byte(resourceListToSort))
+	assert.NoError(t, err)
+	rl.SortItems()
+	yml, err := rl.ToYAML()
+	assert.NoError(t, err)
+	assert.Equal(t, sortedResourceList, yml)
+}

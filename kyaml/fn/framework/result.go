@@ -23,7 +23,7 @@ const (
 	Info Severity = "info"
 )
 
-// ResultItem defines a validation result
+// Result defines a validation result
 type Result struct {
 	// Message is a human readable message. This field is required.
 	Message string `yaml:"message,omitempty" json:"message,omitempty"`
@@ -82,6 +82,10 @@ func (i Result) String() string {
 	formatString += ": %s"
 	list = append(list, i.Message)
 	return fmt.Sprintf(formatString, list...)
+}
+
+func (i Result) Error() string {
+	return (i).String()
 }
 
 // File references a file containing a resource
@@ -184,4 +188,54 @@ func fileLess(items Results, i, j int) int {
 func resultToString(item Result) string {
 	return fmt.Sprintf("resource-ref:%s,field:%s,message:%s",
 		item.ResourceRef, item.Field, item.Message)
+}
+
+func ErrorConfigFileResult(err error, path string) *Result {
+	return ConfigFileResult(err.Error(), path, Error)
+}
+
+func ConfigFileResult(msg, path string, severity Severity) *Result {
+	return &Result{
+		Message:  msg,
+		Severity: severity,
+		File: &File{
+			Path: path,
+		},
+	}
+}
+
+func ErrorResult(err error) *Result {
+	return GeneralResult(err.Error(), Error)
+}
+
+func GeneralResult(msg string, severity Severity) *Result {
+	return &Result{
+		Message:  msg,
+		Severity: severity,
+	}
+}
+
+func ErrorConfigObjectResult(err error, rn *yaml.RNode) *Result {
+	return ConfigObjectResult(err.Error(), rn, Error)
+}
+
+func ConfigObjectResult(msg string, rn *yaml.RNode, severity Severity) *Result {
+	return &Result{
+		Message:  msg,
+		Severity: severity,
+		ResourceRef: &yaml.ResourceIdentifier{
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: rn.GetApiVersion(),
+				Kind:       rn.GetKind(),
+			},
+			NameMeta: yaml.NameMeta{
+				Name:      rn.GetName(),
+				Namespace: rn.GetNamespace(),
+			},
+		},
+		File: &File{
+			Path:  GetPathAnnotation(rn),
+			Index: GetIndexAnnotation(rn),
+		},
+	}
 }
