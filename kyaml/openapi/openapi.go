@@ -9,16 +9,19 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 	"strings"
 
+	openapi_v2 "github.com/googleapis/gnostic/openapiv2"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
-	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	k8syaml "sigs.k8s.io/yaml"
 )
 
+// TODO (natasha41575): Remove this once the gnostic/openapiv2 library integration is
+//  complete.
 // globalSchema contains global state information about the openapi
 var globalSchema openapiData
 
@@ -33,6 +36,11 @@ var customSchema []byte
 type openapiData struct {
 	// schema holds the OpenAPI schema data
 	schema spec.Schema
+
+	// TODO (natasha41575): Remove this once the gnostic/openapiv2 library integration is
+	//  complete.
+	// doc holds the OpenAPI schema data
+	doc openapi_v2.Document
 
 	// schemaForResourceType is a map of Resource types to their schemas
 	schemaByResourceType map[yaml.TypeMeta]*spec.Schema
@@ -360,9 +368,9 @@ func GetSchema(s string, schema *spec.Schema) (*ResourceSchema, error) {
 // be true if the resource is namespace-scoped, and false if the type is
 // cluster-scoped.
 func IsNamespaceScoped(typeMeta yaml.TypeMeta) (bool, bool) {
-	if res, f := precomputedIsNamespaceScoped[typeMeta]; f {
-		return res, true
-	}
+	//if res, f := precomputedIsNamespaceScoped[typeMeta]; f {
+	//	return res, true
+	//}
 	return isNamespaceScopedFromSchema(typeMeta)
 }
 
@@ -596,7 +604,7 @@ func initSchema() {
 	if customSchema != nil {
 		err := parse(customSchema)
 		if err != nil {
-			panic("invalid schema file")
+			panic(fmt.Sprintf("invalid schema file: %s", err.Error()))
 		}
 		if err = parse(kustomizationapi.MustAsset(kustomizationAPIAssetName)); err != nil {
 			// this should never happen
@@ -650,8 +658,14 @@ func parse(b []byte) error {
 	if err := swagger.UnmarshalJSON(b); err != nil {
 		return errors.Wrap(err)
 	}
+
+	doc, err := openapi_v2.ParseDocument(b)
+	if err != nil {
+		return errors.Wrap(fmt.Errorf("parsing document error: %w", err))
+	}
+
 	AddDefinitions(swagger.Definitions)
-	findNamespaceability(swagger.Paths)
+	findNamespaceability(doc.Paths)
 
 	return nil
 }
@@ -661,36 +675,41 @@ func parse(b []byte) error {
 // for each path is found by looking at the x-kubernetes-group-version-kind
 // extension. If a path exists for the resource that contains a namespace path
 // parameter, the resource is namespace-scoped.
-func findNamespaceability(paths *spec.Paths) {
+func findNamespaceability(paths *openapi_v2.Paths) {
 	if globalSchema.namespaceabilityByResourceType == nil {
 		globalSchema.namespaceabilityByResourceType = make(map[yaml.TypeMeta]bool)
 	}
-
 	if paths == nil {
 		return
 	}
+	for _, p := range paths.Path {
+		path, pathInfo := p.GetName(), p.GetValue()
+		if pathInfo.GetGet() == nil {
+			continue
+		}
+		for _, e := range pathInfo.GetGet().GetVendorExtension() {
+			if e.Name == kubernetesGVKExtensionKey {
+				var gvk map[string]string
 
-	for path, pathInfo := range paths.Paths {
-		if pathInfo.Get == nil {
-			continue
-		}
-		gvk, found := pathInfo.Get.VendorExtensible.Extensions[kubernetesGVKExtensionKey]
-		if !found {
-			continue
-		}
-		typeMeta, found := toTypeMeta(gvk)
-		if !found {
-			continue
-		}
+				if err := yaml.Unmarshal([]byte(e.GetValue().GetYaml()), &gvk); err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
+				typeMeta := yaml.TypeMeta{
+					APIVersion: strings.Trim(strings.Join([]string{gvk["group"], gvk["version"]}, "/"), "/"),
+					Kind:       gvk["kind"],
+				}
 
-		if strings.Contains(path, "namespaces/{namespace}") {
-			// if we find a namespace path parameter, we just update the map
-			// directly
-			globalSchema.namespaceabilityByResourceType[typeMeta] = true
-		} else if _, found := globalSchema.namespaceabilityByResourceType[typeMeta]; !found {
-			// if the resource doesn't have the namespace path parameter, we
-			// only add it to the map if it doesn't already exist.
-			globalSchema.namespaceabilityByResourceType[typeMeta] = false
+				if strings.Contains(path, "namespaces/{namespace}") {
+					// if we find a namespace path parameter, we just update the map
+					// directly
+					globalSchema.namespaceabilityByResourceType[typeMeta] = true
+				} else if _, found := globalSchema.namespaceabilityByResourceType[typeMeta]; !found {
+					// if the resource doesn't have the namespace path parameter, we
+					// only add it to the map if it doesn't already exist.
+					globalSchema.namespaceabilityByResourceType[typeMeta] = false
+				}
+			}
 		}
 	}
 }

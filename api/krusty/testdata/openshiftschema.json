@@ -72,5 +72,11 @@
         }
       }
     }
-  }
+  },
+  "info": {
+    "title": "title",
+    "version": "version"
+  },
+  "swagger": "2.0",
+  "paths": {}
 }

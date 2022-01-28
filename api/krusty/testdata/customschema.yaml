@@ -1,3 +1,4 @@
+---
 definitions:
   v1alpha1.MyCRD:
     properties:
@@ -22,7 +23,7 @@ definitions:
       - group: example.com
         kind: MyCRD
         version: v1alpha1
-      - group: ""
+      - group: ''
         kind: MyCRD
         version: v1alpha1
   io.k8s.api.core.v1.PodTemplateSpec:
@@ -70,9 +71,15 @@ definitions:
   io.k8s.api.core.v1.ContainerPort:
     properties:
       containerPort:
+        format: int32
         type: integer
       name:
         type: string
       protocol:
         type: string
     type: object
+info:
+  title: title
+  version: version
+swagger: '2.0'
+paths: {}

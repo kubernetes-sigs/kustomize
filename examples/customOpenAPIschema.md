@@ -175,7 +175,13 @@ cat <<EOF >>$DEMO_HOME/mycr_schema.json
       },
       "type": "object"
     }
-  }
+  },
+  "info": {
+    "title": "Kustomization",
+    "version": "v1beta1"
+  },
+  "swagger": "2.0",
+  "paths": {}
 }
 
 EOF

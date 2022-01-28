@@ -126,5 +126,11 @@
         }
       ]
     }
-  }
+  },
+  "info": {
+    "title": "Kustomization",
+    "version": "v1beta1"
+  },
+  "swagger": "2.0",
+  "paths": {}
 }

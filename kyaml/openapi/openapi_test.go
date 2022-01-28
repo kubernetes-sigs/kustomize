@@ -41,7 +41,12 @@ var additionalSchema = []byte(`
       "x-kustomize": {"setBy":"Jane","setter": {"name":"replicas","value":"5"}}
     }
   },
-  "invalid": "field"
+  "info": {
+    "title": "title",
+    "version": "version"
+  },
+  "swagger": "2.0",
+  "paths": {}
 }
 `)
 
@@ -293,7 +298,8 @@ func TestIsNamespaceScoped_custom(t *testing.T) {
           "group": "custom.io",
           "kind": "Custom",
           "version": "v1"
-        }
+        },
+        "responses": {},
       }
     },
     "/apis/custom.io/v1/clustercustoms": {
@@ -303,10 +309,16 @@ func TestIsNamespaceScoped_custom(t *testing.T) {
           "group": "custom.io",
           "kind": "ClusterCustom",
           "version": "v1"
-        }
+        },
+        "responses": {},
       }
     }
-  }
+  },
+  "info": {
+    "title": "title",
+    "version": "version"
+  },
+  "swagger": "2.0",
 }
 `))
 	assert.NoError(t, err)
