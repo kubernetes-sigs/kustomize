@@ -95,11 +95,15 @@ trap cleanup EXIT ERR
 pushd "$tmpDir" >& /dev/null
 
 opsys=windows
-arch=amd64
 if [[ "$OSTYPE" == linux* ]]; then
   opsys=linux
 elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
+fi
+
+arch=amd64
+if command -v arch &> /dev/null; then
+  arch=$(arch)
 fi
 
 releases=$(curl -s $release_url)
