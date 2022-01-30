@@ -42,7 +42,7 @@ spec:
   - select:
       kind: Deployment
       name: deploy
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -95,7 +95,7 @@ spec:
   targets:
   - select:
       kind: Deployment
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
@@ -328,7 +328,7 @@ spec:
   - select:
       kind: Deployment
       name: deploy1
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.[name=postgresdb].image
 `,
 			expected: `apiVersion: v1
@@ -405,7 +405,7 @@ spec:
   targets:
   - select:
       version: v3
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: my-group-1/v1
@@ -492,7 +492,7 @@ spec:
   targets:
   - select:
       name: my-name-2
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `spec:
@@ -582,7 +582,7 @@ spec:
     reject:
     - name: deploy2
     - name: deploy3
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -662,7 +662,7 @@ spec:
     reject:
     - kind: Deployment
       name: my-name
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -731,7 +731,7 @@ spec:
     reject:
     - kind: Deployment
     - name: my-name
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -799,7 +799,7 @@ spec:
   - select:
       kind: Deployment
       name: deploy1
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
     options:
       delimiter: ':'
@@ -872,7 +872,7 @@ spec:
   - select:
       kind: Pod
       name: pod2
-    fieldPaths: 
+    fieldPaths:
     - spec.volumes.0.projected.sources.0.configMap.items.0.path
     options:
       delimiter: '/'
@@ -948,7 +948,7 @@ spec:
   - select:
       kind: Pod
       name: pod1
-    fieldPaths: 
+    fieldPaths:
     - spec.volumes.0.projected.sources.0.configMap.items.0.path
     options:
       delimiter: '/'
@@ -1024,7 +1024,7 @@ spec:
   - select:
       kind: Pod
       name: pod1
-    fieldPaths: 
+    fieldPaths:
     - spec.volumes.0.projected.sources.0.configMap.items.0.path
     options:
       delimiter: '/'
@@ -1100,7 +1100,7 @@ spec:
   - select:
       kind: Pod
       name: pod1
-    fieldPaths: 
+    fieldPaths:
     - spec.volumes.0.projected.sources.0.configMap.items.0.path
     options:
       delimiter: '/'
@@ -1176,7 +1176,7 @@ spec:
   - select:
       kind: Pod
       name: pod1
-    fieldPaths: 
+    fieldPaths:
     - spec.volumes.0.projected.sources.0.configMap.items.0.path
     options:
       delimiter: '/'
@@ -1212,7 +1212,7 @@ metadata:
   targets:
   - select:
       name: deploy1
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers
     options:
       create: true
@@ -1223,7 +1223,7 @@ metadata:
   targets:
   - select:
       name: deploy2
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
@@ -1285,12 +1285,12 @@ spec:
     kind: Pod
     name: pod
     fieldPath: spec.containers
-    options: 
+    options:
       delimiter: "/"
   targets:
   - select:
       kind: Deployment
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers
 `,
 			expectedErr: "delimiter option can only be used with scalar nodes",
@@ -1331,9 +1331,9 @@ spec:
   targets:
   - select:
       kind: Deployment
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers
-    options: 
+    options:
       delimiter: "/"
 `,
 			expectedErr: "delimiter option can only be used with scalar nodes",
@@ -1354,7 +1354,7 @@ metadata:
   targets:
   - select:
       name: custom
-    fieldPaths: 
+    fieldPaths:
     - metadata.annotations.[f.g.h/i-j]
 `,
 			expected: `apiVersion: v1
@@ -1431,6 +1431,136 @@ spec:
     name: second
     version: latest
     property: second`,
+		},
+		"index contains '*' character": {
+			input: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: deployment-name
+          value: XXXXX
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: sample-deploy
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.*.env.[name=deployment-name].value
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: deployment-name
+          value: sample-deploy`,
+		},
+		"list index contains '*' character": {
+			input: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: deployment-name
+          value: XXXXX
+        - name: foo
+          value: bar
+      - image: nginx
+        name: sidecar
+        env:
+        - name: deployment-name
+          value: YYYYY
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: sample-deploy
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.*.env.[name=deployment-name].value
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: deployment-name
+          value: sample-deploy
+        - name: foo
+          value: bar
+      - image: nginx
+        name: sidecar
+        env:
+        - name: deployment-name
+          value: sample-deploy`,
 		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
@@ -1513,7 +1643,7 @@ spec:
 kind: Deployment
 metadata:
   name: pre-deploy
-  annotations: 
+  annotations:
     internal.config.kubernetes.io/previousNames: deploy,deploy
     internal.config.kubernetes.io/previousKinds: CronJob,Deployment
     internal.config.kubernetes.io/previousNamespaces: default,default
@@ -1535,7 +1665,7 @@ spec:
   - select:
       kind: Deployment
       name: deploy
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -1556,7 +1686,6 @@ spec:
         name: postgresdb
 `,
 		},
-
 		"replacement source.fieldPath does not exist": {
 			input: `apiVersion: v1
 kind: ConfigMap
@@ -1628,7 +1757,7 @@ spec:
   targets:
   - select:
       annotationSelector: foo=bar-1
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -1702,7 +1831,7 @@ spec:
   targets:
   - select:
       labelSelector: foo=bar-1
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
@@ -1778,7 +1907,7 @@ spec:
       kind: Deployment
     reject:
     - labelSelector: foo=bar-2
-    fieldPaths: 
+    fieldPaths:
     - spec.template.spec.containers.1.image
 `,
 			expected: `apiVersion: v1
