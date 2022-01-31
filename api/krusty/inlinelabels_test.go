@@ -77,8 +77,6 @@ spec:
     metadata:
       labels:
         a: b
-        c: d
-        foo: bar
         my: deployment
     spec:
       containers:
@@ -138,6 +136,7 @@ labels:
 - pairs:
     foo: bar
   includeSelectors: false
+  includeTemplates: true
 `)
 	m := th.Run("/app", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
