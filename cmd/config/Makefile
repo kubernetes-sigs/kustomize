@@ -40,7 +40,7 @@ lint: $(GOBIN)/golangci-lint
 
 license: $(GOBIN)/addlicense
 	$(GOBIN)/addlicense \
-	  -y 2021 \
+	  -y 2022 \
 	  -c "The Kubernetes Authors." \
 	  -f LICENSE_TEMPLATE .
 

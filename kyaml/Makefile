@@ -40,7 +40,7 @@ lint: $(MYGOBIN)/golangci-lint
 
 
 license: $(MYGOBIN)/addlicense
-	( find . -type f -not -path "*/internal/forked/github.com/go-yaml*" -exec bash -c "$(MYGOBIN)/addlicense -y 2021 -c 'The Kubernetes Authors.' -f LICENSE_TEMPLATE {}" ";" )
+	( find . -type f -not -path "*/internal/forked/github.com/go-yaml*" -exec bash -c "$(MYGOBIN)/addlicense -y 2022 -c 'The Kubernetes Authors.' -f LICENSE_TEMPLATE {}" ";" )
 
 test:
 	go test -cover ./...
