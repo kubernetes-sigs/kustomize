@@ -25,7 +25,7 @@ generate:
 
 license:
 	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
-	$(GOBIN)/addlicense  -y 2020 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+	$(GOBIN)/addlicense  -y 2022 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 tidy:
 	(cd image && go mod tidy)
