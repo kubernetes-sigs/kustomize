@@ -124,7 +124,8 @@ Undraft the release on the [kustomize repo release page]:
 
 ```
 gorepomod pin kyaml --doIt &&
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/prefixsuffixtransformer/go.mod &&
+go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/prefixtransformer/go.mod &&
+go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/suffixtransformer/go.mod &&
 go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/replicacounttransformer/go.mod &&
 go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/patchtransformer/go.mod &&
 go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/patchjson6902transformer/go.mod
