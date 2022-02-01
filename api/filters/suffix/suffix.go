@@ -18,9 +18,17 @@ type Filter struct {
 	Suffix string `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 
 	FieldSpec types.FieldSpec `json:"fieldSpec,omitempty" yaml:"fieldSpec,omitempty"`
+
+	trackableSetter filtersutil.TrackableSetter
 }
 
 var _ kio.Filter = Filter{}
+var _ kio.TrackableFilter = &Filter{}
+
+// WithMutationTracker registers a callback which will be invoked each time a field is mutated
+func (f *Filter) WithMutationTracker(callback func(key, value, tag string, node *yaml.RNode)) {
+	f.trackableSetter.WithMutationTracker(callback)
+}
 
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 	return kio.FilterAll(yaml.FilterFunc(f.run)).Filter(nodes)
@@ -37,6 +45,6 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 }
 
 func (f Filter) evaluateField(node *yaml.RNode) error {
-	return filtersutil.SetScalar(fmt.Sprintf(
+	return f.trackableSetter.SetScalar(fmt.Sprintf(
 		"%s%s", node.YNode().Value, f.Suffix))(node)
 }

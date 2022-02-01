@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func run(input string, f kio.Filter) (string, error) {
@@ -45,4 +46,33 @@ func RunFilterE(t *testing.T, input string, f kio.Filter) (string, error) {
 		return "", err
 	}
 	return output, nil
+}
+
+type SetValueArg struct {
+	Key      string
+	Value    string
+	Tag      string
+	NodePath []string
+}
+
+// MutationTrackerStub to help stub a mutation tracker for kio.TrackableFilter
+type MutationTrackerStub struct {
+	setValueArgs []SetValueArg
+}
+
+func (mts *MutationTrackerStub) MutationTracker(key, value, tag string, node *yaml.RNode) {
+	mts.setValueArgs = append(mts.setValueArgs, SetValueArg{
+		Key:      key,
+		Value:    value,
+		Tag:      tag,
+		NodePath: node.FieldPath(),
+	})
+}
+
+func (mts *MutationTrackerStub) SetValueArgs() []SetValueArg {
+	return mts.setValueArgs
+}
+
+func (mts *MutationTrackerStub) Reset() {
+	mts.setValueArgs = nil
 }

@@ -16,32 +16,15 @@ import (
 
 var annosFs = builtinconfig.MakeDefaultConfig().CommonAnnotations
 
-type setEntryArg struct {
-	Key      string
-	Value    string
-	Tag      string
-	NodePath []string
-}
-
-var setEntryArgs []setEntryArg
-
-func setEntryCallbackStub(key, value, tag string, node *yaml.RNode) {
-	setEntryArgs = append(setEntryArgs, setEntryArg{
-		Key:      key,
-		Value:    value,
-		Tag:      tag,
-		NodePath: node.FieldPath(),
-	})
-}
-
 func TestAnnotations_Filter(t *testing.T) {
+	mutationTrackStub := filtertest_test.MutationTrackerStub{}
 	testCases := map[string]struct {
 		input                string
 		expectedOutput       string
 		filter               Filter
 		fsslice              types.FsSlice
 		setEntryCallback     func(key, value, tag string, node *yaml.RNode)
-		expectedSetEntryArgs []setEntryArg
+		expectedSetEntryArgs []filtertest_test.SetValueArg
 	}{
 		"add": {
 			input: `
@@ -261,14 +244,14 @@ spec:
 					"b": "b1",
 				},
 			},
-			setEntryCallback: setEntryCallbackStub,
+			setEntryCallback: mutationTrackStub.MutationTracker,
 			fsslice: []types.FieldSpec{
 				{
 					Path:               "spec/template/metadata/annotations",
 					CreateIfNotPresent: true,
 				},
 			},
-			expectedSetEntryArgs: []setEntryArg{
+			expectedSetEntryArgs: []filtertest_test.SetValueArg{
 				{
 					Key:      "a",
 					Value:    "a1",
@@ -298,7 +281,7 @@ spec:
 	}
 
 	for tn, tc := range testCases {
-		setEntryArgs = nil
+		mutationTrackStub.Reset()
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
 			filter.WithMutationTracker(tc.setEntryCallback)
@@ -308,7 +291,7 @@ spec:
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, filter))) {
 				t.FailNow()
 			}
-			if !assert.Equal(t, tc.expectedSetEntryArgs, setEntryArgs) {
+			if !assert.Equal(t, tc.expectedSetEntryArgs, mutationTrackStub.SetValueArgs()) {
 				t.FailNow()
 			}
 		})
