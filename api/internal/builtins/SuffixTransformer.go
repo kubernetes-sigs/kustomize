@@ -19,6 +19,7 @@ type SuffixTransformerPlugin struct {
 	FieldSpecs types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
+// TODO: Make this gvk skip list part of the config.
 var suffixFieldSpecsToSkip = types.FsSlice{
 	{Gvk: resid.Gvk{Kind: "CustomResourceDefinition"}},
 	{Gvk: resid.Gvk{Group: "apiregistration.k8s.io", Kind: "APIService"}},

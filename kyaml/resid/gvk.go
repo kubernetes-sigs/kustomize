@@ -97,6 +97,29 @@ func (x Gvk) String() string {
 	return strings.Join([]string{k, v, g}, fieldSep)
 }
 
+// legacySortString returns an older version of String() that LegacyOrderTransformer depends on
+// to keep its ordering stable across Kustomize versions
+func (x Gvk) legacySortString() string {
+	legacyNoGroup := "~G"
+	legacyNoVersion := "~V"
+	legacyNoKind := "~K"
+	legacyFieldSeparator := "_"
+
+	g := x.Group
+	if g == "" {
+		g = legacyNoGroup
+	}
+	v := x.Version
+	if v == "" {
+		v = legacyNoVersion
+	}
+	k := x.Kind
+	if k == "" {
+		k = legacyNoKind
+	}
+	return strings.Join([]string{g, v, k}, legacyFieldSeparator)
+}
+
 // ApiVersion returns the combination of Group and Version
 func (x Gvk) ApiVersion() string {
 	var sb strings.Builder
@@ -180,7 +203,7 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 	if indexI != indexJ {
 		return indexI < indexJ
 	}
-	return x.String() < o.String()
+	return x.legacySortString() < o.legacySortString()
 }
 
 // IsSelected returns true if `selector` selects `x`; otherwise, false.
