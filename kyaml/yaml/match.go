@@ -5,6 +5,7 @@ package yaml
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -42,9 +43,10 @@ type PathMatcher struct {
 	// This is useful for if the nodes are to be printed in FlowStyle.
 	StripComments bool
 
-	val        *RNode
-	field      string
-	matchRegex string
+	val         *RNode
+	field       string
+	matchRegex  string
+	indexNumber int
 }
 
 func (p *PathMatcher) stripComments(n *Node) {
@@ -79,6 +81,10 @@ func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
 		return p.val, nil
 	}
 
+	if IsIdxNumber(p.Path[0]) {
+		return p.doIndexSeq(rn)
+	}
+
 	if IsListIndex(p.Path[0]) {
 		// match seq elements
 		return p.doSeq(rn)
@@ -98,7 +104,6 @@ func (p *PathMatcher) doMatchEvery(rn *RNode) (*RNode, error) {
 		return nil, err
 	}
 
-	// fmt.Println(p.val.String())
 	return p.val, nil
 }
 
@@ -132,6 +137,36 @@ func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
 	p.val, err = pm.filter(field)
 	p.Matches = pm.Matches
 	return p.val, err
+}
+
+// doIndexSeq iterates over a sequence and appends elements matching the index p.Val
+func (p *PathMatcher) doIndexSeq(rn *RNode) (*RNode, error) {
+	// parse to index number
+	idx, err := strconv.Atoi(p.Path[0])
+	if err != nil {
+		return nil, err
+	}
+	p.indexNumber = idx
+
+	elements, err := rn.Elements()
+	if err != nil {
+		return nil, err
+	}
+
+	// get target element
+	element := elements[idx]
+
+	// recurse on the matching element
+	pm := &PathMatcher{Path: p.Path[1:]}
+	add, err := pm.filter(element)
+	for k, v := range pm.Matches {
+		p.Matches[k] = v
+	}
+	if err != nil || add == nil {
+		return nil, err
+	}
+	p.append("", add.Content()...)
+	return p.val, nil
 }
 
 // doSeq iterates over a sequence and appends elements matching the path regex to p.Val
