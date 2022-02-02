@@ -45,11 +45,13 @@ Thus, do `kyaml` first, then `cmd/config`, etc.
 
 ## Prep work
 
-#### Prepare your source directory
+### ⚠️ IMPORTANT: Check for [release-blocking issues](https://github.com/kubernetes-sigs/kustomize/issues?q=label%3Arelease-blocker+is%3Aclosed)
 
-The release scripts expect Kustomize code to be cloned at a path ending in `sigs.k8s.io/kustomize`. Run all commands from that directory unless otherwise specified.
+We use the `release-blocker` tag to track issues that need to be solved before the next release. Typically, this would be a new regression introduced on the master branch and not present in the previous release. If any such issues exist, the release should be delayed.
 
-#### Consider fetching new OpenAPI data
+It is also a good idea to scan any [untriaged issues](https://github.com/kubernetes-sigs/kustomize/issues?q=is%3Aissue+is%3Aopen+label%3Aneeds-triage) for potential blockers we haven't labelled yet before proceeding.
+
+### Consider fetching new OpenAPI data
 The Kubernetes OpenAPI data changes no more frequently than once per quarter.
 You can check the current builtin versions that kustomize is using with the
 following command.
@@ -60,6 +62,12 @@ kustomize openapi info
 
 Instructions on how to get a new OpenAPI sample can be found in the
 [OpenAPI Readme].
+
+### Set up the release tools
+
+#### Prepare your source directory
+
+The release scripts expect Kustomize code to be cloned at a path ending in `sigs.k8s.io/kustomize`. Run all commands from that directory unless otherwise specified.
 
 #### Load some helper functions
 
