@@ -118,10 +118,12 @@ metadata:
 		expectedSetValueArgs: []filtertest_test.SetValueArg{
 			{
 				Value:    "foo-instance",
+				Tag:      "!!str",
 				NodePath: []string{"metadata", "name"},
 			},
 			{
 				Value:    "foo-instance",
+				Tag:      "!!str",
 				NodePath: []string{"metadata", "name"},
 			},
 		},

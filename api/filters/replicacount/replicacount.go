@@ -35,11 +35,10 @@ func (rc Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FieldSpec:  rc.FieldSpec,
 		SetValue:   rc.set,
 		CreateKind: yaml.ScalarNode, // replicas is a ScalarNode
-		CreateTag:  yaml.NodeTagInt,
 	})
 	return node, err
 }
 
 func (rc Filter) set(node *yaml.RNode) error {
-	return rc.trackableSetter.SetScalar(strconv.FormatInt(rc.Replica.Count, 10))(node)
+	return rc.trackableSetter.SetScalar(strconv.FormatInt(rc.Replica.Count, 10), yaml.NodeTagInt)(node)
 }

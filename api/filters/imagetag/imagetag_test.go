@@ -734,18 +734,22 @@ spec:
 			expectedSetValueArgs: []filtertest.SetValueArg{
 				{
 					Value:    "busybox:v3",
+					Tag:      "!!str",
 					NodePath: []string{"spec", "template", "spec", "containers", "image"},
 				},
 				{
 					Value:    "busybox:v3",
+					Tag:      "!!str",
 					NodePath: []string{"spec", "template", "spec", "containers", "image"},
 				},
 				{
 					Value:    "busybox:v3",
+					Tag:      "!!str",
 					NodePath: []string{"spec", "template", "spec", "initContainers", "image"},
 				},
 				{
 					Value:    "busybox:v3",
+					Tag:      "!!str",
 					NodePath: []string{"spec", "template", "spec", "initContainers", "image"},
 				},
 			},

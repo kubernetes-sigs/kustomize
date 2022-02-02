@@ -8,9 +8,16 @@ import (
 type SetFn func(*yaml.RNode) error
 
 // SetScalar returns a SetFn to set a scalar value
-func SetScalar(value string) SetFn {
+func SetScalar(value, tag string) SetFn {
+	n := &yaml.Node{
+		Kind:  yaml.ScalarNode,
+		Value: value,
+		Tag:   tag,
+	}
 	return func(node *yaml.RNode) error {
-		return node.PipeE(yaml.FieldSetter{StringValue: value})
+		return node.PipeE(yaml.FieldSetter{
+			Value: yaml.NewRNode(n),
+		})
 	}
 }
 
@@ -20,9 +27,6 @@ func SetEntry(key, value, tag string) SetFn {
 		Kind:  yaml.ScalarNode,
 		Value: value,
 		Tag:   tag,
-	}
-	if tag == yaml.NodeTagString && yaml.IsYaml1_1NonString(n) {
-		n.Style = yaml.DoubleQuotedStyle
 	}
 	return func(node *yaml.RNode) error {
 		return node.PipeE(yaml.FieldSetter{
@@ -45,11 +49,11 @@ func (s *TrackableSetter) WithMutationTracker(callback func(key, value, tag stri
 // SetScalar returns a SetFn to set a scalar value
 // if a mutation tracker has been registered, the tracker will be invoked each
 // time a scalar is set
-func (s TrackableSetter) SetScalar(value string) SetFn {
-	origSetScalar := SetScalar(value)
+func (s TrackableSetter) SetScalar(value, tag string) SetFn {
+	origSetScalar := SetScalar(value, tag)
 	return func(node *yaml.RNode) error {
 		if s.setValueCallback != nil {
-			s.setValueCallback("", value, "", node)
+			s.setValueCallback("", value, tag, node)
 		}
 		return origSetScalar(node)
 	}

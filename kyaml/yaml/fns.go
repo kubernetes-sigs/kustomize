@@ -641,6 +641,11 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		s.Value = NewScalarRNode(s.StringValue)
 	}
 
+	// TODO: fix in upstream yaml library so this can be handled with yaml SetString
+	if IsStringValue(s.Value) && IsYaml1_1NonString(s.Value.YNode()) {
+		s.Value.YNode().Style = yaml.DoubleQuotedStyle
+	}
+
 	if s.Name == "" {
 		if err := ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 			return rn, err

@@ -39,12 +39,11 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FieldSpec:  f.FieldSpec,
 		SetValue:   f.evaluateField,
 		CreateKind: yaml.ScalarNode, // Name is a ScalarNode
-		CreateTag:  yaml.NodeTagString,
 	})
 	return node, err
 }
 
 func (f Filter) evaluateField(node *yaml.RNode) error {
 	return f.trackableSetter.SetScalar(fmt.Sprintf(
-		"%s%s", node.YNode().Value, f.Suffix))(node)
+		"%s%s", node.YNode().Value, f.Suffix), yaml.NodeTagString)(node)
 }

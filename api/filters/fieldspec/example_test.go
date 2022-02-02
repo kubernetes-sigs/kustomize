@@ -31,7 +31,7 @@ metadata:
 	}
 	fltr := Filter{
 		CreateKind: yaml.ScalarNode,
-		SetValue:   filtersutil.SetScalar("green"),
+		SetValue:   filtersutil.SetScalar("green", yaml.NodeTagString),
 		FieldSpec:  types.FieldSpec{Path: "a/b", CreateIfNotPresent: true},
 	}
 
