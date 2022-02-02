@@ -651,6 +651,8 @@ k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e/go.mod h1:vHXdDvt9+2spS2R
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
+sigs.k8s.io/kustomize/api v0.11.1 h1:/Vutu+gAqVo8skw1xCZrsZD39SN4Adg+z7FrSTw9pds=
+sigs.k8s.io/kustomize/api v0.11.1/go.mod h1:GZuhith5YcqxIDe0GnRJNx5xxPTjlwaLTt/e+ChUtJA=
 sigs.k8s.io/kustomize/cmd/config v0.10.4 h1:gv8Jj8Yi82aeuCbg2GsbBxIJKxGmPf0YXaSN/gO+7go=
 sigs.k8s.io/kustomize/cmd/config v0.10.4/go.mod h1:2woQTJo0oA4wr8G3F8ZFdH2YoaOoG27IGU4aPA9GPTo=
 sigs.k8s.io/kustomize/kyaml v0.13.3 h1:tNNQIC+8cc+aXFTVg+RtQAOsjwUdYBZRAgYOVI3RBc4=
