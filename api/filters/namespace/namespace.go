@@ -84,8 +84,7 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 		FsSlice: []types.FieldSpec{
 			{Path: types.MetadataNamespacePath, CreateIfNotPresent: true},
 		},
-		SetValue: ns.trackableSetter.SetScalar(ns.Namespace, yaml.NodeTagString),
-		// SetValue:   filtersutil.SetString(ns.Namespace),
+		SetValue:   ns.trackableSetter.SetScalar(ns.Namespace, yaml.NodeTagString),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 	}
 	_, err := f.Filter(obj)
