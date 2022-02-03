@@ -101,10 +101,24 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-arch=amd64
-if command -v arch &> /dev/null; then
-  arch=$(arch)
-fi
+# Supported values of 'arch': amd64, arm64, ppc64le, s390x
+case $(uname -m) in
+x86_64)
+    arch=amd64
+    ;;
+arm64)
+    arch=arm64
+    ;;
+ppc64le)
+    arch=ppc64le
+    ;;
+s390x)
+    arch=s390x
+    ;;
+*)
+    arch=amd64
+    ;;
+esac
 
 releases=$(curl -s $release_url)
 
