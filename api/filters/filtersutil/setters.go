@@ -50,7 +50,7 @@ func (s *TrackableSetter) WithMutationTracker(callback func(key, value, tag stri
 // if a mutation tracker has been registered, the tracker will be invoked each
 // time a scalar is set
 func (s TrackableSetter) SetScalar(value, tag string) SetFn {
-	origSetScalar := SetScalar(value, tag)
+	origSetScalar := SetEntry("", value, tag)
 	return func(node *yaml.RNode) error {
 		if s.setValueCallback != nil {
 			s.setValueCallback("", value, tag, node)
