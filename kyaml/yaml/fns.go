@@ -641,8 +641,9 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		s.Value = NewScalarRNode(s.StringValue)
 	}
 
+	// need to set style for strings not recognized by yaml 1.1 to quoted if not previously set
 	// TODO: fix in upstream yaml library so this can be handled with yaml SetString
-	if IsStringValue(s.Value) && IsYaml1_1NonString(s.Value.YNode()) {
+	if IsStringValue(s.Value) && !s.OverrideStyle && s.Value.YNode().Style == 0 && IsYaml1_1NonString(s.Value.YNode()) {
 		s.Value.YNode().Style = yaml.DoubleQuotedStyle
 	}
 

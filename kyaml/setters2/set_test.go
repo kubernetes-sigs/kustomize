@@ -1237,7 +1237,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
-          isSet: true
+          isSet: "true"
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
