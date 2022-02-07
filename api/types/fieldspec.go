@@ -30,11 +30,21 @@ type FieldSpec struct {
 	resid.Gvk          `json:",inline,omitempty" yaml:",inline,omitempty"`
 	Path               string `json:"path,omitempty" yaml:"path,omitempty"`
 	CreateIfNotPresent bool   `json:"create,omitempty" yaml:"create,omitempty"`
+	// RegexPattern defines and constructs the value format of the fieldSpec node.
+	// It extends the usability of fieldSpec and related filters to set ScalarNode
+	// flexibly. Consider this as the ApplyFilter rules defined on the FieldSpec level.
+	RegexPattern string `json:"regexPattern,omitempty" yaml:"regexPattern,omitempty"`
 }
 
 func (fs FieldSpec) String() string {
-	return fmt.Sprintf(
-		"%s:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path)
+	if fs.RegexPattern == "" {
+		return fmt.Sprintf(
+			"%s:%v:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path)
+	} else {
+
+		return fmt.Sprintf(
+			"%s:%v:%s:%s", fs.Gvk.String(), fs.CreateIfNotPresent, fs.Path, fs.RegexPattern)
+	}
 }
 
 // If true, the primary key is the same, but other fields might not be.
