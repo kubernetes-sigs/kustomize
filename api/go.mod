@@ -3,7 +3,6 @@ module sigs.k8s.io/kustomize/api
 go 1.16
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible
 	github.com/go-errors/errors v1.0.1
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
