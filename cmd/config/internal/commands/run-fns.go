@@ -135,9 +135,14 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, dataItems []string
 			return nil, err
 		}
 		if r.Network {
+			n := &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Value: "true",
+				Tag:   yaml.NodeTagBool,
+			}
 			err = fn.PipeE(
 				yaml.Lookup("container"),
-				yaml.SetField("network", yaml.NewScalarRNode("true")))
+				yaml.SetField("network", yaml.NewRNode(n)))
 			if err != nil {
 				return nil, err
 			}
