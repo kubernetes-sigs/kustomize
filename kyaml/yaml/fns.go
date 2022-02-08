@@ -621,6 +621,7 @@ type MapEntrySetter struct {
 	// Value is the value to set.
 	Value *RNode `yaml:"value,omitempty"`
 
+	// Key is the map key to set.
 	Key *RNode `yaml:"key,omitempty"`
 }
 
