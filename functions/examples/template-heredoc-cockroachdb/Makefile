@@ -10,7 +10,7 @@ endif
 
 license:
 	(which $(GOBIN)/addlicense || go get github.com/google/addlicense)
-	$(GOBIN)/addlicense  -y 2019 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
+	$(GOBIN)/addlicense  -y 2022 -c "The Kubernetes Authors." -f LICENSE_TEMPLATE .
 
 all: license
 

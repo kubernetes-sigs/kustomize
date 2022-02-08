@@ -10,14 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	filtertest "sigs.k8s.io/kustomize/api/testutils/filtertest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestImageTagUpdater_Filter(t *testing.T) {
+	mutationTrackerStub := filtertest.MutationTrackerStub{}
 	testCases := map[string]struct {
-		input          string
-		expectedOutput string
-		filter         Filter
-		fsSlice        types.FsSlice
+		input                string
+		expectedOutput       string
+		filter               Filter
+		fsSlice              types.FsSlice
+		setValueCallback     func(key, value, tag string, node *yaml.RNode)
+		expectedSetValueArgs []filtertest.SetValueArg
 	}{
 		"ignore CustomResourceDefinition": {
 			input: `
@@ -658,17 +662,108 @@ spec:
 				},
 			},
 		},
+		"mutation tracker": {
+			input: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:latest
+        name: nginx-latest
+      - image: foobar:1
+        name: replaced-with-digest
+      - image: postgres:1.8.0
+        name: postgresdb
+      initContainers:
+      - image: nginx
+        name: nginx-notag
+      - image: nginx@sha256:111111111111111111
+        name: nginx-sha256
+      - image: alpine:1.8.0
+        name: init-alpine
+`,
+			expectedOutput: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox:v3
+        name: nginx-tagged
+      - image: busybox:v3
+        name: nginx-latest
+      - image: foobar:1
+        name: replaced-with-digest
+      - image: postgres:1.8.0
+        name: postgresdb
+      initContainers:
+      - image: busybox:v3
+        name: nginx-notag
+      - image: busybox:v3
+        name: nginx-sha256
+      - image: alpine:1.8.0
+        name: init-alpine
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "busybox",
+					NewTag:  "v3",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/template/spec/containers[]/image",
+				},
+				{
+					Path: "spec/template/spec/initContainers[]/image",
+				},
+			},
+			setValueCallback: mutationTrackerStub.MutationTracker,
+			expectedSetValueArgs: []filtertest.SetValueArg{
+				{
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "containers", "image"},
+				},
+				{
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "containers", "image"},
+				},
+				{
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "initContainers", "image"},
+				},
+				{
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "initContainers", "image"},
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
+		mutationTrackerStub.Reset()
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
+			filter.WithMutationTracker(tc.setValueCallback)
 			filter.FsSlice = tc.fsSlice
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
 				strings.TrimSpace(filtertest.RunFilter(t, tc.input, filter))) {
 				t.FailNow()
 			}
+			assert.Equal(t, tc.expectedSetValueArgs, mutationTrackerStub.SetValueArgs())
 		})
 	}
 }

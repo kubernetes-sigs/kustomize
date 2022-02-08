@@ -9,28 +9,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestAddManagedbyLabel(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteF("service.yaml", `
-apiVersion: v1
-kind: Service
-metadata:
-  name: myService
-spec:
-  ports:
-  - port: 7002
-`)
-	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- service.yaml
-`)
-	options := th.MakeDefaultOptions()
-	options.AddManagedbyLabel = true
-	m := th.Run(".", options)
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+const expected = `apiVersion: v1
 kind: Service
 metadata:
   labels:
@@ -39,5 +18,51 @@ metadata:
 spec:
   ports:
   - port: 7002
+`
+
+func TestAddManagedbyLabel(t *testing.T) {
+	tests := []struct {
+		kustFile      string
+		managedByFlag bool
+		expected      string
+	}{
+		{
+			kustFile: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- service.yaml
+`,
+			managedByFlag: true,
+			expected:      expected,
+		},
+		{
+			kustFile: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- service.yaml
+buildMetadata: [managedByLabel]
+`,
+			managedByFlag: false,
+			expected:      expected,
+		},
+	}
+	for _, tc := range tests {
+		th := kusttest_test.MakeHarness(t)
+		th.WriteF("service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - port: 7002
 `)
+		th.WriteK(".", tc.kustFile)
+		options := th.MakeDefaultOptions()
+		options.AddManagedbyLabel = tc.managedByFlag
+		m := th.Run(".", options)
+		th.AssertActualEqualsExpected(m, tc.expected)
+	}
 }
