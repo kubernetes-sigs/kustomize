@@ -340,10 +340,6 @@ const (
 	AliasNode
 )
 
-const (
-	MergeTag = "!!merge"
-)
-
 type Style uint32
 
 const (
