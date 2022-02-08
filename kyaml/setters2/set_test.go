@@ -1099,7 +1099,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
-          isSet: "true"
+          isSet: true
 `,
 		},
 		{
@@ -1140,7 +1140,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
-          isSet: "true"
+          isSet: true
       description: hello world
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
@@ -1188,7 +1188,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: carl
-          isSet: "true"
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:
@@ -1237,7 +1237,7 @@ openAPI:
         setter:
           name: replicas
           value: "3"
-          isSet: "true"
+          isSet: true
     io.k8s.cli.setters.no-match-2':
       x-k8s-cli:
         setter:

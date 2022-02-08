@@ -479,7 +479,12 @@ func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 
 	if s.IsSet {
-		if err := def.PipeE(&yaml.FieldSetter{Name: "isSet", StringValue: "true"}); err != nil {
+		n := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: "true",
+			Tag:   yaml.NodeTagBool,
+		}
+		if err := def.PipeE(&yaml.FieldSetter{Name: "isSet", Value: yaml.NewRNode(n)}); err != nil {
 			return nil, err
 		}
 	}
