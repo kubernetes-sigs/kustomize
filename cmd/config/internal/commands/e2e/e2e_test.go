@@ -339,7 +339,7 @@ metadata:
 			name:           "container_function_no_args",
 			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
 			args: func(d string) []string {
-				return []string{"--image", "shanalily/e2econtainerconfig"}
+				return []string{"--image", "gcr.io/kustomize-functions/e2econtainerconfig"}
 			},
 			files: func(d string) map[string]string {
 				return map[string]string{
@@ -372,7 +372,7 @@ metadata:
 			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
 			args: func(d string) []string {
 				return []string{
-					"--image", "shanalily/e2econtainerconfig",
+					"--image", "gcr.io/kustomize-functions/e2econtainerconfig",
 					"--", "stringValue=a", "intValue=1", "boolValue=true",
 				}
 			},
@@ -416,7 +416,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: "shanalily/e2econtainerconfig"
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
 `,
 				}
 			},
@@ -430,7 +430,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: "shanalily/e2econtainerconfig"
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
     a-string-value: ''
     a-int-value: '0'
     a-bool-value: 'false'
@@ -452,7 +452,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: "shanalily/e2econtainerconfig"
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
 data:
   stringValue: a
   intValue: 2
@@ -476,7 +476,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: "shanalily/e2econtainerconfig"
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
     a-string-value: 'a'
     a-int-value: '2'
     a-bool-value: 'true'
@@ -785,7 +785,7 @@ func build() string {
 			return
 		}
 		build = exec.Command(
-			"docker", "build", ".", "-t", "shanalily/e2econtainerconfig")
+			"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
 		build.Dir = "e2econtainerconfig"
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
