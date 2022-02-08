@@ -959,6 +959,40 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 	}
 }
 
+// isMerge returns if the node is tagged with !!merge
+func isMerge(yn *yaml.Node) bool {
+	return yn.Tag == MergeTag
+}
+
+// findMergeValues receives either a MappingNode, a AliasNode or a potentially
+// mixed list of MappingNodes and AliasNodes. It returns a list of MappingNodes.
+func findMergeValues(yn *yaml.Node) ([]*yaml.Node, error) {
+	switch yn.Kind {
+	case MappingNode:
+		return []*yaml.Node{yn}, nil
+	case AliasNode:
+		if yn.Alias != nil && yn.Alias.Kind != MappingNode {
+			return nil, errors.Errorf("map merge requires map or sequence of maps as the value")
+		}
+		return []*yaml.Node{yn.Alias}, nil
+	case SequenceNode:
+		mergeValues := []*yaml.Node{}
+		for i := 0; i < len(yn.Content); i++ {
+			if yn.Content[i].Kind == SequenceNode {
+				return nil, errors.Errorf("map merge requires map or sequence of maps as the value")
+			}
+			newMergeValues, err := findMergeValues(yn.Content[i])
+			if err != nil {
+				return nil, err
+			}
+			mergeValues = append(mergeValues, newMergeValues...)
+		}
+		return mergeValues, nil
+	default:
+		return nil, errors.Errorf("map merge requires map or sequence of maps as the value")
+	}
+}
+
 // removeMergeTags removes all merge tags and returns a ordered list of yaml
 // nodes to merge and a error
 func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
@@ -971,10 +1005,16 @@ func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
 	newContent := make([]*yaml.Node, 0)
 	toMerge := make([]*yaml.Node, 0)
 	for i := 0; i < len(yn.Content); i += 2 {
-		if yn.Content[i].Tag == "!!merge" {
-			toMerge = append(toMerge, yn.Content[i+1].Alias)
+		key := yn.Content[i]
+		value := yn.Content[i+1]
+		if isMerge(key) {
+			mergeValues, err := findMergeValues(value)
+			if err != nil {
+				return nil, err
+			}
+			toMerge = append(toMerge, mergeValues...)
 		} else {
-			newContent = append(newContent, yn.Content[i], yn.Content[i+1])
+			newContent = append(newContent, key, value)
 		}
 	}
 	yn.Content = newContent

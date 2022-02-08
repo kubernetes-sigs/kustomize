@@ -849,6 +849,34 @@ data:
 		// Test Case
 		// *********
 		{
+			description: "works with explicit long merge tag",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    !<tag:yaml.org,2002:merge> "<<" : *color-used
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
 			description: "merging properties",
 			input: `
 apiVersion: v1
@@ -911,7 +939,7 @@ data:
 		// Test Case
 		// *********
 		{
-			description: "merging multiple anchors",
+			description: "merging multiple anchors with duplicate merge key",
 			input: `
 apiVersion: v1
 kind: MergeTagTest
@@ -946,6 +974,115 @@ data:
     rgb: "#0000FF"
     pretty: false
     alpha: 50
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging multiple anchors with sequence node",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor: &primary
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    <<: [ *color, *primary ]
+    secondary: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    secondary: true
+    rgb: "#0000FF"
+    pretty: false
+    alpha: 50
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging inline map",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: {"pretty": true}
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+    "pretty": true
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging inline sequence map",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: [ *color, {"name": "ugly blue"}]
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+    pretty: false
+    "name": "ugly blue"
 `,
 		},
 		// *********
