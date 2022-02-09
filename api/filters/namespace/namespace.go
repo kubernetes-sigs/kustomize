@@ -54,6 +54,7 @@ func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		FsSlice:    ns.FsSlice,
 		SetValue:   ns.trackableSetter.SetScalar(ns.Namespace, yaml.NodeTagString),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
+		CreateTag:  yaml.NodeTagString,
 	})
 	return node, err
 }
