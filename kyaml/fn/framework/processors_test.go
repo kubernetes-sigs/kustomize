@@ -11,6 +11,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	validationErrors "k8s.io/kube-openapi/pkg/validation/errors"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/frameworktestutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
@@ -357,13 +359,21 @@ func TestSimpleProcessor_Process_Error(t *testing.T) {
 		wantErr string
 	}{
 		{
-			name:    "error when given func as Config",
-			config:  func() {},
-			wantErr: "cannot unmarshal !!map into func()",
+			name:    "error when filter is nil",
+			config:  map[string]string{},
+			filter:  nil,
+			wantErr: "processing filter: ResourceList cannot run apply nil filter",
+		}, {
+			name:   "no error when config is nil",
+			config: nil,
+			filter: kio.FilterFunc(func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+				return items, nil
+			}),
+			wantErr: "",
 		},
 		{
 			name:    "error in filter",
-			wantErr: "err from filter",
+			wantErr: "processing filter: err from filter",
 			filter: kio.FilterFunc(func(_ []*yaml.RNode) ([]*yaml.RNode, error) {
 				return nil, errors.Errorf("err from filter")
 			}),
@@ -382,8 +392,11 @@ func TestSimpleProcessor_Process_Error(t *testing.T) {
 				}),
 			}
 			err := p.Process(&rl)
-			require.Error(t, err)
-			assert.Contains(t, err.Error(), tt.wantErr)
+			if tt.wantErr == "" {
+				require.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantErr)
+			}
 		})
 	}
 }
@@ -396,15 +409,6 @@ func TestVersionedAPIProcessor_Process_Error(t *testing.T) {
 		kind           string
 		wantErr        string
 	}{
-		{
-			name: "error when given FilterFunc as Filter",
-			filterProvider: framework.FilterProviderFunc(func(_, _ string) (kio.Filter, error) {
-				return kio.FilterFunc(func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-					return items, nil
-				}), nil
-			}),
-			wantErr: "cannot unmarshal !!map into kio.FilterFunc",
-		},
 		{
 			name: "error in filter",
 			filterProvider: framework.FilterProviderFunc(func(_, _ string) (kio.Filter, error) {
@@ -657,4 +661,162 @@ func TestTemplateProcessor_Validator(t *testing.T) {
 		Processor:         p,
 	}
 	c.Assert(t)
+}
+
+type jsonTagTest struct {
+	Name string `json:"name"`
+	Test bool   `json:"test"`
+}
+
+type yamlTagTest struct {
+	Name string `yaml:"name"`
+	Test bool   `yaml:"test"`
+}
+
+type customErrorTest struct {
+	v1alpha1JavaSpringBoot
+}
+
+func (e customErrorTest) Schema() (*spec.Schema, error) {
+	return e.v1alpha1JavaSpringBoot.Schema()
+}
+
+func (e customErrorTest) Validate() error {
+	return errors.Errorf("Custom errors:\n- first error\n- second error")
+}
+
+type errorMergeTest struct {
+	v1alpha1JavaSpringBoot
+}
+
+func (e errorMergeTest) Schema() (*spec.Schema, error) {
+	return e.v1alpha1JavaSpringBoot.Schema()
+}
+
+func (e errorMergeTest) Validate() error {
+	if strings.HasSuffix(e.Spec.Image, "latest") {
+		return validationErrors.CompositeValidationError(errors.Errorf("spec.image cannot be tagged :latest"))
+	}
+	return nil
+}
+
+func TestLoadFunctionConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		src         *yaml.RNode
+		api         interface{}
+		want        interface{}
+		wantErrMsgs []string
+	}{
+		{
+			name: "combines schema-based and non-composite custom errors",
+			src: yaml.MustParse(`
+apiVersion: example.com/v1alpha1 
+kind: JavaSpringBoot
+spec:
+  replicas: 11
+  domain: foo.myco.io
+  image: nginx:latest
+`),
+			api: &customErrorTest{},
+			wantErrMsgs: []string{
+				"validation failure list:",
+				"spec.replicas in body should be less than or equal to 9",
+				"spec.domain in body should match 'example\\.com$'",
+				`Custom errors:
+- first error
+- second error`,
+			},
+		},
+		{
+			name: "merges schema-based errors with custom composite errors",
+			src: yaml.MustParse(`
+apiVersion: example.com/v1alpha1 
+kind: JavaSpringBoot
+spec:
+  replicas: 11
+  domain: foo.myco.io
+  image: nginx:latest
+`),
+			api: &errorMergeTest{},
+			wantErrMsgs: []string{"validation failure list:",
+				"spec.replicas in body should be less than or equal to 9",
+				"spec.domain in body should match 'example\\.com$'",
+				"spec.image cannot be tagged :latest"},
+		},
+		{
+			name: "schema errors only",
+			src: yaml.MustParse(`
+apiVersion: example.com/v1alpha1 
+kind: JavaSpringBoot
+spec:
+  replicas: 11
+`),
+			api: &errorMergeTest{},
+			wantErrMsgs: []string{
+				`validation failure list:
+spec.replicas in body should be less than or equal to 9`,
+			},
+		},
+		{
+			name: "custom errors only",
+			src: yaml.MustParse(`
+apiVersion: example.com/v1alpha1 
+kind: JavaSpringBoot
+spec:
+  image: nginx:latest
+`),
+			api: &errorMergeTest{},
+			wantErrMsgs: []string{
+				`validation failure list:
+spec.image cannot be tagged :latest`},
+		},
+		{
+			name: "both custom and schema error hooks defined, but no errors produced",
+			src: yaml.MustParse(`
+apiVersion: example.com/v1alpha1 
+kind: JavaSpringBoot
+spec:
+  image: nginx:1.0
+  replicas: 3
+  domain: bar.example.com
+`),
+			api: &errorMergeTest{},
+			want: &errorMergeTest{v1alpha1JavaSpringBoot: v1alpha1JavaSpringBoot{
+				Spec: v1alpha1JavaSpringBootSpec{Replicas: 3, Domain: "bar.example.com", Image: "nginx:1.0"}},
+			},
+		},
+		{
+			name: "successfully loads types that include fields only tagged with json markers",
+			src: yaml.MustParse(`
+name: tester
+test: true
+`),
+			api:  &jsonTagTest{},
+			want: &jsonTagTest{Name: "tester", Test: true},
+		},
+		{
+			name: "successfully loads types that include fields only tagged with yaml markers",
+			src: yaml.MustParse(`
+name: tester
+test: true
+`),
+			api:  &yamlTagTest{},
+			want: &yamlTagTest{Name: "tester", Test: true},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := framework.LoadFunctionConfig(tt.src, tt.api)
+			if len(tt.wantErrMsgs) == 0 {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, tt.api)
+			} else {
+				for _, msg := range tt.wantErrMsgs {
+					require.Contains(t, err.Error(), msg)
+				}
+			}
+		})
+	}
 }

@@ -10,11 +10,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	validationErrors "k8s.io/kube-openapi/pkg/validation/errors"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -962,28 +965,61 @@ func (a *v1alpha1JavaSpringBoot) Default() error {
 	return nil
 }
 
+var javaSpringBootDefinition = `
+apiVersion: config.kubernetes.io/v1alpha1
+kind: KRMFunctionDefinition
+metadata:
+  name: javaspringboot.example.com
+spec:
+  group: example.com
+  names:
+    kind: JavaSpringBoot
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+            properties:
+              name:
+                type: string
+                minLength: 1
+            required:
+            - name
+          spec:
+            properties:
+              domain:
+                pattern: example\.com$
+                type: string
+              image:
+                type: string
+              replicas:
+                maximum: 9
+                minimum: 0
+                type: integer
+            type: object
+        type: object
+`
+
+func (a v1alpha1JavaSpringBoot) Schema() (*spec.Schema, error) {
+	schema, err := framework.SchemaFromFunctionDefinition(resid.NewGvk("example.com", "v1alpha1", "JavaSpringBoot"), javaSpringBootDefinition)
+	return schema, errors.WrapPrefixf(err, "parsing JavaSpringBoot schema")
+}
+
 func (a *v1alpha1JavaSpringBoot) Validate() error {
-	var messages []string
-	if a.Metadata.Name == "" {
-		messages = append(messages, "name is required")
-	}
-	if a.Spec.Replicas > 10 {
-		messages = append(messages, "replicas must be less than 10")
-	}
-	if !strings.HasSuffix(a.Spec.Domain, "example.com") {
-		messages = append(messages, "domain must be a subdomain of example.com")
-	}
+	var errs []error
 	if strings.HasSuffix(a.Spec.Image, ":latest") {
-		messages = append(messages, "image should not have latest tag")
+		errs = append(errs, errors.Errorf("spec.image should not have latest tag"))
 	}
-	if len(messages) == 0 {
-		return nil
+	if len(errs) > 0 {
+		return validationErrors.CompositeValidationError(errs...)
 	}
-	errMsg := fmt.Sprintf("JavaSpringBoot had %d errors:\n", len(messages))
-	for i, msg := range messages {
-		errMsg += fmt.Sprintf("  [%d] %s\n", i+1, msg)
-	}
-	return errors.Errorf(errMsg)
+	return nil
 }
 
 // ExampleVersionedAPIProcessor shows how to use the VersionedAPIProcessor and TemplateProcessor to

@@ -7,6 +7,7 @@ import (
 	goerrors "errors"
 	"os"
 
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -92,6 +93,19 @@ type Validator interface {
 	Validate() error
 }
 
+// ValidationSchemaProvider is implemented by APIs to have the openapi schema provided by Schema()
+// used to validate the input functionConfig before it is parsed into the API's struct.
+// Use this with framework.SchemaFromFunctionDefinition to load the schema out of a KRMFunctionDefinition
+// or CRD (e.g. one generated with KubeBuilder).
+//
+// func (t MyType) Schema() (*spec.Schema, error) {
+//	 schema, err := framework.SchemaFromFunctionDefinition(resid.NewGvk("example.com", "v1", "MyType"), MyTypeDef)
+//	 return schema, errors.WrapPrefixf(err, "parsing MyType schema")
+// }
+type ValidationSchemaProvider interface {
+	Schema() (*spec.Schema, error)
+}
+
 // Execute is the entrypoint for invoking configuration functions built with this framework
 // from code. See framework/command#Build for a Cobra-based command-line equivalent.
 // Execute reads a ResourceList from the given source, passes it to a ResourceListProcessor,
@@ -158,6 +172,9 @@ func Execute(p ResourceListProcessor, rlSource *kio.ByteReadWriter) error {
 // Filters that return a Result as error will store the result in the ResourceList
 // and continue processing instead of erroring out.
 func (rl *ResourceList) Filter(api kio.Filter) error {
+	if api == nil {
+		return errors.Errorf("ResourceList cannot run apply nil filter")
+	}
 	var err error
 	rl.Items, err = api.Filter(rl.Items)
 	if err != nil {
