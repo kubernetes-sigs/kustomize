@@ -893,3 +893,111 @@ func ExampleRNode_ElementValues() {
 	// Output:
 	// [foo bar baz] <nil>
 }
+
+var (
+	deployment RNode
+	configMap  RNode
+)
+
+func ExampleRNode_mutatePrimitiveField() {
+	replicas, found, err := deployment.GetNestedInt("spec", "replicas")
+	if err != nil { /* do something */
+	}
+	if !found { /* do something */
+	}
+
+	// mutate the replicas variable
+
+	err = deployment.Set(&replicas, "spec", "replicas")
+	if err != nil { /* do something */
+	}
+}
+
+func ExampleRNode_mutatePrimitiveSlice() {
+	var finalizers []string
+	found, err := deployment.Get(&finalizers, "metadata", "finalizers")
+	if err != nil { /* do something */
+	}
+	if !found { /* do something */
+	}
+
+	// mutate the finalizers slice
+
+	err = deployment.Set(finalizers, "metadata", "finalizers")
+	if err != nil { /* do something */
+	}
+}
+
+func ExampleRNode_mutatePrimitiveMap() {
+	var data map[string]string
+	found, err := configMap.Get(&data, "data")
+	if err != nil { /* do something */
+	}
+	if !found { /* do something */
+	}
+
+	// mutate the data map
+
+	err = configMap.Set(data, "data")
+	if err != nil { /* do something */
+	}
+}
+
+func ExampleRNode_mutateStrongTypedField() {
+	// corev1.PodSpec should be used here. But we can't use it here due to dependency restriction in the kustomize repo.
+	var podSpec PodSpec
+	found, err := deployment.Get(&podSpec, "spec", "template", "spec")
+	if err != nil { /* do something */
+	}
+	if !found { /* do something */
+	}
+
+	// mutate the podSpec object
+
+	err = deployment.Set(podSpec, "spec", "template")
+	if err != nil { /* do something */
+	}
+}
+
+// PodSpec is a copy of corev1.PodSpec
+type PodSpec struct {
+	// some fields here
+}
+
+func ExampleRNode_mutateStrongTypedSlice() {
+	// corev1.Container should be used here. But we can't use it here due to dependency restriction in the kustomize repo.
+	var containers []Container
+	found, err := deployment.Get(&containers, "spec", "template", "spec", "containers")
+	if err != nil { /* do something */
+	}
+	if !found { /* do something */
+	}
+
+	// mutate the podTemplate object
+
+	err = deployment.Set(containers, "spec", "template", "spec", "containers")
+	if err != nil { /* do something */
+	}
+}
+
+// Container is a copy of corev1.Container
+type Container struct {
+	// some other fields here
+}
+
+func ExampleRNode_mutateRNode() {
+	var rnode RNode
+	// Get a field as RNode. This may be useful if you want to deal with low-level
+	// yaml manipulation (e.g. dealing with comments).
+	found, err := deployment.Get(&rnode, "metadata", "namespace")
+	if err != nil { /* do something */
+	}
+	if !found { /* do something */
+	}
+
+	// Any modification done on the rnode will be reflected on the original object.
+	// No need to invoke Set method when using RNode
+	ynode := rnode.YNode()
+	ynode.HeadComment = ynode.LineComment
+	ynode.LineComment = ""
+}

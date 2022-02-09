@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -106,11 +108,41 @@ func NewScalarRNode(value string) *RNode {
 
 // NewStringRNode returns a new Scalar *RNode containing the provided string.
 // If the string is non-utf8, it will be base64 encoded, and the tag
-// will indicate binary data.
-func NewStringRNode(value string) *RNode {
-	n := yaml.Node{Kind: yaml.ScalarNode}
-	n.SetString(value)
-	return NewRNode(&n)
+// will indicate binary data. Otherwise, the tag will be String.
+func NewStringRNode(s string) *RNode {
+	n := yaml.Node{}
+	n.SetString(s)
+	return &RNode{value: &n}
+}
+
+// NewIntRNode returns a new int Scalar *RNode containing the provided int.
+func NewIntRNode(i int) *RNode {
+	return &RNode{
+		value: &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Tag:   NodeTagInt,
+			Value: strconv.FormatInt(int64(i), 10),
+		}}
+}
+
+// NewFloatRNode returns a new float Scalar *RNode containing the provided float.
+func NewFloatRNode(f float64) *RNode {
+	return &RNode{
+		value: &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Tag:   NodeTagFloat,
+			Value: strconv.FormatFloat(f, 'f', -1, 64),
+		}}
+}
+
+// NewBoolRNode returns a new bool Scalar *RNode containing the provided bool.
+func NewBoolRNode(b bool) *RNode {
+	return &RNode{
+		value: &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Tag:   NodeTagBool,
+			Value: strconv.FormatBool(b),
+		}}
 }
 
 // NewListRNode returns a new List *RNode containing the provided scalar values.
@@ -145,6 +177,164 @@ func NewMapRNode(values *map[string]string) *RNode {
 	}
 
 	return m
+}
+
+// NewRNodeFrom creates a RNode from the passed-in val. val can be a map, a
+// struct, a slice or a yaml.Node.
+func NewRNodeFrom(val interface{}) (*RNode, error) {
+	rn, err := func() (*RNode, error) {
+		if val == nil {
+			return nil, fmt.Errorf("the passed-in object must not be nil")
+		}
+
+		switch typedVal := val.(type) {
+		case *RNode:
+			return typedVal, nil
+		case RNode:
+			return &typedVal, nil
+		case *Node:
+			return &RNode{value: typedVal}, nil
+		case Node:
+			return &RNode{value: &typedVal}, nil
+		case []*RNode:
+			if len(typedVal) == 0 {
+				return NewListRNode(), nil
+			}
+			return rnodesToRNode(typedVal), nil
+		}
+
+		kind := reflect.ValueOf(val).Kind()
+		if kind == reflect.Ptr {
+			kind = reflect.TypeOf(val).Elem().Kind()
+		}
+
+		switch kind {
+		case reflect.Struct, reflect.Map:
+			node, err := newMappingRNodeFromTypedObject(val)
+			if err != nil {
+				return nil, err
+			}
+			return node, nil
+		case reflect.Slice:
+			node, err := newSequenceRNodeFromTypedObject(val)
+			if err != nil {
+				return nil, err
+			}
+			return node, nil
+		case reflect.String:
+			var s string
+			switch val := val.(type) {
+			case string:
+				s = val
+			case *string:
+				s = *val
+			}
+			return NewStringRNode(s), nil
+		case reflect.Int, reflect.Int64:
+			var i int
+			switch val := val.(type) {
+			case int:
+				i = val
+			case *int:
+				i = *val
+			case int64:
+				i = int(val)
+			case *int64:
+				i = int(*val)
+			}
+			return NewIntRNode(i), nil
+		case reflect.Float64:
+			var f float64
+			switch val := val.(type) {
+			case float64:
+				f = val
+			case *float64:
+				f = *val
+			}
+			return NewFloatRNode(f), nil
+		case reflect.Bool:
+			var b bool
+			switch val := val.(type) {
+			case bool:
+				b = val
+			case *bool:
+				b = *val
+			}
+			return NewBoolRNode(b), nil
+		default:
+			return nil, fmt.Errorf("unsupported kind %s", kind)
+		}
+	}()
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert typed object to RNode: %w", err)
+	}
+	return rn, nil
+}
+
+func newMappingRNodeFromTypedObject(v interface{}) (*RNode, error) {
+	// The built-in types only have json tags. We can't simply do ynode.Encode(v),
+	// since it use the lowercased field name by default if no yaml tag is specified.
+	// This affects both k8s built-in types (e.g. appsv1.Deployment) and any types
+	// that depends on built-in types (e.g. metav1.ObjectMeta, corev1.PodTemplate).
+	// To work around it, we rely on the json tags. We first convert v to
+	// map[string]interface{} through json and then convert it to ynode.
+	node, err := func() (*yaml.Node, error) {
+		j, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		var m map[string]interface{}
+		if err = json.Unmarshal(j, &m); err != nil {
+			return nil, err
+		}
+
+		node := &yaml.Node{}
+		if err = node.Encode(m); err != nil {
+			return nil, err
+		}
+		// Encode set the Style to FlowStyle sometimes, we reset the Style to empty.
+		node.Style = 0
+		return node, sortFields(node)
+	}()
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert strong typed object to yaml node: %w", err)
+	}
+
+	// cleanup creationTimestamp field when it's null.
+	o := NewRNode(node)
+	o.cleanupCreationTimestamp()
+	return o, nil
+}
+
+func newSequenceRNodeFromTypedObject(v interface{}) (*RNode, error) {
+	// The built-in types only have json tags. We can't simply do ynode.Encode(v),
+	// since it use the lowercased field name by default if no yaml tag is specified.
+	// This affects both k8s built-in types (e.g. appsv1.Deployment) and any types
+	// that depends on built-in types (e.g. metav1.ObjectMeta, corev1.PodTemplate).
+	// To work around it, we rely on the json tags. We first convert v to
+	// []interface{} through json and then convert it to ynode.
+	node, err := func() (*yaml.Node, error) {
+		j, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		var s []interface{}
+		if err = json.Unmarshal(j, &s); err != nil {
+			return nil, err
+		}
+
+		node := &yaml.Node{}
+		if err = node.Encode(s); err != nil {
+			return nil, err
+		}
+		// Encode set the Style to FlowStyle sometimes, we reset the Style to empty.
+		node.Style = 0
+		return node, sortFields(node)
+	}()
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert strong typed object to yaml node: %w", err)
+	}
+	return NewRNode(node), nil
 }
 
 // SyncMapNodesOrder sorts the map node keys in 'to' node to match the order of
@@ -194,6 +384,11 @@ func SyncMapNodesOrder(from, to *RNode) {
 // NewRNode returns a new RNode pointer containing the provided Node.
 func NewRNode(value *yaml.Node) *RNode {
 	return &RNode{value: value}
+}
+
+// NewEmptyRNode creates an empty mapping RNode.
+func NewEmptyRNode() (*RNode, error) {
+	return NewRNodeFrom(map[string]interface{}{})
 }
 
 // RNode provides functions for manipulating Kubernetes Resources
@@ -246,6 +441,387 @@ func (rn *RNode) IsNilOrEmpty() bool {
 		IsYNodeEmptyMap(rn.YNode()) ||
 		IsYNodeEmptySeq(rn.YNode()) ||
 		IsYNodeZero(rn.YNode())
+}
+
+// AsOrDie converts a RNode to the desired typed object. ptr must
+// be a pointer to a typed object. It will panic if it encounters an error.
+func (rn *RNode) AsOrDie(ptr interface{}) {
+	if err := rn.As(ptr); err != nil {
+		panic(err)
+	}
+}
+
+// As converts a RNode to the desired typed object. ptr must be
+// a pointer to a typed object.
+func (rn *RNode) As(ptr interface{}) error {
+	if rn.IsNil() {
+		return ErrRNodeNotFound{}
+	}
+	if ptr == nil || reflect.ValueOf(ptr).Kind() != reflect.Ptr {
+		return fmt.Errorf("ptr must be a pointer to an object")
+	}
+
+	// The built-in types only have json tags. We can't simply do mv.Node().Decode(ptr),
+	// since it use the lowercased field name by default if no yaml tag is specified.
+	// This affects both k8s built-in types (e.g. appsv1.Deployment) and any types
+	// that depends on built-in types (e.g. metav1.ObjectMeta, corev1.PodTemplate).
+	// To work around it, we rely on the json tags. We first convert mv to json
+	// and then unmarshal it to ptr.
+	j, err := rn.MarshalJSON()
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(j, ptr)
+	return err
+}
+
+// Get gets the value for a nested field located by fields. A pointer must be
+// passed in, and the value will be stored in ptr. ptr can be any concrete type
+// (e.g. string, []corev1.Container, []string, corev1.Pod, map[string]string) or
+// a RNode. RNode should be used if you are dealing with comments that is more
+// than what LineComment, HeadComment, SetLineComment and SetHeadComment can
+// handle. It returns if the field is found and a potential error.
+func (rn *RNode) Get(ptr interface{}, fields ...string) (bool, error) {
+	found, err := func() (bool, error) {
+		if rn.IsNil() {
+			return false, ErrRNodeNotFound{}
+		}
+
+		if ptr == nil || reflect.ValueOf(ptr).Kind() != reflect.Ptr {
+			return false, fmt.Errorf("ptr must be a pointer to an object")
+		}
+
+		if rnptr, ok := ptr.(*RNode); ok {
+			val, found, err := rn.nestedValue(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			rnptr.SetYNode(val.value)
+			return found, err
+		}
+
+		switch k := reflect.TypeOf(ptr).Elem().Kind(); k {
+		case reflect.Struct, reflect.Map:
+			val, found, err := rn.nestedValue(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			if val.value.Kind != yaml.MappingNode {
+				return found, fmt.Errorf("unable to get field %v, since the RNode was not a MappingNode", fields)
+			}
+			err = val.value.Decode(ptr)
+			return found, err
+		case reflect.Slice:
+			val, found, err := rn.nestedValue(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			if val.value.Kind != yaml.SequenceNode {
+				return found, fmt.Errorf("unable to get field %v, since the RNode was not a SequenceNode", fields)
+			}
+			err = val.value.Decode(ptr)
+			return found, err
+		case reflect.String:
+			s, found, err := rn.GetNestedString(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			*(ptr.(*string)) = s
+			return found, nil
+		case reflect.Int, reflect.Int64:
+			i, found, err := rn.GetNestedInt(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			if k == reflect.Int {
+				*(ptr.(*int)) = i
+			} else if k == reflect.Int64 {
+				*(ptr.(*int64)) = int64(i)
+			}
+			return found, nil
+		case reflect.Float64:
+			f, found, err := rn.GetNestedFloat(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			*(ptr.(*float64)) = f
+			return found, nil
+		case reflect.Bool:
+			b, found, err := rn.GetNestedBool(fields...)
+			if err != nil || !found {
+				return found, err
+			}
+			*(ptr.(*bool)) = b
+			return found, nil
+		default:
+			return false, fmt.Errorf("unhandled kind %s", k)
+		}
+	}()
+	if err != nil {
+		return found, fmt.Errorf("unable to get fields %v as %T with error: %w", fields, ptr, err)
+	}
+	return found, nil
+}
+
+func (rn *RNode) nestedValue(fields ...string) (*RNode, bool, error) {
+	if rn.IsNil() {
+		return nil, false, ErrRNodeNotFound{}
+	}
+
+	pg := &PathGetter{
+		Path: fields,
+	}
+	val, err := pg.Filter(rn)
+	if err != nil {
+		return nil, false, fmt.Errorf("unable to get field %v: %w", fields, err)
+	}
+	if val == nil {
+		return nil, false, nil
+	}
+	return val, true, nil
+}
+
+func (rn *RNode) nestedScalar(fields ...string) (*RNode, bool, error) {
+	node, found, err := rn.nestedValue(fields...)
+	if err != nil || !found {
+		return nil, found, err
+	}
+	if node.value.Kind != yaml.ScalarNode {
+		return nil, found, fmt.Errorf("the YNode kind should be ScalarNode instead of %v", node.value.Kind)
+	}
+	return node, found, nil
+}
+
+// GetNestedString returns a nested string.
+func (rn *RNode) GetNestedString(fields ...string) (string, bool, error) {
+	scalarNode, found, err := rn.nestedScalar(fields...)
+	if err != nil || !found {
+		return "", found, err
+	}
+
+	switch scalarNode.value.Tag {
+	case NodeTagString:
+		return scalarNode.value.Value, true, nil
+	default:
+		return "", true, fmt.Errorf("node was not a string, was %v", scalarNode.value.Tag)
+	}
+}
+
+// GetNestedInt returns a nested int.
+func (rn *RNode) GetNestedInt(fields ...string) (int, bool, error) {
+	scalarNode, found, err := rn.nestedScalar(fields...)
+	if err != nil || !found {
+		return 0, found, err
+	}
+
+	switch scalarNode.value.Tag {
+	case NodeTagInt:
+		i, err := strconv.Atoi(scalarNode.value.Value)
+		if err != nil {
+			return 0, true, fmt.Errorf("unable to parse %q as int: %w", scalarNode.value.Value, err)
+		}
+		return i, true, nil
+	default:
+		return 0, true, fmt.Errorf("node was not an int, was %v", scalarNode.value.Tag)
+	}
+}
+
+// GetNestedFloat returns a nested float.
+func (rn *RNode) GetNestedFloat(fields ...string) (float64, bool, error) {
+	scalarNode, found, err := rn.nestedScalar(fields...)
+	if err != nil || !found {
+		return 0, found, err
+	}
+
+	switch scalarNode.value.Tag {
+	case NodeTagFloat:
+		f, err := strconv.ParseFloat(scalarNode.value.Value, 64)
+		if err != nil {
+			return 0, true, fmt.Errorf("unable to parse %q as float: %w", scalarNode.value.Value, err)
+		}
+		return f, true, nil
+	default:
+		return 0, true, fmt.Errorf("node was not a float, was %v", scalarNode.value.Tag)
+	}
+}
+
+// GetNestedBool returns a nested boolean.
+func (rn *RNode) GetNestedBool(fields ...string) (bool, bool, error) {
+	scalarNode, found, err := rn.nestedScalar(fields...)
+	if err != nil || !found {
+		return false, found, err
+	}
+
+	switch scalarNode.value.Tag {
+	case NodeTagBool:
+		b, err := strconv.ParseBool(scalarNode.value.Value)
+		if err != nil {
+			return false, true, fmt.Errorf("unable to parse %q as bool: %w", scalarNode.value.Value, err)
+		}
+		return b, true, nil
+	default:
+		return false, true, fmt.Errorf("node was not a bool, was %v", scalarNode.value.Tag)
+	}
+}
+
+// GetLineComment return the line comment of the field.
+func (rn *RNode) GetLineComment(fields ...string) (string, error) {
+	node, found, err := rn.nestedValue(fields...)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("unable to get line comment for field %v, since it doesn't exist", fields)
+	}
+	return node.value.LineComment, nil
+}
+
+// GetHeadComment return the head comment of the field.
+func (rn *RNode) GetHeadComment(fields ...string) (string, error) {
+	node, found, err := rn.nestedValue(fields...)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", fmt.Errorf("unable to get line comment for field %v, since it doesn't exist", fields)
+	}
+	return node.value.HeadComment, nil
+}
+
+// SetOrDie sets a nested field located by fields to the value provided as val.
+// It will panic if it encounters any error.
+func (rn *RNode) SetOrDie(val interface{}, fields ...string) {
+	if err := rn.Set(val, fields...); err != nil {
+		panic(err)
+	}
+}
+
+// Set sets a nested field located by fields to the value provided as val. val
+// can be any type. e.g. int, string, []string, map[string]string, struct like
+// corev1.PodTemplate, yaml.RNode or yaml.Node.
+func (rn *RNode) Set(val interface{}, fields ...string) error {
+	if rn.IsNil() {
+		return ErrRNodeNotFound{}
+	}
+	err := func() error {
+		rnode, err := NewRNodeFrom(val)
+		if err != nil {
+			return err
+		}
+		if rnode == nil {
+			return nil
+		}
+		return rn.setYNode(rnode.YNode(), fields...)
+	}()
+	if err != nil {
+		return fmt.Errorf("unable to set value %#v at fields %v with error: %w", val, fields, err)
+	}
+	return nil
+}
+
+func (rn *RNode) setYNode(yn *Node, fields ...string) error {
+	switch len(fields) {
+	case 0:
+		return fmt.Errorf("the length of fields must be at least 1")
+	case 1:
+		_, err := SetField(fields[0], &RNode{value: yn}).Filter(rn)
+		return err
+	default:
+		target, err := PathGetter{
+			Path:   fields,
+			Create: yn.Kind,
+		}.Filter(rn)
+		if err != nil {
+			return err
+		}
+		target.SetYNode(yn)
+	}
+	return nil
+}
+
+// SetLineComment sets the line comment of the field.
+func (rn *RNode) SetLineComment(comment string, fields ...string) error {
+	node := &RNode{}
+	found, err := rn.Get(node, fields...)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("can't set line comment because the field doesn't exist")
+	}
+	node.YNode().LineComment = comment
+	return nil
+}
+
+// SetHeadComment sets the head comment of the field.
+func (rn *RNode) SetHeadComment(comment string, fields ...string) error {
+	node := &RNode{}
+	found, err := rn.Get(node, fields...)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("can't set head comment because the field doesn't exist")
+	}
+	node.YNode().HeadComment = comment
+	return nil
+}
+
+// RemoveOrDie removes the field located by fields if found. It will panic if it
+// encounters any error.
+func (rn *RNode) RemoveOrDie(fields ...string) {
+	if err := rn.Remove(fields...); err != nil {
+		panic(err)
+	}
+}
+
+// Remove removes the field located by fields if found. It returns if the field
+// is found and a potential error.
+func (rn *RNode) Remove(fields ...string) error {
+	if rn.IsNil() {
+		return ErrRNodeNotFound{}
+	}
+	err := func() error {
+		parent := rn
+		var found bool
+		var err error
+		if len(fields) > 1 {
+			parent, found, err = rn.nestedValue(fields[:len(fields)-1]...)
+			if err != nil {
+				return err
+			}
+			if !found {
+				return nil
+			}
+		}
+
+		_, err = FieldClearer{
+			Name: fields[len(fields)-1],
+		}.Filter(parent)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+	if err != nil {
+		return fmt.Errorf("unable to remove fields %v with error: %w", fields, err)
+	}
+	return nil
+}
+
+// cleanupCreationTimestamp tries to remove field metadata.creationTimestamp. If
+// it encounters any error, it aborts.
+func (rn *RNode) cleanupCreationTimestamp() {
+	if rn.YNode().Kind != yaml.MappingNode {
+		return
+	}
+	scalar, found, err := rn.nestedScalar("metadata", "creationTimestamp")
+	if err != nil || !found {
+		return
+	}
+	if scalar.YNode().Tag == NodeTagNull {
+		rn.Remove("metadata", "creationTimestamp")
+	}
 }
 
 // GetMeta returns the ResourceMeta for an RNode
@@ -489,6 +1065,31 @@ func (rn *RNode) SetNamespace(ns string) error {
 		NewScalarRNode(ns), MetadataField, NamespaceField)
 }
 
+// GetResourceIdentifier returns the resource identifier including apiVersion,
+// kind, namespace and name.
+func (rn *RNode) GetResourceIdentifier() *ResourceIdentifier {
+	apiVersion := rn.GetApiVersion()
+	kind := rn.GetKind()
+	name := rn.GetName()
+	ns := rn.GetNamespace()
+	return &ResourceIdentifier{
+		TypeMeta: TypeMeta{
+			APIVersion: apiVersion,
+			Kind:       kind,
+		},
+		NameMeta: NameMeta{
+			Name:      name,
+			Namespace: ns,
+		},
+	}
+}
+
+// GetAnnotation gets the annotation value by looking up the key. If the key
+// doesn't exist, it returns an empty string.
+func (rn *RNode) GetAnnotation(key string) string {
+	return rn.GetAnnotations()[key]
+}
+
 // GetAnnotations gets the metadata annotations field.
 // If the field is missing, returns an empty map.
 // Use another method to check for missing metadata.
@@ -500,9 +1101,22 @@ func (rn *RNode) GetAnnotations() map[string]string {
 	return rn.getMapFromMeta(meta, AnnotationsField)
 }
 
+// SetAnnotation tries to set an annotations using the provided key and value.
+func (rn *RNode) SetAnnotation(key, value string) error {
+	annotations := rn.GetAnnotations()
+	annotations[key] = value
+	return rn.SetAnnotations(annotations)
+}
+
 // SetAnnotations tries to set the metadata annotations field.
 func (rn *RNode) SetAnnotations(m map[string]string) error {
 	return rn.setMapInMetadata(m, AnnotationsField)
+}
+
+// GetLabel gets the label value by looking up the key. If the key doesn't exist,
+// it returns an empty string.
+func (rn *RNode) GetLabel(key string) string {
+	return rn.GetLabels()[key]
 }
 
 // GetLabels gets the metadata labels field.
@@ -526,6 +1140,13 @@ func (rn *RNode) getMapFromMeta(meta *RNode, fName string) map[string]string {
 		})
 	}
 	return result
+}
+
+// SetLabel sets a label using the provided key and value.
+func (rn *RNode) SetLabel(key, value string) error {
+	lbls := rn.GetLabels()
+	lbls[key] = value
+	return rn.SetLabels(lbls)
 }
 
 // SetLabels sets the metadata labels field.
@@ -1063,6 +1684,7 @@ func checkKey(key string, elems []*Node) bool {
 	return count == len(elems)
 }
 
+// Deprecated: Use Get instead.
 // GetSlice returns the contents of the slice field at the given path.
 func (rn *RNode) GetSlice(path string) ([]interface{}, error) {
 	value, err := rn.GetFieldValue(path)
@@ -1075,6 +1697,7 @@ func (rn *RNode) GetSlice(path string) ([]interface{}, error) {
 	return nil, fmt.Errorf("node %s is not a slice", path)
 }
 
+// Deprecated: Use GetNestedString instead.
 // GetString returns the contents of the string field at the given path.
 func (rn *RNode) GetString(path string) (string, error) {
 	value, err := rn.GetFieldValue(path)
@@ -1087,6 +1710,7 @@ func (rn *RNode) GetString(path string) (string, error) {
 	return "", fmt.Errorf("node %s is not a string: %v", path, value)
 }
 
+// Deprecated: Use Get instead.
 // GetFieldValue finds period delimited fields.
 // TODO: When doing kustomize var replacement, which is likely a
 // a primary use of this function and the reason it returns interface{}
@@ -1178,4 +1802,99 @@ type NoFieldError struct {
 
 func (e NoFieldError) Error() string {
 	return fmt.Sprintf("no field named '%s'", e.Field)
+}
+
+func rnodesToRNode(rnodes []*RNode) *RNode {
+	var nodes []*Node
+	for i := range rnodes {
+		nodes = append(nodes, rnodes[i].YNode())
+	}
+	return &RNode{value: &Node{Kind: SequenceNode, Content: nodes}}
+}
+
+func sortFields(ynode *Node) error {
+	switch ynode.Kind {
+	case MappingNode:
+		pairs, err := ynodeToYamlKeyValuePairs(ynode)
+		if err != nil {
+			return fmt.Errorf("unable to sort fields in yaml: %w", err)
+		}
+		for _, pair := range pairs {
+			if err = sortFields(pair.value); err != nil {
+				return err
+			}
+		}
+		sort.Sort(pairs)
+		ynode.Content = yamlKeyValuePairsToYnode(pairs)
+	case SequenceNode:
+		for i := range ynode.Content {
+			if err := sortFields(ynode.Content[i]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func ynodeToYamlKeyValuePairs(ynode *Node) (yamlKeyValuePairs, error) {
+	if len(ynode.Content)%2 != 0 {
+		return nil, fmt.Errorf("invalid number of nodes: %d", len(ynode.Content))
+	}
+
+	var pairs yamlKeyValuePairs
+	for i := 0; i < len(ynode.Content); i += 2 {
+		pairs = append(pairs, &yamlKeyValuePair{name: ynode.Content[i], value: ynode.Content[i+1]})
+	}
+	return pairs, nil
+}
+
+func yamlKeyValuePairsToYnode(pairs yamlKeyValuePairs) []*Node {
+	var nodes []*yaml.Node
+	for _, pair := range pairs {
+		nodes = append(nodes, pair.name, pair.value)
+	}
+	return nodes
+}
+
+type yamlKeyValuePair struct {
+	name  *Node
+	value *Node
+}
+
+type yamlKeyValuePairs []*yamlKeyValuePair
+
+func (nodes yamlKeyValuePairs) Len() int { return len(nodes) }
+
+func (nodes yamlKeyValuePairs) Less(i, j int) bool {
+	iIndex, iFound := FieldOrder[nodes[i].name.Value]
+	jIndex, jFound := FieldOrder[nodes[j].name.Value]
+	if iFound && jFound {
+		return iIndex < jIndex
+	}
+	if iFound {
+		return true
+	}
+	if jFound {
+		return false
+	}
+
+	if nodes[i].name != nodes[j].name {
+		return nodes[i].name.Value < nodes[j].name.Value
+	}
+	return false
+}
+
+func (nodes yamlKeyValuePairs) Swap(i, j int) { nodes[i], nodes[j] = nodes[j], nodes[i] }
+
+// ErrRNodeNotFound indicates the target RNode is nil.
+type ErrRNodeNotFound struct {
+	// Path is the path to the target field.
+	Path []string
+}
+
+func (e ErrRNodeNotFound) Error() string {
+	if len(e.Path) > 0 {
+		return fmt.Sprintf("RNode is not found at %v", strings.Join(e.Path, "."))
+	}
+	return "RNode is not found"
 }

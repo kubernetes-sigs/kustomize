@@ -1110,10 +1110,13 @@ func TestRNodeSetLabels(t *testing.T) {
 		"label1": "foo",
 		"label2": "bar",
 	}))
+	assert.NoError(t, n.SetLabel("label3", "baz"))
 	labels = n.GetLabels()
-	assert.Equal(t, 2, len(labels))
+	assert.Equal(t, 3, len(labels))
 	assert.Equal(t, "foo", labels["label1"])
 	assert.Equal(t, "bar", labels["label2"])
+	assert.Equal(t, "baz", n.GetLabel("label3"))
+	assert.Empty(t, n.GetLabel("label4"))
 	assert.NoError(t, n.SetLabels(map[string]string{}))
 	assert.Equal(t, 0, len(n.GetLabels()))
 }
@@ -1136,10 +1139,13 @@ func TestRNodeGetAnnotations(t *testing.T) {
 		"annotation1": "foo",
 		"annotation2": "bar",
 	}))
+	assert.NoError(t, n.SetAnnotation("annotation3", "baz"))
 	annotations = n.GetAnnotations()
-	assert.Equal(t, 2, len(annotations))
+	assert.Equal(t, 3, len(annotations))
 	assert.Equal(t, "foo", annotations["annotation1"])
 	assert.Equal(t, "bar", annotations["annotation2"])
+	assert.Equal(t, "baz", n.GetAnnotation("annotation3"))
+	assert.Empty(t, n.GetAnnotation("annotation4"))
 	assert.NoError(t, n.SetAnnotations(map[string]string{}))
 	assert.Equal(t, 0, len(n.GetAnnotations()))
 }
@@ -1467,10 +1473,10 @@ func makeBigMap() map[string]interface{} {
 				"anEmptyMap":   map[string]interface{}{},
 				"anEmptySlice": []interface{}{},
 				/*
-					TODO: test for unrecognizable (e.g. a function)
-						"unrecognizable": testing.InternalExample{
-							Name: "fooBar",
-						},
+				   TODO: test for unrecognizable (e.g. a function)
+				     "unrecognizable": testing.InternalExample{
+				       Name: "fooBar",
+				     },
 				*/
 			},
 		},
@@ -1858,4 +1864,810 @@ func TestGetAnnotations(t *testing.T) {
 	if expected, actual := "bar", annotations["annotation2"]; expected != actual {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
+}
+
+const deploymentYaml = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
+`
+
+const configMapYaml = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: bar
+`
+
+const crYaml = `apiVersion: example.co/v1
+kind: Foo
+metadata:
+  name: foo
+`
+
+const cr2Yaml = `apiVersion: example.co/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  boolField: true
+  floatField: 1.23
+`
+
+const emptyResourceList = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+`
+
+const zeroItemsResourceList = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items: []
+`
+
+const resourceListWithConfigMapAsFunctionConfig = `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm
+  data:
+    foo: bar
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    finalizers:
+    - foo
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+          - containerPort: 80
+functionConfig:
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm
+  data:
+    foo: bar
+`
+
+func TestGet(t *testing.T) {
+	testcases := []struct {
+		Name         string
+		Input        string
+		Fields       []string
+		Passedin     interface{}
+		Expected     interface{}
+		Found        bool
+		ExpectError  bool
+		ErrorMessage string
+	}{
+		{
+			Name:     "get spec.replicas int from deployment",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "replicas"},
+			Passedin: func() *int { var in int; return &in }(),
+			Expected: func() *int { in := 3; return &in }(),
+			Found:    true,
+		},
+		{
+			Name:     "get metadata.name string from deployment",
+			Input:    deploymentYaml,
+			Fields:   []string{"metadata", "name"},
+			Passedin: func() *string { var s string; return &s }(),
+			Expected: func() *string { s := "nginx-deployment"; return &s }(),
+			Found:    true,
+		},
+		{
+			Name:     "get spec.selector.matchLabels map[string]string from deployment",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "selector", "matchLabels"},
+			Passedin: &map[string]string{},
+			Expected: &map[string]string{"app": "nginx"},
+			Found:    true,
+		},
+		{
+			Name:     "get metadata.finalizers []string from deployment",
+			Input:    deploymentYaml,
+			Fields:   []string{"metadata", "finalizers"},
+			Passedin: &[]string{},
+			Expected: &[]string{"foo"},
+			Found:    true,
+		},
+		{
+			Name:     "get a container from deployment",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "template", "spec", "containers", "[name=nginx]"},
+			Passedin: &ContainerCopy{},
+			Expected: &ContainerCopy{
+				Name:  "nginx",
+				Image: "nginx:1.14.2",
+			},
+			Found: true,
+		},
+		{
+			Name:         "error when passed-in doesn't match actual",
+			Input:        deploymentYaml,
+			Fields:       []string{"spec", "replicas"},
+			Passedin:     func() *string { var s string; return &s }(),
+			ExpectError:  true,
+			ErrorMessage: "node was not a string",
+		},
+		{
+			Name:     "field not found",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "foo"},
+			Passedin: func() *string { var s string; return &s }(),
+			Found:    false,
+		},
+		{
+			Name:     "get a bool from cr",
+			Input:    cr2Yaml,
+			Fields:   []string{"spec", "boolField"},
+			Passedin: func() *bool { var b bool; return &b }(),
+			Expected: func() *bool { b := true; return &b }(),
+			Found:    true,
+		},
+		{
+			Name:     "get a float from cr",
+			Input:    cr2Yaml,
+			Fields:   []string{"spec", "floatField"},
+			Passedin: func() *float64 { var f float64; return &f }(),
+			Expected: func() *float64 { f := 1.23; return &f }(),
+			Found:    true,
+		},
+		{
+			Name:         "pass in a non-pointer",
+			Input:        deploymentYaml,
+			Fields:       []string{"spec", "replicas"},
+			Passedin:     map[string]interface{}{},
+			ExpectError:  true,
+			ErrorMessage: "ptr must be a pointer to an object",
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			obj, err := Parse(tc.Input)
+			assert.NoError(t, err)
+
+			found, err := obj.Get(tc.Passedin, tc.Fields...)
+			if tc.ExpectError {
+				// Check if the error contains the expected error message
+				assert.Contains(t, err.Error(), tc.ErrorMessage)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Found, found)
+				if tc.Found {
+					assert.Equal(t, tc.Expected, tc.Passedin)
+				}
+			}
+		})
+	}
+}
+
+func TestSet(t *testing.T) {
+	testcases := []struct {
+		Name         string
+		Input        string
+		Fields       []string
+		Passedin     interface{}
+		ExpectError  bool
+		ErrorMessage string
+		Expected     string
+	}{
+		{
+			Name:     "set spec.replicas int pointer",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "replicas"},
+			Passedin: func() *int { in := 10; return &in }(),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set spec.replicas int",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "replicas"},
+			Passedin: 10,
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set spec.replicas int64 pointer",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "replicas"},
+			Passedin: func() *int64 { var in int64 = 10; return &in }(),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set spec.replicas int64",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "replicas"},
+			Passedin: int64(10),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set metadata.name string pointer",
+			Input:    configMapYaml,
+			Fields:   []string{"metadata", "name"},
+			Passedin: func() *string { s := "new-cm"; return &s }(),
+			Expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-cm
+data:
+  foo: bar
+`,
+		},
+		{
+			Name:     "set metadata.name string",
+			Input:    configMapYaml,
+			Fields:   []string{"metadata", "name"},
+			Passedin: "new-cm",
+			Expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-cm
+data:
+  foo: bar
+`,
+		},
+		{
+			Name:     "set spec.selector.matchLabels map[string]string",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "selector", "matchLabels"},
+			Passedin: &map[string]string{"app": "webapp", "foo": "bar"},
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+      foo: bar
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set metadata.finalizers []string",
+			Input:    deploymentYaml,
+			Fields:   []string{"metadata", "finalizers"},
+			Passedin: &[]string{"foo", "bar"},
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+  - bar
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:     "set image name in a container",
+			Input:    deploymentYaml,
+			Fields:   []string{"spec", "template", "spec", "containers", "[name=nginx]", "image"},
+			Passedin: func() *string { s := "nginx:latest"; return &s }(),
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+`,
+		},
+		{
+			Name:   "set image name in a container replace",
+			Input:  deploymentYaml,
+			Fields: []string{"spec", "template", "spec", "containers", "[name=logger]"},
+			Passedin: &ContainerCopy{
+				Name:  "logger",
+				Image: "logger:latest",
+			},
+			Expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  finalizers:
+  - foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+      - name: logger
+        image: logger:latest
+`,
+		},
+		{
+			Name:     "set data.foo RNode pointer",
+			Input:    configMapYaml,
+			Fields:   []string{"data", "foo"},
+			Passedin: NewStringRNode("baz"),
+			Expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: baz
+`,
+		},
+		{
+			Name:     "set data.foo RNode",
+			Input:    configMapYaml,
+			Fields:   []string{"data", "foo"},
+			Passedin: *NewStringRNode("baz"),
+			Expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: baz
+`,
+		},
+		{
+			Name:     "set data.foo YNode pointer",
+			Input:    configMapYaml,
+			Fields:   []string{"data", "foo"},
+			Passedin: NewStringRNode("baz").YNode(),
+			Expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: baz
+`,
+		},
+		{
+			Name:     "set data.foo YNode",
+			Input:    configMapYaml,
+			Fields:   []string{"data", "foo"},
+			Passedin: *(NewStringRNode("baz").YNode()),
+			Expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: baz
+`,
+		},
+		{
+			Name:     "set spec.booleanField bool pointer",
+			Input:    crYaml,
+			Fields:   []string{"spec", "booleanField"},
+			Passedin: func() *bool { b := true; return &b }(),
+			Expected: `apiVersion: example.co/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  booleanField: true
+`,
+		},
+		{
+			Name:     "set spec.booleanField bool",
+			Input:    crYaml,
+			Fields:   []string{"spec", "booleanField"},
+			Passedin: true,
+			Expected: `apiVersion: example.co/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  booleanField: true
+`,
+		},
+		{
+			Name:     "set spec.floatField float pointer",
+			Input:    crYaml,
+			Fields:   []string{"spec", "floatField"},
+			Passedin: func() *float64 { f := 1.23; return &f }(),
+			Expected: `apiVersion: example.co/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  floatField: 1.23
+`,
+		},
+		{
+			Name:     "set spec.floatField float",
+			Input:    crYaml,
+			Fields:   []string{"spec", "floatField"},
+			Passedin: 1.23,
+			Expected: `apiVersion: example.co/v1
+kind: Foo
+metadata:
+  name: foo
+spec:
+  floatField: 1.23
+`,
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.NotEmpty(t, tc.Input)
+			obj, err := Parse(tc.Input)
+			assert.NoError(t, err)
+
+			err = obj.Set(tc.Passedin, tc.Fields...)
+			if tc.ExpectError {
+				// Check if the error contains the expected error message
+				assert.Contains(t, err.Error(), tc.ErrorMessage)
+			} else {
+				assert.NoError(t, err)
+				str, err := obj.String()
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Expected, str)
+			}
+		})
+	}
+}
+
+func TestRemove(t *testing.T) {
+	depl, err := Parse(deploymentYaml)
+	assert.NoError(t, err)
+	assert.NoError(t, depl.Remove("metadata", "finalizers"))
+	assert.NoError(t, depl.Remove("metadata", "foo")) // No-op
+	y, err := depl.String()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+`, y)
+}
+
+func TestAs(t *testing.T) {
+	testcases := []struct {
+		Name         string
+		Input        string
+		Passedin     interface{}
+		ExpectError  bool
+		ErrorMessage string
+		Expected     interface{}
+	}{
+		{
+			Name:     "convert a configmap",
+			Input:    configMapYaml,
+			Passedin: &ConfigMapCopy{},
+			Expected: &ConfigMapCopy{
+				ResourceMeta: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMap",
+					},
+					ObjectMeta: ObjectMeta{
+						NameMeta: NameMeta{Name: "cm"},
+					},
+				},
+				Data: map[string]string{"foo": "bar"},
+			},
+		},
+		{
+			Name:     "convert a configmap to map",
+			Input:    configMapYaml,
+			Passedin: &map[string]interface{}{},
+			Expected: &map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name": "cm",
+				},
+				"data": map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+		},
+		{
+			Name:         "passed-in is not a pointer",
+			Input:        configMapYaml,
+			Passedin:     map[string]interface{}{},
+			ExpectError:  true,
+			ErrorMessage: "ptr must be a pointer to an object",
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.NotEmpty(t, tc.Input)
+			obj, err := Parse(tc.Input)
+			assert.NoError(t, err)
+
+			err = obj.As(tc.Passedin)
+			if tc.ExpectError {
+				// Check if the error contains the expected error message
+				assert.Contains(t, err.Error(), tc.ErrorMessage)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Expected, tc.Passedin)
+			}
+		})
+	}
+}
+
+func TestSetRNode(t *testing.T) {
+	cm, err := Parse(configMapYaml)
+	assert.NoError(t, err)
+	rl, err := Parse(emptyResourceList)
+	assert.NoError(t, err)
+
+	err = rl.Set([]*RNode{}, "items")
+	assert.NoError(t, err)
+
+	rlYaml, err := rl.String()
+	assert.NoError(t, err)
+	assert.Equal(t, zeroItemsResourceList, rlYaml)
+
+	err = rl.Set(cm, "functionConfig")
+	assert.NoError(t, err)
+
+	depl, err := Parse(deploymentYaml)
+	assert.NoError(t, err)
+	err = rl.Set([]*RNode{cm, depl}, "items")
+	assert.NoError(t, err)
+
+	rlYaml, err = rl.String()
+	assert.NoError(t, err)
+	assert.Equal(t, resourceListWithConfigMapAsFunctionConfig, rlYaml)
+
+}
+
+func TestNilRNode(t *testing.T) {
+	expected := ErrRNodeNotFound{}.Error()
+	var rn *RNode
+	_, err := rn.Get(&map[string]interface{}{}, "foo")
+	assert.Contains(t, err.Error(), expected)
+	err = rn.Set(&map[string]interface{}{}, "foo")
+	assert.Contains(t, err.Error(), expected)
+	err = rn.As(&map[string]interface{}{})
+	assert.Contains(t, err.Error(), expected)
+}
+
+func TestGetAndMutateRNode(t *testing.T) {
+	cm, err := Parse(configMapYaml)
+	assert.NoError(t, err)
+	rn := &RNode{}
+	found, err := cm.Get(rn, "metadata", "name")
+	assert.NoError(t, err)
+	assert.True(t, found)
+	rn.YNode().LineComment = "# new comment"
+	comment, err := cm.GetLineComment("metadata", "name")
+	assert.NoError(t, err)
+	assert.Equal(t, "# new comment", comment)
+}
+
+func TestGetAndSetComments(t *testing.T) {
+	cm, err := Parse(configMapYaml)
+	assert.NoError(t, err)
+
+	err = cm.SetLineComment("new line comment", "metadata", "name")
+	assert.NoError(t, err)
+	err = cm.SetHeadComment("new head comment", "metadata", "name")
+	assert.NoError(t, err)
+
+	lineComment, err := cm.GetLineComment("metadata", "name")
+	assert.NoError(t, err)
+	assert.Equal(t, "new line comment", lineComment)
+	headComment, err := cm.GetHeadComment("metadata", "name")
+	assert.NoError(t, err)
+	assert.Equal(t, "new head comment", headComment)
+}
+
+func TestCleanupCreationTimestamp(t *testing.T) {
+	rn, err := Parse(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  creationTimestamp: null
+data:
+  foo: bar
+`)
+	assert.NoError(t, err)
+	rn.cleanupCreationTimestamp()
+	y, err := rn.String()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: bar
+`, y)
+}
+
+type ContainerCopy struct {
+	Name  string `json:"name" yaml:"name"`
+	Image string `json:"image,omitempty" yaml:"image,omitempty"`
+}
+
+type ConfigMapCopy struct {
+	ResourceMeta `json:",inline" yaml:",inline"`
+	Data         map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
 }
