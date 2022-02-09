@@ -90,7 +90,7 @@ func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
 		return p.doSeq(rn)
 	}
 
-	if IsMatchEveryIndex(p.Path[0]) {
+	if IsWildcard(p.Path[0]) {
 		// match every elements (*)
 		return p.doMatchEvery(rn)
 	}

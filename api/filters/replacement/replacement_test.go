@@ -1432,6 +1432,78 @@ spec:
     version: latest
     property: second`,
 		},
+		"one replacements target has multiple value": {
+			input: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: deployment-name
+          value: XXXXX
+        - name: foo
+          value: bar
+      - image: nginx
+        name: sidecar
+        env:
+        - name: deployment-name
+          value: YYYYY
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: sample-deploy
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.[image=nginx].env.[name=deployment-name].value
+`,
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: deployment-name
+          value: sample-deploy
+        - name: foo
+          value: bar
+      - image: nginx
+        name: sidecar
+        env:
+        - name: deployment-name
+          value: sample-deploy`,
+		},
 		"index contains '*' character": {
 			input: `apiVersion: apps/v1
 kind: Deployment
