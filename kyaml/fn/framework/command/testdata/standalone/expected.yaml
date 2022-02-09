@@ -8,7 +8,8 @@ metadata:
   namespace: default
   annotations:
     foo: bar2
-    a: 'b'
+    a: 'c'
+    b: 'd'
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -17,4 +18,5 @@ metadata:
   namespace: default
   annotations:
     foo: bar1
-    a: 'b'
+    a: 'c'
+    b: 'd'
