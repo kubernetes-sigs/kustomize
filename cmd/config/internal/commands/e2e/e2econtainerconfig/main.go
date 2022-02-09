@@ -8,6 +8,8 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -32,27 +34,29 @@ type Example struct {
 
 func main() {
 	functionConfig := &Example{}
-	resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
 
-	cmd := framework.Command(resourceList, func() error {
-		for i := range resourceList.Items {
-			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a-string-value",
+	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+		for i := range items {
+			// set the annotation on each resource item
+			if err := items[i].PipeE(yaml.SetAnnotation("a-string-value",
 				functionConfig.Data.StringValue)); err != nil {
-				return err
+				return nil, err
 			}
 
-			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a-int-value",
+			if err := items[i].PipeE(yaml.SetAnnotation("a-int-value",
 				fmt.Sprintf("%v", functionConfig.Data.IntValue))); err != nil {
-				return err
+				return nil, err
 			}
 
-			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a-bool-value",
+			if err := items[i].PipeE(yaml.SetAnnotation("a-bool-value",
 				fmt.Sprintf("%v", functionConfig.Data.BoolValue))); err != nil {
-				return err
+				return nil, err
 			}
 		}
-		return nil
-	})
+		return items, nil
+	}
+	p := framework.SimpleProcessor{Filter: kio.FilterFunc(fn), Config: functionConfig}
+	cmd := command.Build(p, command.StandaloneDisabled, false)
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
