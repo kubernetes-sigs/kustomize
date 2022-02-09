@@ -509,7 +509,9 @@ func (rn *RNode) Get(ptr interface{}, fields ...string) (bool, error) {
 			if val.value.Kind != yaml.MappingNode {
 				return found, fmt.Errorf("unable to get field %v, since the RNode was not a MappingNode", fields)
 			}
-			err = val.value.Decode(ptr)
+			// We are not using val.value.Decode(ptr) here, since the k8s core types don't
+			// have yaml tags.
+			err = val.As(ptr)
 			return found, err
 		case reflect.Slice:
 			val, found, err := rn.nestedValue(fields...)
@@ -519,7 +521,9 @@ func (rn *RNode) Get(ptr interface{}, fields ...string) (bool, error) {
 			if val.value.Kind != yaml.SequenceNode {
 				return found, fmt.Errorf("unable to get field %v, since the RNode was not a SequenceNode", fields)
 			}
-			err = val.value.Decode(ptr)
+			// We are not using val.value.Decode(ptr) here, since the k8s core types don't
+			// have yaml tags.
+			err = val.As(ptr)
 			return found, err
 		case reflect.String:
 			s, found, err := rn.GetNestedString(fields...)
