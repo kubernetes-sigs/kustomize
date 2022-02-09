@@ -789,6 +789,12 @@ func IsIdxNumber(p string) bool {
 	return err == nil && idx >= 0
 }
 
+// IsWildcard returns true if p is matching every elements.
+// e.g. "*"
+func IsWildcard(p string) bool {
+	return p == "*"
+}
+
 // SplitIndexNameValue splits a lookup part Val index into the field name
 // and field value to match.
 // e.g. splits [name=nginx] into (name, nginx)
@@ -801,12 +807,6 @@ func SplitIndexNameValue(p string) (string, string, error) {
 		return "", "", fmt.Errorf("list path element must contain fieldName=fieldValue for element to match")
 	}
 	return parts[0], parts[1], nil
-}
-
-// IsMatchEveryIndex returns true if p is matching every elements.
-// e.g. "*"
-func IsMatchEveryIndex(p string) bool {
-	return p == "*"
 }
 
 // IncrementFieldIndex increments i to point to the next field name element in

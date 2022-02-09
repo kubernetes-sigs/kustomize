@@ -119,7 +119,6 @@ func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelect
 		if target.Options != nil && target.Options.Create {
 			t, err = node.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
 		} else {
-			// t, err = node.Pipe(yaml.Lookup(fieldPath...))
 			t, err = node.Pipe(&yaml.PathMatcher{Path: fieldPath})
 		}
 		if err != nil {
