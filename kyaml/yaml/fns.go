@@ -782,6 +782,19 @@ func IsListIndex(p string) bool {
 	return strings.HasPrefix(p, "[") && strings.HasSuffix(p, "]")
 }
 
+// IsIdxNumber returns true if p is an index number.
+// e.g. 1
+func IsIdxNumber(p string) bool {
+	idx, err := strconv.Atoi(p)
+	return err == nil && idx >= 0
+}
+
+// IsWildcard returns true if p is matching every elements.
+// e.g. "*"
+func IsWildcard(p string) bool {
+	return p == "*"
+}
+
 // SplitIndexNameValue splits a lookup part Val index into the field name
 // and field value to match.
 // e.g. splits [name=nginx] into (name, nginx)
