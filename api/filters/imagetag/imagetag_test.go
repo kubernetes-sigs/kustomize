@@ -750,6 +750,96 @@ spec:
 				},
 			},
 		},
+		"image with tag and digest new name": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: nginx:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: apache:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/image",
+				},
+			},
+		},
+		"image with tag and digest new name new tag": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: nginx:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: apache:1.3.0
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					NewTag:  "1.3.0",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/image",
+				},
+			},
+		},
+		"image with tag and digest new name new tag and digest": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: nginx:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: apache:1.3.0@sha256:xyz
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					NewTag:  "1.3.0",
+					Digest:  "sha256:xyz",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/image",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
