@@ -13,32 +13,15 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-type setValueArg struct {
-	Key       string
-	Value     string
-	Tag       string
-	PrevValue string
-}
-
-var setValueArgs []setValueArg
-
-func setValueCallbackStub(key, value, tag string, node *yaml.RNode) {
-	setValueArgs = append(setValueArgs, setValueArg{
-		Key:       key,
-		Value:     value,
-		Tag:       tag,
-		PrevValue: node.YNode().Value,
-	})
-}
-
 func TestImageTagUpdater_Filter(t *testing.T) {
+	mutationTrackerStub := filtertest.MutationTrackerStub{}
 	testCases := map[string]struct {
 		input                string
 		expectedOutput       string
 		filter               Filter
 		fsSlice              types.FsSlice
 		setValueCallback     func(key, value, tag string, node *yaml.RNode)
-		expectedSetValueArgs []setValueArg
+		expectedSetValueArgs []filtertest.SetValueArg
 	}{
 		"ignore CustomResourceDefinition": {
 			input: `
@@ -747,23 +730,113 @@ spec:
 					Path: "spec/template/spec/initContainers[]/image",
 				},
 			},
-			setValueCallback: setValueCallbackStub,
-			expectedSetValueArgs: []setValueArg{
+			setValueCallback: mutationTrackerStub.MutationTracker,
+			expectedSetValueArgs: []filtertest.SetValueArg{
 				{
-					Value:     "busybox:v3",
-					PrevValue: "nginx:1.7.9",
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "containers", "image"},
 				},
 				{
-					Value:     "busybox:v3",
-					PrevValue: "nginx:latest",
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "containers", "image"},
 				},
 				{
-					Value:     "busybox:v3",
-					PrevValue: "nginx",
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "initContainers", "image"},
 				},
 				{
-					Value:     "busybox:v3",
-					PrevValue: "nginx@sha256:111111111111111111",
+					Value:    "busybox:v3",
+					NodePath: []string{"spec", "template", "spec", "initContainers", "image"},
+				},
+			},
+		},
+		"image with tag and digest new name": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: nginx:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: apache:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/image",
+				},
+			},
+		},
+		"image with tag and digest new name new tag": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: nginx:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: apache:1.3.0
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					NewTag:  "1.3.0",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/image",
+				},
+			},
+		},
+		"image with tag and digest new name new tag and digest": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: nginx:1.2.1@sha256:46d5b90a7f4e9996351ad893a26bcbd27216676ad4d5316088ce351fb2c2c3dd
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  image: apache:1.3.0@sha256:xyz
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					NewTag:  "1.3.0",
+					Digest:  "sha256:xyz",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/image",
 				},
 			},
 		},
@@ -802,14 +875,14 @@ spec:
 			},
 			fsSlice: []types.FieldSpec{
 				{
-					Path: "spec/template/spec/containers/image",
+					Path: "spec/template/spec/containers[]/image",
 				},
 			},
 		},
 	}
 
 	for tn, tc := range testCases {
-		setValueArgs = nil
+		mutationTrackerStub.Reset()
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
 			filter.WithMutationTracker(tc.setValueCallback)
@@ -819,7 +892,7 @@ spec:
 				strings.TrimSpace(filtertest.RunFilter(t, tc.input, filter))) {
 				t.FailNow()
 			}
-			assert.Equal(t, tc.expectedSetValueArgs, setValueArgs)
+			assert.Equal(t, tc.expectedSetValueArgs, mutationTrackerStub.SetValueArgs())
 		})
 	}
 }
