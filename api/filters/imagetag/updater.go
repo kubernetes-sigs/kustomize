@@ -30,18 +30,32 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		return nil
 	}
 
-	name, tag := image.Split(value)
+	name, tag, digest := image.Split(value)
 	if u.ImageTag.NewName != "" {
 		name = u.ImageTag.NewName
 	}
-	if u.ImageTag.NewTag != "" {
-		tag = ":" + u.ImageTag.NewTag
-	}
-	if u.ImageTag.Digest != "" {
-		tag = "@" + u.ImageTag.Digest
+
+	// overriding tag or digest will replace both original tag and digest values
+	if u.ImageTag.NewTag != "" && u.ImageTag.Digest != "" {
+		tag = u.ImageTag.NewTag
+		digest = u.ImageTag.Digest
+	} else if u.ImageTag.NewTag != "" {
+		tag = u.ImageTag.NewTag
+		digest = ""
+	} else if u.ImageTag.Digest != "" {
+		tag = ""
+		digest = u.ImageTag.Digest
 	}
 
-	return u.trackableSetter.SetScalar(name + tag)(rn)
+	// build final image name
+	if tag != "" {
+		name += ":" + tag
+	}
+	if digest != "" {
+		name += "@" + digest
+	}
+
+	return u.trackableSetter.SetScalar(name)(rn)
 }
 
 func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
