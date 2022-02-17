@@ -174,6 +174,7 @@ func TestAddAnnotationForce(t *testing.T) {
 func TestRunAddLabel(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
+	o.includeSelectors = true
 
 	m := makeKustomization(t)
 	assert.NoError(t, o.addLabels(m))
@@ -269,6 +270,37 @@ func TestAddLabelForce(t *testing.T) {
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddLabel(fSys, v.Validator)
+	err = cmd.Flag("force").Value.Set("true")
+	require.NoError(t, err)
+	assert.NoError(t, cmd.RunE(cmd, args))
+	v.VerifyCall()
+}
+
+func TestAddLabelNoSelector(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomization(fSys)
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fSys, v.Validator)
+	err := cmd.Flag("include-selectors").Value.Set("false")
+	require.NoError(t, err)
+	args := []string{"key:foo"}
+	assert.NoError(t, cmd.RunE(cmd, args))
+	v.VerifyCall()
+	// trying to add the same label again should not work
+	args = []string{"key:bar"}
+	v = valtest_test.MakeHappyMapValidator(t)
+	cmd = newCmdAddLabel(fSys, v.Validator)
+	err = cmd.Flag("include-selectors").Value.Set("false")
+	require.NoError(t, err)
+	err = cmd.RunE(cmd, args)
+	v.VerifyCall()
+	assert.Error(t, err)
+	assert.Equal(t, "label key already in kustomization file", err.Error())
+	// but trying to add it with --force should
+	v = valtest_test.MakeHappyMapValidator(t)
+	cmd = newCmdAddLabel(fSys, v.Validator)
+	err = cmd.Flag("include-selectors").Value.Set("false")
+	require.NoError(t, err)
 	err = cmd.Flag("force").Value.Set("true")
 	require.NoError(t, err)
 	assert.NoError(t, cmd.RunE(cmd, args))

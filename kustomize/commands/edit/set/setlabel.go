@@ -15,8 +15,9 @@ import (
 )
 
 type setLabelOptions struct {
-	metadata     map[string]string
-	mapValidator func(map[string]string) error
+	metadata         map[string]string
+	mapValidator     func(map[string]string) error
+	includeSelectors bool
 }
 
 // newCmdSetLabel sets one or more commonLabels to the kustomization file.
@@ -25,14 +26,25 @@ func newCmdSetLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use: "label",
-		Short: "Sets one or more commonLabels in " +
+		Short: "Sets one or more labels or commonLabels in " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
-		set label {labelKey1:labelValue1} {labelKey2:labelValue2}`,
+		# Set commonLabels (default)
+		set label {labelKey1:labelValue1} {labelKey2:labelValue2}
+
+		# Set commonLabels
+		set label --include-selectors=true {labelKey1:labelValue1} {labelKey2:labelValue2}
+
+		# Set labels
+		set label --include-selectors=false {labelKey1:labelValue1} {labelKey2:labelValue2}
+		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.runE(args, fSys, o.setLabels)
 		},
 	}
+	cmd.Flags().BoolVarP(&o.includeSelectors, "include-selectors", "s", true,
+		"include label in selectors",
+	)
 	return cmd
 }
 
@@ -74,15 +86,43 @@ func (o *setLabelOptions) validateAndParse(args []string) error {
 }
 
 func (o *setLabelOptions) setLabels(m *types.Kustomization) error {
-	if m.CommonLabels == nil {
-		m.CommonLabels = make(map[string]string)
+	if o.includeSelectors {
+		if m.CommonLabels == nil {
+			m.CommonLabels = make(map[string]string)
+		}
+		return o.writeToMap(m.CommonLabels)
+	} else {
+		if m.Labels == nil {
+			m.Labels = make([]types.Label, 0)
+		}
+		return o.writeToLabelsSlice(&m.Labels)
 	}
-	return o.writeToMap(m.CommonLabels)
 }
 
 func (o *setLabelOptions) writeToMap(m map[string]string) error {
 	for k, v := range o.metadata {
 		m[k] = v
+	}
+	return nil
+}
+
+func (o *setLabelOptions) writeToLabelsSlice(klabels *[]types.Label) error {
+	for k, v := range o.metadata {
+		isPresent := false
+		for _, kl := range *klabels {
+			if _, isPresent = kl.Pairs[k]; isPresent {
+				kl.Pairs[k] = v
+				break
+			}
+		}
+		if !isPresent {
+			*klabels = append(*klabels, types.Label{
+				Pairs: map[string]string{
+					k: v,
+				},
+				IncludeSelectors: o.includeSelectors,
+			})
+		}
 	}
 	return nil
 }
