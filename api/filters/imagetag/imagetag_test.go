@@ -849,10 +849,10 @@ metadata:
   name: deploysuffix
 spec:
   template:
-	spec:
-	  containers:
-	  - image: redis:6.2.6
-		name: redis
+    spec:
+      containers:
+      - image: redis:6.2.6
+        name: redis
 `,
 			expectedOutput: `
 group: apps
@@ -862,10 +862,10 @@ metadata:
   name: deploysuffix
 spec:
   template:
-	spec:
-	  containers:
-	  - image: redis:6.2.6-alpine
-		name: redis
+    spec:
+      containers:
+      - image: redis:6.2.6-alpine
+        name: redis
 `,
 			filter: Filter{
 				ImageTag: types.Image{
