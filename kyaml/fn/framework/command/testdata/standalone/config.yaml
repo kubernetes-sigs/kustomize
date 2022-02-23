@@ -4,4 +4,4 @@
 apiVersion: example.com/v1alpha1
 kind: Foo
 a: c
-b: d
+b: 1

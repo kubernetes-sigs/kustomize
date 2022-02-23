@@ -161,7 +161,8 @@ metadata:
   namespace: default
   annotations:
     foo: bar1
-    a: 'b'
+    a: 'c'
+    b: '1'
 spec:
   replicas: 1
 ---
@@ -172,6 +173,7 @@ metadata:
   namespace: default
   annotations:
     foo: bar2
-    a: 'b'
+    a: 'c'
+    b: '1'
 `), strings.TrimSpace(out.String()))
 }

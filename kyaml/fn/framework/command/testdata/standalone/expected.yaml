@@ -9,7 +9,7 @@ metadata:
   annotations:
     foo: bar2
     a: 'c'
-    b: 'd'
+    b: '1'
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -19,4 +19,4 @@ metadata:
   annotations:
     foo: bar1
     a: 'c'
-    b: 'd'
+    b: '1'
