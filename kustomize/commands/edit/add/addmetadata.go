@@ -34,10 +34,11 @@ func (k kindOfAdd) String() string {
 }
 
 type addMetadataOptions struct {
-	force        bool
-	metadata     map[string]string
-	mapValidator func(map[string]string) error
-	kind         kindOfAdd
+	force                 bool
+	metadata              map[string]string
+	mapValidator          func(map[string]string) error
+	kind                  kindOfAdd
+	labelsWithoutSelector bool
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
@@ -78,6 +79,9 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 	}
 	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
 		"overwrite commonLabel if it already exists",
+	)
+	cmd.Flags().BoolVar(&o.labelsWithoutSelector, "without-selector", false,
+		"using add labels without selector option",
 	)
 	return cmd
 }
@@ -127,6 +131,10 @@ func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
 }
 
 func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
+	if o.labelsWithoutSelector {
+		m.Labels = append(m.Labels, types.Label{Pairs: make(map[string]string), IncludeSelectors: false})
+		return o.writeToMap(m.Labels[len(m.Labels)-1].Pairs, label)
+	}
 	if m.CommonLabels == nil {
 		m.CommonLabels = make(map[string]string)
 	}
