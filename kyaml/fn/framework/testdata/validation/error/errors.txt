@@ -1,5 +1,5 @@
-JavaSpringBoot had 4 errors:
-\[\d\] replicas must be less than 10
-\[\d\] name is required
-\[\d\] image should not have latest tag
-\[\d\] domain must be a subdomain of example.com
+validation failure list:
+spec.domain in body should match 'example\\.com\$'
+spec.image should not have latest tag
+metadata.name in body should be at least 1 chars long
+spec.replicas in body should be less than or equal to 9

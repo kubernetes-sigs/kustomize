@@ -6,12 +6,16 @@ package framework
 import (
 	"strings"
 
+	validationErrors "k8s.io/kube-openapi/pkg/validation/errors"
 	"k8s.io/kube-openapi/pkg/validation/spec"
+	"k8s.io/kube-openapi/pkg/validation/strfmt"
+	"k8s.io/kube-openapi/pkg/validation/validate"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	k8syaml "sigs.k8s.io/yaml"
 )
 
 // SimpleProcessor processes a ResourceList by loading the FunctionConfig into
@@ -35,9 +39,9 @@ type SimpleProcessor struct {
 // defaulting and validation if supported by Config. It then executes the processor's filter.
 func (p SimpleProcessor) Process(rl *ResourceList) error {
 	if err := LoadFunctionConfig(rl.FunctionConfig, p.Config); err != nil {
-		return errors.Wrap(err)
+		return errors.WrapPrefixf(err, "loading function config")
 	}
-	return errors.Wrap(rl.Filter(p.Filter))
+	return errors.WrapPrefixf(rl.Filter(p.Filter), "processing filter")
 }
 
 // GVKFilterMap is a FilterProvider that resolves Filters through a simple lookup in a map.
@@ -139,7 +143,24 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 	if api == nil {
 		return nil
 	}
-	if err := yaml.Unmarshal([]byte(src.MustString()), api); err != nil {
+	// Run this before unmarshalling to avoid nasty unmarshal failure error messages
+	var schemaValidationError error
+	if s, ok := api.(ValidationSchemaProvider); ok {
+		schema, err := s.Schema()
+		if err != nil {
+			return errors.WrapPrefixf(err, "loading provided schema")
+		}
+		schemaValidationError = validate.AgainstSchema(schema, src, strfmt.Default)
+		// don't return it yet--try to make it to custom validation stage to combine errors
+	}
+
+	// using sigs.k8s.io/yaml here lets the custom types embed core types
+	// that only have json tags, notably types from k8s.io/apimachinery/pkg/apis/meta/v1
+	if err := k8syaml.Unmarshal([]byte(src.MustString()), api); err != nil {
+		if schemaValidationError != nil {
+			// if we got a validation error, report it instead as it is likely a nicer version of the same message
+			return schemaValidationError
+		}
 		return errors.Wrap(err)
 	}
 
@@ -150,7 +171,25 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 	}
 
 	if v, ok := api.(Validator); ok {
-		return v.Validate()
+		return combineErrors(schemaValidationError, v.Validate())
+	}
+	return nil
+}
+
+func combineErrors(schemaErr, customErr error) error {
+	combined := validationErrors.CompositeValidationError()
+	if compositeSchemaErr, ok := schemaErr.(*validationErrors.CompositeError); ok {
+		combined.Errors = append(combined.Errors, compositeSchemaErr.Errors...)
+	} else if schemaErr != nil {
+		combined.Errors = append(combined.Errors, schemaErr)
+	}
+	if compositeCustomErr, ok := customErr.(*validationErrors.CompositeError); ok {
+		combined.Errors = append(combined.Errors, compositeCustomErr.Errors...)
+	} else if customErr != nil {
+		combined.Errors = append(combined.Errors, customErr)
+	}
+	if len(combined.Errors) > 0 {
+		return combined
 	}
 	return nil
 }
