@@ -273,3 +273,27 @@ func TestAddLabelForce(t *testing.T) {
 	assert.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
+
+func TestAddLabelWithoutSelector(t *testing.T) {
+	var o addMetadataOptions
+	o.labelsWithoutSelector = true
+	m := makeKustomization(t)
+	o.metadata = map[string]string{"new": "label"}
+	assert.NoError(t, o.addLabels(m))
+	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}})
+}
+
+func TestAddLabelWithoutSelectorAddLabel(t *testing.T) {
+	var o addMetadataOptions
+	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
+	o.labelsWithoutSelector = true
+
+	m := makeKustomization(t)
+	assert.NoError(t, o.addLabels(m))
+	// adding new labels should work
+	o.metadata = map[string]string{"new": "label"}
+	assert.NoError(t, o.addLabels(m))
+
+	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"owls": "cute", "otters": "adorable"}})
+	assert.Equal(t, m.Labels[1], types.Label{Pairs: map[string]string{"new": "label"}})
+}
