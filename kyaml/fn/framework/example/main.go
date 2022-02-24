@@ -33,7 +33,7 @@ func buildProcessor(value *string) framework.ResourceListProcessor {
 		}},
 		// This will be populated from the --value flag if provided,
 		// or the config file's `value` field if provided, with the latter taking precedence.
-		TemplateData: struct {
+		TemplateData: &struct {
 			Value *string `yaml:"value"`
 		}{Value: value}}
 }
