@@ -612,7 +612,10 @@ func Set(value *RNode) FieldSetter {
 	return FieldSetter{Value: value}
 }
 
-// MapEntrySetter sets a field or map entry to a value.
+// MapEntrySetter sets a map entry to a value. If it finds a key with the same
+// value, it will override both Key and Value RNodes, including style and any
+// other metadata. If it doesn't find the key, it will insert a new map entry.
+// This is useful for rebuilding some pre-existing RNode structure.
 type MapEntrySetter struct {
 	// Name is the name of the field or key to lookup in a MappingNode.
 	// If Name is unspecified, it will use the Key's Value
