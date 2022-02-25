@@ -1,5 +1,0 @@
-{{- $.Scratch.Add "offline-search-index" slice -}}
-{{- range where .Site.AllPages ".Params.exclude_search" "!=" true -}}
-{{- $.Scratch.Add "offline-search-index" (dict "title" .Title "ref" .RelPermalink "body" .Plain "excerpt" (.Summary | truncate 100)) -}}
-{{- end -}}
-{{- $.Scratch.Get "offline-search-index" | jsonify -}}
