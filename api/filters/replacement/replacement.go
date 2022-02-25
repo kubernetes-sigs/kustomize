@@ -174,7 +174,12 @@ func setTargetValue(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNod
 		value.YNode().Value = strings.Join(tv, options.Delimiter)
 	}
 
-	t.SetYNode(value.YNode())
+	if t.YNode().Kind == yaml.ScalarNode {
+		// For scalar, only copy the value (leave any type intact to auto-convert int->string or string->int)
+		t.YNode().Value = value.YNode().Value
+	} else {
+		t.SetYNode(value.YNode())
+	}
 
 	return nil
 }
