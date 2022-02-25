@@ -615,6 +615,7 @@ func Set(value *RNode) FieldSetter {
 // MapEntrySetter sets a map entry to a value. If it finds a key with the same
 // value, it will override both Key and Value RNodes, including style and any
 // other metadata. If it doesn't find the key, it will insert a new map entry.
+// It will set the field, even if it's empty or nil, unlike the FieldSetter.
 // This is useful for rebuilding some pre-existing RNode structure.
 type MapEntrySetter struct {
 	// Name is the name of the field or key to lookup in a MappingNode.
@@ -629,6 +630,12 @@ type MapEntrySetter struct {
 }
 
 func (s MapEntrySetter) Filter(rn *RNode) (*RNode, error) {
+	if rn == nil {
+		return nil, errors.Errorf("Can't set map entry on a nil RNode")
+	}
+	if err := ErrorIfInvalid(rn, yaml.MappingNode); err != nil {
+		return nil, err
+	}
 	if s.Name == "" {
 		s.Name = GetValue(s.Key)
 	}
