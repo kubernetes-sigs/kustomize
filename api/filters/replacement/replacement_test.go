@@ -205,13 +205,13 @@ spec:
         command: ["printenv"]
         args:
         - example.com
-        - 8080
+        - "8080"
       - name: busybox
         image: busybox:latest
         args:
         - echo
         - example.com
-        - 8080
+        - "8080"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -2011,6 +2011,310 @@ spec:
         name: nginx-tagged
       - image: postgres:1.8.0
         name: postgresdb
+`,
+		},
+		"string source -> integer target": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - containerPort: 80
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: config
+    fieldPath: data.PORT
+  targets:
+  - select:
+      kind: Pod
+    fieldPaths:
+    - spec.containers.0.ports.0.containerPort
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - containerPort: 8080
+`,
+		},
+		"string source -> boolean target": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  MOUNT_TOKEN: "true"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    automountServiceAccountToken: false
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: config
+    fieldPath: data.MOUNT_TOKEN
+  targets:
+  - select:
+      kind: Pod
+    fieldPaths:
+    - spec.containers.0.automountServiceAccountToken
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  MOUNT_TOKEN: "true"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    automountServiceAccountToken: true
+`,
+		},
+		// TODO: This is inconsistent with expectations; creating a numerical string would be
+		// expected, unless we had knowledge of the intended type of the field to be
+		// created.
+		"numerical string source -> integer creation": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - protocol: TCP
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: config
+    fieldPath: data.PORT
+  targets:
+  - select:
+      kind: Pod
+    fieldPaths:
+    - spec.containers.0.ports.0.containerPort
+    - spec.containers.0.ports.0.name
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - protocol: TCP
+      containerPort: 8080
+      name: 8080
+`,
+		},
+		"integer source -> string target": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  PORT: "8080"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - containerPort: 80
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers.0.ports.0.containerPort
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.PORT
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  PORT: "80"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - containerPort: 80
+`,
+		},
+		"boolean source -> string target": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  MOUNT_TOKEN: "true"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    automountServiceAccountToken: false
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers.0.automountServiceAccountToken
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.MOUNT_TOKEN
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  MOUNT_TOKEN: "false"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    automountServiceAccountToken: false
+`,
+		},
+		// TODO: This result is expected, but we should create a string and not an
+		// integer if we could know that the target type should be one. As a result,
+		// the actual ConfigMap produces here cannot be applied.
+		"integer source -> integer creation": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  FOO: "Bar"
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - containerPort: 80
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers.0.ports.0.containerPort
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.PORT
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  FOO: "Bar"
+  PORT: 80
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    ports:
+    - containerPort: 80
 `,
 		},
 	}
