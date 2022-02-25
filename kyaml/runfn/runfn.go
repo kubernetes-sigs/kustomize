@@ -330,6 +330,7 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 		}
 		cf, ok := c.(*container.Filter)
 		if global && ok {
+			cf.Exec.WorkingDir = r.WorkingDir
 			cf.Exec.GlobalScope = true
 		}
 		fltrs = append(fltrs, c)
@@ -468,11 +469,17 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 		if err != nil {
 			return nil, err
 		}
+
+		// Storage mounts can either come from kustomize fn run --mounts,
+		// or from the declarative function mounts field.
+		storageMounts := spec.Container.StorageMounts
+		storageMounts = append(storageMounts, r.StorageMounts...)
+
 		c := container.NewContainer(
 			runtimeutil.ContainerSpec{
 				Image:         spec.Container.Image,
 				Network:       spec.Container.Network,
-				StorageMounts: r.StorageMounts,
+				StorageMounts: storageMounts,
 				Env:           spec.Container.Env,
 			},
 			uidgid,

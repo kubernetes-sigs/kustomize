@@ -7,9 +7,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	. "sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -632,4 +634,229 @@ kind: ConfigMap
 metadata:
   name: env
 `)
+}
+
+func TestFnContainerMounts(t *testing.T) {
+	skipIfNoDocker(t)
+
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+
+	path, err := os.Getwd()
+	assert.NoError(t, err)
+
+	src := filepath.Join(path, "testdata", "charts") + string(filepath.Separator)
+	dst := filepath.Join(tmpDir.String(), "testdata", "charts") + string(filepath.Separator)
+	assert.NoError(t, os.MkdirAll(dst, 0777))
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd := exec.Command("cp", "-r", src, dst)
+		assert.NoError(t, cmd.Run())
+	case "linux":
+		d := dst + "."
+		cmd := exec.Command("cp", "-r", src, d)
+		assert.NoError(t, cmd.Run())
+	default:
+		t.SkipNow()
+	}
+
+	chartPath, err := filepath.Rel(tmpDir.String(), dst)
+	assert.NoError(t, err)
+
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+  - |-
+    apiVersion: v1alpha1
+    kind: RenderHelmChart
+    metadata:
+      name: demo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+            mounts:
+            - type: "bind"
+              src: "`+chartPath+`"
+              dst: "/tmp/charts"
+    helmCharts:
+    - name: helloworld-chart
+      releaseName: test
+      valuesFile: /tmp/charts/helloworld-values/values.yaml
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: helloworld-chart
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: helloworld-chart-0.1.0
+  name: test-helloworld-chart
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: helloworld-chart
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: helloworld-chart-0.1.0
+  name: test-helloworld-chart
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/name: helloworld-chart
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: helloworld-chart
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: helloworld-chart-0.1.0
+  name: test-helloworld-chart
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: test
+      app.kubernetes.io/name: helloworld-chart
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/name: helloworld-chart
+    spec:
+      containers:
+      - image: nginx:1.16.0
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+        name: helloworld-chart
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+        resources: {}
+        securityContext: {}
+      securityContext: {}
+      serviceAccountName: test-helloworld-chart
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test-success
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: helloworld-chart
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: helloworld-chart-0.1.0
+  name: test-helloworld-chart-test-connection
+spec:
+  containers:
+  - args:
+    - test-helloworld-chart:80
+    command:
+    - wget
+    image: busybox
+    name: wget
+  restartPolicy: Never
+`, string(yml))
+
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnContainerMountsLoadRestrictions_absolute(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+  - |-
+    apiVersion: v1alpha1
+    kind: RenderHelmChart
+    metadata:
+      name: demo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+            mounts:
+            - type: "bind"
+              src: "/tmp/dir"
+              dst: "/tmp/charts"
+`)))
+	_, err = b.Run(
+		fSys,
+		tmpDir.String())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "loading generator plugins: plugin RenderHelmChart."+
+		"v1alpha1.[noGrp]/demo.[noNs] with mount path '/tmp/dir' is not permitted; mount paths must"+
+		" be relative to the current kustomization directory")
+}
+
+func TestFnContainerMountsLoadRestrictions_outsideCurrentDir(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+  - |-
+    apiVersion: v1alpha1
+    kind: RenderHelmChart
+    metadata:
+      name: demo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+            mounts:
+            - type: "bind"
+              src: "./tmp/../../dir"
+              dst: "/tmp/charts"
+`)))
+	_, err = b.Run(
+		fSys,
+		tmpDir.String())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "loading generator plugins: plugin RenderHelmChart."+
+		"v1alpha1.[noGrp]/demo.[noNs] with mount path './tmp/../../dir' is not permitted; mount paths must "+
+		"be under the current kustomization directory")
 }

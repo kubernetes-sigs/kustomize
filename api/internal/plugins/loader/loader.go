@@ -49,7 +49,9 @@ func (l *Loader) Config() *types.PluginConfig {
 
 // SetWorkDir sets the working directory for this loader's plugins
 func (l *Loader) SetWorkDir(wd string) {
-	l.pc.FnpLoadingOptions.WorkingDir = wd
+	if wd != string(filepath.Separator) {
+		l.pc.FnpLoadingOptions.WorkingDir = wd
+	}
 }
 
 func (l *Loader) LoadGenerators(
@@ -228,6 +230,17 @@ func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error) {
 	spec := fnplugin.GetFunctionSpec(res)
 	if spec != nil {
+		// validation check that function mounts are under the current kustomization directory
+		for _, mount := range spec.Container.StorageMounts {
+			if filepath.IsAbs(mount.Src) {
+				return nil, errors.New(fmt.Sprintf("plugin %s with mount path '%s' is not permitted; "+
+					"mount paths must be relative to the current kustomization directory", res.OrgId(), mount.Src))
+			}
+			if strings.HasPrefix(filepath.Clean(mount.Src), "../") {
+				return nil, errors.New(fmt.Sprintf("plugin %s with mount path '%s' is not permitted; "+
+					"mount paths must be under the current kustomization directory", res.OrgId(), mount.Src))
+			}
+		}
 		return fnplugin.NewFnPlugin(&l.pc.FnpLoadingOptions), nil
 	}
 	return l.loadExecOrGoPlugin(res.OrgId())
