@@ -605,8 +605,8 @@ kind: Deployment
 metadata:
   name: foo
   annotations:
-    a-bool-value: "true"
-    a-int-value: "2"
+    a-bool-value: true
+    a-int-value: 2
     a-string-value: a
 `,
 				}
@@ -640,8 +640,8 @@ kind: Deployment
 metadata:
   name: foo
   annotations:
-    a-bool-value: "true"
-    a-int-value: "2"
+    a-bool-value: true
+    a-int-value: 2
     a-string-value: a
 `,
 				}
