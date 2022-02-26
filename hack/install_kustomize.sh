@@ -25,6 +25,17 @@ unset CDPATH
 
 where=$PWD
 
+get_machine_arch () {
+  machine_arch=""
+  case $(uname -m) in
+    ppc64)   machine_arch="ppc64le" ;;
+    s390)    machine_arch="s390x" ;;
+    x86_64)  machine_arch="amd64" ;;
+    aarch64) machine_arch="arm64" ;;
+  esac
+  echo $machine_arch
+}
+
 release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 if [ -n "$1" ]; then
   if [[ "$1" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
@@ -98,8 +109,10 @@ opsys=windows
 arch=amd64
 if [[ "$OSTYPE" == linux* ]]; then
   opsys=linux
+  arch=$(get_machine_arch)
 elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
+  arch=$(get_machine_arch)
 fi
 
 releases=$(curl -s $release_url)
