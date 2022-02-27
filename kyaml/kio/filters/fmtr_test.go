@@ -673,7 +673,7 @@ apiVersion: example.com/v1beta1
 `
 
 	_, err := FormatInput(strings.NewReader(y))
-	assert.EqualError(t, err, "yaml: line 15: found character that cannot start any token")
+	assert.EqualError(t, err, "MalformedYAMLError: yaml: line 15: found character that cannot start any token")
 }
 
 // TestFormatFileOrDirectory_yamlExtFile verifies that FormatFileOrDirectory will format a file
