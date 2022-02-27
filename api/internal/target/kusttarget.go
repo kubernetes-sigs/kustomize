@@ -406,7 +406,7 @@ func (kt *KustTarget) accumulateResources(
 			if errors.Is(errF, load.ErrorHTTP) {
 				return nil, errF
 			}
-			if kusterr.IsMalformedYAMLError(errF) { // Some error occured while tyring to decode YAML file
+			if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
 				return nil, errF
 			}
 			ldr, err := kt.ldr.New(path)
