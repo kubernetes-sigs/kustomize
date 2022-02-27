@@ -157,8 +157,8 @@ is governed by the [Kubernetes Code of Conduct].
 [applied]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#apply
 [base]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#base
 [declarative configuration]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#declarative-application-management
-[imageBase]: docs/images/base.jpg
-[imageOverlay]: docs/images/overlay.jpg
+[imageBase]: images/base.jpg
+[imageOverlay]: images/overlay.jpg
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubectl book]: https://kubectl.docs.kubernetes.io/guides/introduction/kustomize/
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
