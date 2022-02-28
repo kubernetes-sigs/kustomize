@@ -95,12 +95,30 @@ trap cleanup EXIT ERR
 pushd "$tmpDir" >& /dev/null
 
 opsys=windows
-arch=amd64
 if [[ "$OSTYPE" == linux* ]]; then
   opsys=linux
 elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
+
+# Supported values of 'arch': amd64, arm64, ppc64le, s390x
+case $(uname -m) in
+x86_64)
+    arch=amd64
+    ;;
+arm64)
+    arch=arm64
+    ;;
+ppc64le)
+    arch=ppc64le
+    ;;
+s390x)
+    arch=s390x
+    ;;
+*)
+    arch=amd64
+    ;;
+esac
 
 releases=$(curl -s $release_url)
 
