@@ -55,7 +55,7 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		name += "@" + digest
 	}
 
-	return u.trackableSetter.SetScalar(name, yaml.NodeTagString)(rn)
+	return u.trackableSetter.SetScalar(name)(rn)
 }
 
 func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {

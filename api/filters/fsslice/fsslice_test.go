@@ -36,7 +36,7 @@ apiVersion: foo/v1
 kind: Bar
 `,
 		filter: Filter{
-			SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+			SetValue:   filtersutil.SetScalar("e"),
 			CreateKind: yaml.ScalarNode,
 		},
 	},
@@ -70,7 +70,7 @@ a:
   b: e
 `,
 		filter: Filter{
-			SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+			SetValue:   filtersutil.SetScalar("e"),
 			CreateKind: yaml.ScalarNode,
 		},
 	},

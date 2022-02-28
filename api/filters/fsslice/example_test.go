@@ -31,7 +31,7 @@ metadata:
 	}
 	fltr := fsslice.Filter{
 		CreateKind: yaml.ScalarNode,
-		SetValue:   filtersutil.SetScalar("green", yaml.NodeTagString),
+		SetValue:   filtersutil.SetScalar("green"),
 		FsSlice: []types.FieldSpec{
 			{Path: "a/b", CreateIfNotPresent: true},
 		},

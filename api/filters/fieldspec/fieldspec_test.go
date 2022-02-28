@@ -40,7 +40,7 @@ kind: Bar
 xxx:
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 		"empty path": {
@@ -61,7 +61,7 @@ xxx:
 `,
 			error: `considering field '' of object Bar.v1.foo/[noName].[noNs]: cannot set or create an empty field name`,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -84,7 +84,7 @@ a:
   b: e
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -107,7 +107,7 @@ a:
   b: c
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -130,7 +130,7 @@ a:
   b: c
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -154,7 +154,7 @@ a:
   b: c
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -178,7 +178,7 @@ a:
   b: c
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -198,7 +198,7 @@ a:
   b: c
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -214,7 +214,7 @@ a:
 `,
 			error: `considering field 'a/b/c' of object Bar.[noVer].[noGrp]/[noName].[noNs]: expected sequence or mapping node`,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -236,7 +236,7 @@ kind: Bar
 a: {b: {c: {d: e}}}
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("e"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -264,7 +264,7 @@ a:
       d: e
 `,
 			filter: fieldspec.Filter{
-				SetValue: filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue: filtersutil.SetScalar("e"),
 			},
 		},
 
@@ -287,7 +287,7 @@ kind: Bar
 a: {}
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("e"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -315,7 +315,7 @@ a:
   - c: {d: e}
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("e"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -336,7 +336,7 @@ apiVersion: v1
 kind: Bar
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("e"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -359,7 +359,7 @@ a:
   b: e
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("e", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("e"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -385,7 +385,7 @@ spec:
   - image: bar
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("bar", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("bar"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -411,7 +411,7 @@ spec:
   - image: bar
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("bar", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("bar"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -434,7 +434,7 @@ spec:
   containers: []
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("bar", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("bar"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -458,7 +458,7 @@ spec:
   containers:
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("bar", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("bar"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -483,7 +483,7 @@ a:
     d: bar
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("bar", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("bar"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -510,7 +510,7 @@ a:
       f: bar
 `,
 			filter: fieldspec.Filter{
-				SetValue:   filtersutil.SetScalar("bar", yaml.NodeTagString),
+				SetValue:   filtersutil.SetScalar("bar"),
 				CreateKind: yaml.ScalarNode,
 			},
 		},
@@ -616,7 +616,7 @@ kind: Pod
 			fieldPaths = append(fieldPaths, strings.Join(node.FieldPath(), "."))
 		})
 		filter := fieldspec.Filter{
-			SetValue: trackableSetter.SetScalar("foo", yaml.NodeTagString),
+			SetValue: trackableSetter.SetScalar("foo"),
 		}
 
 		t.Run(name, func(t *testing.T) {

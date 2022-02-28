@@ -46,5 +46,5 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 
 func (f Filter) evaluateField(node *yaml.RNode) error {
 	return f.trackableSetter.SetScalar(fmt.Sprintf(
-		"%s%s", node.YNode().Value, f.Suffix), yaml.NodeTagString)(node)
+		"%s%s", node.YNode().Value, f.Suffix))(node)
 }
