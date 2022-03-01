@@ -4,11 +4,11 @@ Presented at the [January 26, 2022, SIG-CLI meeting](https://youtu.be/l2plzJ9MRl
 
 kustomize maintainers: @knverey, @natasha41575
 
-[Objective: Improve contributor community](https://github.com/kubernetes-sigs/kustomize/blob/master/roadmap-2021.md#objective-improve-contributor-community)
+[Objective: Improve contributor community](#objective-improve-contributor-community)
 
-[Objective: Improve end-user experience](https://github.com/kubernetes-sigs/kustomize/blob/master/roadmap-2021.md#objective-improve-end-user-experience)
+[Objective: Improve end-user experience](#objective-improve-end-user-experience)
 
-[Objective: Improve extension experience](https://github.com/kubernetes-sigs/kustomize/blob/master/roadmap-2021.md#objective-improve-extension-experience)
+[Objective: Improve extension experience](#objective-improve-extension-experience)
 
 ## Objective: Improve contributor community
 
