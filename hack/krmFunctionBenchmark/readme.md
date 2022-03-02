@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
- - [kustomize v3.7.0 or higher](https://kubernetes-sigs.github.io/kustomize/installation) (support for KRM Config Functions).
+ - [kustomize v3.7.0 or higher](https://kubectl.docs.kubernetes.io/installation/kustomize/) (support for KRM Config Functions).
  - [docker](https://github.com/kubernetes-sigs/kustomize/pull/docker.com)
 
 ## How to run
