@@ -158,8 +158,8 @@ is governed by the [Kubernetes Code of Conduct].
 [applied]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#apply
 [base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
 [declarative configuration]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#declarative-application-management
-[imageBase]: docs/images/base.jpg
-[imageOverlay]: docs/images/overlay.jpg
+[imageBase]: images/base.jpg
+[imageOverlay]: images/overlay.jpg
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
 [kubernetes style]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kubernetes-style-object
