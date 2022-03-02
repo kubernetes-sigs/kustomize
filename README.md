@@ -11,8 +11,8 @@ and it's like [`sed`], in that it emits edited text.
 
 This tool is sponsored by [sig-cli] ([KEP]).
 
- - [Installation instructions](https://kubernetes-sigs.github.io/kustomize/installation)
- - [General documentation](https://kubernetes-sigs.github.io/kustomize)
+ - [Installation instructions](https://kubectl.docs.kubernetes.io/installation/kustomize/)
+ - [General documentation](https://kubectl.docs.kubernetes.io/references/kustomize/)
  - [Examples](examples)
 
 [![Build Status](https://prow.k8s.io/badge.svg?jobs=kustomize-presubmit-master)](https://prow.k8s.io/job-history/kubernetes-jenkins/pr-logs/directory/kustomize-presubmit-master)
@@ -34,13 +34,13 @@ will be reflected in the Kubernetes release notes.
 | v1.21 | v4.0.5 |
 | v1.22 | v4.2.0 |
 
-[v2.0.3]: /../../tree/v2.0.3
+[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [#2506]: https://github.com/kubernetes-sigs/kustomize/issues/2506
 [#1500]: https://github.com/kubernetes-sigs/kustomize/issues/1500
 [kust-in-kubectl update]: https://github.com/kubernetes/kubernetes/blob/4d75a6238a6e330337526e0513e67d02b1940b63/CHANGELOG/CHANGELOG-1.21.md#kustomize-updates-in-kubectl
 
 For examples and guides for using the kubectl integration please
-see the [kubectl book] or the [kubernetes documentation].
+see the [kubernetes documentation].
 
 ## Usage
 
@@ -141,8 +141,9 @@ The YAML can be directly [applied] to a cluster:
 
 ## Community
 
-- [file a bug](https://kubernetes-sigs.github.io/kustomize/contributing/bugs/) instructions
-- [contribute a feature](https://kubernetes-sigs.github.io/kustomize/contributing/features/) instructions
+- [file a bug](https://kubectl.docs.kubernetes.io/contributing/kustomize/bugs/)
+- [contribute a feature](https://kubectl.docs.kubernetes.io/contributing/kustomize/features/)
+- [propose a larger enhancement](https://github.com/kubernetes-sigs/kustomize/tree/master/proposals)
 
 ### Code of conduct
 
@@ -151,27 +152,22 @@ is governed by the [Kubernetes Code of Conduct].
 
 [`make`]: https://www.gnu.org/software/make
 [`sed`]: https://www.gnu.org/software/sed
-[DAM]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#declarative-application-management
+[DAM]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#declarative-application-management
 [KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-cli/2377-Kustomize/README.md
 [Kubernetes Code of Conduct]: code-of-conduct.md
-[applied]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#apply
-[base]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#base
-[declarative configuration]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#declarative-application-management
+[applied]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#apply
+[base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
+[declarative configuration]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#declarative-application-management
 [imageBase]: docs/images/base.jpg
 [imageOverlay]: docs/images/overlay.jpg
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
-[kubectl book]: https://kubectl.docs.kubernetes.io/guides/introduction/kustomize/
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
-[kubernetes style]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#kubernetes-style-object
-[kustomization]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#kustomization
-[overlay]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#overlay
-[overlays]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#overlay
+[kubernetes style]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kubernetes-style-object
+[kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization
+[overlay]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
+[overlays]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
 [release page]: https://github.com/kubernetes-sigs/kustomize/releases
-[resource]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#resource
-[resources]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#resource
+[resource]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#resource
+[resources]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#resource
 [sig-cli]: https://github.com/kubernetes/community/blob/master/sig-cli/README.md
-[variant]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#variant
-[variants]: https://kubernetes-sigs.github.io/kustomize/api-reference/glossary#variant
-[v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
-[v2.1.0]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.1.0
-[workflows]: https://kubernetes-sigs.github.io/kustomize/guides
+[variants]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
