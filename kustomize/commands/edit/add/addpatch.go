@@ -31,8 +31,6 @@ Each item may:
  - be either a strategic merge patch, or a JSON patch
  - be either a file, or an inline string
  - target a single resource or multiple resources
-
-For more information please see https://kubernetes-sigs.github.io/kustomize/api-reference/kustomization/patches/
 `,
 		Example: `
 		add patch --path {filepath} --group {target group name} --version {target version}`,
