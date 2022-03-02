@@ -8,7 +8,7 @@ assignees: ""
 ---
 
 <!--
-Please read this page: https://kubernetes-sigs.github.io/kustomize/contributing/bugs/ before
+Please read this page: https://kubectl.docs.kubernetes.io/contributing/kustomize/bugs/ before
 filing a bug
 -->
 
