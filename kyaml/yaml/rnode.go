@@ -565,10 +565,6 @@ func (rn *RNode) SetMapField(value *RNode, path ...string) error {
 	)
 }
 
-func (rn *RNode) AssocMapEntry(key, value *RNode) error {
-	return rn.PipeE(MapEntrySetter{Key: key, Value: value})
-}
-
 func (rn *RNode) GetDataMap() map[string]string {
 	n, err := rn.Pipe(Lookup(DataField))
 	if err != nil {
@@ -1046,7 +1042,7 @@ func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
 	for i := len(toMerge) - 1; i >= 0; i-- {
 		rnToMerge := NewRNode(toMerge[i]).Copy()
 		rnToMerge.VisitFields(func(node *MapNode) error {
-			rn.AssocMapEntry(node.Key, node.Value)
+			rn.PipeE(MapEntrySetter{Key: node.Key, Value: node.Value})
 			return nil
 		})
 	}
