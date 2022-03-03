@@ -984,7 +984,7 @@ func findMergeValues(yn *yaml.Node) ([]*yaml.Node, error) {
 			if err != nil {
 				return nil, err
 			}
-			mergeValues = append(mergeValues, newMergeValues...)
+			mergeValues = append(newMergeValues, mergeValues...)
 		}
 		return mergeValues, nil
 	default:
@@ -1038,8 +1038,8 @@ func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
 	// We only need to start with a copy of the existing node because we need to
 	// maintain duplicated keys and style
 	rn := NewRNode(yn).Copy()
-	toMerge = append([]*yaml.Node{yn}, toMerge...)
-	for i := len(toMerge) - 1; i >= 0; i-- {
+	toMerge = append(toMerge, yn)
+	for i := range toMerge {
 		rnToMerge := NewRNode(toMerge[i]).Copy()
 		rnToMerge.VisitFields(func(node *MapNode) error {
 			rn.PipeE(MapEntrySetter{Key: node.Key, Value: node.Value})
