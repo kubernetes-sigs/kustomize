@@ -726,6 +726,7 @@ func TestDeAnchorMerge(t *testing.T) {
 		description string
 		input       string
 		expected    string
+		expectedErr error
 	}{
 		// *********
 		// Test Case
@@ -939,7 +940,7 @@ data:
 		// Test Case
 		// *********
 		{
-			description: "merging multiple anchors with duplicate merge key",
+			description: "returns error when defining multiple merge keys",
 			input: `
 apiVersion: v1
 kind: MergeTagTest
@@ -957,24 +958,7 @@ data:
     <<: *primary
     secondary: true
 `,
-			expected: `
-apiVersion: v1
-kind: MergeTagTest
-metadata:
-  name: test
-data:
-  color:
-    rgb: "#FF0000"
-    pretty: false
-  primaryColor:
-    rgb: "#0000FF"
-    alpha: 50
-  secondaryColor:
-    secondary: true
-    rgb: "#0000FF"
-    pretty: false
-    alpha: 50
-`,
+			expectedErr: fmt.Errorf("duplicate merge key"),
 		},
 		// *********
 		// Test Case
@@ -1011,9 +995,9 @@ data:
     alpha: 50
   secondaryColor:
     secondary: true
-    rgb: "#0000FF"
-    pretty: false
+    rgb: "#FF0000"
     alpha: 50
+    pretty: false
 `,
 		},
 		// *********
@@ -1081,8 +1065,8 @@ data:
   primaryColor:
     rgb: "#0000FF"
     alpha: 50
-    pretty: false
     "name": "ugly blue"
+    pretty: false
 `,
 		},
 		// *********
@@ -1132,10 +1116,16 @@ items:
 			rn, err := Parse(tc.input)
 
 			assert.NoError(t, err)
-			assert.NoError(t, rn.DeAnchor())
-			actual, err := rn.String()
-			assert.NoError(t, err)
-			assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual))
+			err = rn.DeAnchor()
+			if tc.expectedErr == nil {
+				assert.NoError(t, err)
+				actual, err := rn.String()
+				assert.NoError(t, err)
+				assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual))
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tc.expectedErr.Error(), err.Error())
+			}
 
 		})
 	}

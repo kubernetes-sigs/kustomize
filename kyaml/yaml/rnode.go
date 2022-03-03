@@ -967,6 +967,9 @@ func isMerge(yn *yaml.Node) bool {
 // findMergeValues receives either a MappingNode, a AliasNode or a potentially
 // mixed list of MappingNodes and AliasNodes. It returns a list of MappingNodes.
 func findMergeValues(yn *yaml.Node) ([]*yaml.Node, error) {
+	if yn == nil {
+		return []*yaml.Node{}, nil
+	}
 	switch yn.Kind {
 	case MappingNode:
 		return []*yaml.Node{yn}, nil
@@ -993,6 +996,24 @@ func findMergeValues(yn *yaml.Node) ([]*yaml.Node, error) {
 	}
 }
 
+// getMergeTagValue receives a MappingNode yaml node, and it searches for
+// merge tagged keys and return its value yaml node. If the key is duplicated,
+// it fails.
+func getMergeTagValue(yn *yaml.Node) (*yaml.Node, error) {
+	var result *yaml.Node
+	for i := 0; i < len(yn.Content); i += 2 {
+		key := yn.Content[i]
+		value := yn.Content[i+1]
+		if isMerge(key) {
+			if result != nil {
+				return nil, fmt.Errorf("duplicate merge key")
+			}
+			result = value
+		}
+	}
+	return result, nil
+}
+
 // removeMergeTags removes all merge tags and returns a ordered list of yaml
 // nodes to merge and a error
 func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
@@ -1002,22 +1023,18 @@ func removeMergeTags(yn *yaml.Node) ([]*yaml.Node, error) {
 	if yn.Kind != yaml.MappingNode {
 		return nil, nil
 	}
-	newContent := make([]*yaml.Node, 0)
-	toMerge := make([]*yaml.Node, 0)
-	for i := 0; i < len(yn.Content); i += 2 {
-		key := yn.Content[i]
-		value := yn.Content[i+1]
-		if isMerge(key) {
-			mergeValues, err := findMergeValues(value)
-			if err != nil {
-				return nil, err
-			}
-			toMerge = append(toMerge, mergeValues...)
-		} else {
-			newContent = append(newContent, key, value)
-		}
+	value, err := getMergeTagValue(yn)
+	if err != nil {
+		return nil, err
 	}
-	yn.Content = newContent
+	toMerge, err := findMergeValues(value)
+	if err != nil {
+		return nil, err
+	}
+	err = NewRNode(yn).PipeE(Clear("<<"))
+	if err != nil {
+		return nil, err
+	}
 	return toMerge, nil
 }
 
@@ -1025,8 +1042,8 @@ func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
 	// We only need to start with a copy of the existing node because we need to
 	// maintain duplicated keys and style
 	rn := NewRNode(yn).Copy()
-	toMerge = append(toMerge, yn)
-	for i := range toMerge {
+	toMerge = append([]*yaml.Node{yn}, toMerge...)
+	for i := len(toMerge) - 1; i >= 0; i-- {
 		rnToMerge := NewRNode(toMerge[i]).Copy()
 		rnToMerge.VisitFields(func(node *MapNode) error {
 			rn.AssocMapEntry(node.Key, node.Value)
