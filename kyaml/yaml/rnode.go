@@ -35,12 +35,6 @@ func IsEmptyMap(node *RNode) bool {
 	return IsMissingOrNull(node) || IsYNodeEmptyMap(node.YNode())
 }
 
-// IsStringValue is true if the RNode is not nil and is scalar string node
-// TODO: make this a method on RNode.
-func IsStringValue(node *RNode) bool {
-	return !node.IsNil() && IsYNodeString(node.YNode())
-}
-
 // GetValue returns underlying yaml.Node Value field
 func GetValue(node *RNode) string {
 	if IsMissingOrNull(node) {
@@ -252,6 +246,11 @@ func (rn *RNode) IsNilOrEmpty() bool {
 		IsYNodeEmptyMap(rn.YNode()) ||
 		IsYNodeEmptySeq(rn.YNode()) ||
 		IsYNodeZero(rn.YNode())
+}
+
+// IsStringValue is true if the RNode is not nil and is scalar string node
+func (rn *RNode) IsStringValue() bool {
+	return !rn.IsNil() && IsYNodeString(rn.YNode())
 }
 
 // GetMeta returns the ResourceMeta for an RNode
