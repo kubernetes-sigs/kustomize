@@ -1,11 +1,7 @@
-// Copyright 2021 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
-
 package utils
 
 import "strings"
 
-// TODO: Move these to kyaml
 
 // PathSplitter splits a delimited string, permitting escaped delimiters.
 func PathSplitter(path string, delimiter string) []string {
