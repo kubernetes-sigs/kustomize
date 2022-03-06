@@ -1,0 +1,3 @@
+[build]
+[build.environment]
+HUGO_VERSION = "0.88.1"

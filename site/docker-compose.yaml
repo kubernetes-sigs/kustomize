@@ -1,0 +1,13 @@
+version: "3.3"
+
+services:
+
+  site:
+    image: kustomize/kustomize-website:alpha
+    build:
+      context: .
+    command: server
+    ports:
+      - "1313:1313"
+    volumes:
+      - .:/src
