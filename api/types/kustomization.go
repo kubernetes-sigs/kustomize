@@ -61,7 +61,7 @@ type Kustomization struct {
 
 	// PatchesStrategicMerge specifies the relative path to a file
 	// containing a strategic merge patch.  Format documented at
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/strategic-merge-patch.md
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
 	// URLs and globs are not supported.
 	PatchesStrategicMerge []PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
