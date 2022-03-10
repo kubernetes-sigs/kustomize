@@ -21,3 +21,9 @@
 *.DS_store
 
 .bin
+
+# Hugo site
+site/public/
+site/resources/
+site/.hugo_build.lock
+**/node_modules/
