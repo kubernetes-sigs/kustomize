@@ -115,7 +115,7 @@ spec:
 
 ### What are Bases and Overlays?
 
-Let's think of a scenario where we need to deploy the nginx manifests from the previous section to 2 environments called `Staging` and `Production`, however although most of the manifest is the same for both environments we need to apply some environment specific changes.  Traditionally we could duplicate the manifests and apply the changes manually or rely on some templating engine. With kustomize we can avoid templating and duplication of our manifests and apply the different changes we need using overlays.  With this approach, the `base` would contain the common part of the our manifests and the `overlays` contain our environment specific changes.
+Let's think of a scenario where we need to deploy the nginx manifests from the previous section to two environments called `Staging` and `Production`. The manifests for these two environments will be mostly identical, with only a few minor changes between them. Traditionally to achieve these changes, we could duplicate the manifests and apply the changes manually or rely on some templating engine. With kustomize we can avoid templating and duplication of our manifests and apply the different changes we need using overlays. With this approach, the `base` would contain the common part of the our manifests and the `overlays` contain our environment specific changes.
 
 To continue with this tutorial, create the `kustomization.yaml` files for our two overlays:
 
