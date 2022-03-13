@@ -73,7 +73,7 @@ EOF
 
 In this `kustomization.yaml` file, all that we are doing is telling kustomize to include the `deployment.yaml` and `service.yaml` as resources for it to use. So if we now run `kustomize build base/` from our current working directory, all kustomize will do at this point is to generate a manifest which contains the contents of our `deployment.yaml` and `service.yaml` files with no additional changes.
 
-```
+```yaml
 $ kustomize build base/
 
 apiVersion: v1
@@ -166,7 +166,7 @@ For the purposes our example, let's define some requirements of how our deployme
 We can achieve the names required by making use of `namePrefix` and `nameSuffix` as follows:
 
 
-_Production overlay kustomization.yaml_:
+_kustomize-example/overlays/production/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -178,7 +178,7 @@ resources:
 - ../../base
 ```
 
-_Staging overlay kustomization.yaml_:
+_kustomize-example/overlays/staging/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -193,6 +193,8 @@ resources:
 The build output for our Production overlay would now be:
 
 ```yaml
+$ kustomize build overlays/production/
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -236,7 +238,7 @@ It is important to note here that the name for _both_ the `deployment` and the `
 Moving on to our next requirements, we can set the namespace and the number of replicas we want by using `namespace` and `replicas` respectively:
 
 
-_Production overlay kustomization.yaml_:
+_kustomize-example/overlays/production/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -254,7 +256,7 @@ resources:
 - ../../base
 ```
 
-_Staging overlay kustomization.yaml_:
+_kustomize-example/overlays/staging/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -275,7 +277,10 @@ resources:
 Looking at the output of `kustomize build` we can see that we have met all the requirements we set out to meet:
 
 _Production overlay build_:
+
 ```yaml
+$ kustomize build overlays/production/
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -316,7 +321,10 @@ spec:
 ```
 
 _Staging overlay build_:
+
 ```yaml
+$ kustomize build overlays/staging/
+
 apiVersion: v1
 kind: Service
 metadata:
