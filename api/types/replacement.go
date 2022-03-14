@@ -77,6 +77,9 @@ type FieldOptions struct {
 
 	// If field missing, add it.
 	Create bool `json:"create,omitempty" yaml:"create,omitempty"`
+
+	Format     string `json:"format,omitempty" yaml:"format,omitempty"`
+	FormatPath string `json:"formatPath,omitempty" yaml:"formatPath,omitempty"`
 }
 
 func (fo *FieldOptions) String() string {

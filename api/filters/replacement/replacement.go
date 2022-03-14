@@ -156,7 +156,29 @@ func applyToOneNode(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNod
 
 func setTargetValue(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNode) error {
 	value = value.Copy()
-	if options != nil && options.Delimiter != "" {
+
+	// options is not
+	if options == nil {
+		t.SetYNode(value.YNode())
+		return nil
+	}
+
+	if options.Format != "" && options.Format == "json" {
+
+		if options.FormatPath == "" {
+			return fmt.Errorf("formatPath is empty, %s replacements Format option is require formatPath", options.Format)
+		}
+
+		replacementValue := value.YNode().Value
+
+		modified, err := getJsonReplacementValue(options, t.YNode().Value, replacementValue)
+		if err != nil {
+			return err
+		}
+
+		value.YNode().Value = modified
+	}
+	if options.Delimiter != "" {
 		if t.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
 		}
@@ -202,18 +224,36 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 }
 
 func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, error) {
-	if options == nil || options.Delimiter == "" {
+	if options == nil {
 		return rn, nil
 	}
+
+	var value string
+
 	if rn.YNode().Kind != yaml.ScalarNode {
-		return nil, fmt.Errorf("delimiter option can only be used with scalar nodes")
+		return nil, fmt.Errorf("replacements option can only be used with scalar nodes")
 	}
-	value := strings.Split(yaml.GetValue(rn), options.Delimiter)
-	if options.Index >= len(value) || options.Index < 0 {
-		return nil, fmt.Errorf("options.index %d is out of bounds for value %s", options.Index, yaml.GetValue(rn))
+
+	if options.Format == "" && options.Delimiter != "" {
+		options.Format = "delimiter"
 	}
+
+	var err error
+	switch options.Format {
+	case "delimiter":
+		value, err = getValueWithDelimiter(options, yaml.GetValue(rn))
+	case "json":
+		value, err = getJsonPathValue(options, yaml.GetValue(rn))
+	default:
+		return rn, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	n := rn.Copy()
-	n.YNode().Value = value[options.Index]
+	n.YNode().Value = value
+
 	return n, nil
 }
 

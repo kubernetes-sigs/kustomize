@@ -1293,7 +1293,7 @@ spec:
     fieldPaths:
     - spec.template.spec.containers
 `,
-			expectedErr: "delimiter option can only be used with scalar nodes",
+			expectedErr: "replacements option can only be used with scalar nodes",
 		},
 		"complex type with delimiter in target": {
 			input: `apiVersion: v1
@@ -2011,6 +2011,121 @@ spec:
         name: nginx-tagged
       - image: postgres:1.8.0
         name: postgresdb
+`,
+		},
+		"simple-replacements-in-json": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+        env: |-
+          {"config": {
+            "id": "42",
+            "value": "REPLACE_TARGET"
+          }}
+
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy
+    fieldPath: spec.template.spec.containers.0.name
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.containers.1.env
+    options:
+      format: 'json'
+      formatPath: '/config/value'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+        env: '{"config":{"id":"42","value":"nginx-tagged"}}'
+`,
+		},
+		"simple-replacements-in-json-in-configmap": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-configmap
+data:
+  HOSTNAME: www.example.com
+  PORT: '8080'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {"config": {
+      "id": "42",
+      "hostname": "REPLACE_TARGET_HOSTNAME",
+      "port": "REPLACE_TARGET_PORT"
+    }}
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-configmap
+    fieldPath: data.HOSTNAME
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-configmap
+    fieldPaths:
+    - data.config\.json
+    options:
+      format: 'json'
+      formatPath: '/config/hostname'
+- source:
+    kind: ConfigMap
+    name: source-configmap
+    fieldPath: data.PORT
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-configmap
+    fieldPaths:
+    - data.config\.json
+    options:
+      format: 'json'
+      formatPath: '/config/port'
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-configmap
+data:
+  HOSTNAME: www.example.com
+  PORT: '8080'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: '{"config":{"hostname":"www.example.com","id":"42","port":"8080"}}'
 `,
 		},
 	}
