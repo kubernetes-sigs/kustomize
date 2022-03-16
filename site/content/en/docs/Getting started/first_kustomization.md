@@ -137,7 +137,7 @@ resources:
 EOF
 ```
 
-The `kustomization.yaml` files in the overlays are just including the `base` folder, so if you were to run `kustomize build` on the overlay folders at this point you would get the same output we got when we built `base`. The directory structure you created so far should look like this:
+The kustomization files for the overlays include just `base` folder, so if you were to run `kustomize build` on the overlay folders at this point you would get the same output we got when we built `base`. The directory structure you created so far should look like this:
 
 ```
 kustomize-example
