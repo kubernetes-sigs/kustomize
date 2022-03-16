@@ -7,7 +7,7 @@ description: >
   A step by step tutorial for absolute kustomize beginners
 ---
 
-This page is intended to help you get started with using this amazing tool called kustomize! We will start off with creating a simple nginx deployment manifest and then use it as an example to explore kustomize basics.
+This page will help you get started with this amazing tool called kustomize! We will start off with a simple nginx deployment manifest and then use it to explore kustomize basics.
 
 ### Create initial manifests and directory structure
 
