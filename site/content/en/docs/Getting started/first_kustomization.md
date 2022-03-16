@@ -71,7 +71,7 @@ resources:
 EOF
 ```
 
-In this `kustomization.yaml` file, all that we are doing is telling kustomize to include the `deployment.yaml` and `service.yaml` as resources for it to use. So if we now run `kustomize build base/` from our current working directory, all kustomize will do at this point is to generate a manifest which contains the contents of our `deployment.yaml` and `service.yaml` files with no additional changes.
+In this kustomization file, we are telling kustomize to include the `deployment.yaml` and `service.yaml` as its resources. If we now run `kustomize build base` from our current working directory, kustomize will generate a manifest containing the contents of our `deployment.yaml` and `service.yaml` files with no additional changes.
 
 ```yaml
 $ kustomize build base/
