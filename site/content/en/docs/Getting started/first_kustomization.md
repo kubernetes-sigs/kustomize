@@ -11,7 +11,7 @@ This page will help you get started with this amazing tool called kustomize! We 
 
 ### Create initial manifests and directory structure
 
-Let's start off by creating our nginx deployment and service manifests in a dedicated folder structure
+Let's start off by creating our nginx deployment and service manifests in a dedicated folder structure.
 
 ```bash
 mkdir -p kustomize-example/base kustomize-example/overlays/staging kustomize-example/overlays/production
