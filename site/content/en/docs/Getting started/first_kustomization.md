@@ -58,7 +58,7 @@ spec:
 EOF
 ```
 
-Now that we have our `deployment.yaml` and `service.yaml` files created, let's create our `kustomization.yaml`:
+Now that we have our `deployment.yaml` and `service.yaml` files created, let's create our Kustomization. [Insert brief explanation of what a Kustomization is], and is defined in a file named `kustomization.yaml`:
 
 ```bash
 cat <<'EOF' >base/kustomization.yaml
