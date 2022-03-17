@@ -58,7 +58,7 @@ spec:
 EOF
 ```
 
-Now that we have our `deployment.yaml` and `service.yaml` files created, let's create our Kustomization. [Insert brief explanation of what a Kustomization is], and is defined in a file named `kustomization.yaml`:
+Now that we have our `deployment.yaml` and `service.yaml` files created, let's create our Kustomization. We can think of Kustomization as the set of instructions that tell kustomize what it needs to do, and is defined in a file named `kustomization.yaml`:
 
 ```bash
 cat <<'EOF' >base/kustomization.yaml
@@ -113,13 +113,80 @@ spec:
         - containerPort: 80
 ```
 
+### How can kustomize help me customise my deployments?
+
+So far we have not used kustomize to do any modifications, so let's see how we can do that. Kustomize comes with a considerable number of transformers that apply changes to our manifests, and in this section we will have a look at the `namePrefix` transformer.  This transformer will add a prefix to the deployment and service names.  Modify the `kustomization.yaml` file as follows:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: example-  ### add this line
+
+resources:
+- deployment.yaml
+- service.yaml
+```
+
+Re-building `base` we see can see our modified manifest which now has the prefixed deployment and service names:
+
+```yaml
+$ kustomize build base
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: example-nginx    ### service name changed here
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: example-nginx    ### deployment name changed here
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+```
+
 ### What are Bases and Overlays?
 
 Now let's assume we need to deploy the nginx manifests from the previous section to two environments called `Staging` and `Production`. The manifests for these two environments will be mostly identical, with only a few minor changes between them. We call these two mostly identical manifests "variants". Traditionally to create variants, we could duplicate the manifests and apply the changes manually or rely on some templating engine. With kustomize, we can avoid templating and duplication of our manifests and apply the different changes we need using overlays. With this approach, the `base` would contain the common part of the our variants and the `overlays` contain our environment specific changes.
 
-Create the `kustomization.yaml` files for our two overlays:
+Create the `kustomization.yaml` files for our two overlays and undo the name prefix change from the previous section:
 
 ```bash
+
+cat <<'EOF' >base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+- service.yaml
+EOF
+
 cat <<'EOF' >overlays/staging/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -137,7 +204,9 @@ resources:
 EOF
 ```
 
-The kustomization files for the overlays include just `base` folder, so if you were to run `kustomize build` on the overlay folders at this point you would get the same output we got when we built `base`. The directory structure you created so far should look like this:
+The kustomization files for the overlays include just `base` folder, so if you were to run `kustomize build` on the overlay folders at this point you would get the same output we got when we built `base`.  It is important to note that bases can be included in the `resources` field in the same way that we included our other deployment and service resource files.
+
+The directory structure you created so far should look like this:
 
 ```
 kustomize-example
