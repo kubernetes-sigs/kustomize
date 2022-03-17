@@ -112,13 +112,13 @@ EOF
 Define corresponding instances of `IAMPolicyMember`.
 
 The values in the `resourceRef/external` fields in these instances
-are only partially complete.  kustomize will add projectIds to
+are only partially complete. kustomize will add projectIds to
 these below.
 
 The boilerplate in these instances could be eliminated
-by making a _custom generator_, but that's for
+by making a _custom generator_, but that's for a
 different tutorial, and with only three instances here
-it's not worth it the effort.
+it's not worth the effort.
 
 <!-- @policyMembers @testAgainstLatestRelease -->
 ```
@@ -174,11 +174,11 @@ EOF
 
 Make a transformer configuration file.
 
-The transformer used is called `AddValueTransformer`.  It's
+The transformer used is called `ValueAddTransformer`. It's
 intended to implement the 'add' operation of
-[IETF RFC 6902 JSON].   The add operation is simple declaration
+[IETF RFC 6902 JSON]. The add operation is simple declaration
 of what value to add, and a powerful syntax for specifying where
-to add the value.  The value can, for example, be inserted
+to add the value. The value can, for example, be inserted
 into an existing field holding a file path as either a prefix,
 a postfix, or some change
 in the middle (e.g. `/volume/data` becomes `/volume/projectId/data`).
@@ -187,7 +187,7 @@ in the middle (e.g. `/volume/data` becomes `/volume/projectId/data`).
 
 
 At the time of writing, this transformer has no dedicated keyword
-in the kustomization file to hold it's config.  This means
+in the kustomization file to hold its config.  This means
 the config must live in its own file:
 
 <!-- @defineSetProjectTransformer @testAgainstLatestRelease -->
@@ -212,8 +212,8 @@ targets:
 EOF
 ```
 
-This file defined both the value to insert, and a list of places to
-insert it.  It's saying 1) _take the name of the directory I am in_ and
+This file defined both the value to insert and a list of places to
+insert it. It's saying 1) _take the name of the directory I am in_ and
 2) use the name as a namespace on all objects in scope, and 3) add that
 name to the 2nd position in the file path found in the `spec/resourceRef/external`
 field of all `IAMPolicyMember` instances.
@@ -223,11 +223,11 @@ To be used, this transformer config file must be referenced
 from some kustomization file's `transformers:` field.
 
 This field can contain a path directly to the transformer config file,
-or a path to an encapsulating kustomization root.  The latter approach
+or a path to an encapsulating kustomization root. The latter approach
 allows any number of transformers to be loaded as a group from a local
 or remote location.
 
-Here an example of the latter case that uses a kustomization file to
+Here's an example of the latter case that uses a kustomization file to
 list pointers to transformer configs, although in this case it
 references only one transformer config.
 
