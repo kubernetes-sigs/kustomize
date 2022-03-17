@@ -117,7 +117,7 @@ spec:
 
 Now let's assume we need to deploy the nginx manifests from the previous section to two environments called `Staging` and `Production`. The manifests for these two environments will be mostly identical, with only a few minor changes between them. We call these two mostly identical manifests "variants". Traditionally to create variants, we could duplicate the manifests and apply the changes manually or rely on some templating engine. With kustomize, we can avoid templating and duplication of our manifests and apply the different changes we need using overlays. With this approach, the `base` would contain the common part of the our variants and the `overlays` contain our environment specific changes.
 
-To continue with this tutorial, create the `kustomization.yaml` files for our two overlays:
+Create the `kustomization.yaml` files for our two overlays:
 
 ```bash
 cat <<'EOF' >overlays/staging/kustomization.yaml
