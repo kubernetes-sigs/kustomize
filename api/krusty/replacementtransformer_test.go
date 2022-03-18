@@ -110,6 +110,67 @@ spec:
 	th.AssertActualEqualsExpected(m, expected)
 }
 
+func TestReplacementsFieldWithPathMultiple(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK(".", `
+resources:
+- resource.yaml
+
+replacements:
+- path: replacement.yaml
+`)
+	th.WriteF("replacement.yaml", `
+- source: 
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths: 
+    - spec.template.spec.containers.1.image
+- source: 
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths: 
+    - spec.template.spec.containers.1.name
+`)
+	th.WriteF("resource.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: foobar:1
+        name: replaced-with-digest
+      - image: postgres:1.8.0
+        name: postgresdb
+`)
+	expected := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: foobar:1
+        name: replaced-with-digest
+      - image: foobar:1
+        name: replaced-with-digest
+`
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
+}
+
 func TestReplacementTransformerWithDiamondShape(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()
