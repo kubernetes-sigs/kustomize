@@ -79,6 +79,175 @@ spec:
         name: init-alpine
 `)
 }
+
+func TestImageTagTransformerFieldSpecStrategyReplace(t *testing.T) {
+	t.SkipNow()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ImageTagTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: nginx
+  newTag: v2
+fieldSpecs:
+- path: spec/template/spec/ephemeralContainers[]/image
+fieldSpecStrategy: replace
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+      ephemeralContainers:
+      - image: nginx:1.7.9
+        name: nginx
+      initContainers:
+      - image: nginx:1.7.9
+        name: nginx
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+      ephemeralContainers:
+      - image: nginx:v2
+        name: nginx
+      initContainers:
+      - image: nginx:1.7.9
+        name: nginx
+`)
+}
+
+func TestImageTagTransformerFieldSpecStrategyMergeDefaults(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ImageTagTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: nginx
+  newTag: v2
+fieldSpecStrategy: merge
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+      ephemeralContainers:
+      - image: nginx:1.7.9
+        name: nginx
+      initContainers:
+      - image: nginx:1.7.9
+        name: nginx
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:v2
+        name: nginx
+      ephemeralContainers:
+      - image: nginx:1.7.9
+        name: nginx
+      initContainers:
+      - image: nginx:v2
+        name: nginx
+`)
+}
+func TestImageTagTransformerFieldSpecStrategyMergeOverrides(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ImageTagTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: nginx
+  newTag: v2
+fieldSpecs:
+- path: spec/template/spec/ephemeralContainers[]/image
+fieldSpecStrategy: merge
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+      ephemeralContainers:
+      - image: nginx:1.7.9
+        name: nginx
+      initContainers:
+      - image: nginx:1.7.9
+        name: nginx
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:v2
+        name: nginx
+      ephemeralContainers:
+      - image: nginx:v2
+        name: nginx
+      initContainers:
+      - image: nginx:v2
+        name: nginx
+`)
+}
 func TestImageTagTransformerNewImage(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("ImageTagTransformer")

@@ -119,3 +119,176 @@ spec:
         name: nginx
 `)
 }
+
+func TestLabelTransformerFieldSpecStrategyReplace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("LabelTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: notImportantHere
+labels:
+  app: bar
+fieldSpecs:
+- path: spec/template/metadata/labels
+  create: true
+  kind: Deployment
+fieldSpecStrategy: replace
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mungebot
+  labels:
+    app: foo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: foo
+  name: mungebot
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bar
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
+
+func TestLabelTransformerFieldSpecStrategyMergeDefaults(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("LabelTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: notImportantHere
+labels:
+  app: bar
+fieldSpecStrategy: merge
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mungebot
+  labels:
+    app: foo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bar
+  name: mungebot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bar
+  template:
+    metadata:
+      labels:
+        app: bar
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}
+
+func TestLabelTransformerFieldSpecStrategyMergeOverrides(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("LabelTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: notImportantHere
+labels:
+  app: bar
+fieldSpecs:
+- path: spec/invalid/schema
+  create: true
+  kind: Deployment
+fieldSpecStrategy: merge
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mungebot
+  labels:
+    app: foo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bar
+  name: mungebot
+spec:
+  invalid:
+    schema:
+      app: bar
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bar
+  template:
+    metadata:
+      labels:
+        app: bar
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`)
+}

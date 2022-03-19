@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/replicacount"
+	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -17,8 +18,9 @@ import (
 // Find matching replicas declarations and replace the count.
 // Eases the kustomization configuration of replica changes.
 type plugin struct {
-	Replica    types.Replica     `json:"replica,omitempty" yaml:"replica,omitempty"`
-	FieldSpecs []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Replica           types.Replica     `json:"replica,omitempty" yaml:"replica,omitempty"`
+	FieldSpecs        []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	FieldSpecStrategy string            `json:"fieldSpecStrategy,omitempty" yaml:"fieldSpecStrategy,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -26,9 +28,28 @@ var KustomizePlugin plugin
 
 func (p *plugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
-	p.Replica = types.Replica{}
-	p.FieldSpecs = nil
-	return yaml.Unmarshal(c, p)
+	kp := p
+	kp.Replica = types.Replica{}
+	kp.FieldSpecs = nil
+	if err = yaml.Unmarshal(c, kp); err != nil {
+		return err
+	}
+	p = kp
+	switch kp.FieldSpecStrategy {
+	case types.FieldSpecStrategy[types.Merge]:
+		fsSliceAsMap, err := builtinpluginconsts.GetFsSliceAsMap()
+		if err != nil {
+			return err
+		}
+		kp.FieldSpecs, err = types.FsSlice(kp.FieldSpecs).MergeAll(fsSliceAsMap["replicas"])
+		if err != nil {
+			return err
+		}
+		p.FieldSpecs = kp.FieldSpecs
+	case types.FieldSpecStrategy[types.Replace]:
+		p.FieldSpecs = kp.FieldSpecs
+	}
+	return nil
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {

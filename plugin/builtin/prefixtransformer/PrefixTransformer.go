@@ -5,9 +5,8 @@
 package main
 
 import (
-	"errors"
-
 	"sigs.k8s.io/kustomize/api/filters/prefix"
+	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -16,8 +15,9 @@ import (
 
 // Add the given prefix to the field
 type plugin struct {
-	Prefix     string        `json:"prefix,omitempty" yaml:"prefix,omitempty"`
-	FieldSpecs types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Prefix            string        `json:"prefix,omitempty" yaml:"prefix,omitempty"`
+	FieldSpecs        types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	FieldSpecStrategy string        `json:"fieldSpecStrategy,omitempty" yaml:"fieldSpecStrategy,omitempty"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -32,16 +32,28 @@ var prefixFieldSpecsToSkip = types.FsSlice{
 
 func (p *plugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
-	p.Prefix = ""
-	p.FieldSpecs = nil
-	err = yaml.Unmarshal(c, p)
-	if err != nil {
-		return
+	kp := p
+	kp.Prefix = ""
+	kp.FieldSpecs = nil
+	if err = yaml.Unmarshal(c, kp); err != nil {
+		return err
 	}
-	if p.FieldSpecs == nil {
-		return errors.New("fieldSpecs is not expected to be nil")
+	p = kp
+	switch kp.FieldSpecStrategy {
+	case types.FieldSpecStrategy[types.Merge]:
+		fsSliceAsMap, err := builtinpluginconsts.GetFsSliceAsMap()
+		if err != nil {
+			return err
+		}
+		kp.FieldSpecs, err = types.FsSlice(kp.FieldSpecs).MergeAll(fsSliceAsMap["nameprefix"])
+		if err != nil {
+			return err
+		}
+		p.FieldSpecs = kp.FieldSpecs
+	case types.FieldSpecStrategy[types.Replace]:
+		p.FieldSpecs = kp.FieldSpecs
 	}
-	return
+	return nil
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {

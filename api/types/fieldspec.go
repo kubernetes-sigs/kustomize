@@ -44,6 +44,21 @@ func (fs FieldSpec) effectivelyEquals(other FieldSpec) bool {
 
 type FsSlice []FieldSpec
 
+type fieldSpecStrategy int
+
+const (
+	// Replace means the version of the resource in FsSlice should be the output.
+	Replace fieldSpecStrategy = iota
+	// Merge means the output to FsSlice should be the merge of defaults,
+	// and FsSlice.
+	Merge
+)
+
+var FieldSpecStrategy = map[fieldSpecStrategy]string{
+	Replace: "replace",
+	Merge:   "merge",
+}
+
 func (s FsSlice) Len() int      { return len(s) }
 func (s FsSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s FsSlice) Less(i, j int) bool {

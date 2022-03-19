@@ -182,6 +182,206 @@ metadata:
 `)
 }
 
+func TestNamespaceTransformerFieldSpecStrategyReplace(t *testing.T) {
+	t.SkipNow()
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+fieldSpecs:
+- path: subjects
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
+fieldSpecStrategy: replace
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+  namespace: default
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+  namespace: default
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+`)
+}
+
+func TestNamespaceTransformerFieldSpecStrategyMergeDefaults(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+fieldSpecStrategy: merge
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: default
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+  namespace: test
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: test
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+`)
+}
+
+func TestNamespaceTransformerFieldSpecStrategyMergeOverrides(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+fieldSpecs:
+- path: metadata/invalid/schema
+  create: true
+fieldSpecStrategy: merge
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: default
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  invalid:
+    schema: test
+  name: cm1
+  namespace: test
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  invalid:
+    schema: test
+  name: cm2
+  namespace: test
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  invalid:
+    schema: test
+  name: test
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  invalid:
+    schema: test
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+`)
+}
+
 func TestNamespaceTransformerClusterLevelKinds(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("NamespaceTransformer")

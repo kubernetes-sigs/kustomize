@@ -5,6 +5,9 @@ package builtinpluginconsts
 
 import (
 	"bytes"
+
+	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // GetDefaultFieldSpecs returns default fieldSpecs.
@@ -37,4 +40,34 @@ func GetDefaultFieldSpecsAsMap() map[string]string {
 	result["images"] = imagesFieldSpecs
 	result["replicas"] = replicasFieldSpecs
 	return result
+}
+
+// GetFsSliceAsMap returns default fieldSpecs
+// as a string->types.FsSlice map.
+func GetFsSliceAsMap() (map[string]types.FsSlice, error) {
+	result := make(map[string]types.FsSlice)
+	for k, v := range GetDefaultFieldSpecsAsMap() {
+		node, err := yaml.Parse(v)
+		if err != nil {
+			return nil, err
+		}
+		if err = node.VisitFields(func(mn *yaml.MapNode) error {
+			var fsSlice types.FsSlice
+			if err = mn.Value.VisitElements(func(elem *yaml.RNode) error {
+				var fieldSpec types.FieldSpec
+				if err := yaml.Unmarshal([]byte(elem.MustString()), &fieldSpec); err != nil {
+					return err
+				}
+				fsSlice = append(fsSlice, fieldSpec)
+				return nil
+			}); err != nil {
+				return err
+			}
+			result[k] = fsSlice
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
 }

@@ -20,7 +20,6 @@ apiVersion: builtin
 kind: ReplicaCountTransformer
 metadata:
   name: notImportantHere
-
 replica:
   name: myapp
   count: 23
@@ -114,6 +113,325 @@ kind: Deployment
 metadata:
   name: myapp
 spec:
+  replicas: 23
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+`)
+}
+
+func TestReplicaCountTransformerFieldSpecStrategyReplace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ReplicaCountTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: notImportantHere
+replica:
+  name: myapp
+  count: 23
+fieldSpecs:
+- path: spec/replicas
+  create: true
+  kind: Deployment
+fieldSpecStrategy: replace
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+`)
+}
+
+func TestReplicaCountTransformerFieldSpecStrategyMergeDefaults(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ReplicaCountTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: notImportantHere
+replica:
+  name: myapp
+  count: 23
+fieldSpecStrategy: merge
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  replicas: 23
+  selector:
+    matchLabels:
+      app: app
+`)
+}
+
+func TestReplicaCountTransformerFieldSpecStrategyMergeOverrides(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ReplicaCountTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ReplicaCountTransformer
+metadata:
+  name: notImportantHere
+replica:
+  name: myapp
+  count: 23
+fieldSpecs:
+  - path: spec/invalid/schema
+    create: true
+    kind: Deployment
+fieldSpecStrategy: merge
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+---
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: app
+`)
+
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otherapp
+spec:
+  replicas: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  invalid:
+    schema: 23
   replicas: 23
 ---
 apiVersion: apps/v1
