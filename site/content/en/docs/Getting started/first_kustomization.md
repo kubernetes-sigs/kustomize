@@ -237,7 +237,7 @@ resources:
 EOF
 ```
 
-The kustomization files for the overlays include just `base` folder, so if you were to run `kustomize build` on the overlay folders at this point you would get the same output you would get if you built `base`.  It is important to note that bases can be included in the `resources` field in the same way that we included our other deployment and service resource files.
+The kustomization files for the overlays include just the `base` folder, so if you were to run `kustomize build` on the overlay folders at this point you would get the same output you would get if you built `base`.  It is important to note that bases can be included in the `resources` field in the same way that we included our other deployment and service resource files.
 
 The directory structure you created so far should look like this:
 
