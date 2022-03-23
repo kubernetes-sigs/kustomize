@@ -721,6 +721,457 @@ data:
 `), strings.TrimSpace(actual))
 }
 
+func TestDeAnchorMerge(t *testing.T) {
+	testCases := []struct {
+		description string
+		input       string
+		expected    string
+		expectedErr error
+	}{
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "simplest merge tag",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    <<: *color-used
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "keep duplicated keys",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: "#FF0000"
+  color: "#FF00FF"
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: "#FF0000"
+  color: "#FF00FF"
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "keep json",
+			input:       `{"apiVersion": "v1", "kind": "MergeTagTest", "spec": {"color": {"rgb": "#FF0000"}}}`,
+			expected:    `{"apiVersion": "v1", "kind": "MergeTagTest", "spec": {"color": {"rgb": "#FF0000"}}}`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "keep comments",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    # use same color because is pretty
+    rgb: "#FF0000"
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    # use same color because is pretty
+    rgb: "#FF0000"
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "works with explicit merge tag",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    !!merge <<: *color-used
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "works with explicit long merge tag",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    foo: bar
+  primaryColor:
+    !<tag:yaml.org,2002:merge> "<<" : *color-used
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    foo: bar
+  primaryColor:
+    foo: bar
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging properties",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    rgb: "#FF0000"
+  primaryColor:
+    <<: *color-used
+    pretty: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+  primaryColor:
+    pretty: true
+    rgb: "#FF0000"
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "overriding value",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color-used
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: *color-used
+    pretty: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    pretty: true
+    rgb: "#FF0000"
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "returns error when defining multiple merge keys",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor: &primary
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    <<: *color
+    <<: *primary
+    secondary: true
+`,
+			expectedErr: fmt.Errorf("duplicate merge key"),
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging multiple anchors with sequence node",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor: &primary
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    <<: [ *color, *primary ]
+    secondary: true
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+  secondaryColor:
+    secondary: true
+    rgb: "#FF0000"
+    alpha: 50
+    pretty: false
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging inline map",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: {"pretty": true}
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+    "pretty": true
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging inline sequence map",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: [ *color, {"name": "ugly blue"}]
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color:
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    rgb: "#0000FF"
+    alpha: 50
+    "name": "ugly blue"
+    pretty: false
+`,
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "error on nested lists on merges",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: [ *color, [{"name": "ugly blue"}]]
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expectedErr: fmt.Errorf("invalid map merge: received a nested sequence"),
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "error on non-map references on merges",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    - rgb: "#FF0000"
+      pretty: false
+  primaryColor:
+    <<: [ *color, [{"name": "ugly blue"}]]
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expectedErr: fmt.Errorf("invalid map merge: received alias for a non-map value"),
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "merging on a list",
+			input: `
+apiVersion: v1
+kind: MergeTagTestList
+items:
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec: &merge-spec
+    something: true
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec:
+    <<: *merge-spec
+`,
+			expected: `
+apiVersion: v1
+kind: MergeTagTestList
+items:
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec:
+    something: true
+- apiVersion: v1
+  kind: MergeTagTest
+  metadata:
+    name: test
+  spec:
+    something: true
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			rn, err := Parse(tc.input)
+
+			assert.NoError(t, err)
+			err = rn.DeAnchor()
+			if tc.expectedErr == nil {
+				assert.NoError(t, err)
+				actual, err := rn.String()
+				assert.NoError(t, err)
+				assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual))
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tc.expectedErr.Error(), err.Error())
+			}
+
+		})
+	}
+}
 func TestRNode_UnmarshalJSON(t *testing.T) {
 	testCases := []struct {
 		testName string
