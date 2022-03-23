@@ -1041,10 +1041,12 @@ func mergeAll(yn *yaml.Node, toMerge []*yaml.Node) error {
 	toMerge = append(toMerge, yn)
 	for i := range toMerge {
 		rnToMerge := NewRNode(toMerge[i]).Copy()
-		rnToMerge.VisitFields(func(node *MapNode) error {
-			rn.PipeE(MapEntrySetter{Key: node.Key, Value: node.Value})
-			return nil
+		err := rnToMerge.VisitFields(func(node *MapNode) error {
+			return rn.PipeE(MapEntrySetter{Key: node.Key, Value: node.Value})
 		})
+		if err != nil {
+			return err
+		}
 	}
 	*yn = *rn.value
 	return nil
