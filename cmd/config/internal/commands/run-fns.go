@@ -135,9 +135,14 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, dataItems []string
 			return nil, err
 		}
 		if r.Network {
+			n := &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Value: "true",
+				Tag:   yaml.NodeTagBool,
+			}
 			err = fn.PipeE(
 				yaml.Lookup("container"),
-				yaml.SetField("network", yaml.NewScalarRNode("true")))
+				yaml.SetField("network", yaml.NewRNode(n)))
 			if err != nil {
 				return nil, err
 			}
@@ -231,7 +236,9 @@ data: {}
 			if len(kv) != 2 {
 				return nil, fmt.Errorf("args must have keys and values separated by =")
 			}
-			err := dataField.PipeE(yaml.SetField(kv[0], yaml.NewScalarRNode(kv[1])))
+			// do not set style since function should determine tag and style
+			err := dataField.PipeE(
+				yaml.FieldSetter{Name: kv[0], Value: yaml.NewScalarRNode(kv[1]), OverrideStyle: true})
 			if err != nil {
 				return nil, err
 			}

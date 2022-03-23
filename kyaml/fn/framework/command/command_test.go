@@ -5,6 +5,7 @@ package command_test
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -66,6 +67,7 @@ ENTRYPOINT ["function"]
 func TestCommand_standalone(t *testing.T) {
 	var config struct {
 		A string `json:"a" yaml:"a"`
+		B int    `json:"b" yaml:"b"`
 	}
 
 	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -80,6 +82,10 @@ metadata:
 `))
 		for i := range items {
 			err := items[i].PipeE(yaml.SetAnnotation("a", config.A))
+			if err != nil {
+				return nil, err
+			}
+			err = items[i].PipeE(yaml.SetAnnotation("b", fmt.Sprintf("%v", config.B)))
 			if err != nil {
 				return nil, err
 			}
@@ -99,6 +105,7 @@ metadata:
 func TestCommand_standalone_stdin(t *testing.T) {
 	var config struct {
 		A string `json:"a" yaml:"a"`
+		B int    `json:"b" yaml:"b"`
 	}
 
 	p := &framework.SimpleProcessor{
@@ -116,6 +123,10 @@ metadata:
 `))
 			for i := range items {
 				err := items[i].PipeE(yaml.SetAnnotation("a", config.A))
+				if err != nil {
+					return nil, err
+				}
+				err = items[i].PipeE(yaml.SetAnnotation("b", fmt.Sprintf("%v", config.B)))
 				if err != nil {
 					return nil, err
 				}
@@ -150,7 +161,8 @@ metadata:
   namespace: default
   annotations:
     foo: bar1
-    a: 'b'
+    a: 'c'
+    b: '1'
 spec:
   replicas: 1
 ---
@@ -161,6 +173,7 @@ metadata:
   namespace: default
   annotations:
     foo: bar2
-    a: 'b'
+    a: 'c'
+    b: '1'
 `), strings.TrimSpace(out.String()))
 }

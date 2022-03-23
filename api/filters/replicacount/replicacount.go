@@ -41,5 +41,5 @@ func (rc Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 }
 
 func (rc Filter) set(node *yaml.RNode) error {
-	return rc.trackableSetter.SetScalar(strconv.FormatInt(rc.Replica.Count, 10))(node)
+	return rc.trackableSetter.SetEntry("", strconv.FormatInt(rc.Replica.Count, 10), yaml.NodeTagInt)(node)
 }
