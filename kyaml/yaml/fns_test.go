@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	. "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -787,6 +788,83 @@ spec:
 			} else {
 				assert.Nil(t, result)
 			}
+		})
+	}
+}
+
+func TestMapEntrySetter(t *testing.T) {
+	withStyle := func(rn *RNode, style yaml.Style) *RNode {
+		rn.YNode().Style = style
+		return rn
+	}
+	testCases := []struct {
+		desc        string
+		input       string
+		setter      MapEntrySetter
+		expected    string
+		expectedErr error
+	}{
+		{
+			desc:  "it should override Key's value map entry",
+			input: "foo: baz\n",
+			setter: MapEntrySetter{
+				Key:   NewScalarRNode("foo"),
+				Value: NewScalarRNode("bar"),
+			},
+			expected: "foo: bar\n",
+		},
+		{
+			desc:  "it should override Name's map entry",
+			input: "foo: baz\n",
+			setter: MapEntrySetter{
+				Name:  "foo",
+				Key:   NewScalarRNode("bar"),
+				Value: NewScalarRNode("baz"),
+			},
+			expected: "bar: baz\n",
+		},
+		{
+			desc:  "it should insert new map entry",
+			input: "foo: baz\n",
+			setter: MapEntrySetter{
+				Key:   NewScalarRNode("bar"),
+				Value: NewScalarRNode("42"),
+			},
+			expected: "foo: baz\nbar: 42\n",
+		},
+		{
+			desc:  "it should override the style",
+			input: "foo: baz\n",
+			setter: MapEntrySetter{
+				Key:   withStyle(NewScalarRNode("foo"), yaml.DoubleQuotedStyle),
+				Value: withStyle(NewScalarRNode("bar"), yaml.SingleQuotedStyle),
+			},
+			expected: `"foo": 'bar'` + "\n",
+		},
+		{
+			desc:  "it should return error on sequence nodes",
+			input: "- foo: baz\n",
+			setter: MapEntrySetter{
+				Key:   NewScalarRNode("foo"),
+				Value: NewScalarRNode("bar"),
+			},
+			expectedErr: errors.Errorf("wrong Node Kind for  expected: MappingNode was SequenceNode: value: {- foo: baz}"),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			node, err := Parse(tc.input)
+			assert.NoError(t, err)
+			k, err := tc.setter.Filter(node)
+			if tc.expectedErr == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expected, assertNoErrorString(t)(node.String()))
+				assert.Equal(t, tc.expected, assertNoErrorString(t)(k.String()))
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, tc.expectedErr.Error(), err.Error())
+			}
+
 		})
 	}
 }

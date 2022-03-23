@@ -335,13 +335,7 @@ kind: List
 		"listWithAnchorReference": {
 			input:       []types.PatchStrategicMerge{patchList2},
 			expectedOut: []*Resource{testDeploymentA, testDeploymentB},
-			// The error using kyaml is:
-			//   json: unsupported type: map[interface {}]interface {}
-			// maybe arising from too many conversions between
-			// yaml, json, Resource, RNode, etc.
-			// These conversions go away after closing #3506
-			// TODO(#3271) This shouldn't have an error, but does when kyaml is used.
-			expectedErr: true,
+			expectedErr: false,
 		},
 		"listWithNoEntries": {
 			input:       []types.PatchStrategicMerge{patchList3},

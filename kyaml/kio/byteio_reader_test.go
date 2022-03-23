@@ -743,7 +743,7 @@ items:
 `},
 			},
 		},
-		"listWithAnchors": {
+		"mergeAnchors": {
 			input: []byte(`
 apiVersion: v1
 kind: DeploymentList
@@ -764,7 +764,59 @@ items:
   metadata:
     name: deployment-b
   spec:
-    *hostAliases
+    <<: *hostAliases
+`),
+			exp: expected{
+				sOut: []string{`
+apiVersion: v1
+kind: DeploymentList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-a
+  spec:
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-b
+  spec:
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+`},
+			},
+		},
+		"listWithAnchors": {
+			input: []byte(`
+apiVersion: v1
+kind: DeploymentList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-a
+  spec: &hostAliases
+    template:
+      spec:
+        hostAliases:
+        - hostnames:
+          - a.example.com
+          ip: 8.8.8.8
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-b
+  spec: *hostAliases
 `),
 			exp: expected{
 				sOut: []string{`
