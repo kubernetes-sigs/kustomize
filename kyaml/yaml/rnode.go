@@ -971,14 +971,14 @@ func findMergeValues(yn *yaml.Node) ([]*yaml.Node, error) {
 		return []*yaml.Node{yn}, nil
 	case AliasNode:
 		if yn.Alias != nil && yn.Alias.Kind != MappingNode {
-			return nil, errors.Errorf("map merge requires map or sequence of maps as the value")
+			return nil, errors.Errorf("invalid map merge: received alias for a non-map value")
 		}
 		return []*yaml.Node{yn.Alias}, nil
 	case SequenceNode:
 		mergeValues := []*yaml.Node{}
 		for i := 0; i < len(yn.Content); i++ {
 			if yn.Content[i].Kind == SequenceNode {
-				return nil, errors.Errorf("map merge requires map or sequence of maps as the value")
+				return nil, errors.Errorf("invalid map merge: received a nested sequence")
 			}
 			newMergeValues, err := findMergeValues(yn.Content[i])
 			if err != nil {

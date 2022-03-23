@@ -1073,6 +1073,48 @@ data:
 		// Test Case
 		// *********
 		{
+			description: "error on nested lists on merges",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    rgb: "#FF0000"
+    pretty: false
+  primaryColor:
+    <<: [ *color, [{"name": "ugly blue"}]]
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expectedErr: fmt.Errorf("invalid map merge: received a nested sequence"),
+		},
+		// *********
+		// Test Case
+		// *********
+		{
+			description: "error on non-map references on merges",
+			input: `
+apiVersion: v1
+kind: MergeTagTest
+metadata:
+  name: test
+data:
+  color: &color
+    - rgb: "#FF0000"
+      pretty: false
+  primaryColor:
+    <<: [ *color, [{"name": "ugly blue"}]]
+    rgb: "#0000FF"
+    alpha: 50
+`,
+			expectedErr: fmt.Errorf("invalid map merge: received alias for a non-map value"),
+		},
+		// *********
+		// Test Case
+		// *********
+		{
 			description: "merging on a list",
 			input: `
 apiVersion: v1
