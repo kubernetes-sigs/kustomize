@@ -3,4 +3,5 @@
 
 apiVersion: example.com/v1alpha1
 kind: Foo
-a: b
+a: c
+b: 1

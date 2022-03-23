@@ -140,7 +140,7 @@ metadata:
     foo: 'bar'
 data:
   a: x
-  b: y
+  b: "y"
   c: Hello World
   d: "true"
 `,
@@ -181,7 +181,7 @@ metadata:
     river: 'Missouri'
 data:
   a: x
-  b: y
+  b: "y"
   c: Hello World
   d: "true"
 immutable: true

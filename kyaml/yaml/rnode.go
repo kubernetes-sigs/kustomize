@@ -248,6 +248,11 @@ func (rn *RNode) IsNilOrEmpty() bool {
 		IsYNodeZero(rn.YNode())
 }
 
+// IsStringValue is true if the RNode is not nil and is scalar string node
+func (rn *RNode) IsStringValue() bool {
+	return !rn.IsNil() && IsYNodeString(rn.YNode())
+}
+
 // GetMeta returns the ResourceMeta for an RNode
 func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	if IsMissingOrNull(rn) {

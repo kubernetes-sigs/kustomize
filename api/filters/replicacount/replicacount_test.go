@@ -192,6 +192,7 @@ spec:
 			expectedSetValueArgs: []filtertest_test.SetValueArg{
 				{
 					Value:    "42",
+					Tag:      "!!int",
 					NodePath: []string{"spec", "replicas"},
 				},
 			},

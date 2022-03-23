@@ -52,7 +52,7 @@ func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 	// transformations based on data -- :)
 	err := node.PipeE(fsslice.Filter{
 		FsSlice:    ns.FsSlice,
-		SetValue:   ns.trackableSetter.SetScalar(ns.Namespace),
+		SetValue:   ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 		CreateTag:  yaml.NodeTagString,
 	})
@@ -85,7 +85,7 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 		FsSlice: []types.FieldSpec{
 			{Path: types.MetadataNamespacePath, CreateIfNotPresent: true},
 		},
-		SetValue:   ns.trackableSetter.SetScalar(ns.Namespace),
+		SetValue:   ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 	}
 	_, err := f.Filter(obj)
@@ -138,7 +138,7 @@ func (ns Filter) roleBindingHack(obj *yaml.RNode, gvk resid.Gvk) error {
 			return err
 		}
 
-		return ns.trackableSetter.SetScalar(ns.Namespace)(node)
+		return ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString)(node)
 
 	})
 

@@ -332,25 +332,59 @@ a:
 		expectedSetValueArgs: []filtertest_test.SetValueArg{
 			{
 				Value:    "bar",
+				Tag:      "!!str",
 				NodePath: []string{"metadata", "namespace"},
 			},
 			{
 				Value:    "bar",
+				Tag:      "!!str",
 				NodePath: []string{"a", "b", "c"},
 			},
 			{
 				Value:    "bar",
+				Tag:      "!!str",
 				NodePath: []string{"metadata", "namespace"},
 			},
 			{
 				Value:    "bar",
+				Tag:      "!!str",
 				NodePath: []string{"namespace"},
 			},
 			{
 				Value:    "bar",
+				Tag:      "!!str",
 				NodePath: []string{"a", "b", "c"},
 			},
 		},
+	},
+
+	{
+		name: "numeric",
+		input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+---
+apiVersion: example.com/v1
+kind: Bar
+metadata:
+  name: instance
+`,
+		expected: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+  namespace: "01234"
+---
+apiVersion: example.com/v1
+kind: Bar
+metadata:
+  name: instance
+  namespace: "01234"
+`,
+		filter: namespace.Filter{Namespace: "01234"},
 	},
 }
 
