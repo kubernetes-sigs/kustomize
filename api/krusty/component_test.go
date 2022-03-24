@@ -551,7 +551,7 @@ components:
 `),
 			},
 			runPath:       "filesincomponents",
-			expectedError: "'/filesincomponents/stub.yaml' must be a directory to be a root",
+			expectedError: "'/filesincomponents/stub.yaml' must be a directory so that it can used as a build root",
 		},
 		"invalid-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,

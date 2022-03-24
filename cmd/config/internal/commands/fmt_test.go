@@ -164,7 +164,7 @@ func TestCmd_failFileContents(t *testing.T) {
 	err := r.Command.Execute()
 
 	// expect an error
-	assert.EqualError(t, err, "yaml: line 1: did not find expected node content")
+	assert.EqualError(t, err, "MalformedYAMLError: yaml: line 1: did not find expected node content")
 }
 
 func TestFmtSubPackages(t *testing.T) {

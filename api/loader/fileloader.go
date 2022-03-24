@@ -159,8 +159,8 @@ func demandDirectoryRoot(
 	}
 	if f != "" {
 		return "", fmt.Errorf(
-			"got file '%s', but '%s' must be a directory to be a root",
-			f, path)
+			"'%s' must be a directory so that it can used as a build root",
+			path)
 	}
 	return d, nil
 }
