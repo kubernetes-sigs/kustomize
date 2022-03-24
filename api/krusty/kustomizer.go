@@ -85,6 +85,9 @@ func (b *Kustomizer) Run(
 	if err != nil {
 		return nil, err
 	}
+	if b.options.AddOriginAnnotations {
+		kt.AddOriginAnnotations()
+	}
 	var m resmap.ResMap
 	m, err = kt.MakeCustomizedResMap()
 	if err != nil {

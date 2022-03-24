@@ -23,6 +23,9 @@ type Options struct {
 	// is added to all the resources in the build out.
 	AddManagedbyLabel bool
 
+	// When true, origin annotations will be added to resources
+	AddOriginAnnotations bool
+
 	// Restrictions on what can be loaded from the file system.
 	// See type definition.
 	LoadRestrictions types.LoadRestrictions

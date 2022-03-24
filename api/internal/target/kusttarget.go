@@ -553,3 +553,10 @@ func (kt *KustTarget) configureBuiltinPlugin(
 	}
 	return nil
 }
+
+// AddOriginAnnotations adds originAnnotations to buildMetadata
+func (kt *KustTarget) AddOriginAnnotations() {
+	if !utils.StringSliceContains(kt.kustomization.BuildMetadata, types.OriginAnnotations) {
+		kt.kustomization.BuildMetadata = append(kt.kustomization.BuildMetadata, types.OriginAnnotations)
+	}
+}
