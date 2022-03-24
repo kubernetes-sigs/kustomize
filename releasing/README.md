@@ -45,7 +45,7 @@ Thus, do `kyaml` first, then `cmd/config`, etc.
 
 ## Prep work
 
-### ⚠️ IMPORTANT: Check for [release-blocking issues](https://github.com/kubernetes-sigs/kustomize/issues?q=label%3Arelease-blocker+is%3Aclosed)
+### ⚠️ IMPORTANT: Check for [release-blocking issues](https://github.com/kubernetes-sigs/kustomize/issues?q=label%3Arelease-blocker+is%3Aopen)
 
 We use the `release-blocker` tag to track issues that need to be solved before the next release. Typically, this would be a new regression introduced on the master branch and not present in the previous release. If any such issues exist, the release should be delayed.
 
@@ -188,7 +188,7 @@ Undraft the release on the [kustomize repo release page]:
 * Make sure each commit left in the release notes includes a PR reference.
 
 
-## Release `api` 
+## Release `api`
 
 This is the kustomize API, used by the kustomize CLI.
 
@@ -388,33 +388,21 @@ new images. Assign the PR to @monopole and @Shell32-natsu.
 ## Update kustomize-in-kubectl
 
 [kubernetes/kubernetes]: https://github.com/kubernetes/kubernetes
-[newest kustomize releases]: https://github.com/kubernetes-sigs/kustomize/releases
+[kustomize release]: https://github.com/kubernetes-sigs/kustomize/releases
 
 To update the version of kustomize shipped with kubectl, first
 fork and clone the [kubernetes/kubernetes] repo.
 
-In the root of the kubernetes repo, run the following commands, modifying
-the version numbers to match the [newest kustomize releases]:
+In the root of the [kubernetes/kubernetes] repo, run the following command:
 ```bash
-./hack/pin-dependency.sh sigs.k8s.io/kustomize/kyaml v0.11.0
-./hack/pin-dependency.sh sigs.k8s.io/kustomize/cmd/config v0.9.13
-./hack/pin-dependency.sh sigs.k8s.io/kustomize/api v0.8.11
-./hack/pin-dependency.sh sigs.k8s.io/kustomize/kustomize/v4 v4.2.0
-
-./hack/update-vendor.sh
-./hack/update-internal-modules.sh 
-./hack/lint-dependencies.sh 
+./hack/update-kustomize.sh
 ```
 
-If needed, manually update the kustomize attachment points in the following files:
+When prompted, review the list of suggested module versions and make sure it matches the versions used in the latest [kustomize release]. If `kyaml`, `cmd/config` or `api` has been released more recently than `kustomize/v4`, **do not** use the more recent version.
 
-`staging/src/k8s.io/cli-runtime/pkg/resource/kustomizevisitor.go`
 
-`staging/src/k8s.io/cli-runtime/pkg/resource/kustomizevisitor_test.go`
+If code used by the kustomize attachment points has changed, kubectl will fail to compile and you will need to update them. The code you'll need to change is likely in the `staging/src/k8s.io/cli-runtime/pkg/resource` and/or `staging/src/k8s.io/kubectl/pkg/cmd/kustomize` packages.
 
-`staging/src/k8s.io/kubectl/pkg/cmd/kustomize/kustomize.go`
-
-`staging/src/k8s.io/cli-runtime/pkg/resource/builder.go`
 
 Here are some example PRs:
 
@@ -683,6 +671,6 @@ git remote set-url --push upstream no_push
 
 This triggers [Google Cloud Build].
 
-###  Update release notes
+### Update release notes
 
 Visit the [release page] and edit the release notes as desired.
