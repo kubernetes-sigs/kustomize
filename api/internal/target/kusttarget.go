@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/builtins"
+	"sigs.k8s.io/kustomize/api/internal/kusterr"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
@@ -403,6 +404,9 @@ func (kt *KustTarget) accumulateResources(
 		if errF := kt.accumulateFile(ra, path); errF != nil {
 			// not much we can do if the error is an HTTP error so we bail out
 			if errors.Is(errF, load.ErrorHTTP) {
+				return nil, errF
+			}
+			if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
 				return nil, errF
 			}
 			ldr, err := kt.ldr.New(path)
