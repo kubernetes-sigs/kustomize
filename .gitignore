@@ -27,3 +27,6 @@ site/public/
 site/resources/
 site/.hugo_build.lock
 **/node_modules/
+
+# goreleaser artifacts
+**/dist/
