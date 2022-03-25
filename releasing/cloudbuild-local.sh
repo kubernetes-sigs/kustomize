@@ -27,7 +27,7 @@ cp releasing/cloudbuild.yaml $config
 # Add the --snapshot flag to suppress the
 # github release and leave the build output
 # in the kustomize/dist directory.
-sed -i "s|# - '--snapshot|- '--snapshot|" $config
+sed -i "" "s|# - '--snapshot|- '--snapshot|" $config
 
 echo "Executing cloud-build-local with config file $config :"
 echo "========================="

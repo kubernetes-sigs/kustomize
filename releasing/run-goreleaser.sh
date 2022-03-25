@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Works exactly like cloudbuild.sh but doesn't perform a release.
+# Builds and optionally releases the specified module
 #
 # Usage (from top of repo):
 #
-#  releasing/localbuild.sh TAG [--snapshot]
+#  releasing/run-goreleaser.sh TAG MODE[build|release] [--snapshot]
 #
 # Where TAG is in the form
 #
@@ -13,56 +13,70 @@
 #   cmd/config/v1.2.3
 #   ... etc.
 #
-# This script runs a build through goreleaser (http://goreleaser.com) but nothing else.
-#
 
-set -e
-set -x
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ -z "${1-}" || -z "${2-}" ]]; then
+  echo "Usage: $0 TAG MODE [goreleaser flags]"
+  echo "  TAG: the tag to build or release, e.g. api/v1.2.3"
+  echo "  MODE: build or release"
+  exit 1
+fi
 
 fullTag=$1
 shift
 echo "fullTag=$fullTag"
 
+if [[ $1 == "release" || $1 == "build" ]]; then
+  mode=$1
+  shift
+else
+  echo "Error: mode must be build or release"
+  exit 1
+fi
+
 remainingArgs="$@"
-echo "Remaining args:  $remainingArgs"
+echo "Remaining args: $remainingArgs"
 
 # Take everything before the last slash.
 # This is expected to match $module.
 module=${fullTag%/*}
 echo "module=$module"
 
-# Find previous tag that matches the tags module
-prevTag=$(git tag -l "$module*" --sort=-version:refname --no-contains=$fullTag | head -n 1)
+# Take everything after the last slash.
+# This should be something like "v1.2.3".
+semVer=${fullTag#$module/}
+echo "semVer=$semVer"
 
 # Generate the changelog for this release
 # using the last two tags for the module
 changeLogFile=$(mktemp)
-git log $prevTag..$fullTag \
-  --pretty=oneline \
-  --abbrev-commit --no-decorate --no-color --no-merges \
-  -- $module > $changeLogFile
-echo "Release notes:"
-cat $changeLogFile
-
-# Take everything after the last slash.
-# This should be something like "v1.2.3".
-semVer=`echo $fullTag | sed "s|$module/||"`
-echo "semVer=$semVer"
+./releasing/compile-changelog.sh "$module" "$fullTag" "$changeLogFile"
+echo
+echo "######### Release notes: ##########"
+cat "$changeLogFile"
+echo "###################################"
+echo
 
 # This is probably a directory called /workspace
-echo "pwd = $PWD"
 
 # Sanity check
-echo "### ls -las . ################################"
+echo
+echo "############ DEBUG ##############"
+echo "pwd = $PWD"
+echo "ls -las ."
 ls -las .
 echo "###################################"
-
+echo
 
 # CD into the module directory.
 # This directory expected to contain a main.go, so there's
 # no need for extra details in the `build` stanza below.
 cd $module
 
+# This is used in goreleaser.yaml
 skipBuild=true
 if [[ "$module" == "kustomize" || "$module" == "pluginator" ]]; then
   # If releasing a main program, don't skip the build.
@@ -112,16 +126,26 @@ release:
 
 EOF
 
-cat $goReleaserConfigFile
+echo
+echo "############# CONFIG ##############"
+cat "$goReleaserConfigFile"
+echo "###################################"
+echo
+
+args=(
+  --debug
+  --timeout 10m
+  --parallelism 7
+  --config="$goReleaserConfigFile"
+  --rm-dist
+  --skip-validate
+)
+if [[ $mode == "release" ]]; then
+  args+=(--release-notes="$changeLogFile")
+fi
 
 date
-
-time /usr/local/bin/goreleaser build \
-  --debug \
-  --timeout 10m \
-  --parallelism 7 \
-  --config=$goReleaserConfigFile \
-  --rm-dist \
-  --skip-validate $remainingArgs
-
+export PATH="/usr/local/bin:$PATH"
+set -x
+time goreleaser "$mode" "${args[@]}" $remainingArgs
 date
