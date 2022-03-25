@@ -2310,3 +2310,31 @@ func TestGetAnnotations(t *testing.T) {
 		t.Fatalf("expected '%s', got '%s'", expected, actual)
 	}
 }
+
+func TestGetFieldValueWithDot(t *testing.T) {
+	t.Skip()
+
+	const input = `
+kind: Pod
+metadata:
+  name: hello-world
+  labels:
+    app: hello-world-app
+    foo.appname: hello-world-foo
+`
+	data, err := Parse(input)
+	require.NoError(t, err)
+
+	labelRNode, err := data.Pipe(Lookup("metadata", "labels"))
+	require.NoError(t, err)
+
+	app, err := labelRNode.GetFieldValue("app")
+	require.NoError(t, err)
+	require.Equal(t, "hello-world-app", app)
+
+	// TODO: doesn't currently work; we expect to be able to escape the dot in future
+	// https://github.com/kubernetes-sigs/kustomize/issues/4487
+	fooAppName, err := labelRNode.GetFieldValue(`foo\.appname`)
+	require.NoError(t, err)
+	require.Equal(t, "hello-world-foo", fooAppName) // no field named 'foo.appname'
+}
