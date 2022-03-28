@@ -16,6 +16,25 @@
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
 
+In this repo, releasing a module is accomplished by applying
+a tag to the repo and pushing it upstream.  A minor release
+branch is also created as necessary to track patch releases.
+
+A properly formatted tag (described below) contains
+the module name and version.
+
+Pushing the tag upstream will trigger [Google Cloud Build] to build a release
+and make it available on the  [release page].
+
+Cloud build reads its instructions from the
+[`cloudbuild.yaml`] file in this directory.
+
+We use a Go program to make the tagging and branch
+creation process less error prone.
+
+See this [multi-module repo] tagging discussion
+for an explanation of the path-like portion of these tags.
+
 #### semver review
 
 Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
@@ -141,7 +160,7 @@ go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/pa
 
 Create the PR:
 ```
-createBranch pinToKyaml "Pin to kyaml $versionKyaml"
+createBranch pinToKyaml "Update kyaml to $versionKyaml"
 ```
 ```
 createPr
@@ -201,7 +220,7 @@ gorepomod pin cmd/config --doIt
 
 Create the PR:
 ```
-createBranch pinToCmdConfig "Pin to cmd/config $versionCmdConfig" &&
+createBranch pinToCmdConfig "Update cmd/config to $versionCmdConfig" &&
 createPr
 ```
 
@@ -256,7 +275,7 @@ gorepomod pin api --doIt
 
 Create the PR:
 ```
-createBranch pinToApi "Pin to api $versionApi" &&
+createBranch pinToApi "Update api to $versionApi" &&
 createPr
 ```
 
@@ -383,7 +402,7 @@ Image sha256 can be found in the image registry in the GCP
 project [k8s-staging-kustomize].
 
 Commit and push your changes. Then create a PR to [k8s.io] to promote
-new images. Assign the PR to @monopole and @Shell32-natsu.
+the new image.
 
 ## Update kustomize-in-kubectl
 
@@ -410,267 +429,7 @@ https://github.com/kubernetes/kubernetes/pull/103419
 
 https://github.com/kubernetes/kubernetes/pull/106389
 
-----
-Older notes follow:
 
-## Public Modules
+# Testing changes to the release pipeline
 
-[`sigs.k8s.io/kustomize/api`]: #sigsk8siokustomizeapi
-[`sigs.k8s.io/kustomize/kustomize`]: #sigsk8siokustomizekustomize
-[`sigs.k8s.io/kustomize/kyaml`]: #sigsk8siokustomizekyaml
-[`sigs.k8s.io/kustomize/cmd/config`]: #sigsk8siokustomizecmdconfig
-
-[kustomize/v3.2.1]: /../../releases/tag/kustomize%2Fv3.2.1
-
-| Module Name                          | Module Description         | Example Tag         | Example Branch Name         |
-| ------                               | ---                        | ---                 | ---                         |
-| [`sigs.k8s.io/kustomize/kustomize`]  | kustomize executable       | _kustomize/v3.2.2_  | _release-kustomize-v3.2.2_  |
-| [`sigs.k8s.io/kustomize/api`]        | kustomize API              | _api/v0.1.0_        | _release-api-v0.1_          |
-| [`sigs.k8s.io/kustomize/kyaml`]      | k8s-specific yaml editting | _kyaml/v0.3.3_      | _release-kyaml-v0.2_        |
-| [`sigs.k8s.io/kustomize/cmd/config`] | kyaml related commands     | _cmd/config/v0.3.3_ | _release-cmd/config-v0.3_   |
-
-### sigs.k8s.io/kustomize/kustomize
-
-The `kustomize` program, a CLI for performing
-structured edits to Kubernetes Resource Model (KRM) YAML.
-
-There's only one public package in this module.
-It's called `main`, it's therefore unimportable.
-It holds the `kustomize` executable.
-
-See the [installation instructions](../docs/INSTALL.md)
-to perform an install.
-
-
-### sigs.k8s.io/kustomize/api
-
-The [kustomize Go API](https://github.com/kubernetes-sigs/kustomize/tree/master/api).
-
-The packages in this module are used by API clients,
-like the `kustomize` program itself, and programs in
-other repositories, e.g. `kubectl`.  They include
-methods to read, edit and emit modified YAML.
-
-Release notes should appear on the [release page].
-
-The package has a toy executable called `api`, which,
-if run, prints the API release version, but has no
-other use.
-
-### sigs.k8s.io/kustomize/kyaml
-
-The [kyaml module](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml).
-
-Low level packages for transforming YAML associated
-with KRM objects.
-
-These are used to build _kyaml filters_, computational units
-that accept and emit KRM YAML, editing or simply validating it.
-
-The kustomize `api` and the `cmd/config` packages are built on this.
-
-### sigs.k8s.io/kustomize/cmd/config
-
-The [cmd/config module](https://github.com/kubernetes-sigs/kustomize/tree/master/cmd/config).
-
-A collection od CLI commands that correspond to
-kyaml filters.
-
-## Manual process
-
-In this repo, releasing a module is accomplished by applying
-a tag to the repo and pushing it upstream.  A minor release
-branch is also created as necessary to track patch releases.
-
-A properly formatted tag (described below) contains
-the module name and version.
-
-Pushing the tag upstream will trigger [Google Cloud Build] to build a release
-and make it available on the  [release page].
-
-Cloud build reads its instructions from the
-[`cloudbuild.yaml`] file in this directory.
-
-We use a Go program to make the tagging and branch
-creation process less error prone.
-
-See this [multi-module repo] tagging discussion
-for an explanation of the path-like portion of these tags.
-
-### Get up to date
-
-It's assumed that whatever is already commited to the latest
-commit is passing all tests and appropriate for release.
-
-
-```
-git fetch upstream
-git checkout master
-git rebase upstream/master
-make prow-presubmit-check
-```
-
-### Select a module to release
-
-E.g.
-```
-module=kustomize   # The kustomize executable
-module=api         # The API
-```
-
-### Review tags to help determine new tag
-
-Local:
-```
-git tag -l | grep $module
-```
-
-Remote:
-```
-git ls-remote --tags upstream | grep $module
-```
-
-Set the version you want:
-
-```
-major=0; minor=1; patch=0
-```
-
-
-### Create the release branch
-
-Every module release occurs on it's own git branch.
-
-The branch name doesn't include the patch number,
-since the branch accumulates patch releases.
-
-> TODO: define procedure for doing a cherrypick (committing a patch) to a
-> release branch that already exists.
-
-Name the branch:
-
-```
-branch="release-${module}-v${major}.${minor}"
-echo "branch=$branch"
-```
-
-Create it:
-```
-git checkout -b $branch
-```
-
-### Define the release tag
-
-```
-tag="${module}/v${major}.${minor}.${patch}"
-echo "tag=$tag"
-```
-
-### Pin modules to their dependencies.
-
-This is achieved via a `replace` directive
-in a module's `go.mod` file.
-
-```
-# Update the following as needed, obviously.
-
-# git checkout -b pinTheRelease
-# go mod edit -dropreplace=sigs.k8s.io/kustomize/api    $module/go.mod
-# go mod edit -require=sigs.k8s.io/kustomize/api@v0.1.1 $module/go.mod
-# git commit -a -m "Drop API module replacement"
-
-```
-
-### Push the release branch
-
-```
-git push -f upstream $branch
-```
-
-#### if replacing a release...
-
-Must delete the tag before re-pushing it.
-Dangerous - only do this if you're sure nothing
-has already pulled the release.
-
-Delete the tag locally:
-
-```
-git tag --delete $tag
-```
-
-Delete it upstream:
-```
-# Disable push protection:
-git remote set-url --push upstream git@github.com:kubernetes-sigs/kustomize.git
-
-# The empty space before the colon effectively means delete the tag.
-git push upstream :refs/tags/$tag
-
-# Enable push protection:
-git remote set-url --push upstream no_push
-```
-
-Optionally visit the [release page] and delete
-(what has now become) the _draft_ release for that
-version.
-
-### Tag the local repository
-
-```
-git tag -a $tag -m "Release $tag on branch $branch"
-```
-
-Move the `latest_kustomize` tag:
-```
-git tag -d latest_kustomize
-git push upstream :latest_kustomize
-git tag -a latest_kustomize
-```
-
-### Optionally build locally
-
-[localbuild.sh]: localbuild.sh
-
-Load the same version of `goreleaser` referenced in `cloudbuild.yaml` via docker and run [localbuild.sh] from the container's command line:
-
-```
-# Get goreleaser image from cloudbuild.yaml 
-export GORELEASER_IMAGE=goreleaser/goreleaser:v0.172.1
-
-# Drop into a shell
-docker run -it --entrypoint=/bin/bash  -v $(pwd):/go/src/github.com/kubernetes-sigs/kustomize -w /go/src/github.com/kubernetes-sigs/kustomize $GORELEASER_IMAGE
-
-# Run build
-./releasing/localbuild.sh TAG [--snapshot]
-```
-
-
-### Optionally build and release locally
-
-[cloudbuild-local.sh]: cloudbuild-local.sh
-
-Install [`cloud-build-local`], then run [cloudbuild-local.sh]:
-
-```
-./releasing/cloudbuild-local.sh $module
-```
-
-This should create release artifacts in a local directory.
-
-### Trigger the cloud build by pushing the tag
-
-Push the tag:
-
-```
-git remote set-url --push upstream git@github.com:kubernetes-sigs/kustomize.git
-git push upstream $tag
-git push upstream latest_kustomize
-git remote set-url --push upstream no_push
-```
-
-This triggers [Google Cloud Build].
-
-### Update release notes
-
-Visit the [release page] and edit the release notes as desired.
+You can test the release script locally by running [cloudbuild.sh](cloudbuild.sh) in a container or by installing Cloud Build Local and running [cloudbuild-local.sh](cloudbuild-local.sh). See each of those files for more details on their usage.
