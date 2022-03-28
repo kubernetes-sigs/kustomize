@@ -37,14 +37,6 @@ steps:
   - checkout
   - $TAG_NAME
 
-# Copy a newer version of Go into the goreleaser workspace.
-# Use the same source image as the builder in kustomize.Dockerfile
-- name: golang:alpine
-  entrypoint: /bin/sh
-  args:
-  - '-c'
-  - 'mkdir -p /workspace/bin && cp $(go env GOROOT)/bin/go /workspace/bin'
-
 # Run goreleaser indirectly via a shell script
 # to configure it properly.
 - name: goreleaser/goreleaser:v0.179.0
@@ -52,8 +44,6 @@ steps:
   entrypoint: /bin/sh
   dir: myClone
   secretEnv: ['GITHUB_TOKEN']
-  env:
-  - 'GO_BINARY_PATH=/workspace/bin/go'
   args:
   - releasing/cloudbuild.sh
   - $TAG_NAME
