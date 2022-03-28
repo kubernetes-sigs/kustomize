@@ -82,8 +82,7 @@ metadata:
 	secret := findSecret(m, "")
 	if secret == nil {
 		t.Errorf("Expected to find a Secret")
-	}
-	if secret.GetName() != "foo-secret-bar-82c2g5f8f6" {
+	} else if secret.GetName() != "foo-secret-bar-82c2g5f8f6" {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 
@@ -95,8 +94,7 @@ metadata:
 	secret = findSecret(m, "")
 	if secret == nil {
 		t.Errorf("Expected to find a Secret")
-	}
-	if secret.GetName() != "foo-secret-bar" { // No hash at end.
+	} else if secret.GetName() != "foo-secret-bar" { // No hash at end.
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 }
@@ -131,16 +129,14 @@ secretGenerator:
 	secret := findSecret(m, "nohash")
 	if secret == nil {
 		t.Errorf("Expected to find a Secret")
-	}
-	if secret.GetName() != "nohash" {
+	} else if secret.GetName() != "nohash" {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 
 	secret = findSecret(m, "yeshash")
 	if secret == nil {
 		t.Errorf("Expected to find a Secret")
-	}
-	if secret.GetName() != "yeshash-82c2g5f8f6" {
+	} else if secret.GetName() != "yeshash-82c2g5f8f6" {
 		t.Errorf("unexpected secret resource name: %s", secret.GetName())
 	}
 }

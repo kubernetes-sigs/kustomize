@@ -55,17 +55,17 @@ verify-kustomize-e2e: test-examples-e2e-kustomize
 # This installs what kustomize wants to use.
 $(MYGOBIN)/golangci-lint-kustomize:
 	rm -f $(CURDIR)/hack/golangci-lint
-	GOBIN=$(CURDIR)/hack go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.23.8
+	GOBIN=$(CURDIR)/hack go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 	mv $(CURDIR)/hack/golangci-lint $(MYGOBIN)/golangci-lint-kustomize
 
 $(MYGOBIN)/mdrip:
 	go install github.com/monopole/mdrip@v1.0.2
 
 $(MYGOBIN)/stringer:
-	go get golang.org/x/tools/cmd/stringer
+	go install golang.org/x/tools/cmd/stringer@latest
 
 $(MYGOBIN)/goimports:
-	go get golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports@latest
 
 # Build from local source.
 $(MYGOBIN)/gorepomod:
