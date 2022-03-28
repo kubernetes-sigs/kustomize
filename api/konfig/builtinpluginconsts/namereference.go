@@ -50,6 +50,16 @@ nameReference:
     kind: Pod
   - path: template/spec/volumes/configMap/name
     kind: PodTemplate
+  - path: template/spec/containers/env/valueFrom/configMapKeyRef/name
+    kind: PodTemplate
+  - path: template/spec/initContainers/env/valueFrom/configMapKeyRef/name
+    kind: PodTemplate
+  - path: template/spec/containers/envFrom/configMapRef/name
+    kind: PodTemplate
+  - path: template/spec/initContainers/envFrom/configMapRef/name
+    kind: PodTemplate
+  - path: template/spec/volumes/projected/sources/configMap/name
+    kind: PodTemplate
   - path: spec/template/spec/volumes/configMap/name
     kind: Deployment
   - path: spec/template/spec/containers/env/valueFrom/configMapKeyRef/name
@@ -155,6 +165,20 @@ nameReference:
   - path: spec/volumes/projected/sources/secret/name
     version: v1
     kind: Pod
+  - path: template/spec/volumes/secret/secretName
+    kind: PodTemplate
+  - path: template/spec/containers/env/valueFrom/secretKeyRef/name
+    kind: PodTemplate
+  - path: template/spec/initContainers/env/valueFrom/secretKeyRef/name
+    kind: PodTemplate
+  - path: template/spec/containers/envFrom/secretRef/name
+    kind: PodTemplate
+  - path: template/spec/initContainers/envFrom/secretRef/name
+    kind: PodTemplate
+  - path: template/spec/imagePullSecrets/name
+    kind: PodTemplate
+  - path: template/spec/volumes/projected/sources/secret/name
+    kind: PodTemplate
   - path: spec/template/spec/volumes/secret/secretName
     kind: Deployment
   - path: spec/template/spec/containers/env/valueFrom/secretKeyRef/name
