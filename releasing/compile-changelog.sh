@@ -29,7 +29,8 @@ fullTag=$2
 changeLogFile="${3:-}"
 
 # Find previous tag that matches the tags module
-prevTag=$(git tag -l "$module*" --sort=-version:refname --no-contains="$fullTag" | head -n 1)
+allTags=$(git tag -l "$module*" --sort=-version:refname --no-contains="$fullTag")
+prevTag=$(echo "$allTags" | head -n 1)
 echo "Compiling $module changes from $prevTag to $fullTag"
 
 commits=( $(git log "$prevTag".."$fullTag" \
