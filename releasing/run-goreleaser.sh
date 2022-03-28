@@ -28,6 +28,7 @@ fi
 fullTag=$1
 shift
 echo "fullTag=$fullTag"
+export GORELEASER_CURRENT_TAG=$fullTag
 
 if [[ $1 == "release" || $1 == "build" ]]; then
   mode=$1
