@@ -51,6 +51,16 @@ echo "module=$module"
 semVer=${fullTag#$module/}
 echo "semVer=$semVer"
 
+# Because of https://github.com/kubernetes-sigs/kustomize/issues/4542
+# we need to manually install a newer version of Go into an older goreleaser image.
+# This points goreleaser to that version of Go, or the version discovered from PATH if unspecified.
+goBinary="go"
+if [[ -n "${GO_BINARY_PATH:-}" ]]; then
+    echo "GO_BINARY_PATH is set, using go version from $GO_BINARY_PATH"
+    goBinary="$GO_BINARY_PATH"
+fi
+sh -c "$goBinary version"
+
 # Generate the changelog for this release
 # using the last two tags for the module
 changeLogFile=$(mktemp)
@@ -100,6 +110,8 @@ builds:
     -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
     -X sigs.k8s.io/kustomize/api/provenance.gitCommit={{.Commit}}
     -X sigs.k8s.io/kustomize/api/provenance.buildDate={{.Date}}
+
+  gobinary: ${goBinary}
 
   goos:
   - linux
