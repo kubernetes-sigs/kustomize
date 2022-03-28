@@ -118,7 +118,13 @@ refreshMaster &&
 testKustomizeRepo
 ```
 
-While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+While you're waiting for the tests, review the commit log:
+
+```
+releasing/compile-changelog.sh kyaml HEAD 
+```
+
+Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
 kyaml has no intra-repo deps, so if the tests pass,
 it can just be released.
@@ -185,7 +191,13 @@ refreshMaster &&
 testKustomizeRepo
 ```
 
-While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+While you're waiting for the tests, review the commit log:
+
+```
+releasing/compile-changelog.sh cmd/config HEAD 
+```
+
+Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
 #### Release it
 
@@ -243,7 +255,13 @@ refreshMaster &&
 testKustomizeRepo
 ```
 
-While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+While you're waiting for the tests, review the commit log:
+
+```
+releasing/compile-changelog.sh api HEAD 
+```
+
+Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
 #### Release it
 
@@ -298,7 +316,13 @@ refreshMaster &&
 testKustomizeRepo
 ```
 
-While you're waiting for the tests, review the commit log. Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
+While you're waiting for the tests, review the commit log:
+
+```
+releasing/compile-changelog.sh kustomize HEAD 
+```
+
+Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
 #### Release it
 
