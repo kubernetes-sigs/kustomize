@@ -22,7 +22,7 @@ rm -f $MYGOBIN/kustomize
 if [ "$version" == "HEAD" ]; then
   (cd kustomize; go install .)
 else
-  GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/${version}
+  GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/${version}
 fi
 
 # TODO: change the label?
