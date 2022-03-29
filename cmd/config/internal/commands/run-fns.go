@@ -47,7 +47,8 @@ func GetRunFnRunner(name string) *RunFnRunner {
 		"run this image as a function instead of discovering them.")
 	// NOTE: exec plugins execute arbitrary code -- never change the default value of this flag!!!
 	r.Command.Flags().BoolVar(
-		&r.EnableExec, "enable-exec", false /*do not change!*/, "enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
+		&r.EnableExec, "enable-exec", false, /*do not change!*/
+		"enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
 	r.Command.Flags().BoolVar(
