@@ -1129,14 +1129,14 @@ set 1 field(s) of setter "namespace" to value "otherspace"
 			}
 
 			// normalize path format for windows
-			actualNormalized := strings.Replace(
-				strings.Replace(actual.String(), "\\", "/", -1),
-				"//", "/", -1)
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(actual.String(), "\\", "/"),
+				"//", "/")
 
-			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
-			expectedNormalized := strings.Replace(
-				strings.Replace(expected, "\\", "/", -1),
-				"//", "/", -1)
+			expected := strings.ReplaceAll(test.expected, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(expected, "\\", "/"),
+				"//", "/")
 			if !assert.Contains(t, strings.TrimSpace(actualNormalized), strings.TrimSpace(expectedNormalized)) {
 				t.FailNow()
 			}

@@ -753,12 +753,12 @@ spec:
 				t.FailNow()
 			}
 
-			expectedOut := strings.Replace(test.out, "${baseDir}", baseDir, -1)
-			expectedNormalized := strings.Replace(expectedOut, "\\", "/", -1)
+			expectedOut := strings.ReplaceAll(test.out, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expectedOut, "\\", "/")
 			// normalize path format for windows
-			actualNormalized := strings.Replace(
-				strings.Replace(out.String(), "\\", "/", -1),
-				"//", "/", -1)
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(out.String(), "\\", "/"),
+				"//", "/")
 
 			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
@@ -863,12 +863,12 @@ setter with name "namespace" already exists, if you want to modify it, please de
 			}
 
 			// normalize path format for windows
-			actualNormalized := strings.Replace(
-				strings.Replace(actual.String(), "\\", "/", -1),
-				"//", "/", -1)
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(actual.String(), "\\", "/"),
+				"//", "/")
 
-			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
-			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
+			expected := strings.ReplaceAll(test.expected, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expected, "\\", "/")
 			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
 			}

@@ -654,12 +654,12 @@ spec:
 			}
 
 			// normalize path format for windows
-			actualNormalized := strings.Replace(
-				strings.Replace(actual.String(), "\\", "/", -1),
-				"//", "/", -1)
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(actual.String(), "\\", "/"),
+				"//", "/")
 
-			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
-			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
+			expected := strings.ReplaceAll(test.expected, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expected, "\\", "/")
 			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}

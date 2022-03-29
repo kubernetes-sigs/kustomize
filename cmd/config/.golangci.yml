@@ -12,35 +12,35 @@ linters:
     - bodyclose
     - deadcode
     - depguard
-#    - dogsled
+    - dogsled
     - dupl
 #    - errcheck
+    - exportloopref
 #    - funlen
-#    - gochecknoinits
-#    - goconst
-#    - gocritic
-#    - gocyclo
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
     - gofmt
     - goimports
-#    - gosec
+    - gosec
     - gosimple
     - govet
     - ineffassign
-#    - lll
+    - lll
     - misspell
     - nakedret
+    - nolintlint
     - revive
-#    - scopelint
     - staticcheck
     - structcheck
-#    - stylecheck
+#    - stylecheck # seems redundant with revive, which replaced golint
     - typecheck
     - unconvert
-#    - unparam
+    - unparam
     - unused
     - varcheck
-#    - whitespace
-
+    - whitespace
 
 linters-settings:
   dupl:
@@ -49,4 +49,18 @@ linters-settings:
     line-length: 170
   gocyclo:
     min-complexity: 30
+  revive:
+    rules:
+    - name: var-naming
+      arguments:
+      - [ "ID", "API", "JSON" ] # AllowList
+      - [ ] # DenyList
+  gosec:
+    config:
+      G306: "0644"
 
+issues:
+  exclude-rules:
+    - linters:
+        - revive
+      text: "don't use leading"
