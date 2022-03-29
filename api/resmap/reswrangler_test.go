@@ -116,7 +116,7 @@ func TestAppendRemove(t *testing.T) {
 	doAppend(t, w2, makeCm(2))
 	doAppend(t, w2, makeCm(4))
 	doAppend(t, w2, makeCm(6))
-	if !reflect.DeepEqual(w1, w1) {
+	if !reflect.DeepEqual(w1, w2) {
 		w1.Debug("w1")
 		w2.Debug("w2")
 		t.Fatalf("mismatch")
@@ -431,7 +431,6 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 	m := resmaptest_test.NewRmBuilder(t, rf).
 		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
 
-	// nolint:goconst
 	tests := []struct {
 		name    string
 		matcher IdMatcher

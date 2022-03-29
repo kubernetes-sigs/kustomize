@@ -204,12 +204,15 @@ clean-kustomize-external-go-plugin:
 lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
 	cd api; $(MYGOBIN)/golangci-lint-kustomize \
 	  -c ../.golangci-kustomize.yml \
+	  --path-prefix api \
 	  run ./...
 	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
 	  -c ../.golangci-kustomize.yml \
+	  --path-prefix kustomize \
 	  run ./...
 	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
 	  -c ../../.golangci-kustomize.yml \
+	  --path-prefix cmd/pluginator \
 	  run ./...
 
 # Used to add non-default compilation flags when experimenting with

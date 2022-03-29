@@ -5,6 +5,7 @@ run:
   deadline: 5m
   skip-dirs:
     - yaml/internal/k8sgen/pkg
+    - internal/forked
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
@@ -14,34 +15,35 @@ linters:
     - bodyclose
     - deadcode
     - depguard
-    # - dogsled # uncomment after upgrading golangci-lint (Issue #3663)
+    - dogsled
     - dupl
-    - errcheck
+#    - errcheck
+    - exportloopref
+#    - funlen
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-#    - gosec
+    - gosec
     - gosimple
     - govet
     - ineffassign
     - lll
     - misspell
     - nakedret
+    - nolintlint
     - revive
-    - scopelint
     - staticcheck
     - structcheck
-    - stylecheck
+#    - stylecheck # seems redundant with revive, which replaced golint
     - typecheck
     - unconvert
     - unparam
     - unused
     - varcheck
-    # - whitespace # uncomment after upgrading golangci-lint (Issue #3663)
-
+    - whitespace
 
 linters-settings:
   dupl:
@@ -50,5 +52,21 @@ linters-settings:
     line-length: 170
   gocyclo:
     min-complexity: 30
-  golint:
-    min-confidence: 0.85
+  revive:
+    rules:
+    - name: var-naming
+      arguments:
+      - [ "ID", "API", "JSON" ] # AllowList
+      - [ ] # DenyList
+  gosec:
+    config:
+      G306: "0644"
+
+issues:
+  exclude-rules:
+    - linters:
+        - revive
+      text: "don't use leading"
+    - linters:
+        - staticcheck
+      text: "SA1019: kioutil.Legacy"

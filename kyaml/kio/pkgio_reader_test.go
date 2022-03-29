@@ -216,9 +216,19 @@ func TestLocalPackageReader_Read_JSON(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, nodes, 2)
 		expected := []string{
-			`{"a": "b", metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'a_test.json', internal.config.kubernetes.io/index: '0', internal.config.kubernetes.io/path: 'a_test.json'}}}
+			`{"a": "b", ` +
+				`metadata: {annotations: {` +
+				`config.kubernetes.io/index: '0', ` +
+				`config.kubernetes.io/path: 'a_test.json', ` +
+				`internal.config.kubernetes.io/index: '0', ` +
+				`internal.config.kubernetes.io/path: 'a_test.json'}}}
 `,
-			`{"e": "f", "g": {"h": ["i", "j"]}, metadata: {annotations: {config.kubernetes.io/index: '0', config.kubernetes.io/path: 'b_test.json', internal.config.kubernetes.io/index: '0', internal.config.kubernetes.io/path: 'b_test.json'}}}
+			`{"e": "f", "g": {"h": ["i", "j"]}, ` +
+				`metadata: {annotations: {` +
+				`config.kubernetes.io/index: '0', ` +
+				`config.kubernetes.io/path: 'b_test.json', ` +
+				`internal.config.kubernetes.io/index: '0', ` +
+				`internal.config.kubernetes.io/path: 'b_test.json'}}}
 `,
 		}
 		for i := range nodes {

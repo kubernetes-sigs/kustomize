@@ -1168,7 +1168,6 @@ items:
 				assert.NotNil(t, err)
 				assert.Equal(t, tc.expectedErr.Error(), err.Error())
 			}
-
 		})
 	}
 }

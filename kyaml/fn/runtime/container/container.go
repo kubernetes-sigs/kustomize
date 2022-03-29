@@ -189,7 +189,7 @@ func (c *Filter) getCommand() (string, []string) {
 	}
 
 	args = append(args, runtimeutil.NewContainerEnvFromStringSlice(c.Env).GetDockerFlags()...)
-	a := append(args, c.Image)
+	a := append(args, c.Image) //nolint:gocritic
 	return "docker", a
 }
 

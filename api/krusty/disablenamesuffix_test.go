@@ -87,9 +87,9 @@ metadata:
 	}
 
 	th.WriteK("/whatever",
-		strings.Replace(kustomizationContent,
+		strings.ReplaceAll(kustomizationContent,
 			"disableNameSuffixHash: false",
-			"disableNameSuffixHash: true", -1))
+			"disableNameSuffixHash: true"))
 	m = th.Run("/whatever", th.MakeDefaultOptions())
 	secret = findSecret(m, "")
 	if secret == nil {

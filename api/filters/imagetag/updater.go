@@ -36,13 +36,14 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	}
 
 	// overriding tag or digest will replace both original tag and digest values
-	if u.ImageTag.NewTag != "" && u.ImageTag.Digest != "" {
+	switch {
+	case u.ImageTag.NewTag != "" && u.ImageTag.Digest != "":
 		tag = u.ImageTag.NewTag
 		digest = u.ImageTag.Digest
-	} else if u.ImageTag.NewTag != "" {
+	case u.ImageTag.NewTag != "":
 		tag = u.ImageTag.NewTag
 		digest = ""
-	} else if u.ImageTag.Digest != "" {
+	case u.ImageTag.Digest != "":
 		tag = ""
 		digest = u.ImageTag.Digest
 	}

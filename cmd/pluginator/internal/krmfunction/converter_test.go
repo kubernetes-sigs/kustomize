@@ -118,7 +118,7 @@ func TestTransformerConverter(t *testing.T) {
 	dir := makeTempDir(t)
 	defer os.RemoveAll(dir)
 
-	ioutil.WriteFile(filepath.Join(dir, "Plugin.go"),
+	ioutil.WriteFile(filepath.Join(dir, "Plugin.go"), // nolint: gosec
 		getTransformerCode(), 0644)
 
 	c := NewConverter(filepath.Join(dir, "output"),
@@ -215,7 +215,7 @@ func TestGeneratorConverter(t *testing.T) {
 	dir := makeTempDir(t)
 	defer os.RemoveAll(dir)
 
-	ioutil.WriteFile(filepath.Join(dir, "Plugin.go"),
+	ioutil.WriteFile(filepath.Join(dir, "Plugin.go"), // nolint: gosec
 		getGeneratorCode(), 0644)
 
 	c := NewConverter(filepath.Join(dir, "output"),

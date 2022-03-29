@@ -864,7 +864,6 @@ func TestMapEntrySetter(t *testing.T) {
 				assert.NotNil(t, err)
 				assert.Equal(t, tc.expectedErr.Error(), err.Error())
 			}
-
 		})
 	}
 }
@@ -1092,15 +1091,14 @@ func (c filter) Filter(object *RNode) (*RNode, error) {
 }
 
 func TestResourceNode_Pipe(t *testing.T) {
-	r0, r1, r2, r3 := &RNode{}, &RNode{}, &RNode{}, &RNode{}
+	var r0, r1, r2, r3 *RNode
 	var called []string
 
 	// check the nil value case
-	r0 = nil
 	_, err := r0.Pipe(FieldMatcher{Name: "foo"})
 	assert.NoError(t, err)
 
-	r0 = &RNode{}
+	r0, r1, r2, r3 = &RNode{}, &RNode{}, &RNode{}, &RNode{}
 	// all filters successful
 	v, err := r0.Pipe(
 		filter{fn: func(object *RNode) (*RNode, error) {

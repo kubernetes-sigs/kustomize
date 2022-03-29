@@ -17,7 +17,6 @@ var makeMf = func(theMap map[string]interface{}) MappingFunc {
 }
 
 func TestFilter(t *testing.T) {
-
 	testCases := map[string]struct {
 		input    string
 		expected string

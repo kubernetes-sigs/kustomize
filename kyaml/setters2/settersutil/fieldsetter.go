@@ -50,7 +50,7 @@ func (fs *FieldSetter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 // Set updates the OpenAPI definitions and resources with the new setter value
-func (fs FieldSetter) Set() (int, error) {
+func (fs *FieldSetter) Set() (int, error) {
 	// Update the OpenAPI definitions
 	soa := setters2.SetOpenAPI{
 		Name:        fs.Name,

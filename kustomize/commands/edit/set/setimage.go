@@ -105,7 +105,6 @@ func (o *setImageOptions) Validate(args []string) error {
 	o.imageMap = make(map[string]types.Image)
 
 	for _, arg := range args {
-
 		img, err := parse(arg)
 		if err != nil {
 			return err
@@ -129,7 +128,6 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 	// append only new images from kustomize file
 	for _, im := range m.Images {
 		if argIm, ok := o.imageMap[im.Name]; ok {
-
 			// Reuse the existing new name when asterisk new name is passed
 			if argIm.NewName == preserveSeparator {
 				argIm = replaceNewName(argIm, im.NewName)
@@ -155,7 +153,6 @@ func (o *setImageOptions) RunSetImage(fSys filesys.FileSystem) error {
 
 	var images []types.Image
 	for _, v := range o.imageMap {
-
 		if v.NewName == preserveSeparator {
 			v = replaceNewName(v, "")
 		}
@@ -207,7 +204,6 @@ func replaceDigest(image types.Image, digest string) types.Image {
 }
 
 func parse(arg string) (types.Image, error) {
-
 	// matches if there is an image name to overwrite
 	// <image>=<new-image><:|@><new-tag>
 	if s := strings.Split(arg, separator); len(s) == 2 {

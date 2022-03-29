@@ -243,10 +243,8 @@ func TestValidation(t *testing.T) {
 					t.Errorf("%s: Expected error %s, but got %v",
 						n, tc.erMsg, err)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("%s: unknown error: %v", n, err)
-				}
+			} else if err != nil {
+				t.Errorf("%s: unknown error: %v", n, err)
 			}
 		})
 	}

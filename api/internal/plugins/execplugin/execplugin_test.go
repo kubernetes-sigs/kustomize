@@ -83,7 +83,6 @@ metadata:
 `
 	if expected != string(p.Cfg()) {
 		t.Fatalf("expected cfg '%s', got '%s'", expected, string(p.Cfg()))
-
 	}
 	if len(p.Args()) != 6 {
 		t.Fatalf("unexpected arg len %d, %#v", len(p.Args()), p.Args())

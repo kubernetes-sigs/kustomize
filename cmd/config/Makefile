@@ -12,7 +12,7 @@ $(GOBIN)/addlicense:
 	go get github.com/google/addlicense
 
 $(GOBIN)/golangci-lint:
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 
 $(GOBIN)/k8scopy:
 	( cd ../k8scopy; go install . )

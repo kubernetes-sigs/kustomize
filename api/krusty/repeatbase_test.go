@@ -172,6 +172,5 @@ spec:
 	//      containers:
 	//      - image: image-canary-a
 	//        name: container-a
-	//`)
-
+	// `)
 }

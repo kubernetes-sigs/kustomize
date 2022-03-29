@@ -883,7 +883,6 @@ data:
 				assert.Error(t, err)
 				assert.Equal(t, tc.expectedErr, err.Error())
 			}
-
 		})
 	}
 }
