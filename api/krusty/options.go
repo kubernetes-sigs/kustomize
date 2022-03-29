@@ -32,6 +32,12 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// When true use cached git cloner
+	EnableGitCache bool
+
+	// When true use cached git cloner
+	EnableGitBranchesRef bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -42,6 +48,8 @@ func MakeDefaultOptions() *Options {
 		LoadRestrictions:     types.LoadRestrictionsRootOnly,
 		DoPrune:              false,
 		PluginConfig:         types.DisabledPluginConfig(),
+		EnableGitCache:       false,
+		EnableGitBranchesRef: true,
 	}
 }
 

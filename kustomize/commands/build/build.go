@@ -24,6 +24,8 @@ var theFlags struct {
 		plugins        bool
 		managedByLabel bool
 		helm           bool
+		gitCache       bool
+		gitRanchesRef  bool
 	}
 	helmCommand    string
 	loadRestrictor string
@@ -107,6 +109,8 @@ func NewCmdBuild(
 	cmd.Flags().MarkDeprecated(managedByFlag,
 		"The flag `enable-managedby-label` has been deprecated. Use the `managedByLabel` option in the `buildMetadata` field instead.")
 	AddFlagEnableHelm(cmd.Flags())
+	AddFlagEnableGitCache(cmd.Flags())
+	AddFlagEnableGitBranchesRef(cmd.Flags())
 	return cmd
 }
 
@@ -142,5 +146,7 @@ func HonorKustomizeFlags(kOpts *krusty.Options) *krusty.Options {
 	}
 	kOpts.PluginConfig.HelmConfig.Command = theFlags.helmCommand
 	kOpts.AddManagedbyLabel = isManagedByLabelEnabled()
+	kOpts.EnableGitCache = theFlags.enable.gitCache
+	kOpts.EnableGitBranchesRef = theFlags.enable.gitRanchesRef
 	return kOpts
 }

@@ -142,7 +142,7 @@ func newLoaderAtConfirmedDir(
 		referrer:       referrer,
 		fSys:           fSys,
 		cloner:         cloner,
-		cleaner:        func() error { return nil },
+		cleaner:        git.DoNothingCleaner,
 	}
 }
 
@@ -178,8 +178,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		if err = fl.errIfRepoCycle(repoSpec); err != nil {
 			return nil, err
 		}
-		return newLoaderAtGitClone(
-			repoSpec, fl.fSys, fl, fl.cloner)
+		return newLoaderAtGitClone(repoSpec, fl.fSys, fl, fl.cloner, fl.cleaner, true)
 	}
 
 	if filepath.IsAbs(path) {
@@ -201,18 +200,18 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
 // directory holding a cloned git repo.
-func newLoaderAtGitClone(
-	repoSpec *git.RepoSpec, fSys filesys.FileSystem,
-	referrer *fileLoader, cloner git.Cloner) (ifc.Loader, error) {
-	cleaner := repoSpec.Cleaner(fSys)
-	err := cloner(repoSpec)
+func newLoaderAtGitClone(repoSpec *git.RepoSpec, fSys filesys.FileSystem, referrer *fileLoader, cloner git.Cloner,
+	cleaner func() error, acceptGitBranchesRef bool) (ifc.Loader, error) {
+
+	repoCleaner := repoSpec.Cleaner(fSys)
+	err := cloner(repoSpec, acceptGitBranchesRef)
 	if err != nil {
-		cleaner()
+		repoCleaner()
 		return nil, err
 	}
 	root, f, err := fSys.CleanedAbs(repoSpec.AbsPath())
 	if err != nil {
-		cleaner()
+		repoCleaner()
 		return nil, err
 	}
 	// We don't know that the path requested in repoSpec
@@ -220,7 +219,7 @@ func newLoaderAtGitClone(
 	// inside.  That just happened, hence the error check
 	// is here.
 	if f != "" {
-		cleaner()
+		repoCleaner()
 		return nil, fmt.Errorf(
 			"'%s' refers to file '%s'; expecting directory",
 			repoSpec.AbsPath(), f)

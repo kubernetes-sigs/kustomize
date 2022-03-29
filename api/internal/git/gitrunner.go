@@ -38,18 +38,22 @@ func newCmdRunner(timeout time.Duration) (*gitRunner, error) {
 }
 
 // run a command with a timeout.
-func (r gitRunner) run(args ...string) error {
+func (r gitRunner) run(args ...string) (string, error) {
+	output := []byte{}
 	//nolint: gosec
 	cmd := exec.Command(r.gitProgram, args...)
 	cmd.Dir = r.dir.String()
-	return utils.TimedCall(
+
+	err := utils.TimedCall(
 		cmd.String(),
 		r.duration,
 		func() error {
-			_, err := cmd.CombinedOutput()
+			o, err := cmd.CombinedOutput()
 			if err != nil {
 				return errors.Wrapf(err, "git cmd = '%s'", cmd.String())
 			}
+			output = o
 			return err
 		})
+	return string(output), err
 }
