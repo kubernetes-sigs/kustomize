@@ -70,7 +70,6 @@ Fixed fields:
   patchesJson6902 -> patches
   commonLabels -> labels
   vars -> replacements`)
-
 	} else {
 		fmt.Fprintln(w, `
 Fixed fields:

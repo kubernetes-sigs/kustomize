@@ -273,9 +273,9 @@ type resultsChecker interface {
 	shouldUpdateFixtures() bool
 	// updateFixtures modifies the test fixture files to match the given content
 	updateFixtures(t *testing.T, actualOutput string, actualError string)
-	// assertOutputMatches compares the expected output to the output recieved.
+	// assertOutputMatches compares the expected output to the output received.
 	assertOutputMatches(t *testing.T, expected string, actual string)
-	// assertErrorMatches compares teh expected error to the error received.
+	// assertErrorMatches compares the expected error to the error received.
 	assertErrorMatches(t *testing.T, expected string, actual string)
 }
 

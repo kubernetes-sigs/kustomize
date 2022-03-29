@@ -69,7 +69,6 @@ func (o *setReplicasOptions) Validate(args []string) error {
 	o.replicasMap = make(map[string]types.Replica)
 
 	for _, arg := range args {
-
 		replica, err := parseReplicasArg(arg)
 		if err != nil {
 			return err
@@ -113,7 +112,6 @@ func (o *setReplicasOptions) RunSetReplicas(fSys filesys.FileSystem) error {
 }
 
 func parseReplicasArg(arg string) (types.Replica, error) {
-
 	// matches a name and a replica count
 	// <name>=<count>
 	if s := strings.Split(arg, replicasSeparator); len(s) == 2 {

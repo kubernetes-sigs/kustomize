@@ -105,7 +105,7 @@ func (c *Converter) prepareWrapper(content string) string {
 		}
 		// assign to plugin variable
 		if strings.TrimSpace(line) == "var plugin resmap.Configurable" {
-			line = line + `
+			line += `
 	// KustomizePlugin is a global variable defined in every plugin
 	plugin = &KustomizePlugin
 `
@@ -156,7 +156,7 @@ func (c *Converter) mkDstDir() error {
 func (c *Converter) write(m map[string]string) error {
 	for k, v := range m {
 		p := filepath.Join(c.outputDir, k)
-		err := ioutil.WriteFile(p, []byte(v), 0644)
+		err := ioutil.WriteFile(p, []byte(v), 0644) //nolint:gosec
 		if err != nil {
 			return err
 		}

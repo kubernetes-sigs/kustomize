@@ -139,7 +139,6 @@ func (ns Filter) roleBindingHack(obj *yaml.RNode, gvk resid.Gvk) error {
 		}
 
 		return ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString)(node)
-
 	})
 
 	return err

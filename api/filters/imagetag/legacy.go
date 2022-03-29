@@ -81,9 +81,7 @@ func (f findFieldsFilter) walk(node *yaml.RNode) error {
 			return nil
 		})
 	case yaml.SequenceNode:
-		return node.VisitElements(func(n *yaml.RNode) error {
-			return f.walk(n)
-		})
+		return node.VisitElements(f.walk)
 	}
 	return nil
 }

@@ -93,7 +93,6 @@ func TestMakeFsInMemory(t *testing.T) {
 		t, "MakeFsInMemory", true, topCases, MakeFsInMemory())
 }
 
-//nolint:gocyclo
 func runBasicOperations(
 	t *testing.T, tName string, isFSysRooted bool,
 	cases []pathCase, fSys FileSystem) {
@@ -449,10 +448,10 @@ var bunchOfFiles = []struct {
 		addAsDir: true,
 	},
 	{
-		path: filepath.Join("x"),
+		path: "x",
 	},
 	{
-		path: filepath.Join("y"),
+		path: "y",
 	},
 	{
 		path: filepath.Join("b", "d", "a", "c", "i", "beans"),
@@ -559,7 +558,7 @@ func TestRemove(t *testing.T) {
 	orgCount -= 3
 
 	// Now drop one more for a total of four dropped.
-	result, _ = n.Find(filepath.Join("y"))
+	result, _ = n.Find("y")
 	err = result.Remove()
 	if err != nil {
 		t.Fatalf("%s; unable to remove: %v", path, err)
@@ -692,7 +691,7 @@ func TestFind(t *testing.T) {
 		},
 		{
 			what:      "directory",
-			arg:       filepath.Join("b"),
+			arg:       "b",
 			expectDir: true,
 		},
 		{
@@ -869,7 +868,7 @@ func TestFileOps(t *testing.T) {
 	defer f.Close()
 
 	for {
-		buf := make([]byte, rand.Intn(10))
+		buf := make([]byte, rand.Intn(10)) // nolint:gosec
 		n, err := f.Read(buf)
 		if err != nil && err != io.EOF {
 			t.Fatalf("unexpected error: %v", err)

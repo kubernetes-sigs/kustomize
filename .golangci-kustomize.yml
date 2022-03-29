@@ -7,13 +7,14 @@ linters:
     - bodyclose
     - deadcode
     - depguard
-    # - dogsled
+    - dogsled
     - dupl
-    # - errcheck
-    # - funlen
-    # - gochecknoinits
+#     - errcheck
+    - exportloopref
+#     - funlen
+    - gochecknoinits
     - goconst
-    # - gocritic
+    - gocritic
     - gocyclo
     - gofmt
     - goimports
@@ -24,19 +25,17 @@ linters:
     - lll
     - misspell
     - nakedret
+    - nolintlint
     - revive
-    # - scopelint
     - staticcheck
     - structcheck
-    # stylecheck demands that acronyms not be treated as words
-    # in camelCase, so JsonOp become JSONOp, etc.  Yuck.
-    # - stylecheck
+#    - stylecheck # seems redundant with revive, which replaced golint
     - typecheck
     - unconvert
     - unparam
     - unused
     - varcheck
-    # - whitespace
+    - whitespace
 
 linters-settings:
   dupl:
@@ -45,5 +44,15 @@ linters-settings:
     line-length: 170
   gocyclo:
     min-complexity: 15
-  golint:
-    min-confidence: 0.85
+  revive:
+    rules:
+    - name: var-naming
+      arguments:
+      - [ "ID", "API", "JSON" ] # AllowList
+      - [ ] # DenyList
+
+issues:
+  exclude-rules:
+    - linters:
+        - revive
+      text: "don't use leading"

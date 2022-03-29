@@ -172,7 +172,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		return nil, fmt.Errorf("new root cannot be empty")
 	}
 
-	repoSpec, err := git.NewRepoSpecFromUrl(path)
+	repoSpec, err := git.NewRepoSpecFromURL(path)
 	if err == nil {
 		// Treat this as git repo clone request.
 		if err = fl.errIfRepoCycle(repoSpec); err != nil {
@@ -315,7 +315,7 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode < 200 || resp.StatusCode > 299 {
-			_, err := git.NewRepoSpecFromUrl(path)
+			_, err := git.NewRepoSpecFromURL(path)
 			if err == nil {
 				return nil, errors.New("URL is a git repository")
 			}

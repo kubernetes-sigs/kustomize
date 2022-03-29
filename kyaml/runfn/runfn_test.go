@@ -342,7 +342,7 @@ metadata:
 		{name: "sort functions -- deepest first",
 			in: []f{
 				{
-					path: filepath.Join("a.yaml"),
+					path: "a.yaml",
 					value: `
 metadata:
   annotations:
@@ -382,7 +382,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -412,7 +412,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -442,7 +442,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -473,7 +473,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -502,7 +502,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -543,7 +543,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:

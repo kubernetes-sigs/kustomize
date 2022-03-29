@@ -96,8 +96,8 @@ type HelmChartArgs struct {
 // per-chart params and global chart-independent parameters.
 func SplitHelmParameters(
 	oldArgs []HelmChartArgs) (charts []HelmChart, globals HelmGlobals) {
-	for _, old := range oldArgs {
-		charts = append(charts, makeHelmChartFromHca(&old))
+	for i, old := range oldArgs {
+		charts = append(charts, makeHelmChartFromHca(&oldArgs[i]))
 		if old.HelmHome != "" {
 			// last non-empty wins
 			globals.ConfigHome = old.HelmHome

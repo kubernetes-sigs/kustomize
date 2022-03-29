@@ -64,7 +64,7 @@ func (c *SetterCreator) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	return nil, c.Create()
 }
 
-func (c SetterCreator) Create() error {
+func (c *SetterCreator) Create() error {
 	err := c.validateSetterInfo()
 	if err != nil {
 		return err

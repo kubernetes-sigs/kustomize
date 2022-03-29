@@ -75,14 +75,16 @@ spec:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              internal value, and may reject unrecognized values. More info: 
+			  https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           color:
             type: string
           kind:
             description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              submits requests to. Cannot be updated. In CamelCase. More info: 
+			  https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -141,7 +143,7 @@ func TestSchemaFromFunctionDefinition(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				var gotProps []string
-				for prop, _ := range got.Properties {
+				for prop := range got.Properties {
 					gotProps = append(gotProps, prop)
 				}
 				sort.Strings(tt.wantProps)

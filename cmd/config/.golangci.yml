@@ -49,5 +49,4 @@ linters-settings:
     line-length: 170
   gocyclo:
     min-complexity: 30
-  golint:
-    min-confidence: 0.85
+

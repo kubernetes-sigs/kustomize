@@ -78,11 +78,9 @@ func filesTouchedByKustomize(k *types.Kustomization, filepath string, fSys files
 				}
 				result = append(result, paths...)
 			}
-
 		}
 		// read the resource as a file
 		result = append(result, path.Join(filepath, r))
-
 	}
 
 	// aggregate all of the paths from the `patches` field
@@ -149,7 +147,6 @@ func findVarName(node *kyaml.RNode, varName string, path []string) ([]string, []
 	var options []*types.FieldOptions
 
 	switch node.YNode().Kind {
-
 	case kyaml.SequenceNode:
 		elements, err := node.Elements()
 		if err != nil {
@@ -237,7 +234,6 @@ func constructFieldOptions(value string, varString string) ([]*types.FieldOption
 
 func constructTargets(file string, node *kyaml.RNode, fieldPaths []string,
 	options []*types.FieldOptions) ([]*types.TargetSelector, error) {
-
 	if len(fieldPaths) != len(options) {
 		// this should never happen
 		return nil, fmt.Errorf("internal error: length of fieldPaths != length of fieldOptions")
@@ -287,7 +283,6 @@ func constructTargets(file string, node *kyaml.RNode, fieldPaths []string,
 // resources may have different IDs than the patch
 func writePatchTargets(patch types.Patch, node *kyaml.RNode, fieldPaths []string,
 	options []*types.FieldOptions) ([]*types.TargetSelector, error) {
-
 	var result []*types.TargetSelector
 	selector := patch.Target.Copy()
 

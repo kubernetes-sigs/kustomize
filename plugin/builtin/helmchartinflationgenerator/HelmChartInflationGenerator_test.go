@@ -472,7 +472,7 @@ func TestHelmChartInflationGeneratorWithIncludeCRDs(t *testing.T) {
 	// and has backticks, which makes string literals wonky
 	testData, err := ioutil.ReadFile("include_crds_testdata.txt")
 	if err != nil {
-		t.Errorf("unable to read test data for includeCRDs: %w", err)
+		t.Error(fmt.Errorf("unable to read test data for includeCRDs: %w", err))
 	}
 
 	rm := th.LoadAndRunGenerator(`
