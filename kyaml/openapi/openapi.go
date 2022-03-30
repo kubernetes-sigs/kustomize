@@ -317,7 +317,7 @@ func toTypeMeta(ext interface{}) (yaml.TypeMeta, bool) {
 	}
 
 	apiVersion := m[versionKey].(string)
-	if g := m[groupKey].(string); g != "" {
+	if g, ok := m[groupKey].(string); ok && g != "" {
 		apiVersion = g + "/" + apiVersion
 	}
 	return yaml.TypeMeta{Kind: m[kindKey].(string), APIVersion: apiVersion}, true
