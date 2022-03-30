@@ -22,6 +22,7 @@ import (
 )
 
 func makeResAccumulator(t *testing.T) *ResAccumulator {
+	t.Helper()
 	ra := MakeEmptyAccumulator()
 	err := ra.MergeConfig(builtinconfig.MakeDefaultConfig())
 	if err != nil {
@@ -133,6 +134,7 @@ func TestResolveVarsOneUnused(t *testing.T) {
 }
 
 func expectLog(t *testing.T, log bytes.Buffer, expect string) {
+	t.Helper()
 	if !strings.Contains(log.String(), expect) {
 		t.Fatalf("expected log containing '%s', got '%s'", expect, log.String())
 	}

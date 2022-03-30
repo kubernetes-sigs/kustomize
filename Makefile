@@ -203,15 +203,15 @@ clean-kustomize-external-go-plugin:
 .PHONY: lint-kustomize
 lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
 	cd api; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../.golangci-kustomize.yml \
+	  -c ../.golangci.yml \
 	  --path-prefix api \
 	  run ./...
 	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../.golangci-kustomize.yml \
+	  -c ../.golangci.yml \
 	  --path-prefix kustomize \
 	  run ./...
 	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../../.golangci-kustomize.yml \
+	  -c ../../.golangci.yml \
 	  --path-prefix cmd/pluginator \
 	  run ./...
 

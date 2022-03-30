@@ -96,6 +96,7 @@ func TestMakeFsInMemory(t *testing.T) {
 func runBasicOperations(
 	t *testing.T, tName string, isFSysRooted bool,
 	cases []pathCase, fSys FileSystem) {
+	t.Helper()
 	for _, c := range cases {
 		err := fSys.WriteFile(c.arg, []byte(content))
 		if c.errStr != "" {
@@ -370,6 +371,7 @@ func TestAddFile(t *testing.T) {
 func checkNode(
 	t *testing.T, what string, f *fsNode, name string,
 	size int, isDir bool, path string) {
+	t.Helper()
 	if f.isNodeADir() != isDir {
 		t.Fatalf("%s; unexpected isNodeADir = %v", what, f.isNodeADir())
 	}
@@ -387,6 +389,7 @@ func checkNode(
 func checkOsStat(
 	t *testing.T, what string, f File, name string,
 	size int, isDir bool) {
+	t.Helper()
 	info, err := f.Stat()
 	if err != nil {
 		t.Fatalf("%s; unexpected stat error %v", what, err)
@@ -473,6 +476,7 @@ var bunchOfFiles = []struct {
 }
 
 func makeLoadedFileTree(t *testing.T) *fsNode {
+	t.Helper()
 	n := MakeEmptyDirInMemory()
 	var err error
 	expectedFileCount := 0
@@ -487,8 +491,7 @@ func makeLoadedFileTree(t *testing.T) *fsNode {
 			t.Fatalf("unexpected error %v", err)
 		}
 	}
-	fc := n.FileCount()
-	if fc != expectedFileCount {
+	if fc := n.FileCount(); fc != expectedFileCount {
 		t.Fatalf("expected file count %d, got %d",
 			expectedFileCount, fc)
 	}
@@ -565,8 +568,7 @@ func TestRemove(t *testing.T) {
 	}
 	orgCount -= 1
 
-	fc := n.FileCount()
-	if fc != orgCount {
+	if fc := n.FileCount(); fc != orgCount {
 		t.Fatalf("expected file count %d, got %d",
 			orgCount, fc)
 	}

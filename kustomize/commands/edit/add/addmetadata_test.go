@@ -16,6 +16,7 @@ import (
 )
 
 func makeKustomization(t *testing.T) *types.Kustomization {
+	t.Helper()
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomization(fSys)
 	kf, err := kustfile.NewKustomizationFile(fSys)

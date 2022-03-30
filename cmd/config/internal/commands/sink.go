@@ -46,7 +46,6 @@ See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.`)
 	return err
 }
 
-// nolint
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 	var outputs []kio.Writer
 	if len(args) == 1 {

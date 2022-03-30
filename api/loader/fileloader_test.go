@@ -240,6 +240,7 @@ func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
 // in or below the loader root.
 func doSanityChecksAndDropIntoBase(
 	t *testing.T, l ifc.Loader) ifc.Loader {
+	t.Helper()
 	data, err := l.Load(path.Join("base", "okayData"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

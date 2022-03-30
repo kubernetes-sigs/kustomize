@@ -91,8 +91,7 @@ func TestEmptyInput(t *testing.T) {
 		Outputs: []Writer{output},
 	}
 
-	err := p.Execute()
-	if err != nil {
+	if err := p.Execute(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -132,8 +131,7 @@ func TestEmptyInputWithFilter(t *testing.T) {
 		Filters: filters,
 	}
 
-	err := p.Execute()
-	if err != nil {
+	if err := p.Execute(); err != nil {
 		t.Fatal(err)
 	}
 

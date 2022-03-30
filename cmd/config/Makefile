@@ -37,7 +37,8 @@ lint: $(GOBIN)/golangci-lint
 	$(GOBIN)/golangci-lint \
 	  --skip-dirs $(k8sGenDir) \
 	  run ./... \
-	  --path-prefix=cmd/config
+	  --path-prefix=cmd/config \
+	  -c ../../.golangci.yml
 
 license: $(GOBIN)/addlicense
 	$(GOBIN)/addlicense \

@@ -74,8 +74,6 @@ data:
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
-	output := rn.MustString()
-
 	expected := `apiVersion: v1
 kind: ConfigMap
 data:
@@ -84,7 +82,7 @@ metadata:
   labels:
     foo: 'bar'
 `
-	if output != expected {
+	if output := rn.MustString(); output != expected {
 		t.Fatalf("expected \n%s\nbut got \n%s\n", expected, output)
 	}
 }
@@ -102,7 +100,6 @@ data:
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
-	output := rn.MustString()
 
 	expected := `apiVersion: v1
 kind: ConfigMap
@@ -114,7 +111,7 @@ data:
   altGreeting: "Good Morning!"
   enableRisky: "false"
 `
-	if output != expected {
+	if output := rn.MustString(); output != expected {
 		t.Fatalf("expected \n%s\nbut got \n%s\n", expected, output)
 	}
 }

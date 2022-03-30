@@ -56,12 +56,14 @@ var origin2 = &resource.Origin{
 }
 
 func doAppend(t *testing.T, w ResMap, r *resource.Resource) {
+	t.Helper()
 	err := w.Append(r)
 	if err != nil {
 		t.Fatalf("append error: %v", err)
 	}
 }
 func doRemove(t *testing.T, w ResMap, id resid.ResId) {
+	t.Helper()
 	err := w.Remove(id)
 	if err != nil {
 		t.Fatalf("remove error: %v", err)

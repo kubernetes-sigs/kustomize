@@ -25,6 +25,7 @@ type pluginTestEnv struct {
 
 // newPluginTestEnv returns a new instance of pluginTestEnv.
 func newPluginTestEnv(t *testing.T) *pluginTestEnv {
+	t.Helper()
 	return &pluginTestEnv{t: t}
 }
 

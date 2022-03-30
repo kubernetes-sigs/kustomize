@@ -65,6 +65,7 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 		{path: "c_test.yaml", content: readFileC},
 		{path: "d_test.yaml", content: readFileD},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath: path,
 			FileSystem:  filesys.FileSystemOrOnDisk{FileSystem: mockFS},
@@ -136,6 +137,7 @@ func TestLocalPackageReader_Read_pkgAndSkipFile(t *testing.T) {
 		{path: "c_test.yaml", content: readFileC},
 		{path: "d_test.yaml", content: readFileD},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:  path,
 			FileSkipFunc: func(relPath string) bool { return relPath == "d_test.yaml" },
@@ -207,6 +209,7 @@ func TestLocalPackageReader_Read_JSON(t *testing.T) {
 		  }`),
 		},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:    path,
 			MatchFilesGlob: []string{"*.json"},
@@ -246,6 +249,7 @@ func TestLocalPackageReader_Read_file(t *testing.T) {
 		{path: "a_test.yaml", content: readFileA},
 		{path: "b_test.yaml", content: readFileB},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath: filepath.Join(path, "a_test.yaml"),
 			FileSystem:  filesys.FileSystemOrOnDisk{FileSystem: mockFS},
@@ -286,6 +290,7 @@ func TestLocalPackageReader_Read_pkgOmitAnnotations(t *testing.T) {
 		{path: "a_test.yaml", content: readFileA},
 		{path: "b_test.yaml", content: readFileB},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:           path,
 			OmitReaderAnnotations: true,
@@ -322,6 +327,7 @@ func TestLocalPackageReader_Read_PreserveSeqIndent(t *testing.T) {
 		{path: "a_test.yaml", content: readFileA},
 		{path: "b_test.yaml", content: readFileB},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:       path,
 			PreserveSeqIndent: true,
@@ -379,6 +385,7 @@ func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 		{path: "a/b/a_test.yaml", content: readFileA},
 		{path: "a/b/b_test.yaml", content: readFileB},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath: path,
 			FileSystem:  filesys.FileSystemOrOnDisk{FileSystem: mockFS},
@@ -433,6 +440,7 @@ func TestLocalPackageReader_Read_matchRegex(t *testing.T) {
 		{path: "a/b/a_test.yaml", content: readFileA},
 		{path: "a/b/b_test.yaml", content: readFileB},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:    path,
 			MatchFilesGlob: []string{`a*.yaml`},
@@ -478,6 +486,7 @@ func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
 		{path: "a/c/c_test.yaml", content: readFileB},
 		{path: "a/c/pkgFile", content: pkgFile},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:     path,
 			PackageFileName: "pkgFile",
@@ -523,6 +532,7 @@ func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
 		{path: "a/c/c_test.yaml", content: readFileB},
 		{path: "a/c/pkgFile", content: pkgFile},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:        path,
 			IncludeSubpackages: true,
@@ -581,6 +591,7 @@ type mockFile struct {
 }
 
 func testOnDiskAndOnMem(t *testing.T, files []mockFile, f func(t *testing.T, path string, fs filesys.FileSystem)) {
+	t.Helper()
 	t.Run("on_disk", func(t *testing.T) {
 		var dirs []string
 		for _, file := range files {
@@ -627,6 +638,7 @@ func TestLocalPackageReader_ReadBareSeqNodes(t *testing.T) {
 		{path: "a/c"},
 		{path: "e_test.yaml", content: readFileE},
 	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
 		rfr := LocalPackageReader{
 			PackagePath:     path,
 			FileSystem:      filesys.FileSystemOrOnDisk{FileSystem: mockFS},

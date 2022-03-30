@@ -26,6 +26,7 @@ func TestNotExistErr(t *testing.T) {
 }
 
 func testNotExistErr(t *testing.T, fs FileSystem) {
+	t.Helper()
 	const path = "bad-dir/file.txt"
 
 	err := fs.RemoveAll(path)

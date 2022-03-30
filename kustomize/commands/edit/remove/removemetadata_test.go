@@ -27,6 +27,7 @@ func makeKustomizationFS() filesys.FileSystem {
 }
 
 func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomization {
+	t.Helper()
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
@@ -39,6 +40,7 @@ func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomiza
 }
 
 func makeKustomization(t *testing.T) *types.Kustomization {
+	t.Helper()
 	fSys := makeKustomizationFS()
 	return readKustomizationFS(t, fSys)
 }

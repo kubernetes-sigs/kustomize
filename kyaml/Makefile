@@ -34,7 +34,10 @@ clean:
 lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
 	  run ./... \
-	  --path-prefix=kyaml
+	  --path-prefix=kyaml \
+	  -c ../.golangci.yml \
+	  --skip-dirs yaml/internal/k8sgen/pkg \
+	  --skip-dirs internal/forked
 
 
 license: $(MYGOBIN)/addlicense

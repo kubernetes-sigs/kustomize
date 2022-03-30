@@ -242,6 +242,7 @@ func TestFilter_ExitCode(t *testing.T) {
 }
 
 func getWorkingDir(t *testing.T) string {
+	t.Helper()
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	return wd
