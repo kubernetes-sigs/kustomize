@@ -36,6 +36,7 @@ type test struct {
 }
 
 func runTests(t *testing.T, tests []test) {
+	t.Helper()
 	dir := build()
 	bin := filepath.Join(dir, kyamlBin)
 

@@ -81,6 +81,7 @@ type CommandResultsChecker struct {
 // Assert runs the command with the input provided in each valid test directory
 // and verifies that the actual output and error match the fixtures in the directory.
 func (rc *CommandResultsChecker) Assert(t *testing.T) bool {
+	t.Helper()
 	if rc.ConfigInputFilename == "" {
 		rc.ConfigInputFilename = DefaultConfigInputFilename
 	}
@@ -109,6 +110,7 @@ func (rc *CommandResultsChecker) isTestDir(path string) bool {
 }
 
 func (rc *CommandResultsChecker) runInCurrentDir(t *testing.T) (string, string) {
+	t.Helper()
 	_, err := os.Stat(rc.ConfigInputFilename)
 	if os.IsNotExist(err) {
 		t.Errorf("Test case is missing FunctionConfig input file (default: %s)", DefaultConfigInputFilename)
@@ -180,6 +182,7 @@ type ProcessorResultsChecker struct {
 // Assert runs the processor with the input provided in each valid test directory
 // and verifies that the actual output and error match the fixtures in the directory.
 func (rc *ProcessorResultsChecker) Assert(t *testing.T) bool {
+	t.Helper()
 	if rc.InputFilename == "" {
 		rc.InputFilename = DefaultInputFilename
 	}
@@ -205,6 +208,7 @@ func (rc *ProcessorResultsChecker) isTestDir(path string) bool {
 }
 
 func (rc *ProcessorResultsChecker) runInCurrentDir(t *testing.T) (string, string) {
+	t.Helper()
 	_, err := os.Stat(rc.InputFilename)
 	if os.IsNotExist(err) {
 		t.Errorf("Test case is missing input file (default: %s)", DefaultInputFilename)
@@ -232,6 +236,7 @@ type AssertionFunc func(t *testing.T, expected string, actual string)
 // RequireEachLineMatches is an AssertionFunc that treats each line of expected string
 // as a regex that must match the actual string.
 func RequireEachLineMatches(t *testing.T, expected, actual string) {
+	t.Helper()
 	// Check that each expected line matches the output
 	actual = standardizeSpacing(actual)
 	for _, msg := range strings.Split(standardizeSpacing(expected), "\n") {
@@ -242,6 +247,7 @@ func RequireEachLineMatches(t *testing.T, expected, actual string) {
 // RequireStrippedStringsEqual is an AssertionFunc that does a simple string comparison
 // of expected and actual after normalizing whitespace.
 func RequireStrippedStringsEqual(t *testing.T, expected, actual string) {
+	t.Helper()
 	require.Equal(t,
 		standardizeSpacing(expected),
 		standardizeSpacing(actual))
@@ -330,6 +336,7 @@ func (rc *checkerCore) shouldUpdateFixtures() bool {
 }
 
 func (rc *checkerCore) updateFixtures(t *testing.T, actualOutput string, actualError string) {
+	t.Helper()
 	if actualError != "" {
 		require.NoError(t, ioutil.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600))
 	}
@@ -340,14 +347,17 @@ func (rc *checkerCore) updateFixtures(t *testing.T, actualOutput string, actualE
 }
 
 func (rc *checkerCore) assertOutputMatches(t *testing.T, expected string, actual string) {
+	t.Helper()
 	rc.outputAssertionFunc(t, expected, actual)
 }
 
 func (rc *checkerCore) assertErrorMatches(t *testing.T, expected string, actual string) {
+	t.Helper()
 	rc.errorAssertionFunc(t, expected, actual)
 }
 
 func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
+	t.Helper()
 	// read the expected results
 	var expectedOutput, expectedError string
 	if rc.expectedOutputFilename != "" {
@@ -385,6 +395,7 @@ func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
 // under test in each directory, and then runs assertions on the returned output and error results.
 // It triggers a test failure if no valid test directories were found.
 func runAllTestCases(t *testing.T, checker resultsChecker) {
+	t.Helper()
 	checker.resetTestCasesRun()
 	err := filepath.Walk(checker.rootDir(),
 		func(path string, info os.FileInfo, err error) error {
@@ -399,6 +410,7 @@ func runAllTestCases(t *testing.T, checker resultsChecker) {
 }
 
 func runDirectoryTestCase(t *testing.T, path string, checker resultsChecker) {
+	t.Helper()
 	// cd into the directory so we can test functions that refer to local files by relative paths
 	d, err := os.Getwd()
 	require.NoError(t, err)

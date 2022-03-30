@@ -2180,8 +2180,7 @@ func TestRoundTripJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected MarshalJSON err: %v", err)
 	}
-	actual := string(data)
-	if actual != deploymentLittleJson {
+	if actual := string(data); actual != deploymentLittleJson {
 		t.Fatalf("expected %s, got %s", deploymentLittleJson, actual)
 	}
 }

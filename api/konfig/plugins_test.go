@@ -179,9 +179,11 @@ func TestDefaultAbsPluginHomeNoXdgJustHomeDir(t *testing.T) {
 }
 
 func setenv(t *testing.T, key, value string) {
+	t.Helper()
 	require.NoError(t, os.Setenv(key, value))
 }
 
 func unsetenv(t *testing.T, key string) {
+	t.Helper()
 	require.NoError(t, os.Unsetenv(key))
 }

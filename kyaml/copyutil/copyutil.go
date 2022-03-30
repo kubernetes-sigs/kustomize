@@ -188,8 +188,7 @@ func SyncFile(src, dst string) error {
 
 // deleteFile deletes file from path, returns no error if file doesn't exist
 func deleteFile(path string) error {
-	_, err := os.Stat(path)
-	if err != nil {
+	if _, err := os.Stat(path); err != nil {
 		// return nil if file doesn't exist
 		return nil
 	}

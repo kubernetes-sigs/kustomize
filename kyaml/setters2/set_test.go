@@ -1002,6 +1002,7 @@ spec:
 
 // initSchema initializes the openAPI with the definitions from s
 func SettersSchema(t *testing.T, s string) *spec.Schema {
+	t.Helper()
 	dir, err := ioutil.TempDir("", "")
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)

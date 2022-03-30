@@ -13,6 +13,7 @@ import (
 )
 
 func setupRMForPatchTargets(t *testing.T) ResMap {
+	t.Helper()
 	result, err := rmF.NewResMapFromBytes([]byte(`
 apiVersion: group1/v1
 kind: Kind1

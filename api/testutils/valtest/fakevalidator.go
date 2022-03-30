@@ -22,11 +22,13 @@ const SAD = "i'm not happy Bob, NOT HAPPY"
 
 // MakeHappyMapValidator makes a fakeValidator that always passes.
 func MakeHappyMapValidator(t *testing.T) *fakeValidator {
+	t.Helper()
 	return &fakeValidator{happy: true, t: t}
 }
 
 // MakeSadMapValidator makes a fakeValidator that always fails.
 func MakeSadMapValidator(t *testing.T) *fakeValidator {
+	t.Helper()
 	return &fakeValidator{happy: false, t: t}
 }
 

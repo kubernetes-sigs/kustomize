@@ -12,6 +12,7 @@ import (
 )
 
 func makeTempDir(t *testing.T) string {
+	t.Helper()
 	s, err := ioutil.TempDir("", "pluginator-*")
 	assert.NoError(t, err)
 	return s
@@ -99,6 +100,7 @@ items:
 }
 
 func runKrmFunction(t *testing.T, input []byte, dir string) []byte {
+	t.Helper()
 	cmd := exec.Command("go", "run", ".")
 	ib := bytes.NewReader(input)
 	cmd.Stdin = ib

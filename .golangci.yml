@@ -3,47 +3,91 @@
 
 run:
   deadline: 5m
-  skip-dirs:
-    - yaml/internal/k8sgen/pkg
-    - internal/forked
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - asciicheck
+    - bidichk
     - bodyclose
+    - contextcheck
+#    - cyclop
     - deadcode
     - depguard
     - dogsled
     - dupl
-#    - errcheck
+    - durationcheck
+#    - errcheck # TODO: enable going forward
+#    - errname # TODO: enable going forward
+#    - errorlint # TODO: enable going forward
+#    - exhaustive # TODO: enable going forward
+#    - exhaustivestruct
     - exportloopref
+#    - forbidigo
+#    - forcetypeassert # TODO: enable going forward
 #    - funlen
+#    - gci
+#    - gochecknoglobals
     - gochecknoinits
+#    - gocognit
     - goconst
     - gocritic
     - gocyclo
+#    - godot
+#    - godox
+#    - goerr113 # TODO: enable going forward
     - gofmt
+#    - gofumpt
+    - goheader
     - goimports
+#    - gomnd
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
     - gosec
     - gosimple
     - govet
+#    - ifshort
+    - importas
     - ineffassign
+#    - ireturn
     - lll
+    - makezero
     - misspell
     - nakedret
+#    - nestif # TODO: enable going forward
+#    - nilerr # TODO: enable going forward
+#    - nilnil
+#    - nlreturn
+#    - noctx
     - nolintlint
+#    - paralleltest
+#    - prealloc # TODO: enable going forward
+    - predeclared
+    - promlinter
     - revive
+    - rowserrcheck
+    - sqlclosecheck
     - staticcheck
     - structcheck
-#    - stylecheck # seems redundant with revive, which replaced golint
+#    - stylecheck
+    - tagliatelle
+    - tenv
+#    - testpackage # TODO: enable going forward
+    - thelper
+    - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
     - varcheck
+#    - varnamelen
+    - wastedassign
     - whitespace
+#    - wrapcheck # TODO: enable going forward
+#    - wsl
 
 linters-settings:
   dupl:
@@ -58,11 +102,14 @@ linters-settings:
       arguments:
       - [ "ID", "API", "JSON" ] # AllowList
       - [ ] # DenyList
+  gomoddirectives:
+    replace-local: true
   gosec:
     config:
       G306: "0644"
 
 issues:
+  max-same-issues: 0
   exclude-rules:
     - linters:
         - revive

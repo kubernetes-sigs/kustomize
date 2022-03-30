@@ -23,19 +23,19 @@ c: d
 
 func TestResourceNode_SetValue(t *testing.T) {
 	instance := *NewScalarRNode("foo")
-	copy := instance
+	instanceCopy := instance
 	instance.SetYNode(&yaml.Node{Kind: yaml.ScalarNode, Value: "bar"})
 	assert.Equal(t, `bar
-`, assertNoErrorString(t)(copy.String()))
+`, assertNoErrorString(t)(instanceCopy.String()))
 	assert.Equal(t, `bar
 `, assertNoErrorString(t)(instance.String()))
 
 	instance = *NewScalarRNode("foo")
-	copy = instance
+	instanceCopy = instance
 	instance.SetYNode(nil)
 	instance.SetYNode(&yaml.Node{Kind: yaml.ScalarNode, Value: "bar"})
 	assert.Equal(t, `foo
-`, assertNoErrorString(t)(copy.String()))
+`, assertNoErrorString(t)(instanceCopy.String()))
 	assert.Equal(t, `bar
 `, assertNoErrorString(t)(instance.String()))
 }
@@ -1279,6 +1279,7 @@ metadata:
 }
 
 func assertNoError(t *testing.T) func(o *RNode, err error) *RNode {
+	t.Helper()
 	return func(o *RNode, err error) *RNode {
 		assert.NoError(t, err)
 		return o
@@ -1286,6 +1287,7 @@ func assertNoError(t *testing.T) func(o *RNode, err error) *RNode {
 }
 
 func assertNoErrorString(t *testing.T) func(string, error) string {
+	t.Helper()
 	return func(s string, err error) string {
 		assert.NoError(t, err)
 		return s

@@ -159,6 +159,7 @@ func TestPathSplitAndJoin(t *testing.T) {
 	}
 	for n, c := range cases {
 		f := func(t *testing.T, original string, expected []string) {
+			t.Helper()
 			actual := PathSplit(original)
 			if len(actual) != len(expected) {
 				t.Fatalf(

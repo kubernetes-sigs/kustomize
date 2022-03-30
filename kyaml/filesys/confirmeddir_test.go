@@ -14,8 +14,7 @@ import (
 
 func TestJoin(t *testing.T) {
 	fSys := MakeFsInMemory()
-	err := fSys.Mkdir("/foo")
-	if err != nil {
+	if err := fSys.Mkdir("/foo"); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
 	d, f, err := fSys.CleanedAbs("/foo")

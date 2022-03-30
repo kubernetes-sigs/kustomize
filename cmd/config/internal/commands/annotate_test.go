@@ -88,6 +88,7 @@ func TestAnnotateCommand(t *testing.T) {
 }
 
 func initTestDir(t *testing.T) string {
+	t.Helper()
 	d, err := ioutil.TempDir("", "kustomize-annotate-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
