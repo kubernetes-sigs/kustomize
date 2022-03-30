@@ -19,17 +19,17 @@ linters:
     - dogsled
     - dupl
     - durationcheck
-#    - errcheck # TODO: enable going forward
-#    - errname # TODO: enable going forward
-#    - errorlint # TODO: enable going forward
-#    - exhaustive # TODO: enable going forward
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
 #    - exhaustivestruct
     - exportloopref
 #    - forbidigo
-#    - forcetypeassert # TODO: enable going forward
+    - forcetypeassert
 #    - funlen
 #    - gci
-#    - gochecknoglobals
+    - gochecknoglobals
     - gochecknoinits
 #    - gocognit
     - goconst
@@ -37,19 +37,19 @@ linters:
     - gocyclo
 #    - godot
 #    - godox
-#    - goerr113 # TODO: enable going forward
+    - goerr113
     - gofmt
 #    - gofumpt
     - goheader
     - goimports
-#    - gomnd
+    - gomnd
     - gomoddirectives
     - gomodguard
     - goprintffuncname
     - gosec
     - gosimple
     - govet
-#    - ifshort
+#    - ifshort # too many false positives
     - importas
     - ineffassign
 #    - ireturn
@@ -57,14 +57,14 @@ linters:
     - makezero
     - misspell
     - nakedret
-#    - nestif # TODO: enable going forward
-#    - nilerr # TODO: enable going forward
+    - nestif
+    - nilerr
 #    - nilnil
 #    - nlreturn
 #    - noctx
     - nolintlint
 #    - paralleltest
-#    - prealloc # TODO: enable going forward
+    - prealloc
     - predeclared
     - promlinter
     - revive
@@ -75,7 +75,7 @@ linters:
 #    - stylecheck
     - tagliatelle
     - tenv
-#    - testpackage # TODO: enable going forward
+    - testpackage
     - thelper
     - tparallel
     - typecheck
@@ -86,7 +86,7 @@ linters:
 #    - varnamelen
     - wastedassign
     - whitespace
-#    - wrapcheck # TODO: enable going forward
+    - wrapcheck
 #    - wsl
 
 linters-settings:
@@ -107,8 +107,12 @@ linters-settings:
   gosec:
     config:
       G306: "0644"
+  gomnd:
+     ignored-functions:
+     - ioutil.WriteFile
 
 issues:
+  new-from-rev: c94b5d8f2 # enables us to enforce a larger set of linters for new code than pass on existing code
   max-same-issues: 0
   exclude-rules:
     - linters:

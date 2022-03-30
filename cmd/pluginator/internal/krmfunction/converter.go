@@ -156,7 +156,7 @@ func (c *Converter) mkDstDir() error {
 func (c *Converter) write(m map[string]string) error {
 	for k, v := range m {
 		p := filepath.Join(c.outputDir, k)
-		err := ioutil.WriteFile(p, []byte(v), 0644) //nolint:gosec
+		err := ioutil.WriteFile(p, []byte(v), 0644)
 		if err != nil {
 			return err
 		}

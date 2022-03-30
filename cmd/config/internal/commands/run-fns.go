@@ -140,13 +140,13 @@ func (r *RunFnRunner) getContainerFunctions(dataItems []string) (
 	// set the function annotation on the function config, so that it is parsed by RunFns
 	value, err := fnAnnotation.String()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	err = res.PipeE(
 		yaml.LookupCreate(yaml.MappingNode, "metadata", "annotations"),
 		yaml.SetField(runtimeutil.FunctionAnnotationKey, yaml.NewScalarRNode(value)))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 
 	return []*yaml.RNode{res}, nil
@@ -206,14 +206,14 @@ data: {}
 func fnAnnotationForExec(path string) (*yaml.RNode, error) {
 	fn, err := yaml.Parse(`exec: {}`)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 
 	err = fn.PipeE(
 		yaml.Lookup("exec"),
 		yaml.SetField("path", yaml.NewScalarRNode(path)))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	return fn, nil
 }
@@ -221,7 +221,7 @@ func fnAnnotationForExec(path string) (*yaml.RNode, error) {
 func fnAnnotationForStar(path string, url string, name string) (*yaml.RNode, error) {
 	fn, err := yaml.Parse(`starlark: {}`)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 
 	if path != "" {
@@ -229,7 +229,7 @@ func fnAnnotationForStar(path string, url string, name string) (*yaml.RNode, err
 			yaml.Lookup("starlark"),
 			yaml.SetField("path", yaml.NewScalarRNode(path)))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 	}
 	if url != "" {
@@ -237,14 +237,14 @@ func fnAnnotationForStar(path string, url string, name string) (*yaml.RNode, err
 			yaml.Lookup("starlark"),
 			yaml.SetField("url", yaml.NewScalarRNode(url)))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 	}
 	err = fn.PipeE(
 		yaml.Lookup("starlark"),
 		yaml.SetField("name", yaml.NewScalarRNode(name)))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	return fn, nil
 }
@@ -252,14 +252,14 @@ func fnAnnotationForStar(path string, url string, name string) (*yaml.RNode, err
 func fnAnnotationForImage(image string, enableNetwork bool) (*yaml.RNode, error) {
 	fn, err := yaml.Parse(`container: {}`)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	// TODO: add support network, volumes, etc based on flag values
 	err = fn.PipeE(
 		yaml.Lookup("container"),
 		yaml.SetField("image", yaml.NewScalarRNode(image)))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	if enableNetwork {
 		n := &yaml.Node{
@@ -271,7 +271,7 @@ func fnAnnotationForImage(image string, enableNetwork bool) (*yaml.RNode, error)
 			yaml.Lookup("container"),
 			yaml.SetField("network", yaml.NewRNode(n)))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err)
 		}
 	}
 	return fn, nil
