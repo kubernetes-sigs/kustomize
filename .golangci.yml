@@ -1,0 +1,123 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+run:
+  deadline: 5m
+
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+#    - cyclop
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+#    - exhaustivestruct
+    - exportloopref
+#    - forbidigo
+    - forcetypeassert
+#    - funlen
+#    - gci
+    - gochecknoglobals
+    - gochecknoinits
+#    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+#    - godot
+#    - godox
+    - goerr113
+    - gofmt
+#    - gofumpt
+    - goheader
+    - goimports
+    - gomnd
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+#    - ifshort # too many false positives
+    - importas
+    - ineffassign
+#    - ireturn
+    - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+#    - nilnil
+#    - nlreturn
+#    - noctx
+    - nolintlint
+#    - paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+#    - stylecheck
+    - tagliatelle
+    - tenv
+    - testpackage
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+#    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+#    - wsl
+
+linters-settings:
+  dupl:
+    threshold: 400
+  lll:
+    line-length: 170
+  gocyclo:
+    min-complexity: 30
+  revive:
+    rules:
+    - name: var-naming
+      arguments:
+      - [ "ID", "API", "JSON" ] # AllowList
+      - [ ] # DenyList
+  gomoddirectives:
+    replace-local: true
+  gosec:
+    config:
+      G306: "0644"
+  gomnd:
+     ignored-functions:
+     - ioutil.WriteFile
+
+issues:
+  new-from-rev: c94b5d8f2 # enables us to enforce a larger set of linters for new code than pass on existing code
+  max-same-issues: 0
+  exclude-rules:
+    - linters:
+        - revive
+      text: "don't use leading"
+    - linters:
+        - staticcheck
+      text: "SA1019: kioutil.Legacy"

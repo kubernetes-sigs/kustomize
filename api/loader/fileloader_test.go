@@ -240,6 +240,7 @@ func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
 // in or below the loader root.
 func doSanityChecksAndDropIntoBase(
 	t *testing.T, l ifc.Loader) ifc.Loader {
+	t.Helper()
 	data, err := l.Load(path.Join("base", "okayData"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -347,7 +348,7 @@ func splitOnNthSlash(v string, n int) (string, string) {
 		if k < 0 {
 			break
 		}
-		left = left + v[:k+1]
+		left += v[:k+1]
 		v = v[k+1:]
 	}
 	return left[:len(left)-1], v
@@ -367,9 +368,9 @@ func TestSplit(t *testing.T) {
 }
 
 func TestNewLoaderAtGitClone(t *testing.T) {
-	rootUrl := "github.com/someOrg/someRepo"
+	rootURL := "github.com/someOrg/someRepo"
 	pathInRepo := "foo/base"
-	url := rootUrl + "/" + pathInRepo
+	url := rootURL + "/" + pathInRepo
 	coRoot := "/tmp"
 	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(coRoot)
@@ -381,7 +382,7 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 whatever
 `))
 
-	repoSpec, err := git.NewRepoSpecFromUrl(url)
+	repoSpec, err := git.NewRepoSpecFromURL(url)
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
 	}
@@ -398,13 +399,13 @@ whatever
 	if _, err = l.New(url); err == nil {
 		t.Fatalf("expected cycle error 1")
 	}
-	if _, err = l.New(rootUrl + "/" + "foo"); err == nil {
+	if _, err = l.New(rootURL + "/" + "foo"); err == nil {
 		t.Fatalf("expected cycle error 2")
 	}
 
 	pathInRepo = "foo/overlay"
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
-	url = rootUrl + "/" + pathInRepo
+	url = rootURL + "/" + pathInRepo
 	l2, err := l.New(url)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -459,7 +460,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// exist in its own repository, so presumably the
 	// remote K would be deliberately designed to phish
 	// for local K's.
-	repoSpec, err := git.NewRepoSpecFromUrl(
+	repoSpec, err := git.NewRepoSpecFromURL(
 		"github.com/someOrg/someRepo/foo/overlay")
 	if err != nil {
 		t.Fatalf("unexpected err: %v\n", err)
@@ -533,7 +534,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 		RestrictionRootOnly, root, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	p1 := "github.com/someOrg/someRepo/foo"
-	rs1, err := git.NewRepoSpecFromUrl(p1)
+	rs1, err := git.NewRepoSpecFromURL(p1)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}

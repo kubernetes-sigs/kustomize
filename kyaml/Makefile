@@ -12,11 +12,8 @@ export PATH := $(MYGOBIN):$(PATH)
 $(MYGOBIN)/addlicense:
 	go get github.com/google/addlicense
 
-# TODO: Issue #3663
-# Update this version of golangci-lint
-# Ideally use same version as in {REPO}/hack/go.mod
 $(MYGOBIN)/golangci-lint:
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.17.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 
 $(MYGOBIN)/k8scopy:
 	( cd ../cmd/k8scopy; go install . )
@@ -24,7 +21,7 @@ $(MYGOBIN)/k8scopy:
 $(MYGOBIN)/stringer:
 	go get golang.org/x/tools/cmd/stringer
 
-all: license fix vet fmt test tidy
+all: license fix vet fmt test lint tidy
 
 k8sGenDir := yaml/internal/k8sgen/pkg
 
@@ -36,7 +33,11 @@ clean:
 
 lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
-	  run ./...
+	  run ./... \
+	  --path-prefix=kyaml \
+	  -c ../.golangci.yml \
+	  --skip-dirs yaml/internal/k8sgen/pkg \
+	  --skip-dirs internal/forked
 
 
 license: $(MYGOBIN)/addlicense

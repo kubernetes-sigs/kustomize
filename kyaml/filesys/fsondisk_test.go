@@ -17,6 +17,7 @@ import (
 )
 
 func makeTestDir(t *testing.T) (FileSystem, string) {
+	t.Helper()
 	fSys := MakeFsOnDisk()
 	td, err := ioutil.TempDir("", "kustomize_testing_dir")
 	if err != nil {
@@ -194,8 +195,8 @@ func TestReadFilesRealFS(t *testing.T) {
 				"file-1.xtn",
 			},
 			expectedDirs: map[string][]string{
-				testDir: []string{dir},
-				dir:     []string{nestedDir},
+				testDir: {dir},
+				dir:     {nestedDir},
 			},
 		},
 		"AllHiddenFiles": {
@@ -206,7 +207,7 @@ func TestReadFilesRealFS(t *testing.T) {
 				".some-file-4.xtn",
 			},
 			expectedDirs: map[string][]string{
-				testDir: []string{hiddenDir},
+				testDir: {hiddenDir},
 			},
 		},
 		"foo_File": {

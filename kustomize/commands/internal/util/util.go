@@ -72,13 +72,14 @@ func ConvertSliceToMap(inputs []string, kind string) (map[string]string, error) 
 	result := make(map[string]string)
 	for _, input := range inputs {
 		c := strings.Index(input, ":")
-		if c == 0 {
+		switch {
+		case c == 0:
 			// key is not passed
 			return nil, fmt.Errorf("invalid %s: '%s' (%s)", kind, input, "need k:v pair where v may be quoted")
-		} else if c < 0 {
+		case c < 0:
 			// only key passed
 			result[input] = ""
-		} else {
+		default:
 			// both key and value passed
 			key := input[:c]
 			value := trimQuotes(input[c+1:])

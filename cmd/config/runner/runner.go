@@ -132,11 +132,11 @@ var StackOnError bool
 const cmdName = "kustomize fn"
 
 // FixDocs replaces instances of old with new in the docs for c
-func FixDocs(new string, c *cobra.Command) {
-	c.Use = strings.ReplaceAll(c.Use, cmdName, new)
-	c.Short = strings.ReplaceAll(c.Short, cmdName, new)
-	c.Long = strings.ReplaceAll(c.Long, cmdName, new)
-	c.Example = strings.ReplaceAll(c.Example, cmdName, new)
+func FixDocs(newStr string, c *cobra.Command) {
+	c.Use = strings.ReplaceAll(c.Use, cmdName, newStr)
+	c.Short = strings.ReplaceAll(c.Short, cmdName, newStr)
+	c.Long = strings.ReplaceAll(c.Long, cmdName, newStr)
+	c.Example = strings.ReplaceAll(c.Example, cmdName, newStr)
 }
 
 // containsString returns true if slice contains s

@@ -644,7 +644,9 @@ metadata:
     internal.config.kubernetes.io/e: 'f'
     internal.config.kubernetes.io/g: 'h'
 `,
-			expectedErr: `internal annotations differ: internal.config.kubernetes.io/a, internal.config.kubernetes.io/c, internal.config.kubernetes.io/e, internal.config.kubernetes.io/g`,
+			expectedErr: `internal annotations differ: ` +
+				`internal.config.kubernetes.io/a, internal.config.kubernetes.io/c, ` +
+				`internal.config.kubernetes.io/e, internal.config.kubernetes.io/g`,
 		},
 	}
 

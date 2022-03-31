@@ -13,7 +13,6 @@ import (
 
 // NewCmdOpenAPI makes a new openapi command.
 func NewCmdOpenAPI(w io.Writer) *cobra.Command {
-
 	openApiCmd := &cobra.Command{
 		Use:     "openapi",
 		Short:   "Commands for interacting with the OpenAPI data",

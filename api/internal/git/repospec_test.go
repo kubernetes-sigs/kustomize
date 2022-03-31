@@ -37,7 +37,7 @@ var hostNamesRawAndNormalized = [][]string{
 	{"git@github.com/", "git@github.com:"},
 }
 
-func makeUrl(hostFmt, orgRepo, path, href string) string {
+func makeURL(hostFmt, orgRepo, path, href string) string {
 	if len(path) > 0 {
 		orgRepo = filepath.Join(orgRepo, path)
 	}
@@ -56,8 +56,8 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 		for _, orgRepo := range orgRepos {
 			for _, pathName := range pathNames {
 				for _, hrefArg := range hrefArgs {
-					uri := makeUrl(hostRaw, orgRepo, pathName, hrefArg)
-					rs, err := NewRepoSpecFromUrl(uri)
+					uri := makeURL(hostRaw, orgRepo, pathName, hrefArg)
+					rs, err := NewRepoSpecFromURL(uri)
 					if err != nil {
 						t.Errorf("problem %v", err)
 					}
@@ -99,7 +99,7 @@ var badData = [][]string{
 
 func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 	for _, tuple := range badData {
-		_, err := NewRepoSpecFromUrl(tuple[0])
+		_, err := NewRepoSpecFromURL(tuple[0])
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -191,7 +191,7 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 	}
 	for tn, tc := range testcases {
 		t.Run(tn, func(t *testing.T) {
-			rs, err := NewRepoSpecFromUrl(tc.input)
+			rs, err := NewRepoSpecFromURL(tc.input)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.cloneSpec, rs.CloneSpec(), "cloneSpec mismatch")
 			assert.Equal(t, tc.absPath, rs.AbsPath(), "absPath mismatch")

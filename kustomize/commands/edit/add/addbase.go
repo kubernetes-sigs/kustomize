@@ -68,7 +68,6 @@ func (o *addBaseOptions) RunAddBase(fSys filesys.FileSystem) error {
 			return fmt.Errorf("base %s already in kustomization file", path)
 		}
 		m.Resources = append(m.Resources, path)
-
 	}
 
 	return mf.Write(m)

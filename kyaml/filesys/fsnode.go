@@ -163,7 +163,6 @@ func (n *fsNode) AddFile(
 }
 
 func (n *fsNode) addDir(path string) (result *fsNode, err error) {
-
 	parent := n
 	dName, subDirName := mySplit(path)
 	if dName != "" {

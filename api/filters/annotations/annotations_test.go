@@ -285,7 +285,7 @@ spec:
 		t.Run(tn, func(t *testing.T) {
 			filter := tc.filter
 			filter.WithMutationTracker(tc.setEntryCallback)
-			filter.FsSlice = append(annosFs, tc.fsslice...)
+			filter.FsSlice = append(annosFs, tc.fsslice...) //nolint:gocritic
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expectedOutput),
 				strings.TrimSpace(filtertest_test.RunFilter(t, tc.input, filter))) {

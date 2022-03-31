@@ -93,10 +93,10 @@ func TestMakeFsInMemory(t *testing.T) {
 		t, "MakeFsInMemory", true, topCases, MakeFsInMemory())
 }
 
-//nolint:gocyclo
 func runBasicOperations(
 	t *testing.T, tName string, isFSysRooted bool,
 	cases []pathCase, fSys FileSystem) {
+	t.Helper()
 	for _, c := range cases {
 		err := fSys.WriteFile(c.arg, []byte(content))
 		if c.errStr != "" {
@@ -371,6 +371,7 @@ func TestAddFile(t *testing.T) {
 func checkNode(
 	t *testing.T, what string, f *fsNode, name string,
 	size int, isDir bool, path string) {
+	t.Helper()
 	if f.isNodeADir() != isDir {
 		t.Fatalf("%s; unexpected isNodeADir = %v", what, f.isNodeADir())
 	}
@@ -388,6 +389,7 @@ func checkNode(
 func checkOsStat(
 	t *testing.T, what string, f File, name string,
 	size int, isDir bool) {
+	t.Helper()
 	info, err := f.Stat()
 	if err != nil {
 		t.Fatalf("%s; unexpected stat error %v", what, err)
@@ -449,10 +451,10 @@ var bunchOfFiles = []struct {
 		addAsDir: true,
 	},
 	{
-		path: filepath.Join("x"),
+		path: "x",
 	},
 	{
-		path: filepath.Join("y"),
+		path: "y",
 	},
 	{
 		path: filepath.Join("b", "d", "a", "c", "i", "beans"),
@@ -474,6 +476,7 @@ var bunchOfFiles = []struct {
 }
 
 func makeLoadedFileTree(t *testing.T) *fsNode {
+	t.Helper()
 	n := MakeEmptyDirInMemory()
 	var err error
 	expectedFileCount := 0
@@ -488,8 +491,7 @@ func makeLoadedFileTree(t *testing.T) *fsNode {
 			t.Fatalf("unexpected error %v", err)
 		}
 	}
-	fc := n.FileCount()
-	if fc != expectedFileCount {
+	if fc := n.FileCount(); fc != expectedFileCount {
 		t.Fatalf("expected file count %d, got %d",
 			expectedFileCount, fc)
 	}
@@ -559,15 +561,14 @@ func TestRemove(t *testing.T) {
 	orgCount -= 3
 
 	// Now drop one more for a total of four dropped.
-	result, _ = n.Find(filepath.Join("y"))
+	result, _ = n.Find("y")
 	err = result.Remove()
 	if err != nil {
 		t.Fatalf("%s; unable to remove: %v", path, err)
 	}
 	orgCount -= 1
 
-	fc := n.FileCount()
-	if fc != orgCount {
+	if fc := n.FileCount(); fc != orgCount {
 		t.Fatalf("expected file count %d, got %d",
 			orgCount, fc)
 	}
@@ -692,7 +693,7 @@ func TestFind(t *testing.T) {
 		},
 		{
 			what:      "directory",
-			arg:       filepath.Join("b"),
+			arg:       "b",
 			expectDir: true,
 		},
 		{
@@ -869,7 +870,7 @@ func TestFileOps(t *testing.T) {
 	defer f.Close()
 
 	for {
-		buf := make([]byte, rand.Intn(10))
+		buf := make([]byte, rand.Intn(10)) // nolint:gosec
 		n, err := f.Read(buf)
 		if err != nil && err != io.EOF {
 			t.Fatalf("unexpected error: %v", err)

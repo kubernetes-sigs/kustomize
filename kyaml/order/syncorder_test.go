@@ -259,7 +259,7 @@ spec:
           properties:
             conditions:
               items:
-                description: ControlPlaneRevisionCondition is a repeated struct definining the current conditions of a ControlPlaneRevision.
+                description: ControlPlaneRevisionCondition is a repeated struct defining the current conditions of a ControlPlaneRevision.
                 properties:
                   lastTransitionTime:
                     description: Last time the condition transitioned from one status to another
@@ -347,7 +347,7 @@ spec:
               type: array
               items:
                 type: object
-                description: ControlPlaneRevisionCondition is a repeated struct definining the current conditions of a ControlPlaneRevision.
+                description: ControlPlaneRevisionCondition is a repeated struct defining the current conditions of a ControlPlaneRevision.
                 properties:
                   type:
                     type: string

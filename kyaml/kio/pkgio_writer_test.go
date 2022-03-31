@@ -25,6 +25,7 @@ import (
 // - ReaderAnnotations are cleared when writing the Resources
 func TestLocalPackageWriter_Write(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -57,6 +58,7 @@ g:
 // - ReaderAnnotations are kept when writing the Resources
 func TestLocalPackageWriter_Write_keepReaderAnnotations(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -108,6 +110,7 @@ metadata:
 // - ClearAnnotations are removed from Resources
 func TestLocalPackageWriter_Write_clearAnnotations(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -141,6 +144,7 @@ g:
 // - If a relative path above the package is defined, write fails
 func TestLocalPackageWriter_Write_failRelativePath(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -171,6 +175,7 @@ metadata:
 // - If a non-int index is given, fail
 func TestLocalPackageWriter_Write_invalidIndex(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -201,6 +206,7 @@ metadata:
 // - If config.kubernetes.io/path is absolute, fail
 func TestLocalPackageWriter_Write_absPath(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -232,6 +238,7 @@ metadata:
 // - If config.kubernetes.io/path or index are missing, then default them
 func TestLocalPackageWriter_Write_missingAnnotations(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -263,6 +270,7 @@ metadata:
 // - If  config.kubernetes.io/path is a directory, fail
 func TestLocalPackageWriter_Write_pathIsDir(t *testing.T) {
 	testWriterOnDiskAndOnMem(t, func(t *testing.T, fs filesys.FileSystem) {
+		t.Helper()
 		d, node1, node2, node3, cleanup := getWriterInputs(t, fs)
 		defer cleanup()
 
@@ -289,6 +297,7 @@ metadata:
 }
 
 func testWriterOnDiskAndOnMem(t *testing.T, f func(t *testing.T, fs filesys.FileSystem)) {
+	t.Helper()
 	t.Run("on_disk", func(t *testing.T) { f(t, filesys.MakeFsOnDisk()) })
 	// TODO: Once fsnode supports Windows, these tests should also be run.
 	if runtime.GOOS != "windows" {
@@ -297,6 +306,7 @@ func testWriterOnDiskAndOnMem(t *testing.T, f func(t *testing.T, fs filesys.File
 }
 
 func getWriterInputs(t *testing.T, mockFS filesys.FileSystem) (string, *yaml.RNode, *yaml.RNode, *yaml.RNode, func()) {
+	t.Helper()
 	node1, err := yaml.Parse(`a: b #first
 metadata:
   annotations:
@@ -325,7 +335,7 @@ metadata:
 
 	// These two lines are similar to calling ioutil.TempDir, but we don't actually create any directory.
 	rand.Seed(time.Now().Unix())
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("kyaml-test%d", rand.Int31()))
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("kyaml-test%d", rand.Int31())) //nolint:gosec
 	require.NoError(t, mockFS.MkdirAll(filepath.Join(path, "a")))
 	return path, node1, node2, node3, func() { require.NoError(t, mockFS.RemoveAll(path)) }
 }

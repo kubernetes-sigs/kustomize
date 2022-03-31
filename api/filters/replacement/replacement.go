@@ -20,11 +20,11 @@ type Filter struct {
 
 // Filter replaces values of targets with values from sources
 func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	for _, r := range f.Replacements {
+	for i, r := range f.Replacements {
 		if r.Source == nil || r.Targets == nil {
 			return nil, fmt.Errorf("replacements must specify a source and at least one target")
 		}
-		value, err := getReplacement(nodes, &r)
+		value, err := getReplacement(nodes, &f.Replacements[i])
 		if err != nil {
 			return nil, err
 		}
@@ -60,8 +60,8 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 			}
 
 			// filter targets by matching resource IDs
-			for _, id := range ids {
-				if id.IsSelectedBy(t.Select.ResId) && !rejectId(t.Reject, &id) {
+			for i, id := range ids {
+				if id.IsSelectedBy(t.Select.ResId) && !rejectId(t.Reject, &ids[i]) {
 					err := applyToNode(n, value, t)
 					if err != nil {
 						return nil, err

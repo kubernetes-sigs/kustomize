@@ -88,6 +88,7 @@ func TestAnnotateCommand(t *testing.T) {
 }
 
 func initTestDir(t *testing.T) string {
+	t.Helper()
 	d, err := ioutil.TempDir("", "kustomize-annotate-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -601,12 +602,12 @@ added annotations in the package
 			}
 
 			// normalize path format for windows
-			actualNormalized := strings.Replace(
-				strings.Replace(actual.String(), "\\", "/", -1),
-				"//", "/", -1)
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(actual.String(), "\\", "/"),
+				"//", "/")
 
-			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
-			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
+			expected := strings.ReplaceAll(test.expected, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expected, "\\", "/")
 			if !assert.Contains(t, actualNormalized, expectedNormalized) {
 				t.FailNow()
 			}

@@ -12,7 +12,7 @@ $(GOBIN)/addlicense:
 	go get github.com/google/addlicense
 
 $(GOBIN)/golangci-lint:
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.19.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 
 $(GOBIN)/k8scopy:
 	( cd ../k8scopy; go install . )
@@ -36,7 +36,9 @@ clean:
 lint: $(GOBIN)/golangci-lint
 	$(GOBIN)/golangci-lint \
 	  --skip-dirs $(k8sGenDir) \
-	  run ./...
+	  run ./... \
+	  --path-prefix=cmd/config \
+	  -c ../../.golangci.yml
 
 license: $(GOBIN)/addlicense
 	$(GOBIN)/addlicense \

@@ -406,7 +406,7 @@ func TestNamespace_Filter(t *testing.T) {
 		test := tests[i]
 		test.filter.WithMutationTracker(test.mutationTracker)
 		t.Run(test.name, func(t *testing.T) {
-			test.filter.FsSlice = append(config.NameSpace, test.fsslice...)
+			test.filter.FsSlice = append(config.NameSpace, test.fsslice...) //nolint:gocritic
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expected),
 				strings.TrimSpace(

@@ -61,13 +61,13 @@ spec:
 		return
 	}
 
-	expected_dir, err := ioutil.TempDir("", "test-data-expected")
-	defer os.RemoveAll(expected_dir)
+	expectedDir, err := ioutil.TempDir("", "test-data-expected")
+	defer os.RemoveAll(expectedDir)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(expected_dir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = ioutil.WriteFile(filepath.Join(expectedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -111,13 +111,13 @@ spec:
 		return
 	}
 
-	updated_dir, err := ioutil.TempDir("", "test-data-updated")
-	defer os.RemoveAll(updated_dir)
+	updatedDir, err := ioutil.TempDir("", "test-data-updated")
+	defer os.RemoveAll(updatedDir)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(updated_dir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = ioutil.WriteFile(filepath.Join(updatedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -158,13 +158,13 @@ spec:
 		return
 	}
 
-	dest_dir, err := ioutil.TempDir("", "test-data-dest")
-	defer os.RemoveAll(dest_dir)
+	destDir, err := ioutil.TempDir("", "test-data-dest")
+	defer os.RemoveAll(destDir)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(dest_dir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = ioutil.WriteFile(filepath.Join(destDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -212,15 +212,15 @@ spec:
 		"--ancestor",
 		datadir,
 		"--from",
-		updated_dir,
+		updatedDir,
 		"--to",
-		dest_dir,
+		destDir,
 	})
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
 	}
 
-	diffs, err := copyutil.Diff(dest_dir, expected_dir)
+	diffs, err := copyutil.Diff(destDir, expectedDir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

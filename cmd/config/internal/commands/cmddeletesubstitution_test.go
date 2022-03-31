@@ -467,11 +467,11 @@ spec:
 			}
 
 			// normalize path format for windows
-			actualNorm := strings.Replace(
-				strings.Replace(out.String(), "\\", "/", -1),
-				"//", "/", -1)
-			expectedOut := strings.Replace(test.out, "${baseDir}", baseDir, -1)
-			expectedNorm := strings.Replace(expectedOut, "\\", "/", -1)
+			actualNorm := strings.ReplaceAll(
+				strings.ReplaceAll(out.String(), "\\", "/"),
+				"//", "/")
+			expectedOut := strings.ReplaceAll(test.out, "${baseDir}", baseDir)
+			expectedNorm := strings.ReplaceAll(expectedOut, "\\", "/")
 
 			if !assert.Contains(t, strings.TrimSpace(actualNorm), expectedNorm) {
 				t.FailNow()
@@ -544,7 +544,7 @@ deleted substitution "image-tag"
 				t.FailNow()
 			}
 			copyutil.CopyDir(sourceDir, baseDir)
-			//defer os.RemoveAll(baseDir)
+			// defer os.RemoveAll(baseDir)
 			runner := commands.NewDeleteSubstitutionRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
@@ -555,12 +555,12 @@ deleted substitution "image-tag"
 			}
 
 			// normalize path format for windows
-			actualNormalized := strings.Replace(
-				strings.Replace(actual.String(), "\\", "/", -1),
-				"//", "/", -1)
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(actual.String(), "\\", "/"),
+				"//", "/")
 
-			expected := strings.Replace(test.expected, "${baseDir}", baseDir, -1)
-			expectedNormalized := strings.Replace(expected, "\\", "/", -1)
+			expected := strings.ReplaceAll(test.expected, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expected, "\\", "/")
 			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}

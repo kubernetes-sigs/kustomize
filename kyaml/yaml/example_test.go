@@ -281,7 +281,7 @@ func ExampleElementMatcher_Filter_objectNotFound() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	append, err := Parse(`
+	toAppend, err := Parse(`
 name: baz
 image: nginx
 `)
@@ -289,7 +289,7 @@ image: nginx
 		log.Fatal(err)
 	}
 	elem, err := obj.Pipe(ElementMatcher{
-		Keys: []string{"name"}, Values: []string{"baz"}, Create: append})
+		Keys: []string{"name"}, Values: []string{"baz"}, Create: toAppend})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -315,7 +315,7 @@ func ExampleElementMatcher_Filter_objectFound() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	append, err := Parse(`
+	toAppend, err := Parse(`
 name: baz
 image: nginx
 `)
@@ -323,7 +323,7 @@ image: nginx
 		log.Fatal(err)
 	}
 	elem, err := obj.Pipe(ElementMatcher{
-		Keys: []string{"name"}, Values: []string{"baz"}, Create: append})
+		Keys: []string{"name"}, Values: []string{"baz"}, Create: toAppend})
 	if err != nil {
 		log.Fatal(err)
 	}
