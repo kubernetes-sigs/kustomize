@@ -52,9 +52,7 @@ function scanDir {
 
 if onLinuxAndNotOnRemoteCI; then
   # Some of these tests have special deps.
-  make $MYGOBIN/helmV2
   make $MYGOBIN/helmV3
-  make $MYGOBIN/helm
   make $MYGOBIN/kubeval
 fi
 
