@@ -22,11 +22,13 @@ type Harness struct {
 }
 
 func MakeHarness(t *testing.T) Harness {
+	t.Helper()
 	return MakeHarnessWithFs(t, filesys.MakeFsInMemory())
 }
 
 func MakeHarnessWithFs(
 	t *testing.T, fSys filesys.FileSystem) Harness {
+	t.Helper()
 	return Harness{
 		t:    t,
 		fSys: fSys,

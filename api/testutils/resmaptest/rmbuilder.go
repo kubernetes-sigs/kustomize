@@ -20,18 +20,22 @@ type rmBuilder struct {
 }
 
 func NewSeededRmBuilder(t *testing.T, rf *resource.Factory, m resmap.ResMap) *rmBuilder {
+	t.Helper()
 	return &rmBuilder{t: t, rf: rf, m: m}
 }
 
 func NewRmBuilder(t *testing.T, rf *resource.Factory) *rmBuilder {
+	t.Helper()
 	return NewSeededRmBuilder(t, rf, resmap.New())
 }
 
 func NewRmBuilderDefault(t *testing.T) *rmBuilder {
+	t.Helper()
 	return NewSeededRmBuilderDefault(t, resmap.New())
 }
 
 func NewSeededRmBuilderDefault(t *testing.T, m resmap.ResMap) *rmBuilder {
+	t.Helper()
 	return NewSeededRmBuilder(
 		t, provider.NewDefaultDepProvider().GetResourceFactory(), m)
 }

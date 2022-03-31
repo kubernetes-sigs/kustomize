@@ -35,7 +35,7 @@ func TestRunE2e(t *testing.T) {
 			name: "exec_function_no_args",
 			args: func(d string) []string {
 				return []string{
-					"--enable-exec", "--exec-path", filepath.Join(d, "e2econtainerconfig"),
+					"--enable-exec", "--exec-path", filepath.Join(d, e2eConfigDir),
 				}
 			},
 			files: func(d string) map[string]string {
@@ -720,7 +720,7 @@ metadata:
 			}
 
 			args := append([]string{"fn", "run", "."}, tt.args(binDir)...)
-			cmd := exec.Command(filepath.Join(binDir, kyamlBin), args...)
+			cmd := exec.Command(filepath.Join(binDir, kyamlBin), args...) // nolint: gosec
 			cmd.Dir = dir
 			var stdErr, stdOut bytes.Buffer
 			cmd.Stdout = &stdOut
@@ -751,6 +751,8 @@ metadata:
 var buildOnce sync.Once
 var binDir string
 
+const e2eConfigDir = "e2econtainerconfig"
+
 func build() string {
 	// only build the binaries once
 	buildOnce.Do(func() {
@@ -760,7 +762,7 @@ func build() string {
 			panic(err)
 		}
 
-		build := exec.Command("go", "build", "-o",
+		build := exec.Command("go", "build", "-o", // nolint: gosec
 			filepath.Join(binDir, e2econtainerconfigBin))
 		build.Dir = "e2econtainerconfig"
 		build.Stdout = os.Stdout
@@ -772,7 +774,7 @@ func build() string {
 			panic(err)
 		}
 
-		build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin))
+		build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin)) // nolint: gosec
 		build.Dir = filepath.Join("..", "..", "..", "kubectl-krm")
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
@@ -786,7 +788,7 @@ func build() string {
 		}
 		build = exec.Command(
 			"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
-		build.Dir = "e2econtainerconfig"
+		build.Dir = e2eConfigDir
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
 		err = build.Run()
@@ -803,9 +805,9 @@ var (
 	kyamlBin              string
 )
 
-func init() {
+func init() { //nolint: gochecknoinits
 	kyamlBin = "kubectl-krm"
-	e2econtainerconfigBin = "e2econtainerconfig"
+	e2econtainerconfigBin = e2eConfigDir
 
 	if runtime.GOOS == "windows" {
 		kyamlBin = "kubectl-krm.exe"

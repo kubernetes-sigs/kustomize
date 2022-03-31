@@ -67,6 +67,7 @@ metadata:
 }
 
 func makeTmpDir(t *testing.T) string {
+	t.Helper()
 	base, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("err %v", err)

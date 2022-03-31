@@ -105,7 +105,7 @@ func (c *Converter) prepareWrapper(content string) string {
 		}
 		// assign to plugin variable
 		if strings.TrimSpace(line) == "var plugin resmap.Configurable" {
-			line = line + `
+			line += `
 	// KustomizePlugin is a global variable defined in every plugin
 	plugin = &KustomizePlugin
 `

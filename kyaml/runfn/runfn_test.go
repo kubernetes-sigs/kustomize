@@ -342,7 +342,7 @@ metadata:
 		{name: "sort functions -- deepest first",
 			in: []f{
 				{
-					path: filepath.Join("a.yaml"),
+					path: "a.yaml",
 					value: `
 metadata:
   annotations:
@@ -382,7 +382,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -412,7 +412,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -442,7 +442,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -473,7 +473,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -502,7 +502,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -543,7 +543,7 @@ metadata:
 `,
 				},
 				{
-					path: filepath.Join("b.yaml"),
+					path: "b.yaml",
 					value: `
 metadata:
   annotations:
@@ -1170,6 +1170,7 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 }
 
 func getGeneratorFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	t.Helper()
 	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 		return kio.FilterFunc(func(items []*yaml.RNode) ([]*yaml.RNode, error) {
 			if f.Container.Image == "generate" {
@@ -1238,6 +1239,7 @@ metadata:
 
 // setupTest initializes a temp test directory containing test data
 func setupTest(t *testing.T) string {
+	t.Helper()
 	dir, err := ioutil.TempDir("", "kustomize-kyaml-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -1264,6 +1266,7 @@ func setupTest(t *testing.T) string {
 // a filter to s/kind: Deployment/kind: StatefulSet/g.
 // this can be used to simulate running a filter.
 func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	t.Helper()
 	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 		// parse the filter from the input
 		filter := yaml.YFilter{}

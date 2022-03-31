@@ -34,7 +34,7 @@ const container = `{ "image": "my-image", "livenessProbe": { "httpGet" : {"path"
 const patchJsonAddProbe = `[{"op": "replace", "path": "/spec/template/spec/containers/0", "value": ` +
 	container + `}]`
 
-const patchDnsPolicy = `
+const patchDNSPolicy = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,7 +44,7 @@ spec:
     spec:
       dnsPolicy: ClusterFirst
 `
-const patchJsonDnsPolicy = `[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]`
+const patchJsonDNSPolicy = `[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]`
 
 const patchRestartPolicy = `
 apiVersion: apps/v1
@@ -96,7 +96,7 @@ resources:
 patchesStrategicMerge:
 - dep-patch.yaml
 `)
-	th.WriteF("dns/dep-patch.yaml", patchDnsPolicy)
+	th.WriteF("dns/dep-patch.yaml", patchDNSPolicy)
 }
 
 func writeRestartOverlay(th kusttest_test.Harness) {
@@ -209,7 +209,7 @@ patchesStrategicMerge:
 - patchRestartPolicy.yaml
 `)
 	th.WriteF("composite/patchRestartPolicy.yaml", patchRestartPolicy)
-	th.WriteF("composite/patchDnsPolicy.yaml", patchDnsPolicy)
+	th.WriteF("composite/patchDnsPolicy.yaml", patchDNSPolicy)
 	th.WriteF("composite/patchAddProbe.yaml", patchAddProbe)
 
 	m := th.Run("composite", th.MakeDefaultOptions())
@@ -220,7 +220,7 @@ func definePatchDirStructure(th kusttest_test.Harness) {
 	writeDeploymentBase(th)
 
 	th.WriteF("patches/patchRestartPolicy.yaml", patchRestartPolicy)
-	th.WriteF("patches/patchDnsPolicy.yaml", patchDnsPolicy)
+	th.WriteF("patches/patchDnsPolicy.yaml", patchDNSPolicy)
 	th.WriteF("patches/patchAddProbe.yaml", patchAddProbe)
 }
 
@@ -368,7 +368,7 @@ func TestIssue1251_Plugins_Local(t *testing.T) {
 	writeDeploymentBase(th.Harness)
 
 	writeJsonTransformerPluginConfig(
-		th, "composite", "addDnsPolicy", patchJsonDnsPolicy)
+		th, "composite", "addDnsPolicy", patchJsonDNSPolicy)
 	writeJsonTransformerPluginConfig(
 		th, "composite", "addRestartPolicy", patchJsonRestartPolicy)
 	writeJsonTransformerPluginConfig(
@@ -417,7 +417,7 @@ resources:
 - addProbeConfig.yaml
 `)
 	writeJsonTransformerPluginConfig(
-		th, "patches", "addDnsPolicy", patchJsonDnsPolicy)
+		th, "patches", "addDnsPolicy", patchJsonDNSPolicy)
 	writeJsonTransformerPluginConfig(
 		th, "patches", "addRestartPolicy", patchJsonRestartPolicy)
 	writeJsonTransformerPluginConfig(
@@ -441,7 +441,7 @@ resources:
 - addDnsPolicyConfig.yaml
 `)
 	writeJsonTransformerPluginConfig(
-		th, "patches/addDnsPolicy", "addDnsPolicy", patchJsonDnsPolicy)
+		th, "patches/addDnsPolicy", "addDnsPolicy", patchJsonDNSPolicy)
 
 	th.WriteK("patches/addRestartPolicy", `
 resources:

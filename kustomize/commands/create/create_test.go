@@ -16,6 +16,7 @@ import (
 var factory = provider.NewDefaultDepProvider().GetResourceFactory()
 
 func readKustomizationFS(t *testing.T, fSys filesys.FileSystem) *types.Kustomization {
+	t.Helper()
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)

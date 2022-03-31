@@ -32,8 +32,7 @@ func TestCopyYNode(t *testing.T) {
 		Line:        7000,
 		Column:      8000,
 	}
-	ynAddr := &yn
-	if !reflect.DeepEqual(&yn, ynAddr) {
+	if ynAddr := &yn; !reflect.DeepEqual(&yn, ynAddr) {
 		t.Fatalf("truly %v should equal %v", &yn, ynAddr)
 	}
 	ynC := CopyYNode(&yn)

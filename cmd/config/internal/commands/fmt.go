@@ -69,7 +69,6 @@ func (r *FmtRunner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *FmtRunner) runE(c *cobra.Command, args []string) error {
-
 	// format stdin if there are no args
 	if len(args) == 0 {
 		rw := &kio.ByteReadWriter{

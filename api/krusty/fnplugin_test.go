@@ -214,6 +214,7 @@ spec:
 }
 
 func skipIfNoDocker(t *testing.T) {
+	t.Helper()
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("skipping because docker binary wasn't found in PATH")
 	}

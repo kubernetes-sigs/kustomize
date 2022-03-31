@@ -106,7 +106,7 @@ func (r *XArgsRunner) runE(c *cobra.Command, _ []string) error {
 		return fmt.Errorf("must specify -- before command")
 	}
 	r.Args = r.Args[cmdIndex:]
-	run := exec.Command(r.Args[0])
+	run := exec.Command(r.Args[0]) // nolint: gosec
 
 	if len(r.Args) > 1 {
 		r.Args = r.Args[cmdIndex+1:]

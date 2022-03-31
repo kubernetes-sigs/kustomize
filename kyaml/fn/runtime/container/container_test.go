@@ -6,11 +6,11 @@ package container
 import (
 	"bytes"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -242,6 +242,7 @@ func TestFilter_ExitCode(t *testing.T) {
 }
 
 func getWorkingDir(t *testing.T) string {
+	t.Helper()
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	return wd

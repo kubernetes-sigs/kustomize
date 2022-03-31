@@ -52,7 +52,6 @@ func (o *removeResourceOptions) Validate(args []string) error {
 
 // RunRemoveResource runs Resource command (do real work).
 func (o *removeResourceOptions) RunRemoveResource(fSys filesys.FileSystem) error {
-
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		return err

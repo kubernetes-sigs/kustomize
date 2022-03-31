@@ -26,6 +26,7 @@ func AssertActualEqualsExpectedWithTweak(
 	t *testing.T,
 	m resmap.ResMap,
 	tweaker func([]byte) []byte, expected string) {
+	t.Helper()
 	if m == nil {
 		t.Fatalf("Map should not be nil.")
 	}
@@ -49,13 +50,14 @@ func AssertActualEqualsExpectedWithTweak(
 // Pretty printing of file differences.
 func reportDiffAndFail(
 	t *testing.T, actual []byte, expected string) {
+	t.Helper()
 	sE, maxLen := convertToArray(expected)
 	sA, _ := convertToArray(string(actual))
 	fmt.Println("===== ACTUAL BEGIN ========================================")
 	fmt.Print(string(actual))
 	fmt.Println("===== ACTUAL END ==========================================")
 	format := fmt.Sprintf("%%s  %%-%ds %%s\n", maxLen+4)
-	limit := 0
+	var limit int
 	if len(sE) < len(sA) {
 		limit = len(sE)
 	} else {

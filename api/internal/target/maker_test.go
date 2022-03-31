@@ -20,6 +20,7 @@ func makeAndLoadKustTarget(
 	t *testing.T,
 	fSys filesys.FileSystem,
 	root string) *target.KustTarget {
+	t.Helper()
 	kt := makeKustTargetWithRf(t, fSys, root, provider.NewDefaultDepProvider())
 	if err := kt.Load(); err != nil {
 		t.Fatalf("Unexpected load error %v", err)
@@ -32,6 +33,7 @@ func makeKustTargetWithRf(
 	fSys filesys.FileSystem,
 	root string,
 	pvd *provider.DepProvider) *target.KustTarget {
+	t.Helper()
 	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys)
 	if err != nil {
 		t.Fatal(err)

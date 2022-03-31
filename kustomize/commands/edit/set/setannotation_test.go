@@ -17,6 +17,7 @@ const invalidAnnotationKey string = "invalid annotation key: see the syntax and 
 	"https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/"
 
 func makeAnnotationKustomization(t *testing.T) *types.Kustomization {
+	t.Helper()
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomization(fSys)
 	kf, err := kustfile.NewKustomizationFile(fSys)

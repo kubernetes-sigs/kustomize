@@ -105,10 +105,10 @@ func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {
 		"TrUe",
 		"potato",
 	}
-	for i, c := range cases {
+	for i := range cases {
 		name := fmt.Sprintf("test%d", i)
 		in := resmap.New()
-		err := in.Append(makeConfigMap(rf, name, "", &c))
+		err := in.Append(makeConfigMap(rf, name, "", &cases[i]))
 		require.NoError(t, err)
 		_, err = UpdateResourceOptions(in)
 		require.Error(t, err)

@@ -460,7 +460,6 @@ metadata:
 }
 
 func TestConfigMapGeneratorMergeNamePrefix(t *testing.T) {
-
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
 configMapGenerator:

@@ -47,6 +47,7 @@ type HarnessEnhanced struct {
 }
 
 func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
+	t.Helper()
 	r := makeBaseEnhancedHarness(t)
 	r.Harness = MakeHarnessWithFs(t, filesys.MakeFsInMemory())
 	// Point the Harness's file loader to the root ('/')
@@ -56,6 +57,7 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 }
 
 func MakeEnhancedHarnessWithTmpRoot(t *testing.T) *HarnessEnhanced {
+	t.Helper()
 	r := makeBaseEnhancedHarness(t)
 	fSys := filesys.MakeFsOnDisk()
 	r.Harness = MakeHarnessWithFs(t, fSys)
@@ -72,6 +74,7 @@ func MakeEnhancedHarnessWithTmpRoot(t *testing.T) *HarnessEnhanced {
 }
 
 func makeBaseEnhancedHarness(t *testing.T) *HarnessEnhanced {
+	t.Helper()
 	rf := resmap.NewFactory(
 		provider.NewDefaultDepProvider().GetResourceFactory())
 	return &HarnessEnhanced{

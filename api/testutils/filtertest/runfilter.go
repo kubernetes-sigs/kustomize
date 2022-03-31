@@ -32,6 +32,7 @@ func run(input string, f kio.Filter) (string, error) {
 
 // RunFilter runs filter and panic if there is error
 func RunFilter(t *testing.T, input string, f kio.Filter) string {
+	t.Helper()
 	output, err := run(input, f)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -41,6 +42,7 @@ func RunFilter(t *testing.T, input string, f kio.Filter) string {
 
 // RunFilterE runs filter and return error if there is
 func RunFilterE(t *testing.T, input string, f kio.Filter) (string, error) {
+	t.Helper()
 	output, err := run(input, f)
 	if err != nil {
 		return "", err

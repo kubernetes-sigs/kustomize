@@ -17,9 +17,13 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	d := build()
-	defer os.RemoveAll(d)
-	os.Exit(m.Run())
+	var code int
+	func() {
+		d := build()
+		defer os.RemoveAll(d)
+		code = m.Run()
+	}()
+	os.Exit(code)
 }
 
 type test struct {
@@ -32,6 +36,7 @@ type test struct {
 }
 
 func runTests(t *testing.T, tests []test) {
+	t.Helper()
 	dir := build()
 	bin := filepath.Join(dir, kyamlBin)
 

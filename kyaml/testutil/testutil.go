@@ -6,11 +6,10 @@ package testutil
 import (
 	"bytes"
 	"runtime"
+	"testing"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-
-	"testing"
 
 	goerrors "github.com/go-errors/errors"
 
@@ -43,6 +42,7 @@ func UpdateYamlBytes(b []byte, function ...yaml.Filter) ([]byte, error) {
 }
 
 func AssertErrorContains(t *testing.T, err error, value string, msg ...string) {
+	t.Helper()
 	if !assert.Error(t, err, msg) {
 		t.FailNow()
 	}
@@ -52,6 +52,7 @@ func AssertErrorContains(t *testing.T, err error, value string, msg ...string) {
 }
 
 func AssertNoError(t *testing.T, err error, msg ...string) {
+	t.Helper()
 	if !assert.NoError(t, err, msg) {
 		gerr, ok := err.(*goerrors.Error)
 		if ok {
@@ -62,6 +63,7 @@ func AssertNoError(t *testing.T, err error, msg ...string) {
 }
 
 func SkipWindows(t *testing.T) {
+	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip()
 	}

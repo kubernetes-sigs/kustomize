@@ -341,6 +341,7 @@ data:
 // The return value indicates whether we should skip the rest of the test case
 // due to the error result.
 func SkipRest(t *testing.T, desc string, err error, contains string) bool {
+	t.Helper()
 	if err != nil {
 		if len(contains) == 0 {
 			t.Errorf("case %q, expect nil error but got %q", desc, err.Error())

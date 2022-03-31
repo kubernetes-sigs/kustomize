@@ -142,7 +142,6 @@ func (r *AnnotateRunner) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 				return nil, err
 			}
 		}
-
 	}
 	return nodes, nil
 }
