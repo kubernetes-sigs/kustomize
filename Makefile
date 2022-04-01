@@ -114,18 +114,12 @@ prow-presubmit-check: \
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
-	$(MYGOBIN)/addlicense \
-	  -y 2022 \
-	  -c "The Kubernetes Authors." \
-	  -f LICENSE_TEMPLATE \
-	  -ignore "kyaml/internal/forked/github.com/**/*" \
-	  -ignore "site/**/*" \
-	  -ignore "**/*.md" \
-	  -ignore "**/*.json" \
-	  -ignore "**/*.yml" \
-	  -ignore "**/*.yaml" \
-	  -v \
-	  .
+	./hack/add-license.sh run
+
+.PHONY: check-license
+check-license: $(MYGOBIN)/addlicense
+	./hack/add-license.sh check
+
 
 .PHONY: lint
 lint: $(MYGOBIN)/golangci-lint $(builtinplugins)
