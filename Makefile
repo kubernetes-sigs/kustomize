@@ -117,7 +117,7 @@ check-license: $(MYGOBIN)/addlicense
 	./hack/add-license.sh check
 
 .PHONY: lint
-lint: $(MYGOBIN)/golangci-lint $(builtinplugins)
+lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
 .PHONY: lint-kustomize
