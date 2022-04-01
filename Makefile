@@ -26,10 +26,6 @@ REPO_NAME := "kustomize"
 endif
 
 
-.PHONY: all
-all: install-tools verify-kustomize
-
-
 # --- Plugins ---
 include Makefile-plugins.mk
 
@@ -98,8 +94,8 @@ generate-kustomize-api: $(MYGOBIN)/k8scopy
 # --- Verification targets ---
 .PHONY: verify-kustomize
 verify-kustomize: \
-	lint \
-	license \
+	install-tools \
+	lint-kustomize \
 	test-unit-kustomize-all \
 	test-unit-cmd-all \
 	test-go-mod \
@@ -110,7 +106,7 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
-	all
+	verify-kustomize
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
@@ -120,10 +116,15 @@ license: $(MYGOBIN)/addlicense
 check-license: $(MYGOBIN)/addlicense
 	./hack/add-license.sh check
 
-
 .PHONY: lint
 lint: $(MYGOBIN)/golangci-lint $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
+
+.PHONY: lint-kustomize
+lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
+	cd api; make lint
+	cd kustomize; make lint
+	cd cmd/pluginator; make lint
 
 .PHONY: test-unit-all
 test-unit-all: $(builtinplugins)
