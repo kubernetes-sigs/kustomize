@@ -3,6 +3,8 @@
 FUNC_WRAPPER_SRC_DIR = funcwrappersrc
 FUNC_WRAPPER_DST_DIR = funcwrapper
 
+include ../../Makefile-modules.mk
+
 all: test build
 
 statik:

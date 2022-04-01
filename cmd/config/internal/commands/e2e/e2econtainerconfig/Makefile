@@ -3,10 +3,7 @@
 
 .PHONY: generate license fix vet fmt test build tidy
 
-GOBIN := $(shell go env GOPATH)/bin
-
-test:
-	go test
+include ../../../../../../Makefile-modules.mk
 
 image:
 	docker build . -t gcr.io/kustomize-functions/e2econtainerconfig

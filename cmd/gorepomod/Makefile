@@ -3,7 +3,7 @@ ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
 
-include ../../Makefile-tools.mk
+include ../../Makefile-modules.mk
 
 $(MYGOBIN)/gorepomod: usage.go
 	go install .

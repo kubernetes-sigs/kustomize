@@ -1,6 +1,12 @@
 # Copyright 2022 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
+MYGOBIN = $(shell go env GOBIN)
+ifeq ($(MYGOBIN),)
+MYGOBIN = $(shell go env GOPATH)/bin
+endif
+export PATH := $(MYGOBIN):$(PATH)
+
 .PHONY: install-out-of-tree-tools
 install-out-of-tree-tools: \
 	$(MYGOBIN)/goimports \
@@ -35,6 +41,9 @@ $(MYGOBIN)/mdtogo:
 
 $(MYGOBIN)/addlicense:
 	go install github.com/google/addlicense
+
+$(MYGOBIN)/statik:
+	go install github.com/rakyll/statik
 
 $(MYGOBIN)/kind:
 	( \
