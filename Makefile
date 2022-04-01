@@ -129,18 +129,11 @@ license: $(MYGOBIN)/addlicense
 
 .PHONY: lint
 lint: $(MYGOBIN)/golangci-lint $(builtinplugins)
-	cd api; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../.golangci.yml \
-	  --path-prefix api \
-	  run ./...
-	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../.golangci.yml \
-	  --path-prefix kustomize \
-	  run ./...
-	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../../.golangci.yml \
-	  --path-prefix cmd/pluginator \
-	  run ./...
+	./hack/for-each-module.sh "make lint"
+
+.PHONY: test-unit-all
+test-unit-all: $(builtinplugins)
+	./hack/for-each-module.sh "make test"
 
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
@@ -165,7 +158,7 @@ test-unit-cmd-all:
 	./hack/kyaml-pre-commit.sh
 
 test-go-mod:
-	./hack/check-go-mod.sh
+	./hack/for-each-module.sh "go list -m -json all > /dev/null && go mod tidy -v"
 
 .PHONY:
 verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind

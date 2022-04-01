@@ -25,7 +25,7 @@ jobs:
         fetch-depth: 0
 
     - name: Lint
-      run: ./hack/kyaml-pre-commit.sh
+      run: make lint
       env:
         KUSTOMIZE_DOCKER_E2E: false # don't need to do e2e tests for linting
 
