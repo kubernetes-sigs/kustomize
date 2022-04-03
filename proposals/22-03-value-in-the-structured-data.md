@@ -45,10 +45,11 @@ This proposal decides the interfaces to change values in the structured data (li
 If this proposal is an expansion of an existing GitHub issue, link to it here.
 -->
 
-Fields in Kubernetes objects sometimes include values formatted by structured data like json and yaml.
-kustomize can strong patch with Kubernetes objects, but kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's yaml field.
+Fields in Kubernetes objects sometimes include values formatted by structured data like json and yaml substrings in a string literal.
+kustomize can strong patch with Kubernetes objects, but kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's string literal field. This is a expected behavior, but kustomize will be very helpful if it can change the value structured data like json and yaml substrings in a string literal.
 
-Example, kustomize can't change value `"REPLACE_TARGET_HOSTNAME"` in this yaml file.
+For example, kustomize can't change the value `"REPLACE_TARGET_HOSTNAME"` in this yaml file straightforwardly.
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -85,7 +86,7 @@ What is out of scope for this proposal? Listing non-goals helps to focus discuss
 and make progress.
 -->
 
-1. Do not provide to perfectly alternative for deprecated [vars](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/vars/).
+1. Do not provide [Unstructured edits, because kustomize eschews parameterization](https://kubectl.docs.kubernetes.io/faq/kustomize/eschewedfeatures/#unstructured-edits).
 
 ## Proposal
 
@@ -103,11 +104,85 @@ inline here, if you feel such implementation details are required to adequately 
 If you have a PR, link to it at the top of this section.
 -->
 
+### Replacement the value in structured data
+
 I propose to add options for replacing the value in structured data to replacements function. My sample implementation is [here](https://github.com/kubernetes-sigs/kustomize/pull/4518).
 This idea is add two parameter `format` and `formatPath` to [options](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L67-L80) in replacement [TargetSelector](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L52-L64). The `format` option is used by select to structured data format like "json" or yaml, and The `formatPath` option is "path" to target to change values in structured data with selected format from `format` option.
+I think these two parameters can't select a specific default value. Therefore kustomize return error message for the user if only one parameter was set.
+
+#### Example.
+
+```yaml
+## replacement
+replacements:
+- source:
+    kind: ConfigMap
+    name: source-configmap
+    fieldPath: data.HOSTNAME
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-configmap
+    fieldPaths:
+    - data.config\.json
+    options:
+      format: 'json'
+      formatPath: '/config/hostname'
+```
 
 
-Example.
+### Disciplined merge the value in structured data with configMapGenerator
+
+The proposal is merge two structured data values from substring in a kubernetes object's string literal.
+
+- https://github.com/kubernetes-sigs/kustomize/issues/680#issuecomment-458834785
+
+
+## User Stories
+<!--
+Describe what people will be able to do if this KEP is implemented. If different user personas
+will use the feature differently, consider writing separate stories for each.
+Include as much detail as possible so that people can understand the "how" of the system.
+The goal here is to make this feel real for users without getting bogged down.
+-->
+
+#### Story 1
+
+Scenario summary: Replacement the value inside for structured data(json) in the configMap.
+<!--
+A walkthrough of what it will look like for a user to take advantage of the new feature.
+Include the the steps the user will take and samples of the commands they'll run
+and config they'll use.
+-->
+
+kustomize patching overlay is very strong to manage common yaml when using many cluster.
+But, if you want to set cluster specific change value in the json with configMap data field, you have to replacement whole json file.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap-dev
+data:
+  config.json: |-
+    {"config": {
+      "id": "42",
+      "hostname": "dev.example.com
+    }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap-prod
+data:
+  config.json: |-
+    {"config": {
+      "id": "42",
+      "hostname": "prod.example.com"
+    }}
+```
+
+So if we can replacement this value in the substring formatted with json, we can easy to overlay this difference.
 
 ```yaml
 ## source
@@ -165,16 +240,7 @@ data:
   config.json: '{"config":{"hostname":"www.example.com","id":"42"}}'
 ```
 
-
-### User Stories
-<!--
-Describe what people will be able to do if this KEP is implemented. If different user personas
-will use the feature differently, consider writing separate stories for each.
-Include as much detail as possible so that people can understand the "how" of the system.
-The goal here is to make this feel real for users without getting bogged down.
--->
-
-#### Story 1
+#### Story 2
 
 Scenario summary: As a [end user, extension developer, ...], I want to [...]
 <!--
@@ -183,7 +249,7 @@ Include the the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
 
-#### Story 2
+#### Story 3
 
 Scenario summary: As a [end user, extension developer, ...], I want to [...]
 <!--
