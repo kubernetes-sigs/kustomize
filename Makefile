@@ -84,11 +84,11 @@ kustomize: $(MYGOBIN)/kustomize
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
 build-kustomize-api: $(builtinplugins)
-	cd api; go build ./...
+	cd api; $(MAKE) build
 
 .PHONY: generate-kustomize-api
-generate-kustomize-api: $(MYGOBIN)/k8scopy
-	cd api; go generate ./...
+generate-kustomize-api:
+	cd api; $(MAKE) generate
 
 
 # --- Verification targets ---
@@ -98,6 +98,7 @@ verify-kustomize: \
 	lint-kustomize \
 	test-unit-kustomize-all \
 	test-unit-non-plugin \
+	build-non-plugin \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-v4-release
@@ -122,9 +123,9 @@ lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 
 .PHONY: lint-kustomize
 lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
-	cd api; make lint
-	cd kustomize; make lint
-	cd cmd/pluginator; make lint
+	cd api; $(MAKE) lint
+	cd kustomize; $(MAKE) lint
+	cd cmd/pluginator; $(MAKE) lint
 
 .PHONY: test-unit-all
 test-unit-all: $(builtinplugins)
@@ -134,10 +135,13 @@ test-unit-all: $(builtinplugins)
 test-unit-non-plugin:
 	./hack/for-each-module.sh "make test" "./plugin/*" 15
 
+.PHONY: build-non-plugin
+build-non-plugin:
+	./hack/for-each-module.sh "make build" "./plugin/*" 15
+
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
-	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-	cd api/krusty; OPENAPI_TEST=true go test -run TestCustomOpenAPIFieldFromComponentWithOverlays
+	cd api; $(MAKE) test
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
@@ -145,7 +149,7 @@ test-unit-kustomize-plugins:
 
 .PHONY: test-unit-kustomize-cli
 test-unit-kustomize-cli:
-	cd kustomize; go test ./...
+	cd kustomize; $(MAKE) test
 
 .PHONY: test-unit-kustomize-all
 test-unit-kustomize-all: \

@@ -11,7 +11,7 @@ export PATH := $(MYGOBIN):$(PATH)
 export KUSTOMIZE_ROOT ?= $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\1|')
 include $(KUSTOMIZE_ROOT)/Makefile-tools.mk
 
-.PHONY: lint test fix fmt tidy vet
+.PHONY: lint test fix fmt tidy vet build
 
 lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
@@ -33,3 +33,6 @@ tidy:
 
 vet:
 	go vet ./...
+
+build:
+	go build -v ./...

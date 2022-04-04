@@ -46,3 +46,6 @@ tidy:
 
 vet:
 	go vet $(shell go list ./... | grep -v "/kyaml/internal/forked/github.com/go-yaml/yaml")
+
+build:
+	go build -v ./...

@@ -8,3 +8,6 @@ lint:
 
 test:
 	echo "Skipping test for broken module depprobcheck"
+
+build:
+	echo "Skipping build for broken module depprobcheck"
