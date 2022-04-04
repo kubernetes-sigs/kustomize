@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # This script is called by Kustomize's Cloud Build release pipeline.
 # It installs jq (required for release note construction)

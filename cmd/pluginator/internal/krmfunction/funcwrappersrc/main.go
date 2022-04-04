@@ -1,3 +1,6 @@
+// Copyright 2022 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 // This file will be processed and embedded to pluginator.
 
 package funcwrappersrc

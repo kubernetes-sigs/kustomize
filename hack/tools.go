@@ -1,3 +1,6 @@
+// Copyright 2022 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 // +build tools
 
 // This package imports things required by build scripts, to force `go mod` to see them as dependencies

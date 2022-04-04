@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 
 # If no argument is given -> Downloads the most recently released
 # kustomize binary to your current working directory.
