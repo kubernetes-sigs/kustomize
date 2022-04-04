@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # To test the release process, this script attempts
 # to use a Google cloudbuild configuration to create
