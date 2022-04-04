@@ -14,6 +14,8 @@ if [[ -z "${1-}" ]] ; then
 fi
 
 cmd=$1
+skip_pattern="${2-}"
+expected_module_count=${3:-44}
 
 seen=()
 # Hack scripts must be run from the root of the repository.
@@ -21,7 +23,7 @@ KUSTOMIZE_ROOT=$(pwd)
 export KUSTOMIZE_ROOT
 
 # verify all modules pass validation
-for i in $(find . -name go.mod -not -path "./site/*"); do
+for i in $(find . -name go.mod -not -path "./site/*" -not -path "$skip_pattern"); do
   pushd .
   cd $(dirname $i);
 
@@ -43,9 +45,8 @@ echo -e "\n\n----------------------------------------------------------"
 echo -e "SUCCESS: Ran '$cmd' on the following modules:"
 printf "  - %s\n" "${seen[@]}"
 
-EXPECTED_MODULE_COUNT=44
-if [[ "${#seen[@]}" -ne $EXPECTED_MODULE_COUNT ]]; then
+if [[ "${#seen[@]}" -ne $expected_module_count ]]; then
   echo
-  echo "SANITY CHECK FAILURE: Expected to see $EXPECTED_MODULE_COUNT modules, but saw ${#seen[@]}"
+  echo "SANITY CHECK FAILURE: Expected to see $expected_module_count modules, but saw ${#seen[@]}"
   exit 1
 fi
