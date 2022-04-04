@@ -4,8 +4,8 @@ MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
 
-export KUSTOMIZE_ROOT=$(shell pwd | sed 's|kustomize/.*|kustomize/|')
-
+# only set this if not already set, so importing makefiles can override it
+export KUSTOMIZE_ROOT ?= $(shell pwd | sed -E 's|(.*\/kustomize).*|\1|')
 include $(KUSTOMIZE_ROOT)/Makefile-tools.mk
 
 .PHONY: lint test fix fmt tidy vet

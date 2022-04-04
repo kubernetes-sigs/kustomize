@@ -15,8 +15,10 @@ fi
 
 cmd=$1
 
-seen=""
-kustomize_root=$(pwd | sed 's|kustomize/.*|kustomize/|')
+seen=()
+# Hack scripts must be run from the root of the repository.
+KUSTOMIZE_ROOT=$(pwd)
+export KUSTOMIZE_ROOT
 
 # verify all modules pass validation
 for i in $(find . -name go.mod -not -path "./site/*"); do
@@ -25,18 +27,25 @@ for i in $(find . -name go.mod -not -path "./site/*"); do
 
   set +x
   dir=$(pwd)
-  module="${dir#$kustomize_root}"
+  module="${dir#$KUSTOMIZE_ROOT}"
   echo -e "\n----------------------------------------------------------"
   echo "Running command in $module"
   echo -e "----------------------------------------------------------"
   set -x
 
   bash -c "$cmd"
-  seen+="  - $module\n"
+  seen+=("$module")
   popd
 done
 
 set +x
 echo -e "\n\n----------------------------------------------------------"
 echo -e "SUCCESS: Ran '$cmd' on the following modules:"
-echo -e "$seen"
+printf "  - %s\n" "${seen[@]}"
+
+EXPECTED_MODULE_COUNT=44
+if [[ "${#seen[@]}" -ne $EXPECTED_MODULE_COUNT ]]; then
+  echo
+  echo "SANITY CHECK FAILURE: Expected to see $EXPECTED_MODULE_COUNT modules, but saw ${#seen[@]}"
+  exit 1
+fi
