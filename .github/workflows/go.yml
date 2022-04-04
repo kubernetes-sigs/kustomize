@@ -58,6 +58,10 @@ jobs:
         env:
           KUSTOMIZE_DOCKER_E2E: true
 
+      - name: Test kustomize
+        run: go test -cover ./...
+        working-directory: ./kustomize
+
   test-macos:
     name: Test MacOS
     runs-on: [macos-latest]
@@ -85,6 +89,10 @@ jobs:
         working-directory: ./cmd/config
         env:
           KUSTOMIZE_DOCKER_E2E: false # docker not installed on mac
+
+      - name: Test kustomize
+        run: go test -cover ./...
+        working-directory: ./kustomize
 
   test-windows:
     name: Test Windows
@@ -114,3 +122,8 @@ jobs:
         working-directory: ./cmd/config
         env:
           KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
+
+      # TODO: uncomment once Windows tests are passing.
+      # - name: Test kustomize
+      #   run: go test -cover ./...
+      #   working-directory: ./kustomize
