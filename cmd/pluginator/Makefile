@@ -7,16 +7,13 @@ include ../../Makefile-modules.mk
 
 all: test build
 
-statik:
-	go get github.com/rakyll/statik
-
 test: generate
 	go test ./...
 
-generate: statik
+generate: $(MYGOBIN)/statik
 	( \
 		cd internal/krmfunction; \
-		statik -src=$(FUNC_WRAPPER_SRC_DIR) -f -p $(FUNC_WRAPPER_DST_DIR) -include=main.go,go.mod.src \
+		$(MYGOBIN)/statik -src=$(FUNC_WRAPPER_SRC_DIR) -f -p $(FUNC_WRAPPER_DST_DIR) -include=main.go,go.mod.src \
 	)
 
 build: generate

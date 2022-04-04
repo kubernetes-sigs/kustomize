@@ -122,7 +122,7 @@ lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
 .PHONY: lint-kustomize
-lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
+lint-kustomize: $(MYGOBIN)/golangci-lint $(builtinplugins)
 	cd api; $(MAKE) lint
 	cd kustomize; $(MAKE) lint
 	cd cmd/pluginator; $(MAKE) lint
