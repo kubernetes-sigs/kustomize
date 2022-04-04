@@ -34,11 +34,13 @@ args=(
 )
 if [[ $mode == "check" ]]; then
   args+=(-check)
+  if  ! addlicense "${args[@]}" .  ; then
+    set +x
+    echo -e "\n------------------------------------------------------------------------"
+    echo "Error: license missing in one or more files. Run \`$0 run\` to update them."
+    exit 1
+  fi
+  exit 0
 fi
 
-if  ! addlicense "${args[@]}" .  ; then
-  set +x
-  echo -e "\n------------------------------------------------------------------------"
-  echo "Error: license missing in one or more files. Run \`$0 run\` to update them."
-  exit 1
-fi
+addlicense "${args[@]}" .

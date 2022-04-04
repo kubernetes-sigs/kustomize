@@ -26,8 +26,6 @@ jobs:
 
     - name: Lint
       run: make lint
-      env:
-        KUSTOMIZE_DOCKER_E2E: false # don't need to do e2e tests for linting
 
     - name: Verify boilerplate
       run: make check-license

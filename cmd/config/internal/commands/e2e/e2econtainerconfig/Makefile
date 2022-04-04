@@ -1,7 +1,7 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test build tidy
+.PHONY: generate fix vet fmt test build tidy
 
 include ../../../../../../Makefile-modules.mk
 
