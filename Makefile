@@ -97,7 +97,7 @@ verify-kustomize: \
 	install-tools \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-unit-cmd-all \
+	test-unit-non-plugin \
 	test-go-mod \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-v4-release
@@ -130,6 +130,10 @@ lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
 test-unit-all: $(builtinplugins)
 	./hack/for-each-module.sh "make test"
 
+.PHONY: test-unit-non-plugin
+test-unit-non-plugin:
+	./hack/for-each-module.sh "make test" "./plugin/*" 15
+
 .PHONY: test-unit-kustomize-api
 test-unit-kustomize-api: build-kustomize-api
 	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
@@ -149,7 +153,7 @@ test-unit-kustomize-all: \
 	test-unit-kustomize-cli \
 	test-unit-kustomize-plugins
 
-test-unit-cmd-all:
+test-unit-kyaml-all:
 	./hack/kyaml-pre-commit.sh
 
 test-go-mod:
