@@ -5,7 +5,7 @@ endif
 export PATH := $(MYGOBIN):$(PATH)
 
 # only set this if not already set, so importing makefiles can override it
-export KUSTOMIZE_ROOT ?= $(shell pwd | sed -E 's|(.*\/kustomize).*|\1|')
+export KUSTOMIZE_ROOT ?= $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\1|')
 include $(KUSTOMIZE_ROOT)/Makefile-tools.mk
 
 .PHONY: lint test fix fmt tidy vet
@@ -13,7 +13,7 @@ include $(KUSTOMIZE_ROOT)/Makefile-tools.mk
 lint: $(MYGOBIN)/golangci-lint
 	$(MYGOBIN)/golangci-lint \
 	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
-	  --path-prefix $(shell pwd | sed 's|.*kustomize/||') \
+	  --path-prefix $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\2|') \
 	  run ./...
 
 test:
