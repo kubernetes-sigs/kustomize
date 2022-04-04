@@ -37,13 +37,13 @@ $(MYGOBIN)/goimports:
 	go install golang.org/x/tools/cmd/goimports@latest
 
 $(MYGOBIN)/mdtogo:
-	go install sigs.k8s.io/kustomize/cmd/mdtogo
+	go install sigs.k8s.io/kustomize/cmd/mdtogo@latest
 
 $(MYGOBIN)/addlicense:
-	go install github.com/google/addlicense
+	go install github.com/google/addlicense@latest
 
 $(MYGOBIN)/statik:
-	go install github.com/rakyll/statik
+	go install github.com/rakyll/statik@latest
 
 $(MYGOBIN)/kind:
 	( \
