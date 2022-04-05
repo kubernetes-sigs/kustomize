@@ -149,8 +149,19 @@ test-unit-kustomize-plugins:
 test-unit-kustomize-cli:
 	cd kustomize; $(MAKE) test
 
-test-unit-kyaml-all:
-	./hack/kyaml-pre-commit.sh
+.PHONY: kyaml-precommit
+kyaml-precommit:
+	cd kyaml; $(MAKE) all
+	cd cmd/config; $(MAKE) all
+	make functions-examples-all
+
+.PHONY: functions-examples-all
+functions-examples-all:
+	for dir in $(abspath $(wildcard functions/examples/*/.)); do \
+		echo -e "\n---Running make tasks for function $$dir---"; \
+		set -e; \
+		cd $$dir; $(MAKE) all; \
+	done
 
 test-go-mod:
 	./hack/for-each-module.sh "go list -m -json all > /dev/null && go mod tidy -v"
