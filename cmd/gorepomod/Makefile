@@ -10,7 +10,7 @@ $(MYGOBIN)/gorepomod: usage.go
 
 .PHONY: test
 test: $(MYGOBIN)/gorepomod
-	go test ./...
+	go test -v ./...
 
 usage.go: README.md $(MYGOBIN)/goimports
 	go generate . \
