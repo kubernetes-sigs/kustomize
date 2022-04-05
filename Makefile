@@ -104,10 +104,12 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
-	verify-kustomize \
-	test-unit-kyaml-all \
+	install-tools \
+	test-unit-kustomize-plugins \
 	test-go-mod \
-	build-non-plugin-all
+	build-non-plugin-all \
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-v4-release
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
