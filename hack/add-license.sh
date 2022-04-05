@@ -30,6 +30,7 @@ args=(
   -ignore "**/*.json"
   -ignore "**/*.yml"
   -ignore "**/*.yaml"
+  -ignore "**/*.xml"
   -v
 )
 if [[ $mode == "check" ]]; then
