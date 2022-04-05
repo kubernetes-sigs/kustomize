@@ -97,9 +97,6 @@ verify-kustomize: \
 	install-tools \
 	lint-kustomize \
 	test-unit-kustomize-all \
-	test-unit-non-plugin \
-	build-non-plugin \
-	test-go-mod \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-v4-release
 
@@ -107,7 +104,10 @@ verify-kustomize: \
 # https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
-	verify-kustomize
+	verify-kustomize \
+	test-unit-kyaml-all \
+	test-go-mod \
+	build-non-plugin-all
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
@@ -135,8 +135,9 @@ test-unit-all: $(builtinplugins)
 test-unit-non-plugin:
 	./hack/for-each-module.sh "make test" "./plugin/*" 15
 
-.PHONY: build-non-plugin
-build-non-plugin:
+# This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
+.PHONY: build-non-plugin-all
+build-non-plugin-all:
 	./hack/for-each-module.sh "make build" "./plugin/*" 15
 
 .PHONY: test-unit-kustomize-api
