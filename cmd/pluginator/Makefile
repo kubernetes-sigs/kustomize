@@ -8,7 +8,7 @@ include ../../Makefile-modules.mk
 all: test build
 
 test: generate
-	go test ./...
+	go test -v ./...
 
 generate: $(MYGOBIN)/statik
 	( \
