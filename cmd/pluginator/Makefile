@@ -17,7 +17,7 @@ generate: $(MYGOBIN)/statik
 	)
 
 build: generate
-	go build -o pluginator main.go
+	go build -o $(MYGOBIN) main.go
 
 install: generate
 	go install .
