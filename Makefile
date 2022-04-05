@@ -91,13 +91,14 @@ generate-kustomize-api:
 
 
 # --- Verification targets ---
-.PHONY: verify-kustomize
-verify-kustomize: \
+.PHONY: verify-kustomize-repo
+verify-kustomize-repo: \
 	install-tools \
-	lint-kustomize \
-	test-unit-kustomize-api \
-	test-unit-kustomize-cli \
-	test-unit-kustomize-plugins \
+	lint \
+	check-license \
+	test-unit-all \
+	build-non-plugin-all \
+	test-go-mod \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-v4-release
 
@@ -125,8 +126,9 @@ lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
 .PHONY: test-unit-all
-test-unit-all: $(builtinplugins)
-	./hack/for-each-module.sh "make test"
+test-unit-all: \
+	test-unit-non-plugin \
+	test-unit-kustomize-plugins
 
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
@@ -137,23 +139,9 @@ test-unit-non-plugin:
 build-non-plugin-all:
 	./hack/for-each-module.sh "make build" "./plugin/*" 15
 
-.PHONY: test-unit-kustomize-api
-test-unit-kustomize-api: build-kustomize-api
-	cd api; $(MAKE) test
-
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
 	./hack/testUnitKustomizePlugins.sh
-
-.PHONY: test-unit-kustomize-cli
-test-unit-kustomize-cli:
-	cd kustomize; $(MAKE) test
-
-.PHONY: kyaml-precommit
-kyaml-precommit:
-	cd kyaml; $(MAKE) all
-	cd cmd/config; $(MAKE) all
-	make functions-examples-all
 
 .PHONY: functions-examples-all
 functions-examples-all:
