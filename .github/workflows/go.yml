@@ -92,7 +92,7 @@ jobs:
         env:
           KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
 
-      # TODO: replace specific modules above with this once Windows tests are passing.
+      # TODO (#4001): replace specific modules above with this once Windows tests are passing.
       #- name: Test all modules
       #  run: make test-unit-non-plugin
       #  env:

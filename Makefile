@@ -3,7 +3,6 @@
 #
 # Makefile for kustomize CLI and API.
 
-MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
 LATEST_V4_RELEASE=v4.5.4
 
 SHELL := /usr/bin/env bash
@@ -96,7 +95,9 @@ generate-kustomize-api:
 verify-kustomize: \
 	install-tools \
 	lint-kustomize \
-	test-unit-kustomize-all \
+	test-unit-kustomize-api \
+	test-unit-kustomize-cli \
+	test-unit-kustomize-plugins \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-v4-release
 
@@ -123,21 +124,15 @@ check-license: $(MYGOBIN)/addlicense
 lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
-.PHONY: lint-kustomize
-lint-kustomize: $(MYGOBIN)/golangci-lint $(builtinplugins)
-	cd api; $(MAKE) lint
-	cd kustomize; $(MAKE) lint
-	cd cmd/pluginator; $(MAKE) lint
-
 .PHONY: test-unit-all
 test-unit-all: $(builtinplugins)
 	./hack/for-each-module.sh "make test"
 
+# This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
 test-unit-non-plugin:
 	./hack/for-each-module.sh "make test" "./plugin/*" 15
 
-# This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: build-non-plugin-all
 build-non-plugin-all:
 	./hack/for-each-module.sh "make build" "./plugin/*" 15
@@ -153,12 +148,6 @@ test-unit-kustomize-plugins:
 .PHONY: test-unit-kustomize-cli
 test-unit-kustomize-cli:
 	cd kustomize; $(MAKE) test
-
-.PHONY: test-unit-kustomize-all
-test-unit-kustomize-all: \
-	test-unit-kustomize-api \
-	test-unit-kustomize-cli \
-	test-unit-kustomize-plugins
 
 test-unit-kyaml-all:
 	./hack/kyaml-pre-commit.sh
