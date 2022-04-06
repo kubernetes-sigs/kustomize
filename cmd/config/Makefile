@@ -1,50 +1,38 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: generate license fix vet fmt test build tidy clean
+.PHONY: generate fix vet fmt test build tidy clean
 
-GOBIN = $(shell go env GOBIN)
-ifeq ($(GOBIN),)
-GOBIN = $(shell go env GOPATH)/bin
+MYGOBIN = $(shell go env GOBIN)
+ifeq ($(MYGOBIN),)
+MYGOBIN = $(shell go env GOPATH)/bin
 endif
+export PATH := $(MYGOBIN):$(PATH)
 
-$(GOBIN)/addlicense:
-	go get github.com/google/addlicense
+include ../../Makefile-tools.mk
 
-$(GOBIN)/golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
-
-$(GOBIN)/k8scopy:
+$(MYGOBIN)/k8scopy:
 	( cd ../k8scopy; go install . )
 
-$(GOBIN)/mdtogo:
-	go get sigs.k8s.io/kustomize/cmd/mdtogo
-
 build:
-	go build -v -o $(GOBIN)/kubectl-krm ./kubectl-krm
+	go build -v -o $(MYGOBIN)/kubectl-krm ./kubectl-krm
 
-all: build license fix vet fmt test lint tidy
+all: build fix vet fmt test lint tidy
 
 k8sGenDir := internal/commands/internal/k8sgen/pkg
 
-generate: $(GOBIN)/mdtogo $(GOBIN)/k8scopy
-	GOBIN=$(GOBIN) go generate ./...
+generate: $(MYGOBIN)/mdtogo $(MYGOBIN)/k8scopy
+	GOBIN="${MYGOBIN}" go generate ./...
 
 clean:
 	rm -rf $(k8sGenDir)
 
-lint: $(GOBIN)/golangci-lint
-	$(GOBIN)/golangci-lint \
+lint: $(MYGOBIN)/golangci-lint
+	$(MYGOBIN)/golangci-lint \
 	  --skip-dirs $(k8sGenDir) \
 	  run ./... \
 	  --path-prefix=cmd/config \
 	  -c ../../.golangci.yml
-
-license: $(GOBIN)/addlicense
-	$(GOBIN)/addlicense \
-	  -y 2022 \
-	  -c "The Kubernetes Authors." \
-	  -f LICENSE_TEMPLATE .
 
 test:
 	go test -v -timeout 45m -cover ./...
