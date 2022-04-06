@@ -257,3 +257,71 @@ metadata:
 	assert.NoError(t, err)
 	assert.Equal(t, string(expYaml), string(actYaml))
 }
+
+func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/generator", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generators:
+- |-
+  apiVersion: generators.example/v1
+  kind: ManifestGenerator
+  metadata:
+    name: ManifestGenerator
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: ManifestGenerator:latest
+  spec:
+    image: 'someimage:12345'
+    configPath: config.json
+- |-
+  apiVersion: generators.example/v1
+  kind: ManifestGenerator
+  metadata:
+    name: ManifestGenerator
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: ManifestGenerator:latest
+  spec:
+    image: 'someimage:12345'
+    configPath: another_config.json
+`)
+	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/generator").AccumulateTarget()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ManifestGenerator.v1.generators.example/ManifestGenerator")
+}
+
+func TestDuplicateExternalTransformersForbidden(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/transformer", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |-
+  apiVersion: transformers.example.co/v1
+  kind: ValueAnnotator
+  metadata:
+    name: notImportantHere
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: example.docker.com/my-functions/valueannotator:1.0.0
+  value: 'pass'
+- |-
+  apiVersion: transformers.example.co/v1
+  kind: ValueAnnotator
+  metadata:
+    name: notImportantHere
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: example.docker.com/my-functions/valueannotator:1.0.0
+  value: 'fail'
+`)
+	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ValueAnnotator.v1.transformers.example.co/notImportantHere")
+}

@@ -304,7 +304,9 @@ func (kt *KustTarget) configureExternalGenerators() (
 				rm.Replace(r)
 			}
 		}
-		ra.AppendAll(rm)
+		if err = ra.AppendAll(rm); err != nil {
+			return nil, errors.Wrapf(err, "configuring external generator")
+		}
 	}
 	ra, err := kt.accumulateResources(ra, generatorPaths)
 	if err != nil {
@@ -348,7 +350,10 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]*r
 				rm.Replace(r)
 			}
 		}
-		ra.AppendAll(rm)
+
+		if err = ra.AppendAll(rm); err != nil {
+			return nil, errors.Wrapf(err, "configuring external transformer")
+		}
 	}
 	ra, err := kt.accumulateResources(ra, transformerPaths)
 	if err != nil {
