@@ -1,3 +1,6 @@
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 # Build the kubectl integration PR
 
 # Merge pull request #93861 from sttts/sttts-so-reuseaddr-kube

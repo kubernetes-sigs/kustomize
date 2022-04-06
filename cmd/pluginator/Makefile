@@ -3,22 +3,21 @@
 FUNC_WRAPPER_SRC_DIR = funcwrappersrc
 FUNC_WRAPPER_DST_DIR = funcwrapper
 
+include ../../Makefile-modules.mk
+
 all: test build
 
-statik:
-	go get github.com/rakyll/statik
-
 test: generate
-	go test ./...
+	go test -v ./...
 
-generate: statik
+generate: $(MYGOBIN)/statik
 	( \
 		cd internal/krmfunction; \
-		statik -src=$(FUNC_WRAPPER_SRC_DIR) -f -p $(FUNC_WRAPPER_DST_DIR) -include=main.go,go.mod.src \
+		$(MYGOBIN)/statik -src=$(FUNC_WRAPPER_SRC_DIR) -f -p $(FUNC_WRAPPER_DST_DIR) -include=main.go,go.mod.src \
 	)
 
 build: generate
-	go build -o pluginator main.go
+	go build -o $(MYGOBIN) main.go
 
 install: generate
 	go install .

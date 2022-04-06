@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 
 # If no arguments are given -> Downloads the most recently released
 # kpt binary to your current working directory.
