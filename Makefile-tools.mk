@@ -45,6 +45,9 @@ $(MYGOBIN)/addlicense:
 $(MYGOBIN)/statik:
 	go install github.com/rakyll/statik@latest
 
+$(MYGOBIN)/goreleaser:
+	go install github.com/goreleaser/goreleaser@v0.179.0 # https://github.com/kubernetes-sigs/kustomize/issues/4542
+
 $(MYGOBIN)/kind:
 	( \
         set -e; \
