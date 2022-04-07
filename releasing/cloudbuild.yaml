@@ -39,9 +39,8 @@ steps:
 
 # Run goreleaser indirectly via a shell script
 # to configure it properly.
-- name: goreleaser/goreleaser:v0.179.0
-  timeout: 12m
-  entrypoint: /bin/sh
+- name: golang:1.18
+  entrypoint: /bin/bash
   dir: myClone
   secretEnv: ['GITHUB_TOKEN']
   args:
