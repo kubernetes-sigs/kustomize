@@ -45,8 +45,10 @@ This proposal decides the interfaces to change values in the structured data (li
 If this proposal is an expansion of an existing GitHub issue, link to it here.
 -->
 
-Fields in Kubernetes objects sometimes include values formatted by structured data like json and yaml substrings in a string literal.
-kustomize can strong patch with Kubernetes objects, but kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's string literal field. This is a expected behavior, but kustomize will be very helpful if it can change the value structured data like json and yaml substrings in a string literal.
+kustomize can strong patch to Kubernetes objects (yaml file in most cases) with structured edit. And, It is structured data.
+Sometimes structured multi-line or long single line string (ex. json,yaml, and other structured format data) is injected in Kubernetes objects' string literal field. And, kustomize seems it only string literal.
+So, kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's string literal field. This function is expected behavior, but kustomize will be very helpful if it can change the value of structured data like json and yaml substrings in a string literal.
+Eventually, kustomize doesn't support unstructured edits for string literal. The proposal allows editing of an unstructured string literal as an exception if the string literal is a structured string of a well-known format like json.
 
 For example, kustomize can't change the value `"REPLACE_TARGET_HOSTNAME"` in this yaml file straightforwardly.
 
