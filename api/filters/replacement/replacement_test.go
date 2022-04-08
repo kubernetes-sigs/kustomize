@@ -2354,7 +2354,28 @@ spec:
         options:
           create: true
 `,
-			expectedErr: `cannot use create option in a multi-value target`,
+			expected: `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+  restartPolicy: OnFailure`,
 		},
 	}
 
