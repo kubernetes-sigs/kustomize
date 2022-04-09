@@ -45,10 +45,10 @@ This proposal decides the interfaces to change values in the structured data (li
 If this proposal is an expansion of an existing GitHub issue, link to it here.
 -->
 
-kustomize can strong patch to Kubernetes objects (yaml file in most cases) with structured edit. And, It is structured data.
-Sometimes structured multi-line or long single line string (ex. json,yaml, and other structured format data) is injected in Kubernetes objects' string literal field. And, kustomize seems it only string literal.
-So, kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's string literal field. This function is expected behavior, but kustomize will be very helpful if it can change the value of structured data like json and yaml substrings in a string literal.
-Eventually, kustomize doesn't support unstructured edits for string literal. The proposal allows editing of an unstructured string literal as an exception if the string literal is a structured string of a well-known format like json.
+kustomize can strong patch to Kubernetes objects (yaml file in most cases) with structured edit. And, It is structured data.\
+Sometimes structured multi-line or long single line string (ex. json,yaml, and other structured format data) is injected in Kubernetes objects' string literal field. And, kustomize seems it only string literal.\
+So, kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's string literal field. This function is expected behavior, but kustomize will be very helpful if it can change the value of structured data like json and yaml substrings in a string literal.\
+Eventually, kustomize doesn't support unstructured edits for string literal. The proposal allows editing of an unstructured string literal as an exception if the string literal is a structured string of a well-known format like json.\
 
 For example, kustomize can't change the value `"REPLACE_TARGET_HOSTNAME"` in this yaml file straightforwardly.
 
@@ -108,9 +108,9 @@ If you have a PR, link to it at the top of this section.
 
 ### Replacement the value in structured data
 
-I propose to add options for replacing the value in structured data to replacements function. My sample implementation is [here](https://github.com/kubernetes-sigs/kustomize/pull/4518).
-This idea is add two parameter `format` and `formatPath` to [options](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L67-L80) in replacement [TargetSelector](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L52-L64). The `format` option is used by select to structured data format like "json" or yaml, and The `formatPath` option is "path" to target to change values in structured data with selected format from `format` option.
-I think these two parameters can't select a specific default value. Therefore kustomize return error message for the user if only one parameter was set.
+I propose to add options for replacing the value in structured data to replacements function. My sample implementation is [here](https://github.com/kubernetes-sigs/kustomize/pull/4518).\
+This idea is add two parameter `format` and `formatPath` to [options](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L67-L80) in replacement [TargetSelector](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L52-L64). The `format` option is used by select to structured data format like "json" or "yaml", and The `formatPath` option is "path" to target to change values in structured data with selected format from `format` option.\
+I think these two parameters can't select a specific default value. Therefore kustomize return error message for the user if only one parameter was set.\
 
 #### Example.
 
@@ -128,17 +128,42 @@ replacements:
     fieldPaths:
     - data.config\.json
     options:
-      format: 'json'
-      formatPath: '/config/hostname'
+      format: 'json'                  # Setting structured data format.
+      formatPath: '/config/hostname'  # Setting replacements path.
 ```
 
+Please check [Story 1](#Story-1).
 
 ### Disciplined merge the value in structured data with configMapGenerator
 
-The proposal is merge two structured data values from substring in a kubernetes object's string literal.
+This Proposal is add option for [configMapGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/) to allow merge two string literals when the behavior option is setting to merge and string literals value is structured.\
+This idea is add one parameter for `valueStructuredMergeFormat` to `option`. The `valueStructuredMergeFormat` option is used by select to structured data format like "json" or "yaml". And this function needs to work requires setting `behavior: merge`.\
+This merge operation will be implemented for a part of [Overriding Base ConfigMap Values](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/#overriding-base-configmap-values). It will execute to merge two string literal having same [key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) name when merging two configMap.
 
+#### Example
+
+```yaml
+configMapGenerator:
+- name: demo-settings
+  behavior: merge                     # This function requires `behavior: merge`.
+  option:
+    valueStructuredMergeFormat: json  # Setting structured data format.
+  literals:
+  - config.json: |-
+      {
+        "config": {
+          "hostname": "REPLACE_TARGET_HOSTNAME",
+          "value": {
+            "foo": "bar"
+          }
+        }
+      }
+```
+
+Please check [Story 2](#Story-2).
+
+#### Appendix
 - https://github.com/kubernetes-sigs/kustomize/issues/680#issuecomment-458834785
-
 
 ## User Stories
 <!--
@@ -157,7 +182,7 @@ Include the the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
 
-kustomize patching overlay is very strong to manage common yaml when using many cluster.
+kustomize patching overlay is very strong to manage common yaml when using many cluster.\
 But, if you want to set cluster specific change value in the json with configMap data field, you have to replacement whole json file.
 
 ```yaml
@@ -244,12 +269,75 @@ data:
 
 #### Story 2
 
-Scenario summary: As a [end user, extension developer, ...], I want to [...]
+Scenario summary: Merge the two values formatted by structured data(json) with configMapGenerator.
+
 <!--
 A walkthrough of what it will look like for a user to take advantage of the new feature.
 Include the the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
+
+Many application needs to be set with json format file. And, That file is handled with configMap when the application is running on kubernetes.\
+So, If kustomize configMapGenerator can overlay to one line inside a configMap data value, A json format file will be simple and easy to handle.
+
+#### Source
+```yaml
+# base/kustomization.yaml
+configMapGenerator:
+- name: demo
+  behavior: merge
+  literals:
+  - config.json: |-
+      {
+        "config": {
+          "loglevel": debug,
+          "parameter": {
+            "foo": "bar"
+          }
+        }
+      }
+```
+
+```yaml
+# overlay/kustomization.yaml
+resources:
+- ../base
+configMapGenerator:
+- name: demo
+  option:
+    valueMergeFormat: json
+  literals:
+  - config.json: |-
+      {
+        "config": {
+          "hostname": "www.example.com",
+          "parameter": {
+            "baz": "qux"
+          }
+        }
+      }
+```
+
+#### Result
+```yaml
+apiVersion: v1
+data:
+  config.json: |-
+    {
+      "config": {
+        "loglevel": debug,
+        "hostname": "www.example.com",
+        "parameter": {
+          "foo": "bar",
+          "baz": "qux"
+        }
+      }
+    }
+kind: ConfigMap
+metadata:
+  name: demo-xxxxxxxxxx  # name suffix hash
+```
+
 
 #### Story 3
 
