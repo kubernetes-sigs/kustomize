@@ -4,10 +4,10 @@
 package krusty_test
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -639,61 +639,18 @@ metadata:
 func TestFnContainerMounts(t *testing.T) {
 	skipIfNoDocker(t)
 
-	th := kusttest_test.MakeHarness(t)
-	o := th.MakeOptionsPluginsEnabled()
-	fSys := filesys.MakeFsOnDisk()
-	b := MakeKustomizer(&o)
-	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-
 	path, err := os.Getwd()
 	assert.NoError(t, err)
 
-	src := filepath.Join(path, "testdata", "charts") + string(filepath.Separator)
-	dst := filepath.Join(tmpDir.String(), "testdata", "charts") + string(filepath.Separator)
-	assert.NoError(t, os.MkdirAll(dst, 0777))
+	testDir := filepath.Join(path, "testdata", "fnmounts")
+	command := exec.Command("kustomize", "build", testDir, "--enable-alpha-plugins")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	t.Log(stderr.String())
 
-	switch runtime.GOOS {
-	case "darwin":
-		cmd := exec.Command("cp", "-r", src, dst)
-		assert.NoError(t, cmd.Run())
-	case "linux":
-		d := dst + "."
-		cmd := exec.Command("cp", "-r", src, d)
-		assert.NoError(t, cmd.Run())
-	default:
-		t.SkipNow()
-	}
-
-	chartPath, err := filepath.Rel(tmpDir.String(), dst)
-	assert.NoError(t, err)
-
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
-generators:
-  - |-
-    apiVersion: v1alpha1
-    kind: RenderHelmChart
-    metadata:
-      name: demo
-      annotations:
-        config.kubernetes.io/function: |
-          container:
-            image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
-            mounts:
-            - type: "bind"
-              src: "`+chartPath+`"
-              dst: "/tmp/charts"
-    helmCharts:
-    - name: helloworld-chart
-      releaseName: test
-      valuesFile: /tmp/charts/helloworld-values/values.yaml
-`)))
-	m, err := b.Run(
-		fSys,
-		tmpDir.String())
-	assert.NoError(t, err)
-	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	assert.NoError(t, command.Run())
 	assert.Equal(t, `apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -790,9 +747,7 @@ spec:
     image: busybox
     name: wget
   restartPolicy: Never
-`, string(yml))
-
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+`, stdout.String())
 }
 
 func TestFnContainerMountsLoadRestrictions_absolute(t *testing.T) {

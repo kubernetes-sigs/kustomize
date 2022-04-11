@@ -82,7 +82,7 @@ kustomize: $(MYGOBIN)/kustomize
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
-build-kustomize-api: $(builtinplugins)
+build-kustomize-api: $(MYGOBIN)/goimports $(builtinplugins)
 	cd api; $(MAKE) build
 
 .PHONY: generate-kustomize-api
@@ -132,7 +132,7 @@ test-unit-all: \
 
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
-test-unit-non-plugin:
+test-unit-non-plugin: kustomize
 	./hack/for-each-module.sh "make test" "./plugin/*" 15
 
 .PHONY: build-non-plugin-all
