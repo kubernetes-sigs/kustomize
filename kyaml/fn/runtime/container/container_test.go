@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,7 @@ func TestFilter_setupExec(t *testing.T) {
 		expectedArgs   []string
 		containerSpec  runtimeutil.ContainerSpec
 		UIDGID         string
+		skipOnWindows  bool
 	}{
 		{
 			name: "command",
@@ -68,7 +70,8 @@ metadata:
 		},
 
 		{
-			name: "storage_mounts",
+			name:          "storage_mounts",
+			skipOnWindows: true, // the fieldpaths are different on Windows
 			functionConfig: `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -122,6 +125,9 @@ metadata:
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.skipOnWindows && runtime.GOOS == "windows" {
+				t.SkipNow()
+			}
 			cfg, err := yaml.Parse(tt.functionConfig)
 			if !assert.NoError(t, err) {
 				t.FailNow()
