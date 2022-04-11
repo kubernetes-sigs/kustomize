@@ -72,6 +72,11 @@ follows:
 3. Orchestrator uses the `stdout`, `stderr`, and the exit code of the function
    as it sees fit following to the semantics described below.
 
+### Breaking Changes
+
+1. KRM Function spec `v2` will drop support for `results[].field.proposedValue`
+   and instead use the new array field `results[].field.proposedValues[]`.
+
 ### Schema
 
 A function MUST accept input from `stdin` and MUST output to `stdout` a
@@ -87,6 +92,9 @@ definitions:
     type: object
     description: ResourceList is the input/output wire format for KRM functions.
     x-kubernetes-group-version-kind:
+      - group: config.kubernetes.io
+        kind: ResourceList
+        version: v2alpha1
       - group: config.kubernetes.io
         kind: ResourceList
         version: v1
@@ -192,10 +200,16 @@ definitions:
             description: |
               CurrrentValue is the current value of the field.
               Can be any value - string, number, boolean, array or object.
+          proposedValues:
+            type: array
+            description: |
+              PropposedValues is the set of proposed values of the field to fix an issue.
+              Elements can be any value - string, number, boolean, array or object.
           proposedValue:
             description: |
               PropposedValue is the proposed value of the field to fix an issue.
               Can be any value - string, number, boolean, array or object.
+              Note: This field is removed on v2 and gets mapped into proposedValues.
       file:
         type: object
         description: File references a file containing the resource.
@@ -258,13 +272,14 @@ items:
 ```
 
 The following is an example output containing one result representing a
-validation error:
+validation error which also includes a proposal to fix the problem, tools that
+make use of this API can use these hints to apply automatic fixes.
 
 ```yaml
 apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
-  - apiVersion: v1
+  - apiVersion: v2alpha1
     kind: Service
     metadata:
       name: wordpress
@@ -290,6 +305,10 @@ results:
       name: wordpress
     field:
       path: spec.ports.0.port
+      currentValue: cool-port
+      proposedValues:
+      - 1337
+      - 4242
     file:
       path: service.yaml
 ```

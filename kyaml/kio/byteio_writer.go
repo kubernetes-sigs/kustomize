@@ -134,25 +134,87 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 			{Kind: yaml.ScalarNode, Value: w.WrappingAPIVersion},
 			{Kind: yaml.ScalarNode, Value: "kind"},
 			{Kind: yaml.ScalarNode, Value: w.WrappingKind},
-			{Kind: yaml.ScalarNode, Value: "items"}, items,
-		}}
+			{Kind: yaml.ScalarNode, Value: "items"},
+			items,
+		},
+	}
 	if w.FunctionConfig != nil {
 		list.Content = append(list.Content,
 			&yaml.Node{Kind: yaml.ScalarNode, Value: "functionConfig"},
 			w.FunctionConfig.YNode())
 	}
 	if w.Results != nil {
+		err := w.Results.PipeE(yaml.FilterFunc(w.validateResultVersion))
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
 		list.Content = append(list.Content,
 			&yaml.Node{Kind: yaml.ScalarNode, Value: "results"},
 			w.Results.YNode())
 	}
 	doc := &yaml.Node{
 		Kind:    yaml.DocumentNode,
-		Content: []*yaml.Node{list}}
+		Content: []*yaml.Node{list},
+	}
 	for i := range nodes {
 		items.Content = append(items.Content, nodes[i].YNode())
 	}
 	return encoder.Encode(doc)
+}
+
+// validateResultVersion makes transformations for "Results" across major versions.
+// For example fixing proposedValues changes from v1->v2+.
+func (w ByteWriter) validateResultVersion(rn *yaml.RNode) (*yaml.RNode, error) {
+	if rn.YNode().Kind != yaml.SequenceNode {
+		return rn, nil
+	}
+
+	results, err := rn.Elements()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	_, err = FilterAll(yaml.FilterFunc(w.validateProposedValuesVersion)).Filter(results)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return rn, nil
+}
+
+// validateProposedValuesVersion verifies v1 does not use proposedValues and v2+ does not use proposerValue.
+func (w ByteWriter) validateProposedValuesVersion(rn *yaml.RNode) (*yaml.RNode, error) {
+	if w.WrappingKind != ResourceListKind {
+		return rn, nil
+	}
+
+	if rn.IsNilOrEmpty() || rn.Field("field").IsNilOrEmpty() {
+		return rn, nil
+	}
+
+	switch w.WrappingAPIVersion {
+	case ResourceListAPIVersionV1, ResourceListAPIVersionV1Beta1:
+		multi, err := rn.Pipe(yaml.Lookup("field", "proposedValues"))
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+
+		if !multi.IsNilOrEmpty() {
+			return nil, errors.Errorf("KRM function spec v1 does not support the array proposedValues, use the single proposedValue instead")
+		}
+
+	default:
+		single, err := rn.Pipe(yaml.Lookup("field", "proposedValue"))
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+		if !single.IsNilOrEmpty() {
+			return nil, errors.Errorf("KRM function spec v2 no longer supports a single proposedValue, use the proposedValues array instead")
+		}
+	}
+
+	return rn, nil
 }
 
 func copyRNodes(in []*yaml.RNode) []*yaml.RNode {

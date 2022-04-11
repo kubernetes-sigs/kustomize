@@ -116,6 +116,114 @@ results:
 		},
 
 		{
+			name: "results v1",
+			input: `
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+results:
+- field:
+    proposedValue: "foo"
+`,
+			expectedOutput: `
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+results:
+- field:
+    proposedValue: "foo"
+`,
+		},
+
+		{
+			name: "results v1 proposedValues",
+			err:  "KRM function spec v1 does not support the array proposedValues, use the single proposedValue instead",
+			input: `
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+results:
+- field:
+    proposedValues: ["foo"]
+`,
+		},
+
+		{
+			name: "results v2",
+			input: `
+apiVersion: config.kubernetes.io/v2
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+results:
+- field:
+    proposedValues: ["foo", "bar"]
+`,
+			expectedOutput: `
+apiVersion: config.kubernetes.io/v2
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+results:
+- field:
+    proposedValues: ["foo", "bar"]
+`,
+		},
+
+		{
+			name: "results v2 proposedValue not supported",
+			err:  "KRM function spec v2 no longer supports a single proposedValue, use the proposedValues array instead",
+			input: `
+apiVersion: config.kubernetes.io/v2
+kind: ResourceList
+items:
+- kind: Deployment
+  spec:
+    replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+results:
+- field:
+    proposedValue: "foo"
+`,
+		},
+
+		{
 			name: "drop_invalid_resource_list_field",
 			input: `
 apiVersion: config.kubernetes.io/v1
@@ -336,15 +444,14 @@ data:
 			}
 
 			err = w.Write(nodes)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
 
 			if tc.err != "" {
 				if !assert.EqualError(t, err, tc.err) {
 					t.FailNow()
 				}
 				return
+			} else if !assert.NoError(t, err) {
+				t.FailNow()
 			}
 
 			if !assert.Equal(t,

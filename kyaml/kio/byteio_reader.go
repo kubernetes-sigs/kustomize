@@ -17,8 +17,14 @@ import (
 )
 
 const (
-	ResourceListKind       = "ResourceList"
-	ResourceListAPIVersion = "config.kubernetes.io/v1"
+	ResourceListKind = "ResourceList"
+
+	ResourceListAPIVersionV1       = "config.kubernetes.io/v1"
+	ResourceListAPIVersionV1Beta1  = "config.kubernetes.io/v1beta1"
+	ResourceListAPIVersionV2Alpha1 = "config.kubernetes.io/v2alpha1"
+
+	// ResourceListAPIVersion is the most recent stable ResourceList version.
+	ResourceListAPIVersion = ResourceListAPIVersionV1
 )
 
 // ByteReadWriter reads from an input and writes to an output.
