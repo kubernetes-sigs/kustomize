@@ -142,9 +142,6 @@ func applyToOneNode(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNod
 	}
 
 	for _, scalarNode := range t.YNode().Content {
-		if options != nil && options.Create {
-			return fmt.Errorf("cannot use create option in a multi-value target")
-		}
 		rn := yaml.NewRNode(scalarNode)
 		if err := setTargetValue(options, rn, value); err != nil {
 			return err
