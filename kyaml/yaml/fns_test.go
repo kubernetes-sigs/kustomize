@@ -584,7 +584,7 @@ func TestLookup_Fn_create_with_wildcard_error(t *testing.T) {
 	node, err := Parse(s)
 	assert.NoError(t, err)
 	_, err = node.Pipe(LookupCreate(yaml.MappingNode, "a", "b", "*", "t"))
-	assert.Error(t, err, "cannot support create option in a multi-value target now")
+	assert.Error(t, err, "wildcard is not supported in PathGetter")
 }
 
 func TestLookup(t *testing.T) {
