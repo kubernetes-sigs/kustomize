@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"errors"
-
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -124,7 +122,7 @@ func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelect
 			// So, if create option is set, we fallback to PathGetter.
 			for _, f := range fieldPath {
 				if f == "*" {
-					return errors.New("cannot support create option in a multi-value target")
+					return fmt.Errorf("cannot support create option in a multi-value target")
 				}
 			}
 			t, err = node.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
