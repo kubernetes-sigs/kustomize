@@ -542,8 +542,8 @@ func (l PathGetter) getFilter(part, nextPart string, fieldPath *[]string) (Filte
 		// part is a hyphen
 		return GetElementByIndex(-1), nil
 	case part == "*":
-		// part is a hyphen
-		return nil, fmt.Errorf("cannot support create option in a multi-value target now")
+		// part is a asterisk
+		return nil, errors.Errorf("cannot support create option in a multi-value target now")
 	case IsListIndex(part):
 		// part is surrounded by brackets
 		return l.elemFilter(part)
