@@ -4,6 +4,7 @@
 package replacement
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -122,7 +123,7 @@ func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelect
 			// So, if create option is set, we fallback to PathGetter.
 			for _, f := range fieldPath {
 				if f == "*" {
-					return fmt.Errorf("cannot support create option in a multi-value target")
+					return errors.New("cannot support create option in a multi-value target")
 				}
 			}
 			t, err = node.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
