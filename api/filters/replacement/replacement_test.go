@@ -1671,7 +1671,7 @@ spec:
     options:
       create: true
 `,
-			expectedErr: "cannot support create option in a multi-value target now",
+			expectedErr: "cannot support create option in a multi-value target",
 		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
