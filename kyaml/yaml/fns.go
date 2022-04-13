@@ -541,6 +541,9 @@ func (l PathGetter) getFilter(part, nextPart string, fieldPath *[]string) (Filte
 	case part == "-":
 		// part is a hyphen
 		return GetElementByIndex(-1), nil
+	case part == "*":
+		// PathGetter is not support for wildcard matching
+		return nil, errors.Errorf("wildcard is not supported in PathGetter")
 	case IsListIndex(part):
 		// part is surrounded by brackets
 		return l.elemFilter(part)

@@ -4,6 +4,7 @@
 package replacement
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -117,6 +118,14 @@ func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelect
 		var t *yaml.RNode
 		var err error
 		if target.Options != nil && target.Options.Create {
+			// create option is not supported in a wildcard matching.
+			// Because, PathMatcher is not supported create option.
+			// So, if create option is set, we fallback to PathGetter.
+			for _, f := range fieldPath {
+				if f == "*" {
+					return errors.New("cannot support create option in a multi-value target") //nolint:goerr113
+				}
+			}
 			t, err = node.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
 		} else {
 			t, err = node.Pipe(&yaml.PathMatcher{Path: fieldPath})
@@ -142,9 +151,6 @@ func applyToOneNode(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNod
 	}
 
 	for _, scalarNode := range t.YNode().Content {
-		if options != nil && options.Create {
-			return fmt.Errorf("cannot use create option in a multi-value target")
-		}
 		rn := yaml.NewRNode(scalarNode)
 		if err := setTargetValue(options, rn, value); err != nil {
 			return err

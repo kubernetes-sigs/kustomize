@@ -142,7 +142,7 @@ func TestElementSetter(t *testing.T) {
 
 	node = MustParse(`
 - a: b
-- c: d	
+- c: d
 `)
 	// If given a key and no values, ElementSetter will
 	// change node to be an empty list
@@ -154,7 +154,7 @@ func TestElementSetter(t *testing.T) {
 
 	node = MustParse(`
 - a: b
-- c: d	
+- c: d
 `)
 	// Return error because ElementSetter will assume all elements are scalar when
 	// there is only value provided.
@@ -578,6 +578,13 @@ a: {}
 	assert.NoError(t, err)
 	assert.Equal(t, "{a: {b: [{c: d, t: {f: [h]}}]}}\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "h\n", assertNoErrorString(t)(rn.String()))
+}
+
+func TestLookup_Fn_create_with_wildcard_error(t *testing.T) {
+	node, err := Parse(s)
+	assert.NoError(t, err)
+	_, err = node.Pipe(LookupCreate(yaml.MappingNode, "a", "b", "*", "t"))
+	assert.Error(t, err, "wildcard is not supported in PathGetter")
 }
 
 func TestLookup(t *testing.T) {
