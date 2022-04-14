@@ -49,9 +49,7 @@ func (l *Loader) Config() *types.PluginConfig {
 
 // SetWorkDir sets the working directory for this loader's plugins
 func (l *Loader) SetWorkDir(wd string) {
-	if wd != string(filepath.Separator) {
-		l.pc.FnpLoadingOptions.WorkingDir = wd
-	}
+	l.pc.FnpLoadingOptions.WorkingDir = wd
 }
 
 func (l *Loader) LoadGenerators(

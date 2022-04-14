@@ -537,30 +537,33 @@ spec:
 
 func TestFnContainerTransformerWithConfig(t *testing.T) {
 	skipIfNoDocker(t)
-
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK(".", `
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 resources:
 - data1.yaml
 - data2.yaml
 transformers:
 - label_namespace.yaml
-`)
-
-	th.WriteF("data1.yaml", `apiVersion: v1
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data1.yaml"), []byte(`
+apiVersion: v1
 kind: Namespace
 metadata:
   name: my-namespace
-`)
-	th.WriteF("data2.yaml", `apiVersion: v1
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data2.yaml"), []byte(`
+apiVersion: v1
 kind: Namespace
 metadata:
   name: another-namespace
-`)
-
-	th.WriteF("label_namespace.yaml", `apiVersion: v1
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "label_namespace.yaml"), []byte(`
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: label_namespace
@@ -571,11 +574,14 @@ metadata:
 data:
   label_name: my-ns-name
   label_value: function-test
-`)
-
-	m := th.Run(".", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
 kind: Namespace
 metadata:
   labels:
@@ -588,24 +594,22 @@ metadata:
   labels:
     my-ns-name: function-test
   name: another-namespace
-`)
+`, string(actual))
 }
 
 func TestFnContainerEnvVars(t *testing.T) {
 	skipIfNoDocker(t)
-
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK(".", `
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
 - gener.yaml
-`)
-
-	// TODO: cheange image to gcr.io/kpt-functions/templater:stable
-	// when https://github.com/GoogleContainerTools/kpt-functions-catalog/pull/103
-	// is merged
-	th.WriteF("gener.yaml", `
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -624,16 +628,20 @@ data:
       name: env
     data:
       value: '{{ env "TESTTEMPLATE" }}'
-`)
-	m := th.Run(".", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
 data:
   value: value
 kind: ConfigMap
 metadata:
   name: env
-`)
+`, string(actual))
 }
 
 func TestFnContainerMounts(t *testing.T) {
