@@ -341,12 +341,111 @@ metadata:
 
 #### Story 3
 
-Scenario summary: As a [end user, extension developer, ...], I want to [...]
+Scenario summary: Replacement the value inside for yaml in the configMap.
 <!--
 A walkthrough of what it will look like for a user to take advantage of the new feature.
 Include the the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
+
+A few applications require to use yaml format config file, and some major cloudnative applications are using that.(ex, Prometheus,AlertManager)\
+A value you want to overlay in yaml is usually into a nested yaml structure. So if you can overlay value inside yaml, you won't need to copy a whole yaml file.
+
+```yaml
+## source
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+data:
+  env: dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: TARGET_ENVIROMENT
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+```
+
+```yaml
+## replacement
+replacements:
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.env
+  targets:
+  - select:
+      kind: ConfigMap
+      name: prometheus-config
+    fieldPaths:
+    - prometheus\.yml
+    options:
+      format: 'yaml'
+      formatPath: '/global/external_labels/prometheus_env'
+```
+
+```yaml
+## expected
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+data:
+  env: dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: dev
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+```
+
+#### Story 4
+
+Scenario summary: Replacement the value inside for json in the annotations.
+<!--
+A walkthrough of what it will look like for a user to take advantage of the new feature.
+Include the the steps the user will take and samples of the commands they'll run
+and config they'll use.
+-->
+
+A few times, an application on your cluster requires to set json format config for the *Annotations* on kubernetes yaml resources. We need to overlay in this position value.
+
+##### Example
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud-provider/backend-config: '{"ports": {"appA":"referrence_from_appA"}}'
+spec:
+  ports:
+  - name: appA
+    port: 1234
+    protocol: TCP
+    targetPort: 8080
+```
+
+- https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#unique_backendconfig_per_service_port
+- https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/ingress/annotations/#listen-ports
+
 
 ### Risks and Mitigations
 <!--
