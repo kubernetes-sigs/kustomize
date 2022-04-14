@@ -5,6 +5,7 @@ package imagetag
 
 import (
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
+
 	"sigs.k8s.io/kustomize/api/image"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -46,6 +47,9 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	case u.ImageTag.Digest != "":
 		tag = ""
 		digest = u.ImageTag.Digest
+	case u.ImageTag.TagSuffix != "":
+		tag += u.ImageTag.TagSuffix
+		digest = ""
 	}
 
 	// build final image name
