@@ -9,4 +9,4 @@ VERSION=$1
 $MYGOBIN/go-bindata \
   --pkg "${VERSION//.}" \
   -o kubernetesapi/"${VERSION//.}"/swagger.go \
-  kubernetesapi/"${VERSION//.}"/swagger.json
+  kubernetesapi/"${VERSION//.}"/swagger.pb

@@ -5,7 +5,6 @@ MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
-API_VERSION := "v1.21.2"
 KIND_VERSION := "v0.11.1"
 
 .PHONY: all
@@ -45,10 +44,6 @@ kustomizationapi/swagger.go: $(MYGOBIN)/go-bindata kustomizationapi/swagger.json
 		--pkg kustomizationapi \
 		-o kustomizationapi/swagger.go \
 		kustomizationapi/swagger.json
-
-.PHONY: kubernetesapi/openapiinfo.go
-kubernetesapi/openapiinfo.go:
-	./scripts/makeOpenApiInfoDotGo.sh
 
 .PHONY: kubernetesapi/swagger.json
 kubernetesapi/swagger.json: $(MYGOBIN)/kind $(MYGOBIN)/kustomize

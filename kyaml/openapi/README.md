@@ -67,11 +67,25 @@ make kubernetesapi/swagger.go API_VERSION=v1.21.2
 While the above commands generate the swagger.go files, they
 do not make them available for use nor do they update the
 info field reported by `kustomize openapi info`. To make the
-newly fetched schema and swagger.go available:
+newly fetched schema and swagger.go available, update the
+file [`kubernetesapi/openapiinfo.go`](https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/openapi/kubernetesapi/openapiinfo.go). 
+
+Here is an example of what it looks like with v1.21.2. The version number needs to be updated in all five places that it appears:
 
 ```
-rm kubernetesapi/openapiinfo.go
-make kubernetesapi/openapiinfo.go
+package kubernetesapi
+
+import (
+  "sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1212"
+)
+
+const Info = "{title:Kubernetes,version:v1.21.2}"
+
+var OpenAPIMustAsset = map[string]func(string) []byte{
+"v1212": v1212.MustAsset,
+}
+
+const DefaultOpenAPI = "v1212"
 ```
 
 ## Partial regeneration
