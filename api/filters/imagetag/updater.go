@@ -47,7 +47,7 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	case u.ImageTag.Digest != "":
 		tag = ""
 		digest = u.ImageTag.Digest
-	} else if u.ImageTag.TagSuffix != "" {
+	case u.ImageTag.TagSuffix != "":
 		tag += u.ImageTag.TagSuffix
 		digest = ""
 	}
