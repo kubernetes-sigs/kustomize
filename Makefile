@@ -132,7 +132,7 @@ test-unit-all: \
 
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
-test-unit-non-plugin: kustomize
+test-unit-non-plugin:
 	./hack/for-each-module.sh "make test" "./plugin/*" 15
 
 .PHONY: build-non-plugin-all

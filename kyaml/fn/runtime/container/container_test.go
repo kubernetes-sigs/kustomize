@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"runtime"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,7 +24,6 @@ func TestFilter_setupExec(t *testing.T) {
 		expectedArgs   []string
 		containerSpec  runtimeutil.ContainerSpec
 		UIDGID         string
-		skipOnWindows  bool
 	}{
 		{
 			name: "command",
@@ -70,8 +69,7 @@ metadata:
 		},
 
 		{
-			name:          "storage_mounts",
-			skipOnWindows: true, // the fieldpaths are different on Windows
+			name: "storage_mounts",
 			functionConfig: `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -84,18 +82,19 @@ metadata:
 				"--network", "none",
 				"--user", "nobody",
 				"--security-opt=no-new-privileges",
-				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "bind", "/mount/path", "/local/"),
-				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s", "bind", "/mount/pathrw", "/localrw/"),
-				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "volume", "/myvol", "/local/"),
-				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "tmpfs", "/", "/local/"),
+				// use filepath.Join for Windows filepath handling
+				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "bind", getAbsFilePath(string(filepath.Separator), "mount", "path"), "/local/"),
+				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s", "bind", getAbsFilePath(string(filepath.Separator), "mount", "pathrw"), "/localrw/"),
+				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "volume", getAbsFilePath(string(filepath.Separator), "myvol"), "/local/"),
+				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "tmpfs", getAbsFilePath(string(filepath.Separator)), "/local/"),
 			},
 			containerSpec: runtimeutil.ContainerSpec{
 				Image: "example.com:version",
 				StorageMounts: []runtimeutil.StorageMount{
-					{MountType: "bind", Src: "/mount/path", DstPath: "/local/"},
-					{MountType: "bind", Src: "/mount/pathrw", DstPath: "/localrw/", ReadWriteMode: true},
-					{MountType: "volume", Src: "/myvol", DstPath: "/local/"},
-					{MountType: "tmpfs", Src: "/", DstPath: "/local/"},
+					{MountType: "bind", Src: getAbsFilePath(string(filepath.Separator), "mount", "path"), DstPath: "/local/"},
+					{MountType: "bind", Src: getAbsFilePath(string(filepath.Separator), "mount", "pathrw"), DstPath: "/localrw/", ReadWriteMode: true},
+					{MountType: "volume", Src: getAbsFilePath(string(filepath.Separator), "myvol"), DstPath: "/local/"},
+					{MountType: "tmpfs", Src: getAbsFilePath(string(filepath.Separator)), DstPath: "/local/"},
 				},
 			},
 			UIDGID: "nobody",
@@ -125,9 +124,6 @@ metadata:
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.skipOnWindows && runtime.GOOS == "windows" {
-				t.SkipNow()
-			}
 			cfg, err := yaml.Parse(tt.functionConfig)
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -252,4 +248,9 @@ func getWorkingDir(t *testing.T) string {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	return wd
+}
+
+func getAbsFilePath(args ...string) string {
+	path, _ := filepath.Abs(filepath.Join(args...))
+	return path
 }

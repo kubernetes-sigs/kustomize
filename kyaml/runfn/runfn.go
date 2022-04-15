@@ -329,9 +329,11 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 			continue
 		}
 		cf, ok := c.(*container.Filter)
-		if global && ok {
+		if ok {
+			if global {
+				cf.Exec.GlobalScope = true
+			}
 			cf.Exec.WorkingDir = r.WorkingDir
-			cf.Exec.GlobalScope = true
 		}
 		fltrs = append(fltrs, c)
 	}

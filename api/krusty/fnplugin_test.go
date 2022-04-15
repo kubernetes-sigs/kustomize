@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"bytes"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -644,118 +643,70 @@ metadata:
 `, string(actual))
 }
 
-func TestFnContainerMounts(t *testing.T) {
+func TestFnContainerFnMounts(t *testing.T) {
 	skipIfNoDocker(t)
-
-	path, err := os.Getwd()
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
 	assert.NoError(t, err)
-
-	testDir := filepath.Join(path, "testdata", "fnmounts")
-	command := exec.Command("kustomize", "build", testDir, "--enable-alpha-plugins")
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	command.Stdout = &stdout
-	command.Stderr = &stderr
-	t.Log(stderr.String())
-
-	assert.NoError(t, command.Run())
-	assert.Equal(t, `apiVersion: v1
-kind: ServiceAccount
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+- gener.yaml
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
+apiVersion: v1alpha1
+kind: RenderHelmChart
 metadata:
-  labels:
-    app.kubernetes.io/instance: test
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: helloworld-chart
-    app.kubernetes.io/version: 1.16.0
-    helm.sh/chart: helloworld-chart-0.1.0
-  name: test-helloworld-chart
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app.kubernetes.io/instance: test
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: helloworld-chart
-    app.kubernetes.io/version: 1.16.0
-    helm.sh/chart: helloworld-chart-0.1.0
-  name: test-helloworld-chart
-spec:
-  ports:
-  - name: http
-    port: 80
-    protocol: TCP
-    targetPort: http
-  selector:
-    app.kubernetes.io/instance: test
-    app.kubernetes.io/name: helloworld-chart
-  type: ClusterIP
----
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+        mounts:
+        - type: "bind"
+          src: "./charts"
+          dst: "/tmp/charts"
+helmCharts:
+- name: helloworld-chart
+  releaseName: test
+  valuesFile: /tmp/charts/helloworld-values/values.yaml
+`)))
+	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates")))
+	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-values")))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "Chart.yaml"), []byte(`
+apiVersion: v2
+name: helloworld-chart
+description: A Helm chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: 1.16.0
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates", "deployment.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app.kubernetes.io/instance: test
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: helloworld-chart
-    app.kubernetes.io/version: 1.16.0
-    helm.sh/chart: helloworld-chart-0.1.0
-  name: test-helloworld-chart
+  name: name
+spec:
+  replicas: {{ .Values.replicaCount }}
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-values", "values.yaml"), []byte(`
+replicaCount: 5
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: name
 spec:
   replicas: 5
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: test
-      app.kubernetes.io/name: helloworld-chart
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: test
-        app.kubernetes.io/name: helloworld-chart
-    spec:
-      containers:
-      - image: nginx:1.16.0
-        imagePullPolicy: Always
-        livenessProbe:
-          httpGet:
-            path: /
-            port: http
-        name: helloworld-chart
-        ports:
-        - containerPort: 80
-          name: http
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /
-            port: http
-        resources: {}
-        securityContext: {}
-      securityContext: {}
-      serviceAccountName: test-helloworld-chart
----
-apiVersion: v1
-kind: Pod
-metadata:
-  annotations:
-    helm.sh/hook: test-success
-  labels:
-    app.kubernetes.io/instance: test
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: helloworld-chart
-    app.kubernetes.io/version: 1.16.0
-    helm.sh/chart: helloworld-chart-0.1.0
-  name: test-helloworld-chart-test-connection
-spec:
-  containers:
-  - args:
-    - test-helloworld-chart:80
-    command:
-    - wget
-    image: busybox
-    name: wget
-  restartPolicy: Never
-`, stdout.String())
+`, string(actual))
 }
 
 func TestFnContainerMountsLoadRestrictions_absolute(t *testing.T) {
@@ -822,4 +773,30 @@ generators:
 	assert.Contains(t, err.Error(), "loading generator plugins: plugin RenderHelmChart."+
 		"v1alpha1.[noGrp]/demo.[noNs] with mount path './tmp/../../dir' is not permitted; mount paths must "+
 		"be under the current kustomization directory")
+}
+
+func TestFnContainerMountsLoadRestrictions_root(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+
+	th.WriteK(".", `
+generators:
+- gener.yaml
+`)
+	// Create generator config
+	th.WriteF("gener.yaml", `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: CockroachDB
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-cockroachdb:v0.1.0
+spec:
+  replicas: 3
+`)
+	err := th.RunWithErr(".", th.MakeOptionsPluginsEnabled())
+	assert.Error(t, err)
+	assert.EqualError(t, err, "couldn't execute function: root working directory '/' not allowed")
 }
