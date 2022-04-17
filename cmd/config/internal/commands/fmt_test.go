@@ -216,17 +216,13 @@ formatted resource files in the package
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			baseDir := t.TempDir()
 			copyutil.CopyDir(sourceDir, baseDir)
-			defer os.RemoveAll(baseDir)
 			runner := commands.GetFmtRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
 			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
-			err = runner.Command.Execute()
+			err := runner.Command.Execute()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
