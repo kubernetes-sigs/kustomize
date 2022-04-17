@@ -49,9 +49,20 @@ See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.
 func TestInit_noargs(t *testing.T) {
 	d := t.TempDir()
 
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
 	if !assert.NoError(t, os.Chdir(d)) {
 		t.FailNow()
 	}
+
+	t.Cleanup(func() {
+		if !assert.NoError(t, os.Chdir(cwd)) {
+			t.FailNow()
+		}
+	})
 
 	b := &bytes.Buffer{}
 	r := commands.GetInitRunner("")
