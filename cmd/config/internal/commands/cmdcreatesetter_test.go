@@ -712,7 +712,10 @@ spec:
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				defer os.Remove(sch.Name())
+				t.Cleanup(func() {
+					sch.Close()
+					os.Remove(sch.Name())
+				})
 
 				err = ioutil.WriteFile(sch.Name(), []byte(test.schema), 0600)
 				if !assert.NoError(t, err) {
@@ -726,7 +729,7 @@ spec:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			defer os.Remove(r.Name())
+			t.Cleanup(func() { r.Close() })
 			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
