@@ -17,10 +17,20 @@ import (
 
 func TestTreeCommandDefaultCurDir_files(t *testing.T) {
 	d := t.TempDir()
-	err := os.Chdir(d)
+	cwd, err := os.Getwd()
 	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, os.Chdir(d)) {
 		return
 	}
+
+	t.Cleanup(func() {
+		if !assert.NoError(t, os.Chdir(cwd)) {
+			t.FailNow()
+		}
+	})
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
