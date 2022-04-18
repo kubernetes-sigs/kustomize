@@ -1551,7 +1551,7 @@ func TestValidateAgainstSchema(t *testing.T) {
 				},
 			},
 			shouldValidate:   false,
-			expectedErrorMsg: "foo in body must be of type integer",
+			expectedErrorMsg: "foo[2] in body must be of type integer",
 		},
 		{
 			name: "all values should satisfy type string",

@@ -501,8 +501,8 @@ spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
   - 0
  `,
-			errMsg: `list in body must be of type integer: "string"
-list in body must be of type integer: "boolean"
+			errMsg: `list[1] in body must be of type integer: "string"
+list[2] in body must be of type integer: "boolean"
 list in body should have at most 2 items`,
 		},
 
@@ -750,8 +750,8 @@ spec:
   list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
   - 0
  `,
-			errMsg: `list in body must be of type integer: "string"
-list in body must be of type integer: "boolean"
+			errMsg: `list[1] in body must be of type integer: "string"
+list[2] in body must be of type integer: "boolean"
 list in body should have at most 2 items`,
 		},
 		{
