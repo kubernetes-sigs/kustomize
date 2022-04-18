@@ -82,7 +82,7 @@ kustomize: $(MYGOBIN)/kustomize
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
-build-kustomize-api: $(builtinplugins)
+build-kustomize-api: $(MYGOBIN)/goimports $(builtinplugins)
 	cd api; $(MAKE) build
 
 .PHONY: generate-kustomize-api
