@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -24,11 +23,7 @@ import (
 )
 
 func TestCommand_dockerfile(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	// create a function
 	cmd := command.Build(&framework.SimpleProcessor{}, command.StandaloneEnabled, false)

@@ -20,13 +20,9 @@ import (
 // TODO(pwittrock): write tests for reading / writing ResourceLists
 
 func TestCmd_files(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-cat-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -121,13 +117,9 @@ spec:
 }
 
 func TestCmd_filesWithReconcilers(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-cat-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -231,13 +223,9 @@ spec:
 }
 
 func TestCmd_filesWithoutNonReconcilers(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-cat-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -313,13 +301,9 @@ spec:
 }
 
 func TestCmd_outputTruncateFile(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-cat-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -427,13 +411,9 @@ spec:
 }
 
 func TestCmd_outputCreateFile(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-cat-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -483,11 +463,7 @@ spec:
 		return
 	}
 
-	d2, err := ioutil.TempDir("", "kustomize-cat-test-dest")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d2)
+	d2 := t.TempDir()
 	f := filepath.Join(d2, "output.yaml")
 
 	// fmt the files
@@ -638,17 +614,13 @@ spec:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			baseDir := t.TempDir()
 			copyutil.CopyDir(sourceDir, baseDir)
-			defer os.RemoveAll(baseDir)
 			runner := commands.GetCatRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
 			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
-			err = runner.Command.Execute()
+			err := runner.Command.Execute()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

@@ -42,8 +42,7 @@ func TestIgnoreFilesMatcher_readIgnoreFile(t *testing.T) {
 		// onDisk creates a temp directory and returns a nil FileSystem, testing
 		// the normal conditions under which ignoreFileMatcher is used.
 		"onDisk": func(writeIgnoreFile bool) (string, filesys.FileSystem) { //nolint:unparam
-			dir, err := ioutil.TempDir("", "kyaml-test")
-			require.NoError(t, err)
+			dir := t.TempDir()
 
 			if writeIgnoreFile {
 				ignoreFilePath := filepath.Join(dir, ignoreFileName)

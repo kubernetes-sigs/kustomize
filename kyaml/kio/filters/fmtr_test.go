@@ -872,11 +872,9 @@ func TestFormatFileOrDirectory_skipJsonExtFile(t *testing.T) {
 // TestFormatFileOrDirectory_directory verifies that yaml files will be formatted,
 // and other files will be ignored
 func TestFormatFileOrDirectory_directory(t *testing.T) {
-	d, err := ioutil.TempDir("", "yamlfmt")
-	assert.NoError(t, err)
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(d, "config"), 0700)
+	err := os.Mkdir(filepath.Join(d, "config"), 0700)
 	assert.NoError(t, err)
 
 	err = ioutil.WriteFile(filepath.Join(d, "c1.yaml"), testyaml.UnformattedYaml1, 0600)

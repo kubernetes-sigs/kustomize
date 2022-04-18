@@ -5,7 +5,6 @@ package settersutil
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -83,20 +82,10 @@ spec:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			srcDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			srcDir := t.TempDir()
+			destDir := t.TempDir()
 
-			destDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			defer os.RemoveAll(srcDir)
-			defer os.RemoveAll(destDir)
-
-			err = ioutil.WriteFile(filepath.Join(srcDir, "Krmfile"), []byte(test.srcOpenAPIFile), 0600)
+			err := ioutil.WriteFile(filepath.Join(srcDir, "Krmfile"), []byte(test.srcOpenAPIFile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

@@ -39,12 +39,8 @@ func TestSubDirsWithFile(t *testing.T) {
 		},
 	}
 
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
-	err = createTestDirStructure(dir)
+	dir := t.TempDir()
+	err := createTestDirStructure(dir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

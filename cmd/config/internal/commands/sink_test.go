@@ -6,7 +6,6 @@ package commands_test
 import (
 	"bytes"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -15,11 +14,7 @@ import (
 )
 
 func TestSinkCommand(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	r := commands.GetSinkRunner("")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
@@ -137,11 +132,7 @@ spec:
 }
 
 func TestSinkCommandJSON(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	r := commands.GetSinkRunner("")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
@@ -182,12 +173,6 @@ items:
 }
 
 func TestSinkCommand_Stdout(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
-
 	// fmt the files
 	out := &bytes.Buffer{}
 	r := commands.GetSinkRunner("")
@@ -296,12 +281,6 @@ spec:
 }
 
 func TestSinkCommandJSON_Stdout(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
-
 	// fmt the files
 	out := &bytes.Buffer{}
 	r := commands.GetSinkRunner("")

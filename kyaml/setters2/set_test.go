@@ -5,7 +5,6 @@ package setters2
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -1003,10 +1002,8 @@ spec:
 // initSchema initializes the openAPI with the definitions from s
 func SettersSchema(t *testing.T, s string) *spec.Schema {
 	t.Helper()
-	dir, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-	err = ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(s), 0600)
+	dir := t.TempDir()
+	err := ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(s), 0600)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

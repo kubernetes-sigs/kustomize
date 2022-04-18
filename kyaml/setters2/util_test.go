@@ -6,7 +6,6 @@ package setters2
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -141,10 +140,8 @@ openAPI:
 		t.Run(test.name, func(t *testing.T) {
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
-			dir, err := ioutil.TempDir("", "")
-			assert.NoError(t, err)
-			defer os.RemoveAll(dir)
-			err = ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.inputOpenAPIfile), 0600)
+			dir := t.TempDir()
+			err := ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.inputOpenAPIfile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

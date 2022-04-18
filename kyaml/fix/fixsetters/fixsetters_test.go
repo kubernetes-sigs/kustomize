@@ -5,7 +5,6 @@ package fixsetters
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -407,14 +406,9 @@ spec:
 		t.Run(test.name, func(t *testing.T) {
 			openAPIFileName := "Krmfile"
 
-			dir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			dir := t.TempDir()
 
-			defer os.RemoveAll(dir)
-
-			err = ioutil.WriteFile(filepath.Join(dir, "deploy.yaml"), []byte(test.input), 0600)
+			err := ioutil.WriteFile(filepath.Join(dir, "deploy.yaml"), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
