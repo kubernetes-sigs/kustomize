@@ -6,7 +6,6 @@ package commands
 import (
 	"bytes"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -58,7 +57,6 @@ func TestAnnotateCommand(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			d := initTestDir(t)
-			defer os.RemoveAll(d)
 
 			a := NewAnnotateRunner("")
 			a.Command.SetArgs(append([]string{d}, tt.args...))
@@ -89,18 +87,13 @@ func TestAnnotateCommand(t *testing.T) {
 
 func initTestDir(t *testing.T) string {
 	t.Helper()
-	d, err := ioutil.TempDir("", "kustomize-annotate-test")
+	d := t.TempDir()
+	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(f1Input), 0600)
 	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(f1Input), 0600)
-	if !assert.NoError(t, err) {
-		defer os.RemoveAll(d)
 		t.FailNow()
 	}
 	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(f2Input), 0600)
 	if !assert.NoError(t, err) {
-		defer os.RemoveAll(d)
 		t.FailNow()
 	}
 	return d
@@ -586,17 +579,13 @@ added annotations in the package
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			baseDir := t.TempDir()
 			copyutil.CopyDir(sourceDir, baseDir)
-			defer os.RemoveAll(baseDir)
 			runner := NewAnnotateRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
 			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
-			err = runner.Command.Execute()
+			err := runner.Command.Execute()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

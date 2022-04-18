@@ -16,11 +16,7 @@ import (
 )
 
 func TestInit_args(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-cat-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	// fmt the files
 	b := &bytes.Buffer{}
@@ -51,15 +47,22 @@ See discussion in https://github.com/kubernetes-sigs/kustomize/issues/3953.
 }
 
 func TestInit_noargs(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-test-")
+	d := t.TempDir()
+
+	cwd, err := os.Getwd()
 	if !assert.NoError(t, err) {
-		return
+		t.FailNow()
 	}
-	defer os.RemoveAll(d)
 
 	if !assert.NoError(t, os.Chdir(d)) {
 		t.FailNow()
 	}
+
+	t.Cleanup(func() {
+		if !assert.NoError(t, os.Chdir(cwd)) {
+			t.FailNow()
+		}
+	})
 
 	b := &bytes.Buffer{}
 	r := commands.GetInitRunner("")

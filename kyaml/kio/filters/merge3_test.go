@@ -4,8 +4,6 @@
 package filters_test
 
 import (
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -28,11 +26,7 @@ func TestMerge3_Merge(t *testing.T) {
 	datadir = filepath.Join(filepath.Dir(datadir), "testdata")
 
 	// setup the local directory
-	dir, err := ioutil.TempDir("", "kyaml-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	if !assert.NoError(t, copyutil.CopyDir(
 		filepath.Join(datadir, "dataset1-localupdates"),
@@ -40,7 +34,7 @@ func TestMerge3_Merge(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = filters.Merge3{
+	err := filters.Merge3{
 		OriginalPath: filepath.Join(datadir, "dataset1"),
 		UpdatedPath:  filepath.Join(datadir, "dataset1-remoteupdates"),
 		DestPath:     filepath.Join(dir, "dataset1"),
@@ -74,11 +68,7 @@ func TestMerge3_Merge_path(t *testing.T) {
 	datadir = filepath.Join(filepath.Dir(datadir), "testdata2")
 
 	// setup the local directory
-	dir, err := ioutil.TempDir("", "kyaml-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	if !assert.NoError(t, copyutil.CopyDir(
 		filepath.Join(datadir, "dataset1-localupdates"),
@@ -86,7 +76,7 @@ func TestMerge3_Merge_path(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = filters.Merge3{
+	err := filters.Merge3{
 		OriginalPath: filepath.Join(datadir, "dataset1"),
 		UpdatedPath:  filepath.Join(datadir, "dataset1-remoteupdates"),
 		DestPath:     filepath.Join(dir, "dataset1"),
@@ -119,11 +109,7 @@ func TestMerge3_Merge_fail(t *testing.T) {
 	datadir = filepath.Join(filepath.Dir(datadir), "testdata2")
 
 	// setup the local directory
-	dir, err := ioutil.TempDir("", "kyaml-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	if !assert.NoError(t, copyutil.CopyDir(
 		filepath.Join(datadir, "dataset1-localupdates"),
@@ -131,7 +117,7 @@ func TestMerge3_Merge_fail(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = filters.Merge3{
+	err := filters.Merge3{
 		OriginalPath: filepath.Join(datadir, "dataset1"),
 		UpdatedPath:  filepath.Join(datadir, "dataset1-remoteupdates"),
 		DestPath:     filepath.Join(dir, "dataset1"),

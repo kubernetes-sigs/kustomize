@@ -6,7 +6,6 @@ package commands_test
 import (
 	"bytes"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -355,13 +354,9 @@ spec:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			defer os.RemoveAll(baseDir)
+			baseDir := t.TempDir()
 			f := filepath.Join(baseDir, "Krmfile")
-			err = ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
+			err := ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -370,7 +365,7 @@ spec:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			defer os.Remove(r.Name())
+			t.Cleanup(func() { r.Close() })
 			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -484,17 +479,13 @@ created substitution "image-tag"`,
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			baseDir := t.TempDir()
 			copyutil.CopyDir(sourceDir, baseDir)
-			defer os.RemoveAll(baseDir)
 			runner := commands.NewCreateSubstitutionRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
 			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
-			err = runner.Command.Execute()
+			err := runner.Command.Execute()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

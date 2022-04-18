@@ -213,11 +213,9 @@ const (
 //   │   └── symLinkToExteriorData -> ../exteriorData
 //   └── exteriorData
 //
-func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
-	dir, err := ioutil.TempDir("", "kustomize-test-")
-	if err != nil {
-		return "", nil, err
-	}
+func commonSetupForLoaderRestrictionTest(t *testing.T) (string, filesys.FileSystem) {
+	t.Helper()
+	dir := t.TempDir()
 	fSys := filesys.MakeFsOnDisk()
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
@@ -233,7 +231,7 @@ func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
 	os.Symlink(
 		filepath.Join(dir, "exteriorData"),
 		filepath.Join(dir, "base", "symLinkToExteriorData"))
-	return dir, fSys, nil
+	return dir, fSys
 }
 
 // Make sure everything works when loading files
@@ -283,11 +281,7 @@ func doSanityChecksAndDropIntoBase(
 }
 
 func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
-	dir, fSys, err := commonSetupForLoaderRestrictionTest()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer os.RemoveAll(dir)
+	dir, fSys := commonSetupForLoaderRestrictionTest(t)
 
 	var l ifc.Loader
 
@@ -296,7 +290,7 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 	l = doSanityChecksAndDropIntoBase(t, l)
 
 	// Reading symlink to exteriorData fails.
-	_, err = l.Load("symLinkToExteriorData")
+	_, err := l.Load("symLinkToExteriorData")
 	if err == nil {
 		t.Fatalf("expected error")
 	}
@@ -316,11 +310,7 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 }
 
 func TestRestrictionNoneInRealLoader(t *testing.T) {
-	dir, fSys, err := commonSetupForLoaderRestrictionTest()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer os.RemoveAll(dir)
+	dir, fSys := commonSetupForLoaderRestrictionTest(t)
 
 	var l ifc.Loader
 
@@ -329,7 +319,7 @@ func TestRestrictionNoneInRealLoader(t *testing.T) {
 	l = doSanityChecksAndDropIntoBase(t, l)
 
 	// Reading symlink to exteriorData works.
-	_, err = l.Load("symLinkToExteriorData")
+	_, err := l.Load("symLinkToExteriorData")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
