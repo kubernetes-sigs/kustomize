@@ -6,6 +6,7 @@ package replacement
 import (
 	"errors"
 	"fmt"
+	"sigs.k8s.io/kustomize/kyaml/pathsplitterutil"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/utils"
@@ -114,7 +115,7 @@ func rejectId(rejects []*types.Selector, id *resid.ResId) bool {
 
 func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelector) error {
 	for _, fp := range target.FieldPaths {
-		fieldPath := utils.SmarterPathSplitter(fp, ".")
+		fieldPath := pathsplitterutil.SmarterPathSplitter(fp, ".")
 		var t *yaml.RNode
 		var err error
 		if target.Options != nil && target.Options.Create {
@@ -199,7 +200,7 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 	if r.Source.FieldPath == "" {
 		r.Source.FieldPath = types.DefaultReplacementFieldPath
 	}
-	fieldPath := utils.SmarterPathSplitter(r.Source.FieldPath, ".")
+	fieldPath := pathsplitterutil.SmarterPathSplitter(r.Source.FieldPath, ".")
 
 	rn, err := source.Pipe(yaml.Lookup(fieldPath...))
 	if err != nil {

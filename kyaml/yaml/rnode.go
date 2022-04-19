@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
+	"sigs.k8s.io/kustomize/kyaml/pathsplitterutil"
 	"strconv"
 	"strings"
 
@@ -1207,7 +1208,7 @@ func (rn *RNode) GetString(path string) (string, error) {
 // assuming we keep the var feature in kustomize.
 // The other end of this is: refvar.go:updateNodeValue.
 func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
-	fields := convertSliceIndex(strings.Split(path, "."))
+	fields := pathsplitterutil.SmarterPathSplitter(path, ".")
 	rn, err := rn.Pipe(Lookup(fields...))
 	if err != nil {
 		return nil, err

@@ -2310,7 +2310,7 @@ func TestGetAnnotations(t *testing.T) {
 }
 
 func TestGetFieldValueWithDot(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 
 	const input = `
 kind: Pod

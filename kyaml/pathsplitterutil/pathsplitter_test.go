@@ -1,13 +1,13 @@
 // Copyright 2021 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package utils_test
+package pathsplitterutil_test
 
 import (
+	. "sigs.k8s.io/kustomize/kyaml/pathsplitterutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	. "sigs.k8s.io/kustomize/api/internal/utils"
 )
 
 func TestPathSplitter(t *testing.T) {
