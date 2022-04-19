@@ -37,5 +37,5 @@ func (p *AnnotationsTransformerPlugin) Transform(m resmap.ResMap) error {
 }
 
 func NewAnnotationsTransformerPlugin() resmap.TransformerPlugin {
-		return &AnnotationsTransformerPlugin{}
+  return &AnnotationsTransformerPlugin{}
 }
