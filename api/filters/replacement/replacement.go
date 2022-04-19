@@ -6,13 +6,13 @@ package replacement
 import (
 	"errors"
 	"fmt"
-	utils2 "sigs.k8s.io/kustomize/kyaml/utils"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
+	kyaml_utils "sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -115,7 +115,7 @@ func rejectId(rejects []*types.Selector, id *resid.ResId) bool {
 
 func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelector) error {
 	for _, fp := range target.FieldPaths {
-		fieldPath := utils2.SmarterPathSplitter(fp, ".")
+		fieldPath := kyaml_utils.SmarterPathSplitter(fp, ".")
 		var t *yaml.RNode
 		var err error
 		if target.Options != nil && target.Options.Create {
@@ -200,7 +200,7 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 	if r.Source.FieldPath == "" {
 		r.Source.FieldPath = types.DefaultReplacementFieldPath
 	}
-	fieldPath := utils2.SmarterPathSplitter(r.Source.FieldPath, ".")
+	fieldPath := kyaml_utils.SmarterPathSplitter(r.Source.FieldPath, ".")
 
 	rn, err := source.Pipe(yaml.Lookup(fieldPath...))
 	if err != nil {
