@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/inf.v0 v0.9.1
-	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661
+	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
 	sigs.k8s.io/kustomize/kyaml v0.13.6
 )
 
