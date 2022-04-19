@@ -104,12 +104,14 @@ type Field struct {
 	CurrentValue interface{} `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
 
 	// ProposedValues is a set of proposed value of the field to fix an issue.
+	//
+	// Note: This field is only supported on ResourceList config.kubernetes.io/v2alpha1 and above.
 	ProposedValues []interface{} `yaml:"proposedValues,omitempty" json:"proposedValues,omitempty"`
 
 	// ProposedValue is the proposed value of the field to fix an issue.
 	//
-	// Note: This field will be removed on KRM Spec config.kubernetes.io/v2
-	// The value gets mapped into ProposedValues.
+	// Note: This field will be removed on ResourceList config.kubernetes.io/v2
+	// Only supported on ResourceList config.kubernetes.io/v1 and below - Use proposedValues instead.
 	ProposedValue interface{} `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
 }
 

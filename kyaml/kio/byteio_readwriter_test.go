@@ -151,7 +151,7 @@ results:
 
 		{
 			name: "results v1 proposedValues",
-			err:  "KRM function spec v1 does not support the array proposedValues, use the single proposedValue instead",
+			err:  "ResourceList v1 does not support the array proposedValues, use the single proposedValue instead",
 			input: `
 apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -205,7 +205,7 @@ results:
 
 		{
 			name: "results v2 proposedValue not supported",
-			err:  "KRM function spec v2 no longer supports a single proposedValue, use the proposedValues array instead",
+			err:  "ResourceList v2alpha1 no longer supports a single proposedValue, use the proposedValues array instead",
 			input: `
 apiVersion: config.kubernetes.io/v2
 kind: ResourceList

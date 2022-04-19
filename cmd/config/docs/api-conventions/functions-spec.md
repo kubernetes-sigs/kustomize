@@ -205,11 +205,14 @@ definitions:
             description: |
               PropposedValues is the set of proposed values of the field to fix an issue.
               Elements can be any value - string, number, boolean, array or object.
+
+              Note: Only supported on spec v2alpha1 and above.
           proposedValue:
             description: |
               PropposedValue is the proposed value of the field to fix an issue.
               Can be any value - string, number, boolean, array or object.
-              Note: This field is removed on v2 and gets mapped into proposedValues.
+              
+              Note: Only supported on spec v1 and below. Use proposedValues instead.
       file:
         type: object
         description: File references a file containing the resource.

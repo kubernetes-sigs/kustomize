@@ -201,7 +201,7 @@ func (w ByteWriter) validateProposedValuesVersion(rn *yaml.RNode) (*yaml.RNode, 
 		}
 
 		if !multi.IsNilOrEmpty() {
-			return nil, errors.Errorf("KRM function spec v1 does not support the array proposedValues, use the single proposedValue instead")
+			return nil, errors.Errorf("ResourceList v1 does not support the array proposedValues, use the single proposedValue instead")
 		}
 
 	default:
@@ -210,7 +210,7 @@ func (w ByteWriter) validateProposedValuesVersion(rn *yaml.RNode) (*yaml.RNode, 
 			return nil, errors.Wrap(err)
 		}
 		if !single.IsNilOrEmpty() {
-			return nil, errors.Errorf("KRM function spec v2 no longer supports a single proposedValue, use the proposedValues array instead")
+			return nil, errors.Errorf("ResourceList v2alpha1 no longer supports a single proposedValue, use the proposedValues array instead")
 		}
 	}
 
