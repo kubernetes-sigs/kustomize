@@ -1206,9 +1206,12 @@ func (rn *RNode) GetString(path string) (string, error) {
 // rather than string, we do conversion from Nodes to Go types and back
 // to nodes.  We should figure out how to do replacement using raw nodes,
 // assuming we keep the var feature in kustomize.
-// The other end of this is: refvar.go:updateNodeValue.
+// The other end of this is: refvar.go:updateNodeValue.ß
 func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
-	fields := utils.SmarterPathSplitter(path, ".")
+	fields := convertSliceIndex(utils.SmarterPathSplitter(path, "."))
+	fields2 := utils.SmarterPathSplitter(path, ".")
+	fields3 := convertSliceIndex(strings.Split(path, "."))
+	fmt.Println(fields2, fields3)
 	rn, err := rn.Pipe(Lookup(fields...))
 	if err != nil {
 		return nil, err
