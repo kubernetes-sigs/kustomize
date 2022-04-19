@@ -198,18 +198,18 @@ definitions:
               e.g. `spec.template.spec.containers[3].resources.limits.cpu`
           currentValue:
             description: |
-              CurrrentValue is the current value of the field.
+              CurrentValue is the current value of the field.
               Can be any value - string, number, boolean, array or object.
           proposedValues:
             type: array
             description: |
-              PropposedValues is the set of proposed values of the field to fix an issue.
+              ProposedValues is the set of proposed values of the field to fix an issue.
               Elements can be any value - string, number, boolean, array or object.
 
               Note: Only supported on spec v2alpha1 and above.
           proposedValue:
             description: |
-              PropposedValue is the proposed value of the field to fix an issue.
+              ProposedValue is the proposed value of the field to fix an issue.
               Can be any value - string, number, boolean, array or object.
               
               Note: Only supported on spec v1 and below. Use proposedValues instead.
