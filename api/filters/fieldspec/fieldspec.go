@@ -5,13 +5,13 @@ package fieldspec
 
 import (
 	"fmt"
-	"sigs.k8s.io/kustomize/kyaml/pathsplitterutil"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/resid"
+	"sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -49,7 +49,7 @@ func (fltr Filter) Filter(obj *yaml.RNode) (*yaml.RNode, error) {
 	if match := isMatchGVK(fltr.FieldSpec, obj); !match {
 		return obj, nil
 	}
-	fltr.path = pathsplitterutil.PathSplitter(fltr.FieldSpec.Path, "/")
+	fltr.path = utils.PathSplitter(fltr.FieldSpec.Path, "/")
 	if err := fltr.filter(obj); err != nil {
 		return nil, errors.WrapPrefixf(err,
 			"considering field '%s' of object %s", fltr.FieldSpec.Path, resid.FromRNode(obj))
