@@ -33,7 +33,10 @@ func MakeConfigMap(
 	if err != nil {
 		return nil, err
 	}
-	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	m, s, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	if s != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}

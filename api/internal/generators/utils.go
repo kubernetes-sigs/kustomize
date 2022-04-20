@@ -35,24 +35,26 @@ kind: %s
 }
 
 func makeValidatedDataMap(
-	ldr ifc.KvLoader, name string, sources types.KvPairSources) (map[string]string, error) {
+	ldr ifc.KvLoader, name string, sources types.KvPairSources) (map[string]string, []string, error) {
 	pairs, err := ldr.Load(sources)
 	if err != nil {
-		return nil, errors.WrapPrefix(err, "loading KV pairs", 0)
+		return nil, nil, errors.WrapPrefix(err, "loading KV pairs", 0)
 	}
 	knownKeys := make(map[string]string)
+	sortetKeys := make([]string, 0)
 	for _, p := range pairs {
 		// legal key: alphanumeric characters, '-', '_' or '.'
 		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if _, ok := knownKeys[p.Key]; ok {
-			return nil, errors.Errorf(
+			return nil, nil, errors.Errorf(
 				"configmap %s illegally repeats the key `%s`", name, p.Key)
 		}
 		knownKeys[p.Key] = p.Value
+		sortetKeys = append(sortetKeys, p.Key)
 	}
-	return knownKeys, nil
+	return knownKeys, sortetKeys, nil
 }
 
 // copyLabelsAndAnnotations copies labels and annotations from
