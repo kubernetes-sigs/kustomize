@@ -81,7 +81,7 @@ func TestTemplateFiles(t *testing.T) {
 		{
 			name:    "rejects non-.template.yaml files",
 			paths:   []string{"testdata/ignore.yaml"},
-			wantErr: "file testdata/ignore.yaml did not have required extension .template.yaml",
+			wantErr: "file testdata/ignore.yaml does not have any of permitted extensions [.template.yaml]",
 		},
 	}
 	for _, tt := range tests {
@@ -112,6 +112,23 @@ func TestTemplateFiles(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTemplateParser_WithExtensions(t *testing.T) {
+	p := parser.TemplateFiles("testdata").WithExtensions(".json")
+	templates, err := p.Parse()
+	require.NoError(t, err)
+	require.Len(t, templates, 2)
+
+	p = p.WithExtensions(".yaml")
+	templates, err = p.Parse()
+	require.NoError(t, err)
+	require.Len(t, templates, 3)
+
+	p = p.WithExtensions(".yaml", ".json")
+	templates, err = p.Parse()
+	require.NoError(t, err)
+	require.Len(t, templates, 5)
 }
 
 func TestTemplateStrings(t *testing.T) {
