@@ -173,7 +173,7 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 	if v, ok := api.(Validator); ok {
 		return combineErrors(schemaValidationError, v.Validate())
 	}
-	return nil
+	return schemaValidationError
 }
 
 func combineErrors(schemaErr, customErr error) error {
