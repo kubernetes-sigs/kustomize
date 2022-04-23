@@ -41,6 +41,7 @@ spec:
 `)
 	m := th.Run(".", th.MakeDefaultOptions())
 	_, err := m.AsYaml()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "mapping key \"env\" already defined")
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "key \"env\" already set in map")
+	}
 }

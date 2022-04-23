@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	k8syaml "sigs.k8s.io/yaml"
+
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/sliceutil"
@@ -879,19 +881,11 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	if rn.YNode().Kind == SequenceNode {
-		var a []interface{}
-		if err := Unmarshal([]byte(s), &a); err != nil {
-			return nil, err
-		}
-		return json.Marshal(a)
+	b, err := k8syaml.YAMLToJSONStrict([]byte(s))
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
-
-	m := map[string]interface{}{}
-	if err := Unmarshal([]byte(s), &m); err != nil {
-		return nil, err
-	}
-	return json.Marshal(m)
+	return b, nil
 }
 
 // UnmarshalJSON overwrites this RNode with data from []byte.

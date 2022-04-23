@@ -312,6 +312,31 @@ metadata:
 `)
 }
 
+func TestIssue3446(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- cm.yaml
+`)
+	th.WriteF("cm.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  123: abc
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  "123": abc
+kind: ConfigMap
+metadata:
+  name: cm
+`)
+}
+
 func TestGeneratorSimpleOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
