@@ -1,0 +1,4 @@
+{{- $latestVersion := site.Params.kustomize_example_version -}}
+{{- $latestSemverParts := (split $latestVersion ".") -}}
+{{- $latestSemver := (index $latestSemverParts 0) -}}
+{{- $latestSemver -}}
