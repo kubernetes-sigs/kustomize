@@ -143,6 +143,14 @@ func applyToNode(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelect
 }
 
 func applyToOneNode(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNode) error {
+	// if create option is enabled, we fallback to PathGetter.
+	if options != nil && options.Create {
+		if err := setTargetValue(options, t, value); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if len(t.YNode().Content) == 0 {
 		if err := setTargetValue(options, t, value); err != nil {
 			return err

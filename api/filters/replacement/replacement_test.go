@@ -1673,6 +1673,67 @@ spec:
 `,
 			expectedErr: "cannot support create option in a multi-value target",
 		},
+		"enable_create_option_and_replacement_sequenceNode": {
+			input: `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - image: busybox
+      name: myapp-container
+  restartPolicy: OnFailure
+`,
+			replacements: `replacements:
+  - source:
+      kind: Pod
+      name: my-pod
+      fieldPath: spec
+    targets:
+      - select:
+          name: hello
+          kind: Job
+        fieldPaths:
+          - spec.template.spec
+        options:
+          create: true
+`,
+			expected: `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+  restartPolicy: OnFailure
+`,
+		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
 kind: ConfigMap
