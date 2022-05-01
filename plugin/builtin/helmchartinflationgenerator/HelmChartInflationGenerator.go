@@ -297,9 +297,15 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 	args := []string{
 		"pull",
 		"--untar",
-		"--untardir", p.absChartHome(),
-		"--repo", p.Repo,
-		p.Name}
+		"--untardir", p.absChartHome()}
+
+	// OCI pull combine the repo and the chart name into one URL
+	if strings.HasPrefix(p.Repo, "oci://") {
+		chartUrl := p.Repo + "/" + p.Name
+		args = append(args, chartUrl)
+	} else {
+		args = append(args, "--repo", p.Repo, p.Name)
+	}
 	if p.Version != "" {
 		args = append(args, "--version", p.Version)
 	}
