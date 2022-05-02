@@ -139,18 +139,13 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	env := []string{
-		fmt.Sprintf("HELM_CONFIG_HOME=%s", p.ConfigHome),
-		fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.ConfigHome),
-		fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
-	cmd.Env = append(os.Environ(), env...)
 	err := cmd.Run()
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
 		err = errors.Wrap(
 			fmt.Errorf(
-				"unable to run: '%s %s' with env=%s (is '%s' installed?)",
-				helm, strings.Join(args, " "), env, helm),
+				"unable to run: '%s %s' (is '%s' installed?)",
+				helm, strings.Join(args, " "), helm),
 			stderr.String(),
 		)
 	}
@@ -292,9 +287,15 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 	args := []string{
 		"pull",
 		"--untar",
-		"--untardir", p.absChartHome(),
-		"--repo", p.Repo,
-		p.Name}
+		"--untardir", p.absChartHome()}
+
+	// OCI pull combine the repo and the chart name into one URL
+	if strings.HasPrefix(p.Repo, "oci://") {
+		chartUrl := p.Repo + "/" + p.Name
+		args = append(args, chartUrl)
+	} else {
+		args = append(args, "--repo", p.Repo, p.Name)
+	}
 	if p.Version != "" {
 		args = append(args, "--version", p.Version)
 	}
