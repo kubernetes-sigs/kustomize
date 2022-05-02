@@ -2310,8 +2310,6 @@ func TestGetAnnotations(t *testing.T) {
 }
 
 func TestGetFieldValueWithDot(t *testing.T) {
-	t.Skip()
-
 	const input = `
 kind: Pod
 metadata:
@@ -2330,8 +2328,6 @@ metadata:
 	require.NoError(t, err)
 	require.Equal(t, "hello-world-app", app)
 
-	// TODO: doesn't currently work; we expect to be able to escape the dot in future
-	// https://github.com/kubernetes-sigs/kustomize/issues/4487
 	fooAppName, err := labelRNode.GetFieldValue(`foo\.appname`)
 	require.NoError(t, err)
 	require.Equal(t, "hello-world-foo", fooAppName) // no field named 'foo.appname'

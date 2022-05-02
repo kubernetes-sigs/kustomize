@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	. "sigs.k8s.io/kustomize/api/internal/utils"
+	. "sigs.k8s.io/kustomize/kyaml/utils"
 )
 
 func TestPathSplitter(t *testing.T) {
