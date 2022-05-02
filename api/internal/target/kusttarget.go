@@ -411,11 +411,11 @@ func (kt *KustTarget) accumulateResources(
 			if errors.Is(errF, load.ErrorHTTP) {
 				return nil, errF
 			}
-			if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
-				return nil, errF
-			}
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
+				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
+					return nil, errF
+				}
 				return nil, errors.Wrapf(
 					err, "accumulation err='%s'", errF.Error())
 			}
@@ -430,6 +430,9 @@ func (kt *KustTarget) accumulateResources(
 				ra, err = kt.accumulateDirectory(ra, ldr, false)
 			}
 			if err != nil {
+				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
+					return nil, errF
+				}
 				return nil, errors.Wrapf(
 					err, "accumulation err='%s'", errF.Error())
 			}
