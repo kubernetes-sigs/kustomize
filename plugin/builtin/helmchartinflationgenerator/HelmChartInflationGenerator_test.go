@@ -579,3 +579,25 @@ valuesInline:
 `)
 	th.AssertActualEqualsExpected(rm, "")
 }
+
+func TestHelmChartInflationGeneratorOciRegistry(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: ocichart
+name: chart1
+version: 0.1.0
+repo: oci://us-central1-docker.pkg.dev/mikebz-ex1/charts
+valuesInline:
+  nameOverride: foobar
+`)
+	th.AssertActualEqualsExpected(rm, "")
+}
