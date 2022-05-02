@@ -97,7 +97,11 @@ $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
+<<<<<<< HEAD
 		tgzFile=helm-v3.10.2-$(GOOS)-$(GOARCH).tar.gz; \
+=======
+		tgzFile=helm-v3.8.2-$(GOOS)-$(GOARCH).tar.gz; \
+>>>>>>> bffa1db93 (updated to helm v3.8+)
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
 		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV3; \
