@@ -291,8 +291,8 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 
 	// OCI pull combine the repo and the chart name into one URL
 	if strings.HasPrefix(p.Repo, "oci://") {
-		chartUrl := p.Repo + "/" + p.Name
-		args = append(args, chartUrl)
+		chartURL := p.Repo + "/" + p.Name
+		args = append(args, chartURL)
 	} else {
 		args = append(args, "--repo", p.Repo, p.Name)
 	}
