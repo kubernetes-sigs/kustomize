@@ -99,15 +99,6 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 	if err = p.errIfIllegalValuesMerge(); err != nil {
 		return err
 	}
-
-	// ConfigHome is not loaded by the plugin, and can be located anywhere.
-	if p.ConfigHome == "" {
-		if err = p.establishTmpDir(); err != nil {
-			return errors.Wrap(
-				err, "unable to create tmp dir for HELM_CONFIG_HOME")
-		}
-		p.ConfigHome = filepath.Join(p.tmpDir, "helm")
-	}
 	return nil
 }
 
@@ -139,6 +130,16 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
+
+	// if the user has specifically set the confighome command then
+	// go ahead and use it.
+	if p.ConfigHome != "" {
+		env := []string{
+			fmt.Sprintf("HELM_CONFIG_HOME=%s", p.ConfigHome),
+			fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.ConfigHome),
+			fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
+		cmd.Env = append(os.Environ(), env...)	
+	}
 	err := cmd.Run()
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
