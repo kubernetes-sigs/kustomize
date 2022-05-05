@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -289,7 +290,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 				if label.IncludeTemplates {
 					fss, err = fss.MergeOne(types.FieldSpec{Path: "spec/template/metadata/labels", CreateIfNotPresent: false})
 					if err != nil {
-						return nil, err
+						return nil, errors.Wrap(err, "failed to merge template fieldSpec")
 					}
 				}
 				// only add to metadata by default
