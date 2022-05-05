@@ -91,3 +91,72 @@ spec:
     c: d
 `)
 }
+
+func TestKustomizationLabelsInTemplate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+`)
+	th.WriteK("/app", `
+resources:
+- deployment.yaml
+
+labels:
+- pairs:
+    foo: bar
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+    foo: bar
+  name: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+        foo: bar
+`)
+}
