@@ -20,7 +20,7 @@ const resourcesField = `resources:
 - %s`
 const resourceErrorFormat = "accumulating resources: accumulation err='accumulating resources from '%s': "
 const fileError = "evalsymlink failure"
-const repoFindError = "URL is a git repository': hit 27s timeout running"
+const repoFindError = "URL is a git repository"
 
 const multibaseDevExampleBuild = `apiVersion: v1
 kind: Pod
@@ -131,18 +131,21 @@ func TestRemoteResourceSsh(t *testing.T) {
 	// skip all tests until server has ssh keys
 	tests := map[string]remoteResourceCase{
 		"scp shorthand": {
+			skip: true,
 			kustomization: `
 resources:
 - git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"full ssh, no ending slash": {
+			skip: true,
 			kustomization: `
 resources:
 - ssh://git@github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"repo": {
+			skip: true,
 			kustomization: `
 resources:
 - ssh://git@github.com/annasong20/kustomize-test.git?ref=main`,
@@ -168,6 +171,7 @@ func TestRemoteResourcePort(t *testing.T) {
 	// ports not currently supported; should implement in future
 	tests := map[string]remoteResourceCase{
 		"ssh": {
+			skip:          true,
 			kustomization: fmt.Sprintf(resourcesField, sshURL),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+fileError, sshURL),
@@ -198,6 +202,7 @@ resources:
 			expected: multibaseDevExampleBuild,
 		},
 		"ssh, no ref": {
+			skip: true,
 			kustomization: `
 resources:
 - git@github.com:annasong20/kustomize-test.git`,
@@ -246,11 +251,13 @@ resources:
 			expected: multibaseDevExampleBuild,
 		},
 		"ssh no params": {
+			skip:          true,
 			kustomization: fmt.Sprintf(resourcesField, sshNoParams),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+fileError, sshNoParams),
 		},
 		"ssh all params": {
+			skip: true,
 			kustomization: `
 resources:
 - ssh://git@github.com/annasong20/kustomize-test.git?ref=main&timeout=10&submodules=true`,
