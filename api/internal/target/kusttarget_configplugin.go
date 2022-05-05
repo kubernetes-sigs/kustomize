@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -336,7 +335,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		p := f()
 		err = kt.configureBuiltinPlugin(p, c, bpt)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to configure transformer")
+			return nil, err
 		}
 		result = append(result, p)
 		return
