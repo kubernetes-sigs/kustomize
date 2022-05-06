@@ -60,6 +60,9 @@ The prefix/suffix transformer adds a prefix/suffix to the `metadata/name` field 
 ```yaml
 namePrefix:
 - path: metadata/name
+
+nameSuffix:
+- path: metadata/name
 ```
 
 Example kustomization.yaml:
