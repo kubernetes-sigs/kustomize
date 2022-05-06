@@ -1,5 +1,7 @@
 # remote targets
 
+##remote directories
+
 `kustomize build` can be run on a URL. Resources can also reference other
 kustomization directories via URLs too.
 
@@ -23,6 +25,9 @@ SSH clones are also supported either with `git@github.com:owner/repo` or
 `ssh://git@github.com/owner/repo` URLs.
 
 `file:///` clones are not supported.
+
+##remote files
+Resources can reference remote files via their raw GitHub urls.
 
 # Examples
 
