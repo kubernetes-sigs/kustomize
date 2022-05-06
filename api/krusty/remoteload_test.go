@@ -226,14 +226,16 @@ func TestRemoteResourceParameters(t *testing.T) {
 	httpsMasterBranch := "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master"
 	sshNoParams := "git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev"
 
-	// some query parameter combinations not currently supported; should implement in future
+	// cases with expected errors are query parameter combinations that aren't supported yet; should implement in future
 	tests := map[string]remoteResourceCase{
 		"https no params": {
+			skip:          true, // flaky: passes locally, but sometimes fails on server; fix in future
 			kustomization: fmt.Sprintf(resourcesField, httpsNoParam),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsNoParam),
 		},
 		"https master": {
+			skip:          true, // flaky: passes locally, but sometimes fails on server; fix in future
 			kustomization: fmt.Sprintf(resourcesField, httpsMasterBranch),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsMasterBranch),
