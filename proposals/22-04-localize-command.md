@@ -1,9 +1,11 @@
 # Localize Command
 
-**Authors**: 
+**Authors**:
+
 - annasong20
 
-**Reviewers**: 
+**Reviewers**:
+
 - natasha41575
 - KnVerey
 
@@ -11,9 +13,9 @@
 
 ## Summary
 
-The `kustomize localize` command creates a “localized” copy of the target kustomization directory in which the layered
-kustomization files contain local, instead of remote, references to downloaded files. The command is part of an effort
-to enable `kustomize build` to run without network access.
+The `kustomize localize` command creates a “localized” copy of the target kustomization and any files target transitively
+references, in which the kustomization files contain local, instead of remote, references to downloaded files. The
+command is part of an effort to enable `kustomize build` to run without network access.
 
 ## Motivation
 
@@ -25,35 +27,41 @@ have access to the internal network. Server-side applications like Config Sync a
 vulnerabilities of git, which `kustomize build` uses to fetch remote files.
 
 These use cases would benefit from a kustomize solution that downloads all remote files that a `kustomize build` target
-references, into a copy of the target that references the downloaded files instead. `kustomize build` would then be able
-to run on the copy without a network dependency.
+references, into a copy of target that references the downloaded files instead. The copy would include the target and
+any files target transitively references.`kustomize build` would then be able to run on the copy without a network
+dependency.
 
 This proposal nearly achieves the solution by downloading all remote files directly referenced by the target or by a
-recursively referenced kustomization file. The only remote files not covered by this proposal and still needed for
-`kustomize build` to run are those in KRM functions. However, KRM functions are third party to kustomize, and so will be
-out of scope for `kustomize localize`.
+transitively referenced kustomization file. The only remote files not covered by this proposal and still needed for
+`kustomize build` to run are those in KRM functions. The command copies local exec binaries of KRM functions only as
+part of copying target. The actual localization only applies to kustomization resources. KRM functions are third party
+to kustomize, and thus KRM function remotes are out of scope for `kustomize localize`.
 
 **Goals:**
+
 1. This command should localize all remote files that a kustomization file directly references. This command will have
    achieved this goal if, in the absence of remote input files to KRM functions, `kustomize build` can run on the
    localized copy without network access.
 
 **Non-goals:**
+
 1. This command should not localize remote input files to KRM functions.
-1. This command should not serve as a package manager.
+2. This command should not copy files that the target kustomization does not reference.
+3. This command should not serve as a package manager.
 
 ## Proposal
 
 The command takes the following form:
 
 <pre>
-<b>kustomize localize</b> <ins>target</ins> <ins>newDir</ins>
+<b>kustomize localize</b> <ins>target</ins> <ins>scope</ins> <ins>newDir</ins>
 </pre>
 
 where the arguments are:
 
 * `target`: a directory with a top-level kustomization file that kustomize will localize; can be a path to a local
   directory or a url to a remote directory
+* `scope`: `target` or a directory that contains `target`
 * `newDir`: destination of the localized copy of `target`
     * if `target` is local, `newDir` must be a directory name, as it will be located in the same directory as `target`
       to preserve relative path references
