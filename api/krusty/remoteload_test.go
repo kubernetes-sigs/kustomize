@@ -128,7 +128,7 @@ namePrefix: dev-`,
 }
 
 func TestRemoteResourceSsh(t *testing.T) {
-	// skip all tests until server has ssh keys
+	// TODO: add ssh keys to server to run these tests
 	tests := map[string]remoteResourceCase{
 		"scp shorthand": {
 			skip: true,
@@ -168,7 +168,7 @@ func TestRemoteResourcePort(t *testing.T) {
 	sshURL := "ssh://git@github.com:22/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
 	httpsURL := "https://github.com:443/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
 
-	// ports not currently supported; should implement in future
+	// TODO: ports not currently supported; implement in future
 	tests := map[string]remoteResourceCase{
 		"ssh": {
 			skip:          true,
@@ -226,14 +226,18 @@ func TestRemoteResourceParameters(t *testing.T) {
 	httpsMasterBranch := "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master"
 	sshNoParams := "git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev"
 
-	// some query parameter combinations not currently supported; should implement in future
+	// TODO: cases with expected errors are query parameter combinations that aren't supported yet; implement in future
 	tests := map[string]remoteResourceCase{
+		// TODO: fix flaky test that passes locally, but sometimes fails on server
 		"https no params": {
+			skip:          true,
 			kustomization: fmt.Sprintf(resourcesField, httpsNoParam),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsNoParam),
 		},
+		// TODO: fix flaky test that passes locally, but sometimes fails on server
 		"https master": {
+			skip:          true,
 			kustomization: fmt.Sprintf(resourcesField, httpsMasterBranch),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsMasterBranch),
