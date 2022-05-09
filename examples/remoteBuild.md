@@ -1,6 +1,6 @@
 # remote targets
 
-##remote directories
+## remote directories
 
 `kustomize build` can be run on a URL. Resources can also reference other
 kustomization directories via URLs too.
@@ -26,8 +26,10 @@ SSH clones are also supported either with `git@github.com:owner/repo` or
 
 `file:///` clones are not supported.
 
-##remote files
-Resources can reference remote files via their raw GitHub urls.
+## remote files
+Resources can reference remote files via their raw GitHub urls, such
+as `https://raw.githubusercontent.com/kubernetes-sigs/kustomize/8ea501347443c7760217f2c1817c5c60934cf6a5/examples/helloWorld/deployment.yaml`
+.
 
 # Examples
 
