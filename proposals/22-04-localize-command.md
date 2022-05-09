@@ -13,9 +13,9 @@
 
 ## Summary
 
-The `kustomize localize` command creates a “localized” copy of the target kustomization and any files target transitively
-references, in which the kustomization files contain local, instead of remote, references to downloaded files. The
-command is part of an effort to enable `kustomize build` to run without network access.
+The `kustomize localize` command creates a “localized” copy, of both the target kustomization and files target
+references, in which the kustomization files contain, instead of remote references, local paths to their downloaded
+locations. The command is part of an effort to enable `kustomize build` to run without network access.
 
 ## Motivation
 
@@ -27,25 +27,29 @@ have access to the internal network. Server-side applications like Config Sync a
 vulnerabilities of git, which `kustomize build` uses to fetch remote files.
 
 These use cases would benefit from a kustomize solution that downloads all remote files that a `kustomize build` target
-references, into a copy of target that references the downloaded files instead. The copy would include the target and
-any files target transitively references.`kustomize build` would then be able to run on the copy without a network
+references, into a copy of target that references the downloaded files instead. Admins could upload the localized copy
+to an internal repo so that pipelines and applications can run `kustomize build` on the copy without a network
 dependency.
 
-This proposal nearly achieves the solution by downloading all remote files directly referenced by the target or by a
-transitively referenced kustomization file. The only remote files not covered by this proposal and still needed for
-`kustomize build` to run are those in KRM functions. The command copies local exec binaries of KRM functions only as
-part of copying target. The actual localization only applies to kustomization resources. KRM functions are third party
-to kustomize, and thus KRM function remotes are out of scope for `kustomize localize`.
+The proposed command nearly achieves the solution by downloading all remote files directly referenced by the target or
+by a recursively referenced kustomization file. The command also downloads remote exec binaries of referenced KRM
+functions, which are the only potential source of remote files other than kustomizations. The only remote files that
+this proposal does not cover and that `kustomize build` still needs to run are remote images and custom fields in KRM
+functions. Downloaded images would live only in local caches and kustomize cannot know the form that custom fields will
+take. Thus, neither is worth localizing.
 
 **Goals:**
 
-1. This command should localize all remote files that a kustomization file directly references. This command will have
-   achieved this goal if, in the absence of remote input files to KRM functions, `kustomize build` can run on the
-   localized copy without network access.
+1. This command should localize 
+   * all remote files that a kustomization file directly references 
+   * remote exec binaries of referenced KRM functions 
+
+   This command achieves this goal if, in the absence of remote images and custom fields in KRM
+   functions, `kustomize build` can run on the localized copy without network access.
 
 **Non-goals:**
 
-1. This command should not localize remote input files to KRM functions.
+1. This command should not localize remote images or custom fields in KRM functions.
 2. This command should not copy files that the target kustomization does not reference.
 3. This command should not serve as a package manager.
 
@@ -61,37 +65,35 @@ where the arguments are:
 
 * `target`: a directory with a top-level kustomization file that kustomize will localize; can be a path to a local
   directory or a url to a remote directory
-* `scope`: `target` or a directory that contains `target`
-* `newDir`: destination of the localized copy of `target`
-    * if `target` is local, `newDir` must be a directory name, as it will be located in the same directory as `target`
-      to preserve relative path references
-    * if `target` is remote, `newDir` must be a directory path
+* `scope`: optional root directory, files outside which kustomize is not allowed to copy and localize; if not specified,
+  takes on value of `target`
+* `newDir`: destination directory of the localized copy of `target`
 
-The command creates a copy of `target` at `newDir` in which each kustomization file, from the top-level to any
-recursively referenced, has local paths to downloaded files instead of remote references for the following kustomization
-fields:
+The command creates a copy of the `target` kustomization and the local files that `target` references at `newDir`. We
+define the "files that `target` references" as:
 
-* `resources`
-* `components`
-* `bases`
-* `openapi:`  
-  &nbsp; &nbsp; `paths`
+* kustomization files that `target` directly or transitively references
+* configuration files that referenced kustomization files reference
+* exec binaries of referenced KRM functions
 
-A new `localized-files` directory holds the downloaded files (or directory)
-at:
+Here, configuration file means a non-kustomization yaml file. The command only copies referenced files that reside
+inside `scope`.
+
+The command localizes the copy of `target` at `newDir` by downloading all remote files that `target` references. The
+downloaded files placed in a new `localized-files` directory next to the file that referenced the downloaded files.
+Inside `localized-files`, the downloads are located on path:
 
 <pre>
 <ins>remote-host</ins> / <ins>organization</ins> / <ins>repo</ins> / <ins>version</ins> / <ins>path-to-file-in-repo</ins>
 </pre>
 
-Each `localized-files` directory is located in the same directory as the kustomization file that referenced the
-downloaded files.
-
-To help ensure that `newDir` is a clean copy, the command overwrites every absolute path into `target` to point
-to `newDir` before processing the path.
+The command rewrites remote references in `newDir` to the local paths of the downloaded files. To help ensure
+that `newDir` is a clean copy, the command additionally overwrites absolute path references into `target` to point
+to `newDir`.
 
 **Error cases**:
 * `target` does not have a top-level kustomization file
+* `scope` does not contain `target`
 * `newDir` already exists
 * `localized-files` directory already exists
 * remote reference does not have a version
@@ -99,10 +101,13 @@ to `newDir` before processing the path.
 * cycle of kustomization file references exists
 
 **Warning cases**:
-* `newDir` refers to `base` kustomization layer outside of `newDir`, and `base` has remote references
-* KRM function has container image or exec binary that the user might not have locally
+* `target` references a local path that traverses outside of `scope`
+* KRM function has container image that the user might not have locally
 
-If the command runs without any errors, `kustomize build` on `target` and `newDir` should produce the same output.
+For the warning cases, the command will ignore the reference and continue execution.
+
+If the command runs without any errors or warnings, `kustomize build` without `--load-restrictor LoadRestrictionsNone`
+on `target` and `newDir` should produce the same output.
 
 ### User Stories
 
@@ -136,17 +141,17 @@ pipeline does not have external network access.
 Fortunately, I remember that I can run `kustomize localize` on `example/overlay` on my local machine. I can then upload
 the localized directory to my company’s internal package management site for the CI/CD pipeline to pull and build
 instead. I run
-`kustomize localize example/overlay example/localized-overlay`, but I get the following error:
+`kustomize localize example/overlay example/localized-overlay`, but I get the following warning:
 
 ```
 $ kustomize localize example/overlay example/localized-overlay
-Warning: kustomization directory example/overlay refers to remote resources in example/base
+Warning: File example/overlay/kustomization.yaml refers to ../base on line 2. This reference is outside of scope: 
+         example/overlay. kustomize localize will skip this path.
 ```
 
-because I forgot that `kustomize localize` can only localize remote references originating from within the
-`target`, `example/overlay`. Therefore, command could not localize the remote references in `example/base`,
-which `example/overlay/kustomization.yaml` locally references. `kustomize build example/localized-overlay` will still
-run correctly outside the CI/CD pipeline, but will still require network access:
+because I forgot that `kustomize localize` can only process local references to files within
+`scope`. Therefore, the command could not copy `example/base` to `example/localized-overlay`or localize the remote
+references in `example/base`. The resulting file structure is as follows:
 
 ```
 └── example
@@ -166,43 +171,22 @@ run correctly outside the CI/CD pipeline, but will still require network access:
         └── kustomization.yaml
 ```
 
+`kustomize build example/localized-overlay` will still run correctly outside the CI/CD pipeline because I chose to
+place `example/localized-overlay` in the same directory as `example/overlay`. As a result, relative paths,
+namely `../base`, in `example/localized-overlay` will point to the same files as their counterparts in `example/overlay`
+. However, `kustomize build example/localized-overlay` will still require network access to run.
+
 #### Story 2
 
 I am back again from **Story 1**, but this time ready to localize `base` too, instead of just the `overlay` directory.
-To localize both, I change my `target` argument from `example/overlay` to `example` to make a copy of both directories.
-I add a top-level kustomization file to `example` with the following commands:
+To localize both, I set my `scope` argument to `example` to make a copy of both directories. My setup still looks like
+that at the end of **Story 1**:
 
-```
-kustomize init; kustomize edit add resource overlay
-```
-
-I have deleted `example/localized-overlay` from **Story 1**. My setup now looks like this:
 ```
 └── example
-    ├── kustomization.yaml
     ├── overlay
     │   └── kustomization.yaml
-    └── base
-        └── kustomization.yaml
-```
-```
-# example/kustomization.yaml
-resources:
-  - ./overlay
-```
-
-with all other files having the same contents. After I run `kustomize localize example localized-example`, I get the
-following:
-```
-├── example                      # the old kustomization directory
-│   ├── kustomization.yaml
-│   ├── overlay
-│   │   └── kustomization.yaml
-│   └── base
-│       └── kustomization.yaml
-└── localized-example            # the new, localized kustomization directory
-    ├── kustomization.yaml
-    ├── base
+    ├── localized-overlay
     │   ├── kustomization.yaml
     │   └── localized-files
     │       └── github.com
@@ -210,42 +194,78 @@ following:
     │               └── kustomize
     │                   └── v1.0.6
     │                       └── examples
-    │                           ├── helloWorld
-    │                           │   └── configMap.yaml
-    │                           └── multibases
-    │                               ├── base
-    │                               │   └── pod.yaml
-    │                               ├── dev
-    │                               ├── kustomization.yaml
-    │                               ├── production
-    │                               └── staging
-    └── overlay
+    │                           └── helloWorld
+    │                               └── deployment.yaml
+    └── base
+        └── kustomization.yaml
+```
+
+After I run `kustomize localize example/overlay example new-space/localized-example`, I get the
+following:
+
+```
+├── example                         # old kustomization directory
+│   ├── overlay
+│   │   └── kustomization.yaml
+│   ├── localized-overlay
+│   │   ├── kustomization.yaml
+│   │   └── localized-files
+│   │       └── github.com
+│   │           └── kubernetes-sigs
+│   │               └── kustomize
+│   │                   └── v1.0.6
+│   │                       └── examples
+│   │                           └── helloWorld
+│   │                               └── deployment.yaml
+│   └── base
+│       └── kustomization.yaml
+└── new-space
+    └── localized-example            # the new, localized kustomization directory
         ├── kustomization.yaml
-        └── localized-files
-            └── github.com
-                └── kubernetes-sigs
-                    └── kustomize
-                        └── v1.0.6
-                            └── examples
-                                └── helloWorld
-                                    └── deployment.yaml
+        ├── base
+        │   ├── kustomization.yaml
+        │   └── localized-files
+        │       └── github.com
+        │           └── kubernetes-sigs
+        │               └── kustomize
+        │                   └── v1.0.6
+        │                       └── examples
+        │                           ├── helloWorld
+        │                           │   └── configMap.yaml
+        │                           └── multibases
+        │                               ├── base
+        │                               │   └── pod.yaml
+        │                               ├── dev
+        │                               ├── kustomization.yaml
+        │                               ├── production
+        │                               └── staging
+        └── overlay
+            ├── kustomization.yaml
+            └── localized-files
+                └── github.com
+                    └── kubernetes-sigs
+                        └── kustomize
+                            └── v1.0.6
+                                └── examples
+                                    └── helloWorld
+                                        └── deployment.yaml
 ```
 ```
-# localized-example/overlay/kustomization.yaml
+# new-space/localized-example/overlay/kustomization.yaml
 resources:
   - ../base
   - ./localized-files/github.com/kubernetes-sigs/kustomize/examples/helloWorld/deployment.yaml
 ```
 ```
-# localized-example/base/kustomization.yaml
+# new-space/localized-example/base/kustomization.yaml
 resources:
   - ./localized-files/github.com/kubernetes-sigs/kustomize/examples/multibases
   - ./localized-files/github.com/kubernetes-sigs/kustomize/examples/helloWorld/configMap.yaml
 ```
 
-Now, I upload `localized-example` from my local setup to my company’s internal package management site. I change the
-commands in my CI/CD pipeline to pull `localized-example` before running `kustomize build localized-example`, and the
-command executes successfully!
+Now, I upload `new-space/localized-example` from my local setup to my company’s internal package management site. I
+change the commands in my CI/CD pipeline to pull `localized-example` before running `kustomize build localized-example`,
+and the command executes successfully!
 
 ### Risks and Mitigations
 N/A
@@ -266,9 +286,10 @@ different potential `target` directories cannot share copies either.
 
 ## Drawbacks
 
-Users, like the one in the **User Stories** section, whose kustomization layers are in sibling directories need to
-perform the extra step of creating a top-level kustomization file. However, many existing kustomize use cases also
-require this step, and as shown in **Story 2**, users can create kustomization files relatively easily via command line.
+Users whose layered kustomizations form a complex directory tree structure may have a hard time finding an
+appropriate `scope`. However, many kustomizations exist in repositories, allowing the user to easily choose the repo
+root as a valid `scope`. The warning messages that `kustomize localize` outputs for reference paths that extend
+beyond `scope` should also help.
 
 ## Alternatives
 
@@ -277,24 +298,34 @@ require this step, and as shown in **Story 2**, users can create kustomization f
   different kustomization files to share configurations. On top of that, if `kustomize build` had the added
   functionality to check for previous downloads of remote references at said global location, `kustomize localize` would
   not need to overwrite the remote references in `target` to the local downloads. As a result, `kustomize localize`
-  would need to neither write to `target` nor copy `target` into `newDir`. The user would not need to create a top-level
-  kustomization file either. <br></br>
+  would need to neither write to `target` nor copy `target` into `newDir`. The user would not need to specify a `scope`
+  either. <br></br>
 
   Despite its advantages, the alternative design violates the self-contained nature of each kustomize layer. Users would
   be unable to upload a fully localized kustomization directory in version control. Furthermore, this alternative
   complicates the existing kustomize workflow by requiring the setup of global environment variables.
+  <br></br>
 
 * The command could, instead of making a copy, modify `target` directly. However, users would not have an easy way to
   undo the command, which is undesirable.
+  <br></br>
+
+* Instead of requiring the user to specify a second argument `scope`, the command could by definition limit its copying
+  to `target`. However, in the case of **Story 1**, the command would force the user to set `target` to `example` in
+  order to include `example/base` in the localization of `example/overlay`. The user would then have to create a
+  kustomization file at `example` that points to `example/overlay` under the `resources` field. The creation of the
+  kustomization file solely for this purpose is messy and more work for the user.
 
 ## Rollout Plan
+
 This command will have at least alpha and GA releases. Depending on user feedback, we may add a beta.
 
 ### Alpha
 
-This release will limit the depth of nested `localized-files` to 1 layer. In other words, the command will ignore remote
-kustomization directory references that originate from within a `localized-files` directory. In addition, this release
-will ignore KRM functions. The command will not output warnings for remote KRM images or exec binaries.
+This release will ignore 
+
+* local kustomization files that `target` references
+* KRM functions
 
 The entire command will be new in the alpha release, and so will not require an alpha flag. The command will not be
 available in `kubectl kustomize` either as kubectl only has `kustomize build` builtin.
