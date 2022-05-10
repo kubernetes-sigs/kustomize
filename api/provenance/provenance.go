@@ -10,17 +10,6 @@ import (
 	"strings"
 )
 
-var (
-	version = "unknown"
-	// sha1 from git, output of $(git rev-parse HEAD)
-	gitCommit = "$Format:%H$"
-	// build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
-	buildDate    = "1970-01-01T00:00:00Z" //nolint:gochecknoglobals
-	goos         = runtime.GOOS           //nolint:gochecknoglobals
-	goarch       = runtime.GOARCH         //nolint:gochecknoglobals
-	gitTreeState = "unknown"              //nolint:gochecknoglobals
-)
-
 // Provenance holds information about the build of an executable.
 type Provenance struct {
 	// Version of the kustomize binary.
@@ -41,14 +30,14 @@ type Provenance struct {
 
 // GetProvenance returns an instance of Provenance.
 func GetProvenance() Provenance {
-	// start with values from ldflags, in case BuildInfo is not set
 	p := Provenance{
-		BuildDate:    buildDate,
-		Version:      version,
-		GitCommit:    gitCommit,
-		GitTreeState: gitTreeState,
-		GoOs:         goos,
-		GoArch:       goarch,
+		BuildDate:    "unknown",
+		Version:      "unknown",
+		GitCommit:    "unknown",
+		GitTreeState: "unknown",
+		GoOs:         runtime.GOOS,
+		GoArch:       runtime.GOARCH,
+		GoVersion:    runtime.Version(),
 	}
 	info, ok := debug.ReadBuildInfo()
 	if !ok {

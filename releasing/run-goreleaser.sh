@@ -100,9 +100,6 @@ builds:
 
   ldflags: >
     -s
-    -X sigs.k8s.io/kustomize/api/provenance.version={{.Version}}
-    -X sigs.k8s.io/kustomize/api/provenance.gitCommit={{.Commit}}
-    -X sigs.k8s.io/kustomize/api/provenance.buildDate={{.Date}}
 
   goos:
   - linux
