@@ -61,7 +61,7 @@ func TemplateStrings(data ...string) framework.TemplateParser {
 //		}},
 //   }
 func TemplateFiles(paths ...string) TemplateParser {
-	return TemplateParser{parser{paths: paths, extension: TemplateExtension}}
+	return TemplateParser{parser{paths: paths, extensions: []string{TemplateExtension}}}
 }
 
 // TemplateParser is a framework.TemplateParser that can parse files or directories containing Go templated YAML.
@@ -93,5 +93,11 @@ func (l TemplateParser) Parse() ([]*template.Template, error) {
 // For example, you can use an embed.FS.
 func (l TemplateParser) FromFS(fs iofs.FS) TemplateParser {
 	l.parser.fs = fs
+	return l
+}
+
+// WithExtensions allows you to replace the extension the parser accept on the input files.
+func (l TemplateParser) WithExtensions(ext ...string) TemplateParser {
+	l.parser.extensions = ext
 	return l
 }

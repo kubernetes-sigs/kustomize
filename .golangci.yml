@@ -110,6 +110,19 @@ linters-settings:
   gomnd:
      ignored-functions:
      - ioutil.WriteFile
+  wrapcheck:
+    ignoreSigs:
+      # defaults
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - .Wrap(
+      - .Wrapf(
+      - .WithMessage(
+      - .WithMessagef(
+      - .WithStack(
+      # from kyaml's errors package
+      - .WrapPrefixf(
 
 issues:
   new-from-rev: c94b5d8f2 # enables us to enforce a larger set of linters for new code than pass on existing code

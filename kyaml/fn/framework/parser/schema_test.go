@@ -52,7 +52,7 @@ func TestSchemaFiles(t *testing.T) {
 		{
 			name:    "rejects non-.template.yaml files",
 			paths:   []string{"testdata/ignore.yaml"},
-			wantErr: "file testdata/ignore.yaml did not have required extension .json",
+			wantErr: "file testdata/ignore.yaml does not have any of permitted extensions [.json]",
 		},
 	}
 	for _, tt := range tests {

@@ -56,7 +56,7 @@ func SchemaStrings(data ...string) framework.SchemaParser {
 //		AdditionalSchemas: parser.SchemaFiles("path/to/crd-schemas", "path/to/special-schema.json),
 //	}
 func SchemaFiles(paths ...string) SchemaParser {
-	return SchemaParser{parser{paths: paths, extension: SchemaExtension}}
+	return SchemaParser{parser{paths: paths, extensions: []string{SchemaExtension}}}
 }
 
 // SchemaParser is a framework.SchemaParser that can parse files or directories containing openapi schemas.
