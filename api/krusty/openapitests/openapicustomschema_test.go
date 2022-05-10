@@ -170,6 +170,23 @@ openapi:
 	})
 }
 
+func TestCustomOpenApiFieldBasicUsageWithRemoteSchema(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
+resources:
+- mycrd.yaml
+openapi:
+  path: https://github.com/kubernetes-sigs/kustomize/raw/master/api/krusty/testdata/customschema.json
+`+customSchemaPatch)
+		writeCustomResource(th, "mycrd.yaml")
+		writeTestSchema(th, "./")
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+	})
+}
+
 func TestCustomOpenApiFieldWithTwoGvks(t *testing.T) {
 	runOpenApiTest(t, func(t *testing.T) {
 		t.Helper()
@@ -303,6 +320,29 @@ resources:
 	})
 }
 
+func TestCustomOpenApiFieldFromBaseWithRemoteSchema(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK("base", `
+resources:
+- mycrd.yaml
+openapi:
+  path: https://github.com/kubernetes-sigs/kustomize/raw/master/api/krusty/testdata/customschema.json
+`)
+		th.WriteK("overlay", `
+resources:
+- ../base
+`+customSchemaPatch)
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "base/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+		assert.Equal(t, "using custom schema from file provided",
+			openapi.GetSchemaVersion())
+	})
+}
+
 func TestCustomOpenApiFieldFromOverlay(t *testing.T) {
 	runOpenApiTest(t, func(t *testing.T) {
 		t.Helper()
@@ -316,6 +356,29 @@ resources:
 - ../base
 openapi:
   path: mycrd_schema.json
+`+customSchemaPatch)
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "overlay/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+		assert.Equal(t, "using custom schema from file provided",
+			openapi.GetSchemaVersion())
+	})
+}
+
+func TestCustomOpenApiFieldFromOverlayWithRemoteSchema(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK("base", `
+resources:
+- mycrd.yaml
+`)
+		th.WriteK("overlay", `
+resources:
+- ../base
+openapi:
+  path: https://github.com/kubernetes-sigs/kustomize/raw/master/api/krusty/testdata/customschema.json
 `+customSchemaPatch)
 		writeCustomResource(th, "base/mycrd.yaml")
 		writeTestSchema(th, "overlay/")

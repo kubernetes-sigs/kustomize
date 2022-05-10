@@ -6,7 +6,6 @@ package target
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -481,9 +480,8 @@ func (kt *KustTarget) accumulateDirectory(
 	subKt.kustomization.BuildMetadata = kt.kustomization.BuildMetadata
 	subKt.origin = kt.origin
 	var bytes []byte
-	path := ldr.Root()
 	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
-		bytes, err = ldr.Load(filepath.Join(path, openApiPath))
+		bytes, err = ldr.Load(openApiPath)
 		if err != nil {
 			return nil, err
 		}
