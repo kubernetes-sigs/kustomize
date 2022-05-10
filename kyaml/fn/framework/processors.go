@@ -150,7 +150,7 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 		if err != nil {
 			return errors.WrapPrefixf(err, "loading provided schema")
 		}
-		schemaValidationError = validate.AgainstSchema(schema, src, strfmt.Default)
+		schemaValidationError = errors.Wrap(validate.AgainstSchema(schema, src, strfmt.Default))
 		// don't return it yet--try to make it to custom validation stage to combine errors
 	}
 
@@ -166,14 +166,14 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 
 	if d, ok := api.(Defaulter); ok {
 		if err := d.Default(); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
 	if v, ok := api.(Validator); ok {
 		return combineErrors(schemaValidationError, v.Validate())
 	}
-	return nil
+	return schemaValidationError
 }
 
 func combineErrors(schemaErr, customErr error) error {
