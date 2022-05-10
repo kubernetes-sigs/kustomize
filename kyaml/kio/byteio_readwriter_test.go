@@ -170,9 +170,9 @@ results:
 		},
 
 		{
-			name: "results v2",
+			name: "results v2alpha1",
 			input: `
-apiVersion: config.kubernetes.io/v2
+apiVersion: config.kubernetes.io/v2alpha1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -187,7 +187,7 @@ results:
     proposedValues: ["foo", "bar"]
 `,
 			expectedOutput: `
-apiVersion: config.kubernetes.io/v2
+apiVersion: config.kubernetes.io/v2alpha1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -204,10 +204,10 @@ results:
 		},
 
 		{
-			name: "results v2 proposedValue not supported",
+			name: "results v2alpha1 proposedValue not supported",
 			err:  "ResourceList v2alpha1 no longer supports a single proposedValue, use the proposedValues array instead",
 			input: `
-apiVersion: config.kubernetes.io/v2
+apiVersion: config.kubernetes.io/v2alpha1
 kind: ResourceList
 items:
 - kind: Deployment

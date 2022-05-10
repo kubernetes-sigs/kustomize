@@ -20,8 +20,10 @@ const (
 	ResourceListKind = "ResourceList"
 
 	ResourceListAPIVersionV1       = "config.kubernetes.io/v1"
-	ResourceListAPIVersionV1Beta1  = "config.kubernetes.io/v1beta1"
 	ResourceListAPIVersionV2Alpha1 = "config.kubernetes.io/v2alpha1"
+
+	// Deprecated: ResourceListAPIVersionV1Beta1 is no longer supported, please use a higher version.
+	ResourceListAPIVersionV1Beta1 = "config.kubernetes.io/v1beta1"
 
 	// ResourceListAPIVersion is the most recent stable ResourceList version.
 	ResourceListAPIVersion = ResourceListAPIVersionV1

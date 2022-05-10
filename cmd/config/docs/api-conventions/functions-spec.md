@@ -310,8 +310,8 @@ results:
       path: spec.ports.0.port
       currentValue: cool-port
       proposedValues:
-      - 1337
-      - 4242
+        - 1337
+        - 4242
     file:
       path: service.yaml
 ```
