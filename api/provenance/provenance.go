@@ -46,7 +46,7 @@ func GetProvenance() Provenance {
 
 	// override with values from BuildInfo
 	if info.Main.Version != "" {
-		p.Version = info.Main.Version
+		p.Version = info.Main.Version // TODO: Figure out whether tagging alone gets this set correctly
 	}
 	p.GoVersion = info.GoVersion
 	for _, setting := range info.Settings {
@@ -56,11 +56,11 @@ func GetProvenance() Provenance {
 		case "vcs.modified":
 			switch setting.Value {
 			case "true":
-				p.GitTreeState = "dirty"
+				p.GitTreeState = "dirty" // TODO: This ends up being "dirty" in goreleaser for some reason.
 			case "false":
 				p.GitTreeState = "clean"
 			}
-		case "vcs.time":
+		case "vcs.time": // TODO: This is the commit time, not the build time.
 			p.BuildDate = setting.Value
 		case "GOARCH":
 			p.GoArch = setting.Value
