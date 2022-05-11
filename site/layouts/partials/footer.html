@@ -1,0 +1,29 @@
+{{ $links := .Site.Params.links }}
+<footer class="bg-dark row d-print-none" style="min-height: initial">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-12 text-center mt-3 mb-3">
+        {{ with .Site.Params.copyright_k8s }}<small class="text-white">&copy; {{ now.Year}} {{ T "main_documentation_license" | safeHTML }}</small>{{ end }}
+        <br />
+        {{ with .Site.Params.copyright_linux }}<small class="text-white">Copyright &copy; {{ now.Year }} {{ T "main_copyright_notice" | safeHTML }}</small>{{ end }}
+        <br />
+        <small class="text-white">ICP license: 京ICP备17074266号-3</small>
+        {{ with .Site.Params.privacy_policy }}<small class="ml-1"><a href="{{ . }}" target="_blank" rel="noopener">{{ T "footer_privacy_policy" }}</a></small>{{ end }}
+        {{ if not .Site.Params.ui.footer_about_disable }}
+        {{ with .Site.GetPage "about" }}<p class="mt-2"><a href="{{ .RelPermalink }}">{{ .Title }}</a></p>{{ end }}
+        {{ end }}
+      </div>
+    </div>
+  </div>
+</footer>
+{{ define "footer-links-block" }}
+<ul class="list-inline mb-0 ">
+  {{ range . }}
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="{{ .name }}" aria-label="{{ .name }}">
+    <a class="text-white" target="_blank" rel="noopener" href="{{ .url }}" aria-label="{{ .name }}">
+      <i class="{{ .icon }}"></i>
+    </a>
+  </li>
+  {{ end }}
+</ul>
+{{ end }}
