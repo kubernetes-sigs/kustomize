@@ -196,6 +196,8 @@ func TestRemoteResourcePort(t *testing.T) {
 func TestRemoteResourceRepo(t *testing.T) {
 	tests := map[string]remoteResourceCase{
 		"https, no ref": {
+			// TODO: fix flaky test that sporadically throws errors on server
+			skip: true,
 			kustomization: `
 resources:
 - https://github.com/annasong20/kustomize-test.git`,
@@ -227,15 +229,14 @@ func TestRemoteResourceParameters(t *testing.T) {
 	sshNoParams := "git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev"
 
 	// TODO: cases with expected errors are query parameter combinations that aren't supported yet; implement in future
+	// TODO: fix flaky tests (non-ssh tests that we skip) that sporadically fail on server
 	tests := map[string]remoteResourceCase{
-		// TODO: fix flaky test that passes locally, but sometimes fails on server
 		"https no params": {
 			skip:          true,
 			kustomization: fmt.Sprintf(resourcesField, httpsNoParam),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsNoParam),
 		},
-		// TODO: fix flaky test that passes locally, but sometimes fails on server
 		"https master": {
 			skip:          true,
 			kustomization: fmt.Sprintf(resourcesField, httpsMasterBranch),
@@ -243,12 +244,14 @@ func TestRemoteResourceParameters(t *testing.T) {
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsMasterBranch),
 		},
 		"https master and no submodules": {
+			skip: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master&submodules=false`,
 			expected: multibaseDevExampleBuild,
 		},
 		"https all params": {
+			skip: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6&timeout=10&submodules=true`,
@@ -281,20 +284,24 @@ resources:
 }
 
 func TestRemoteResourceGoGetter(t *testing.T) {
+	// TODO: fix flaky tests (the ones that we skip) that fail sporadically on server
 	tests := map[string]remoteResourceCase{
 		"git detector with / subdirectory separator": {
+			skip: true,
 			kustomization: `
 resources:
 - github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"git detector for repo": {
+			skip: true,
 			kustomization: `
 resources:
 - github.com/annasong20/kustomize-test`,
 			expected: multibaseDevExampleBuild,
 		},
 		"https with / subdirectory separator": {
+			skip: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
@@ -307,6 +314,7 @@ resources:
 			expected: multibaseDevExampleBuild,
 		},
 		"git forced protocol with / subdirectory separator": {
+			skip: true,
 			kustomization: `
 resources:
 - git::https://github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
