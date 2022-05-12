@@ -18,7 +18,7 @@ type Setup struct {
 	Root string
 }
 
-// setupDirectories creates directories for reading test configuration from
+// SetupDirectories creates directories for reading test configuration from
 func SetupDirectories(t *testing.T, dirs ...string) Setup {
 	t.Helper()
 	d, err := ioutil.TempDir("", "kyaml-test")
@@ -32,7 +32,7 @@ func SetupDirectories(t *testing.T, dirs ...string) Setup {
 	return Setup{Root: d}
 }
 
-// writeFile writes a file under the test directory
+// WriteFile writes a file under the test directory
 func (s Setup) WriteFile(t *testing.T, path string, value []byte) {
 	t.Helper()
 	err := os.MkdirAll(filepath.Dir(filepath.Join(s.Root, path)), 0700)
@@ -41,7 +41,7 @@ func (s Setup) WriteFile(t *testing.T, path string, value []byte) {
 	require.NoError(t, err)
 }
 
-// clean deletes the test config
+// Clean deletes the test config
 func (s Setup) Clean() {
 	os.RemoveAll(s.Root)
 }
