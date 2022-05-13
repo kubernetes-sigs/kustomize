@@ -6,8 +6,9 @@
 kustomization directories via URLs too.
 
 The URL format is an HTTPS or SSH `git clone` URL with an optional directory and
-some query string parameters. The directory is specified by appending a `//`
-after the repo URL. The following query string parameters can also be specified:
+some query string parameters. Kustomize does not currently support ports in the
+URL. The directory is specified by appending a `//` after the repo URL. The
+following query string parameters can also be specified:
 
  * `ref` - a `git fetch`-able ref, typically a branch, tag, or full commit hash
    (short hashes are not supported)
