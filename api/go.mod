@@ -11,8 +11,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661
-	sigs.k8s.io/kustomize/kyaml v0.13.6
+	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.2.0
 )
-
-replace sigs.k8s.io/kustomize/kyaml => ../kyaml

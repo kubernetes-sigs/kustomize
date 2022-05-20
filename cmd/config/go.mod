@@ -12,7 +12,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/inf.v0 v0.9.1
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661
-	sigs.k8s.io/kustomize/kyaml v0.13.6
+	sigs.k8s.io/kustomize/kyaml v0.13.7
 )
-
-replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
