@@ -11,12 +11,10 @@ require (
 	golang.org/x/text v0.3.7
 	sigs.k8s.io/kustomize/api v0.11.4
 	sigs.k8s.io/kustomize/cmd/config v0.10.6
-	sigs.k8s.io/kustomize/kyaml v0.13.6
+	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.2.0
 )
 
 replace sigs.k8s.io/kustomize/api => ../api
 
 replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
-
-replace sigs.k8s.io/kustomize/kyaml => ../kyaml
