@@ -14,3 +14,9 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace sigs.k8s.io/kustomize/api => ../api
+
+replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
+
+replace sigs.k8s.io/kustomize/kyaml => ../kyaml
