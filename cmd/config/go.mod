@@ -14,3 +14,5 @@ require (
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661
 	sigs.k8s.io/kustomize/kyaml v0.13.7
 )
+
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
