@@ -551,3 +551,56 @@ valuesInline:
 `)
 	th.AssertActualEqualsExpected(rm, "")
 }
+
+func TestHelmChartWithChartParameter(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: minecraft
+name: minecraft
+chart: https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-3.1.3/minecraft-3.1.3.tgz
+releaseName: moria
+`)
+
+	th.AssertActualEqualsExpected(rm, `apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: moria-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: moria
+  name: moria-minecraft
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    app: moria-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: moria
+  name: moria-minecraft
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: moria-minecraft
+  type: ClusterIP
+`)
+}

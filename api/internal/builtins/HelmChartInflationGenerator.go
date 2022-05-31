@@ -82,6 +82,13 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 		return fmt.Errorf("chart name cannot be empty")
 	}
 
+	if p.Chart != "" && p.Repo != "" {
+		return fmt.Errorf("repo and chart cannot be defined both")
+	}
+
+	if p.Chart != "" && p.Version != "" {
+		return fmt.Errorf("version cannot be set when chart is defined")
+	}
 	// ChartHome might be consulted by the plugin (to read
 	// values files below it), so it must be located under
 	// the loader root (unless root restrictions are
@@ -227,9 +234,9 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 		return nil, err
 	}
 	if path, exists := p.chartExistsLocally(); !exists {
-		if p.Repo == "" {
+		if p.Repo == "" && p.Chart == "" {
 			return nil, fmt.Errorf(
-				"no repo specified for pull, no chart found at '%s'", path)
+				"neither repo nor chart specified for pull, no chart found at '%s'", path)
 		}
 		if _, err := p.runHelmCommand(p.pullCommand()); err != nil {
 			return nil, err
@@ -290,11 +297,14 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 	args := []string{
 		"pull",
 		"--untar",
-		"--untardir", p.absChartHome(),
-		"--repo", p.Repo,
-		p.Name}
-	if p.Version != "" {
-		args = append(args, "--version", p.Version)
+	}
+	if p.Repo != "" {
+		args = append(args, "--untardir", p.absChartHome(), "--repo", p.Repo, p.Name)
+		if p.Version != "" {
+			args = append(args, "--version", p.Version)
+		}
+	} else if p.Chart != "" {
+		args = append(args, "--untardir", p.absChartHome(), p.Chart)
 	}
 	return args
 }

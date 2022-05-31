@@ -42,6 +42,11 @@ type HelmChart struct {
 	// `https://itzg.github.io/minecraft-server-charts`.
 	Repo string `json:"repo,omitempty" yaml:"repo,omitempty"`
 
+	// Chart is a URL locating a package of the chart on the internet.
+	// This is the argument to helm's  `chart URL` argument, e.g.
+	// `https://github.com/orga/project/releases/download/v1.0.0/project-1.0.0.tgz`.
+	Chart string `json:"chart,omitempty" yaml:"chart,omitempty"`
+
 	// ReleaseName replaces RELEASE-NAME in chart template output,
 	// making a particular inflation of a chart unique with respect to
 	// other inflations of the same chart in a cluster. It's the first
