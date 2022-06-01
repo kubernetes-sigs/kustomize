@@ -95,6 +95,8 @@ weight = 1
 copyright_k8s = "The Kubernetes Authors"
 copyright_linux =  "Copyright © 2020 The Linux Foundation ®."
 
+kustomize_example_version = "v4.5.4"
+
 # First one is picked as the Twitter card image if not set on page.
 # images = ["images/project-illustration.png"]
 
