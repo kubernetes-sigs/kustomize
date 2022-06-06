@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -78,9 +77,9 @@ func testRemoteResource(require *require.Assertions, test *remoteResourceCase) {
 	require.NoError(fSys.RemoveAll(tmpDir.String()))
 }
 
-// isLocalEnv checks whether we can ascertain that tests are being run locally, instead of on the server
 func isLocalEnv(require *require.Assertions) bool {
-	if value, exists := os.LookupEnv(konfig.LocalEnv); exists {
+	// make variable that determines whether to run local-only tests
+	if value, exists := os.LookupEnv("IS_LOCAL"); exists {
 		isLocal, err := strconv.ParseBool(strings.TrimSpace(value))
 		require.NoError(err)
 		return isLocal

@@ -46,7 +46,4 @@ const (
 
 	// Label key that indicates the resources are validated by a validator
 	ValidatedByLabelKey = "validated-by"
-
-	// An environment variable that determines whether to run local-only tests
-	LocalEnv = "IS_LOCAL"
 )
