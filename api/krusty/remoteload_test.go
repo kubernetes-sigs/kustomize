@@ -6,10 +6,14 @@ package krusty_test
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -35,7 +39,7 @@ spec:
 `
 
 type remoteResourceCase struct {
-	skip          bool
+	local         bool // only run locally; doesn't behave as expected on server
 	kustomization string
 	error         bool
 	expected      string // if error, expected is error string
@@ -74,8 +78,33 @@ func testRemoteResource(require *require.Assertions, test *remoteResourceCase) {
 	require.NoError(fSys.RemoveAll(tmpDir.String()))
 }
 
+// isLocalEnv checks whether we can ascertain that tests are being run locally, instead of on the server
+func isLocalEnv(require *require.Assertions) bool {
+	if value, exists := os.LookupEnv(konfig.LocalEnv); exists {
+		isLocal, err := strconv.ParseBool(strings.TrimSpace(value))
+		require.NoError(err)
+		return isLocal
+	}
+	return false
+}
+
+func runResourceTests(t *testing.T, cases map[string]*remoteResourceCase) {
+	t.Helper()
+
+	req := require.New(t)
+	for name, test := range cases {
+		savedTest := test // test assignment changes; need assignment in this scope (iteration) of range
+		t.Run(name, func(t *testing.T) {
+			if savedTest.local && !isLocalEnv(req) {
+				t.SkipNow()
+			}
+			testRemoteResource(req, test)
+		})
+	}
+}
+
 func TestRemoteLoad(t *testing.T) {
-	require := require.New(t)
+	req := require.New(t)
 
 	fSys := filesys.MakeFsOnDisk()
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
@@ -83,12 +112,12 @@ func TestRemoteLoad(t *testing.T) {
 	m, err := b.Run(
 		fSys,
 		"github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6")
-	require.NoError(err)
-	checkYaml(m, multibaseDevExampleBuild, require)
+	req.NoError(err)
+	checkYaml(m, multibaseDevExampleBuild, req)
 }
 
 func TestRemoteResourceHttps(t *testing.T) {
-	tests := map[string]remoteResourceCase{
+	tests := map[string]*remoteResourceCase{
 		"basic": {
 			kustomization: `
 resources:
@@ -116,36 +145,28 @@ namePrefix: dev-`,
 		},
 	}
 
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			if test.skip {
-				t.SkipNow()
-			}
-			testRemoteResource(require.New(t), &test)
-		})
-	}
+	runResourceTests(t, tests)
 }
 
 func TestRemoteResourceSsh(t *testing.T) {
 	// TODO: add ssh keys to server to run these tests
-	tests := map[string]remoteResourceCase{
+	tests := map[string]*remoteResourceCase{
 		"scp shorthand": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"full ssh, no ending slash": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - ssh://git@github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"repo": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - ssh://git@github.com/annasong20/kustomize-test.git?ref=main`,
@@ -153,15 +174,7 @@ resources:
 		},
 	}
 
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			if test.skip {
-				t.SkipNow()
-			}
-			testRemoteResource(require.New(t), &test)
-		})
-	}
+	runResourceTests(t, tests)
 }
 
 func TestRemoteResourcePort(t *testing.T) {
@@ -169,9 +182,9 @@ func TestRemoteResourcePort(t *testing.T) {
 	httpsURL := "https://github.com:443/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
 
 	// TODO: ports not currently supported; implement in future
-	tests := map[string]remoteResourceCase{
+	tests := map[string]*remoteResourceCase{
 		"ssh": {
-			skip:          true,
+			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, sshURL),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+fileError, sshURL),
@@ -182,29 +195,22 @@ func TestRemoteResourcePort(t *testing.T) {
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsURL),
 		},
 	}
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			if test.skip {
-				t.SkipNow()
-			}
-			testRemoteResource(require.New(t), &test)
-		})
-	}
+
+	runResourceTests(t, tests)
 }
 
 func TestRemoteResourceRepo(t *testing.T) {
-	tests := map[string]remoteResourceCase{
+	tests := map[string]*remoteResourceCase{
 		"https, no ref": {
 			// TODO: fix flaky test that sporadically throws errors on server
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - https://github.com/annasong20/kustomize-test.git`,
 			expected: multibaseDevExampleBuild,
 		},
 		"ssh, no ref": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - git@github.com:annasong20/kustomize-test.git`,
@@ -212,15 +218,7 @@ resources:
 		},
 	}
 
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			if test.skip {
-				t.SkipNow()
-			}
-			testRemoteResource(require.New(t), &test)
-		})
-	}
+	runResourceTests(t, tests)
 }
 
 func TestRemoteResourceParameters(t *testing.T) {
@@ -230,41 +228,41 @@ func TestRemoteResourceParameters(t *testing.T) {
 
 	// TODO: cases with expected errors are query parameter combinations that aren't supported yet; implement in future
 	// TODO: fix flaky tests (non-ssh tests that we skip) that sporadically fail on server
-	tests := map[string]remoteResourceCase{
+	tests := map[string]*remoteResourceCase{
 		"https no params": {
-			skip:          true,
+			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, httpsNoParam),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsNoParam),
 		},
 		"https master": {
-			skip:          true,
+			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, httpsMasterBranch),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsMasterBranch),
 		},
 		"https master and no submodules": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master&submodules=false`,
 			expected: multibaseDevExampleBuild,
 		},
 		"https all params": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6&timeout=10&submodules=true`,
 			expected: multibaseDevExampleBuild,
 		},
 		"ssh no params": {
-			skip:          true,
+			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, sshNoParams),
 			error:         true,
 			expected:      fmt.Sprintf(resourceErrorFormat+fileError, sshNoParams),
 		},
 		"ssh all params": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - ssh://git@github.com/annasong20/kustomize-test.git?ref=main&timeout=10&submodules=true`,
@@ -272,36 +270,28 @@ resources:
 		},
 	}
 
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			if test.skip {
-				t.SkipNow()
-			}
-			testRemoteResource(require.New(t), &test)
-		})
-	}
+	runResourceTests(t, tests)
 }
 
 func TestRemoteResourceGoGetter(t *testing.T) {
 	// TODO: fix flaky tests (the ones that we skip) that fail sporadically on server
-	tests := map[string]remoteResourceCase{
+	tests := map[string]*remoteResourceCase{
 		"git detector with / subdirectory separator": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"git detector for repo": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - github.com/annasong20/kustomize-test`,
 			expected: multibaseDevExampleBuild,
 		},
 		"https with / subdirectory separator": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
@@ -314,7 +304,7 @@ resources:
 			expected: multibaseDevExampleBuild,
 		},
 		"git forced protocol with / subdirectory separator": {
-			skip: true,
+			local: true,
 			kustomization: `
 resources:
 - git::https://github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
@@ -322,22 +312,14 @@ resources:
 		},
 	}
 
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			if test.skip {
-				t.SkipNow()
-			}
-			testRemoteResource(require.New(t), &test)
-		})
-	}
+	runResourceTests(t, tests)
 }
 
 func TestRemoteResourceWithHttpError(t *testing.T) {
-	require := require.New(t)
+	req := require.New(t)
 
 	url404 := "https://github.com/thisisa404.yaml"
-	fSys, tmpDir := createKustDir(fmt.Sprintf(resourcesField, url404), require)
+	fSys, tmpDir := createKustDir(fmt.Sprintf(resourcesField, url404), req)
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 
 	_, err := b.Run(fSys, tmpDir.String())
@@ -345,9 +327,9 @@ func TestRemoteResourceWithHttpError(t *testing.T) {
 	httpErr := fmt.Errorf("%w: status code %d (%s)", loader.ErrorHTTP, 404, http.StatusText(404))
 	accuFromErr := fmt.Errorf("accumulating resources from '%s': %w", url404, httpErr)
 	expectedErr := fmt.Errorf("accumulating resources: %w", accuFromErr)
-	require.EqualErrorf(err, expectedErr.Error(), url404)
+	req.EqualErrorf(err, expectedErr.Error(), url404)
 
-	require.NoError(fSys.RemoveAll(tmpDir.String()))
+	req.NoError(fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestRemoteResourceAnnoOrigin(t *testing.T) {
@@ -379,21 +361,21 @@ spec:
 }
 
 func TestRemoteResourceAsBaseWithAnnoOrigin(t *testing.T) {
-	require := require.New(t)
+	req := require.New(t)
 
 	fSys := filesys.MakeFsOnDisk()
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(err)
+	req.NoError(err)
 	base := filepath.Join(tmpDir.String(), "base")
 	prod := filepath.Join(tmpDir.String(), "prod")
-	require.NoError(fSys.Mkdir(base))
-	require.NoError(fSys.Mkdir(prod))
-	require.NoError(fSys.WriteFile(filepath.Join(base, "kustomization.yaml"), []byte(`
+	req.NoError(fSys.Mkdir(base))
+	req.NoError(fSys.Mkdir(prod))
+	req.NoError(fSys.WriteFile(filepath.Join(base, "kustomization.yaml"), []byte(`
 resources:
 - github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6
 `)))
-	require.NoError(fSys.WriteFile(filepath.Join(prod, "kustomization.yaml"), []byte(`
+	req.NoError(fSys.WriteFile(filepath.Join(prod, "kustomization.yaml"), []byte(`
 resources:
 - ../base
 namePrefix: prefix-
@@ -403,7 +385,7 @@ buildMetadata: [originAnnotations]
 	m, err := b.Run(
 		fSys,
 		prod)
-	require.NoError(err)
+	req.NoError(err)
 
 	expected := `apiVersion: v1
 kind: Pod
@@ -421,7 +403,7 @@ spec:
   - image: nginx:1.7.9
     name: nginx
 `
-	checkYaml(m, expected, require)
+	checkYaml(m, expected, req)
 
-	require.NoError(fSys.RemoveAll(tmpDir.String()))
+	req.NoError(fSys.RemoveAll(tmpDir.String()))
 }

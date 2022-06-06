@@ -24,7 +24,7 @@ function refreshMaster {
 }
 
 function testKustomizeRepo {
-  make prow-presubmit-check >& /tmp/k.txt
+  make IS_LOCAL=true verify-kustomize-repo >& /tmp/k.txt
   local code=$?
   if [ $code -ne 0 ]; then
     echo "**** FAILURE ******************"
