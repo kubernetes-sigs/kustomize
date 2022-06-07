@@ -2367,7 +2367,7 @@ spec:
       containers:
       - image: busybox
         name: myapp-container
-      restartPolicy: OnFailure
+      restartPolicy: old
 ---
 apiVersion: v1
 kind: Pod
@@ -2377,7 +2377,7 @@ spec:
   containers:
     - image: busybox
       name: myapp-container
-  restartPolicy: OnFailure
+  restartPolicy: new
 `,
 			replacements: `replacements:
 - source:
@@ -2400,12 +2400,10 @@ metadata:
 spec:
   template:
     spec:
-      "":
-        containers:
-        - image: busybox
-          name: myapp-container
-        restartPolicy: OnFailure
-      "": ""
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: new
 ---
 apiVersion: v1
 kind: Pod
@@ -2415,7 +2413,7 @@ spec:
   containers:
   - image: busybox
     name: myapp-container
-  restartPolicy: OnFailure
+  restartPolicy: new
 `,
 		},
 	}
