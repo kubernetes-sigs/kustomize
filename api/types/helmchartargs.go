@@ -37,6 +37,9 @@ type HelmChart struct {
 	// Version is the version of the chart, e.g. '3.1.3'
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 
+	// Kubernetes api-version, same as --kube-version from helm template
+	KubeVersion string `json:"kubeVersion,omitempty" yaml:"kubeVersion,omitempty"`
+
 	// Repo is a URL locating the chart on the internet.
 	// This is the argument to helm's  `--repo` flag, e.g.
 	// `https://itzg.github.io/minecraft-server-charts`.
