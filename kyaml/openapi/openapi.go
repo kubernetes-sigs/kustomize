@@ -400,7 +400,7 @@ func SuppressBuiltInSchemaUse() {
 
 // Elements returns the Schema for the elements of an array.
 func (rs *ResourceSchema) Elements() *ResourceSchema {
-	// load the schema from swagger.json
+	// load the schema from swagger files
 	initSchema()
 
 	if len(rs.Schema.Type) != 1 || rs.Schema.Type[0] != "array" {
@@ -446,7 +446,7 @@ func (rs *ResourceSchema) Lookup(path ...string) *ResourceSchema {
 
 // Field returns the Schema for a field.
 func (rs *ResourceSchema) Field(field string) *ResourceSchema {
-	// load the schema from swagger.json
+	// load the schema from swagger files
 	initSchema()
 
 	// locate the Schema
@@ -459,7 +459,7 @@ func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 		// (the key doesn't matter, they all have the same value type)
 		s = *rs.Schema.AdditionalProperties.Schema
 	default:
-		// no Schema found from either swagger.json or line comments
+		// no Schema found from either swagger files or line comments
 		return nil
 	}
 

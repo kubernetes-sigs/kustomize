@@ -6,6 +6,7 @@ ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
 KIND_VERSION := "v0.11.1"
+API_VERSION ?= "v1.21.2"
 
 .PHONY: all
 all: \
@@ -27,7 +28,7 @@ nuke: clean
 	rm -r kubernetesapi/*
 
 $(MYGOBIN)/go-bindata:
-	go install github.com/go-bindata/go-bindata/v3/go-bindata
+	go install github.com/go-bindata/go-bindata/v3/go-bindata@latest
 
 $(MYGOBIN)/kind:
 	( \
@@ -45,12 +46,12 @@ kustomizationapi/swagger.go: $(MYGOBIN)/go-bindata kustomizationapi/swagger.json
 		-o kustomizationapi/swagger.go \
 		kustomizationapi/swagger.json
 
-.PHONY: kubernetesapi/swagger.json
-kubernetesapi/swagger.json: $(MYGOBIN)/kind $(MYGOBIN)/kustomize
+.PHONY: kubernetesapi/swagger.pb
+kubernetesapi/swagger.pb: $(MYGOBIN)/kind $(MYGOBIN)/kustomize
 	./scripts/fetchSchemaFromCluster.sh $(API_VERSION)
 
 .PHONY: kubernetesapi/swagger.go
-kubernetesapi/swagger.go: $(MYGOBIN)/go-bindata kubernetesapi/swagger.json
+kubernetesapi/swagger.go: $(MYGOBIN)/go-bindata kubernetesapi/swagger.pb
 	./scripts/generateSwaggerDotGo.sh $(API_VERSION)
 
 $(MYGOBIN)/kustomize:
