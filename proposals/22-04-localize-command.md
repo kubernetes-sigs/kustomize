@@ -46,12 +46,14 @@ upstream changes.
 
 **Goals:**
 
-1. This command should localize
-   * all remote files that a kustomization file directly references
-   * remote exec binaries of referenced KRM functions
+This command should localize
 
-   This command achieves this goal if, in the absence of remote images and custom fields in KRM
-   functions, `kustomize build` can run on the localized copy without network access.
+* all remote files that a kustomization file directly references
+* remote exec binaries of referenced KRM functions
+
+This command achieves this goal if, in the absence of remote images and custom fields in KRM
+functions, `kustomize build` can run on the localized copy without network access and produce the same output as when
+run on the original.
 
 **Non-goals:**
 
@@ -64,7 +66,7 @@ upstream changes.
 The command takes the following form:
 
 <pre>
-<b>kustomize localize</b> <ins>target</ins> <ins>newDir</ins> [-s <ins>scope</ins>] [-n]
+<b>kustomize localize</b> <ins>target</ins> <ins>newDir</ins> [--scope <ins>scope</ins>] [--no-verify]
 </pre>
 
 where the arguments are:
@@ -72,13 +74,12 @@ where the arguments are:
 * `target`: a directory with a top-level kustomization file that kustomize will localize; can be a path to a local
   directory or a url to a remote directory
 * `newDir`: optional destination directory of the localized copy of `target`; if not specified, the destination is a
-  directory named `localized-{target}` in the same directory as `scope`
+  directory named `localized-{target}` in the working directory
 
 and the flags are:
-* `-s`, `--scope`  
-  `scope`: optional root directory, files outside which kustomize is not allowed to copy and localize; if not specified,
-  takes on value of `target`
-* `-n`, `--no-verify`: do not verify that the outputs of `kustomize build` for `target` and `newDir` are the same after
+* `--scope scope`: optional root directory, files outside which kustomize is not allowed to copy and localize; if not
+  specified, takes on value of `target`
+* `--no-verify`: do not verify that the outputs of `kustomize build` for `target` and `newDir` are the same after
   localization
 
 The command creates a copy of the `target` kustomization and the local files that `target` references at `newDir`. We
@@ -89,12 +90,14 @@ define the "files that `target` references" as:
 * exec binaries of referenced KRM functions
 
 Here, configuration file means a non-kustomization yaml file. The command cannot run on `target`s that need
-the `--load-restrictor LoadRestrictionsNone` flag on `kustomize build`. The command only copies referenced files that
-reside inside `scope`.
+the `--load-restrictor LoadRestrictionsNone` flag for `kustomize build`. Additionally, the command only copies
+referenced files that reside inside `scope`. Note that for the localization to occur, `scope` must contain `target` and
+naturally if `target` is remote, `scope` should be as well. The copied files sit under the same relative paths
+in `newDir` as those that their counterparts sit under in `scope`.
 
-The command localizes the copy of `target` at `newDir` by downloading all remote files that `target`
-references. Users do not have executable permission for downloaded exec binaries that KRM functions reference and for
-each such exec binary, the command will print a warning message to that effect. 
+The command localizes the copy of `target` in `newDir` by downloading all remote files that `target` references. For
+each downloaded exec binary that KRM functions reference, the command removes users' executable permissions and prints a
+warning message to that effect.
 
 The command creates a new `localized-files` directory, next to the file that referenced the downloaded files, to hold
 said files. Inside `localized-files`, the downloads are located on path:
@@ -103,19 +106,20 @@ said files. Inside `localized-files`, the downloads are located on path:
 <ins>domain</ins> / <ins>organization</ins> / <ins>repo</ins> / <ins>version</ins> / <ins>path/to/file/in/repo</ins>
 </pre>
 
-where `version` corresponds to the `ref` query string parameter in the url, though ideally `version` ia a stable tag as
-opposed to a branch.
+where `version` corresponds to a [`git fetch` "ref"](https://git-scm.com/docs/git-fetch), found in the form of the `ref`
+query string parameter for directory urls and embedded in the path of raw GitHub file urls. Ideally though, `version` is
+a stable tag as opposed to a branch.
 
-The command replaces remote references in `newDir` with the local paths of the downloaded files. To help ensure
+The command replaces remote references in `newDir` with local relative paths to the downloaded files. To help ensure
 that `newDir` is a clean copy, the command additionally overwrites absolute path references into `target` to point
-to `newDir`.
+to the corresponding file in `newDir` instead.
 
 As a convenience to the user, in the absence of the `--no-verify` flag, the command automatically tries to
-run `kustomize build`, without any flags, on `target` and the localized `newDir` to compare their outputs. The command
-indicates success if the outputs match and throws an error with the diff summary otherwise. This check, however, is not
-useful for certain `target`s, including those that need flags to build. In these cases, the command prints next steps
-that users can follow to check the output themselves. For example, for `target`s that reference KRM functions with a
-remote exec binary, the command suggests the user:
+run `kustomize build`, without any flags, on the original `target` and the localized `target` in `newDir` to compare
+their outputs. The command indicates success if the outputs match and throws an error with a diff summary otherwise.
+This check, however, is not useful for certain `target`s, including those that need flags to build. In these cases, the
+command prints next steps that users can follow to check the output themselves. For example, for `target`s that
+reference KRM functions with a remote exec binary, the command suggests the user:
 
 1. add executable permissions for the downloaded exec binaries in `newDir` **that the user trusts**
 2. run `kustomize build` with flags `--enable-alpha-plugins --enable-exec` and self-verify the outputs
@@ -163,7 +167,7 @@ resources:
 ```shell
 # example/base/kustomization.yaml
 resources:
-  - github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
+  - https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
   - https://raw.githubusercontent.com/kubernetes-sigs/kustomize/v1.0.6/examples/helloWorld/configMap.yaml
 ```
 
@@ -172,13 +176,12 @@ pipeline does not have external network access.
 
 Fortunately, I remember that I can run `kustomize localize` on `example/overlay` on my local machine. I can then upload
 the localized directory to my company’s internal package management site for the CI/CD pipeline to pull and build
-instead. I run
-`kustomize localize example/overlay -s example`, where my `target` is `example/overlay`, I accept the default location
-and name of `newDir`, and I expand my `scope` to `example` because `example/overlay` references `example/base`. I get
-the following output:
+instead. I run `kustomize localize example/overlay --scope example`, where my `target` is `example/overlay`, I accept
+the default location and name of `newDir`, and I expand my `scope` to `example` because `example/overlay`
+references `example/base`. I get the following output:
 
 ```shell
-$ kustomize localize example/overlay -s example
+$ kustomize localize example/overlay --scope example
 SUCCESS: example/overlay, localized-overlay produce same kustomize build output
 ```
 
@@ -189,7 +192,6 @@ SUCCESS: example/overlay, localized-overlay produce same kustomize build output
 │   └── base
 │       └── kustomization.yaml
 └── localized-overlay               # the new, localized kustomization directory
-    ├── kustomization.yaml
     ├── base
     │   ├── kustomization.yaml
     │   └── localized-files
@@ -204,9 +206,12 @@ SUCCESS: example/overlay, localized-overlay produce same kustomize build output
     │                               ├── base
     │                               │   └── pod.yaml
     │                               ├── dev
+    │                               │   └── kustomization.yaml
     │                               ├── kustomization.yaml
     │                               ├── production
+    │                               │   └── kustomization.yaml
     │                               └── staging
+    │                                   └── kustomization.yaml
     └── overlay
         ├── kustomization.yaml
         └── localized-files
@@ -222,13 +227,13 @@ SUCCESS: example/overlay, localized-overlay produce same kustomize build output
 # localized-overlay/overlay/kustomization.yaml
 resources:
   - ../base
-  - ./localized-files/github.com/kubernetes-sigs/kustomize/examples/helloWorld/deployment.yaml
+  - localized-files/github.com/kubernetes-sigs/kustomize/v1.0.6/examples/helloWorld/deployment.yaml
 ```
 ```shell
 # localized-overlay/base/kustomization.yaml
 resources:
-  - ./localized-files/github.com/kubernetes-sigs/kustomize/examples/multibases
-  - ./localized-files/github.com/kubernetes-sigs/kustomize/examples/helloWorld/configMap.yaml
+  - localized-files/github.com/kubernetes-sigs/kustomize/v1.0.6/examples/multibases
+  - localized-files/github.com/kubernetes-sigs/kustomize/v1.0.6/examples/helloWorld/configMap.yaml
 ```
 
 Now, I upload `localized-overlay` from my local setup to my company’s internal package management site. I change the
@@ -246,15 +251,16 @@ configurations are also not too difficult to identify.
 
 Exec binaries that KRM functions reference are a different story. `kustomize localize` downloads remote exec binaries
 that, if malicious, are capable of almost anything during subsequent `kustomize build` calls. The command mitigates this
-risk by leaving these downloaded exec binaries without executable permissions and warning the user, as mentioned in
+risk by removing executable permissions on these downloaded exec binaries and warning the user, as mentioned in 
 **Proposal**. `kustomize build` can only run the exec binary after the user deems the binary safe and changes its
 permissions.
 
-Still another risk may be that if a user's kustomization tree is large, `kustomize localize` may be copying files from
-unexpected locations. The command mitigates this risk with the `scope` flag. If not set, `kustomize localize` only
-copies files in `target`. Otherwise, the user specifies `scope`and understands that `kustomize localize` only copies
-files in `scope`. The qualification that the command can only localize `target`s that follow load restrictions helps
-mitigate this risk as well.
+Still another risk may be that if a user's kustomization tree is large, `kustomize localize` has the potential to copy
+files from unexpected locations. The command mitigates this risk with the `scope` flag. If the user specifies `scope`,
+they understand that `kustomize localize` only copies files in `scope`. Otherwise, `kustomize localize` treats `target`
+as `scope`. In either case, `kustomize localize` aborts with a descriptive error message if `target` references local
+files outside of `scope` that the command would copy. The qualification that the command can only localize `target`s
+that follow load restrictions helps mitigate this risk as well.
 
 ### Dependencies
 
@@ -262,15 +268,10 @@ N/A
 
 ### Scalability
 
-Large kustomization trees slows the performance of `kustomize localize`. These trees can have large local subtrees, have
+Large kustomization trees slow the performance of `kustomize localize`. These trees can have large local subtrees, have
 large remote subtrees, be deeply nested, or be wide, with each overlay referencing multiple bases. Regardless of the
-cause, large kustomization trees inevitably takes longer to copy and download. Parts of the kustomize code are not
+cause, large kustomization trees inevitably take longer to copy and download. Parts of the kustomize code are not
 thread-safe, which precludes parallel execution.
-
-On a separate note, a chain of remote kustomization directories in which the current kustomization file references the
-next remote kustomization directories could create a `newDir` with deeply nested `localized-files`. This directory
-structure would impede users’ navigation of `newDir`. However, this scenario should be unlikely as most kustomizations
-only consist of a few layers.
 
 The creation of the `localized-files` directory local to the referencing kustomization file additionally prevents the
 different layers of kustomization files from sharing the same copy of the remote files. Following the same logic,
@@ -280,7 +281,7 @@ different potential `target` directories cannot share copies either.
 
 Users whose layered kustomizations form a complex directory tree structure may have a hard time finding an
 appropriate `scope`. However, many kustomizations exist in repositories, allowing the user to easily choose the repo
-root as a valid `scope`. The warning messages that `kustomize localize` outputs for reference paths that extend
+root as a valid `scope`. The error messages that `kustomize localize` outputs for reference paths that extend
 beyond `scope` should also help.
 
 ## Alternatives
@@ -295,12 +296,10 @@ beyond `scope` should also help.
 
   Despite its advantages, the alternative design violates the self-contained nature of each kustomize layer. Users would
   be unable to upload a fully localized kustomization directory in version control. Furthermore, this alternative
-  complicates the existing kustomize workflow by requiring the setup of global environment variables.
-  <br></br>
+  complicates the existing kustomize workflow by requiring the setup of global environment variables. <br></br>
 
 * The command could, instead of making a copy, modify `target` directly. However, users would not have an easy way to
-  undo the command, which is undesirable.
-  <br></br>
+  undo the command, which is undesirable. <br></br>
 
 * Instead of requiring the user to specify a second argument `scope`, the command could by definition limit its copying
   to `target`. However, in the case of **Story 1**, the command would force the user to set `target` to `example` in
@@ -316,15 +315,15 @@ This command will have at least alpha and GA releases. Depending on user feedbac
 
 This release will not support
 
-* load restrictions check
 * KRM functions
 * absolute paths
-* `target` kustomization with reference cycles
-* any verification in the form of `--no-verification` flag or automatically running `kustomize build` at the end of
+* any verification in the form of the `--no-verify` flag or automatically running `kustomize build` at the end of
   localization
 
 The entire command will be new in the alpha release, and so will not require an alpha flag. The command will not be
-available in `kubectl kustomize` either as kubectl only has `kustomize build` builtin.
+available in `kubectl kustomize` either, as kubectl only has `kustomize build` builtin. Instead, upon execution, the
+command will print a warning message, which declares its alpha status and includes instructions on how users can provide
+feedback.
 
 ### Beta/GA
 
