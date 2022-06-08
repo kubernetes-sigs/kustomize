@@ -7,6 +7,9 @@ MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
 
+# determines whether to run tests that only behave locally; can be overridden by override variable
+export IS_LOCAL = false
+
 .PHONY: install-out-of-tree-tools
 install-out-of-tree-tools: \
 	$(MYGOBIN)/goimports \
