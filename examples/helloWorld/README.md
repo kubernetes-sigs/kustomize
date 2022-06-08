@@ -1,14 +1,14 @@
-[base]: ../../docs/glossary.md#base
+[base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
 [config]: https://github.com/kubernetes-sigs/kustomize/tree/master/examples/helloWorld
-[gitops]: ../../docs/glossary.md#gitops
+[gitops]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#gitops
 [hello]: https://github.com/monopole/hello
-[kustomization]: ../../docs/glossary.md#kustomization
+[kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization
 [original]: https://github.com/kubernetes-sigs/kustomize/tree/master/examples/helloWorld
-[overlay]: ../../docs/glossary.md#overlay
-[overlays]: ../../docs/glossary.md#overlay
-[patch]: ../../docs/glossary.md#patch
-[variant]: ../../docs/glossary.md#variant
-[variants]: ../../docs/glossary.md#variant
+[overlay]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
+[overlays]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
+[patch]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#patch
+[variant]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
+[variants]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
 
 # Demo: hello world with variants
 
