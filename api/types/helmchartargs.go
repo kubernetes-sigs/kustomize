@@ -37,8 +37,11 @@ type HelmChart struct {
 	// Version is the version of the chart, e.g. '3.1.3'
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 
-	// Kubernetes api-version, same as --kube-version from helm template
+	// Kubernetes api-version, same as --kube-version from helm template, e.g. '1.22'
 	KubeVersion string `json:"kubeVersion,omitempty" yaml:"kubeVersion,omitempty"`
+
+	// allow helm to set the --api-versions flag when running helm template, e.g. 'monitoring.coreos.com/v1'
+	ApiVersions string `json:"apiVersions,omitempty" yaml:"apiVersions,omitempty"`
 
 	// Repo is a URL locating the chart on the internet.
 	// This is the argument to helm's  `--repo` flag, e.g.

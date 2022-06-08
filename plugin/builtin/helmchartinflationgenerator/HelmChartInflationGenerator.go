@@ -291,6 +291,9 @@ func (p *HelmChartInflationGeneratorPlugin) templateCommand() []string {
 	if p.KubeVersion != "" {
 		args = append(args, "--kube-version", p.KubeVersion)
 	}
+	if p.ApiVersions != "" {
+		args = append(args, "--api-versions", p.ApiVersions)
+	}
 	return args
 }
 
