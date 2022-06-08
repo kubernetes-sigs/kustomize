@@ -89,6 +89,7 @@ cat <<'EOF' >$DEMO_HOME/base/kustomization.yaml
 helmCharts:
 - name: minecraft
   includeCRDs: false
+  skipTests: false
   valuesInline:
     minecraftServer:
       eula: true
@@ -109,6 +110,9 @@ The `valuesInline` field overrides some native chart values.
 The `includeCRDs` field instructs Helm to generate 
 `CustomResourceDefinitions`. 
 See [the Helm documentation](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/) for details.
+
+The `skipTests` field instruct Helm to not generate
+[Chart tests](https://helm.sh/docs/topics/chart_tests/)
 
 Check the directory layout:
 

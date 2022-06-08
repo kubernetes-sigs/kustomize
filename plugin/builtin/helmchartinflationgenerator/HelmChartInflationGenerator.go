@@ -288,6 +288,9 @@ func (p *plugin) templateCommand() []string {
 	if p.SkipHooks {
 		args = append(args, "--no-hooks")
 	}
+	if p.SkipTests {
+		args = append(args, "--skip-tests")
+	}
 	return args
 }
 

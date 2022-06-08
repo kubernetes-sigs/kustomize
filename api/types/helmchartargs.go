@@ -76,6 +76,10 @@ type HelmChart struct {
 	// SkipHooks sets the --no-hooks flag when calling helm template. This prevents
 	// helm from erroneously rendering test templates.
 	SkipHooks bool `json:"skipHooks,omitempty" yaml:"skipHooks,omitempty"`
+
+	// SkipTests specifies if Helm should skip generating tests
+	// Defaults to 'false'.
+	SkipTests bool `json:"skipTests,omitempty" yaml:"skipTests,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.

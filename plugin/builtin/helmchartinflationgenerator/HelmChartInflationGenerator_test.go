@@ -579,3 +579,34 @@ valuesInline:
 `)
 	th.AssertActualEqualsExpected(rm, "")
 }
+
+func TestHelmChartInflationGeneratorWithSkipTests(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	testData, err := os.ReadFile("include_crds_testdata.txt")
+	if err != nil {
+		t.Error(fmt.Errorf("unable to read test data for includeCRDs: %w", err))
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: terraform
+name: terraform
+version: 1.0.0
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars
+includeCRDs: true
+skipTests: true
+valuesInline:
+  global:
+    enabled: false
+`)
+	th.AssertActualEqualsExpected(rm, string(testData))
+}
