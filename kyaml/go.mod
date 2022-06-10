@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
+	github.com/xlab/treeprint v1.1.0
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0
