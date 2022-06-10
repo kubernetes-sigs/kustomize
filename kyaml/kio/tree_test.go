@@ -70,7 +70,7 @@ spec:
 
 	if !assert.Equal(t, `
 ├── bar-package
-│   └── [f2.yaml]  Deployment bar
+│   └── [f2.yaml]  Deployment bar
 └── foo-package
     ├── [f1.yaml]  Deployment default/foo
     ├── [f1.yaml]  Service default/foo
@@ -143,7 +143,7 @@ spec:
 ├── [f1.yaml]  Service default/foo
 ├── [f3.yaml]  Deployment default/foo
 ├── bar-package
-│   └── [f2.yaml]  Deployment bar
+│   └── [f2.yaml]  Deployment bar
 └── foo-package
     └── [f1.yaml]  Deployment default/foo
 `, out.String()) {
