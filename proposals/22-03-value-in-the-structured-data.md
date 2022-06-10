@@ -48,7 +48,7 @@ If this proposal is an expansion of an existing GitHub issue, link to it here.
 kustomize can apply structured edits to Kubernetes objects defined in yaml files.\
 Sometimes structured multi-line or long single line string (ex. json,yaml, and other structured format data) is injected in Kubernetes objects' string literal field. From the kustomize perspective, these "structured" multiline strings are just arbitrary unstructured strings.\
 So, kustomize can't manipulate one value on structured, formatted data in the Kubernetes object's string literal field. This function is expected behavior, but kustomize will be very helpful if it can change the value of structured data like json and yaml substrings in a string literal.\
-While kustomize won't support unstructured edits in general, theis proposal allows editing of an unstructured string literal as an exception if the string literal is a structured string of a well-known format like json.\
+This proposal allows the user to identify strings literals containing JSON/YAML data so that Kustomize can make structured edits to the data they contain. This allows the requested functionality to be added without violating Kustomize's core principle of supporting structured edits exclusively.\
 
 For example, kustomize can't change the value `"REPLACE_TARGET_HOSTNAME"` in this yaml file straightforwardly.
 
@@ -285,7 +285,6 @@ So, If kustomize configMapGenerator can overlay to one line inside a configMap d
 # base/kustomization.yaml
 configMapGenerator:
 - name: demo
-  behavior: merge
   literals:
   - config.json: |-
       {
@@ -304,6 +303,7 @@ resources:
 - ../base
 configMapGenerator:
 - name: demo
+  behavior: merge
   option:
     valueMergeFormat: json
   literals:
