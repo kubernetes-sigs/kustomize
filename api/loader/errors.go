@@ -5,4 +5,7 @@ package loader
 
 import "fmt"
 
-var ErrorHTTP = fmt.Errorf("HTTP Error")
+var (
+	ErrHTTP   = fmt.Errorf("HTTP Error")
+	ErrLdrDir = fmt.Errorf("can only create loader at directory")
+)
