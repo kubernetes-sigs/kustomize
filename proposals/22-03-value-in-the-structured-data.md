@@ -78,8 +78,7 @@ List the specific goals of the proposal. What is it trying to achieve? How will 
 know that this has succeeded?
 -->
 
-1. Provide the way to update values in the structured data like kubernetes objects with many formats.
-1. Be able to add replacement able format after.
+1. Provide the way to update values in the structured data like kubernetes objects with JSON/YAML formats.
 
 
 **Non-goals:**
@@ -134,9 +133,9 @@ replacements:
 
 Please check [Story 1](#Story-1).
 
-### Disciplined merge the value in structured data with configMapGenerator
+### Disciplined merge the value in structured data with configMapGenerator and secretGenerator
 
-This Proposal is add option for [configMapGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/) to allow merge two string literals when the behavior option is setting to merge and string literals value is structured.\
+This Proposal is add option for [configMapGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/) and [secretGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/secretgenerator/) to allow merge two string literals when the behavior option is setting to merge and string literals value is structured.\
 This idea is add one parameter for `valueStructuredMergeFormat` to `option`. The `valueStructuredMergeFormat` option is used by select to structured data format like "json" or "yaml". And this function needs to work requires setting `behavior: merge`.\
 This merge operation will be implemented for a part of [Overriding Base ConfigMap Values](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/#overriding-base-configmap-values). It will execute to merge two string literal having same [key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) name when merging two configMap.
 
