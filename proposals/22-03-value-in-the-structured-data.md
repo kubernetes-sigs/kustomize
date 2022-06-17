@@ -89,6 +89,10 @@ and make progress.
 
 1. Do not provide [Unstructured edits, because kustomize eschews parameterization](https://kubectl.docs.kubernetes.io/faq/kustomize/eschewedfeatures/#unstructured-edits).
 
+1. Do not provide a way for targeting/merging values within strings from the [patches](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/patches/) field.
+
+1. Do not provide a way for customizing field merge strategies for the embedded data.
+
 ## Proposal
 
 <!--
@@ -138,6 +142,7 @@ Please check [Story 1](#Story-1).
 This Proposal is add option for [configMapGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/) and [secretGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/secretgenerator/) to allow merge two string literals when the behavior option is setting to merge and string literals value is structured.\
 This idea is add one parameter for `valueStructuredMergeFormat` to `option`. The `valueStructuredMergeFormat` option is used by select to structured data format like "json" or "yaml". And this function needs to work requires setting `behavior: merge`.\
 This merge operation will be implemented for a part of [Overriding Base ConfigMap Values](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/#overriding-base-configmap-values). It will execute to merge two string literal having same [key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) name when merging two configMap.
+It will implement in [GeneratorArgs](https://github.com/kubernetes-sigs/kustomize/blob/672c751715be7dd0b43b4a2fce956c84452e0db9/api/types/generatorargs.go#L7-L27) used from configMapGenerator and secretGenerator.
 
 #### Example
 
