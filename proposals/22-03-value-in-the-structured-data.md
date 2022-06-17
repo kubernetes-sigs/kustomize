@@ -391,7 +391,7 @@ replacements:
       kind: ConfigMap
       name: prometheus-config
     fieldPaths:
-    - prometheus\.yml
+    - data.prometheus\.yml
     options:
       format: 'yaml'
       formatPath: '/global/external_labels/prometheus_env'
@@ -434,11 +434,63 @@ A few times, an application on your cluster requires to set json format config f
 
 ##### Example
 ```yaml
+## source
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: debug-backend-config
+spec:
+  securityPolicy:
+    name: "debug-security-policy"
+---
 apiVersion: v1
 kind: Service
 metadata:
+  name: appA-svc
   annotations:
-    cloud-provider/backend-config: '{"ports": {"appA":"referrence_from_appA"}}'
+    cloud-provider/backend-config: '{"ports": {"appA":"gke-default-backend-config"}}'
+spec:
+  ports:
+  - name: appA
+    port: 1234
+    protocol: TCP
+    targetPort: 8080
+```
+
+```yaml
+## replacement
+replacements:
+- source:
+    kind: BackendConfig
+    name: debug-backend-config
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: ConServicefigMap
+      name: appA-svc
+    fieldPaths:
+    - metadata.annotations.cloud-provider/backend-config
+    options:
+      format: 'json'
+      formatPath: '/ports/appA'
+```
+
+```yaml
+## expected
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: debug-backend-config
+spec:
+  securityPolicy:
+    name: "debug-security-policy"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appA-svc
+  annotations:
+    cloud-provider/backend-config: '{"ports": {"appA":"debug-backend-config"}}'
 spec:
   ports:
   - name: appA
