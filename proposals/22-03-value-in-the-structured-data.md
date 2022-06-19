@@ -139,10 +139,10 @@ Please check [Story 1](#Story-1).
 
 ### Disciplined merge the value in structured data with configMapGenerator and secretGenerator
 
-This Proposal is add option for [configMapGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/) and [secretGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/secretgenerator/) to allow merge two string literals when the behavior option is setting to merge and string literals value is structured.\
-This idea is add one parameter for `valueStructuredMergeFormat` to `option`. The `valueStructuredMergeFormat` option is used by select to structured data format like "json" or "yaml". And this function needs to work requires setting `behavior: merge`.\
-This merge operation will be implemented for a part of [Overriding Base ConfigMap Values](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/#overriding-base-configmap-values). It will execute to merge two string literal having same [key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) name when merging two configMap.
-It will implement in [GeneratorArgs](https://github.com/kubernetes-sigs/kustomize/blob/672c751715be7dd0b43b4a2fce956c84452e0db9/api/types/generatorargs.go#L7-L27) used from configMapGenerator and secretGenerator.
+This Proposal is to add parameters for [configMapGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/) and [secretGenerator](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/secretgenerator/) to allow the merging of two string literals when the behavior option is set to merge and string literals value is structured.\
+This idea is to add one parameter, `mergeValues` to [GeneratorArgs](https://github.com/kubernetes-sigs/kustomize/blob/672c751715be7dd0b43b4a2fce956c84452e0db9/api/types/generatorargs.go#L7-L27) used from configMapGenerator and secretGenerator.
+The `mergeValues` option is a list that contains two parameters, `key` and `format`. One element corresponds to one string literal, `key` is used to select a string literal to merge, and `format` is used to designate a format for string literal which is JSON or YAML.\
+This merge operation will be implemented for a part of [Overriding Base ConfigMap Values](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/#overriding-base-configmap-values). It will execute to merge two string literal having same [key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) name when merging two configMap or secret.\
 
 #### Example
 
@@ -150,8 +150,9 @@ It will implement in [GeneratorArgs](https://github.com/kubernetes-sigs/kustomiz
 configMapGenerator:
 - name: demo-settings
   behavior: merge                     # This function requires `behavior: merge`.
-  option:
-    valueStructuredMergeFormat: json  # Setting structured data format.
+  mergeValues:
+  - key: config.json # Key with a target to merge.
+    format: json # Setting structured data format MUST be YAML/JSON.
   literals:
   - config.json: |-
       {
@@ -282,7 +283,7 @@ and config they'll use.
 -->
 
 Many application needs to be set with json format file. And, That file is handled with configMap when the application is running on kubernetes.\
-So, If kustomize configMapGenerator can overlay to one line inside a configMap data value, A json format file will be simple and easy to handle.
+So, If kustomize configMapGenerator can merge for json inside a configMap data value, A json format file will be simple and easy to handle.
 
 #### Source
 ```yaml
@@ -308,8 +309,9 @@ resources:
 configMapGenerator:
 - name: demo
   behavior: merge
-  option:
-    valueMergeFormat: json
+  mergeValues:
+  - key: config.json # Key with a target to merge.
+    format: json # Setting structured data format MUST be YAML/JSON.
   literals:
   - config.json: |-
       {
