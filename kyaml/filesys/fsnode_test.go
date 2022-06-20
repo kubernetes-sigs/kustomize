@@ -865,7 +865,7 @@ func TestDemandDirRelativeNode(t *testing.T) {
 
 	actual, err := DemandDir(fSysSub, "c")
 	req.NoError(err)
-	req.Equal(ConfirmedDir(expected), actual)
+	req.Equal(expected, actual.String())
 }
 
 func TestFileOps(t *testing.T) {

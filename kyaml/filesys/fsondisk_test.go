@@ -5,9 +5,9 @@ package filesys
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"testing"
 
@@ -16,8 +16,9 @@ import (
 
 const dirMsg = "Expected '%s' to be a dir \n"
 
-func makeTestDir(t *testing.T, req *require.Assertions) (FileSystem, string) {
+func makeTestDir(t *testing.T) (FileSystem, string) {
 	t.Helper()
+	req := require.New(t)
 
 	fSys := MakeFsOnDisk()
 	td := t.TempDir()
@@ -30,45 +31,56 @@ func makeTestDir(t *testing.T, req *require.Assertions) (FileSystem, string) {
 	return fSys, testDir
 }
 
-func cleanWd(req *require.Assertions, fSys FileSystem) ConfirmedDir {
-	wd, err := os.Getwd()
-	req.NoError(err)
+func cleanWd(t *testing.T) string {
+	t.Helper()
 
-	cleanedWd, f, err := fSys.CleanedAbs(wd)
-	req.NoError(err)
-	req.Empty(f)
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	cleanedWd, err := filepath.EvalSymlinks(wd)
+	require.NoError(t, err)
 
 	return cleanedWd
 }
 
+func getOSRoot(t *testing.T) string {
+	t.Helper()
+
+	switch runtime.GOOS {
+	case "windows":
+		wd := cleanWd(t)
+		return filepath.VolumeName(wd) + `\`
+	default:
+		return "/"
+	}
+}
+
 func TestCleanedAbs_1(t *testing.T) {
 	req := require.New(t)
-
-	fSys, _ := makeTestDir(t, req)
+	fSys, _ := makeTestDir(t)
 
 	d, f, err := fSys.CleanedAbs("")
 	req.NoError(err)
 
-	wd := cleanWd(req, fSys)
-	req.Equal(wd, d)
+	wd := cleanWd(t)
+	req.Equal(wd, d.String())
 	req.Empty(f)
 }
 
 func TestCleanedAbs_2(t *testing.T) {
 	req := require.New(t)
+	fSys, _ := makeTestDir(t)
 
-	fSys, _ := makeTestDir(t, req)
-
-	d, f, err := fSys.CleanedAbs("/")
+	root := getOSRoot(t)
+	d, f, err := fSys.CleanedAbs(root)
 	req.NoError(err)
-	req.Equal(ConfirmedDir("/"), d)
+	req.Equal(root, d.String())
 	req.Empty(f)
 }
 
 func TestCleanedAbs_3(t *testing.T) {
 	req := require.New(t)
-
-	fSys, testDir := makeTestDir(t, req)
+	fSys, testDir := makeTestDir(t)
 
 	err := fSys.WriteFile(
 		filepath.Join(testDir, "foo"), []byte(`foo`))
@@ -82,8 +94,7 @@ func TestCleanedAbs_3(t *testing.T) {
 
 func TestCleanedAbs_4(t *testing.T) {
 	req := require.New(t)
-
-	fSys, testDir := makeTestDir(t, req)
+	fSys, testDir := makeTestDir(t)
 
 	err := fSys.MkdirAll(filepath.Join(testDir, "d1", "d2"))
 	req.NoError(err)
@@ -108,11 +119,10 @@ func TestCleanedAbs_4(t *testing.T) {
 
 func TestDemandDirDisk(t *testing.T) {
 	req := require.New(t)
-	fSys, testDir := makeTestDir(t, req)
+	fSys, testDir := makeTestDir(t)
+	wd := cleanWd(t)
 
-	wd := cleanWd(req, fSys)
-
-	relDir := "actual-foo-431432"
+	relDir := "actual_foo_431432"
 	err := fSys.Mkdir(relDir)
 	req.NoError(err)
 	req.Truef(fSys.Exists(relDir), existMsg, relDir)
@@ -122,24 +132,25 @@ func TestDemandDirDisk(t *testing.T) {
 	})
 
 	linkDir := filepath.Join(testDir, "pointer")
-	err = os.Symlink(wd.Join(relDir), linkDir)
+	err = os.Symlink(filepath.Join(wd, relDir), linkDir)
 	req.NoError(err)
 
+	root := getOSRoot(t)
 	tests := map[string]*struct {
 		path      string
 		cleanPath string
 	}{
 		"root": {
-			"/",
-			"/",
+			root,
+			root,
 		},
 		"non-selfdir relative path": {
 			relDir,
-			wd.Join(relDir),
+			filepath.Join(wd, relDir),
 		},
 		"symlink": {
 			linkDir,
-			wd.Join(relDir),
+			filepath.Join(wd, relDir),
 		},
 	}
 
@@ -148,7 +159,7 @@ func TestDemandDirDisk(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actualPath, err := DemandDir(fSys, tCase.path)
 			require.NoError(t, err)
-			require.Equal(t, ConfirmedDir(tCase.cleanPath), actualPath)
+			require.Equal(t, tCase.cleanPath, actualPath.String())
 		})
 	}
 }
@@ -156,11 +167,11 @@ func TestDemandDirDisk(t *testing.T) {
 func TestReadFilesRealFS(t *testing.T) {
 	req := require.New(t)
 
-	fSys, testDir := makeTestDir(t, req)
+	fSys, testDir := makeTestDir(t)
 
-	dir := path.Join(testDir, "dir")
-	nestedDir := path.Join(dir, "nestedDir")
-	hiddenDir := path.Join(testDir, ".hiddenDir")
+	dir := filepath.Join(testDir, "dir")
+	nestedDir := filepath.Join(dir, "nestedDir")
+	hiddenDir := filepath.Join(testDir, ".hiddenDir")
 	dirs := []string{
 		testDir,
 		dir,
@@ -187,7 +198,7 @@ func TestReadFilesRealFS(t *testing.T) {
 	for _, d := range dirs {
 		req.Truef(fSys.IsDir(d), dirMsg, d)
 		for _, f := range files {
-			fPath := path.Join(d, f)
+			fPath := filepath.Join(d, f)
 			err = fSys.WriteFile(fPath, []byte(f))
 			req.NoError(err)
 			req.Truef(fSys.Exists(fPath), existMsg, fPath)
@@ -242,12 +253,12 @@ func TestReadFilesRealFS(t *testing.T) {
 			for _, d := range dirs {
 				var expectedPaths []string
 				for _, f := range c.expectedFiles {
-					expectedPaths = append(expectedPaths, path.Join(d, f))
+					expectedPaths = append(expectedPaths, filepath.Join(d, f))
 				}
 				if c.expectedDirs != nil {
 					expectedPaths = append(expectedPaths, c.expectedDirs[d]...)
 				}
-				actualPaths, globErr := fSys.Glob(path.Join(d, c.globPattern))
+				actualPaths, globErr := fSys.Glob(filepath.Join(d, c.globPattern))
 				require.NoError(t, globErr)
 
 				sort.Strings(actualPaths)

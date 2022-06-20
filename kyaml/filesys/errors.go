@@ -3,6 +3,6 @@
 
 package filesys
 
-import "github.com/pkg/errors"
+import "sigs.k8s.io/kustomize/kyaml/errors"
 
-var ErrNotDir = errors.New("invalid directory")
+var ErrNotDir = errors.Errorf("invalid directory")

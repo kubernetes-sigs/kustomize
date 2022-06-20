@@ -5,9 +5,9 @@
 package loader
 
 import (
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -28,7 +28,7 @@ func NewLoader(
 	}
 	root, err := filesys.DemandDir(fSys, target)
 	if err != nil {
-		return nil, errors.Wrapf(err, ErrLdrDir.Error())
+		return nil, errors.WrapPrefixf(err, ErrLdrDir.Error())
 	}
 	return newLoaderAtConfirmedDir(
 		lr, root, fSys, nil, git.ClonerUsingGitExec), nil

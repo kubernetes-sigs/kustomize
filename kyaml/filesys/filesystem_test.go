@@ -54,33 +54,32 @@ func testNotExistErr(t *testing.T, fs FileSystem) {
 }
 
 // setupFileSys returns file system, default directory to test in, and working directory
-func setupFileSys(t *testing.T, req *require.Assertions, name string, bldr func() FileSystem) (FileSystem, string, string) {
+func setupFileSys(t *testing.T, name string) (FileSystem, string, string) {
 	t.Helper()
+
 	switch name {
 	case disk:
-		fSys, testDir := makeTestDir(t, req)
-		return fSys, testDir, string(cleanWd(req, fSys))
+		fSys, testDir := makeTestDir(t)
+		return fSys, testDir, cleanWd(t)
 	case memoryAbs:
-		return bldr(), Separator, Separator
+		return filesysBuilders[name](), Separator, Separator
 	default:
-		req.Equal(memoryEmpty, name)
-		return bldr(), "", ""
+		require.Equal(t, memoryEmpty, name)
+		return filesysBuilders[name](), "", ""
 	}
 }
 
 func TestDemandDir(t *testing.T) {
-	for name, builder := range filesysBuilders {
+	for name := range filesysBuilders {
 		thisName := name
-		thisBldr := builder
 		t.Run(thisName, func(t *testing.T) {
-			req := require.New(t)
-			fSys, prefixPath, wd := setupFileSys(t, req, thisName, thisBldr)
+			fSys, prefixPath, wd := setupFileSys(t, thisName)
 
 			d1Path := filepath.Join(prefixPath, "d1")
 			d2Path := filepath.Join(d1Path, ".d2")
 			err := fSys.MkdirAll(d2Path)
-			req.NoError(err)
-			req.Truef(fSys.Exists(d2Path), existMsg, d2Path)
+			require.NoError(t, err)
+			require.Truef(t, fSys.Exists(d2Path), existMsg, d2Path)
 
 			tests := map[string]*struct {
 				dir      string
@@ -104,7 +103,7 @@ func TestDemandDir(t *testing.T) {
 				t.Run(subName, func(t *testing.T) {
 					cleanDir, err := DemandDir(fSys, tCase.dir)
 					require.NoError(t, err)
-					require.Equal(t, ConfirmedDir(tCase.cleanDir), cleanDir)
+					require.Equal(t, tCase.cleanDir, cleanDir.String())
 				})
 			}
 		})
@@ -112,27 +111,25 @@ func TestDemandDir(t *testing.T) {
 }
 
 func TestDemandDirErr(t *testing.T) {
-	for name, builder := range filesysBuilders {
+	for name := range filesysBuilders {
 		thisName := name
-		thisBldr := builder
 		t.Run(thisName, func(t *testing.T) {
-			req := require.New(t)
-			fSys, prefixPath, _ := setupFileSys(t, req, thisName, thisBldr)
+			fSys, prefixPath, _ := setupFileSys(t, thisName)
 
 			fPath := filepath.Join(prefixPath, "foo")
 			err := fSys.WriteFile(fPath, []byte(`foo`))
-			req.NoError(err)
-			req.Truef(fSys.Exists(fPath), existMsg, fPath)
+			require.NoError(t, err)
+			require.Truef(t, fSys.Exists(fPath), existMsg, fPath)
 
 			tests := map[string]string{
-				"Empty":          "",
-				"File":           fPath,
-				"Does not exist": filepath.Join(prefixPath, "bar"),
+				"Empty":        "",
+				"File":         fPath,
+				"Non-existent": filepath.Join(prefixPath, "bar"),
 			}
 			for subName, invalidPath := range tests {
-				path := invalidPath
+				invalid := invalidPath
 				t.Run(subName, func(t *testing.T) {
-					_, err := DemandDir(fSys, path)
+					_, err := DemandDir(fSys, invalid)
 					require.Error(t, err)
 				})
 			}

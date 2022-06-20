@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 const (
@@ -66,20 +66,20 @@ type FileSystem interface {
 	Walk(path string, walkFn filepath.WalkFunc) error
 }
 
-// DemandDir returns an error if path is not an existing directory on fSys.
+// DemandDir returns an error if the user-specified path is not an existing directory on fSys.
 // Otherwise, DemandDir returns path, which can be relative, as a ConfirmedDir and all that implies.
 func DemandDir(fSys FileSystem, path string) (ConfirmedDir, error) {
 	if path == "" {
-		return "", errors.New("directory path cannot be empty")
+		return "", errors.Errorf("directory path cannot be empty")
 	}
 
 	d, f, err := fSys.CleanedAbs(path)
 	if err != nil {
-		return "", errors.Wrapf(err, ErrNotDir.Error())
+		return "", errors.WrapPrefixf(err, ErrNotDir.Error())
 	}
 	if f != "" {
-		return "", errors.Wrapf(
-			errors.Wrapf(errors.New("file is not directory"), fmt.Sprintf("'%s'", path)),
+		return "", errors.WrapPrefixf(
+			errors.WrapPrefixf(errors.Errorf("file is not directory"), fmt.Sprintf("'%s'", path)),
 			ErrNotDir.Error())
 	}
 	return d, nil

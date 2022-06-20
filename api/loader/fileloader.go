@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -168,7 +168,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	}
 	root, err := filesys.DemandDir(fl.fSys, fl.root.Join(path))
 	if err != nil {
-		return nil, errors.Wrapf(err, ErrLdrDir.Error())
+		return nil, errors.WrapPrefixf(err, ErrLdrDir.Error())
 	}
 	if err = fl.errIfGitContainmentViolation(root); err != nil {
 		return nil, err
@@ -298,7 +298,7 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 		if resp.StatusCode < 200 || resp.StatusCode > 299 {
 			_, err := git.NewRepoSpecFromURL(path)
 			if err == nil {
-				return nil, errors.New("URL is a git repository")
+				return nil, errors.Errorf("URL is a git repository")
 			}
 			return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
