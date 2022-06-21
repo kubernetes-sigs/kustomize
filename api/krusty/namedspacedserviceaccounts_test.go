@@ -69,6 +69,9 @@ resources:
 `)
 
 	m := th.Run(".", th.MakeDefaultOptions())
+
+	// Everything is as expected: each CRB gets updated to reference the SA in the appropriate namespace
+	// Changing order in the root kustomization.yaml does not change the result, as expected
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
@@ -170,6 +173,9 @@ resources:
 `)
 
 	m := th.Run(".", th.MakeDefaultOptions())
+
+	// Unexpected result: crb-b's subject obtains the wrong namespace, having "namespace: a"
+	// If the order is swapped in the kustomization.yaml then it's crb-a that gets "namespace: b"
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: ServiceAccount
