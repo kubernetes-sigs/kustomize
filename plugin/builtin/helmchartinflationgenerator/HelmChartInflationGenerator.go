@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/a8m/envsubst/parse"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -225,6 +226,25 @@ func (p *HelmChartInflationGeneratorPlugin) cleanup() {
 	}
 }
 
+func (p *HelmChartInflationGeneratorPlugin) evaluateEnvs() (string, error) {
+	b, err := p.h.Loader().Load(p.ValuesFile)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read file: %w", err)
+	}
+
+	// Parse input string
+	parserMode := parse.AllErrors
+	restrictions := &parse.Restrictions{
+		NoUnset: true,
+		NoEmpty: true,
+	}
+	result, err := (&parse.Parser{Name: "string", Env: os.Environ(), Restrict: restrictions, Mode: parserMode}).Parse(string(b))
+	if err != nil {
+		return "", fmt.Errorf("Failed to parse input: %w", err)
+	}
+	return p.writeValuesBytes([]byte(result))
+}
+
 // Generate implements generator
 func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err error) {
 	defer p.cleanup()
@@ -248,6 +268,11 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 	if err != nil {
 		return nil, err
 	}
+	p.ValuesFile, err = p.evaluateEnvs()
+	if err != nil {
+		return nil, err
+	}
+
 	var stdout []byte
 	stdout, err = p.runHelmCommand(p.templateCommand())
 	if err != nil {
