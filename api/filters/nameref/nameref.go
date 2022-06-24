@@ -173,7 +173,8 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 		// Nil referral means nothing to do.
 		return err
 	}
-	f.recordTheReferral(referral)
+	//Remove this as refBy field is removed
+	//f.recordTheReferral(referral)
 	if referral.GetName() == node.YNode().Value {
 		// The name has not changed, nothing to do.
 		return nil
