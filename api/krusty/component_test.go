@@ -11,7 +11,6 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type FileGen func(kusttest_test.Harness)
@@ -552,9 +551,8 @@ components:
 - ../comp
 `),
 			},
-			runPath: "filesincomponents",
-			expectedError: fmt.Sprintf("%s: %s: '%s'", loader.ErrLdrDir.Error(), filesys.ErrNotDir.Error(),
-				"/filesincomponents/stub.yaml"),
+			runPath:       "filesincomponents",
+			expectedError: fmt.Sprintf("%s: '%s'", loader.ErrRtNotDir.Error(), "/filesincomponents/stub.yaml"),
 		},
 		"invalid-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,

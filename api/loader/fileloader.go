@@ -123,7 +123,7 @@ func (fl *fileLoader) Root() string {
 func newLoaderOrDie(
 	lr LoadRestrictorFunc,
 	fSys filesys.FileSystem, path string) *fileLoader {
-	root, err := filesys.DemandDir(fSys, path)
+	root, err := filesys.ConfirmDir(fSys, path)
 	if err != nil {
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
@@ -150,7 +150,7 @@ func newLoaderAtConfirmedDir(
 // or rooted in a temp directory holding a git repo clone.
 func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
-		return nil, fmt.Errorf("new root cannot be empty")
+		return nil, errors.Errorf("new root cannot be empty")
 	}
 
 	repoSpec, err := git.NewRepoSpecFromURL(path)
@@ -166,9 +166,9 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	root, err := filesys.DemandDir(fl.fSys, fl.root.Join(path))
+	root, err := filesys.ConfirmDir(fl.fSys, fl.root.Join(path))
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, ErrLdrDir.Error())
+		return nil, errors.WrapPrefixf(err, ErrRtNotDir.Error())
 	}
 	if err = fl.errIfGitContainmentViolation(root); err != nil {
 		return nil, err

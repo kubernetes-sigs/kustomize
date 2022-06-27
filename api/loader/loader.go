@@ -26,9 +26,9 @@ func NewLoader(
 		return newLoaderAtGitClone(
 			repoSpec, fSys, nil, git.ClonerUsingGitExec)
 	}
-	root, err := filesys.DemandDir(fSys, target)
+	root, err := filesys.ConfirmDir(fSys, target)
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, ErrLdrDir.Error())
+		return nil, errors.WrapPrefixf(err, ErrRtNotDir.Error())
 	}
 	return newLoaderAtConfirmedDir(
 		lr, root, fSys, nil, git.ClonerUsingGitExec), nil

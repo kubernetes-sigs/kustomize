@@ -69,11 +69,11 @@ func setupFileSys(t *testing.T, name string) (FileSystem, string, string) {
 	}
 }
 
-func TestDemandDir(t *testing.T) {
+func TestConfirmDir(t *testing.T) {
 	for name := range filesysBuilders {
-		thisName := name
-		t.Run(thisName, func(t *testing.T) {
-			fSys, prefixPath, wd := setupFileSys(t, thisName)
+		name := name
+		t.Run(name, func(t *testing.T) {
+			fSys, prefixPath, wd := setupFileSys(t, name)
 
 			d1Path := filepath.Join(prefixPath, "d1")
 			d2Path := filepath.Join(d1Path, ".d2")
@@ -99,18 +99,18 @@ func TestDemandDir(t *testing.T) {
 				},
 			}
 			for subName, test := range tests {
-				tCase := test
+				test := test
 				t.Run(subName, func(t *testing.T) {
-					cleanDir, err := DemandDir(fSys, tCase.dir)
+					cleanDir, err := ConfirmDir(fSys, test.dir)
 					require.NoError(t, err)
-					require.Equal(t, tCase.cleanDir, cleanDir.String())
+					require.Equal(t, test.cleanDir, cleanDir.String())
 				})
 			}
 		})
 	}
 }
 
-func TestDemandDirErr(t *testing.T) {
+func TestConfirmDirErr(t *testing.T) {
 	for name := range filesysBuilders {
 		thisName := name
 		t.Run(thisName, func(t *testing.T) {
@@ -127,9 +127,9 @@ func TestDemandDirErr(t *testing.T) {
 				"Non-existent": filepath.Join(prefixPath, "bar"),
 			}
 			for subName, invalidPath := range tests {
-				invalid := invalidPath
+				invalidPath := invalidPath
 				t.Run(subName, func(t *testing.T) {
-					_, err := DemandDir(fSys, invalid)
+					_, err := ConfirmDir(fSys, invalidPath)
 					require.Error(t, err)
 				})
 			}

@@ -3,9 +3,9 @@
 
 package loader
 
-import "fmt"
+import "sigs.k8s.io/kustomize/kyaml/errors"
 
 var (
-	ErrHTTP   = fmt.Errorf("HTTP Error")
-	ErrLdrDir = fmt.Errorf("can only create loader at directory")
+	ErrHTTP     = errors.Errorf("HTTP Error")
+	ErrRtNotDir = errors.Errorf("must build at directory")
 )

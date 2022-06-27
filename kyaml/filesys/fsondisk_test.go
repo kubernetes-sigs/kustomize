@@ -104,7 +104,7 @@ func TestCleanedAbs_4(t *testing.T) {
 	req.Equal("bar", f)
 }
 
-func TestDemandDirDisk(t *testing.T) {
+func TestConfirmDirDisk(t *testing.T) {
 	req := require.New(t)
 	fSys, testDir := makeTestDir(t)
 	wd := cleanWd(t)
@@ -142,11 +142,11 @@ func TestDemandDirDisk(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		tCase := test
+		test := test
 		t.Run(name, func(t *testing.T) {
-			actualPath, err := DemandDir(fSys, tCase.path)
+			actualPath, err := ConfirmDir(fSys, test.path)
 			require.NoError(t, err)
-			require.Equal(t, tCase.cleanPath, actualPath.String())
+			require.Equal(t, test.cleanPath, actualPath.String())
 		})
 	}
 }

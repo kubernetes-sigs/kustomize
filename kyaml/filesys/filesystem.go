@@ -66,21 +66,19 @@ type FileSystem interface {
 	Walk(path string, walkFn filepath.WalkFunc) error
 }
 
-// DemandDir returns an error if the user-specified path is not an existing directory on fSys.
-// Otherwise, DemandDir returns path, which can be relative, as a ConfirmedDir and all that implies.
-func DemandDir(fSys FileSystem, path string) (ConfirmedDir, error) {
+// ConfirmDir returns an error if the user-specified path is not an existing directory on fSys.
+// Otherwise, ConfirmDir returns path, which can be relative, as a ConfirmedDir and all that implies.
+func ConfirmDir(fSys FileSystem, path string) (ConfirmedDir, error) {
 	if path == "" {
 		return "", errors.Errorf("directory path cannot be empty")
 	}
 
 	d, f, err := fSys.CleanedAbs(path)
 	if err != nil {
-		return "", errors.WrapPrefixf(err, ErrNotDir.Error())
+		return "", errors.WrapPrefixf(err, "not a valid directory")
 	}
 	if f != "" {
-		return "", errors.WrapPrefixf(
-			errors.WrapPrefixf(errors.Errorf("file is not directory"), fmt.Sprintf("'%s'", path)),
-			ErrNotDir.Error())
+		return "", errors.WrapPrefixf(errors.Errorf("file is not directory"), fmt.Sprintf("'%s'", path))
 	}
 	return d, nil
 }

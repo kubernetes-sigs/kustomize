@@ -842,14 +842,14 @@ func TestCleanedAbs(t *testing.T) {
 	}
 }
 
-func TestDemandDirMemRoot(t *testing.T) {
+func TestConfirmDirMemRoot(t *testing.T) {
 	fSys := MakeFsInMemory()
-	actual, err := DemandDir(fSys, Separator)
+	actual, err := ConfirmDir(fSys, Separator)
 	require.NoError(t, err)
 	require.Equal(t, Separator, actual.String())
 }
 
-func TestDemandDirRelativeNode(t *testing.T) {
+func TestConfirmDirRelativeNode(t *testing.T) {
 	req := require.New(t)
 	fSysEmpty := MakeEmptyDirInMemory()
 
@@ -863,7 +863,7 @@ func TestDemandDirRelativeNode(t *testing.T) {
 	expected := filepath.Join("a", "b", "c")
 	req.Truef(fSysEmpty.Exists(expected), existMsg, expected)
 
-	actual, err := DemandDir(fSysSub, "c")
+	actual, err := ConfirmDir(fSysSub, "c")
 	req.NoError(err)
 	req.Equal(expected, actual.String())
 }
