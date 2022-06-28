@@ -2,4 +2,7 @@ module sigs.k8s.io/kustomize/cmd/gorepomod
 
 go 1.16
 
-require golang.org/x/mod v0.3.0
+require (
+	golang.org/x/mod v0.4.2
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+)

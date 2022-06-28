@@ -2,6 +2,12 @@ go 1.18
 
 use (
 	./api
+	./cmd/config
+	./cmd/depprobcheck
+	./cmd/gorepomod
+	./cmd/k8scopy
+	./cmd/mdtogo
+	./cmd/pluginator
 	./kustomize
 	./kyaml
 )
