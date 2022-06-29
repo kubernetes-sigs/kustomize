@@ -6,9 +6,12 @@
 
 package filesys
 
-import "testing"
+import (
+	"path/filepath"
+	"testing"
+)
 
 func getOSRoot(t *testing.T) string {
 	t.Helper()
-	return "/"
+	return string(filepath.Separator)
 }

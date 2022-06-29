@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const dirMsg = "Expected '%s' to be a dir \n"
+const dirMsg = "expected '%s' to be a dir"
 
 func makeTestDir(t *testing.T) (FileSystem, string) {
 	t.Helper()
@@ -111,12 +111,12 @@ func TestConfirmDirDisk(t *testing.T) {
 
 	relDir := "actual_foo_431432"
 	err := fSys.Mkdir(relDir)
-	req.NoError(err)
-	req.Truef(fSys.Exists(relDir), existMsg, relDir)
 	t.Cleanup(func() {
 		err := fSys.RemoveAll(relDir)
 		req.NoError(err)
 	})
+	req.NoError(err)
+	req.Truef(fSys.Exists(relDir), existMsg, relDir)
 
 	linkDir := filepath.Join(testDir, "pointer")
 	err = os.Symlink(filepath.Join(wd, relDir), linkDir)
@@ -124,8 +124,8 @@ func TestConfirmDirDisk(t *testing.T) {
 
 	root := getOSRoot(t)
 	tests := map[string]*struct {
-		path      string
-		cleanPath string
+		path     string
+		expected string
 	}{
 		"root": {
 			root,
@@ -146,7 +146,7 @@ func TestConfirmDirDisk(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actualPath, err := ConfirmDir(fSys, test.path)
 			require.NoError(t, err)
-			require.Equal(t, test.cleanPath, actualPath.String())
+			require.Equal(t, test.expected, actualPath.String())
 		})
 	}
 }

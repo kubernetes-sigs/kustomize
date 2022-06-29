@@ -18,7 +18,7 @@ const (
 	memoryAbs   = "MakeFsInMemory"
 	memoryEmpty = "MakeEmptyDirInMemory"
 
-	existMsg = "Expected '%s' to exist \n"
+	existMsg = "expected '%s' to exist"
 )
 
 var filesysBuilders = map[string]func() FileSystem{
@@ -63,9 +63,11 @@ func setupFileSys(t *testing.T, name string) (FileSystem, string, string) {
 		return fSys, testDir, cleanWd(t)
 	case memoryAbs:
 		return filesysBuilders[name](), Separator, Separator
-	default:
-		require.Equal(t, memoryEmpty, name)
+	case memoryEmpty:
 		return filesysBuilders[name](), "", ""
+	default:
+		t.Fatalf("unexpected FileSystem implementation '%s'", name)
+		panic("unreachable point of execution")
 	}
 }
 
@@ -83,7 +85,7 @@ func TestConfirmDir(t *testing.T) {
 
 			tests := map[string]*struct {
 				dir      string
-				cleanDir string
+				expected string
 			}{
 				"Simple": {
 					d1Path,
@@ -103,7 +105,7 @@ func TestConfirmDir(t *testing.T) {
 				t.Run(subName, func(t *testing.T) {
 					cleanDir, err := ConfirmDir(fSys, test.dir)
 					require.NoError(t, err)
-					require.Equal(t, test.cleanDir, cleanDir.String())
+					require.Equal(t, test.expected, cleanDir.String())
 				})
 			}
 		})
