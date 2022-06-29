@@ -41,8 +41,8 @@ in [issue #4154](https://github.com/kubernetes-sigs/kustomize/issues/4154).
 
 The proposed command has the added benefit of increasing user confidence in the integrity of their kustomization builds.
 Locally downloaded files, unlike urls, give users full control of file content. At the same time, the command does this
-without modifying the original kustomization so that users can always run the command on the original again to fetch
-upstream changes.
+while preserving the original kustomization, allowing users to further iterate on the original and to build and localize
+the iterations.
 
 **Goals:**
 
@@ -71,14 +71,17 @@ The command takes the following form:
 
 where the arguments are:
 
-* `target`: a directory with a top-level kustomization file that kustomize will localize; can be a path to a local
-  directory or a url to a remote directory
+* `target`: [kustomization root](https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization-root)
+  that kustomize will localize; can be local path
+  or [remote directory with `ref` parameter](https://github.com/kubernetes-sigs/kustomize/blob/master/examples/remoteBuild.md)
 * `newDir`: optional destination directory of the localized copy of `target`; if not specified, the destination is a
-  directory named `localized-{target}` in the working directory
+  directory in the working directory named 
+  * `localized-{target}` for local `target`
+  * `localized-{target}-{ref}` for remote `target`
 
 and the flags are:
-* `--scope scope`: optional root directory, files outside which kustomize is not allowed to copy and localize; if not
-  specified, takes on value of `target`
+* `--scope scope`: optional local directory, files outside which kustomize is not allowed to copy and localize; only 
+  applicable if `target` is local, and if not specified, `scope` takes on value of `target`
 * `--no-verify`: do not verify that the outputs of `kustomize build` for `target` and `newDir` are the same after
   localization
 
@@ -90,10 +93,9 @@ define the "files that `target` references" as:
 * exec binaries of referenced KRM functions
 
 Here, configuration file means a non-kustomization yaml file. The command cannot run on `target`s that need
-the `--load-restrictor LoadRestrictionsNone` flag for `kustomize build`. Additionally, the command only copies
-referenced files that reside inside `scope`. Note that for the localization to occur, `scope` must contain `target` and
-naturally if `target` is remote, `scope` should be as well. The copied files sit under the same relative paths
-in `newDir` as those that their counterparts sit under in `scope`.
+the `--load-restrictor LoadRestrictionsNone` flag for `kustomize build`. Additionally, note that for the localization to
+occur on a local `target`, `scope` must contain `target`. The copied files sit under the same relative paths in `newDir`
+that their counterparts sit under in `scope` and in the repo, for local and remote `target`s, respectively.
 
 The command localizes the copy of `target` in `newDir` by downloading all remote files that `target` references. For
 each downloaded exec binary that KRM functions reference, the command removes users' executable permissions and prints a
@@ -106,9 +108,9 @@ said files. Inside `localized-files`, the downloads are located on path:
 <ins>domain</ins> / <ins>organization</ins> / <ins>repo</ins> / <ins>version</ins> / <ins>path/to/file/in/repo</ins>
 </pre>
 
-where `version` corresponds to a [`git fetch` "ref"](https://git-scm.com/docs/git-fetch), found in the form of the `ref`
-query string parameter for directory urls and embedded in the path of raw GitHub file urls. Ideally though, `version` is
-a stable tag as opposed to a branch.
+where `version` corresponds to a [`git fetch ref`](https://git-scm.com/docs/git-fetch), the same entity that the command
+looks for in a remote `target`. `ref`s are query string parameters in directory urls and embedded in the path of raw 
+GitHub file urls. Ideally though, `ref`s are stable tags as opposed to branches.
 
 The command replaces remote references in `newDir` with local relative paths to the downloaded files. To help ensure
 that `newDir` is a clean copy, the command additionally overwrites absolute path references into `target` to point
@@ -126,14 +128,13 @@ reference KRM functions with a remote exec binary, the command suggests the user
 
 **Error cases**:
 
-* `target` does not have a top-level kustomization file
 * `kustomize build` needs `--load-restrictor LoadRestrictionsNone` to run on `target`
 * `newDir` already exists
+* `scope` specified for remote `target`
 * `scope` does not contain `target`
 * `target` references a local path that traverses outside of `scope`
-* remote reference does not have a `version`
+* remote url does not have a `version`
 * `localized-files` directory already exists
-* kustomization file is malformed
 * cycle of kustomization file references exists
 * `kustomize build` produces different output for `target` and `newDir` in the absence of `--no-verify`
 
@@ -149,8 +150,8 @@ running the command again.
 
 #### Story 1
 
-My company’s CI/CD pipeline currently pulls an `example` directory from our internal package management site. I want the
-CI/CD pipeline to additionally run `kustomize build example/overlay`. My setup looks like this:
+My company’s CI/CD pipeline currently fetches an `example` directory from our internal package management site. I want 
+the CI/CD pipeline to additionally run `kustomize build example/overlay`. My setup looks like this:
 ```shell
 └── example
     ├── overlay
@@ -204,6 +205,7 @@ SUCCESS: example/overlay, localized-overlay produce same kustomize build output
     │                           │   └── configMap.yaml
     │                           └── multibases
     │                               ├── base
+    │                               │   │── kustomization.yaml
     │                               │   └── pod.yaml
     │                               ├── dev
     │                               │   └── kustomization.yaml
@@ -237,8 +239,58 @@ resources:
 ```
 
 Now, I upload `localized-overlay` from my local setup to my company’s internal package management site. I change the
-commands in my CI/CD pipeline to pull `localized-overlay` before running `kustomize build localized-overlay`, and the
+commands in my CI/CD pipeline to fetch `localized-overlay` before running `kustomize build localized-overlay`, and the
 command executes successfully!
+
+#### Story 2
+
+Like in [Story 1](#story-1), I need kustomize to `localize` a
+root, "https://github.com/annasong20/kustomize-test.git?ref=1.0.0", so that my company's CI/CD pipeline can
+run `kustomize build` on it given network constraints. However, the difference this time is that I don't have a local
+copy of the target root. Fortunately for me, `kustomize localize` provides me the convenience of remote targets, so that
+I don't have to first run `git fetch`.
+
+On my local machine, I run `kustomize localize https://github.com/annasong20/kustomize-test.git?ref=1.0.0`, where the 
+url is my `target` and I once again accept the default `newDir`. Note that the `--scope` flag is not applicable here. I
+get the following output:
+
+```shell
+$ kustomize localize https://github.com/annasong20/kustomize-test.git?ref=1.0.0
+SUCCESS: https://github.com/annasong20/kustomize-test.git?ref=1.0.0, localized-kustomize-test-v1.0.0 produce same kustomize build output
+```
+
+```shell
+└── localized-kustomize-test-v1.0.0
+    ├── kustomization.yaml
+    └── localized-files
+        └── github.com
+            └── kubernetes-sigs
+                └── kustomize
+                    └── v1.0.6
+                        └── examples
+                            └── multibases
+                                ├── base
+                                │   │── kustomization.yaml
+                                │   └── pod.yaml
+                                ├── dev
+                                │   └── kustomization.yaml
+                                ├── kustomization.yaml
+                                ├── production
+                                │   └── kustomization.yaml
+                                └── staging
+                                    └── kustomization.yaml
+```
+
+```shell
+# localized-kustomize-test-v1.0.0/kustomization.yaml
+resources:
+  - localized-files/github.com/kubernetes-sigs/kustomize/v1.0.6/examples/multibases
+```
+
+Once again, I upload `localized-kustomize-test-v1.0.0` from my local machine to the internal package management site and
+program the CI/CD pipeline to fetch `localized-kustomize-test-v1.0.0` before 
+running `kustomize build localized-kustomize-test-v1.0.0`! Note that the pipeline can also run `kustomize build` on the 
+url for my upload of `localized-kustomize-test-v1.0.0` to avoid explicitly calling `git fetch` beforehand.
 
 ### Risks and Mitigations
 
@@ -256,11 +308,13 @@ risk by removing executable permissions on these downloaded exec binaries and wa
 permissions.
 
 Still another risk may be that if a user's kustomization tree is large, `kustomize localize` has the potential to copy
-files from unexpected locations. The command mitigates this risk with the `scope` flag. If the user specifies `scope`,
-they understand that `kustomize localize` only copies files in `scope`. Otherwise, `kustomize localize` treats `target`
-as `scope`. In either case, `kustomize localize` aborts with a descriptive error message if `target` references local
-files outside of `scope` that the command would copy. The qualification that the command can only localize `target`s
-that follow load restrictions helps mitigate this risk as well.
+files from unexpected local locations. The command mitigates this risk with the `scope` flag. If the user 
+specifies `scope`, they understand that `kustomize localize` only copies files in `scope`. 
+Otherwise, `kustomize localize` treats `target` as `scope`. In either case, `kustomize localize` aborts with a 
+descriptive error message if `target` references local files outside of `scope` that the command would copy. Note that 
+for remote `target` and recursively referenced remote kustomization roots, the repo in which the remote root resides 
+is the implicit `scope`. The qualification that the command can only localize `target`s that follow load restrictions 
+helps mitigate this risk as well.
 
 ### Dependencies
 
@@ -279,10 +333,9 @@ different potential `target` directories cannot share copies either.
 
 ## Drawbacks
 
-Users whose layered kustomizations form a complex directory tree structure may have a hard time finding an
-appropriate `scope`. However, many kustomizations exist in repositories, allowing the user to easily choose the repo
-root as a valid `scope`. The error messages that `kustomize localize` outputs for reference paths that extend
-beyond `scope` should also help.
+Users whose layered local kustomizations form a complex directory tree structure may have a hard time finding an
+appropriate `scope`. However, the error messages that `kustomize localize` outputs for reference paths that extend
+beyond `scope` should help.
 
 ## Alternatives
 
@@ -302,10 +355,10 @@ beyond `scope` should also help.
   undo the command, which is undesirable. <br></br>
 
 * Instead of requiring the user to specify a second argument `scope`, the command could by definition limit its copying
-  to `target`. However, in the case of **Story 1**, the command would force the user to set `target` to `example` in
-  order to include `example/base` in the localization of `example/overlay`. The user would then have to create a
-  kustomization file at `example` that points to `example/overlay` under the `resources` field. The creation of the
-  kustomization file solely for this purpose is messy and more work for the user.
+  to the local `target`. However, in the case of [Story 1](#story-1), the command would force the user to set `target`
+  to `example` in order to include `example/base` in the localization of `example/overlay`. The user would then have to
+  create a kustomization file at `example` that points to `example/overlay` under the `resources` field. The creation of
+  the kustomization file solely for this purpose is messy and more work for the user.
 
 ## Rollout Plan
 
