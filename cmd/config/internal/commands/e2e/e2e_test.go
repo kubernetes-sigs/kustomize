@@ -335,72 +335,72 @@ metadata:
 		//
 		// Container
 		//
-		{
-			name:           "container_function_no_args",
-			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
-			args: func(d string) []string {
-				return []string{"--image", "gcr.io/kustomize-functions/e2econtainerconfig"}
-			},
-			files: func(d string) map[string]string {
-				return map[string]string{
-					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-`,
-				}
-			},
-			expectedFiles: func(d string) map[string]string {
-				return map[string]string{
-					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-  annotations:
-    a-string-value: ''
-    a-int-value: '0'
-    a-bool-value: 'false'
-`,
-				}
-			},
-		},
+		// 		{
+		// 			name:           "container_function_no_args",
+		// 			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
+		// 			args: func(d string) []string {
+		// 				return []string{"--image", "gcr.io/kustomize-functions/e2econtainerconfig"}
+		// 			},
+		// 			files: func(d string) map[string]string {
+		// 				return map[string]string{
+		// 					"deployment.yaml": `
+		// apiVersion: apps/v1
+		// kind: Deployment
+		// metadata:
+		//   name: foo
+		// `,
+		// 				}
+		// 			},
+		// 			expectedFiles: func(d string) map[string]string {
+		// 				return map[string]string{
+		// 					"deployment.yaml": `
+		// apiVersion: apps/v1
+		// kind: Deployment
+		// metadata:
+		//   name: foo
+		//   annotations:
+		//     a-string-value: ''
+		//     a-int-value: '0'
+		//     a-bool-value: 'false'
+		// `,
+		// 				}
+		// 			},
+		// 		},
 
-		{
-			name:           "container_function_args",
-			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
-			args: func(d string) []string {
-				return []string{
-					"--image", "gcr.io/kustomize-functions/e2econtainerconfig",
-					"--", "stringValue=a", "intValue=1", "boolValue=true",
-				}
-			},
-			files: func(d string) map[string]string {
-				return map[string]string{
-					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-`,
-				}
-			},
-			expectedFiles: func(d string) map[string]string {
-				return map[string]string{
-					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-  annotations:
-    a-string-value: 'a'
-    a-int-value: '1'
-    a-bool-value: 'true'
-`,
-				}
-			},
-		},
+		// 		{
+		// 			name:           "container_function_args",
+		// 			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
+		// 			args: func(d string) []string {
+		// 				return []string{
+		// 					"--image", "gcr.io/kustomize-functions/e2econtainerconfig",
+		// 					"--", "stringValue=a", "intValue=1", "boolValue=true",
+		// 				}
+		// 			},
+		// 			files: func(d string) map[string]string {
+		// 				return map[string]string{
+		// 					"deployment.yaml": `
+		// apiVersion: apps/v1
+		// kind: Deployment
+		// metadata:
+		//   name: foo
+		// `,
+		// 				}
+		// 			},
+		// 			expectedFiles: func(d string) map[string]string {
+		// 				return map[string]string{
+		// 					"deployment.yaml": `
+		// apiVersion: apps/v1
+		// kind: Deployment
+		// metadata:
+		//   name: foo
+		//   annotations:
+		//     a-string-value: 'a'
+		//     a-int-value: '1'
+		//     a-bool-value: 'true'
+		// `,
+		// 				}
+		// 			},
+		// 		},
 
 		{
 			name:           "container_function_config",
@@ -409,95 +409,127 @@ metadata:
 			files: func(d string) map[string]string {
 				return map[string]string{
 					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: "gcr.io/kustomize-functions/e2econtainerconfig"
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+# items are provided as nodes
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: foo
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: "gcr.io/kustomize-functions/e2econtainerconfig
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: foo
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: "gcr.io/kustomize-functions/e2econtainerconfig
+functionConfig:
+  apiVersion: v1
+  kind: ConfigMap
+  data:
+    value: baz
 `,
 				}
 			},
 			expectedFiles: func(d string) map[string]string {
 				return map[string]string{
 					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: "gcr.io/kustomize-functions/e2econtainerconfig"
-    a-string-value: ''
-    a-int-value: '0'
-    a-bool-value: 'false'
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: foo
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: "gcr.io/kustomize-functions/e2econtainerconfig
+      value: 'baz'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: foo
+    annotations:
+      config.kubernetes.io/function: |
+        container:
+          image: "gcr.io/kustomize-functions/e2econtainerconfig
+      value: 'baz'
+functionConfig:
+  apiVersion: v1
+  kind: ConfigMap
+  data:
+    value: baz
 `}
 			},
 		},
 
-		{
-			name:           "container_function_config",
-			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
-			args:           func(d string) []string { return []string{} },
-			files: func(d string) map[string]string {
-				return map[string]string{
-					"config.yaml": `
-apiVersion: example.com/v1alpha1
-kind: Input
-metadata:
-  name: foo
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: "gcr.io/kustomize-functions/e2econtainerconfig"
-data:
-  stringValue: a
-  intValue: 2
-  boolValue: true
-`,
-					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-`,
-				}
-			},
-			expectedFiles: func(d string) map[string]string {
-				return map[string]string{
-					"config.yaml": `
-apiVersion: example.com/v1alpha1
-kind: Input
-metadata:
-  name: foo
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: "gcr.io/kustomize-functions/e2econtainerconfig"
-    a-string-value: 'a'
-    a-int-value: '2'
-    a-bool-value: 'true'
-data:
-  stringValue: a
-  intValue: 2
-  boolValue: true
-`,
-					"deployment.yaml": `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-  annotations:
-    a-string-value: 'a'
-    a-int-value: '2'
-    a-bool-value: 'true'
-`,
-				}
-			},
-		},
+		// 		{
+		// 			name:           "container_function_config",
+		// 			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
+		// 			args:           func(d string) []string { return []string{} },
+		// 			files: func(d string) map[string]string {
+		// 				return map[string]string{
+		// 					"config.yaml": `
+		// apiVersion: example.com/v1alpha1
+		// kind: Input
+		// metadata:
+		//   name: foo
+		//   annotations:
+		//     config.kubernetes.io/function: |
+		//       container:
+		//         image: "gcr.io/kustomize-functions/e2econtainerconfig"
+		// data:
+		//   stringValue: a
+		//   intValue: 2
+		//   boolValue: true
+		// `,
+		// 					"deployment.yaml": `
+		// apiVersion: apps/v1
+		// kind: Deployment
+		// metadata:
+		//   name: foo
+		// `,
+		// 				}
+		// 			},
+		// 			expectedFiles: func(d string) map[string]string {
+		// 				return map[string]string{
+		// 					"config.yaml": `
+		// apiVersion: example.com/v1alpha1
+		// kind: Input
+		// metadata:
+		//   name: foo
+		//   annotations:
+		//     config.kubernetes.io/function: |
+		//       container:
+		//         image: "gcr.io/kustomize-functions/e2econtainerconfig"
+		//     a-string-value: 'a'
+		//     a-int-value: '2'
+		//     a-bool-value: 'true'
+		// data:
+		//   stringValue: a
+		//   intValue: 2
+		//   boolValue: true
+		// `,
+		// 					"deployment.yaml": `
+		// apiVersion: apps/v1
+		// kind: Deployment
+		// metadata:
+		//   name: foo
+		//   annotations:
+		//     a-string-value: 'a'
+		//     a-int-value: '2'
+		//     a-bool-value: 'true'
+		// `,
+		// 				}
+		// 			},
+		// 		},
 
 		{
 			name: "starlark_function_config",
