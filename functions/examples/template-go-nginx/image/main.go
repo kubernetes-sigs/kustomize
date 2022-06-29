@@ -4,15 +4,13 @@
 package main
 
 import (
-	"bytes"
 	"os"
 	"strconv"
-	"text/template"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
 )
 
 // define the input API schema as a struct
@@ -30,55 +28,22 @@ type API struct {
 }
 
 func main() {
-	functionConfig := &API{}
-	resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
+	api := new(API)
 
-	cmd := framework.Command(resourceList, func() error {
-		// initialize API defaults
-		if err := initAPI(functionConfig); err != nil {
-			return err
-		}
+	// create the template
+	fn := framework.TemplateProcessor{
+		// Templates input
+		TemplateData: api,
+		// Templates
+		ResourceTemplates: []framework.ResourceTemplate{
+			{
+				Templates: parser.TemplateStrings(serviceTemplate + "---\n" + deploymentTemplate),
+			},
+		},
+	}
 
-		// execute the service template
-		buff := &bytes.Buffer{}
-		t := template.Must(template.New("nginx-service").Parse(serviceTemplate))
-		if err := t.Execute(buff, functionConfig); err != nil {
-			return err
-		}
-		s, err := yaml.Parse(buff.String())
-		if err != nil {
-			return err
-		}
-
-		// execute the deployment template
-		buff = &bytes.Buffer{}
-		t = template.Must(template.New("nginx-deployment").Parse(deploymentTemplate))
-		if err := t.Execute(buff, functionConfig); err != nil {
-			return err
-		}
-		d, err := yaml.Parse(buff.String())
-		if err != nil {
-			return err
-		}
-
-		// add the template generated Resources to the output -- these will get merged by the next
-		// filter
-		resourceList.Items = append(resourceList.Items, s, d)
-
-		// merge the new copies with the old copies of each resource
-		resourceList.Items, err = filters.MergeFilter{}.Filter(resourceList.Items)
-		if err != nil {
-			return err
-		}
-
-		// apply formatting
-		resourceList.Items, err = filters.FormatFilter{}.Filter(resourceList.Items)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
+	cmd := command.Build(fn, command.StandaloneDisabled, false)
+	command.AddGenerateDockerfile(cmd)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
