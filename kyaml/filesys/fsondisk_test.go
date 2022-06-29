@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"sort"
 	"testing"
 
@@ -41,18 +40,6 @@ func cleanWd(t *testing.T) string {
 	require.NoError(t, err)
 
 	return cleanedWd
-}
-
-func getOSRoot(t *testing.T) string {
-	t.Helper()
-
-	switch runtime.GOOS {
-	case "windows":
-		wd := cleanWd(t)
-		return filepath.VolumeName(wd) + `\`
-	default:
-		return "/"
-	}
 }
 
 func TestCleanedAbs_1(t *testing.T) {
