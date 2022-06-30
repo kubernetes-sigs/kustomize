@@ -323,7 +323,7 @@ func TestRemoteResourceWithHttpError(t *testing.T) {
 
 	_, err := b.Run(fSys, tmpDir.String())
 
-	httpErr := fmt.Errorf("%w: status code %d (%s)", loader.ErrorHTTP, 404, http.StatusText(404))
+	httpErr := fmt.Errorf("%w: status code %d (%s)", loader.ErrHTTP, 404, http.StatusText(404))
 	accuFromErr := fmt.Errorf("accumulating resources from '%s': %w", url404, httpErr)
 	expectedErr := fmt.Errorf("accumulating resources: %w", accuFromErr)
 	req.EqualErrorf(err, expectedErr.Error(), url404)

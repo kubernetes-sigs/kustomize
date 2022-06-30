@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/loader"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -551,7 +552,7 @@ components:
 `),
 			},
 			runPath:       "filesincomponents",
-			expectedError: "'/filesincomponents/stub.yaml' must be a directory so that it can used as a build root",
+			expectedError: fmt.Sprintf("%s: '%s'", loader.ErrRtNotDir.Error(), "/filesincomponents/stub.yaml"),
 		},
 		"invalid-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,

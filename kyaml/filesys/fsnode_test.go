@@ -16,6 +16,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 const content = `
@@ -838,6 +840,32 @@ func TestCleanedAbs(t *testing.T) {
 			t.Fatalf("%s; expected name=%s, got '%s'", item.what, item.name, name)
 		}
 	}
+}
+
+func TestConfirmDirMemRoot(t *testing.T) {
+	fSys := MakeFsInMemory()
+	actual, err := ConfirmDir(fSys, Separator)
+	require.NoError(t, err)
+	require.Equal(t, Separator, actual.String())
+}
+
+func TestConfirmDirRelativeNode(t *testing.T) {
+	req := require.New(t)
+	fSysEmpty := MakeEmptyDirInMemory()
+
+	fSysRoot, err := fSysEmpty.AddDir("a")
+	req.NoError(err)
+	fSysSub, err := fSysRoot.AddDir("b")
+	req.NoError(err)
+	err = fSysSub.Mkdir("c")
+	req.NoError(err)
+
+	expected := filepath.Join("a", "b", "c")
+	req.Truef(fSysEmpty.Exists(expected), existMsg, expected)
+
+	actual, err := ConfirmDir(fSysSub, "c")
+	req.NoError(err)
+	req.Equal(expected, actual.String())
 }
 
 func TestFileOps(t *testing.T) {
