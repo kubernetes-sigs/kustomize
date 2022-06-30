@@ -1,0 +1,11 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-deployment
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: localize-test-deployment-simple
+  minReplicas: 1
+  maxReplicas: 10
