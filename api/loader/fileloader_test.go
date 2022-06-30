@@ -15,7 +15,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -408,11 +407,8 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot + "/foo/base")
 
-	root, err := demandDirectoryRoot(fSys, topDir)
-	require.NoError(err)
-
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	require.Equal(topDir, l1.Root())
 
@@ -430,11 +426,8 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
-	root, err := demandDirectoryRoot(fSys, topDir)
-	require.NoError(err)
-
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromURL(p1)
@@ -455,11 +448,8 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
-	root, err := demandDirectoryRoot(fSys, topDir)
-	require.NoError(err)
-
 	l0 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 
 	p1 := "github.com/someOrg/someRepo1"

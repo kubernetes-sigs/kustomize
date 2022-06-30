@@ -407,7 +407,7 @@ func (kt *KustTarget) accumulateResources(
 		// try loading resource as file then as base (directory or git repository)
 		if errF := kt.accumulateFile(ra, path); errF != nil {
 			// not much we can do if the error is an HTTP error so we bail out
-			if errors.Is(errF, load.ErrorHTTP) {
+			if errors.Is(errF, load.ErrHTTP) {
 				return nil, errF
 			}
 			ldr, err := kt.ldr.New(path)

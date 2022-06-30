@@ -7,6 +7,7 @@ package loader
 import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -25,9 +26,9 @@ func NewLoader(
 		return newLoaderAtGitClone(
 			repoSpec, fSys, nil, git.ClonerUsingGitExec)
 	}
-	root, err := demandDirectoryRoot(fSys, target)
+	root, err := filesys.ConfirmDir(fSys, target)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapPrefixf(err, ErrRtNotDir.Error())
 	}
 	return newLoaderAtConfirmedDir(
 		lr, root, fSys, nil, git.ClonerUsingGitExec), nil
