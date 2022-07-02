@@ -14,6 +14,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/xlab/treeprint v1.1.0
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
+	golang.org/x/sys v0.0.0-20210510120138-977fb7262007
+	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
 	gopkg.in/yaml.v2 v2.4.0
