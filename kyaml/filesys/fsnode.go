@@ -14,7 +14,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 var _ File = &fsNode{}
@@ -232,7 +232,7 @@ func (n *fsNode) AddDir(path string) (result *fsNode, err error) {
 func (n *fsNode) CleanedAbs(path string) (ConfirmedDir, string, error) {
 	node, err := n.Find(path)
 	if err != nil {
-		return "", "", errors.Wrap(err, "unable to clean")
+		return "", "", errors.WrapPrefixf(err, "unable to clean")
 	}
 	if node == nil {
 		return "", "", notExistError(path)
