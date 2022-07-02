@@ -8,30 +8,52 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func main() {
-	var config struct {
-		// Data contains the items
-		Data map[string]string `yaml:"data"`
-	}
+// Data contains the items
+type Data struct {
+	StringValue string `yaml:"stringValue,omitempty"`
 
-	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-		for i := range items {
-			// set the annotation on each resource item
-			if err := items[i].PipeE(yaml.SetAnnotation("value", config.Data["value"])); err != nil {
-				return nil, fmt.Errorf("%w", err)
+	IntValue int `yaml:"intValue,omitempty"`
+
+	BoolValue bool `yaml:"boolValue,omitempty"`
+}
+
+// Example defines the ResourceList.functionConfig schema.
+type Example struct {
+	// Data contains configuration data for the Example
+	// Nest values under Data so that the function can accept a ConfigMap as its
+	// functionConfig (`run` generates a ConfigMap for the functionConfig when run with --)
+	// e.g. `config run DIR/ --image my-image -- a-string-value=foo` will create the input
+	// with ResourceList.functionConfig.data.a-string-value=foo
+	Data Data `yaml:"data,omitempty"`
+}
+
+func main() {
+	functionConfig := &Example{}
+	resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
+
+	cmd := framework.Command(resourceList, func() error {
+		for i := range resourceList.Items {
+			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a-string-value",
+				functionConfig.Data.StringValue)); err != nil {
+				return err
+			}
+
+			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a-int-value",
+				fmt.Sprintf("%v", functionConfig.Data.IntValue))); err != nil {
+				return err
+			}
+
+			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("a-bool-value",
+				fmt.Sprintf("%v", functionConfig.Data.BoolValue))); err != nil {
+				return err
 			}
 		}
-		return items, nil
-	}
+		return nil
+	})
 
-	p := framework.SimpleProcessor{Config: config, Filter: kio.FilterFunc(fn)}
-	cmd := command.Build(p, command.StandaloneDisabled, false)
-	command.AddGenerateDockerfile(cmd)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
