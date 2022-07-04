@@ -3,7 +3,7 @@ go 1.18
 use (
 	./api
 	./cmd/config
-	// ./cmd/config/internal/commands/e2e/e2econtainerconfig
+	./cmd/config/internal/commands/e2e/e2econtainerconfig
 	./cmd/depprobcheck
 	./cmd/gorepomod
 	./cmd/k8scopy
