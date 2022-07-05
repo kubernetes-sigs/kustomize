@@ -408,6 +408,42 @@ metadata:
 			args:           func(d string) []string { return []string{} },
 			files: func(d string) map[string]string {
 				return map[string]string{
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
+`,
+				}
+			},
+			expectedFiles: func(d string) map[string]string {
+				return map[string]string{
+					"deployment.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
+    a-string-value: ''
+    a-int-value: '0'
+    a-bool-value: 'false'
+`}
+			},
+		},
+
+		{
+			name:           "container_function_config",
+			skipIfFalseEnv: "KUSTOMIZE_DOCKER_E2E",
+			args:           func(d string) []string { return []string{} },
+			files: func(d string) map[string]string {
+				return map[string]string{
 					"config.yaml": `
 apiVersion: example.com/v1alpha1
 kind: Input
