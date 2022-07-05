@@ -102,22 +102,22 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 	return n, nil
 }
 
-func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.TargetSelector) ([]*yaml.RNode, error) {
-	for _, t := range targets {
-		if t.Select == nil {
+func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []*types.TargetSelector) ([]*yaml.RNode, error) {
+	for _, selector := range targetSelectors {
+		if selector.Select == nil {
 			return nil, errors.New("target must specify resources to select")
 		}
-		if len(t.FieldPaths) == 0 {
-			t.FieldPaths = []string{types.DefaultReplacementFieldPath}
+		if len(selector.FieldPaths) == 0 {
+			selector.FieldPaths = []string{types.DefaultReplacementFieldPath}
 		}
-		for _, n := range nodes {
-			ids, err := utils.MakeResIds(n)
+		for _, possibleTarget := range nodes {
+			ids, err := utils.MakeResIds(possibleTarget)
 			if err != nil {
 				return nil, err
 			}
 
 			// filter targets by label and annotation selectors
-			selectByAnnoAndLabel, err := selectByAnnoAndLabel(n, t)
+			selectByAnnoAndLabel, err := selectByAnnoAndLabel(possibleTarget, selector)
 			if err != nil {
 				return nil, err
 			}
@@ -127,8 +127,8 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targets []*types.T
 
 			// filter targets by matching resource IDs
 			for i, id := range ids {
-				if id.IsSelectedBy(t.Select.ResId) && !rejectId(t.Reject, &ids[i]) {
-					err := copyValueToTargets(n, value, t)
+				if id.IsSelectedBy(selector.Select.ResId) && !rejectId(selector.Reject, &ids[i]) {
+					err := copyValueToTarget(possibleTarget, value, selector)
 					if err != nil {
 						return nil, err
 					}
@@ -177,41 +177,32 @@ func rejectId(rejects []*types.Selector, id *resid.ResId) bool {
 	return false
 }
 
-func copyValueToTargets(node *yaml.RNode, value *yaml.RNode, target *types.TargetSelector) error {
-	for _, fp := range target.FieldPaths {
+func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.TargetSelector) error {
+	for _, fp := range selector.FieldPaths {
 		fieldPath := kyaml_utils.SmarterPathSplitter(fp, ".")
-		create, err := shouldCreateNode(target.Options, fieldPath, node)
+		create, err := shouldCreateField(selector.Options, fieldPath, target)
 		if err != nil {
 			return err
 		}
 
-		var t *yaml.RNode
+		var targetFields []*yaml.RNode
 		if create {
-			t, err = node.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
-		} else {
-			t, err = node.Pipe(&yaml.PathMatcher{Path: fieldPath})
-		}
-		if err != nil {
-			return fmt.Errorf("error creating replacement node: %w", err)
-		}
-
-		if t == nil {
-			// we couldn't find the target fieldPath in this node
-			continue
-		}
-
-		var targetNodes []*yaml.RNode
-		switch len(t.YNode().Content) {
-		case 0:
-			targetNodes = append(targetNodes, t)
-		default:
-			for _, n := range t.YNode().Content {
-				targetNodes = append(targetNodes, yaml.NewRNode(n))
+			createdField, createErr := target.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
+			if createErr != nil {
+				return fmt.Errorf("error creating replacement node: %w", createErr)
 			}
+			targetFields = append(targetFields, createdField)
+		} else {
+			// may return multiple fields, always wrapped in a sequence node
+			foundFieldSequence, lookupErr := target.Pipe(&yaml.PathMatcher{Path: fieldPath})
+			if lookupErr != nil {
+				return errors.WrapPrefix(lookupErr, "error finding field in replacement target", 0)
+			}
+			targetFields, err = foundFieldSequence.Elements()
 		}
 
-		for _, t := range targetNodes {
-			if err := setTargetValue(target.Options, t, value); err != nil {
+		for _, t := range targetFields {
+			if err := setFieldValue(selector.Options, t, value); err != nil {
 				return err
 			}
 		}
@@ -220,13 +211,13 @@ func copyValueToTargets(node *yaml.RNode, value *yaml.RNode, target *types.Targe
 	return nil
 }
 
-func setTargetValue(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNode) error {
+func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
 	value = value.Copy()
 	if options != nil && options.Delimiter != "" {
-		if t.YNode().Kind != yaml.ScalarNode {
+		if targetField.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
 		}
-		tv := strings.Split(t.YNode().Value, options.Delimiter)
+		tv := strings.Split(targetField.YNode().Value, options.Delimiter)
 		v := yaml.GetValue(value)
 		// TODO: Add a way to remove an element
 		switch {
@@ -240,31 +231,25 @@ func setTargetValue(options *types.FieldOptions, t *yaml.RNode, value *yaml.RNod
 		value.YNode().Value = strings.Join(tv, options.Delimiter)
 	}
 
-	if t.YNode().Kind == yaml.ScalarNode {
+	if targetField.YNode().Kind == yaml.ScalarNode {
 		// For scalar, only copy the value (leave any type intact to auto-convert int->string or string->int)
-		t.YNode().Value = value.YNode().Value
+		targetField.YNode().Value = value.YNode().Value
 	} else {
-		t.SetYNode(value.YNode())
+		targetField.SetYNode(value.YNode())
 	}
 
 	return nil
 }
 
-func shouldCreateNode(options *types.FieldOptions, fieldPath []string, node *yaml.RNode) (bool, error) {
-	var create bool
-	if options != nil && options.Create {
-		// create option is not supported in a wildcard matching
-		for _, f := range fieldPath {
-			if f == "*" {
-				return false, errors.New("cannot support create option in a multi-value target")
-			}
-		}
-		// only create if the node does not already exist
-		found, err := node.Pipe(yaml.Lookup(fieldPath...))
-		if err != nil {
-			return false, errors.New(fmt.Sprintf("error looking up node: %s", err.Error()))
-		}
-		create = found == nil
+func shouldCreateField(options *types.FieldOptions, fieldPath []string, resource *yaml.RNode) (bool, error) {
+	if options == nil || !options.Create {
+		return false, nil
 	}
-	return create, nil
+	// create option is not supported in a wildcard matching
+	for _, f := range fieldPath {
+		if f == "*" {
+			return false, errors.New("cannot support create option in a multi-value target")
+		}
+	}
+	return true, nil
 }

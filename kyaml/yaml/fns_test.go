@@ -580,6 +580,31 @@ a: {}
 	assert.Equal(t, "h\n", assertNoErrorString(t)(rn.String()))
 }
 
+// Don't keep this test--it is probably redundant, but clearly shows the problem is not being caused by LookupCreate
+func TestLookupCreate_5(t *testing.T) {
+	doc := `
+spec:
+  template:
+    spec:
+      containers:
+      - name: a
+      - name: b
+      restartPolicy: Always
+`
+	node, err := Parse(doc)
+	assert.NoError(t, err)
+	rn, err := node.Pipe(
+		LookupCreate(yaml.MappingNode, "spec", "template", "spec"))
+
+	assert.NoError(t, err)
+	expected := `containers:
+- name: a
+- name: b
+restartPolicy: Always
+`
+	assert.Equal(t, expected, assertNoErrorString(t)(rn.String()))
+}
+
 func TestLookup_Fn_create_with_wildcard_error(t *testing.T) {
 	node, err := Parse(s)
 	assert.NoError(t, err)
