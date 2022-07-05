@@ -178,7 +178,7 @@ Create the `kustomization.yaml` files for our two overlays and move the files we
 
 ```bash
 mkdir -p base overlays/staging overlays/production
-mv -t base deployment.yaml kustomization.yaml service.yaml
+mv deployment.yaml kustomization.yaml service.yaml base
 
 
 cat <<'EOF' >overlays/staging/kustomization.yaml
