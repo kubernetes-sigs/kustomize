@@ -8,15 +8,27 @@ import (
 	"os"
 	"strconv"
 
-	corev1 "k8s.io/api/core/v1"
+	// corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// Config defines the ResourceList.functionConfig schema.
+type Config struct {
+	// Data contains configuration data for the Example
+	// Nest values under Data so that the function can accept a ConfigMap as its
+	// functionConfig (`run` generates a ConfigMap for the functionConfig when run with --)
+	// e.g. `config run DIR/ --image my-image -- a-string-value=foo` will create the input
+	// with ResourceList.functionConfig.data.a-string-value=foo
+	Data map[string]string `yaml:"data,omitempty"`
+}
+
 func main() {
-	config := &corev1.ConfigMap{}
+	// config is same structure to configMap.
+	// config := &corev1.ConfigMap{}
+	config := &Config{}
 
 	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
 		var newNodes []*yaml.RNode

@@ -348,7 +348,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
- `,
+`,
 				}
 			},
 			expectedFiles: func(d string) map[string]string {
@@ -362,7 +362,7 @@ metadata:
     a-string-value: ''
     a-int-value: '0'
     a-bool-value: 'false'
- `,
+`,
 				}
 			},
 		},
@@ -383,7 +383,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
- `,
+`,
 				}
 			},
 			expectedFiles: func(d string) map[string]string {
@@ -397,7 +397,7 @@ metadata:
     a-string-value: 'a'
     a-int-value: '1'
     a-bool-value: 'true'
- `,
+`,
 				}
 			},
 		},
@@ -457,13 +457,13 @@ data:
   stringValue: a
   intValue: 2
   boolValue: true
- `,
+`,
 					"deployment.yaml": `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-   name: foo
- `,
+  name: foo
+`,
 				}
 			},
 			expectedFiles: func(d string) map[string]string {
@@ -484,7 +484,7 @@ data:
   stringValue: a
   intValue: 2
   boolValue: true
- `,
+`,
 					"deployment.yaml": `
 apiVersion: apps/v1
 kind: Deployment
@@ -494,7 +494,7 @@ metadata:
     a-string-value: 'a'
     a-int-value: '2'
     a-bool-value: 'true'
- `,
+`,
 				}
 			},
 		},
