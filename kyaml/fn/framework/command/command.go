@@ -122,7 +122,7 @@ func AddGenerateDockerfile(cmd *cobra.Command) {
 		Use:  "gen [DIR]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return ioutil.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM golang:1.16-alpine as builder
+			if err := ioutil.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM golang:1.18-alpine as builder
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod go.sum ./
@@ -133,7 +133,10 @@ RUN go build -ldflags '-w -s' -v -o /usr/local/bin/function ./
 FROM alpine:latest
 COPY --from=builder /usr/local/bin/function /usr/local/bin/function
 ENTRYPOINT ["function"]
-`), 0600)
+`), 0600); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+			return nil
 		},
 	}
 	cmd.AddCommand(gen)
