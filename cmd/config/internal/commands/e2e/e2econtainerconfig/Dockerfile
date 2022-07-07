@@ -1,9 +1,15 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM golang:1.13-stretch
+FROM golang:1.18-stretch
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
+
+# download modules
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN go mod download
+
 COPY . .
 RUN go build -v -o /usr/local/bin/function ./
 
