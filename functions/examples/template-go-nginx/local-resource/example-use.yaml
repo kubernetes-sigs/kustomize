@@ -8,6 +8,6 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kustomize-functions/example-nginx:v0.2.0
+        image: gcr.io/kustomize-functions/example-nginx:v0.3.0
 spec:
   replicas: 4
