@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 
-	// corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -26,8 +25,6 @@ type Config struct {
 }
 
 func main() {
-	// config is same structure to configMap.
-	// config := &corev1.ConfigMap{}
 	config := &Config{}
 
 	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -37,11 +34,25 @@ func main() {
 			if err := items[i].PipeE(yaml.SetAnnotation("a-string-value", config.Data["stringValue"])); err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
-			intValue, _ := strconv.Atoi(config.Data["intValue"])
+			intValue, err := strconv.Atoi(config.Data["intValue"])
+			if config.Data["intValue"] == "" {
+				// default value
+				intValue = 0
+			} else if err != nil {
+				return nil, fmt.Errorf("intValue convert error: %w", err)
+
+			}
 			if err := items[i].PipeE(yaml.SetAnnotation("a-int-value", strconv.Itoa(intValue))); err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
-			boolValue, _ := strconv.ParseBool(config.Data["boolValue"])
+			boolValue, err := strconv.ParseBool(config.Data["boolValue"])
+			if config.Data["boolValue"] == "" {
+				// default value
+				boolValue = false
+			} else if err != nil {
+				return nil, fmt.Errorf("boolValue convert error: %w", err)
+
+			}
 			if err := items[i].PipeE(yaml.SetAnnotation("a-bool-value", strconv.FormatBool(boolValue))); err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
