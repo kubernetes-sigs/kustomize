@@ -41,7 +41,7 @@ func TestIgnoreFilesMatcher_readIgnoreFile(t *testing.T) {
 	fsMakers := map[string]func(bool) (string, filesys.FileSystem){
 		// onDisk creates a temp directory and returns a nil FileSystem, testing
 		// the normal conditions under which ignoreFileMatcher is used.
-		"onDisk": func(writeIgnoreFile bool) (string, filesys.FileSystem) { //nolint:unparam
+		"onDisk": func(writeIgnoreFile bool) (string, filesys.FileSystem) {
 			dir := t.TempDir()
 
 			if writeIgnoreFile {

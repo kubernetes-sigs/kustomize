@@ -85,7 +85,7 @@ func (c *Converter) Convert() error {
 }
 
 func (c *Converter) getDockerfile() string {
-	return `FROM golang:1.13-stretch
+	return `FROM golang:1.18-stretch
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY . .
