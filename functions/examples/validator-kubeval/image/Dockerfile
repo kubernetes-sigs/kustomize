@@ -5,7 +5,7 @@ FROM alpine:latest as schemas
 RUN apk --no-cache add git
 RUN git clone --depth 1 https://github.com/instrumenta/kubernetes-json-schema.git
 
-FROM golang:1.13-stretch as function
+FROM golang:1.18-stretch as function
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod .
