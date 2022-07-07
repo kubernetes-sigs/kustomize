@@ -2,53 +2,53 @@
 #   [\w/]+/v\d+\.\d+\.\d+
 #
 steps:
-- name: 'bash'
-  args:
-  - 'echo'
-  - 'Cloud build substitution check: '
-  - 'BUILD_ID=$BUILD_ID'
-  - 'PROJECT_ID=$PROJECT_ID'
-  - 'REVISION_ID=$REVISION_ID'
-  - 'REPO_NAME=$REPO_NAME'
-  - 'COMMIT_SHA=$COMMIT_SHA'
-  - 'BRANCH_NAME=$BRANCH_NAME'
-  - 'TAG_NAME=$TAG_NAME'
+  - name: "bash"
+    args:
+      - "echo"
+      - "Cloud build substitution check: "
+      - "BUILD_ID=$BUILD_ID"
+      - "PROJECT_ID=$PROJECT_ID"
+      - "REVISION_ID=$REVISION_ID"
+      - "REPO_NAME=$REPO_NAME"
+      - "COMMIT_SHA=$COMMIT_SHA"
+      - "BRANCH_NAME=$BRANCH_NAME"
+      - "TAG_NAME=$TAG_NAME"
 
-# Cloud build has already copied the repo at the tag that
-# that triggered the build to its /workspace directory, but
-# hasn't actually _cloned_ the repo (there's no .git directory).
-#
-# The goreleaser tool, however, needs the repo and its history
-# to produce release notes.
-#
-# So clone the repo to /workspace/myClone to avoid directory
-# name collision.
-#
-- name: gcr.io/cloud-builders/git
-  args:
-  - clone
-  - https://github.com/kubernetes-sigs/kustomize.git
-  - myClone
+  # Cloud build has already copied the repo at the tag that
+  # that triggered the build to its /workspace directory, but
+  # hasn't actually _cloned_ the repo (there's no .git directory).
+  #
+  # The goreleaser tool, however, needs the repo and its history
+  # to produce release notes.
+  #
+  # So clone the repo to /workspace/myClone to avoid directory
+  # name collision.
+  #
+  - name: gcr.io/cloud-builders/git
+    args:
+      - clone
+      - https://github.com/kubernetes-sigs/kustomize.git
+      - myClone
 
-# Checkout the proper tag.
-- name: gcr.io/cloud-builders/git
-  dir: myClone
-  args:
-  - checkout
-  - $TAG_NAME
+  # Checkout the proper tag.
+  - name: gcr.io/cloud-builders/git
+    dir: myClone
+    args:
+      - checkout
+      - $TAG_NAME
 
-# Run goreleaser indirectly via a shell script
-# to configure it properly.
-- name: golang:1.18
-  entrypoint: /bin/bash
-  dir: myClone
-  secretEnv: ['GITHUB_TOKEN']
-  args:
-  - releasing/cloudbuild.sh
-  - $TAG_NAME
-  # - '--snapshot'
-  # Use this final arg in a local build, to suppress
-  # the release and leave the 'dist' directory in place.
+  # Run goreleaser indirectly via a shell script
+  # to configure it properly.
+  - name: golang:1.18
+    entrypoint: /bin/bash
+    dir: myClone
+    secretEnv: ["GITHUB_TOKEN"]
+    args:
+      - releasing/cloudbuild.sh
+      - $TAG_NAME
+    # - '--snapshot'
+    # Use this final arg in a local build, to suppress
+    # the release and leave the 'dist' directory in place.
 
 # Overall timeout
 timeout: 14m
@@ -59,9 +59,9 @@ timeout: 14m
 # The base64 of that is shown below.  It's decrypted by cloud build
 # and provided back to goreleaser.
 secrets:
-- kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
-  secretEnv:
-    GITHUB_TOKEN: CiQAJ+XRL07Aror04bf6N0PpMDxRpxzs1PXVVDztB+HNu3fW7FESUQA2EggaBGI1cpFJC1YT93h9r50WzyLMD28LDDBTO8QJxZsU6UEToBfpVDr0ohnSazBTbvCcy5NJK0ooKyDifFsKzkT5ym3LPyHzPIXiejCmAg==
+  - kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
+    secretEnv:
+      GITHUB_TOKEN: CiQAJ+XRL07Aror04bf6N0PpMDxRpxzs1PXVVDztB+HNu3fW7FESUQA2EggaBGI1cpFJC1YT93h9r50WzyLMD28LDDBTO8QJxZsU6UEToBfpVDr0ohnSazBTbvCcy5NJK0ooKyDifFsKzkT5ym3LPyHzPIXiejCmAg==
 
 options:
-  machineType: 'N1_HIGHCPU_8'
+  machineType: "N1_HIGHCPU_8"
