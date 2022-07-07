@@ -10,6 +10,8 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -30,17 +32,18 @@ var (
 )
 
 func main() {
-	resourceList := &framework.ResourceList{}
-	cmd := framework.Command(resourceList, func() error {
-		for _, r := range resourceList.Items {
-			if err := size(r); err != nil {
-				return err
+	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, item := range items {
+			if err := size(item); err != nil {
+				return nil, err
 			}
 		}
-		return nil
-	})
+		return items, nil
+	}
+	p := framework.SimpleProcessor{Config: nil, Filter: kio.FilterFunc(fn)}
+	cmd := command.Build(p, command.StandaloneDisabled, false)
+	command.AddGenerateDockerfile(cmd)
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 }
