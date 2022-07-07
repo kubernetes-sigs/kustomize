@@ -10,7 +10,7 @@ some query string parameters. Kustomize does not currently support ports in the
 URL. The directory is specified by appending a `//` after the repo URL. The
 following query string parameters can also be specified:
 
- * `ref` - a `git fetch`-able ref, typically a branch, tag, or full commit hash
+ * `ref` - a [`git fetch`-able ref](https://git-scm.com/docs/git-fetch), typically a branch, tag, or full commit hash
    (short hashes are not supported)
  * `timeout` (default `27s`) - a number in seconds, or a go duration. specifies
    the timeout for fetching the resource
