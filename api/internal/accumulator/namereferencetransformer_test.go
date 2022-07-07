@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -523,6 +524,52 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 			expectedErr: `updating name reference in 'rules/resourceNames' field of 'ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]': ` +
 				`considering field 'rules/resourceNames' of object ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]: visit traversal on ` +
 				`path: [resourceNames]: path config error; no 'name' field in node`,
+		},
+		{
+			// When targeting a map reference, we need to update both name and namespace, so multiple
+			// possible referral targets with different namespaces should not be considered identical.
+			// This test covers a bug where the difference in namespace was ignored and one candidate was chosen at random.
+			resMap: resmaptest_test.NewRmBuilderDefault(t).AddWithNsAndName(
+				"", orgname,
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ServiceAccount",
+					"metadata": map[string]interface{}{
+						"name":      orgname,
+						"namespace": ns1,
+					},
+				},
+			).AddWithNsAndName(
+				"", orgname,
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ServiceAccount",
+					"metadata": map[string]interface{}{
+						"name":      orgname,
+						"namespace": ns2,
+					},
+				},
+			).Add(
+				map[string]interface{}{
+					"apiVersion": "rbac.authorization.k8s.io/v1",
+					"kind":       "ClusterRoleBinding",
+					"metadata": map[string]interface{}{
+						"name": orgname,
+					},
+					"roleRef": map[string]interface{}{
+						"apiGroup": "rbac.authorization.k8s.io",
+						"kind":     "ClusterRole",
+						"name":     orgname,
+					},
+					"subjects": []interface{}{
+						map[string]interface{}{
+							"kind": "ServiceAccount",
+							"name": orgname,
+						},
+					},
+				},
+			).ResMap(),
+			expectedErr: "found multiple possible referrals: ServiceAccount.v1.[noGrp]/uniquename.ns1, ServiceAccount.v1.[noGrp]/uniquename.ns2",
 		},
 	}
 
@@ -1058,6 +1105,79 @@ func TestNameReferenceCandidateSelection(t *testing.T) {
 
 	m.RemoveBuildAnnotations()
 	if err = expected.ErrorIfNotEqualLists(m); err != nil {
+		t.Fatalf(notEqualErrFmt, err)
+	}
+}
+
+func TestNameReferenceCandidateDisambiguationByNamespace(t *testing.T) {
+	// The ClusterRole refers to both configmaps, since it is not namespace-specific.
+	// Since both names are updated consistently, the transformer should be able to
+	// silently update the ClusterRole as well.
+	// This test guards against a regression where allNamesAndNamespacesAreTheSame would be
+	// used to detect referral candidate identity instead of allNamesAreTheSame.
+	m := resmaptest_test.NewRmBuilderDefault(t).AddWithName(orgname,
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      suffixedname,
+				"namespace": ns1,
+			},
+		},
+	).AddWithName(orgname,
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      suffixedname,
+				"namespace": ns2,
+			},
+		},
+	).Add(
+		map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": orgname,
+			},
+			"rules": []interface{}{
+				map[string]interface{}{
+					"resources": []interface{}{
+						"configmaps",
+					},
+					"resourceNames": []interface{}{
+						orgname,
+					},
+				},
+			},
+		},
+	).ResMap()
+
+	expected := resmaptest_test.NewSeededRmBuilderDefault(t, m.ShallowCopy()).
+		ReplaceResource(map[string]interface{}{
+			"apiVersion": "rbac.authorization.k8s.io/v1",
+			"kind":       "ClusterRole",
+			"metadata": map[string]interface{}{
+				"name": orgname,
+			},
+			"rules": []interface{}{
+				map[string]interface{}{
+					"resources": []interface{}{
+						"configmaps",
+					},
+					"resourceNames": []interface{}{
+						suffixedname,
+					},
+				},
+			},
+		},
+		).ResMap()
+
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
+	require.NoError(t, nrt.Transform(m))
+
+	m.RemoveBuildAnnotations()
+	if err := expected.ErrorIfNotEqualLists(m); err != nil {
 		t.Fatalf(notEqualErrFmt, err)
 	}
 }
