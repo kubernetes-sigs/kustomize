@@ -118,7 +118,9 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 		return err
 	}
 	oldName := nameNode.YNode().Value
-	referral, err := f.selectReferral(oldName, candidates)
+	// use allNamesAndNamespacesAreTheSame to compare referral candidates for functional identity,
+	// because we source both name and namespace values from the referral in this case.
+	referral, err := f.selectReferral(oldName, candidates, allNamesAndNamespacesAreTheSame)
 	if err != nil || referral == nil {
 		// Nil referral means nothing to do.
 		return err
@@ -167,8 +169,10 @@ func (f Filter) filterMapCandidatesByNamespace(
 }
 
 func (f Filter) setScalar(node *yaml.RNode) error {
+	// use allNamesAreTheSame to compare referral candidates for functional identity,
+	// because we only source the name from the referral in this case.
 	referral, err := f.selectReferral(
-		node.YNode().Value, f.ReferralCandidates.Resources())
+		node.YNode().Value, f.ReferralCandidates.Resources(), allNamesAreTheSame)
 	if err != nil || referral == nil {
 		// Nil referral means nothing to do.
 		return err
@@ -311,7 +315,9 @@ func (f Filter) sameCurrentNamespaceAsReferrer() sieveFunc {
 func (f Filter) selectReferral(
 	// The name referral that may need to be updated.
 	oldName string,
-	candidates []*resource.Resource) (*resource.Resource, error) {
+	candidates []*resource.Resource,
+	// function that returns whether two referrals are identical for the purposes of the transformation
+	candidatesIdentical func(resources []*resource.Resource) bool) (*resource.Resource, error) {
 	candidates = doSieve(candidates, previousNameMatches(oldName))
 	candidates = doSieve(candidates, previousIdSelectedByGvk(&f.ReferralTarget))
 	candidates = doSieve(candidates, f.roleRefFilter())
@@ -326,7 +332,7 @@ func (f Filter) selectReferral(
 	if len(candidates) == 0 {
 		return nil, nil
 	}
-	if allNamesAreTheSame(candidates) {
+	if candidatesIdentical(candidates) {
 		// Just take the first one.
 		return candidates[0], nil
 	}
@@ -350,6 +356,17 @@ func allNamesAreTheSame(resources []*resource.Resource) bool {
 	name := resources[0].GetName()
 	for i := 1; i < len(resources); i++ {
 		if name != resources[i].GetName() {
+			return false
+		}
+	}
+	return true
+}
+
+func allNamesAndNamespacesAreTheSame(resources []*resource.Resource) bool {
+	name := resources[0].GetName()
+	namespace := resources[0].GetNamespace()
+	for i := 1; i < len(resources); i++ {
+		if name != resources[i].GetName() || namespace != resources[i].GetNamespace() {
 			return false
 		}
 	}
