@@ -44,4 +44,5 @@ use (
 	./plugin/someteam.example.com/v1/starlarkmixer
 	./plugin/someteam.example.com/v1/stringprefixer
 	./plugin/someteam.example.com/v1/validator
+	./plugin/untested/v1/gogetter
 )
