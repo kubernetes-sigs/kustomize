@@ -96,7 +96,7 @@ The script wraps itself using ` + "`" + `config run wrap -- $0` + "`" + ` which 
 	  config run wrap -- $0
 	  exit $?
 	fi
-	
+
 	cat <<End-of-message
 	apiVersion: v1
 	kind: Service
