@@ -19,6 +19,9 @@ type Filter struct {
 	// FsSlice contains the FieldSpecs to locate the namespace field
 	FsSlice types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 
+	// SkipExisting means only blank namespace fields will be set
+	SkipExisting bool `json:"skipExisting" yaml:"skipExisting"`
+
 	trackableSetter filtersutil.TrackableSetter
 }
 
@@ -36,47 +39,34 @@ func (ns Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 
 // Run runs the filter on a single node rather than a slice
 func (ns Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
-	// hacks for hardcoded types -- :(
-	if err := ns.hacks(node); err != nil {
+	// Special handling for metadata.namespace -- :(
+	// never let SetEntry handle metadata.namespace--it will incorrectly include cluster-scoped resources
+	ns.FsSlice = ns.removeMetaNamespaceFieldSpecs(ns.FsSlice)
+	gvk := resid.GvkFromNode(node)
+	if err := ns.metaNamespaceHack(node, gvk); err != nil {
 		return nil, err
 	}
 
-	// Remove the fieldspecs that are for hardcoded fields.  The fieldspecs
-	// exist for backwards compatibility with other implementations
-	// of this transformation.
-	// This implementation of the namespace transformation
-	// Does not use the fieldspecs for implementing cases which
-	// require hardcoded logic.
-	ns.FsSlice = ns.removeFieldSpecsForHacks(ns.FsSlice)
+	// Special handling for (cluster) role binding -- :(
+	if isRoleBinding(gvk.Kind) {
+		ns.FsSlice = ns.removeRoleBindingFieldSpecs(ns.FsSlice)
+		if err := ns.roleBindingHack(node, gvk); err != nil {
+			return nil, err
+		}
+	}
 
 	// transformations based on data -- :)
 	err := node.PipeE(fsslice.Filter{
 		FsSlice:    ns.FsSlice,
-		SetValue:   ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString),
+		SetValue:   ns.fieldSetter(),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 		CreateTag:  yaml.NodeTagString,
 	})
 	return node, err
 }
 
-// hacks applies the namespace transforms that are hardcoded rather
-// than specified through FieldSpecs.
-func (ns Filter) hacks(obj *yaml.RNode) error {
-	gvk := resid.GvkFromNode(obj)
-	if err := ns.metaNamespaceHack(obj, gvk); err != nil {
-		return err
-	}
-	return ns.roleBindingHack(obj, gvk)
-}
-
 // metaNamespaceHack is a hack for implementing the namespace transform
 // for the metadata.namespace field on namespace scoped resources.
-// namespace scoped resources are determined by NOT being present
-// in a hard-coded list of cluster-scoped resource types (by apiVersion and kind).
-//
-// This hack should be updated to allow individual resources to specify
-// if they are cluster scoped through either an annotation on the resources,
-// or through inlined OpenAPI on the resource as a YAML comment.
 func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 	if gvk.IsClusterScoped() {
 		return nil
@@ -85,16 +75,16 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 		FsSlice: []types.FieldSpec{
 			{Path: types.MetadataNamespacePath, CreateIfNotPresent: true},
 		},
-		SetValue:   ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString),
+		SetValue:   ns.fieldSetter(),
 		CreateKind: yaml.ScalarNode, // Namespace is a ScalarNode
 	}
 	_, err := f.Filter(obj)
 	return err
 }
 
-// roleBindingHack is a hack for implementing the namespace transform
+// roleBindingHack is a hack for implementing the transformer's DefaultSubjectsOnly mode
 // for RoleBinding and ClusterRoleBinding resource types.
-// RoleBinding and ClusterRoleBinding have namespace set on
+// In this mode, RoleBinding and ClusterRoleBinding have namespace set on
 // elements of the "subjects" field if and only if the subject elements
 // "name" is "default".  Otherwise the namespace is not set.
 //
@@ -107,12 +97,11 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 // - name: "something-else" # this will not have the namespace set
 //   ...
 func (ns Filter) roleBindingHack(obj *yaml.RNode, gvk resid.Gvk) error {
-	if gvk.Kind != roleBindingKind && gvk.Kind != clusterRoleBindingKind {
+	if !isRoleBinding(gvk.Kind) {
 		return nil
 	}
 
 	// Lookup the namespace field on all elements.
-	// We should change the fieldspec so this isn't necessary.
 	obj, err := obj.Pipe(yaml.Lookup(subjectsField))
 	if err != nil || yaml.IsMissingOrNull(obj) {
 		return err
@@ -138,32 +127,50 @@ func (ns Filter) roleBindingHack(obj *yaml.RNode, gvk resid.Gvk) error {
 			return err
 		}
 
-		return ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString)(node)
+		return ns.fieldSetter()(node)
 	})
 
 	return err
 }
 
-// removeFieldSpecsForHacks removes from the list fieldspecs that
+func isRoleBinding(kind string) bool {
+	switch kind {
+	case roleBindingKind, clusterRoleBindingKind:
+		return true
+	default:
+		return false
+	}
+}
+
+// removeRoleBindingFieldSpecs removes from the list fieldspecs that
 // have hardcoded implementations
-func (ns Filter) removeFieldSpecsForHacks(fs types.FsSlice) types.FsSlice {
+func (ns Filter) removeRoleBindingFieldSpecs(fs types.FsSlice) types.FsSlice {
 	var val types.FsSlice
 	for i := range fs {
-		// implemented by metaNamespaceHack
-		if fs[i].Path == types.MetadataNamespacePath {
-			continue
-		}
-		// implemented by roleBindingHack
-		if fs[i].Kind == roleBindingKind && fs[i].Path == subjectsField {
-			continue
-		}
-		// implemented by roleBindingHack
-		if fs[i].Kind == clusterRoleBindingKind && fs[i].Path == subjectsField {
+		if isRoleBinding(fs[i].Kind) && fs[i].Path == subjectsField {
 			continue
 		}
 		val = append(val, fs[i])
 	}
 	return val
+}
+
+func (ns Filter) removeMetaNamespaceFieldSpecs(fs types.FsSlice) types.FsSlice {
+	var val types.FsSlice
+	for i := range fs {
+		if fs[i].Path == types.MetadataNamespacePath {
+			continue
+		}
+		val = append(val, fs[i])
+	}
+	return val
+}
+
+func (ns *Filter) fieldSetter() filtersutil.SetFn {
+	if ns.SkipExisting {
+		return ns.trackableSetter.SetEntryIfEmpty("", ns.Namespace, yaml.NodeTagString)
+	}
+	return ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString)
 }
 
 const (

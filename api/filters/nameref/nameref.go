@@ -337,19 +337,16 @@ func (f Filter) selectReferral(
 		return candidates[0], nil
 	}
 	ids := getIds(candidates)
-	f.failureDetails(candidates)
-	return nil, fmt.Errorf(" found multiple possible referrals: %s", ids)
+	return nil, fmt.Errorf(" found multiple possible referrals: %s\n%s", ids, f.failureDetails(candidates))
 }
 
-func (f Filter) failureDetails(resources []*resource.Resource) {
-	fmt.Printf(
-		"\n**** Too many possible referral targets to referrer:\n%s\n",
-		f.Referrer.MustYaml())
+func (f Filter) failureDetails(resources []*resource.Resource) string {
+	msg := strings.Builder{}
+	msg.WriteString(fmt.Sprintf("\n**** Too many possible referral targets to referrer:\n%s\n", f.Referrer.MustYaml()))
 	for i, r := range resources {
-		fmt.Printf(
-			"--- possible referral %d:\n%s", i, r.MustYaml())
-		fmt.Println("------")
+		msg.WriteString(fmt.Sprintf("--- possible referral %d:\n%s\n", i, r.MustYaml()))
 	}
+	return msg.String()
 }
 
 func allNamesAreTheSame(resources []*resource.Resource) bool {
