@@ -649,7 +649,6 @@ metadata:
   name: oldNs
 `)
 	m := th.Run(".", th.MakeDefaultOptions())
-	// Incorrect: the self-reference annotations in both resources were not updated!
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -658,7 +657,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    theConfigMap: cm
+    theConfigMap: cm-updated
     theNamespace: newNs
   name: cm-updated
   namespace: newNs
@@ -668,7 +667,7 @@ kind: Namespace
 metadata:
   annotations:
     theConfigMap: cm-updated
-    theNamespace: oldNs
+    theNamespace: newNs
   name: newNs
 `)
 }
