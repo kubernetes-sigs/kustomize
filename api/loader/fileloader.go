@@ -18,6 +18,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+// HasRemoteFileScheme returns whether path has a url scheme that kustomize allows for
+// remote files. See https://github.com/kubernetes-sigs/kustomize/blob/master/examples/remoteBuild.md
+func HasRemoteFileScheme(path string) bool {
+	u, err := url.Parse(path)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https")
+}
+
 // fileLoader is a kustomization's interface to files.
 //
 // The directory in which a kustomization file sits
@@ -112,6 +119,13 @@ func NewFileLoaderAtCwd(fSys filesys.FileSystem) *fileLoader {
 func NewFileLoaderAtRoot(fSys filesys.FileSystem) *fileLoader {
 	return newLoaderOrDie(
 		RestrictionRootOnly, fSys, filesys.Separator)
+}
+
+func (fl *fileLoader) Repo() (string, bool) {
+	if fl.repoSpec == nil {
+		return "", false
+	}
+	return fl.repoSpec.Dir.String(), true
 }
 
 // Root returns the absolute path that is prepended to any
@@ -279,34 +293,37 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 	return fl.referrer.errIfRepoCycle(newRepoSpec)
 }
 
+func loadURL(hc *http.Client, path string) ([]byte, error) {
+	resp, err := hc.Get(path)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "cannot GET url")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		if _, err = git.NewRepoSpecFromURL(path); err == nil {
+			return nil, errors.Errorf("URL is a git repository")
+		}
+		return nil, errors.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "cannot read url content")
+	}
+	return body, nil
+}
+
 // Load returns the content of file at the given path,
 // else an error. Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
-	if u, err := url.Parse(path); err == nil && (u.Scheme == "http" || u.Scheme == "https") {
+	if HasRemoteFileScheme(path) {
 		var hc *http.Client
 		if fl.http != nil {
 			hc = fl.http
 		} else {
 			hc = &http.Client{}
 		}
-		resp, err := hc.Get(path)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode < 200 || resp.StatusCode > 299 {
-			_, err := git.NewRepoSpecFromURL(path)
-			if err == nil {
-				return nil, errors.Errorf("URL is a git repository")
-			}
-			return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
-		}
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return body, nil
+		return loadURL(hc, path)
 	}
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)

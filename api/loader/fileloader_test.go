@@ -21,6 +21,40 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+func TestHasRemoteFileScheme(t *testing.T) {
+	cases := map[string]struct {
+		url   string
+		valid bool
+	}{
+		"https file": {
+			"https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/configMap.yaml",
+			true,
+		},
+		"https dir": {
+			"https://github.com/kubernetes-sigs/kustomize//examples/helloWorld/",
+			true,
+		},
+		"no scheme": {
+			"github.com/kubernetes-sigs/kustomize//examples/helloWorld/",
+			false,
+		},
+		"ssh": {
+			"ssh://git@github.com/kubernetes-sigs/kustomize.git",
+			false,
+		},
+		"local": {
+			"pod.yaml",
+			false,
+		},
+	}
+	for name, test := range cases {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, test.valid, HasRemoteFileScheme(test.url))
+		})
+	}
+}
+
 type testData struct {
 	path            string
 	expectedContent string
