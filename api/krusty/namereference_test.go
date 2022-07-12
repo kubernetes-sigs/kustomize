@@ -589,3 +589,85 @@ metadata:
   namespace: kube-system
 `)
 }
+
+func TestIssue4682_NameReferencesToSelfInAnnotations(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+namespace: newNs
+resources:
+  - resources.yaml
+
+nameSuffix: -updated
+
+configurations:
+  - kustomize-nameref.yaml 
+`)
+	th.WriteF("kustomize-nameref.yaml", `
+nameReference:
+  - kind: Namespace
+    fieldSpecs:
+      - path: data/theNamespace
+        kind: ConfigMap
+        version: v1
+      - path: metadata/annotations/theNamespace
+        kind: ConfigMap
+        version: v1      
+      - path: metadata/annotations/theNamespace
+        kind: Namespace
+        version: v1
+  - kind: ConfigMap
+    fieldSpecs:
+      - path: data/theConfigMap
+        kind: ConfigMap
+        version: v1
+      - path: metadata/annotations/theConfigMap
+        kind: ConfigMap
+        version: v1   
+      - path: metadata/annotations/theConfigMap
+        kind: Namespace
+        version: v1
+`)
+	th.WriteF("resources.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    theConfigMap: cm
+    theNamespace: oldNs
+  name: cm
+  namespace: oldNs
+data:
+  theConfigMap: cm
+  theNamespace: oldNs
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    theConfigMap: cm
+    theNamespace: oldNs
+  name: oldNs
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  theConfigMap: cm-updated
+  theNamespace: newNs
+kind: ConfigMap
+metadata:
+  annotations:
+    theConfigMap: cm-updated
+    theNamespace: newNs
+  name: cm-updated
+  namespace: newNs
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    theConfigMap: cm-updated
+    theNamespace: newNs
+  name: newNs
+`)
+}
