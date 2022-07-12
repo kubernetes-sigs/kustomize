@@ -121,6 +121,7 @@ checksum:
 env:
 - CGO_ENABLED=0
 - GO111MODULE=on
+- GOWORK=off
 
 release:
   github:
