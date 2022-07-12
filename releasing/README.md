@@ -349,43 +349,6 @@ Undraft the release on the [kustomize repo release page]:
 
 * Visit the [release page] and edit the release notes as desired.
 
-
-## Unpin everything
-
-
-Go back into development mode, where all modules depend on in-repo code:
-
-```
-gorepomod unpin api         --doIt &&
-gorepomod unpin cmd/config  --doIt &&
-gorepomod unpin kyaml       --doIt
-```
-
-Create the PR:
-```
-createBranch unpinEverything "Back to development mode; unpin the modules" &&
-createPr
-```
-
-Run local tests while GH runs tests in the cloud:
-```
-testKustomizeRepo
-```
-
-Wait for tests to pass, then merge the PR:
-```
-gh pr status  # rinse, repeat
-```
-```
-gh pr merge -m
-```
-
-Get back on master and do paranoia test:
-```
-refreshMaster &&
-testKustomizeRepo
-```
-
 ## Update example test target
 
 [Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
