@@ -56,7 +56,7 @@ func (b *Compiler) ObjPath() string {
 }
 
 // Compile changes its working directory to
-// ${pluginRoot}/${g}/${v}/$lower(${k} and places
+// ${pluginRoot}/${g}/${v}/$lower/${k} and places
 // object code next to source code.
 func (b *Compiler) Compile() error {
 	if !utils.FileExists(b.srcPath()) {
