@@ -70,8 +70,5 @@ resources:
 `)
 
 	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	assert.EqualError(t, err,
-		"updating name reference in 'subjects' field of 'ClusterRoleBinding.v1.rbac.authorization.k8s.io/crb-a.[noNs]': "+
-			"considering field 'subjects' of object ClusterRoleBinding.v1.rbac.authorization.k8s.io/crb-a.[noNs]:  "+
-			"found multiple possible referrals: ServiceAccount.v1.[noGrp]/sa.a, ServiceAccount.v1.[noGrp]/sa.b")
+	assert.Contains(t, err.Error(), "found multiple possible referrals: ServiceAccount.v1.[noGrp]/sa.a, ServiceAccount.v1.[noGrp]/sa.b")
 }
