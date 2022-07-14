@@ -19,8 +19,8 @@ type Filter struct {
 	// FsSlice contains the FieldSpecs to locate the namespace field
 	FsSlice types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 
-	// SkipExisting means only blank namespace fields will be set
-	SkipExisting bool `json:"skipExisting" yaml:"skipExisting"`
+	// UnsetOnly means only blank namespace fields will be set
+	UnsetOnly bool `json:"unsetOnly" yaml:"unsetOnly"`
 
 	trackableSetter filtersutil.TrackableSetter
 }
@@ -134,12 +134,7 @@ func (ns Filter) roleBindingHack(obj *yaml.RNode, gvk resid.Gvk) error {
 }
 
 func isRoleBinding(kind string) bool {
-	switch kind {
-	case roleBindingKind, clusterRoleBindingKind:
-		return true
-	default:
-		return false
-	}
+	return kind == roleBindingKind || kind == clusterRoleBindingKind
 }
 
 // removeRoleBindingFieldSpecs removes from the list fieldspecs that
@@ -167,7 +162,7 @@ func (ns Filter) removeMetaNamespaceFieldSpecs(fs types.FsSlice) types.FsSlice {
 }
 
 func (ns *Filter) fieldSetter() filtersutil.SetFn {
-	if ns.SkipExisting {
+	if ns.UnsetOnly {
 		return ns.trackableSetter.SetEntryIfEmpty("", ns.Namespace, yaml.NodeTagString)
 	}
 	return ns.trackableSetter.SetEntry("", ns.Namespace, yaml.NodeTagString)

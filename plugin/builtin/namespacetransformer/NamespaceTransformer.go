@@ -17,7 +17,7 @@ import (
 type plugin struct {
 	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
-	SkipExisting     bool              `json:"skipExisting" yaml:"skipExisting"`
+	UnsetOnly        bool              `json:"unsetOnly" yaml:"unsetOnly"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -41,9 +41,9 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
-			Namespace:    p.Namespace,
-			FsSlice:      p.FieldSpecs,
-			SkipExisting: p.SkipExisting,
+			Namespace: p.Namespace,
+			FsSlice:   p.FieldSpecs,
+			UnsetOnly: p.UnsetOnly,
 		}); err != nil {
 			return err
 		}

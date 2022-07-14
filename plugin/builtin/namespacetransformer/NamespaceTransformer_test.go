@@ -272,7 +272,7 @@ metadata:
 		})
 }
 
-func TestNamespaceTransformer_SkipExistingTrue(t *testing.T) {
+func TestNamespaceTransformer_UnsetOnlyTrue(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("NamespaceTransformer")
 	defer th.Reset()
@@ -282,7 +282,7 @@ kind: NamespaceTransformer
 metadata:
   name: notImportantHere
   namespace: test
-skipExisting: true
+unsetOnly: true
 fieldSpecs:
 - path: metadata/namespace
   create: true

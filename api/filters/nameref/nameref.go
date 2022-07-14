@@ -337,7 +337,7 @@ func (f Filter) selectReferral(
 		return candidates[0], nil
 	}
 	ids := getIds(candidates)
-	return nil, fmt.Errorf(" found multiple possible referrals: %s\n%s", ids, f.failureDetails(candidates))
+	return nil, fmt.Errorf("found multiple possible referrals: %s\n%s", ids, f.failureDetails(candidates))
 }
 
 func (f Filter) failureDetails(resources []*resource.Resource) string {

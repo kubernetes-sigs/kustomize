@@ -94,8 +94,7 @@ func hasExistingValue(node *yaml.RNode, key string) bool {
 	if node.IsNilOrEmpty() {
 		return false
 	}
-	if key == "" {
-		// scalar node
+	if err := yaml.ErrorIfInvalid(node, yaml.ScalarNode); err == nil {
 		return yaml.GetValue(node) != ""
 	}
 	entry := node.Field(key)
