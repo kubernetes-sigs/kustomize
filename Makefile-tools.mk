@@ -28,7 +28,7 @@ uninstall-out-of-tree-tools:
 	rm -f $(MYGOBIN)/stringer
 
 $(MYGOBIN)/golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
 
 $(MYGOBIN)/mdrip:
 	go install github.com/monopole/mdrip@v1.0.2

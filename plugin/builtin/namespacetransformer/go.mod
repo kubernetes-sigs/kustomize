@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	sigs.k8s.io/kustomize/api v0.11.5
+	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -32,5 +33,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.13.7 // indirect
 )
