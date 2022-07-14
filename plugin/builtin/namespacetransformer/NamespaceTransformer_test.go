@@ -10,6 +10,18 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+const defaultFieldSpecs = `
+fieldSpecs:
+- path: metadata/namespace
+  create: true
+- path: subjects
+  kind: RoleBinding
+  group: rbac.authorization.k8s.io
+- path: subjects
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
+`
+
 func TestNamespaceTransformer1(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("NamespaceTransformer")
@@ -20,16 +32,7 @@ kind: NamespaceTransformer
 metadata:
   name: notImportantHere
   namespace: test
-fieldSpecs:
-- path: metadata/namespace
-  create: true
-- path: subjects
-  kind: RoleBinding
-  group: rbac.authorization.k8s.io
-- path: subjects
-  kind: ClusterRoleBinding
-  group: rbac.authorization.k8s.io
-`, `
+`+defaultFieldSpecs, `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -267,4 +270,152 @@ metadata:
 				t.Fatalf("unexpected error: %s", err.Error())
 			}
 		})
+}
+
+func TestNamespaceTransformer_UnsetOnlyTrue(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+unsetOnly: true
+fieldSpecs:
+- path: metadata/namespace
+  create: true
+- path: subjects/namespace
+  kind: RoleBinding
+  group: rbac.authorization.k8s.io
+- path: subjects/namespace
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
+- path: spec/template/namespace
+  kind: MyWeirdObject
+- path: spec/template/altNamespace
+  kind: MyWeirdObject
+  create: true
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc2
+  namespace: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns1
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: other
+- kind: ServiceAccount
+  name: default
+  namespace: ""
+- kind: ServiceAccount
+  name: default
+- kind: ServiceAccount
+  name: another
+  namespace: random
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crd
+---
+apiVersion: v1
+kind: MyWeirdObject
+metadata:
+  name: custom
+spec:
+  template:
+    namespace: original
+`,
+		`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+  namespace: test
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm2
+  namespace: foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+  namespace: test
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc2
+  namespace: test
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns1
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: other
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: another
+  namespace: random
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crd
+---
+apiVersion: v1
+kind: MyWeirdObject
+metadata:
+  name: custom
+  namespace: test
+spec:
+  template:
+    altNamespace: test
+    namespace: original
+`)
 }
