@@ -2,7 +2,7 @@
 title: "Filing Bugs"
 linkTitle: "Filing Bugs"
 type: docs
-weight: 50
+weight: 10
 description: >
     How to file bugs and fix Kustomize bugs
 ---

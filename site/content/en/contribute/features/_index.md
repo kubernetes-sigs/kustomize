@@ -2,7 +2,7 @@
 title: "Contributing Features"
 linkTitle: "Contributing Features"
 type: docs
-weight: 21
+weight: 30
 description: >
     How to contribute features
 ---
