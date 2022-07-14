@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/build"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/create"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit"
+	"sigs.k8s.io/kustomize/kustomize/v4/commands/localize"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/openapi"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/version"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -53,6 +54,8 @@ See https://sigs.k8s.io/kustomize
 		create.NewCmdCreate(fSys, pvd.GetResourceFactory()),
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
+		// TODO: will need stdout later
+		localize.NewCmdLocalize(fSys),
 	)
 	configcobra.AddCommands(c, konfig.ProgramName)
 

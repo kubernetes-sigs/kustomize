@@ -33,7 +33,7 @@ type Loader interface {
 	// was created from a url; otherwise, the empty string and false
 	Repo() (string, bool)
 
-	// Root returns the root location for this Loader.
+	// Root returns the Src location for this Loader.
 	Root() string
 
 	// New returns Loader located at newRoot.

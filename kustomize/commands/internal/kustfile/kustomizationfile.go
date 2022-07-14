@@ -287,6 +287,23 @@ func findMatchedField(line []byte) (bool, string) {
 	return false, ""
 }
 
+func MarshalField(field string, kustomization *types.Kustomization) ([]byte, error) {
+	r := reflect.ValueOf(*kustomization)
+	titleCaser := cases.Title(language.English, cases.NoLower)
+	v := r.FieldByName(titleCaser.String(field))
+
+	if !v.IsValid() || isEmpty(v) {
+		return []byte{}, nil
+	}
+
+	k := &types.Kustomization{}
+	kr := reflect.ValueOf(k)
+	kv := kr.Elem().FieldByName(titleCaser.String(field))
+	kv.Set(v)
+
+	return yaml.Marshal(k)
+}
+
 // marshalField marshal a given field of a kustomization object into yaml format.
 // If the field wasn't in the original kustomization.yaml file or wasn't added,
 // an empty []byte is returned.
