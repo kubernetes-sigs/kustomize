@@ -95,6 +95,8 @@ func TestLoaderLoad(t *testing.T) {
 	require := require.New(t)
 
 	l1 := makeLoader()
+	_, remote := l1.Repo()
+	require.False(remote)
 	require.Equal("/", l1.Root())
 
 	for _, x := range testCases {
@@ -107,6 +109,9 @@ func TestLoaderLoad(t *testing.T) {
 	}
 	l2, err := l1.New("foo/project")
 	require.NoError(err)
+
+	_, remote = l2.Repo()
+	require.False(remote)
 	require.Equal("/foo/project", l2.Root())
 
 	for _, x := range testCases {
@@ -356,6 +361,9 @@ whatever
 		repoSpec, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
 	require.NoError(err)
+	repo, remote := l.Repo()
+	require.True(remote)
+	require.Equal(coRoot, repo)
 	require.Equal(coRoot+"/"+pathInRepo, l.Root())
 
 	_, err = l.New(url)
@@ -369,6 +377,10 @@ whatever
 	url = rootURL + "/" + pathInRepo
 	l2, err := l.New(url)
 	require.NoError(err)
+
+	repo, remote = l2.Repo()
+	require.True(remote)
+	require.Equal(coRoot, repo)
 	require.Equal(coRoot+"/"+pathInRepo, l2.Root())
 }
 
@@ -423,6 +435,8 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// This is okay.
 	l2, err = l1.New("../base")
 	require.NoError(err)
+	_, remote := l2.Repo()
+	require.False(remote)
 	require.Equal(cloneRoot+"/foo/base", l2.Root())
 
 	// This is not okay.
@@ -448,6 +462,9 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 
 	l2, err := l1.New("github.com/someOrg/someRepo/foo/base")
 	require.NoError(err)
+	repo, remote := l2.Repo()
+	require.True(remote)
+	require.Equal(cloneRoot, repo)
 	require.Equal(cloneRoot+"/foo/base", l2.Root())
 }
 

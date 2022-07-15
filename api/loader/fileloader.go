@@ -121,6 +121,15 @@ func NewFileLoaderAtRoot(fSys filesys.FileSystem) *fileLoader {
 		RestrictionRootOnly, fSys, filesys.Separator)
 }
 
+// Repo returns the absolute path to the repo that contains Root and true
+// if this fileLoader was created from a url; otherwise, the empty string and false
+func (fl *fileLoader) Repo() (string, bool) {
+	if fl.repoSpec != nil {
+		return fl.repoSpec.Dir.String(), true
+	}
+	return "", false
+}
+
 // Root returns the absolute path that is prepended to any
 // relative paths used in Load.
 func (fl *fileLoader) Root() string {
