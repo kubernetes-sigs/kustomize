@@ -4,10 +4,10 @@
 package replacement
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/go-errors/errors"
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -196,9 +196,12 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 			// may return multiple fields, always wrapped in a sequence node
 			foundFieldSequence, lookupErr := target.Pipe(&yaml.PathMatcher{Path: fieldPath})
 			if lookupErr != nil {
-				return errors.WrapPrefix(lookupErr, "error finding field in replacement target", 0)
+				return fmt.Errorf("error finding field in replacement target: %w", lookupErr)
 			}
 			targetFields, err = foundFieldSequence.Elements()
+			if err != nil {
+				return fmt.Errorf("error fetching elements in replacement target: %w", err)
+			}
 		}
 
 		for _, t := range targetFields {
