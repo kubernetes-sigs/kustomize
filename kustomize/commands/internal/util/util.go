@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -30,9 +31,15 @@ func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) 
 	return result, nil
 }
 
-// GlobPatterns accepts a slice of glob strings and returns the set of
+// GlobPatternsWithRemotes accepts a slice of glob strings and returns the set of
 // matching file paths. If files are not found, will try load from remote.
-func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []string) ([]string, error) {
+func GlobPatternsWithRemotes(fSys filesys.FileSystem, patterns []string) ([]string, error) {
+	return globPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), patterns)
+}
+
+// globPatternsWithLoader accepts a slice of glob strings and returns the set of
+// matching file paths. If files are not found, globPatternsWithLoader will try loading from ldr.
+func globPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []string) ([]string, error) {
 	var result []string
 	for _, pattern := range patterns {
 		files, err := fSys.Glob(pattern)
@@ -40,9 +47,10 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 			return nil, err
 		}
 		if len(files) == 0 {
-			loader, err := ldr.New(pattern)
-			if err != nil {
-				log.Printf("%s has no match", pattern)
+			_, fileErr := ldr.Load(pattern)
+			loader, dirErr := ldr.New(pattern)
+			if fileErr != nil && dirErr != nil {
+				log.Printf("'%s' has no match", pattern)
 			} else {
 				result = append(result, pattern)
 				if loader != nil {

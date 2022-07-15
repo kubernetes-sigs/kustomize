@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -49,7 +48,7 @@ func (o *addComponentOptions) Validate(args []string) error {
 
 // RunAddComponent runs addComponent command (do real work).
 func (o *addComponentOptions) RunAddComponent(fSys filesys.FileSystem) error {
-	components, err := util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), o.componentFilePaths)
+	components, err := util.GlobPatternsWithRemotes(fSys, o.componentFilePaths)
 	if err != nil {
 		return err
 	}

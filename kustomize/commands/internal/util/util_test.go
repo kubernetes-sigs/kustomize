@@ -5,10 +5,11 @@ package util
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -21,26 +22,15 @@ func TestConvertToMap(t *testing.T) {
 	expected["g"] = "h:k"
 
 	result, err := ConvertToMap(args, "annotation")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err.Error())
-	}
-
-	eq := reflect.DeepEqual(expected, result)
-	if !eq {
-		t.Errorf("Converted map does not match expected, expected: %v, result: %v\n", expected, result)
-	}
+	require.NoError(t, err)
+	require.Equal(t, expected, result)
 }
 
 func TestConvertToMapError(t *testing.T) {
 	args := "a:b,c:\"d\",:f:g"
 
 	_, err := ConvertToMap(args, "annotation")
-	if err == nil {
-		t.Errorf("expected an error")
-	}
-	if err.Error() != "invalid annotation: ':f:g' (need k:v pair where v may be quoted)" {
-		t.Errorf("incorrect error: %v", err.Error())
-	}
+	require.EqualError(t, err, "invalid annotation: ':f:g' (need k:v pair where v may be quoted)")
 }
 
 func TestConvertSliceToMap(t *testing.T) {
@@ -52,68 +42,63 @@ func TestConvertSliceToMap(t *testing.T) {
 	expected["g"] = "h:k"
 
 	result, err := ConvertSliceToMap(args, "annotation")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err.Error())
-	}
-
-	eq := reflect.DeepEqual(expected, result)
-	if !eq {
-		t.Errorf("Converted map does not match expected, expected: %v, result: %v\n", expected, result)
-	}
+	require.NoError(t, err)
+	require.Equal(t, expected, result)
 }
 
 func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
+	req := require.New(t)
+
 	fSys := filesys.MakeFsInMemory()
-	fSys.Create("test.yml")
+	_, err := fSys.Create("test.yml")
+	req.NoError(err)
+
 	httpPath := "https://example.com/example.yaml"
-	ldr := fakeLoader{
-		path: httpPath,
+	ldr := fakeRemoteLoader{
+		files: map[string]struct{}{httpPath: {}},
 	}
+	expected := [2]string{httpPath, "/test.yml"}
 
 	// test load remote file
-	resources, err := GlobPatternsWithLoader(fSys, ldr, []string{httpPath})
-	if err != nil {
-		t.Fatalf("unexpected load error: %v", err)
-	}
-	if len(resources) != 1 || resources[0] != httpPath {
-		t.Fatalf("incorrect resources: %v", resources)
-	}
+	resources, err := globPatternsWithLoader(fSys, ldr, []string{httpPath})
+	req.NoError(err)
+	req.Equal(expected[:1], resources)
 
 	// test load local and remote file
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{httpPath, "/test.yml"})
-	if err != nil {
-		t.Fatalf("unexpected load error: %v", err)
-	}
-	if len(resources) != 2 || resources[0] != httpPath || resources[1] != "/test.yml" {
-		t.Fatalf("incorrect resources: %v", resources)
-	}
+	resources, err = globPatternsWithLoader(fSys, ldr, []string{httpPath, "/test.yml"})
+	req.NoError(err)
+	req.Equal(expected[:], resources)
 
 	// test load invalid file
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{"http://invalid"})
-	if err != nil {
-		t.Fatalf("unexpected load error: %v", err)
-	}
-	if len(resources) > 0 {
-		t.Fatalf("incorrect resources: %v", resources)
-	}
+	resources, err = globPatternsWithLoader(fSys, ldr, []string{"http://invalid"})
+	req.NoError(err)
+	req.Empty(resources)
 }
 
-type fakeLoader struct {
-	path string
+type fakeRemoteLoader struct {
+	dirs  map[string]struct{}
+	files map[string]struct{}
 }
 
-func (l fakeLoader) Root() string {
+func (l fakeRemoteLoader) Root() string {
 	return ""
 }
-func (l fakeLoader) New(newRoot string) (ifc.Loader, error) {
-	if newRoot == l.path {
+func (l fakeRemoteLoader) New(newRoot string) (ifc.Loader, error) {
+	if _, ok := l.dirs[newRoot]; ok {
 		return nil, nil
 	}
-	return nil, fmt.Errorf("%s not exist", newRoot)
+	return nil, errors.WrapPrefixf(
+		errors.Errorf("does not exist"),
+		fmt.Sprintf("'%s'", newRoot))
 }
-func (l fakeLoader) Load(location string) ([]byte, error) {
-	return nil, nil
+func (l fakeRemoteLoader) Load(location string) ([]byte, error) {
+	if _, ok := l.files[location]; ok {
+		return nil, nil
+	}
+	return nil, errors.WrapPrefixf(
+		errors.Errorf("does not exist"),
+		fmt.Sprintf("'%s'", location))
 }
-func (l fakeLoader) Cleanup() error {
+func (l fakeRemoteLoader) Cleanup() error {
 	return nil
 }

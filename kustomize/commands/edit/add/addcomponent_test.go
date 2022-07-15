@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/konfig"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -21,6 +22,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddComponentHappyPath(t *testing.T) {
+	// cannot use MakeFsInMemory(), since it cannot Glob relative paths
 	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
 	require.NoError(t, err)
@@ -38,7 +40,7 @@ func TestAddComponentHappyPath(t *testing.T) {
 }
 
 func TestAddComponentAlreadyThere(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
@@ -52,18 +54,16 @@ func TestAddComponentAlreadyThere(t *testing.T) {
 }
 
 func TestAddKustomizationFileAsComponent(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
-	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
-	require.NoError(t, err)
+	fSys := filesys.MakeEmptyDirInMemory()
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddComponent(fSys)
-	args := []string{componentFileName}
+	args := []string{konfig.DefaultKustomizationFileName()}
 	require.NoError(t, cmd.RunE(cmd, args))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
 	require.NoError(t, err)
-	assert.NotContains(t, string(content), componentFileName)
+	assert.NotContains(t, string(content), konfig.DefaultKustomizationFileName())
 }
 
 func TestAddComponentNoArgs(t *testing.T) {

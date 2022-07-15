@@ -43,8 +43,8 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 }
 
 // DoNothingCloner returns a cloner that only sets
-// cloneDir field in the repoSpec.  It's assumed that
-// the cloneDir is associated with some fake filesystem
+// the Dir field in the repoSpec.  It's assumed that
+// the Dir is associated with some fake filesystem
 // used in a test.
 func DoNothingCloner(dir filesys.ConfirmedDir) Cloner {
 	return func(rs *RepoSpec) error {

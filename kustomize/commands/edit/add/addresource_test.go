@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/konfig"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -21,6 +22,7 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 )
 
 func TestAddResourceHappyPath(t *testing.T) {
+	// cannot use MakeFsInMemory(), since it cannot Glob relative paths
 	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	require.NoError(t, err)
@@ -57,7 +59,7 @@ replacements:
 }
 
 func TestAddResourceAlreadyThere(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
@@ -71,19 +73,17 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 }
 
 func TestAddKustomizationFileAsResource(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
-	err := fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
-	require.NoError(t, err)
+	fSys := filesys.MakeEmptyDirInMemory()
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddResource(fSys)
-	args := []string{resourceFileName}
+	args := []string{konfig.DefaultKustomizationFileName()}
 	assert.NoError(t, cmd.RunE(cmd, args))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
 	assert.NoError(t, err)
 
-	assert.NotContains(t, string(content), resourceFileName)
+	assert.NotContains(t, string(content), konfig.DefaultKustomizationFileName())
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
@@ -91,6 +91,6 @@ func TestAddResourceNoArgs(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	err := cmd.Execute()
-	assert.Error(t, err)
-	assert.Equal(t, "must specify a resource file", err.Error())
+	require.Error(t, err)
+	require.Equal(t, "must specify a resource file", err.Error())
 }
