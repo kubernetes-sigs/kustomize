@@ -2356,6 +2356,66 @@ spec:
     - containerPort: 80
 `,
 		},
+		"replace an existing mapping value": {
+			input: `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: old
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - image: busybox
+      name: myapp-container
+  restartPolicy: new
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: my-pod
+    fieldPath: spec
+  targets:
+  - select:
+      name: hello
+      kind: Job
+    fieldPaths:
+     - spec.template.spec
+    options:
+      create: true
+`,
+			expected: `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: new
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+  restartPolicy: new
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
