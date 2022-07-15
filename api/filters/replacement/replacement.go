@@ -51,10 +51,10 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 
 	rn, err := source.Pipe(yaml.Lookup(fieldPath...))
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("error looking up replacement source: %s", err.Error()))
+		return nil, fmt.Errorf("error looking up replacement source: %w", err)
 	}
 	if rn.IsNilOrEmpty() {
-		return nil, errors.New(fmt.Sprintf("fieldPath `%s` is missing for replacement source %s", r.Source.FieldPath, r.Source.ResId))
+		return nil, fmt.Errorf("fieldPath `%s` is missing for replacement source %s", r.Source.FieldPath, r.Source.ResId)
 	}
 
 	return getRefinedValue(r.Source.Options, rn)
@@ -67,13 +67,13 @@ func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yam
 	for _, n := range nodes {
 		ids, err := utils.MakeResIds(n)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("error getting node IDs: %s", err.Error()))
+			return nil, fmt.Errorf("error getting node IDs: %w", err)
 		}
 		for _, id := range ids {
 			if id.IsSelectedBy(selector.ResId) {
 				if len(matches) > 0 {
-					return nil, errors.New(fmt.Sprintf(
-						"multiple matches for selector %s", selector))
+					return nil, fmt.Errorf(
+						"multiple matches for selector %s", selector)
 				}
 				matches = append(matches, n)
 				break
@@ -81,7 +81,7 @@ func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yam
 		}
 	}
 	if len(matches) == 0 {
-		return nil, errors.New(fmt.Sprintf("nothing selected by %s", selector))
+		return nil, fmt.Errorf("nothing selected by %s", selector)
 	}
 	return matches[0], nil
 }
@@ -91,11 +91,11 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 		return rn, nil
 	}
 	if rn.YNode().Kind != yaml.ScalarNode {
-		return nil, errors.New("delimiter option can only be used with scalar nodes")
+		return nil, fmt.Errorf("delimiter option can only be used with scalar nodes")
 	}
 	value := strings.Split(yaml.GetValue(rn), options.Delimiter)
 	if options.Index >= len(value) || options.Index < 0 {
-		return nil, errors.New(fmt.Sprintf("options.index %d is out of bounds for value %s", options.Index, yaml.GetValue(rn)))
+		return nil, fmt.Errorf("options.index %d is out of bounds for value %s", options.Index, yaml.GetValue(rn))
 	}
 	n := rn.Copy()
 	n.YNode().Value = value[options.Index]
@@ -180,7 +180,7 @@ func rejectId(rejects []*types.Selector, id *resid.ResId) bool {
 func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.TargetSelector) error {
 	for _, fp := range selector.FieldPaths {
 		fieldPath := kyaml_utils.SmarterPathSplitter(fp, ".")
-		create, err := shouldCreateField(selector.Options, fieldPath, target)
+		create, err := shouldCreateField(selector.Options, fieldPath)
 		if err != nil {
 			return err
 		}
@@ -244,14 +244,14 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 	return nil
 }
 
-func shouldCreateField(options *types.FieldOptions, fieldPath []string, resource *yaml.RNode) (bool, error) {
+func shouldCreateField(options *types.FieldOptions, fieldPath []string) (bool, error) {
 	if options == nil || !options.Create {
 		return false, nil
 	}
 	// create option is not supported in a wildcard matching
 	for _, f := range fieldPath {
 		if f == "*" {
-			return false, errors.New("cannot support create option in a multi-value target")
+			return false, fmt.Errorf("cannot support create option in a multi-value target")
 		}
 	}
 	return true, nil
