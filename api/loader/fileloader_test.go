@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func TestHasFileScheme(t *testing.T) {
+func TestHasRemoteFileScheme(t *testing.T) {
 	cases := map[string]struct {
 		url   string
 		valid bool

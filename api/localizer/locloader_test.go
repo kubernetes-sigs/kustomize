@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	lclzr "sigs.k8s.io/kustomize/api/localizer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
