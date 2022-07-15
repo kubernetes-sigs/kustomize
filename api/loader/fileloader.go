@@ -18,6 +18,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+// HasRemoteFileScheme returns whether path has a url scheme that kustomize allows for
+// remote files. See examples/remoteBuild.md
+func HasRemoteFileScheme(path string) bool {
+	u, err := url.Parse(path)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https")
+}
+
 // fileLoader is a kustomization's interface to files.
 //
 // The directory in which a kustomization file sits
@@ -283,7 +290,7 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 // else an error. Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
-	if u, err := url.Parse(path); err == nil && (u.Scheme == "http" || u.Scheme == "https") {
+	if HasRemoteFileScheme(path) {
 		var hc *http.Client
 		if fl.http != nil {
 			hc = fl.http
