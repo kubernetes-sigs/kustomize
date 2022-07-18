@@ -557,12 +557,13 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 		return nil
 	}
 
-	version, exists := openAPIField["version"]
-	if exists && schema != nil {
-		return fmt.Errorf("builtin version and custom schema provided, cannot use both")
-	}
+	version, versionProvided := openAPIField["version"]
 
-	if schema != nil { // use custom schema
+	// use custom schema
+	if schema != nil {
+		if versionProvided {
+			return fmt.Errorf("builtin version and custom schema provided, cannot use both")
+		}
 		customSchema = schema
 		kubernetesOpenAPIVersion = "custom"
 		// if the schema is changed, initSchema should parse the new schema
@@ -571,11 +572,12 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 	}
 
 	// use builtin version
-	kubernetesOpenAPIVersion = strings.ReplaceAll(version, ".", "")
-	if kubernetesOpenAPIVersion == "" {
-		return nil
+	kubernetesOpenAPIVersion = version
+	if version == "" {
+		version = kubernetesapi.DefaultOpenAPI
 	}
-	if _, ok := kubernetesapi.OpenAPIMustAsset[kubernetesOpenAPIVersion]; !ok {
+
+	if _, ok := kubernetesapi.OpenAPIMustAsset[version]; !ok {
 		return fmt.Errorf("the specified OpenAPI version is not built in")
 	}
 	customSchema = nil
@@ -629,11 +631,10 @@ func parseBuiltinSchema(version string) {
 		// don't parse the built in schema
 		return
 	}
-
 	// parse the swagger, this should never fail
 	assetName := filepath.Join(
 		"kubernetesapi",
-		version,
+		strings.ReplaceAll(version, ".", "_"),
 		"swagger.pb")
 
 	if err := parse(kubernetesapi.OpenAPIMustAsset[version](assetName), Proto); err != nil {

@@ -421,7 +421,7 @@ spec:
       - image: nginx
         name: server
 `)
-		assert.Equal(t, "v1212", openapi.GetSchemaVersion())
+		assert.Equal(t, "v1.21.2", openapi.GetSchemaVersion())
 	})
 }
 
@@ -580,7 +580,7 @@ spec:
       containers:
       - image: whatever
 `)
-		assert.Equal(t, "v1212", openapi.GetSchemaVersion())
+		assert.Equal(t, "v1.21.2", openapi.GetSchemaVersion())
 	})
 }
 

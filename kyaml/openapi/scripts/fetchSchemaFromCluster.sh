@@ -15,5 +15,5 @@ curl -k -H "Accept: application/com.github.proto-openapi.spec.v2@v1.0+protobuf" 
 
 $MYGOBIN/kind delete cluster --name=getopenapidata
 cp /tmp/kubeconfig.txt $HOME/.kube/config | true
-mkdir -p kubernetesapi/"${VERSION//.}"
-cp /tmp/new_swagger.pb kubernetesapi/"${VERSION//.}"/swagger.pb
+mkdir -p kubernetesapi/"${VERSION//./_}"
+cp /tmp/new_swagger.pb kubernetesapi/"${VERSION//./_}"/swagger.pb

@@ -5,6 +5,7 @@ package openapi
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	openapi_v2 "github.com/google/gnostic/openapiv2"
@@ -18,7 +19,7 @@ func BenchmarkProtoUnmarshal(t *testing.B) {
 	// parse the swagger, this should never fail
 	assetName := filepath.Join(
 		"kubernetesapi",
-		version,
+		strings.ReplaceAll(version, ".", "_"),
 		"swagger.pb")
 
 	b := kubernetesapi.OpenAPIMustAsset[version](assetName)

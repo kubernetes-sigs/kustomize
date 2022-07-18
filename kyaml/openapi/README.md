@@ -37,6 +37,9 @@ make all
 
 Then, follow the instructions in the next section to make the newly generated schema available for use.
 
+You can optionally delete the old `swagger.pb` and `swagger.go` files if we no longer need to support that kubernetes version of
+openapi data.
+
 ### Updating the builtin versions
 
 The above command will update the [OpenAPI schema] and the [Kustomization schema]. It will
@@ -50,16 +53,16 @@ Here is an example of what it looks like with v1.21.2.
 package kubernetesapi
 
 import (
-"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1212"
+"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_2"
 )
 
 const Info = "{title:Kubernetes,version:v1.21.2}"
 
 var OpenAPIMustAsset = map[string]func(string) []byte{
-"v1212": v1212.MustAsset,
+"v1212": v1_21_2.MustAsset,
 }
 
-const DefaultOpenAPI = "v1212"
+const DefaultOpenAPI = "v1.21.2"
 ```
 
 You need to replace the version number in all five places it appears. If you would like to keep the old version as an option,
@@ -71,17 +74,18 @@ Here is an example of both v1.21.2 and v1.21.5 being available to use, but v1.21
 package kubernetesapi
 
 import (
-"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1215"
+  "sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_2"
+  "sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_5"
 )
 
 const Info = "{title:Kubernetes,version:v1.21.2},{title:Kubernetes,version:v1.21.5}"
 
 var OpenAPIMustAsset = map[string]func(string) []byte{
-"v1212": v1212.MustAsset,
-"v1215": v1215.MustAsset,
+"v1.21.2": v1_21_2.MustAsset,
+"v1.21.5": v1_21_5.MustAsset,
 }
 
-const DefaultOpenAPI = "v1215"
+const DefaultOpenAPI = "v1.21.5"
 ```
 
 
