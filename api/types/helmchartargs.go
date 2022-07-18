@@ -118,5 +118,6 @@ func makeHelmChartFromHca(old *HelmChartArgs) (c HelmChart) {
 	c.ValuesInline = old.ValuesLocal
 	c.ValuesMerge = old.ValuesMerge
 	c.ReleaseName = old.ReleaseName
+	c.Namespace = old.ReleaseNamespace
 	return
 }
