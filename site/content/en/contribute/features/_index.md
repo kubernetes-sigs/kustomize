@@ -11,7 +11,7 @@ description: >
 [sig-cli]: https://groups.google.com/g/kubernetes-sig-cli
 [meeting agenda]: https://docs.google.com/document/d/1r0YElcXt6G5mOWxwZiXgGu_X6he3F--wKwg-9UBc29I/edit#heading=h.himo1st0tqyy
 [KEP]: https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli
-[table-driven]: https://github.com/kubernetes-sigs/kustomize/blob/a8b9741866cf8e0c43e643ab7a9f40a3bd7e2a4d/api/filters/imagetag/imagetag_test.go#L15
+[table-driven]: https://github.com/kubernetes-sigs/kustomize/blob/master/api/filters/imagetag/imagetag_test.go#L16
 [eschewed feature list]: /faq/eschewedfeatures/
 [kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
 [sig-cli bi-weekly]: https://github.com/kubernetes/community/tree/master/sig-cli#meetings

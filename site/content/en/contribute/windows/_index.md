@@ -25,7 +25,7 @@ Assume:
 
 - Running a stock Windows 10 system
 - Local Admin rights.
-- You can open [PowerShell as administrator](http://lmgtfy.com/?iie=1&q=How+to+open+powershell+as+administrator)
+- You can open PowerShell as administrator
 - You should be knowledgeable enough to pull source for packages into your GO ```src``` directory
   - Yes, this means you also need to know a bit about **git** usually
 
