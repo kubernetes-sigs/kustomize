@@ -8,12 +8,13 @@ description: >
 ---
 
 [issue]: https://github.com/kubernetes-sigs/kustomize/issues
-[sig-cli]: /contributing/kustomize/community/
+[sig-cli]: https://groups.google.com/g/kubernetes-sig-cli
 [meeting agenda]: https://docs.google.com/document/d/1r0YElcXt6G5mOWxwZiXgGu_X6he3F--wKwg-9UBc29I/edit#heading=h.himo1st0tqyy
 [KEP]: https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli
 [table-driven]: https://github.com/kubernetes-sigs/kustomize/blob/a8b9741866cf8e0c43e643ab7a9f40a3bd7e2a4d/api/filters/imagetag/imagetag_test.go#L15
-[eschewed feature list]: /faq/kustomize/eschewedfeatures/
+[eschewed feature list]: /faq/eschewedfeatures/
 [kind/feature]: https://github.com/kubernetes-sigs/kustomize/labels/kind%2Ffeature
+[sig-cli bi-weekly]: https://github.com/kubernetes/community/tree/master/sig-cli#meetings
 
 Following is the process for proposing a new Kustomize feature:
 
@@ -24,7 +25,7 @@ Following is the process for proposing a new Kustomize feature:
    - example of how you would accomplish the motivating task *without* the feature
    - example of how you would accomplish the motivating task *with* the feature
 3. Email the [sig-cli] mailing list with the issue
-4. Present the issue at [sig-cli] bi-weekly meeting on Zoom
+4. Present the issue at [sig-cli bi-weekly] meeting on Zoom
    - add it to the [meeting agenda] doc
    - be present to discuss the feature
    - response may be -- move forward with a PoC, not to move forward, defer and come back later,

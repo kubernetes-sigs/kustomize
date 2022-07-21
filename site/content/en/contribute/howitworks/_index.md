@@ -8,58 +8,57 @@ description: >
 ---
 
 {{< alert color="success" title="Info" >}}
-To build kustomize using the locally modified modules, `replace` statements must be added to
-the `kustomize/go.mod`.
+Kustomize supports go workspace mode, so if adding locally modified modules, remember to also add it to the [go.work](https://github.com/kubernetes-sigs/kustomize/blob/master/go.work) file.
 
-e.g. if code in `api` was modified, a `replace` statement would need to be added for the
-`kustomize/api` module.
 {{< /alert >}}
 
-Call stack when running `kustomize build`, with links to code.
+## Call stack
+Call stack when running `kustomize build`, with links to code:
 
-## Run build
+#### Run build
 
-* [RunBuild](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/kustomize/internal/commands/build/build.go#L121)
-  * [MakeKustomizer](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/krusty/kustomizer.go#L32)
-  * [Run](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/krusty/kustomizer.go#L47): performs a kustomization. It uses its internal filesystem reference to read the file at the given path argument, interpret it as a kustomization.yaml file, perform the kustomization it represents, and return the resulting resources.
+* [Build Command](https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go#L65)
+  * [MakeKustomizer](https://github.com/kubernetes-sigs/kustomize/blob/master/api/krusty/kustomizer.go#L36)
+  * [Run](https://github.com/kubernetes-sigs/kustomize/blob/master/api/krusty/kustomizer.go#L53): performs a kustomization. It uses its internal filesystem reference to read the file at the given path argument, interpret it as a `kustomization.yaml` file, perform the kustomization it represents, and returns the resulting resources.
     * Create factories
-      * [tranformer.NewFactoryImpl](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/k8sdeps/transformer/factory.go#L17)
-      * [resmap.NewFactory](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/resmap/factory.go#L21)
-        * [resource.NewFactory](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/resource/factory.go#L23)
-          * [kustruct.NewKunstructuredFactoryImpl](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/k8sdeps/kunstruct/factory.go#L28)
-      * [loader.NewLoader](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/loader/loader.go#L19)
+      * [depprovider.GetFactory](https://github.com/kubernetes-sigs/kustomize/blob/master/api/provider/depprovider.go#L36)
+      * [resmap.NewFactory](https://github.com/kubernetes-sigs/kustomize/blob/master/api/resmap/factory.go#L22)
+        * [resource.Factory](https://github.com/kubernetes-sigs/kustomize/blob/master/api/resource/factory.go#L23)
+      * [loader.NewLoader](https://github.com/kubernetes-sigs/kustomize/blob/master/api/loader/loader.go)
       * [validator.NewKustValidator](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/k8sdeps/validator/validators.go#L23)
-    * [NewKustTarget](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L38)
-    * [Load](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L54)
-    * [MakeCustomizeResMap](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L109): details in next section
-  * [emitResources](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/kustomize/internal/commands/build/build.go#L143)
+    * [NewKustTarget](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L42)
+      * [Load](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L58)
+    * [MakeCustomizeResMap](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L117): details in [next section](#make-resource-map)
+  * [write to yaml file](https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go#L89-#L97)
 
-## Make resource map
+### Make resource map
 
-* [makeCustomizeResMap](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L117)
-  * [AccumulateTarget](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L196): returns a new ResAccumulator, holding customized resources and the data/rules used to do so. The name back references and vars are not yet fixed.
-    * [accummulateResources](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L302): fills the given resourceAccumulator with resources read from the given list of paths.
+* [makeCustomizeResMap](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L121)
+  * [AccumulateTarget](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L179): returns a new ResAccumulator, holding customized resources and the data/rules used to do so. The name back references and vars are not yet fixed.
+    * [accummulateResources](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L404): fills the given resourceAccumulator with resources read from the given list of paths.
     * Merge config from builtin and CRDs
-    * [runGenerators](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L239)
-      * [configureBuiltinGenerators](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget_configplugin.go#L28)
+    * [runGenerators](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L253)
+      * [configureBuiltinGenerators](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget_configplugin.go#L34)
         * ConfigMapGenerator
         * SecretGenerator
-      * [configureExternalGenerators]()
+      * [configureExternalGenerators](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L286)
       * Iterate all generators
-    * [runTransfomers](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L274)
-      * [configureBuiltinTransformers](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget_configplugin.go#L44)
+    * [runTransfomers](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L317)
+      * [configureBuiltinTransformers](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget_configplugin.go#L69)
         * PatchStrategicMergeTransformer
         * PatchTransformer
         * NamespaceTransformer
         * PrefixSuffixTransformer
+        * SuffixTransformer
         * LabelTransformer
         * AnnotationsTransformer
         * PatchJson6902Transformer
         * ReplicaCountTransformer
         * ImageTagTransformer
-      * [configureExternalTransformers](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L291)
-    * [MergeVars](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L64)
+        * ReplacementTransformer
+      * [configureExternalTransformers](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/target/kusttarget.go#L333)
+    * [MergeVars](https://github.com/kubernetes-sigs/kustomize/blob/master/api/internal/accumulator/resaccumulator.go#L71)
   * The following steps must be done last, not as part of the recursion implicit in AccumulateTarget.
-    * [addHashesToNames](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/target/kusttarget.go#L153)
-    * [FixBackReferences](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L160): Given that names have changed (prefixs/suffixes added), fix all the back references to those names.
-    * [ResolveVars](https://github.com/kubernetes-sigs/kustomize/blob/c7d78970fb86782dbdded3a93944b774f826071f/api/internal/accumulator/resaccumulator.go#L141)
+    * [addHashesToNames](https://github.com/kubernetes-sigs/kustomize/blob/2f2ba40876b3b6c5b33281e8dee503010a1bc537/api/internal/target/kusttarget.go#L156)
+    * [FixBackReferences](https://github.com/kubernetes-sigs/kustomize/blob/2f2ba40876b3b6c5b33281e8dee503010a1bc537/api/internal/accumulator/resaccumulator.go#L163): Given that names have changed (prefixs/suffixes added), fix all the back references to those names.
+    * [ResolveVars](https://github.com/kubernetes-sigs/kustomize/blob/2f2ba40876b3b6c5b33281e8dee503010a1bc537/api/internal/accumulator/resaccumulator.go#L144)

@@ -9,9 +9,10 @@ description: >
 
 [krusty package]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/krusty
 [reusable custom transformer test]: https://github.com/kubernetes-sigs/kustomize/tree/master/api/krusty/customconfigreusable_test.go
+[example PR]: https://github.com/kubernetes-sigs/kustomize/pull/4683
 
-File issues as desired, but if you've found a problem
-with how `kustomize build` works, please report
+File [issues](https://github.com/kubernetes-sigs/kustomize/issues) as desired, but if you've found a problem
+with how `kustomize build` works, please report:
 
 * the output of `kustomize version`,
 * the input (the content of `kustomization.yaml`
@@ -44,7 +45,7 @@ albeit with output demonstrating behavior you
 presumably want to change.
 
 Send the new test in a PR, along with commentary (in
-the test) on what you'd prefer to see.
+the test) on what you'd prefer to see. You can refer to this [example PR]
 
 The person who fixes the bug then has a clear bug
 reproduction and a test to modify when the bug is
