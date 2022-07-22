@@ -23,7 +23,7 @@ func newCmdAddTransformer(fSys filesys.FileSystem) *cobra.Command {
 	var o addTransformerOptions
 	cmd := &cobra.Command{
 		Use:   "transformer",
-		Short: "Add the name of a file containing a transformer configuration to the kustomization file.",
+		Short: "Add the name of a file containing a transformer configuration to the kustomization file",
 		Example: `
 		add transformer {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

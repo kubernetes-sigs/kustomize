@@ -13,7 +13,7 @@ import (
 func NewCmdSet(fSys filesys.FileSystem, ldr ifc.KvLoader, v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "set",
-		Short: "Sets the value of different fields in kustomization file.",
+		Short: "Sets the value of different fields in kustomization file",
 		Long:  "",
 		Example: `
 	# Sets the nameprefix field

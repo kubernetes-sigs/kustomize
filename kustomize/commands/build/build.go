@@ -42,7 +42,7 @@ func MakeHelp(pgmName, cmdName string) *Help {
 	fN := konfig.DefaultKustomizationFileName()
 	return &Help{
 		Use:   cmdName + " DIR",
-		Short: "Build a kustomization target from a directory or URL.",
+		Short: "Build a kustomization target from a directory or URL",
 		Long: fmt.Sprintf(`Build a set of KRM resources using a '%s' file.
 The DIR argument must be a path to a directory containing
 '%s', or a git repository URL with a path suffix

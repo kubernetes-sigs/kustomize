@@ -24,7 +24,7 @@ func newCmdAddComponent(fSys filesys.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "component",
-		Short: "Add the name of a file containing a component to the kustomization file.",
+		Short: "Add the name of a file containing a component to the kustomization file",
 		Example: `
 		add component {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
