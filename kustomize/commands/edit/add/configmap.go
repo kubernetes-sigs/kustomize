@@ -20,7 +20,7 @@ func newCmdAddConfigMap(
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
-		Short: "Adds a configmap to the kustomization file.",
+		Short: "Adds a configmap to the kustomization file",
 		Long:  "",
 		Example: `
 	# Adds a configmap to the kustomization file (with a specified key)

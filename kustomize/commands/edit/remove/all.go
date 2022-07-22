@@ -15,7 +15,7 @@ func NewCmdRemove(
 	v ifc.Validator) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "remove",
-		Short: "Removes items from the kustomization file.",
+		Short: "Removes items from the kustomization file",
 		Long:  "",
 		Example: `
 	# Removes resources from the kustomization file
