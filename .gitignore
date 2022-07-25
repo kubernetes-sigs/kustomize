@@ -6,6 +6,7 @@
 *.dylib
 
 .idea
+.vscode
 *.iml
 
 # Test binary, build with `go test -c`
