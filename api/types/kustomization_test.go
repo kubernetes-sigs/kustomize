@@ -16,6 +16,66 @@ func fixKustomizationPostUnmarshallingCheck(k, e *Kustomization) bool {
 		k.Bases == nil
 }
 
+func TestKustomization_CheckDeprecatedFields(t *testing.T) {
+	tests := []struct {
+		name string
+		k    Kustomization
+		want *[]string
+	}{
+		{
+			name: "using_bases",
+			k: Kustomization{
+				Bases: []string{"base"},
+			},
+			want: &[]string{deprecatedBaseWarningMessage},
+		},
+		{
+			name: "usingPatchesJson6902",
+			k: Kustomization{
+				PatchesJson6902: []Patch{},
+			},
+			want: &[]string{deprecatedPatchesJson6902Message},
+		},
+		{
+			name: "usingPatchesStrategicMerge",
+			k: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{},
+			},
+			want: &[]string{deprecatedPatchesStrategicMergeMessage},
+		},
+		{
+			name: "usingVar",
+			k: Kustomization{
+				Vars: []Var{},
+			},
+			want: &[]string{deprecatedVarsMessage},
+		},
+		{
+			name: "usingAll",
+			k: Kustomization{
+				Bases:                 []string{"base"},
+				PatchesJson6902:       []Patch{},
+				PatchesStrategicMerge: []PatchStrategicMerge{},
+				Vars:                  []Var{},
+			},
+			want: &[]string{
+				deprecatedBaseWarningMessage,
+				deprecatedPatchesJson6902Message,
+				deprecatedPatchesStrategicMergeMessage,
+				deprecatedVarsMessage,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := tt.k
+			if got := k.CheckDeprecatedFields(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Kustomization.CheckDeprecatedFields() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 	var k Kustomization
 	k.Bases = append(k.Bases, "foo")
