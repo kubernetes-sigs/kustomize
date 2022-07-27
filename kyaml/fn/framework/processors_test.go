@@ -491,7 +491,9 @@ another`),
 			wantErr: `failed to parse rendered patch template into a resource:
 001 aString
 002 another
-: wrong Node Kind for  expected: MappingNode was ScalarNode: value: {aString another}`,
+: wrong node kind: expected MappingNode but got ScalarNode: node contents:
+aString another
+`,
 		},
 		{
 			name: "ResourcePatchTemplate is invalid template",
@@ -515,7 +517,9 @@ another`),
 			wantErr: `failed to parse rendered patch template into a resource:
 001 aString
 002 another
-: wrong Node Kind for  expected: MappingNode was ScalarNode: value: {aString another}`,
+: wrong node kind: expected MappingNode but got ScalarNode: node contents:
+aString another
+`,
 		},
 		{
 			name: "ContainerPatchTemplate is invalid template",
@@ -538,7 +542,9 @@ another`),
 			wantErr: `failed to parse rendered template into a resource:
 001 aString
 002 another
-: wrong Node Kind for  expected: MappingNode was ScalarNode: value: {aString another}`,
+: wrong node kind: expected MappingNode but got ScalarNode: node contents:
+aString another
+`,
 		},
 		{
 			name: "ResourceTemplate is invalid template",

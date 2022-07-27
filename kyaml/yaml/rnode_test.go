@@ -1372,7 +1372,9 @@ spec:
 		{
 			testName: "non mapping node error",
 			input:    `apiVersion`,
-			err:      "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {apiVersion}",
+			err: `wrong node kind: expected MappingNode but got ScalarNode: node contents:
+apiVersion
+`,
 		},
 	}
 

@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/evanphx/json-patch v4.11.0+incompatible
-	github.com/go-errors/errors v1.0.1
+	github.com/go-errors/errors v1.4.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/imdario/mergo v0.3.6
 	github.com/pkg/errors v0.9.1
