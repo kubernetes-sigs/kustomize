@@ -136,7 +136,7 @@ RELEASE_URL=$(echo "${releases}" |\
   sort -V | tail -n 1)
 
 if [ ! -n "$RELEASE_URL" ]; then
-  echo "Version $version does not have a release for ${opsys}/${arch}."
+  echo "Version $version does not exist or is not available for ${opsys}/${arch}."
   exit 1
 fi
 
