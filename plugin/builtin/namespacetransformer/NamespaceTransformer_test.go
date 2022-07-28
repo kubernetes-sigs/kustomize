@@ -14,6 +14,12 @@ const defaultFieldSpecs = `
 fieldSpecs:
 - path: metadata/namespace
   create: true
+- path: subjects/namespace
+  kind: RoleBinding
+  group: rbac.authorization.k8s.io
+- path: subjects/namespace
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
 - path: subjects
   kind: RoleBinding
   group: rbac.authorization.k8s.io
@@ -418,4 +424,279 @@ spec:
     altNamespace: test
     namespace: original
 `)
+}
+
+func TestNamespaceTransformer_RoleBindingSubjectMode(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	defaultInput := `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: system
+- kind: ServiceAccount
+  name: service-account
+  namespace: system
+- kind: ServiceAccount
+  name: another
+  namespace: random
+- kind: ServiceAccount
+  name: without-namespace
+- kind: Unrecognized
+  name: no-namespace
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice@example.com
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: frontend-admins
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:qa
+`
+
+	tests := []struct {
+		name              string
+		input             string
+		transformerConfig string
+		expected          string
+	}{
+		{
+			name:  "target ALL service account subjects",
+			input: defaultInput,
+			transformerConfig: `
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+setRoleBindingSubjects: allServiceAccounts
+` + defaultFieldSpecs,
+			expected: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: service-account
+  namespace: test
+- kind: ServiceAccount
+  name: another
+  namespace: test
+- kind: ServiceAccount
+  name: without-namespace
+  namespace: test
+- kind: Unrecognized
+  name: no-namespace
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice@example.com
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: frontend-admins
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:qa
+`,
+		},
+		{
+			name:  "target ALL subjects, role binding fieldspecs missing",
+			input: defaultInput,
+			transformerConfig: `
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+setRoleBindingSubjects: allServiceAccounts
+fieldSpecs:
+- path: metadata/namespace
+  create: true
+`,
+			expected: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: service-account
+  namespace: test
+- kind: ServiceAccount
+  name: another
+  namespace: test
+- kind: ServiceAccount
+  name: without-namespace
+  namespace: test
+- kind: Unrecognized
+  name: no-namespace
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice@example.com
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: frontend-admins
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:qa
+`,
+		},
+		{
+			name:  "target ALL UNSET service account subjects",
+			input: defaultInput,
+			transformerConfig: `
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+setRoleBindingSubjects: allServiceAccounts
+unsetOnly: true
+` + defaultFieldSpecs,
+			expected: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: system
+- kind: ServiceAccount
+  name: service-account
+  namespace: system
+- kind: ServiceAccount
+  name: another
+  namespace: random
+- kind: ServiceAccount
+  name: without-namespace
+  namespace: test
+- kind: Unrecognized
+  name: no-namespace
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice@example.com
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: frontend-admins
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:qa
+`,
+		},
+		{
+			name:  "target NO subjects",
+			input: defaultInput,
+			transformerConfig: `
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+setRoleBindingSubjects: none
+` + defaultFieldSpecs,
+			expected: defaultInput,
+		},
+		{
+			name:  "target subject named 'default' (explicitly)",
+			input: defaultInput,
+			transformerConfig: `
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+setRoleBindingSubjects: defaultOnly
+` + defaultFieldSpecs,
+			expected: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: service-account
+  namespace: system
+- kind: ServiceAccount
+  name: another
+  namespace: random
+- kind: ServiceAccount
+  name: without-namespace
+- kind: Unrecognized
+  name: no-namespace
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice@example.com
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: frontend-admins
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:qa
+`,
+		},
+		{
+			name:  "target subject named 'default' (mode unspecified)",
+			input: defaultInput,
+			transformerConfig: `
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+` + defaultFieldSpecs,
+			expected: `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: service-account
+  namespace: system
+- kind: ServiceAccount
+  name: another
+  namespace: random
+- kind: ServiceAccount
+  name: without-namespace
+- kind: Unrecognized
+  name: no-namespace
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: alice@example.com
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: frontend-admins
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts:qa
+`,
+		},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			th.RunTransformerAndCheckResult(test.transformerConfig, test.input, test.expected)
+		})
+	}
 }
