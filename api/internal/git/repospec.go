@@ -27,8 +27,11 @@ type RepoSpec struct {
 	// TODO(monopole): Drop raw, use processed fields instead.
 	raw string
 
-	// Host, e.g. github.com
+	// Host, e.g. https://github.com/
 	Host string
+
+	// Domain, e.g. github.com
+	Domain string
 
 	// orgRepo name (organization/repoName),
 	// e.g. kubernetes-sigs/kustomize
@@ -86,7 +89,7 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	host, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout := parseGitURL(n)
+	host, domain, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout := parseGitURL(n)
 	if orgRepo == "" {
 		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
@@ -94,7 +97,7 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
 	return &RepoSpec{
-		raw: n, Host: host, OrgRepo: orgRepo,
+		raw: n, Host: host, Domain: domain, OrgRepo: orgRepo,
 		Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: suffix,
 		Submodules: gitSubmodules, Timeout: gitTimeout}, nil
 }
@@ -109,7 +112,7 @@ const (
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGitURL(n string) (
-	host string, orgRepo string, path string, gitRef string, gitSubmodules bool, gitSuff string, gitTimeout time.Duration) {
+	host string, domain string, orgRepo string, path string, gitRef string, gitSubmodules bool, gitSuff string, gitTimeout time.Duration) {
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
@@ -118,7 +121,7 @@ func parseGitURL(n string) (
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
 		return
 	}
-	host, n = parseHostSpec(n)
+	host, domain, n = parseHostSpec(n)
 	gitSuff = gitSuffix
 	if strings.Contains(n, gitSuffix) {
 		index := strings.Index(n, gitSuffix)
@@ -145,7 +148,7 @@ func parseGitURL(n string) (
 	}
 	path = ""
 	orgRepo, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
-	return host, orgRepo, path, gitRef, gitSubmodules, gitSuff, gitTimeout
+	return host, domain, orgRepo, path, gitRef, gitSubmodules, gitSuff, gitTimeout
 }
 
 // Clone git submodules by default.
@@ -195,9 +198,31 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 	return parsed.Path, ref, duration, submodules
 }
 
-func parseHostSpec(n string) (string, string) {
-	var host string
+func parseDomain(host string, schemes []string) string {
+	if host == "gh:" {
+		return "github.com"
+	}
+	domain := host
+	for _, p := range schemes {
+		if strings.HasPrefix(domain, p) {
+			domain = domain[len(p):]
+			break
+		}
+	}
+	if i := strings.Index(domain, "@"); i > -1 {
+		domain = domain[i+1:]
+	}
+	if i := strings.Index(domain, ":"); i > -1 {
+		domain = domain[:i]
+	}
+	return strings.TrimSuffix(domain, "/")
+}
+
+func parseHostSpec(u string) (host string, domain string, n string) {
+	n = u
+	// TODO(annasong): handle ports, non-github ssh with userinfo, github.com sub-domains
 	// Start accumulating the host part.
+	schemes := []string{"ssh://", "https://", "http://"}
 	for _, p := range []string{
 		// Order matters here.
 		"git::", "gh:", "ssh://", "https://", "http://",
@@ -208,23 +233,24 @@ func parseHostSpec(n string) (string, string) {
 		}
 	}
 	if host == "git@" {
-		i := strings.Index(n, "/")
-		if i > -1 {
+		var i int
+		j := strings.Index(n, ":")
+		k := strings.Index(n, "/")
+		// ssh relative path
+		if j > -1 && (k == -1 || k > j) {
+			i = j
+			if k == i+1 {
+				// username expansion will be prefixed with '/' after ':'
+				i = k
+			}
 			host += n[:i+1]
 			n = n[i+1:]
-		} else {
-			i = strings.Index(n, ":")
-			if i > -1 {
-				host += n[:i+1]
-				n = n[i+1:]
-			}
 		}
-		return host, n
+		return host, parseDomain(host, schemes), n
 	}
 
 	// If host is a http(s) or ssh URL, grab the domain part.
-	for _, p := range []string{
-		"ssh://", "https://", "http://"} {
+	for _, p := range schemes {
 		if strings.HasSuffix(host, p) {
 			i := strings.Index(n, "/")
 			if i > -1 {
@@ -235,7 +261,8 @@ func parseHostSpec(n string) (string, string) {
 		}
 	}
 
-	return normalizeGitHostSpec(host), n
+	host = normalizeGitHostSpec(host)
+	return host, parseDomain(host, schemes), n
 }
 
 func normalizeGitHostSpec(host string) string {
