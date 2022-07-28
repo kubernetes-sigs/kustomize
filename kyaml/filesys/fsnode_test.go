@@ -35,6 +35,12 @@ var topCases = []pathCase{
 		errStr: "illegal name '..' in file creation",
 	},
 	{
+		what: "colon",
+		arg:  "a:b",
+		name: "a:b",
+		path: "a:b",
+	},
+	{
 		what:   "empty",
 		arg:    "",
 		name:   "",

@@ -569,7 +569,7 @@ func (n *fsNode) DebugPrint() {
 	})
 }
 
-var legalFileNamePattern = regexp.MustCompile("^[a-zA-Z0-9-_.]+$")
+var legalFileNamePattern = regexp.MustCompile("^[a-zA-Z0-9-_.:]+$")
 
 // This rules enforced here should be simpler and tighter
 // than what's allowed on a real OS.
