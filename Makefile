@@ -94,7 +94,6 @@ generate-kustomize-api:
 .PHONY: verify-kustomize-repo
 verify-kustomize-repo: \
 	install-tools \
-	lint \
 	check-license \
 	test-unit-all \
 	build-non-plugin-all \
