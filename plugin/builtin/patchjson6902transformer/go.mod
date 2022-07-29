@@ -6,7 +6,7 @@ require (
 	github.com/evanphx/json-patch v4.11.0+incompatible
 	github.com/pkg/errors v0.9.1
 	sigs.k8s.io/kustomize/api v0.11.5
-	sigs.k8s.io/kustomize/kyaml v0.13.7
+	sigs.k8s.io/kustomize/kyaml v0.13.8
 	sigs.k8s.io/yaml v1.2.0
 )
 
