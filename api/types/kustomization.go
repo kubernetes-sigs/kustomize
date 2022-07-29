@@ -222,6 +222,13 @@ func (k *Kustomization) FixKustomizationPreMarshalling() error {
 	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
 
+	if k.PatchesStrategicMerge != nil {
+		for _, patchStrategicMerge := range k.PatchesStrategicMerge {
+			k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
+		}
+		k.PatchesStrategicMerge = nil
+	}
+
 	// this fix is not in FixKustomizationPostUnmarshalling because
 	// it will break some commands like `create` and `add`. those
 	// commands depend on 'commonLabels' field
