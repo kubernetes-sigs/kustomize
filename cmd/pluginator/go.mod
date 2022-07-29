@@ -6,7 +6,7 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.0
-	sigs.k8s.io/kustomize/api v0.11.5
+	sigs.k8s.io/kustomize/api v0.12.0
 	sigs.k8s.io/kustomize/kyaml v0.13.8
 )
 
@@ -21,7 +21,6 @@ require (
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
