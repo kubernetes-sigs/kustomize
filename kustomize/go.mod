@@ -11,7 +11,7 @@ require (
 	golang.org/x/text v0.3.7
 	sigs.k8s.io/kustomize/api v0.11.5
 	sigs.k8s.io/kustomize/cmd/config v0.10.7
-	sigs.k8s.io/kustomize/kyaml v0.13.7
+	sigs.k8s.io/kustomize/kyaml v0.13.8
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -40,6 +40,7 @@ require (
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
