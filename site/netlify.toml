@@ -2,7 +2,6 @@
   base = "site/"
   command = "git submodule update --init --recursive --depth 1 && hugo"
   publish = "publishedSite/"
-  ignore = "exit 1"
 
 [build.environment]
   HUGO_VERSION = "0.92.2"
