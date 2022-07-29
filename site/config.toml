@@ -1,7 +1,7 @@
 baseURL = "https://kustomize.io"
 title = "Kustomize"
 
-publishDir = "../publishedSite"
+publishDir = "publishedSite"
 
 # Language settings
 contentDir = "content/en"

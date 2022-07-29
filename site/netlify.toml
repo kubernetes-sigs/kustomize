@@ -1,3 +1,20 @@
 [build]
+  base = "site/"
+  command = "git submodule update --init --recursive --depth 1 && hugo"
+  publish = "publishedSite/"
+  ignore = "exit 1"
+
 [build.environment]
-HUGO_VERSION = "0.88.1"
+  HUGO_VERSION = "0.92.2"
+  NODE_ENV = "development"
+  NETLIFY_BUILD_DEBUG = "true"
+
+[context.deploy-preview]
+  command = "git submodule update --init --recursive --depth 1 && hugo --enableGitInfo --buildFuture -b $DEPLOY_PRIME_URL"
+
+[context.branch-deploy]
+  ignore = "exit 0" # build PRs (deploy preview env) only, not all branches
+
+[context.production]
+  ignore = "exit 0" # never deploy production until we're ready to launch
+
