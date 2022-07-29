@@ -68,12 +68,14 @@ func RunFix(fSys filesys.FileSystem, w io.Writer) error {
 		fmt.Fprintln(w, `
 Fixed fields:
   patchesJson6902 -> patches
+  patchesStrategicMerge -> patches
   commonLabels -> labels
   vars -> replacements`)
 	} else {
 		fmt.Fprintln(w, `
 Fixed fields:
   patchesJson6902 -> patches
+  patchesStrategicMerge -> patches
   commonLabels -> labels
 
 To convert vars -> replacements, run the command `+"`kustomize edit fix --vars`"+`
