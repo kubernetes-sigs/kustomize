@@ -229,8 +229,16 @@ func parse(arg string) (types.Image, error) {
 // parseOverwrite parses the overwrite parameters
 // from the given arg into a struct
 func parseOverwrite(arg string, overwriteImage bool) (overwrite, error) {
-	// match <image>@<digest>
+	// match <image[:tag]>@<digest>
 	if d := strings.Split(arg, "@"); len(d) > 1 {
+		// match <image>:<tag>@<digest>
+		if t := strings.Split(d[0], ":"); len(t) > 1 {
+			return overwrite{
+				name:   t[0],
+				tag:    t[1],
+				digest: d[1],
+			}, nil
+		}
 		return overwrite{
 			name:   d[0],
 			digest: d[1],
