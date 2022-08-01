@@ -11,5 +11,8 @@ import (
 
 func getOSRoot() (string, error) {
 	sysDir, err := windows.GetSystemDirectory()
-	return filepath.VolumeName(sysDir) + `\`, err
+	if err != nil {
+		return "", err
+	}
+	return filepath.VolumeName(sysDir) + `\`, nil
 }
