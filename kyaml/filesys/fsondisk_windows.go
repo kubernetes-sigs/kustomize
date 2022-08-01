@@ -5,16 +5,14 @@ package filesys
 
 import (
 	"path/filepath"
-	"testing"
 
-	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 )
 
-func getOSRoot(t *testing.T) string {
-	t.Helper()
-
+func getOSRoot() (string, error) {
 	sysDir, err := windows.GetSystemDirectory()
-	require.NoError(t, err)
-	return filepath.VolumeName(sysDir) + `\`
+	if err != nil {
+		return "", err
+	}
+	return filepath.VolumeName(sysDir) + `\`, nil
 }
