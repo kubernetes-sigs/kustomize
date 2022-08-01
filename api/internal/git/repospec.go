@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -212,18 +213,26 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 	return parsed.Path, ref, duration, submodules
 }
 
+var userRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]*@`)
+
 func parseHostSpec(n string) (string, string) {
 	var host string
-	// Start accumulating the host part.
-	for _, p := range []string{
-		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://", "file://",
-		"git@", "github.com:", "github.com/"} {
-		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
-			n = n[len(p):]
-			host += p
+	consumeHostStrings := func(parts []string) {
+		for _, p := range parts {
+			if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
+				n = n[len(p):]
+				host += p
+			}
 		}
 	}
+	// Start accumulating the host part.
+	// Order matters here.
+	consumeHostStrings([]string{"git::", "gh:", "ssh://", "https://", "http://", "file://"})
+	if p := userRegex.FindString(n); p != "" {
+		n = n[len(p):]
+		host += p
+	}
+	consumeHostStrings([]string{"github.com:", "github.com/"})
 	if host == "git@" {
 		i := strings.Index(n, "/")
 		if i > -1 {
@@ -257,10 +266,14 @@ func parseHostSpec(n string) (string, string) {
 
 func normalizeGitHostSpec(host string) string {
 	s := strings.ToLower(host)
+	m := userRegex.FindString(host)
 	if strings.Contains(s, "github.com") {
-		if strings.Contains(s, "git@") || strings.Contains(s, "ssh:") {
+		switch {
+		case m != "":
+			host = m + "github.com:"
+		case strings.Contains(s, "ssh:"):
 			host = "git@github.com:"
-		} else {
+		default:
 			host = "https://github.com/"
 		}
 	}
