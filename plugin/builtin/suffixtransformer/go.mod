@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	sigs.k8s.io/kustomize/api v0.11.5
-	sigs.k8s.io/kustomize/kyaml v0.13.8
+	sigs.k8s.io/kustomize/kyaml v0.13.9
 )
 
 require (
