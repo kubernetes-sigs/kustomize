@@ -58,7 +58,8 @@ func TestCleanedAbs_2(t *testing.T) {
 	req := require.New(t)
 	fSys, _ := makeTestDir(t)
 
-	root := getOSRoot(t)
+	root, err := getOSRoot()
+	req.NoError(err)
 	d, f, err := fSys.CleanedAbs(root)
 	req.NoError(err)
 	req.Equal(root, d.String())
@@ -122,7 +123,8 @@ func TestConfirmDirDisk(t *testing.T) {
 	err = os.Symlink(filepath.Join(wd, relDir), linkDir)
 	req.NoError(err)
 
-	root := getOSRoot(t)
+	root, err := getOSRoot()
+	req.NoError(err)
 	tests := map[string]*struct {
 		path     string
 		expected string

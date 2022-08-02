@@ -8,10 +8,8 @@ package filesys
 
 import (
 	"path/filepath"
-	"testing"
 )
 
-func getOSRoot(t *testing.T) string {
-	t.Helper()
-	return string(filepath.Separator)
+func getOSRoot() (string, error) {
+	return string(filepath.Separator), nil
 }

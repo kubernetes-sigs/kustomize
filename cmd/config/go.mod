@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/inf.v0 v0.9.1
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661
-	sigs.k8s.io/kustomize/kyaml v0.13.8
+	sigs.k8s.io/kustomize/kyaml v0.13.9
 )
 
 require (
