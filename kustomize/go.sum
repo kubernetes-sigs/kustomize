@@ -228,8 +228,8 @@ k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661/go.mod h1:daOouuuwd9JXpv1
 k8s.io/utils v0.0.0-20210802155522-efc7438f0176/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 h1:HNSDgDCrr/6Ly3WEGKZftiE7IY19Vz2GdbOCyI4qqhc=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
-sigs.k8s.io/kustomize/api v0.12.0 h1:9kDUe94bgFaTJwPaHC3mdlcw/PfWupSKov1iGcKSlSw=
-sigs.k8s.io/kustomize/api v0.12.0/go.mod h1:x/VlfVNU8ey7rqGuWFKJH2mx4zmAgcjNLSLIwqLZKmQ=
+sigs.k8s.io/kustomize/api v0.12.1 h1:7YM7gW3kYBwtKvoY216ZzY+8hM+lV53LUayghNRJ0vM=
+sigs.k8s.io/kustomize/api v0.12.1/go.mod h1:y3JUhimkZkR6sbLNwfJHxvo1TCLwuwm14sCYnkH6S1s=
 sigs.k8s.io/kustomize/cmd/config v0.10.9 h1:LV8AUwZPuvqhGfia50uNwsPwNg1xOy9koEf5hyBnYs4=
 sigs.k8s.io/kustomize/cmd/config v0.10.9/go.mod h1:T0s850zPV3wKfBALA0dyeP/K74jlJcoP8Pr9ZWwE3MQ=
 sigs.k8s.io/kustomize/kyaml v0.13.9 h1:Qz53EAaFFANyNgyOEJbT/yoIHygK40/ZcvU3rgry2Tk=
