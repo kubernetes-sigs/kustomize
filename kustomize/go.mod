@@ -11,7 +11,7 @@ require (
 	golang.org/x/text v0.3.7
 	sigs.k8s.io/kustomize/api v0.12.0
 	sigs.k8s.io/kustomize/cmd/config v0.10.8
-	sigs.k8s.io/kustomize/kyaml v0.13.8
+	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.2.0
 )
 
