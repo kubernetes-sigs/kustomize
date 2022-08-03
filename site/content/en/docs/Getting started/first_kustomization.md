@@ -757,7 +757,7 @@ spec:
 
 ```
 
-`Variant 2` overlay build_:
+_Variant 2 overlay build_:
 
 ```yaml
 $ kustomize build overlays/var2/
