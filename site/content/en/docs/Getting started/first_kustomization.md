@@ -253,7 +253,7 @@ resources:
 - ../../base
 ```
 
-The build output for our Variant 1 overlay would now be:
+The build output for our `Variant 1` overlay would now be:
 
 ```yaml
 $ kustomize build overlays/var1/
@@ -437,7 +437,7 @@ Now that you have seen how kustomize works, let's add a few more requirements:
 |Label      |variant=var1                        |variant=var2                 |
 |Env Var    |ENVIRONMENT=env1                    |ENVIRONMENT=env2             |
 
-To keep the example brief, we will just be showing the changes for the Variant 1 overlay and then present the updated overlay files and builds for both overlays at the end.  The specific image tag can be set by making use of the `images` field. Add the following to the kustomization files in your overlays:
+To keep the example brief, we will just be showing the changes for the `Variant 1` overlay and then present the updated overlay files and builds for both overlays at the end.  The specific image tag can be set by making use of the `images` field. Add the following to the kustomization files in your overlays:
 
 ```yaml
 images:
@@ -455,7 +455,7 @@ labels:
   includeTemplates: true  # Setting this to true will make the label available also on the pod and not just the deployment
 ```
 
-At this point, your kustomization files for your Variant 1 overlay should be as follows:
+At this point, your kustomization files for your `Variant 1` overlay should be as follows:
 
 _kustomize-example/overlays/var1/kustomization.yaml_:
 ```yaml
@@ -485,7 +485,7 @@ resources:
 - ../../base
 ```
 
-Rebuilding the Variant 1 overlay gives the following:
+Rebuilding the `Variant 1` overlay gives the following:
 
 ```yaml
 $ kustomize build overlays/var1/
@@ -532,7 +532,7 @@ spec:
         - containerPort: 80
 ```
 
-Our last requirement to meet is to set the environment variable, and to do that we will create a patch.  To do this, create the following file for the Variant 1 overlay:
+Our last requirement to meet is to set the environment variable, and to do that we will create a patch.  To do this, create the following file for the `Variant 1` overlay:
 
 ```bash
 cat <<'EOF' >overlays/var1/patch-env-vars.yaml
@@ -757,7 +757,7 @@ spec:
 
 ```
 
-Variant 2 overlay build_:
+`Variant 2` overlay build_:
 
 ```yaml
 $ kustomize build overlays/var2/
