@@ -442,7 +442,7 @@ To keep the example brief, we will just be showing the changes for the `Variant 
 ```yaml
 images:
 - name: nginx
-  newTag: 1.20.1  ## For the Variant 2 overlay set this to 'latest'
+  newTag: 1.20.2  ## For the Variant 2 overlay set this to 'latest'
 ```
 
 For setting the label, we can use the `labels` field. Add the following to the kustomization files in your overlays:
@@ -473,7 +473,7 @@ replicas:
 
 images:
 - name: nginx
-  newTag: 1.20.1
+  newTag: 1.20.2
 
 labels:
 - pairs:
@@ -526,7 +526,7 @@ spec:
         variant: var1            ### label has been set here
     spec:
       containers:
-      - image: nginx:1.20.1       ### image tag has been set to 1.20.1
+      - image: nginx:1.20.2      ### image tag has been set to 1.20.2
         name: nginx
         ports:
         - containerPort: 80
@@ -604,7 +604,7 @@ spec:
       - env:
         - name: ENVIRONMENT               ### Environment variable has been added here
           value: env1
-        image: nginx:1.20.1
+        image: nginx:1.20.2
         name: nginx
         ports:
         - containerPort: 80
@@ -628,7 +628,7 @@ replicas:
 
 images:
 - name: nginx
-  newTag: 1.20.1
+  newTag: 1.20.2
 
 labels:
 - pairs:
@@ -750,7 +750,7 @@ spec:
       - env:
         - name: ENVIRONMENT
           value: env1
-        image: nginx:1.20.1
+        image: nginx:1.20.2
         name: nginx
         ports:
         - containerPort: 80
