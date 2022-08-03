@@ -172,16 +172,16 @@ spec:
 
 ### Create variants using overlays
 
-Now let's assume we need to deploy the nginx manifests from the previous section to two environments called `Staging` and `Production`. The manifests for these two environments will be mostly identical, with only a few minor changes between them. We call these two mostly identical manifests "variants". Traditionally to create variants, we could duplicate the manifests and apply the changes manually or rely on some templating engine. With kustomize, we can avoid templating and duplication of our manifests and apply the different changes we need using overlays. With this approach, the `base` would contain the common part of the our variants and the `overlays` contain our environment specific changes.
+Now let's assume we need to deploy the nginx manifests from the previous section to two environments called (in real life these could be for example `Staging` and `Production`). The manifests for these two environments will be mostly identical, with only a few minor changes between them. We call these two mostly identical manifests "variants". Traditionally to create variants, we could duplicate the manifests and apply the changes manually or rely on some templating engine. With kustomize, we can avoid templating and duplication of our manifests and apply the different changes we need using overlays. With this approach, the `base` would contain the common part of the our variants and the `overlays` contain our environment specific changes.
 
 Create the `kustomization.yaml` files for our two overlays and move the files we have so far into `base`:
 
 ```bash
-mkdir -p base overlays/staging overlays/production
+mkdir -p base overlays/var1 overlays/var2
 mv deployment.yaml kustomization.yaml service.yaml base
 
 
-cat <<'EOF' >overlays/staging/kustomization.yaml
+cat <<'EOF' >overlays/var1/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -189,7 +189,7 @@ resources:
 - ../../base
 EOF
 
-cat <<'EOF' >overlays/production/kustomization.yaml
+cat <<'EOF' >overlays/var2/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -209,9 +209,9 @@ kustomize-example
 │   ├── kustomization.yaml
 │   └── service.yaml
 └── overlays
-    ├── production
+    ├── var1
     │   └── kustomization.yaml
-    └── staging
+    └── var2
         └── kustomization.yaml
 ```
 
@@ -219,51 +219,51 @@ kustomize-example
 
 For the purposes our example, let's define some requirements of how our deployment should look like in the two environments:
 
-|Requirement|             Production             |           Staging           |
+|Requirement|             Variant 1              |          Variant 2          |
 |-----------|------------------------------------|-----------------------------|
-|Name       |env1-example-nginx-production       |env2-example-nginx-staging   |
-|Namespace  |production                          |staging                      |
+|Name       |env1-example-nginx-var1             |env2-example-nginx-var2      |
+|Namespace  |ns1                                 |ns2                          |
 |Replicas   |3                                   |2                            |
 
 
 We can achieve the names required by making use of `namePrefix` and `nameSuffix` as follows:
 
 
-_kustomize-example/overlays/production/kustomization.yaml_:
+_kustomize-example/overlays/var1/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namePrefix: env1-
-nameSuffix: -production
+nameSuffix: -var1
 
 resources:
 - ../../base
 ```
 
-_kustomize-example/overlays/staging/kustomization.yaml_:
+_kustomize-example/overlays/var2/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namePrefix: env2-
-nameSuffix: -staging
+nameSuffix: -var2
 
 resources:
 - ../../base
 ```
 
-The build output for our Production overlay would now be:
+The build output for our Variant 1 overlay would now be:
 
 ```yaml
-$ kustomize build overlays/production/
+$ kustomize build overlays/var1/
 
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: nginx
-  name: env1-example-nginx-production    ### service name changed here
+  name: env1-example-nginx-var1    ### service name changed here
 spec:
   ports:
   - port: 80
@@ -277,7 +277,7 @@ kind: Deployment
 metadata:
   labels:
     app: nginx
-  name: env1-example-nginx-production    ### deployment name changed here
+  name: env1-example-nginx-var1    ### deployment name changed here
 spec:
   replicas: 1
   selector:
@@ -300,6 +300,132 @@ It is important to note here that the name for _both_ the `deployment` and the `
 
 Moving on to our next requirements, we can set the namespace and the number of replicas we want by using `namespace` and `replicas` respectively:
 
+
+_kustomize-example/overlays/var1/kustomization.yaml_:
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: env1-
+nameSuffix: -var1
+
+namespace: ns1
+
+replicas:
+- name: example-nginx
+  count: 3
+
+resources:
+- ../../base
+```
+
+_kustomize-example/overlays/var2/kustomization.yaml_:
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: env2-
+nameSuffix: -var2
+
+namespace: ns2
+
+replicas:
+- name: example-nginx
+  count: 2
+
+resources:
+- ../../base
+```
+
+Note that the deployment name being referenced in `replicas` is the modified name that was output by `base`. Looking at the output of `kustomize build` we can see that we have met all the requirements we set out to meet:
+
+_Variant 1 overlay build_:
+
+```yaml
+$ kustomize build overlays/var1/
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: env1-example-nginx-var1
+  namespace: ns1              ### namespace has been set to ns1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: env1-example-nginx-var1
+  namespace: ns1              ### namespace has been set to ns1
+spec:
+  replicas: 3                 ### replicas have been updated from 1 to 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+```
+
+_Variant 2 overlay build_:
+
+```yaml
+$ kustomize build overlays/var2/
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: env2-example-nginx-var2
+  namespace: ns2                 ### namespace has been set to ns2
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: env2-example-nginx-var2
+  namespace: ns2                 ### namespace has been set to ns2
+spec:
+  replicas: 2                    ### replicas have been from 1 to 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        ports:
+        - containerPort: 80
+```
 
 _kustomize-example/overlays/production/kustomization.yaml_:
 ```yaml
