@@ -427,56 +427,298 @@ spec:
         - containerPort: 80
 ```
 
-_kustomize-example/overlays/production/kustomization.yaml_:
+### Further customisations
+
+Now that you have seen how kustomize works, let's add a few more requirements:
+
+|Requirement|             Variant 1              |          Variant 2          |
+|-----------|------------------------------------|-----------------------------|
+|Image      |nginx:1.20.2                        |nginx:latest                 |
+|Label      |variant=var1                        |variant=var2                 |
+|Env Var    |ENVIRONMENT=env1                    |ENVIRONMENT=env2             |
+
+To keep the example brief, we will just be showing the changes for the Variant 1 overlay and then present the updated overlay files and builds for both overlays at the end.  The specific image tag can be set by making use of the `images` field. Add the following to the kustomization files in your overlays:
+
+```yaml
+images:
+- name: nginx
+  newTag: 1.20.1  ## For the Variant 2 overlay set this to 'latest'
+```
+
+For setting the label, we can use the `labels` field. Add the following to the kustomization files in your overlays:
+
+```yaml
+labels:
+- pairs:
+    variant: var1  ## For the Variant 2 overlay set this to 'var2'
+  includeSelectors: false # Setting this to false so that the label is not added to the selectors
+  includeTemplates: true  # Setting this to true will make the label available also on the pod and not just the deployment
+```
+
+At this point, your kustomization files for your Variant 1 overlay should be as follows:
+
+_kustomize-example/overlays/var1/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namePrefix: env1-
-nameSuffix: -production
+nameSuffix: -var1
 
-namespace: production
+namespace: ns1
 
 replicas:
 - name: example-nginx
   count: 3
 
+images:
+- name: nginx
+  newTag: 1.20.1
+
+labels:
+- pairs:
+    variant: var1
+  includeSelectors: false
+  includeTemplates: true
+
 resources:
 - ../../base
 ```
 
-_kustomize-example/overlays/staging/kustomization.yaml_:
+Rebuilding the Variant 1 overlay gives the following:
+
+```yaml
+$ kustomize build overlays/var1/
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+    variant: var1                ### label has been set here
+  name: env1-example-nginx-var1
+  namespace: ns1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+    variant: var1                ### label has been set here
+  name: env1-example-nginx-var1
+  namespace: ns1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        variant: var1            ### label has been set here
+    spec:
+      containers:
+      - image: nginx:1.20.1       ### image tag has been set to 1.20.1
+        name: nginx
+        ports:
+        - containerPort: 80
+```
+
+Our last requirement to meet is to set the environment variable, and to do that we will create a patch.  To do this, create the following file for the Variant 1 overlay:
+
+```bash
+cat <<'EOF' >overlays/var1/patch-env-vars.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ENVIRONMENT
+          value: env1
+EOF
+```
+
+Next step, add a reference to that patch file in `kustomization.yaml`:
+
+```yaml
+patches:
+- patch-env-vars.yaml
+```
+
+One important thing to note here is that we the name of the deployment used is the name that we are getting from our base and not the deployment name that has the prefix and suffix added.
+
+Rebuilding the overlay shows that the environment variable has been added to our container:
+
+```yaml
+$ kustomize build overlays/var1/
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+    variant: var1
+  name: env1-example-nginx-var1
+  namespace: ns1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+    variant: var1
+  name: env1-example-nginx-var1
+  namespace: ns1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        variant: var1
+    spec:
+      containers:
+      - env:
+        - name: ENVIRONMENT               ### Environment variable has been added here
+          value: env1
+        image: nginx:1.20.1
+        name: nginx
+        ports:
+        - containerPort: 80
+```
+
+Looking at the output of `kustomize build` we can see that the additional requirements we set out to meet have been met.  Below are the files as they should be at this point in your overlays and the `kustomize build` output:
+
+_kustomize-example/overlays/var1/kustomization.yaml_:
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: env1-
+nameSuffix: -var1
+
+namespace: ns1
+
+replicas:
+- name: example-nginx
+  count: 3
+
+images:
+- name: nginx
+  newTag: 1.20.1
+
+labels:
+- pairs:
+    variant: var1
+  includeSelectors: false
+  includeTemplates: true
+
+resources:
+- ../../base
+
+patches:
+- patch-env-vars.yaml
+```
+
+_kustomize-example/overlays/var1/patch-env-vars.yaml_:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ENVIRONMENT
+          value: env1
+```
+
+_kustomize-example/overlays/var2/kustomization.yaml_:
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namePrefix: env2-
-nameSuffix: -staging
+nameSuffix: -var2
 
-namespace: staging
+namespace: ns2
 
 replicas:
 - name: example-nginx
   count: 2
 
+images:
+- name: nginx
+  newTag: latest
+
+labels:
+- pairs:
+    variant: var2
+  includeSelectors: false
+  includeTemplates: true
+
 resources:
 - ../../base
+
+patches:
+- patch-env-vars.yaml
 ```
 
-Note that the deployment name being referenced in `replicas` is the modified name that was output by `base`. Looking at the output of `kustomize build` we can see that we have met all the requirements we set out to meet:
+_kustomize-example/overlays/staging/patch-env-vars.yaml_:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ENVIRONMENT
+          value: env2
+```
 
-_Production overlay build_:
+_Variable 1 overlay build_:
 
 ```yaml
-$ kustomize build overlays/production/
+$ kustomize build overlays/var1/
 
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: nginx
-  name: env1-example-nginx-production
-  namespace: production              ### namespace has been set to production
+    variant: var1
+  name: env1-example-nginx-var1
+  namespace: ns1
 spec:
   ports:
   - port: 80
@@ -490,10 +732,11 @@ kind: Deployment
 metadata:
   labels:
     app: nginx
-  name: env1-example-nginx-production
-  namespace: production              ### namespace has been set to production
+    variant: var1
+  name: env1-example-nginx-var1
+  namespace: ns1
 spec:
-  replicas: 3                        ### replicas have been updated from 1 to 3
+  replicas: 3
   selector:
     matchLabels:
       app: nginx
@@ -501,26 +744,32 @@ spec:
     metadata:
       labels:
         app: nginx
+        variant: var1
     spec:
       containers:
-      - image: nginx
+      - env:
+        - name: ENVIRONMENT
+          value: env1
+        image: nginx:1.20.1
         name: nginx
         ports:
         - containerPort: 80
+
 ```
 
-_Staging overlay build_:
+Variant 2 overlay build_:
 
 ```yaml
-$ kustomize build overlays/staging/
+$ kustomize build overlays/var2/
 
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: nginx
-  name: env2-example-nginx-staging
-  namespace: staging                 ### namespace has been set to staging
+    variant: var2
+  name: env2-example-nginx-var2
+  namespace: ns2
 spec:
   ports:
   - port: 80
@@ -534,10 +783,11 @@ kind: Deployment
 metadata:
   labels:
     app: nginx
-  name: env2-example-nginx-staging
-  namespace: staging                 ### namespace has been set to staging
+    variant: var2
+  name: env2-example-nginx-var2
+  namespace: ns2
 spec:
-  replicas: 2                        ### replicas have been from 1 to 2
+  replicas: 2
   selector:
     matchLabels:
       app: nginx
@@ -545,10 +795,27 @@ spec:
     metadata:
       labels:
         app: nginx
+        variant: var2
     spec:
       containers:
-      - image: nginx
+      - env:
+        - name: ENVIRONMENT
+          value: env2
+        image: nginx:latest
         name: nginx
         ports:
         - containerPort: 80
 ```
+
+### Next steps
+
+Congratulations on making it to the end of this tutorial.  As a summary for you, these are the customisations that we did in this tutorial:
+
+- Add a name prefix and a name suffix
+- Set the namespace for our resources
+- Set the number of replicas for our deployment
+- Set the image to use
+- Add a label to our resources
+- Add an environment variable to a container by using a patch
+
+These are just a few of the things kustomize can do, and if you are interested to learn more the kustomization reference (to add link here) is your next step. You will see how you can use components to define base resources and add them to specific overlays where needed, use generators to create configMaps from files and much more!
