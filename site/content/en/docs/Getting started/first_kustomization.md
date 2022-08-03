@@ -690,7 +690,7 @@ patches:
 - patch-env-vars.yaml
 ```
 
-_kustomize-example/overlays/staging/patch-env-vars.yaml_:
+_kustomize-example/overlays/var2/patch-env-vars.yaml_:
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
