@@ -294,6 +294,30 @@ func (ll *LocLoader) Load(path string) ([]byte, *LocPath, error) {
 	}, nil
 }
 
+func parseDomain(host string) string {
+	if host == "gh:" {
+		return "github.com"
+	}
+	target := host
+	// remove scheme from target
+	for _, p := range git.Schemes() {
+		if strings.HasPrefix(target, p) {
+			target = target[len(p):]
+			break
+		}
+	}
+	// remove userinfo
+	if i := strings.Index(target, "@"); i > -1 {
+		target = target[i+1:]
+	}
+	// remove ssh path delimiter or port delimiter
+	if i := strings.Index(target, ":"); i > -1 {
+		target = target[:i]
+	}
+	// remove http path delimiter
+	return strings.TrimSuffix(target, "/")
+}
+
 // New returns a LocLoader at path and whether path is remote if path is a root that can be localized.
 // Otherwise, New returns an error.
 func (ll *LocLoader) New(path string) (*LocLoader, *LocPath, error) {
@@ -311,7 +335,7 @@ func (ll *LocLoader) New(path string) (*LocLoader, *LocPath, error) {
 			return nil, nil, err
 		}
 		inRepo := pathSuffix(repo, ldr.Root())
-		inDst = filepath.Join(localizeDir, spec.Domain, toFSPath(spec.OrgRepo), toFSPath(spec.Ref), inRepo)
+		inDst = filepath.Join(localizeDir, parseDomain(spec.Host), toFSPath(spec.OrgRepo), toFSPath(spec.Ref), inRepo)
 	case ll.local && !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.scope):
 		return nil, nil, errors.WrapPrefixf(
 			errRootOutsideScope,

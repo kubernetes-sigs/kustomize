@@ -13,6 +13,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSchemes(t *testing.T) {
+	scheme := Schemes()
+	assert.Len(t, scheme, 3)
+	assert.Contains(t, scheme, "https")
+	assert.Contains(t, scheme, "http")
+	assert.Contains(t, scheme, "ssh")
+}
+
 var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 
 var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -21,22 +29,22 @@ var hrefArgs = []string{"someBranch", "master", "v0.1.0", ""}
 
 func hostsRawNormalizedAndDomain() [][]string {
 	return [][]string{
-		{"gh:", "gh:", "github.com"},
-		{"GH:", "gh:", "github.com"},
-		{"gitHub.com/", "https://github.com/", "github.com"},
-		{"github.com:", "https://github.com/", "github.com"},
-		{"http://github.com/", "https://github.com/", "github.com"},
-		{"https://github.com/", "https://github.com/", "github.com"},
-		{"hTTps://github.com/", "https://github.com/", "github.com"},
-		{"https://git-codecommit.us-east-2.amazonaws.com/", "https://git-codecommit.us-east-2.amazonaws.com/", "git-codecommit.us-east-2.amazonaws.com"},
-		{"https://fabrikops2.visualstudio.com/", "https://fabrikops2.visualstudio.com/", "fabrikops2.visualstudio.com"},
-		{"ssh://git.example.com:7999/", "ssh://git.example.com:7999/", "git.example.com"},
-		{"git::https://gitlab.com/", "https://gitlab.com/", "gitlab.com"},
-		{"git::http://git.example.com/", "http://git.example.com/", "git.example.com"},
-		{"git::https://git.example.com/", "https://git.example.com/", "git.example.com"},
-		{"git@github.com:", "git@github.com:", "github.com"},
-		{"git@github.com/", "git@github.com:", "github.com"},
-		{"git@gitlab.com:", "git@gitlab.com:", "gitlab.com"},
+		{"gh:", "gh:"},
+		{"GH:", "gh:"},
+		{"gitHub.com/", "https://github.com/"},
+		{"github.com:", "https://github.com/"},
+		{"http://github.com/", "https://github.com/"},
+		{"https://github.com/", "https://github.com/"},
+		{"hTTps://github.com/", "https://github.com/"},
+		{"https://git-codecommit.us-east-2.amazonaws.com/", "https://git-codecommit.us-east-2.amazonaws.com/"},
+		{"https://fabrikops2.visualstudio.com/", "https://fabrikops2.visualstudio.com/"},
+		{"ssh://git.example.com:7999/", "ssh://git.example.com:7999/"},
+		{"git::https://gitlab.com/", "https://gitlab.com/"},
+		{"git::http://git.example.com/", "http://git.example.com/"},
+		{"git::https://git.example.com/", "https://git.example.com/"},
+		{"git@github.com:", "git@github.com:"},
+		{"git@github.com/", "git@github.com:"},
+		{"git@gitlab.com:", "git@gitlab.com:"},
 	}
 }
 
@@ -56,7 +64,6 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 	for _, tuple := range hostsRawNormalizedAndDomain() {
 		hostRaw := tuple[0]
 		hostSpec := tuple[1]
-		domain := tuple[2]
 		for _, orgRepo := range orgRepos {
 			for _, pathName := range pathNames {
 				for _, hrefArg := range hrefArgs {
@@ -67,9 +74,6 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 					}
 					if rs.Host != hostSpec {
 						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
-					}
-					if rs.Domain != domain {
-						bad = append(bad, []string{"domain", uri, rs.Domain, domain})
 					}
 					if rs.OrgRepo != orgRepo {
 						bad = append(bad, []string{"orgRepo", uri, rs.OrgRepo, orgRepo})
@@ -98,10 +102,10 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 
 var badData = [][]string{
 	{"/tmp", "uri looks like abs path"},
-	{"iauhsdiuashduas", "url lacks orgRepo"},
+	{"iauhsdiuashduas", "url lacks host"},
 	{"htxxxtp://github.com/", "url lacks host"},
 	{"ssh://git.example.com", "url lacks orgRepo"},
-	{"git::___", "url lacks orgRepo"},
+	{"git::___", "url lacks host"},
 }
 
 func TestNewRepoSpecFromUrlErrors(t *testing.T) {
