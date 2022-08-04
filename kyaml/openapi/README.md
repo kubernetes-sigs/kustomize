@@ -28,65 +28,19 @@ If you'd like to change the default schema version, then in the Makefile in this
 
 You may need to update the version of Kind these scripts use by changing `KIND_VERSION` in the Makefile in this directory. You can find compatibility information in the [kind release notes](https://github.com/kubernetes-sigs/kind/releases).
 
-In this directory, fetch the openapi schema and generate the 
-corresponding swagger.go for the kubernetes api: 
+In this directory, fetch the openapi schema, generate the
+corresponding swagger.go for the kubernetes api, and update `kubernetesapi/openapiinfo.go`:
 
 ```
-make all
+make kustomizationapi/swagger.go
+make kubernetesapi/swagger.go
+make kubernetesapi/openapiinfo.go
 ```
 
 Then, follow the instructions in the next section to make the newly generated schema available for use.
 
 You can optionally delete the old `swagger.pb` and `swagger.go` files if we no longer need to support that kubernetes version of
-openapi data.
-
-### Updating the builtin versions
-
-The above command will update the [OpenAPI schema] and the [Kustomization schema]. It will
-create a directory kubernetesapi/v1_21_2 and store the resulting
-swagger.pb and swagger.go files there. You will then have to manually update
-[`kubernetesapi/openapiinfo.go`](https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/openapi/kubernetesapi/openapiinfo.go).
-
-Here is an example of what it looks like with v1.21.2.
-
-```
-package kubernetesapi
-
-import (
-"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_2"
-)
-
-const Info = "{title:Kubernetes,version:v1.21.2}"
-
-var OpenAPIMustAsset = map[string]func(string) []byte{
-"v1212": v1_21_2.MustAsset,
-}
-
-const DefaultOpenAPI = "v1.21.2"
-```
-
-You need to replace the version number in all five places it appears. If you would like to keep the old version as an option,
-and just update the default, you can append a new version number to all lists and change the default.
-
-Here is an example of both v1.21.2 and v1.21.5 being available to use, but v1.21.5 being the default:
-
-```
-package kubernetesapi
-
-import (
-  "sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_2"
-  "sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_5"
-)
-
-const Info = "{title:Kubernetes,version:v1.21.2},{title:Kubernetes,version:v1.21.5}"
-
-var OpenAPIMustAsset = map[string]func(string) []byte{
-"v1.21.2": v1_21_2.MustAsset,
-"v1.21.5": v1_21_5.MustAsset,
-}
-
-const DefaultOpenAPI = "v1.21.5"
-```
+openapi data. Make sure you rerun `make kubernetesapi/openapiinfo.go` after deleting any old schemas.
 
 
 #### Precomputations

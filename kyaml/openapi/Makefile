@@ -40,6 +40,10 @@ $(MYGOBIN)/kind:
 		rm -rf $$d; \
 	)
 
+.PHONY: kubernetesapi/openapiinfo.go
+kubernetesapi/openapiinfo.go:
+	./scripts/makeOpenApiInfoDotGo.sh
+
 kustomizationapi/swagger.go: $(MYGOBIN)/go-bindata kustomizationapi/swagger.json
 	$(MYGOBIN)/go-bindata \
 		--pkg kustomizationapi \
