@@ -573,13 +573,13 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 
 	// use builtin version
 	kubernetesOpenAPIVersion = version
-	if version == "" {
-		version = kubernetesapi.DefaultOpenAPI
+	if kubernetesOpenAPIVersion == "" {
+		return nil
 	}
-
-	if _, ok := kubernetesapi.OpenAPIMustAsset[version]; !ok {
+	if _, ok := kubernetesapi.OpenAPIMustAsset[kubernetesOpenAPIVersion]; !ok {
 		return fmt.Errorf("the specified OpenAPI version is not built in")
 	}
+
 	customSchema = nil
 	// if the schema is changed, initSchema should parse the new schema
 	globalSchema.schemaInit = false

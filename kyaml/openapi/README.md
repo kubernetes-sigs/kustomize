@@ -32,12 +32,17 @@ In this directory, fetch the openapi schema, generate the
 corresponding swagger.go for the kubernetes api, and update `kubernetesapi/openapiinfo.go`:
 
 ```
+make all
+```
+
+If you want to run the steps individually instead of using `make all`, you can run
+the following commands:
+
+```
 make kustomizationapi/swagger.go
 make kubernetesapi/swagger.go
 make kubernetesapi/openapiinfo.go
 ```
-
-Then, follow the instructions in the next section to make the newly generated schema available for use.
 
 You can optionally delete the old `swagger.pb` and `swagger.go` files if we no longer need to support that kubernetes version of
 openapi data. Make sure you rerun `make kubernetesapi/openapiinfo.go` after deleting any old schemas.
