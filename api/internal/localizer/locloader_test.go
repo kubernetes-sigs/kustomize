@@ -41,7 +41,7 @@ func checkConfirmedDir(req *require.Assertions, dir filesys.ConfirmedDir, path s
 }
 
 func checkLocPath(req *require.Assertions, locPath *lclzr.LocPath, path string) {
-	req.False(locPath.Remote)
+	req.False(locPath.IsRemote)
 	req.Equal(path, locPath.Path)
 }
 

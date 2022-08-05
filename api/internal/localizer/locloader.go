@@ -17,13 +17,12 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const urlSeparator = "/"
-const replacement = "-"
-
 const dstPrefix = "localized"
-const localizeDir = dstPrefix + replacement + "files"
+const localizeDir = "localized-files"
 const fatalPrefix = "should never happen"
+
 const errAlpha = "alpha unsupported localize feature"
+const errCleanDst = "unable to clean localize destination"
 const errReference = "invalid localize reference location '%s'"
 
 var errDstRef = errors.Errorf("reference into localize destination")
@@ -60,7 +59,7 @@ type LocLoader struct {
 
 // LocPath represents the localized counterpart of a target reference
 type LocPath struct {
-	Remote bool
+	IsRemote bool
 
 	Path string
 }
@@ -75,7 +74,8 @@ func ValidateLocArgs(targetArg string, scopeArg string, newDirArg string, fSys f
 		return nil, "", errors.WrapPrefixf(err, "unable to establish localize target '%s'", targetArg)
 	}
 	var spec *git.RepoSpec
-	if _, remote := ldr.Repo(); remote {
+	repo, isRemote := ldr.Repo()
+	if isRemote {
 		spec, err = parseLocRootURL(targetArg)
 		if err != nil {
 			cleanLdr(ldr)
@@ -96,11 +96,12 @@ func ValidateLocArgs(targetArg string, scopeArg string, newDirArg string, fSys f
 	}
 
 	var realScope string
-	if repo, remote := ldr.Repo(); remote {
+	if isRemote {
 		realScope = repo
 	} else {
 		realScope = scope.String()
 	}
+	// use target relative path to scope to find directory in destination corresponding to target
 	toDst := pathSuffix(realScope, ldr.Root())
 
 	return &LocLoader{
@@ -117,27 +118,26 @@ func ValidateLocArgs(targetArg string, scopeArg string, newDirArg string, fSys f
 
 // validateScope returns the scope given localize arguments and targetLdr that corresponds to targetArg
 func validateScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
-	var scope filesys.ConfirmedDir
-
 	errBadScopeForTarget := fmt.Sprintf("invalid localize scope '%s' for target '%s'", scopeArg, targetArg)
-	switch _, remote := targetLdr.Repo(); {
-	case remote:
+
+	if _, isRemote := targetLdr.Repo(); isRemote {
 		if scopeArg != "" {
 			return "", errors.WrapPrefixf(
 				errors.Errorf("cannot specify scope for remote localize target"),
 				errBadScopeForTarget)
 		}
-	case scopeArg == "":
-		scope = filesys.ConfirmedDir(targetLdr.Root())
-	default:
-		var err error
-		scope, err = filesys.ConfirmDir(fSys, scopeArg)
-		if err != nil {
-			return "", errors.WrapPrefixf(err, "unable to establish localize scope")
-		}
-		if !filesys.ConfirmedDir(targetLdr.Root()).HasPrefix(scope) {
-			return scope, errors.WrapPrefixf(errRootOutsideScope, errBadScopeForTarget)
-		}
+		return "", nil
+	}
+	// default scope
+	if scopeArg == "" {
+		return filesys.ConfirmedDir(targetLdr.Root()), nil
+	}
+	scope, err := filesys.ConfirmDir(fSys, scopeArg)
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "unable to establish localize scope")
+	}
+	if !filesys.ConfirmedDir(targetLdr.Root()).HasPrefix(scope) {
+		return scope, errors.WrapPrefixf(errRootOutsideScope, errBadScopeForTarget)
 	}
 	return scope, nil
 }
@@ -161,8 +161,8 @@ func parseLocRootURL(rootURL string) (*git.RepoSpec, error) {
 
 // urlBase is the url equivalent of filepath.Base
 func urlBase(url string) string {
-	cleaned := strings.TrimRight(url, urlSeparator)
-	i := strings.LastIndex(cleaned, urlSeparator)
+	cleaned := strings.TrimRight(url, "/")
+	i := strings.LastIndex(cleaned, "/")
 	if i < 0 {
 		return cleaned
 	}
@@ -173,19 +173,21 @@ func urlBase(url string) string {
 // and spec of target, which is nil if target is local
 func defaultNewDir(targetLdr ifc.Loader, spec *git.RepoSpec) string {
 	targetDir := filepath.Base(targetLdr.Root())
-	switch repo, remote := targetLdr.Repo(); {
-	case remote:
+	if repo, isRemote := targetLdr.Repo(); isRemote {
+		// kustomize doesn't download repo into repo-named folder
+		// must find repo folder name from url
 		if repo == targetLdr.Root() {
 			targetDir = urlBase(spec.OrgRepo)
 		}
 		return strings.Join(
-			[]string{dstPrefix, targetDir, strings.ReplaceAll(spec.Ref, urlSeparator, replacement)},
-			replacement)
-	case targetDir == string(filepath.Separator):
-		return dstPrefix
-	default:
-		return strings.Join([]string{dstPrefix, targetDir}, replacement)
+			[]string{dstPrefix, targetDir, strings.ReplaceAll(spec.Ref, "/", "-")},
+			"-")
 	}
+	// special case for local target directory since destination directory cannot have "/" in name
+	if targetDir == string(filepath.Separator) {
+		return dstPrefix
+	}
+	return strings.Join([]string{dstPrefix, targetDir}, "-")
 }
 
 // validateNewDir returns the localize destination directory or error. Note that spec is nil if targetLdr is at local
@@ -202,12 +204,15 @@ func validateNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, 
 			errors.Errorf("localize destination already exists"),
 			"invalid localize destination path '%s'", newDirPath)
 	}
+	// destination directory must sit in existing directory
 	if err := fSys.Mkdir(newDirPath); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to create localize destination directory")
 	}
 	newDir, err := filesys.ConfirmDir(fSys, newDirPath)
 	if err != nil {
-		cleanDst(newDirPath, fSys)
+		if err := fSys.RemoveAll(newDir.String()); err != nil {
+			log.Printf("%s", errors.WrapPrefixf(err, errCleanDst).Error())
+		}
 		return "", errors.WrapPrefixf(err, "unable to establish localize destination")
 	}
 
@@ -223,16 +228,18 @@ func pathSuffix(prefix string, path string) string {
 	return path[len(prefix)+1:]
 }
 
+// Root returns the path to the current target directory
 func (ll *LocLoader) Root() string {
 	return ll.ldr.Root()
 }
 
+// Dst returns the path to the directory in destination that corresponds to Root
 func (ll *LocLoader) Dst() string {
 	return ll.dst
 }
 
 func toFSPath(urlPath string) string {
-	return filepath.Join(strings.Split(urlPath, urlSeparator)...)
+	return filepath.Join(strings.Split(urlPath, "/")...)
 }
 
 func locFilePath(u *url.URL) string {
@@ -249,21 +256,17 @@ func (ll *LocLoader) Load(path string) ([]byte, *LocPath, error) {
 	if err != nil {
 		return nil, nil, errors.WrapPrefixf(err, "invalid file reference")
 	}
-
-	var dst string
-	var remote bool
-	switch {
-	case loader.HasRemoteFileScheme(path):
-		remote = true
-
+	if loader.HasRemoteFileScheme(path) {
+		// parsable because prefixed by scheme
 		u, err := url.Parse(path)
 		if err != nil {
 			log.Fatalf(errors.WrapPrefixf(
 				err,
 				"%s: cannot parse validated file url '%s'", fatalPrefix, path).Error())
 		}
-		dst = locFilePath(u)
-	case !filepath.IsAbs(path):
+		return content, &LocPath{true, locFilePath(u)}, nil
+	}
+	if !filepath.IsAbs(path) {
 		abs := filepath.Join(ll.ldr.Root(), path)
 		// avoid symlinks; only write file corresponding to actual location in root
 		// avoid path that Load() shows to be in root, but may traverse outside
@@ -283,15 +286,10 @@ func (ll *LocLoader) Load(path string) ([]byte, *LocPath, error) {
 		if ll.local && dir.HasPrefix(ll.args.newDir) {
 			return nil, nil, errors.WrapPrefixf(errDstRef, errReference, cleanPath)
 		}
-		dst = pathSuffix(ll.ldr.Root(), cleanPath)
-	default:
-		return nil, nil, errors.WrapPrefixf(errors.Errorf(errAlpha), "path '%s' is absolute", path)
+		return content, &LocPath{false, pathSuffix(ll.ldr.Root(), cleanPath)}, nil
 	}
 
-	return content, &LocPath{
-		remote,
-		dst,
-	}, nil
+	return nil, nil, errors.WrapPrefixf(errors.Errorf(errAlpha), "path '%s' is absolute", path)
 }
 
 func parseDomain(host string) string {
@@ -318,6 +316,26 @@ func parseDomain(host string) string {
 	return strings.TrimSuffix(target, "/")
 }
 
+// handleNewLocalDir returns the relative path between the current LocLoader root and the new root at ldr
+// if the new root satisfies localize requirements. Otherwise, handleNewLocalDir returns an error.
+func (ll *LocLoader) handleNewLocalDir(ldr ifc.Loader) (string, error) {
+	if ll.local && !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.scope) {
+		return "", errors.WrapPrefixf(
+			errRootOutsideScope,
+			"invalid root location '%s' for scope '%s'", ldr.Root(), ll.args.scope)
+	}
+	if ll.local && filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.newDir) {
+		return "", errors.WrapPrefixf(errDstRef, errReference, ldr.Root())
+	}
+	rel, err := filepath.Rel(ll.ldr.Root(), ldr.Root())
+	if err != nil {
+		log.Fatalf(errors.WrapPrefixf(err,
+			"%s: cannot find relative path from root '%s' to its valid root reference '%s'",
+			fatalPrefix, ll.ldr.Root(), ldr.Root()).Error())
+	}
+	return rel, nil
+}
+
 // New returns a LocLoader at path and whether path is remote if path is a root that can be localized.
 // Otherwise, New returns an error.
 func (ll *LocLoader) New(path string) (*LocLoader, *LocPath, error) {
@@ -325,40 +343,29 @@ func (ll *LocLoader) New(path string) (*LocLoader, *LocPath, error) {
 	if err != nil {
 		return nil, nil, errors.WrapPrefixf(err, "invalid root reference")
 	}
-
 	var repo, inDst string
-	var remote bool
-	switch repo, remote = ldr.Repo(); {
-	case remote:
+	var isRemote bool
+	if repo, isRemote = ldr.Repo(); isRemote {
 		spec, err := parseLocRootURL(path)
 		if err != nil {
 			return nil, nil, err
 		}
 		inRepo := pathSuffix(repo, ldr.Root())
 		inDst = filepath.Join(localizeDir, parseDomain(spec.Host), toFSPath(spec.OrgRepo), toFSPath(spec.Ref), inRepo)
-	case ll.local && !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.scope):
-		return nil, nil, errors.WrapPrefixf(
-			errRootOutsideScope,
-			"invalid root location '%s' for scope '%s'", ldr.Root(), ll.args.scope)
-	case ll.local && filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.newDir):
-		return nil, nil, errors.WrapPrefixf(errDstRef, errReference, ldr.Root())
-	default:
-		inDst, err = filepath.Rel(ll.ldr.Root(), ldr.Root())
+	} else {
+		inDst, err = ll.handleNewLocalDir(ldr)
 		if err != nil {
-			log.Fatalf(errors.WrapPrefixf(err,
-				"%s: cannot find relative path from root '%s' to its valid root reference '%s'",
-				fatalPrefix, ll.ldr.Root(), ldr.Root()).Error())
+			return nil, nil, err
 		}
 	}
-
 	return &LocLoader{
 			fSys:  ll.fSys,
 			args:  ll.args,
 			ldr:   ldr,
-			local: ll.local && !remote,
+			local: ll.local && !isRemote,
 			dst:   filepath.Join(ll.dst, inDst),
 		}, &LocPath{
-			remote,
+			isRemote,
 			inDst,
 		}, nil
 }
