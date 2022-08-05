@@ -23,10 +23,7 @@ version_list=()
 V=`ls kubernetesapi | grep v.*`
 for VERSION in $V
 do
-  openapiinfo=$(\
-    jq -r '.info' kubernetesapi/$VERSION/swagger.json  | \
-    sed 's/[\" *]//g' | \
-    tr -d '\n' )
+  openapiinfo="{title:Kubernetes,version:${VERSION//_/.}}"
   info_list+=( $openapiinfo )
   version_list+=( ${VERSION} )
 done
@@ -70,7 +67,7 @@ for version in ${version_list[@]}
 do
   latest=$version
   cat <<EOF >>kubernetesapi/openapiinfo.go
-  "$version": $version.MustAsset,
+  "${version//_/.}": $version.MustAsset,
 EOF
 done
 
@@ -78,7 +75,7 @@ done
 cat <<EOF >>kubernetesapi/openapiinfo.go
 }
 
-const DefaultOpenAPI = "$latest"
+const DefaultOpenAPI = "${latest//_/.}"
 EOF
 
-
+gofmt -s -w kubernetesapi/openapiinfo.go

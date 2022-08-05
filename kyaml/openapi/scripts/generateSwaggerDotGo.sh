@@ -7,6 +7,6 @@ MYGOBIN="${MYGOBIN:-$(go env GOPATH)/bin}"
 VERSION=$1
 
 $MYGOBIN/go-bindata \
-  --pkg "${VERSION//.}" \
-  -o kubernetesapi/"${VERSION//.}"/swagger.go \
-  kubernetesapi/"${VERSION//.}"/swagger.json
+  --pkg "${VERSION//./_}" \
+  -o kubernetesapi/"${VERSION//./_}"/swagger.go \
+  kubernetesapi/"${VERSION//./_}"/swagger.pb
