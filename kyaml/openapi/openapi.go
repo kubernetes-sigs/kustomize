@@ -400,7 +400,7 @@ func SuppressBuiltInSchemaUse() {
 
 // Elements returns the Schema for the elements of an array.
 func (rs *ResourceSchema) Elements() *ResourceSchema {
-	// load the schema from swagger.json
+	// load the schema from swagger files
 	initSchema()
 
 	if len(rs.Schema.Type) != 1 || rs.Schema.Type[0] != "array" {
@@ -446,7 +446,7 @@ func (rs *ResourceSchema) Lookup(path ...string) *ResourceSchema {
 
 // Field returns the Schema for a field.
 func (rs *ResourceSchema) Field(field string) *ResourceSchema {
-	// load the schema from swagger.json
+	// load the schema from swagger files
 	initSchema()
 
 	// locate the Schema
@@ -459,7 +459,7 @@ func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 		// (the key doesn't matter, they all have the same value type)
 		s = *rs.Schema.AdditionalProperties.Schema
 	default:
-		// no Schema found from either swagger.json or line comments
+		// no Schema found from either swagger files or line comments
 		return nil
 	}
 
@@ -557,12 +557,13 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 		return nil
 	}
 
-	version, exists := openAPIField["version"]
-	if exists && schema != nil {
-		return fmt.Errorf("builtin version and custom schema provided, cannot use both")
-	}
+	version, versionProvided := openAPIField["version"]
 
-	if schema != nil { // use custom schema
+	// use custom schema
+	if schema != nil {
+		if versionProvided {
+			return fmt.Errorf("builtin version and custom schema provided, cannot use both")
+		}
 		customSchema = schema
 		kubernetesOpenAPIVersion = "custom"
 		// if the schema is changed, initSchema should parse the new schema
@@ -571,13 +572,14 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 	}
 
 	// use builtin version
-	kubernetesOpenAPIVersion = strings.ReplaceAll(version, ".", "")
+	kubernetesOpenAPIVersion = version
 	if kubernetesOpenAPIVersion == "" {
 		return nil
 	}
 	if _, ok := kubernetesapi.OpenAPIMustAsset[kubernetesOpenAPIVersion]; !ok {
 		return fmt.Errorf("the specified OpenAPI version is not built in")
 	}
+
 	customSchema = nil
 	// if the schema is changed, initSchema should parse the new schema
 	globalSchema.schemaInit = false
@@ -629,11 +631,10 @@ func parseBuiltinSchema(version string) {
 		// don't parse the built in schema
 		return
 	}
-
 	// parse the swagger, this should never fail
 	assetName := filepath.Join(
 		"kubernetesapi",
-		version,
+		strings.ReplaceAll(version, ".", "_"),
 		"swagger.pb")
 
 	if err := parse(kubernetesapi.OpenAPIMustAsset[version](assetName), Proto); err != nil {

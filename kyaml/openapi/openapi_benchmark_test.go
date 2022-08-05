@@ -5,20 +5,24 @@ package openapi
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	openapi_v2 "github.com/google/gnostic/openapiv2"
 	"google.golang.org/protobuf/proto"
-	v1212 "sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1212"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 )
 
 func BenchmarkProtoUnmarshal(t *testing.B) {
+	version := kubernetesOpenAPIDefaultVersion
+
+	// parse the swagger, this should never fail
 	assetName := filepath.Join(
 		"kubernetesapi",
-		"v1212",
+		strings.ReplaceAll(version, ".", "_"),
 		"swagger.pb")
 
-	b := v1212.MustAsset(assetName)
+	b := kubernetesapi.OpenAPIMustAsset[version](assetName)
 
 	for i := 0; i < t.N; i++ {
 		// We parse protobuf and get an openapiv2.Document here.
