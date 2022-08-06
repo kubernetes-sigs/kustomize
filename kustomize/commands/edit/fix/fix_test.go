@@ -27,8 +27,15 @@ func TestFix(t *testing.T) {
 	assert.Contains(t, string(content), "kind: Kustomization")
 }
 
-func TestFixOutdatedPatchesFieldTitle(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+func TestFixCommand(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "FixOutdatedPatchesFieldTitle",
+			input: `
 patchesJson6902:
 - path: patch1.yaml
   target:
@@ -38,9 +45,8 @@ patchesJson6902:
     group: apps
     kind: Deployment
     version: v1
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
@@ -52,24 +58,11 @@ patches:
     group: apps
     kind: Deployment
     version: v1
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestRenameAndKeepOutdatedPatchesField(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+`,
+		},
+		{
+			name: "TestRenameAndKeepOutdatedPatchesField",
+			input: `
 patchesJson6902:
 - path: patch1.yaml
   target:
@@ -81,9 +74,8 @@ patches:
 - path: patch3.yaml
   target:
     kind: Service
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 patches:
 - path: patch2.yaml
   target:
@@ -96,24 +88,11 @@ patches:
     kind: Deployment
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestFixOutdatedPatchesStrategicMergeFieldTitle(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+`,
+		},
+		{
+			name: "TestFixOutdatedPatchesStrategicMergeFieldTitle",
+			input: `
 patchesStrategicMerge:
 - |-
   apiVersion: apps/v1
@@ -126,9 +105,8 @@ patchesStrategicMerge:
         containers:
           - name: nginx
             image: nignx:latest
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
@@ -143,24 +121,11 @@ patches:
           containers:
             - name: nginx
               image: nignx:latest
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestFixAndMergeOutdatedPatchesStrategicMergeFieldTitle(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+`,
+		},
+		{
+			name: "TestFixAndMergeOutdatedPatchesStrategicMergeFieldTitle",
+			input: `
 patchesStrategicMerge:
 - |-
   apiVersion: apps/v1
@@ -177,9 +142,8 @@ patches:
 - path: patch2.yaml
   target:
     kind: Deployment
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 patches:
 - path: patch2.yaml
   target:
@@ -197,78 +161,37 @@ patches:
               image: nignx:latest
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestFixOutdatedPatchesStrategicMergeToPathFieldTitle(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+`,
+		},
+		{
+			name: "TestFixOutdatedPatchesStrategicMergeToPathFieldTitle",
+			input: `
 patchesStrategicMerge:
 - deploy.yaml
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
 - path: deploy.yaml
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestFixOutdatedPatchesStrategicMergeToPathFieldYMLTitle(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+`,
+		},
+		{
+			name: "TestFixOutdatedPatchesStrategicMergeToPathFieldYMLTitle",
+			input: `
 patchesStrategicMerge:
 - deploy.yml
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
 - path: deploy.yml
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestFixOutdatedPatchesStrategicMergeFieldPatchEndOfYamlTitle(t *testing.T) {
-	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+`,
+		},
+		{
+			name: "TestFixOutdatedPatchesStrategicMergeFieldPatchEndOfYamlTitle",
+			input: `
 patchesStrategicMerge:
 - |-
   apiVersion: apps/v1
@@ -283,9 +206,8 @@ patchesStrategicMerge:
             env:
               - name: CONFIG_FILE_PATH
                 value: home.yaml
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
@@ -302,32 +224,18 @@ patches:
               env:
                 - name: CONFIG_FILE_PATH
                   value: home.yaml
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
-
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
-
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
-	}
-}
-
-func TestFixOutdatedCommonLabels(t *testing.T) {
-	kustomizationContentWithOutdatedCommonLabels := []byte(`
+`,
+		},
+		{
+			name: "TestFixOutdatedCommonLabels",
+			input: `
 commonLabels:
   foo: bar
 labels:
 - pairs:
     a: b
-`)
-
-	expected := []byte(`
+`,
+			expected: `
 labels:
 - pairs:
     a: b
@@ -336,19 +244,23 @@ labels:
     foo: bar
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-`)
-	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
-	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
+`,
+		},
+	}
+	for _, test := range tests {
+		fSys := filesys.MakeFsInMemory()
+		testutils_test.WriteTestKustomizationWith(fSys, []byte(test.input))
+		cmd := NewCmdFix(fSys, os.Stdout)
+		assert.NoError(t, cmd.RunE(cmd, nil))
 
-	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
-	assert.Contains(t, string(content), "apiVersion: ")
-	assert.Contains(t, string(content), "kind: Kustomization")
+		content, err := testutils_test.ReadTestKustomization(fSys)
+		assert.NoError(t, err)
+		assert.Contains(t, string(content), "apiVersion: ")
+		assert.Contains(t, string(content), "kind: Kustomization")
 
-	if diff := cmp.Diff(expected, content); diff != "" {
-		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+		if diff := cmp.Diff([]byte(test.expected), content); diff != "" {
+			t.Errorf("%s: Mismatch (-expected, +actual):\n%s", test.name, diff)
+		}
 	}
 }
 
