@@ -213,6 +213,111 @@ kind: Kustomization
 	}
 }
 
+func TestFixOutdatedPatchesStrategicMergeToPathFieldTitle(t *testing.T) {
+	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+patchesStrategicMerge:
+- deploy.yaml
+`)
+
+	expected := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: deploy.yaml
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
+	cmd := NewCmdFix(fSys, os.Stdout)
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
+
+	if diff := cmp.Diff(expected, content); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
+func TestFixOutdatedPatchesStrategicMergeToPathFieldYMLTitle(t *testing.T) {
+	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+patchesStrategicMerge:
+- deploy.yml
+`)
+
+	expected := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: deploy.yml
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
+	cmd := NewCmdFix(fSys, os.Stdout)
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
+
+	if diff := cmp.Diff(expected, content); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
+func TestFixOutdatedPatchesStrategicMergeFieldPatchEndOfYamlTitle(t *testing.T) {
+	kustomizationContentWithOutdatedPatchesFieldTitle := []byte(`
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx
+  spec:
+    template:
+      spec:
+        containers:
+          - name: nginx
+            env:
+              - name: CONFIG_FILE_PATH
+                value: home.yaml
+`)
+
+	expected := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx
+    spec:
+      template:
+        spec:
+          containers:
+            - name: nginx
+              env:
+                - name: CONFIG_FILE_PATH
+                  value: home.yaml
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedPatchesFieldTitle)
+	cmd := NewCmdFix(fSys, os.Stdout)
+	assert.NoError(t, cmd.RunE(cmd, nil))
+
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	assert.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: ")
+	assert.Contains(t, string(content), "kind: Kustomization")
+
+	if diff := cmp.Diff(expected, content); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
 func TestFixOutdatedCommonLabels(t *testing.T) {
 	kustomizationContentWithOutdatedCommonLabels := []byte(`
 commonLabels:

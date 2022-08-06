@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
@@ -224,7 +225,15 @@ func (k *Kustomization) FixKustomizationPreMarshalling() error {
 
 	if k.PatchesStrategicMerge != nil {
 		for _, patchStrategicMerge := range k.PatchesStrategicMerge {
-			k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
+			// check this patch is file path select.
+			if strings.Count(string(patchStrategicMerge), "\n") < 1 &&
+				(patchStrategicMerge[len(patchStrategicMerge)-5:] == ".yaml" || patchStrategicMerge[len(patchStrategicMerge)-4:] == ".yml") {
+				// path patch
+				k.Patches = append(k.Patches, Patch{Path: string(patchStrategicMerge)})
+			} else {
+				// inline string patch
+				k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
+			}
 		}
 		k.PatchesStrategicMerge = nil
 	}
