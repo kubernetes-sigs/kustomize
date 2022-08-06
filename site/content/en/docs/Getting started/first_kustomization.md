@@ -558,7 +558,7 @@ patches:
 - patch-env-vars.yaml
 ```
 
-One important thing to note here is that we the name of the deployment used is the name that we are getting from our base and not the deployment name that has the prefix and suffix added.
+One important thing to note here is that the name of the deployment used is the name that we are getting from our base and not the deployment name that has the prefix and suffix added.
 
 Rebuilding the overlay shows that the environment variable has been added to our container:
 
@@ -706,7 +706,7 @@ spec:
           value: env2
 ```
 
-_Variable 1 overlay build_:
+_Variant 1 overlay build_:
 
 ```yaml
 $ kustomize build overlays/var1/
