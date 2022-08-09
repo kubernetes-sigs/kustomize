@@ -7,17 +7,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"reflect"
-	"regexp"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
-	"sigs.k8s.io/yaml"
+	"sigs.k8s.io/kustomize/kyaml/order"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var fieldMarshallingOrder = determineFieldOrder()
@@ -94,26 +94,10 @@ func determineFieldOrder() []string {
 	return result
 }
 
-// commentedField records the comment associated with a kustomization field
-// field has to be a recognized kustomization field
-// comment can be empty
-type commentedField struct {
-	field   string
-	comment []byte
-}
-
-func (cf *commentedField) appendComment(comment []byte) {
-	cf.comment = append(cf.comment, comment...)
-}
-
-func squash(x [][]byte) []byte {
-	return bytes.Join(x, []byte(``))
-}
-
 type kustomizationFile struct {
-	path           string
-	fSys           filesys.FileSystem
-	originalFields []*commentedField
+	path          string
+	fSys          filesys.FileSystem
+	originalRNode *yaml.RNode
 }
 
 // NewKustomizationFile returns a new instance.
@@ -201,43 +185,22 @@ func StringInSlice(str string, list []string) bool {
 }
 
 func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
-	buffer := bytes.NewBuffer(content)
-	var comments [][]byte
+	var nodes *yaml.RNode
 
-	line, err := buffer.ReadBytes('\n')
-	for err == nil {
-		if isCommentOrBlankLine(line) {
-			comments = append(comments, line)
-		} else {
-			matched, field := findMatchedField(line)
-			if matched {
-				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments)})
-				comments = [][]byte{}
-			} else if len(comments) > 0 && len(mf.originalFields) > 0 {
-				mf.originalFields[len(mf.originalFields)-1].appendComment(squash(comments))
-				comments = [][]byte{}
-			}
-		}
-		line, err = buffer.ReadBytes('\n')
-	}
-
-	if err != io.EOF {
+	nodes, err := yaml.Parse(string(content))
+	if err != nil {
 		return err
 	}
+	mf.originalRNode = nodes
 	return nil
 }
 
 // marshal converts a kustomization to a byte stream.
 func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte, error) {
-	var output []byte
-	for _, comment := range mf.originalFields {
-		output = append(output, comment.comment...)
-		content, err := marshalField(comment.field, kustomization)
-		if err != nil {
-			return content, err
-		}
-		output = append(output, content...)
-	}
+	var buffer []byte
+	var output string
+	var toRNode *yaml.RNode
+
 	for _, field := range fieldMarshallingOrder {
 		if mf.hasField(field) {
 			continue
@@ -246,18 +209,21 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 		if err != nil {
 			return content, nil
 		}
-		output = append(output, content...)
+		buffer = append(buffer, content...)
 	}
-	return output, nil
-}
+	toRNode, err := yaml.Parse(string(buffer))
+	if err != nil {
+		return nil, err
+	}
+	comments.CopyComments(mf.originalRNode, toRNode)
+	order.SyncOrder(mf.originalRNode, toRNode)
 
-func (mf *kustomizationFile) hasField(name string) bool {
-	for _, n := range mf.originalFields {
-		if n.field == name {
-			return true
-		}
+	output, err = toRNode.String()
+	if err != nil {
+		return nil, err
 	}
-	return false
+
+	return []byte(output), nil
 }
 
 /*
@@ -274,15 +240,14 @@ func isCommentOrBlankLine(line []byte) bool {
 	return len(s) == 0 || bytes.HasPrefix(s, []byte(`#`))
 }
 
-func findMatchedField(line []byte) (bool, string) {
-	for _, field := range fieldMarshallingOrder {
-		// (?i) is for case insensitive regexp matching
-		r := regexp.MustCompile("^(" + "(?i)" + field + "):")
-		if r.Match(line) {
-			return true, field
-		}
+func (mf *kustomizationFile) hasField(name string) bool {
+	if mf.originalRNode == nil {
+		return false
 	}
-	return false, ""
+	if mf.originalRNode.Field(name) != nil {
+		return true
+	}
+	return false
 }
 
 // marshalField marshal a given field of a kustomization object into yaml format.
