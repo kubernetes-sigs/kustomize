@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/ifc"
 	lclzr "sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -30,19 +31,21 @@ func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	return fSys
 }
 
-func checkLocLoader(req *require.Assertions, ll *lclzr.LocLoader, root string, dst string) {
-	req.Equal(root, ll.Root())
-	req.Equal(dst, ll.Dst())
+func checkLocLoader(req *require.Assertions, ll *lclzr.LocLoader, root string, scope string) {
+	checkLoader(req, ll, root)
+	req.Equal(scope, ll.Scope())
+}
+
+func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
+	req.Equal(root, ldr.Root())
+	repo, isRemote := ldr.Repo()
+	req.Equal(false, isRemote)
+	req.Equal("", repo)
 }
 
 func checkConfirmedDir(req *require.Assertions, dir filesys.ConfirmedDir, path string, fSys filesys.FileSystem) {
 	req.Equal(path, dir.String())
 	req.True(fSys.Exists(path))
-}
-
-func checkLocPath(req *require.Assertions, locPath *lclzr.LocPath, path string) {
-	req.False(locPath.IsRemote)
-	req.Equal(path, locPath.Path)
 }
 
 func TestLocalLoadNewAndCleanup(t *testing.T) {
@@ -54,7 +57,7 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	// typical setup
 	ll, dst, err := lclzr.ValidateLocArgs("a", "/", "/newDir", fSys)
 	req.NoError(err)
-	checkLocLoader(req, ll, "/a", "/newDir/a")
+	checkLocLoader(req, ll, "/a", "/")
 
 	req.Equal("/newDir", dst.String())
 	fSysCopy := makeMemoryFs(t)
@@ -62,19 +65,18 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	req.Equal(fSysCopy, fSys)
 
 	// easy load directly in root
-	content, locPath, err := ll.Load("kustomization.yaml")
+	content, err := ll.Load("kustomization.yaml")
 	req.NoError(err)
 	req.Equal([]byte("/a"), content)
-	checkLocPath(req, locPath, "kustomization.yaml")
 
 	// typical sibling root reference
-	sibLL, locPath, err := ll.New("../alpha")
+	sibLL, err := ll.New("../alpha")
 	req.NoError(err)
-	checkLocLoader(req, sibLL, "/alpha", "/newDir/alpha")
-	checkLocPath(req, locPath, "../alpha")
+	checkLoader(req, sibLL, "/alpha")
 
 	// only need to test once, since don't need to call Cleanup() on local target
-	ll.Cleanup()
+	req.NoError(ll.Cleanup())
+
 	// file system checks are also one-time
 	req.Equal(fSysCopy, fSys)
 	req.Empty(buf.String())
@@ -102,25 +104,22 @@ func TestValidateLocArgsDefaultForRootTarget(t *testing.T) {
 
 			ll, dst, err := lclzr.ValidateLocArgs(params.target, params.scope, "", fSys)
 			req.NoError(err)
-			checkLocLoader(req, ll, "/", "/"+dstPrefix)
+			checkLocLoader(req, ll, "/", "/")
 			checkConfirmedDir(req, dst, "/"+dstPrefix, fSys)
 
 			// file in root, but nested
-			content, locPath, err := ll.Load("a/kustomization.yaml")
+			content, err := ll.Load("a/kustomization.yaml")
 			req.NoError(err)
 			req.Equal([]byte("/a"), content)
-			checkLocPath(req, locPath, "a/kustomization.yaml")
 
-			childLL, locPath, err := ll.New("a")
+			childLL, err := ll.New("a")
 			req.NoError(err)
-			checkLocLoader(req, childLL, "/a", "/"+dstPrefix+"/a")
-			checkLocPath(req, locPath, "a")
+			checkLoader(req, childLL, "/a")
 
 			// messy, uncleaned path
-			content, locPath, err = childLL.Load("./../a/kustomization.yaml")
+			content, err = childLL.Load("./../a/kustomization.yaml")
 			req.NoError(err)
 			req.Equal([]byte("/a"), content)
-			checkLocPath(req, locPath, "kustomization.yaml")
 		})
 	}
 }
@@ -134,20 +133,18 @@ func TestNewMultiple(t *testing.T) {
 	ll, dst, err := lclzr.ValidateLocArgs("/alpha/beta", "/alpha", "", fSys)
 	req.NoError(err)
 	newDir := "/" + dstPrefix + "-beta"
-	checkLocLoader(req, ll, "/alpha/beta", newDir+"/beta")
+	checkLocLoader(req, ll, "/alpha/beta", "/alpha")
 	checkConfirmedDir(req, dst, newDir, fSys)
 
 	// nested child root that isn't cleaned
-	descLL, locPath, err := ll.New("../beta/gamma/delta")
+	descLL, err := ll.New("../beta/gamma/delta")
 	req.NoError(err)
-	checkLocLoader(req, descLL, "/alpha/beta/gamma/delta", newDir+"/beta/gamma/delta")
-	checkLocPath(req, locPath, "gamma/delta")
+	checkLoader(req, descLL, "/alpha/beta/gamma/delta")
 
 	// upwards traversal
-	higherLL, locPath, err := descLL.New("../../c")
+	higherLL, err := descLL.New("../../c")
 	req.NoError(err)
-	checkLocLoader(req, higherLL, "/alpha/beta/c", newDir+"/beta/c")
-	checkLocPath(req, locPath, "../../c")
+	checkLoader(req, higherLL, "/alpha/beta/c")
 }
 
 func makeWdFs(t *testing.T) map[string]filesys.FileSystem {
@@ -199,7 +196,7 @@ func TestValidateLocArgsCwdNotRoot(t *testing.T) {
 			ll, dst, err := lclzr.ValidateLocArgs(test.target, test.scope, test.newDir, fSys)
 			req.NoError(err)
 			newDir := test.wd + "/" + test.newDir
-			checkLocLoader(req, ll, "a/b/c/d/e", newDir+"/d/e")
+			checkLocLoader(req, ll, "a/b/c/d/e", "a/b/c")
 
 			req.Equal(newDir, dst.String())
 			// memory file system can only find paths rooted at current node
@@ -256,7 +253,7 @@ func TestNewFails(t *testing.T) {
 
 		ll, dst, err := lclzr.ValidateLocArgs("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 		req.NoError(err)
-		checkLocLoader(req, ll, "/alpha/beta/gamma", "/alpha/beta/gamma/newDir/beta/gamma")
+		checkLocLoader(req, ll, "/alpha/beta/gamma", "/alpha")
 		checkConfirmedDir(req, dst, "/alpha/beta/gamma/newDir", fSys)
 	})
 	cases := map[string]string{
@@ -274,7 +271,7 @@ func TestNewFails(t *testing.T) {
 			ll, _, err := lclzr.ValidateLocArgs("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 			require.NoError(t, err)
 
-			_, _, err = ll.New(root)
+			_, err = ll.New(root)
 			require.Error(t, err)
 		})
 	}
@@ -287,7 +284,7 @@ func TestLoadFails(t *testing.T) {
 
 		ll, dst, err := lclzr.ValidateLocArgs("a", "", "/a/b/newDir", fSys)
 		req.NoError(err)
-		checkLocLoader(req, ll, "/a", "/a/b/newDir")
+		checkLocLoader(req, ll, "/a", "/a")
 		checkConfirmedDir(req, dst, "/a/b/newDir", fSys)
 	})
 	cases := map[string]string{
@@ -308,7 +305,7 @@ func TestLoadFails(t *testing.T) {
 
 			req.NoError(fSys.WriteFile("/a/newDir/kustomization.yaml", []byte("/a/newDir")))
 
-			_, _, err = ll.Load(file)
+			_, err = ll.Load(file)
 			req.Error(err)
 		})
 	}
