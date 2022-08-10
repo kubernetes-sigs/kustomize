@@ -102,6 +102,9 @@ linters-settings:
       arguments:
       - [ "ID", "API", "JSON" ] # AllowList
       - [ ] # DenyList
+  gomnd:
+    ignored-functions:
+    - os.WriteFile
   gomoddirectives:
     replace-local: true
   gosec:

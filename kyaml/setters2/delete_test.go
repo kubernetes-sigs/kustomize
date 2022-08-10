@@ -42,7 +42,7 @@ func TestDelete_Filter2(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile2")
 
 	// write initial resourcefile to temp path
-	err := os.WriteFile(path, []byte(resourcefile2), 0666)
+	err := os.WriteFile(path, []byte(resourcefile2), 0644)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

@@ -48,7 +48,7 @@ func TestDeleterCreator_Delete(t *testing.T) {
 	}
 	defer os.Remove(openAPI.Name())
 	// write openapi to temp dir
-	err = os.WriteFile(openAPI.Name(), []byte(openAPIFile), 0666)
+	err = os.WriteFile(openAPI.Name(), []byte(openAPIFile), 0644)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -59,7 +59,7 @@ func TestDeleterCreator_Delete(t *testing.T) {
 		t.FailNow()
 	}
 	defer os.Remove(resource.Name())
-	err = os.WriteFile(resource.Name(), []byte(resourceFile), 0666)
+	err = os.WriteFile(resource.Name(), []byte(resourceFile), 0644)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

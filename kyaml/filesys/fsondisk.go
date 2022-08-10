@@ -125,7 +125,10 @@ func (fsOnDisk) ReadDir(name string) ([]string, error) {
 }
 
 // ReadFile delegates to os.ReadFile.
-func (fsOnDisk) ReadFile(name string) ([]byte, error) { return os.ReadFile(name) }
+func (fsOnDisk) ReadFile(name string) ([]byte, error) {
+	//nolint:wrapcheck
+	return os.ReadFile(name)
+}
 
 // WriteFile delegates to os.WriteFile with read/write permissions.
 func (fsOnDisk) WriteFile(name string, c []byte) error {

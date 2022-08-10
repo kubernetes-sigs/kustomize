@@ -66,7 +66,7 @@ func WriteFile(node *RNode, path string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, []byte(out), 0600)
+	return errors.WrapPrefixf(os.WriteFile(path, []byte(out), 0600), "writing RNode to file")
 }
 
 // UpdateFile reads the file at path, applies the filter to it, and write the result back.

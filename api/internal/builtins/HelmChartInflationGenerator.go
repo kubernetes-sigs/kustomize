@@ -210,7 +210,7 @@ func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(
 		return "", fmt.Errorf("cannot create tmp dir to write helm values")
 	}
 	path := filepath.Join(p.tmpDir, p.Name+"-kustomize-values.yaml")
-	return path, os.WriteFile(path, b, 0644)
+	return path, errors.Wrap(os.WriteFile(path, b, 0644), "failed to write values file")
 }
 
 func (p *HelmChartInflationGeneratorPlugin) cleanup() {
