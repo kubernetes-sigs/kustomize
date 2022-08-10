@@ -55,8 +55,8 @@ func validateNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, 
 	}
 	newDir, err := filesys.ConfirmDir(fSys, newDirPath)
 	if err != nil {
-		if err := fSys.RemoveAll(newDir.String()); err != nil {
-			log.Printf("%s", errors.WrapPrefixf(err, "unable to clean localize destination").Error())
+		if errCleanup := fSys.RemoveAll(newDir.String()); errCleanup != nil {
+			log.Printf("%s", errors.WrapPrefixf(errCleanup, "unable to clean localize destination").Error())
 		}
 		return "", errors.WrapPrefixf(err, "unable to establish localize destination")
 	}

@@ -240,8 +240,11 @@ func TestValidateLocArgsFails(t *testing.T) {
 	for name, params := range cases {
 		params := params
 		t.Run(name, func(t *testing.T) {
+			var buf bytes.Buffer
+			log.SetOutput(&buf)
 			_, _, err := lclzr.ValidateLocArgs(params.target, params.scope, params.dest, makeMemoryFs(t))
 			require.Error(t, err)
+			require.Empty(t, buf.String())
 		})
 	}
 }

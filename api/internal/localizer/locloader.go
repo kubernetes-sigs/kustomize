@@ -51,17 +51,13 @@ func ValidateLocArgs(targetArg string, scopeArg string, newDirArg string, fSys f
 
 	scope, err := validateScope(scopeArg, targetArg, ldr, fSys)
 	if err != nil {
-		if cleanErr := ldr.Cleanup(); cleanErr != nil {
-			log.Printf("%s", errors.WrapPrefixf(cleanErr, "unable to clean localize target").Error())
-		}
+		_ = ldr.Cleanup()
 		return nil, "", errors.WrapPrefixf(err, "invalid localize scope '%s'", scopeArg)
 	}
 
 	newDir, err := validateNewDir(newDirArg, ldr, spec, fSys)
 	if err != nil {
-		if cleanErr := ldr.Cleanup(); cleanErr != nil {
-			log.Printf("%s", errors.WrapPrefixf(cleanErr, "unable to clean localize target").Error())
-		}
+		_ = ldr.Cleanup()
 		return nil, "", errors.WrapPrefixf(err, "invalid localize destination '%s'", newDirArg)
 	}
 
