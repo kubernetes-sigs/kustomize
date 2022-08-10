@@ -288,7 +288,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			} else {
 				// merge spec/template/metadata fieldSpec if includeTemplate flag is true
 				if label.IncludeTemplates {
-					fss, err = fss.MergeOne(types.FieldSpec{Path: "spec/template/metadata/labels", CreateIfNotPresent: true})
+					fss, err = fss.MergeOne(types.FieldSpec{Path: "spec/template/metadata/labels", CreateIfNotPresent: false})
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to merge template fieldSpec")
 					}
