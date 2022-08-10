@@ -6,7 +6,6 @@ package runtimeutil
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -24,7 +23,7 @@ type testRun struct {
 
 func (r testRun) run(reader io.Reader, writer io.Writer) error {
 	if r.expectedInput != "" {
-		input, err := ioutil.ReadAll(reader)
+		input, err := io.ReadAll(reader)
 		if !assert.NoError(r.t, err) {
 			r.t.FailNow()
 		}
@@ -1040,7 +1039,7 @@ metadata:
 			// results file setup
 			if len(tt.expectedResults) > 0 && !tt.noMakeResultsFile {
 				// expect result files to be written -- create a directory for them
-				f, err := ioutil.TempFile("", "test-kyaml-*.yaml")
+				f, err := os.CreateTemp("", "test-kyaml-*.yaml")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -1123,7 +1122,7 @@ metadata:
 					t.FailNow()
 				}
 
-				b, err := ioutil.ReadFile(tt.instance.ResultsFile)
+				b, err := os.ReadFile(tt.instance.ResultsFile)
 				writtenResults := strings.TrimSpace(string(b))
 				if !assert.NoError(t, err) {
 					t.FailNow()

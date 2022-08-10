@@ -5,7 +5,6 @@ package repo
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -68,7 +67,7 @@ func loadProtoModules(
 
 func loadProtoModule(path string) (*protoModule, error) {
 	mPath := filepath.Join(path, goModFile)
-	content, err := ioutil.ReadFile(mPath)
+	content, err := os.ReadFile(mPath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading %q: %v\n", mPath, err)
 	}

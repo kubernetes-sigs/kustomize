@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,22 +20,22 @@ import (
 
 // TestCmd_files verifies the fmt command formats the files
 func TestFmtCommand_files(t *testing.T) {
-	f1, err := ioutil.TempFile("", "cmdfmt*.yaml")
+	f1, err := os.CreateTemp("", "cmdfmt*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer os.RemoveAll(f1.Name())
-	err = ioutil.WriteFile(f1.Name(), testyaml.UnformattedYaml1, 0600)
+	err = os.WriteFile(f1.Name(), testyaml.UnformattedYaml1, 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	f2, err := ioutil.TempFile("", "cmdfmt*.yaml")
+	f2, err := os.CreateTemp("", "cmdfmt*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer os.RemoveAll(f2.Name())
-	err = ioutil.WriteFile(f2.Name(), testyaml.UnformattedYaml2, 0600)
+	err = os.WriteFile(f2.Name(), testyaml.UnformattedYaml2, 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -50,7 +49,7 @@ func TestFmtCommand_files(t *testing.T) {
 	}
 
 	// verify the contents
-	b, err := ioutil.ReadFile(f1.Name())
+	b, err := os.ReadFile(f1.Name())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -58,7 +57,7 @@ func TestFmtCommand_files(t *testing.T) {
 		return
 	}
 
-	b, err = ioutil.ReadFile(f2.Name())
+	b, err = os.ReadFile(f2.Name())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -84,20 +83,20 @@ func TestFmtCommand_stdin(t *testing.T) {
 // TestCmd_filesAndstdin verifies that if both files and stdin input are provided, only
 // the files are formatted and the input is ignored
 func TestFmtCmd_filesAndStdin(t *testing.T) {
-	f1, err := ioutil.TempFile("", "cmdfmt*.yaml")
+	f1, err := os.CreateTemp("", "cmdfmt*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(f1.Name(), testyaml.UnformattedYaml1, 0600)
+	err = os.WriteFile(f1.Name(), testyaml.UnformattedYaml1, 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	f2, err := ioutil.TempFile("", "cmdfmt*.yaml")
+	f2, err := os.CreateTemp("", "cmdfmt*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(f2.Name(), testyaml.UnformattedYaml2, 0600)
+	err = os.WriteFile(f2.Name(), testyaml.UnformattedYaml2, 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -117,7 +116,7 @@ func TestFmtCmd_filesAndStdin(t *testing.T) {
 	}
 
 	// verify the output
-	b, err := ioutil.ReadFile(f1.Name())
+	b, err := os.ReadFile(f1.Name())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -125,7 +124,7 @@ func TestFmtCmd_filesAndStdin(t *testing.T) {
 		return
 	}
 
-	b, err = ioutil.ReadFile(f2.Name())
+	b, err = os.ReadFile(f2.Name())
 	if !assert.NoError(t, err) {
 		return
 	}

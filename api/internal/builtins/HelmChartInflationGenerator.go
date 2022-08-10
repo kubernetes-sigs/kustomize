@@ -6,7 +6,6 @@ package builtins
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -73,7 +72,7 @@ func (p *HelmChartInflationGeneratorPlugin) establishTmpDir() (err error) {
 		// already done.
 		return nil
 	}
-	p.tmpDir, err = ioutil.TempDir("", "kustomize-helm-")
+	p.tmpDir, err = os.MkdirTemp("", "kustomize-helm-")
 	return err
 }
 
@@ -211,7 +210,7 @@ func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(
 		return "", fmt.Errorf("cannot create tmp dir to write helm values")
 	}
 	path := filepath.Join(p.tmpDir, p.Name+"-kustomize-values.yaml")
-	return path, ioutil.WriteFile(path, b, 0644)
+	return path, os.WriteFile(path, b, 0644)
 }
 
 func (p *HelmChartInflationGeneratorPlugin) cleanup() {

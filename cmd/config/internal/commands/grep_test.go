@@ -5,7 +5,7 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,7 +19,7 @@ import (
 func TestGrepCommand_files(t *testing.T) {
 	d := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -42,7 +42,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx

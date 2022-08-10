@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +26,7 @@ func TestInit_args(t *testing.T) {
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "Krmfile"))
+	actual, err := os.ReadFile(filepath.Join(d, "Krmfile"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -71,7 +70,7 @@ func TestInit_noargs(t *testing.T) {
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "Krmfile"))
+	actual, err := os.ReadFile(filepath.Join(d, "Krmfile"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

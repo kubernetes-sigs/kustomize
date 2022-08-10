@@ -5,7 +5,7 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -356,17 +356,17 @@ spec:
 
 			baseDir := t.TempDir()
 			f := filepath.Join(baseDir, "Krmfile")
-			err := ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
+			err := os.WriteFile(f, []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
+			r, err := os.CreateTemp(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			t.Cleanup(func() { r.Close() })
-			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			err = os.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -399,7 +399,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualResources, err := ioutil.ReadFile(r.Name())
+			actualResources, err := os.ReadFile(r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -409,7 +409,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(f)
+			actualOpenAPI, err := os.ReadFile(f)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

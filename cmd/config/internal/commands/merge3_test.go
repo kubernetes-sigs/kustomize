@@ -4,7 +4,7 @@
 package commands_test
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -17,7 +17,7 @@ import (
 func TestMerge3Command(t *testing.T) {
 	datadir := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(datadir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err := os.WriteFile(filepath.Join(datadir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -58,7 +58,7 @@ spec:
 
 	expectedDir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(expectedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = os.WriteFile(filepath.Join(expectedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -104,7 +104,7 @@ spec:
 
 	updatedDir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(updatedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = os.WriteFile(filepath.Join(updatedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -147,7 +147,7 @@ spec:
 
 	destDir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(destDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = os.WriteFile(filepath.Join(destDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app

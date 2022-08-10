@@ -6,7 +6,6 @@ package runner
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -137,27 +136,27 @@ func createTestDirStructure(dir string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg1", "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg1", "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg2", "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg2", "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg2/subpkg3", "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg2/subpkg3", "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg4", "error.txt"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg4", "error.txt"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg4", "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg4", "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
@@ -167,7 +166,7 @@ func createTestDirStructure(dir string) error {
 type TestRunner struct{}
 
 func (r *TestRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
-	children, err := ioutil.ReadDir(pkgPath)
+	children, err := os.ReadDir(pkgPath)
 	if err != nil {
 		return err
 	}

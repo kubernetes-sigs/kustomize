@@ -5,7 +5,7 @@ package setters2
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -141,7 +141,7 @@ openAPI:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 			dir := t.TempDir()
-			err := ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.inputOpenAPIfile), 0600)
+			err := os.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.inputOpenAPIfile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

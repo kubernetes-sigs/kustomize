@@ -4,7 +4,6 @@
 package setters2
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -282,7 +281,7 @@ func TestAdd_Filter2(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile")
 
 	// write initial resourcefile to temp path
-	err := ioutil.WriteFile(path, []byte(resourcefile), 0666)
+	err := os.WriteFile(path, []byte(resourcefile), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -311,7 +310,7 @@ func TestAdd_Filter2(t *testing.T) {
 		t.FailNow()
 	}
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		t.FailNow()
 	}
@@ -343,7 +342,7 @@ func TestAddUpdateSubstitution(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile")
 
 	// write initial resourcefile to temp path
-	err := ioutil.WriteFile(path, []byte(resourcefile), 0666)
+	err := os.WriteFile(path, []byte(resourcefile), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -385,7 +384,7 @@ func TestAddUpdateSubstitution(t *testing.T) {
 		t.FailNow()
 	}
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		t.FailNow()
 	}
