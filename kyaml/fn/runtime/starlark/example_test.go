@@ -6,7 +6,6 @@ package starlark_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -200,13 +199,13 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 // resource configuration read from a directory.
 func ExampleFilter_Filter_file() {
 	// setup the configuration
-	d, err := ioutil.TempDir("", "")
+	d, err := os.MkdirTemp("", "")
 	if err != nil {
 		log.Println(err)
 	}
 	defer os.RemoveAll(d)
 
-	err = ioutil.WriteFile(filepath.Join(d, "deploy1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "deploy1.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -222,7 +221,7 @@ spec:
 		log.Println(err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "deploy2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "deploy2.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -238,7 +237,7 @@ spec:
 		log.Println(err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "annotate.star"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "annotate.star"), []byte(`
 def run(items):
   for item in items:
     item["metadata"]["annotations"]["foo"] = "bar"

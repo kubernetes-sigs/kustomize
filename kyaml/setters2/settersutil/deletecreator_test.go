@@ -4,7 +4,6 @@
 package settersutil
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -43,24 +42,24 @@ spec:
 func TestDeleterCreator_Delete(t *testing.T) {
 	openapi.ResetOpenAPI()
 	defer openapi.ResetOpenAPI()
-	openAPI, err := ioutil.TempFile("", "openAPI.yaml")
+	openAPI, err := os.CreateTemp("", "openAPI.yaml")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	defer os.Remove(openAPI.Name())
 	// write openapi to temp dir
-	err = ioutil.WriteFile(openAPI.Name(), []byte(openAPIFile), 0666)
+	err = os.WriteFile(openAPI.Name(), []byte(openAPIFile), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	// write resource file to temp dir
-	resource, err := ioutil.TempFile("", "k8s-cli-*.yaml")
+	resource, err := os.CreateTemp("", "k8s-cli-*.yaml")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	defer os.Remove(resource.Name())
-	err = ioutil.WriteFile(resource.Name(), []byte(resourceFile), 0666)
+	err = os.WriteFile(resource.Name(), []byte(resourceFile), 0666)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -84,12 +83,12 @@ func TestDeleterCreator_Delete(t *testing.T) {
 		t.FailNow()
 	}
 
-	actualOpenAPI, err := ioutil.ReadFile(openAPI.Name())
+	actualOpenAPI, err := os.ReadFile(openAPI.Name())
 	if err != nil {
 		t.FailNow()
 	}
 
-	actualResource, err := ioutil.ReadFile(resource.Name())
+	actualResource, err := os.ReadFile(resource.Name())
 	if err != nil {
 		t.FailNow()
 	}

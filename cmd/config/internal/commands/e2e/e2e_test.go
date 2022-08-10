@@ -6,7 +6,6 @@ package e2e
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -706,7 +705,7 @@ metadata:
 				t.Skip()
 			}
 
-			dir, err := ioutil.TempDir("", "kustomize-test-data-")
+			dir, err := os.MkdirTemp("", "kustomize-test-data-")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -715,7 +714,7 @@ metadata:
 
 			// write the input
 			for path, data := range tt.files(binDir) {
-				err := ioutil.WriteFile(path, []byte(data), 0600)
+				err := os.WriteFile(path, []byte(data), 0600)
 				testutil.AssertNoError(t, err)
 			}
 
@@ -737,7 +736,7 @@ metadata:
 			testutil.AssertNoError(t, err, stdErr.String())
 
 			for path, data := range tt.expectedFiles(binDir) {
-				b, err := ioutil.ReadFile(path)
+				b, err := os.ReadFile(path)
 				testutil.AssertNoError(t, err, stdErr.String())
 
 				if !assert.Equal(t, strings.TrimSpace(data), strings.TrimSpace(string(b)), stdErr.String()) {
@@ -757,7 +756,7 @@ func build() string {
 	// only build the binaries once
 	buildOnce.Do(func() {
 		var err error
-		binDir, err = ioutil.TempDir("", "kustomize-test-")
+		binDir, err = os.MkdirTemp("", "kustomize-test-")
 		if err != nil {
 			panic(err)
 		}

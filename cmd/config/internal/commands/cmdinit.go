@@ -4,7 +4,6 @@
 package commands
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,7 +55,7 @@ func (r *InitRunner) runE(c *cobra.Command, args []string) error {
 		return errors.Errorf("directory already initialized with a Krmfile")
 	}
 
-	return ioutil.WriteFile(filename, []byte(strings.TrimSpace(`
+	return os.WriteFile(filename, []byte(strings.TrimSpace(`
 apiVersion: config.k8s.io/v1alpha1
 kind: Krmfile
 `)), 0600)

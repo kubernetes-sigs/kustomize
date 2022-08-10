@@ -4,8 +4,8 @@
 package parser
 
 import (
+	"io"
 	iofs "io/fs"
-	"io/ioutil"
 	"path"
 	"strings"
 
@@ -54,7 +54,7 @@ func (l parser) readPath(path string, processContent contentProcessor) error {
 	if err := checkExtension(path, l.extensions); err != nil {
 		return err
 	}
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
@@ -100,5 +100,5 @@ func (l parser) readFile(path string) ([]byte, error) {
 	}
 	defer f.Close()
 
-	return ioutil.ReadAll(f)
+	return io.ReadAll(f)
 }

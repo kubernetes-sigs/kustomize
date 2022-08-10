@@ -5,7 +5,6 @@ package settersutil
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -85,7 +84,7 @@ func (c SubstitutionCreator) Create() error {
 		return err
 	}
 
-	curOpenAPI, err := ioutil.ReadFile(c.OpenAPIPath)
+	curOpenAPI, err := os.ReadFile(c.OpenAPIPath)
 	if err != nil {
 		return err
 	}
@@ -131,7 +130,7 @@ func (c SubstitutionCreator) Create() error {
 
 	// revert openAPI file if there are cycles detected in created input substitution
 	if err := c.checkForCycles(ext, visited); err != nil {
-		if writeErr := ioutil.WriteFile(c.OpenAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
+		if writeErr := os.WriteFile(c.OpenAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
 			return writeErr
 		}
 		return err

@@ -4,7 +4,7 @@
 package fixsetters
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -408,13 +408,13 @@ spec:
 
 			dir := t.TempDir()
 
-			err := ioutil.WriteFile(filepath.Join(dir, "deploy.yaml"), []byte(test.input), 0600)
+			err := os.WriteFile(filepath.Join(dir, "deploy.yaml"), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
 			if test.openAPIFile != "" {
-				err = ioutil.WriteFile(filepath.Join(dir, openAPIFileName), []byte(test.openAPIFile), 0600)
+				err = os.WriteFile(filepath.Join(dir, openAPIFileName), []byte(test.openAPIFile), 0600)
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -437,14 +437,14 @@ spec:
 				return
 			}
 
-			actualOutput, err := ioutil.ReadFile(filepath.Join(dir, "deploy.yaml"))
+			actualOutput, err := os.ReadFile(filepath.Join(dir, "deploy.yaml"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			assert.Equal(t, test.expectedOutput, string(actualOutput))
 
 			if test.expectedOpenAPI != "" {
-				actualOpenAPI, err := ioutil.ReadFile(filepath.Join(dir, openAPIFileName))
+				actualOpenAPI, err := os.ReadFile(filepath.Join(dir, openAPIFileName))
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}

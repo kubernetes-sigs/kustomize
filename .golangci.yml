@@ -107,9 +107,6 @@ linters-settings:
   gosec:
     config:
       G306: "0644"
-  gomnd:
-     ignored-functions:
-     - ioutil.WriteFile
   wrapcheck:
     ignoreSigs:
       # defaults

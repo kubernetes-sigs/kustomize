@@ -5,7 +5,7 @@ package loader
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -518,7 +518,7 @@ func TestLoaderHTTP(t *testing.T) {
 			require.Equal(x.path, u)
 			return &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(x.expectedContent)),
+				Body:       io.NopCloser(bytes.NewBufferString(x.expectedContent)),
 				Header:     make(http.Header),
 			}
 		})
