@@ -100,5 +100,6 @@ func (l parser) readFile(path string) ([]byte, error) {
 	}
 	defer f.Close()
 
-	return io.ReadAll(f)
+	content, err := io.ReadAll(f)
+	return content, errors.Wrap(err)
 }

@@ -281,7 +281,7 @@ func TestAdd_Filter2(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile")
 
 	// write initial resourcefile to temp path
-	err := os.WriteFile(path, []byte(resourcefile), 0666)
+	err := os.WriteFile(path, []byte(resourcefile), 0644)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -342,7 +342,7 @@ func TestAddUpdateSubstitution(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile")
 
 	// write initial resourcefile to temp path
-	err := os.WriteFile(path, []byte(resourcefile), 0666)
+	err := os.WriteFile(path, []byte(resourcefile), 0644)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
