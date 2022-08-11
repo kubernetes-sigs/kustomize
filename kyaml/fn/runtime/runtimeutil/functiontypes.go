@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	k8syaml "sigs.k8s.io/yaml"
 )
 
 const (
@@ -224,7 +225,7 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) *Funct
 	for _, s := range functionAnnotationKeys {
 		fn := meta.Annotations[s]
 		if fn != "" {
-			err := yaml.Unmarshal([]byte(fn), &fs)
+			err := k8syaml.UnmarshalStrict([]byte(fn), &fs)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 			}
@@ -239,7 +240,7 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) *Funct
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 	}
-	err = yaml.Unmarshal([]byte(s), &fs)
+	err = k8syaml.UnmarshalStrict([]byte(s), &fs)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 	}

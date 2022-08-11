@@ -1278,9 +1278,23 @@ container:
   image: foo:v1.0.0
 `,
 		},
+		{
+			name: "fn missing spell",
+			resource: `
+apiVersion: v1beta1
+kind: Example
+metadata:
+  annotations:
+    config.kubernetes.io/function: |-
+      containeer:
+        image: foo:v1.0.0
+`,
+			expectedFn: `{}`,
+		},
 
 		// legacy fn style
-		{name: "legacy fn meta",
+		{
+			name: "legacy fn meta",
 			resource: `
 apiVersion: v1beta1
 kind: Example
