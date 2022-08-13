@@ -350,7 +350,7 @@ metadata:
   labels:
     app: nginx
   name: env1-example-nginx-production
-  namespace: production              ### namespace has been set to ns1
+  namespace: production              ### namespace has been set to production
 spec:
   ports:
   - port: 80
@@ -365,7 +365,7 @@ metadata:
   labels:
     app: nginx
   name: env1-example-nginx-production
-  namespace: production              ### namespace has been set to ns1
+  namespace: production              ### namespace has been set to production
 spec:
   replicas: 3                        ### replicas have been updated from 1 to 3
   selector:
@@ -394,7 +394,7 @@ metadata:
   labels:
     app: nginx
   name: env2-example-nginx-staging
-  namespace: staging                 ### namespace has been set to ns2
+  namespace: staging                 ### namespace has been set to staging
 spec:
   ports:
   - port: 80
@@ -409,7 +409,7 @@ metadata:
   labels:
     app: nginx
   name: env2-example-nginx-staging
-  namespace: staging                 ### namespace has been set to ns2
+  namespace: staging                 ### namespace has been set to staging
 spec:
   replicas: 2                        ### replicas have been from 1 to 2
   selector:
