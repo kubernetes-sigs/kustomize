@@ -295,7 +295,7 @@ spec:
         - containerPort: 80
 ```
 
-It is important to note here that the name for _both_ the `deployment` and the `service` were updated with the `namePrefix` and `nameSuffix` defined. If you had additional kubernetes objects (like an `ingress`) their name would be updated as well.
+It is important to note here that the name for _both_ the `deployment` and the `service` were updated with the `namePrefix` and `nameSuffix` defined. If you had additional Kubernetes objects (like an `ingress`) their name would be updated as well.
 
 
 Moving on to the next requirements, you can set the namespace and the number of replicas you want by using `namespace` and `replicas` respectively:
