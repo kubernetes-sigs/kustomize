@@ -6,6 +6,7 @@ weight: 20
 description: >
   A step by step tutorial for absolute kustomize beginners
 ---
+[kustomization reference]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 
 This page will help you get started with this amazing tool called kustomize! You will start off with a simple nginx deployment manifest and then use it to explore kustomize basics.
 
@@ -555,7 +556,7 @@ Next step, add a reference to that patch file in `kustomization.yaml`:
 
 ```yaml
 patches:
-- patch-env-vars.yaml
+- path: patch-env-vars.yaml
 ```
 
 One important thing to note here is that the name of the deployment used is the name that you are getting from the base and not the deployment name that has the prefix and suffix added.
@@ -640,7 +641,7 @@ resources:
 - ../../base
 
 patches:
-- patch-env-vars.yaml
+- path: patch-env-vars.yaml
 ```
 
 _kustomize-example/overlays/production/patch-env-vars.yaml_:
@@ -687,7 +688,7 @@ resources:
 - ../../base
 
 patches:
-- patch-env-vars.yaml
+- path: patch-env-vars.yaml
 ```
 
 _kustomize-example/overlays/staging/patch-env-vars.yaml_:
@@ -818,4 +819,4 @@ Congratulations on making it to the end of this tutorial.  As a summary for you,
 - Add a label to your resources
 - Add an environment variable to a container by using a patch
 
-These are just a few of the things kustomize can do. if you are interested to learn more, the kustomization reference (to add link here) is your next step. You will see how you can use components to define base resources and add them to specific overlays where needed, use generators to create configMaps from files, and much more!
+These are just a few of the things kustomize can do.  If you are interested to learn more, the [kustomization reference] is your next step. You will see how you can use components to define base resources and add them to specific overlays where needed, use generators to create configMaps from files, and much more!
