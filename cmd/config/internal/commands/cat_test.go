@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +21,7 @@ import (
 func TestCmd_files(t *testing.T) {
 	d := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -45,7 +44,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -119,7 +118,7 @@ spec:
 func TestCmd_filesWithReconcilers(t *testing.T) {
 	d := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -142,7 +141,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -225,7 +224,7 @@ spec:
 func TestCmd_filesWithoutNonReconcilers(t *testing.T) {
 	d := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -248,7 +247,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -303,7 +302,7 @@ spec:
 func TestCmd_outputTruncateFile(t *testing.T) {
 	d := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -326,7 +325,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -353,7 +352,7 @@ spec:
 		return
 	}
 
-	f, err := ioutil.TempFile("", "kustomize-cat-test-dest")
+	f, err := os.CreateTemp("", "kustomize-cat-test-dest")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -372,7 +371,7 @@ spec:
 		return
 	}
 
-	actual, err := ioutil.ReadFile(f.Name())
+	actual, err := os.ReadFile(f.Name())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -413,7 +412,7 @@ spec:
 func TestCmd_outputCreateFile(t *testing.T) {
 	d := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -436,7 +435,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -479,7 +478,7 @@ spec:
 		return
 	}
 
-	actual, err := ioutil.ReadFile(f)
+	actual, err := os.ReadFile(f)
 	if !assert.NoError(t, err) {
 		return
 	}

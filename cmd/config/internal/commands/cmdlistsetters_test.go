@@ -5,7 +5,7 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -409,12 +409,12 @@ openAPI:
 
 			dir := t.TempDir()
 
-			err := ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.openapi), 0600)
+			err := os.WriteFile(filepath.Join(dir, "Krmfile"), []byte(test.openapi), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			err = ioutil.WriteFile(filepath.Join(dir, "deployment.yaml"), []byte(test.input), 0600)
+			err = os.WriteFile(filepath.Join(dir, "deployment.yaml"), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -433,7 +433,7 @@ openAPI:
 			}
 
 			// make sure that the resources are not altered
-			actualResources, err := ioutil.ReadFile(filepath.Join(dir, "deployment.yaml"))
+			actualResources, err := os.ReadFile(filepath.Join(dir, "deployment.yaml"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -443,7 +443,7 @@ openAPI:
 				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(filepath.Join(dir, "Krmfile"))
+			actualOpenAPI, err := os.ReadFile(filepath.Join(dir, "Krmfile"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

@@ -4,7 +4,6 @@
 package pathutil
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -78,15 +77,15 @@ func createTestDirStructure(dir string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg1", "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg1", "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "subpkg2", "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "subpkg2", "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(dir, "Krmfile"), []byte(""), 0644)
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,6 @@
 package kusttest_test
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -61,7 +60,7 @@ func MakeEnhancedHarnessWithTmpRoot(t *testing.T) *HarnessEnhanced {
 	r := makeBaseEnhancedHarness(t)
 	fSys := filesys.MakeFsOnDisk()
 	r.Harness = MakeHarnessWithFs(t, fSys)
-	tmpDir, err := ioutil.TempDir("", "kust-testing-")
+	tmpDir, err := os.MkdirTemp("", "kust-testing-")
 	if err != nil {
 		panic("test harness cannot make tmp dir: " + err.Error())
 	}

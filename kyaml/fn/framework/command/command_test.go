@@ -6,7 +6,7 @@ package command_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -36,7 +36,7 @@ func TestCommand_dockerfile(t *testing.T) {
 		t.FailNow()
 	}
 
-	b, err := ioutil.ReadFile(filepath.Join(d, "Dockerfile"))
+	b, err := os.ReadFile(filepath.Join(d, "Dockerfile"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

@@ -4,7 +4,7 @@
 package setters2
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -1003,7 +1003,7 @@ spec:
 func SettersSchema(t *testing.T, s string) *spec.Schema {
 	t.Helper()
 	dir := t.TempDir()
-	err := ioutil.WriteFile(filepath.Join(dir, "Krmfile"), []byte(s), 0600)
+	err := os.WriteFile(filepath.Join(dir, "Krmfile"), []byte(s), 0600)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

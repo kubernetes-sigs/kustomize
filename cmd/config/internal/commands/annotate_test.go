@@ -5,7 +5,7 @@ package commands
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -88,11 +88,11 @@ func TestAnnotateCommand(t *testing.T) {
 func initTestDir(t *testing.T) string {
 	t.Helper()
 	d := t.TempDir()
-	err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(f1Input), 0600)
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(f1Input), 0600)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(f2Input), 0600)
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(f2Input), 0600)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

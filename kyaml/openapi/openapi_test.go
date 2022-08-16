@@ -5,7 +5,7 @@ package openapi
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -116,11 +116,11 @@ openAPI:
           name: image-name
           value: "nginx"
  `
-	f, err := ioutil.TempFile("", "openapi-")
+	f, err := os.CreateTemp("", "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+	if !assert.NoError(t, os.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
 		t.FailNow()
 	}
 
@@ -168,11 +168,11 @@ openAPI:
             ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `
 
-	f, err := ioutil.TempFile("", "openapi-")
+	f, err := os.CreateTemp("", "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+	if !assert.NoError(t, os.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
 		t.FailNow()
 	}
 
@@ -203,11 +203,11 @@ func TestAddSchemaFromFile_empty(t *testing.T) {
 kind: Example
  `
 
-	f, err := ioutil.TempFile("", "openapi-")
+	f, err := os.CreateTemp("", "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+	if !assert.NoError(t, os.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
 		t.FailNow()
 	}
 

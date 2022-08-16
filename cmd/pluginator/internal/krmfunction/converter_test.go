@@ -5,7 +5,7 @@ package krmfunction
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -116,7 +116,7 @@ func TestTransformerConverter(t *testing.T) {
 	t.Skip("TODO: fix this test, which was not running in CI and does not pass")
 	dir := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(dir, "Plugin.go"),
+	err := os.WriteFile(filepath.Join(dir, "Plugin.go"),
 		getTransformerCode(), 0644)
 	require.NoError(t, err)
 
@@ -214,7 +214,7 @@ func TestGeneratorConverter(t *testing.T) {
 	t.Skip("TODO: fix this test, which was not running in CI and does not pass")
 	dir := t.TempDir()
 
-	err := ioutil.WriteFile(filepath.Join(dir, "Plugin.go"),
+	err := os.WriteFile(filepath.Join(dir, "Plugin.go"),
 		getGeneratorCode(), 0644)
 	require.NoError(t, err)
 

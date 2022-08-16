@@ -7,7 +7,6 @@ package openapitests //nolint
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -18,12 +17,12 @@ import (
 )
 
 func writeTestSchema(th kusttest_test.Harness, filepath string) {
-	bytes, _ := ioutil.ReadFile("../testdata/customschema.json")
+	bytes, _ := os.ReadFile("../testdata/customschema.json")
 	th.WriteF(filepath+"mycrd_schema.json", string(bytes))
 }
 
 func writeTestSchemaYaml(th kusttest_test.Harness, filepath string) {
-	bytes, _ := ioutil.ReadFile("../testdata/customschema.yaml")
+	bytes, _ := os.ReadFile("../testdata/customschema.yaml")
 	th.WriteF(filepath+"mycrd_schema.yaml", string(bytes))
 }
 
@@ -486,7 +485,7 @@ spec:
 `)
 
 		// openapi schema referred to by the component
-		bytes, _ := ioutil.ReadFile("../testdata/openshiftschema.json")
+		bytes, _ := os.ReadFile("../testdata/openshiftschema.json")
 		th.WriteF("components/dc-openapi/openapi.json", string(bytes))
 
 		// patch referred to by the component
