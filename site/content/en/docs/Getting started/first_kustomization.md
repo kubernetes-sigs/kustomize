@@ -218,7 +218,7 @@ kustomize-example
 
 ### Customizing overlays
 
-For the purposes this example, let's define some requirements of how your deployment should look like in the two environments:
+For the purposes of this example, let's define some requirements for how your deployment should look like in the two environments:
 
 |Requirement|             Production             |           Staging           |
 |-----------|------------------------------------|-----------------------------|
