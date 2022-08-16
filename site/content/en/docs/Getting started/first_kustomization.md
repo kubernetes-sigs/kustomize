@@ -818,4 +818,4 @@ Congratulations on making it to the end of this tutorial.  As a summary for you,
 - Add a label to your resources
 - Add an environment variable to a container by using a patch
 
-These are just a few of the things kustomize can do, and if you are interested to learn more the kustomization reference (to add link here) is your next step. You will see how you can use components to define base resources and add them to specific overlays where needed, use generators to create configMaps from files, and much more!
+These are just a few of the things kustomize can do. if you are interested to learn more, the kustomization reference (to add link here) is your next step. You will see how you can use components to define base resources and add them to specific overlays where needed, use generators to create configMaps from files, and much more!
