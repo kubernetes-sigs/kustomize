@@ -412,7 +412,7 @@ metadata:
   name: env2-example-nginx-staging
   namespace: staging                 ### namespace has been set to staging
 spec:
-  replicas: 2                        ### replicas have been from 1 to 2
+  replicas: 2                        ### replicas have been updated from 1 to 2
   selector:
     matchLabels:
       app: nginx
