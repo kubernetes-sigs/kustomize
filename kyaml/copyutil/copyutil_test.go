@@ -5,7 +5,6 @@ package copyutil_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,13 +20,13 @@ func TestDiff_identical(t *testing.T) {
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -85,13 +84,13 @@ func TestDiff_srcDestContentsDiffer(t *testing.T) {
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`b`), 0600)
 	assert.NoError(t, err)
 
@@ -110,13 +109,13 @@ func TestDiff_srcDestContentsDifferInDirs(t *testing.T) {
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "b1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "b1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -138,29 +137,29 @@ func TestDiff_skipGitSrc(t *testing.T) {
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// files that just happen to start with .git should not be ignored.
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -177,20 +176,20 @@ func TestDiff_skipGitDest(t *testing.T) {
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(d, ".git"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, ".git", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -205,14 +204,14 @@ func TestSyncFile(t *testing.T) {
 	d2 := t.TempDir()
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
-	err := ioutil.WriteFile(f1Name, []byte("abc"), 0600)
+	err := os.WriteFile(f1Name, []byte("abc"), 0600)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(f2Name, []byte("def"), 0644)
+	err = os.WriteFile(f2Name, []byte("def"), 0644)
 	expectedFileInfo, _ := os.Stat(f2Name)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
-	actual, err := ioutil.ReadFile(f2Name)
+	actual, err := os.ReadFile(f2Name)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
@@ -225,11 +224,11 @@ func TestSyncFileNoDestFile(t *testing.T) {
 	d2 := t.TempDir()
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
-	err := ioutil.WriteFile(f1Name, []byte("abc"), 0644)
+	err := os.WriteFile(f1Name, []byte("abc"), 0644)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
-	actual, err := ioutil.ReadFile(f2Name)
+	actual, err := os.ReadFile(f2Name)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
@@ -243,11 +242,11 @@ func TestSyncFileNoSrcFile(t *testing.T) {
 	d2 := t.TempDir()
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
-	err := ioutil.WriteFile(f2Name, []byte("abc"), 0644)
+	err := os.WriteFile(f2Name, []byte("abc"), 0644)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
-	_, err = ioutil.ReadFile(f2Name)
+	_, err = os.ReadFile(f2Name)
 	assert.Error(t, err)
 }
 
@@ -279,29 +278,29 @@ func TestCopyDir(t *testing.T) {
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// files that just happen to start with .git should not be ignored.
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(v, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(v, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(v, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 

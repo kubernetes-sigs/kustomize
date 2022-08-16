@@ -41,7 +41,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -68,7 +67,7 @@ func main() {
 	source := os.Args[1]
 	dest := os.Args[2]
 
-	files, err := ioutil.ReadDir(source)
+	files, err := os.ReadDir(source)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
@@ -79,7 +78,7 @@ func main() {
 		if filepath.Ext(f.Name()) != ".md" {
 			continue
 		}
-		b, err := ioutil.ReadFile(filepath.Join(source, f.Name()))
+		b, err := os.ReadFile(filepath.Join(source, f.Name()))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
@@ -96,7 +95,7 @@ func main() {
 	} else if licenseFile == "none" {
 		// no license -- maybe added by another tool
 	} else {
-		b, err := ioutil.ReadFile(licenseFile)
+		b, err := os.ReadFile(licenseFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
@@ -117,7 +116,7 @@ package ` + filepath.Base(dest) + "\n"}
 	}
 
 	o := strings.Join(out, "\n")
-	err = ioutil.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600)
+	err = os.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

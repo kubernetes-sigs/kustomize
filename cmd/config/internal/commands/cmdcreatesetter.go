@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -213,7 +213,7 @@ func schemaFromFile(schemaPath string) (*spec.Schema, error) {
 	if schemaPath == "" {
 		return sc, nil
 	}
-	sch, err := ioutil.ReadFile(schemaPath)
+	sch, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return sc, err
 	}

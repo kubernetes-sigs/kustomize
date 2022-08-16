@@ -6,7 +6,6 @@ package filters_test
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -680,12 +679,12 @@ apiVersion: example.com/v1beta1
 // with a .yaml extension.
 func TestFormatFileOrDirectory_yamlExtFile(t *testing.T) {
 	// write the unformatted file
-	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp("", "yamlfmt*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
+	err = os.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -697,7 +696,7 @@ func TestFormatFileOrDirectory_yamlExtFile(t *testing.T) {
 	}
 
 	// check the result is formatted
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -706,10 +705,10 @@ func TestFormatFileOrDirectory_yamlExtFile(t *testing.T) {
 
 func TestFormatFileOrDirectory_multipleYamlEntries(t *testing.T) {
 	// write the unformatted file
-	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp("", "yamlfmt*.yaml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(),
+	err = os.WriteFile(f.Name(),
 		[]byte(string(testyaml.UnformattedYaml1)+"---\n"+string(testyaml.UnformattedYaml2)), 0600)
 	assert.NoError(t, err)
 
@@ -718,7 +717,7 @@ func TestFormatFileOrDirectory_multipleYamlEntries(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check the result is formatted
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.FormattedYaml1)+"---\n"+string(testyaml.FormattedYaml2), string(b))
 }
@@ -727,10 +726,10 @@ func TestFormatFileOrDirectory_multipleYamlEntries(t *testing.T) {
 // with a .yml extension.
 func TestFormatFileOrDirectory_ymlExtFile(t *testing.T) {
 	// write the unformatted file
-	f, err := ioutil.TempFile("", "yamlfmt*.yml")
+	f, err := os.CreateTemp("", "yamlfmt*.yml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
+	err = os.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
 	assert.NoError(t, err)
 
 	// format the file
@@ -738,7 +737,7 @@ func TestFormatFileOrDirectory_ymlExtFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check the result is formatted
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.FormattedYaml1), string(b))
 }
@@ -747,10 +746,10 @@ func TestFormatFileOrDirectory_ymlExtFile(t *testing.T) {
 // YAML content is formatted as such.
 func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	// write the unformatted JSON file contents
-	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp("", "yamlfmt*.yaml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
+	err = os.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
 	assert.NoError(t, err)
 
 	// format the file
@@ -758,7 +757,7 @@ func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check the result is formatted as yaml
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.FormattedFlowYAML1), string(b))
 }
@@ -767,10 +766,10 @@ func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 // and JSON contents won't be modified.
 func TestFormatFileOrDirectory_JsonExtFileWithNotModified(t *testing.T) {
 	// write the unformatted JSON file contents
-	f, err := ioutil.TempFile("", "yamlfmt*.json")
+	f, err := os.CreateTemp("", "yamlfmt*.json")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
+	err = os.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
 	assert.NoError(t, err)
 
 	// format the file
@@ -778,7 +777,7 @@ func TestFormatFileOrDirectory_JsonExtFileWithNotModified(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check the result is formatted as yaml
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.UnformattedJSON1), string(b))
 }
@@ -787,10 +786,10 @@ func TestFormatFileOrDirectory_JsonExtFileWithNotModified(t *testing.T) {
 // Kubernetes and non-Kubernetes documents, it will only format the Kubernetes documents
 func TestFormatFileOrDirectory_partialKubernetesYamlFile(t *testing.T) {
 	// write the unformatted file
-	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp("", "yamlfmt*.yaml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), []byte(string(testyaml.UnformattedYaml1)+`---
+	err = os.WriteFile(f.Name(), []byte(string(testyaml.UnformattedYaml1)+`---
 status:
   conditions:
   - 3
@@ -806,7 +805,7 @@ spec: a
 	assert.NoError(t, err)
 
 	// check the result is  NOT formatted
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.FormattedYaml1)+`---
 status:
@@ -823,10 +822,10 @@ spec: a
 // kubernetes
 func TestFormatFileOrDirectory_skipNonKubernetesYamlFile(t *testing.T) {
 	// write the unformatted JSON file contents
-	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp("", "yamlfmt*.yaml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), []byte(`
+	err = os.WriteFile(f.Name(), []byte(`
 status:
   conditions:
   - 3
@@ -841,7 +840,7 @@ spec: a
 	assert.NoError(t, err)
 
 	// check the result is formatted as yaml
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, `status:
   conditions:
@@ -854,16 +853,16 @@ spec: a
 
 // TestFormatFileOrDirectory_jsonFile should not fmt the file even though it contains yaml.
 func TestFormatFileOrDirectory_skipJsonExtFile(t *testing.T) {
-	f, err := ioutil.TempFile("", "yamlfmt*.json")
+	f, err := os.CreateTemp("", "yamlfmt*.json")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
+	err = os.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
 	assert.NoError(t, err)
 
 	err = FormatFileOrDirectory(f.Name())
 	assert.NoError(t, err)
 
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(testyaml.UnformattedYaml1), string(b))
@@ -877,27 +876,27 @@ func TestFormatFileOrDirectory_directory(t *testing.T) {
 	err := os.Mkdir(filepath.Join(d, "config"), 0700)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(filepath.Join(d, "c1.yaml"), testyaml.UnformattedYaml1, 0600)
+	err = os.WriteFile(filepath.Join(d, "c1.yaml"), testyaml.UnformattedYaml1, 0600)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(filepath.Join(d, "config", "c2.yaml"), testyaml.UnformattedYaml2, 0600)
+	err = os.WriteFile(filepath.Join(d, "config", "c2.yaml"), testyaml.UnformattedYaml2, 0600)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(filepath.Join(d, "README.md"), []byte(`# Markdown`), 0600)
+	err = os.WriteFile(filepath.Join(d, "README.md"), []byte(`# Markdown`), 0600)
 	assert.NoError(t, err)
 
 	err = FormatFileOrDirectory(d)
 	assert.NoError(t, err)
 
-	b, err := ioutil.ReadFile(filepath.Join(d, "c1.yaml"))
+	b, err := os.ReadFile(filepath.Join(d, "c1.yaml"))
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.FormattedYaml1), string(b))
 
-	b, err = ioutil.ReadFile(filepath.Join(d, "config", "c2.yaml"))
+	b, err = os.ReadFile(filepath.Join(d, "config", "c2.yaml"))
 	assert.NoError(t, err)
 	assert.Equal(t, string(testyaml.FormattedYaml2), string(b))
 
-	b, err = ioutil.ReadFile(filepath.Join(d, "README.md"))
+	b, err = os.ReadFile(filepath.Join(d, "README.md"))
 	assert.NoError(t, err)
 	assert.Equal(t, `# Markdown`, string(b))
 
@@ -917,16 +916,16 @@ func TestFormatFileOrDirectory_directory(t *testing.T) {
 // TestFormatFileOrDirectory_trimWhiteSpace verifies that trailling and leading whitespace is
 // trimmed
 func TestFormatFileOrDirectory_trimWhiteSpace(t *testing.T) {
-	f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp("", "yamlfmt*.yaml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
-	err = ioutil.WriteFile(f.Name(), []byte("\n\n"+string(testyaml.UnformattedYaml1)+"\n\n"), 0600)
+	err = os.WriteFile(f.Name(), []byte("\n\n"+string(testyaml.UnformattedYaml1)+"\n\n"), 0600)
 	assert.NoError(t, err)
 
 	err = FormatFileOrDirectory(f.Name())
 	assert.NoError(t, err)
 
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(testyaml.FormattedYaml1), string(b))
@@ -1024,11 +1023,11 @@ metadata:
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			f, err := ioutil.TempFile("", "yamlfmt*.yaml")
+			f, err := os.CreateTemp("", "yamlfmt*.yaml")
 			assert.NoError(t, err)
 			defer os.Remove(f.Name())
 
-			err = ioutil.WriteFile(f.Name(), test.input, 0600)
+			err = os.WriteFile(f.Name(), test.input, 0600)
 			assert.NoError(t, err)
 
 			err = FormatFileOrDirectory(f.Name())
@@ -1038,7 +1037,7 @@ metadata:
 			}
 			assert.NoError(t, err)
 
-			b, err := ioutil.ReadFile(f.Name())
+			b, err := os.ReadFile(f.Name())
 			assert.NoError(t, err)
 
 			assert.Equal(t, strings.TrimSpace(string(test.expectedOutput)),

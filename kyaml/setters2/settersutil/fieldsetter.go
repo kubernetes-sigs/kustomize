@@ -4,7 +4,6 @@
 package settersutil
 
 import (
-	"io/ioutil"
 	"os"
 
 	"k8s.io/kube-openapi/pkg/validation/spec"
@@ -70,7 +69,7 @@ func (fs *FieldSetter) Set() (int, error) {
 		return 0, err
 	}
 
-	curOpenAPI, err := ioutil.ReadFile(fs.OpenAPIPath)
+	curOpenAPI, err := os.ReadFile(fs.OpenAPIPath)
 	if err != nil {
 		return 0, err
 	}
@@ -100,7 +99,7 @@ func (fs *FieldSetter) Set() (int, error) {
 
 	// revert openAPI file if set operation fails
 	if err != nil {
-		if writeErr := ioutil.WriteFile(fs.OpenAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
+		if writeErr := os.WriteFile(fs.OpenAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
 			return 0, writeErr
 		}
 	}

@@ -6,8 +6,8 @@ package yaml
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -53,7 +53,7 @@ func Parse(value string) (*RNode, error) {
 // ReadFile parses a single Resource from a yaml file.
 // To parse multiple resources, consider a kio.ByteReader
 func ReadFile(path string) (*RNode, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func WriteFile(node *RNode, path string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, []byte(out), 0600)
+	return errors.WrapPrefixf(os.WriteFile(path, []byte(out), 0600), "writing RNode to file")
 }
 
 // UpdateFile reads the file at path, applies the filter to it, and write the result back.

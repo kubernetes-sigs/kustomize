@@ -102,14 +102,14 @@ linters-settings:
       arguments:
       - [ "ID", "API", "JSON" ] # AllowList
       - [ ] # DenyList
+  gomnd:
+    ignored-functions:
+    - os.WriteFile
   gomoddirectives:
     replace-local: true
   gosec:
     config:
       G306: "0644"
-  gomnd:
-     ignored-functions:
-     - ioutil.WriteFile
   wrapcheck:
     ignoreSigs:
       # defaults

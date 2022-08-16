@@ -4,7 +4,6 @@
 package setters2
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -43,7 +42,7 @@ func TestDelete_Filter2(t *testing.T) {
 	path := filepath.Join(os.TempDir(), "resourcefile2")
 
 	// write initial resourcefile to temp path
-	err := ioutil.WriteFile(path, []byte(resourcefile2), 0666)
+	err := os.WriteFile(path, []byte(resourcefile2), 0644)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -59,7 +58,7 @@ func TestDelete_Filter2(t *testing.T) {
 		t.FailNow()
 	}
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		t.FailNow()
 	}

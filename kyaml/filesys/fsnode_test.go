@@ -9,7 +9,6 @@ package filesys
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -141,7 +140,7 @@ func runBasicOperations(
 		if fi.Name() != c.name {
 			t.Fatalf("%s; expected name '%s', got '%s'", c.what, c.name, fi.Name())
 		}
-		buff, err := ioutil.ReadAll(f)
+		buff, err := io.ReadAll(f)
 		if err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
 		}

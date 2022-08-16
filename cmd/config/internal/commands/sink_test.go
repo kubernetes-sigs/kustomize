@@ -5,7 +5,7 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -72,7 +72,7 @@ items:
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.yaml"))
+	actual, err := os.ReadFile(filepath.Join(d, "f1.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -99,7 +99,7 @@ spec:
 		t.FailNow()
 	}
 
-	actual, err = ioutil.ReadFile(filepath.Join(d, "f2.yaml"))
+	actual, err = os.ReadFile(filepath.Join(d, "f2.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -147,7 +147,7 @@ items:
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.json"))
+	actual, err := os.ReadFile(filepath.Join(d, "f1.json"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

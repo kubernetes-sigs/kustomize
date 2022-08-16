@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -702,13 +701,13 @@ spec:
 			baseDir := t.TempDir()
 
 			f := filepath.Join(baseDir, "Krmfile")
-			err := ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
+			err := os.WriteFile(f, []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
 			if test.schema != "" {
-				sch, err := ioutil.TempFile("", "schema.json")
+				sch, err := os.CreateTemp("", "schema.json")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -717,7 +716,7 @@ spec:
 					os.Remove(sch.Name())
 				})
 
-				err = ioutil.WriteFile(sch.Name(), []byte(test.schema), 0600)
+				err = os.WriteFile(sch.Name(), []byte(test.schema), 0600)
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -725,12 +724,12 @@ spec:
 				test.args = append(test.args, "--schema-path", sch.Name())
 			}
 
-			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
+			r, err := os.CreateTemp(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			t.Cleanup(func() { r.Close() })
-			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			err = os.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -763,7 +762,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualResources, err := ioutil.ReadFile(r.Name())
+			actualResources, err := os.ReadFile(r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -773,7 +772,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(f)
+			actualOpenAPI, err := os.ReadFile(f)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
