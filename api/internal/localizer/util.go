@@ -14,8 +14,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// validateScope returns the scope given localize arguments and targetLdr that corresponds to targetArg
-func validateScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
+// establishScope returns the scope given localize arguments and targetLdr at targetArg
+func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
 	if _, isRemote := targetLdr.Repo(); isRemote {
 		if scopeArg != "" {
 			return "", errors.Errorf("scope '%s' specified for remote localize target '%s'", scopeArg, targetArg)
@@ -37,23 +37,20 @@ func validateScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys
 	return scope, nil
 }
 
-// validateNewDir returns the localize destination directory or error. Note that spec is nil if targetLdr is at local
+// createNewDir returns the localize destination directory or error. Note that spec is nil if targetLdr is at local
 // target.
-func validateNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
-	var newDirPath string
+func createNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
 	if newDirArg == "" {
-		newDirPath = defaultNewDir(targetLdr, spec)
-	} else {
-		newDirPath = newDirArg
+		newDirArg = defaultNewDir(targetLdr, spec)
 	}
-	if fSys.Exists(newDirPath) {
-		return "", errors.Errorf("localize destination '%s' already exists", newDirPath)
+	if fSys.Exists(newDirArg) {
+		return "", errors.Errorf("localize destination '%s' already exists", newDirArg)
 	}
 	// destination directory must sit in an existing directory
-	if err := fSys.Mkdir(newDirPath); err != nil {
+	if err := fSys.Mkdir(newDirArg); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to create localize destination directory")
 	}
-	newDir, err := filesys.ConfirmDir(fSys, newDirPath)
+	newDir, err := filesys.ConfirmDir(fSys, newDirArg)
 	if err != nil {
 		if errCleanup := fSys.RemoveAll(newDir.String()); errCleanup != nil {
 			log.Printf("%s", errors.WrapPrefixf(errCleanup, "unable to clean localize destination").Error())

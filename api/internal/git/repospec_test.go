@@ -13,14 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSchemes(t *testing.T) {
-	scheme := Schemes()
-	assert.Len(t, scheme, 3)
-	assert.Contains(t, scheme, "https")
-	assert.Contains(t, scheme, "http")
-	assert.Contains(t, scheme, "ssh")
-}
-
 var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 
 var pathNames = []string{"README.md", "foo/krusty.txt", ""}

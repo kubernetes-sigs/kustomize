@@ -22,9 +22,9 @@ import (
 // with a unique name that isn't created until clone time.
 const notCloned = filesys.ConfirmedDir("/notCloned")
 
-// Schemes returns the schemes that repo urls may begin with
+// Schemes returns the schemes that repo urls may have
 func Schemes() []string {
-	return []string{"https", "http", "ssh"}
+	return []string{"https://", "http://", "ssh://"}
 }
 
 // RepoSpec specifies a git repository and a branch and path therein.
@@ -92,14 +92,14 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	spec := parseGitURL(n)
-	if spec.Host == "" {
+	repoSpec := parseGitURL(n)
+	if repoSpec.Host == "" {
 		return nil, errors.Errorf("url lacks host: %s", n)
 	}
-	if spec.OrgRepo == "" {
+	if repoSpec.OrgRepo == "" {
 		return nil, errors.Errorf("url lacks orgRepo: %s", n)
 	}
-	return spec, nil
+	return repoSpec, nil
 }
 
 const (
@@ -112,24 +112,25 @@ const (
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGitURL(n string) *RepoSpec {
-	spec := &RepoSpec{raw: n, Dir: notCloned}
+	repoSpec := &RepoSpec{raw: n, Dir: notCloned}
 
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
-		spec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
+		repoSpec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
 		// url before next /, though make sure before ? query string delimiter
-		spec.OrgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
-		spec.Path, spec.Ref, spec.Timeout, spec.Submodules = peelQuery(n[index+len(gitDelimiter)+len(spec.OrgRepo):])
-		return spec
+		repoSpec.OrgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
+		repoSpec.Path, repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules =
+			peelQuery(n[index+len(gitDelimiter)+len(repoSpec.OrgRepo):])
+		return repoSpec
 	}
 
-	spec.Host, n = parseHostSpec(n)
+	repoSpec.Host, n = parseHostSpec(n)
 
-	spec.GitSuffix = gitSuffix
+	repoSpec.GitSuffix = gitSuffix
 	if strings.Contains(n, gitSuffix) {
 		index := strings.Index(n, gitSuffix)
-		spec.OrgRepo = n[0:index]
+		repoSpec.OrgRepo = n[0:index]
 		n = n[index+len(gitSuffix):]
 		// always try to include / in previous component
 		if len(n) > 0 && n[0] == '/' {
@@ -141,16 +142,16 @@ func parseGitURL(n string) *RepoSpec {
 		j := strings.Index(n[i+1:], "/")
 		// only 2 components, so can use peelQuery to group everything before ? query string delimiter as OrgRepo
 		if j == -1 {
-			spec.OrgRepo, spec.Ref, spec.Timeout, spec.Submodules = peelQuery(n)
-			return spec
+			repoSpec.OrgRepo, repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules = peelQuery(n)
+			return repoSpec
 		}
 		// extract first 2 components
 		j += i + 1
-		spec.OrgRepo = n[:j]
+		repoSpec.OrgRepo = n[:j]
 		n = n[j+1:]
 	}
-	spec.Path, spec.Ref, spec.Timeout, spec.Submodules = peelQuery(n)
-	return spec
+	repoSpec.Path, repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules = peelQuery(n)
+	return repoSpec
 }
 
 // Clone git submodules by default.
@@ -220,7 +221,7 @@ func parseHostSpec(n string) (string, string) {
 		j := strings.Index(n, ":")
 		// orgRepo delimiter only valid if not preceded by /
 		k := strings.Index(n, "/")
-		// orgRepo delimeter exists, so extend host
+		// orgRepo delimiter exists, so extend host
 		if j > -1 && (k == -1 || k > j) {
 			i = j
 			// should try to group / with previous component
@@ -236,7 +237,7 @@ func parseHostSpec(n string) (string, string) {
 
 	// If host is a http(s) or ssh URL, grab the domain part.
 	for _, p := range Schemes() {
-		if strings.HasSuffix(host, p+"://") {
+		if strings.HasSuffix(host, p) {
 			i := strings.Index(n, "/")
 			if i > -1 {
 				host += n[0 : i+1]

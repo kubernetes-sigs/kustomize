@@ -31,11 +31,6 @@ func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	return fSys
 }
 
-func checkLocLoader(req *require.Assertions, ll *lclzr.LocLoader, root string, scope string) {
-	checkLoader(req, ll, root)
-	req.Equal(scope, ll.Scope())
-}
-
 func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
 	req.Equal(root, ldr.Root())
 	repo, isRemote := ldr.Repo()
@@ -43,9 +38,10 @@ func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
 	req.Equal("", repo)
 }
 
-func checkConfirmedDir(req *require.Assertions, dir filesys.ConfirmedDir, path string, fSys filesys.FileSystem) {
-	req.Equal(path, dir.String())
-	req.True(fSys.Exists(path))
+func checkLocArgs(req *require.Assertions, args *lclzr.LocArgs, scope string, newDir string, fSys filesys.FileSystem) {
+	req.Equal(scope, args.Scope.String())
+	req.Equal(newDir, args.NewDir.String())
+	req.True(fSys.Exists(newDir))
 }
 
 func TestLocalLoadNewAndCleanup(t *testing.T) {
@@ -55,34 +51,35 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	// typical setup
-	ll, dst, err := lclzr.ValidateLocArgs("a", "/", "/newDir", fSys)
+	ldr, args, err := lclzr.NewLocLoader("a", "/", "/newDir", fSys)
 	req.NoError(err)
-	checkLocLoader(req, ll, "/a", "/")
+	checkLoader(req, ldr, "/a")
+	checkLocArgs(req, &args, "/", "/newDir", fSys)
 
-	req.Equal("/newDir", dst.String())
 	fSysCopy := makeMemoryFs(t)
 	req.NoError(fSysCopy.Mkdir("/newDir"))
 	req.Equal(fSysCopy, fSys)
 
 	// easy load directly in root
-	content, err := ll.Load("kustomization.yaml")
+	content, err := ldr.Load("kustomization.yaml")
 	req.NoError(err)
 	req.Equal([]byte("/a"), content)
 
 	// typical sibling root reference
-	sibLL, err := ll.New("../alpha")
+	sibLdr, err := ldr.New("../alpha")
 	req.NoError(err)
-	checkLoader(req, sibLL, "/alpha")
+	checkLoader(req, sibLdr, "/alpha")
 
 	// only need to test once, since don't need to call Cleanup() on local target
-	req.NoError(ll.Cleanup())
+	req.NoError(sibLdr.Cleanup())
+	req.NoError(ldr.Cleanup())
 
-	// file system checks are also one-time
+	// file system and buffer checks are also one-time
 	req.Equal(fSysCopy, fSys)
 	req.Empty(buf.String())
 }
 
-func TestValidateLocArgsDefaultForRootTarget(t *testing.T) {
+func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 	cases := map[string]struct {
 		target string
 		scope  string
@@ -102,22 +99,22 @@ func TestValidateLocArgsDefaultForRootTarget(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
 
-			ll, dst, err := lclzr.ValidateLocArgs(params.target, params.scope, "", fSys)
+			ldr, args, err := lclzr.NewLocLoader(params.target, params.scope, "", fSys)
 			req.NoError(err)
-			checkLocLoader(req, ll, "/", "/")
-			checkConfirmedDir(req, dst, "/"+dstPrefix, fSys)
+			checkLoader(req, ldr, "/")
+			checkLocArgs(req, &args, "/", "/"+dstPrefix, fSys)
 
 			// file in root, but nested
-			content, err := ll.Load("a/kustomization.yaml")
+			content, err := ldr.Load("a/kustomization.yaml")
 			req.NoError(err)
 			req.Equal([]byte("/a"), content)
 
-			childLL, err := ll.New("a")
+			childLdr, err := ldr.New("a")
 			req.NoError(err)
-			checkLoader(req, childLL, "/a")
+			checkLoader(req, childLdr, "/a")
 
 			// messy, uncleaned path
-			content, err = childLL.Load("./../a/kustomization.yaml")
+			content, err = childLdr.Load("./../a/kustomization.yaml")
 			req.NoError(err)
 			req.Equal([]byte("/a"), content)
 		})
@@ -130,21 +127,21 @@ func TestNewMultiple(t *testing.T) {
 
 	// default destination for non-file system root target
 	// destination outside of scope
-	ll, dst, err := lclzr.ValidateLocArgs("/alpha/beta", "/alpha", "", fSys)
+	ldr, args, err := lclzr.NewLocLoader("/alpha/beta", "/alpha", "", fSys)
 	req.NoError(err)
 	newDir := "/" + dstPrefix + "-beta"
-	checkLocLoader(req, ll, "/alpha/beta", "/alpha")
-	checkConfirmedDir(req, dst, newDir, fSys)
+	checkLoader(req, ldr, "/alpha/beta")
+	checkLocArgs(req, &args, "/alpha", newDir, fSys)
 
 	// nested child root that isn't cleaned
-	descLL, err := ll.New("../beta/gamma/delta")
+	descLdr, err := ldr.New("../beta/gamma/delta")
 	req.NoError(err)
-	checkLoader(req, descLL, "/alpha/beta/gamma/delta")
+	checkLoader(req, descLdr, "/alpha/beta/gamma/delta")
 
 	// upwards traversal
-	higherLL, err := descLL.New("../../c")
+	higherLdr, err := descLdr.New("../../c")
 	req.NoError(err)
-	checkLoader(req, higherLL, "/alpha/beta/c")
+	checkLoader(req, higherLdr, "/alpha/beta/c")
 }
 
 func makeWdFs(t *testing.T) map[string]filesys.FileSystem {
@@ -165,7 +162,7 @@ func makeWdFs(t *testing.T) map[string]filesys.FileSystem {
 	}
 }
 
-func TestValidateLocArgsCwdNotRoot(t *testing.T) {
+func TestNewLocLoaderCwdNotRoot(t *testing.T) {
 	cases := map[string]struct {
 		wd     string
 		target string
@@ -193,19 +190,20 @@ func TestValidateLocArgsCwdNotRoot(t *testing.T) {
 			req := require.New(t)
 			fSys := makeWdFs(t)[test.wd]
 
-			ll, dst, err := lclzr.ValidateLocArgs(test.target, test.scope, test.newDir, fSys)
+			ldr, args, err := lclzr.NewLocLoader(test.target, test.scope, test.newDir, fSys)
 			req.NoError(err)
 			newDir := test.wd + "/" + test.newDir
-			checkLocLoader(req, ll, "a/b/c/d/e", "a/b/c")
+			checkLoader(req, ldr, "a/b/c/d/e")
 
-			req.Equal(newDir, dst.String())
+			req.Equal("a/b/c", args.Scope.String())
+			req.Equal(newDir, args.NewDir.String())
 			// memory file system can only find paths rooted at current node
 			req.True(fSys.Exists(test.newDir))
 		})
 	}
 }
 
-func TestValidateLocArgsFails(t *testing.T) {
+func TestNewLocLoaderFails(t *testing.T) {
 	cases := map[string]struct {
 		target string
 		scope  string
@@ -242,7 +240,7 @@ func TestValidateLocArgsFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var buf bytes.Buffer
 			log.SetOutput(&buf)
-			_, _, err := lclzr.ValidateLocArgs(params.target, params.scope, params.dest, makeMemoryFs(t))
+			_, _, err := lclzr.NewLocLoader(params.target, params.scope, params.dest, makeMemoryFs(t))
 			require.Error(t, err)
 			require.Empty(t, buf.String())
 		})
@@ -250,15 +248,14 @@ func TestValidateLocArgsFails(t *testing.T) {
 }
 
 func TestNewFails(t *testing.T) {
-	t.Run("ValidateLocArgs", func(t *testing.T) {
-		req := require.New(t)
-		fSys := makeMemoryFs(t)
+	req := require.New(t)
+	fSys := makeMemoryFs(t)
 
-		ll, dst, err := lclzr.ValidateLocArgs("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
-		req.NoError(err)
-		checkLocLoader(req, ll, "/alpha/beta/gamma", "/alpha")
-		checkConfirmedDir(req, dst, "/alpha/beta/gamma/newDir", fSys)
-	})
+	ldr, args, err := lclzr.NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
+	req.NoError(err)
+	checkLoader(req, ldr, "/alpha/beta/gamma")
+	checkLocArgs(req, &args, "/alpha", "/alpha/beta/gamma/newDir", fSys)
+
 	cases := map[string]string{
 		"outside scope":     "../../../a",
 		"at dst":            "newDir",
@@ -271,25 +268,24 @@ func TestNewFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
 
-			ll, _, err := lclzr.ValidateLocArgs("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
+			ldr, _, err := lclzr.NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 			require.NoError(t, err)
 
-			_, err = ll.New(root)
+			_, err = ldr.New(root)
 			require.Error(t, err)
 		})
 	}
 }
 
 func TestLoadFails(t *testing.T) {
-	t.Run("ValidateLocArgs", func(t *testing.T) {
-		req := require.New(t)
-		fSys := makeMemoryFs(t)
+	req := require.New(t)
+	fSys := makeMemoryFs(t)
 
-		ll, dst, err := lclzr.ValidateLocArgs("a", "", "/a/b/newDir", fSys)
-		req.NoError(err)
-		checkLocLoader(req, ll, "/a", "/a")
-		checkConfirmedDir(req, dst, "/a/b/newDir", fSys)
-	})
+	ldr, args, err := lclzr.NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
+	req.NoError(err)
+	checkLoader(req, ldr, "/a")
+	checkLocArgs(req, &args, "/a", "/a/newDir", fSys)
+
 	cases := map[string]string{
 		"absolute path":     "/a/kustomization.yaml",
 		"directory":         "b",
@@ -303,12 +299,12 @@ func TestLoadFails(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
 
-			ll, _, err := lclzr.ValidateLocArgs("./a/../a", "/a/../a", "/a/newDir", fSys)
+			ldr, _, err := lclzr.NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 			req.NoError(err)
 
 			req.NoError(fSys.WriteFile("/a/newDir/kustomization.yaml", []byte("/a/newDir")))
 
-			_, err = ll.Load(file)
+			_, err = ldr.Load(file)
 			req.Error(err)
 		})
 	}
