@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"log"
 
-	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 // An example showing how to unmarshal embedded
