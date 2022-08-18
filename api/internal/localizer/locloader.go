@@ -16,8 +16,11 @@ import (
 
 const dstPrefix = "localized"
 
-// LocArgs holds localize arguments other than target
+// LocArgs holds localize arguments
 type LocArgs struct {
+
+	// target; local copy if remote
+	Target filesys.ConfirmedDir
 
 	// directory that bounds target's local references, empty string if target is remote
 	Scope filesys.ConfirmedDir
@@ -70,6 +73,7 @@ func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys file
 	}
 
 	args := LocArgs{
+		Target: filesys.ConfirmedDir(ldr.Root()),
 		Scope:  scope,
 		NewDir: newDir,
 	}
