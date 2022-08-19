@@ -155,7 +155,6 @@ func TestConfirmDirDisk(t *testing.T) {
 
 func TestReadFilesRealFS(t *testing.T) {
 	req := require.New(t)
-
 	fSys, testDir := makeTestDir(t)
 
 	dir := filepath.Join(testDir, "dir")

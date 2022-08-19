@@ -46,8 +46,7 @@ func MakeKustomizer(o *Options) *Kustomizer {
 // a kustomization.yaml file, perform the kustomization it represents,
 // and return the resulting resources.
 //
-// Any files referenced by the kustomization must be present on the
-// filesystem.  One may call Run any number of times, on any number
+// One may call Run any number of times, on any number
 // of internal paths (e.g. the filesystem may contain multiple overlays,
 // and Run can be called on each of them).
 func (b *Kustomizer) Run(
