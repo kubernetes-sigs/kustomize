@@ -1242,7 +1242,7 @@ container:
 		},
 
 		{
-			name: "path",
+			name: "path_with_uncorrect_position",
 			resource: `
 apiVersion: v1beta1
 kind: Example
@@ -1253,15 +1253,11 @@ metadata:
       container:
         image: foo:v1.0.0
 `,
-			// path should be erased
-			expectedFn: `
-container:
-  image: foo:v1.0.0
-`,
+			missingFn: true,
 		},
 
 		{
-			name: "network",
+			name: "network_with_uncorrect_position",
 			resource: `
 apiVersion: v1beta1
 kind: Example
@@ -1272,11 +1268,7 @@ metadata:
       container:
         image: foo:v1.0.0
 `,
-			// network should be erased
-			expectedFn: `
-container:
-  image: foo:v1.0.0
-`,
+			missingFn: true,
 		},
 		{
 			name: "fn missing spell",
@@ -1289,7 +1281,7 @@ metadata:
       containeer:
         image: foo:v1.0.0
 `,
-			expectedFn: `{}`,
+			missingFn: true,
 		},
 
 		// legacy fn style
@@ -1310,7 +1302,8 @@ container:
 		},
 
 		// no fn
-		{name: "no fn",
+		{
+			name: "no fn",
 			resource: `
 apiVersion: v1beta1
 kind: Example
@@ -1327,7 +1320,7 @@ metadata:
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			resource := yaml.MustParse(tt.resource)
-			fn := GetFunctionSpec(resource)
+			fn, _ := GetFunctionSpec(resource)
 			if tt.missingFn {
 				if !assert.Nil(t, fn) {
 					t.FailNow()
@@ -1408,7 +1401,7 @@ metadata:
 		if !assert.NoError(t, err) {
 			return
 		}
-		fn := GetFunctionSpec(cfg)
+		fn, _ := GetFunctionSpec(cfg)
 		assert.Equal(t, tc.required, fn.Container.Network)
 	}
 }
@@ -1546,7 +1539,7 @@ metadata:
 		if !assert.NoError(t, err) {
 			return
 		}
-		fn := GetFunctionSpec(cfg)
+		fn, _ := GetFunctionSpec(cfg)
 		assert.Equal(t, tc.expected, *NewContainerEnvFromStringSlice(fn.Container.Env))
 	}
 }
