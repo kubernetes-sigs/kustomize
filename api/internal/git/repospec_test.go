@@ -19,22 +19,25 @@ var pathNames = []string{"README.md", "foo/krusty.txt", ""}
 
 var hrefArgs = []string{"someBranch", "master", "v0.1.0", ""}
 
-var hostNamesRawAndNormalized = [][]string{
-	{"gh:", "gh:"},
-	{"GH:", "gh:"},
-	{"gitHub.com/", "https://github.com/"},
-	{"github.com:", "https://github.com/"},
-	{"http://github.com/", "https://github.com/"},
-	{"https://github.com/", "https://github.com/"},
-	{"hTTps://github.com/", "https://github.com/"},
-	{"https://git-codecommit.us-east-2.amazonaws.com/", "https://git-codecommit.us-east-2.amazonaws.com/"},
-	{"https://fabrikops2.visualstudio.com/", "https://fabrikops2.visualstudio.com/"},
-	{"ssh://git.example.com:7999/", "ssh://git.example.com:7999/"},
-	{"git::https://gitlab.com/", "https://gitlab.com/"},
-	{"git::http://git.example.com/", "http://git.example.com/"},
-	{"git::https://git.example.com/", "https://git.example.com/"},
-	{"git@github.com:", "git@github.com:"},
-	{"git@github.com/", "git@github.com:"},
+func hostsRawNormalizedAndDomain() [][]string {
+	return [][]string{
+		{"gh:", "gh:"},
+		{"GH:", "gh:"},
+		{"gitHub.com/", "https://github.com/"},
+		{"github.com:", "https://github.com/"},
+		{"http://github.com/", "https://github.com/"},
+		{"https://github.com/", "https://github.com/"},
+		{"hTTps://github.com/", "https://github.com/"},
+		{"https://git-codecommit.us-east-2.amazonaws.com/", "https://git-codecommit.us-east-2.amazonaws.com/"},
+		{"https://fabrikops2.visualstudio.com/", "https://fabrikops2.visualstudio.com/"},
+		{"ssh://git.example.com:7999/", "ssh://git.example.com:7999/"},
+		{"git::https://gitlab.com/", "https://gitlab.com/"},
+		{"git::http://git.example.com/", "http://git.example.com/"},
+		{"git::https://git.example.com/", "https://git.example.com/"},
+		{"git@github.com:", "git@github.com:"},
+		{"git@github.com/", "git@github.com:"},
+		{"git@gitlab.com:", "git@gitlab.com:"},
+	}
 }
 
 func makeURL(hostFmt, orgRepo, path, href string) string {
@@ -50,7 +53,7 @@ func makeURL(hostFmt, orgRepo, path, href string) string {
 
 func TestNewRepoSpecFromUrl(t *testing.T) {
 	var bad [][]string
-	for _, tuple := range hostNamesRawAndNormalized {
+	for _, tuple := range hostsRawNormalizedAndDomain() {
 		hostRaw := tuple[0]
 		hostSpec := tuple[1]
 		for _, orgRepo := range orgRepos {
@@ -91,10 +94,10 @@ func TestNewRepoSpecFromUrl(t *testing.T) {
 
 var badData = [][]string{
 	{"/tmp", "uri looks like abs path"},
-	{"iauhsdiuashduas", "url lacks orgRepo"},
+	{"iauhsdiuashduas", "url lacks host"},
 	{"htxxxtp://github.com/", "url lacks host"},
 	{"ssh://git.example.com", "url lacks orgRepo"},
-	{"git::___", "url lacks orgRepo"},
+	{"git::___", "url lacks host"},
 }
 
 func TestNewRepoSpecFromUrlErrors(t *testing.T) {
@@ -147,6 +150,7 @@ func TestNewRepoSpecFromUrl_CloneSpecs(t *testing.T) {
 			ref:       "",
 		},
 		"t6": {
+			// TODO(annasong): replace illegal test case with legal variations
 			input:     "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
 			cloneSpec: "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git",
 			absPath:   notCloned.String(),

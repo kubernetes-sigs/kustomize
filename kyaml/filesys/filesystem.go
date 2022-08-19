@@ -23,10 +23,10 @@ type FileSystem interface {
 	// Create a file.
 	Create(path string) (File, error)
 
-	// MkDir makes a directory.
+	// Mkdir makes a directory.
 	Mkdir(path string) error
 
-	// MkDirAll makes a directory path, creating intervening directories.
+	// MkdirAll makes a directory path, creating intervening directories.
 	MkdirAll(path string) error
 
 	// RemoveAll removes path and any children it contains.
@@ -45,7 +45,7 @@ type FileSystem interface {
 	// directory and a file name, where the directory
 	// is represented as a ConfirmedDir and all that implies.
 	// If the entire path is a directory, the file component
-	// is an empty string.
+	// is an empty string. Path can be relative.
 	CleanedAbs(path string) (ConfirmedDir, string, error)
 
 	// Exists is true if the path exists in the file system.
