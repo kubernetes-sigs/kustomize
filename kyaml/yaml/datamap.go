@@ -23,8 +23,12 @@ func SortedMapKeys(m map[string]string) []string {
 	return keys
 }
 
-func (rn *RNode) LoadMapIntoConfigMapData(m map[string]string) error {
-	for _, k := range SortedMapKeys(m) {
+func (rn *RNode) LoadMapIntoConfigMapData(m map[string]string, o []string) error {
+	keys := o
+	if o == nil {
+		keys = SortedMapKeys(m)
+	}
+	for _, k := range keys {
 		fldName, vrN := makeConfigMapValueRNode(m[k])
 		if _, err := rn.Pipe(
 			LookupCreate(MappingNode, fldName),
@@ -65,12 +69,16 @@ func makeConfigMapValueRNode(s string) (field string, rN *RNode) {
 	return field, NewRNode(yN)
 }
 
-func (rn *RNode) LoadMapIntoSecretData(m map[string]string) error {
+func (rn *RNode) LoadMapIntoSecretData(m map[string]string, o []string) error {
 	mapNode, err := rn.Pipe(LookupCreate(MappingNode, DataField))
 	if err != nil {
 		return err
 	}
-	for _, k := range SortedMapKeys(m) {
+	keys := o
+	if keys == nil {
+		keys = SortedMapKeys(m)
+	}
+	for _, k := range keys {
 		vrN := makeSecretValueRNode(m[k])
 		if _, err := mapNode.Pipe(SetField(k, vrN)); err != nil {
 			return err

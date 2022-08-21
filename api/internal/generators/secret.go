@@ -46,11 +46,11 @@ func MakeSecret(
 			Value: yaml.NewStringRNode(t)}); err != nil {
 		return nil, err
 	}
-	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	m, o, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
 	if err != nil {
 		return nil, err
 	}
-	if err = rn.LoadMapIntoSecretData(m); err != nil {
+	if err = rn.LoadMapIntoSecretData(m, o); err != nil {
 		return nil, err
 	}
 	copyLabelsAndAnnotations(rn, args.Options)

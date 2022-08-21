@@ -633,7 +633,7 @@ func (rn *RNode) SetDataMap(m map[string]string) {
 	if len(m) == 0 {
 		return
 	}
-	if err := rn.LoadMapIntoConfigMapData(m); err != nil {
+	if err := rn.LoadMapIntoConfigMapData(m, nil); err != nil {
 		log.Fatal(err)
 	}
 }

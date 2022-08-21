@@ -33,11 +33,11 @@ func MakeConfigMap(
 	if err != nil {
 		return nil, err
 	}
-	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	m, o, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
 	if err != nil {
 		return nil, err
 	}
-	if err = rn.LoadMapIntoConfigMapData(m); err != nil {
+	if err = rn.LoadMapIntoConfigMapData(m, o); err != nil {
 		return nil, err
 	}
 	err = copyLabelsAndAnnotations(rn, args.Options)

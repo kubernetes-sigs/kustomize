@@ -44,8 +44,8 @@ metadata:
   name: envSecret
 type: Opaque
 data:
-  DB_PASSWORD: cXdlcnR5
   DB_USERNAME: YWRtaW4=
+  DB_PASSWORD: cXdlcnR5
 `,
 			},
 		},
