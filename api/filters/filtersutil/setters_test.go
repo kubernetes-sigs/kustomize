@@ -102,5 +102,7 @@ func TestTrackableSetter_SetEntryIfEmpty_BadInputNodeKind(t *testing.T) {
 	fn := filtersutil.TrackableSetter{}.SetEntryIfEmpty("foo", "false", yaml.NodeTagBool)
 	rn := yaml.NewListRNode("nope")
 	rn.AppendToFieldPath("dummy", "path")
-	assert.EqualError(t, fn(rn), "wrong Node Kind for dummy.path expected: MappingNode was SequenceNode: value: {- nope}")
+	assert.EqualError(t, fn(rn), `wrong node kind: expected MappingNode but got SequenceNode: node contents:
+- nope
+`)
 }

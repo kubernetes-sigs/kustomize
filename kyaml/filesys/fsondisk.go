@@ -126,8 +126,8 @@ func (fsOnDisk) ReadDir(name string) ([]string, error) {
 
 // ReadFile delegates to os.ReadFile.
 func (fsOnDisk) ReadFile(name string) ([]byte, error) {
-	//nolint:wrapcheck
-	return os.ReadFile(name)
+	content, err := os.ReadFile(name)
+	return content, errors.Wrap(err)
 }
 
 // WriteFile delegates to os.WriteFile with read/write permissions.
