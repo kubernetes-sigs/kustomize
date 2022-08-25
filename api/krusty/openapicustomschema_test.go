@@ -1,12 +1,9 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// The openapi field tests are separated due to the global OpenAPI variable causing
-// race conditions. As a result, these tests can't be run in parallel with the other tests.
-package openapitests //nolint
+package krusty_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -17,12 +14,12 @@ import (
 )
 
 func writeTestSchema(th kusttest_test.Harness, filepath string) {
-	bytes, _ := os.ReadFile("../testdata/customschema.json")
+	bytes, _ := os.ReadFile("./testdata/customschema.json")
 	th.WriteF(filepath+"mycrd_schema.json", string(bytes))
 }
 
 func writeTestSchemaYaml(th kusttest_test.Harness, filepath string) {
-	bytes, _ := os.ReadFile("../testdata/customschema.yaml")
+	bytes, _ := os.ReadFile("./testdata/customschema.yaml")
 	th.WriteF(filepath+"mycrd_schema.yaml", string(bytes))
 }
 
@@ -144,9 +141,7 @@ spec:
 
 func runOpenApiTest(t *testing.T, test func(t *testing.T)) {
 	t.Helper()
-	if val, ok := os.LookupEnv("OPENAPI_TEST"); !ok || val != "true" {
-		t.SkipNow()
-	}
+	openapi.ResetOpenAPI()
 	test(t)
 	openapi.ResetOpenAPI()
 }
@@ -485,7 +480,7 @@ spec:
 `)
 
 		// openapi schema referred to by the component
-		bytes, _ := os.ReadFile("../testdata/openshiftschema.json")
+		bytes, _ := os.ReadFile("./testdata/openshiftschema.json")
 		th.WriteF("components/dc-openapi/openapi.json", string(bytes))
 
 		// patch referred to by the component
@@ -646,61 +641,4 @@ spec:
 `)
 		assert.Equal(t, kubernetesapi.DefaultOpenAPI, openapi.GetSchemaVersion())
 	})
-}
-
-// The following definitions are copied from the krusty package.
-
-type FileGen func(kusttest_test.Harness)
-
-func writeTestBase(th kusttest_test.Harness) {
-	th.WriteK("base", `
-resources:
-- deploy.yaml
-configMapGenerator:
-- name: my-configmap
-  literals:	
-  - testValue=purple
-  - otherValue=green
-`)
-	th.WriteF("base/deploy.yaml", `
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: storefront
-spec:
-  replicas: 1
-`)
-}
-
-func writeOverlayProd(th kusttest_test.Harness) {
-	th.WriteK("prod", `
-resources:
-- ../base
-- db
-
-components:
-- ../comp
-`)
-	writeDB(th)
-}
-
-func writeDB(th kusttest_test.Harness) {
-	deployment("db", "prod/db")(th)
-}
-
-func deployment(name string, path string) FileGen {
-	return writeF(path, fmt.Sprintf(`
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: %s
-spec:
-  type: Logical
-`, name))
-}
-
-func writeF(path string, content string) FileGen {
-	return func(th kusttest_test.Harness) {
-		th.WriteF(path, content)
-	}
 }
