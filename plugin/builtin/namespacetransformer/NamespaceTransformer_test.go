@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -18,12 +19,6 @@ fieldSpecs:
   kind: RoleBinding
   group: rbac.authorization.k8s.io
 - path: subjects/namespace
-  kind: ClusterRoleBinding
-  group: rbac.authorization.k8s.io
-- path: subjects
-  kind: RoleBinding
-  group: rbac.authorization.k8s.io
-- path: subjects
   kind: ClusterRoleBinding
   group: rbac.authorization.k8s.io
 `
@@ -699,4 +694,71 @@ subjects:
 			th.RunTransformerAndCheckResult(test.transformerConfig, test.input, test.expected)
 		})
 	}
+}
+
+func TestNamespaceTransformer_InvalidFieldSpecs(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+unsetOnly: true
+fieldSpecs:
+- path: subjects
+  kind: RoleBinding
+  group: rbac.authorization.k8s.io
+- path: subjects
+  kind: ClusterRoleBinding
+  group: rbac.authorization.k8s.io
+`, `
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: other
+- kind: ServiceAccount
+  name: default
+  namespace: ""
+- kind: ServiceAccount
+  name: default
+- kind: ServiceAccount
+  name: another
+  namespace: random
+---
+apiVersion: example.com/v1
+kind: RoleBinding
+metadata:
+  namespace: bar
+  name: rolebinding
+subjects:
+- name: default
+  namespace: bar
+`,
+		func(t *testing.T, err error) {
+			t.Helper()
+			assert.EqualError(t, err, `namespace field specs must target scalar nodes: `+
+				`considering field 'subjects' of object ClusterRoleBinding.v1.rbac.authorization.k8s.io/manager-rolebinding.[noNs]: `+
+				`wrong node kind: expected ScalarNode but got SequenceNode: node contents:
+- kind: ServiceAccount
+  name: default
+  namespace: other
+- kind: ServiceAccount
+  name: default
+  namespace: "test"
+- kind: ServiceAccount
+  name: default
+  namespace: test
+- kind: ServiceAccount
+  name: another
+  namespace: random
+`)
+		})
 }

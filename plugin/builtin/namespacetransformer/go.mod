@@ -3,6 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/namespacetransformer
 go 1.18
 
 require (
+	github.com/stretchr/testify v1.7.0
 	sigs.k8s.io/kustomize/api v0.11.5
 	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.2.0
@@ -25,6 +26,7 @@ require (
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
