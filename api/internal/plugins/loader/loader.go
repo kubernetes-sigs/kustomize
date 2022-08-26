@@ -58,11 +58,11 @@ func (l *Loader) LoadGenerators(
 	for _, res := range rm.Resources() {
 		g, err := l.LoadGenerator(ldr, v, res)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to load generator: %w", err)
 		}
 		generatorOrigin, err := resource.OriginFromCustomPlugin(res)
 		if err != nil {
-			return nil, fmt.Errorf("%w", err)
+			return nil, fmt.Errorf("failed to get origin from CustomPlugin: %w", err)
 		}
 		result = append(result, &resmap.GeneratorWithProperties{Generator: g, Origin: generatorOrigin})
 	}

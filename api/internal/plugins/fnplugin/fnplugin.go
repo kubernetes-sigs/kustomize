@@ -54,11 +54,11 @@ func resourceToRNode(res *resource.Resource) (*yaml.RNode, error) {
 func GetFunctionSpec(res *resource.Resource) (*runtimeutil.FunctionSpec, error) {
 	rnode, err := resourceToRNode(res)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("could not convert resource to RNode: %w", err)
 	}
 	functionSpec, err := runtimeutil.GetFunctionSpec(rnode)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
 	}
 	return functionSpec, nil
 }
