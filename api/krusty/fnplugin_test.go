@@ -737,7 +737,7 @@ generators:
 		fSys,
 		tmpDir.String())
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "loading generator plugins: plugin RenderHelmChart."+
+	assert.Contains(t, err.Error(), "loading generator plugins: failed to load generator: plugin RenderHelmChart."+
 		"v1alpha1.[noGrp]/demo.[noNs] with mount path '/tmp/dir' is not permitted; mount paths must"+
 		" be relative to the current kustomization directory")
 }
@@ -770,7 +770,7 @@ generators:
 		fSys,
 		tmpDir.String())
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "loading generator plugins: plugin RenderHelmChart."+
+	assert.Contains(t, err.Error(), "loading generator plugins: failed to load generator: plugin RenderHelmChart."+
 		"v1alpha1.[noGrp]/demo.[noNs] with mount path './tmp/../../dir' is not permitted; mount paths must "+
 		"be under the current kustomization directory")
 }

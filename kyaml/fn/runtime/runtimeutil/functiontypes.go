@@ -206,9 +206,12 @@ func GetFunctionSpec(n *yaml.RNode) (*FunctionSpec, error) {
 	if err != nil {
 		return nil, nil
 	}
-	if fn, err := getFunctionSpecFromAnnotation(n, meta); err != nil {
+
+	fn, err := getFunctionSpecFromAnnotation(n, meta)
+	if err != nil {
 		return nil, err
-	} else if fn != nil {
+	}
+	if fn != nil {
 		return fn, nil
 	}
 
