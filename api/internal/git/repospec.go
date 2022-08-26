@@ -27,7 +27,7 @@ type RepoSpec struct {
 	// TODO(monopole): Drop raw, use processed fields instead.
 	raw string
 
-	// Host, e.g. github.com
+	// Host, e.g. https://github.com/
 	Host string
 
 	// orgRepo name (organization/repoName),
