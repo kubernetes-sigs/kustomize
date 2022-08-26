@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -22,18 +21,13 @@ import (
 // with a unique name that isn't created until clone time.
 const notCloned = filesys.ConfirmedDir("/notCloned")
 
-// Schemes returns the schemes that repo urls may have
-func Schemes() []string {
-	return []string{"https://", "http://", "ssh://"}
-}
-
 // RepoSpec specifies a git repository and a branch and path therein.
 type RepoSpec struct {
 	// Raw, original spec, used to look for cycles.
 	// TODO(monopole): Drop raw, use processed fields instead.
 	raw string
 
-	// Host, e.g. https://github.com/
+	// Host, e.g. github.com
 	Host string
 
 	// orgRepo name (organization/repoName),
@@ -92,14 +86,17 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	repoSpec := parseGitURL(n)
-	if repoSpec.Host == "" {
-		return nil, errors.Errorf("url lacks host: %s", n)
+	host, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout := parseGitURL(n)
+	if orgRepo == "" {
+		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
-	if repoSpec.OrgRepo == "" {
-		return nil, errors.Errorf("url lacks orgRepo: %s", n)
+	if host == "" {
+		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
-	return repoSpec, nil
+	return &RepoSpec{
+		raw: n, Host: host, OrgRepo: orgRepo,
+		Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: suffix,
+		Submodules: gitSubmodules, Timeout: gitTimeout}, nil
 }
 
 const (
@@ -111,47 +108,44 @@ const (
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
-func parseGitURL(n string) *RepoSpec {
-	repoSpec := &RepoSpec{raw: n, Dir: notCloned}
-
+func parseGitURL(n string) (
+	host string, orgRepo string, path string, gitRef string, gitSubmodules bool, gitSuff string, gitTimeout time.Duration) {
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
-		repoSpec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
-		// url before next /, though make sure before ? query string delimiter
-		repoSpec.OrgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
-		repoSpec.Path, repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules =
-			peelQuery(n[index+len(gitDelimiter)+len(repoSpec.OrgRepo):])
-		return repoSpec
+		host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
+		orgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
+		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
+		return
 	}
-
-	repoSpec.Host, n = parseHostSpec(n)
-
-	repoSpec.GitSuffix = gitSuffix
+	host, n = parseHostSpec(n)
+	gitSuff = gitSuffix
 	if strings.Contains(n, gitSuffix) {
 		index := strings.Index(n, gitSuffix)
-		repoSpec.OrgRepo = n[0:index]
+		orgRepo = n[0:index]
 		n = n[index+len(gitSuffix):]
-		// always try to include / in previous component
 		if len(n) > 0 && n[0] == '/' {
 			n = n[1:]
 		}
-	} else if strings.Contains(n, "/") {
-		// there exist at least 2 components that we can interpret as org + repo
-		i := strings.Index(n, "/")
-		j := strings.Index(n[i+1:], "/")
-		// only 2 components, so can use peelQuery to group everything before ? query string delimiter as OrgRepo
-		if j == -1 {
-			repoSpec.OrgRepo, repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules = peelQuery(n)
-			return repoSpec
-		}
-		// extract first 2 components
-		j += i + 1
-		repoSpec.OrgRepo = n[:j]
-		n = n[j+1:]
+		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		return
 	}
-	repoSpec.Path, repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules = peelQuery(n)
-	return repoSpec
+
+	i := strings.Index(n, "/")
+	if i < 1 {
+		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		return
+	}
+	j := strings.Index(n[i+1:], "/")
+	if j >= 0 {
+		j += i + 1
+		orgRepo = n[:j]
+		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[j+1:])
+		return
+	}
+	path = ""
+	orgRepo, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+	return host, orgRepo, path, gitRef, gitSubmodules, gitSuff, gitTimeout
 }
 
 // Clone git submodules by default.
@@ -203,7 +197,6 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 
 func parseHostSpec(n string) (string, string) {
 	var host string
-	// TODO(annasong): handle ports, non-github ssh with userinfo, github.com sub-domains
 	// Start accumulating the host part.
 	for _, p := range []string{
 		// Order matters here.
@@ -214,29 +207,24 @@ func parseHostSpec(n string) (string, string) {
 			host += p
 		}
 	}
-	// ssh relative path
 	if host == "git@" {
-		var i int
-		// git orgRepo delimiter for ssh relative path
-		j := strings.Index(n, ":")
-		// orgRepo delimiter only valid if not preceded by /
-		k := strings.Index(n, "/")
-		// orgRepo delimiter exists, so extend host
-		if j > -1 && (k == -1 || k > j) {
-			i = j
-			// should try to group / with previous component
-			// this is possible if git url username expansion follows
-			if k == i+1 {
-				i = k
-			}
+		i := strings.Index(n, "/")
+		if i > -1 {
 			host += n[:i+1]
 			n = n[i+1:]
+		} else {
+			i = strings.Index(n, ":")
+			if i > -1 {
+				host += n[:i+1]
+				n = n[i+1:]
+			}
 		}
 		return host, n
 	}
 
 	// If host is a http(s) or ssh URL, grab the domain part.
-	for _, p := range Schemes() {
+	for _, p := range []string{
+		"ssh://", "https://", "http://"} {
 		if strings.HasSuffix(host, p) {
 			i := strings.Index(n, "/")
 			if i > -1 {
