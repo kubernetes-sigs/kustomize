@@ -32,6 +32,7 @@ func TestFixCommand(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
+		files    map[string]string
 		expected string
 	}{
 		{
@@ -170,6 +171,21 @@ kind: Kustomization
 patchesStrategicMerge:
 - deploy.yaml
 `,
+			files: map[string]string{
+				"deploy.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+        - name: nginx
+          env:
+            - name: CONFIG_FILE_PATH
+              value: home.yaml`,
+			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -183,6 +199,21 @@ patches:
 patchesStrategicMerge:
 - deploy.yml
 `,
+			files: map[string]string{
+				"deploy.yml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: nginx
+spec:
+template:
+spec:
+containers:
+  - name: nginx
+    env:
+      - name: CONFIG_FILE_PATH
+        value: home.yaml`,
+			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -209,6 +240,21 @@ patchesStrategicMerge:
               - name: CONFIG_FILE_PATH
                 value: home.yaml
 `,
+			files: map[string]string{
+				"deploy.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: nginx
+spec:
+template:
+spec:
+containers:
+- name: nginx
+env:
+- name: CONFIG_FILE_PATH
+  value: home.yaml`,
+			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -239,6 +285,21 @@ patchesJson6902:
   target:
     kind: Deployment
 `,
+			files: map[string]string{
+				"deploy.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: nginx
+spec:
+template:
+spec:
+containers:
+- name: nginx
+env:
+- name: CONFIG_FILE_PATH
+  value: home.yaml`,
+			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -310,6 +371,9 @@ kind: Kustomization
 	for _, test := range tests {
 		fSys := filesys.MakeFsInMemory()
 		testutils_test.WriteTestKustomizationWith(fSys, []byte(test.input))
+		for filename, content := range test.files {
+			require.NoError(t, fSys.WriteFile(filename, []byte(content)))
+		}
 		cmd := NewCmdFix(fSys, os.Stdout)
 		require.NoError(t, cmd.RunE(cmd, nil))
 

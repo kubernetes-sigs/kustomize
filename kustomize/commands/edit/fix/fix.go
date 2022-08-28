@@ -55,8 +55,7 @@ func RunFix(fSys filesys.FileSystem, w io.Writer) error {
 		return err
 	}
 
-	err = m.FixKustomizationPreMarshalling()
-	if err != nil {
+	if err := m.FixKustomizationPreMarshalling(fSys); err != nil {
 		return err
 	}
 
