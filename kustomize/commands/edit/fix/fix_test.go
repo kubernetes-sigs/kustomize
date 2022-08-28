@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -190,6 +191,65 @@ patches:
 `,
 		},
 		{
+			name: "Test fix outdated patchesStrategicMerge from a file and one string literal",
+			input: `
+patchesStrategicMerge:
+- deploy.yaml
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx
+  spec:
+    template:
+      spec:
+        containers:
+          - name: nginx
+            env:
+              - name: CONFIG_FILE_PATH
+                value: home.yaml
+`,
+			expected: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: deploy.yaml
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx
+    spec:
+      template:
+        spec:
+          containers:
+            - name: nginx
+              env:
+                - name: CONFIG_FILE_PATH
+                  value: home.yaml
+`,
+		},
+		{
+			name: "Test fix outdated patchesStrategicMerge and patchesJson6902",
+			input: `
+patchesStrategicMerge:
+- deploy.yaml
+patchesJson6902:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+`,
+			expected: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: patch1.yaml
+  target:
+    kind: Deployment
+- path: deploy.yaml
+`,
+		},
+		{
 			name: "TestFixOutdatedPatchesStrategicMergeFieldPatchEndOfYamlTitle",
 			input: `
 patchesStrategicMerge:
@@ -251,12 +311,12 @@ kind: Kustomization
 		fSys := filesys.MakeFsInMemory()
 		testutils_test.WriteTestKustomizationWith(fSys, []byte(test.input))
 		cmd := NewCmdFix(fSys, os.Stdout)
-		assert.NoError(t, cmd.RunE(cmd, nil))
+		require.NoError(t, cmd.RunE(cmd, nil))
 
 		content, err := testutils_test.ReadTestKustomization(fSys)
-		assert.NoError(t, err)
-		assert.Contains(t, string(content), "apiVersion: ")
-		assert.Contains(t, string(content), "kind: Kustomization")
+		require.NoError(t, err)
+		require.Contains(t, string(content), "apiVersion: ")
+		require.Contains(t, string(content), "kind: Kustomization")
 
 		if diff := cmp.Diff([]byte(test.expected), content); diff != "" {
 			t.Errorf("%s: Mismatch (-expected, +actual):\n%s", test.name, diff)
