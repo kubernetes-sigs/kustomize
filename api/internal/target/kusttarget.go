@@ -412,11 +412,11 @@ func (kt *KustTarget) accumulateResources(
 			}
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
-				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
-					return nil, errF
+				if kusterr.IsMalformedYAMLError(err) { // Some error occurred while tyring to decode YAML file
+					return nil, err
 				}
 				return nil, errors.Wrapf(
-					err, "accumulation err='%s'", errF.Error())
+					err, "accumulating remote resource: %s", path)
 			}
 			// store the origin, we'll need it later
 			origin := kt.origin.Copy()
