@@ -26,9 +26,6 @@ import (
 
 const resourcesField = `resources:
 - %s`
-const resourceErrorFormat = "accumulating resources: accumulation err='accumulating resources from '%s': "
-const fileError = "evalsymlink failure"
-const repoFindError = "URL is a git repository"
 
 const multibaseDevExampleBuild = `apiVersion: v1
 kind: Pod
@@ -105,6 +102,8 @@ func isLocalEnv(t *testing.T) bool {
 }
 
 func runResourceTests(t *testing.T, cases map[string]*remoteResourceCase) {
+	t.Helper()
+
 	for name, test := range cases {
 		savedTest := test // test assignment changes; need assignment in this scope (iteration) of range
 		t.Run(name, func(t *testing.T) {
