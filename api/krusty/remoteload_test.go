@@ -105,9 +105,8 @@ func runResourceTests(t *testing.T, cases map[string]*remoteResourceCase) {
 	t.Helper()
 
 	for name, test := range cases {
-		savedTest := test // test assignment changes; need assignment in this scope (iteration) of range
 		t.Run(name, func(t *testing.T) {
-			if savedTest.local && !isLocalEnv(t) {
+			if test.local && !isLocalEnv(t) {
 				t.SkipNow()
 			}
 			configureGitSSHCommand(t)
