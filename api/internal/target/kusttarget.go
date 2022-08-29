@@ -412,6 +412,14 @@ func (kt *KustTarget) accumulateResources(
 			}
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
+				if strings.Contains(err.Error(), load.ErrRtNotDir.Error()) { // Was neither a remote resource nor a local directory.
+					if kusterr.IsMalformedYAMLError(errF) {
+						// Some error occurred while tyring to decode YAML file
+						return nil, errF
+					}
+					return nil, errors.Wrapf(
+						err, "accumulation err='%s'", errF.Error())
+				}
 				return nil, errors.Wrapf(
 					err, "accumulating remote resource: %s", path)
 			}
