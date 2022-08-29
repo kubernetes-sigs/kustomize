@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -48,22 +49,22 @@ type remoteResourceCase struct {
 	expected      string // if error, expected is error string
 }
 
-func createKustDir(content string, require *require.Assertions) (filesys.FileSystem, filesys.ConfirmedDir) {
+func createKustDir(t *testing.T, content string) (filesys.FileSystem, filesys.ConfirmedDir) {
 	fSys := filesys.MakeFsOnDisk()
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(err)
-	require.NoError(fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(content)))
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(content)))
 	return fSys, tmpDir
 }
 
-func checkYaml(actual resmap.ResMap, expected string, require *require.Assertions) {
+func checkYaml(t *testing.T, actual resmap.ResMap, expected string) {
 	yml, err := actual.AsYaml()
-	require.NoError(err)
-	require.Equal(expected, string(yml))
+	assert.NoError(t, err)
+	assert.Equal(t, expected, string(yml))
 }
 
-func testRemoteResource(require *require.Assertions, test *remoteResourceCase) {
-	fSys, tmpDir := createKustDir(test.kustomization, require)
+func testRemoteResource(t *testing.T, test *remoteResourceCase) {
+	fSys, tmpDir := createKustDir(t, test.kustomization)
 
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	m, err := b.Run(
@@ -71,21 +72,23 @@ func testRemoteResource(require *require.Assertions, test *remoteResourceCase) {
 		tmpDir.String())
 
 	if test.error {
-		require.Error(err)
-		require.Contains(err.Error(), test.expected)
+		assert.Error(t, err)
+		if err != nil {
+			assert.Contains(t, err.Error(), test.expected)
+		}
 	} else {
-		require.NoError(err)
-		checkYaml(m, test.expected, require)
+		assert.NoError(t, err)
+		checkYaml(t, m, test.expected)
 	}
 
-	require.NoError(fSys.RemoveAll(tmpDir.String()))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
-func isLocalEnv(require *require.Assertions) bool {
+func isLocalEnv(t *testing.T) bool {
 	// make variable that determines whether to run local-only tests
 	if value, exists := os.LookupEnv("IS_LOCAL"); exists {
 		isLocal, err := strconv.ParseBool(strings.TrimSpace(value))
-		require.NoError(err)
+		require.NoError(t, err)
 		return isLocal
 	}
 	return false
@@ -94,15 +97,14 @@ func isLocalEnv(require *require.Assertions) bool {
 func runResourceTests(t *testing.T, cases map[string]*remoteResourceCase) {
 	t.Helper()
 
-	req := require.New(t)
 	for name, test := range cases {
 		savedTest := test // test assignment changes; need assignment in this scope (iteration) of range
 		t.Run(name, func(t *testing.T) {
-			if savedTest.local && !isLocalEnv(req) {
+			if savedTest.local && !isLocalEnv(t) {
 				t.SkipNow()
 			}
 			configureGitSSHCommand(t)
-			testRemoteResource(req, test)
+			testRemoteResource(t, test)
 		})
 	}
 }
@@ -141,7 +143,7 @@ func TestRemoteLoad(t *testing.T) {
 		fSys,
 		"github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6")
 	req.NoError(err)
-	checkYaml(m, multibaseDevExampleBuild, req)
+	checkYaml(t, m, multibaseDevExampleBuild)
 }
 
 func TestRemoteResourceHttps(t *testing.T) {
@@ -344,7 +346,7 @@ func TestRemoteResourceWithHttpError(t *testing.T) {
 	req := require.New(t)
 
 	url404 := "https://github.com/thisisa404.yaml"
-	fSys, tmpDir := createKustDir(fmt.Sprintf(resourcesField, url404), req)
+	fSys, tmpDir := createKustDir(t, fmt.Sprintf(resourcesField, url404))
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 
 	_, err := b.Run(fSys, tmpDir.String())
@@ -382,7 +384,7 @@ spec:
 `,
 	}
 
-	testRemoteResource(require.New(t), &test)
+	testRemoteResource(t, &test)
 }
 
 func TestRemoteResourceAsBaseWithAnnoOrigin(t *testing.T) {
@@ -428,7 +430,7 @@ spec:
   - image: nginx:1.7.9
     name: nginx
 `
-	checkYaml(m, expected, req)
+	checkYaml(t, m, expected)
 
 	req.NoError(fSys.RemoveAll(tmpDir.String()))
 }
