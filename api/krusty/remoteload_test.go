@@ -50,6 +50,8 @@ type remoteResourceCase struct {
 }
 
 func createKustDir(t *testing.T, content string) (filesys.FileSystem, filesys.ConfirmedDir) {
+	t.Helper()
+
 	fSys := filesys.MakeFsOnDisk()
 	tmpDir, err := filesys.NewTmpConfirmedDir()
 	require.NoError(t, err)
@@ -58,12 +60,16 @@ func createKustDir(t *testing.T, content string) (filesys.FileSystem, filesys.Co
 }
 
 func checkYaml(t *testing.T, actual resmap.ResMap, expected string) {
+	t.Helper()
+
 	yml, err := actual.AsYaml()
 	assert.NoError(t, err)
 	assert.Equal(t, expected, string(yml))
 }
 
 func testRemoteResource(t *testing.T, test *remoteResourceCase) {
+	t.Helper()
+
 	fSys, tmpDir := createKustDir(t, test.kustomization)
 
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
@@ -78,13 +84,17 @@ func testRemoteResource(t *testing.T, test *remoteResourceCase) {
 		}
 	} else {
 		assert.NoError(t, err)
-		checkYaml(t, m, test.expected)
+		if err == nil {
+			checkYaml(t, m, test.expected)
+		}
 	}
 
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func isLocalEnv(t *testing.T) bool {
+	t.Helper()
+
 	// make variable that determines whether to run local-only tests
 	if value, exists := os.LookupEnv("IS_LOCAL"); exists {
 		isLocal, err := strconv.ParseBool(strings.TrimSpace(value))
@@ -95,8 +105,6 @@ func isLocalEnv(t *testing.T) bool {
 }
 
 func runResourceTests(t *testing.T, cases map[string]*remoteResourceCase) {
-	t.Helper()
-
 	for name, test := range cases {
 		savedTest := test // test assignment changes; need assignment in this scope (iteration) of range
 		t.Run(name, func(t *testing.T) {
@@ -211,15 +219,14 @@ func TestRemoteResourcePort(t *testing.T) {
 	// TODO: ports not currently supported; implement in future
 	tests := map[string]*remoteResourceCase{
 		"ssh": {
-			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, sshURL),
-			error:         true,
-			expected:      fmt.Sprintf(resourceErrorFormat+fileError, sshURL),
+			error:         true, // not implemented
+			expected:      "accumulating resources: accumulating remote resource: ssh://git@github.com:22/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6",
 		},
 		"https": {
 			kustomization: fmt.Sprintf(resourcesField, httpsURL),
-			error:         true,
-			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsURL),
+			error:         true, // not implemented
+			expected:      "accumulating resources: accumulating remote resource: https://github.com:443/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6",
 		},
 	}
 
@@ -230,7 +237,6 @@ func TestRemoteResourceRepo(t *testing.T) {
 	tests := map[string]*remoteResourceCase{
 		"https, no ref": {
 			// TODO: fix flaky test that sporadically throws errors on server
-			local: true,
 			kustomization: `
 resources:
 - https://github.com/annasong20/kustomize-test.git`,
@@ -249,50 +255,44 @@ resources:
 }
 
 func TestRemoteResourceParameters(t *testing.T) {
-	httpsNoParam := "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/"
-	httpsMasterBranch := "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master"
-	sshNoParams := "git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev"
+	// FIXME: the submodules=0 param was added to test whether they cause flakes in the test suite
+	// https://github.com/kubernetes-sigs/kustomize/issues/4640
+	httpsNoParam := "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?submodules=0"
+	httpsMasterBranch := "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master&submodules=0"
+	sshNoParams := "git@github.com:kubernetes-sigs/kustomize//examples/multibases/dev?submodules=0"
 
 	// TODO: cases with expected errors are query parameter combinations that aren't supported yet; implement in future
 	// TODO: fix flaky tests (non-ssh tests that we skip) that sporadically fail on server
 	tests := map[string]*remoteResourceCase{
 		"https no params": {
-			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, httpsNoParam),
-			error:         true,
-			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsNoParam),
+			expected:      multibaseDevExampleBuild,
 		},
 		"https master": {
-			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, httpsMasterBranch),
-			error:         true,
-			expected:      fmt.Sprintf(resourceErrorFormat+repoFindError, httpsMasterBranch),
+			expected:      multibaseDevExampleBuild,
 		},
 		"https master and no submodules": {
-			local: true,
 			kustomization: `
 resources:
 - https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=master&submodules=false`,
 			expected: multibaseDevExampleBuild,
 		},
 		"https all params": {
-			local: true,
 			kustomization: `
 resources:
-- https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6&timeout=10&submodules=true`,
+- https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6&timeout=10&submodules=false`,
 			expected: multibaseDevExampleBuild,
 		},
 		"ssh no params": {
-			local:         true,
 			kustomization: fmt.Sprintf(resourcesField, sshNoParams),
-			error:         true,
-			expected:      fmt.Sprintf(resourceErrorFormat+fileError, sshNoParams),
+			expected:      multibaseDevExampleBuild,
 		},
 		"ssh all params": {
 			local: true,
 			kustomization: `
 resources:
-- ssh://git@github.com/annasong20/kustomize-test.git?ref=main&timeout=10&submodules=true`,
+- ssh://git@github.com/annasong20/kustomize-test.git?ref=main&timeout=10&submodules=false`,
 			expected: multibaseDevExampleBuild,
 		},
 	}
@@ -304,14 +304,12 @@ func TestRemoteResourceGoGetter(t *testing.T) {
 	// TODO: fix flaky tests (the ones that we skip) that fail sporadically on server
 	tests := map[string]*remoteResourceCase{
 		"git detector with / subdirectory separator": {
-			local: true,
 			kustomization: `
 resources:
 - github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
 			expected: multibaseDevExampleBuild,
 		},
 		"git detector for repo": {
-			local: true,
 			kustomization: `
 resources:
 - github.com/annasong20/kustomize-test`,
@@ -331,7 +329,6 @@ resources:
 			expected: multibaseDevExampleBuild,
 		},
 		"git forced protocol with / subdirectory separator": {
-			local: true,
 			kustomization: `
 resources:
 - git::https://github.com/kubernetes-sigs/kustomize/examples/multibases/dev/?ref=v1.0.6`,
