@@ -21,7 +21,7 @@ func newCmdSetNamePrefix(fSys filesys.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "nameprefix",
-		Short: "Sets the value of the namePrefix field in the kustomization file.",
+		Short: "Sets the value of the namePrefix field in the kustomization file",
 		Example: `
 The command
   set nameprefix acme-

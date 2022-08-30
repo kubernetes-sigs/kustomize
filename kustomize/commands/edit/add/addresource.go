@@ -24,7 +24,7 @@ func newCmdAddResource(fSys filesys.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "resource",
-		Short: "Add the name of a file containing a resource to the kustomization file.",
+		Short: "Add the name of a file containing a resource to the kustomization file",
 		Example: `
 		add resource {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {
