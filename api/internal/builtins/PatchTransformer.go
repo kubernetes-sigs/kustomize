@@ -101,7 +101,7 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 	}
 
 	if len(selected) == 0 {
-		return fmt.Errorf("patches target not found for  %s", p.Target.ResId)
+		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
 	}
 
 	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
