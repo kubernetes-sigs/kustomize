@@ -11,7 +11,7 @@ import (
 func GetCfg(name string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cfg",
-		Short: "Commands for reading and writing configuration.",
+		Short: "Commands for reading and writing configuration",
 	}
 
 	cmd.AddCommand(commands.AnnotateCommand(name))
