@@ -87,7 +87,7 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
 	host, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout := parseGitURL(n)
-	if orgRepo == "" {
+	if orgRepo == "" && !strings.HasPrefix(host, fileScheme) {
 		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
 	if host == "" {
@@ -103,6 +103,7 @@ const (
 	refQuery     = "?ref="
 	gitSuffix    = ".git"
 	gitDelimiter = "_git/"
+	fileScheme   = "file://"
 )
 
 // From strings like git@github.com:someOrg/someRepo.git or
@@ -116,6 +117,20 @@ func parseGitURL(n string) (
 		host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
 		orgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
+		return
+	}
+	if strings.HasPrefix(n, fileScheme) {
+		idx := strings.Index(n, gitSuffix)
+		if idx == -1 {
+			// invalid, must have .git somewhere
+			return
+		}
+		host += n[:idx+len(gitSuffix)]
+		n = n[idx+len(gitSuffix):]
+		if len(n) > 0 && n[0] == '/' {
+			n = n[1:]
+		}
+		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
 		return
 	}
 	host, n = parseHostSpec(n)
@@ -200,7 +215,7 @@ func parseHostSpec(n string) (string, string) {
 	// Start accumulating the host part.
 	for _, p := range []string{
 		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://",
+		"git::", "gh:", "ssh://", "https://", "http://", "file://",
 		"git@", "github.com:", "github.com/"} {
 		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
 			n = n[len(p):]

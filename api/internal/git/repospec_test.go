@@ -61,6 +61,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 					rs, err := NewRepoSpecFromURL(uri)
 					if err != nil {
 						t.Errorf("problem %v", err)
+						continue
 					}
 					if rs.Host != hostSpec {
 						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
@@ -283,6 +284,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				OrgRepo:   "someorg/somerepo",
 				Path:      "somepath",
 				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t15",
+			input:     "file://a/b/c/someRepo.git/somepath?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo.git",
+			absPath:   notCloned.Join("somepath"),
+			repoSpec: RepoSpec{
+				Host:    "file://a/b/c/someRepo.git",
+				OrgRepo: "",
+				Path:    "somepath",
+				Ref:     "someBranch",
 			},
 		},
 	}
