@@ -1,3 +1,6 @@
+// Copyright 2022 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package krusty_test
 
 import (
@@ -45,8 +48,14 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 		}
 		root := t.TempDir()
 		bash(fmt.Sprintf(`
-export ROOT="%s"
 set -eux
+
+export ROOT="%s"
+export GIT_AUTHOR_EMAIL=nobody@kustomize.io
+export GIT_AUTHOR_NAME=Nobody
+export GIT_COMMITTER_EMAIL=nobody@kustomize.io
+export GIT_COMMITTER_NAME=Nobody
+
 cp -r testdata/remoteload/simple $ROOT/simple.git
 (
 	cd $ROOT/simple.git
