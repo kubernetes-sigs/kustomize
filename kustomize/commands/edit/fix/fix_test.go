@@ -204,15 +204,15 @@ patchesStrategicMerge:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: nginx
+  name: nginx
 spec:
-template:
-spec:
-containers:
-  - name: nginx
-    env:
-      - name: CONFIG_FILE_PATH
-        value: home.yaml`,
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: CONFIG_FILE_PATH
+          value: home.yaml`,
 			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -245,15 +245,15 @@ patchesStrategicMerge:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: nginx
+  name: nginx
 spec:
-template:
-spec:
-containers:
-- name: nginx
-env:
-- name: CONFIG_FILE_PATH
-  value: home.yaml`,
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: CONFIG_FILE_PATH
+          value: home.yaml`,
 			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -290,15 +290,15 @@ patchesJson6902:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: nginx
+  name: nginx
 spec:
-template:
-spec:
-containers:
-- name: nginx
-env:
-- name: CONFIG_FILE_PATH
-  value: home.yaml`,
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: CONFIG_FILE_PATH
+          value: home.yaml`,
 			},
 			expected: `
 apiVersion: kustomize.config.k8s.io/v1beta1
