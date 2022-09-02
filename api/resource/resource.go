@@ -17,6 +17,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
+
+	gyaml "gopkg.in/yaml.v2"
 )
 
 // Resource is an RNode, representing a Kubernetes Resource Model object,
@@ -361,7 +363,12 @@ func (r *Resource) AsYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return yaml.JSONToYAML(json)
+
+	m := gyaml.MapSlice{}
+	if err := gyaml.Unmarshal(json, &m); err != nil {
+		return nil, err
+	}
+	return gyaml.Marshal(m)
 }
 
 // MustYaml returns YAML or panics.

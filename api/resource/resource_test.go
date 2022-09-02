@@ -58,6 +58,42 @@ metadata:
 	}
 }
 
+func TestAsYAMLSorted(t *testing.T) {
+	given := factory.FromMap(
+		map[string]interface{}{
+			"configMapGenerator": map[string]interface{}{
+				"literals": map[string]interface{}{
+					"32E0817AE855A845": "foo",
+					"024233B4DFB484FC": "foo",
+					"EE10D2E63AF9F498": "foo",
+					"6E7E3021F1821943": "foo",
+					"FDC41072BFC0BC7F": "foo",
+					"DFD86A289C3857EF": "foo",
+					"0C6B462C403217C4": "foo",
+				},
+			},
+		})
+	expected := `configMapGenerator:
+  literals:
+    024233B4DFB484FC: foo
+    0C6B462C403217C4: foo
+    32E0817AE855A845: foo
+    6E7E3021F1821943: foo
+    DFD86A289C3857EF: foo
+    EE10D2E63AF9F498: foo
+    FDC41072BFC0BC7F: foo
+`
+	t.Logf("%v", given)
+
+	yaml, err := given.AsYAML()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(yaml) != expected {
+		t.Fatalf("--- expected\n%s\n--- got\n%s\n", expected, string(yaml))
+	}
+}
+
 func TestResourceString(t *testing.T) {
 	tests := []struct {
 		in *Resource
