@@ -58,7 +58,7 @@ func TestFunctionFilter_Filter(t *testing.T) {
 		// verify that resources emitted from the function have a file path defaulted
 		// if none already exists
 		{
-			name: "default_file_path_annotation",
+			name: "default file path annotation",
 			run: testRun{
 				output: `
 apiVersion: config.kubernetes.io/v1
@@ -99,7 +99,7 @@ metadata:
 		// verify that resources emitted from the function do not have a file path defaulted
 		// if one already exists
 		{
-			name: "no_default_file_path_annotation",
+			name: "no default file path annotation",
 			run: testRun{
 				output: `
 apiVersion: config.kubernetes.io/v1
@@ -142,7 +142,7 @@ metadata:
 		// verify the FunctionFilter correctly writes the inputs and reads the outputs
 		// of Run
 		{
-			name: "write_read",
+			name: "write read",
 			run: testRun{
 				output: `
 apiVersion: config.kubernetes.io/v1
@@ -200,7 +200,7 @@ metadata:
 		// verify that the results file is written
 		//
 		{
-			name: "write_results_file",
+			name: "write results file",
 			run: testRun{
 				output: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -277,7 +277,7 @@ metadata:
 		// verify that the results file is written for functions that exist non-0
 		// and the FunctionFilter returns the error
 		{
-			name:          "write_results_file_function_exit_non_0",
+			name:          "write results file function exit non 0",
 			expectedError: "failed",
 			run: testRun{
 				err: fmt.Errorf("failed"),
@@ -356,7 +356,7 @@ metadata:
 		// verify that if deferFailure is set, the results file is written and the
 		// exit error is saved, but the FunctionFilter does not return an error.
 		{
-			name:               "write_results_defer_failure",
+			name:               "write results defer failure",
 			instance:           FunctionFilter{DeferFailure: true},
 			expectedSavedError: "failed",
 			run: testRun{
@@ -434,7 +434,7 @@ metadata:
 		},
 
 		{
-			name:              "write_results_bad_results_file",
+			name:              "write results bad results file",
 			expectedError:     "open /not/real/file:",
 			noMakeResultsFile: true,
 			run: testRun{
@@ -484,7 +484,7 @@ metadata:
 		// resources not provided to the function should still appear in the FunctionFilter
 		// output
 		{
-			name: "scope_resources_by_directory",
+			name: "scope resources by directory",
 			run: testRun{
 				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -575,7 +575,7 @@ metadata:
 
 		// verify functions without file path annotation are not scoped to functions
 		{
-			name: "scope_resources_by_directory_resources_missing_path",
+			name: "scope resources by directory resources missing path",
 			run: testRun{
 				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -662,7 +662,7 @@ metadata:
 
 		// verify the functions can see all resources if global scope is set
 		{
-			name:     "scope_resources_global",
+			name:     "scope resources global",
 			instance: FunctionFilter{GlobalScope: true},
 			run: testRun{
 				expectedInput: `apiVersion: config.kubernetes.io/v1
@@ -767,7 +767,7 @@ metadata:
 		},
 
 		{
-			name: "scope_no_resources",
+			name: "scope no resources",
 			run: testRun{
 				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -837,7 +837,7 @@ metadata:
 		},
 
 		{
-			name: "scope_functions_dir",
+			name: "scope functions dir",
 			run: testRun{
 				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -928,7 +928,7 @@ metadata:
 		},
 
 		{
-			name: "copy_comments",
+			name: "copy comments",
 			run: testRun{
 				expectedInput: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
@@ -1242,7 +1242,7 @@ container:
 		},
 
 		{
-			name: "path_with_uncorrect_position",
+			name: "path with uncorrect position",
 			resource: `
 apiVersion: v1beta1
 kind: Example
@@ -1257,7 +1257,7 @@ metadata:
 		},
 
 		{
-			name: "network_with_uncorrect_position",
+			name: "network with uncorrect position",
 			resource: `
 apiVersion: v1beta1
 kind: Example
@@ -1271,7 +1271,7 @@ metadata:
 			missingFn: true,
 		},
 		{
-			name: "fn missing spell",
+			name: "typo in function config",
 			resource: `
 apiVersion: v1beta1
 kind: Example
@@ -1320,21 +1320,21 @@ metadata:
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			resource := yaml.MustParse(tt.resource)
-			fn, _ := GetFunctionSpec(resource)
+			fn, err := GetFunctionSpec(resource)
 			if tt.missingFn {
-				if !assert.Nil(t, fn) {
+				if err == nil && !assert.Nil(t, fn) {
 					t.FailNow()
 				}
-			} else {
-				b, err := yaml.Marshal(fn)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				if !assert.Equal(t,
-					strings.TrimSpace(tt.expectedFn),
-					strings.TrimSpace(string(b))) {
-					t.FailNow()
-				}
+				return
+			}
+			b, err := yaml.Marshal(fn)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(tt.expectedFn),
+				strings.TrimSpace(string(b))) {
+				t.FailNow()
 			}
 		})
 	}
@@ -1399,9 +1399,12 @@ metadata:
 	for _, tc := range tests {
 		cfg, err := yaml.Parse(tc.input)
 		if !assert.NoError(t, err) {
-			return
+			t.FailNow()
 		}
-		fn, _ := GetFunctionSpec(cfg)
+		fn, err := GetFunctionSpec(cfg)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
 		assert.Equal(t, tc.required, fn.Container.Network)
 	}
 }
@@ -1537,9 +1540,12 @@ metadata:
 	for _, tc := range tests {
 		cfg, err := yaml.Parse(tc.input)
 		if !assert.NoError(t, err) {
-			return
+			t.FailNow()
 		}
-		fn, _ := GetFunctionSpec(cfg)
+		fn, err := GetFunctionSpec(cfg)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
 		assert.Equal(t, tc.expected, *NewContainerEnvFromStringSlice(fn.Container.Env))
 	}
 }
