@@ -258,15 +258,11 @@ resources:
 				tmpDir.String())
 
 			if test.err != "" {
-				assert.Error(t, err)
-				if err != nil {
-					assert.Contains(t, err.Error(), test.err)
-				}
+				require.Error(t, err)
+				require.Contains(t, err.Error(), test.err)
 			} else {
-				assert.NoError(t, err)
-				if err == nil {
-					checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", repos.root))
-				}
+				require.NoError(t, err)
+				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", repos.root))
 			}
 		})
 	}
@@ -360,17 +356,14 @@ resources:
 				tmpDir.String())
 
 			if test.err != "" {
-				assert.Error(t, err)
-				if err != nil {
-					assert.Contains(t, err.Error(), test.err)
-				}
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), test.err)
 				if test.errT != nil {
 					assert.ErrorIs(t, err, test.errT)
 				}
 			} else {
-				assert.NoError(t, err)
-				if err == nil {
-					const multibaseDevExampleBuild = `apiVersion: v1
+				require.NoError(t, err)
+				const multibaseDevExampleBuild = `apiVersion: v1
 kind: Pod
 metadata:
   labels:
@@ -381,8 +374,7 @@ spec:
   - image: nginx:1.7.9
     name: nginx
 `
-					checkYaml(t, m, multibaseDevExampleBuild)
-				}
+				checkYaml(t, m, multibaseDevExampleBuild)
 			}
 		})
 	}
