@@ -87,7 +87,7 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
 	host, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout := parseGitURL(n)
-	if orgRepo == "" && !strings.HasPrefix(host, fileScheme) {
+	if orgRepo == "" {
 		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
 	if host == "" {
@@ -119,28 +119,32 @@ func parseGitURL(n string) (
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
 		return
 	}
-	if strings.HasPrefix(n, fileScheme) {
-		idx := strings.Index(n, gitSuffix)
-		if idx == -1 {
-			// invalid, must have .git somewhere
-			return
-		}
-		host += n[:idx+len(gitSuffix)]
-		n = n[idx+len(gitSuffix):]
+	host, n = parseHostSpec(n)
+	isLocal := strings.HasPrefix(host, "file://")
+	if !isLocal {
+		gitSuff = gitSuffix
+	}
+	if strings.Contains(n, gitSuffix) {
+		gitSuff = gitSuffix
+		index := strings.Index(n, gitSuffix)
+		orgRepo = n[0:index]
+		n = n[index+len(gitSuffix):]
 		if len(n) > 0 && n[0] == '/' {
 			n = n[1:]
 		}
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
 		return
 	}
-	host, n = parseHostSpec(n)
-	gitSuff = gitSuffix
-	if strings.Contains(n, gitSuffix) {
-		index := strings.Index(n, gitSuffix)
-		orgRepo = n[0:index]
-		n = n[index+len(gitSuffix):]
-		if len(n) > 0 && n[0] == '/' {
-			n = n[1:]
+
+	if isLocal {
+		if idx := strings.Index(n, "//"); idx > 0 {
+			orgRepo = n[:idx]
+			n = n[idx+2:]
+		} else if q := strings.Index(n, "?"); q != -1 {
+			orgRepo = n[:q]
+			n = n[q:]
+		} else {
+			orgRepo = n
 		}
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
 		return

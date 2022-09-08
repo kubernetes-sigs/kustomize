@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -107,6 +108,7 @@ spec:
   - image: nginx:1.7.9
     name: nginx
 `
+	var simpleBuildWithNginx2 = strings.ReplaceAll(simpleBuild, "nginx:1.7.9", "nginx:2")
 	var multibaseDevExampleBuild = strings.ReplaceAll(simpleBuild, "myapp-pod", "dev-myapp-pod")
 
 	repos := createGitRepos(t)
@@ -140,7 +142,7 @@ resources:
 - "file://$ROOT/simple.git?ref=change-image"
 `,
 
-			expected: strings.ReplaceAll(simpleBuild, "nginx:1.7.9", "nginx:2"),
+			expected: simpleBuildWithNginx2,
 		},
 		{
 			// Version is the same as ref
@@ -149,7 +151,7 @@ resources:
 resources:
 - file://$ROOT/simple.git?version=change-image
 `,
-			expected: strings.ReplaceAll(simpleBuild, "nginx:1.7.9", "nginx:2"),
+			expected: simpleBuildWithNginx2,
 		},
 		{
 			name: "has submodule",
@@ -160,12 +162,28 @@ resources:
 			expected: simpleBuild,
 		},
 		{
+			name: "has timeout",
+			kustomization: `
+resources:
+- file://$ROOT/simple.git?timeout=500
+`,
+			expected: simpleBuild,
+		},
+		{
+			name: "triple slash absolute path",
+			kustomization: `
+resources:
+- file:///$ROOT/simple.git
+`,
+			expected: simpleBuild,
+		},
+		{
 			name: "has submodule but not initialized",
 			kustomization: `
 resources:
 - file://$ROOT/with-submodule.git/submodule?submodules=0
 `,
-			err: "unable to find",
+			err: "unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory",
 		},
 		{
 			name: "has origin annotation",
@@ -192,10 +210,10 @@ spec:
 `,
 		},
 		{
-			name: "has ref path and origin annotation",
+			name: "has ref path timeout and origin annotation",
 			kustomization: `
 resources:
-- file://$ROOT/multibase.git/dev?version=main
+- file://$ROOT/multibase.git/dev?version=main&timeout=500
 buildMetadata: [originAnnotations]
 `,
 			expected: `apiVersion: v1
@@ -214,6 +232,14 @@ spec:
   - image: nginx:1.7.9
     name: nginx
 `,
+		},
+		{
+			name: "repo does not exist ",
+			kustomization: `
+resources:
+- file:///not/a/real/repo
+`,
+			err: "fatal: '/not/a/real/repo' does not appear to be a git repository",
 		},
 	}
 
@@ -248,17 +274,26 @@ spec:
 
 func TestRemoteLoad_RemoteProtocols(t *testing.T) {
 	// Slow remote tests with long timeouts.
-	// TODO: Maybe they should retry too.
+	// TODO: If these end up flaking, they should retry. If not, remove this TODO.
 	tests := []struct {
 		name          string
 		kustomization string
 		err           string
+		errT          error
+		beforeTest    func(t *testing.T, )
 	}{
 		{
 			name: "https",
 			kustomization: `
 resources:
-- https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?submodules=0&ref=v1.0.6&timeout=300
+- https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
+`,
+		},
+		{
+			name: "git double-colon https",
+			kustomization: `
+resources:
+- git::https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
 `,
 		},
 		{
@@ -270,17 +305,53 @@ namePrefix: dev-
 `,
 		},
 		{
-			name: "ssh",
+			name:       "ssh",
+			beforeTest: configureGitSSHCommand,
 			kustomization: `
 resources:
-- ssh://git@github.com/kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=v1.0.6&timeout=300
+- git@github.com/kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
 `,
+		},
+		{
+			name:       "ssh with colon",
+			beforeTest: configureGitSSHCommand,
+			kustomization: `
+resources:
+- git@github.com:kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
+`,
+		},
+		{
+			name:       "ssh without username",
+			beforeTest: configureGitSSHCommand,
+			kustomization: `
+resources:
+- github.com/kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
+`,
+		},
+		{
+			name:       "ssh scheme",
+			beforeTest: configureGitSSHCommand,
+			kustomization: `
+resources:
+- ssh://git@github.com/kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
+`,
+		},
+		{
+			name: "http error",
+			kustomization: `
+resources:
+- https://github.com/thisisa404.yaml
+`,
+			err:  "accumulating resources: accumulating resources from 'https://github.com/thisisa404.yaml': HTTP Error: status code 404 (Not Found)",
+			errT: loader.ErrHTTP,
 		},
 	}
 
-	configureGitSSHCommand(t)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.beforeTest != nil {
+				test.beforeTest(t)
+			}
 			fSys, tmpDir := createKustDir(t, test.kustomization)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
@@ -292,6 +363,9 @@ resources:
 				assert.Error(t, err)
 				if err != nil {
 					assert.Contains(t, err.Error(), test.err)
+				}
+				if test.errT != nil {
+					assert.ErrorIs(t, err, test.errT)
 				}
 			} else {
 				assert.NoError(t, err)
