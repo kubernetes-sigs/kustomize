@@ -140,13 +140,12 @@ func parseGitURL(n string) (
 		if idx := strings.Index(n, "//"); idx > 0 {
 			orgRepo = n[:idx]
 			n = n[idx+2:]
-		} else if q := strings.Index(n, "?"); q != -1 {
-			orgRepo = n[:q]
-			n = n[q:]
-		} else {
-			orgRepo = n
+			path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+			return
 		}
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		orgRepo = path
+		path = ""
 		return
 	}
 

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
@@ -359,11 +360,31 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				GitSuffix: ".git",
 			},
 		},
+		{
+			name:      "t21",
+			input:     "file:///a/b/c/someRepo",
+			cloneSpec: "file:///a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/a/b/c/someRepo",
+			},
+		},
+		{
+			name:      "t22",
+			input:     "file:///",
+			cloneSpec: "file:///",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			rs, err := NewRepoSpecFromURL(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.cloneSpec, rs.CloneSpec(), "cloneSpec mismatch")
 			assert.Equal(t, tc.absPath, rs.AbsPath(), "absPath mismatch")
 			// some values have defaults. Clear them here so test cases remain compact.

@@ -27,6 +27,7 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 	type testRepos struct {
 		root          string
 		simple        string
+		noSuffix      string
 		multiBaseDev  string
 		withSubmodule string
 	}
@@ -34,6 +35,7 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 	// creates git repos under a root temporary directory with the following structure
 	// root/
 	//   simple.git/			- base with just a pod
+	//   nosuffix/				- same as simple.git/ without the .git suffix
 	//   multibase.git/			- base with a dev overlay
 	//   with-submodule.git/	- includes `simple` as a submodule
 	//     submodule/			- the submodule referencing `simple
@@ -74,6 +76,7 @@ EOF
 	git commit -am "image change"
 	git checkout main
 )
+cp -r $ROOT/simple.git $ROOT/nosuffix
 cp -r testdata/remoteload/multibase $ROOT/multibase.git
 (
 	cd $ROOT/multibase.git
@@ -90,8 +93,10 @@ cp -r testdata/remoteload/multibase $ROOT/multibase.git
 )
 `, root))
 		return testRepos{
-			root:          root,
+			root: root,
+			// The strings below aren't currently used, and more serve as documentation.
 			simple:        "simple.git",
+			noSuffix:      "nosuffix",
 			multiBaseDev:  "multibase.git",
 			withSubmodule: "with-submodule.git",
 		}
@@ -128,10 +133,26 @@ resources:
 			expected: simpleBuild,
 		},
 		{
+			name: "without git suffix",
+			kustomization: `
+resources:
+- file://$ROOT/nosuffix
+`,
+			expected: simpleBuild,
+		},
+		{
 			name: "has path",
 			kustomization: `
 resources:
 - file://$ROOT/multibase.git/dev
+`,
+			expected: multibaseDevExampleBuild,
+		},
+		{
+			name: "has path without git suffix",
+			kustomization: `
+resources:
+- file://$ROOT/multibase//dev
 `,
 			expected: multibaseDevExampleBuild,
 		},
