@@ -1198,11 +1198,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy1
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy2
 `,
 			replacements: `replacements:
 - source:
@@ -1216,15 +1211,6 @@ metadata:
     - spec.template.spec.containers
     options:
       create: true
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-  targets:
-  - select:
-      name: deploy2
-    fieldPaths:
-    - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -1245,11 +1231,6 @@ spec:
       containers:
       - image: busybox
         name: myapp-container
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy2
 `,
 		},
 		"complex type with delimiter in source": {

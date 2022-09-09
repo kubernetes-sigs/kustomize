@@ -4,13 +4,13 @@
 package replacement
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml_utils "sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -105,7 +105,7 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []*types.TargetSelector) ([]*yaml.RNode, error) {
 	for _, selector := range targetSelectors {
 		if selector.Select == nil {
-			return nil, errors.New("target must specify resources to select")
+			return nil, errors.Errorf("target must specify resources to select")
 		}
 		if len(selector.FieldPaths) == 0 {
 			selector.FieldPaths = []string{types.DefaultReplacementFieldPath}
@@ -191,6 +191,9 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 			if createErr != nil {
 				return fmt.Errorf("error creating replacement node: %w", createErr)
 			}
+			if createdField == nil {
+				return errors.Errorf("unable to find or create field %s in replacement target", fp)
+			}
 			targetFields = append(targetFields, createdField)
 		} else {
 			// may return multiple fields, always wrapped in a sequence node
@@ -201,6 +204,9 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 			targetFields, err = foundFieldSequence.Elements()
 			if err != nil {
 				return fmt.Errorf("error fetching elements in replacement target: %w", err)
+			}
+			if len(targetFields) == 0 {
+				return errors.Errorf("unable to find field %s in replacement target", fp)
 			}
 		}
 

@@ -6,6 +6,7 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -545,4 +546,104 @@ kind: ConfigMap
 metadata:
   name: red-dc6gc5btkc
 `)
+}
+
+func TestIssue4761_path_not_in_target_with_create_true(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("resources.yaml", `
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+    - applyTo: NETWORK_FILTER
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`)
+
+	th.WriteK(".", `
+resources:
+- resources.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: istio-version
+      fieldPath: data.ISTIO_REGEX
+    targets:
+      - select:
+          kind: EnvoyFilter
+        fieldPaths:
+          - spec.configPatches.0.match.proxy.proxyVersion
+          - spec.configPatches.1.match.proxy.proxyVersion
+          - spec.configPatches.2.match.proxy.proxyVersion
+          - spec.configPatches.3.match.proxy.proxyVersion
+        options:
+          create: true
+`)
+
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	require.EqualError(t, err, "unable to find or create field spec.configPatches.2.match.proxy.proxyVersion in replacement target")
+}
+
+func TestIssue4761_path_not_in_target_with_create_false(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("resources.yaml", `
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+    - applyTo: NETWORK_FILTER
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`)
+
+	th.WriteK(".", `
+resources:
+- resources.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: istio-version
+      fieldPath: data.ISTIO_REGEX
+    targets:
+      - select:
+          kind: EnvoyFilter
+        fieldPaths:
+          - spec.configPatches.0.match.proxy.proxyVersion
+          - spec.configPatches.1.match.proxy.proxyVersion
+          - spec.configPatches.2.match.proxy.proxyVersion
+          - spec.configPatches.3.match.proxy.proxyVersion
+        options:
+          create: false
+`)
+
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	require.EqualError(t, err, "unable to find field spec.configPatches.0.match.proxy.proxyVersion in replacement target")
 }
