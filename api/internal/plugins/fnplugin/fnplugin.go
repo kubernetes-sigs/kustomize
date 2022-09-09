@@ -51,13 +51,16 @@ func resourceToRNode(res *resource.Resource) (*yaml.RNode, error) {
 }
 
 // GetFunctionSpec return function spec is there is. Otherwise return nil
-func GetFunctionSpec(res *resource.Resource) *runtimeutil.FunctionSpec {
+func GetFunctionSpec(res *resource.Resource) (*runtimeutil.FunctionSpec, error) {
 	rnode, err := resourceToRNode(res)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("could not convert resource to RNode: %w", err)
 	}
-
-	return runtimeutil.GetFunctionSpec(rnode)
+	functionSpec, err := runtimeutil.GetFunctionSpec(rnode)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
+	}
+	return functionSpec, nil
 }
 
 func toStorageMounts(mounts []string) []runtimeutil.StorageMount {

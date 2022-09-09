@@ -314,6 +314,24 @@ metadata:
 			},
 			out: []string{"gcr.io/example.com/image:v1.0.0 deferFailure: true"},
 		},
+		{
+			name: "parse_failure",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      containeeer:
+        image: gcr.io/example.com/image:v1.0.0
+`,
+				},
+			},
+			error: "config.kubernetes.io/function unmarshal error: error unmarshaling JSON: while decoding JSON: json: unknown field \"containeeer\"",
+		},
 
 		{name: "disable containers",
 			in: []f{
@@ -807,7 +825,10 @@ metadata:
 
 			var images []string
 			for _, n := range packageBuff.Nodes {
-				spec := runtimeutil.GetFunctionSpec(n)
+				spec, err := runtimeutil.GetFunctionSpec(n)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
 				images = append(images, spec.Container.Image)
 			}
 
