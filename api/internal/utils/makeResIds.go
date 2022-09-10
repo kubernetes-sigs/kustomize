@@ -51,7 +51,7 @@ func PrevIds(n *yaml.RNode) ([]resid.ResId, error) {
 	}
 	meta, err := n.GetMeta()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse resource metadata: %w", err)
 	}
 	group, version := resid.ParseGroupVersion(meta.APIVersion)
 	for i := range names {
