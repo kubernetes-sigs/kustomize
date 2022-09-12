@@ -369,22 +369,22 @@ kind: Kustomization
 		},
 	}
 	for _, test := range tests {
-		fSys := filesys.MakeFsInMemory()
-		testutils_test.WriteTestKustomizationWith(fSys, []byte(test.input))
-		for filename, content := range test.files {
-			require.NoError(t, fSys.WriteFile(filename, []byte(content)))
-		}
-		cmd := NewCmdFix(fSys, os.Stdout)
-		require.NoError(t, cmd.RunE(cmd, nil))
+		t.Run(test.name, func(t *testing.T) {
+			fSys := filesys.MakeFsInMemory()
+			testutils_test.WriteTestKustomizationWith(fSys, []byte(test.input))
+			for filename, content := range test.files {
+				require.NoError(t, fSys.WriteFile(filename, []byte(content)))
+			}
+			cmd := NewCmdFix(fSys, os.Stdout)
+			require.NoError(t, cmd.RunE(cmd, nil))
 
-		content, err := testutils_test.ReadTestKustomization(fSys)
-		require.NoError(t, err)
-		require.Contains(t, string(content), "apiVersion: ")
-		require.Contains(t, string(content), "kind: Kustomization")
+			content, err := testutils_test.ReadTestKustomization(fSys)
+			require.NoError(t, err)
+			require.Contains(t, string(content), "apiVersion: ")
+			require.Contains(t, string(content), "kind: Kustomization")
 
-		if diff := cmp.Diff([]byte(test.expected), content); diff != "" {
-			t.Errorf("%s: Mismatch (-expected, +actual):\n%s", test.name, diff)
-		}
+			require.Empty(t, cmp.Diff([]byte(test.expected), content))
+		})
 	}
 }
 
