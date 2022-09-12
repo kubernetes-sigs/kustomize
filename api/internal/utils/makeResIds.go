@@ -49,12 +49,12 @@ func PrevIds(n *yaml.RNode) ([]resid.ResId, error) {
 				"number of previous namespaces, " +
 				"number of previous kinds not equal")
 	}
+	meta, err := n.GetMeta()
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse resource metadata: %w", err)
+	}
+	group, version := resid.ParseGroupVersion(meta.APIVersion)
 	for i := range names {
-		meta, err := n.GetMeta()
-		if err != nil {
-			return nil, err
-		}
-		group, version := resid.ParseGroupVersion(meta.APIVersion)
 		gvk := resid.Gvk{
 			Group:   group,
 			Version: version,
