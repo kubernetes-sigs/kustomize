@@ -35,7 +35,7 @@ brew install coreutils wget gnu-sed tree
 
 Add the new tools to your PATH
 
-## Make everything
+## Verify the installation
 
 Verify your install by running `make`:
 
