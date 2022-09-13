@@ -19,7 +19,7 @@ This is the PowerShell script to run all go tests for Kustomize on a windows bas
 
 This script should output to the current console and return an exit code if all tests are successful(0) or any failed(1).
 
-### If you are tryin to run these tests locally you can follow these instructions
+### Running tests locally
 
 Assume:
 
