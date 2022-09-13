@@ -7,7 +7,7 @@ description: >
     Background information to help orient newcomers to the Kustomize codebase
 ---
 
-{{< alert color="success" title="Info" >}}
+{{< alert color="success" title="Workspace mode" >}}
 Kustomize supports go workspace mode, so if adding locally modified modules, remember to also add it to the [go.work](https://github.com/kubernetes-sigs/kustomize/blob/master/go.work) file.
 
 {{< /alert >}}
