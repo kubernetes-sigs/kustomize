@@ -4,7 +4,7 @@ linkTitle: "Writing Code"
 type: docs
 weight: 40
 description: >
-    How to modify Kustomize
+    Background information to help orient newcomers to the Kustomize codebase
 ---
 
 {{< alert color="success" title="Info" >}}
