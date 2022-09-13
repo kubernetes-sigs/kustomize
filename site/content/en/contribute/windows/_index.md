@@ -7,7 +7,7 @@ description: >
     How to develop on Windows
 ---
 
-This is the PowerShell script to run all go tests for Kustomize on a windows based platform which mimics /build/pre-commit.sh
+This is the PowerShell script to run all go tests for Kustomize on a Windows-based platform.
 
 ## Pre-Reqs
 
