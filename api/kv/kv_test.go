@@ -65,6 +65,46 @@ func TestKeyValuesFromLines(t *testing.T) {
 	}
 }
 
+func TestParseFileSource(t *testing.T) {
+	tests := map[string]*struct {
+		Input    string
+		Legal    bool
+		Key      string
+		Filename string
+	}{
+		"filename only": {
+			"./path/myfile",
+			true,
+			"myfile",
+			"./path/myfile",
+		},
+		"key and filename": {
+			"newName.ini=oldName",
+			true,
+			"newName.ini",
+			"oldName",
+		},
+		"multiple =": {
+			Input: "newName.ini==oldName",
+		},
+		"missing key": {
+			Input: "=myfile",
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			key, file, err := ParseFileSource(test.Input)
+			if !test.Legal {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, test.Key, key)
+				require.Equal(t, test.Filename, file)
+			}
+		})
+	}
+}
+
 func TestKeyValuesFromFileSources(t *testing.T) {
 	tests := []struct {
 		description string
