@@ -122,6 +122,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		repoSpec  RepoSpec
 		cloneSpec string
 		absPath   string
+		skip      string
 	}{
 		{
 			name:      "t1",
@@ -289,7 +290,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		},
 		{
 			name:      "t15",
-			input:     "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?submodules=0&ref=v1.0.6&timeout=300",
+			input:     "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6",
 			cloneSpec: "https://github.com/kubernetes-sigs/kustomize.git",
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
@@ -380,9 +381,39 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				OrgRepo: "/",
 			},
 		},
+		{
+			name:      "t23",
+			skip:      "the `//` repo separator does not work",
+			input:     "https://fake-git-hosting.org/path/to/repo//examples/multibases/dev",
+			cloneSpec: "https://fake-git-hosting.org/path/to.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "https://fake-git-hosting.org/",
+				OrgRepo:   "path/to/server",
+				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t24",
+			skip:      "the `//` repo separator does not work",
+			input:     "ssh://alice@acme.co/path/to/repo//examples/multibases/dev",
+			cloneSpec: "ssh://alice@acme.co/path/to/repo.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "ssh://alice@acme.co",
+				OrgRepo:   "path/to/repo",
+				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.skip != "" {
+				t.Skip(tc.skip)
+			}
+
 			rs, err := NewRepoSpecFromURL(tc.input)
 			require.NoError(t, err)
 			assert.Equal(t, tc.cloneSpec, rs.CloneSpec(), "cloneSpec mismatch")

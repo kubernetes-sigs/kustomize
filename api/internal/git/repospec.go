@@ -103,7 +103,6 @@ const (
 	refQuery     = "?ref="
 	gitSuffix    = ".git"
 	gitDelimiter = "_git/"
-	fileScheme   = "file://"
 )
 
 // From strings like git@github.com:someOrg/someRepo.git or

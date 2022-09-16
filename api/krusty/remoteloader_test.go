@@ -417,7 +417,7 @@ func configureGitSSHCommand(t *testing.T) {
 	require.NoError(t, err)
 	_, err = io.Copy(f, bytes.NewReader(key))
 	require.NoError(t, err)
-	cmd := fmt.Sprintf("ssh -i %s", f.Name())
+	cmd := fmt.Sprintf("ssh -i %s -o IdentitiesOnly=yes", f.Name())
 	const SSHCommandKey = "GIT_SSH_COMMAND"
 	t.Setenv(SSHCommandKey, cmd)
 	t.Cleanup(func() {
