@@ -35,7 +35,13 @@ func TestSortArrayAndComputeHash(t *testing.T) {
 func Test_hex256(t *testing.T) {
 	// hash the empty string to be sure that sha256 is being used
 	expect := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sum := hex256("")
+	sum := hex256([]byte(""))
+	if expect != sum {
+		t.Errorf("expected hash %q but got %q", expect, sum)
+	}
+
+	// hash the nil slice to be sure that sha256 is being used
+	sum = hex256(nil)
 	if expect != sum {
 		t.Errorf("expected hash %q but got %q", expect, sum)
 	}
@@ -270,7 +276,7 @@ binaryData:
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
-		if s != c.expect {
+		if string(s) != c.expect {
 			t.Errorf("case %q, expect %q but got %q from encode %#v", c.desc, c.expect, s, c.cmYaml)
 		}
 	}
@@ -330,7 +336,7 @@ data:
 		if SkipRest(t, c.desc, err, c.err) {
 			continue
 		}
-		if s != c.expect {
+		if string(s) != c.expect {
 			t.Errorf("case %q, expect %q but got %q from encode %#v", c.desc, c.expect, s, c.secretYaml)
 		}
 	}

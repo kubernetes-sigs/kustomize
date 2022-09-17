@@ -7,9 +7,8 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"sort"
-
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sort"
 )
 
 // SortArrayAndComputeHash sorts a string array and
@@ -20,7 +19,7 @@ func SortArrayAndComputeHash(s []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return encode(hex256(string(data)))
+	return encode(hex256(data))
 }
 
 // Copied from https://github.com/kubernetes/kubernetes
@@ -49,8 +48,8 @@ func encode(hex string) (string, error) {
 }
 
 // hex256 returns the hex form of the sha256 of the argument.
-func hex256(data string) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
+func hex256(data []byte) string {
+	return fmt.Sprintf("%x", sha256.Sum256(data))
 }
 
 // Hasher computes the hash of an RNode.
@@ -58,7 +57,7 @@ type Hasher struct{}
 
 // Hash returns a hash of the argument.
 func (h *Hasher) Hash(node *yaml.RNode) (r string, err error) {
-	var encoded string
+	var encoded []byte
 	switch node.GetKind() {
 	case "ConfigMap":
 		encoded, err = encodeConfigMap(node)
@@ -67,7 +66,7 @@ func (h *Hasher) Hash(node *yaml.RNode) (r string, err error) {
 	default:
 		var encodedBytes []byte
 		encodedBytes, err = json.Marshal(node.YNode())
-		encoded = string(encodedBytes)
+		encoded = encodedBytes
 	}
 	if err != nil {
 		return "", err
@@ -106,12 +105,12 @@ func getNodeValues(
 // encodeConfigMap encodes a ConfigMap.
 // Data, Kind, and Name are taken into account.
 // BinaryData is included if it's not empty to avoid useless key in output.
-func encodeConfigMap(node *yaml.RNode) (string, error) {
+func encodeConfigMap(node *yaml.RNode) ([]byte, error) {
 	// get fields
 	paths := []string{"metadata/name", "data", "binaryData"}
 	values, err := getNodeValues(node, paths)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	m := map[string]interface{}{
 		"kind": "ConfigMap",
@@ -125,20 +124,20 @@ func encodeConfigMap(node *yaml.RNode) (string, error) {
 	// json.Marshal sorts the keys in a stable order in the encoding
 	data, err := json.Marshal(m)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(data), nil
+	return data, nil
 }
 
 // encodeSecret encodes a Secret.
 // Data, Kind, Name, and Type are taken into account.
 // StringData is included if it's not empty to avoid useless key in output.
-func encodeSecret(node *yaml.RNode) (string, error) {
+func encodeSecret(node *yaml.RNode) ([]byte, error) {
 	// get fields
 	paths := []string{"type", "metadata/name", "data", "stringData"}
 	values, err := getNodeValues(node, paths)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	m := map[string]interface{}{"kind": "Secret", "type": values["type"],
 		"name": values["metadata/name"], "data": values["data"]}
@@ -149,7 +148,7 @@ func encodeSecret(node *yaml.RNode) (string, error) {
 	// json.Marshal sorts the keys in a stable order in the encoding
 	data, err := json.Marshal(m)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(data), nil
+	return data, nil
 }
