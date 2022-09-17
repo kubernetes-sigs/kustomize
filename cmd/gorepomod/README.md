@@ -78,7 +78,7 @@ If the existing version is _v1.2.7_, then the new version will be:
  - `minor` -> _v1.3.0_
  - `major` -> _v2.0.0_
 
-After establishing the the version, the command looks for a branch named
+After establishing the version, the command looks for a branch named
 
 > _release-{module}/-v{major}.{minor}_
 
