@@ -385,6 +385,33 @@ spec:
 	testRemoteResource(require.New(t), &test)
 }
 
+func TestRemoteResourceAnnoOriginFailing(t *testing.T) {
+	test := remoteResourceCase{
+		kustomization: `
+resources:
+- https://github.com/mightyguava/kustomize-bug.git
+buildMetadata: [originAnnotations]
+`,
+		expected: `apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      repo: https://github.com/mightyguava/kustomize-bug.git
+      path: pod.yaml
+  labels:
+    app: myapp
+  name: myapp-pod
+spec:
+  containers:
+  - image: nginx:1.7.9
+    name: nginx
+`,
+	}
+
+	testRemoteResource(require.New(t), &test)
+}
+
 func TestRemoteResourceAsBaseWithAnnoOrigin(t *testing.T) {
 	req := require.New(t)
 
