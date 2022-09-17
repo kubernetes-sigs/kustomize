@@ -7,8 +7,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sort"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // SortArrayAndComputeHash sorts a string array and
