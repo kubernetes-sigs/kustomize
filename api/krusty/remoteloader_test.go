@@ -297,7 +297,7 @@ func TestRemoteLoad_RemoteProtocols(t *testing.T) {
 		kustomization string
 		err           string
 		errT          error
-		beforeTest    func(t *testing.T, )
+		beforeTest    func(t *testing.T)
 	}{
 		{
 			name: "https",
@@ -322,6 +322,13 @@ namePrefix: dev-
 `,
 		},
 		{
+			name: "https without scheme",
+			kustomization: `
+resources:
+- github.com/kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
+`,
+		},
+		{
 			name:       "ssh",
 			beforeTest: configureGitSSHCommand,
 			kustomization: `
@@ -335,14 +342,6 @@ resources:
 			kustomization: `
 resources:
 - git@github.com:kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
-`,
-		},
-		{
-			name:       "ssh without username",
-			beforeTest: configureGitSSHCommand,
-			kustomization: `
-resources:
-- github.com/kubernetes-sigs/kustomize/examples/multibases/dev?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
 `,
 		},
 		{
