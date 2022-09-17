@@ -389,7 +389,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
 				Host:      "https://fake-git-hosting.org/",
-				OrgRepo:   "path/to/server",
+				OrgRepo:   "path/to/repo",
 				Path:      "/examples/multibases/dev",
 				GitSuffix: ".git",
 			},
