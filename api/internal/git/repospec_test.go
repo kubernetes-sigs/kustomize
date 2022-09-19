@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
@@ -61,6 +62,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 					rs, err := NewRepoSpecFromURL(uri)
 					if err != nil {
 						t.Errorf("problem %v", err)
+						continue
 					}
 					if rs.Host != hostSpec {
 						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
@@ -120,6 +122,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		repoSpec  RepoSpec
 		cloneSpec string
 		absPath   string
+		skip      string
 	}{
 		{
 			name:      "t1",
@@ -285,11 +288,134 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				GitSuffix: ".git",
 			},
 		},
+		{
+			name:      "t15",
+			input:     "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6",
+			cloneSpec: "https://github.com/kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "https://github.com/",
+				OrgRepo:   "kubernetes-sigs/kustomize",
+				Path:      "/examples/multibases/dev/",
+				Ref:       "v1.0.6",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t16",
+			input:     "file://a/b/c/someRepo.git/somepath?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo.git",
+			absPath:   notCloned.Join("somepath"),
+			repoSpec: RepoSpec{
+				Host:      "file://",
+				OrgRepo:   "a/b/c/someRepo",
+				Path:      "somepath",
+				Ref:       "someBranch",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t17",
+			input:     "file://a/b/c/someRepo//somepath?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo",
+			absPath:   notCloned.Join("somepath"),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "a/b/c/someRepo",
+				Path:    "somepath",
+				Ref:     "someBranch",
+			},
+		},
+		{
+			name:      "t18",
+			input:     "file://a/b/c/someRepo?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "a/b/c/someRepo",
+				Ref:     "someBranch",
+			},
+		},
+		{
+			name:      "t19",
+			input:     "file:///a/b/c/someRepo?ref=someBranch",
+			cloneSpec: "file:///a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/a/b/c/someRepo",
+				Ref:     "someBranch",
+			},
+		},
+		{
+			name:      "t20",
+			input:     "ssh://git@github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6",
+			cloneSpec: "git@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.Join("examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "git@github.com:",
+				OrgRepo:   "kubernetes-sigs/kustomize",
+				Path:      "/examples/multibases/dev",
+				Ref:       "v1.0.6",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t21",
+			input:     "file:///a/b/c/someRepo",
+			cloneSpec: "file:///a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/a/b/c/someRepo",
+			},
+		},
+		{
+			name:      "t22",
+			input:     "file:///",
+			cloneSpec: "file:///",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/",
+			},
+		},
+		{
+			name:      "t23",
+			skip:      "the `//` repo separator does not work",
+			input:     "https://fake-git-hosting.org/path/to/repo//examples/multibases/dev",
+			cloneSpec: "https://fake-git-hosting.org/path/to.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "https://fake-git-hosting.org/",
+				OrgRepo:   "path/to/repo",
+				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t24",
+			skip:      "the `//` repo separator does not work",
+			input:     "ssh://alice@acme.co/path/to/repo//examples/multibases/dev",
+			cloneSpec: "ssh://alice@acme.co/path/to/repo.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "ssh://alice@acme.co",
+				OrgRepo:   "path/to/repo",
+				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.skip != "" {
+				t.Skip(tc.skip)
+			}
+
 			rs, err := NewRepoSpecFromURL(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.cloneSpec, rs.CloneSpec(), "cloneSpec mismatch")
 			assert.Equal(t, tc.absPath, rs.AbsPath(), "absPath mismatch")
 			// some values have defaults. Clear them here so test cases remain compact.

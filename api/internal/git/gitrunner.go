@@ -46,9 +46,9 @@ func (r gitRunner) run(args ...string) error {
 		cmd.String(),
 		r.duration,
 		func() error {
-			_, err := cmd.CombinedOutput()
+			out, err := cmd.CombinedOutput()
 			if err != nil {
-				return errors.Wrapf(err, "git cmd = '%s'", cmd.String())
+				return errors.Wrapf(err, "failed to run '%s': %s", cmd.String(), string(out))
 			}
 			return err
 		})
