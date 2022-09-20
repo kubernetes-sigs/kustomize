@@ -160,3 +160,159 @@ spec:
         foo: bar
 `)
 }
+
+func TestKustomizationLabelsInTemplateWhenLabelsIsNil(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: test-server
+        image: test-server
+`)
+	th.WriteK("/app", `
+resources:
+- deployment.yaml
+
+commonLabels:
+  app: test-server
+
+labels:
+- pairs:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-server
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-server
+  template:
+    metadata:
+      labels:
+        app: test-server
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+    spec:
+      containers:
+      - image: test-server
+        name: test-server
+`)
+}
+
+func TestKustomizationLabelsInTemplateWhenResourceHasNoTemplate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: test-server
+        image: test-server
+`)
+	th.WriteF("app/service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 9376
+`)
+	th.WriteK("/app", `
+resources:
+- deployment.yaml
+- service.yaml
+
+commonLabels:
+  app: test-server
+
+labels:
+- pairs:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-server
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-server
+  template:
+    metadata:
+      labels:
+        app: test-server
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+    spec:
+      containers:
+      - image: test-server
+        name: test-server
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-server
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: service
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 9376
+  selector:
+    app: test-server
+`)
+}
