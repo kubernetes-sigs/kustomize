@@ -257,23 +257,42 @@ func TestNewFails(t *testing.T) {
 	req.NoError(err)
 	checkNewLocLoader(req, ldr, &args, "/alpha/beta/gamma", "/alpha", "/alpha/beta/gamma/newDir", fSys)
 
-	cases := map[string]string{
-		"outside scope":     "../../../a",
-		"at dst":            "newDir",
-		"ancestor":          "../../beta",
-		"non-existent root": "delt",
-		"file":              "delta/kustomization.yaml",
+	cases := map[string]*struct {
+		arg string
+
+		// whether error is specific to localize
+		localizeError bool
+	}{
+		"outside scope": {
+			"../../../a",
+			true,
+		},
+		"at dst": {
+			"newDir",
+			true,
+		},
+		"ancestor": {
+			arg: "../../beta",
+		},
+		"non-existent root": {
+			arg: "delt",
+		},
+		"file": {
+			arg: "delta/deployment.yaml",
+		},
 	}
 	for name, root := range cases {
-		root := root
 		t.Run(name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
 
 			ldr, _, err := lclzr.NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 			require.NoError(t, err)
 
-			_, err = ldr.New(root)
+			_, err = ldr.New(root.arg)
 			require.Error(t, err)
+			if !root.localizeError {
+				require.ErrorIs(t, err, lclzr.ErrInvalidRoot)
+			}
 		})
 	}
 }

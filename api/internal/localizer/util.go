@@ -14,13 +14,15 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const LocalizeDir = "localized-files"
+
 // establishScope returns the scope given localize arguments and targetLdr at targetArg
 func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
-	if _, isRemote := targetLdr.Repo(); isRemote {
+	if repo, isRemote := targetLdr.Repo(); isRemote {
 		if scopeArg != "" {
 			return "", errors.Errorf("scope '%s' specified for remote localize target '%s'", scopeArg, targetArg)
 		}
-		return "", nil
+		return filesys.ConfirmedDir(repo), nil
 	}
 	// default scope
 	if scopeArg == "" {
@@ -78,6 +80,14 @@ func defaultNewDir(targetLdr ifc.Loader, spec *git.RepoSpec) string {
 		return dstPrefix
 	}
 	return strings.Join([]string{dstPrefix, targetDir}, "-")
+}
+
+func hasRef(path string) bool {
+	repoSpec, err := git.NewRepoSpecFromURL(path)
+	if err != nil {
+		log.Fatalf("%s: %s", "unable to parse validated root url", err.Error())
+	}
+	return repoSpec.Ref != ""
 }
 
 // urlBase is the url equivalent of filepath.Base

@@ -9,6 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -21,7 +22,8 @@ type LocArgs struct {
 	// target; local copy if remote
 	Target filesys.ConfirmedDir
 
-	// directory that bounds target's local references, empty string if target is remote
+	// directory that bounds target's local references
+	// repo directory of local copy if target is remote
 	Scope filesys.ConfirmedDir
 
 	// localize destination
@@ -49,8 +51,7 @@ func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys file
 	// check earlier to avoid cleanup
 	repoSpec, err := git.NewRepoSpecFromURL(targetArg)
 	if err == nil && repoSpec.Ref == "" {
-		return nil, LocArgs{},
-			errors.Errorf("localize remote root '%s' missing ref query string parameter", targetArg)
+		return nil, LocArgs{}, errors.Errorf("%w: '%s'", ErrNoRef, targetArg)
 	}
 
 	// for security, should enforce load restrictions
@@ -76,11 +77,12 @@ func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys file
 		Scope:  scope,
 		NewDir: newDir,
 	}
+	_, isRemote := ldr.Repo()
 	return &locLoader{
 		fSys:   fSys,
 		args:   &args,
 		Loader: ldr,
-		local:  scope != "",
+		local:  !isRemote,
 	}, args, nil
 }
 
@@ -95,19 +97,18 @@ func (ll *locLoader) Load(path string) ([]byte, error) {
 	if filepath.IsAbs(path) {
 		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path '%s' is absolute", path)
 	}
-	if ll.local {
+	if !loader.HasRemoteFileScheme(path) && ll.local {
 		abs := filepath.Join(ll.Root(), path)
 		dir, f, err := ll.fSys.CleanedAbs(abs)
 		if err != nil {
-			// should never happen
 			log.Fatalf(errors.WrapPrefixf(err, "cannot clean validated file path '%s'", abs).Error())
 		}
 		// target cannot reference newDir, as this load would've failed prior to localize;
 		// not a problem if remote because then reference could only be in newDir if repo copy,
 		// which will be cleaned, is inside newDir
 		if dir.HasPrefix(ll.args.NewDir) {
-			return nil, errors.Errorf(
-				"file path '%s' references into localize destination '%s'", dir.Join(f), ll.args.NewDir)
+			return nil, errors.Errorf("invalid reference '%s': file at '%s' references into localize destination '%s'",
+				path, dir.Join(f), ll.args.NewDir)
 		}
 	}
 	return content, nil
@@ -116,24 +117,32 @@ func (ll *locLoader) Load(path string) ([]byte, error) {
 // New returns a Loader at path if path is a valid localize root.
 // Otherwise, New returns an error.
 func (ll *locLoader) New(path string) (ifc.Loader, error) {
-	repoSpec, err := git.NewRepoSpecFromURL(path)
-	if err == nil && repoSpec.Ref == "" {
-		return nil, errors.Errorf("localize remote root '%s' missing ref query string parameter", path)
-	}
-
 	ldr, err := ll.Loader.New(path)
+	// timeout indicates path is a root, not a file
+	if utils.IsErrTimeout(err) {
+		if !hasRef(path) {
+			return nil, errors.Errorf("%w: '%s'", ErrNoRef, path)
+		}
+		return nil, err
+	}
+	// otherwise, invalid root; upper layer should try file
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, "invalid root reference")
+		return nil, errors.Errorf("%w: %s", ErrInvalidRoot, err.Error())
 	}
 
-	var isRemote bool
-	if _, isRemote = ldr.Repo(); !isRemote {
-		if ll.local && !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.Scope) {
-			return nil, errors.Errorf("root '%s' outside localize scope '%s'", ldr.Root(), ll.args.Scope)
+	_, isRemote := ldr.Repo()
+	if isRemote {
+		if !hasRef(path) {
+			return nil, errors.Errorf("%w: '%s'", ErrNoRef, path)
 		}
-		if ll.local && filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.NewDir) {
-			return nil, errors.Errorf(
-				"root '%s' references into localize destination '%s'", ldr.Root(), ll.args.NewDir)
+	} else if ll.local {
+		if !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.Scope) {
+			return nil, errors.Errorf("invalid reference '%s': root at '%s' outside localize scope '%s'",
+				path, ldr.Root(), ll.args.Scope)
+		}
+		if filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.NewDir) {
+			return nil, errors.Errorf("invalid reference '%s': root at '%s' references into localize destination '%s'",
+				path, ldr.Root(), ll.args.NewDir)
 		}
 	}
 
