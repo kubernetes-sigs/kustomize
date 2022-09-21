@@ -21,6 +21,12 @@ import (
 // with a unique name that isn't created until clone time.
 const notCloned = filesys.ConfirmedDir("/notCloned")
 
+func Schemes() []string {
+	return []string{
+		"ssh://", "https://", "http://",
+	}
+}
+
 // RepoSpec specifies a git repository and a branch and path therein.
 type RepoSpec struct {
 	// Raw, original spec, used to look for cycles.
@@ -240,6 +246,7 @@ func parseHostSpec(n string) (string, string) {
 	}
 
 	// If host is a http(s) or ssh URL, grab the domain part.
+	// TODO: replace with Schemes
 	for _, p := range []string{
 		"ssh://", "https://", "http://"} {
 		if strings.HasSuffix(host, p) {

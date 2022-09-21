@@ -16,21 +16,6 @@ import (
 
 const dstPrefix = "localized"
 
-func makeMemoryFs(t *testing.T) filesys.FileSystem {
-	t.Helper()
-	req := require.New(t)
-
-	fSys := filesys.MakeFsInMemory()
-	req.NoError(fSys.MkdirAll("/a/b"))
-	req.NoError(fSys.WriteFile("/a/kustomization.yaml", []byte("/a")))
-
-	dirChain := "/alpha/beta/gamma/delta"
-	req.NoError(fSys.MkdirAll(dirChain))
-	req.NoError(fSys.WriteFile(dirChain+"/kustomization.yaml", []byte(dirChain)))
-	req.NoError(fSys.Mkdir("/alpha/beta/c"))
-	return fSys
-}
-
 func checkNewLocLoader(req *require.Assertions, ldr ifc.Loader, args *lclzr.LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
 	checkLoader(req, ldr, target)
 	checkLocArgs(req, args, target, scope, newDir, fSys)
@@ -66,9 +51,9 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	req.Equal(fSysCopy, fSys)
 
 	// easy load directly in root
-	content, err := ldr.Load("kustomization.yaml")
+	content, err := ldr.Load("pod.yaml")
 	req.NoError(err)
-	req.Equal([]byte("/a"), content)
+	req.Equal([]byte("pod configuration"), content)
 
 	// typical sibling root reference
 	sibLdr, err := ldr.New("../alpha")
@@ -109,18 +94,18 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 			checkNewLocLoader(req, ldr, &args, "/", "/", "/"+dstPrefix, fSys)
 
 			// file in root, but nested
-			content, err := ldr.Load("a/kustomization.yaml")
+			content, err := ldr.Load("a/pod.yaml")
 			req.NoError(err)
-			req.Equal([]byte("/a"), content)
+			req.Equal([]byte("pod configuration"), content)
 
 			childLdr, err := ldr.New("a")
 			req.NoError(err)
 			checkLoader(req, childLdr, "/a")
 
 			// messy, uncleaned path
-			content, err = childLdr.Load("./../a/kustomization.yaml")
+			content, err = childLdr.Load("./../a/pod.yaml")
 			req.NoError(err)
-			req.Equal([]byte("/a"), content)
+			req.Equal([]byte("pod configuration"), content)
 		})
 	}
 }
@@ -141,9 +126,9 @@ func TestNewMultiple(t *testing.T) {
 	checkLoader(req, descLdr, "/alpha/beta/gamma/delta")
 
 	// upwards traversal
-	higherLdr, err := descLdr.New("../../c")
+	higherLdr, err := descLdr.New("../../say")
 	req.NoError(err)
-	checkLoader(req, higherLdr, "/alpha/beta/c")
+	checkLoader(req, higherLdr, "/alpha/beta/say")
 }
 
 func makeWdFs(t *testing.T) map[string]filesys.FileSystem {
@@ -217,7 +202,7 @@ func TestNewLocLoaderFails(t *testing.T) {
 			"/newDir",
 		},
 		"file target": {
-			"/a/kustomization.yaml",
+			"/a/pod.yaml",
 			"/",
 			"/newDir",
 		},
@@ -306,11 +291,11 @@ func TestLoadFails(t *testing.T) {
 	checkNewLocLoader(req, ldr, &args, "/a", "/a", "/a/newDir", fSys)
 
 	cases := map[string]string{
-		"absolute path":     "/a/kustomization.yaml",
+		"absolute path":     "/a/pod.yaml",
 		"directory":         "b",
 		"non-existent file": "kubectl.yaml",
-		"file outside root": "../alpha/beta/gamma/delta/kustomization.yaml",
-		"inside dst":        "newDir/kustomization.yaml",
+		"file outside root": "../alpha/beta/gamma/delta/deployment.yaml",
+		"inside dst":        "newDir/pod.yaml",
 	}
 	for name, file := range cases {
 		file := file
@@ -321,7 +306,7 @@ func TestLoadFails(t *testing.T) {
 			ldr, _, err := lclzr.NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 			req.NoError(err)
 
-			req.NoError(fSys.WriteFile("/a/newDir/kustomization.yaml", []byte("/a/newDir")))
+			req.NoError(fSys.WriteFile("/a/newDir/pod.yaml", []byte("pod configuration")))
 
 			_, err = ldr.Load(file)
 			req.Error(err)

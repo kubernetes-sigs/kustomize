@@ -4,7 +4,6 @@
 package localizer
 
 import (
-	"log"
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -98,17 +97,14 @@ func (ll *locLoader) Load(path string) ([]byte, error) {
 		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path '%s' is absolute", path)
 	}
 	if !loader.HasRemoteFileScheme(path) && ll.local {
-		abs := filepath.Join(ll.Root(), path)
-		dir, f, err := ll.fSys.CleanedAbs(abs)
-		if err != nil {
-			log.Fatalf(errors.WrapPrefixf(err, "cannot clean validated file path '%s'", abs).Error())
-		}
+		cleanPath := cleanFilePath(ll.fSys, filesys.ConfirmedDir(ll.Root()), path)
+		cleanAbs := filepath.Join(ll.Root(), cleanPath)
+		dir := filesys.ConfirmedDir(filepath.Dir(cleanAbs))
 		// target cannot reference newDir, as this load would've failed prior to localize;
 		// not a problem if remote because then reference could only be in newDir if repo copy,
 		// which will be cleaned, is inside newDir
 		if dir.HasPrefix(ll.args.NewDir) {
-			return nil, errors.Errorf("invalid reference '%s': file at '%s' references into localize destination '%s'",
-				path, dir.Join(f), ll.args.NewDir)
+			return nil, errors.Errorf("file '%s' at '%s' enters localize destination '%s'", path, cleanAbs, ll.args.NewDir)
 		}
 	}
 	return content, nil
@@ -123,7 +119,7 @@ func (ll *locLoader) New(path string) (ifc.Loader, error) {
 		if !hasRef(path) {
 			return nil, errors.Errorf("%w: '%s'", ErrNoRef, path)
 		}
-		return nil, err
+		return nil, errors.Wrap(err)
 	}
 	// otherwise, invalid root; upper layer should try file
 	if err != nil {
@@ -137,12 +133,10 @@ func (ll *locLoader) New(path string) (ifc.Loader, error) {
 		}
 	} else if ll.local {
 		if !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.Scope) {
-			return nil, errors.Errorf("invalid reference '%s': root at '%s' outside localize scope '%s'",
-				path, ldr.Root(), ll.args.Scope)
+			return nil, errors.Errorf("root '%s' at '%s' outside localize scope '%s'", path, ldr.Root(), ll.args.Scope)
 		}
 		if filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.NewDir) {
-			return nil, errors.Errorf("invalid reference '%s': root at '%s' references into localize destination '%s'",
-				path, ldr.Root(), ll.args.NewDir)
+			return nil, errors.Errorf("root '%s' at '%s' enters localize destination '%s'", path, ldr.Root(), ll.args.NewDir)
 		}
 	}
 
