@@ -903,7 +903,7 @@ func TestFileOps(t *testing.T) {
 	defer f.Close()
 
 	for {
-		buf := make([]byte, rand.Intn(10)) // nolint:gosec
+		buf := make([]byte, rand.Intn(10)) //nolint:gosec
 		n, err := f.Read(buf)
 		if err != nil && err != io.EOF {
 			t.Fatalf("unexpected error: %v", err)

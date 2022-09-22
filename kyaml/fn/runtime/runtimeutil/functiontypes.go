@@ -204,7 +204,7 @@ func (s *StorageMount) String() string {
 func GetFunctionSpec(n *yaml.RNode) (*FunctionSpec, error) {
 	meta, err := n.GetMeta()
 	if err != nil {
-		return nil, nil
+		return nil, fmt.Errorf("failed to get ResourceMeta: %w", err)
 	}
 
 	fn, err := getFunctionSpecFromAnnotation(n, meta)
@@ -237,7 +237,10 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) (*Func
 		}
 	}
 	n, err := n.Pipe(yaml.Lookup("metadata", "configFn"))
-	if err != nil || yaml.IsMissingOrNull(n) {
+	if err != nil {
+		return nil, fmt.Errorf("failed to LookUp configFn: %w", err)
+	}
+	if yaml.IsMissingOrNull(n) {
 		return nil, nil
 	}
 	s, err := n.String()
