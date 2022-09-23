@@ -18,6 +18,7 @@ type TransformerConfig struct {
 	NameSuffix        types.FsSlice `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
 	NameSpace         types.FsSlice `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	CommonLabels      types.FsSlice `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
+	TemplateLabels    types.FsSlice `json:"templateLabels,omitempty" yaml:"templateLabels,omitempty"`
 	CommonAnnotations types.FsSlice `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 	NameReference     nbrSlice      `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
 	VarReference      types.FsSlice `json:"varReference,omitempty" yaml:"varReference,omitempty"`
@@ -60,6 +61,7 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.NamePrefix)
 	sort.Sort(t.NameSpace)
 	sort.Sort(t.CommonLabels)
+	sort.Sort(t.TemplateLabels)
 	sort.Sort(t.CommonAnnotations)
 	sort.Sort(t.NameReference)
 	sort.Sort(t.VarReference)
@@ -124,6 +126,10 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 		return nil, err
 	}
 	merged.CommonLabels, err = t.CommonLabels.MergeAll(input.CommonLabels)
+	if err != nil {
+		return nil, err
+	}
+	merged.TemplateLabels, err = t.TemplateLabels.MergeAll(input.TemplateLabels)
 	if err != nil {
 		return nil, err
 	}
