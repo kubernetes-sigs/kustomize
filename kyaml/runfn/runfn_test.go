@@ -287,6 +287,21 @@ metadata:
 				{
 					explicitFunction: true,
 					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    foo: bar
+`,
+				},
+			},
+		},
+		{
+			name: "invalid input object",
+			in: []f{
+				{
+					explicitFunction: true,
+					value: `
 foo: bar
 `,
 				},
