@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/frameworktestutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/parser"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -490,7 +491,9 @@ another`),
 			wantErr: `failed to parse rendered patch template into a resource:
 001 aString
 002 another
-: wrong Node Kind for  expected: MappingNode was ScalarNode: value: {aString another}`,
+: wrong node kind: expected MappingNode but got ScalarNode: node contents:
+aString another
+`,
 		},
 		{
 			name: "ResourcePatchTemplate is invalid template",
@@ -514,7 +517,9 @@ another`),
 			wantErr: `failed to parse rendered patch template into a resource:
 001 aString
 002 another
-: wrong Node Kind for  expected: MappingNode was ScalarNode: value: {aString another}`,
+: wrong node kind: expected MappingNode but got ScalarNode: node contents:
+aString another
+`,
 		},
 		{
 			name: "ContainerPatchTemplate is invalid template",
@@ -537,7 +542,9 @@ another`),
 			wantErr: `failed to parse rendered template into a resource:
 001 aString
 002 another
-: wrong Node Kind for  expected: MappingNode was ScalarNode: value: {aString another}`,
+: wrong node kind: expected MappingNode but got ScalarNode: node contents:
+aString another
+`,
 		},
 		{
 			name: "ResourceTemplate is invalid template",
@@ -700,6 +707,16 @@ func (e errorMergeTest) Validate() error {
 	return nil
 }
 
+func (a schemaProviderOnlyTest) Schema() (*spec.Schema, error) {
+	schema, err := framework.SchemaFromFunctionDefinition(resid.NewGvk("example.com", "v1alpha1", "JavaSpringBoot"), javaSpringBootDefinition)
+	return schema, errors.WrapPrefixf(err, "parsing JavaSpringBoot schema")
+}
+
+type schemaProviderOnlyTest struct {
+	Metadata Metadata                   `yaml:"metadata" json:"metadata"`
+	Spec     v1alpha1JavaSpringBootSpec `yaml:"spec" json:"spec"`
+}
+
 func TestLoadFunctionConfig(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -753,6 +770,19 @@ spec:
   replicas: 11
 `),
 			api: &errorMergeTest{},
+			wantErrMsgs: []string{
+				`validation failure list:
+spec.replicas in body should be less than or equal to 9`,
+			},
+		}, {
+			name: "schema provider only",
+			src: yaml.MustParse(`
+apiVersion: example.com/v1alpha1
+kind: JavaSpringBoot
+spec:
+  replicas: 11
+`),
+			api: &schemaProviderOnlyTest{},
 			wantErrMsgs: []string{
 				`validation failure list:
 spec.replicas in body should be less than or equal to 9`,
@@ -813,6 +843,7 @@ test: true
 				require.NoError(t, err)
 				require.Equal(t, tt.want, tt.api)
 			} else {
+				require.Error(t, err)
 				for _, msg := range tt.wantErrMsgs {
 					require.Contains(t, err.Error(), msg)
 				}

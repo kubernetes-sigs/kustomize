@@ -4,7 +4,6 @@
 package settersutil
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,28 +82,18 @@ spec:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			srcDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			srcDir := t.TempDir()
+			destDir := t.TempDir()
 
-			destDir, err := ioutil.TempDir("", "")
+			err := os.WriteFile(filepath.Join(srcDir, "Krmfile"), []byte(test.srcOpenAPIFile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-
-			defer os.RemoveAll(srcDir)
-			defer os.RemoveAll(destDir)
-
-			err = ioutil.WriteFile(filepath.Join(srcDir, "Krmfile"), []byte(test.srcOpenAPIFile), 0600)
+			err = os.WriteFile(filepath.Join(destDir, "destFile.yaml"), []byte(test.destFile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			err = ioutil.WriteFile(filepath.Join(destDir, "destFile.yaml"), []byte(test.destFile), 0600)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			err = ioutil.WriteFile(filepath.Join(destDir, "Krmfile"), []byte(test.destOpenAPI), 0600)
+			err = os.WriteFile(filepath.Join(destDir, "Krmfile"), []byte(test.destOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -114,7 +103,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualDestFile1, err := ioutil.ReadFile(filepath.Join(destDir, "destFile.yaml"))
+			actualDestFile1, err := os.ReadFile(filepath.Join(destDir, "destFile.yaml"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -122,7 +111,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualDestOpenAPIFile1, err := ioutil.ReadFile(filepath.Join(destDir, "Krmfile"))
+			actualDestOpenAPIFile1, err := os.ReadFile(filepath.Join(destDir, "Krmfile"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

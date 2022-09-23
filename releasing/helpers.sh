@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 
 function createBranch {
   branch=$1
@@ -21,7 +24,7 @@ function refreshMaster {
 }
 
 function testKustomizeRepo {
-  make prow-presubmit-check >& /tmp/k.txt
+  make IS_LOCAL=true verify-kustomize-repo >& /tmp/k.txt
   local code=$?
   if [ $code -ne 0 ]; then
     echo "**** FAILURE ******************"

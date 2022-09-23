@@ -5,7 +5,6 @@ package copyutil_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,20 +15,18 @@ import (
 
 // TestDiff_identical verifies identical directories return an empty set
 func TestDiff_identical(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -41,12 +38,10 @@ func TestDiff_identical(t *testing.T) {
 // TestDiff_additionalSourceFiles verifies if there are additional files
 // in the source, the diff will contain them
 func TestDiff_additionalSourceFiles(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(s, "a2"), 0700)
@@ -63,12 +58,10 @@ func TestDiff_additionalSourceFiles(t *testing.T) {
 // TestDiff_additionalDestFiles verifies if there are additional files
 // in the dest, the diff will contain them
 func TestDiff_additionalDestFiles(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
@@ -86,20 +79,18 @@ func TestDiff_additionalDestFiles(t *testing.T) {
 // differ between the source and destination, the diff
 // contains the differing files
 func TestDiff_srcDestContentsDiffer(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`b`), 0600)
 	assert.NoError(t, err)
 
@@ -113,20 +104,18 @@ func TestDiff_srcDestContentsDiffer(t *testing.T) {
 // TestDiff_srcDestContentsDifferInDirs verifies if identical files
 // exist in different directories, they are included in the diff
 func TestDiff_srcDestContentsDifferInDirs(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "b1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "b1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -143,36 +132,34 @@ func TestDiff_srcDestContentsDifferInDirs(t *testing.T) {
 // TestDiff_skipGitSrc verifies that .git directories in the source
 // are not looked at
 func TestDiff_skipGitSrc(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// files that just happen to start with .git should not be ignored.
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -184,27 +171,25 @@ func TestDiff_skipGitSrc(t *testing.T) {
 // TestDiff_skipGitDest verifies that .git directories in the destination
 // are not looked at
 func TestDiff_skipGitDest(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	d, err := ioutil.TempDir("", "copyutildest")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	d := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(d, ".git"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(d, ".git", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
@@ -215,20 +200,18 @@ func TestDiff_skipGitDest(t *testing.T) {
 
 // TestSyncFile tests if destination file is replaced by source file content
 func TestSyncFile(t *testing.T) {
-	d1, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
-	d2, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
+	d1 := t.TempDir()
+	d2 := t.TempDir()
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
-	err = ioutil.WriteFile(f1Name, []byte("abc"), 0600)
+	err := os.WriteFile(f1Name, []byte("abc"), 0600)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(f2Name, []byte("def"), 0644)
+	err = os.WriteFile(f2Name, []byte("def"), 0644)
 	expectedFileInfo, _ := os.Stat(f2Name)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
-	actual, err := ioutil.ReadFile(f2Name)
+	actual, err := os.ReadFile(f2Name)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
@@ -237,17 +220,15 @@ func TestSyncFile(t *testing.T) {
 
 // TestSyncFileNoDestFile tests if new file is created at destination with source file content
 func TestSyncFileNoDestFile(t *testing.T) {
-	d1, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
-	d2, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
+	d1 := t.TempDir()
+	d2 := t.TempDir()
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
-	err = ioutil.WriteFile(f1Name, []byte("abc"), 0644)
+	err := os.WriteFile(f1Name, []byte("abc"), 0644)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
-	actual, err := ioutil.ReadFile(f2Name)
+	actual, err := os.ReadFile(f2Name)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
@@ -257,17 +238,15 @@ func TestSyncFileNoDestFile(t *testing.T) {
 
 // TestSyncFileNoSrcFile tests if destination file is deleted if source file doesn't exist
 func TestSyncFileNoSrcFile(t *testing.T) {
-	d1, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
-	d2, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
+	d1 := t.TempDir()
+	d2 := t.TempDir()
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
-	err = ioutil.WriteFile(f2Name, []byte("abc"), 0644)
+	err := os.WriteFile(f2Name, []byte("abc"), 0644)
 	assert.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
 	assert.NoError(t, err)
-	_, err = ioutil.ReadFile(f2Name)
+	_, err = os.ReadFile(f2Name)
 	assert.Error(t, err)
 }
 
@@ -294,41 +273,38 @@ metadata:
 }
 
 func TestCopyDir(t *testing.T) {
-	s, err := ioutil.TempDir("", "copyutilsrc")
-	assert.NoError(t, err)
-	v, err := ioutil.TempDir("", "copyutilvalidate")
-	assert.NoError(t, err)
+	s := t.TempDir()
+	v := t.TempDir()
 
-	err = os.Mkdir(filepath.Join(s, "a1"), 0700)
+	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// files that just happen to start with .git should not be ignored.
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(v, "a1"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(v, "a1", "f.yaml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(v, ".gitlab-ci.yml"), []byte(`a`), 0600)
 	assert.NoError(t, err)
 
-	d, err := ioutil.TempDir("", "copyutildestination")
-	assert.NoError(t, err)
+	d := t.TempDir()
 
 	err = CopyDir(s, d)
 	assert.NoError(t, err)

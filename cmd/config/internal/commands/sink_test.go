@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,11 +14,7 @@ import (
 )
 
 func TestSinkCommand(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	r := commands.GetSinkRunner("")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
@@ -77,7 +72,7 @@ items:
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.yaml"))
+	actual, err := os.ReadFile(filepath.Join(d, "f1.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -104,7 +99,7 @@ spec:
 		t.FailNow()
 	}
 
-	actual, err = ioutil.ReadFile(filepath.Join(d, "f2.yaml"))
+	actual, err = os.ReadFile(filepath.Join(d, "f2.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -137,11 +132,7 @@ spec:
 }
 
 func TestSinkCommandJSON(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	r := commands.GetSinkRunner("")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
@@ -156,7 +147,7 @@ items:
 		t.FailNow()
 	}
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.json"))
+	actual, err := os.ReadFile(filepath.Join(d, "f1.json"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -182,12 +173,6 @@ items:
 }
 
 func TestSinkCommand_Stdout(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
-
 	// fmt the files
 	out := &bytes.Buffer{}
 	r := commands.GetSinkRunner("")
@@ -296,12 +281,6 @@ spec:
 }
 
 func TestSinkCommandJSON_Stdout(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
-
 	// fmt the files
 	out := &bytes.Buffer{}
 	r := commands.GetSinkRunner("")

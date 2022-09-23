@@ -1,14 +1,18 @@
 # remote targets
 
+## remote directories
+
 `kustomize build` can be run on a URL. Resources can also reference other
 kustomization directories via URLs too.
 
 The URL format is an HTTPS or SSH `git clone` URL with an optional directory and
-some query string parameters. The directory is specified by appending a `//`
-after the repo URL. The following query string parameters can also be specified:
+some query string parameters. Kustomize does not currently support ports in the
+URL. The directory is specified by appending a `//` after the repo URL. The
+following query string parameters can also be specified:
 
- * `ref` - a `git fetch`-able ref, typically a branch, tag, or full commit hash
+ * `ref` - a [`git fetch`-able ref](https://git-scm.com/docs/git-fetch), typically a branch, tag, or full commit hash
    (short hashes are not supported)
+ * `version` - same as `ref`. If `ref` is provided, this is ignored.
  * `timeout` (default `27s`) - a number in seconds, or a go duration. specifies
    the timeout for fetching the resource
  * `submodules` (default `true`) - a boolean specifying whether to clone
@@ -22,7 +26,19 @@ will essentially clone the git repo via HTTPS, checkout `v1.0.6` and run
 SSH clones are also supported either with `git@github.com:owner/repo` or
 `ssh://git@github.com/owner/repo` URLs.
 
-`file:///` clones are not supported.
+`file:///` clones are supported. For
+example, `file:///path/to/repo//someSubdir?ref=v1.0.6`, references the absolute
+path to the repo at `/path/to/repo`, and a kustomization directory
+at `someSubdir` within that repo. `//` to delimits the root of the repo.
+Kustomize will clone the repo to a temporary directory and do a clean checkout
+of the `ref`. This behavior is differs from a direct path reference
+like `/path/to/repo/someSubdir`, in which case Kustomize will not use Git at
+all, and process the files at the path directly.
+
+## remote files
+Resources can reference remote files via their raw GitHub urls, such
+as `https://raw.githubusercontent.com/kubernetes-sigs/kustomize/8ea501347443c7760217f2c1817c5c60934cf6a5/examples/helloWorld/deployment.yaml`
+.
 
 # Examples
 

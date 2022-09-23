@@ -541,6 +541,9 @@ func (l PathGetter) getFilter(part, nextPart string, fieldPath *[]string) (Filte
 	case part == "-":
 		// part is a hyphen
 		return GetElementByIndex(-1), nil
+	case part == "*":
+		// PathGetter is not support for wildcard matching
+		return nil, errors.Errorf("wildcard is not supported in PathGetter")
 	case IsListIndex(part):
 		// part is surrounded by brackets
 		return l.elemFilter(part)
@@ -791,12 +794,22 @@ func ErrorIfAnyInvalidAndNonNull(kind yaml.Kind, rn ...*RNode) error {
 	return nil
 }
 
-var nodeTypeIndex = map[yaml.Kind]string{
-	yaml.SequenceNode: "SequenceNode",
-	yaml.MappingNode:  "MappingNode",
-	yaml.ScalarNode:   "ScalarNode",
-	yaml.DocumentNode: "DocumentNode",
-	yaml.AliasNode:    "AliasNode",
+type InvalidNodeKindError struct {
+	expectedKind yaml.Kind
+	node         *RNode
+}
+
+func (e *InvalidNodeKindError) Error() string {
+	msg := fmt.Sprintf("wrong node kind: expected %s but got %s",
+		nodeKindString(e.expectedKind), nodeKindString(e.node.YNode().Kind))
+	if content, err := e.node.String(); err == nil {
+		msg += fmt.Sprintf(": node contents:\n%s", content)
+	}
+	return msg
+}
+
+func (e *InvalidNodeKindError) ActualNodeKind() Kind {
+	return e.node.YNode().Kind
 }
 
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
@@ -806,11 +819,7 @@ func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 	}
 
 	if rn.YNode().Kind != kind {
-		s, _ := rn.String()
-		return errors.Errorf(
-			"wrong Node Kind for %s expected: %v was %v: value: {%s}",
-			strings.Join(rn.FieldPath(), "."),
-			nodeTypeIndex[kind], nodeTypeIndex[rn.YNode().Kind], strings.TrimSpace(s))
+		return &InvalidNodeKindError{node: rn, expectedKind: kind}
 	}
 
 	if kind == yaml.MappingNode {

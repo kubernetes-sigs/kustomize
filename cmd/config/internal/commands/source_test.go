@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,13 +14,9 @@ import (
 )
 
 func TestSourceCommand(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -44,7 +39,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -144,13 +139,9 @@ items:
 }
 
 func TestSourceCommandJSON(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.json"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.json"), []byte(`
 {
   "kind": "Deployment",
   "metadata": {
@@ -170,7 +161,7 @@ func TestSourceCommandJSON(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.json"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.json"), []byte(`
 {
   "apiVersion": "v1",
   "kind": "Abstraction",
@@ -224,12 +215,6 @@ items:
 }
 
 func TestSourceCommand_Stdin(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
-
 	in := bytes.NewBufferString(`
 kind: Deployment
 metadata:
@@ -290,12 +275,6 @@ items:
 }
 
 func TestSourceCommandJSON_Stdin(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-source-test")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
-
 	in := bytes.NewBufferString(`
 {
   "kind": "Deployment",

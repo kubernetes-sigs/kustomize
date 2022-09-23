@@ -1402,31 +1402,31 @@ spec:
 `))
 	assert.NoError(t, err)
 	r.AppendRefBy(resid.FromString("knd1.ver1.gr1/name1.ns1"))
-	assert.Equal(t, r.RNode.MustString(), `apiVersion: v1
+	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:
   name: clown
   annotations:
-    internal.config.kubernetes.io/refBy: knd1.ver1.gr1/name1.ns1
+    internal.config.kubernetes.io/refBy: 'knd1.ver1.gr1/name1.ns1'
 spec:
   numReplicas: 1
-`)
+`, r.RNode.MustString())
 	assert.Equal(t, r.GetRefBy(), []resid.ResId{resid.FromString("knd1.ver1.gr1/name1.ns1")})
 
 	r.AppendRefBy(resid.FromString("knd2.ver2.gr2/name2.ns2"))
-	assert.Equal(t, r.RNode.MustString(), `apiVersion: v1
+	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:
   name: clown
   annotations:
-    internal.config.kubernetes.io/refBy: knd1.ver1.gr1/name1.ns1,knd2.ver2.gr2/name2.ns2
+    internal.config.kubernetes.io/refBy: 'knd1.ver1.gr1/name1.ns1,knd2.ver2.gr2/name2.ns2'
 spec:
   numReplicas: 1
-`)
-	assert.Equal(t, r.GetRefBy(), []resid.ResId{
+`, r.RNode.MustString())
+	assert.Equal(t, []resid.ResId{
 		resid.FromString("knd1.ver1.gr1/name1.ns1"),
 		resid.FromString("knd2.ver2.gr2/name2.ns2"),
-	})
+	}, r.GetRefBy())
 }
 
 func TestOrigin(t *testing.T) {

@@ -21,7 +21,7 @@ func newCmdSetNameSuffix(fSys filesys.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "namesuffix",
-		Short: "Sets the value of the nameSuffix field in the kustomization file.",
+		Short: "Sets the value of the nameSuffix field in the kustomization file",
 		Example: `
 The command
   set namesuffix -- -acme

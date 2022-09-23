@@ -9,13 +9,14 @@ package filesys
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 const content = `
@@ -31,6 +32,12 @@ var topCases = []pathCase{
 		what:   "dotdot",
 		arg:    ParentDir,
 		errStr: "illegal name '..' in file creation",
+	},
+	{
+		what: "colon",
+		arg:  "a:b",
+		name: "a:b",
+		path: "a:b",
 	},
 	{
 		what:   "empty",
@@ -133,7 +140,7 @@ func runBasicOperations(
 		if fi.Name() != c.name {
 			t.Fatalf("%s; expected name '%s', got '%s'", c.what, c.name, fi.Name())
 		}
-		buff, err := ioutil.ReadAll(f)
+		buff, err := io.ReadAll(f)
 		if err != nil {
 			t.Fatalf("%s; unexpected error: %v", c.what, err)
 		}
@@ -838,6 +845,32 @@ func TestCleanedAbs(t *testing.T) {
 			t.Fatalf("%s; expected name=%s, got '%s'", item.what, item.name, name)
 		}
 	}
+}
+
+func TestConfirmDirMemRoot(t *testing.T) {
+	fSys := MakeFsInMemory()
+	actual, err := ConfirmDir(fSys, Separator)
+	require.NoError(t, err)
+	require.Equal(t, Separator, actual.String())
+}
+
+func TestConfirmDirRelativeNode(t *testing.T) {
+	req := require.New(t)
+	fSysEmpty := MakeEmptyDirInMemory()
+
+	fSysRoot, err := fSysEmpty.AddDir("a")
+	req.NoError(err)
+	fSysSub, err := fSysRoot.AddDir("b")
+	req.NoError(err)
+	err = fSysSub.Mkdir("c")
+	req.NoError(err)
+
+	expected := filepath.Join("a", "b", "c")
+	req.Truef(fSysEmpty.Exists(expected), existMsg, expected)
+
+	actual, err := ConfirmDir(fSysSub, "c")
+	req.NoError(err)
+	req.Equal(expected, actual.String())
 }
 
 func TestFileOps(t *testing.T) {

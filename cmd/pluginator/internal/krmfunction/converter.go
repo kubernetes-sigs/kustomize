@@ -1,10 +1,13 @@
+// Copyright 2022 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package krmfunction
 
 import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,7 +85,7 @@ func (c *Converter) Convert() error {
 }
 
 func (c *Converter) getDockerfile() string {
-	return `FROM golang:1.13-stretch
+	return `FROM golang:1.18-stretch
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY . .
@@ -127,7 +130,7 @@ func (c *Converter) readEmbeddedFile(name string) (string, error) {
 		return "", err
 	}
 	defer r.Close()
-	contents, err := ioutil.ReadAll(r)
+	contents, err := io.ReadAll(r)
 	if err != nil {
 		return "", err
 	}
@@ -136,7 +139,7 @@ func (c *Converter) readEmbeddedFile(name string) (string, error) {
 }
 
 func (c *Converter) readDiskFile(path string) (string, error) {
-	f, err := ioutil.ReadFile(path)
+	f, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
@@ -156,7 +159,7 @@ func (c *Converter) mkDstDir() error {
 func (c *Converter) write(m map[string]string) error {
 	for k, v := range m {
 		p := filepath.Join(c.outputDir, k)
-		err := ioutil.WriteFile(p, []byte(v), 0644)
+		err := os.WriteFile(p, []byte(v), 0644)
 		if err != nil {
 			return err
 		}

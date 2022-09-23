@@ -3,7 +3,7 @@ English | [简体中文](zh/README.md)
 # Examples
 
 To run these examples, your `$PATH` must contain `kustomize`.
-See the [installation instructions](../docs/INSTALL.md).
+See the [installation instructions](https://kubectl.docs.kubernetes.io/installation/kustomize/).
 
 These examples are [tested](../hack/testExamplesAgainstKustomize.sh)
 to work with the latest _released_ version of kustomize.

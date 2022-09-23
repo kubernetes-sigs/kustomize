@@ -7,7 +7,6 @@ package copyutil
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,11 +40,11 @@ func CopyDir(src string, dst string) error {
 		}
 
 		// copy file by reading and writing it
-		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+		b, err := os.ReadFile(filepath.Join(src, copyTo))
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		err = os.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
 		if err != nil {
 			return err
 		}
@@ -112,11 +111,11 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 		}
 
 		// compare upstreamFiles
-		b1, err := ioutil.ReadFile(filepath.Join(destDir, f))
+		b1, err := os.ReadFile(filepath.Join(destDir, f))
 		if err != nil {
 			return diff, err
 		}
-		b2, err := ioutil.ReadFile(filepath.Join(sourceDir, f))
+		b2, err := os.ReadFile(filepath.Join(sourceDir, f))
 		if err != nil {
 			return diff, err
 		}
@@ -162,7 +161,7 @@ func SyncFile(src, dst string) error {
 		return nil
 	}
 
-	input, err := ioutil.ReadFile(src)
+	input, err := os.ReadFile(src)
 	if err != nil {
 		return err
 	}
@@ -178,7 +177,7 @@ func SyncFile(src, dst string) error {
 		filePerm = dstFileInfo.Mode().Perm()
 	}
 
-	err = ioutil.WriteFile(dst, input, filePerm)
+	err = os.WriteFile(dst, input, filePerm)
 	if err != nil {
 		return err
 	}

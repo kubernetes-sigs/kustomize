@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2022 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 
 # If no argument is given -> Downloads the most recently released
 # kustomize binary to your current working directory.
@@ -133,7 +136,7 @@ RELEASE_URL=$(echo "${releases}" |\
   sort -V | tail -n 1)
 
 if [ ! -n "$RELEASE_URL" ]; then
-  echo "Version $version does not exist."
+  echo "Version $version does not exist or is not available for ${opsys}/${arch}."
   exit 1
 fi
 

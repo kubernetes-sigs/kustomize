@@ -4,7 +4,6 @@
 package commands_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,13 +15,9 @@ import (
 
 // TestMerge3Command verifies the merge3 correctly applies the diff between 2 sets of resources into another
 func TestMerge3Command(t *testing.T) {
-	datadir, err := ioutil.TempDir("", "test-data")
-	defer os.RemoveAll(datadir)
-	if !assert.NoError(t, err) {
-		return
-	}
+	datadir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(datadir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err := os.WriteFile(filepath.Join(datadir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -61,13 +56,9 @@ spec:
 		return
 	}
 
-	expectedDir, err := ioutil.TempDir("", "test-data-expected")
-	defer os.RemoveAll(expectedDir)
-	if !assert.NoError(t, err) {
-		return
-	}
+	expectedDir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(expectedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = os.WriteFile(filepath.Join(expectedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -111,13 +102,9 @@ spec:
 		return
 	}
 
-	updatedDir, err := ioutil.TempDir("", "test-data-updated")
-	defer os.RemoveAll(updatedDir)
-	if !assert.NoError(t, err) {
-		return
-	}
+	updatedDir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(updatedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = os.WriteFile(filepath.Join(updatedDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
@@ -158,13 +145,9 @@ spec:
 		return
 	}
 
-	destDir, err := ioutil.TempDir("", "test-data-dest")
-	defer os.RemoveAll(destDir)
-	if !assert.NoError(t, err) {
-		return
-	}
+	destDir := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(destDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
+	err = os.WriteFile(filepath.Join(destDir, "java-deployment.resource.yaml"), []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app

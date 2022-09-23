@@ -6,7 +6,6 @@ package commands_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,17 +15,23 @@ import (
 )
 
 func TestTreeCommandDefaultCurDir_files(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-tree-test")
-	defer os.RemoveAll(d)
+	d := t.TempDir()
+	cwd, err := os.Getwd()
 	if !assert.NoError(t, err) {
-		return
+		t.FailNow()
 	}
-	err = os.Chdir(d)
-	if !assert.NoError(t, err) {
+
+	if !assert.NoError(t, os.Chdir(d)) {
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	t.Cleanup(func() {
+		if !assert.NoError(t, os.Chdir(cwd)) {
+			t.FailNow()
+		}
+	})
+
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -61,7 +66,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -95,13 +100,9 @@ spec:
 
 // TestCmd_files verifies fmt reads the files and filters them
 func TestTreeCommand_files(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-tree-test")
-	defer os.RemoveAll(d)
-	if !assert.NoError(t, err) {
-		return
-	}
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -136,7 +137,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -169,13 +170,9 @@ spec:
 }
 
 func TestTreeCommand_Kustomization(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-tree-test")
-	defer os.RemoveAll(d)
-	if !assert.NoError(t, err) {
-		return
-	}
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err := os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -189,7 +186,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Kustomization"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+	err = os.WriteFile(filepath.Join(d, "Kustomization"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - f2.yaml
@@ -215,18 +212,14 @@ resources:
 }
 
 func TestTreeCommand_subpkgs(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-tree-test")
-	defer os.RemoveAll(d)
+	d := t.TempDir()
+
+	err := os.MkdirAll(filepath.Join(d, "subpkg"), 0700)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	err = os.MkdirAll(filepath.Join(d, "subpkg"), 0700)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -261,7 +254,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "subpkg", "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "subpkg", "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -275,7 +268,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Krmfile"), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = os.WriteFile(filepath.Join(d, "Krmfile"), []byte(`apiVersion: kpt.dev/v1alpha1
 kind: Krmfile
 metadata:
   name: mainpkg
@@ -285,7 +278,7 @@ openAPI:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "subpkg", "Krmfile"), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = os.WriteFile(filepath.Join(d, "subpkg", "Krmfile"), []byte(`apiVersion: kpt.dev/v1alpha1
 kind: Krmfile
 metadata:
   name: subpkg
@@ -427,13 +420,9 @@ spec:
 }
 
 func TestTreeCommand_includeReconcilers(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize-tree-test")
-	defer os.RemoveAll(d)
-	if !assert.NoError(t, err) {
-		return
-	}
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -456,7 +445,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: gcr.io/example/reconciler:v1
 kind: Abstraction
 metadata:
@@ -499,13 +488,9 @@ spec:
 }
 
 func TestTreeCommand_excludeNonReconcilers(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustmoize-tree-test")
-	defer os.RemoveAll(d)
-	if !assert.NoError(t, err) {
-		return
-	}
+	d := t.TempDir()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -528,7 +513,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:

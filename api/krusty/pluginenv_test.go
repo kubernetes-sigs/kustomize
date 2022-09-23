@@ -4,7 +4,6 @@
 package krusty_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,8 +26,13 @@ func TestPluginEnvironment(t *testing.T) {
 		kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsInMemory()),
 		filesys.Separator)
 
-	dir := makeTmpDir(t)
-	defer os.RemoveAll(dir)
+	// On MacOS, $TMPDIR is by default set to /var/folders/…, with /var a
+	// symlink to /private/var , which does not match our expectations
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+
 	confirmBehavior(
 		kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsOnDisk()),
 		dir)
@@ -64,17 +68,4 @@ kind: GeneratedEnv
 metadata:
   name: hello
 `)
-}
-
-func makeTmpDir(t *testing.T) string {
-	t.Helper()
-	base, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("err %v", err)
-	}
-	dir, err := ioutil.TempDir(base, "kustomize-tmp-test-")
-	if err != nil {
-		t.Fatalf("err %v", err)
-	}
-	return dir
 }

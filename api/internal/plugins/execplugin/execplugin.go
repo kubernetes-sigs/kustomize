@@ -6,7 +6,6 @@ package execplugin
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
@@ -150,7 +149,7 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 // passes the full temp file path as the first arg to a process
 // running the plugin binary.  Process output is returned.
 func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
-	f, err := ioutil.TempFile("", tmpConfigFilePrefix)
+	f, err := os.CreateTemp("", tmpConfigFilePrefix)
 	if err != nil {
 		return nil, errors.Wrap(
 			err, "creating tmp plugin config file")

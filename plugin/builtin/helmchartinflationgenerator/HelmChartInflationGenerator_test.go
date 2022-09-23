@@ -1,8 +1,11 @@
+// Copyright 2022 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package main_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -470,7 +473,7 @@ func TestHelmChartInflationGeneratorWithIncludeCRDs(t *testing.T) {
 
 	// we store this data outside of the _test.go file as its sort of huge
 	// and has backticks, which makes string literals wonky
-	testData, err := ioutil.ReadFile("include_crds_testdata.txt")
+	testData, err := os.ReadFile("include_crds_testdata.txt")
 	if err != nil {
 		t.Error(fmt.Errorf("unable to read test data for includeCRDs: %w", err))
 	}

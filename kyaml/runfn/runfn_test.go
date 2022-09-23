@@ -6,7 +6,6 @@ package runfn
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -314,6 +313,24 @@ metadata:
 				},
 			},
 			out: []string{"gcr.io/example.com/image:v1.0.0 deferFailure: true"},
+		},
+		{
+			name: "parse_failure",
+			in: []f{
+				{
+					path: filepath.Join("foo", "bar.yaml"),
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      containeeer:
+        image: gcr.io/example.com/image:v1.0.0
+`,
+				},
+			},
+			error: "config.kubernetes.io/function unmarshal error: error unmarshaling JSON: while decoding JSON: json: unknown field \"containeeer\"",
 		},
 
 		{name: "disable containers",
@@ -648,7 +665,6 @@ metadata:
 		t.Run(tt.name, func(t *testing.T) {
 			// setup the test directory
 			d := setupTest(t)
-			defer os.RemoveAll(d)
 
 			// write the functions to files
 			var fnPaths []string
@@ -663,11 +679,7 @@ metadata:
 					// if out of package, write to a separate temp directory
 					if f.newFnPath || fnPath == "" {
 						// create a new fn directory
-						fnPath, err = ioutil.TempDir("", "kustomize-test")
-						if !assert.NoError(t, err) {
-							t.FailNow()
-						}
-						defer os.RemoveAll(fnPath)
+						fnPath = t.TempDir()
 						fnPaths = append(fnPaths, fnPath)
 					}
 					dir = fnPath
@@ -684,7 +696,7 @@ metadata:
 					if !assert.NoError(t, err) {
 						t.FailNow()
 					}
-					err := ioutil.WriteFile(filepath.Join(dir, f.path), []byte(f.value), 0600)
+					err := os.WriteFile(filepath.Join(dir, f.path), []byte(f.value), 0600)
 					if !assert.NoError(t, err) {
 						t.FailNow()
 					}
@@ -813,7 +825,10 @@ metadata:
 
 			var images []string
 			for _, n := range packageBuff.Nodes {
-				spec := runtimeutil.GetFunctionSpec(n)
+				spec, err := runtimeutil.GetFunctionSpec(n)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
 				images = append(images, spec.Container.Image)
 			}
 
@@ -916,10 +931,9 @@ metadata:
 
 func TestCmd_Execute(t *testing.T) {
 	dir := setupTest(t)
-	defer os.RemoveAll(dir)
 
 	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
@@ -928,7 +942,7 @@ func TestCmd_Execute(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -952,10 +966,9 @@ func (f *TestFilter) GetExit() error {
 
 func TestCmd_Execute_deferFailure(t *testing.T) {
 	dir := setupTest(t)
-	defer os.RemoveAll(dir)
 
 	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter1.yaml"), []byte(`apiVersion: v1
 kind: ValueReplacer
 metadata:
@@ -971,7 +984,7 @@ replace: StatefulSet
 	}
 
 	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter2.yaml"), []byte(`apiVersion: v1
 kind: ValueReplacer
 metadata:
@@ -1014,7 +1027,7 @@ replace: StatefulSet
 	if !assert.EqualError(t, err, "message: 1\n---\nmessage: 2") {
 		t.FailNow()
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -1026,15 +1039,14 @@ replace: StatefulSet
 // TestCmd_Execute_setOutput tests the execution of a filter reading and writing to a dir
 func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	dir := setupTest(t)
-	defer os.RemoveAll(dir)
 
 	// write a test filter to a separate directory
-	tmpF, err := ioutil.TempFile("", "filter*.yaml")
+	tmpF, err := os.CreateTemp("", "filter*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
 	os.RemoveAll(tmpF.Name())
-	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerYAMLData), 0600)) {
+	if !assert.NoError(t, os.WriteFile(tmpF.Name(), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
 
@@ -1051,7 +1063,7 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		return
@@ -1062,10 +1074,9 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 // TestCmd_Execute_setOutput tests the execution of a filter using an io.Writer as output
 func TestCmd_Execute_setOutput(t *testing.T) {
 	dir := setupTest(t)
-	defer os.RemoveAll(dir)
 
 	// write a test filter
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
@@ -1082,7 +1093,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		return
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		return
@@ -1094,8 +1105,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 // TestCmd_Execute_setInput tests the execution of a filter using an io.Reader as input
 func TestCmd_Execute_setInput(t *testing.T) {
 	dir := setupTest(t)
-	defer os.RemoveAll(dir)
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
@@ -1109,13 +1119,9 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		t.FailNow()
 	}
 
-	outDir, err := ioutil.TempDir("", "kustomize-test")
-	defer os.RemoveAll(outDir)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	outDir := t.TempDir()
 
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
@@ -1131,7 +1137,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		return
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(outDir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -1142,10 +1148,9 @@ func TestCmd_Execute_setInput(t *testing.T) {
 // TestCmd_Execute_enableLogSteps tests the execution of a filter with LogSteps enabled.
 func TestCmd_Execute_enableLogSteps(t *testing.T) {
 	dir := setupTest(t)
-	defer os.RemoveAll(dir)
 
 	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
@@ -1160,7 +1165,7 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -1240,10 +1245,7 @@ metadata:
 // setupTest initializes a temp test directory containing test data
 func setupTest(t *testing.T) string {
 	t.Helper()
-	dir, err := ioutil.TempDir("", "kustomize-kyaml-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	dir := t.TempDir()
 
 	_, filename, _, ok := runtime.Caller(0)
 	if !assert.True(t, ok) {
@@ -1256,9 +1258,23 @@ func setupTest(t *testing.T) string {
 	if !assert.NoError(t, copyutil.CopyDir(ds, dir)) {
 		t.FailNow()
 	}
+
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
 	if !assert.NoError(t, os.Chdir(filepath.Dir(dir))) {
 		t.FailNow()
 	}
+
+	// Change back the current working directory when the test finishes
+	t.Cleanup(func() {
+		if !assert.NoError(t, os.Chdir(cwd)) {
+			t.FailNow()
+		}
+	})
+
 	return dir
 }
 

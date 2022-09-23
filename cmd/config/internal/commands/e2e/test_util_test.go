@@ -5,7 +5,6 @@ package e2e
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,7 +42,7 @@ func runTests(t *testing.T, tests []test) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			dataDir, err := ioutil.TempDir("", "kustomize-test-data-")
+			dataDir, err := os.MkdirTemp("", "kustomize-test-data-")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -52,7 +51,7 @@ func runTests(t *testing.T, tests []test) {
 
 			// write the input
 			for path, data := range tt.files {
-				err := ioutil.WriteFile(path, []byte(data), 0600)
+				err := os.WriteFile(path, []byte(data), 0600)
 				testutil.AssertNoError(t, err)
 			}
 
@@ -79,7 +78,7 @@ func runTests(t *testing.T, tests []test) {
 			}
 
 			for path, data := range tt.expectedFiles {
-				b, err := ioutil.ReadFile(path)
+				b, err := os.ReadFile(path)
 				testutil.AssertNoError(t, err, stdErr.String())
 
 				if !assert.Equal(t, strings.TrimSpace(data), strings.TrimSpace(string(b)), stdErr.String()) {

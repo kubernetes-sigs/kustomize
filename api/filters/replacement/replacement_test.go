@@ -1634,6 +1634,45 @@ spec:
         - name: deployment-name
           value: sample-deploy`,
 		},
+		"index contains '*' character and create options": {
+			input: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: other-env
+          value: YYYYY
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: sample-deploy
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.*.env.[name=deployment-name].value
+    options:
+      create: true
+`,
+			expectedErr: "cannot support create option in a multi-value target",
+		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
 kind: ConfigMap
@@ -2315,6 +2354,66 @@ spec:
     name: myapp-container
     ports:
     - containerPort: 80
+`,
+		},
+		"replace an existing mapping value": {
+			input: `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: old
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - image: busybox
+      name: myapp-container
+  restartPolicy: new
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: my-pod
+    fieldPath: spec
+  targets:
+  - select:
+      name: hello
+      kind: Job
+    fieldPaths:
+     - spec.template.spec
+    options:
+      create: true
+`,
+			expected: `apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+      restartPolicy: new
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+  restartPolicy: new
 `,
 		},
 	}

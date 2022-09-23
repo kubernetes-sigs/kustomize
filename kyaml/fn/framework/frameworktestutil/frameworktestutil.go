@@ -6,7 +6,6 @@ package frameworktestutil
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -216,7 +215,7 @@ func (rc *ProcessorResultsChecker) runInCurrentDir(t *testing.T) (string, string
 	require.NoError(t, err)
 
 	actualOutput := bytes.NewBuffer([]byte{})
-	rlBytes, err := ioutil.ReadFile(rc.InputFilename)
+	rlBytes, err := os.ReadFile(rc.InputFilename)
 	require.NoError(t, err)
 
 	rw := kio.ByteReadWriter{
@@ -338,10 +337,10 @@ func (rc *checkerCore) shouldUpdateFixtures() bool {
 func (rc *checkerCore) updateFixtures(t *testing.T, actualOutput string, actualError string) {
 	t.Helper()
 	if actualError != "" {
-		require.NoError(t, ioutil.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600))
+		require.NoError(t, os.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600))
 	}
 	if len(actualOutput) > 0 {
-		require.NoError(t, ioutil.WriteFile(rc.expectedOutputFilename, []byte(actualOutput), 0600))
+		require.NoError(t, os.WriteFile(rc.expectedOutputFilename, []byte(actualOutput), 0600))
 	}
 	t.Skip("Updated fixtures for test case")
 }
@@ -367,7 +366,7 @@ func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
 		}
 		if err == nil {
 			// only read the file if it exists
-			b, err := ioutil.ReadFile(rc.expectedOutputFilename)
+			b, err := os.ReadFile(rc.expectedOutputFilename)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -381,7 +380,7 @@ func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
 		}
 		if err == nil {
 			// only read the file if it exists
-			b, err := ioutil.ReadFile(rc.expectedErrorFilename)
+			b, err := os.ReadFile(rc.expectedErrorFilename)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

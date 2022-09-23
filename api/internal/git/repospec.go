@@ -27,7 +27,7 @@ type RepoSpec struct {
 	// TODO(monopole): Drop raw, use processed fields instead.
 	raw string
 
-	// Host, e.g. github.com
+	// Host, e.g. https://github.com/
 	Host string
 
 	// orgRepo name (organization/repoName),
@@ -119,8 +119,12 @@ func parseGitURL(n string) (
 		return
 	}
 	host, n = parseHostSpec(n)
-	gitSuff = gitSuffix
+	isLocal := strings.HasPrefix(host, "file://")
+	if !isLocal {
+		gitSuff = gitSuffix
+	}
 	if strings.Contains(n, gitSuffix) {
+		gitSuff = gitSuffix
 		index := strings.Index(n, gitSuffix)
 		orgRepo = n[0:index]
 		n = n[index+len(gitSuffix):]
@@ -128,6 +132,19 @@ func parseGitURL(n string) (
 			n = n[1:]
 		}
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		return
+	}
+
+	if isLocal {
+		if idx := strings.Index(n, "//"); idx > 0 {
+			orgRepo = n[:idx]
+			n = n[idx+2:]
+			path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+			return
+		}
+		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		orgRepo = path
+		path = ""
 		return
 	}
 
@@ -200,7 +217,7 @@ func parseHostSpec(n string) (string, string) {
 	// Start accumulating the host part.
 	for _, p := range []string{
 		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://",
+		"git::", "gh:", "ssh://", "https://", "http://", "file://",
 		"git@", "github.com:", "github.com/"} {
 		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
 			n = n[len(p):]

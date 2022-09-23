@@ -2,15 +2,27 @@
 title: "Overview"
 linkTitle: "Overview"
 weight: 1
+type: docs
 description: >
-  Introduction to Kustomize.
+  Introduction to Kustomize
 ---
+
+{{< alert color="success" title="TL;DR" >}}
+- Kustomize helps customizing config files in a template free way.
+- Kustomize provides a number of handy methods like generators to make customization easier.
+- Kustomize uses patches to introduce environment specific changes on an already existing standard config file without disturbing it.
+{{< /alert >}}
 
 Kustomize provides a solution for customizing Kubernetes resource configuration free from templates and DSLs.
 
-Kustomize lets you customize raw, template-free YAML files for multiple purposes, leaving the original YAML untouched and usable as is.
+Kustomize lets you customize raw, template-free YAML
+files for multiple purposes, leaving the original YAML
+untouched and usable as is.
 
-Kustomize targets kubernetes; it understands and can patch kubernetes style API objects. It’s like make, in that what it does is declared in a file, and it’s like sed, in that it emits edited text.
+Kustomize targets kubernetes; it understands and can
+patch `kubernetes style` API objects.  It's like
+[make](https://www.gnu.org/software/make), in that what it does is declared in a file,
+and it's like [sed](https://www.gnu.org/software/sed), in that it emits edited text.
 
 ## Usage
 
@@ -103,11 +115,4 @@ The YAML can be directly `applied` to a cluster:
  ```sh
  kustomize build ~/someApp/overlays/production | kubectl apply -f -
  ```
-
-## Where should I go next?
-
-Give your users next steps from the Overview. For example:
-
-* [Getting Started](/docs/getting-started/): Get started with $project
-* [Examples](/docs/examples/): Check out some example code!
 

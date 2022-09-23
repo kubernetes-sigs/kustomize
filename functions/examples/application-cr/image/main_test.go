@@ -8,7 +8,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -219,7 +218,7 @@ func Test(t *testing.T) {
 		outC <- buf.String()
 	}()
 
-	tmpfile, err := ioutil.TempFile("", "test-input")
+	tmpfile, err := os.CreateTemp("", "test-input")
 	if err != nil {
 		t.Fatal(err)
 	}

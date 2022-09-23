@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+
 jobs:
 
   lint:
@@ -14,9 +17,9 @@ jobs:
     steps:
 
     - name: Set up Go 1.x
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
-        go-version: ^1.16
+        go-version: ^1.18
       id: go
 
     - name: Check out code into the Go module directory
@@ -25,9 +28,10 @@ jobs:
         fetch-depth: 0
 
     - name: Lint
-      run: ./hack/kyaml-pre-commit.sh
-      env:
-        KUSTOMIZE_DOCKER_E2E: false # don't need to do e2e tests for linting
+      run: make lint
+
+    - name: Verify boilerplate
+      run: make check-license
 
   test-linux:
     name: Test Linux
@@ -35,25 +39,16 @@ jobs:
     steps:
 
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.16
+          go-version: ^1.18
         id: go
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Test kyaml
-        run: go test -cover ./...
-        working-directory: ./kyaml
-
-      - name: Test api
-        run: go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-        working-directory: ./api
-
-      - name: Test cmd/config
-        run: go test -cover ./...
-        working-directory: ./cmd/config
+      - name: Test all modules
+        run: make test-unit-non-plugin
         env:
           KUSTOMIZE_DOCKER_E2E: true
 
@@ -63,25 +58,16 @@ jobs:
     steps:
 
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.16
+          go-version: ^1.18
         id: go
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Test kyaml
-        run: go test -cover ./...
-        working-directory: ./kyaml
-
-      - name: Test api
-        run: go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-        working-directory: ./api
-
-      - name: Test cmd/config
-        run: go test -cover ./...
-        working-directory: ./cmd/config
+      - name: Test all modules
+        run: make test-unit-non-plugin
         env:
           KUSTOMIZE_DOCKER_E2E: false # docker not installed on mac
 
@@ -91,9 +77,9 @@ jobs:
     steps:
 
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.16
+          go-version: ^1.18
         id: go
 
       - name: Check out code into the Go module directory
@@ -103,13 +89,14 @@ jobs:
         run: go test -cover ./...
         working-directory: ./kyaml
 
-      # TODO: uncomment once Windows tests are passing.
-      # - name: Test api
-      #   run: go test -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-      #   working-directory: ./api
-
       - name: Test cmd/config
         run: go test -cover ./...
         working-directory: ./cmd/config
         env:
           KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
+
+      # TODO (#4001): replace specific modules above with this once Windows tests are passing.
+      #- name: Test all modules
+      #  run: make test-unit-non-plugin
+      #  env:
+      #    KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet

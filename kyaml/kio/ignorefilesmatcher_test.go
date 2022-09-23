@@ -4,7 +4,7 @@
 package kio
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -41,16 +41,15 @@ func TestIgnoreFilesMatcher_readIgnoreFile(t *testing.T) {
 	fsMakers := map[string]func(bool) (string, filesys.FileSystem){
 		// onDisk creates a temp directory and returns a nil FileSystem, testing
 		// the normal conditions under which ignoreFileMatcher is used.
-		"onDisk": func(writeIgnoreFile bool) (string, filesys.FileSystem) { //nolint:unparam
-			dir, err := ioutil.TempDir("", "kyaml-test")
-			require.NoError(t, err)
+		"onDisk": func(writeIgnoreFile bool) (string, filesys.FileSystem) {
+			dir := t.TempDir()
 
 			if writeIgnoreFile {
 				ignoreFilePath := filepath.Join(dir, ignoreFileName)
-				require.NoError(t, ioutil.WriteFile(ignoreFilePath, []byte(ignoreFileBody), 0600))
+				require.NoError(t, os.WriteFile(ignoreFilePath, []byte(ignoreFileBody), 0600))
 			}
 			testFilePath := filepath.Join(dir, testFileName)
-			require.NoError(t, ioutil.WriteFile(testFilePath, []byte{}, 0600))
+			require.NoError(t, os.WriteFile(testFilePath, []byte{}, 0600))
 			return dir, nil
 		},
 

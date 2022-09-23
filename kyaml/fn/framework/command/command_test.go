@@ -6,7 +6,6 @@ package command_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,11 +23,7 @@ import (
 )
 
 func TestCommand_dockerfile(t *testing.T) {
-	d, err := ioutil.TempDir("", "kustomize")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
+	d := t.TempDir()
 
 	// create a function
 	cmd := command.Build(&framework.SimpleProcessor{}, command.StandaloneEnabled, false)
@@ -41,12 +36,12 @@ func TestCommand_dockerfile(t *testing.T) {
 		t.FailNow()
 	}
 
-	b, err := ioutil.ReadFile(filepath.Join(d, "Dockerfile"))
+	b, err := os.ReadFile(filepath.Join(d, "Dockerfile"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	expected := `FROM golang:1.16-alpine as builder
+	expected := `FROM golang:1.18-alpine as builder
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod go.sum ./

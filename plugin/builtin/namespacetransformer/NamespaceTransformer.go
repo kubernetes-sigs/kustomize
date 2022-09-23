@@ -10,13 +10,16 @@ import (
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/yaml"
 )
 
 // Change or set the namespace of non-cluster level resources.
 type plugin struct {
-	types.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	FieldSpecs       []types.FieldSpec `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	types.ObjectMeta       `json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	FieldSpecs             []types.FieldSpec                `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	UnsetOnly              bool                             `json:"unsetOnly" yaml:"unsetOnly"`
+	SetRoleBindingSubjects namespace.RoleBindingSubjectMode `json:"setRoleBindingSubjects" yaml:"setRoleBindingSubjects"`
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -26,7 +29,21 @@ func (p *plugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
-	return yaml.Unmarshal(c, p)
+	if err := yaml.Unmarshal(c, p); err != nil {
+		return errors.WrapPrefixf(err, "unmarshalling NamespaceTransformer config")
+	}
+	switch p.SetRoleBindingSubjects {
+	case namespace.AllServiceAccountSubjects, namespace.DefaultSubjectsOnly, namespace.NoSubjects:
+		// valid
+	case namespace.SubjectModeUnspecified:
+		p.SetRoleBindingSubjects = namespace.DefaultSubjectsOnly
+	default:
+		return errors.Errorf("invalid value %q for setRoleBindingSubjects: "+
+			"must be one of %q, %q or %q", p.SetRoleBindingSubjects,
+			namespace.DefaultSubjectsOnly, namespace.NoSubjects, namespace.AllServiceAccountSubjects)
+	}
+
+	return nil
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
@@ -40,8 +57,10 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
-			Namespace: p.Namespace,
-			FsSlice:   p.FieldSpecs,
+			Namespace:              p.Namespace,
+			FsSlice:                p.FieldSpecs,
+			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
+			UnsetOnly:              p.UnsetOnly,
 		}); err != nil {
 			return err
 		}

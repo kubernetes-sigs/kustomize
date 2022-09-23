@@ -663,7 +663,7 @@ func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
 - foo
 - bar
 `,
-			readerErr: "wrong Node Kind for  expected: MappingNode was SequenceNode",
+			readerErr: "wrong node kind: expected MappingNode but got SequenceNode",
 		},
 		{
 			name:            "error round_trip bare seq node",
@@ -686,7 +686,7 @@ func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
       served: true
       storage: false
 `,
-			readerErr: "wrong Node Kind for  expected: MappingNode was SequenceNode",
+			readerErr: "wrong node kind: expected MappingNode but got SequenceNode",
 		},
 		{
 			name:            "round_trip bare seq node json",
@@ -698,7 +698,7 @@ func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
 			name:            "error round_trip invalid yaml node",
 			wrapBareSeqNode: false,
 			input:           "I am not valid",
-			readerErr:       "wrong Node Kind for  expected: MappingNode was ScalarNode",
+			readerErr:       "wrong node kind: expected MappingNode but got ScalarNode",
 		},
 	}
 

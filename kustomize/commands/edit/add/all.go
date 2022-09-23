@@ -17,7 +17,7 @@ func NewCmdAdd(
 	rf *resource.Factory) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
-		Short: "Adds an item to the kustomization file.",
+		Short: "Adds an item to the kustomization file",
 		Long:  "",
 		Example: `
 	# Adds a secret to the kustomization file

@@ -3,6 +3,8 @@
 #
 # Makefile for kustomize CLI and API.
 
+LATEST_V4_RELEASE=v4.5.6
+
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
@@ -11,8 +13,6 @@ ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
-MODULES := '"cmd/config" "api/" "kustomize/" "kyaml/"'
-LATEST_V4_RELEASE=v4.5.4
 
 # Provide defaults for REPO_OWNER and REPO_NAME if not present.
 # Typically these values would be provided by Prow.
@@ -24,48 +24,35 @@ ifndef REPO_NAME
 REPO_NAME := "kustomize"
 endif
 
-.PHONY: all
-all: install-tools verify-kustomize
 
-.PHONY: verify-kustomize
-verify-kustomize: \
-	lint-kustomize \
-	test-unit-kustomize-all \
-	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-v4-release
+# --- Plugins ---
+include Makefile-plugins.mk
 
-# The following target referenced by a file in
-# https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
-.PHONY: prow-presubmit-check
-prow-presubmit-check: \
-	install-tools \
-	lint-kustomize \
-	test-unit-kustomize-all \
-	test-unit-cmd-all \
-	test-go-mod \
-	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-v4-release
 
-.PHONY: verify-kustomize-e2e
-verify-kustomize-e2e: test-examples-e2e-kustomize
+# --- Tool management ---
+include Makefile-tools.mk
 
-# Other builds in this repo might want a different linter version.
-# Without one Makefile to rule them all, the different makes
-# cannot assume that golanci-lint is at the version they want.
-# This installs what kustomize wants to use.
-$(MYGOBIN)/golangci-lint-kustomize:
-	rm -f $(CURDIR)/hack/golangci-lint
-	GOBIN=$(CURDIR)/hack go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
-	mv $(CURDIR)/hack/golangci-lint $(MYGOBIN)/golangci-lint-kustomize
+.PHONY: install-tools
+install-tools: \
+	install-local-tools \
+	install-out-of-tree-tools
 
-$(MYGOBIN)/mdrip:
-	go install github.com/monopole/mdrip@v1.0.2
+.PHONY: uninstall-tools
+uninstall-tools: \
+	uninstall-local-tools \
+	uninstall-out-of-tree-tools
 
-$(MYGOBIN)/stringer:
-	go install golang.org/x/tools/cmd/stringer@latest
+.PHONY: install-local-tools
+install-local-tools: \
+	$(MYGOBIN)/gorepomod \
+	$(MYGOBIN)/k8scopy \
+	$(MYGOBIN)/pluginator
 
-$(MYGOBIN)/goimports:
-	go install golang.org/x/tools/cmd/goimports@latest
+.PHONY: uninstall-local-tools
+uninstall-local-tools:
+	rm -f $(MYGOBIN)/gorepomod
+	rm -f $(MYGOBIN)/k8scopy
+	rm -f $(MYGOBIN)/pluginator
 
 # Build from local source.
 $(MYGOBIN)/gorepomod:
@@ -82,176 +69,93 @@ $(MYGOBIN)/pluginator:
 	cd cmd/pluginator; \
 	go install .
 
+
+# --- Build targets ---
+
 # Build from local source.
 $(MYGOBIN)/kustomize: build-kustomize-api
 	cd kustomize; \
 	go install .
 
-.PHONY: install-tools
-install-tools: \
-	$(MYGOBIN)/goimports \
-	$(MYGOBIN)/golangci-lint-kustomize \
-	$(MYGOBIN)/gorepomod \
-	$(MYGOBIN)/helmV3 \
-	$(MYGOBIN)/k8scopy \
-	$(MYGOBIN)/mdrip \
-	$(MYGOBIN)/pluginator \
-	$(MYGOBIN)/stringer
-
-### Begin kustomize plugin rules.
-#
-# The rules to deal with builtin plugins are a bit
-# complicated because
-#
-# - Every builtin plugin is a Go plugin -
-#   meaning it gets its own module directory
-#   (outside of the api module) with Go
-#   code in a 'main' package per Go plugin rules.
-# - kustomize locates plugins using the
-#   'apiVersion' and 'kind' fields from the
-#   plugin config file.
-# - k8s wants CamelCase in 'kind' fields.
-# - The module name (the last name in the path)
-#   must be the lowercased 'kind' of the
-#   plugin because Go and related tools
-#   demand lowercase in import paths, but
-#   allow CamelCase in file names.
-# - the generated code must live in the api
-#   module (it's linked into the api).
-
-# Where all generated builtin plugin code should go.
-pGen=api/internal/builtins
-# Where the builtin Go plugin modules live.
-pSrc=plugin/builtin
-
-_builtinplugins = \
-	AnnotationsTransformer.go \
-	ConfigMapGenerator.go \
-	IAMPolicyGenerator.go \
-	HashTransformer.go \
-	ImageTagTransformer.go \
-	LabelTransformer.go \
-	LegacyOrderTransformer.go \
-	NamespaceTransformer.go \
-	PatchJson6902Transformer.go \
-	PatchStrategicMergeTransformer.go \
-	PatchTransformer.go \
-	PrefixTransformer.go \
-	SuffixTransformer.go \
-	ReplacementTransformer.go \
-	ReplicaCountTransformer.go \
-	SecretGenerator.go \
-	ValueAddTransformer.go \
-	HelmChartInflationGenerator.go
-
-# Maintaining this explicit list of generated files, and
-# adding it as a dependency to a few targets, to assure
-# they get recreated if deleted.  The rules below on how
-# to make them don't, by themselves, assure they will be
-# recreated if deleted.
-builtinplugins = $(patsubst %,$(pGen)/%,$(_builtinplugins))
-
-# These rules are verbose, but assure that if a source file
-# is modified, the corresponding generated file, and only
-# that file, will be recreated.
-$(pGen)/AnnotationsTransformer.go: $(pSrc)/annotationstransformer/AnnotationsTransformer.go
-$(pGen)/ConfigMapGenerator.go: $(pSrc)/configmapgenerator/ConfigMapGenerator.go
-$(pGen)/GkeSaGenerator.go: $(pSrc)/gkesagenerator/GkeSaGenerator.go
-$(pGen)/HashTransformer.go: $(pSrc)/hashtransformer/HashTransformer.go
-$(pGen)/ImageTagTransformer.go: $(pSrc)/imagetagtransformer/ImageTagTransformer.go
-$(pGen)/LabelTransformer.go: $(pSrc)/labeltransformer/LabelTransformer.go
-$(pGen)/LegacyOrderTransformer.go: $(pSrc)/legacyordertransformer/LegacyOrderTransformer.go
-$(pGen)/NamespaceTransformer.go: $(pSrc)/namespacetransformer/NamespaceTransformer.go
-$(pGen)/PatchJson6902Transformer.go: $(pSrc)/patchjson6902transformer/PatchJson6902Transformer.go
-$(pGen)/PatchStrategicMergeTransformer.go: $(pSrc)/patchstrategicmergetransformer/PatchStrategicMergeTransformer.go
-$(pGen)/PatchTransformer.go: $(pSrc)/patchtransformer/PatchTransformer.go
-$(pGen)/PrefixTransformer.go: $(pSrc)/prefixtransformer/PrefixTransformer.go
-$(pGen)/SuffixTransformer.go: $(pSrc)/suffixtransformer/SuffixTransformer.go
-$(pGen)/ReplacementTransformer.go: $(pSrc)/replacementtransformer/ReplacementTransformer.go
-$(pGen)/ReplicaCountTransformer.go: $(pSrc)/replicacounttransformer/ReplicaCountTransformer.go
-$(pGen)/SecretGenerator.go: $(pSrc)/secretgenerator/SecretGenerator.go
-$(pGen)/ValueAddTransformer.go: $(pSrc)/valueaddtransformer/ValueAddTransformer.go
-$(pGen)/HelmChartInflationGenerator.go: $(pSrc)/helmchartinflationgenerator/HelmChartInflationGenerator.go
-
-# The (verbose but portable) Makefile way to convert to lowercase.
-toLowerCase = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
-
-$(pGen)/%.go: $(MYGOBIN)/pluginator
-	@echo "generating $*"
-	( \
-		set -e; \
-		cd $(pSrc)/$(call toLowerCase,$*); \
-		go generate .; \
-		cd ../../../$(pGen); \
-		$(MYGOBIN)/goimports -w $*.go \
-	)
-
-# Target is for debugging.
-.PHONY: generate-kustomize-builtin-plugins
-generate-kustomize-builtin-plugins: $(builtinplugins)
-
-.PHONY: build-kustomize-external-go-plugin
-build-kustomize-external-go-plugin:
-	./hack/buildExternalGoPlugins.sh ./plugin
-
-.PHONY: clean-kustomize-external-go-plugin
-clean-kustomize-external-go-plugin:
-	./hack/buildExternalGoPlugins.sh ./plugin clean
-
-### End kustomize plugin rules.
-
-.PHONY: lint-kustomize
-lint-kustomize: $(MYGOBIN)/golangci-lint-kustomize $(builtinplugins)
-	cd api; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../.golangci.yml \
-	  --path-prefix api \
-	  run ./...
-	cd kustomize; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../.golangci.yml \
-	  --path-prefix kustomize \
-	  run ./...
-	cd cmd/pluginator; $(MYGOBIN)/golangci-lint-kustomize \
-	  -c ../../.golangci.yml \
-	  --path-prefix cmd/pluginator \
-	  run ./...
+kustomize: $(MYGOBIN)/kustomize
 
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
-build-kustomize-api: $(builtinplugins)
-	cd api; go build ./...
+build-kustomize-api: $(MYGOBIN)/goimports $(builtinplugins)
+	cd api; $(MAKE) build
 
 .PHONY: generate-kustomize-api
-generate-kustomize-api: $(MYGOBIN)/k8scopy
-	cd api; go generate ./...
+generate-kustomize-api:
+	cd api; $(MAKE) generate
 
-.PHONY: test-unit-kustomize-api
-test-unit-kustomize-api: build-kustomize-api
-	cd api; go test ./...  -ldflags "-X sigs.k8s.io/kustomize/api/provenance.version=v444.333.222"
-	cd api/krusty; OPENAPI_TEST=true go test -run TestCustomOpenAPIFieldFromComponentWithOverlays
+
+# --- Verification targets ---
+.PHONY: verify-kustomize-repo
+verify-kustomize-repo: \
+	install-tools \
+	lint \
+	check-license \
+	test-unit-all \
+	build-non-plugin-all \
+	test-go-mod \
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-v4-release
+
+# The following target referenced by a file in
+# https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/kustomize
+.PHONY: prow-presubmit-check
+prow-presubmit-check: \
+	install-tools \
+	test-unit-kustomize-plugins \
+	test-go-mod \
+	build-non-plugin-all \
+	test-examples-kustomize-against-HEAD \
+	test-examples-kustomize-against-v4-release
+
+.PHONY: license
+license: $(MYGOBIN)/addlicense
+	./hack/add-license.sh run
+
+.PHONY: check-license
+check-license: $(MYGOBIN)/addlicense
+	./hack/add-license.sh check
+
+.PHONY: lint
+lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
+	./hack/for-each-module.sh "make lint"
+
+.PHONY: test-unit-all
+test-unit-all: \
+	test-unit-non-plugin \
+	test-unit-kustomize-plugins
+
+# This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
+.PHONY: test-unit-non-plugin
+test-unit-non-plugin:
+	./hack/for-each-module.sh "make test" "./plugin/*" 15
+
+.PHONY: build-non-plugin-all
+build-non-plugin-all:
+	./hack/for-each-module.sh "make build" "./plugin/*" 15
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:
 	./hack/testUnitKustomizePlugins.sh
 
-.PHONY: test-unit-kustomize-cli
-test-unit-kustomize-cli:
-	cd kustomize; go test ./...
-
-.PHONY: test-unit-kustomize-all
-test-unit-kustomize-all: \
-	test-unit-kustomize-api \
-	test-unit-kustomize-cli \
-	test-unit-kustomize-plugins
-
-test-unit-cmd-all:
-	./hack/kyaml-pre-commit.sh
+.PHONY: functions-examples-all
+functions-examples-all:
+	for dir in $(abspath $(wildcard functions/examples/*/.)); do \
+		echo -e "\n---Running make tasks for function $$dir---"; \
+		set -e; \
+		cd $$dir; $(MAKE) all; \
+	done
 
 test-go-mod:
-	./hack/check-go-mod.sh
+	./hack/for-each-module.sh "go list -m -json all > /dev/null && go mod tidy -v"
 
 .PHONY:
-test-examples-e2e-kustomize: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
+verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	( \
 		set -e; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
@@ -268,85 +172,13 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 test-examples-kustomize-against-v4-release: $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh v4@$(LATEST_V4_RELEASE)
 
-# linux only.
-# This is for testing an example plugin that
-# uses kubeval for validation.
-# Don't want to add a hard dependence in go.mod file
-# to github.com/instrumenta/kubeval.
-# Instead, download the binary.
-$(MYGOBIN)/kubeval:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-$(GOOS)-$(GOARCH).tar.gz; \
-		tar xf kubeval-$(GOOS)-$(GOARCH).tar.gz; \
-		mv kubeval $(MYGOBIN); \
-		rm -rf $$d; \
-	)
 
-# linux only.
-# This is for testing an example plugin that uses helm to inflate a chart
-# for subsequent kustomization.
-# Don't want to add a hard dependence in go.mod file to helm.
-# Instead, download the binaries.
-$(MYGOBIN)/helmV2:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v2.13.1-$(GOOS)-$(GOARCH).tar.gz; \
-		wget https://storage.googleapis.com/kubernetes-helm/$$tgzFile; \
-		tar -xvzf $$tgzFile; \
-		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV2; \
-		rm -rf $$d \
-	)
-
-# Helm V3 differs from helm V2; downloading it to provide coverage for the
-# chart inflator plugin under helm v3.
-$(MYGOBIN)/helmV3:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.6.3-$(GOOS)-$(GOARCH).tar.gz; \
-		wget https://get.helm.sh/$$tgzFile; \
-		tar -xvzf $$tgzFile; \
-		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV3; \
-		rm -rf $$d \
-	)
-
-$(MYGOBIN)/kind:
-	( \
-        set -e; \
-        d=$(shell mktemp -d); cd $$d; \
-        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(GOOS)-$(GOARCH); \
-        chmod +x ./kind; \
-        mv ./kind $(MYGOBIN); \
-        rm -rf $$d; \
-	)
-
-# linux only.
-$(MYGOBIN)/gh:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=gh_1.0.0_$(GOOS)_$(GOARCH).tar.gz; \
-		wget https://github.com/cli/cli/releases/download/v1.0.0/$$tgzFile; \
-		tar -xvzf $$tgzFile; \
-		mv gh_1.0.0_$(GOOS)_$(GOARCH)/bin/gh  $(MYGOBIN)/gh; \
-		rm -rf $$d \
-	)
-
+# --- Cleanup targets ---
 .PHONY: clean
-clean: clean-kustomize-external-go-plugin
+clean: clean-kustomize-external-go-plugin uninstall-tools
 	go clean --cache
 	rm -f $(builtinplugins)
-	rm -f $(MYGOBIN)/goimports
-	rm -f $(MYGOBIN)/golangci-lint-kustomize
 	rm -f $(MYGOBIN)/kustomize
-	rm -f $(MYGOBIN)/mdrip
-	rm -f $(MYGOBIN)/stringer
-
-# Handle pluginator manually.
-# rm -f $(MYGOBIN)/pluginator
 
 # Nuke the site from orbit.  It's the only way to be sure.
 .PHONY: nuke

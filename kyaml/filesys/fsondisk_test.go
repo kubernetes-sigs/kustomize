@@ -1,146 +1,166 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !windows
-// +build !windows
-
 package filesys
 
 import (
-	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
+
+const dirMsg = "expected '%s' to be a dir"
 
 func makeTestDir(t *testing.T) (FileSystem, string) {
 	t.Helper()
+	req := require.New(t)
+
 	fSys := MakeFsOnDisk()
-	td, err := ioutil.TempDir("", "kustomize_testing_dir")
-	if err != nil {
-		t.Fatalf("unexpected error %s", err)
-	}
+	td := t.TempDir()
+
 	testDir, err := filepath.EvalSymlinks(td)
-	if err != nil {
-		t.Fatalf("unexpected error %s", err)
-	}
-	if !fSys.Exists(testDir) {
-		t.Fatalf("expected existence")
-	}
-	if !fSys.IsDir(testDir) {
-		t.Fatalf("expected directory")
-	}
+	req.NoError(err)
+	req.Truef(fSys.Exists(testDir), existMsg, testDir)
+	req.Truef(fSys.IsDir(testDir), dirMsg, testDir)
+
 	return fSys, testDir
 }
 
+func cleanWd(t *testing.T) string {
+	t.Helper()
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	cleanedWd, err := filepath.EvalSymlinks(wd)
+	require.NoError(t, err)
+
+	return cleanedWd
+}
+
 func TestCleanedAbs_1(t *testing.T) {
-	fSys, testDir := makeTestDir(t)
-	defer os.RemoveAll(testDir)
+	req := require.New(t)
+	fSys, _ := makeTestDir(t)
 
 	d, f, err := fSys.CleanedAbs("")
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
-	if d.String() != wd {
-		t.Fatalf("unexpected d=%s", d)
-	}
-	if f != "" {
-		t.Fatalf("unexpected f=%s", f)
-	}
+	req.NoError(err)
+
+	wd := cleanWd(t)
+	req.Equal(wd, d.String())
+	req.Empty(f)
 }
 
 func TestCleanedAbs_2(t *testing.T) {
-	fSys, testDir := makeTestDir(t)
-	defer os.RemoveAll(testDir)
+	req := require.New(t)
+	fSys, _ := makeTestDir(t)
 
-	d, f, err := fSys.CleanedAbs("/")
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
-	if d != "/" {
-		t.Fatalf("unexpected d=%s", d)
-	}
-	if f != "" {
-		t.Fatalf("unexpected f=%s", f)
-	}
+	root, err := getOSRoot()
+	req.NoError(err)
+	d, f, err := fSys.CleanedAbs(root)
+	req.NoError(err)
+	req.Equal(root, d.String())
+	req.Empty(f)
 }
 
 func TestCleanedAbs_3(t *testing.T) {
+	req := require.New(t)
 	fSys, testDir := makeTestDir(t)
-	defer os.RemoveAll(testDir)
 
 	err := fSys.WriteFile(
 		filepath.Join(testDir, "foo"), []byte(`foo`))
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
+	req.NoError(err)
 
 	d, f, err := fSys.CleanedAbs(filepath.Join(testDir, "foo"))
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
-	if d.String() != testDir {
-		t.Fatalf("unexpected d=%s", d)
-	}
-	if f != "foo" {
-		t.Fatalf("unexpected f=%s", f)
-	}
+	req.NoError(err)
+	req.Equal(testDir, d.String())
+	req.Equal("foo", f)
 }
 
 func TestCleanedAbs_4(t *testing.T) {
+	req := require.New(t)
 	fSys, testDir := makeTestDir(t)
-	defer os.RemoveAll(testDir)
 
 	err := fSys.MkdirAll(filepath.Join(testDir, "d1", "d2"))
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
+	req.NoError(err)
+
 	err = fSys.WriteFile(
 		filepath.Join(testDir, "d1", "d2", "bar"),
 		[]byte(`bar`))
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
+	req.NoError(err)
 
 	d, f, err := fSys.CleanedAbs(
 		filepath.Join(testDir, "d1", "d2"))
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
-	}
-	if d.String() != filepath.Join(testDir, "d1", "d2") {
-		t.Fatalf("unexpected d=%s", d)
-	}
-	if f != "" {
-		t.Fatalf("unexpected f=%s", f)
-	}
+	req.NoError(err)
+	req.Equal(filepath.Join(testDir, "d1", "d2"), d.String())
+	req.Empty(f)
 
 	d, f, err = fSys.CleanedAbs(
 		filepath.Join(testDir, "d1", "d2", "bar"))
-	if err != nil {
-		t.Fatalf("unexpected err=%v", err)
+	req.NoError(err)
+	req.Equal(filepath.Join(testDir, "d1", "d2"), d.String())
+	req.Equal("bar", f)
+}
+
+func TestConfirmDirDisk(t *testing.T) {
+	req := require.New(t)
+	fSys, testDir := makeTestDir(t)
+	wd := cleanWd(t)
+
+	relDir := "actual_foo_431432"
+	err := fSys.Mkdir(relDir)
+	t.Cleanup(func() {
+		err := fSys.RemoveAll(relDir)
+		req.NoError(err)
+	})
+	req.NoError(err)
+	req.Truef(fSys.Exists(relDir), existMsg, relDir)
+
+	linkDir := filepath.Join(testDir, "pointer")
+	err = os.Symlink(filepath.Join(wd, relDir), linkDir)
+	req.NoError(err)
+
+	root, err := getOSRoot()
+	req.NoError(err)
+	tests := map[string]*struct {
+		path     string
+		expected string
+	}{
+		"root": {
+			root,
+			root,
+		},
+		"non-selfdir relative path": {
+			relDir,
+			filepath.Join(wd, relDir),
+		},
+		"symlink": {
+			linkDir,
+			filepath.Join(wd, relDir),
+		},
 	}
-	if d.String() != filepath.Join(testDir, "d1", "d2") {
-		t.Fatalf("unexpected d=%s", d)
-	}
-	if f != "bar" {
-		t.Fatalf("unexpected f=%s", f)
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			actualPath, err := ConfirmDir(fSys, test.path)
+			require.NoError(t, err)
+			require.Equal(t, test.expected, actualPath.String())
+		})
 	}
 }
 
 func TestReadFilesRealFS(t *testing.T) {
-	fSys, testDir := makeTestDir(t)
-	defer os.RemoveAll(testDir)
+	req := require.New(t)
 
-	dir := path.Join(testDir, "dir")
-	nestedDir := path.Join(dir, "nestedDir")
-	hiddenDir := path.Join(testDir, ".hiddenDir")
+	fSys, testDir := makeTestDir(t)
+
+	dir := filepath.Join(testDir, "dir")
+	nestedDir := filepath.Join(dir, "nestedDir")
+	hiddenDir := filepath.Join(testDir, ".hiddenDir")
 	dirs := []string{
 		testDir,
 		dir,
@@ -158,27 +178,19 @@ func TestReadFilesRealFS(t *testing.T) {
 	}
 
 	err := fSys.MkdirAll(nestedDir)
-	if err != nil {
-		t.Fatalf("Unexpected Error %v\n", err)
-	}
+	req.NoError(err)
+
 	err = fSys.MkdirAll(hiddenDir)
-	if err != nil {
-		t.Fatalf("Unexpected Error %v\n", err)
-	}
+	req.NoError(err)
 
 	// adding all files in every directory that we had defined
 	for _, d := range dirs {
-		if !fSys.IsDir(d) {
-			t.Fatalf("Expected %s to be a dir\n", d)
-		}
+		req.Truef(fSys.IsDir(d), dirMsg, d)
 		for _, f := range files {
-			err = fSys.WriteFile(path.Join(d, f), []byte(f))
-			if err != nil {
-				t.Fatalf("unexpected error %s", err)
-			}
-			if !fSys.Exists(path.Join(d, f)) {
-				t.Fatalf("expected %s", f)
-			}
+			fPath := filepath.Join(d, f)
+			err = fSys.WriteFile(fPath, []byte(f))
+			req.NoError(err)
+			req.Truef(fSys.Exists(fPath), existMsg, fPath)
 		}
 	}
 
@@ -230,15 +242,14 @@ func TestReadFilesRealFS(t *testing.T) {
 			for _, d := range dirs {
 				var expectedPaths []string
 				for _, f := range c.expectedFiles {
-					expectedPaths = append(expectedPaths, path.Join(d, f))
+					expectedPaths = append(expectedPaths, filepath.Join(d, f))
 				}
 				if c.expectedDirs != nil {
 					expectedPaths = append(expectedPaths, c.expectedDirs[d]...)
 				}
-				actualPaths, globErr := fSys.Glob(path.Join(d, c.globPattern))
-				if globErr != nil {
-					t.Fatalf("Unexpected Error : %v\n", globErr)
-				}
+				actualPaths, globErr := fSys.Glob(filepath.Join(d, c.globPattern))
+				require.NoError(t, globErr)
+
 				sort.Strings(actualPaths)
 				sort.Strings(expectedPaths)
 				if !reflect.DeepEqual(actualPaths, expectedPaths) {

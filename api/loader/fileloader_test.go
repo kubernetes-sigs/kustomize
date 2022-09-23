@@ -5,7 +5,7 @@ package loader
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -14,11 +14,46 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
+
+func TestHasRemoteFileScheme(t *testing.T) {
+	cases := map[string]struct {
+		url   string
+		valid bool
+	}{
+		"https file": {
+			"https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/configMap.yaml",
+			true,
+		},
+		"https dir": {
+			"https://github.com/kubernetes-sigs/kustomize//examples/helloWorld/",
+			true,
+		},
+		"no scheme": {
+			"github.com/kubernetes-sigs/kustomize//examples/helloWorld/",
+			false,
+		},
+		"ssh": {
+			"ssh://git@github.com/kubernetes-sigs/kustomize.git",
+			false,
+		},
+		"local": {
+			"pod.yaml",
+			false,
+		},
+	}
+	for name, test := range cases {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, test.valid, HasRemoteFileScheme(test.url))
+		})
+	}
+}
 
 type testData struct {
 	path            string
@@ -57,124 +92,99 @@ func makeLoader() *fileLoader {
 }
 
 func TestLoaderLoad(t *testing.T) {
+	require := require.New(t)
+
 	l1 := makeLoader()
-	if "/" != l1.Root() {
-		t.Fatalf("incorrect root: '%s'\n", l1.Root())
-	}
+	_, remote := l1.Repo()
+	require.False(remote)
+	require.Equal("/", l1.Root())
+
 	for _, x := range testCases {
 		b, err := l1.Load(x.path)
-		if err != nil {
-			t.Fatalf("unexpected load error: %v", err)
-		}
+		require.NoError(err)
+
 		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 		}
 	}
 	l2, err := l1.New("foo/project")
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
-	if "/foo/project" != l2.Root() {
-		t.Fatalf("incorrect root: %s\n", l2.Root())
-	}
+	require.NoError(err)
+
+	_, remote = l2.Repo()
+	require.False(remote)
+	require.Equal("/foo/project", l2.Root())
+
 	for _, x := range testCases {
 		b, err := l2.Load(strings.TrimPrefix(x.path, "foo/project/"))
-		if err != nil {
-			t.Fatalf("unexpected load error %v", err)
-		}
+		require.NoError(err)
+
 		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 		}
 	}
 	l2, err = l1.New("foo/project/") // Assure trailing slash stripped
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
-	if "/foo/project" != l2.Root() {
-		t.Fatalf("incorrect root: %s\n", l2.Root())
-	}
+	require.NoError(err)
+	require.Equal("/foo/project", l2.Root())
 }
 
 func TestLoaderNewSubDir(t *testing.T) {
+	require := require.New(t)
+
 	l1, err := makeLoader().New("foo/project")
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
+	require.NoError(err)
+
 	l2, err := l1.New("subdir1")
-	if err != nil {
-		t.Fatalf("unexpected err:  %v\n", err)
-	}
-	if "/foo/project/subdir1" != l2.Root() {
-		t.Fatalf("incorrect root: %s\n", l2.Root())
-	}
+	require.NoError(err)
+	require.Equal("/foo/project/subdir1", l2.Root())
+
 	x := testCases[1]
 	b, err := l2.Load("fileB.yaml")
-	if err != nil {
-		t.Fatalf("unexpected load error %v", err)
-	}
+	require.NoError(err)
+
 	if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 		t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 	}
 }
 
 func TestLoaderBadRelative(t *testing.T) {
+	require := require.New(t)
+
 	l1, err := makeLoader().New("foo/project/subdir1")
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
-	if "/foo/project/subdir1" != l1.Root() {
-		t.Fatalf("incorrect root: %s\n", l1.Root())
-	}
+	require.NoError(err)
+	require.Equal("/foo/project/subdir1", l1.Root())
 
 	// Cannot cd into a file.
 	l2, err := l1.New("fileB.yaml")
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l2.Root())
-	}
+	require.Error(err)
 
 	// It's not okay to stay at the same place.
 	l2, err = l1.New(filesys.SelfDir)
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l2.Root())
-	}
+	require.Error(err)
 
 	// It's not okay to go up and back down into same place.
 	l2, err = l1.New("../subdir1")
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l2.Root())
-	}
+	require.Error(err)
 
 	// It's not okay to go up via a relative path.
 	l2, err = l1.New("..")
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l2.Root())
-	}
+	require.Error(err)
 
 	// It's not okay to go up via an absolute path.
 	l2, err = l1.New("/foo/project")
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l2.Root())
-	}
+	require.Error(err)
 
 	// It's not okay to go to the root.
 	l2, err = l1.New("/")
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l2.Root())
-	}
+	require.Error(err)
 
 	// It's okay to go up and down to a sibling.
 	l2, err = l1.New("../subdir2")
-	if err != nil {
-		t.Fatalf("unexpected new error %v", err)
-	}
-	if "/foo/project/subdir2" != l2.Root() {
-		t.Fatalf("incorrect root: %s\n", l2.Root())
-	}
+	require.NoError(err)
+	require.Equal("/foo/project/subdir2", l2.Root())
+
 	x := testCases[2]
 	b, err := l2.Load("fileC.yaml")
-	if err != nil {
-		t.Fatalf("unexpected load error %v", err)
-	}
+	require.NoError(err)
 	if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 		t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 	}
@@ -182,21 +192,16 @@ func TestLoaderBadRelative(t *testing.T) {
 	// It's not OK to go over to a previously visited directory.
 	// Must disallow going back and forth in a cycle.
 	l1, err = l2.New("../subdir1")
-	if err == nil {
-		t.Fatalf("expected err, but got root %s", l1.Root())
-	}
+	require.Error(err)
 }
 
 func TestLoaderMisc(t *testing.T) {
 	l := makeLoader()
 	_, err := l.New("")
-	if err == nil {
-		t.Fatalf("Expected error for empty root location not returned")
-	}
+	require.Error(t, err)
+
 	_, err = l.New("https://google.com/project")
-	if err == nil {
-		t.Fatalf("Expected error")
-	}
+	require.Error(t, err)
 }
 
 const (
@@ -213,11 +218,9 @@ const (
 //   │   └── symLinkToExteriorData -> ../exteriorData
 //   └── exteriorData
 //
-func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
-	dir, err := ioutil.TempDir("", "kustomize-test-")
-	if err != nil {
-		return "", nil, err
-	}
+func commonSetupForLoaderRestrictionTest(t *testing.T) (string, filesys.FileSystem) {
+	t.Helper()
+	dir := t.TempDir()
 	fSys := filesys.MakeFsOnDisk()
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
@@ -233,7 +236,7 @@ func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
 	os.Symlink(
 		filepath.Join(dir, "exteriorData"),
 		filepath.Join(dir, "base", "symLinkToExteriorData"))
-	return dir, fSys, nil
+	return dir, fSys
 }
 
 // Make sure everything works when loading files
@@ -241,53 +244,36 @@ func commonSetupForLoaderRestrictionTest() (string, filesys.FileSystem, error) {
 func doSanityChecksAndDropIntoBase(
 	t *testing.T, l ifc.Loader) ifc.Loader {
 	t.Helper()
+	require := require.New(t)
+
 	data, err := l.Load(path.Join("base", "okayData"))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if string(data) != contentOk {
-		t.Fatalf("unexpected content: %v", data)
-	}
+	require.NoError(err)
+	require.Equal(contentOk, string(data))
+
 	data, err = l.Load("exteriorData")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if string(data) != contentExteriorData {
-		t.Fatalf("unexpected content: %v", data)
-	}
+	require.NoError(err)
+	require.Equal(contentExteriorData, string(data))
 
 	// Drop in.
 	l, err = l.New("base")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(err)
 
 	// Reading okayData works.
 	data, err = l.Load("okayData")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if string(data) != contentOk {
-		t.Fatalf("unexpected content: %v", data)
-	}
+	require.NoError(err)
+	require.Equal(contentOk, string(data))
 
 	// Reading local symlink to okayData works.
 	data, err = l.Load("symLinkToOkayData")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if string(data) != contentOk {
-		t.Fatalf("unexpected content: %v", data)
-	}
+	require.NoError(err)
+	require.Equal(contentOk, string(data))
+
 	return l
 }
 
 func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
-	dir, fSys, err := commonSetupForLoaderRestrictionTest()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer os.RemoveAll(dir)
+	require := require.New(t)
+	dir, fSys := commonSetupForLoaderRestrictionTest(t)
 
 	var l ifc.Loader
 
@@ -296,31 +282,19 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 	l = doSanityChecksAndDropIntoBase(t, l)
 
 	// Reading symlink to exteriorData fails.
-	_, err = l.Load("symLinkToExteriorData")
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "is not in or below") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	_, err := l.Load("symLinkToExteriorData")
+	require.Error(err)
+	require.Contains(err.Error(), "is not in or below")
 
 	// Attempt to read "up" fails, though earlier we were
 	// able to read this file when root was "..".
 	_, err = l.Load("../exteriorData")
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "is not in or below") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.Error(err)
+	require.Contains(err.Error(), "is not in or below")
 }
 
 func TestRestrictionNoneInRealLoader(t *testing.T) {
-	dir, fSys, err := commonSetupForLoaderRestrictionTest()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer os.RemoveAll(dir)
+	dir, fSys := commonSetupForLoaderRestrictionTest(t)
 
 	var l ifc.Loader
 
@@ -329,16 +303,12 @@ func TestRestrictionNoneInRealLoader(t *testing.T) {
 	l = doSanityChecksAndDropIntoBase(t, l)
 
 	// Reading symlink to exteriorData works.
-	_, err = l.Load("symLinkToExteriorData")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	_, err := l.Load("symLinkToExteriorData")
+	require.NoError(t, err)
 
 	// Attempt to read "up" works.
 	_, err = l.Load("../exteriorData")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	require.NoError(t, err)
 }
 
 func splitOnNthSlash(v string, n int) (string, string) {
@@ -368,6 +338,8 @@ func TestSplit(t *testing.T) {
 }
 
 func TestNewLoaderAtGitClone(t *testing.T) {
+	require := require.New(t)
+
 	rootURL := "github.com/someOrg/someRepo"
 	pathInRepo := "foo/base"
 	url := rootURL + "/" + pathInRepo
@@ -383,40 +355,38 @@ whatever
 `))
 
 	repoSpec, err := git.NewRepoSpecFromURL(url)
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
+	require.NoError(err)
+
 	l, err := newLoaderAtGitClone(
 		repoSpec, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
-	if coRoot+"/"+pathInRepo != l.Root() {
-		t.Fatalf("expected root '%s', got '%s'\n",
-			coRoot+"/"+pathInRepo, l.Root())
-	}
-	if _, err = l.New(url); err == nil {
-		t.Fatalf("expected cycle error 1")
-	}
-	if _, err = l.New(rootURL + "/" + "foo"); err == nil {
-		t.Fatalf("expected cycle error 2")
-	}
+	require.NoError(err)
+	repo, remote := l.Repo()
+	require.True(remote)
+	require.Equal(coRoot, repo)
+	require.Equal(coRoot+"/"+pathInRepo, l.Root())
+
+	_, err = l.New(url)
+	require.Error(err)
+
+	_, err = l.New(rootURL + "/" + "foo")
+	require.Error(err)
 
 	pathInRepo = "foo/overlay"
 	fSys.MkdirAll(coRoot + "/" + pathInRepo)
 	url = rootURL + "/" + pathInRepo
 	l2, err := l.New(url)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if coRoot+"/"+pathInRepo != l2.Root() {
-		t.Fatalf("expected root '%s', got '%s'\n",
-			coRoot+"/"+pathInRepo, l2.Root())
-	}
+	require.NoError(err)
+
+	repo, remote = l2.Repo()
+	require.True(remote)
+	require.Equal(coRoot, repo)
+	require.Equal(coRoot+"/"+pathInRepo, l2.Root())
 }
 
 func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
+	require := require.New(t)
+
 	// Define an overlay-base structure in the file system.
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
@@ -431,23 +401,15 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// to the local bases.
 	l1 = newLoaderOrDie(
 		RestrictionRootOnly, fSys, cloneRoot+"/foo/overlay")
-	if l1.Root() != cloneRoot+"/foo/overlay" {
-		t.Fatalf("unexpected root %s", l1.Root())
-	}
+	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
+
 	l2, err := l1.New("../base")
-	if err != nil {
-		t.Fatalf("unexpected err:  %v\n", err)
-	}
-	if l2.Root() != cloneRoot+"/foo/base" {
-		t.Fatalf("unexpected root %s", l2.Root())
-	}
+	require.NoError(nil)
+	require.Equal(cloneRoot+"/foo/base", l2.Root())
+
 	l3, err := l2.New("../../../highBase")
-	if err != nil {
-		t.Fatalf("unexpected err:  %v\n", err)
-	}
-	if l3.Root() != topDir+"/highBase" {
-		t.Fatalf("unexpected root %s", l3.Root())
-	}
+	require.NoError(err)
+	require.Equal(topDir+"/highBase", l3.Root())
 
 	// Establish that a Kustomization found in cloned
 	// repo can reach (non-remote) bases inside the clone
@@ -462,125 +424,97 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// for local K's.
 	repoSpec, err := git.NewRepoSpecFromURL(
 		"github.com/someOrg/someRepo/foo/overlay")
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
+	require.NoError(err)
+
 	l1, err = newLoaderAtGitClone(
 		repoSpec, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
-	if l1.Root() != cloneRoot+"/foo/overlay" {
-		t.Fatalf("unexpected root %s", l1.Root())
-	}
+	require.NoError(err)
+	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
+
 	// This is okay.
 	l2, err = l1.New("../base")
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
-	if l2.Root() != cloneRoot+"/foo/base" {
-		t.Fatalf("unexpected root %s", l2.Root())
-	}
+	require.NoError(err)
+	_, remote := l2.Repo()
+	require.False(remote)
+	require.Equal(cloneRoot+"/foo/base", l2.Root())
+
 	// This is not okay.
 	_, err = l2.New("../../../highBase")
-	if err == nil {
-		t.Fatalf("expected err")
-	}
-	if !strings.Contains(err.Error(),
-		"base '/whatever/highBase' is outside '/whatever/someClone'") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.Error(err)
+	require.Contains(err.Error(),
+		"base '/whatever/highBase' is outside '/whatever/someClone'")
 }
 
 func TestLocalLoaderReferencingGitBase(t *testing.T) {
+	require := require.New(t)
+
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot + "/foo/base")
 
-	root, err := demandDirectoryRoot(fSys, topDir)
-	if err != nil {
-		t.Fatalf("unexpected err:  %v\n", err)
-	}
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
-	if l1.Root() != topDir {
-		t.Fatalf("unexpected root %s", l1.Root())
-	}
+	require.Equal(topDir, l1.Root())
+
 	l2, err := l1.New("github.com/someOrg/someRepo/foo/base")
-	if err != nil {
-		t.Fatalf("unexpected err:  %v\n", err)
-	}
-	if l2.Root() != cloneRoot+"/foo/base" {
-		t.Fatalf("unexpected root %s", l2.Root())
-	}
+	require.NoError(err)
+	repo, remote := l2.Repo()
+	require.True(remote)
+	require.Equal(cloneRoot, repo)
+	require.Equal(cloneRoot+"/foo/base", l2.Root())
 }
 
 func TestRepoDirectCycleDetection(t *testing.T) {
+	require := require.New(t)
+
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
-	root, err := demandDirectoryRoot(fSys, topDir)
-	if err != nil {
-		t.Fatalf("unexpected err: %v\n", err)
-	}
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromURL(p1)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.NoError(err)
+
 	l1.repoSpec = rs1
 	_, err = l1.New(p1)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "cycle detected") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.Error(err)
+	require.Contains(err.Error(), "cycle detected")
 }
 
 func TestRepoIndirectCycleDetection(t *testing.T) {
+	require := require.New(t)
+
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(topDir)
 	fSys.MkdirAll(cloneRoot)
 
-	root, err := demandDirectoryRoot(fSys, topDir)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
 	l0 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, root, fSys, nil,
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
 
 	p1 := "github.com/someOrg/someRepo1"
 	p2 := "github.com/someOrg/someRepo2"
 
 	l1, err := l0.New(p1)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.NoError(err)
+
 	l2, err := l1.New(p2)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.NoError(err)
+
 	_, err = l2.New(p1)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	if !strings.Contains(err.Error(), "cycle detected") {
-		t.Fatalf("unexpected err: %v", err)
-	}
+	require.Error(err)
+	require.Contains(err.Error(), "cycle detected")
 }
 
 // Inspired by https://hassansin.github.io/Unit-Testing-http-client-in-Go
@@ -598,6 +532,8 @@ func makeFakeHTTPClient(fn fakeRoundTripper) *http.Client {
 
 // TestLoaderHTTP test http file loader
 func TestLoaderHTTP(t *testing.T) {
+	require := require.New(t)
+
 	var testCasesFile = []testData{
 		{
 			path:            "http/file.yaml",
@@ -606,14 +542,11 @@ func TestLoaderHTTP(t *testing.T) {
 	}
 
 	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCasesFile))
-	if "/" != l1.Root() {
-		t.Fatalf("incorrect root: '%s'\n", l1.Root())
-	}
+	require.Equal("/", l1.Root())
+
 	for _, x := range testCasesFile {
 		b, err := l1.Load(x.path)
-		if err != nil {
-			t.Fatalf("unexpected load error: %v", err)
-		}
+		require.NoError(err)
 		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 		}
@@ -633,21 +566,17 @@ func TestLoaderHTTP(t *testing.T) {
 	for _, x := range testCasesHTTP {
 		hc := makeFakeHTTPClient(func(req *http.Request) *http.Response {
 			u := req.URL.String()
-			if x.path != u {
-				t.Fatalf("expected URL %s, but got %s", x.path, u)
-			}
+			require.Equal(x.path, u)
 			return &http.Response{
 				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString(x.expectedContent)),
+				Body:       io.NopCloser(bytes.NewBufferString(x.expectedContent)),
 				Header:     make(http.Header),
 			}
 		})
 		l2 := l1
 		l2.http = hc
 		b, err := l2.Load(x.path)
-		if err != nil {
-			t.Fatalf("unexpected load error: %v", err)
-		}
+		require.NoError(err)
 		if !reflect.DeepEqual([]byte(x.expectedContent), b) {
 			t.Fatalf("in load expected %s, but got %s", x.expectedContent, b)
 		}
@@ -667,8 +596,6 @@ func TestLoaderHTTP(t *testing.T) {
 		l2 := l1
 		l2.http = hc
 		_, err := l2.Load(x.path)
-		if err == nil {
-			t.Fatalf("expect error but get %v", err)
-		}
+		require.Error(err)
 	}
 }

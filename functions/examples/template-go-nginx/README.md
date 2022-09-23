@@ -41,7 +41,7 @@ This generates the `local-resource/config` directory containing the template out
 
 Run the config with:
 
-     kustomize fn run local-resource/
+    kustomize build --enable-alpha-plugins local-resource/
 
 This will create the directory
 
@@ -50,6 +50,6 @@ This will create the directory
 Add an annotation to the Deployment Resource and change the replica count of the
 `kind: Nginx` Resource in `example-use.yaml`.  Rerun the template:
 
-    kustomize fn run local-resource/
+    kustomize build --enable-alpha-plugins local-resource/
 
 The replica count should be updated, but your annotation should remain.

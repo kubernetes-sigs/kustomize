@@ -23,7 +23,7 @@ func newCmdAddGenerator(fSys filesys.FileSystem) *cobra.Command {
 	var o addGeneratorOptions
 	cmd := &cobra.Command{
 		Use:   "generator",
-		Short: "Add the name of a file containing a generator configuration to the kustomization file.",
+		Short: "Add the name of a file containing a generator configuration to the kustomization file",
 		Example: `
 		add generator {filepath}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -4,22 +4,22 @@
 package krusty_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 )
 
 func writeTestSchema(th kusttest_test.Harness, filepath string) {
-	bytes, _ := ioutil.ReadFile("testdata/customschema.json")
+	bytes, _ := os.ReadFile("./testdata/customschema.json")
 	th.WriteF(filepath+"mycrd_schema.json", string(bytes))
 }
 
 func writeTestSchemaYaml(th kusttest_test.Harness, filepath string) {
-	bytes, _ := ioutil.ReadFile("testdata/customschema.yaml")
+	bytes, _ := os.ReadFile("./testdata/customschema.yaml")
 	th.WriteF(filepath+"mycrd_schema.yaml", string(bytes))
 }
 
@@ -139,37 +139,64 @@ spec:
           protocol: TCP
 `
 
+func runOpenApiTest(t *testing.T, test func(t *testing.T)) {
+	t.Helper()
+	openapi.ResetOpenAPI()
+	test(t)
+	openapi.ResetOpenAPI()
+}
+
 // Test for issue #2825
 func TestCustomOpenApiFieldBasicUsage(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
 resources:
 - mycrd.yaml
 openapi:
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "mycrd.yaml")
-	writeTestSchema(th, "./")
-	openapi.ResetOpenAPI()
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, patchedCustomResource)
+		writeCustomResource(th, "mycrd.yaml")
+		writeTestSchema(th, "./")
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+	})
+}
+
+func TestCustomOpenApiFieldBasicUsageWithRemoteSchema(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
+resources:
+- mycrd.yaml
+openapi:
+  path: https://github.com/kubernetes-sigs/kustomize/raw/master/api/krusty/testdata/customschema.json
+`+customSchemaPatch)
+		writeCustomResource(th, "mycrd.yaml")
+		writeTestSchema(th, "./")
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+	})
 }
 
 func TestCustomOpenApiFieldWithTwoGvks(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
 resources:
 - mycrd.yaml
 - myothercrd.yaml
 openapi:
   path: mycrd_schema.json
 `+customSchemaPatchMultipleGvks)
-	writeCustomResource(th, "mycrd.yaml")
-	writeOtherCustomResource(th, "myothercrd.yaml")
-	writeTestSchema(th, "./")
-	openapi.ResetOpenAPI()
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `apiVersion: example.com/v1alpha1
+		writeCustomResource(th, "mycrd.yaml")
+		writeOtherCustomResource(th, "myothercrd.yaml")
+		writeTestSchema(th, "./")
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `apiVersion: example.com/v1alpha1
 kind: MyCRD
 metadata:
   name: service
@@ -201,124 +228,182 @@ spec:
           name: grpc
           protocol: TCP
 `)
+	})
 }
 
 func TestCustomOpenApiFieldYaml(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
 resources:
 - mycrd.yaml
 openapi:
   path: mycrd_schema.yaml
 `+customSchemaPatch)
-	writeCustomResource(th, "mycrd.yaml")
-	writeTestSchemaYaml(th, "./")
-	openapi.ResetOpenAPI()
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, patchedCustomResource)
+		writeCustomResource(th, "mycrd.yaml")
+		writeTestSchemaYaml(th, "./")
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+	})
 }
 
 // Error if user tries to specify both builtin version
 // and custom schema
 func TestCustomOpenApiFieldBothPathAndVersion(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
 resources:
 - mycrd.yaml
 openapi:
   version: v1.21.2
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "mycrd.yaml")
-	writeTestSchema(th, "./")
-	openapi.ResetOpenAPI()
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	assert.Error(t, err)
-	assert.Equal(t,
-		"builtin version and custom schema provided, cannot use both",
-		err.Error())
+		writeCustomResource(th, "mycrd.yaml")
+		writeTestSchema(th, "./")
+		err := th.RunWithErr(".", th.MakeDefaultOptions())
+		assert.Error(t, err)
+		assert.Equal(t,
+			"builtin version and custom schema provided, cannot use both",
+			err.Error())
+	})
 }
 
 // Test for if the filepath specified is not found
 func TestCustomOpenApiFieldFileNotFound(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
 resources:
 - mycrd.yaml
 openapi:
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "mycrd.yaml")
-	openapi.ResetOpenAPI()
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	assert.Error(t, err)
-	assert.Equal(t,
-		"'/mycrd_schema.json' doesn't exist",
-		err.Error())
+		writeCustomResource(th, "mycrd.yaml")
+		err := th.RunWithErr(".", th.MakeDefaultOptions())
+		assert.Error(t, err)
+		assert.Equal(t,
+			"'/mycrd_schema.json' doesn't exist",
+			err.Error())
+	})
 }
 
 func TestCustomOpenApiFieldFromBase(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("base", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK("base", `
 resources:
 - mycrd.yaml
 openapi:
   path: mycrd_schema.json
 `)
-	th.WriteK("overlay", `
+		th.WriteK("overlay", `
 resources:
 - ../base
 `+customSchemaPatch)
-	writeCustomResource(th, "base/mycrd.yaml")
-	writeTestSchema(th, "base/")
-	openapi.ResetOpenAPI()
-	m := th.Run("overlay", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, patchedCustomResource)
-	assert.Equal(t, "using custom schema from file provided",
-		openapi.GetSchemaVersion())
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "base/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+		assert.Equal(t, "using custom schema from file provided",
+			openapi.GetSchemaVersion())
+	})
+}
+
+func TestCustomOpenApiFieldFromBaseWithRemoteSchema(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK("base", `
+resources:
+- mycrd.yaml
+openapi:
+  path: https://github.com/kubernetes-sigs/kustomize/raw/master/api/krusty/testdata/customschema.json
+`)
+		th.WriteK("overlay", `
+resources:
+- ../base
+`+customSchemaPatch)
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "base/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+		assert.Equal(t, "using custom schema from file provided",
+			openapi.GetSchemaVersion())
+	})
 }
 
 func TestCustomOpenApiFieldFromOverlay(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("base", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK("base", `
 resources:
 - mycrd.yaml
 `)
-	th.WriteK("overlay", `
+		th.WriteK("overlay", `
 resources:
 - ../base
 openapi:
   path: mycrd_schema.json
 `+customSchemaPatch)
-	writeCustomResource(th, "base/mycrd.yaml")
-	writeTestSchema(th, "overlay/")
-	openapi.ResetOpenAPI()
-	m := th.Run("overlay", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, patchedCustomResource)
-	assert.Equal(t, "using custom schema from file provided",
-		openapi.GetSchemaVersion())
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "overlay/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+		assert.Equal(t, "using custom schema from file provided",
+			openapi.GetSchemaVersion())
+	})
+}
+
+func TestCustomOpenApiFieldFromOverlayWithRemoteSchema(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK("base", `
+resources:
+- mycrd.yaml
+`)
+		th.WriteK("overlay", `
+resources:
+- ../base
+openapi:
+  path: https://github.com/kubernetes-sigs/kustomize/raw/master/api/krusty/testdata/customschema.json
+`+customSchemaPatch)
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "overlay/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, patchedCustomResource)
+		assert.Equal(t, "using custom schema from file provided",
+			openapi.GetSchemaVersion())
+	})
 }
 
 func TestCustomOpenApiFieldOverlayTakesPrecedence(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	openapi.ResetOpenAPI()
-	th.WriteK("base", `
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		openapi.ResetOpenAPI()
+		th.WriteK("base", `
 resources:
 - mycrd.yaml
 openapi:
   path: mycrd_schema.json
 `)
-	th.WriteK("overlay", `
+		th.WriteK("overlay", `
 resources:
 - ../base
 openapi:
   version: v1.21.2
 `+customSchemaPatch)
-	writeCustomResource(th, "base/mycrd.yaml")
-	writeTestSchema(th, "base/")
-	openapi.ResetOpenAPI()
-	m := th.Run("overlay", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
+		writeCustomResource(th, "base/mycrd.yaml")
+		writeTestSchema(th, "base/")
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `
 apiVersion: example.com/v1alpha1
 kind: MyCRD
 metadata:
@@ -330,47 +415,48 @@ spec:
       - image: nginx
         name: server
 `)
-	assert.Equal(t, "v1212", openapi.GetSchemaVersion())
+		assert.Equal(t, "v1.21.2", openapi.GetSchemaVersion())
+	})
 }
 
-func TestCustomOpenAPIFieldFromComponent(t *testing.T) {
-	input := []FileGen{
-		writeTestBase,
-		writeTestComponentWithCustomSchema,
-		writeOverlayProd}
+func TestCustomOpenApiFieldFromComponent(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		input := []FileGen{
+			writeTestBase,
+			writeTestComponentWithCustomSchema,
+			writeOverlayProd}
 
-	th := kusttest_test.MakeHarness(t)
-	for _, f := range input {
-		f(th)
-	}
-	openapi.ResetOpenAPI()
-	th.Run("prod", th.MakeDefaultOptions())
-	assert.Equal(t, "using custom schema from file provided", openapi.GetSchemaVersion())
+		th := kusttest_test.MakeHarness(t)
+		for _, f := range input {
+			f(th)
+		}
+		th.Run("prod", th.MakeDefaultOptions())
+		assert.Equal(t, "using custom schema from file provided", openapi.GetSchemaVersion())
+	})
 }
 
 // test for https://github.com/kubernetes-sigs/kustomize/issues/4179
 // kustomize is not seeing the openapi field from the component defined in the overlay
-func TestCustomOpenAPIFieldFromComponentWithOverlays(t *testing.T) {
-	if val, ok := os.LookupEnv("OPENAPI_TEST"); !ok || val != "true" {
-		t.SkipNow()
-	}
+func TestCustomOpenApiFieldFromComponentWithOverlays(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
 
-	th := kusttest_test.MakeHarness(t)
-
-	// overlay declaring the component
-	th.WriteK("overlays/overlay-component-openapi", `resources:
+		// overlay declaring the component
+		th.WriteK("overlays/overlay-component-openapi", `resources:
 - ../base/
 components:
 - ../../components/dc-openapi
 `)
 
-	// base kustomization
-	th.WriteK("overlays/base", `resources:
+		// base kustomization
+		th.WriteK("overlays/base", `resources:
 - dc.yml
 `)
 
-	// resource declared in the base kustomization
-	th.WriteF("overlays/base/dc.yml", `apiVersion: apps.openshift.io/v1
+		// resource declared in the base kustomization
+		th.WriteF("overlays/base/dc.yml", `apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
   name: my-dc
@@ -393,12 +479,12 @@ spec:
             name: cm
 `)
 
-	// openapi schema referred to by the component
-	bytes, _ := ioutil.ReadFile("testdata/openshiftschema.json")
-	th.WriteF("components/dc-openapi/openapi.json", string(bytes))
+		// openapi schema referred to by the component
+		bytes, _ := os.ReadFile("./testdata/openshiftschema.json")
+		th.WriteF("components/dc-openapi/openapi.json", string(bytes))
 
-	// patch referred to by the component
-	th.WriteF("components/dc-openapi/patch.yml", `apiVersion: apps.openshift.io/v1
+		// patch referred to by the component
+		th.WriteF("components/dc-openapi/patch.yml", `apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
   name: my-dc
@@ -416,16 +502,15 @@ spec:
              name: additional-cm
 `)
 
-	// component declared in overlay with custom schema and patch
-	th.WriteC("components/dc-openapi", `patches:
+		// component declared in overlay with custom schema and patch
+		th.WriteC("components/dc-openapi", `patches:
   - patch.yml
 openapi:
   path: openapi.json
 `)
 
-	openapi.ResetOpenAPI()
-	m := th.Run("overlays/overlay-component-openapi", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `apiVersion: apps.openshift.io/v1
+		m := th.Run("overlays/overlay-component-openapi", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
   name: my-dc
@@ -452,4 +537,108 @@ spec:
           name: cm
         name: cm
 `)
+	})
+}
+
+func TestCustomOpenApiFieldVersion(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
+openapi:
+  version: v1.21.2
+resources:
+- deployment.yaml
+`)
+		th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+		assert.Equal(t, "v1.21.2", openapi.GetSchemaVersion())
+	})
+}
+
+func TestCustomOpenApiFieldNotBuiltin(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
+openapi:
+  version: v1.14.1
+resources:
+- deployment.yaml
+`)
+		th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+
+		err := th.RunWithErr(".", th.MakeDefaultOptions())
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+	})
+}
+
+func TestCustomOpenApiFieldDefaultVersion(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
+resources:
+- deployment.yaml
+`)
+		th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever
+`)
+		assert.Equal(t, kubernetesapi.DefaultOpenAPI, openapi.GetSchemaVersion())
+	})
 }

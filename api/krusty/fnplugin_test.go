@@ -1,3 +1,6 @@
+// Copyright 2022 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package krusty_test
 
 import (
@@ -7,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	. "sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -532,30 +536,33 @@ spec:
 
 func TestFnContainerTransformerWithConfig(t *testing.T) {
 	skipIfNoDocker(t)
-
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK(".", `
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 resources:
 - data1.yaml
 - data2.yaml
 transformers:
 - label_namespace.yaml
-`)
-
-	th.WriteF("data1.yaml", `apiVersion: v1
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data1.yaml"), []byte(`
+apiVersion: v1
 kind: Namespace
 metadata:
   name: my-namespace
-`)
-	th.WriteF("data2.yaml", `apiVersion: v1
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data2.yaml"), []byte(`
+apiVersion: v1
 kind: Namespace
 metadata:
   name: another-namespace
-`)
-
-	th.WriteF("label_namespace.yaml", `apiVersion: v1
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "label_namespace.yaml"), []byte(`
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: label_namespace
@@ -566,11 +573,14 @@ metadata:
 data:
   label_name: my-ns-name
   label_value: function-test
-`)
-
-	m := th.Run(".", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
 kind: Namespace
 metadata:
   labels:
@@ -583,24 +593,22 @@ metadata:
   labels:
     my-ns-name: function-test
   name: another-namespace
-`)
+`, string(actual))
 }
 
 func TestFnContainerEnvVars(t *testing.T) {
 	skipIfNoDocker(t)
-
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK(".", `
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
 - gener.yaml
-`)
-
-	// TODO: cheange image to gcr.io/kpt-functions/templater:stable
-	// when https://github.com/GoogleContainerTools/kpt-functions-catalog/pull/103
-	// is merged
-	th.WriteF("gener.yaml", `
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -619,14 +627,176 @@ data:
       name: env
     data:
       value: '{{ env "TESTTEMPLATE" }}'
-`)
-	m := th.Run(".", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
 data:
   value: value
 kind: ConfigMap
 metadata:
   name: env
+`, string(actual))
+}
+
+func TestFnContainerFnMounts(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+- gener.yaml
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
+apiVersion: v1alpha1
+kind: RenderHelmChart
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+        mounts:
+        - type: "bind"
+          src: "./charts"
+          dst: "/tmp/charts"
+helmCharts:
+- name: helloworld-chart
+  releaseName: test
+  valuesFile: /tmp/charts/helloworld-values/values.yaml
+`)))
+	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates")))
+	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-values")))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "Chart.yaml"), []byte(`
+apiVersion: v2
+name: helloworld-chart
+description: A Helm chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: 1.16.0
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates", "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: name
+spec:
+  replicas: {{ .Values.replicaCount }}
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-values", "values.yaml"), []byte(`
+replicaCount: 5
+`)))
+	m, err := b.Run(
+		fSys,
+		tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: name
+spec:
+  replicas: 5
+`, string(actual))
+}
+
+func TestFnContainerMountsLoadRestrictions_absolute(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+  - |-
+    apiVersion: v1alpha1
+    kind: RenderHelmChart
+    metadata:
+      name: demo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+            mounts:
+            - type: "bind"
+              src: "/tmp/dir"
+              dst: "/tmp/charts"
+`)))
+	_, err = b.Run(
+		fSys,
+		tmpDir.String())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "loading generator plugins: failed to load generator: plugin RenderHelmChart."+
+		"v1alpha1.[noGrp]/demo.[noNs] with mount path '/tmp/dir' is not permitted; mount paths must"+
+		" be relative to the current kustomization directory")
+}
+
+func TestFnContainerMountsLoadRestrictions_outsideCurrentDir(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+generators:
+  - |-
+    apiVersion: v1alpha1
+    kind: RenderHelmChart
+    metadata:
+      name: demo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+            mounts:
+            - type: "bind"
+              src: "./tmp/../../dir"
+              dst: "/tmp/charts"
+`)))
+	_, err = b.Run(
+		fSys,
+		tmpDir.String())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "loading generator plugins: failed to load generator: plugin RenderHelmChart."+
+		"v1alpha1.[noGrp]/demo.[noNs] with mount path './tmp/../../dir' is not permitted; mount paths must "+
+		"be under the current kustomization directory")
+}
+
+func TestFnContainerMountsLoadRestrictions_root(t *testing.T) {
+	skipIfNoDocker(t)
+	th := kusttest_test.MakeHarness(t)
+
+	th.WriteK(".", `
+generators:
+- gener.yaml
 `)
+	// Create generator config
+	th.WriteF("gener.yaml", `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: CockroachDB
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-cockroachdb:v0.1.0
+spec:
+  replicas: 3
+`)
+	err := th.RunWithErr(".", th.MakeOptionsPluginsEnabled())
+	assert.Error(t, err)
+	assert.EqualError(t, err, "couldn't execute function: root working directory '/' not allowed")
 }

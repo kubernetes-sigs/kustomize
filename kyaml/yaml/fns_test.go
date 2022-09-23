@@ -45,7 +45,7 @@ func TestAppend(t *testing.T) {
 	assert.NoError(t, err)
 	rn, err := node.Pipe(Append(NewScalarRNode("").YNode()))
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "wrong Node Kind")
+		assert.Contains(t, err.Error(), "wrong node kind")
 	}
 	assert.Nil(t, rn)
 
@@ -142,7 +142,7 @@ func TestElementSetter(t *testing.T) {
 
 	node = MustParse(`
 - a: b
-- c: d	
+- c: d
 `)
 	// If given a key and no values, ElementSetter will
 	// change node to be an empty list
@@ -154,12 +154,14 @@ func TestElementSetter(t *testing.T) {
 
 	node = MustParse(`
 - a: b
-- c: d	
+- c: d
 `)
 	// Return error because ElementSetter will assume all elements are scalar when
 	// there is only value provided.
 	_, err = node.Pipe(ElementSetter{Values: []string{"b"}})
-	assert.EqualError(t, err, "wrong Node Kind for  expected: ScalarNode was MappingNode: value: {a: b}")
+	assert.EqualError(t, err, `wrong node kind: expected ScalarNode but got MappingNode: node contents:
+a: b
+`)
 
 	node = MustParse(`
 - a
@@ -455,7 +457,7 @@ a: b
 	assert.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "a"})
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "wrong Node Kind")
+		assert.Contains(t, err.Error(), "wrong node kind")
 	}
 	assert.Nil(t, rn)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
@@ -578,6 +580,13 @@ a: {}
 	assert.NoError(t, err)
 	assert.Equal(t, "{a: {b: [{c: d, t: {f: [h]}}]}}\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "h\n", assertNoErrorString(t)(rn.String()))
+}
+
+func TestLookup_Fn_create_with_wildcard_error(t *testing.T) {
+	node, err := Parse(s)
+	assert.NoError(t, err)
+	_, err = node.Pipe(LookupCreate(yaml.MappingNode, "a", "b", "*", "t"))
+	assert.Error(t, err, "wildcard is not supported in PathGetter")
 }
 
 func TestLookup(t *testing.T) {
@@ -848,7 +857,9 @@ func TestMapEntrySetter(t *testing.T) {
 				Key:   NewScalarRNode("foo"),
 				Value: NewScalarRNode("bar"),
 			},
-			expectedErr: errors.Errorf("wrong Node Kind for  expected: MappingNode was SequenceNode: value: {- foo: baz}"),
+			expectedErr: errors.Errorf(`wrong node kind: expected MappingNode but got SequenceNode: node contents:
+- foo: baz
+`),
 		},
 	}
 	for _, tc := range testCases {
@@ -943,7 +954,7 @@ foo
 	}
 	k, err = instance.Filter(node)
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "wrong Node Kind")
+		assert.Contains(t, err.Error(), "wrong node kind")
 	}
 	assert.Nil(t, k)
 }
@@ -1002,7 +1013,7 @@ foo: baz
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "wrong Node Kind")
+	assert.Contains(t, err.Error(), "wrong node kind")
 	assert.Equal(t, `foo: baz
 `, assertNoErrorString(t)(node.String()))
 }
@@ -1022,15 +1033,15 @@ func TestErrorIfInvalid(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	assert.Contains(t, err.Error(), "wrong Node Kind")
+	assert.Contains(t, err.Error(), "wrong node kind")
 
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{}), yaml.SequenceNode)
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "wrong Node Kind")
+		assert.Contains(t, err.Error(), "wrong node kind")
 	}
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{}), yaml.MappingNode)
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "wrong Node Kind")
+		assert.Contains(t, err.Error(), "wrong node kind")
 	}
 
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{
@@ -1041,7 +1052,7 @@ func TestErrorIfInvalid(t *testing.T) {
 
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{}), yaml.SequenceNode)
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "wrong Node Kind")
+		assert.Contains(t, err.Error(), "wrong node kind")
 	}
 
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{

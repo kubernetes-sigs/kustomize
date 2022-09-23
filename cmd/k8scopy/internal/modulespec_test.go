@@ -4,7 +4,6 @@
 package internal_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -51,7 +50,7 @@ func TestReadSpec(t *testing.T) {
 
 // Write content to temp file, returning file name.
 func writeFile(t *testing.T, content []byte) string {
-	f, err := ioutil.TempFile("", "testjunk")
+	f, err := os.CreateTemp("", "testjunk")
 	if err != nil {
 		t.Fatal(err)
 	}

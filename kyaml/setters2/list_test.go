@@ -4,7 +4,6 @@
 package setters2
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -253,22 +252,22 @@ spec:
 			// reset the openAPI afterward
 			defer openapi.ResetOpenAPI()
 
-			f, err := ioutil.TempFile("", "k8s-cli-")
+			f, err := os.CreateTemp("", "k8s-cli-")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			defer os.Remove(f.Name())
-			err = ioutil.WriteFile(f.Name(), []byte(test.openapi), 0600)
+			err = os.WriteFile(f.Name(), []byte(test.openapi), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			r, err := ioutil.TempFile("", "k8s-cli-*.yaml")
+			r, err := os.CreateTemp("", "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			defer os.Remove(r.Name())
-			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			err = os.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

@@ -58,11 +58,11 @@ func (l *Loader) LoadGenerators(
 	for _, res := range rm.Resources() {
 		g, err := l.LoadGenerator(ldr, v, res)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to load generator: %w", err)
 		}
 		generatorOrigin, err := resource.OriginFromCustomPlugin(res)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get origin from CustomPlugin: %w", err)
 		}
 		result = append(result, &resmap.GeneratorWithProperties{Generator: g, Origin: generatorOrigin})
 	}
@@ -130,15 +130,19 @@ func (l *Loader) AbsolutePluginPath(id resid.ResId) (string, error) {
 // absPluginHome is the home of kustomize Exec and Go plugins.
 // Kustomize plugin configuration files are k8s-style objects
 // containing the fields 'apiVersion' and 'kind', e.g.
-//   apiVersion: apps/v1
-//   kind: Deployment
+//
+//	apiVersion: apps/v1
+//	kind: Deployment
+//
 // kustomize reads plugin configuration data from a file path
 // specified in the 'generators:' or 'transformers:' field of a
 // kustomization file.  For Exec and Go plugins, kustomize
 // uses this data to both locate the plugin and configure it.
 // Each Exec or Go plugin (its code, its tests, its supporting data
 // files, etc.) must be housed in its own directory at
-//   ${absPluginHome}/${pluginApiVersion}/LOWERCASE(${pluginKind})
+//
+//	${absPluginHome}/${pluginApiVersion}/LOWERCASE(${pluginKind})
+//
 // where
 //   - ${absPluginHome} is an absolute path, defined below.
 //   - ${pluginApiVersion} is taken from the plugin config file.
@@ -226,8 +230,22 @@ func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 }
 
 func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error) {
-	spec := fnplugin.GetFunctionSpec(res)
+	spec, err := fnplugin.GetFunctionSpec(res)
+	if err != nil {
+		return nil, fmt.Errorf("loader: %w", err)
+	}
 	if spec != nil {
+		// validation check that function mounts are under the current kustomization directory
+		for _, mount := range spec.Container.StorageMounts {
+			if filepath.IsAbs(mount.Src) {
+				return nil, errors.New(fmt.Sprintf("plugin %s with mount path '%s' is not permitted; "+
+					"mount paths must be relative to the current kustomization directory", res.OrgId(), mount.Src))
+			}
+			if strings.HasPrefix(filepath.Clean(mount.Src), "../") {
+				return nil, errors.New(fmt.Sprintf("plugin %s with mount path '%s' is not permitted; "+
+					"mount paths must be under the current kustomization directory", res.OrgId(), mount.Src))
+			}
+		}
 		return fnplugin.NewFnPlugin(&l.pc.FnpLoadingOptions), nil
 	}
 	return l.loadExecOrGoPlugin(res.OrgId())

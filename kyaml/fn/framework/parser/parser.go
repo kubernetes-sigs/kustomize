@@ -4,8 +4,8 @@
 package parser
 
 import (
+	"io"
 	iofs "io/fs"
-	"io/ioutil"
 	"path"
 	"strings"
 
@@ -13,9 +13,9 @@ import (
 )
 
 type parser struct {
-	fs        iofs.FS
-	paths     []string
-	extension string
+	fs         iofs.FS
+	paths      []string
+	extensions []string
 }
 
 type contentProcessor func(content []byte, name string) error
@@ -51,14 +51,23 @@ func (l parser) readPath(path string, processContent contentProcessor) error {
 	}
 
 	// Path is a file -- check extension and read it
-	if !strings.HasSuffix(path, l.extension) {
-		return errors.Errorf("file %s did not have required extension %s", path, l.extension)
+	if err := checkExtension(path, l.extensions); err != nil {
+		return err
 	}
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
 	return processContent(b, path)
+}
+
+func checkExtension(path string, extensions []string) error {
+	for _, ext := range extensions {
+		if strings.HasSuffix(path, ext) {
+			return nil
+		}
+	}
+	return errors.Errorf("file %s does not have any of permitted extensions %s", path, extensions)
 }
 
 func (l parser) readDir(dir iofs.ReadDirFile, dirname string, processContent contentProcessor) error {
@@ -68,7 +77,7 @@ func (l parser) readDir(dir iofs.ReadDirFile, dirname string, processContent con
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), l.extension) {
+		if err := checkExtension(entry.Name(), l.extensions); err != nil || entry.IsDir() {
 			continue
 		}
 		// Note: using filepath.Join will break Windows, because io/fs.FS implementations require slashes on all OS.
@@ -91,5 +100,6 @@ func (l parser) readFile(path string) ([]byte, error) {
 	}
 	defer f.Close()
 
-	return ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
+	return content, errors.Wrap(err)
 }

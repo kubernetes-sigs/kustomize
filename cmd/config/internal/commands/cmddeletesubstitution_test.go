@@ -5,7 +5,6 @@ package commands_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -428,23 +427,19 @@ spec:
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			defer os.RemoveAll(baseDir)
+			baseDir := t.TempDir()
 			f := filepath.Join(baseDir, "Krmfile")
-			err = ioutil.WriteFile(f, []byte(test.inputOpenAPI), 0600)
+			err := os.WriteFile(f, []byte(test.inputOpenAPI), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
+			r, err := os.CreateTemp(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			defer os.Remove(r.Name())
-			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			t.Cleanup(func() { r.Close() })
+			err = os.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -477,7 +472,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualOpenAPI, err := ioutil.ReadFile(f)
+			actualOpenAPI, err := os.ReadFile(f)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -487,7 +482,7 @@ spec:
 				t.FailNow()
 			}
 
-			actualResources, err := ioutil.ReadFile(r.Name())
+			actualResources, err := os.ReadFile(r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -539,17 +534,13 @@ deleted substitution "image-tag"
 			openapi.ResetOpenAPI()
 			defer openapi.ResetOpenAPI()
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			baseDir := t.TempDir()
 			copyutil.CopyDir(sourceDir, baseDir)
-			// defer os.RemoveAll(baseDir)
 			runner := commands.NewDeleteSubstitutionRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)
 			runner.Command.SetArgs(append([]string{filepath.Join(baseDir, test.packagePath)}, test.args...))
-			err = runner.Command.Execute()
+			err := runner.Command.Execute()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

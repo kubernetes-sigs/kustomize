@@ -4,7 +4,7 @@
 package internal
 
 import (
-	"io/ioutil"
+	"os"
 
 	"sigs.k8s.io/yaml"
 )
@@ -25,7 +25,7 @@ type PackageSpec struct {
 }
 
 func ReadSpec(fileName string) *ModuleSpec {
-	bytes, err := ioutil.ReadFile(fileName)
+	bytes, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(err)
 	}
