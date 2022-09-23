@@ -1,6 +1,5 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
-//
 package commands
 
 import (
@@ -100,7 +99,7 @@ func (r *GrepRunner) preRunE(c *cobra.Command, args []string) error {
 		r.Value = last[1]
 	}
 
-	r.Path = append(parts[:len(parts)-1], last[0]) // nolint:gocritic
+	r.Path = append(parts[:len(parts)-1], last[0]) //nolint:gocritic
 	return nil
 }
 

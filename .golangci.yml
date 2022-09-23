@@ -14,7 +14,6 @@ linters:
     - bodyclose
     - contextcheck
 #    - cyclop
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -71,7 +70,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
 #    - stylecheck
     - tagliatelle
     - tenv
@@ -82,12 +80,16 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
 #    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
 #    - wsl
+    - asasalint
+    - usestdlibvars
+    - interfacebloat
+    - logrlint
+    - reassign
 
 linters-settings:
   dupl:

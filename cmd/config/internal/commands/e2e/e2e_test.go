@@ -719,7 +719,7 @@ metadata:
 			}
 
 			args := append([]string{"fn", "run", "."}, tt.args(binDir)...)
-			cmd := exec.Command(filepath.Join(binDir, kyamlBin), args...) // nolint: gosec
+			cmd := exec.Command(filepath.Join(binDir, kyamlBin), args...) //nolint: gosec
 			cmd.Dir = dir
 			var stdErr, stdOut bytes.Buffer
 			cmd.Stdout = &stdOut
@@ -761,7 +761,7 @@ func build() string {
 			panic(err)
 		}
 
-		build := exec.Command("go", "build", "-o", // nolint: gosec
+		build := exec.Command("go", "build", "-o", //nolint: gosec
 			filepath.Join(binDir, e2econtainerconfigBin))
 		build.Dir = "e2econtainerconfig"
 		build.Stdout = os.Stdout
@@ -773,7 +773,7 @@ func build() string {
 			panic(err)
 		}
 
-		build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin)) // nolint: gosec
+		build = exec.Command("go", "build", "-o", filepath.Join(binDir, kyamlBin)) //nolint: gosec
 		build.Dir = filepath.Join("..", "..", "..", "kubectl-krm")
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
