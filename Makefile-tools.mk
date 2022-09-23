@@ -1,6 +1,8 @@
 # Copyright 2022 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
+GOLANGCI_LINT_VERSION=v1.49.0
+
 MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
@@ -28,7 +30,7 @@ uninstall-out-of-tree-tools:
 	rm -f $(MYGOBIN)/stringer
 
 $(MYGOBIN)/golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 $(MYGOBIN)/mdrip:
 	go install github.com/monopole/mdrip@v1.0.2

@@ -692,7 +692,7 @@ resources:
 	th.AssertActualEqualsExpected(m, namespaceNeedInVarExpectedOutput)
 }
 
-// nolint:gosec
+//nolint:gosec
 const namespaceNeedInVarMyAppWithNamespace string = `
 resources:
 - elasticsearch-dev-service.yaml
