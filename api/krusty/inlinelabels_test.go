@@ -92,7 +92,7 @@ spec:
 `)
 }
 
-func TestKustomizationLabelsInTemplate(t *testing.T) {
+func TestKustomizationLabelsInDeploymentTemplate(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("app/deployment.yaml", `
 apiVersion: apps/v1
@@ -314,5 +314,274 @@ spec:
     targetPort: 9376
   selector:
     app: test-server
+`)
+}
+
+func TestKustomizationLabelsInDaemonSetTemplate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/ds.yaml", `
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: daemon
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+`)
+	th.WriteK("/app", `
+resources:
+- ds.yaml
+
+labels:
+- pairs:
+    foo: bar
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+    foo: bar
+  name: daemon
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+        foo: bar
+`)
+}
+
+func TestKustomizationLabelsInStatefulSetTemplate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/sts.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: set
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  serviceName: set
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+`)
+	th.WriteK("/app", `
+resources:
+- sts.yaml
+
+labels:
+- pairs:
+    foo: bar
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+    foo: bar
+  name: set
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  serviceName: set
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+        foo: bar
+`)
+}
+
+func TestKustomizationLabelsInCronJobTemplate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/cjob.yaml", `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: job
+spec:
+  jobTemplate:
+    spec:
+      backoffLimit: 4
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: a
+            app.kubernetes.io/instance: b
+            app.kubernetes.io/name: c
+            app.kubernetes.io/part-of: d
+        spec:
+          restartPolicy: Never
+  schedule: '* * * * *'
+`)
+	th.WriteK("/app", `
+resources:
+- cjob.yaml
+
+labels:
+- pairs:
+    foo: bar
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+    foo: bar
+  name: job
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        foo: bar
+    spec:
+      backoffLimit: 4
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: a
+            app.kubernetes.io/instance: b
+            app.kubernetes.io/name: c
+            app.kubernetes.io/part-of: d
+            foo: bar
+        spec:
+          restartPolicy: Never
+  schedule: '* * * * *'
+`)
+}
+
+func TestKustomizationLabelsInJobTemplate(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("app/job.yaml", `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+  name: job
+spec:
+  backoffLimit: 4
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+    spec:
+      restartPolicy: Never
+`)
+	th.WriteK("/app", `
+resources:
+- job.yaml
+
+labels:
+- pairs:
+    foo: bar
+  includeSelectors: false
+  includeTemplates: true
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+    foo: bar
+  name: job
+spec:
+  backoffLimit: 4
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+        foo: bar
+    spec:
+      restartPolicy: Never
 `)
 }
