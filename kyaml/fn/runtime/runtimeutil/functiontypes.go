@@ -238,7 +238,7 @@ func getFunctionSpecFromAnnotation(n *yaml.RNode, meta yaml.ResourceMeta) (*Func
 	}
 	n, err := n.Pipe(yaml.Lookup("metadata", "configFn"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to LookUp configFn: %w", err)
+		return nil, fmt.Errorf("failed to look up metadata.configFn: %w", err)
 	}
 	if yaml.IsMissingOrNull(n) {
 		return nil, nil
