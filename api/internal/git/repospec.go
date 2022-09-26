@@ -87,7 +87,10 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	host, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout := parseGitURL(n)
+	host, orgRepo, path, gitRef, gitSubmodules, suffix, gitTimeout, err := parseGitURL(n)
+	if err != nil {
+		return nil, err
+	}
 	if orgRepo == "" {
 		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
 	}
@@ -110,16 +113,22 @@ const (
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGitURL(n string) (
-	host string, orgRepo string, path string, gitRef string, gitSubmodules bool, gitSuff string, gitTimeout time.Duration) {
+	host string, orgRepo string, path string, gitRef string, gitSubmodules bool, gitSuff string, gitTimeout time.Duration, err error) {
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
-		host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
+		host, err = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
+		if err != nil {
+			return
+		}
 		orgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
 		return
 	}
-	host, n = parseHostSpec(n)
+	host, n, err = parseHostSpec(n)
+	if err != nil {
+		return
+	}
 	isLocal := strings.HasPrefix(host, "file://")
 	if !isLocal {
 		gitSuff = gitSuffix
@@ -163,7 +172,7 @@ func parseGitURL(n string) (
 	}
 	path = ""
 	orgRepo, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
-	return host, orgRepo, path, gitRef, gitSubmodules, gitSuff, gitTimeout
+	return host, orgRepo, path, gitRef, gitSubmodules, gitSuff, gitTimeout, nil
 }
 
 // Clone git submodules by default.
@@ -213,9 +222,9 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 	return parsed.Path, ref, duration, submodules
 }
 
-var userRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]*@`)
+var userRegex = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9-]*@`)
 
-func parseHostSpec(n string) (string, string) {
+func parseHostSpec(n string) (string, string, error) {
 	var host string
 	consumeHostStrings := func(parts []string) {
 		for _, p := range parts {
@@ -245,7 +254,7 @@ func parseHostSpec(n string) (string, string) {
 				n = n[i+1:]
 			}
 		}
-		return host, n
+		return host, n, nil
 	}
 
 	// If host is a http(s) or ssh URL, grab the domain part.
@@ -261,15 +270,19 @@ func parseHostSpec(n string) (string, string) {
 		}
 	}
 
-	return normalizeGitHostSpec(host), n
+	host, err := normalizeGitHostSpec(host)
+	return host, n, err
 }
 
-func normalizeGitHostSpec(host string) string {
+func normalizeGitHostSpec(host string) (string, error) {
 	s := strings.ToLower(host)
 	m := userRegex.FindString(host)
 	if strings.Contains(s, "github.com") {
 		switch {
 		case m != "":
+			if strings.HasPrefix(s, "git::") && m != "git" {
+				return "", fmt.Errorf("git protocol on github.com only allows git@ user")
+			}
 			host = m + "github.com:"
 		case strings.Contains(s, "ssh:"):
 			host = "git@github.com:"
@@ -280,7 +293,7 @@ func normalizeGitHostSpec(host string) string {
 	if strings.HasPrefix(s, "git::") {
 		host = strings.TrimPrefix(s, "git::")
 	}
-	return host
+	return host, nil
 }
 
 // The format of Azure repo URL is documented

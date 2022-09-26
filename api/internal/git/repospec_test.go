@@ -37,6 +37,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		{"git@github.com/", "git@github.com:"},
 		{"org-12345@github.com:", "org-12345@github.com:"},
 		{"org-12345@github.com/", "org-12345@github.com:"},
+		{"git::git@github.com:", "git@github.com:"},
 	}
 	var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -101,16 +102,19 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		{"htxxxtp://github.com/", "url lacks host"},
 		{"ssh://git.example.com", "url lacks orgRepo"},
 		{"git::___", "url lacks orgRepo"},
+		{"git::org-12345@github.com:kubernetes-sigs/kustomize", "git protocol on github.com only allows git@ user"},
 	}
 
 	for _, testCase := range badData {
-		_, err := NewRepoSpecFromURL(testCase.url)
-		if err == nil {
-			t.Error("expected error")
-		}
-		if !strings.Contains(err.Error(), testCase.error) {
-			t.Errorf("unexpected error: %s", err)
-		}
+		t.Run(testCase.error, func(t *testing.T) {
+			_, err := NewRepoSpecFromURL(testCase.url)
+			if err == nil {
+				t.Fatal("expected error")
+			}
+			if !strings.Contains(err.Error(), testCase.error) {
+				t.Errorf("unexpected error: %s", err)
+			}
+		})
 	}
 }
 
@@ -406,6 +410,39 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:      "ssh://alice@acme.co",
 				OrgRepo:   "path/to/repo",
 				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t25",
+			input:     "https://org-12345@github.com/kubernetes-sigs/kustomize",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "org-12345@github.com:",
+				OrgRepo:   "kubernetes-sigs/kustomize",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t26",
+			input:     "ssh://org-12345@github.com/kubernetes-sigs/kustomize",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "org-12345@github.com:",
+				OrgRepo:   "kubernetes-sigs/kustomize",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t27",
+			input:     "org-12345@github.com/kubernetes-sigs/kustomize",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "org-12345@github.com:",
+				OrgRepo:   "kubernetes-sigs/kustomize",
 				GitSuffix: ".git",
 			},
 		},
