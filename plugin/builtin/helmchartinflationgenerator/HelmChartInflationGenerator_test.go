@@ -526,6 +526,34 @@ valuesInline:
 	th.AssertActualEqualsExpected(rm, "")
 }
 
+func TestHelmChartInflationGeneratorWithSkipHooks(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	// we choose this helm chart as it has the ability to turn
+	// everything off, except CRDs.
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: terraform
+name: terraform
+version: 1.0.0
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars
+includeCRDs: false
+skipHooks: true
+valuesInline:
+  global:
+    enabled: false
+`)
+	th.AssertActualEqualsExpected(rm, "")
+}
+
 func TestHelmChartInflationGeneratorWithIncludeCRDsNotSpecified(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
