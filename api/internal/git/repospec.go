@@ -222,8 +222,6 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 	return parsed.Path, ref, duration, submodules
 }
 
-var userRegex = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9-]*@`)
-
 func parseHostSpec(n string) (string, string, error) {
 	var host string
 	consumeHostStrings := func(parts []string) {
@@ -274,16 +272,18 @@ func parseHostSpec(n string) (string, string, error) {
 	return host, n, err
 }
 
+var userRegex = regexp.MustCompile(`^(?:ssh://|git::)?([a-zA-Z][a-zA-Z0-9-]*@)`)
+
 func normalizeGitHostSpec(host string) (string, error) {
 	s := strings.ToLower(host)
-	m := userRegex.FindString(host)
+	m := userRegex.FindStringSubmatch(host)
 	if strings.Contains(s, "github.com") {
 		switch {
-		case m != "":
-			if strings.HasPrefix(s, "git::") && m != "git" {
+		case len(m) > 0:
+			if strings.HasPrefix(s, "git::") && m[1] != "git@" {
 				return "", fmt.Errorf("git protocol on github.com only allows git@ user")
 			}
-			host = m + "github.com:"
+			host = m[1] + "github.com:"
 		case strings.Contains(s, "ssh:"):
 			host = "git@github.com:"
 		default:

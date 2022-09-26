@@ -416,10 +416,10 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		{
 			name:      "t25",
 			input:     "https://org-12345@github.com/kubernetes-sigs/kustomize",
-			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			cloneSpec: "https://github.com/kubernetes-sigs/kustomize.git",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "org-12345@github.com:",
+				Host:      "https://github.com/",
 				OrgRepo:   "kubernetes-sigs/kustomize",
 				GitSuffix: ".git",
 			},
