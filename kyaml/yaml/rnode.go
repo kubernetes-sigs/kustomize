@@ -440,31 +440,43 @@ func (rn *RNode) getMetaStringField(fName string) string {
 	if md == nil {
 		return ""
 	}
-	f := md.Field(fName)
-	if f.IsNilOrEmpty() {
+	f := yNodeField(md, fName)
+	if f == nil {
 		return ""
 	}
-	return GetValue(f.Value)
+	return f.Value
 }
 
-// getMetaData returns the RNode holding the value of the metadata field.
+// getMetaData returns the yaml.Node for the metadata field.
 // Return nil if field not found (no error).
-func (rn *RNode) getMetaData() *RNode {
+func (rn *RNode) getMetaData() *yaml.Node {
 	if IsMissingOrNull(rn) {
 		return nil
 	}
-	var n *RNode
 	if rn.YNode().Kind == DocumentNode {
 		// get the content if this is the document node
-		n = NewRNode(rn.Content()[0])
-	} else {
-		n = rn
+		return rn.Content()[0]
 	}
-	mf := n.Field(MetadataField)
-	if mf.IsNilOrEmpty() {
+	mf := rn.YNode()
+	if mf == nil {
 		return nil
 	}
-	return mf.Value
+	return yNodeField(mf, MetadataField)
+}
+
+// yNodeField returns the specified field from the node.
+// Returns nil if the node is not a mapping node, or if
+// the field does not exist.
+func yNodeField(n *yaml.Node, field string) *yaml.Node {
+	if n.Kind != MappingNode {
+		return nil
+	}
+	for i := 0; i < len(n.Content); i = i + 2 {
+		if n.Content[i].Value == field {
+			return n.Content[i+1]
+		}
+	}
+	return nil
 }
 
 // SetName sets the metadata name field.
@@ -496,14 +508,16 @@ func (rn *RNode) SetNamespace(ns string) error {
 }
 
 // GetAnnotations gets the metadata annotations field.
-// If the field is missing, returns an empty map.
+// If specific annotations are provided, only those are returned.
+// If no specific annotations are provided, all are returned.
+// If the annotations field is missing, returns an empty map.
 // Use another method to check for missing metadata.
-func (rn *RNode) GetAnnotations() map[string]string {
+func (rn *RNode) GetAnnotations(annotations ...string) map[string]string {
 	meta := rn.getMetaData()
 	if meta == nil {
 		return make(map[string]string)
 	}
-	return rn.getMapFromMeta(meta, AnnotationsField)
+	return rn.getMapFromMeta(meta, AnnotationsField, annotations...)
 }
 
 // SetAnnotations tries to set the metadata annotations field.
@@ -512,24 +526,65 @@ func (rn *RNode) SetAnnotations(m map[string]string) error {
 }
 
 // GetLabels gets the metadata labels field.
+// If specific labels are provided, only those are returned.
+// If no specific labels are provided, then all are returned.
 // If the field is missing, returns an empty map.
 // Use another method to check for missing metadata.
-func (rn *RNode) GetLabels() map[string]string {
+func (rn *RNode) GetLabels(labels ...string) map[string]string {
 	meta := rn.getMetaData()
 	if meta == nil {
 		return make(map[string]string)
 	}
-	return rn.getMapFromMeta(meta, LabelsField)
+	return rn.getMapFromMeta(meta, LabelsField, labels...)
 }
 
 // getMapFromMeta returns map, sometimes empty, from metadata.
-func (rn *RNode) getMapFromMeta(meta *RNode, fName string) map[string]string {
-	result := make(map[string]string)
-	if f := meta.Field(fName); !f.IsNilOrEmpty() {
-		_ = f.Value.VisitFields(func(node *MapNode) error {
-			result[GetValue(node.Key)] = GetValue(node.Value)
-			return nil
-		})
+func (rn *RNode) getMapFromMeta(meta *yaml.Node, fName string, fields ...string) map[string]string {
+	f := yNodeField(meta, fName)
+	if f == nil {
+		return make(map[string]string)
+	}
+	if f.Kind != MappingNode {
+		return nil
+	}
+	if len(fields) == 0 {
+		return fieldsAsStringMapAll(f)
+	}
+	return fieldsAsStringMapSome(f, fields...)
+}
+
+// fieldsAsStringMapAll returns a map of the node's content.
+func fieldsAsStringMapAll(n *yaml.Node) map[string]string {
+	result := make(map[string]string, len(n.Content))
+	for i := 0; i < len(n.Content); i = i + 2 {
+		key := n.Content[i].Value
+		value := n.Content[i+1].Value
+		result[key] = value
+	}
+	return result
+}
+
+// fieldsAsStringMapSome returns a map of the node's content,
+// restricted to the specified fields.
+func fieldsAsStringMapSome(n *yaml.Node, fields ...string) map[string]string {
+	size := len(fields)
+	result := make(map[string]string, size)
+	isMatchFn := func(checkKey string) bool {
+		for _, desiredKey := range fields {
+			if checkKey == desiredKey {
+				return true
+			}
+		}
+		return false
+	}
+	for i := 0; i < len(n.Content); i = i + 2 {
+		key := n.Content[i].Value
+		if isMatchFn(key) {
+			result[key] = n.Content[i+1].Value
+			if len(result) >= size {
+				break
+			}
+		}
 	}
 	return result
 }
