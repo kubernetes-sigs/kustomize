@@ -18,7 +18,7 @@ All kustomize commands can be found in [kustomize/commands](https://github.com/k
 
 Running `kustomize build` triggers the [NewCmdBuild](https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go#L65), which does the following:
 
-- creates a [*Kustomize](https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go#L77) instance
+- creates a [Kustomizer](https://github.com/kubernetes-sigs/kustomize/blob/master/kustomize/commands/build/build.go#L77) instance
 
 - calls [Run](https://github.com/kubernetes-sigs/kustomize/blob/482e8930fc256672afd4ff5d531ec8fe80d35119/api/krusty/kustomizer.go#L53-L543)  to perform the kustomization
 
