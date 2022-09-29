@@ -569,17 +569,9 @@ func fieldsAsStringMapAll(n *yaml.Node) map[string]string {
 func fieldsAsStringMapSome(n *yaml.Node, fields ...string) map[string]string {
 	size := len(fields)
 	result := make(map[string]string, size)
-	isMatchFn := func(checkKey string) bool {
-		for _, desiredKey := range fields {
-			if checkKey == desiredKey {
-				return true
-			}
-		}
-		return false
-	}
 	for i := 0; i < len(n.Content); i = i + 2 {
 		key := n.Content[i].Value
-		if isMatchFn(key) {
+		if sliceutil.Contains(fields, key) {
 			result[key] = n.Content[i+1].Value
 			if len(result) >= size {
 				break
