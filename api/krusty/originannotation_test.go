@@ -817,7 +817,7 @@ buildMetadata: [originAnnotations]
 metadata:
   annotations:
     config.kubernetes.io/origin: |
-      repo: https://github.com/kubernetes-sigs/kustomize
+      repo: https://github.com/kubernetes-sigs/kustomize.git
       ref: v1.0.6
       configuredIn: examples/ldap/base/kustomization.yaml
       configuredBy:

@@ -31,14 +31,14 @@ func TestOriginAppend(t *testing.T) {
 			},
 			path: "github.com/kubernetes-sigs/kustomize/examples/multibases/dev/",
 			expected: `path: examples/multibases/dev
-repo: https://github.com/kubernetes-sigs/kustomize
+repo: https://github.com/kubernetes-sigs/kustomize.git
 `,
 		},
 	}
 	for _, test := range tests {
 		actual, err := test.in.Append(test.path).String()
 		assert.NoError(t, err)
-		assert.Equal(t, actual, test.expected)
+		assert.Equal(t, test.expected, actual)
 	}
 }
 
