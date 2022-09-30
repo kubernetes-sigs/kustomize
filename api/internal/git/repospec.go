@@ -297,14 +297,15 @@ func normalizeGitHostSpec(host string) (string, error) {
 	s := strings.ToLower(host)
 	m := userRegex.FindStringSubmatch(host)
 	if strings.Contains(s, "github.com") {
-		if len(m) > 0 {
+		switch {
+		case len(m) > 0:
 			if strings.HasPrefix(s, "git::") && m[1] != "git@" {
 				return "", fmt.Errorf("git protocol on github.com only allows git@ user")
 			}
 			host = m[1] + "github.com:"
-		} else if strings.Contains(s, "ssh:") {
+		case strings.Contains(s, "ssh:"):
 			host = "git@github.com:"
-		} else {
+		default:
 			host = "https://github.com/"
 		}
 	}
