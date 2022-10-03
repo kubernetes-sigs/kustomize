@@ -446,6 +446,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				GitSuffix: ".git",
 			},
 		},
+		{
+			name:      "t28",
+			input:     "git::ssh://git@github.com/someorg/somerepo/somepath",
+			cloneSpec: "ssh://git@github.com/someorg/somerepo.git",
+			absPath:   notCloned.Join("somepath"),
+			repoSpec: RepoSpec{
+				Host:      "ssh://git@github.com/",
+				OrgRepo:   "someorg/somerepo",
+				Path:      "somepath",
+				GitSuffix: ".git",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
