@@ -220,6 +220,8 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 	return parsed.Path, ref, duration, submodules
 }
 
+var userRegexp = regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9-]*)@`)
+
 func parseHostSpec(n string) (string, string, error) {
 	var host string
 	consumeHostStrings := func(parts []string) {
@@ -233,7 +235,7 @@ func parseHostSpec(n string) (string, string, error) {
 	// Start accumulating the host part.
 	// Order matters here.
 	consumeHostStrings([]string{"git::", "gh:", "ssh://", "https://", "http://", "file://"})
-	if p := userRegex.FindString(n); p != "" {
+	if p := userRegexp.FindString(n); p != "" {
 		n = n[len(p):]
 		host += p
 	}
@@ -270,26 +272,44 @@ func parseHostSpec(n string) (string, string, error) {
 	return host, n, err
 }
 
-var userRegex = regexp.MustCompile(`^(?:ssh://|git::)?([a-zA-Z][a-zA-Z0-9-]*@)`)
+var githubRegexp = regexp.MustCompile(`^(?:ssh://)?([a-zA-Z][a-zA-Z0-9-]*)@(github.com[:/]?)`)
 
 func normalizeGitHostSpec(host string) (string, error) {
 	s := strings.ToLower(host)
-	m := userRegex.FindStringSubmatch(host)
-	if strings.Contains(s, "github.com") {
-		switch {
-		case len(m) > 0:
-			if strings.HasPrefix(s, "git::") && m[1] != "git@" {
-				return "", fmt.Errorf("git protocol on github.com only allows git@ user")
-			}
-			host = m[1] + "github.com:"
-		case strings.Contains(s, "ssh:"):
-			host = "git@github.com:"
-		default:
-			host = "https://github.com/"
-		}
-	}
-	if strings.HasPrefix(s, "git::") {
+
+	// The git:: syntax is meant to force the Git protocol (separate from SSH
+	// and HTTPS), but we drop it here, to preserve past behavior.
+	isGitProtocol := strings.HasPrefix(s, "git::")
+	if isGitProtocol {
 		host = strings.TrimPrefix(s, "git::")
+	}
+
+	// Special treatment for github.com
+	if strings.Contains(host, "github.com") {
+		m := githubRegexp.FindStringSubmatch(host)
+		if m == nil {
+			return "https://github.com/", nil
+		}
+		userName, realHost := m[1], m[2]
+
+		if realHost == "github.com/" {
+			realHost = "github.com:"
+		}
+
+		const gitUser = "git"
+		isGitUser := userName == gitUser || userName == ""
+		if userName == "" {
+			userName = gitUser
+		}
+
+		switch {
+		case isGitProtocol && !isGitUser:
+			return "", fmt.Errorf("git protocol on github.com only allows git@ user")
+		case isGitProtocol:
+			return "git@github.com:", nil
+		default:
+			return fmt.Sprintf("%s@%s", userName, realHost), nil
+		}
 	}
 	return host, nil
 }
