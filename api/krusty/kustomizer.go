@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -114,13 +115,13 @@ func (b *Kustomizer) Run(
 	if !utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.OriginAnnotations) {
 		err = m.RemoveOriginAnnotations()
 		if err != nil {
-			return nil, err
+			return nil, errors.WrapPrefixf(err, "failed to clean up origin tracking annotations")
 		}
 	}
 	if !utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.TransformerAnnotations) {
 		err = m.RemoveTransformerAnnotations()
 		if err != nil {
-			return nil, err
+			return nil, errors.WrapPrefixf(err, "failed to clean up transformer annotations")
 		}
 	}
 	return m, nil
