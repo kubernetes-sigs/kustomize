@@ -224,7 +224,7 @@ spec:
 `)
 }
 
-func TestKustomizationLabelsInTemplateWhenResourceHasNoTemplate(t *testing.T) {
+func TestKustomizationLabelsDoesNotCreateInvalidTemplatePaths(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("app/deployment.yaml", `
 apiVersion: apps/v1
