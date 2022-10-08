@@ -324,25 +324,16 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: daemon
   name: daemon
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/component: a
-      app.kubernetes.io/instance: b
-      app.kubernetes.io/name: c
-      app.kubernetes.io/part-of: d
+      app.kubernetes.io/name: daemon
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: a
-        app.kubernetes.io/instance: b
-        app.kubernetes.io/name: c
-        app.kubernetes.io/part-of: d
+        app.kubernetes.io/name: daemon
 `)
 	th.WriteK("/app", `
 resources:
@@ -360,26 +351,17 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: daemon
     foo: bar
   name: daemon
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/component: a
-      app.kubernetes.io/instance: b
-      app.kubernetes.io/name: c
-      app.kubernetes.io/part-of: d
+      app.kubernetes.io/name: daemon
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: a
-        app.kubernetes.io/instance: b
-        app.kubernetes.io/name: c
-        app.kubernetes.io/part-of: d
+        app.kubernetes.io/name: daemon
         foo: bar
 `)
 }
@@ -391,27 +373,18 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: set
   name: set
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app.kubernetes.io/component: a
-      app.kubernetes.io/instance: b
-      app.kubernetes.io/name: c
-      app.kubernetes.io/part-of: d
+      app.kubernetes.io/name: set
   serviceName: set
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: a
-        app.kubernetes.io/instance: b
-        app.kubernetes.io/name: c
-        app.kubernetes.io/part-of: d
+        app.kubernetes.io/name: set
 `)
 	th.WriteK("/app", `
 resources:
@@ -429,28 +402,19 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: set
     foo: bar
   name: set
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app.kubernetes.io/component: a
-      app.kubernetes.io/instance: b
-      app.kubernetes.io/name: c
-      app.kubernetes.io/part-of: d
+      app.kubernetes.io/name: set
   serviceName: set
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: a
-        app.kubernetes.io/instance: b
-        app.kubernetes.io/name: c
-        app.kubernetes.io/part-of: d
+        app.kubernetes.io/name: set
         foo: bar
 `)
 }
@@ -462,10 +426,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: job
   name: job
 spec:
   jobTemplate:
@@ -474,10 +435,7 @@ spec:
       template:
         metadata:
           labels:
-            app.kubernetes.io/component: a
-            app.kubernetes.io/instance: b
-            app.kubernetes.io/name: c
-            app.kubernetes.io/part-of: d
+            app.kubernetes.io/name: job
         spec:
           restartPolicy: Never
   schedule: '* * * * *'
@@ -498,10 +456,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: job
     foo: bar
   name: job
 spec:
@@ -514,10 +469,7 @@ spec:
       template:
         metadata:
           labels:
-            app.kubernetes.io/component: a
-            app.kubernetes.io/instance: b
-            app.kubernetes.io/name: c
-            app.kubernetes.io/part-of: d
+            app.kubernetes.io/name: job
             foo: bar
         spec:
           restartPolicy: Never
@@ -532,20 +484,14 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: job
   name: job
 spec:
   backoffLimit: 4
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: a
-        app.kubernetes.io/instance: b
-        app.kubernetes.io/name: c
-        app.kubernetes.io/part-of: d
+        app.kubernetes.io/name: job
     spec:
       restartPolicy: Never
 `)
@@ -565,10 +511,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    app.kubernetes.io/component: a
-    app.kubernetes.io/instance: b
-    app.kubernetes.io/name: c
-    app.kubernetes.io/part-of: d
+    app.kubernetes.io/name: job
     foo: bar
   name: job
 spec:
@@ -576,10 +519,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/component: a
-        app.kubernetes.io/instance: b
-        app.kubernetes.io/name: c
-        app.kubernetes.io/part-of: d
+        app.kubernetes.io/name: job
         foo: bar
     spec:
       restartPolicy: Never
