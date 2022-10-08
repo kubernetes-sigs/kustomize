@@ -4,13 +4,13 @@
 package builtinconfig
 
 import (
-	"fmt"
 	"log"
 	"sort"
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // TransformerConfig holds the data needed to perform transformations.
@@ -111,44 +111,44 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	merged = &TransformerConfig{}
 	merged.NamePrefix, err = t.NamePrefix.MergeAll(input.NamePrefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge NamePrefix fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge NamePrefix fieldSpec")
 	}
 	merged.NameSuffix, err = t.NameSuffix.MergeAll(input.NameSuffix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge NameSuffix fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge NameSuffix fieldSpec")
 	}
 	merged.NameSpace, err = t.NameSpace.MergeAll(input.NameSpace)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge NameSpace fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge NameSpace fieldSpec")
 	}
 	merged.CommonAnnotations, err = t.CommonAnnotations.MergeAll(
 		input.CommonAnnotations)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge CommonAnnotations fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge CommonAnnotations fieldSpec")
 	}
 	merged.CommonLabels, err = t.CommonLabels.MergeAll(input.CommonLabels)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge CommonLabels fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge CommonLabels fieldSpec")
 	}
 	merged.TemplateLabels, err = t.TemplateLabels.MergeAll(input.TemplateLabels)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge TemplateLabels fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge TemplateLabels fieldSpec")
 	}
 	merged.VarReference, err = t.VarReference.MergeAll(input.VarReference)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge VarReference fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge VarReference fieldSpec")
 	}
 	merged.NameReference, err = t.NameReference.mergeAll(input.NameReference)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge NameReference fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge NameReference fieldSpec")
 	}
 	merged.Images, err = t.Images.MergeAll(input.Images)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge Images fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge Images fieldSpec")
 	}
 	merged.Replicas, err = t.Replicas.MergeAll(input.Replicas)
 	if err != nil {
-		return nil, fmt.Errorf("failed to merge Replicas fieldSpec: %w", err)
+		return nil, errors.WrapPrefixf(err, "failed to merge Replicas fieldSpec")
 	}
 	merged.sortFields()
 	return merged, nil
