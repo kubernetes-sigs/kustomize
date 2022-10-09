@@ -41,6 +41,12 @@ spec:
 EOF
 `
 
+const krmEchoDotSh = `#!/bin/bash
+
+resourceList=$(cat)
+echo "$resourceList"
+`
+
 func TestFnExecGenerator(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 
@@ -126,7 +132,7 @@ spec:
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
-func TestFnExecGeneratorWithOverlay(t *testing.T) {
+func TestFnExecGeneratorInOverlay(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -213,6 +219,124 @@ spec:
       containers:
       - image: nginx
         name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnExecTransformer(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	assert.NoError(t, fSys.Mkdir(base))
+	th.WriteK(base, `
+resources:
+- secret.yaml
+transformers:
+- krm-echo.yaml
+`)
+	th.WriteF(filepath.Join(base, "secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+type: Opaque
+stringData:
+  foo: bar
+`)
+	th.WriteF(filepath.Join(base, "krmEcho.sh"), krmEchoDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(base, "krmEcho.sh"), 0777))
+	th.WriteF(filepath.Join(base, "krm-echo.yaml"), `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: MyPlugin
+metadata:
+  name: notImportantHere
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./krmEcho.sh
+`)
+
+	m := th.Run(base, o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+stringData:
+  foo: bar
+type: Opaque
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnExecTransformerInOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	th.WriteK(base, `
+resources:
+- secret.yaml
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+transformers:
+- krm-echo.yaml
+`)
+	th.WriteF(filepath.Join(base, "secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+type: Opaque
+stringData:
+  foo: bar
+`)
+	th.WriteF(filepath.Join(prod, "krmEcho.sh"), krmEchoDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(prod, "krmEcho.sh"), 0777))
+	th.WriteF(filepath.Join(prod, "krm-echo.yaml"), `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: MyPlugin
+metadata:
+  name: notImportantHere
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./krmEcho.sh
+`)
+
+	m := th.Run(prod, o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+stringData:
+  foo: bar
+type: Opaque
 `, string(yml))
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
