@@ -78,3 +78,17 @@ func TestLoader(t *testing.T) {
 		}
 	}
 }
+
+func TestLoaderSetPluginConfigWorkingDir(t *testing.T) {
+	p := provider.NewDefaultDepProvider()
+	rmF := resmap.NewFactory(p.GetResourceFactory())
+	fsys := filesys.MakeFsInMemory()
+	c := types.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pLdr := NewLoader(c, rmF, fsys)
+	pLdrCopy := *pLdr
+	pLdrCopy.DeepCopyPluginConfig()
+	pLdrCopy.SetPluginConfigWorkingDir("/tmp/dummy")
+	if pLdrCopy.Config().FnpLoadingOptions.WorkingDir != "/tmp/dummy" {
+		t.Fatal("plugin working dir is not set correctly")
+	}
+}

@@ -47,8 +47,18 @@ func (l *Loader) Config() *types.PluginConfig {
 	return l.pc
 }
 
-// SetWorkDir sets the working directory for this loader's plugins
-func (l *Loader) SetWorkDir(wd string) {
+// DeepCopyPluginConfig makes a full copy the actual values of PluginConfig.
+func (l *Loader) DeepCopyPluginConfig() {
+	l.pc = &types.PluginConfig{
+		PluginRestrictions: l.pc.PluginRestrictions,
+		BpLoadingOptions:   l.pc.BpLoadingOptions,
+		FnpLoadingOptions:  l.pc.FnpLoadingOptions,
+		HelmConfig:         l.pc.HelmConfig,
+	}
+}
+
+// SetPluginConfigWorkingDir sets the working directory for the loader's plugins.
+func (l *Loader) SetPluginConfigWorkingDir(wd string) {
 	l.pc.FnpLoadingOptions.WorkingDir = wd
 }
 

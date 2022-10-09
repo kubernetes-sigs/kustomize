@@ -45,7 +45,9 @@ func NewKustTarget(
 	rFactory *resmap.Factory,
 	pLdr *loader.Loader) *KustTarget {
 	pLdrCopy := *pLdr
-	pLdrCopy.SetWorkDir(ldr.Root())
+	pLdrCopy.DeepCopyPluginConfig()
+	pLdrCopy.SetPluginConfigWorkingDir(ldr.Root())
+
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
