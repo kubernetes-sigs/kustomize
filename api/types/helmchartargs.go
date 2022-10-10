@@ -72,6 +72,10 @@ type HelmChart struct {
 	// IncludeCRDs specifies if Helm should also generate CustomResourceDefinitions.
 	// Defaults to 'false'.
 	IncludeCRDs bool `json:"includeCRDs,omitempty" yaml:"includeCRDs,omitempty"` //nolint: tagliatelle
+
+	// SkipHooks sets the --no-hooks flag when calling helm template. This prevents
+	// helm from erroneously rendering test templates.
+	SkipHooks bool `json:"skipHooks,omitempty" yaml:"skipHooks,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.
