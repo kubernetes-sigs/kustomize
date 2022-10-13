@@ -74,8 +74,9 @@ function readlink_f {
 }
 
 function find_release_url() {
-  local opsys=$1
-  local arch=$2
+  local releases=$1
+  local opsys=$2
+  local arch=$3
 
   echo "${releases}" |\
     grep "browser_download.*${opsys}_${arch}" |\
@@ -140,19 +141,19 @@ if [[ $releases == *"API rate limit exceeded"* ]]; then
   exit 1
 fi
 
-RELEASE_URL="$(find_release_url "$opsys" "$arch")"
+RELEASE_URL="$(find_release_url "$releases" "$opsys" "$arch")"
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
     # fallback to the old behavior of downloading amd64 binaries on aarch64 systems.
     # People might have qemu-binfmt-misc installed, so it worked for them previously.
     echo "Version $version does not exist for ${opsys}_arm64, trying ${opsys}_amd64 instead."
-    RELEASE_URL="$(find_release_url "$opsys" "amd64")"
+    RELEASE_URL="$(find_release_url "$releases" "$opsys" "amd64")"
     if [[ -n "$RELEASE_URL" ]]; then
       arch=amd64
     fi
 fi
 
-if [ -z "$RELEASE_URL" ]; then
+if [[ -z "$RELEASE_URL" ]]; then
   echo "Version $version does not exist or is not available for ${opsys}/${arch}."
   exit 1
 fi
