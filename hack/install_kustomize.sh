@@ -143,7 +143,7 @@ fi
 
 RELEASE_URL="$(find_release_url "$releases" "$opsys" "$arch")"
 
-if [[ "$(uname -m)" == "aarch64" ]]; then
+if [[ "$arch" == "arm64" ]] && [[ -z "$RELEASE_URL" ]] ; then
     # fallback to the old behavior of downloading amd64 binaries on aarch64 systems.
     # People might have qemu-binfmt-misc installed, so it worked for them previously.
     echo "Version $version does not exist for ${opsys}_arm64, trying ${opsys}_amd64 instead."
