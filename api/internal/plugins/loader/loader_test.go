@@ -6,6 +6,7 @@ package loader_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -79,16 +80,15 @@ func TestLoader(t *testing.T) {
 	}
 }
 
-func TestLoaderSetPluginConfigWorkingDir(t *testing.T) {
+func TestLoaderWithWorkingDir(t *testing.T) {
 	p := provider.NewDefaultDepProvider()
 	rmF := resmap.NewFactory(p.GetResourceFactory())
 	fsys := filesys.MakeFsInMemory()
 	c := types.EnabledPluginConfig(types.BploLoadFromFileSys)
 	pLdr := NewLoader(c, rmF, fsys)
-	pLdrCopy := *pLdr
-	pLdrCopy.DeepCopyPluginConfig()
-	pLdrCopy.SetPluginConfigWorkingDir("/tmp/dummy")
-	if pLdrCopy.Config().FnpLoadingOptions.WorkingDir != "/tmp/dummy" {
-		t.Fatal("plugin working dir is not set correctly")
-	}
+	npLdr := pLdr.LoaderWithWorkingDir("/tmp/dummy")
+	require.Equal(t,
+		"/tmp/dummy",
+		npLdr.Config().FnpLoadingOptions.WorkingDir,
+		"plugin working dir is not set correctly")
 }
