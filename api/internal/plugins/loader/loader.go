@@ -42,24 +42,22 @@ func NewLoader(
 	return &Loader{pc: pc, rf: rf, fs: fs}
 }
 
-// Config provides the global (not plugin specific) PluginConfig data.
-func (l *Loader) Config() *types.PluginConfig {
-	return l.pc
-}
-
-// DeepCopyPluginConfig makes a full copy the actual values of PluginConfig.
-func (l *Loader) DeepCopyPluginConfig() {
-	l.pc = &types.PluginConfig{
+// LoaderWithWorkingDir returns loader after setting its working directory.
+// NOTE: This is not really a new loader since some of the Loader struct fields are pointers.
+func (l *Loader) LoaderWithWorkingDir(wd string) *Loader {
+	lpc := &types.PluginConfig{
 		PluginRestrictions: l.pc.PluginRestrictions,
 		BpLoadingOptions:   l.pc.BpLoadingOptions,
 		FnpLoadingOptions:  l.pc.FnpLoadingOptions,
 		HelmConfig:         l.pc.HelmConfig,
 	}
+	lpc.FnpLoadingOptions.WorkingDir = wd
+	return &Loader{pc: lpc, rf: l.rf, fs: l.fs}
 }
 
-// SetPluginConfigWorkingDir sets the working directory for the loader's plugins.
-func (l *Loader) SetPluginConfigWorkingDir(wd string) {
-	l.pc.FnpLoadingOptions.WorkingDir = wd
+// Config provides the global (not plugin specific) PluginConfig data.
+func (l *Loader) Config() *types.PluginConfig {
+	return l.pc
 }
 
 func (l *Loader) LoadGenerators(
