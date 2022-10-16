@@ -339,6 +339,8 @@ configMapGenerator:
   behavior: replace
   literals:
   - foo=override-bar
+  options:
+    disableNameSuffixHash: true
 secretGenerator:
 - name: secret-in-base
   behavior: merge
@@ -389,7 +391,7 @@ spec:
           name: staging-configmap-in-overlay-dc6fm46dhm
         name: configmap-in-overlay
       - configMap:
-          name: staging-team-foo-configmap-in-base-hc6g9dk6g9
+          name: staging-team-foo-configmap-in-base
         name: configmap-in-base
 ---
 apiVersion: v1
@@ -424,7 +426,7 @@ metadata:
     env: staging
     org: example.com
     team: override-foo
-  name: staging-team-foo-configmap-in-base-hc6g9dk6g9
+  name: staging-team-foo-configmap-in-base
 ---
 apiVersion: v1
 data:
