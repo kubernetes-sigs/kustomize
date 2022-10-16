@@ -94,3 +94,47 @@ metadata:
   name: shouldHaveHash-c9867f8446
 `)
 }
+
+func TestGeneratorOptionsOverlayDisableNameSuffixHash(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: false
+  labels:
+    foo: bar
+configMapGenerator:
+- name: baseShouldHaveHashButOverlayShouldNot
+  literals:
+  - foo=bar
+`)
+	th.WriteK("overlay", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    fruit: apple
+configMapGenerator:
+- name: baseShouldHaveHashButOverlayShouldNot
+  behavior: merge
+  literals:
+  - fruit=apple
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  foo: bar
+  fruit: apple
+kind: ConfigMap
+metadata:
+  labels:
+    foo: bar
+    fruit: apple
+  name: baseShouldHaveHashButOverlayShouldNot
+`)
+}
