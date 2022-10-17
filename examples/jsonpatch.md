@@ -13,7 +13,7 @@ Make a place to work:
 DEMO_HOME=$(mktemp -d)
 ```
 
-We'll be editting an `Ingress` object:
+We'll be editing an `Ingress` object:
 
 <!-- @ingress @testAgainstLatestRelease -->
 ```
