@@ -23,7 +23,6 @@ use (
 	./plugin/builtin/iampolicygenerator
 	./plugin/builtin/imagetagtransformer
 	./plugin/builtin/labeltransformer
-	./plugin/builtin/legacyordertransformer
 	./plugin/builtin/namespacetransformer
 	./plugin/builtin/patchjson6902transformer
 	./plugin/builtin/patchstrategicmergetransformer

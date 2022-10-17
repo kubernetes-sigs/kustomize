@@ -34,7 +34,6 @@ _builtinplugins = \
 	HashTransformer.go \
 	ImageTagTransformer.go \
 	LabelTransformer.go \
-	LegacyOrderTransformer.go \
 	SortOrderTransformer.go \
 	NamespaceTransformer.go \
 	PatchJson6902Transformer.go \
@@ -64,7 +63,6 @@ $(pGen)/GkeSaGenerator.go: $(pSrc)/gkesagenerator/GkeSaGenerator.go
 $(pGen)/HashTransformer.go: $(pSrc)/hashtransformer/HashTransformer.go
 $(pGen)/ImageTagTransformer.go: $(pSrc)/imagetagtransformer/ImageTagTransformer.go
 $(pGen)/LabelTransformer.go: $(pSrc)/labeltransformer/LabelTransformer.go
-$(pGen)/LegacyOrderTransformer.go: $(pSrc)/legacyordertransformer/LegacyOrderTransformer.go
 $(pGen)/SortOrderTransformer.go: $(pSrc)/sortordertransformer/SortOrderTransformer.go
 $(pGen)/NamespaceTransformer.go: $(pSrc)/namespacetransformer/NamespaceTransformer.go
 $(pGen)/PatchJson6902Transformer.go: $(pSrc)/patchjson6902transformer/PatchJson6902Transformer.go

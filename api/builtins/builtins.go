@@ -16,7 +16,6 @@ type (
 	IAMPolicyGeneratorPlugin             = internal.IAMPolicyGeneratorPlugin
 	ImageTagTransformerPlugin            = internal.ImageTagTransformerPlugin
 	LabelTransformerPlugin               = internal.LabelTransformerPlugin
-	LegacyOrderTransformerPlugin         = internal.LegacyOrderTransformerPlugin
 	NamespaceTransformerPlugin           = internal.NamespaceTransformerPlugin
 	PatchJson6902TransformerPlugin       = internal.PatchJson6902TransformerPlugin
 	PatchStrategicMergeTransformerPlugin = internal.PatchStrategicMergeTransformerPlugin
@@ -37,7 +36,6 @@ var (
 	NewIAMPolicyGeneratorPlugin             = internal.NewIAMPolicyGeneratorPlugin
 	NewImageTagTransformerPlugin            = internal.NewImageTagTransformerPlugin
 	NewLabelTransformerPlugin               = internal.NewLabelTransformerPlugin
-	NewLegacyOrderTransformerPlugin         = internal.NewLegacyOrderTransformerPlugin
 	NewNamespaceTransformerPlugin           = internal.NewNamespaceTransformerPlugin
 	NewPatchJson6902TransformerPlugin       = internal.NewPatchJson6902TransformerPlugin
 	NewPatchStrategicMergeTransformerPlugin = internal.NewPatchStrategicMergeTransformerPlugin

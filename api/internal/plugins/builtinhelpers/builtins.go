@@ -19,7 +19,6 @@ const (
 	HashTransformer
 	ImageTagTransformer
 	LabelTransformer
-	LegacyOrderTransformer
 	NamespaceTransformer
 	PatchJson6902Transformer
 	PatchStrategicMergeTransformer
@@ -100,7 +99,6 @@ var TransformerFactories = map[BuiltinPluginType]func() resmap.TransformerPlugin
 	HashTransformer:                builtins.NewHashTransformerPlugin,
 	ImageTagTransformer:            builtins.NewImageTagTransformerPlugin,
 	LabelTransformer:               builtins.NewLabelTransformerPlugin,
-	LegacyOrderTransformer:         builtins.NewLegacyOrderTransformerPlugin,
 	NamespaceTransformer:           builtins.NewNamespaceTransformerPlugin,
 	PatchJson6902Transformer:       builtins.NewPatchJson6902TransformerPlugin,
 	PatchStrategicMergeTransformer: builtins.NewPatchStrategicMergeTransformerPlugin,
