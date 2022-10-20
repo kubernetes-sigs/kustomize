@@ -406,6 +406,28 @@ func TestRNodeGetValidatedMetadata(t *testing.T) {
 				errMsg: "missing metadata.name",
 			},
 		},
+		"generateNameConfigMap": {
+			theMap: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"generateName": "winnie-",
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "v1",
+						Kind:       "ConfigMap",
+					},
+					ObjectMeta: ObjectMeta{
+						NameMeta: NameMeta{
+							GenerateName: "winnie-",
+						},
+					},
+				},
+			},
+		},
 		"configmap": {
 			theMap: testConfigMap,
 			rsExp: resultExpected{

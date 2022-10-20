@@ -18,13 +18,14 @@ const (
 
 // Field names
 const (
-	AnnotationsField = "annotations"
-	APIVersionField  = "apiVersion"
-	KindField        = "kind"
-	MetadataField    = "metadata"
-	DataField        = "data"
-	BinaryDataField  = "binaryData"
-	NameField        = "name"
-	NamespaceField   = "namespace"
-	LabelsField      = "labels"
+	AnnotationsField  = "annotations"
+	APIVersionField   = "apiVersion"
+	KindField         = "kind"
+	MetadataField     = "metadata"
+	DataField         = "data"
+	BinaryDataField   = "binaryData"
+	NameField         = "name"
+	GenerateNameField = "generateName"
+	NamespaceField    = "namespace"
+	LabelsField       = "labels"
 )
