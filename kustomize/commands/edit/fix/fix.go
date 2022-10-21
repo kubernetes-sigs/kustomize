@@ -55,8 +55,7 @@ func RunFix(fSys filesys.FileSystem, w io.Writer) error {
 		return err
 	}
 
-	err = m.FixKustomizationPreMarshalling()
-	if err != nil {
+	if err := m.FixKustomizationPreMarshalling(fSys); err != nil {
 		return err
 	}
 
@@ -68,12 +67,14 @@ func RunFix(fSys filesys.FileSystem, w io.Writer) error {
 		fmt.Fprintln(w, `
 Fixed fields:
   patchesJson6902 -> patches
+  patchesStrategicMerge -> patches
   commonLabels -> labels
   vars -> replacements`)
 	} else {
 		fmt.Fprintln(w, `
 Fixed fields:
   patchesJson6902 -> patches
+  patchesStrategicMerge -> patches
   commonLabels -> labels
 
 To convert vars -> replacements, run the command `+"`kustomize edit fix --vars`"+`
@@ -89,7 +90,7 @@ We recommend doing this in a clean git repository where the change is easy to un
 	fixedBuildCmd := build.NewCmdBuild(fSys, build.MakeHelp(konfig.ProgramName, "build"), &fixedOutput)
 	err = fixedBuildCmd.RunE(fixedBuildCmd, nil)
 	if err != nil {
-		fmt.Fprintf(w, "Warning: 'Fixed' kustomization now produces the error when running `kustomize build`: %s", err.Error())
+		fmt.Fprintf(w, "Warning: 'Fixed' kustomization now produces the error when running `kustomize build`: %s\n", err.Error())
 	} else if fixedOutput.String() != oldOutput.String() {
 		fmt.Fprintf(w, "Warning: 'Fixed' kustomization now produces different output when running `kustomize build`:\n...%s...\n", fixedOutput.String())
 	}
