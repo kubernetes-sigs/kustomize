@@ -1,7 +1,7 @@
 # Copyright 2022 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-GOLANGCI_LINT_VERSION=v1.49.0
+GOLANGCI_LINT_VERSION=v1.50.1
 
 MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
