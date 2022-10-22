@@ -108,6 +108,7 @@ func (c *Converter) prepareWrapper(content string) string {
 		}
 		// assign to plugin variable
 		if strings.TrimSpace(line) == "var plugin resmap.Configurable" {
+			//nolint:dupword
 			line += `
 	// KustomizePlugin is a global variable defined in every plugin
 	plugin = &KustomizePlugin
