@@ -88,7 +88,11 @@ func TestLoaderWithWorkingDir(t *testing.T) {
 	pLdr := NewLoader(c, rmF, fsys)
 	npLdr := pLdr.LoaderWithWorkingDir("/tmp/dummy")
 	require.Equal(t,
+		"",
+		pLdr.Config().FnpLoadingOptions.WorkingDir,
+		"the plugin working dir should not change")
+	require.Equal(t,
 		"/tmp/dummy",
 		npLdr.Config().FnpLoadingOptions.WorkingDir,
-		"plugin working dir is not set correctly")
+		"the plugin working dir is not updated")
 }
