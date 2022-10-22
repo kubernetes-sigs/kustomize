@@ -1076,7 +1076,10 @@ func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
 		return m, nil
 	}
 	if m.NameMeta.Name == "" && m.NameMeta.GenerateName == "" {
-		return m, fmt.Errorf("missing metadata.name in object %v", m)
+		return m, fmt.Errorf(
+			"missing metadata.name or metadata.generateName in object %v",
+			m,
+		)
 	}
 	return m, nil
 }
