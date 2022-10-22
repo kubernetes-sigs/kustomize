@@ -4,6 +4,7 @@
 package yaml
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -432,10 +433,25 @@ func (rn *RNode) getMapFieldValue(field string) *yaml.Node {
 	return nil
 }
 
+// GetGenerateName returns the name, or empty string if
+// field not found.  The setter is more restrictive.
+func (rn *RNode) GetGenerateName() string {
+	return rn.getMetaStringField(GenerateNameField)
+}
+
 // GetName returns the name, or empty string if
 // field not found.  The setter is more restrictive.
 func (rn *RNode) GetName() string {
-	return rn.getMetaStringField(NameField)
+	name := rn.getMetaStringField(NameField)
+	if name == "" {
+		data := rn.MustString()
+		suffix := fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
+
+		name = fmt.Sprintf("%s[%s]", rn.GetGenerateName(), suffix[:10])
+
+	}
+
+	return name
 }
 
 // getMetaStringField returns the value of a string field in metadata.

@@ -13,12 +13,28 @@ import (
 func writeBase(th kusttest_test.Harness) {
 	th.WriteK("base", `
 resources:
+- job.yaml
 - serviceaccount.yaml
 - rolebinding.yaml
 - clusterrolebinding.yaml
 - clusterrole.yaml
 namePrefix: pfx-
 nameSuffix: -sfx
+`)
+	th.WriteF("base/job.yaml", `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: job-
+spec:
+  template:
+    spec:
+      containers:
+      - name: job
+        image: run/job:1.0
+        command:
+        - echo
+        - done
 `)
 	th.WriteF("base/serviceaccount.yaml", `
 apiVersion: v1
@@ -94,6 +110,20 @@ func TestBase(t *testing.T) {
 	writeBase(th)
 	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: job-
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - echo
+        - done
+        image: run/job:1.0
+        name: job
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -145,6 +175,20 @@ func TestMidLevelA(t *testing.T) {
 	writeMidOverlays(th)
 	m := th.Run("overlays/a", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: job-
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - echo
+        - done
+        image: run/job:1.0
+        name: job
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -196,6 +240,20 @@ func TestMidLevelB(t *testing.T) {
 	writeMidOverlays(th)
 	m := th.Run("overlays/b", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: job-
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - echo
+        - done
+        image: run/job:1.0
+        name: job
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -248,6 +306,20 @@ func TestMultibasesNoConflict(t *testing.T) {
 	writeTopOverlay(th)
 	m := th.Run("combined", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: job-
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - echo
+        - done
+        image: run/job:1.0
+        name: job
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -290,6 +362,20 @@ rules:
   - get
   - watch
   - list
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: job-
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - echo
+        - done
+        image: run/job:1.0
+        name: job
 ---
 apiVersion: v1
 kind: ServiceAccount

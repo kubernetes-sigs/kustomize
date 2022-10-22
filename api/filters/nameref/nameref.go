@@ -402,8 +402,13 @@ func (f Filter) confirmNodeMatchesReferrer(node *yaml.RNode) error {
 		return err
 	}
 	if err = checkEqual(
-		"Name", meta.Name, f.Referrer.GetName()); err != nil {
-		return err
+		"generateName",
+		meta.GenerateName,
+		f.Referrer.GetGenerateName()); err != nil {
+		if err = checkEqual(
+			"Name", meta.Name, f.Referrer.GetName()); err != nil {
+			return err
+		}
 	}
 	if err = checkEqual(
 		"Namespace", meta.Namespace, f.Referrer.GetNamespace()); err != nil {
