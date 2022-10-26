@@ -44,13 +44,11 @@ func NewKustTarget(
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
 	pLdr *loader.Loader) *KustTarget {
-	pLdrCopy := *pLdr
-	pLdrCopy.SetWorkDir(ldr.Root())
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
-		pLdr:      &pLdrCopy,
+		pLdr:      pLdr.LoaderWithWorkingDir(ldr.Root()),
 	}
 }
 
