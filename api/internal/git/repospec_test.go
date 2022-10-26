@@ -19,22 +19,26 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 	// Not all combinations make sense, but the parsing is very permissive and
 	// we probably stil don't want to break backwards compatibility for things
 	// that are unintentionally supported.
-	var schemeAuthority = []struct{ raw, normalized string }{
-		{"gh:", "gh:"},
-		{"GH:", "gh:"},
-		{"gitHub.com/", "https://github.com/"},
-		{"github.com:", "https://github.com/"},
-		{"http://github.com/", "https://github.com/"},
-		{"https://github.com/", "https://github.com/"},
-		{"hTTps://github.com/", "https://github.com/"},
-		{"https://git-codecommit.us-east-2.amazonaws.com/", "https://git-codecommit.us-east-2.amazonaws.com/"},
-		{"https://fabrikops2.visualstudio.com/", "https://fabrikops2.visualstudio.com/"},
-		{"ssh://git.example.com:7999/", "ssh://git.example.com:7999/"},
-		{"git::https://gitlab.com/", "https://gitlab.com/"},
-		{"git::http://git.example.com/", "http://git.example.com/"},
-		{"git::https://git.example.com/", "https://git.example.com/"},
-		{"git@github.com:", "git@github.com:"},
-		{"git@github.com/", "git@github.com:"},
+	var schemeAuthority = []struct{ raw, normalized, skip string }{
+		{raw: "gh:", normalized: "gh:"},
+		{raw: "GH:", normalized: "gh:"},
+		{raw: "gitHub.com/", normalized: "https://github.com/"},
+		{raw: "github.com:", normalized: "https://github.com/"},
+		{raw: "http://github.com/", normalized: "https://github.com/"},
+		{raw: "https://github.com/", normalized: "https://github.com/"},
+		{raw: "hTTps://github.com/", normalized: "https://github.com/"},
+		{raw: "https://git-codecommit.us-east-2.amazonaws.com/", normalized: "https://git-codecommit.us-east-2.amazonaws.com/"},
+		{raw: "https://fabrikops2.visualstudio.com/", normalized: "https://fabrikops2.visualstudio.com/"},
+		{raw: "ssh://git.example.com:7999/", normalized: "ssh://git.example.com:7999/"},
+		{raw: "git::https://gitlab.com/", normalized: "https://gitlab.com/"},
+		{raw: "git::http://git.example.com/", normalized: "http://git.example.com/"},
+		{raw: "git::https://git.example.com/", normalized: "https://git.example.com/"},
+		{raw: "git@github.com:", normalized: "git@github.com:"},
+		{raw: "git@github.com/", normalized: "git@github.com:"},
+		{
+			raw:        "git@gitlab.com:",
+			normalized: "git@gitlab.com:",
+			skip:       "incorrectly looks for / as end of host instead of : for relative non-github ssh urls"},
 	}
 	var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -53,6 +57,9 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 
 	var bad [][]string
 	for _, v := range schemeAuthority {
+		if v.skip != "" {
+			continue
+		}
 		hostRaw := v.raw
 		hostSpec := v.normalized
 		for _, orgRepo := range orgRepos {
