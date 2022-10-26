@@ -41,7 +41,19 @@ spec:
 EOF
 `
 
-func TestFnExecGenerator(t *testing.T) {
+const krmTransformerDotSh = `#!/bin/bash
+cat << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummyTransformed
+stringData:
+  foo: bar
+type: Opaque
+EOF
+`
+
+func TestFnExecGeneratorInBase(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -87,7 +99,6 @@ spec:
 `)
 
 	m := th.Run(tmpDir.String(), o)
-	assert.NoError(t, err)
 	yml, err := m.AsYaml()
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
@@ -126,7 +137,7 @@ spec:
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
-func TestFnExecGeneratorWithOverlay(t *testing.T) {
+func TestFnExecGeneratorInBaseWithOverlay(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -213,6 +224,274 @@ spec:
       containers:
       - image: nginx
         name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnExecGeneratorInOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	th.WriteK(base, `
+resources:
+- short_secret.yaml
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+generators:
+- gener.yaml
+`)
+	th.WriteF(filepath.Join(base, "short_secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+type: Opaque
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+`)
+	th.WriteF(filepath.Join(prod, "generateDeployment.sh"), generateDeploymentDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(prod, "generateDeployment.sh"), 0777))
+	th.WriteF(filepath.Join(prod, "gener.yaml"), `
+kind: executable
+metadata:
+  name: demo
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./generateDeployment.sh
+spec:
+`)
+
+	m := th.Run(prod, o)
+	assert.NoError(t, err)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    airshipit.org/ephemeral-user-data: "true"
+  name: node1-bmc-secret
+stringData:
+  userData: |
+    bootcmd:
+    - mkdir /mnt/vda
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnExecTransformerInBase(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	assert.NoError(t, fSys.Mkdir(base))
+	th.WriteK(base, `
+resources:
+- secret.yaml
+transformers:
+- krm-transformer.yaml
+`)
+	th.WriteF(filepath.Join(base, "secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+type: Opaque
+stringData:
+  foo: bar
+`)
+	th.WriteF(filepath.Join(base, "krmTransformer.sh"), krmTransformerDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(base, "krmTransformer.sh"), 0777))
+	th.WriteF(filepath.Join(base, "krm-transformer.yaml"), `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: MyPlugin
+metadata:
+  name: notImportantHere
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./krmTransformer.sh
+`)
+
+	m := th.Run(base, o)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  name: dummyTransformed
+stringData:
+  foo: bar
+type: Opaque
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnExecTransformerInBaseWithOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	th.WriteK(base, `
+resources:
+- secret.yaml
+transformers:
+- krm-transformer.yaml
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+`)
+	th.WriteF(filepath.Join(base, "secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+type: Opaque
+stringData:
+  foo: bar
+`)
+	th.WriteF(filepath.Join(base, "krmTransformer.sh"), krmTransformerDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(base, "krmTransformer.sh"), 0777))
+	th.WriteF(filepath.Join(base, "krm-transformer.yaml"), `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: MyPlugin
+metadata:
+  name: notImportantHere
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./krmTransformer.sh
+`)
+
+	m := th.Run(prod, o)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  name: dummyTransformed
+stringData:
+  foo: bar
+type: Opaque
+`, string(yml))
+	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+}
+
+func TestFnExecTransformerInOverlay(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	base := filepath.Join(tmpDir.String(), "base")
+	prod := filepath.Join(tmpDir.String(), "prod")
+	assert.NoError(t, fSys.Mkdir(base))
+	assert.NoError(t, fSys.Mkdir(prod))
+	th.WriteK(base, `
+resources:
+- secret.yaml
+`)
+	th.WriteK(prod, `
+resources:
+- ../base
+transformers:
+- krm-transformer.yaml
+`)
+	th.WriteF(filepath.Join(base, "secret.yaml"),
+		`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+type: Opaque
+stringData:
+  foo: bar
+`)
+	th.WriteF(filepath.Join(prod, "krmTransformer.sh"), krmTransformerDotSh)
+
+	assert.NoError(t, os.Chmod(filepath.Join(prod, "krmTransformer.sh"), 0777))
+	th.WriteF(filepath.Join(prod, "krm-transformer.yaml"), `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: MyPlugin
+metadata:
+  name: notImportantHere
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./krmTransformer.sh
+`)
+
+	m := th.Run(prod, o)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+kind: Secret
+metadata:
+  name: dummyTransformed
+stringData:
+  foo: bar
+type: Opaque
 `, string(yml))
 	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }

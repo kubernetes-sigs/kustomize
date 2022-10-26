@@ -42,14 +42,22 @@ func NewLoader(
 	return &Loader{pc: pc, rf: rf, fs: fs}
 }
 
+// LoaderWithWorkingDir returns loader after setting its working directory.
+// NOTE: This is not really a new loader since some of the Loader struct fields are pointers.
+func (l *Loader) LoaderWithWorkingDir(wd string) *Loader {
+	lpc := &types.PluginConfig{
+		PluginRestrictions: l.pc.PluginRestrictions,
+		BpLoadingOptions:   l.pc.BpLoadingOptions,
+		FnpLoadingOptions:  l.pc.FnpLoadingOptions,
+		HelmConfig:         l.pc.HelmConfig,
+	}
+	lpc.FnpLoadingOptions.WorkingDir = wd
+	return &Loader{pc: lpc, rf: l.rf, fs: l.fs}
+}
+
 // Config provides the global (not plugin specific) PluginConfig data.
 func (l *Loader) Config() *types.PluginConfig {
 	return l.pc
-}
-
-// SetWorkDir sets the working directory for this loader's plugins
-func (l *Loader) SetWorkDir(wd string) {
-	l.pc.FnpLoadingOptions.WorkingDir = wd
 }
 
 func (l *Loader) LoadGenerators(
