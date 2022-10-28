@@ -443,12 +443,11 @@ func (rn *RNode) GetGenerateName() string {
 // field not found.  The setter is more restrictive.
 func (rn *RNode) GetName() string {
 	name := rn.getMetaStringField(NameField)
-	if name == "" {
+	if name == "" && rn.GetGenerateName() != "" {
 		data := rn.MustString()
 		suffix := fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
 
 		name = fmt.Sprintf("%s[%s]", rn.GetGenerateName(), suffix[:10])
-
 	}
 
 	return name
