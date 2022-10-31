@@ -62,7 +62,7 @@ export GIT_COMMITTER_NAME=Nobody
 cp -r testdata/remoteload/simple $ROOT/simple.git
 (
 	cd $ROOT/simple.git
-    git config --global protocol.file.allow always
+	git config --global protocol.file.allow always
 	git init --initial-branch=main
 	git add .
 	git commit -m "import"
