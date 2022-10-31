@@ -14,7 +14,8 @@ import (
 )
 
 func TestRemoveConfigMap(t *testing.T) {
-	const configMapName = "example-configmap"
+	const configMapName01 = "example-configmap-01"
+	const configMapName02 = "example-configmap-02"
 
 	tests := map[string]struct {
 		input       string
@@ -29,23 +30,23 @@ configMapGenerator:
 - name: %s
   files:
   - application.properties
-`, configMapName),
-			args: []string{configMapName},
+`, configMapName01),
+			args: []string{configMapName01},
 		},
 		"multiple": {
 			input: fmt.Sprintf(`
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 configMapGenerator:
-- name: %s-01
+- name: %s
   files:
   - application.properties
-- name: %s-02
+- name: %s
   files:
   - application.properties
-`, configMapName, configMapName),
+`, configMapName01, configMapName02),
 			args: []string{
-				fmt.Sprintf("%s-01,%s-02", configMapName, configMapName),
+				fmt.Sprintf("%s,%s", configMapName01, configMapName02),
 			},
 		},
 		"miss": {
@@ -56,7 +57,7 @@ configMapGenerator:
 - name: %s
   files:
   - application.properties
-`, configMapName),
+`, configMapName01),
 			args: []string{"foo"},
 		},
 	}

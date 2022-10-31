@@ -6,6 +6,7 @@ package remove
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -67,12 +68,25 @@ func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) err
 	}
 
 	var newConfigMaps []types.ConfigMapArgs
-	for _, configMap := range m.ConfigMapGenerator {
-		if kustfile.StringInSlice(configMap.Name, o.configMapNames) {
+	foundConfigMaps := make(map[string]bool)
+	for _, removeName := range o.configMapNames {
+		foundConfigMaps[removeName] = false
+	}
+
+	for _, currentConfigMap := range m.ConfigMapGenerator {
+		if kustfile.StringInSlice(currentConfigMap.Name, o.configMapNames) {
+			foundConfigMaps[currentConfigMap.Name] = true
 			continue
 		}
-		newConfigMaps = append(newConfigMaps, configMap)
+		newConfigMaps = append(newConfigMaps, currentConfigMap)
 	}
+
+	for name, found := range foundConfigMaps {
+		if !found {
+			log.Printf("configmap %s doesn't exist in kustomization file", name)
+		}
+	}
+
 	m.ConfigMapGenerator = newConfigMaps
 	return mf.Write(m)
 }
