@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/yaml"
 )
 
@@ -217,10 +218,24 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 // FixKustomizationPreMarshalling fixes things
 // that should occur after the kustomization file
 // has been processed.
-func (k *Kustomization) FixKustomizationPreMarshalling() error {
+func (k *Kustomization) FixKustomizationPreMarshalling(fSys filesys.FileSystem) error {
 	// PatchesJson6902 should be under the Patches field.
 	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
+
+	if k.PatchesStrategicMerge != nil {
+		for _, patchStrategicMerge := range k.PatchesStrategicMerge {
+			// check this patch is file path select.
+			if _, err := fSys.ReadFile(string(patchStrategicMerge)); err == nil {
+				// path patch
+				k.Patches = append(k.Patches, Patch{Path: string(patchStrategicMerge)})
+			} else {
+				// inline string patch
+				k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
+			}
+		}
+		k.PatchesStrategicMerge = nil
+	}
 
 	// this fix is not in FixKustomizationPostUnmarshalling because
 	// it will break some commands like `create` and `add`. those
