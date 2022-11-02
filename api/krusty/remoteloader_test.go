@@ -23,6 +23,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const XdgConfigHome = "XDG_CONFIG_HOME"
+
 func TestRemoteLoad_LocalProtocol(t *testing.T) {
 	type testRepos struct {
 		root          string
@@ -58,6 +60,13 @@ export GIT_AUTHOR_EMAIL=nobody@kustomize.io
 export GIT_AUTHOR_NAME=Nobody
 export GIT_COMMITTER_EMAIL=nobody@kustomize.io
 export GIT_COMMITTER_NAME=Nobody
+export XDG_CONFIG_HOME="$ROOT"
+
+mkdir $XDG_CONFIG_HOME/git
+cat <<GitConfig > $XDG_CONFIG_HOME/git/config
+[protocol "file"]
+	allow=always
+GitConfig
 
 cp -r testdata/remoteload/simple $ROOT/simple.git
 (
@@ -264,6 +273,9 @@ resources:
 		},
 	}
 
+	xdgConfigHome := os.Getenv(XdgConfigHome)
+	os.Setenv(XdgConfigHome, repos.root)
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if test.skip {
@@ -287,6 +299,8 @@ resources:
 			}
 		})
 	}
+
+	os.Setenv(XdgConfigHome, xdgConfigHome)
 }
 
 func TestRemoteLoad_RemoteProtocols(t *testing.T) {
