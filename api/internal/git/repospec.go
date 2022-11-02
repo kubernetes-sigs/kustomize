@@ -4,6 +4,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -93,6 +94,10 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if host == "" {
 		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
+	cleanedPath := filepath.Clean(path)
+	if cleanedPath == ".." || strings.HasPrefix(cleanedPath, "../") {
+		return nil, errors.New("path traverses outside of repo")
+	}
 	return &RepoSpec{
 		raw: n, Host: host, OrgRepo: orgRepo,
 		Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: suffix,
@@ -154,7 +159,7 @@ func parseGitURL(n string) (
 		return
 	}
 	j := strings.Index(n[i+1:], "/")
-	if j >= 0 {
+	if j >= 0 && !strings.Contains(n[:j], "?") {
 		j += i + 1
 		orgRepo = n[:j]
 		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[j+1:])
@@ -213,6 +218,92 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 }
 
 func parseHostSpec(n string) (string, string) {
+	var host string
+
+	const legacyGoGetterPrefix = "git::"
+	if strings.HasPrefix(strings.ToLower(n), legacyGoGetterPrefix) {
+		n = n[len(legacyGoGetterPrefix):]
+	}
+	const githubShorthand = "gh:"
+	if strings.HasPrefix(strings.ToLower(n), githubShorthand) {
+		return githubShorthand, n[len(githubShorthand):]
+	}
+	const fileScheme = "file://"
+	if strings.HasPrefix(strings.ToLower(n), fileScheme) {
+		return fileScheme, n[len(fileScheme):]
+	}
+	const sshScheme = "ssh://"
+	lower := strings.ToLower(n)
+	if strings.HasPrefix(lower, sshScheme) {
+		n = n[len(sshScheme):]
+		// this is consistent with current behavior, but
+		// technically incorrect since does not allow port specification
+		for _, authority := range []string{
+			"ssh://git@github.com:",
+			"ssh://git@github.com/",
+			"ssh://github.com:",
+			"ssh://github.com/",
+		} {
+			if strings.HasPrefix(lower, authority) {
+				return normalizeGitHostSpec(authority), n[len(authority):]
+			}
+		}
+		if i := strings.Index(n, "/"); i != -1 {
+			return sshScheme + n[:i+1], n[i+1:]
+		}
+		return sshScheme, n
+	}
+	const userinfo = "git@"
+	if strings.HasPrefix(lower, userinfo) {
+		for _, authority := range []string{
+			"git@github.com:",
+			"git@github.com/",
+		} {
+			if strings.HasPrefix(lower, authority) {
+				return normalizeGitHostSpec(authority), n[len(authority):]
+			}
+			if i := strings.Index(n[len(userinfo):], ":"); i != -1 {
+				n = n[len(userinfo):]
+				return userinfo + n[:i+1], n[i+1:]
+			}
+		}
+		return userinfo, n
+	}
+	for _, scheme := range []string{
+		"https://",
+		"http://",
+	} {
+		if strings.HasPrefix(lower, scheme) {
+			host = scheme
+			lower = lower[len(scheme):]
+			n = n[len(scheme):]
+			for _, domain := range []string{
+				"github.com/",
+				"github.com:",
+			} {
+				if strings.HasPrefix(lower, domain) {
+					return normalizeGitHostSpec(host + domain), n[len(domain):]
+				}
+			}
+			if i := strings.Index(lower, "/"); i != -1 {
+
+				return scheme + n[:i+1], n[i+1:]
+			}
+			return host, n
+		}
+	}
+	for _, domain := range []string{
+		"github.com:",
+		"github.com/",
+	} {
+		if strings.HasPrefix(lower, domain) {
+			return normalizeGitHostSpec(domain), n[len(domain):]
+		}
+	}
+	return host, n[len(host):]
+}
+
+func oldHost(n string) (string, string) {
 	var host string
 	// Start accumulating the host part.
 	for _, p := range []string{

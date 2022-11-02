@@ -38,7 +38,11 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		{
 			raw:        "git@gitlab.com:",
 			normalized: "git@gitlab.com:",
-			skip:       "incorrectly looks for / as end of host instead of : for relative non-github ssh urls"},
+		},
+		{
+			raw:        "ssh://git@gitlab.com/",
+			normalized: "ssh://git@gitlab.com/",
+		},
 	}
 	var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -106,6 +110,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		{"htxxxtp://github.com/", "url lacks host"},
 		{"ssh://git.example.com", "url lacks orgRepo"},
 		{"git::___", "url lacks orgRepo"},
+		{"https://github.com/org/repo//..", "path traverses outside of repo"},
 	}
 
 	for _, testCase := range badData {
@@ -131,6 +136,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		absPath   string
 		skip      string
 	}{
+		{
+			name:      "t0",
+			input:     "https://github.com/someorg/somerepo?ref=group/version",
+			cloneSpec: "https://github.com/someorg/somerepo.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "https://github.com/",
+				OrgRepo:   "someorg/somerepo",
+				Ref:       "group/version",
+				GitSuffix: ".git",
+			},
+		},
 		{
 			name:      "t1",
 			input:     "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir",
