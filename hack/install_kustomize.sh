@@ -112,6 +112,9 @@ x86_64)
 arm64)
     arch=arm64
     ;;
+aarch64)
+    arch=arm64
+    ;;
 ppc64le)
     arch=ppc64le
     ;;
