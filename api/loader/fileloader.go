@@ -299,31 +299,14 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 // else an error. Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
-	// TODO(annasong): replace check with HasRemoteFileScheme
-	if u, err := url.Parse(path); err == nil && (u.Scheme == "http" || u.Scheme == "https") {
+	if HasRemoteFileScheme(path) {
 		var hc *http.Client
 		if fl.http != nil {
 			hc = fl.http
 		} else {
 			hc = &http.Client{}
 		}
-		resp, err := hc.Get(path)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode < 200 || resp.StatusCode > 299 {
-			_, err := git.NewRepoSpecFromURL(path)
-			if err == nil {
-				return nil, errors.Errorf("URL is a git repository")
-			}
-			return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
-		}
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return body, nil
+		return loadURL(hc, path)
 	}
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)
@@ -333,6 +316,25 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 		return nil, err
 	}
 	return fl.fSys.ReadFile(path)
+}
+
+func loadURL(hc *http.Client, path string) ([]byte, error) {
+	resp, err := hc.Get(path)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "cannot GET url")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		if _, err = git.NewRepoSpecFromURL(path); err == nil {
+			return nil, errors.Errorf("URL is a git repository")
+		}
+		return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "cannot read url content")
+	}
+	return body, nil
 }
 
 // Cleanup runs the cleaner.
