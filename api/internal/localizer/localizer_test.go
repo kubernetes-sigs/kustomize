@@ -10,7 +10,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/hasher"
 	"sigs.k8s.io/kustomize/api/internal/localizer"
+	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
+	"sigs.k8s.io/kustomize/api/internal/validate"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -34,8 +41,25 @@ func addFiles(t *testing.T, fSys filesys.FileSystem, parentDir string, files map
 
 	// in-memory file system makes all necessary dirs when writing files
 	for file, content := range files {
-		require.NoError(t, fSys.WriteFile(filepath.Join(parentDir, file), []byte(content)))
+		require.NoError(t, fSys.WriteFile(filepath.Join(parentDir, file), []byte(content))) /**/
 	}
+}
+
+func RunLocalize(t *testing.T, fSys filesys.FileSystem, target string, scope string, newDir string) error {
+	t.Helper()
+
+	// no need to re-test LocLoader
+	ldr, _, err := localizer.NewLoader(target, scope, newDir, fSys)
+	require.NoError(t, err)
+	rmFactory := resmap.NewFactory(resource.NewFactory(&hasher.Hasher{}))
+	lc, err := localizer.NewLocalizer(
+		ldr,
+		validate.NewFieldValidator(),
+		rmFactory,
+		// file system can be in memory, as plugin configuration will prevent the use of file system anyway
+		loader.NewLoader(types.DisabledPluginConfig(), rmFactory, fSys))
+	require.NoError(t, err)
+	return errors.Wrap(lc.Localize())
 }
 
 func TestPatchStrategicMergeOnFile(t *testing.T) {
@@ -48,25 +72,34 @@ func TestPatchStrategicMergeOnFile(t *testing.T) {
 	// tests both inline and file patches
 	// tests localize handles nested directory and winding path
 	files := map[string]string{
-		"kustomization.yaml": `
-patchesStrategicMerge:
+		"kustomization.yaml": `patchesStrategicMerge:
 - ../beta/say/patch.yaml
 - |-
-  apiVersion: apps/v1
+  apiVersion: v1
   metadata:
-    name: myDeployment
-  kind: Deployment
+    name: myPod
+  kind: Pod
   spec:
-    replica: 2
-
+    containers:
+    - name: nginx
+      image: nginx:1.14.2
+      ports:
+      - containerPort: 80
 resources:
 - localized-files`,
 		// in the absence of remote references, localize directory name can be used by other files
-		"localized-files": "localized-files configuration",
-		"say/patch.yaml":  "patch configuration",
+		"localized-files": "deployment configuration",
+		"say/patch.yaml": `apiVersion: v1
+metadata:
+ name: myPod
+kind: Pod
+spec:
+ containers:
+ - name: app
+   image: images.my-company.example/app:v4`,
 	}
 	addFiles(t, fSys, "/alpha/beta", files)
-	err := localizer.Run(fSys, "/alpha/beta", "", "/alpha/newDir")
+	err := RunLocalize(t, fSys, "/alpha/beta", "", "/alpha/newDir")
 	req.NoError(err)
 	req.Empty(buf.String())
 
@@ -77,16 +110,73 @@ kind: Kustomization
 patchesStrategicMerge:
 - say/patch.yaml
 - |-
-  apiVersion: apps/v1
+  apiVersion: v1
   metadata:
-    name: myDeployment
-  kind: Deployment
+    name: myPod
+  kind: Pod
   spec:
-    replica: 2
+    containers:
+    - name: nginx
+      image: nginx:1.14.2
+      ports:
+      - containerPort: 80
 resources:
 - localized-files
 `
 	// directories in scope, but not referenced should not be copied to destination
+	addFiles(t, fSysExpected, "/alpha/newDir", files)
+	req.Equal(fSysExpected, fSys)
+}
+
+func TestSecretGenerator(t *testing.T) {
+	req := require.New(t)
+
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	fSys := makeMemoryFs(t)
+
+	files := map[string]string{
+		// test configurations
+		// test generatorOptions does not affect secretGenerator
+		// show that localize currently replaces deprecated kustomization fields
+		"kustomization.yaml": `
+configurations:
+- name-suffix-config
+nameSuffix: -my
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+- name: my-secret
+  env: data
+  options: 
+    labels:
+      type: fruit
+`,
+		// test no file extensions
+		"name-suffix-config": "nameSuffix field specs",
+		"data":               "APPLE=orange",
+	}
+	addFiles(t, fSys, "/alpha/beta", files)
+	req.NoError(RunLocalize(t, fSys, "/alpha/beta", "", "/alpha/newDir"))
+	req.Empty(buf.String())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/alpha/beta", files)
+	files["kustomization.yaml"] = `apiVersion: kustomize.config.k8s.io/v1beta1
+configurations:
+- name-suffix-config
+generatorOptions:
+  disableNameSuffixHash: true
+kind: Kustomization
+nameSuffix: -my
+secretGenerator:
+- envs:
+  - data
+  name: my-secret
+  options:
+    labels:
+      type: fruit
+`
 	addFiles(t, fSysExpected, "/alpha/newDir", files)
 	req.Equal(fSysExpected, fSys)
 }
@@ -128,10 +218,11 @@ replacements:
 
 		"alpha/my-replacement.yaml": "replacement configuration",
 
+		// test inline and file patchesJson6902
 		// in the absence of remote references, directories can share localize directory name
 		"a/localized-files/Kustomization": `apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
-patches:
+patchesJson6902:
 - patch: |-
     - op: replace
       path: /spec/containers/0/name
@@ -147,7 +238,7 @@ patches:
 	}
 	addFiles(t, fSys, "/", files)
 
-	err := localizer.Run(fSys, "/a", "/", "")
+	err := RunLocalize(t, fSys, "/a", "/", "")
 	require.NoError(t, err)
 	require.Empty(t, buf.String())
 
@@ -172,6 +263,44 @@ resources:
 		"a/localized-files/patch.yaml":         files["a/localized-files/patch.yaml"],
 	}
 	addFiles(t, fSysExpected, "/localized-a", filesExpected)
+	require.Equal(t, fSysExpected, fSys)
+}
+
+func TestOpenAPI(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	fSys := makeMemoryFs(t)
+
+	files := map[string]string{
+		// test patches
+		"a/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+openapi:
+  path: custom-api.json
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/count
+      value: 2
+  target:
+    kind: CustomObject
+- path: patch.yaml
+resources:
+- custom-object.yaml
+`,
+
+		"a/custom-api.json":    "schema",
+		"a/patch.yaml":         "strategic merge patch",
+		"a/custom-object.yaml": "custom object configuration",
+	}
+	addFiles(t, fSys, "/", files)
+
+	require.NoError(t, RunLocalize(t, fSys, "/a", "/", ""))
+	require.Empty(t, buf.String())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/", files)
+	addFiles(t, fSysExpected, "/localized-a", files)
 	require.Equal(t, fSysExpected, fSys)
 }
 
@@ -213,6 +342,7 @@ configMapGenerator:
 
 		"beta/say/more.properties": "more properties",
 
+		// test crds
 		"beta/gamma/delta/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 commonLabels:
   label: value
@@ -241,8 +371,7 @@ resources:
 		"beta/gamma/delta/epsilon/type-new-kind.yaml": "new-kind definition",
 	}
 	addFiles(t, fSys, "/alpha", files)
-	err := localizer.Run(fSys, "/alpha/beta/gamma", "/alpha",
-		"/alpha/beta/gamma/delta/newDir")
+	err := RunLocalize(t, fSys, "/alpha/beta/gamma", "/alpha", "/alpha/beta/gamma/delta/newDir")
 	require.NoError(t, err)
 	require.Empty(t, buf.String())
 
@@ -266,65 +395,5 @@ resources:
 `
 	files["beta/gamma/delta/deployment.yaml"] = "deployment configuration"
 	addFiles(t, fSysExpected, "/alpha/beta/gamma/delta/newDir", files)
-	require.Equal(t, fSysExpected, fSys)
-}
-
-func TestExtensions(t *testing.T) {
-	req := require.New(t)
-
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-
-	fSys := makeMemoryFs(t)
-	files := map[string]string{
-		"a/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-generators:
-- generator.yaml
-kind: Kustomization
-resources:
-- pod.yaml
-transformers:
-- transformer.yaml
-`,
-
-		"a/generator.yaml": "generator configuration",
-
-		"a/transformer.yaml": "transformer configuration",
-	}
-	addFiles(t, fSys, "/", files)
-
-	err := localizer.Run(fSys, "a", ".", "newDir")
-	req.NoError(err)
-	req.Contains(buf.String(), localizer.GeneratorWarning)
-	req.Contains(buf.String(), localizer.TransformerWarning)
-
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/", files)
-	filesExpected := map[string]string{
-		"a/kustomization.yaml": files["a/kustomization.yaml"],
-		"a/pod.yaml":           "pod configuration",
-	}
-	addFiles(t, fSysExpected, "/newDir", filesExpected)
-	req.Equal(fSysExpected, fSys)
-}
-
-func TestCleanDstOnErr(t *testing.T) {
-	fSys := makeMemoryFs(t)
-	files := map[string]string{
-		"a/kustomization.yaml": `
-resources:
-- pod.yaml
-- b
-namePrefix: my-`,
-		"b/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-invalidField: invalidValue`,
-	}
-	addFiles(t, fSys, "/", files)
-	err := localizer.Run(fSys, "/a", "/", "/newDir")
-	require.Error(t, err)
-
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/", files)
 	require.Equal(t, fSysExpected, fSys)
 }

@@ -20,31 +20,6 @@ import (
 
 var utf8bom = []byte{0xEF, 0xBB, 0xBF}
 
-// ParseFileSource parses the source given.
-//
-//  Acceptable formats include:
-//   1.  source-path: the basename will become the key name
-//   2.  source-name=source-path: the source-name will become the key name and
-//       source-path is the path to the key file.
-//
-// Key names cannot include '='.
-func ParseFileSource(source string) (keyName, filePath string, err error) {
-	numSeparators := strings.Count(source, "=")
-	switch {
-	case numSeparators == 0:
-		return path.Base(source), source, nil
-	case numSeparators == 1 && strings.HasPrefix(source, "="):
-		return "", "", fmt.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
-	case numSeparators == 1 && strings.HasSuffix(source, "="):
-		return "", "", fmt.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
-	case numSeparators > 1:
-		return "", "", errors.New("key names or file paths cannot contain '='")
-	default:
-		components := strings.Split(source, "=")
-		return components[0], components[1], nil
-	}
-}
-
 // loader reads and validates KV pairs.
 type loader struct {
 	// Used to read the filesystem.
@@ -102,7 +77,7 @@ func keyValuesFromLiteralSources(sources []string) ([]types.Pair, error) {
 func (kvl *loader) keyValuesFromFileSources(sources []string) ([]types.Pair, error) {
 	var kvs []types.Pair
 	for _, s := range sources {
-		k, fPath, err := ParseFileSource(s)
+		k, fPath, err := parseFileSource(s)
 		if err != nil {
 			return nil, err
 		}
@@ -198,6 +173,31 @@ func (kvl *loader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, 
 	}
 	kv.Key = key
 	return kv, nil
+}
+
+// ParseFileSource parses the source given.
+//
+//	Acceptable formats include:
+//	 1.  source-path: the basename will become the key name
+//	 2.  source-name=source-path: the source-name will become the key name and
+//	     source-path is the path to the key file.
+//
+// Key names cannot include '='.
+func parseFileSource(source string) (keyName, filePath string, err error) {
+	numSeparators := strings.Count(source, "=")
+	switch {
+	case numSeparators == 0:
+		return path.Base(source), source, nil
+	case numSeparators == 1 && strings.HasPrefix(source, "="):
+		return "", "", fmt.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
+	case numSeparators == 1 && strings.HasSuffix(source, "="):
+		return "", "", fmt.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
+	case numSeparators > 1:
+		return "", "", errors.New("key names or file paths cannot contain '='")
+	default:
+		components := strings.Split(source, "=")
+		return components[0], components[1], nil
+	}
 }
 
 // ParseLiteralSource parses the source key=val pair into its component pieces.
