@@ -18,9 +18,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// HasRemoteFileScheme returns whether path has a url scheme that kustomize allows for
+// IsRemoteFile returns whether path has a url scheme that kustomize allows for
 // remote files. See https://github.com/kubernetes-sigs/kustomize/blob/master/examples/remoteBuild.md
-func HasRemoteFileScheme(path string) bool {
+func IsRemoteFile(path string) bool {
 	u, err := url.Parse(path)
 	return err == nil && (u.Scheme == "http" || u.Scheme == "https")
 }
@@ -299,14 +299,8 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 // else an error. Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
-	if HasRemoteFileScheme(path) {
-		var hc *http.Client
-		if fl.http != nil {
-			hc = fl.http
-		} else {
-			hc = &http.Client{}
-		}
-		return loadURL(hc, path)
+	if IsRemoteFile(path) {
+		return fl.httpClientGetContent(path)
 	}
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)
@@ -318,23 +312,28 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 	return fl.fSys.ReadFile(path)
 }
 
-func loadURL(hc *http.Client, path string) ([]byte, error) {
+func (fl *fileLoader) httpClientGetContent(path string) ([]byte, error) {
+	var hc *http.Client
+	if fl.http != nil {
+		hc = fl.http
+	} else {
+		hc = &http.Client{}
+	}
 	resp, err := hc.Get(path)
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, "cannot GET url")
+		return nil, errors.Wrap(err)
 	}
 	defer resp.Body.Close()
+	// response unsuccessful
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		if _, err = git.NewRepoSpecFromURL(path); err == nil {
+		_, err = git.NewRepoSpecFromURL(path)
+		if err == nil {
 			return nil, errors.Errorf("URL is a git repository")
 		}
 		return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "cannot read url content")
-	}
-	return body, nil
+	content, err := io.ReadAll(resp.Body)
+	return content, errors.Wrap(err)
 }
 
 // Cleanup runs the cleaner.

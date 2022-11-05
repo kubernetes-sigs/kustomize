@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func TestHasRemoteFileScheme(t *testing.T) {
+func TestIsRemoteFile(t *testing.T) {
 	cases := map[string]struct {
 		url   string
 		valid bool
@@ -50,7 +50,7 @@ func TestHasRemoteFileScheme(t *testing.T) {
 	for name, test := range cases {
 		test := test
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, test.valid, HasRemoteFileScheme(test.url))
+			require.Equal(t, test.valid, IsRemoteFile(test.url))
 		})
 	}
 }
