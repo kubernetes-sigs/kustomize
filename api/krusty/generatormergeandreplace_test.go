@@ -339,8 +339,6 @@ configMapGenerator:
   behavior: replace
   literals:
   - foo=override-bar
-  options:
-    disableNameSuffixHash: true
 secretGenerator:
 - name: secret-in-base
   behavior: merge
@@ -389,6 +387,165 @@ spec:
         name: nginx-persistent-storage
       - configMap:
           name: staging-configmap-in-overlay-dc6fm46dhm
+        name: configmap-in-overlay
+      - configMap:
+          name: staging-team-foo-configmap-in-base-hc6g9dk6g9
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+---
+apiVersion: v1
+data:
+  foo: override-bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-configmap-in-base-hc6g9dk6g9
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  proxy: aGFwcm94eQ==
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-secret-in-base-k2k4692t9g
+type: Opaque
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: override-foo
+  name: staging-configmap-in-overlay-dc6fm46dhm
+`)
+}
+
+func TestMergeAndReplaceDisableNameSuffixHashGenerators(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeBaseWithGenerators(th)
+	th.WriteF("overlay/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-overlay
+        name: configmap-in-overlay
+`)
+	th.WriteK("overlay", `
+namePrefix: staging-
+commonLabels:
+  env: staging
+  team: override-foo
+patchesStrategicMerge:
+- deployment.yaml
+resources:
+- ../app
+configMapGenerator:
+- name: configmap-in-overlay
+  literals:
+  - hello=world
+  options:
+    disableNameSuffixHash: true
+- name: configmap-in-base
+  behavior: replace
+  literals:
+  - foo=override-bar
+  options:
+    disableNameSuffixHash: true
+secretGenerator:
+- name: secret-in-base
+  behavior: merge
+  literals:
+  - proxy=haproxy
+  options:
+    disableNameSuffixHash: true
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-nginx
+spec:
+  selector:
+    matchLabels:
+      app: mynginx
+      env: staging
+      org: example.com
+      team: override-foo
+  template:
+    metadata:
+      annotations:
+        note: This is a test annotation
+      labels:
+        app: mynginx
+        env: staging
+        org: example.com
+        team: override-foo
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: staging-configmap-in-overlay
         name: configmap-in-overlay
       - configMap:
           name: staging-team-foo-configmap-in-base
@@ -442,7 +599,7 @@ metadata:
     env: staging
     org: example.com
     team: override-foo
-  name: staging-team-foo-secret-in-base-k2k4692t9g
+  name: staging-team-foo-secret-in-base
 type: Opaque
 ---
 apiVersion: v1
@@ -453,7 +610,7 @@ metadata:
   labels:
     env: staging
     team: override-foo
-  name: staging-configmap-in-overlay-dc6fm46dhm
+  name: staging-configmap-in-overlay
 `)
 }
 
