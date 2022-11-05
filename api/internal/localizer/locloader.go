@@ -117,7 +117,8 @@ func (ll *locLoader) Load(path string) ([]byte, error) {
 // Otherwise, New returns an error.
 func (ll *locLoader) New(path string) (ifc.Loader, error) {
 	repoSpec, err := git.NewRepoSpecFromURL(path)
-	if err == nil && repoSpec.Ref == "" {
+	isRemote := err == nil
+	if isRemote && repoSpec.Ref == "" {
 		return nil, errors.Errorf("localize remote root '%s' missing ref query string parameter", path)
 	}
 
@@ -126,8 +127,7 @@ func (ll *locLoader) New(path string) (ifc.Loader, error) {
 		return nil, errors.WrapPrefixf(err, "invalid root reference")
 	}
 
-	var isRemote bool
-	if _, isRemote = ldr.Repo(); !isRemote {
+	if !isRemote {
 		if ll.local && !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.Scope) {
 			return nil, errors.Errorf("root '%s' outside localize scope '%s'", ldr.Root(), ll.args.Scope)
 		}
