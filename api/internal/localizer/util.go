@@ -89,3 +89,12 @@ func urlBase(url string) string {
 	}
 	return cleaned[i+1:]
 }
+
+// hasRef checks if repoURL has ref query string parameter
+func hasRef(repoURL string) bool {
+	repoSpec, err := git.NewRepoSpecFromURL(repoURL)
+	if err != nil {
+		log.Fatalf("%s: %s", "unable to parse validated root url", err.Error())
+	}
+	return repoSpec.Ref != ""
+}
