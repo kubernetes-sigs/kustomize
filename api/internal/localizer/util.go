@@ -94,7 +94,7 @@ func urlBase(url string) string {
 func hasRef(repoURL string) bool {
 	repoSpec, err := git.NewRepoSpecFromURL(repoURL)
 	if err != nil {
-		log.Fatalf("%s: %s", "unable to parse validated root url", err.Error())
+		log.Fatalf("unable to parse validated root url: %s", err.Error())
 	}
 	return repoSpec.Ref != ""
 }

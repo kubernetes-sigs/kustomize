@@ -130,7 +130,7 @@ func (ll *locLoader) New(path string) (ifc.Loader, error) {
 				"root '%s' references into localize destination '%s'", ldr.Root(), ll.args.NewDir)
 		}
 	} else if !hasRef(path) {
-		return nil, errors.Errorf("localize remote root '%s' missing ref query string parameter", path)
+		return nil, errors.Errorf("localize remote root %q missing ref query string parameter", path)
 	}
 
 	return &locLoader{
