@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package localizer_test
+package localizer //nolint:testpackage
 
 import (
 	"bytes"
@@ -10,13 +10,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
-	lclzr "sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const dstPrefix = "localized"
-
-func checkNewLocLoader(req *require.Assertions, ldr *lclzr.LocLoader, args *lclzr.LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
+func checkNewLocLoader(req *require.Assertions, ldr *LocLoader, args *LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
 	checkLoader(req, ldr, target)
 	checkLocArgs(req, args, target, scope, newDir, fSys)
 }
@@ -26,7 +23,7 @@ func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
 	req.Empty(ldr.Repo())
 }
 
-func checkLocArgs(req *require.Assertions, args *lclzr.LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
+func checkLocArgs(req *require.Assertions, args *LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
 	req.Equal(target, args.Target.String())
 	req.Equal(scope, args.Scope.String())
 	req.Equal(newDir, args.NewDir.String())
@@ -40,7 +37,7 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	// typical setup
-	ldr, args, err := lclzr.NewLocLoader("a", "/", "/newDir", fSys)
+	ldr, args, err := NewLocLoader("a", "/", "/newDir", fSys)
 	req.NoError(err)
 	checkNewLocLoader(req, ldr, &args, "/a", "/", "/newDir", fSys)
 
@@ -87,7 +84,7 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
 
-			ldr, args, err := lclzr.NewLocLoader(params.target, params.scope, "", fSys)
+			ldr, args, err := NewLocLoader(params.target, params.scope, "", fSys)
 			req.NoError(err)
 			checkNewLocLoader(req, ldr, &args, "/", "/", "/"+dstPrefix, fSys)
 
@@ -114,7 +111,7 @@ func TestNewMultiple(t *testing.T) {
 
 	// default destination for non-file system root target
 	// destination outside of scope
-	ldr, args, err := lclzr.NewLocLoader("/alpha/beta", "/alpha", "", fSys)
+	ldr, args, err := NewLocLoader("/alpha/beta", "/alpha", "", fSys)
 	req.NoError(err)
 	checkNewLocLoader(req, ldr, &args, "/alpha/beta", "/alpha", "/"+dstPrefix+"-beta", fSys)
 
@@ -175,7 +172,7 @@ func TestNewLocLoaderCwdNotRoot(t *testing.T) {
 			req := require.New(t)
 			fSys := makeWdFs(t)[test.wd]
 
-			ldr, args, err := lclzr.NewLocLoader(test.target, test.scope, test.newDir, fSys)
+			ldr, args, err := NewLocLoader(test.target, test.scope, test.newDir, fSys)
 			req.NoError(err)
 			checkLoader(req, ldr, "a/b/c/d/e")
 
@@ -225,7 +222,7 @@ func TestNewLocLoaderFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var buf bytes.Buffer
 			log.SetOutput(&buf)
-			_, _, err := lclzr.NewLocLoader(params.target, params.scope, params.dest, makeMemoryFs(t))
+			_, _, err := NewLocLoader(params.target, params.scope, params.dest, makeMemoryFs(t))
 			require.Error(t, err)
 			require.Empty(t, buf.String())
 		})
@@ -236,7 +233,7 @@ func TestNewFails(t *testing.T) {
 	req := require.New(t)
 	fSys := makeMemoryFs(t)
 
-	ldr, args, err := lclzr.NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
+	ldr, args, err := NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 	req.NoError(err)
 	checkNewLocLoader(req, ldr, &args, "/alpha/beta/gamma", "/alpha", "/alpha/beta/gamma/newDir", fSys)
 
@@ -252,7 +249,7 @@ func TestNewFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
 
-			ldr, _, err := lclzr.NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
+			ldr, _, err := NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 			require.NoError(t, err)
 
 			_, err = ldr.New(root)
@@ -265,7 +262,7 @@ func TestLoadFails(t *testing.T) {
 	req := require.New(t)
 	fSys := makeMemoryFs(t)
 
-	ldr, args, err := lclzr.NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
+	ldr, args, err := NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 	req.NoError(err)
 	checkNewLocLoader(req, ldr, &args, "/a", "/a", "/a/newDir", fSys)
 
@@ -282,7 +279,7 @@ func TestLoadFails(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
 
-			ldr, _, err := lclzr.NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
+			ldr, _, err := NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 			req.NoError(err)
 
 			req.NoError(fSys.WriteFile("/a/newDir/pod.yaml", []byte("pod configuration")))

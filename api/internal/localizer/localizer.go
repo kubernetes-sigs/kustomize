@@ -27,7 +27,7 @@ type Localizer struct {
 	rFactory  *resmap.Factory
 	pLdr      *plgnsLdr.Loader
 
-	// should be LocLoader
+	// underlying type is LocLoader
 	ldr ifc.Loader
 
 	// destination directory in newDir that mirrors ldr's current root.
@@ -63,7 +63,7 @@ func (lc *Localizer) Localize() error {
 		return errors.Wrap(err)
 	}
 
-	kust, err := lc.processKust(kt)
+	kust, err := processKustFn(lc, kt)
 	if err != nil {
 		return err
 	}
@@ -78,8 +78,9 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// processKust returns a copy of the kustomization at the KustTarget with all paths localized.
-func (lc *Localizer) processKust(_ *target.KustTarget) (*types.Kustomization, error) {
-	// TODO(annasong): Implement
+// TODO(annasong): test only, will be replaced by Localizer.processKust
+var processKustFn = processKust //nolint:gochecknoglobals
+
+func processKust(_ *Localizer, _ *target.KustTarget) (*types.Kustomization, error) {
 	return nil, nil
 }
