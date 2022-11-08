@@ -14,13 +14,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// establishScope returns the scope given localize arguments and targetLdr at targetArg
+// establishScope returns the effective scope given localize arguments and targetLdr at targetArg. For remote targetArg,
+// the effective scope is the downloaded repo.
 func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
-	if targetLdr.Repo() != "" {
+	if repo := targetLdr.Repo(); repo != "" {
 		if scopeArg != "" {
 			return "", errors.Errorf("scope '%s' specified for remote localize target '%s'", scopeArg, targetArg)
 		}
-		return "", nil
+		return filesys.ConfirmedDir(repo), nil
 	}
 	// default scope
 	if scopeArg == "" {
