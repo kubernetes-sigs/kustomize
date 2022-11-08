@@ -16,7 +16,7 @@ import (
 
 // establishScope returns the scope given localize arguments and targetLdr at targetArg
 func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
-	if _, isRemote := targetLdr.Repo(); isRemote {
+	if targetLdr.Repo() != "" {
 		if scopeArg != "" {
 			return "", errors.Errorf("scope '%s' specified for remote localize target '%s'", scopeArg, targetArg)
 		}
@@ -65,7 +65,7 @@ func createNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, fS
 // and spec of target, which is nil if target is local
 func defaultNewDir(targetLdr ifc.Loader, spec *git.RepoSpec) string {
 	targetDir := filepath.Base(targetLdr.Root())
-	if repo, isRemote := targetLdr.Repo(); isRemote {
+	if repo := targetLdr.Repo(); repo != "" {
 		// kustomize doesn't download repo into repo-named folder
 		// must find repo folder name from url
 		if repo == targetLdr.Root() {
@@ -88,4 +88,13 @@ func urlBase(url string) string {
 		return cleaned
 	}
 	return cleaned[i+1:]
+}
+
+// hasRef checks if repoURL has ref query string parameter
+func hasRef(repoURL string) bool {
+	repoSpec, err := git.NewRepoSpecFromURL(repoURL)
+	if err != nil {
+		log.Fatalf("unable to parse validated root url: %s", err.Error())
+	}
+	return repoSpec.Ref != ""
 }

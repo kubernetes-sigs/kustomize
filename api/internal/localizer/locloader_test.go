@@ -38,9 +38,7 @@ func checkNewLocLoader(req *require.Assertions, ldr ifc.Loader, args *lclzr.LocA
 
 func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
 	req.Equal(root, ldr.Root())
-	repo, isRemote := ldr.Repo()
-	req.Equal(false, isRemote)
-	req.Equal("", repo)
+	req.Empty(ldr.Repo())
 }
 
 func checkLocArgs(req *require.Assertions, args *lclzr.LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
