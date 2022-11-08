@@ -48,7 +48,7 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	// easy load directly in root
 	content, err := ldr.Load("pod.yaml")
 	req.NoError(err)
-	req.Equal([]byte("pod configuration"), content)
+	req.Equal([]byte(podConfiguration), content)
 
 	// typical sibling root reference
 	sibLdr, err := ldr.New("../alpha")
@@ -91,7 +91,7 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 			// file in root, but nested
 			content, err := ldr.Load("a/pod.yaml")
 			req.NoError(err)
-			req.Equal([]byte("pod configuration"), content)
+			req.Equal([]byte(podConfiguration), content)
 
 			childLdr, err := ldr.New("a")
 			req.NoError(err)
@@ -100,7 +100,7 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 			// messy, uncleaned path
 			content, err = childLdr.Load("./../a/pod.yaml")
 			req.NoError(err)
-			req.Equal([]byte("pod configuration"), content)
+			req.Equal([]byte(podConfiguration), content)
 		})
 	}
 }
@@ -282,7 +282,7 @@ func TestLoadFails(t *testing.T) {
 			ldr, _, err := NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 			req.NoError(err)
 
-			req.NoError(fSys.WriteFile("/a/newDir/pod.yaml", []byte("pod configuration")))
+			req.NoError(fSys.WriteFile("/a/newDir/pod.yaml", []byte(podConfiguration)))
 
 			_, err = ldr.Load(file)
 			req.Error(err)

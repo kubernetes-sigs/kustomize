@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
-	plgnsLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
+	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -25,7 +25,7 @@ type Localizer struct {
 	// kusttarget fields
 	validator ifc.Validator
 	rFactory  *resmap.Factory
-	pLdr      *plgnsLdr.Loader
+	pLdr      *pLdr.Loader
 
 	// underlying type is LocLoader
 	ldr ifc.Loader
@@ -35,7 +35,7 @@ type Localizer struct {
 }
 
 // NewLocalizer is the factory method for Localizer
-func NewLocalizer(ldr *LocLoader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *plgnsLdr.Loader) (*Localizer, error) {
+func NewLocalizer(ldr *LocLoader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
 	toDst, err := filepath.Rel(ldr.args.Scope.String(), ldr.Root())
 	if err != nil {
 		log.Fatalf("cannot find path from directory %q to %q inside directory: %s", ldr.args.Scope.String(),
@@ -81,6 +81,8 @@ func (lc *Localizer) Localize() error {
 // TODO(annasong): test only, will be replaced by Localizer.processKust
 var processKustFn = processKust //nolint:gochecknoglobals
 
+// TODO(annasong): implement
+// processKust returns a copy of the kustomization at KustTarget with paths localized.
 func processKust(_ *Localizer, _ *target.KustTarget) (*types.Kustomization, error) {
 	return nil, nil
 }

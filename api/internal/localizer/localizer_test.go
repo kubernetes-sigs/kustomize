@@ -18,13 +18,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const podConfiguration = `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    -containerPort: 80
+`
+
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	t.Helper()
 	req := require.New(t)
 
 	fSys := filesys.MakeFsInMemory()
 	req.NoError(fSys.MkdirAll("/a/b"))
-	req.NoError(fSys.WriteFile("/a/pod.yaml", []byte("pod configuration")))
+	req.NoError(fSys.WriteFile("/a/pod.yaml", []byte(podConfiguration)))
 
 	dirChain := "/alpha/beta/gamma/delta"
 	req.NoError(fSys.MkdirAll(dirChain))
