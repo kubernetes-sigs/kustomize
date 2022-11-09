@@ -63,10 +63,7 @@ func (lc *Localizer) Localize() error {
 		return errors.Wrap(err)
 	}
 
-	kust, err := ProcessKustFn(lc, kt)
-	if err != nil {
-		return err
-	}
+	kust := lc.processKust(kt)
 
 	content, err := yaml.Marshal(kust)
 	if err != nil {
@@ -78,12 +75,9 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// ProcessKustFn should return a kustomization with paths localized.
-// TODO(annasong): test only, will be replaced by Localizer.processKust
-var ProcessKustFn = processKust //nolint:gochecknoglobals
-
 // TODO(annasong): implement
-// processKust returns a copy of the kustomization at KustTarget with paths localized.
-func processKust(_ *Localizer, _ *target.KustTarget) (*types.Kustomization, error) {
-	return nil, nil
+// processKust returns a copy of the kustomization at kt with paths localized.
+func (lc *Localizer) processKust(kt *target.KustTarget) *types.Kustomization {
+	kust := kt.Kustomization()
+	return &kust
 }

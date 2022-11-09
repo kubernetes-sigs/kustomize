@@ -11,7 +11,6 @@ import (
 	"sigs.k8s.io/kustomize/api/hasher"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/internal/validate"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -93,38 +92,26 @@ func TestNewLocalizerTargetNestedInScope(t *testing.T) {
 func TestLocalizeKustomizationName(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustomization := map[string]string{
-		"Kustomization": `resources:
-- pod.yaml
-configMapGenerator:
-- name: map
-  behavior: create
-  literals:
-  - APPLE=orange`,
-	}
-	addFiles(t, fSys, "/a", kustomization)
-
-	lclzr := createLocalizer(t, fSys, "/a", "/", "/dst")
-	ProcessKustFn = func(_ *Localizer, kt *target.KustTarget) (*types.Kustomization, error) {
-		kust := kt.Kustomization()
-		kust.NamePrefix = "my-"
-		return &kust, nil
-	}
-	require.NoError(t, lclzr.Localize())
-
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustomization)
-	addFiles(t, fSysExpected, "/dst/a", map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+		"Kustomization": `apiVersion: kustomize.config.k8s.io/v1beta1
 configMapGenerator:
 - behavior: create
   literals:
   - APPLE=orange
   name: map
 kind: Kustomization
-namePrefix: my-
 resources:
 - pod.yaml
 `,
+	}
+	addFiles(t, fSys, "/a", kustomization)
+
+	lclzr := createLocalizer(t, fSys, "/a", "/", "/dst")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustomization)
+	addFiles(t, fSysExpected, "/dst/a", map[string]string{
+		"kustomization.yaml": kustomization["Kustomization"],
 	})
 	require.Equal(t, fSysExpected, fSys)
 }
