@@ -14,25 +14,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// establishScope returns the effective scope given localize arguments and targetLdr at targetArg. For remote targetArg,
+// establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote targetArg,
 // the effective scope is the downloaded repo.
-func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
+func establishScope(rawScope string, rawTarget string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
 	if repo := targetLdr.Repo(); repo != "" {
-		if scopeArg != "" {
-			return "", errors.Errorf("scope %q specified for remote localize target %q", scopeArg, targetArg)
+		if rawScope != "" {
+			return "", errors.Errorf("scope %q specified for remote localize target %q", rawScope, rawTarget)
 		}
 		return filesys.ConfirmedDir(repo), nil
 	}
 	// default scope
-	if scopeArg == "" {
+	if rawScope == "" {
 		return filesys.ConfirmedDir(targetLdr.Root()), nil
 	}
-	scope, err := filesys.ConfirmDir(fSys, scopeArg)
+	scope, err := filesys.ConfirmDir(fSys, rawScope)
 	if err != nil {
 		return "", errors.WrapPrefixf(err, "unable to establish localize scope")
 	}
 	if !filesys.ConfirmedDir(targetLdr.Root()).HasPrefix(scope) {
-		return scope, errors.Errorf("localize scope %q does not contain target %q at %q", scopeArg, targetArg,
+		return scope, errors.Errorf("localize scope %q does not contain target %q at %q", rawScope, rawTarget,
 			targetLdr.Root())
 	}
 	return scope, nil
@@ -40,18 +40,18 @@ func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSy
 
 // createNewDir returns the localize destination directory or error. Note that spec is nil if targetLdr is at local
 // target.
-func createNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
-	if newDirArg == "" {
-		newDirArg = defaultNewDir(targetLdr, spec)
+func createNewDir(rawNewDir string, targetLdr ifc.Loader, spec *git.RepoSpec, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
+	if rawNewDir == "" {
+		rawNewDir = defaultNewDir(targetLdr, spec)
 	}
-	if fSys.Exists(newDirArg) {
-		return "", errors.Errorf("localize destination %q already exists", newDirArg)
+	if fSys.Exists(rawNewDir) {
+		return "", errors.Errorf("localize destination %q already exists", rawNewDir)
 	}
 	// destination directory must sit in an existing directory
-	if err := fSys.Mkdir(newDirArg); err != nil {
+	if err := fSys.Mkdir(rawNewDir); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to create localize destination directory")
 	}
-	newDir, err := filesys.ConfirmDir(fSys, newDirArg)
+	newDir, err := filesys.ConfirmDir(fSys, rawNewDir)
 	if err != nil {
 		if errCleanup := fSys.RemoveAll(newDir.String()); errCleanup != nil {
 			log.Printf("%s", errors.WrapPrefixf(errCleanup, "unable to clean localize destination").Error())

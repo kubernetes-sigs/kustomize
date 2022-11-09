@@ -43,32 +43,32 @@ type LocLoader struct {
 
 var _ ifc.Loader = &LocLoader{}
 
-// NewLocLoader is the factory method for LocLoader, under localize constraints, at targetArg. For invalid localize arguments,
+// NewLocLoader is the factory method for LocLoader, under localize constraints, at rawTarget. For invalid localize arguments,
 // NewLocLoader returns an error.
-func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys filesys.FileSystem) (*LocLoader, LocArgs, error) {
+func NewLocLoader(rawTarget string, rawScope string, rawNewDir string, fSys filesys.FileSystem) (*LocLoader, LocArgs, error) {
 	// check earlier to avoid cleanup
-	repoSpec, err := git.NewRepoSpecFromURL(targetArg)
+	repoSpec, err := git.NewRepoSpecFromURL(rawTarget)
 	if err == nil && repoSpec.Ref == "" {
 		return nil, LocArgs{},
-			errors.Errorf("localize remote root %q missing ref query string parameter", targetArg)
+			errors.Errorf("localize remote root %q missing ref query string parameter", rawTarget)
 	}
 
 	// for security, should enforce load restrictions
-	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, targetArg, fSys)
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, rawTarget, fSys)
 	if err != nil {
-		return nil, LocArgs{}, errors.WrapPrefixf(err, "unable to establish localize target %q", targetArg)
+		return nil, LocArgs{}, errors.WrapPrefixf(err, "unable to establish localize target %q", rawTarget)
 	}
 
-	scope, err := establishScope(scopeArg, targetArg, ldr, fSys)
+	scope, err := establishScope(rawScope, rawTarget, ldr, fSys)
 	if err != nil {
 		_ = ldr.Cleanup()
-		return nil, LocArgs{}, errors.WrapPrefixf(err, "invalid localize scope %q", scopeArg)
+		return nil, LocArgs{}, errors.WrapPrefixf(err, "invalid localize scope %q", rawScope)
 	}
 
-	newDir, err := createNewDir(newDirArg, ldr, repoSpec, fSys)
+	newDir, err := createNewDir(rawNewDir, ldr, repoSpec, fSys)
 	if err != nil {
 		_ = ldr.Cleanup()
-		return nil, LocArgs{}, errors.WrapPrefixf(err, "invalid localize destination %q", newDirArg)
+		return nil, LocArgs{}, errors.WrapPrefixf(err, "invalid localize destination %q", rawNewDir)
 	}
 
 	args := LocArgs{
