@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package localizer //nolint:testpackage
+package localizer_test
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
+	. "sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -86,7 +87,7 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 
 			ldr, args, err := NewLocLoader(params.target, params.scope, "", fSys)
 			req.NoError(err)
-			checkNewLocLoader(req, ldr, &args, "/", "/", "/"+dstPrefix, fSys)
+			checkNewLocLoader(req, ldr, &args, "/", "/", "/"+DstPrefix, fSys)
 
 			// file in root, but nested
 			content, err := ldr.Load("a/pod.yaml")
@@ -113,7 +114,7 @@ func TestNewMultiple(t *testing.T) {
 	// destination outside of scope
 	ldr, args, err := NewLocLoader("/alpha/beta", "/alpha", "", fSys)
 	req.NoError(err)
-	checkNewLocLoader(req, ldr, &args, "/alpha/beta", "/alpha", "/"+dstPrefix+"-beta", fSys)
+	checkNewLocLoader(req, ldr, &args, "/alpha/beta", "/alpha", "/"+DstPrefix+"-beta", fSys)
 
 	// nested child root that isn't cleaned
 	descLdr, err := ldr.New("../beta/gamma/delta")

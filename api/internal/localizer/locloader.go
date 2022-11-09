@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const dstPrefix = "localized"
+const DstPrefix = "localized"
 
 // LocArgs holds localize arguments
 type LocArgs struct {

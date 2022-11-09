@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package localizer //nolint:testpackage
+package localizer_test
 
 import (
 	"path/filepath"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/hasher"
+	. "sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/internal/validate"
@@ -103,7 +104,7 @@ configMapGenerator:
 	addFiles(t, fSys, "/a", kustomization)
 
 	lclzr := createLocalizer(t, fSys, "/a", "/", "/dst")
-	processKustFn = func(_ *Localizer, kt *target.KustTarget) (*types.Kustomization, error) {
+	ProcessKustFn = func(_ *Localizer, kt *target.KustTarget) (*types.Kustomization, error) {
 		kust := kt.Kustomization()
 		kust.NamePrefix = "my-"
 		return &kust, nil

@@ -72,13 +72,13 @@ func defaultNewDir(targetLdr ifc.Loader, spec *git.RepoSpec) string {
 		if repo == targetLdr.Root() {
 			targetDir = urlBase(spec.OrgRepo)
 		}
-		return strings.Join([]string{dstPrefix, targetDir, strings.ReplaceAll(spec.Ref, "/", "-")}, "-")
+		return strings.Join([]string{DstPrefix, targetDir, strings.ReplaceAll(spec.Ref, "/", "-")}, "-")
 	}
 	// special case for local target directory since destination directory cannot have "/" in name
 	if targetDir == string(filepath.Separator) {
-		return dstPrefix
+		return DstPrefix
 	}
-	return strings.Join([]string{dstPrefix, targetDir}, "-")
+	return strings.Join([]string{DstPrefix, targetDir}, "-")
 }
 
 // urlBase is the url equivalent of filepath.Base
