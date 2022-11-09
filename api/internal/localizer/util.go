@@ -19,7 +19,7 @@ import (
 func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
 	if repo := targetLdr.Repo(); repo != "" {
 		if scopeArg != "" {
-			return "", errors.Errorf("scope '%s' specified for remote localize target '%s'", scopeArg, targetArg)
+			return "", errors.Errorf("scope %q specified for remote localize target %q", scopeArg, targetArg)
 		}
 		return filesys.ConfirmedDir(repo), nil
 	}
@@ -32,8 +32,8 @@ func establishScope(scopeArg string, targetArg string, targetLdr ifc.Loader, fSy
 		return "", errors.WrapPrefixf(err, "unable to establish localize scope")
 	}
 	if !filesys.ConfirmedDir(targetLdr.Root()).HasPrefix(scope) {
-		return scope, errors.Errorf("localize scope '%s' does not contain target '%s' at '%s'",
-			scopeArg, targetArg, targetLdr.Root())
+		return scope, errors.Errorf("localize scope %q does not contain target %q at %q", scopeArg, targetArg,
+			targetLdr.Root())
 	}
 	return scope, nil
 }
@@ -45,7 +45,7 @@ func createNewDir(newDirArg string, targetLdr ifc.Loader, spec *git.RepoSpec, fS
 		newDirArg = defaultNewDir(targetLdr, spec)
 	}
 	if fSys.Exists(newDirArg) {
-		return "", errors.Errorf("localize destination '%s' already exists", newDirArg)
+		return "", errors.Errorf("localize destination %q already exists", newDirArg)
 	}
 	// destination directory must sit in an existing directory
 	if err := fSys.Mkdir(newDirArg); err != nil {
