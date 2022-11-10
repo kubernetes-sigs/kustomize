@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const dstPrefix = "localized"
+const DstPrefix = "localized"
 
 // LocArgs holds localize arguments
 type LocArgs struct {
@@ -28,8 +28,8 @@ type LocArgs struct {
 	NewDir filesys.ConfirmedDir
 }
 
-// locLoader is the Loader for kustomize localize. It is an ifc.Loader that enforces localize constraints.
-type locLoader struct {
+// LocLoader is the Loader for kustomize localize. It is an ifc.Loader that enforces localize constraints.
+type LocLoader struct {
 	fSys filesys.FileSystem
 
 	args *LocArgs
@@ -41,11 +41,11 @@ type locLoader struct {
 	local bool
 }
 
-var _ ifc.Loader = &locLoader{}
+var _ ifc.Loader = &LocLoader{}
 
-// NewLocLoader is the factory method for Loader, under localize constraints, at targetArg. For invalid localize arguments,
+// NewLocLoader is the factory method for LocLoader, under localize constraints, at targetArg. For invalid localize arguments,
 // NewLocLoader returns an error.
-func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys filesys.FileSystem) (ifc.Loader, LocArgs, error) {
+func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys filesys.FileSystem) (*LocLoader, LocArgs, error) {
 	// check earlier to avoid cleanup
 	repoSpec, err := git.NewRepoSpecFromURL(targetArg)
 	if err == nil && repoSpec.Ref == "" {
@@ -76,7 +76,7 @@ func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys file
 		Scope:  scope,
 		NewDir: newDir,
 	}
-	return &locLoader{
+	return &LocLoader{
 		fSys:   fSys,
 		args:   &args,
 		Loader: ldr,
@@ -86,7 +86,7 @@ func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys file
 
 // Load returns the contents of path if path is a valid localize file.
 // Otherwise, Load returns an error.
-func (ll *locLoader) Load(path string) ([]byte, error) {
+func (ll *LocLoader) Load(path string) ([]byte, error) {
 	// checks in root, and thus in scope
 	content, err := ll.Loader.Load(path)
 	if err != nil {
@@ -115,7 +115,7 @@ func (ll *locLoader) Load(path string) ([]byte, error) {
 
 // New returns a Loader at path if path is a valid localize root.
 // Otherwise, New returns an error.
-func (ll *locLoader) New(path string) (ifc.Loader, error) {
+func (ll *LocLoader) New(path string) (ifc.Loader, error) {
 	ldr, err := ll.Loader.New(path)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "invalid root reference")
@@ -133,7 +133,7 @@ func (ll *locLoader) New(path string) (ifc.Loader, error) {
 		return nil, errors.Errorf("localize remote root %q missing ref query string parameter", path)
 	}
 
-	return &locLoader{
+	return &LocLoader{
 		fSys:   ll.fSys,
 		args:   ll.args,
 		Loader: ldr,
