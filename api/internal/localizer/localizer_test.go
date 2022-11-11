@@ -58,7 +58,7 @@ func createLocalizer(t *testing.T, fSys filesys.FileSystem, target string, scope
 	t.Helper()
 
 	// no need to re-test LocLoader
-	ldr, _, err := NewLocLoader(target, scope, newDir, fSys)
+	ldr, _, err := NewLoader(target, scope, newDir, fSys)
 	require.NoError(t, err)
 	rmFactory := resmap.NewFactory(resource.NewFactory(&hasher.Hasher{}))
 	lc, err := NewLocalizer(
