@@ -150,9 +150,7 @@ func parseGitURL(n string) (
 			path = parsePath(n)
 			return
 		}
-		path = parsePath(n)
-		orgRepo = path
-		path = ""
+		orgRepo = parsePath(n)
 		return
 	}
 
@@ -220,6 +218,7 @@ func parseQuery(query string) (string, time.Duration, bool) {
 
 func parsePath(n string) string {
 	parsed, err := url.Parse(n)
+	// in event of parse failure, return default
 	if err != nil {
 		return ""
 	}
