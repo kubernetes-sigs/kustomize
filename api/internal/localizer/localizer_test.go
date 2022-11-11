@@ -84,6 +84,8 @@ func checkFSys(t *testing.T, fSysExpected filesys.FileSystem, fSysActual filesys
 }
 
 func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual filesys.FileSystem) {
+	t.Helper()
+
 	visited := make(map[string]struct{})
 	err := fSysActual.Walk("/", func(path string, info fs.FileInfo, err error) error {
 		require.NoError(t, err)
