@@ -443,6 +443,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				GitSuffix: ".git",
 			},
 		},
+		{
+			name:      "non_parsable_path",
+			input:     "https://authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
+			cloneSpec: "https://authority/org/repo.git",
+			absPath:   notCloned.Join("%-invalid-uri-so-not-parsable-by-net/url.Parse"),
+			repoSpec: RepoSpec{
+				Host:      "https://authority/",
+				OrgRepo:   "org/repo",
+				Path:      "%-invalid-uri-so-not-parsable-by-net/url.Parse",
+				GitSuffix: ".git",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

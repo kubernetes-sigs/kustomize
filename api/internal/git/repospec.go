@@ -220,7 +220,7 @@ func parsePath(n string) string {
 	parsed, err := url.Parse(n)
 	// in event of parse failure, return default
 	if err != nil {
-		return ""
+		return n
 	}
 	return parsed.Path
 }
