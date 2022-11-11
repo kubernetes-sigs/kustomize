@@ -11,6 +11,7 @@ import (
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -38,8 +39,7 @@ type Localizer struct {
 func NewLocalizer(ldr *Loader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
 	toDst, err := filepath.Rel(ldr.args.Scope.String(), ldr.Root())
 	if err != nil {
-		log.Fatalf("cannot find path from directory %q to %q inside directory: %s", ldr.args.Scope.String(),
-			ldr.Root(), err.Error())
+		log.Fatalf("cannot find path from %q to child directory %q: %s", ldr.args.Scope.String(), ldr.Root(), err.Error())
 	}
 	dst := ldr.args.NewDir.Join(toDst)
 	if err = ldr.fSys.MkdirAll(dst); err != nil {
@@ -62,9 +62,10 @@ func (lc *Localizer) Localize() error {
 	if err != nil {
 		return errors.Wrap(err)
 	}
-
-	kust := lc.processKust(kt)
-
+	kust, err := lc.processKust(kt)
+	if err != nil {
+		return err
+	}
 	content, err := yaml.Marshal(kust)
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to serialize localized kustomization file")
@@ -75,9 +76,69 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// TODO(annasong): implement
-// processKust returns a copy of the kustomization at kt with paths localized.
-func (lc *Localizer) processKust(kt *target.KustTarget) *types.Kustomization {
+// processKust returns a copy of the kustomization at kt with the patches field localized
+func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, error) {
 	kust := kt.Kustomization()
-	return &kust
+	for name, patches := range map[string][]types.Patch{
+		"patches":         kust.Patches,
+		"patchesJson6902": kust.PatchesJson6902,
+	} {
+		for i := range patches {
+			if patches[i].Path != "" {
+				newPath, err := lc.localizeFile(patches[i].Path)
+				if err != nil {
+					return nil, errors.WrapPrefixf(err, "unable to localize %s path", name)
+				}
+				patches[i].Path = newPath
+			}
+		}
+	}
+	return &kust, nil
+}
+
+// localizeFile localizes file path and returns the localized path
+func (lc *Localizer) localizeFile(path string) (string, error) {
+	content, err := lc.ldr.Load(path)
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+
+	var locPath string
+	if loader.IsRemoteFile(path) {
+		if !lc.addLocalizeDir() {
+			return "", errors.Errorf("cannot localize remote %q: localize directory already exists at %q", path,
+				lc.ldr.Root())
+		}
+		locPath = locFilePath(path)
+	} else { // path must be relative; subject to change in beta
+		// avoid symlinks; only write file corresponding to actual location in root
+		// avoid path that Load() shows to be in root, but may traverse outside
+		// temporarily; for example, ../root/config; problematic for rename and
+		// relocation
+		locPath = cleanFilePath(lc.fSys, filesys.ConfirmedDir(lc.ldr.Root()), path)
+		if !lc.guardLocalizeDir(locPath) {
+			abs := filepath.Join(lc.ldr.Root(), locPath)
+			return "", errors.Errorf("invalid local file path %q at %q: localize directory already exists", path, abs)
+		}
+	}
+	cleanPath := lc.dst.Join(locPath)
+	if err = lc.fSys.MkdirAll(filepath.Dir(cleanPath)); err != nil {
+		return "", errors.WrapPrefixf(err, "unable to create directories to localize file %q", path)
+	}
+	if err = lc.fSys.WriteFile(cleanPath, content); err != nil {
+		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
+	}
+	return locPath, nil
+}
+
+// addLocalizeDir returns whether it is able to add a localize directory at dst
+// TODO(annasong): implement
+func (lc *Localizer) addLocalizeDir() bool {
+	return false
+}
+
+// guardLocalizeDir returns false if local path enters a localize directory, and true otherwise
+// TODO(annasong): implement
+func (lc *Localizer) guardLocalizeDir(_ string) bool {
+	return true
 }

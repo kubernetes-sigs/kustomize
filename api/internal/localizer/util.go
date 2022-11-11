@@ -14,7 +14,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote targetArg,
+const DstPrefix = "localized"
+const LocalizeDir = "localized-files"
+
+// establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote rawTarget,
 // the effective scope is the downloaded repo.
 func establishScope(rawScope string, rawTarget string, targetLdr ifc.Loader, fSys filesys.FileSystem) (filesys.ConfirmedDir, error) {
 	if repo := targetLdr.Repo(); repo != "" {
@@ -98,4 +101,24 @@ func hasRef(repoURL string) bool {
 		log.Fatalf("unable to parse validated root url: %s", err.Error())
 	}
 	return repoSpec.Ref != ""
+}
+
+// cleanFilePath returns file cleaned, where file is a relative path to root on fSys
+func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file string) string {
+	abs := root.Join(file)
+	dir, f, err := fSys.CleanedAbs(abs)
+	if err != nil {
+		log.Fatalf("cannot clean validated file path %q: %s", abs, err.Error())
+	}
+	locPath, err := filepath.Rel(root.String(), dir.Join(f))
+	if err != nil {
+		log.Fatalf("cannot find path from parent %q to file %q: %s", root.String(), dir.Join(f), err.Error())
+	}
+	return locPath
+}
+
+// locFilePath returns the relative localized path of validated file url fileURL
+// TODO(annasong): implement
+func locFilePath(_ string) string {
+	return filepath.Join(LocalizeDir, "")
 }
