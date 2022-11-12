@@ -14,7 +14,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+// DstPrefix prefixes the target and ref, if target is remote, in the default localize destination directory name
 const DstPrefix = "localized"
+
+// LocalizeDir is the name of the localize directories used to store remote content in the localize destination
 const LocalizeDir = "localized-files"
 
 // establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote rawTarget,
@@ -57,7 +60,7 @@ func createNewDir(rawNewDir string, targetLdr ifc.Loader, spec *git.RepoSpec, fS
 	newDir, err := filesys.ConfirmDir(fSys, rawNewDir)
 	if err != nil {
 		if errCleanup := fSys.RemoveAll(newDir.String()); errCleanup != nil {
-			log.Printf("%s", errors.WrapPrefixf(errCleanup, "unable to clean localize destination").Error())
+			log.Printf("%s", errors.WrapPrefixf(errCleanup, "unable to clean localize destination"))
 		}
 		return "", errors.WrapPrefixf(err, "unable to establish localize destination")
 	}
@@ -98,7 +101,7 @@ func urlBase(url string) string {
 func hasRef(repoURL string) bool {
 	repoSpec, err := git.NewRepoSpecFromURL(repoURL)
 	if err != nil {
-		log.Fatalf("unable to parse validated root url: %s", err.Error())
+		log.Fatalf("unable to parse validated root url: %s", err)
 	}
 	return repoSpec.Ref != ""
 }
@@ -108,11 +111,11 @@ func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file stri
 	abs := root.Join(file)
 	dir, f, err := fSys.CleanedAbs(abs)
 	if err != nil {
-		log.Fatalf("cannot clean validated file path %q: %s", abs, err.Error())
+		log.Fatalf("cannot clean validated file path %q: %s", abs, err)
 	}
 	locPath, err := filepath.Rel(root.String(), dir.Join(f))
 	if err != nil {
-		log.Fatalf("cannot find path from parent %q to file %q: %s", root.String(), dir.Join(f), err.Error())
+		log.Fatalf("cannot find path from parent %q to file %q: %s", root, dir.Join(f), err)
 	}
 	return locPath
 }

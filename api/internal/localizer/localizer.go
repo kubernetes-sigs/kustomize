@@ -39,7 +39,7 @@ type Localizer struct {
 func NewLocalizer(ldr *Loader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
 	toDst, err := filepath.Rel(ldr.args.Scope.String(), ldr.Root())
 	if err != nil {
-		log.Fatalf("cannot find path from %q to child directory %q: %s", ldr.args.Scope.String(), ldr.Root(), err.Error())
+		log.Fatalf("cannot find path from %q to child directory %q: %s", ldr.args.Scope, ldr.Root(), err)
 	}
 	dst := ldr.args.NewDir.Join(toDst)
 	if err = ldr.fSys.MkdirAll(dst); err != nil {
@@ -105,10 +105,8 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 
 	var locPath string
 	if loader.IsRemoteFile(path) {
-		if !lc.addLocalizeDir() {
-			return "", errors.Errorf("cannot localize remote %q: localize directory already exists at %q", path,
-				lc.ldr.Root())
-		}
+		// TODO(annasong): check if able to addLocalizeDir() once implemented
+		_ = lc.addLocalizeDir()
 		locPath = locFilePath(path)
 	} else { // path must be relative; subject to change in beta
 		// avoid symlinks; only write file corresponding to actual location in root
@@ -116,16 +114,14 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 		// temporarily; for example, ../root/config; problematic for rename and
 		// relocation
 		locPath = cleanFilePath(lc.fSys, filesys.ConfirmedDir(lc.ldr.Root()), path)
-		if !lc.guardLocalizeDir(locPath) {
-			abs := filepath.Join(lc.ldr.Root(), locPath)
-			return "", errors.Errorf("invalid local file path %q at %q: localize directory already exists", path, abs)
-		}
+		// TODO(annasong): check if hitsLocalizeDir() once implemented
+		_ = lc.hitsLocalizeDir(locPath)
 	}
-	cleanPath := lc.dst.Join(locPath)
-	if err = lc.fSys.MkdirAll(filepath.Dir(cleanPath)); err != nil {
+	absPath := lc.dst.Join(locPath)
+	if err = lc.fSys.MkdirAll(filepath.Dir(absPath)); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to create directories to localize file %q", path)
 	}
-	if err = lc.fSys.WriteFile(cleanPath, content); err != nil {
+	if err = lc.fSys.WriteFile(absPath, content); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
 	}
 	return locPath, nil
@@ -137,8 +133,8 @@ func (lc *Localizer) addLocalizeDir() bool {
 	return false
 }
 
-// guardLocalizeDir returns false if local path enters a localize directory, and true otherwise
+// hitsLocalizeDir returns true if local path enters a localize directory, and false otherwise
 // TODO(annasong): implement
-func (lc *Localizer) guardLocalizeDir(_ string) bool {
-	return true
+func (lc *Localizer) hitsLocalizeDir(_ string) bool {
+	return false
 }
