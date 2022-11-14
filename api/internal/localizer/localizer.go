@@ -105,8 +105,7 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 
 	var locPath string
 	if loader.IsRemoteFile(path) {
-		// TODO(annasong): check if able to addLocalizeDir() once implemented
-		_ = lc.addLocalizeDir()
+		// TODO(annasong): check if able to add localize directory
 		locPath = locFilePath(path)
 	} else { // path must be relative; subject to change in beta
 		// avoid symlinks; only write file corresponding to actual location in root
@@ -114,8 +113,7 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 		// temporarily; for example, ../root/config; problematic for rename and
 		// relocation
 		locPath = cleanFilePath(lc.fSys, filesys.ConfirmedDir(lc.ldr.Root()), path)
-		// TODO(annasong): check if hitsLocalizeDir() once implemented
-		_ = lc.hitsLocalizeDir(locPath)
+		// TODO(annasong): check if hits localize directory
 	}
 	absPath := lc.dst.Join(locPath)
 	if err = lc.fSys.MkdirAll(filepath.Dir(absPath)); err != nil {
@@ -125,16 +123,4 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
 	}
 	return locPath, nil
-}
-
-// addLocalizeDir returns whether it is able to add a localize directory at dst
-// TODO(annasong): implement
-func (lc *Localizer) addLocalizeDir() bool {
-	return false
-}
-
-// hitsLocalizeDir returns true if local path enters a localize directory, and false otherwise
-// TODO(annasong): implement
-func (lc *Localizer) hitsLocalizeDir(_ string) bool {
-	return false
 }
