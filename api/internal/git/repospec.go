@@ -218,7 +218,7 @@ func parseQuery(query string) (string, time.Duration, bool) {
 
 func parsePath(n string) string {
 	parsed, err := url.Parse(n)
-	// in event of parse failure, return default
+	// TODO(annasong): decide how to handle error, i.e. return error, empty string, etc.
 	if err != nil {
 		return n
 	}
