@@ -104,7 +104,7 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-# Supported values of 'arch': amd64, arm64, ppc64le, s390x
+# Supported values of 'arch': amd64, arm64, aarch64, ppc64le, s390x
 case $(uname -m) in
 x86_64)
     arch=amd64
