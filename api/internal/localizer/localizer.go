@@ -76,10 +76,10 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// processKust returns a copy of the kustomization at kt with the patches field localized
+// processKust returns a copy of the kustomization at kt with paths localized.
 func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, error) {
 	kust := kt.Kustomization()
-	for name, patches := range map[string][]types.Patch{
+	for fieldName, patches := range map[string][]types.Patch{
 		"patches":         kust.Patches,
 		"patchesJson6902": kust.PatchesJson6902,
 	} {
@@ -87,12 +87,16 @@ func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, e
 			if patches[i].Path != "" {
 				newPath, err := lc.localizeFile(patches[i].Path)
 				if err != nil {
-					return nil, errors.WrapPrefixf(err, "unable to localize %s path", name)
+					return nil, errors.WrapPrefixf(err, "unable to localize path %q from field %s", patches[i].Path,
+						fieldName)
 				}
 				patches[i].Path = newPath
 			}
 		}
 	}
+	// TODO(annasong): localize all other kustomization fields: resources, components, crds, configurations,
+	// openapi, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
+	// TODO(annasong): localize built-in plugins under generators, transformers, and validators fields
 	return &kust, nil
 }
 
@@ -107,11 +111,16 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 	if loader.IsRemoteFile(path) {
 		// TODO(annasong): check if able to add localize directory
 		locPath = locFilePath(path)
-	} else { // path must be relative; subject to change in beta
-		// avoid symlinks; only write file corresponding to actual location in root
-		// avoid path that Load() shows to be in root, but may traverse outside
-		// temporarily; for example, ../root/config; problematic for rename and
-		// relocation
+	} else {
+		// ldr has checked that path must be relative; this is subject to change in beta.
+
+		// We must clean path to:
+		// 1. avoid symlinks. A `kustomize build` run will fail if we write files to
+		//    symlink paths outside the current root, given that we don't want to recreate
+		//    the symlinks. Even worse, we could be writing files outside the localize destination.
+		// 2. avoid paths that temporarily traverse outside the current root,
+		//    i.e. ../../../scope/target/current-root. The localized file will be surrounded by
+		//    different directories than its source, and so an uncleaned path may no longer be valid.
 		locPath = cleanFilePath(lc.fSys, filesys.ConfirmedDir(lc.ldr.Root()), path)
 		// TODO(annasong): check if hits localize directory
 	}
