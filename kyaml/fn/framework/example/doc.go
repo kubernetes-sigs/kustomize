@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package main contains an example using the the framework.
+// Package main contains an example using the framework.
 // The example annotates all resources in the input with the value provided as a flag,
 // and adds all resources in the templates/ directory to the list.
 //

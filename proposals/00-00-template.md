@@ -89,7 +89,7 @@ The goal here is to make this feel real for users without getting bogged down.
 Scenario summary: As a [end user, extension developer, ...], I want to [...]
 <!--
 A walkthrough of what it will look like for a user to take advantage of the new feature.
-Include the the steps the user will take and samples of the commands they'll run
+Include the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
 
@@ -98,7 +98,7 @@ and config they'll use.
 Scenario summary: As a [end user, extension developer, ...], I want to [...]
 <!--
 A walkthrough of what it will look like for a user to take advantage of the new feature.
-Include the the steps the user will take and samples of the commands they'll run
+Include the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
 
