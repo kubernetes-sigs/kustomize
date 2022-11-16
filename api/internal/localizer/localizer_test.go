@@ -4,9 +4,12 @@
 package localizer_test
 
 import (
+	"fmt"
+	"io/fs"
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/hasher"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
@@ -27,7 +30,7 @@ spec:
   - name: nginx
     image: nginx:1.14.2
     ports:
-    -containerPort: 80
+    - containerPort: 80
 `
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
@@ -71,36 +74,101 @@ func createLocalizer(t *testing.T, fSys filesys.FileSystem, target string, scope
 	return lc
 }
 
+func checkFSys(t *testing.T, fSysExpected filesys.FileSystem, fSysActual filesys.FileSystem) {
+	t.Helper()
+
+	assert.Equal(t, fSysExpected, fSysActual)
+	if t.Failed() {
+		reportFSysDiff(t, fSysExpected, fSysActual)
+	}
+}
+
+func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual filesys.FileSystem) {
+	t.Helper()
+
+	visited := make(map[string]struct{})
+	err := fSysActual.Walk("/", func(path string, info fs.FileInfo, err error) error {
+		require.NoError(t, err)
+		visited[path] = struct{}{}
+
+		if info.IsDir() {
+			assert.Truef(t, fSysExpected.IsDir(path), "unexpected directory %q", path)
+		} else {
+			actualContent, readErr := fSysActual.ReadFile(path)
+			require.NoError(t, readErr)
+			expectedContent, findErr := fSysExpected.ReadFile(path)
+			assert.NoError(t, findErr)
+			if findErr == nil {
+				assert.Equal(t, string(expectedContent), string(actualContent))
+			}
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	err = fSysExpected.Walk("/", func(path string, info fs.FileInfo, err error) error {
+		require.NoError(t, err)
+		visited[path] = struct{}{}
+
+		if _, exists := visited[path]; !exists {
+			t.Errorf("expected path %q not found", path)
+		}
+		return nil
+	})
+	require.NoError(t, err)
+}
+
 func TestNewLocalizerTargetIsScope(t *testing.T) {
 	fSys := makeMemoryFs(t)
-	_ = createLocalizer(t, fSys, "/a", "", "/a/b/dst")
+	kustomization := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: my-
+`,
+	}
+	addFiles(t, fSys, "/a", kustomization)
+	lclzr := createLocalizer(t, fSys, "/a", "", "/a/b/dst")
+	require.NoError(t, lclzr.Localize())
 
 	fSysExpected := makeMemoryFs(t)
-	require.NoError(t, fSysExpected.MkdirAll("/a/b/dst"))
-	require.Equal(t, fSysExpected, fSys)
+	addFiles(t, fSysExpected, "/a", kustomization)
+	addFiles(t, fSysExpected, "/a/b/dst", kustomization)
+	checkFSys(t, fSysExpected, fSys)
 }
 
 func TestNewLocalizerTargetNestedInScope(t *testing.T) {
 	fSys := makeMemoryFs(t)
-	_ = createLocalizer(t, fSys, "/a/b", "/", "/a/b/dst")
+	kustomization := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- patch: |-
+    - op: replace
+      path: /some/existing/path
+      value: new value
+  target:
+    kind: Deployment
+    labelSelector: env=dev
+`,
+	}
+	addFiles(t, fSys, "/a/b", kustomization)
+	lclzr := createLocalizer(t, fSys, "/a/b", "/", "/a/b/dst")
+	require.NoError(t, lclzr.Localize())
 
 	fSysExpected := makeMemoryFs(t)
-	require.NoError(t, fSysExpected.MkdirAll("/a/b/dst/a/b"))
-	require.Equal(t, fSysExpected, fSys)
+	addFiles(t, fSysExpected, "/a/b", kustomization)
+	addFiles(t, fSysExpected, "/a/b/dst/a/b", kustomization)
+	checkFSys(t, fSysExpected, fSys)
 }
 
 func TestLocalizeKustomizationName(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustomization := map[string]string{
 		"Kustomization": `apiVersion: kustomize.config.k8s.io/v1beta1
-configMapGenerator:
-- behavior: create
-  literals:
-  - APPLE=orange
-  name: map
+commonLabels:
+  label-one: value-one
+  label-two: value-two
 kind: Kustomization
-resources:
-- pod.yaml
 `,
 	}
 	addFiles(t, fSys, "/a", kustomization)
@@ -113,5 +181,121 @@ resources:
 	addFiles(t, fSysExpected, "/dst/a", map[string]string{
 		"kustomization.yaml": kustomization["Kustomization"],
 	})
-	require.Equal(t, fSysExpected, fSys)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeFileName(t *testing.T) {
+	for name, path := range map[string]string{
+		"nested_directories":               "a/b/c/d/patch.yaml",
+		"localize_dir_name_when_absent":    LocalizeDir,
+		"in_localize_dir_name_when_absent": fmt.Sprintf("%s/patch.yaml", LocalizeDir),
+		"no_file_extension":                "patch",
+		"kustomization_name":               "a/kustomization.yaml",
+	} {
+		t.Run(name, func(t *testing.T) {
+			fSys := makeMemoryFs(t)
+			kustAndPatch := map[string]string{
+				"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: %s
+`, path),
+				path: podConfiguration,
+			}
+			addFiles(t, fSys, "/a", kustAndPatch)
+
+			lclzr := createLocalizer(t, fSys, "/a", "/", "/a/dst")
+			require.NoError(t, lclzr.Localize())
+
+			fSysExpected := makeMemoryFs(t)
+			addFiles(t, fSysExpected, "/a", kustAndPatch)
+			addFiles(t, fSysExpected, "/a/dst/a", kustAndPatch)
+			checkFSys(t, fSysExpected, fSys)
+		})
+	}
+}
+
+func TestLocalizeFileCleaned(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatch := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: ../gamma/../../../alpha/beta/./gamma/patch.yaml
+`,
+		"patch.yaml": podConfiguration,
+	}
+	addFiles(t, fSys, "/alpha/beta/gamma", kustAndPatch)
+
+	lclzr := createLocalizer(t, fSys, "/alpha/beta/gamma", "/", "")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/alpha/beta/gamma", kustAndPatch)
+	addFiles(t, fSysExpected, "/localized-gamma/alpha/beta/gamma", map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: patch.yaml
+`,
+		"patch.yaml": podConfiguration,
+	})
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizePatches(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatch := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- patch: |-
+    apiVersion: v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/version: 1.21.0
+      name: dummy-app
+  target:
+    labelSelector: app.kubernetes.io/name=nginx
+- options:
+    allowNameChange: true
+  path: patch.yaml
+`,
+		"patch.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Deployment
+metadata:
+  name: not-used
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21.0
+`,
+	}
+	addFiles(t, fSys, "/", kustAndPatch)
+
+	lclzr := createLocalizer(t, fSys, "/", "", "")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/", kustAndPatch)
+	addFiles(t, fSysExpected, "/localized", kustAndPatch)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeFileNoFile(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatch := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: name-DNE.yaml
+`,
+	}
+	addFiles(t, fSys, "/a/b", kustAndPatch)
+
+	lclzr := createLocalizer(t, fSys, "/a/b", "", "/dst")
+	require.Error(t, lclzr.Localize())
 }

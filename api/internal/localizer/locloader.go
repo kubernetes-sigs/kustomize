@@ -4,7 +4,6 @@
 package localizer
 
 import (
-	"log"
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -14,14 +13,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const DstPrefix = "localized"
-
 // Args holds localize arguments
 type Args struct {
 	// target; local copy if remote
 	Target filesys.ConfirmedDir
 
-	// directory that bounds target's local references, empty string if target is remote
+	// directory that bounds target's local references
+	// repo directory of local copy if target is remote
 	Scope filesys.ConfirmedDir
 
 	// localize destination
@@ -95,18 +93,14 @@ func (ll *Loader) Load(path string) ([]byte, error) {
 		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path %q is absolute", path)
 	}
 	if ll.local {
-		abs := filepath.Join(ll.Root(), path)
-		dir, f, err := ll.fSys.CleanedAbs(abs)
-		if err != nil {
-			// should never happen
-			log.Fatalf(errors.WrapPrefixf(err, "cannot clean validated file path %q", abs).Error())
-		}
+		cleanPath := cleanFilePath(ll.fSys, filesys.ConfirmedDir(ll.Root()), path)
+		cleanAbs := filepath.Join(ll.Root(), cleanPath)
+		dir := filesys.ConfirmedDir(filepath.Dir(cleanAbs))
 		// target cannot reference newDir, as this load would've failed prior to localize;
 		// not a problem if remote because then reference could only be in newDir if repo copy,
 		// which will be cleaned, is inside newDir
 		if dir.HasPrefix(ll.args.NewDir) {
-			return nil, errors.Errorf(
-				"file path %q references into localize destination %q", dir.Join(f), ll.args.NewDir)
+			return nil, errors.Errorf("file %q at %q enters localize destination %q", path, cleanAbs, ll.args.NewDir)
 		}
 	}
 	return content, nil
