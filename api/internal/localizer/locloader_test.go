@@ -14,9 +14,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func checkNewLocLoader(req *require.Assertions, ldr *LocLoader, args *LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
+func checkNewLoader(req *require.Assertions, ldr *Loader, args *Args, target string, scope string, newDir string, fSys filesys.FileSystem) {
 	checkLoader(req, ldr, target)
-	checkLocArgs(req, args, target, scope, newDir, fSys)
+	checkArgs(req, args, target, scope, newDir, fSys)
 }
 
 func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
@@ -24,7 +24,7 @@ func checkLoader(req *require.Assertions, ldr ifc.Loader, root string) {
 	req.Empty(ldr.Repo())
 }
 
-func checkLocArgs(req *require.Assertions, args *LocArgs, target string, scope string, newDir string, fSys filesys.FileSystem) {
+func checkArgs(req *require.Assertions, args *Args, target string, scope string, newDir string, fSys filesys.FileSystem) {
 	req.Equal(target, args.Target.String())
 	req.Equal(scope, args.Scope.String())
 	req.Equal(newDir, args.NewDir.String())
@@ -38,9 +38,9 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	// typical setup
-	ldr, args, err := NewLocLoader("a", "/", "/newDir", fSys)
+	ldr, args, err := NewLoader("a", "/", "/newDir", fSys)
 	req.NoError(err)
-	checkNewLocLoader(req, ldr, &args, "/a", "/", "/newDir", fSys)
+	checkNewLoader(req, ldr, &args, "/a", "/", "/newDir", fSys)
 
 	fSysCopy := makeMemoryFs(t)
 	req.NoError(fSysCopy.Mkdir("/newDir"))
@@ -85,9 +85,9 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
 
-			ldr, args, err := NewLocLoader(params.target, params.scope, "", fSys)
+			ldr, args, err := NewLoader(params.target, params.scope, "", fSys)
 			req.NoError(err)
-			checkNewLocLoader(req, ldr, &args, "/", "/", "/"+DstPrefix, fSys)
+			checkNewLoader(req, ldr, &args, "/", "/", "/"+DstPrefix, fSys)
 
 			// file in root, but nested
 			content, err := ldr.Load("a/pod.yaml")
@@ -112,9 +112,9 @@ func TestNewMultiple(t *testing.T) {
 
 	// default destination for non-file system root target
 	// destination outside of scope
-	ldr, args, err := NewLocLoader("/alpha/beta", "/alpha", "", fSys)
+	ldr, args, err := NewLoader("/alpha/beta", "/alpha", "", fSys)
 	req.NoError(err)
-	checkNewLocLoader(req, ldr, &args, "/alpha/beta", "/alpha", "/"+DstPrefix+"-beta", fSys)
+	checkNewLoader(req, ldr, &args, "/alpha/beta", "/alpha", "/"+DstPrefix+"-beta", fSys)
 
 	// nested child root that isn't cleaned
 	descLdr, err := ldr.New("../beta/gamma/delta")
@@ -173,7 +173,7 @@ func TestNewLocLoaderCwdNotRoot(t *testing.T) {
 			req := require.New(t)
 			fSys := makeWdFs(t)[test.wd]
 
-			ldr, args, err := NewLocLoader(test.target, test.scope, test.newDir, fSys)
+			ldr, args, err := NewLoader(test.target, test.scope, test.newDir, fSys)
 			req.NoError(err)
 			checkLoader(req, ldr, "a/b/c/d/e")
 
@@ -223,7 +223,8 @@ func TestNewLocLoaderFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var buf bytes.Buffer
 			log.SetOutput(&buf)
-			_, _, err := NewLocLoader(params.target, params.scope, params.dest, makeMemoryFs(t))
+
+			_, _, err := NewLoader(params.target, params.scope, params.dest, makeMemoryFs(t))
 			require.Error(t, err)
 			require.Empty(t, buf.String())
 		})
@@ -234,9 +235,9 @@ func TestNewFails(t *testing.T) {
 	req := require.New(t)
 	fSys := makeMemoryFs(t)
 
-	ldr, args, err := NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
+	ldr, args, err := NewLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 	req.NoError(err)
-	checkNewLocLoader(req, ldr, &args, "/alpha/beta/gamma", "/alpha", "/alpha/beta/gamma/newDir", fSys)
+	checkNewLoader(req, ldr, &args, "/alpha/beta/gamma", "/alpha", "/alpha/beta/gamma/newDir", fSys)
 
 	cases := map[string]string{
 		"outside scope":     "../../../a",
@@ -250,7 +251,7 @@ func TestNewFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
 
-			ldr, _, err := NewLocLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
+			ldr, _, err := NewLoader("/alpha/beta/gamma", "alpha", "alpha/beta/gamma/newDir", fSys)
 			require.NoError(t, err)
 
 			_, err = ldr.New(root)
@@ -263,9 +264,9 @@ func TestLoadFails(t *testing.T) {
 	req := require.New(t)
 	fSys := makeMemoryFs(t)
 
-	ldr, args, err := NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
+	ldr, args, err := NewLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 	req.NoError(err)
-	checkNewLocLoader(req, ldr, &args, "/a", "/a", "/a/newDir", fSys)
+	checkNewLoader(req, ldr, &args, "/a", "/a", "/a/newDir", fSys)
 
 	cases := map[string]string{
 		"absolute path":     "/a/pod.yaml",
@@ -280,7 +281,7 @@ func TestLoadFails(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
 
-			ldr, _, err := NewLocLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
+			ldr, _, err := NewLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 			req.NoError(err)
 
 			req.NoError(fSys.WriteFile("/a/newDir/pod.yaml", []byte(podConfiguration)))

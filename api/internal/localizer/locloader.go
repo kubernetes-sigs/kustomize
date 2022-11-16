@@ -16,8 +16,8 @@ import (
 
 const DstPrefix = "localized"
 
-// LocArgs holds localize arguments
-type LocArgs struct {
+// Args holds localize arguments
+type Args struct {
 	// target; local copy if remote
 	Target filesys.ConfirmedDir
 
@@ -28,55 +28,54 @@ type LocArgs struct {
 	NewDir filesys.ConfirmedDir
 }
 
-// LocLoader is the Loader for kustomize localize. It is an ifc.Loader that enforces localize constraints.
-type LocLoader struct {
+// Loader is an ifc.Loader that enforces additional constraints specific to kustomize localize.
+type Loader struct {
 	fSys filesys.FileSystem
 
-	args *LocArgs
+	args *Args
 
-	// loader at locLoader's current directory
+	// loader at Loader's current directory
 	ifc.Loader
 
-	// whether locLoader and all its ancestors are the result of local references
+	// whether Loader and all its ancestors are the result of local references
 	local bool
 }
 
-var _ ifc.Loader = &LocLoader{}
+var _ ifc.Loader = &Loader{}
 
-// NewLocLoader is the factory method for LocLoader, under localize constraints, at targetArg. For invalid localize arguments,
-// NewLocLoader returns an error.
-func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys filesys.FileSystem) (*LocLoader, LocArgs, error) {
+// NewLoader is the factory method for Loader, under localize constraints, at rawTarget. For invalid localize arguments,
+// NewLoader returns an error.
+func NewLoader(rawTarget string, rawScope string, rawNewDir string, fSys filesys.FileSystem) (*Loader, Args, error) {
 	// check earlier to avoid cleanup
-	repoSpec, err := git.NewRepoSpecFromURL(targetArg)
+	repoSpec, err := git.NewRepoSpecFromURL(rawTarget)
 	if err == nil && repoSpec.Ref == "" {
-		return nil, LocArgs{},
-			errors.Errorf("localize remote root '%s' missing ref query string parameter", targetArg)
+		return nil, Args{}, errors.Errorf("localize remote root %q missing ref query string parameter", rawTarget)
 	}
 
 	// for security, should enforce load restrictions
-	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, targetArg, fSys)
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, rawTarget, fSys)
 	if err != nil {
-		return nil, LocArgs{}, errors.WrapPrefixf(err, "unable to establish localize target '%s'", targetArg)
+		return nil, Args{}, errors.WrapPrefixf(err, "unable to establish localize target %q", rawTarget)
 	}
 
-	scope, err := establishScope(scopeArg, targetArg, ldr, fSys)
-	if err != nil {
-		_ = ldr.Cleanup()
-		return nil, LocArgs{}, errors.WrapPrefixf(err, "invalid localize scope '%s'", scopeArg)
-	}
-
-	newDir, err := createNewDir(newDirArg, ldr, repoSpec, fSys)
+	scope, err := establishScope(rawScope, rawTarget, ldr, fSys)
 	if err != nil {
 		_ = ldr.Cleanup()
-		return nil, LocArgs{}, errors.WrapPrefixf(err, "invalid localize destination '%s'", newDirArg)
+		return nil, Args{}, errors.WrapPrefixf(err, "invalid localize scope %q", rawScope)
 	}
 
-	args := LocArgs{
+	newDir, err := createNewDir(rawNewDir, ldr, repoSpec, fSys)
+	if err != nil {
+		_ = ldr.Cleanup()
+		return nil, Args{}, errors.WrapPrefixf(err, "invalid localize destination %q", rawNewDir)
+	}
+
+	args := Args{
 		Target: filesys.ConfirmedDir(ldr.Root()),
 		Scope:  scope,
 		NewDir: newDir,
 	}
-	return &LocLoader{
+	return &Loader{
 		fSys:   fSys,
 		args:   &args,
 		Loader: ldr,
@@ -86,28 +85,28 @@ func NewLocLoader(targetArg string, scopeArg string, newDirArg string, fSys file
 
 // Load returns the contents of path if path is a valid localize file.
 // Otherwise, Load returns an error.
-func (ll *LocLoader) Load(path string) ([]byte, error) {
+func (ll *Loader) Load(path string) ([]byte, error) {
 	// checks in root, and thus in scope
 	content, err := ll.Loader.Load(path)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "invalid file reference")
 	}
 	if filepath.IsAbs(path) {
-		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path '%s' is absolute", path)
+		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path %q is absolute", path)
 	}
 	if ll.local {
 		abs := filepath.Join(ll.Root(), path)
 		dir, f, err := ll.fSys.CleanedAbs(abs)
 		if err != nil {
 			// should never happen
-			log.Fatalf(errors.WrapPrefixf(err, "cannot clean validated file path '%s'", abs).Error())
+			log.Fatalf(errors.WrapPrefixf(err, "cannot clean validated file path %q", abs).Error())
 		}
 		// target cannot reference newDir, as this load would've failed prior to localize;
 		// not a problem if remote because then reference could only be in newDir if repo copy,
 		// which will be cleaned, is inside newDir
 		if dir.HasPrefix(ll.args.NewDir) {
 			return nil, errors.Errorf(
-				"file path '%s' references into localize destination '%s'", dir.Join(f), ll.args.NewDir)
+				"file path %q references into localize destination %q", dir.Join(f), ll.args.NewDir)
 		}
 	}
 	return content, nil
@@ -115,7 +114,7 @@ func (ll *LocLoader) Load(path string) ([]byte, error) {
 
 // New returns a Loader at path if path is a valid localize root.
 // Otherwise, New returns an error.
-func (ll *LocLoader) New(path string) (ifc.Loader, error) {
+func (ll *Loader) New(path string) (ifc.Loader, error) {
 	ldr, err := ll.Loader.New(path)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "invalid root reference")
@@ -123,17 +122,17 @@ func (ll *LocLoader) New(path string) (ifc.Loader, error) {
 
 	if repo := ldr.Repo(); repo == "" {
 		if ll.local && !filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.Scope) {
-			return nil, errors.Errorf("root '%s' outside localize scope '%s'", ldr.Root(), ll.args.Scope)
+			return nil, errors.Errorf("root %q outside localize scope %q", ldr.Root(), ll.args.Scope)
 		}
 		if ll.local && filesys.ConfirmedDir(ldr.Root()).HasPrefix(ll.args.NewDir) {
 			return nil, errors.Errorf(
-				"root '%s' references into localize destination '%s'", ldr.Root(), ll.args.NewDir)
+				"root %q references into localize destination %q", ldr.Root(), ll.args.NewDir)
 		}
 	} else if !hasRef(path) {
 		return nil, errors.Errorf("localize remote root %q missing ref query string parameter", path)
 	}
 
-	return &LocLoader{
+	return &Loader{
 		fSys:   ll.fSys,
 		args:   ll.args,
 		Loader: ldr,

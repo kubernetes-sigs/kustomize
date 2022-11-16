@@ -27,7 +27,7 @@ type Localizer struct {
 	rFactory  *resmap.Factory
 	pLdr      *pLdr.Loader
 
-	// underlying type is LocLoader
+	// underlying type is Loader
 	ldr ifc.Loader
 
 	// destination directory in newDir that mirrors ldr's current root.
@@ -35,7 +35,7 @@ type Localizer struct {
 }
 
 // NewLocalizer is the factory method for Localizer
-func NewLocalizer(ldr *LocLoader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
+func NewLocalizer(ldr *Loader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
 	toDst, err := filepath.Rel(ldr.args.Scope.String(), ldr.Root())
 	if err != nil {
 		log.Fatalf("cannot find path from directory %q to %q inside directory: %s", ldr.args.Scope.String(),
