@@ -8,35 +8,33 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
-	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
-	"sigs.k8s.io/yaml"
 )
 
 // Localizer encapsulates all state needed to localize the root at ldr.
 type Localizer struct {
 	fSys filesys.FileSystem
 
-	// kusttarget fields
-	validator ifc.Validator
-	rFactory  *resmap.Factory
-	pLdr      *pLdr.Loader
-
 	// underlying type is Loader
 	ldr ifc.Loader
 
 	// destination directory in newDir that mirrors ldr's current root.
 	dst filesys.ConfirmedDir
+
+	// kust is the kustomization at ldr's root.
+	kust LegacyKust
+
+	// kustFileName stores the name of the kustomization file at ldr root.
+	kustFileName string
+
+	rFactory *resmap.Factory
 }
 
 // NewLocalizer is the factory method for Localizer
-func NewLocalizer(ldr *Loader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
+func NewLocalizer(ldr *Loader, rFactory *resmap.Factory) (*Localizer, error) {
 	toDst, err := filepath.Rel(ldr.args.Scope.String(), ldr.Root())
 	if err != nil {
 		log.Fatalf("cannot find path from %q to child directory %q: %s", ldr.args.Scope, ldr.Root(), err)
@@ -46,52 +44,64 @@ func NewLocalizer(ldr *Loader, validator ifc.Validator, rFactory *resmap.Factory
 		return nil, errors.WrapPrefixf(err, "unable to create directory in localize destination")
 	}
 	return &Localizer{
-		fSys:      ldr.fSys,
-		validator: validator,
-		rFactory:  rFactory,
-		pLdr:      pLdr,
-		ldr:       ldr,
-		dst:       filesys.ConfirmedDir(dst),
+		fSys:     ldr.fSys,
+		ldr:      ldr,
+		dst:      filesys.ConfirmedDir(dst),
+		rFactory: rFactory,
 	}, nil
 }
 
-// Localize localizes the root that lc is at
 func (lc *Localizer) Localize() error {
-	kt := target.NewKustTarget(lc.ldr, lc.validator, lc.rFactory, lc.pLdr)
-	err := kt.Load()
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	kust, err := lc.processKust(kt)
+	err := lc.loadKust()
 	if err != nil {
 		return err
 	}
-	content, err := yaml.Marshal(kust)
+	err = lc.processKust()
 	if err != nil {
-		return errors.WrapPrefixf(err, "unable to serialize localized kustomization file")
+		return err
 	}
-	if err = lc.fSys.WriteFile(lc.dst.Join(konfig.DefaultKustomizationFileName()), content); err != nil {
-		return errors.WrapPrefixf(err, "unable to write localized kustomization file")
+	locKust, err := lc.kust.Marshal()
+	if err != nil {
+		return err
+	}
+	err = lc.fSys.WriteFile(lc.dst.Join(lc.kustFileName), locKust)
+	if err != nil {
+		return errors.WrapPrefixf(err, "unable to write localized legacy patches")
 	}
 	return nil
 }
 
-// processKust returns a copy of the kustomization at kt with paths localized.
-func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, error) {
-	kust := kt.Kustomization()
-	for i := range kust.Patches {
-		if kust.Patches[i].Path != "" {
-			newPath, err := lc.localizeFile(kust.Patches[i].Path)
+// loadKust loads the kustomization that lc is at into lc.legacyKust and lc.legacyPatches
+func (lc *Localizer) loadKust() error {
+	content, fileName, err := loadKustFile(lc.ldr)
+	if err != nil {
+		return err
+	}
+	var legacyKust LegacyKust
+	err = (&legacyKust).Unmarshal(content)
+	if err != nil {
+		return err
+	}
+	lc.kust = legacyKust
+	lc.kustFileName = fileName
+	return nil
+}
+
+// processKust localizes the paths on lc.kust.
+func (lc *Localizer) processKust() error {
+	for i := range lc.kust.fields.Patches {
+		if lc.kust.fields.Patches[i].Path != "" {
+			newPath, err := lc.localizeFile(lc.kust.fields.Patches[i].Path)
 			if err != nil {
-				return nil, errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
+				return errors.WrapPrefixf(err, "unable to localize patches path %q", lc.kust.fields.Patches[i].Path)
 			}
-			kust.Patches[i].Path = newPath
+			lc.kust.fields.Patches[i].Path = newPath
 		}
 	}
 	// TODO(annasong): localize all other kustomization fields: resources, components, crds, configurations,
-	// openapi, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
+	// openapi, legacy patches, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
 	// TODO(annasong): localize built-in plugins under generators, transformers, and validators fields
-	return &kust, nil
+	return nil
 }
 
 // localizeFile localizes file path and returns the localized path

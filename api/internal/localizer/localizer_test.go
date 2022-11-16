@@ -4,8 +4,10 @@
 package localizer_test
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
+	"log"
 	"path/filepath"
 	"testing"
 
@@ -13,11 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/hasher"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
-	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/internal/validate"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -63,13 +62,7 @@ func createLocalizer(t *testing.T, fSys filesys.FileSystem, target string, scope
 	// no need to re-test Loader
 	ldr, _, err := NewLoader(target, scope, newDir, fSys)
 	require.NoError(t, err)
-	rmFactory := resmap.NewFactory(resource.NewFactory(&hasher.Hasher{}))
-	lc, err := NewLocalizer(
-		ldr,
-		validate.NewFieldValidator(),
-		rmFactory,
-		// file system can be in memory, as plugin configuration will prevent the use of file system anyway
-		loader.NewLoader(types.DisabledPluginConfig(), rmFactory, fSys))
+	lc, err := NewLocalizer(ldr, resmap.NewFactory(resource.NewFactory(&hasher.Hasher{})))
 	require.NoError(t, err)
 	return lc
 }
@@ -178,9 +171,7 @@ kind: Kustomization
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a", kustomization)
-	addFiles(t, fSysExpected, "/dst/a", map[string]string{
-		"kustomization.yaml": kustomization["Kustomization"],
-	})
+	addFiles(t, fSysExpected, "/dst/a", kustomization)
 	checkFSys(t, fSysExpected, fSys)
 }
 
@@ -298,4 +289,49 @@ patches:
 
 	lclzr := createLocalizer(t, fSys, "/a/b", "", "/dst")
 	require.Error(t, lclzr.Localize())
+}
+
+func TestLegacyAndNonLegacy(t *testing.T) {
+	req := require.New(t)
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	fSys := makeMemoryFs(t)
+
+	files := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+imageTags:
+- name: postgres
+  newTag: v1
+images:
+- name: postgres
+  newName: my-registry/my-postgres
+kind: Kustomization
+patchesStrategicMerge:
+- |-
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: map
+  data:
+    APPLE: "orange"
+patches:
+- |-
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: secret
+  data:
+    APPLE: b3Jhbmdl
+`,
+	}
+	addFiles(t, fSys, "/", files)
+	lclzr := createLocalizer(t, fSys, "/", "", "")
+	err := lclzr.Localize()
+	req.NoError(err)
+	req.Empty(buf.String())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/", files)
+	addFiles(t, fSysExpected, "/localized", files)
+	checkFSys(t, fSysExpected, fSys)
 }

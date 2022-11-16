@@ -10,6 +10,9 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -124,4 +127,45 @@ func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file stri
 // TODO(annasong): implement
 func locFilePath(_ string) string {
 	return filepath.Join(LocalizeDir, "")
+}
+
+// loadKustFile returns the contents of the kustomization file at ldr and the kustomization file name
+func loadKustFile(ldr ifc.Loader) ([]byte, string, error) {
+	var content []byte
+	match := 0
+	var kustFileName string
+	for _, kf := range konfig.RecognizedKustomizationFileNames() {
+		c, err := ldr.Load(kf)
+		if err == nil {
+			match += 1
+			content = c
+			kustFileName = kf
+		}
+	}
+	switch match {
+	case 0:
+		return nil, "", target.NewErrMissingKustomization(ldr.Root())
+	case 1:
+		return content, kustFileName, nil
+	default:
+		return nil, "", errors.Errorf("Found multiple kustomization files under: %s", ldr.Root())
+	}
+}
+
+// getLegacyPatches tries to parse patchesField as legacy patch elements. If successful,
+// getLegacyPatches returns the legacy patches and true. Otherwise, the empty slice and false.
+func getLegacyPatches(patchesField interface{}) ([]types.PatchStrategicMerge, bool) {
+	elements, ok := patchesField.([]interface{})
+	if !ok {
+		return nil, false
+	}
+	patches := make([]types.PatchStrategicMerge, len(elements))
+	for i, e := range elements {
+		patch, ok := e.(string)
+		if !ok {
+			return nil, false
+		}
+		patches[i] = types.PatchStrategicMerge(patch)
+	}
+	return patches, true
 }
