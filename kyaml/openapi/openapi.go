@@ -545,7 +545,7 @@ const (
 	groupKey = "group"
 	// versionKey is the key to lookup the version from the GVK extension
 	versionKey = "version"
-	// kindKey is the the to lookup the kind from the GVK extension
+	// kindKey is the to lookup the kind from the GVK extension
 	kindKey = "kind"
 )
 
