@@ -79,19 +79,13 @@ func (lc *Localizer) Localize() error {
 // processKust returns a copy of the kustomization at kt with paths localized.
 func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, error) {
 	kust := kt.Kustomization()
-	for fieldName, patches := range map[string][]types.Patch{
-		"patches":         kust.Patches,
-		"patchesJson6902": kust.PatchesJson6902,
-	} {
-		for i := range patches {
-			if patches[i].Path != "" {
-				newPath, err := lc.localizeFile(patches[i].Path)
-				if err != nil {
-					return nil, errors.WrapPrefixf(err, "unable to localize path %q from field %s", patches[i].Path,
-						fieldName)
-				}
-				patches[i].Path = newPath
+	for i := range kust.Patches {
+		if kust.Patches[i].Path != "" {
+			newPath, err := lc.localizeFile(kust.Patches[i].Path)
+			if err != nil {
+				return nil, errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
 			}
+			kust.Patches[i].Path = newPath
 		}
 	}
 	// TODO(annasong): localize all other kustomization fields: resources, components, crds, configurations,

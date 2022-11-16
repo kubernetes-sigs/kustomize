@@ -285,47 +285,6 @@ spec:
 	checkFSys(t, fSysExpected, fSys)
 }
 
-func TestLocalizePatchesJson6902(t *testing.T) {
-	fSys := makeMemoryFs(t)
-	kustAndPatch := map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-patchesJson6902:
-- options:
-    allowKindChange: true
-  patch: |-
-    - op: add
-      path: /some/new/path
-      value: value
-    - op: move
-      from: /some/existing/path
-      path: /some/existing/destination/path
-  target:
-    kind: Service
-    name: my-service
-    version: v1
-- path: patch.yaml
-  target:
-    name: my-deployment
-`,
-		"patch.yaml": ` [
-   {"op": "copy", "from": "/some/existing/path", "path": "/some/path"},
-   {"op": "remove", "path": "/some/existing/path"},
-   {"op": "test", "path": "/some/path", "value": "my-node-value"}
- ]
-`,
-	}
-	addFiles(t, fSys, "/a", kustAndPatch)
-
-	lclzr := createLocalizer(t, fSys, "/a", "", "")
-	require.NoError(t, lclzr.Localize())
-
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustAndPatch)
-	addFiles(t, fSysExpected, "/localized-a", kustAndPatch)
-	checkFSys(t, fSysExpected, fSys)
-}
-
 func TestLocalizeFileNoFile(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPatch := map[string]string{
