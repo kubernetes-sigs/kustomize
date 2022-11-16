@@ -57,8 +57,8 @@ func addFiles(t *testing.T, fSys filesys.FileSystem, parentDir string, files map
 func createLocalizer(t *testing.T, fSys filesys.FileSystem, target string, scope string, newDir string) *Localizer {
 	t.Helper()
 
-	// no need to re-test LocLoader
-	ldr, _, err := NewLocLoader(target, scope, newDir, fSys)
+	// no need to re-test Loader
+	ldr, _, err := NewLoader(target, scope, newDir, fSys)
 	require.NoError(t, err)
 	rmFactory := resmap.NewFactory(resource.NewFactory(&hasher.Hasher{}))
 	lc, err := NewLocalizer(
