@@ -55,13 +55,14 @@ timeout: 14m
 
 # golreleaser expects the GITHUB_TOKEN env var to hold the github token
 # it needs to write the released package and notes back to github.
-# The raw token was encrypted by gcloud kms (Key Management Service)
+# The raw token was encrypted by `gcloud kms encrypt` (Key Management Service)
 # The base64 of that is shown below.  It's decrypted by cloud build
 # and provided back to goreleaser.
+# IMPORTANT: make sure the token does not end with a newline when you encrypt it!
 secrets:
 - kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
   secretEnv:
-    GITHUB_TOKEN: CiQAJ+XRL1gnKicT8/753UT2HGKZfnNf0GeFPIORlNe9dxaqxwsSUgAdel1MCMW9acrDV3cvxiTmg/2Ey0vwTpG1+ydpICFvYwOry/QcRMmqpgi+MzF8RGx6+gqxqVrgJp884LRumEYZHGT1P8++wYOOE3PzocrxUaQ=
+    GITHUB_TOKEN: CiQAJ+XRLyyHcIJNVgYxvlvRdBn5ZwAETbYrN4he4qD2TyDGetkSUQAdel1M+EcsyedJVVWSQnRdst5o4aa4jeqGH7CCITQwHGEY9nbAJaGU4n3VgThnAk6/AhiLpQRH4XERcM4klX8gBnbvJX/C0908S2oVCzzgmw==
 
 options:
   machineType: 'N1_HIGHCPU_8'
