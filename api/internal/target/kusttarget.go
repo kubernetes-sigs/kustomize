@@ -6,6 +6,7 @@ package target
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -67,6 +68,15 @@ func (kt *KustTarget) Load() error {
 	if err != nil {
 		return err
 	}
+
+	// show warning message when using deprecated fields.
+	warningMessages := k.CheckDeprecatedFields()
+	if warningMessages != nil {
+		for _, msg := range *warningMessages {
+			fmt.Fprintf(os.Stderr, "%v\n", msg)
+		}
+	}
+
 	k.FixKustomizationPostUnmarshalling()
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
