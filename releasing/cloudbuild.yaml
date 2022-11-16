@@ -61,7 +61,7 @@ timeout: 14m
 secrets:
 - kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
   secretEnv:
-    GITHUB_TOKEN: CiQAJ+XRL/4GYvbFWjYq8Awj7+bb+02wIpfTkBsu2rfX/klvzt8SUgAdel1MUwA2REYGJHe5SIeWC9uzsg2aN1UDLdo9gLn9afrqQxgQUN15XNskSsYP8LFITY59rXyJAA1EK8m74rAgrwUucjaGoG3YZtAlxvCvtyM=
+    GITHUB_TOKEN: CiQAJ+XRL1gnKicT8/753UT2HGKZfnNf0GeFPIORlNe9dxaqxwsSUgAdel1MCMW9acrDV3cvxiTmg/2Ey0vwTpG1+ydpICFvYwOry/QcRMmqpgi+MzF8RGx6+gqxqVrgJp884LRumEYZHGT1P8++wYOOE3PzocrxUaQ=
 
 options:
   machineType: 'N1_HIGHCPU_8'
