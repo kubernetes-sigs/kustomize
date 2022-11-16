@@ -299,3 +299,82 @@ patches:
 	lclzr := createLocalizer(t, fSys, "/a/b", "", "/dst")
 	require.Error(t, lclzr.Localize())
 }
+
+func TestLocalizePlugins(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+generators:
+- |-
+  apiVersion: builtin
+  behavior: create
+  kind: ConfigMapGenerator
+  literals:
+  - APPLE=orange
+  metadata:
+    name: map
+  ---
+  apiVersion: builtin
+  kind: SecretGenerator
+  literals:
+  - APPLE=b3Jhbmdl
+  metadata:
+    name: secret
+  options:
+    disableNameSuffixHash: true
+kind: Kustomization
+transformers:
+- plugin.yaml
+`,
+		"plugin.yaml": `apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: patch
+patch: '[{"op": "replace", "path": "/spec/replicas", "value": "2"}]'
+target:
+  name: .*Deploy
+`,
+	}
+	addFiles(t, fSys, "/a", kustAndPlugins)
+
+	lclzr := createLocalizer(t, fSys, "/a", "", "/alpha/dst")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndPlugins)
+	addFiles(t, fSysExpected, "/alpha/dst", map[string]string{
+		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
+	})
+	require.Equal(t, fSysExpected, fSys)
+}
+
+func TestLocalizePluginsNotBuiltin(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+generators:
+- |-
+  apiVersion: builtin
+  kind: ConfigMapGenerator
+  literals:
+  - APPLE=orange
+  metadata:
+    name: map
+kind: Kustomization
+transformers:
+- plugin.yaml
+`,
+		"plugin.yaml": `apiVersion: random
+kind: PatchTransformer
+metadata:
+  name: patch
+patch: '[{"op": "replace", "path": "/spec/replicas", "value": "2"}]'
+target:
+  name: .*Deploy
+`,
+	}
+	addFiles(t, fSys, "/", kustAndPlugins)
+
+	lclzr := createLocalizer(t, fSys, "/", "", "/dst")
+	require.Error(t, lclzr.Localize())
+}

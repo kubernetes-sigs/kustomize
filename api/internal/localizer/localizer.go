@@ -4,6 +4,7 @@
 package localizer
 
 import (
+	"bytes"
 	"log"
 	"path/filepath"
 
@@ -62,11 +63,18 @@ func (lc *Localizer) Localize() error {
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	kust, err := lc.processKust(kt)
+
+	kustomization := kt.Kustomization()
+	err = lc.localizeFields(&kustomization)
 	if err != nil {
 		return err
 	}
-	content, err := yaml.Marshal(kust)
+	err = lc.localizePlugins(&kustomization)
+	if err != nil {
+		return err
+	}
+
+	content, err := yaml.Marshal(&kustomization)
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to serialize localized kustomization file")
 	}
@@ -76,22 +84,21 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// processKust returns a copy of the kustomization at kt with paths localized.
-func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, error) {
-	kust := kt.Kustomization()
+// localizeFields localizes paths on the kustomization's built-in fields, excluding helm.
+func (lc *Localizer) localizeFields(kust *types.Kustomization) error {
 	for i := range kust.Patches {
 		if kust.Patches[i].Path != "" {
 			newPath, err := lc.localizeFile(kust.Patches[i].Path)
 			if err != nil {
-				return nil, errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
+				return errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
 			}
 			kust.Patches[i].Path = newPath
 		}
 	}
-	// TODO(annasong): localize all other kustomization fields: resources, components, crds, configurations,
-	// openapi, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
+	// TODO(annasong): localize all other kustomization fields: resources, bases, components, crds, configurations,
+	// openapi, patchesJson6902, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
 	// TODO(annasong): localize built-in plugins under generators, transformers, and validators fields
-	return &kust, nil
+	return nil
 }
 
 // localizeFile localizes file path and returns the localized path
@@ -126,4 +133,59 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
 	}
 	return locPath, nil
+}
+
+// localizePlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins
+// can be inline or a file, but not the result of a kustomization.
+func (lc *Localizer) localizePlugins(kust *types.Kustomization) error {
+	for field, plugins := range map[string][]string{
+		"generator":   kust.Generators,
+		"transformer": kust.Transformers,
+		"validator":   kust.Validators,
+	} {
+		for i, entry := range plugins {
+			var isPath bool
+			rm, err := lc.rFactory.NewResMapFromBytes([]byte(entry))
+			if err != nil {
+				rm, err = lc.rFactory.FromFile(lc.ldr, entry)
+				if err != nil {
+					return errors.WrapPrefixf(err, "%q is neither a valid inline nor file path %s", entry, field)
+				}
+				isPath = true
+			}
+			localizedPlugin, err := lc.localizePluginEntry(rm)
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to localize %s entry %q", field, entry)
+			}
+			var newEntry string
+			if isPath {
+				// TODO(annasong): write localizedPlugin to dst
+				newEntry = entry
+			} else {
+				newEntry = string(localizedPlugin)
+			}
+			plugins[i] = newEntry
+		}
+	}
+	return nil
+}
+
+// localizePluginEntry localizes pluginEntry, the resources in a plugin entry, and returns
+// the localized pluginEntry in bytes if they are built-ins that can specify file paths.
+// Otherwise, localizePluginEntry returns an error.
+func (lc *Localizer) localizePluginEntry(pluginEntry resmap.ResMap) ([]byte, error) {
+	localizedPlugins := make([][]byte, pluginEntry.Size())
+	for i, plugin := range pluginEntry.Resources() {
+		if !isBuiltinPlugin(plugin) {
+			return nil, errors.Errorf("plugin is not built-in")
+		}
+		content, err := plugin.AsYAML()
+		if err != nil {
+			return nil, errors.WrapPrefixf(err, "unable to serialize plugin in entry")
+		}
+		// TODO(annasong): localize plugins
+		localizedPlugins[i] = content
+	}
+	localizedEntry := bytes.Join(localizedPlugins, []byte("---\n"))
+	return bytes.TrimSuffix(localizedEntry, []byte("\n")), nil
 }
