@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/api
 
-go 1.18
+go 1.19
 
 require (
 	github.com/evanphx/json-patch v4.11.0+incompatible

@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/functions/examples/validator-resource-requests
 
-go 1.18
+go 1.19
 
 require sigs.k8s.io/kustomize/kyaml v0.13.7
 
