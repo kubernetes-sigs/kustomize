@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/helmchartinflationgenerator
 
-go 1.18
+go 1.19
 
 require (
 	github.com/imdario/mergo v0.3.6

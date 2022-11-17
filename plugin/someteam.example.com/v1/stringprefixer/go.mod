@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/stringprefixer
 
-go 1.18
+go 1.19
 
 require (
 	github.com/pkg/errors v0.9.1

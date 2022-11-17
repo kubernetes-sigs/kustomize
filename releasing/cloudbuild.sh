@@ -10,7 +10,7 @@
 # To test it locally, run it in a goreleaser container:
 #
 #   # Get build image from cloudbuild.yaml
-#   export GOLANG_IMAGE=golang:1.18
+#   export GOLANG_IMAGE=golang:1.19
 #
 #   # Drop into a shell
 #   docker run -it --entrypoint=/bin/bash -v $(pwd):/go/src/github.com/kubernetes-sigs/kustomize -w /go/src/github.com/kubernetes-sigs/kustomize $GOLANG_IMAGE
