@@ -59,20 +59,20 @@ func (o *removeSecretOptions) Validate(args []string) error {
 func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
-		return err
+		return fmt.Errorf("secret cannot load from file system, got %w", err)
 	}
 
 	m, err := mf.Read()
 	if err != nil {
-		return err
+		return fmt.Errorf("secret cannot read from file, got %w", err)
 	}
 
-	var newSecrets []types.SecretArgs
 	foundSecrets := make(map[string]bool)
 	for _, removeName := range o.secretNames {
 		foundSecrets[removeName] = false
 	}
 
+	newSecrets := make([]types.SecretArgs, 0, len(m.SecretGenerator))
 	for _, currentSecret := range m.SecretGenerator {
 		if kustfile.StringInSlice(currentSecret.Name, o.secretNames) {
 			foundSecrets[currentSecret.Name] = true
@@ -88,5 +88,10 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 	}
 
 	m.SecretGenerator = newSecrets
-	return mf.Write(m)
+
+	err = mf.Write(m)
+	if err != nil {
+		return fmt.Errorf("secret cannot write back to file, got %w", err)
+	}
+	return nil
 }
