@@ -18,6 +18,7 @@ linters:
     - depguard
     - dogsled
     - dupl
+    - dupword
     - durationcheck
     - errcheck
     - errname
@@ -75,6 +76,7 @@ linters:
     - tagliatelle
     - tenv
     - testpackage
+    - testableexamples
     - thelper
     - tparallel
     - typecheck
@@ -89,7 +91,7 @@ linters:
     - asasalint
     - usestdlibvars
     - interfacebloat
-    - logrlint
+    - loggercheck
     - reassign
 
 linters-settings:

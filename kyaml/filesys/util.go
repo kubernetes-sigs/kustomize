@@ -93,7 +93,7 @@ func PathJoin(incoming []string) string {
 //     relative paths; if it weren't, this function could convert absolute
 //     paths to relative paths, which is not desirable.
 //
-//   - For robustness (liberal input, conservative output) Pos values that
+//   - For robustness (liberal input, conservative output) Pos values
 //     that are too small (large) to index the split filepath result in a
 //     prefix (postfix) rather than an error.  Use extreme position values
 //     to assure a prefix or postfix (e.g. 0 will always prefix, and
