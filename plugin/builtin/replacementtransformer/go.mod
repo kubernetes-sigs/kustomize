@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/replacementtransformer
 
-go 1.18
+go 1.19
 
 require (
 	sigs.k8s.io/kustomize/api v0.11.5
