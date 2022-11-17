@@ -9,7 +9,7 @@ description: >
 
 First install the tools to build and run tests
 
-### Install go 1.18
+### Install go 1.19
 
 [Instructions](https://golang.org/doc/install)
 

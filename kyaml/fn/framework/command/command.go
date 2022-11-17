@@ -115,13 +115,13 @@ func Build(p framework.ResourceListProcessor, mode CLIMode, noPrintError bool) *
 // the function into a container image.
 // The gen command takes one argument: the directory where the Dockerfile will be created.
 //
-//		go run main.go gen DIR/
+//	go run main.go gen DIR/
 func AddGenerateDockerfile(cmd *cobra.Command) {
 	gen := &cobra.Command{
 		Use:  "gen [DIR]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := os.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM golang:1.18-alpine as builder
+			if err := os.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM golang:1.19-alpine as builder
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod go.sum ./

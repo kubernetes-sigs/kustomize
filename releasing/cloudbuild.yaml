@@ -39,7 +39,7 @@ steps:
 
 # Run goreleaser indirectly via a shell script
 # to configure it properly.
-- name: golang:1.18
+- name: golang:1.19
   entrypoint: /bin/bash
   dir: myClone
   secretEnv: ['GITHUB_TOKEN']
