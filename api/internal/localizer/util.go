@@ -10,8 +10,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -126,8 +124,4 @@ func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file stri
 // TODO(annasong): implement
 func locFilePath(_ string) string {
 	return filepath.Join(LocalizeDir, "")
-}
-
-func isBuiltinPlugin(res *resource.Resource) bool {
-	return res.GetGvk().Group == "" && res.GetGvk().Version == konfig.BuiltinPluginApiVersion
 }

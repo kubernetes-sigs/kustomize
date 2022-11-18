@@ -305,7 +305,7 @@ func TestLocalizeBuiltinPlugins(t *testing.T) {
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 generators:
-- |-
+- |
   apiVersion: builtin
   behavior: create
   kind: ConfigMapGenerator
@@ -345,36 +345,31 @@ target:
 	addFiles(t, fSysExpected, "/alpha/dst", map[string]string{
 		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
 	})
-	require.Equal(t, fSysExpected, fSys)
+	checkFSys(t, fSysExpected, fSys)
 }
 
-func TestLocalizeBuiltinPluginsNotBuiltin(t *testing.T) {
-	fSys := makeMemoryFs(t)
-	kustAndPlugins := map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+func TestLocalizeBuiltinPluginsInvalid(t *testing.T) {
+	for name, kustomization := range map[string]string{
+		"bad_resource": `apiVersion: kustomize.config.k8s.io/v1beta1
 generators:
-- |-
+- |
   apiVersion: builtin
   kind: ConfigMapGenerator
-  literals:
-  - APPLE=orange
-  metadata:
-    name: map
+kind: Kustomization
+`,
+		"non-existent_file": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 transformers:
-- plugin.yaml
+- transformer.yaml
 `,
-		"plugin.yaml": `apiVersion: random
-kind: PatchTransformer
-metadata:
-  name: patch
-patch: '[{"op": "replace", "path": "/spec/replicas", "value": "2"}]'
-target:
-  name: .*Deploy
-`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			fSys := makeMemoryFs(t)
+			addFiles(t, fSys, "/", map[string]string{
+				"kustomization.yaml": kustomization,
+			})
+			lclzr := createLocalizer(t, fSys, "/", "", "/dst")
+			require.Error(t, lclzr.Localize())
+		})
 	}
-	addFiles(t, fSys, "/", kustAndPlugins)
-
-	lclzr := createLocalizer(t, fSys, "/", "", "/dst")
-	require.Error(t, lclzr.Localize())
 }

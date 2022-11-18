@@ -4,13 +4,11 @@
 package localizer
 
 import (
-	"bytes"
 	"log"
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -181,18 +179,14 @@ when parsing as filepath received error`, fieldName, entry, inlineErr)
 //
 // Note that the localization in this function has not been implemented yet.
 func (lc *Localizer) localizePluginEntry(pluginEntry resmap.ResMap) ([]byte, error) {
-	localizedPlugins := make([][]byte, pluginEntry.Size())
-	for i, plugin := range pluginEntry.Resources() {
-		if !utils.IsBuiltinPlugin(plugin) {
-			return nil, errors.Errorf("plugin is not built-in")
-		}
-		content, err := plugin.AsYAML()
-		if err != nil {
-			return nil, errors.WrapPrefixf(err, "unable to serialize plugin in entry")
-		}
-		// TODO(annasong): localize plugins
-		localizedPlugins[i] = content
+	filter := localizeBuiltinPlugin{}
+	err := pluginEntry.ApplyFilter(&filter)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
-	localizedEntry := bytes.Join(localizedPlugins, []byte("---\n"))
-	return bytes.TrimSuffix(localizedEntry, []byte("\n")), nil
+	content, err := pluginEntry.AsYaml()
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "unable to serialize localized plugins entry")
+	}
+	return content, nil
 }
