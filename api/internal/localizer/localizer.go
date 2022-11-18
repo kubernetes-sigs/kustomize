@@ -10,6 +10,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
+	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
@@ -65,11 +66,11 @@ func (lc *Localizer) Localize() error {
 	}
 
 	kustomization := kt.Kustomization()
-	err = lc.localizeFields(&kustomization)
+	err = lc.localizeNativeFields(&kustomization)
 	if err != nil {
 		return err
 	}
-	err = lc.localizePlugins(&kustomization)
+	err = lc.localizeBuiltinPlugins(&kustomization)
 	if err != nil {
 		return err
 	}
@@ -84,8 +85,9 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// localizeFields localizes paths on the kustomization's built-in fields, excluding helm.
-func (lc *Localizer) localizeFields(kust *types.Kustomization) error {
+// localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
+// built-in understanding of. This excludes helm.
+func (lc *Localizer) localizeNativeFields(kust *types.Kustomization) error {
 	for i := range kust.Patches {
 		if kust.Patches[i].Path != "" {
 			newPath, err := lc.localizeFile(kust.Patches[i].Path)
@@ -135,27 +137,30 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 	return locPath, nil
 }
 
-// localizePlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins
-// can be inline or a file, but not the result of a kustomization.
-func (lc *Localizer) localizePlugins(kust *types.Kustomization) error {
-	for field, plugins := range map[string][]string{
+// localizeBuiltinPlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins
+// can be inline or in a file.
+func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
+	for fieldName, plugins := range map[string][]string{
 		"generator":   kust.Generators,
 		"transformer": kust.Transformers,
 		"validator":   kust.Validators,
 	} {
 		for i, entry := range plugins {
 			var isPath bool
-			rm, err := lc.rFactory.NewResMapFromBytes([]byte(entry))
-			if err != nil {
-				rm, err = lc.rFactory.FromFile(lc.ldr, entry)
-				if err != nil {
-					return errors.WrapPrefixf(err, "%q is neither a valid inline nor file path %s", entry, field)
+			rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(entry))
+			if inlineErr != nil {
+				var fileErr error
+				rm, fileErr = lc.rFactory.FromFile(lc.ldr, entry)
+				if fileErr != nil {
+					return errors.WrapPrefixf(fileErr, `unable to localize %s value %q:
+when parsing as inline received error: %s
+when parsing as filepath received error`, fieldName, entry, inlineErr)
 				}
 				isPath = true
 			}
 			localizedPlugin, err := lc.localizePluginEntry(rm)
 			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize %s entry %q", field, entry)
+				return errors.WrapPrefixf(err, "unable to localize %s entry %q", fieldName, entry)
 			}
 			var newEntry string
 			if isPath {
@@ -173,10 +178,12 @@ func (lc *Localizer) localizePlugins(kust *types.Kustomization) error {
 // localizePluginEntry localizes pluginEntry, the resources in a plugin entry, and returns
 // the localized pluginEntry in bytes if they are built-ins that can specify file paths.
 // Otherwise, localizePluginEntry returns an error.
+//
+// Note that the localization in this function has not been implemented yet.
 func (lc *Localizer) localizePluginEntry(pluginEntry resmap.ResMap) ([]byte, error) {
 	localizedPlugins := make([][]byte, pluginEntry.Size())
 	for i, plugin := range pluginEntry.Resources() {
-		if !isBuiltinPlugin(plugin) {
+		if !utils.IsBuiltinPlugin(plugin) {
 			return nil, errors.Errorf("plugin is not built-in")
 		}
 		content, err := plugin.AsYAML()

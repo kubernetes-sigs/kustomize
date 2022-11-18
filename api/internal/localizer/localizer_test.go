@@ -300,7 +300,7 @@ patches:
 	require.Error(t, lclzr.Localize())
 }
 
-func TestLocalizePlugins(t *testing.T) {
+func TestLocalizeBuiltinPlugins(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -348,7 +348,7 @@ target:
 	require.Equal(t, fSysExpected, fSys)
 }
 
-func TestLocalizePluginsNotBuiltin(t *testing.T) {
+func TestLocalizeBuiltinPluginsNotBuiltin(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
