@@ -5,6 +5,7 @@ package localizer
 
 import (
 	"log"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -121,7 +122,20 @@ func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file stri
 }
 
 // locFilePath returns the relative localized path of validated file url fileURL
-// TODO(annasong): implement
-func locFilePath(_ string) string {
-	return filepath.Join(LocalizeDir, "")
+func locFilePath(fileURL string) string {
+	// file urls must have http or https scheme
+	u, err := url.Parse(fileURL)
+	if err != nil {
+		log.Fatalf("cannot parse validated file url %q: %s", fileURL, err.Error())
+	}
+
+	// preserve percent-encodings in case of sub-delims special meaning
+	// remove extraneous '..' parent directory dot-segments
+	path := filepath.Join(string(filepath.Separator), filepath.FromSlash(u.EscapedPath()))
+
+	// raw github urls are the only type of file urls kustomize officially accepts, in which case
+	// path consists of org, repo, version, path in repo
+
+	// host should not include userinfo or port
+	return filepath.Join(LocalizeDir, u.Hostname(), path)
 }
