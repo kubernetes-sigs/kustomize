@@ -4,7 +4,7 @@
 [stable chart]: https://github.com/helm/charts/tree/master/stable
 [Helm charts]: https://github.com/helm/charts
 [_minecraft_]: https://github.com/helm/charts/tree/master/stable/minecraft
-[插件]: ../../docs/plugins
+[插件]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#plugin
 
 kustomize 并不会读取 [Helm charts] ，但可以使用 generator 来访问 [Helm charts] 。
 

@@ -1,11 +1,11 @@
-[builtin operations]: ../docs/plugins/builtins.md
-[builtin plugins]: ../docs/plugins/builtins.md
-[plugins]: ../docs/plugins
-[plugin]: ../docs/plugins
-[fields]: ../docs/fields.md
-[fields in a kustomization file]: ../docs/fields.md
+[builtin operations]: https://kubectl.docs.kubernetes.io/references/kustomize/builtins/
+[builtin plugins]: https://kubectl.docs.kubernetes.io/references/kustomize/builtins/
+[plugins]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#plugin
+[plugin]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#plugin
+[fields]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+[fields in a kustomization file]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 [TransformerConfig]: ../api/internal/plugins/builtinconfig/transformerconfig.go
-[kustomization]: ../docs/glossary.md#kustomization
+[kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization
 
 # Customizing kustomize
 

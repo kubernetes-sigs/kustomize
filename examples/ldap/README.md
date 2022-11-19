@@ -1,10 +1,10 @@
-[base]: ../../docs/glossary.md#base
-[gitops]: ../../docs/glossary.md#gitops
-[kustomization]: ../../docs/glossary.md#kustomization
-[overlay]: ../../docs/glossary.md#overlay
-[overlays]: ../../docs/glossary.md#overlay
-[variant]: ../../docs/glossary.md#variant
-[variants]: ../../docs/glossary.md#variant
+[base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
+[gitops]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#gitops
+[kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kustomization
+[overlay]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
+[overlays]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
+[variant]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
+[variants]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
 
 # Demo: LDAP with variants
 

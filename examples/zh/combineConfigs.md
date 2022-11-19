@@ -1,5 +1,5 @@
-[overlay]: ../docs/glossary.md#overlay
-[target]: ../docs/glossary.md#target
+[overlay]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#overlay
+[target]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#target
 
 # 示例：devops和开发配合管理配置数据
 

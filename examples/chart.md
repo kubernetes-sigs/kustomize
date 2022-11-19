@@ -4,7 +4,7 @@
 [last mile]: https://testingclouds.wordpress.com/2018/07/20/844/
 [artifact hub]: https://artifacthub.io
 [_minecraft_]: https://artifacthub.io/packages/helm/minecraft-server-charts/minecraft
-[plugin]: ../docs/plugins
+[plugin]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#plugin
 [built]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization
 
 Kustomize is [built] from _generators_ and

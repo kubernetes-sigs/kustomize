@@ -1,5 +1,5 @@
 [kubernetes API object style]: https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields
-[variant]: ../docs/glossary.md#variant
+[variant]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
 
 # Demo: configure breakfast
 

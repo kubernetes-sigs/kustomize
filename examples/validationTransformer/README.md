@@ -2,7 +2,7 @@
 
 [base]: ../../docs/glossary.md#base
 [kubeval]: https://github.com/instrumenta/kubeval
-[plugin]: ../../docs/plugins
+[plugin]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#plugin
 
 kustomize doesn't validate either its input or
 output beyond the validation provided by the
