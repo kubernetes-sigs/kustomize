@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -136,28 +137,35 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 }
 
 // localizeBuiltinPlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins
-// can be inline or in a file.
+// can be inline or in a file. This excludes helm.
+//
+// Note that the localization in this function has not been implemented yet.
 func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
-	for fieldName, plugins := range map[string][]string{
-		"generator":   kust.Generators,
-		"transformer": kust.Transformers,
+	for fieldName, plugins := range map[string]struct {
+		entries   []string
+		localizer kio.Filter
+	}{
+		"generators": {
+			kust.Generators,
+			&localizeBuiltinGenerators{},
+		},
+		"transformers": {
+			kust.Transformers,
+			&localizeBuiltinTransformers{},
+		},
 	} {
-		for i, entry := range plugins {
-			var isPath bool
-			rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(entry))
-			if inlineErr != nil {
-				var fileErr error
-				rm, fileErr = lc.rFactory.FromFile(lc.ldr, entry)
-				if fileErr != nil {
-					return errors.WrapPrefixf(fileErr, `unable to localize %s value %q:
-when parsing as inline received error: %s
-when parsing as filepath received error`, fieldName, entry, inlineErr)
-				}
-				isPath = true
-			}
-			localizedPlugin, err := lc.localizePluginEntry(rm)
+		for i, entry := range plugins.entries {
+			rm, isPath, err := lc.loadResource(entry)
 			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize %s entry %q", fieldName, entry)
+				return errors.WrapPrefixf(err, "unable to load %s entry", fieldName)
+			}
+			err = rm.ApplyFilter(plugins.localizer)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			localizedPlugin, err := rm.AsYaml()
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to serialize localized %s entry %q", fieldName, entry)
 			}
 			var newEntry string
 			if isPath {
@@ -166,7 +174,7 @@ when parsing as filepath received error`, fieldName, entry, inlineErr)
 			} else {
 				newEntry = string(localizedPlugin)
 			}
-			plugins[i] = newEntry
+			plugins.entries[i] = newEntry
 		}
 	}
 	if len(kust.Validators) > 0 {
@@ -175,20 +183,18 @@ when parsing as filepath received error`, fieldName, entry, inlineErr)
 	return nil
 }
 
-// localizePluginEntry localizes pluginEntry, the resources in a plugin entry, and returns
-// the localized pluginEntry in bytes if they are built-ins that can specify file paths.
-// Otherwise, localizePluginEntry returns an error.
-//
-// Note that the localization in this function has not been implemented yet.
-func (lc *Localizer) localizePluginEntry(pluginEntry resmap.ResMap) ([]byte, error) {
-	filter := localizeBuiltinPlugin{}
-	err := pluginEntry.ApplyFilter(&filter)
-	if err != nil {
-		return nil, errors.Wrap(err)
+// loadResource tries to load resourceEntry as a file path or inline.
+// On success, loadResource returns the loaded resource map and whether resourceEntry is a file path.
+func (lc *Localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, error) {
+	var fileErr error
+	rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(resourceEntry))
+	if inlineErr != nil {
+		rm, fileErr = lc.rFactory.FromFile(lc.ldr, resourceEntry)
+		if fileErr != nil {
+			return nil, false, errors.WrapPrefixf(fileErr, `unable to load resource entry %q:
+when parsing as inline received error: %s
+when parsing as filepath received error`, resourceEntry, inlineErr)
+		}
 	}
-	content, err := pluginEntry.AsYaml()
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "unable to serialize localized plugins entry")
-	}
-	return content, nil
+	return rm, fileErr == nil, nil
 }
