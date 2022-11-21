@@ -19,7 +19,7 @@ func TestUrlBaseTrailingSlash(t *testing.T) {
 	require.Equal(t, "repo", urlBase("github.com/org/repo//"))
 }
 
-// simpleJoin is filepath.Join() without side effects
+// simpleJoin is filepath.Join() without the side effects of filepath.Clean()
 func simpleJoin(t *testing.T, elems ...string) string {
 	t.Helper()
 

@@ -121,21 +121,25 @@ func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file stri
 	return locPath
 }
 
-// locFilePath returns the relative localized path of validated file url fileURL
+// locFilePath converts a URL to its localized form, e.g.
+// https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/api/krusty/testdata/localize/simple/service.yaml ->
+// localized-files/raw.githubusercontent.com/kubernetes-sigs/kustomize/master/api/krusty/testdata/localize/simple/service.yaml.
+//
+// fileURL must be a validated file URL.
 func locFilePath(fileURL string) string {
-	// file urls must have http or https scheme
+	// File urls must have http or https scheme, so it is safe to use url.Parse.
 	u, err := url.Parse(fileURL)
 	if err != nil {
 		log.Fatalf("cannot parse validated file url %q: %s", fileURL, err.Error())
 	}
 
-	// preserve percent-encodings in case of sub-delims special meaning
-	// remove extraneous '..' parent directory dot-segments
+	// Percent-encodings should be preserved in case sub-delims have special meaning.
+	// Extraneous '..' parent directory dot-segments should be removed.
 	path := filepath.Join(string(filepath.Separator), filepath.FromSlash(u.EscapedPath()))
 
-	// raw github urls are the only type of file urls kustomize officially accepts, in which case
-	// path consists of org, repo, version, path in repo
-
-	// host should not include userinfo or port
+	// The host should not include userinfo or port.
+	// Raw github urls are the only type of file urls kustomize officially accepts.
+	// In this case, the path already consists of org, repo, version, and path in repo, in order,
+	// so we can use it as is.
 	return filepath.Join(LocalizeDir, u.Hostname(), path)
 }
