@@ -141,7 +141,6 @@ func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 	for fieldName, plugins := range map[string][]string{
 		"generator":   kust.Generators,
 		"transformer": kust.Transformers,
-		"validator":   kust.Validators,
 	} {
 		for i, entry := range plugins {
 			var isPath bool
@@ -169,6 +168,9 @@ when parsing as filepath received error`, fieldName, entry, inlineErr)
 			}
 			plugins[i] = newEntry
 		}
+	}
+	if len(kust.Validators) > 0 {
+		return errors.Errorf("no built-in validators with file paths, but validators field non-empty")
 	}
 	return nil
 }

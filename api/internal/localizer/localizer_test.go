@@ -300,11 +300,12 @@ patches:
 	require.Error(t, lclzr.Localize())
 }
 
-func TestLocalizeBuiltinPlugins(t *testing.T) {
+func TestLocalizeGenerators(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 generators:
+- plugin.yaml
 - |
   apiVersion: builtin
   behavior: create
@@ -312,7 +313,7 @@ generators:
   literals:
   - APPLE=orange
   metadata:
-    name: map
+    name: another-map
   ---
   apiVersion: builtin
   kind: SecretGenerator
@@ -323,16 +324,11 @@ generators:
   options:
     disableNameSuffixHash: true
 kind: Kustomization
-transformers:
-- plugin.yaml
 `,
 		"plugin.yaml": `apiVersion: builtin
-kind: PatchTransformer
+kind: ConfigMapGenerator
 metadata:
-  name: patch
-patch: '[{"op": "replace", "path": "/spec/replicas", "value": "2"}]'
-target:
-  name: .*Deploy
+  name: map
 `,
 	}
 	addFiles(t, fSys, "/a", kustAndPlugins)
@@ -348,28 +344,115 @@ target:
 	checkFSys(t, fSysExpected, fSys)
 }
 
+func TestLocalizeTransformers(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: builtin
+  jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
+  kind: PatchJson6902Transformer
+  metadata:
+    name: patch6902
+  target:
+    name: deployment
+  ---
+  apiVersion: builtin
+  kind: ReplacementTransformer
+  metadata:
+    name: replacement
+  replacements:
+  - source:
+      fieldPath: spec.template.spec.containers.0.image
+      kind: Deployment
+    targets:
+    - fieldPaths:
+      - spec.template.spec.containers.1.image
+      select:
+        kind: Deployment
+- plugin.yaml
+`,
+		"plugin.yaml": `apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: patchSM
+paths:
+- pod.yaml
+`,
+	}
+	addFiles(t, fSys, "/a", kustAndPlugins)
+
+	lclzr := createLocalizer(t, fSys, "/a", "", "/dst")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndPlugins)
+	addFiles(t, fSysExpected, "/dst", map[string]string{
+		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
+	})
+	checkFSys(t, fSysExpected, fSys)
+}
+
 func TestLocalizeBuiltinPluginsInvalid(t *testing.T) {
-	for name, kustomization := range map[string]string{
-		"bad_resource": `apiVersion: kustomize.config.k8s.io/v1beta1
+	type testCase struct {
+		name  string
+		files map[string]string
+	}
+	for _, test := range []testCase{
+		{
+			name: "bad_inline_resource",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 generators:
 - |
   apiVersion: builtin
   kind: ConfigMapGenerator
 kind: Kustomization
 `,
-		"non-existent_file": `apiVersion: kustomize.config.k8s.io/v1beta1
+			},
+		},
+		{
+			name: "bad_file_resource",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 transformers:
-- transformer.yaml
+- plugin.yaml
 `,
+				"plugin.yaml": `apiVersion: builtin
+metadata:
+  name: PatchTransformer
+`,
+			},
+		},
 	} {
-		t.Run(name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
-			addFiles(t, fSys, "/", map[string]string{
-				"kustomization.yaml": kustomization,
-			})
+			addFiles(t, fSys, "/", test.files)
 			lclzr := createLocalizer(t, fSys, "/", "", "/dst")
 			require.Error(t, lclzr.Localize())
 		})
 	}
+}
+
+func TestLocalizeValidators(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	addFiles(t, fSys, "/", map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+validators:
+- |-
+  apiVersion: builtin
+  jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
+  kind: PatchJson6902Transformer
+  metadata:
+    name: patch6902
+  target:
+    name: deployment
+`,
+	})
+	lclzr := createLocalizer(t, fSys, "/", "", "/dst")
+	require.Error(t, lclzr.Localize())
 }
