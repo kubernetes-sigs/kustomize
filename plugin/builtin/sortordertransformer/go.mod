@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
-	sigs.k8s.io/kustomize/api v0.8.9
+	sigs.k8s.io/kustomize/api v0.12.1
 	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.2.0
 )
@@ -37,7 +37,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../api
-
-replace sigs.k8s.io/kustomize/kyaml => ../../../kyaml

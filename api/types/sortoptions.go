@@ -15,8 +15,8 @@ type SortOptions struct {
 // SortOrder defines different ordering strategies.
 type SortOrder string
 
-var LegacySortOrder SortOrder = "legacy"
-var FIFOSortOrder SortOrder = "fifo"
+const LegacySortOrder SortOrder = "legacy"
+const FIFOSortOrder SortOrder = "fifo"
 
 // LegacySortOptions define various options for tweaking the "legacy" ordering
 // strategy.

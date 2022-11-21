@@ -37,7 +37,7 @@ func validateFlagReorderOutput() error {
 func getFlagReorderOutput(flags *flag.FlagSet) krusty.ReorderOption {
 	isReorderSet := flags.Changed(flagReorderOutputName)
 	if !isReorderSet {
-		theFlags.reorderOutput = string(krusty.ReorderOptionUnspecified)
+		return krusty.ReorderOptionUnspecified
 	}
 	switch theFlags.reorderOutput {
 	case string(krusty.ReorderOptionNone):

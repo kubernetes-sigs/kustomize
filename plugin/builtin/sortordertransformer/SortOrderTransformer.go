@@ -87,8 +87,8 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 	return nil
 }
 
-// applySortOrder takes resources (given in resmap) and a desired ordering given
-// as a sequence of ResIds, and updates the resmap's resources to match the
+// applyOrdering takes resources (given in ResMap) and a desired ordering given
+// as a sequence of ResIds, and updates the ResMap's resources to match the
 // ordering.
 func applyOrdering(m resmap.ResMap, ordering []resid.ResId) error {
 	var err error
