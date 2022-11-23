@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/yaml"
 )
 
@@ -59,12 +60,14 @@ type Kustomization struct {
 	// CommonAnnotations to add to all objects.
 	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 
+	// Deprecated: Use the Patches field instead, which provides a superset of the functionality of PatchesStrategicMerge.
 	// PatchesStrategicMerge specifies the relative path to a file
 	// containing a strategic merge patch.  Format documented at
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-api-machinery/strategic-merge-patch.md
 	// URLs and globs are not supported.
 	PatchesStrategicMerge []PatchStrategicMerge `json:"patchesStrategicMerge,omitempty" yaml:"patchesStrategicMerge,omitempty"`
 
+	// Deprecated: Use the Patches field instead, which provides a superset of the functionality of JSONPatches.
 	// JSONPatches is a list of JSONPatch for applying JSON patch.
 	// Format documented at https://tools.ietf.org/html/rfc6902
 	// and http://jsonpatch.com
@@ -88,6 +91,7 @@ type Kustomization struct {
 	// specification. This can also be done with a patch.
 	Replicas []Replica `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 
+	// Deprecated: Vars will be removed in future release. Migrate to Replacements instead.
 	// Vars allow things modified by kustomize to be injected into a
 	// kubernetes object specification. A var is a name (e.g. FOO) associated
 	// with a field in a specific resource instance.  The field must
@@ -116,9 +120,7 @@ type Kustomization struct {
 	// CRDs themselves are not modified.
 	Crds []string `json:"crds,omitempty" yaml:"crds,omitempty"`
 
-	// Deprecated.
-	// Anything that would have been specified here should
-	// be specified in the Resources field instead.
+	// Deprecated: Anything that would have been specified here should be specified in the Resources field instead.
 	Bases []string `json:"bases,omitempty" yaml:"bases,omitempty"`
 
 	//
@@ -172,6 +174,33 @@ type Kustomization struct {
 	BuildMetadata []string `json:"buildMetadata,omitempty" yaml:"buildMetadata,omitempty"`
 }
 
+const (
+	deprecatedWarningToRunEditFix              = "Run 'kustomize edit fix' to update your Kustomization automatically."
+	deprecatedWarningToRunEditFixExperimential = "[EXPERIMENTAL] Run 'kustomize edit fix' to update your Kustomization automatically."
+	deprecatedBaseWarningMessage               = "# Warning: 'bases' is deprecated. Please use 'resources' instead." + " " + deprecatedWarningToRunEditFix
+	deprecatedPatchesJson6902Message           = "# Warning: 'patchesJson6902' is deprecated. Please use 'patches' instead." + " " + deprecatedWarningToRunEditFix
+	deprecatedPatchesStrategicMergeMessage     = "# Warning: 'patchesStrategicMerge' is deprecated. Please use 'patches' instead." + " " + deprecatedWarningToRunEditFix
+	deprecatedVarsMessage                      = "# Warning: 'vars' is deprecated. Please use 'replacements' instead." + " " + deprecatedWarningToRunEditFixExperimential
+)
+
+// CheckDeprecatedFields check deprecated field is used or not.
+func (k *Kustomization) CheckDeprecatedFields() *[]string {
+	var warningMessages []string
+	if k.Bases != nil {
+		warningMessages = append(warningMessages, deprecatedBaseWarningMessage)
+	}
+	if k.PatchesJson6902 != nil {
+		warningMessages = append(warningMessages, deprecatedPatchesJson6902Message)
+	}
+	if k.PatchesStrategicMerge != nil {
+		warningMessages = append(warningMessages, deprecatedPatchesStrategicMergeMessage)
+	}
+	if k.Vars != nil {
+		warningMessages = append(warningMessages, deprecatedVarsMessage)
+	}
+	return &warningMessages
+}
+
 // FixKustomizationPostUnmarshalling fixes things
 // like empty fields that should not be empty, or
 // moving content of deprecated fields to newer
@@ -187,8 +216,11 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 			k.APIVersion = KustomizationVersion
 		}
 	}
+
+	// 'bases' field was deprecated in favor of the 'resources' field.
 	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
+
 	for i, g := range k.ConfigMapGenerator {
 		if g.EnvSource != "" {
 			k.ConfigMapGenerator[i].EnvSources =
@@ -217,10 +249,24 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 // FixKustomizationPreMarshalling fixes things
 // that should occur after the kustomization file
 // has been processed.
-func (k *Kustomization) FixKustomizationPreMarshalling() error {
+func (k *Kustomization) FixKustomizationPreMarshalling(fSys filesys.FileSystem) error {
 	// PatchesJson6902 should be under the Patches field.
 	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
+
+	if k.PatchesStrategicMerge != nil {
+		for _, patchStrategicMerge := range k.PatchesStrategicMerge {
+			// check this patch is file path select.
+			if _, err := fSys.ReadFile(string(patchStrategicMerge)); err == nil {
+				// path patch
+				k.Patches = append(k.Patches, Patch{Path: string(patchStrategicMerge)})
+			} else {
+				// inline string patch
+				k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
+			}
+		}
+		k.PatchesStrategicMerge = nil
+	}
 
 	// this fix is not in FixKustomizationPostUnmarshalling because
 	// it will break some commands like `create` and `add`. those

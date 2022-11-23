@@ -39,7 +39,7 @@ steps:
 
 # Run goreleaser indirectly via a shell script
 # to configure it properly.
-- name: golang:1.18
+- name: golang:1.19
   entrypoint: /bin/bash
   dir: myClone
   secretEnv: ['GITHUB_TOKEN']
@@ -55,13 +55,14 @@ timeout: 14m
 
 # golreleaser expects the GITHUB_TOKEN env var to hold the github token
 # it needs to write the released package and notes back to github.
-# The raw token was encrypted by gcloud kms (Key Management Service)
+# The raw token was encrypted by `gcloud kms encrypt` (Key Management Service)
 # The base64 of that is shown below.  It's decrypted by cloud build
 # and provided back to goreleaser.
+# IMPORTANT: make sure the token does not end with a newline when you encrypt it!
 secrets:
 - kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
   secretEnv:
-    GITHUB_TOKEN: CiQAJ+XRL07Aror04bf6N0PpMDxRpxzs1PXVVDztB+HNu3fW7FESUQA2EggaBGI1cpFJC1YT93h9r50WzyLMD28LDDBTO8QJxZsU6UEToBfpVDr0ohnSazBTbvCcy5NJK0ooKyDifFsKzkT5ym3LPyHzPIXiejCmAg==
+    GITHUB_TOKEN: CiQAJ+XRLwPj71lnT8zn0UdE7ihQIdCzDUsgEX7+mRN4aJ2ffRUSUQAdel1M9mEzxqs6gln1dzoZkNU3lmh7ya0EY3i3zkyz0jJ7Qok6TZsp29dl2lRnza3KxVGTWXo6YHa2Z5Qe7RwgoQxdwSdR3GWLu4fm1h4aXA==
 
 options:
   machineType: 'N1_HIGHCPU_8'

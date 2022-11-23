@@ -3,6 +3,7 @@
 
 run:
   deadline: 5m
+  go: '1.19'
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
@@ -14,10 +15,10 @@ linters:
     - bodyclose
     - contextcheck
 #    - cyclop
-    - deadcode
     - depguard
     - dogsled
     - dupl
+    - dupword
     - durationcheck
     - errcheck
     - errname
@@ -71,23 +72,27 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
 #    - stylecheck
     - tagliatelle
     - tenv
     - testpackage
+    - testableexamples
     - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
 #    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
 #    - wsl
+    - asasalint
+    - usestdlibvars
+    - interfacebloat
+    - loggercheck
+    - reassign
 
 linters-settings:
   dupl:

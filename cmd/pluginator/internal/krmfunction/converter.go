@@ -85,7 +85,7 @@ func (c *Converter) Convert() error {
 }
 
 func (c *Converter) getDockerfile() string {
-	return `FROM golang:1.18-stretch
+	return `FROM golang:1.19-bullseye
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY . .
@@ -108,6 +108,7 @@ func (c *Converter) prepareWrapper(content string) string {
 		}
 		// assign to plugin variable
 		if strings.TrimSpace(line) == "var plugin resmap.Configurable" {
+			//nolint:dupword
 			line += `
 	// KustomizePlugin is a global variable defined in every plugin
 	plugin = &KustomizePlugin

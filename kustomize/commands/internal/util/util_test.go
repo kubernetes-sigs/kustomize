@@ -102,8 +102,8 @@ type fakeLoader struct {
 	path string
 }
 
-func (l fakeLoader) Repo() (string, bool) {
-	return "", false
+func (l fakeLoader) Repo() string {
+	return ""
 }
 func (l fakeLoader) Root() string {
 	return ""

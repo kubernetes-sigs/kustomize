@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func TestHasRemoteFileScheme(t *testing.T) {
+func TestIsRemoteFile(t *testing.T) {
 	cases := map[string]struct {
 		url   string
 		valid bool
@@ -50,7 +50,7 @@ func TestHasRemoteFileScheme(t *testing.T) {
 	for name, test := range cases {
 		test := test
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, test.valid, HasRemoteFileScheme(test.url))
+			require.Equal(t, test.valid, IsRemoteFile(test.url))
 		})
 	}
 }
@@ -95,8 +95,8 @@ func TestLoaderLoad(t *testing.T) {
 	require := require.New(t)
 
 	l1 := makeLoader()
-	_, remote := l1.Repo()
-	require.False(remote)
+	repo := l1.Repo()
+	require.Empty(repo)
 	require.Equal("/", l1.Root())
 
 	for _, x := range testCases {
@@ -110,8 +110,8 @@ func TestLoaderLoad(t *testing.T) {
 	l2, err := l1.New("foo/project")
 	require.NoError(err)
 
-	_, remote = l2.Repo()
-	require.False(remote)
+	repo = l2.Repo()
+	require.Empty(repo)
 	require.Equal("/foo/project", l2.Root())
 
 	for _, x := range testCases {
@@ -361,8 +361,7 @@ whatever
 		repoSpec, fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
 	require.NoError(err)
-	repo, remote := l.Repo()
-	require.True(remote)
+	repo := l.Repo()
 	require.Equal(coRoot, repo)
 	require.Equal(coRoot+"/"+pathInRepo, l.Root())
 
@@ -378,8 +377,7 @@ whatever
 	l2, err := l.New(url)
 	require.NoError(err)
 
-	repo, remote = l2.Repo()
-	require.True(remote)
+	repo = l2.Repo()
 	require.Equal(coRoot, repo)
 	require.Equal(coRoot+"/"+pathInRepo, l2.Root())
 }
@@ -435,8 +433,8 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// This is okay.
 	l2, err = l1.New("../base")
 	require.NoError(err)
-	_, remote := l2.Repo()
-	require.False(remote)
+	repo := l2.Repo()
+	require.Empty(repo)
 	require.Equal(cloneRoot+"/foo/base", l2.Root())
 
 	// This is not okay.
@@ -462,8 +460,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 
 	l2, err := l1.New("github.com/someOrg/someRepo/foo/base")
 	require.NoError(err)
-	repo, remote := l2.Repo()
-	require.True(remote)
+	repo := l2.Repo()
 	require.Equal(cloneRoot, repo)
 	require.Equal(cloneRoot+"/foo/base", l2.Root())
 }

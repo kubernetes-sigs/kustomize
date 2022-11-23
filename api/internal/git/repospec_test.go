@@ -6,11 +6,11 @@ package git
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
@@ -37,7 +37,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 	}
 	var orgRepos = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
-	var refArgs = []string{"someBranch", "master", "v0.1.0", ""}
+	var refArgs = []string{"group/version", "someBranch", "master", "v0.1.0", ""}
 
 	makeURL := func(hostFmt, orgRepo, path, ref string) string {
 		if len(path) > 0 {
@@ -50,63 +50,65 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		return url
 	}
 
-	var bad [][]string
+	var i int
 	for _, v := range schemeAuthority {
 		hostRaw := v.raw
 		hostSpec := v.normalized
 		for _, orgRepo := range orgRepos {
 			for _, pathName := range pathNames {
 				for _, hrefArg := range refArgs {
-					uri := makeURL(hostRaw, orgRepo, pathName, hrefArg)
-					rs, err := NewRepoSpecFromURL(uri)
-					if err != nil {
-						t.Errorf("problem %v", err)
-					}
-					if rs.Host != hostSpec {
-						bad = append(bad, []string{"host", uri, rs.Host, hostSpec})
-					}
-					if rs.OrgRepo != orgRepo {
-						bad = append(bad, []string{"orgRepo", uri, rs.OrgRepo, orgRepo})
-					}
-					if rs.Path != pathName {
-						bad = append(bad, []string{"path", uri, rs.Path, pathName})
-					}
-					if rs.Ref != hrefArg {
-						bad = append(bad, []string{"ref", uri, rs.Ref, hrefArg})
-					}
+					t.Run(fmt.Sprintf("t%d", i), func(t *testing.T) {
+						uri := makeURL(hostRaw, orgRepo, pathName, hrefArg)
+						rs, err := NewRepoSpecFromURL(uri)
+						require.NoErrorf(t, err, "unexpected error creating RepoSpec for uri %s", uri)
+						assert.Equal(t, hostSpec, rs.Host, "unexpected host for uri %s", uri)
+						assert.Equal(t, orgRepo, rs.OrgRepo, "unexpected orgRepo for uri %s", uri)
+						assert.Equal(t, pathName, rs.Path, "unexpected path for uri %s", uri)
+						assert.Equal(t, hrefArg, rs.Ref, "unexpected ref for uri %s", uri)
+					})
+					i++
 				}
 			}
 		}
 	}
-	if len(bad) > 0 {
-		for _, tuple := range bad {
-			fmt.Printf("\n"+
-				"     from uri: %s\n"+
-				"  actual %4s: %s\n"+
-				"expected %4s: %s\n",
-				tuple[1], tuple[0], tuple[2], tuple[0], tuple[3])
-		}
-		t.Fail()
-	}
 }
 
 func TestNewRepoSpecFromUrlErrors(t *testing.T) {
-	var badData = []struct{ url, error string }{
-		{"/tmp", "uri looks like abs path"},
-		{"iauhsdiuashduas", "url lacks orgRepo"},
-		{"htxxxtp://github.com/", "url lacks host"},
-		{"ssh://git.example.com", "url lacks orgRepo"},
-		{"git::___", "url lacks orgRepo"},
+	badData := map[string]struct {
+		url, error string
+	}{
+		"absolute_path": {
+			"/tmp",
+			"uri looks like abs path",
+		},
+		"no_slashes": {
+			"iauhsdiuashduas",
+			"url lacks orgRepo",
+		},
+		"bad_scheme": {
+			"htxxxtp://github.com/",
+			"url lacks host",
+		},
+		"no_org_repo": {
+			"ssh://git.example.com",
+			"url lacks orgRepo",
+		},
+		"hashicorp_git_only": {
+			"git::___",
+			"url lacks orgRepo",
+		},
+		"query_after_host": {
+			"https://host?ref=group/version/minor_version",
+			"url lacks orgRepo",
+		},
 	}
 
-	for _, testCase := range badData {
-		_, err := NewRepoSpecFromURL(testCase.url)
-		if err == nil {
-			t.Error("expected error")
-		}
-		if !strings.Contains(err.Error(), testCase.error) {
-			t.Errorf("unexpected error: %s", err)
-		}
+	for name, testCase := range badData {
+		t.Run(name, func(t *testing.T) {
+			_, err := NewRepoSpecFromURL(testCase.url)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), testCase.error)
+		})
 	}
 }
 
@@ -120,6 +122,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		repoSpec  RepoSpec
 		cloneSpec string
 		absPath   string
+		skip      string
 	}{
 		{
 			name:      "t1",
@@ -285,16 +288,187 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				GitSuffix: ".git",
 			},
 		},
+		{
+			name:      "t15",
+			input:     "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6",
+			cloneSpec: "https://github.com/kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "https://github.com/",
+				OrgRepo:   "kubernetes-sigs/kustomize",
+				Path:      "/examples/multibases/dev/",
+				Ref:       "v1.0.6",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t16",
+			input:     "file://a/b/c/someRepo.git/somepath?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo.git",
+			absPath:   notCloned.Join("somepath"),
+			repoSpec: RepoSpec{
+				Host:      "file://",
+				OrgRepo:   "a/b/c/someRepo",
+				Path:      "somepath",
+				Ref:       "someBranch",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t17",
+			input:     "file://a/b/c/someRepo//somepath?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo",
+			absPath:   notCloned.Join("somepath"),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "a/b/c/someRepo",
+				Path:    "somepath",
+				Ref:     "someBranch",
+			},
+		},
+		{
+			name:      "t18",
+			input:     "file://a/b/c/someRepo?ref=someBranch",
+			cloneSpec: "file://a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "a/b/c/someRepo",
+				Ref:     "someBranch",
+			},
+		},
+		{
+			name:      "t19",
+			input:     "file:///a/b/c/someRepo?ref=someBranch",
+			cloneSpec: "file:///a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/a/b/c/someRepo",
+				Ref:     "someBranch",
+			},
+		},
+		{
+			name:      "t20",
+			input:     "ssh://git@github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6",
+			cloneSpec: "git@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.Join("examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "git@github.com:",
+				OrgRepo:   "kubernetes-sigs/kustomize",
+				Path:      "/examples/multibases/dev",
+				Ref:       "v1.0.6",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t21",
+			input:     "file:///a/b/c/someRepo",
+			cloneSpec: "file:///a/b/c/someRepo",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/a/b/c/someRepo",
+			},
+		},
+		{
+			name:      "t22",
+			input:     "file:///",
+			cloneSpec: "file:///",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:    "file://",
+				OrgRepo: "/",
+			},
+		},
+		{
+			name:      "t23",
+			skip:      "the `//` repo separator does not work",
+			input:     "https://fake-git-hosting.org/path/to/repo//examples/multibases/dev",
+			cloneSpec: "https://fake-git-hosting.org/path/to.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "https://fake-git-hosting.org/",
+				OrgRepo:   "path/to/repo",
+				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "t24",
+			skip:      "the `//` repo separator does not work",
+			input:     "ssh://alice@acme.co/path/to/repo//examples/multibases/dev",
+			cloneSpec: "ssh://alice@acme.co/path/to/repo.git",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:      "ssh://alice@acme.co",
+				OrgRepo:   "path/to/repo",
+				Path:      "/examples/multibases/dev",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "query_slash",
+			input:     "https://authority/org/repo?ref=group/version",
+			cloneSpec: "https://authority/org/repo.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "https://authority/",
+				OrgRepo:   "org/repo",
+				Ref:       "group/version",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "query_git_delimiter",
+			input:     "https://authority/org/repo/?ref=includes_git/for_some_reason",
+			cloneSpec: "https://authority/org/repo.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "https://authority/",
+				OrgRepo:   "org/repo",
+				Ref:       "includes_git/for_some_reason",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "query_git_suffix",
+			input:     "https://authority/org/repo/?ref=includes.git/for_some_reason",
+			cloneSpec: "https://authority/org/repo.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "https://authority/",
+				OrgRepo:   "org/repo",
+				Ref:       "includes.git/for_some_reason",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "non_parsable_path",
+			input:     "https://authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
+			cloneSpec: "https://authority/org/repo.git",
+			absPath:   notCloned.Join("%-invalid-uri-so-not-parsable-by-net/url.Parse"),
+			repoSpec: RepoSpec{
+				Host:      "https://authority/",
+				OrgRepo:   "org/repo",
+				Path:      "%-invalid-uri-so-not-parsable-by-net/url.Parse",
+				GitSuffix: ".git",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.skip != "" {
+				t.Skip(tc.skip)
+			}
+
 			rs, err := NewRepoSpecFromURL(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.cloneSpec, rs.CloneSpec(), "cloneSpec mismatch")
 			assert.Equal(t, tc.absPath, rs.AbsPath(), "absPath mismatch")
 			// some values have defaults. Clear them here so test cases remain compact.
 			// This means submodules and timeout cannot be tested here. That's fine since
-			// they are tested in TestPeelQuery.
+			// they are tested in TestParseQuery.
 			rs.raw = ""
 			rs.Dir = ""
 			rs.Submodules = false
@@ -302,6 +476,13 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			assert.Equal(t, &tc.repoSpec, rs)
 		})
 	}
+}
+
+func TestNewRepoSpecFromURL_DefaultQueryParams(t *testing.T) {
+	repoSpec, err := NewRepoSpecFromURL("https://github.com/org/repo")
+	require.NoError(t, err)
+	require.Equal(t, defaultSubmodules, repoSpec.Submodules)
+	require.Equal(t, defaultTimeout, repoSpec.Timeout)
 }
 
 func TestIsAzureHost(t *testing.T) {
@@ -334,138 +515,128 @@ func TestIsAzureHost(t *testing.T) {
 	}
 }
 
-func TestPeelQuery(t *testing.T) {
+func TestParseQuery(t *testing.T) {
 	testcases := []struct {
 		name       string
 		input      string
-		path       string
 		ref        string
 		submodules bool
 		timeout    time.Duration
 	}{
 		{
-			name: "t1",
-			// All empty.
-			input:      "somerepos",
-			path:       "somerepos",
+			name:       "empty",
+			input:      "",
 			ref:        "",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name:       "t2",
-			input:      "somerepos?ref=v1.0.0",
-			path:       "somerepos",
+			name:       "ref",
+			input:      "ref=v1.0.0",
 			ref:        "v1.0.0",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name:       "t3",
-			input:      "somerepos?version=master",
-			path:       "somerepos",
+			name:       "ref_slash",
+			input:      "ref=kustomize/v4.5.7",
+			ref:        "kustomize/v4.5.7",
+			submodules: defaultSubmodules,
+			timeout:    defaultTimeout,
+		},
+		{
+			name:       "version",
+			input:      "version=master",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name: "t4",
+			name: "ref_and_version",
 			// A ref value takes precedence over a version value.
-			input:      "somerepos?version=master&ref=v1.0.0",
-			path:       "somerepos",
+			input:      "version=master&ref=v1.0.0",
 			ref:        "v1.0.0",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name: "t5",
+			name: "empty_submodules",
 			// Empty submodules value uses default.
-			input:      "somerepos?version=master&submodules=",
-			path:       "somerepos",
+			input:      "version=master&submodules=",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name: "t6",
+			name: "bad_submodules",
 			// Malformed submodules value uses default.
-			input:      "somerepos?version=master&submodules=maybe",
-			path:       "somerepos",
+			input:      "version=master&submodules=maybe",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name:       "t7",
-			input:      "somerepos?version=master&submodules=true",
-			path:       "somerepos",
+			name:       "submodules_true",
+			input:      "version=master&submodules=true",
 			ref:        "master",
 			submodules: true,
 			timeout:    defaultTimeout,
 		},
 		{
-			name:       "t8",
-			input:      "somerepos?version=master&submodules=false",
-			path:       "somerepos",
+			name:       "submodules_false",
+			input:      "version=master&submodules=false",
 			ref:        "master",
 			submodules: false,
 			timeout:    defaultTimeout,
 		},
 		{
-			name: "t9",
+			name: "empty_timeout",
 			// Empty timeout value uses default.
-			input:      "somerepos?version=master&timeout=",
-			path:       "somerepos",
+			input:      "version=master&timeout=",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name: "t10",
+			name: "bad_timeout",
 			// Malformed timeout value uses default.
-			input:      "somerepos?version=master&timeout=jiffy",
-			path:       "somerepos",
+			input:      "version=master&timeout=jiffy",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name: "t11",
+			name: "zero_timeout",
 			// Zero timeout value uses default.
-			input:      "somerepos?version=master&timeout=0",
-			path:       "somerepos",
+			input:      "version=master&timeout=0",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name:       "t12",
-			input:      "somerepos?version=master&timeout=0s",
-			path:       "somerepos",
+			name:       "zero_unit_timeout",
+			input:      "version=master&timeout=0s",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    defaultTimeout,
 		},
 		{
-			name:       "t13",
-			input:      "somerepos?version=master&timeout=61",
-			path:       "somerepos",
+			name:       "timeout",
+			input:      "version=master&timeout=61",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    61 * time.Second,
 		},
 		{
-			name:       "t14",
-			input:      "somerepos?version=master&timeout=1m1s",
-			path:       "somerepos",
+			name:       "timeout_unit",
+			input:      "version=master&timeout=1m1s",
 			ref:        "master",
 			submodules: defaultSubmodules,
 			timeout:    61 * time.Second,
 		},
 		{
-			name:       "t15",
-			input:      "somerepos?version=master&submodules=false&timeout=1m1s",
-			path:       "somerepos",
+			name:       "all",
+			input:      "version=master&submodules=false&timeout=1m1s",
 			ref:        "master",
 			submodules: false,
 			timeout:    61 * time.Second,
@@ -473,8 +644,7 @@ func TestPeelQuery(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			path, ref, timeout, submodules := peelQuery(tc.input)
-			assert.Equal(t, tc.path, path, "path mismatch")
+			ref, timeout, submodules := parseQuery(tc.input)
 			assert.Equal(t, tc.ref, ref, "ref mismatch")
 			assert.Equal(t, tc.timeout, timeout, "timeout mismatch")
 			assert.Equal(t, tc.submodules, submodules, "submodules mismatch")

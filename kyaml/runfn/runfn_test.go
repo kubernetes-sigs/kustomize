@@ -281,7 +281,23 @@ metadata:
 			out: []string{"gcr.io/example.com/image:v1.0.0"},
 		},
 
-		{name: "no function spec",
+		{
+			name: "no function spec",
+			in: []f{
+				{
+					explicitFunction: true,
+					value: `
+apiVersion: example.com/v1alpha1
+kind: ExampleFunction
+metadata:
+  annotations:
+    foo: bar
+`,
+				},
+			},
+		},
+		{
+			name: "invalid input object",
 			in: []f{
 				{
 					explicitFunction: true,
@@ -290,6 +306,7 @@ foo: bar
 `,
 				},
 			},
+			error: "failed to get FunctionSpec: failed to get ResourceMeta: missing Resource metadata",
 		},
 
 		// Test

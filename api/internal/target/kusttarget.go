@@ -6,6 +6,7 @@ package target
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -44,13 +45,11 @@ func NewKustTarget(
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
 	pLdr *loader.Loader) *KustTarget {
-	pLdrCopy := *pLdr
-	pLdrCopy.SetWorkDir(ldr.Root())
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
-		pLdr:      &pLdrCopy,
+		pLdr:      pLdr.LoaderWithWorkingDir(ldr.Root()),
 	}
 }
 
@@ -69,6 +68,15 @@ func (kt *KustTarget) Load() error {
 	if err != nil {
 		return err
 	}
+
+	// show warning message when using deprecated fields.
+	warningMessages := k.CheckDeprecatedFields()
+	if warningMessages != nil {
+		for _, msg := range *warningMessages {
+			fmt.Fprintf(os.Stderr, "%v\n", msg)
+		}
+	}
+
 	k.FixKustomizationPostUnmarshalling()
 	errs := k.EnforceFields()
 	if len(errs) > 0 {

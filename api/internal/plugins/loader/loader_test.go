@@ -6,6 +6,7 @@ package loader_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -77,4 +78,21 @@ func TestLoader(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+}
+
+func TestLoaderWithWorkingDir(t *testing.T) {
+	p := provider.NewDefaultDepProvider()
+	rmF := resmap.NewFactory(p.GetResourceFactory())
+	fsys := filesys.MakeFsInMemory()
+	c := types.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pLdr := NewLoader(c, rmF, fsys)
+	npLdr := pLdr.LoaderWithWorkingDir("/tmp/dummy")
+	require.Equal(t,
+		"",
+		pLdr.Config().FnpLoadingOptions.WorkingDir,
+		"the plugin working dir should not change")
+	require.Equal(t,
+		"/tmp/dummy",
+		npLdr.Config().FnpLoadingOptions.WorkingDir,
+		"the plugin working dir is not updated")
 }

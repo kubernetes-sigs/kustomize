@@ -110,41 +110,64 @@ const (
 // the parts.
 func parseGitURL(n string) (
 	host string, orgRepo string, path string, gitRef string, gitSubmodules bool, gitSuff string, gitTimeout time.Duration) {
+	// parse query first
+	// safe because according to rfc3986: ? only allowed in query
+	// and not recognized %-encoded
+	beforeQuery, query, _ := strings.Cut(n, "?")
+	n = beforeQuery
+	// if no query, defaults returned
+	gitRef, gitTimeout, gitSubmodules = parseQuery(query)
+
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
 		host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
-		orgRepo = strings.Split(strings.Split(n[index+len(gitDelimiter):], "/")[0], "?")[0]
-		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[index+len(gitDelimiter)+len(orgRepo):])
+		orgRepo = strings.Split(n[index+len(gitDelimiter):], "/")[0]
+		path = parsePath(n[index+len(gitDelimiter)+len(orgRepo):])
 		return
 	}
 	host, n = parseHostSpec(n)
-	gitSuff = gitSuffix
+	isLocal := strings.HasPrefix(host, "file://")
+	if !isLocal {
+		gitSuff = gitSuffix
+	}
 	if strings.Contains(n, gitSuffix) {
+		gitSuff = gitSuffix
 		index := strings.Index(n, gitSuffix)
 		orgRepo = n[0:index]
 		n = n[index+len(gitSuffix):]
 		if len(n) > 0 && n[0] == '/' {
 			n = n[1:]
 		}
-		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		path = parsePath(n)
+		return
+	}
+
+	if isLocal {
+		if idx := strings.Index(n, "//"); idx > 0 {
+			orgRepo = n[:idx]
+			n = n[idx+2:]
+			path = parsePath(n)
+			return
+		}
+		orgRepo = parsePath(n)
 		return
 	}
 
 	i := strings.Index(n, "/")
 	if i < 1 {
-		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+		path = parsePath(n)
 		return
 	}
 	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
 		orgRepo = n[:j]
-		path, gitRef, gitTimeout, gitSubmodules = peelQuery(n[j+1:])
+		path = parsePath(n[j+1:])
 		return
 	}
 	path = ""
-	orgRepo, gitRef, gitTimeout, gitSubmodules = peelQuery(n)
+	orgRepo = parsePath(n)
 	return host, orgRepo, path, gitRef, gitSubmodules, gitSuff, gitTimeout
 }
 
@@ -154,14 +177,12 @@ const defaultSubmodules = true
 // Arbitrary, but non-infinite, timeout for running commands.
 const defaultTimeout = 27 * time.Second
 
-func peelQuery(arg string) (string, string, time.Duration, bool) {
-	// Parse the given arg into a URL. In the event of a parse failure, return
-	// our defaults.
-	parsed, err := url.Parse(arg)
+func parseQuery(query string) (string, time.Duration, bool) {
+	values, err := url.ParseQuery(query)
+	// in event of parse failure, return defaults
 	if err != nil {
-		return arg, "", defaultTimeout, defaultSubmodules
+		return "", defaultTimeout, defaultSubmodules
 	}
-	values := parsed.Query()
 
 	// ref is the desired git ref to target. Can be specified by in a git URL
 	// with ?ref=<string> or ?version=<string>, although ref takes precedence.
@@ -192,7 +213,16 @@ func peelQuery(arg string) (string, string, time.Duration, bool) {
 		}
 	}
 
-	return parsed.Path, ref, duration, submodules
+	return ref, duration, submodules
+}
+
+func parsePath(n string) string {
+	parsed, err := url.Parse(n)
+	// TODO(annasong): decide how to handle error, i.e. return error, empty string, etc.
+	if err != nil {
+		return n
+	}
+	return parsed.Path
 }
 
 func parseHostSpec(n string) (string, string) {
@@ -200,7 +230,7 @@ func parseHostSpec(n string) (string, string) {
 	// Start accumulating the host part.
 	for _, p := range []string{
 		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://",
+		"git::", "gh:", "ssh://", "https://", "http://", "file://",
 		"git@", "github.com:", "github.com/"} {
 		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
 			n = n[len(p):]
