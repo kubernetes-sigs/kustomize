@@ -101,6 +101,10 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"https://host?ref=group/version/minor_version",
 			"url lacks orgRepo",
 		},
+		"path_exits_repo": {
+			"https://github.com/org/repo.git//path/../../exits/repo",
+			"url path exits repo",
+		},
 	}
 
 	for name, testCase := range badData {
