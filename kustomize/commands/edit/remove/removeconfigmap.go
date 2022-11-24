@@ -59,20 +59,20 @@ func (o *removeConfigMapOptions) Validate(args []string) error {
 func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
-		return err
+		return fmt.Errorf("configmap cannot load from file system, got %w", err)
 	}
 
 	m, err := mf.Read()
 	if err != nil {
-		return err
+		return fmt.Errorf("configmap cannot read from file, got %w", err)
 	}
 
-	var newConfigMaps []types.ConfigMapArgs
 	foundConfigMaps := make(map[string]bool)
 	for _, removeName := range o.configMapNames {
 		foundConfigMaps[removeName] = false
 	}
 
+	newConfigMaps := make([]types.ConfigMapArgs, 0, len(m.ConfigMapGenerator))
 	for _, currentConfigMap := range m.ConfigMapGenerator {
 		if kustfile.StringInSlice(currentConfigMap.Name, o.configMapNames) {
 			foundConfigMaps[currentConfigMap.Name] = true
@@ -88,5 +88,9 @@ func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) err
 	}
 
 	m.ConfigMapGenerator = newConfigMaps
-	return mf.Write(m)
+	err = mf.Write(m)
+	if err != nil {
+		return fmt.Errorf("configmap cannot write back to file, got %w", err)
+	}
+	return nil
 }
