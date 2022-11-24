@@ -73,7 +73,18 @@ function readlink_f {
   echo "$RESULT"
 }
 
-where="$(readlink_f $where)/"
+function find_release_url() {
+  local releases=$1
+  local opsys=$2
+  local arch=$3
+
+  echo "${releases}" |\
+    grep "browser_download.*${opsys}_${arch}" |\
+    cut -d '"' -f 4 |\
+    sort -V | tail -n 1
+}
+
+where="$(readlink_f "$where")/"
 
 if [ -f "${where}kustomize" ]; then
   echo "${where}kustomize exists. Remove it first."
@@ -83,7 +94,7 @@ elif [ -d "${where}kustomize" ]; then
   exit 1
 fi
 
-tmpDir=`mktemp -d`
+tmpDir=$(mktemp -d)
 if [[ ! "$tmpDir" || ! -d "$tmpDir" ]]; then
   echo "Could not create temp dir."
   exit 1
@@ -109,7 +120,7 @@ case $(uname -m) in
 x86_64)
     arch=amd64
     ;;
-arm64)
+arm64|aarch64)
     arch=arm64
     ;;
 ppc64le)
@@ -123,24 +134,29 @@ s390x)
     ;;
 esac
 
-releases=$(curl -s $release_url)
+releases=$(curl -s "$release_url")
 
 if [[ $releases == *"API rate limit exceeded"* ]]; then
   echo "Github rate-limiter failed the request. Either authenticate or wait a couple of minutes."
   exit 1
 fi
 
-RELEASE_URL=$(echo "${releases}" |\
-  grep browser_download.*${opsys}_${arch} |\
-  cut -d '"' -f 4 |\
-  sort -V | tail -n 1)
+RELEASE_URL="$(find_release_url "$releases" "$opsys" "$arch")"
 
-if [ ! -n "$RELEASE_URL" ]; then
+if [[ "$arch" == "arm64" ]] && [[ -z "$RELEASE_URL" ]] ; then
+    # fallback to the old behavior of downloading amd64 binaries on aarch64 systems.
+    # People might have qemu-binfmt-misc installed, so it worked for them previously.
+    echo "Version $version does not exist for ${opsys}/arm64, trying ${opsys}/amd64 instead."
+    arch=amd64
+    RELEASE_URL="$(find_release_url "$releases" "$opsys" "amd64")"
+fi
+
+if [[ -z "$RELEASE_URL" ]]; then
   echo "Version $version does not exist or is not available for ${opsys}/${arch}."
   exit 1
 fi
 
-curl -sLO $RELEASE_URL
+curl -sLO "$RELEASE_URL"
 
 tar xzf ./kustomize_v*_${opsys}_${arch}.tar.gz
 
@@ -148,6 +164,6 @@ cp ./kustomize "$where"
 
 popd >& /dev/null
 
-${where}kustomize version
+"${where}kustomize" version
 
 echo "kustomize installed to ${where}kustomize"
