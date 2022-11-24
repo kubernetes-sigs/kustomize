@@ -222,26 +222,11 @@ func findMatchingFields(target *yaml.RNode, fp string) ([]*yaml.RNode, error) {
 // Wildcard matching is supported, but creating intermediate list nodes is not.
 func findOrCreateFields(target *yaml.RNode, fp string, createKind yaml.Kind) ([]*yaml.RNode, error) {
 	split := kyaml_utils.SmarterPathSplitter(fp, ".")
-	targetPaths := [][]string{split}
-	var err error
-	if strings.Contains(fp, "*") {
-		targetPaths, err = expandPaths(target.Copy(), split)
-		if err != nil {
-			return nil, err
-		}
+	targetFields, err := expandPaths(target, split, createKind)
+	if len(targetFields) == 0 {
+		return nil, errors.Errorf("unable to find or create field %s in replacement target", fp)
 	}
-	var targetFields []*yaml.RNode
-	for _, fieldPath := range targetPaths {
-		createdField, createErr := target.Pipe(yaml.LookupCreate(createKind, fieldPath...))
-		if createErr != nil {
-			return nil, fmt.Errorf("error creating replacement node: %w", createErr)
-		}
-		if createdField == nil {
-			return nil, errors.Errorf("unable to find or create field %s in replacement target", fp)
-		}
-		targetFields = append(targetFields, createdField)
-	}
-	return targetFields, nil
+	return targetFields, err
 }
 
 // expandPaths creates one or more concrete paths from an input fieldPath that may contain wildcards.
@@ -250,61 +235,48 @@ func findOrCreateFields(target *yaml.RNode, fp string, createKind yaml.Kind) ([]
 // Paths that do not contain wildcards, or paths to the right of the last wildcard, do not need to exist.
 // This is because expandPaths is intended for use with functions that may create paths where possible
 // (it is not possible to create the undefined number of sequence elements represented by a wildcard).
-func expandPaths(target *yaml.RNode, fieldPath []string) ([][]string, error) {
+func expandPaths(target *yaml.RNode, fieldPath []string, create yaml.Kind) ([]*yaml.RNode, error) {
 	if len(fieldPath) == 0 {
-		return [][]string{[]string{}}, nil
+		return nil, nil
 	}
 
-	field, remainder := fieldPath[0], fieldPath[1:]
-	var results [][]string
-	var subTargets []*yaml.RNode
-	var err error
-
-	if field != "*" {
-		element, err := yaml.PathGetter{Path: []string{field}}.Filter(target)
+	if fieldPath[0] == "*" {
+		var results []*yaml.RNode
+		remainder := fieldPath[1:]
+		subTargets, err := target.Elements()
 		if err != nil {
-			return nil, errors.Wrap(err)
+			return nil, errors.WrapPrefixf(err, "wildcard must target a list")
 		}
-
-		newPath := []string{field}
-		if element == nil {
-			// slurp the rest of the path until we find another wildcard
-			// no further wildcards can be expanded, since the child nodes won't already exist either
-			// and cannot automatically be created
-			for _, p := range remainder {
-				if p == "*" {
-					break
-				}
-				newPath = append(newPath, p)
+		for _, element := range subTargets {
+			rResults, err := expandPaths(element, remainder, create)
+			if err != nil {
+				return nil, err
 			}
-			return [][]string{newPath}, nil
-		}
-		rResults, rErr := expandPaths(element, remainder)
-		if rErr != nil {
-			return nil, rErr
-		}
-		for _, rResult := range rResults {
-			results = append(results, append(newPath, rResult...))
+			results = append(results, rResults...)
 		}
 		return results, nil
 	}
 
-	subTargets, err = target.Elements()
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "wildcard must target a list")
+	var currentPath []string
+	for i, seg := range fieldPath {
+		if seg == "*" {
+			break
+		}
+		currentPath = append(currentPath, fieldPath[i])
 	}
 
-	for resultNo, element := range subTargets {
-		rResults, rErr := expandPaths(element, remainder)
-		if rErr != nil {
-			return nil, rErr
-		}
-		newPath := []string{fmt.Sprintf("%d", resultNo)}
-		for _, rResult := range rResults {
-			results = append(results, append(newPath, rResult...))
-		}
+	element, err := yaml.PathGetter{Path: currentPath, Create: create}.Filter(target)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
-	return results, nil
+	if element.IsNil() {
+		return nil, nil
+	}
+	remainder := fieldPath[len(currentPath):]
+	if len(remainder) > 0 {
+		return expandPaths(element, remainder, create)
+	}
+	return []*yaml.RNode{element}, nil
 }
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
