@@ -179,63 +179,132 @@ func rejectId(rejects []*types.Selector, id *resid.ResId) bool {
 
 func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.TargetSelector) error {
 	for _, fp := range selector.FieldPaths {
-		mutator := updateMatchingFields
+		var targetFields []*yaml.RNode
+		var err error
 		if selector.Options != nil && selector.Options.Create {
-			mutator = createOrUpdateOneField
+			targetFields, err = findOrCreateFields(target, fp, value.YNode().Kind)
+		} else {
+			targetFields, err = findMatchingFields(target, fp)
 		}
-		if err := mutator(target, value, selector.Options, fp); err != nil {
+		if err != nil {
 			return err
+		}
+		for _, t := range targetFields {
+			if err := setFieldValue(selector.Options, t, value); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-// updateMatchingFields updates all fields in target that match the given field path.
+// findMatchingFields returns all fields in target that match the given field path.
 // If the field path does not already exist in the target, an error is returned.
-func updateMatchingFields(target *yaml.RNode, value *yaml.RNode, opts *types.FieldOptions, fp string) error {
+func findMatchingFields(target *yaml.RNode, fp string) ([]*yaml.RNode, error) {
 	fieldPath := kyaml_utils.SmarterPathSplitter(fp, ".")
 	// may return multiple fields, always wrapped in a sequence node
 	foundFieldSequence, lookupErr := target.Pipe(&yaml.PathMatcher{Path: fieldPath})
 	if lookupErr != nil {
-		return fmt.Errorf("error finding field in replacement target: %w", lookupErr)
+		return nil, fmt.Errorf("error finding field in replacement target: %w", lookupErr)
 	}
 	targetFields, err := foundFieldSequence.Elements()
 	if err != nil {
-		return fmt.Errorf("error fetching elements in replacement target: %w", err)
+		return nil, fmt.Errorf("error fetching elements in replacement target: %w", err)
 	}
 	if len(targetFields) == 0 {
-		return errors.Errorf("unable to find field %s in replacement target", fp)
+		return nil, errors.Errorf("unable to find field %s in replacement target", fp)
 	}
-
-	for _, t := range targetFields {
-		if err := setFieldValue(opts, t, value); err != nil {
-			return err
-		}
-	}
-	return nil
+	return targetFields, nil
 }
 
-// createOrUpdateOneField updates the field in the target that matches the given field path.
+// findOrCreateFields updates the field(s) in the target that match the given field path.
 // If the field path does not already exist in the target, it is created.
-// Wildcard matching is not supported, nor is creating intermediate list nodes.
-func createOrUpdateOneField(target *yaml.RNode, value *yaml.RNode, opts *types.FieldOptions, fp string) error {
-	fieldPath := kyaml_utils.SmarterPathSplitter(fp, ".")
-	for _, f := range fieldPath {
-		if f == "*" {
-			return fmt.Errorf("cannot support create option in a multi-value target")
+// Wildcard matching is supported, but creating intermediate list nodes is not.
+func findOrCreateFields(target *yaml.RNode, fp string, createKind yaml.Kind) ([]*yaml.RNode, error) {
+	split := kyaml_utils.SmarterPathSplitter(fp, ".")
+	targetPaths := [][]string{split}
+	var err error
+	if strings.Contains(fp, "*") {
+		targetPaths, err = expandPaths(target.Copy(), split)
+		if err != nil {
+			return nil, err
 		}
 	}
-	createdField, createErr := target.Pipe(yaml.LookupCreate(value.YNode().Kind, fieldPath...))
-	if createErr != nil {
-		return fmt.Errorf("error creating replacement node: %w", createErr)
+	var targetFields []*yaml.RNode
+	for _, fieldPath := range targetPaths {
+		createdField, createErr := target.Pipe(yaml.LookupCreate(createKind, fieldPath...))
+		if createErr != nil {
+			return nil, fmt.Errorf("error creating replacement node: %w", createErr)
+		}
+		if createdField == nil {
+			return nil, errors.Errorf("unable to find or create field %s in replacement target", fp)
+		}
+		targetFields = append(targetFields, createdField)
 	}
-	if createdField == nil {
-		return errors.Errorf("unable to find or create field %s in replacement target", fp)
+	return targetFields, nil
+}
+
+// expandPaths creates one or more concrete paths from an input fieldPath that may contain wildcards.
+// Each wildcard must correspond to an existing SequenceNode in the target.
+// This means that the full path up to the wildcard must exist in order for a result to be generated.
+// Paths that do not contain wildcards, or paths to the right of the last wildcard, do not need to exist.
+// This is because expandPaths is intended for use with functions that may create paths where possible
+// (it is not possible to create the undefined number of sequence elements represented by a wildcard).
+func expandPaths(target *yaml.RNode, fieldPath []string) ([][]string, error) {
+	if len(fieldPath) == 0 {
+		return [][]string{[]string{}}, nil
 	}
-	if err := setFieldValue(opts, createdField, value); err != nil {
-		return errors.WrapPrefixf(err, "unable to set field %s in replacement target", fp)
+
+	field, remainder := fieldPath[0], fieldPath[1:]
+	var results [][]string
+	var subTargets []*yaml.RNode
+	var err error
+
+	if field != "*" {
+		element, err := yaml.PathGetter{Path: []string{field}}.Filter(target)
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+
+		newPath := []string{field}
+		if element == nil {
+			// slurp the rest of the path until we find another wildcard
+			// no further wildcards can be expanded, since the child nodes won't already exist either
+			// and cannot automatically be created
+			for _, p := range remainder {
+				if p == "*" {
+					break
+				}
+				newPath = append(newPath, p)
+			}
+			return [][]string{newPath}, nil
+		}
+		rResults, rErr := expandPaths(element, remainder)
+		if rErr != nil {
+			return nil, rErr
+		}
+		for _, rResult := range rResults {
+			results = append(results, append(newPath, rResult...))
+		}
+		return results, nil
 	}
-	return nil
+
+	subTargets, err = target.Elements()
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "wildcard must target a list")
+	}
+
+	for resultNo, element := range subTargets {
+		rResults, rErr := expandPaths(element, remainder)
+		if rErr != nil {
+			return nil, rErr
+		}
+		newPath := []string{fmt.Sprintf("%d", resultNo)}
+		for _, rResult := range rResults {
+			results = append(results, append(newPath, rResult...))
+		}
+	}
+	return results, nil
 }
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {

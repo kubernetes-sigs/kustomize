@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	filtertest "sigs.k8s.io/kustomize/api/testutils/filtertest"
-	"sigs.k8s.io/yaml"
+	kyaml_utils "sigs.k8s.io/kustomize/kyaml/utils"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestFilter(t *testing.T) {
@@ -1652,7 +1654,31 @@ spec:
     options:
       create: true
 `,
-			expectedErr: "cannot support create option in a multi-value target",
+			expected: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  template:
+    metadata:
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: nginx
+        name: main
+        env:
+        - name: other-env
+          value: YYYYY
+        - name: deployment-name
+          value: sample-deploy
+`,
 		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
@@ -2477,6 +2503,67 @@ replacements:
 `,
 			expectedErr: "unable to find field spec.configPatches.0.match.proxy.proxyVersion in replacement target",
 		},
+		"issue4761 - wildcard solution": {
+			input: `
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+    - applyTo: NETWORK_FILTER
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`,
+			replacements: `
+replacements:
+  - source:
+      kind: ConfigMap
+      name: istio-version
+      fieldPath: data.ISTIO_REGEX
+    targets:
+      - select:
+          kind: EnvoyFilter
+        fieldPaths:
+          - spec.configPatches.*.match.proxy.proxyVersion
+        options:
+          create: true
+`,
+			expected: `
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+  - applyTo: NETWORK_FILTER
+    match:
+      proxy:
+        proxyVersion: ^1\.14.*
+  - applyTo: NETWORK_FILTER
+    match:
+      proxy:
+        proxyVersion: ^1\.14.*
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -2498,6 +2585,172 @@ replacements:
 			}
 			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
 				t.FailNow()
+			}
+		})
+	}
+}
+
+func Test_expandPaths(t *testing.T) {
+	tests := []struct {
+		name      string
+		target    string
+		fieldPath string
+		want      []string
+		wantErr   string
+	}{
+		{
+			name:      "wildcard list targeting map leaf that exists",
+			fieldPath: "list.*.name",
+			want:      []string{"list.0.name", "list.1.name", "list.2.name"},
+			target: `
+list:
+- name: one
+- name: two
+- name: three
+`,
+		},
+		{
+			name:      "wildcard list targeting map leaf that does not exist",
+			fieldPath: "list.*.foo",
+			want:      []string{"list.0.foo", "list.1.foo", "list.2.foo"},
+			target: `
+list:
+- name: one
+- name: two
+- name: three
+`,
+		},
+		{
+			name:      "wildcard targeting map leaf with several layers that do not exist",
+			fieldPath: "list.*.foo.bar.baz",
+			want:      []string{"list.0.foo.bar.baz", "list.1.foo.bar.baz", "list.2.foo.bar.baz"},
+			target: `
+list:
+- name: one
+- name: two
+- name: three
+`,
+		},
+		{
+			name:      "wildcard targeting scalar leaf that exists",
+			fieldPath: "list.*",
+			want:      []string{"list.0", "list.1", "list.2"},
+			target: `
+list:
+- one
+- two
+- three
+`,
+		},
+		{
+			name:      "wildcard targeting scalar leaf that does not exist",
+			fieldPath: "list.*",
+			want:      []string(nil),
+			target: `
+list: []
+`,
+		},
+		{
+			name:      "wildcard targeting list leaf that exists",
+			fieldPath: "list.*",
+			want:      []string{"list.0", "list.1", "list.2"},
+			target: `
+list:
+- [one, two]
+- [three, four]
+- [five, six]
+`,
+		},
+		{
+			name:      "wildcard list targeting list leaf that does not exist",
+			fieldPath: "list.*",
+			want:      []string(nil),
+			target: `
+list: []
+`,
+		},
+		{
+			name:      "no wildcards",
+			fieldPath: "list.1.name",
+			want:      []string{"list.1.name"},
+			target: `
+list:
+- name: one
+- name: two
+- name: three
+`,
+		},
+		{
+			name:      "wildcards and static lists",
+			fieldPath: "list.*.name.0.item.*",
+			want:      []string{"list.0.name.0.item", "list.1.name.0.item.0", "list.2.name.0.item"},
+			target: `
+list:
+- name: []
+- name:
+  - item:
+    - zero
+  - item:
+    - one
+- other: field
+`,
+		},
+		{
+			name:      "multiple wildcards",
+			fieldPath: "list.*.foo.*.anotherList.*",
+			want:      []string{"list.0.foo.0.anotherList.0", "list.0.foo.0.anotherList.1", "list.1.foo.0.anotherList"},
+			target: `
+list:
+- name: one
+  foo:
+  - name: target
+    anotherList:
+    - item
+    - item2
+- name: two
+  foo:
+  - name: two
+`,
+		},
+		{
+			name:      "wildcard on item of wrong type",
+			fieldPath: "list.*",
+			wantErr:   "wildcard must target a list: wrong node kind: expected SequenceNode but got MappingNode: node contents:\nnot: aList\n",
+			target: `
+list:
+  not: aList
+`,
+		},
+		{
+			name:      "irrelevant input",
+			fieldPath: "list.*",
+			want:      []string{"list"},
+			target:    `foo: bar`,
+		},
+		{
+			name:      "wildcard at root",
+			fieldPath: "*.foo.*.bar",
+			want:      []string{"0.foo.0.bar", "1.foo.0.bar"},
+			target: `
+- foo:
+  - bar: 1
+- foo:
+  - bar: 2
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSplit, err := expandPaths(yaml.MustParse(tt.target), kyaml_utils.PathSplitter(tt.fieldPath, "."))
+			var got []string
+			for i := range gotSplit {
+				got = append(got, strings.Join(gotSplit[i], "."))
+			}
+			if tt.wantErr != "" {
+				assert.EqualError(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}
