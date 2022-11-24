@@ -47,9 +47,6 @@ $(MYGOBIN)/mdtogo:
 $(MYGOBIN)/addlicense:
 	go install github.com/google/addlicense@latest
 
-$(MYGOBIN)/statik:
-	go install github.com/rakyll/statik@latest
-
 $(MYGOBIN)/goreleaser:
 	go install github.com/goreleaser/goreleaser@v0.179.0 # https://github.com/kubernetes-sigs/kustomize/issues/4542
 
