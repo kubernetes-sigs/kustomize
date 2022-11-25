@@ -1757,6 +1757,85 @@ spec:
           value: sample-deploy
 `,
 		},
+		"Issue 1493: wildcard to create or replace field in all containers in all workloads": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: policy
+data:
+  restart: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  containers:
+  - image: nginx
+    name: main
+  - image: nginx
+    name: sidecar
+    imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  containers:
+  - image: nginx
+    name: main
+    imagePullPolicy: Always
+  - image: nginx
+    name: sidecar
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: policy
+    fieldPath: data.restart
+  targets:
+  - select:
+      kind: Pod
+    fieldPaths:
+    - spec.containers.*.imagePullPolicy
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: policy
+data:
+  restart: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  containers:
+  - image: nginx
+    name: main
+    imagePullPolicy: OnFailure
+  - image: nginx
+    name: sidecar
+    imagePullPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  containers:
+  - image: nginx
+    name: main
+    imagePullPolicy: OnFailure
+  - image: nginx
+    name: sidecar
+    imagePullPolicy: OnFailure
+`,
+		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
 kind: ConfigMap
