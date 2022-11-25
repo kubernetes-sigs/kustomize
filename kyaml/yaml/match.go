@@ -25,7 +25,7 @@ type PathMatcher struct {
 	// Each path part may be one of:
 	// * FieldMatcher -- e.g. "spec"
 	// * Map Key -- e.g. "app.k8s.io/version"
-	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]" or "0" or "-"
+	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]" or "0"
 	//
 	// Map Keys and Fields are equivalent.
 	// See FieldMatcher for more on Fields and Map Keys.
@@ -52,8 +52,8 @@ type PathMatcher struct {
 	// * The leaf Node (final path) will be created with a Kind matching Create
 	// * Intermediary Nodes will be created as either a MappingNodes or
 	//   SequenceNodes as appropriate for each's Path location.
-	// * If a list item is specified by an index (an offset or "-"), this item will
-	//   not be created even Create is set.
+	// * Nodes identified by an index will only be created if the index indicates
+	//   an append operation (i.e. index=len(list))
 	Create yaml.Kind `yaml:"create,omitempty"`
 
 	val        *RNode
@@ -94,9 +94,6 @@ func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
 	}
 
 	if IsIdxNumber(p.Path[0]) {
-		return p.doIndexSeq(rn)
-	}
-	if p.Path[0] == "-" && IsCreate(p.Create) {
 		return p.doIndexSeq(rn)
 	}
 
@@ -166,21 +163,15 @@ func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
 
 // doIndexSeq iterates over a sequence and appends elements matching the index p.Val
 func (p *PathMatcher) doIndexSeq(rn *RNode) (*RNode, error) {
-	elements, err := rn.Elements()
+	// parse to index number
+	idx, err := strconv.Atoi(p.Path[0])
 	if err != nil {
 		return nil, err
 	}
 
-	var idx int
-	if p.Path[0] == "-" && IsCreate(p.Create) {
-		// hyphen means append
-		idx = len(elements)
-	} else {
-		// parse to index number
-		idx, err = strconv.Atoi(p.Path[0])
-		if err != nil {
-			return nil, err
-		}
+	elements, err := rn.Elements()
+	if err != nil {
+		return nil, err
 	}
 
 	if len(elements) == idx && IsCreate(p.Create) {

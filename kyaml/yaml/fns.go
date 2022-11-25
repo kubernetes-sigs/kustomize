@@ -596,7 +596,7 @@ func getPathPartKind(nextPart string, defaultKind yaml.Kind) yaml.Kind {
 		// so the current part must be a SequenceNode
 		return yaml.SequenceNode
 	}
-	if IsIdxNumber(nextPart) || nextPart == "-" {
+	if IsIdxNumber(nextPart) {
 		return yaml.SequenceNode
 	}
 	if nextPart == "" {

@@ -140,40 +140,11 @@ func TestPathMatcher_Filter_Create(t *testing.T) {
 			modifiedNodeMustContain: "ports: [{containerPort: 80}, {}]",
 			create:                  yaml.MappingNode,
 		},
-		"create non-primitive item in empty sequence by hyphen": {
-			path:                    []string{"spec", "template", "spec", "containers", "[name=nginx]", "envFrom", "-"},
-			matches:                 []string{"{}\n"},
-			modifiedNodeMustContain: "envFrom:\n        - {}\n",
-			create:                  yaml.MappingNode,
-		},
-		"create primitive item in empty sequence by hyphen": {
-			path:                    []string{"spec", "template", "spec", "containers", "[name=sidecar]", "args", "-"},
-			matches:                 []string{"\n"},
-			modifiedNodeMustContain: "args:\n        -\n",
-			create:                  yaml.ScalarNode,
-		},
-		"append primitive item to sequence by hyphen": {
-			path:                    []string{"spec", "template", "spec", "containers", "[name=nginx]", "args", "-"},
-			matches:                 []string{"\n"},
-			create:                  yaml.ScalarNode,
-			modifiedNodeMustContain: "args: [-c, conf.yaml, '']",
-		},
-		"append non-primitive item to sequence by hyphen": {
-			path:                    []string{"spec", "template", "spec", "containers", "[name=nginx]", "ports", "-"},
-			matches:                 []string{"{}\n"},
-			modifiedNodeMustContain: "ports: [{containerPort: 80}, {}]",
-			create:                  yaml.MappingNode,
-		},
 		"appending non-primitive element in middle of sequence": {
-			path:                    []string{"spec", "template", "spec", "containers", "-", "imagePullPolicy"},
+			path:                    []string{"spec", "template", "spec", "containers", "2", "imagePullPolicy"},
 			matches:                 []string{"\n"},
 			create:                  yaml.ScalarNode,
 			modifiedNodeMustContain: "\n      - imagePullPolicy:\n",
-		},
-		"hyphen treated as literal map key when creation disabled": {
-			path:      []string{"spec", "template", "spec", "containers", "0", "ports", "-", "containerPort"},
-			create:    yaml.Kind(0),
-			expectErr: "wrong node kind: expected MappingNode but got SequenceNode: node contents:\n[{containerPort: 80}]\n",
 		},
 		"fail to create non-primitive item by non-zero index in created sequence": {
 			path:      []string{"spec", "template", "spec", "containers", "[name=nginx]", "envFrom", "1"},
