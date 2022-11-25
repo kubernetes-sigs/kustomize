@@ -2538,7 +2538,37 @@ replacements:
         options:
           create: true
 `,
-			expectedErr: "unable to find or create field spec.configPatches.2.match.proxy.proxyVersion in replacement target",
+			expected: `
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+  - applyTo: NETWORK_FILTER
+    match:
+      proxy:
+        proxyVersion: ^1\.14.*
+  - applyTo: NETWORK_FILTER
+    match:
+      proxy:
+        proxyVersion: ^1\.14.*
+  - match:
+      proxy:
+        proxyVersion: ^1\.14.*
+  - match:
+      proxy:
+        proxyVersion: ^1\.14.*
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`,
 		},
 		"issue4761 - path not in target with create: false": {
 			input: `
@@ -2640,6 +2670,60 @@ metadata:
 data:
   ISTIO_REGEX: '^1\.14.*'
 `,
+		},
+		"append to sequence using index": {
+			input: `apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+spec:
+  rules:
+    - host: myingress.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-svc
+                port:
+                  number: 80
+`,
+			replacements: `replacements:
+  - source:
+      kind: Ingress
+      name: myingress
+      fieldPath: spec.rules.0.host
+    targets:
+      - select:
+          kind: Ingress
+          name: myingress
+        fieldPaths:
+          - spec.tls.0.hosts.0
+          - spec.tls.0.secretName          
+        options:
+          create: true
+`,
+			expected: `apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+spec:
+  rules:
+  - host: myingress.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-svc
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - myingress.example.com
+    secretName: myingress.example.com`,
 		},
 	}
 

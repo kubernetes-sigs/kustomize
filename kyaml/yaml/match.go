@@ -25,7 +25,7 @@ type PathMatcher struct {
 	// Each path part may be one of:
 	// * FieldMatcher -- e.g. "spec"
 	// * Map Key -- e.g. "app.k8s.io/version"
-	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]"
+	// * List Entry -- e.g. "[name=nginx]" or "[=-jar]" or "0" or "-"
 	//
 	// Map Keys and Fields are equivalent.
 	// See FieldMatcher for more on Fields and Map Keys.
@@ -56,10 +56,9 @@ type PathMatcher struct {
 	//   not be created even Create is set.
 	Create yaml.Kind `yaml:"create,omitempty"`
 
-	val         *RNode
-	field       string
-	matchRegex  string
-	indexNumber int
+	val        *RNode
+	field      string
+	matchRegex string
 }
 
 func (p *PathMatcher) stripComments(n *Node) {
@@ -95,6 +94,9 @@ func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
 	}
 
 	if IsIdxNumber(p.Path[0]) {
+		return p.doIndexSeq(rn)
+	}
+	if p.Path[0] == "-" && IsCreate(p.Create) {
 		return p.doIndexSeq(rn)
 	}
 
@@ -164,16 +166,34 @@ func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
 
 // doIndexSeq iterates over a sequence and appends elements matching the index p.Val
 func (p *PathMatcher) doIndexSeq(rn *RNode) (*RNode, error) {
-	// parse to index number
-	idx, err := strconv.Atoi(p.Path[0])
-	if err != nil {
-		return nil, err
-	}
-	p.indexNumber = idx
-
 	elements, err := rn.Elements()
 	if err != nil {
 		return nil, err
+	}
+
+	var idx int
+	if p.Path[0] == "-" && IsCreate(p.Create) {
+		// hyphen means append
+		idx = len(elements)
+	} else {
+		// parse to index number
+		idx, err = strconv.Atoi(p.Path[0])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(elements) == idx && IsCreate(p.Create) {
+		var nextPart string
+		if len(p.Path) > 1 {
+			nextPart = p.Path[1]
+		}
+		elem := &yaml.Node{Kind: getPathPartKind(nextPart, p.Create)}
+		err = rn.PipeE(Append(elem))
+		if err != nil {
+			return nil, errors.WrapPrefixf(err, "failed to append element for %q", p.Path[0])
+		}
+		elements = append(elements, NewRNode(elem))
 	}
 
 	if len(elements) < idx+1 {
