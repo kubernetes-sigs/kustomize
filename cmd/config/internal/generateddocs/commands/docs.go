@@ -245,7 +245,7 @@ For information on merge rules, run:
 var Merge3Examples = `
     kustomize cfg merge3 --ancestor a/ --from b/ --to c/`
 
-var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
+var RunFnsShort = `[Alpha] Reconcile config functions to Resources.`
 var RunFnsLong = `
 [Alpha] Reconcile config functions to Resources.
 
