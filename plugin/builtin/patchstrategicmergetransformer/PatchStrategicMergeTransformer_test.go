@@ -397,6 +397,7 @@ spec:
   replicas: 1
   template:
     metadata:
+      creationTimestamp: null
       labels:
         workload.sas.com/class: stateless
     spec:
