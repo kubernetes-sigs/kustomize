@@ -85,7 +85,7 @@ func (lc *Localizer) Localize() error {
 }
 
 // localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
-// built-in understanding of. This excludes helm.
+// built-in understanding of. This excludes helm-related fields, such as `helmGlobals` and `helmCharts`.
 func (lc *Localizer) localizeNativeFields(kust *types.Kustomization) error {
 	for i := range kust.Patches {
 		if kust.Patches[i].Path != "" {
@@ -137,7 +137,7 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 }
 
 // localizeBuiltinPlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins
-// can be inline or in a file. This excludes helm.
+// can be inline or in a file. This excludes the HelmChartInflationGenerator.
 //
 // Note that the localization in this function has not been implemented yet.
 func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
@@ -151,6 +151,10 @@ func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 		},
 		"transformers": {
 			kust.Transformers,
+			&localizeBuiltinTransformers{},
+		},
+		"validators": {
+			kust.Validators,
 			&localizeBuiltinTransformers{},
 		},
 	} {
@@ -177,9 +181,6 @@ func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 			plugins.entries[i] = newEntry
 		}
 	}
-	if len(kust.Validators) > 0 {
-		return errors.Errorf("no built-in validators with file paths, but validators field non-empty")
-	}
 	return nil
 }
 
@@ -191,9 +192,11 @@ func (lc *Localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, er
 	if inlineErr != nil {
 		rm, fileErr = lc.rFactory.FromFile(lc.ldr, resourceEntry)
 		if fileErr != nil {
-			return nil, false, errors.WrapPrefixf(fileErr, `unable to load resource entry %q:
-when parsing as inline received error: %s
-when parsing as filepath received error`, resourceEntry, inlineErr)
+			err := ResourceLoadError{
+				InlineError: inlineErr,
+				FileError:   fileErr,
+			}
+			return nil, false, errors.WrapPrefixf(err, "unable to load resource entry %q", resourceEntry)
 		}
 	}
 	return rm, fileErr == nil, nil
