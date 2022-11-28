@@ -1,0 +1,87 @@
+name: Bug report
+description: File a bug report
+labels: ["kind/bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: |
+        Please provide as much info as possible. Not doing so may result in your bug not being addressed in a timely manner.
+        If this matter is security related, please disclose it privately via https://kubernetes.io/security
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-files
+    attributes:
+      label: How can we reproduce it (as minimally and precisely as possible)?
+      description: Please provide a minimum set of files that can reproduce the issue. You can paste the file contents here or provide a link to a tarball or git repo. Even better, submit a tests case in the api/krusty package! For more information on how to do that, see https://kubectl.docs.kubernetes.io/contributing/kustomize/bugs/.
+      value: | 
+        ```yaml
+        # kustomization.yaml
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+        - resources.yaml
+        ```
+    
+        ```yaml
+        # resources.yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: test-object
+        data:
+          placeholder: data
+        ```
+    validations:
+      required: true  
+  - type: textarea
+    id: expected-output
+    attributes:
+      label: Expected output
+      description: If you are able to provide reproduction files, please include the output you expect here.
+      value: | 
+        ```yaml
+
+        ```
+    validations:
+      required: false
+  - type: textarea
+    id: actual-output
+    attributes:
+      label: Actual output
+      description: If you are able to provide reproduction files, please include the output they currently produce here.
+      value: | 
+        ```yaml
+
+        ```
+    validations:
+      required: false
+  - type: input
+    id: kustomize-version
+    attributes:
+      label: Kustomize version
+      description: Please use the latest version whenever possible.
+      placeholder: What version of Kustomize are you using?
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - MacOS
+        - Windows
+        - Other
+    validations:
+      required: false
