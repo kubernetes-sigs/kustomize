@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -62,11 +63,18 @@ func (lc *Localizer) Localize() error {
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	kust, err := lc.processKust(kt)
+
+	kustomization := kt.Kustomization()
+	err = lc.localizeNativeFields(&kustomization)
 	if err != nil {
 		return err
 	}
-	content, err := yaml.Marshal(kust)
+	err = lc.localizeBuiltinPlugins(&kustomization)
+	if err != nil {
+		return err
+	}
+
+	content, err := yaml.Marshal(&kustomization)
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to serialize localized kustomization file")
 	}
@@ -76,22 +84,22 @@ func (lc *Localizer) Localize() error {
 	return nil
 }
 
-// processKust returns a copy of the kustomization at kt with paths localized.
-func (lc *Localizer) processKust(kt *target.KustTarget) (*types.Kustomization, error) {
-	kust := kt.Kustomization()
+// localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
+// built-in understanding of. This excludes helm-related fields, such as `helmGlobals` and `helmCharts`.
+func (lc *Localizer) localizeNativeFields(kust *types.Kustomization) error {
 	for i := range kust.Patches {
 		if kust.Patches[i].Path != "" {
 			newPath, err := lc.localizeFile(kust.Patches[i].Path)
 			if err != nil {
-				return nil, errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
+				return errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
 			}
 			kust.Patches[i].Path = newPath
 		}
 	}
-	// TODO(annasong): localize all other kustomization fields: resources, components, crds, configurations,
-	// openapi, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
+	// TODO(annasong): localize all other kustomization fields: resources, bases, components, crds, configurations,
+	// openapi, patchesJson6902, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
 	// TODO(annasong): localize built-in plugins under generators, transformers, and validators fields
-	return &kust, nil
+	return nil
 }
 
 // localizeFile localizes file path and returns the localized path
@@ -126,4 +134,70 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
 	}
 	return locPath, nil
+}
+
+// localizeBuiltinPlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins
+// can be inline or in a file. This excludes the HelmChartInflationGenerator.
+//
+// Note that the localization in this function has not been implemented yet.
+func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
+	for fieldName, plugins := range map[string]struct {
+		entries   []string
+		localizer kio.Filter
+	}{
+		"generators": {
+			kust.Generators,
+			&localizeBuiltinGenerators{},
+		},
+		"transformers": {
+			kust.Transformers,
+			&localizeBuiltinTransformers{},
+		},
+		"validators": {
+			kust.Validators,
+			&localizeBuiltinTransformers{},
+		},
+	} {
+		for i, entry := range plugins.entries {
+			rm, isPath, err := lc.loadResource(entry)
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to load %s entry", fieldName)
+			}
+			err = rm.ApplyFilter(plugins.localizer)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			localizedPlugin, err := rm.AsYaml()
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to serialize localized %s entry %q", fieldName, entry)
+			}
+			var newEntry string
+			if isPath {
+				// TODO(annasong): write localizedPlugin to dst
+				newEntry = entry
+			} else {
+				newEntry = string(localizedPlugin)
+			}
+			plugins.entries[i] = newEntry
+		}
+	}
+	return nil
+}
+
+// loadResource tries to load resourceEntry as a file path or inline.
+// On success, loadResource returns the loaded resource map and whether resourceEntry is a file path.
+func (lc *Localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, error) {
+	var fileErr error
+	rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(resourceEntry))
+	if inlineErr != nil {
+		rm, fileErr = lc.rFactory.FromFile(lc.ldr, resourceEntry)
+		if fileErr != nil {
+			err := ResourceLoadError{
+				InlineError: inlineErr,
+				FileError:   fileErr,
+			}
+			return nil, false, errors.WrapPrefixf(err, "unable to load resource entry %q", resourceEntry)
+		}
+	}
+	return rm, fileErr == nil, nil
 }
