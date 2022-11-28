@@ -1,0 +1,64 @@
+name: Feature request
+description: Propose an enhancement to Kustomize
+labels: kind/feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Small, straightforward enhancements can be proposed in regular GitHub issues using the template below. As a rule of thumb, the enhancement should be resolvable in a single PR that is at most size L. Anything more involved requires a mini (in-repo) enhancement proposal, and features with implications for kubectl require a full [KEP](https://github.com/kubernetes/enhancements). 
+         
+        For more information on the Kustomize enhancement process, see: https://github.com/kubernetes-sigs/kustomize/tree/master/proposals.      
+         
+        When in doubt, go ahead and fill out the template below; the maintainers will let you know if a KEP is required.
+
+  - type: checkboxes
+    attributes:
+      label: Eschewed features
+      description: Some features are out of scope for Kustomize because they are incompatible with its foundational design principles. Please review the [Eschewed Features](https://kubectl.docs.kubernetes.io/faq/kustomize/eschewedfeatures/) documentation before submitting your feature request.
+      options:
+      - label: This issue is not requesting templating, unstuctured edits, build-time side-effects from args or env vars, or any other eschewed feature.
+        required: true
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: What would you like to have added?
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why is this needed?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: current-alternatives
+    attributes:
+      label: Can you accomplish the motivating task without this feature, and if so, how?
+    validations:
+      required: true      
+      
+      
+  - type: textarea
+    id: design-alternatives
+    attributes:
+      label: What other solutions have you considered?
+    validations:
+      required: true        
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Anything else we should know?
+    validations:
+      required: false
+      
+  - type: checkboxes
+    attributes:
+      label: Feature ownership
+      description: The Kustomize project, like many areas of Kubernetes, currently lacks enough contributors to adequately respond to all proposals that have merit. Offering to build and support the feature yourself can help get traction for your request.
+      options:
+      - label: I am interested in contributing this feature myself! 🎉
+        required: false
