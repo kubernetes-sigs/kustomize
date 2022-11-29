@@ -170,13 +170,13 @@ func localizeGenerator(lc *localizer, generator *types.GeneratorArgs) error {
 	for i, file := range generator.FileSources {
 		k, f, err := parseFileSource(file)
 		if err != nil {
-			return errors.WrapPrefixf(err, "unable to parse generator files entry %q", file)
+			return errors.WrapPrefixf(err, "unable to parse generator files entry")
 		}
 		newFile, err := lc.localizeFile(f)
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to localize generator files path")
 		}
-		if f != file {
+		if k != "" {
 			newFile = k + "=" + newFile
 		}
 		locFiles[i] = newFile
@@ -186,25 +186,20 @@ func localizeGenerator(lc *localizer, generator *types.GeneratorArgs) error {
 	return nil
 }
 
-// parseFileSource parses the source given.
-//
-//	Acceptable formats include:
-//	 1.  source-path: the basename will become the key name
-//	 2.  source-name=source-path: the source-name will become the key name and
-//	     source-path is the path to the key file.
-//
-// Key names cannot include '='.
+// parseFileSource parses the provided source, an entry under the `files` field for `configMapGenerator`, `secretGenerator`,
+// into the specified key, if one exists, and the file path. If only the file path is specified, parseFileSource returns
+// an empty key. parseFileSource returns an error for an invalid `files` entry.
 func parseFileSource(source string) (keyName, filePath string, err error) {
 	numSeparators := strings.Count(source, "=")
 	switch {
 	case numSeparators == 0:
-		return filepath.Base(source), source, nil
+		return "", source, nil
 	case numSeparators == 1 && strings.HasPrefix(source, "="):
-		return "", "", errors.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
+		return "", "", errors.Errorf("key name for files entry %q missing", source)
 	case numSeparators == 1 && strings.HasSuffix(source, "="):
-		return "", "", errors.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
+		return "", "", errors.Errorf("file path for files entry %q missing", source)
 	case numSeparators > 1:
-		return "", "", errors.Errorf("key names or file paths cannot contain '='")
+		return "", "", errors.Errorf("key name, file path in files entry %q contains '='", source)
 	default:
 		components := strings.Split(source, "=")
 		return components[0], components[1], nil
