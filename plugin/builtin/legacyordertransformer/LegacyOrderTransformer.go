@@ -19,8 +19,7 @@ import (
 // (like ValidatingWebhookConfiguration) last.
 type plugin struct{}
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 // Nothing needed for configuration.
 func (p *plugin) Config(
