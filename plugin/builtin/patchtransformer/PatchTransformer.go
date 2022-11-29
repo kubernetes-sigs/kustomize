@@ -26,8 +26,7 @@ type plugin struct {
 	Options      map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(
 	h *resmap.PluginHelpers, c []byte) error {

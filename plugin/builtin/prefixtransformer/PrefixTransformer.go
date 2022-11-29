@@ -20,8 +20,7 @@ type plugin struct {
 	FieldSpecs types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 // TODO: Make this gvk skip list part of the config.
 var prefixFieldSpecsToSkip = types.FsSlice{
