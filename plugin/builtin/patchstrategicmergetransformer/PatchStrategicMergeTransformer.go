@@ -19,8 +19,7 @@ type plugin struct {
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(
 	h *resmap.PluginHelpers, c []byte) (err error) {

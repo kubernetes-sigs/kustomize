@@ -17,8 +17,7 @@ type plugin struct {
 	types.SecretArgs
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	p.SecretArgs = types.SecretArgs{}

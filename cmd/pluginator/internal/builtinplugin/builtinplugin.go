@@ -72,10 +72,7 @@ func ConvertToBuiltInPlugin() (retErr error) {
 		if strings.HasPrefix(l, "//go:generate") {
 			continue
 		}
-		if strings.HasPrefix(l, "//noinspection") {
-			continue
-		}
-		if l == "var "+konfig.PluginSymbol+" plugin" {
+		if strings.HasPrefix(l, "var "+konfig.PluginSymbol+" plugin") {
 			continue
 		}
 		if strings.Contains(l, " Transform(") {
@@ -136,9 +133,12 @@ func newWriter(r string) (*writer, error) {
 }
 
 // Assume that this command is running with a $PWD of
-//   $HOME/kustomize/plugin/builtin/secretGenerator
+//
+//	$HOME/kustomize/plugin/builtin/secretGenerator
+//
 // (for example).  Then we want to write to
-//   $HOME/kustomize/api/builtins
+//
+//	$HOME/kustomize/api/builtins
 func makeOutputFileName(root string) string {
 	return filepath.Join(
 		"..", "..", "..", "api/internal", packageForGeneratedCode, root+".go")

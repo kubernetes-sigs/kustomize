@@ -19,16 +19,13 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// HelmChartInflationGeneratorPlugin is a plugin to generate resources
-// from a remote or local helm chart.
+// Generate resources from a remote or local helm chart.
 type HelmChartInflationGeneratorPlugin struct {
 	h *resmap.PluginHelpers
 	types.HelmGlobals
 	types.HelmChart
 	tmpDir string
 }
-
-var KustomizePlugin HelmChartInflationGeneratorPlugin
 
 const (
 	valuesMergeOptionMerge    = "merge"

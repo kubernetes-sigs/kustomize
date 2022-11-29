@@ -34,8 +34,7 @@ type plugin struct{
   FieldSpecs       []types.FieldSpec ` + "`json:\"fieldSpecs,omitempty\" yaml:\"fieldSpecs,omitempty\"`" + `
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(
   _ *resmap.PluginHelpers, config []byte) (err error) {
@@ -171,8 +170,7 @@ type plugin struct {
 	types.ConfigMapArgs
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	p.ConfigMapArgs = types.ConfigMapArgs{}

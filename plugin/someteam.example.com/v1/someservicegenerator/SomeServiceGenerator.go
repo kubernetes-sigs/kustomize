@@ -19,9 +19,7 @@ type plugin struct {
 	Port             string `json:"port,omitempty" yaml:"port,omitempty"`
 }
 
-//nolint: golint
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 const tmpl = `
 apiVersion: v1

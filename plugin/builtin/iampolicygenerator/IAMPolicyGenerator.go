@@ -15,8 +15,7 @@ type plugin struct {
 	types.IAMPolicyGeneratorArgs
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	p.IAMPolicyGeneratorArgs = types.IAMPolicyGeneratorArgs{}

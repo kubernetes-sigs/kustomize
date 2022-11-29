@@ -23,17 +23,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// HelmChartInflationGeneratorPlugin is a plugin to generate resources
-// from a remote or local helm chart.
-type HelmChartInflationGeneratorPlugin struct {
+// Generate resources from a remote or local helm chart.
+type plugin struct {
 	h *resmap.PluginHelpers
 	types.HelmGlobals
 	types.HelmChart
 	tmpDir string
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin HelmChartInflationGeneratorPlugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 const (
 	valuesMergeOptionMerge    = "merge"
@@ -49,7 +47,7 @@ var legalMergeOptions = []string{
 
 // Config uses the input plugin configurations `config` to setup the generator
 // options
-func (p *HelmChartInflationGeneratorPlugin) Config(
+func (p *plugin) Config(
 	h *resmap.PluginHelpers, config []byte) (err error) {
 	if h.GeneralConfig() == nil {
 		return fmt.Errorf("unable to access general config")
@@ -72,7 +70,7 @@ func (p *HelmChartInflationGeneratorPlugin) Config(
 // filesystem since we allow the user to use previously
 // downloaded charts.  This is safe since this plugin is
 // owned by kustomize.
-func (p *HelmChartInflationGeneratorPlugin) establishTmpDir() (err error) {
+func (p *plugin) establishTmpDir() (err error) {
 	if p.tmpDir != "" {
 		// already done.
 		return nil
@@ -81,7 +79,7 @@ func (p *HelmChartInflationGeneratorPlugin) establishTmpDir() (err error) {
 	return err
 }
 
-func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
+func (p *plugin) validateArgs() (err error) {
 	if p.Name == "" {
 		return fmt.Errorf("chart name cannot be empty")
 	}
@@ -116,7 +114,7 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 	return nil
 }
 
-func (p *HelmChartInflationGeneratorPlugin) errIfIllegalValuesMerge() error {
+func (p *plugin) errIfIllegalValuesMerge() error {
 	if p.ValuesMerge == "" {
 		// Use the default.
 		p.ValuesMerge = valuesMergeOptionOverride
@@ -130,14 +128,14 @@ func (p *HelmChartInflationGeneratorPlugin) errIfIllegalValuesMerge() error {
 	return fmt.Errorf("valuesMerge must be one of %v", legalMergeOptions)
 }
 
-func (p *HelmChartInflationGeneratorPlugin) absChartHome() string {
+func (p *plugin) absChartHome() string {
 	if filepath.IsAbs(p.ChartHome) {
 		return p.ChartHome
 	}
 	return filepath.Join(p.h.Loader().Root(), p.ChartHome)
 }
 
-func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
+func (p *plugin) runHelmCommand(
 	args []string) ([]byte, error) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
@@ -163,7 +161,7 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 }
 
 // createNewMergedValuesFile replaces/merges original values file with ValuesInline.
-func (p *HelmChartInflationGeneratorPlugin) createNewMergedValuesFile() (
+func (p *plugin) createNewMergedValuesFile() (
 	path string, err error) {
 	if p.ValuesMerge == valuesMergeOptionMerge ||
 		p.ValuesMerge == valuesMergeOptionOverride {
@@ -179,7 +177,7 @@ func (p *HelmChartInflationGeneratorPlugin) createNewMergedValuesFile() (
 	return p.writeValuesBytes(b)
 }
 
-func (p *HelmChartInflationGeneratorPlugin) replaceValuesInline() error {
+func (p *plugin) replaceValuesInline() error {
 	pValues, err := p.h.Loader().Load(p.ValuesFile)
 	if err != nil {
 		return err
@@ -200,7 +198,7 @@ func (p *HelmChartInflationGeneratorPlugin) replaceValuesInline() error {
 }
 
 // copyValuesFile to avoid branching.  TODO: get rid of this.
-func (p *HelmChartInflationGeneratorPlugin) copyValuesFile() (string, error) {
+func (p *plugin) copyValuesFile() (string, error) {
 	b, err := p.h.Loader().Load(p.ValuesFile)
 	if err != nil {
 		return "", err
@@ -209,7 +207,7 @@ func (p *HelmChartInflationGeneratorPlugin) copyValuesFile() (string, error) {
 }
 
 // Write a absolute path file in the tmp file system.
-func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(
+func (p *plugin) writeValuesBytes(
 	b []byte) (string, error) {
 	if err := p.establishTmpDir(); err != nil {
 		return "", fmt.Errorf("cannot create tmp dir to write helm values")
@@ -218,14 +216,14 @@ func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(
 	return path, errors.Wrap(os.WriteFile(path, b, 0644), "failed to write values file")
 }
 
-func (p *HelmChartInflationGeneratorPlugin) cleanup() {
+func (p *plugin) cleanup() {
 	if p.tmpDir != "" {
 		os.RemoveAll(p.tmpDir)
 	}
 }
 
 // Generate implements generator
-func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err error) {
+func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 	defer p.cleanup()
 	if err = p.checkHelmVersion(); err != nil {
 		return nil, err
@@ -266,7 +264,7 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 	return nil, err
 }
 
-func (p *HelmChartInflationGeneratorPlugin) templateCommand() []string {
+func (p *plugin) templateCommand() []string {
 	args := []string{"template"}
 	if p.ReleaseName != "" {
 		args = append(args, p.ReleaseName)
@@ -293,7 +291,7 @@ func (p *HelmChartInflationGeneratorPlugin) templateCommand() []string {
 	return args
 }
 
-func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
+func (p *plugin) pullCommand() []string {
 	args := []string{
 		"pull",
 		"--untar",
@@ -308,7 +306,7 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 
 // chartExistsLocally will return true if the chart does exist in
 // local chart home.
-func (p *HelmChartInflationGeneratorPlugin) chartExistsLocally() (string, bool) {
+func (p *plugin) chartExistsLocally() (string, bool) {
 	path := filepath.Join(p.absChartHome(), p.Name)
 	s, err := os.Stat(path)
 	if err != nil {
@@ -318,7 +316,7 @@ func (p *HelmChartInflationGeneratorPlugin) chartExistsLocally() (string, bool) 
 }
 
 // checkHelmVersion will return an error if the helm version is not V3
-func (p *HelmChartInflationGeneratorPlugin) checkHelmVersion() error {
+func (p *plugin) checkHelmVersion() error {
 	stdout, err := p.runHelmCommand([]string{"version", "-c", "--short"})
 	if err != nil {
 		return err

@@ -9,8 +9,7 @@ import (
 
 type plugin struct{}
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(
 	_ *resmap.PluginHelpers, _ []byte) (err error) {

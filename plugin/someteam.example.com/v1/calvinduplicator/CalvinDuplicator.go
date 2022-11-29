@@ -22,9 +22,7 @@ type plugin struct {
 	Count int `json:"count,omitempty" yaml:"count,omitempty"`
 }
 
-//nolint: golint
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(_ *resmap.PluginHelpers, c []byte) error {
 	return yaml.Unmarshal(c, p)

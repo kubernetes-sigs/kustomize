@@ -15,8 +15,7 @@ type plugin struct {
 	hasher ifc.KustHasher
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(
 	h *resmap.PluginHelpers, _ []byte) (err error) {

@@ -21,9 +21,7 @@ type plugin struct {
 	t resmap.Transformer
 }
 
-//nolint: golint
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) makePrefixPluginConfig() ([]byte, error) {
 	var s struct {
@@ -55,7 +53,9 @@ func (p *plugin) Config(h *resmap.PluginHelpers, _ []byte) error {
 }
 
 // Returns a constant, rather than
-//   time.Now().Format("2006-01-02")
+//
+//	time.Now().Format("2006-01-02")
+//
 // to make tests happy.
 // This is just an example.
 func getDate() string {
