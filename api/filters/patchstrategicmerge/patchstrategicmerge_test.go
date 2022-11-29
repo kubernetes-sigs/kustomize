@@ -734,6 +734,50 @@ spec:
           protocol: "UDP"
 `,
 		},
+
+		// Issue #4628
+		"should retain existing null values in targets": {
+			input: `
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: chart
+spec:
+  releaseName: helm-chart
+  timeout: 15m
+  values:
+    chart:
+      replicaCount: null
+      autoscaling: true
+`,
+			patch: yaml.MustParse(`
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: chart
+spec:
+  releaseName: helm-chart
+  timeout: 15m
+  values:
+    deepgram-api:
+      some: value
+`),
+			expected: `
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: chart
+spec:
+  releaseName: helm-chart
+  timeout: 15m
+  values:
+    chart:
+      replicaCount: null
+      autoscaling: true
+    deepgram-api:
+      some: value
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
