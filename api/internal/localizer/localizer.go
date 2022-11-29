@@ -128,8 +128,20 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Patches[i].Path = newPath
 		}
 	}
+
+	for i := range kust.ConfigMapGenerator {
+		if err := localizeGenerator(lc, &kust.ConfigMapGenerator[i].GeneratorArgs); err != nil {
+			return errors.WrapPrefixf(err, "unable to localize configMapGenerator")
+		}
+	}
+	for i := range kust.SecretGenerator {
+		if err := localizeGenerator(lc, &kust.SecretGenerator[i].GeneratorArgs); err != nil {
+			return errors.WrapPrefixf(err, "unable to localize secretGenerator")
+		}
+	}
+
 	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations,
-	// openapi, patchesJson6902, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
+	// openapi, patchesJson6902, patchesStrategicMerge, replacements
 	return nil
 }
 

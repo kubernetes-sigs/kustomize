@@ -11,6 +11,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -153,4 +154,59 @@ func locRootPath(rootURL string, repoDir string, rootDir filesys.ConfirmedDir) s
 	_ = rootURL
 	_, _ = repoDir, rootDir
 	return ""
+}
+
+// localizeGenerator localizes the file paths on generator.
+func localizeGenerator(lc *localizer, generator *types.GeneratorArgs) error {
+	locEnvs := make([]string, len(generator.EnvSources))
+	for i, env := range generator.EnvSources {
+		newPath, err := lc.localizeFile(env)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize generator envs file")
+		}
+		locEnvs[i] = newPath
+	}
+	locFiles := make([]string, len(generator.FileSources))
+	for i, file := range generator.FileSources {
+		k, f, err := parseFileSource(file)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to parse generator files entry %q", file)
+		}
+		newFile, err := lc.localizeFile(f)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize generator files path")
+		}
+		if f != file {
+			newFile = k + "=" + newFile
+		}
+		locFiles[i] = newFile
+	}
+	generator.EnvSources = locEnvs
+	generator.FileSources = locFiles
+	return nil
+}
+
+// parseFileSource parses the source given.
+//
+//	Acceptable formats include:
+//	 1.  source-path: the basename will become the key name
+//	 2.  source-name=source-path: the source-name will become the key name and
+//	     source-path is the path to the key file.
+//
+// Key names cannot include '='.
+func parseFileSource(source string) (keyName, filePath string, err error) {
+	numSeparators := strings.Count(source, "=")
+	switch {
+	case numSeparators == 0:
+		return filepath.Base(source), source, nil
+	case numSeparators == 1 && strings.HasPrefix(source, "="):
+		return "", "", errors.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
+	case numSeparators == 1 && strings.HasSuffix(source, "="):
+		return "", "", errors.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
+	case numSeparators > 1:
+		return "", "", errors.Errorf("key names or file paths cannot contain '='")
+	default:
+		components := strings.Split(source, "=")
+		return components[0], components[1], nil
+	}
 }
