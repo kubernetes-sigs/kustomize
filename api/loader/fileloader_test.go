@@ -5,6 +5,7 @@ package loader
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -442,6 +443,27 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	require.Error(err)
 	require.Contains(err.Error(),
 		"base '/whatever/highBase' is outside '/whatever/someClone'")
+}
+
+func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+	dir, err := filesys.NewTmpConfirmedDir()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = fSys.RemoveAll(dir.String())
+	})
+	repo := dir.Join("repo")
+	require.NoError(t, fSys.Mkdir(repo))
+
+	base := filepath.Join(repo, "base")
+	require.NoError(t, os.Symlink(dir.String(), base))
+
+	repoSpec, err := git.NewRepoSpecFromURL("https://github.com/org/repo/base")
+	require.NoError(t, err)
+
+	_, err = newLoaderAtGitClone(repoSpec, fSys, nil, git.DoNothingCloner(filesys.ConfirmedDir(repo)))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf("%q refers to directory outside of repo %q", base, repo))
 }
 
 func TestLocalLoaderReferencingGitBase(t *testing.T) {
