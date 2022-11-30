@@ -26,8 +26,7 @@ interpreted as described in [RFC 2119][2].
 KRM functions enable shift-left practices (client-side) through:
 
 - Pre-commit / delivery validation and linting of configuration
-  - e.g. Fail if any containers don't have PodSecurityPolicy or CPU / Memory
-    limits
+  - e.g. Fail if any containers don't have CPU / Memory limits
 - Implementation of abstractions as client actuated APIs
   - e.g. Create a client-side _"CRD"_ for generating configuration checked into
     git

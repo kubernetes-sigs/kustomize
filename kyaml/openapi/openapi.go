@@ -104,7 +104,7 @@ var precomputedIsNamespaceScoped = map[yaml.TypeMeta]bool{
 	{APIVersion: "node.k8s.io/v1beta1", Kind: "RuntimeClass"}:                                    false,
 	{APIVersion: "policy/v1", Kind: "PodDisruptionBudget"}:                                       true,
 	{APIVersion: "policy/v1beta1", Kind: "PodDisruptionBudget"}:                                  true,
-	{APIVersion: "policy/v1beta1", Kind: "PodSecurityPolicy"}:                                    false,
+	{APIVersion: "policy/v1beta1", Kind: "PodSecurityPolicy"}:                                    false, // remove after openapi upgrades to v1.25.
 	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole"}:                            false,
 	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRoleBinding"}:                     false,
 	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "Role"}:                                   true,

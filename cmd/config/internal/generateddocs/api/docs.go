@@ -255,7 +255,7 @@ interpreted as described in [RFC 2119][2].
 
 
 - Pre-commit / delivery validation and linting of configuration
-  - e.g. Fail if any containers don't have PodSecurityPolicy or CPU / Memory limits
+  - e.g. Fail if any containers don't have CPU / Memory limits
 - Implementation of abstractions as client actuated APIs (e.g. templating)
   - e.g. Create a client-side _"CRD"_ for generating configuration checked into git
 - Aspect Orient configuration / Injection of cross-cutting configuration
