@@ -5,6 +5,8 @@ package generators
 
 import (
 	"fmt"
+	"path"
+	"strings"
 
 	"github.com/go-errors/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -94,4 +96,29 @@ func setImmutable(
 	}
 
 	return nil
+}
+
+// ParseFileSource parses the source given.
+//
+// Acceptable formats include:
+//  1. source-path: the basename will become the key name
+//  2. source-name=source-path: the source-name will become the key name and
+//     source-path is the path to the key file.
+//
+// Key names cannot include '='.
+func ParseFileSource(source string) (keyName, filePath string, err error) {
+	numSeparators := strings.Count(source, "=")
+	switch {
+	case numSeparators == 0:
+		return path.Base(source), source, nil
+	case numSeparators == 1 && strings.HasPrefix(source, "="):
+		return "", "", errors.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
+	case numSeparators == 1 && strings.HasSuffix(source, "="):
+		return "", "", errors.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
+	case numSeparators > 1:
+		return "", "", errors.New("key names or file paths cannot contain '='")
+	default:
+		components := strings.Split(source, "=")
+		return components[0], components[1], nil
+	}
 }
