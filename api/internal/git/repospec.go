@@ -106,91 +106,68 @@ const (
 // https://github.com/someOrg/someRepo?ref=someHash, extract
 // the parts.
 func parseGitURL(n string) *RepoSpec {
-	var host, orgRepo, path, gitRef, gitSuff string
-	var gitSubmodules bool
-	var gitTimeout time.Duration
+	repoSpec := &RepoSpec{raw: n, Dir: notCloned}
 	// parse query first
 	// safe because according to rfc3986: ? only allowed in query
 	// and not recognized %-encoded
 	beforeQuery, query, _ := strings.Cut(n, "?")
 	n = beforeQuery
 	// if no query, defaults returned
-	gitRef, gitTimeout, gitSubmodules = parseQuery(query)
+	repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules = parseQuery(query)
 
 	if strings.Contains(n, gitDelimiter) {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
-		host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
-		orgRepo = strings.Split(n[index+len(gitDelimiter):], "/")[0]
-		path = parsePath(n[index+len(gitDelimiter)+len(orgRepo):])
+		repoSpec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
+		repoSpec.OrgRepo = strings.Split(n[index+len(gitDelimiter):], "/")[0]
+		repoSpec.Path = parsePath(n[index+len(gitDelimiter)+len(repoSpec.OrgRepo):])
 
-		return &RepoSpec{
-			raw: n, Host: host, OrgRepo: orgRepo,
-			Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-			Submodules: gitSubmodules, Timeout: gitTimeout}
+		return repoSpec
 	}
-	host, n = parseHostSpec(n)
-	isLocal := strings.HasPrefix(host, "file://")
+	repoSpec.Host, n = parseHostSpec(n)
+	isLocal := strings.HasPrefix(repoSpec.Host, "file://")
 	if !isLocal {
-		gitSuff = gitSuffix
+		repoSpec.GitSuffix = gitSuffix
 	}
 	if strings.Contains(n, gitSuffix) {
-		gitSuff = gitSuffix
+		repoSpec.GitSuffix = gitSuffix
 		index := strings.Index(n, gitSuffix)
-		orgRepo = n[0:index]
+		repoSpec.OrgRepo = n[0:index]
 		n = n[index+len(gitSuffix):]
 		if len(n) > 0 && n[0] == '/' {
 			n = n[1:]
 		}
-		path = parsePath(n)
-		return &RepoSpec{
-			raw: n, Host: host, OrgRepo: orgRepo,
-			Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-			Submodules: gitSubmodules, Timeout: gitTimeout}
+		repoSpec.Path = parsePath(n)
+		return repoSpec
 	}
 
 	if isLocal {
 		if idx := strings.Index(n, "//"); idx > 0 {
-			orgRepo = n[:idx]
+			repoSpec.OrgRepo = n[:idx]
 			n = n[idx+2:]
-			path = parsePath(n)
-			return &RepoSpec{
-				raw: n, Host: host, OrgRepo: orgRepo,
-				Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-				Submodules: gitSubmodules, Timeout: gitTimeout}
+			repoSpec.Path = parsePath(n)
+			return repoSpec
 		}
-		orgRepo = parsePath(n)
-		return &RepoSpec{
-			raw: n, Host: host, OrgRepo: orgRepo,
-			Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-			Submodules: gitSubmodules, Timeout: gitTimeout}
+		repoSpec.OrgRepo = parsePath(n)
+		return repoSpec
 	}
 
 	i := strings.Index(n, "/")
 	if i < 1 {
-		path = parsePath(n)
-		return &RepoSpec{
-			raw: n, Host: host, OrgRepo: orgRepo,
-			Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-			Submodules: gitSubmodules, Timeout: gitTimeout}
+		repoSpec.Path = parsePath(n)
+		return repoSpec
 	}
 	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
-		orgRepo = n[:j]
-		path = parsePath(n[j+1:])
-		return &RepoSpec{
-			raw: n, Host: host, OrgRepo: orgRepo,
-			Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-			Submodules: gitSubmodules, Timeout: gitTimeout}
+		repoSpec.OrgRepo = n[:j]
+		repoSpec.Path = parsePath(n[j+1:])
+		return repoSpec
 	}
-	path = ""
-	orgRepo = parsePath(n)
+	repoSpec.Path = ""
+	repoSpec.OrgRepo = parsePath(n)
 
-	return &RepoSpec{
-		raw: n, Host: host, OrgRepo: orgRepo,
-		Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: gitSuff,
-		Submodules: gitSubmodules, Timeout: gitTimeout}
+	return repoSpec
 }
 
 // Clone git submodules by default.
