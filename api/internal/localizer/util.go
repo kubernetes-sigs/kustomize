@@ -15,11 +15,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// DstPrefix prefixes the target and ref, if target is remote, in the default localize destination directory name
-const DstPrefix = "localized"
+const (
+	// DstPrefix prefixes the target and ref, if target is remote, in the default localize destination directory name
+	DstPrefix = "localized"
 
-// LocalizeDir is the name of the localize directories used to store remote content in the localize destination
-const LocalizeDir = "localized-files"
+	// LocalizeDir is the name of the localize directories used to store remote content in the localize destination
+	LocalizeDir = "localized-files"
+)
 
 // establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote rawTarget,
 // the effective scope is the downloaded repo.
