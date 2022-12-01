@@ -1,0 +1,6 @@
+contact_links:
+  - name: Support request
+    url: https://discuss.kubernetes.io
+    about: |
+      Please do not submit support requests or questions as issues. 
+      Ask your question in the Kubernetes Community Forums, or in the #kustomize channel on Kubernetes Slack (https://slack.k8s.io).
