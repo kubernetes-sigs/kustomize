@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const podConfiguration = `apiVersion: v1
+const (
+	podConfiguration = `apiVersion: v1
 kind: Pod
 metadata:
   name: pod
@@ -32,6 +34,15 @@ spec:
     ports:
     - containerPort: 80
 `
+	replacementField = `source:
+  kind: Pod
+  fieldPath: source.path
+targets:
+- select:
+    name: target
+  fieldPaths:
+  - target.path`
+)
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	t.Helper()
@@ -396,9 +407,11 @@ paths:
 }
 
 func TestLocalizeValidators(t *testing.T) {
+	formattedReplacement := strings.ReplaceAll(replacementField, "\n", "\n  ")
+
 	fSys := makeMemoryFs(t)
 	kustAndPlugin := map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 validators:
 - |-
@@ -407,30 +420,16 @@ validators:
   metadata:
     name: replacement
   replacements:
-  - source:
-      kind: ConfigMap
-      fieldPath: metadata.name
-    targets:
-    - select:
-        kind: ConfigMap
-      fieldPaths:
-      - metadata.name
+  - %s
 - replacement.yaml
-`,
-		"replacement.yaml": `apiVersion: builtin
+`, formattedReplacement),
+		"replacement.yaml": fmt.Sprintf(`apiVersion: builtin
 kind: ReplacementTransformer
 metadata:
   name: replacement-2
 replacements:
-- source:
-    kind: Secret
-    fieldPath: data.USER_NAME
-  targets:
-  - select:
-      kind: Secret
-    fieldPaths:
-    - data.USER_NAME
-`,
+- %s
+`, formattedReplacement),
 	}
 	addFiles(t, fSys, "/", kustAndPlugin)
 	lclzr := createLocalizer(t, fSys, "/", "", "/dst")
@@ -501,6 +500,73 @@ metadata:
 
 			require.EqualError(t, err, fmt.Sprintf(`%s: when parsing as inline received error: %s
 when parsing as filepath received error: %s`, test.errPrefix, test.inlineErrMsg, test.fileErrMsg))
+		})
+	}
+}
+
+func TestLocalizePluginsWrongGVK(t *testing.T) {
+	type testCase struct {
+		name           string
+		badPlugin      string
+		kustomizationf string
+		errorf         string
+	}
+	for _, test := range []testCase{
+		// TODO(annasong): test generators once implemented
+		{
+			name: "latter_transformer_kind_cannot_have_filepath",
+			badPlugin: `apiVersion: builtin
+kind: PrefixTransformer
+metadata:
+  name: not-filepath-plugin
+prefix: bad-
+fieldSpecs:
+- kind: Pod
+`,
+			kustomizationf: `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: builtin
+  jsonOp: '[{"op": "add", "path": "/path", "value": "value"}]'
+  kind: PatchJson6902Transformer
+  metadata:
+    name: patchSM
+  target:
+    name: pod
+  ---
+  %s
+`,
+			errorf: `built-in transformer "%s" of kind "PrefixTransformer" does not have file path`,
+		},
+		{
+			name: "validator_not_builtin",
+			badPlugin: fmt.Sprintf(`apiVersion: builtin/v1
+kind: ReplacementTransformer
+metadata:
+  name: replacement
+replacements:
+- %s
+`, strings.ReplaceAll(replacementField, "\n", "\n  ")),
+			kustomizationf: `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+validators:
+- |
+  %s
+`,
+			errorf: `apiVersion "builtin/v1" of transformer "%s" is not built-in`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fSys := makeMemoryFs(t)
+			addFiles(t, fSys, "/", map[string]string{
+				"kustomization.yaml": fmt.Sprintf(test.kustomizationf, strings.ReplaceAll(test.badPlugin, "\n", "\n  ")),
+			})
+
+			lclzr := createLocalizer(t, fSys, "/", "", "")
+			err := lclzr.Localize()
+
+			require.EqualError(t, err, fmt.Sprintf(test.errorf, strings.ReplaceAll(test.badPlugin, "\n", "\\n")))
 		})
 	}
 }
