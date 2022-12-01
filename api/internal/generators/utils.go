@@ -112,11 +112,11 @@ func ParseFileSource(source string) (keyName, filePath string, err error) {
 	case numSeparators == 0:
 		return path.Base(source), source, nil
 	case numSeparators == 1 && strings.HasPrefix(source, "="):
-		return "", "", errors.Errorf("key name for file path %v missing", strings.TrimPrefix(source, "="))
+		return "", "", errors.Errorf("missing key name for file path %q in source %q", strings.TrimPrefix(source, "="), source)
 	case numSeparators == 1 && strings.HasSuffix(source, "="):
-		return "", "", errors.Errorf("file path for key name %v missing", strings.TrimSuffix(source, "="))
+		return "", "", errors.Errorf("missing file path for key name %q in source %q", strings.TrimSuffix(source, "="), source)
 	case numSeparators > 1:
-		return "", "", errors.New("key names or file paths cannot contain '='")
+		return "", "", errors.Errorf("source %q key name or file path contains '='", source)
 	default:
 		components := strings.Split(source, "=")
 		return components[0], components[1], nil

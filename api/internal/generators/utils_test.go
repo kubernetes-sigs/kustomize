@@ -13,34 +13,34 @@ import (
 func TestParseFileSource(t *testing.T) {
 	tests := map[string]*struct {
 		Input    string
-		Legal    bool
+		Error    string
 		Key      string
 		Filename string
 	}{
 		"filename only": {
-			"./path/myfile",
-			true,
-			"myfile",
-			"./path/myfile",
+			Input:    "./path/myfile",
+			Key:      "myfile",
+			Filename: "./path/myfile",
 		},
 		"key and filename": {
-			"newName.ini=oldName",
-			true,
-			"newName.ini",
-			"oldName",
+			Input:    "newName.ini=oldName",
+			Key:      "newName.ini",
+			Filename: "oldName",
 		},
 		"multiple =": {
 			Input: "newName.ini==oldName",
+			Error: `source "newName.ini==oldName" key name or file path contains '='`,
 		},
 		"missing key": {
 			Input: "=myfile",
+			Error: `missing key name for file path "myfile" in source "=myfile"`,
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			key, file, err := ParseFileSource(test.Input)
-			if !test.Legal {
-				require.Error(t, err)
+			if test.Error != "" {
+				require.EqualError(t, err, test.Error)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, test.Key, key)
