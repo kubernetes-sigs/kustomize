@@ -158,6 +158,11 @@ func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
+	err = kt.IgnoreLocal(ra)
+	if err != nil {
+		return nil, err
+	}
+
 	return ra.ResMap(), nil
 }
 
@@ -237,10 +242,6 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "merging vars %v", kt.kustomization.Vars)
-	}
-	err = kt.IgnoreLocal(ra)
-	if err != nil {
-		return nil, err
 	}
 	return ra, nil
 }
