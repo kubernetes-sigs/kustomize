@@ -11,13 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/api/hasher"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
-	"sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/internal/validate"
-	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -57,23 +51,6 @@ func addFiles(t *testing.T, fSys filesys.FileSystem, parentDir string, files map
 	}
 }
 
-func createLocalizer(t *testing.T, fSys filesys.FileSystem, target string, scope string, newDir string) *Localizer {
-	t.Helper()
-
-	// no need to re-test Loader
-	ldr, _, err := NewLoader(target, scope, newDir, fSys)
-	require.NoError(t, err)
-	rmFactory := resmap.NewFactory(resource.NewFactory(&hasher.Hasher{}))
-	lc, err := NewLocalizer(
-		ldr,
-		validate.NewFieldValidator(),
-		rmFactory,
-		// file system can be in memory, as plugin configuration will prevent the use of file system anyway
-		loader.NewLoader(types.DisabledPluginConfig(), rmFactory, fSys))
-	require.NoError(t, err)
-	return lc
-}
-
 func checkFSys(t *testing.T, fSysExpected filesys.FileSystem, fSysActual filesys.FileSystem) {
 	t.Helper()
 
@@ -97,7 +74,7 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 			actualContent, readErr := fSysActual.ReadFile(path)
 			require.NoError(t, readErr)
 			expectedContent, findErr := fSysExpected.ReadFile(path)
-			assert.NoError(t, findErr)
+			assert.NoErrorf(t, findErr, "unexpected file %q", path)
 			if findErr == nil {
 				assert.Equal(t, string(expectedContent), string(actualContent))
 			}
@@ -118,7 +95,7 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 	require.NoError(t, err)
 }
 
-func TestNewLocalizerTargetIsScope(t *testing.T) {
+func TestTargetIsScope(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustomization := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -127,8 +104,8 @@ namePrefix: my-
 `,
 	}
 	addFiles(t, fSys, "/a", kustomization)
-	lclzr := createLocalizer(t, fSys, "/a", "", "/a/b/dst")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/a", "", "/a/b/dst", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a", kustomization)
@@ -136,7 +113,7 @@ namePrefix: my-
 	checkFSys(t, fSysExpected, fSys)
 }
 
-func TestNewLocalizerTargetNestedInScope(t *testing.T) {
+func TestTargetNestedInScope(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustomization := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -152,8 +129,8 @@ patches:
 `,
 	}
 	addFiles(t, fSys, "/a/b", kustomization)
-	lclzr := createLocalizer(t, fSys, "/a/b", "/", "/a/b/dst")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/a/b", "/", "/a/b/dst", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a/b", kustomization)
@@ -173,8 +150,8 @@ kind: Kustomization
 	}
 	addFiles(t, fSys, "/a", kustomization)
 
-	lclzr := createLocalizer(t, fSys, "/a", "/", "/dst")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/a", "/", "/dst", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a", kustomization)
@@ -186,11 +163,11 @@ kind: Kustomization
 
 func TestLocalizeFileName(t *testing.T) {
 	for name, path := range map[string]string{
-		"nested_directories":               "a/b/c/d/patch.yaml",
-		"localize_dir_name_when_absent":    LocalizeDir,
-		"in_localize_dir_name_when_absent": fmt.Sprintf("%s/patch.yaml", LocalizeDir),
-		"no_file_extension":                "patch",
-		"kustomization_name":               "a/kustomization.yaml",
+		"nested_directories":                  "a/b/c/d/patch.yaml",
+		"localize_dir_name_when_no_remote":    LocalizeDir,
+		"in_localize_dir_name_when_no_remote": fmt.Sprintf("%s/patch.yaml", LocalizeDir),
+		"no_file_extension":                   "patch",
+		"kustomization_name":                  "a/kustomization.yaml",
 	} {
 		t.Run(name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
@@ -204,8 +181,8 @@ patches:
 			}
 			addFiles(t, fSys, "/a", kustAndPatch)
 
-			lclzr := createLocalizer(t, fSys, "/a", "/", "/a/dst")
-			require.NoError(t, lclzr.Localize())
+			err := Run("/a", "/", "/a/dst", fSys)
+			require.NoError(t, err)
 
 			fSysExpected := makeMemoryFs(t)
 			addFiles(t, fSysExpected, "/a", kustAndPatch)
@@ -227,8 +204,8 @@ patches:
 	}
 	addFiles(t, fSys, "/alpha/beta/gamma", kustAndPatch)
 
-	lclzr := createLocalizer(t, fSys, "/alpha/beta/gamma", "/", "")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/alpha/beta/gamma", "/", "", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/alpha/beta/gamma", kustAndPatch)
@@ -276,8 +253,8 @@ spec:
 	}
 	addFiles(t, fSys, "/", kustAndPatch)
 
-	lclzr := createLocalizer(t, fSys, "/", "", "")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/", "", "", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/", kustAndPatch)
@@ -296,8 +273,12 @@ patches:
 	}
 	addFiles(t, fSys, "/a/b", kustAndPatch)
 
-	lclzr := createLocalizer(t, fSys, "/a/b", "", "/dst")
-	require.Error(t, lclzr.Localize())
+	err := Run("/a/b", "", "/dst", fSys)
+	require.Error(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a/b", kustAndPatch)
+	checkFSys(t, fSysExpected, fSys)
 }
 
 func TestLocalizeGenerators(t *testing.T) {
@@ -333,8 +314,8 @@ metadata:
 	}
 	addFiles(t, fSys, "/a", kustAndPlugins)
 
-	lclzr := createLocalizer(t, fSys, "/a", "", "/alpha/dst")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/a", "", "/alpha/dst", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a", kustAndPlugins)
@@ -384,8 +365,8 @@ paths:
 	}
 	addFiles(t, fSys, "/a", kustAndPlugins)
 
-	lclzr := createLocalizer(t, fSys, "/a", "", "/dst")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/a", "", "/dst", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a", kustAndPlugins)
@@ -433,8 +414,8 @@ replacements:
 `,
 	}
 	addFiles(t, fSys, "/", kustAndPlugin)
-	lclzr := createLocalizer(t, fSys, "/", "", "/dst")
-	require.NoError(t, lclzr.Localize())
+	err := Run("/", "", "/dst", fSys)
+	require.NoError(t, err)
 
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/", kustAndPlugin)
@@ -491,16 +472,19 @@ metadata:
 		t.Run(test.name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
 			addFiles(t, fSys, "/", test.files)
-			lclzr := createLocalizer(t, fSys, "/", "", "/dst")
-			err := lclzr.Localize()
+			err := Run("/", "", "/dst", fSys)
 
 			var actualErr ResourceLoadError
 			require.ErrorAs(t, err, &actualErr)
 			require.EqualError(t, actualErr.InlineError, test.inlineErrMsg)
 			require.EqualError(t, actualErr.FileError, test.fileErrMsg)
 
-			require.EqualError(t, err, fmt.Sprintf(`%s: when parsing as inline received error: %s
+			require.EqualError(t, err, fmt.Sprintf(`unable to localize target "/": %s: when parsing as inline received error: %s
 when parsing as filepath received error: %s`, test.errPrefix, test.inlineErrMsg, test.fileErrMsg))
+
+			fSysExpected := makeMemoryFs(t)
+			addFiles(t, fSysExpected, "/", test.files)
+			checkFSys(t, fSysExpected, fSys)
 		})
 	}
 }

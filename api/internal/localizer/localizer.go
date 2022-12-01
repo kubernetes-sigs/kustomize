@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -20,8 +21,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Localizer encapsulates all state needed to localize the root at ldr.
-type Localizer struct {
+// localizer encapsulates all state needed to localize the root at ldr.
+type localizer struct {
 	fSys filesys.FileSystem
 
 	// kusttarget fields
@@ -32,32 +33,56 @@ type Localizer struct {
 	// underlying type is Loader
 	ldr ifc.Loader
 
-	// destination directory in newDir that mirrors ldr's current root.
-	dst filesys.ConfirmedDir
+	// root is at ldr.Root()
+	root filesys.ConfirmedDir
+
+	// destination directory in newDir that mirrors root
+	dst string
 }
 
-// NewLocalizer is the factory method for Localizer
-func NewLocalizer(ldr *Loader, validator ifc.Validator, rFactory *resmap.Factory, pLdr *pLdr.Loader) (*Localizer, error) {
-	toDst, err := filepath.Rel(ldr.args.Scope.String(), ldr.Root())
+// Run attempts to localize the kustomization root at target with the given localize arguments
+func Run(target string, scope string, newDir string, fSys filesys.FileSystem) error {
+	ldr, args, err := NewLoader(target, scope, newDir, fSys)
 	if err != nil {
-		log.Fatalf("cannot find path from %q to child directory %q: %s", ldr.args.Scope, ldr.Root(), err)
+		return errors.Wrap(err)
 	}
-	dst := ldr.args.NewDir.Join(toDst)
-	if err = ldr.fSys.MkdirAll(dst); err != nil {
-		return nil, errors.WrapPrefixf(err, "unable to create directory in localize destination")
+	defer func() { _ = ldr.Cleanup() }()
+
+	toDst, err := filepath.Rel(args.Scope.String(), args.Target.String())
+	if err != nil {
+		log.Panicf("cannot find path from %q to child directory %q: %s", args.Scope, args.Target, err)
 	}
-	return &Localizer{
-		fSys:      ldr.fSys,
-		validator: validator,
+	dst := args.NewDir.Join(toDst)
+	if err = fSys.MkdirAll(dst); err != nil {
+		return errors.WrapPrefixf(err, "unable to create directory in localize destination")
+	}
+
+	depProvider := provider.NewDepProvider()
+	rFactory := resmap.NewFactory(depProvider.GetResourceFactory())
+	// As of alpha, only built-in plugins, using kustomize's built-in definitions of them,
+	// are potentially localized.
+	plgnsLdr := pLdr.NewLoader(types.DisabledPluginConfig(), rFactory, filesys.MakeFsOnDisk())
+	err = (&localizer{
+		fSys:      fSys,
+		validator: depProvider.GetFieldValidator(),
 		rFactory:  rFactory,
-		pLdr:      pLdr,
+		pLdr:      plgnsLdr,
 		ldr:       ldr,
-		dst:       filesys.ConfirmedDir(dst),
-	}, nil
+		root:      args.Target,
+		dst:       dst,
+	}).localize()
+	if err != nil {
+		errCleanup := fSys.RemoveAll(args.NewDir.String())
+		if errCleanup != nil {
+			log.Printf("unable to clean localize destination: %s", errCleanup)
+		}
+		return errors.WrapPrefixf(err, "unable to localize target %q", target)
+	}
+	return nil
 }
 
-// Localize localizes the root that lc is at
-func (lc *Localizer) Localize() error {
+// localize localizes the root that lc is at
+func (lc *localizer) localize() error {
 	kt := target.NewKustTarget(lc.ldr, lc.validator, lc.rFactory, lc.pLdr)
 	err := kt.Load()
 	if err != nil {
@@ -78,7 +103,7 @@ func (lc *Localizer) Localize() error {
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to serialize localized kustomization file")
 	}
-	if err = lc.fSys.WriteFile(lc.dst.Join(konfig.DefaultKustomizationFileName()), content); err != nil {
+	if err = lc.fSys.WriteFile(filepath.Join(lc.dst, konfig.DefaultKustomizationFileName()), content); err != nil {
 		return errors.WrapPrefixf(err, "unable to write localized kustomization file")
 	}
 	return nil
@@ -86,7 +111,7 @@ func (lc *Localizer) Localize() error {
 
 // localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
 // built-in understanding of. This excludes helm-related fields, such as `helmGlobals` and `helmCharts`.
-func (lc *Localizer) localizeNativeFields(kust *types.Kustomization) error {
+func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 	for i := range kust.Patches {
 		if kust.Patches[i].Path != "" {
 			newPath, err := lc.localizeFile(kust.Patches[i].Path)
@@ -98,12 +123,11 @@ func (lc *Localizer) localizeNativeFields(kust *types.Kustomization) error {
 	}
 	// TODO(annasong): localize all other kustomization fields: resources, bases, components, crds, configurations,
 	// openapi, patchesJson6902, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
-	// TODO(annasong): localize built-in plugins under generators, transformers, and validators fields
 	return nil
 }
 
 // localizeFile localizes file path and returns the localized path
-func (lc *Localizer) localizeFile(path string) (string, error) {
+func (lc *localizer) localizeFile(path string) (string, error) {
 	content, err := lc.ldr.Load(path)
 	if err != nil {
 		return "", errors.Wrap(err)
@@ -111,7 +135,8 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 
 	var locPath string
 	if loader.IsRemoteFile(path) {
-		// TODO(annasong): check if able to add localize directory
+		// TODO(annasong): You need to check if you can add a localize directory here to store
+		// the remote file content. There may be a directory that shares the localize directory name.
 		locPath = locFilePath(path)
 	} else {
 		// ldr has checked that path must be relative; this is subject to change in beta.
@@ -123,10 +148,9 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 		// 2. avoid paths that temporarily traverse outside the current root,
 		//    i.e. ../../../scope/target/current-root. The localized file will be surrounded by
 		//    different directories than its source, and so an uncleaned path may no longer be valid.
-		locPath = cleanFilePath(lc.fSys, filesys.ConfirmedDir(lc.ldr.Root()), path)
-		// TODO(annasong): check if hits localize directory
+		locPath = cleanFilePath(lc.fSys, lc.root, path)
 	}
-	absPath := lc.dst.Join(locPath)
+	absPath := filepath.Join(lc.dst, locPath)
 	if err = lc.fSys.MkdirAll(filepath.Dir(absPath)); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to create directories to localize file %q", path)
 	}
@@ -140,7 +164,7 @@ func (lc *Localizer) localizeFile(path string) (string, error) {
 // can be inline or in a file. This excludes the HelmChartInflationGenerator.
 //
 // Note that the localization in this function has not been implemented yet.
-func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
+func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 	for fieldName, plugins := range map[string]struct {
 		entries   []string
 		localizer kio.Filter
@@ -186,7 +210,7 @@ func (lc *Localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 
 // loadResource tries to load resourceEntry as a file path or inline.
 // On success, loadResource returns the loaded resource map and whether resourceEntry is a file path.
-func (lc *Localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, error) {
+func (lc *localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, error) {
 	var fileErr error
 	rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(resourceEntry))
 	if inlineErr != nil {
