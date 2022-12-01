@@ -299,3 +299,208 @@ patches:
 	lclzr := createLocalizer(t, fSys, "/a/b", "", "/dst")
 	require.Error(t, lclzr.Localize())
 }
+
+func TestLocalizeGenerators(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+generators:
+- plugin.yaml
+- |
+  apiVersion: builtin
+  behavior: create
+  kind: ConfigMapGenerator
+  literals:
+  - APPLE=orange
+  metadata:
+    name: another-map
+  ---
+  apiVersion: builtin
+  kind: SecretGenerator
+  literals:
+  - APPLE=b3Jhbmdl
+  metadata:
+    name: secret
+  options:
+    disableNameSuffixHash: true
+kind: Kustomization
+`,
+		"plugin.yaml": `apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: map
+`,
+	}
+	addFiles(t, fSys, "/a", kustAndPlugins)
+
+	lclzr := createLocalizer(t, fSys, "/a", "", "/alpha/dst")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndPlugins)
+	addFiles(t, fSysExpected, "/alpha/dst", map[string]string{
+		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
+	})
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeTransformers(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: builtin
+  jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
+  kind: PatchJson6902Transformer
+  metadata:
+    name: patch6902
+  target:
+    name: deployment
+  ---
+  apiVersion: builtin
+  kind: ReplacementTransformer
+  metadata:
+    name: replacement
+  replacements:
+  - source:
+      fieldPath: spec.template.spec.containers.0.image
+      kind: Deployment
+    targets:
+    - fieldPaths:
+      - spec.template.spec.containers.1.image
+      select:
+        kind: Deployment
+- plugin.yaml
+`,
+		"plugin.yaml": `apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: patchSM
+paths:
+- pod.yaml
+`,
+	}
+	addFiles(t, fSys, "/a", kustAndPlugins)
+
+	lclzr := createLocalizer(t, fSys, "/a", "", "/dst")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndPlugins)
+	addFiles(t, fSysExpected, "/dst", map[string]string{
+		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
+	})
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeValidators(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPlugin := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+validators:
+- |-
+  apiVersion: builtin
+  kind: ReplacementTransformer
+  metadata:
+    name: replacement
+  replacements:
+  - source:
+      kind: ConfigMap
+      fieldPath: metadata.name
+    targets:
+    - select:
+        kind: ConfigMap
+      fieldPaths:
+      - metadata.name
+- replacement.yaml
+`,
+		"replacement.yaml": `apiVersion: builtin
+kind: ReplacementTransformer
+metadata:
+  name: replacement-2
+replacements:
+- source:
+    kind: Secret
+    fieldPath: data.USER_NAME
+  targets:
+  - select:
+      kind: Secret
+    fieldPaths:
+    - data.USER_NAME
+`,
+	}
+	addFiles(t, fSys, "/", kustAndPlugin)
+	lclzr := createLocalizer(t, fSys, "/", "", "/dst")
+	require.NoError(t, lclzr.Localize())
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/", kustAndPlugin)
+	addFiles(t, fSysExpected, "/dst", map[string]string{
+		"kustomization.yaml": kustAndPlugin["kustomization.yaml"],
+	})
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeBuiltinPluginsNotResource(t *testing.T) {
+	type testCase struct {
+		name         string
+		files        map[string]string
+		errPrefix    string
+		inlineErrMsg string
+		fileErrMsg   string
+	}
+	for _, test := range []testCase{
+		{
+			name: "bad_inline_resource",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+generators:
+- |
+  apiVersion: builtin
+  kind: ConfigMapGenerator
+kind: Kustomization
+`,
+			},
+			errPrefix:    `unable to load generators entry: unable to load resource entry "apiVersion: builtin\nkind: ConfigMapGenerator\n"`,
+			inlineErrMsg: `missing metadata.name in object {{builtin ConfigMapGenerator} {{ } map[] map[]}}`,
+			fileErrMsg: `invalid file reference: '/apiVersion: builtin
+kind: ConfigMapGenerator
+' doesn't exist`,
+		},
+		{
+			name: "bad_file_resource",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- plugin.yaml
+`,
+				"plugin.yaml": `apiVersion: builtin
+metadata:
+  name: PatchTransformer
+`,
+			},
+			errPrefix:    `unable to load transformers entry: unable to load resource entry "plugin.yaml"`,
+			inlineErrMsg: `missing Resource metadata`,
+			fileErrMsg:   `missing kind in object {{builtin } {{PatchTransformer } map[] map[]}}`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fSys := makeMemoryFs(t)
+			addFiles(t, fSys, "/", test.files)
+			lclzr := createLocalizer(t, fSys, "/", "", "/dst")
+			err := lclzr.Localize()
+
+			var actualErr ResourceLoadError
+			require.ErrorAs(t, err, &actualErr)
+			require.EqualError(t, actualErr.InlineError, test.inlineErrMsg)
+			require.EqualError(t, actualErr.FileError, test.fileErrMsg)
+
+			require.EqualError(t, err, fmt.Sprintf(`%s: when parsing as inline received error: %s
+when parsing as filepath received error: %s`, test.errPrefix, test.inlineErrMsg, test.fileErrMsg))
+		})
+	}
+}

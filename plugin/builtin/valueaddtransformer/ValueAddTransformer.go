@@ -49,8 +49,7 @@ type Target struct {
 	FilePathPosition int `json:"filePathPosition,omitempty" yaml:"filePathPosition,omitempty"`
 }
 
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	err := yaml.Unmarshal(c, p)

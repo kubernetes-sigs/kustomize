@@ -93,7 +93,17 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if repoSpecVal.Host == "" {
 		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
-	return repoSpecVal, nil
+
+	cleanedPath := filepath.Clean(strings.TrimPrefix(path, string(filepath.Separator)))
+	if pathElements := strings.Split(cleanedPath, string(filepath.Separator)); len(pathElements) > 0 &&
+		pathElements[0] == filesys.ParentDir {
+		return nil, fmt.Errorf("url path exits repo: %s", n)
+	}
+	return &RepoSpec{
+		raw: n, Host: host, OrgRepo: orgRepo,
+		Dir: notCloned, Path: path, Ref: gitRef, GitSuffix: suffix,
+		Submodules: gitSubmodules, Timeout: gitTimeout}, nil
+
 }
 
 const (

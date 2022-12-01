@@ -222,6 +222,13 @@ func newLoaderAtGitClone(
 			"'%s' refers to file '%s'; expecting directory",
 			repoSpec.AbsPath(), f)
 	}
+	// Path in repo can contain symlinks that exit repo. We can only
+	// check for this after cloning repo.
+	if !root.HasPrefix(repoSpec.CloneDir()) {
+		_ = cleaner()
+		return nil, fmt.Errorf("%q refers to directory outside of repo %q", repoSpec.AbsPath(),
+			repoSpec.CloneDir())
+	}
 	return &fileLoader{
 		// Clones never allowed to escape root.
 		loadRestrictor: RestrictionRootOnly,

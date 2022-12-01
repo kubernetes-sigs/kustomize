@@ -22,9 +22,7 @@ type plugin struct {
 	t                resmap.Transformer
 }
 
-//nolint: golint
-//noinspection GoUnusedGlobalVariable
-var KustomizePlugin plugin
+var KustomizePlugin plugin //nolint:gochecknoglobals
 
 func (p *plugin) makePrefixPluginConfig(n string) ([]byte, error) {
 	var s struct {
