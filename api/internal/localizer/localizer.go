@@ -112,6 +112,13 @@ func (lc *localizer) localize() error {
 // localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
 // built-in understanding of. This excludes helm-related fields, such as `helmGlobals` and `helmCharts`.
 func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
+	for i, path := range kust.Components {
+		newPath, err := lc.localizeDir(path)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize components field")
+		}
+		kust.Components[i] = newPath
+	}
 	for i := range kust.Patches {
 		if kust.Patches[i].Path != "" {
 			newPath, err := lc.localizeFile(kust.Patches[i].Path)
@@ -121,7 +128,7 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Patches[i].Path = newPath
 		}
 	}
-	// TODO(annasong): localize all other kustomization fields: resources, bases, components, crds, configurations,
+	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations,
 	// openapi, patchesJson6902, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
 	return nil
 }
@@ -156,6 +163,48 @@ func (lc *localizer) localizeFile(path string) (string, error) {
 	}
 	if err = lc.fSys.WriteFile(absPath, content); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
+	}
+	return locPath, nil
+}
+
+// localizeDir localizes root path and returns the localized path
+func (lc *localizer) localizeDir(path string) (string, error) {
+	ldr, err := lc.ldr.New(path)
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+	defer func() { _ = ldr.Cleanup() }()
+
+	root, err := filesys.ConfirmDir(lc.fSys, ldr.Root())
+	if err != nil {
+		log.Panicf("unable to establish validated root reference %q: %s", path, err)
+	}
+	var locPath string
+	if repo := ldr.Repo(); repo != "" {
+		// TODO(annasong): You need to check if you can add a localize directory here to store
+		// the remote file content. There may be a directory that shares the localize directory name.
+		locPath = locRootPath(path, repo, root)
+	} else {
+		locPath, err = filepath.Rel(lc.root.String(), root.String())
+		if err != nil {
+			log.Panicf("cannot find relative path between scoped localize roots %q and %q: %s", lc.root, root, err)
+		}
+	}
+	newDst := filepath.Join(lc.dst, locPath)
+	if err = lc.fSys.MkdirAll(newDst); err != nil {
+		return "", errors.WrapPrefixf(err, "unable to create root %q in localize destination", path)
+	}
+	err = (&localizer{
+		fSys:      lc.fSys,
+		validator: lc.validator,
+		rFactory:  lc.rFactory,
+		pLdr:      lc.pLdr,
+		ldr:       ldr,
+		root:      root,
+		dst:       newDst,
+	}).localize()
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "unable to localize root %q", path)
 	}
 	return locPath, nil
 }
