@@ -488,3 +488,170 @@ when parsing as filepath received error: %s`, test.errPrefix, test.inlineErrMsg,
 		})
 	}
 }
+
+func TestLocalizeDirInTarget(t *testing.T) {
+	type testCase struct {
+		name  string
+		files map[string]string
+	}
+	for _, tc := range []testCase{
+		{
+			name: "multi_nested_child",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- delta/epsilon
+kind: Kustomization
+`,
+				"delta/epsilon/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace
+`,
+			},
+		},
+		{
+			name: "recursive",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- delta
+kind: Kustomization
+`,
+				"delta/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+components:
+- epsilon
+kind: Component
+`,
+				"delta/epsilon/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace
+`,
+			},
+		},
+		{
+			name: "file_in_dir",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- delta
+kind: Kustomization
+`,
+				"delta/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+- path: patch.yaml
+`,
+				"delta/patch.yaml": podConfiguration,
+			},
+		},
+		{
+			name: "multiple_calls",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- delta
+- delta/epsilon
+kind: Kustomization
+`,
+				"delta/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace
+`,
+				"delta/epsilon/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+buildMetadata:
+- managedByLabel
+kind: Component
+`,
+			},
+		},
+		{
+			name: "localize_directory_name_when_no_remote",
+			files: map[string]string{
+				"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- %s
+kind: Kustomization
+`, LocalizeDir),
+				fmt.Sprintf("%s/kustomization.yaml", LocalizeDir): `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace
+`,
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fSys := makeMemoryFs(t)
+			addFiles(t, fSys, "/alpha/beta/gamma", tc.files)
+
+			err := Run("/alpha/beta/gamma", "/alpha/beta", "/dst", fSys)
+			require.NoError(t, err)
+
+			fSysExpected := makeMemoryFs(t)
+			addFiles(t, fSysExpected, "/alpha/beta/gamma", tc.files)
+			addFiles(t, fSysExpected, "/dst/gamma", tc.files)
+			checkFSys(t, fSysExpected, fSys)
+		})
+	}
+}
+
+func TestLocalizeDirCleanedSibling(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndComponents := map[string]string{
+		// This test checks that winding paths that might traverse through directories
+		// outside of scope, which will not be present at destination, are cleaned.
+		"beta/gamma/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- delta/../../../../a/b/../../alpha/beta/sibling
+kind: Kustomization`,
+		"beta/sibling/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace
+`,
+	}
+	addFiles(t, fSys, "/alpha", kustAndComponents)
+
+	err := Run("/alpha/beta/gamma", "/alpha", "/alpha/beta/dst", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/alpha", kustAndComponents)
+	cleanedFiles := map[string]string{
+		"beta/gamma/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- ../sibling
+kind: Kustomization
+`,
+		"beta/sibling/kustomization.yaml": kustAndComponents["beta/sibling/kustomization.yaml"],
+	}
+	addFiles(t, fSysExpected, "/alpha/beta/dst", cleanedFiles)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeComponents(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndComponents := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+components:
+- a
+- alpha
+kind: Kustomization
+`,
+		"a/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namePrefix: my-
+`,
+		"alpha/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+nameSuffix: -test
+`,
+	}
+	addFiles(t, fSys, "/", kustAndComponents)
+
+	err := Run("/", "", "", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/", kustAndComponents)
+	addFiles(t, fSysExpected, "/localized", kustAndComponents)
+	checkFSys(t, fSysExpected, fSys)
+}

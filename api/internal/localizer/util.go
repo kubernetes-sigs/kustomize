@@ -145,3 +145,12 @@ func locFilePath(fileURL string) string {
 	// so we can use it as is.
 	return filepath.Join(LocalizeDir, u.Hostname(), path)
 }
+
+// locRootPath returns the relative localized path of the validated root url rootURL, where the local copy of its repo
+// is at repoDir and the copy of its root is at rootDir
+// TODO(annasong): implement
+func locRootPath(rootURL string, repoDir string, rootDir filesys.ConfirmedDir) string {
+	_ = rootURL
+	_, _ = repoDir, rootDir
+	return ""
+}
