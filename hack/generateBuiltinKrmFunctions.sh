@@ -8,7 +8,6 @@ builtinPlugins=(AnnotationsTransformer \
 	HashTransformer \
 	ImageTagTransformer \
 	LabelTransformer \
-	LegacyOrderTransformer \
 	NamespaceTransformer \
 	PatchJson6902Transformer \
 	PatchStrategicMergeTransformer \
