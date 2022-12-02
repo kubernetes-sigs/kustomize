@@ -4,9 +4,12 @@
 package localizer_test
 
 import (
+	"bufio"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +18,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const podConfiguration = `apiVersion: v1
+const (
+	podConfiguration = `apiVersion: v1
 kind: Pod
 metadata:
   name: pod
@@ -24,8 +28,22 @@ spec:
   - name: nginx
     image: nginx:1.14.2
     ports:
-    - containerPort: 80
-`
+    - containerPort: 80`
+	replacement = `source:
+  fieldPath: path.*.to.[some=field]
+  kind: Pod
+  options:
+    delimiter: /
+targets:
+- fieldPaths:
+  - config\.kubernetes\.io.annotations
+  - second.path
+  reject:
+  - group: apps
+    version: v2
+  select:
+    namespace: my`
+)
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	t.Helper()
@@ -93,6 +111,29 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 		return nil
 	})
 	require.NoError(t, err)
+}
+
+func checkDeprecationWarning(t *testing.T) {
+	t.Helper()
+
+	stdErr := os.Stderr
+	mockReader, mockStdErr, err := os.Pipe()
+	require.NoError(t, err)
+	os.Stderr = mockStdErr
+	t.Cleanup(func() {
+		os.Stderr = stdErr
+		require.NoError(t, mockStdErr.Close())
+
+		fileScanner := bufio.NewScanner(mockReader)
+		assert.True(t, fileScanner.Scan())
+		assert.Contains(t, fileScanner.Text(), "deprecated")
+
+		// We should check that there is no other error output.
+		assert.False(t, fileScanner.Scan())
+		assert.NoError(t, fileScanner.Err())
+
+		assert.NoError(t, mockReader.Close())
+	})
 }
 
 func TestTargetIsScope(t *testing.T) {
@@ -290,6 +331,94 @@ spec:
 	checkFSys(t, fSysExpected, fSys)
 }
 
+func TestLocalizePatchesJson(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesJson6902:
+- path: patch.yaml
+  target:
+    annotationSelector: zone=west
+    name: pod
+    version: v1
+- patch: '[{"op": "add", "path": "/new/path", "value": "value"}]'
+  target:
+    group: apps
+    kind: Pod
+- path: patch.json
+  target:
+    namespace: my
+`,
+		"patch.yaml": `- op: add
+  path: /some/new/path
+  value: value
+- op: replace
+  path: /some/existing/path
+  value: new value`,
+		"patch.json": ` [
+   {"op": "copy", "from": "/here", "path": "/there"},
+   {"op": "remove", "path": "/some/existing/path"},
+ ]`,
+	}
+	addFiles(t, fSys, "/alpha/beta", kustAndPatches)
+
+	checkDeprecationWarning(t)
+	err := Run("/alpha/beta", "/", "/beta", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/alpha/beta", kustAndPatches)
+	addFiles(t, fSysExpected, "/beta/alpha/beta", kustAndPatches)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizePatchesSM(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesStrategicMerge:
+- |-
+  %s
+- patch.yaml
+`, strings.ReplaceAll(podConfiguration, "\n", "\n  ")),
+		"patch.yaml": podConfiguration,
+	}
+	addFiles(t, fSys, "/a", kustAndPatches)
+
+	checkDeprecationWarning(t)
+	err := Run("/a", "", "/dst", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndPatches)
+	addFiles(t, fSysExpected, "/dst", kustAndPatches)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeReplacements(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndReplacement := map[string]string{
+		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+replacements:
+- path: replacement.yaml
+- %s
+`, strings.ReplaceAll(replacement, "\n", "\n  ")),
+		"replacement.yaml": replacement,
+	}
+	addFiles(t, fSys, "/a", kustAndReplacement)
+
+	err := Run("/a", "/", "/dst", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndReplacement)
+	addFiles(t, fSysExpected, "/dst/a", kustAndReplacement)
+	checkFSys(t, fSysExpected, fSys)
+}
+
 func TestLocalizeConfigMapGenerator(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndData := map[string]string{
@@ -477,39 +606,25 @@ paths:
 func TestLocalizeValidators(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPlugin := map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 validators:
-- |-
+- |
   apiVersion: builtin
   kind: ReplacementTransformer
   metadata:
     name: replacement
   replacements:
-  - source:
-      kind: ConfigMap
-      fieldPath: metadata.name
-    targets:
-    - select:
-        kind: ConfigMap
-      fieldPaths:
-      - metadata.name
+  - %s
 - replacement.yaml
-`,
-		"replacement.yaml": `apiVersion: builtin
+`, strings.ReplaceAll(replacement, "\n", "\n    ")),
+		"replacement.yaml": fmt.Sprintf(`apiVersion: builtin
 kind: ReplacementTransformer
 metadata:
   name: replacement-2
 replacements:
-- source:
-    kind: Secret
-    fieldPath: data.USER_NAME
-  targets:
-  - select:
-      kind: Secret
-    fieldPaths:
-    - data.USER_NAME
-`,
+- %s
+`, strings.ReplaceAll(replacement, "\n", "\n  ")),
 	}
 	addFiles(t, fSys, "/", kustAndPlugin)
 	err := Run("/", "", "/dst", fSys)
