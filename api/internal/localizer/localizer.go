@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/internal/generators"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -128,8 +129,50 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Patches[i].Path = newPath
 		}
 	}
+
+	for i := range kust.ConfigMapGenerator {
+		if err := lc.localizeGenerator(&kust.ConfigMapGenerator[i].GeneratorArgs); err != nil {
+			return errors.WrapPrefixf(err, "unable to localize configMapGenerator")
+		}
+	}
+	for i := range kust.SecretGenerator {
+		if err := lc.localizeGenerator(&kust.SecretGenerator[i].GeneratorArgs); err != nil {
+			return errors.WrapPrefixf(err, "unable to localize secretGenerator")
+		}
+	}
+
 	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations,
-	// openapi, patchesJson6902, patchesStrategicMerge, replacements, configMapGenerators, secretGenerators
+	// openapi, patchesJson6902, patchesStrategicMerge, replacements
+	return nil
+}
+
+// localizeGenerator localizes the file paths on generator.
+func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) error {
+	locEnvs := make([]string, len(generator.EnvSources))
+	for i, env := range generator.EnvSources {
+		newPath, err := lc.localizeFile(env)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize generator envs file")
+		}
+		locEnvs[i] = newPath
+	}
+	locFiles := make([]string, len(generator.FileSources))
+	for i, file := range generator.FileSources {
+		k, f, err := generators.ParseFileSource(file)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to parse generator files entry %q", file)
+		}
+		newFile, err := lc.localizeFile(f)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize generator files path in entry %q", file)
+		}
+		if f != file {
+			newFile = k + "=" + newFile
+		}
+		locFiles[i] = newFile
+	}
+	generator.EnvSources = locEnvs
+	generator.FileSources = locFiles
 	return nil
 }
 
