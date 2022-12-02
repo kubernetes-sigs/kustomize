@@ -109,7 +109,7 @@ const (
 
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
-// the parts.
+// the different parts of URL , set into a RepoSpec object and return RepoSpec object.
 func parseGitURL(n string) *RepoSpec {
 	repoSpec := &RepoSpec{raw: n, Dir: notCloned, Timeout: defaultTimeout, Submodules: defaultSubmodules}
 	// parse query first
