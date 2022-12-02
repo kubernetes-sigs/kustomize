@@ -220,6 +220,34 @@ patches:
 	checkFSys(t, fSysExpected, fSys)
 }
 
+func TestLocalizeUnreferencedIgnored(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	targetAndUnreferenced := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+configMapGenerator:
+- envs:
+  - env
+  name: referenced-file
+kind: Kustomization
+`,
+		"env":            "APPLE=orange",
+		"env.properties": "USERNAME=password",
+		"resource.yaml":  podConfiguration,
+	}
+	addFiles(t, fSys, "/alpha/beta", targetAndUnreferenced)
+
+	err := Run("/alpha/beta", "/alpha", "/beta", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/alpha/beta", targetAndUnreferenced)
+	addFiles(t, fSysExpected, "/beta/beta", map[string]string{
+		"kustomization.yaml": targetAndUnreferenced["kustomization.yaml"],
+		"env":                targetAndUnreferenced["env"],
+	})
+	checkFSys(t, fSysExpected, fSys)
+}
+
 func TestLocalizePatches(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPatch := map[string]string{
@@ -259,6 +287,76 @@ spec:
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/", kustAndPatch)
 	addFiles(t, fSysExpected, "/localized", kustAndPatch)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeConfigMapGenerator(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndData := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+configMapGenerator:
+- envs:
+  - standard.env
+  namespace: my
+  options:
+    immutable: true
+- behavior: merge
+  files:
+  - key.properties
+  literals:
+  - PEAR=pineapple
+kind: Kustomization
+metadata:
+  name: test
+`,
+		"standard.env": `SIZE=0.1
+IS_GLOBAL=true`,
+		"key.properties": "value",
+	}
+	addFiles(t, fSys, "/a/b", kustAndData)
+
+	err := Run("/a/b", "", "", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a/b", kustAndData)
+	addFiles(t, fSysExpected, "/localized-b", kustAndData)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeSecretGenerator(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndData := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- behavior: create
+  files:
+  - key=b/value.properties
+  - b/value
+  name: secret
+- envs:
+  - crt
+  - key
+  type: kubernetes.io/tls
+- literals:
+  - APPLE=b3Jhbmdl
+  - PLUM=cGx1b3Q=
+  name: no-files
+`,
+		"crt":                "tls.crt=LS0tLS1CRUd...0tLQo=",
+		"key":                "tls.key=LS0tLS1CRUd...0tLQo=",
+		"b/value.properties": "dmFsdWU=",
+		"b/value":            "dmFsdWU=",
+	}
+	addFiles(t, fSys, "/a", kustAndData)
+
+	err := Run("/a", "/", "/localized-a", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndData)
+	addFiles(t, fSysExpected, "/localized-a/a", kustAndData)
 	checkFSys(t, fSysExpected, fSys)
 }
 
