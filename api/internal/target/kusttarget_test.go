@@ -258,19 +258,17 @@ metadata:
 	assert.Equal(t, string(expYaml), string(actYaml))
 }
 
-func TestMergeTransformersConfig(t *testing.T) {
+func TestConfigurationsOverrideDefault(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/merge-config", `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: foo-
 nameSuffix: -bar
-namespace: ns1
 resources:
   - deployment.yaml
   - config.yaml
   - secret.yaml
-  - namespace.yaml
 configurations:
   - name-prefix-rules.yaml
 `)
@@ -301,12 +299,6 @@ kind: Secret
 metadata:
   name: secret
 `)
-	th.WriteF("/merge-config/namespace.yaml", `
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ns1
-`)
 
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
@@ -316,50 +308,40 @@ metadata:
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name":      "foo-deployment1-bar",
-				"namespace": "ns1",
+				"name": "foo-deployment1-bar",
 			},
 		}), resFactory.FromMapWithName("config", map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
-				"name":      "config-bar",
-				"namespace": "ns1",
+				"name": "config-bar",
 			},
 		}), resFactory.FromMapWithName("secret", map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Secret",
 			"metadata": map[string]interface{}{
-				"name":      "foo-secret-bar",
-				"namespace": "ns1",
-			},
-		}), resFactory.FromMapWithName("ns1", map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "Namespace",
-			"metadata": map[string]interface{}{
-				"name": "ns1",
+				"name": "foo-secret-bar",
 			},
 		}),
 	}
 
 	expected := resmap.New()
 	for _, r := range resources {
-		if err := expected.Append(r); err != nil {
-			t.Fatalf("unexpected error %v", err)
-		}
+		err := expected.Append(r)
+		require.NoError(t, err)
 	}
 	expected.RemoveBuildAnnotations()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/merge-config", pvd)
-	assert.NoError(t, kt.Load())
+	require.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
-	assert.NoError(t, err)
-	assert.Equal(t, string(expYaml), string(actYaml))
+	require.NoError(t, err)
+	require.Equal(t, string(expYaml), string(actYaml))
 }
 
 func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
