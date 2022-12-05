@@ -117,6 +117,66 @@ commonAnnotations:
   oncallPager: 800-555-1212
 ```
 
+## Namespace
+
+The namespace transformer is used to update namespace references in your manifests when you set the `namespace` declaration in your `kustomization.yaml`.
+
+### Example
+
+kustomization.yaml
+
+```
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: example
+
+resources:
+- resources.yaml
+
+configurations:
+  - namespace.yaml
+```
+
+namespace.yaml
+
+
+```
+namespace:
+  - kind: AnimalPark
+    path: spec/gorillaRef/namespace
+    create: true
+```
+
+resources.yaml
+
+```
+apiVersion: animal/v1
+kind: AnimalPark
+metadata:
+  name: ap
+spec:
+  gorillaRef:
+    name: gg
+    kind: Gorilla
+    apiVersion: animal/v1
+```
+
+Output of `kustomize build`:
+
+```
+apiVersion: animal/v1
+kind: AnimalPark
+metadata:
+  name: ap
+  namespace: example
+spec:
+  gorillaRef:
+    apiVersion: animal/v1
+    kind: Gorilla
+    name: gg
+    namespace: example
+```
+
 ## Name reference transformer
 
 `nameReference` Transformer is used to tie a target resource's name to a list of other resources' referrers' names.
