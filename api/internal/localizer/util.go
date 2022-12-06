@@ -21,6 +21,9 @@ const (
 
 	// LocalizeDir is the name of the localize directories used to store remote content in the localize destination
 	LocalizeDir = "localized-files"
+
+	// FileSchemeDir is the name of the directory immediately inside LocalizeDir used to store file-schemed repos
+	FileSchemeDir = "file-schemed"
 )
 
 // establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote rawTarget,
@@ -132,25 +135,65 @@ func locFilePath(fileURL string) string {
 	// File urls must have http or https scheme, so it is safe to use url.Parse.
 	u, err := url.Parse(fileURL)
 	if err != nil {
-		log.Fatalf("cannot parse validated file url %q: %s", fileURL, err.Error())
+		log.Panicf("cannot parse validated file url %q: %s", fileURL, err)
 	}
 
-	// Percent-encodings should be preserved in case sub-delims have special meaning.
+	// We include both userinfo and port, lest they determine the file read.
+	authority := strings.TrimPrefix((&url.URL{
+		User: u.User,
+		Host: u.Host,
+	}).String(), "//")
+
 	// Extraneous '..' parent directory dot-segments should be removed.
 	path := filepath.Join(string(filepath.Separator), filepath.FromSlash(u.EscapedPath()))
 
-	// The host should not include userinfo or port.
 	// Raw github urls are the only type of file urls kustomize officially accepts.
 	// In this case, the path already consists of org, repo, version, and path in repo, in order,
 	// so we can use it as is.
-	return filepath.Join(LocalizeDir, u.Hostname(), path)
+	return filepath.Join(LocalizeDir, authority, path)
 }
 
 // locRootPath returns the relative localized path of the validated root url rootURL, where the local copy of its repo
-// is at repoDir and the copy of its root is at rootDir
-// TODO(annasong): implement
-func locRootPath(rootURL string, repoDir string, rootDir filesys.ConfirmedDir) string {
-	_ = rootURL
-	_, _ = repoDir, rootDir
-	return ""
+// is at repoDir and the copy of its root is at root on fSys.
+func locRootPath(rootURL string, repoDir string, root filesys.ConfirmedDir, fSys filesys.FileSystem) string {
+	repoSpec, err := git.NewRepoSpecFromURL(rootURL)
+	if err != nil {
+		log.Panicf("cannot parse validated repo url %q: %s", rootURL, err)
+	}
+	repo, err := filesys.ConfirmDir(fSys, repoDir)
+	if err != nil {
+		log.Panicf("unable to establish validated repo download location %q: %s", repoDir, err)
+	}
+	// calculate from copy instead of url to straighten symlinks
+	inRepo, err := filepath.Rel(repo.String(), root.String())
+	if err != nil {
+		log.Panicf("cannot find path from %q to child directory %q: %s", repo, root, err)
+	}
+	// Like git, we clean dot-segments from OrgRepo.
+	// Git does not allow ref value to contain dot-segments.
+	return filepath.Join(LocalizeDir,
+		parseSchemeAuthority(repoSpec),
+		filepath.Join(string(filepath.Separator), filepath.FromSlash(repoSpec.OrgRepo)),
+		filepath.FromSlash(repoSpec.Ref),
+		inRepo)
+}
+
+// parseSchemeAuthority returns the localize directory path corresponding to repoSpec.Host
+func parseSchemeAuthority(repoSpec *git.RepoSpec) string {
+	if repoSpec.Host == "file://" {
+		return FileSchemeDir
+	}
+	target := repoSpec.Host
+	for _, scheme := range []string{"https", "http", "ssh"} {
+		schemePrefix := scheme + "://"
+		if strings.HasPrefix(target, schemePrefix) {
+			target = target[len(schemePrefix):]
+			break
+		}
+	}
+	// We remove delimiters in this order, as ':' has different meaning if prefixed by '/'.
+	// We can remove ':/' suffix because ':' delimits empty port in this case.
+	// Note that gh: is handled here.
+	target = strings.TrimSuffix(target, "/")
+	return strings.TrimSuffix(target, ":")
 }

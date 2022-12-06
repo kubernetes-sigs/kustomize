@@ -4,12 +4,58 @@
 package localizer //nolint:testpackage
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
+
+func TestDefaultNewDirRepo(t *testing.T) {
+	for name, test := range map[string]struct {
+		url, dst string
+	}{
+		"simple": {
+			url: "https://github.com/org/repo?ref=value",
+			dst: "localized-repo-value",
+		},
+		"slashed_ref": {
+			url: "https://github.com/org/repo?ref=group/version",
+			dst: "localized-repo-group-version",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			repoSpec, err := git.NewRepoSpecFromURL(test.url)
+			require.NoError(t, err)
+			require.Equal(t, test.dst, defaultNewDir(&fakeLoader{t.TempDir()}, repoSpec))
+		})
+	}
+}
+
+type fakeLoader struct {
+	root string
+}
+
+func (fl *fakeLoader) Root() string {
+	return fl.root
+}
+func (fl *fakeLoader) Repo() string {
+	return fl.root
+}
+func (fl *fakeLoader) Load(_ string) ([]byte, error) {
+	return []byte{}, nil
+}
+func (fl *fakeLoader) New(path string) (ifc.Loader, error) {
+	return &fakeLoader{path}, nil
+}
+func (fl *fakeLoader) Cleanup() error {
+	return nil
+}
 
 func TestUrlBase(t *testing.T) {
 	require.Equal(t, "repo", urlBase("https://github.com/org/repo"))
@@ -34,6 +80,14 @@ func TestLocFilePath(t *testing.T) {
 			url:  "https://raw.githubusercontent.com/org/repo/ref/path/to/file.yaml",
 			path: simpleJoin(t, "raw.githubusercontent.com", "org", "repo", "ref", "path", "to", "file.yaml"),
 		},
+		"http-scheme": {
+			url:  "http://host/path",
+			path: simpleJoin(t, "host", "path"),
+		},
+		"userinfo": {
+			url:  "https://userinfo@host/path",
+			path: simpleJoin(t, "userinfo@host", "path"),
+		},
 		"empty_path": {
 			url:  "https://host",
 			path: "host",
@@ -42,11 +96,7 @@ func TestLocFilePath(t *testing.T) {
 			url:  "https://host//",
 			path: "host",
 		},
-		"extraneous_components": {
-			url:  "http://userinfo@host:1234/path/file?query",
-			path: simpleJoin(t, "host", "path", "file"),
-		},
-		"percent-encoding": {
+		"percent-encoded_path": {
 			url:  "https://host/file%2Eyaml",
 			path: simpleJoin(t, "host", "file%2Eyaml"),
 		},
@@ -58,9 +108,204 @@ func TestLocFilePath(t *testing.T) {
 			url:  "https://host/foo/bar/baz/../../../../file",
 			path: simpleJoin(t, "host", "file"),
 		},
+		"query": {
+			url:  "https://host/path?query",
+			path: simpleJoin(t, "host", "path"),
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			require.Equal(t, simpleJoin(t, LocalizeDir, tUnit.path), locFilePath(tUnit.url))
 		})
 	}
+}
+
+func TestLocFilePath_Colon(t *testing.T) {
+	// The colon is special because it was once used as the unix file separator.
+	for name, authority := range map[string]string{
+		"IPv6": "[2001:4860:4860::8888]",
+		"port": "localhost:8080",
+	} {
+		t.Run(name, func(t *testing.T) {
+			const file = "file.yaml"
+			u := fmt.Sprintf("https://%s/%s", authority, file)
+			require.Equal(t, simpleJoin(t, LocalizeDir, authority, file), locFilePath(u))
+
+			fSys := filesys.MakeFsOnDisk()
+			targetDir := simpleJoin(t, t.TempDir(), authority)
+
+			// We check that we can create single directory, meaning ':' not used as file separator.
+			require.NoError(t, fSys.Mkdir(targetDir))
+			_, err := fSys.Create(simpleJoin(t, targetDir, file))
+			require.NoError(t, err)
+
+			// We check that the directory with such name is readable.
+			files, err := fSys.ReadDir(targetDir)
+			require.NoError(t, err)
+			require.Equal(t, []string{file}, files)
+		})
+	}
+}
+
+func TestLocFilePath_SpecialChar(t *testing.T) {
+	req := require.New(t)
+
+	// The wild card character is one of the legal uri characters with more meaning
+	// to the system, so we test it here.
+	const wildcard = "*"
+	req.Equal(simpleJoin(t, LocalizeDir, "host", wildcard), locFilePath("https://host/*"))
+
+	fSys := filesys.MakeFsOnDisk()
+	testDir := t.TempDir()
+	req.NoError(fSys.Mkdir(simpleJoin(t, testDir, "a")))
+	req.NoError(fSys.WriteFile(simpleJoin(t, testDir, "b"), []byte{}))
+
+	// We check that we can create and read from wild card-named file.
+	// We check that the file system is not matching it to existing file names.
+	req.NoError(fSys.WriteFile(simpleJoin(t, testDir, wildcard), []byte("test")))
+	content, err := fSys.ReadFile(simpleJoin(t, testDir, wildcard))
+	req.NoError(err)
+	req.Equal("test", string(content))
+}
+
+func TestLocFilePath_SpecialFiles(t *testing.T) {
+	for name, tFSys := range map[string]struct {
+		urlPath           string
+		pathDir, pathFile string
+	}{
+		"windows_reserved_name": {
+			urlPath:  "/aux/file",
+			pathDir:  "aux",
+			pathFile: "file",
+		},
+		"hidden_files": {
+			urlPath:  "/.../.file",
+			pathDir:  "...",
+			pathFile: ".file",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			req := require.New(t)
+
+			expectedPath := simpleJoin(t, LocalizeDir, "host", tFSys.pathDir, tFSys.pathFile)
+			req.Equal(expectedPath, locFilePath("https://host"+tFSys.urlPath))
+
+			fSys := filesys.MakeFsOnDisk()
+			targetDir := simpleJoin(t, t.TempDir(), tFSys.pathDir)
+			req.NoError(fSys.Mkdir(targetDir))
+			req.NoError(fSys.WriteFile(simpleJoin(t, targetDir, tFSys.pathFile), []byte("test")))
+
+			content, err := fSys.ReadFile(simpleJoin(t, targetDir, tFSys.pathFile))
+			req.NoError(err)
+			req.Equal([]byte("test"), content)
+		})
+	}
+}
+
+func makeConfirmedDir(t *testing.T) (filesys.FileSystem, filesys.ConfirmedDir) {
+	t.Helper()
+
+	fSys := filesys.MakeFsOnDisk()
+	testDir, err := filesys.NewTmpConfirmedDir()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = fSys.RemoveAll(testDir.String())
+	})
+
+	return fSys, testDir
+}
+
+func TestLocRootPath_SamePathInRepo(t *testing.T) {
+	for name, test := range map[string]struct {
+		urlf, path string
+	}{
+		"ssh": {
+			urlf: "ssh://git@github.com/org/repo//%s?ref=value",
+			path: simpleJoin(t, "git@github.com", "org", "repo", "value"),
+		},
+		"rel_ssh": {
+			urlf: "git@github.com:org/repo//%s?ref=value",
+			path: simpleJoin(t, "git@github.com", "org", "repo", "value"),
+		},
+		"https": {
+			urlf: "https://gitlab.com/org/repo//%s?ref=value",
+			path: simpleJoin(t, "gitlab.com", "org", "repo", "value"),
+		},
+		"file": {
+			urlf: "file:///var/run/repo//%s?ref=value",
+			path: simpleJoin(t, FileSchemeDir, "var", "run", "repo", "value"),
+		},
+		"gh_shorthand": {
+			urlf: "gh:org/repo//%s?ref=value",
+			path: simpleJoin(t, "gh", "org", "repo", "value"),
+		},
+		"IPv6": {
+			urlf: "https://[2001:4860:4860::8888]/org/repo//%s?ref=value",
+			path: simpleJoin(t, "[2001:4860:4860::8888]", "org", "repo", "value"),
+		},
+		"port": {
+			urlf: "https://localhost.com:8080/org/repo//%s?ref=value",
+			path: simpleJoin(t, "localhost.com:8080", "org", "repo", "value"),
+		},
+		"no_org": {
+			urlf: "https://github.com/repo//%s?ref=value",
+			path: simpleJoin(t, "github.com", "repo", "value"),
+		},
+		".git_suffix": {
+			urlf: "https://github.com/org1/org2/repo.git//%s?ref=value",
+			path: simpleJoin(t, "github.com", "org1", "org2", "repo", "value"),
+		},
+		"dot-segments": {
+			urlf: "https://github.com/./../org/../org/repo.git//%s?ref=value",
+			path: simpleJoin(t, "github.com", "org", "repo", "value"),
+		},
+		"no_path_delimiter": {
+			urlf: "https://github.com/org/repo/%s?ref=value",
+			path: simpleJoin(t, "github.com", "org", "repo", "value"),
+		},
+		"illegal_windows_dir": {
+			urlf: "https://gitlab.com/org./repo..git//%s?ref=value",
+			path: simpleJoin(t, "gitlab.com", "org.", "repo.", "value"),
+		},
+		"ref_has_slash": {
+			urlf: "https://gitlab.com/org/repo//%s?ref=group/version/kind",
+			path: simpleJoin(t, "gitlab.com", "org", "repo", "group", "version", "kind"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			u := fmt.Sprintf(test.urlf, "path/to/root")
+			path := simpleJoin(t, LocalizeDir, test.path, "path", "to", "root")
+
+			fSys, testDir := makeConfirmedDir(t)
+			repoDir := simpleJoin(t, testDir.String(), "repo_random-hash")
+			require.NoError(t, fSys.Mkdir(repoDir))
+			rootDir := simpleJoin(t, repoDir, "path", "to", "root")
+			require.NoError(t, fSys.MkdirAll(rootDir))
+
+			actual := locRootPath(u, repoDir, filesys.ConfirmedDir(rootDir), fSys)
+			require.Equal(t, path, actual)
+
+			require.NoError(t, fSys.MkdirAll(simpleJoin(t, testDir.String(), path)))
+		})
+	}
+}
+
+func TestLocRootPath_Repo(t *testing.T) {
+	const url = "https://github.com/org/repo?ref=value"
+	expected := simpleJoin(t, LocalizeDir, "github.com", "org", "repo", "value")
+
+	fSys, testDir := makeConfirmedDir(t)
+	actual := locRootPath(url, testDir.String(), testDir, fSys)
+	require.Equal(t, expected, actual)
+}
+
+func TestLocRootPath_SymlinkPath(t *testing.T) {
+	const url = "https://github.com/org/repo//symlink?ref=value"
+
+	fSys, repoDir := makeConfirmedDir(t)
+	rootDir := simpleJoin(t, repoDir.String(), "actual-root")
+	require.NoError(t, fSys.Mkdir(rootDir))
+	require.NoError(t, os.Symlink(rootDir, simpleJoin(t, repoDir.String(), "symlink")))
+
+	expected := simpleJoin(t, LocalizeDir, "github.com", "org", "repo", "value", "actual-root")
+	require.Equal(t, expected, locRootPath(url, repoDir.String(), filesys.ConfirmedDir(rootDir), fSys))
 }
