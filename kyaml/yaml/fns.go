@@ -550,7 +550,7 @@ func (l PathGetter) getFilter(part, nextPart string, fieldPath *[]string) (Filte
 	default:
 		// mapping node
 		*fieldPath = append(*fieldPath, part)
-		return l.fieldFilter(part, l.getKind(nextPart))
+		return l.fieldFilter(part, getPathPartKind(nextPart, l.Create))
 	}
 }
 
@@ -590,15 +590,18 @@ func (l PathGetter) fieldFilter(
 	return FieldMatcher{Name: name, Create: &RNode{value: &yaml.Node{Kind: kind, Style: l.Style}}}, nil
 }
 
-func (l PathGetter) getKind(nextPart string) yaml.Kind {
+func getPathPartKind(nextPart string, defaultKind yaml.Kind) yaml.Kind {
 	if IsListIndex(nextPart) {
 		// if nextPart is of the form [a=b], then it is an index into a Sequence
 		// so the current part must be a SequenceNode
 		return yaml.SequenceNode
 	}
+	if IsIdxNumber(nextPart) {
+		return yaml.SequenceNode
+	}
 	if nextPart == "" {
-		// final name in the path, use the l.Create defined Kind
-		return l.Create
+		// final name in the path, use the default kind provided
+		return defaultKind
 	}
 
 	// non-sequence intermediate Node
