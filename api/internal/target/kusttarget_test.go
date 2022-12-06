@@ -40,7 +40,7 @@ func TestLoad(t *testing.T) {
 			},
 		},
 		"nonsenseLatin": {
-			errContains: "error converting YAML to JSON",
+			errContains: "found a tab character that violates indentation",
 			content: `
 		Lorem ipsum dolor sit amet, consectetur
 		adipiscing elit, sed do eiusmod tempor
