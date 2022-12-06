@@ -208,9 +208,9 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 
 func fieldRetrievalError(fieldPath string, isCreate bool) string {
 	if isCreate {
-		return "unable to find or create field " + fieldPath + " in replacement target"
+		return fmt.Sprintf("unable to find or create field %q in replacement target", fieldPath)
 	}
-	return "unable to find field " + fieldPath + " in replacement target"
+	return fmt.Sprintf("unable to find field %q in replacement target", fieldPath)
 }
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {

@@ -101,7 +101,6 @@ spec:
 
 func TestPathMatcher_Filter_Create(t *testing.T) {
 	testCases := map[string]struct {
-		name                    string
 		path                    []string
 		matches                 []string
 		modifiedNodeMustContain string

@@ -2687,7 +2687,7 @@ replacements:
         options:
           create: false
 `,
-			expectedErr: "unable to find field spec.configPatches.0.match.proxy.proxyVersion in replacement target",
+			expectedErr: "unable to find field \"spec.configPatches.0.match.proxy.proxyVersion\" in replacement target",
 		},
 		"issue4761 - wildcard solution": {
 			input: `
@@ -2803,6 +2803,32 @@ spec:
   - hosts:
     - myingress.example.com
     secretName: myingress.example.com`,
+		},
+		"fail to append to sequence using a distant index": {
+			input: `apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+spec:
+  rules:
+    - host: myingress.example.com
+`,
+			replacements: `replacements:
+  - source:
+      kind: Ingress
+      name: myingress
+      fieldPath: spec.rules.0.host
+    targets:
+      - select:
+          kind: Ingress
+          name: myingress
+        fieldPaths:
+          - spec.tls.5.hosts.5
+          - spec.tls.5.secretName
+        options:
+          create: true
+`,
+			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
 		},
 	}
 
