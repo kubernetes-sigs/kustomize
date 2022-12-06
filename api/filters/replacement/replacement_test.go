@@ -1198,11 +1198,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy1
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy2
 `,
 			replacements: `replacements:
 - source:
@@ -1216,15 +1211,6 @@ metadata:
     - spec.template.spec.containers
     options:
       create: true
-- source:
-    kind: Pod
-    name: pod
-    fieldPath: spec.containers
-  targets:
-  - select:
-      name: deploy2
-    fieldPaths:
-    - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -1245,11 +1231,6 @@ spec:
       containers:
       - image: busybox
         name: myapp-container
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deploy2
 `,
 		},
 		"complex type with delimiter in source": {
@@ -2415,6 +2396,86 @@ spec:
     name: myapp-container
   restartPolicy: new
 `,
+		},
+		"issue4761 - path not in target with create: true": {
+			input: `
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+    - applyTo: NETWORK_FILTER
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`,
+			replacements: `
+replacements:
+  - source:
+      kind: ConfigMap
+      name: istio-version
+      fieldPath: data.ISTIO_REGEX
+    targets:
+      - select:
+          kind: EnvoyFilter
+        fieldPaths:
+          - spec.configPatches.0.match.proxy.proxyVersion
+          - spec.configPatches.1.match.proxy.proxyVersion
+          - spec.configPatches.2.match.proxy.proxyVersion
+          - spec.configPatches.3.match.proxy.proxyVersion
+        options:
+          create: true
+`,
+			expectedErr: "unable to find or create field spec.configPatches.2.match.proxy.proxyVersion in replacement target",
+		},
+		"issue4761 - path not in target with create: false": {
+			input: `
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: request-id
+spec:
+  configPatches:
+    - applyTo: NETWORK_FILTER
+    - applyTo: NETWORK_FILTER
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-version
+  annotations:
+    config.kubernetes.io/local-config: true
+data:
+  ISTIO_REGEX: '^1\.14.*'
+`,
+			replacements: `
+replacements:
+  - source:
+      kind: ConfigMap
+      name: istio-version
+      fieldPath: data.ISTIO_REGEX
+    targets:
+      - select:
+          kind: EnvoyFilter
+        fieldPaths:
+          - spec.configPatches.0.match.proxy.proxyVersion
+          - spec.configPatches.1.match.proxy.proxyVersion
+          - spec.configPatches.2.match.proxy.proxyVersion
+          - spec.configPatches.3.match.proxy.proxyVersion
+        options:
+          create: false
+`,
+			expectedErr: "unable to find field spec.configPatches.0.match.proxy.proxyVersion in replacement target",
 		},
 	}
 
