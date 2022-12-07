@@ -131,22 +131,13 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			return errors.WrapPrefixf(err, "unable to localize secretGenerator")
 		}
 	}
-
-	for name, patches := range map[string][]types.Patch{
-		"patches": kust.Patches,
-		// Allow use of deprecated field
-		//nolint:staticcheck
-		"patchesJson6902": kust.PatchesJson6902,
-	} {
-		for i := range patches {
-			if patches[i].Path != "" {
-				newPath, err := lc.localizeFile(patches[i].Path)
-				if err != nil {
-					return errors.WrapPrefixf(err, "unable to localize %s path %q", name, patches[i].Path)
-				}
-				patches[i].Path = newPath
-			}
-		}
+	if err := lc.localizePatches(kust.Patches); err != nil {
+		return errors.WrapPrefixf(err, "unable to localize patches")
+	}
+	// Allow use of deprecated field
+	//nolint:staticcheck
+	if err := lc.localizePatches(kust.PatchesJson6902); err != nil {
+		return errors.WrapPrefixf(err, "unable to localize patchesJson6902")
 	}
 	//nolint:staticcheck
 	for i, patch := range kust.PatchesStrategicMerge {
@@ -203,6 +194,20 @@ func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) error {
 	}
 	generator.EnvSources = locEnvs
 	generator.FileSources = locFiles
+	return nil
+}
+
+// localizePatches localizes the file paths on patches if they are non-empty
+func (lc *localizer) localizePatches(patches []types.Patch) error {
+	for i := range patches {
+		if patches[i].Path != "" {
+			newPath, err := lc.localizeFile(patches[i].Path)
+			if err != nil {
+				return err
+			}
+			patches[i].Path = newPath
+		}
+	}
 	return nil
 }
 

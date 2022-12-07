@@ -4,12 +4,9 @@
 package localizer_test
 
 import (
-	"bufio"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,8 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const (
-	podConfiguration = `apiVersion: v1
+const podConfiguration = `apiVersion: v1
 kind: Pod
 metadata:
   name: pod
@@ -29,21 +25,6 @@ spec:
     image: nginx:1.14.2
     ports:
     - containerPort: 80`
-	replacement = `source:
-  fieldPath: path.*.to.[some=field]
-  kind: Pod
-  options:
-    delimiter: /
-targets:
-- fieldPaths:
-  - config\.kubernetes\.io.annotations
-  - second.path
-  reject:
-  - group: apps
-    version: v2
-  select:
-    namespace: my`
-)
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	t.Helper()
@@ -111,29 +92,6 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 		return nil
 	})
 	require.NoError(t, err)
-}
-
-func checkDeprecationWarning(t *testing.T) {
-	t.Helper()
-
-	stdErr := os.Stderr
-	mockReader, mockStdErr, err := os.Pipe()
-	require.NoError(t, err)
-	os.Stderr = mockStdErr
-	t.Cleanup(func() {
-		os.Stderr = stdErr
-		require.NoError(t, mockStdErr.Close())
-
-		fileScanner := bufio.NewScanner(mockReader)
-		assert.True(t, fileScanner.Scan())
-		assert.Contains(t, fileScanner.Text(), "deprecated")
-
-		// We should check that there is no other error output.
-		assert.False(t, fileScanner.Scan())
-		assert.NoError(t, fileScanner.Err())
-
-		assert.NoError(t, mockReader.Close())
-	})
 }
 
 func TestTargetIsScope(t *testing.T) {
@@ -363,7 +321,6 @@ patchesJson6902:
 	}
 	addFiles(t, fSys, "/alpha/beta", kustAndPatches)
 
-	checkDeprecationWarning(t)
 	err := Run("/alpha/beta", "/", "/beta", fSys)
 	require.NoError(t, err)
 
@@ -376,18 +333,22 @@ patchesJson6902:
 func TestLocalizePatchesSM(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPatches := map[string]string{
-		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patchesStrategicMerge:
 - |-
-  %s
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: map
+  data:
+  - APPLE: orange
 - patch.yaml
-`, strings.ReplaceAll(podConfiguration, "\n", "\n  ")),
+`,
 		"patch.yaml": podConfiguration,
 	}
 	addFiles(t, fSys, "/a", kustAndPatches)
 
-	checkDeprecationWarning(t)
 	err := Run("/a", "", "/dst", fSys)
 	require.NoError(t, err)
 
@@ -400,13 +361,33 @@ patchesStrategicMerge:
 func TestLocalizeReplacements(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndReplacement := map[string]string{
-		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 replacements:
 - path: replacement.yaml
-- %s
-`, strings.ReplaceAll(replacement, "\n", "\n  ")),
-		"replacement.yaml": replacement,
+- source:
+    fieldPath: path
+    name: map
+  targets:
+  - fieldPaths:
+    - path
+    select:
+      name: my-map
+`,
+		"replacement.yaml": `source:
+  fieldPath: path.*.to.[some=field]
+  kind: Pod
+  options:
+    delimiter: /
+targets:
+- fieldPaths:
+  - config\.kubernetes\.io.annotations
+  - second.path
+  reject:
+  - group: apps
+    version: v2
+  select:
+    namespace: my`,
 	}
 	addFiles(t, fSys, "/a", kustAndReplacement)
 
@@ -606,7 +587,7 @@ paths:
 func TestLocalizeValidators(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndPlugin := map[string]string{
-		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 validators:
 - |
@@ -615,16 +596,31 @@ validators:
   metadata:
     name: replacement
   replacements:
-  - %s
+  - source:
+      fieldPath: data.[field=value]
+      group: apps
+    targets:
+    - fieldPaths:
+      - spec.*
+      select:
+        kind: Pod
 - replacement.yaml
-`, strings.ReplaceAll(replacement, "\n", "\n    ")),
-		"replacement.yaml": fmt.Sprintf(`apiVersion: builtin
+`,
+		"replacement.yaml": `apiVersion: builtin
 kind: ReplacementTransformer
 metadata:
   name: replacement-2
 replacements:
-- %s
-`, strings.ReplaceAll(replacement, "\n", "\n  ")),
+- source:
+    fieldPath: spec.containers.1.image
+    kind: Custom
+    namespace: test
+  targets:
+  - fieldPaths:
+    - path
+    select:
+      namespace: test
+`,
 	}
 	addFiles(t, fSys, "/", kustAndPlugin)
 	err := Run("/", "", "/dst", fSys)
