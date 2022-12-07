@@ -258,6 +258,92 @@ metadata:
 	assert.Equal(t, string(expYaml), string(actYaml))
 }
 
+func TestConfigurationsOverrideDefault(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/merge-config", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: foo-
+nameSuffix: -bar
+resources:
+  - deployment.yaml
+  - config.yaml
+  - secret.yaml
+configurations:
+  - name-prefix-rules.yaml
+`)
+	th.WriteF("/merge-config/name-prefix-rules.yaml", `
+namePrefix:
+- path: metadata/name
+  apiVersion: v1
+  kind: Deployment
+- path: metadata/name
+  apiVersion: v1
+  kind: Secret
+`)
+	th.WriteF("/merge-config/deployment.yaml", `
+apiVersion: apps/v1
+metadata:
+  name: deployment1
+kind: Deployment
+`)
+	th.WriteF("/merge-config/config.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+`)
+	th.WriteF("/merge-config/secret.yaml", `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret
+`)
+
+	pvd := provider.NewDefaultDepProvider()
+	resFactory := pvd.GetResourceFactory()
+
+	resources := []*resource.Resource{
+		resFactory.FromMapWithName("deployment1", map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "foo-deployment1-bar",
+			},
+		}), resFactory.FromMapWithName("config", map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name": "config-bar",
+			},
+		}), resFactory.FromMapWithName("secret", map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Secret",
+			"metadata": map[string]interface{}{
+				"name": "foo-secret-bar",
+			},
+		}),
+	}
+
+	expected := resmap.New()
+	for _, r := range resources {
+		err := expected.Append(r)
+		require.NoError(t, err)
+	}
+	expected.RemoveBuildAnnotations()
+	expYaml, err := expected.AsYaml()
+	require.NoError(t, err)
+
+	kt := makeKustTargetWithRf(t, th.GetFSys(), "/merge-config", pvd)
+	require.NoError(t, kt.Load())
+	actual, err := kt.MakeCustomizedResMap()
+	require.NoError(t, err)
+	actual.RemoveBuildAnnotations()
+	actYaml, err := actual.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(expYaml), string(actYaml))
+}
+
 func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("/generator", `
