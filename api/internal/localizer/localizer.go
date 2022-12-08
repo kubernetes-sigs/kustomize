@@ -9,9 +9,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/generators"
-	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -26,16 +23,13 @@ import (
 type localizer struct {
 	fSys filesys.FileSystem
 
-	// kusttarget fields
-	validator ifc.Validator
-	rFactory  *resmap.Factory
-	pLdr      *pLdr.Loader
-
 	// underlying type is Loader
 	ldr ifc.Loader
 
 	// root is at ldr.Root()
 	root filesys.ConfirmedDir
+
+	rFactory *resmap.Factory
 
 	// destination directory in newDir that mirrors root
 	dst string
@@ -58,19 +52,12 @@ func Run(target string, scope string, newDir string, fSys filesys.FileSystem) er
 		return errors.WrapPrefixf(err, "unable to create directory in localize destination")
 	}
 
-	depProvider := provider.NewDepProvider()
-	rFactory := resmap.NewFactory(depProvider.GetResourceFactory())
-	// As of alpha, only built-in plugins, using kustomize's built-in definitions of them,
-	// are potentially localized.
-	plgnsLdr := pLdr.NewLoader(types.DisabledPluginConfig(), rFactory, filesys.MakeFsOnDisk())
 	err = (&localizer{
-		fSys:      fSys,
-		validator: depProvider.GetFieldValidator(),
-		rFactory:  rFactory,
-		pLdr:      plgnsLdr,
-		ldr:       ldr,
-		root:      args.Target,
-		dst:       dst,
+		fSys:     fSys,
+		ldr:      ldr,
+		root:     args.Target,
+		rFactory: resmap.NewFactory(provider.NewDepProvider().GetResourceFactory()),
+		dst:      dst,
 	}).localize()
 	if err != nil {
 		errCleanup := fSys.RemoveAll(args.NewDir.String())
@@ -84,30 +71,51 @@ func Run(target string, scope string, newDir string, fSys filesys.FileSystem) er
 
 // localize localizes the root that lc is at
 func (lc *localizer) localize() error {
-	kt := target.NewKustTarget(lc.ldr, lc.validator, lc.rFactory, lc.pLdr)
-	err := kt.Load()
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
-	kustomization := kt.Kustomization()
-	err = lc.localizeNativeFields(&kustomization)
+	kustomization, kustFileName, err := lc.load()
 	if err != nil {
 		return err
 	}
-	err = lc.localizeBuiltinPlugins(&kustomization)
+	err = lc.localizeNativeFields(kustomization)
+	if err != nil {
+		return err
+	}
+	err = lc.localizeBuiltinPlugins(kustomization)
 	if err != nil {
 		return err
 	}
 
-	content, err := yaml.Marshal(&kustomization)
+	content, err := yaml.Marshal(kustomization)
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to serialize localized kustomization file")
 	}
-	if err = lc.fSys.WriteFile(filepath.Join(lc.dst, konfig.DefaultKustomizationFileName()), content); err != nil {
+	if err = lc.fSys.WriteFile(filepath.Join(lc.dst, kustFileName), content); err != nil {
 		return errors.WrapPrefixf(err, "unable to write localized kustomization file")
 	}
 	return nil
+}
+
+// load returns the kustomization at lc.root and the file name under which it was found
+func (lc *localizer) load() (*types.Kustomization, string, error) {
+	content, kustFileName, err := loadKustFile(lc.ldr)
+	if err != nil {
+		return nil, "", err
+	}
+	content, err = types.FixKustomizationPreUnmarshalling(content)
+	if err != nil {
+		return nil, "", errors.WrapPrefixf(err, "invalid kustomization")
+	}
+	var kust types.Kustomization
+	err = (&kust).Unmarshal(content)
+	if err != nil {
+		return nil, "", errors.WrapPrefixf(err, "invalid kustomization")
+	}
+
+	// Localize intentionally does not replace legacy fields to return a localized kustomization
+	// with as much resemblance to the original as possible.
+	// Localize also intentionally does not enforce fields, as localize does not wish to unnecessarily
+	// repeat the responsibilities of kustomize build.
+
+	return &kust, kustFileName, nil
 }
 
 // localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
@@ -163,7 +171,8 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 		}
 	}
 
-	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations, openapi
+	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations,
+	// openapi, configMapGenerator.env, secretGenerator.env
 	return nil
 }
 
@@ -273,13 +282,11 @@ func (lc *localizer) localizeDir(path string) (string, error) {
 		return "", errors.WrapPrefixf(err, "unable to create root %q in localize destination", path)
 	}
 	err = (&localizer{
-		fSys:      lc.fSys,
-		validator: lc.validator,
-		rFactory:  lc.rFactory,
-		pLdr:      lc.pLdr,
-		ldr:       ldr,
-		root:      root,
-		dst:       newDst,
+		fSys:     lc.fSys,
+		ldr:      ldr,
+		root:     root,
+		rFactory: lc.rFactory,
+		dst:      newDst,
 	}).localize()
 	if err != nil {
 		return "", errors.WrapPrefixf(err, "unable to localize root %q", path)
