@@ -503,7 +503,7 @@ spec:
 `)
 
 		// component declared in overlay with custom schema and patch
-		th.WriteC("components/dc-openapi", `patches:
+		th.WriteC("components/dc-openapi", `patchesStrategicMerge:
   - patch.yml
 openapi:
   path: openapi.json
