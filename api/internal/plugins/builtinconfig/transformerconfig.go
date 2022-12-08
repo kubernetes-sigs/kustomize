@@ -60,6 +60,7 @@ func MakeTransformerConfig(
 // sortFields provides determinism in logging, tests, etc.
 func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.NamePrefix)
+	sort.Sort(t.NameSuffix)
 	sort.Sort(t.NameSpace)
 	sort.Sort(t.CommonLabels)
 	sort.Sort(t.TemplateLabels)
