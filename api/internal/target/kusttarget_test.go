@@ -265,12 +265,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: foo-
 nameSuffix: -bar
+namespace: ns1
 resources:
   - deployment.yaml
   - config.yaml
   - secret.yaml
 configurations:
   - name-prefix-rules.yaml
+  - name-suffix-rules.yaml
 `)
 	th.WriteF("/merge-config/name-prefix-rules.yaml", `
 namePrefix:
@@ -280,6 +282,15 @@ namePrefix:
 - path: metadata/name
   apiVersion: v1
   kind: Secret
+`)
+	th.WriteF("/merge-config/name-suffix-rules.yaml", `
+nameSuffix:
+- path: metadata/name
+  apiVersion: v1
+  kind: ConfigMap
+- path: metadata/name
+  apiVersion: v1
+  kind: Deployment
 `)
 	th.WriteF("/merge-config/deployment.yaml", `
 apiVersion: apps/v1
@@ -308,19 +319,22 @@ metadata:
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "foo-deployment1-bar",
+				"name":      "foo-deployment1-bar",
+				"namespace": "ns1",
 			},
 		}), resFactory.FromMapWithName("config", map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
-				"name": "config-bar",
+				"name":      "config-bar",
+				"namespace": "ns1",
 			},
 		}), resFactory.FromMapWithName("secret", map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Secret",
 			"metadata": map[string]interface{}{
-				"name": "foo-secret-bar",
+				"name":      "foo-secret",
+				"namespace": "ns1",
 			},
 		}),
 	}
