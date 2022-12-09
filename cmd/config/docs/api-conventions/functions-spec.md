@@ -1,6 +1,6 @@
 # KRM Functions Specification
 
-_apiVersion: v1_
+_apiVersion: v1.1_
 
 ## Overview
 
@@ -20,6 +20,11 @@ This document references terms described in [Kubernetes API Conventions][1].
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
 interpreted as described in [RFC 2119][2].
+
+## Version Compatibility
+
+Version 1.1 is backwards-compatible with Version 1, but for a function to be
+conformant with the new version it is REQUIRED to support file output.
 
 ## Use Cases
 
