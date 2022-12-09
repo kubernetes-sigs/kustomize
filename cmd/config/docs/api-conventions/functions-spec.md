@@ -345,11 +345,11 @@ functions.
 ### Internal Annotations
 
 For orchestration purposes, the orchestrator will use a set of annotations,
-referred to as _internal annotations_, on resources in `Resources.items`. These
-annotations are not persisted to resource manifests on the filesystem: The
-orchestrator sets this annotation when reading files from the local filesystem
-and removes the annotation when writing the output of functions back to the
-filesystem.
+referred to as _internal annotations_, on resources in `Resources.items` or 
+the `Resources` itself. These annotations are not persisted to resource manifests
+on the filesystem: The orchestrator sets this annotation when reading files from
+the local filesystem and removes the annotation when writing the output of functions
+back to the filesystem.
 
 Annotation prefix `internal.config.kubernetes.io` is reserved for use for
 internal annotations. In general, a function MUST NOT modify these annotations with
@@ -396,8 +396,8 @@ This represents the third resource in the file.
 Records the slash-delimited, OS-agnostic, absolute file path to an output file.
 The Orchestrator ensures the file can written to by the Function.
 
-When this annotation is present the Function should write it's output to the specified
-file, instead of stdout.
+When this annotation is present the function MUST write it's output to the specified
+file, the output MUST NOT be written to `stdout`.
 
 A function SHOULD NOT modify these annotations.
 
