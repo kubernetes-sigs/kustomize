@@ -210,7 +210,7 @@ bases:
 - beta
 configMapGenerator:
 - env: env.properties
-images:
+imageTags:
 - name: postgres
   newName: my-registry/my-postgres
   newTag: v1

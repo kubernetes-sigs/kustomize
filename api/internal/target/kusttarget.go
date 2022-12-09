@@ -58,25 +58,21 @@ func (kt *KustTarget) Load() error {
 	if err != nil {
 		return err
 	}
-	content, err = types.FixKustomizationPreUnmarshalling(content)
-	if err != nil {
-		return err
-	}
+
 	var k types.Kustomization
-	err = k.Unmarshal(content)
-	if err != nil {
+	if err := k.Unmarshal(content); err != nil {
 		return err
 	}
 
 	// show warning message when using deprecated fields.
-	warningMessages := k.CheckDeprecatedFields()
-	if warningMessages != nil {
+	if warningMessages := k.CheckDeprecatedFields(); warningMessages != nil {
 		for _, msg := range *warningMessages {
 			fmt.Fprintf(os.Stderr, "%v\n", msg)
 		}
 	}
 
-	k.FixKustomizationPostUnmarshalling()
+	k.FixKustomization()
+
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
 		return fmt.Errorf(
