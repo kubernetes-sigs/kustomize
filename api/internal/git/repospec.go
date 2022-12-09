@@ -39,7 +39,7 @@ type RepoSpec struct {
 
 	// Relative path in the repository, and in the cloneDir,
 	// to a Kustomization.
-	Path string
+	KustRootPath string
 
 	// Branch or tag reference.
 	Ref string
@@ -71,7 +71,7 @@ func (x *RepoSpec) Raw() string {
 }
 
 func (x *RepoSpec) AbsPath() string {
-	return x.Dir.Join(x.Path)
+	return x.Dir.Join(x.KustRootPath)
 }
 
 func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
@@ -93,7 +93,7 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	if repoSpecVal.Host == "" {
 		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
-	cleanedPath := filepath.Clean(strings.TrimPrefix(repoSpecVal.Path, string(filepath.Separator)))
+	cleanedPath := filepath.Clean(strings.TrimPrefix(repoSpecVal.KustRootPath, string(filepath.Separator)))
 	if pathElements := strings.Split(cleanedPath, string(filepath.Separator)); len(pathElements) > 0 &&
 		pathElements[0] == filesys.ParentDir {
 		return nil, fmt.Errorf("url path exits repo: %s", n)
@@ -125,7 +125,7 @@ func parseGitURL(n string) *RepoSpec {
 		// Adding _git/ to host
 		repoSpec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
 		repoSpec.RepoPath = strings.Split(n[index+len(gitDelimiter):], "/")[0]
-		repoSpec.Path = parsePath(n[index+len(gitDelimiter)+len(repoSpec.RepoPath):])
+		repoSpec.KustRootPath = parsePath(n[index+len(gitDelimiter)+len(repoSpec.RepoPath):])
 		return repoSpec
 	}
 	repoSpec.Host, n = parseHostSpec(n)
@@ -141,7 +141,7 @@ func parseGitURL(n string) *RepoSpec {
 		if len(n) > 0 && n[0] == '/' {
 			n = n[1:]
 		}
-		repoSpec.Path = parsePath(n)
+		repoSpec.KustRootPath = parsePath(n)
 		return repoSpec
 	}
 
@@ -149,7 +149,7 @@ func parseGitURL(n string) *RepoSpec {
 		if idx := strings.Index(n, "//"); idx > 0 {
 			repoSpec.RepoPath = n[:idx]
 			n = n[idx+2:]
-			repoSpec.Path = parsePath(n)
+			repoSpec.KustRootPath = parsePath(n)
 			return repoSpec
 		}
 		repoSpec.RepoPath = parsePath(n)
@@ -158,17 +158,17 @@ func parseGitURL(n string) *RepoSpec {
 
 	i := strings.Index(n, "/")
 	if i < 1 {
-		repoSpec.Path = parsePath(n)
+		repoSpec.KustRootPath = parsePath(n)
 		return repoSpec
 	}
 	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
 		repoSpec.RepoPath = n[:j]
-		repoSpec.Path = parsePath(n[j+1:])
+		repoSpec.KustRootPath = parsePath(n[j+1:])
 		return repoSpec
 	}
-	repoSpec.Path = ""
+	repoSpec.KustRootPath = ""
 	repoSpec.RepoPath = parsePath(n)
 	return repoSpec
 }

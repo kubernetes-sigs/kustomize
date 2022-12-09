@@ -79,7 +79,7 @@ func defaultNewDir(targetLdr ifc.Loader, spec *git.RepoSpec) string {
 		// kustomize doesn't download repo into repo-named folder
 		// must find repo folder name from url
 		if repo == targetLdr.Root() {
-			targetDir = urlBase(spec.OrgRepo)
+			targetDir = urlBase(spec.RepoPath)
 		}
 		return strings.Join([]string{DstPrefix, targetDir, strings.ReplaceAll(spec.Ref, "/", "-")}, "-")
 	}
