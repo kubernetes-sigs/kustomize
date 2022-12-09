@@ -242,11 +242,7 @@ func (rn *RNode) IsTaggedNull() bool {
 // IsNilOrEmpty is true if the node is nil,
 // has no YNode, or has YNode that appears empty.
 func (rn *RNode) IsNilOrEmpty() bool {
-	return rn.IsNil() ||
-		IsYNodeTaggedNull(rn.YNode()) ||
-		IsYNodeEmptyMap(rn.YNode()) ||
-		IsYNodeEmptySeq(rn.YNode()) ||
-		IsYNodeZero(rn.YNode())
+	return rn.IsNil() || IsYNodeNilOrEmpty(rn.YNode())
 }
 
 // IsStringValue is true if the RNode is not nil and is scalar string node
@@ -420,12 +416,11 @@ func (rn *RNode) SetApiVersion(av string) {
 // given field, so this function cannot be used to make distinctions
 // between these cases.
 func (rn *RNode) getMapFieldValue(field string) *yaml.Node {
-	for i := 0; i < len(rn.Content()); i = IncrementFieldIndex(i) {
-		if rn.Content()[i].Value == field {
-			return rn.Content()[i+1]
-		}
-	}
-	return nil
+	var result *yaml.Node
+	visitMappingNodeFields(rn.Content(), func(key, value *yaml.Node) {
+		result = value
+	}, field)
+	return result
 }
 
 // GetName returns the name, or empty string if
@@ -696,9 +691,9 @@ func (rn *RNode) Fields() ([]string, error) {
 		return nil, errors.Wrap(err)
 	}
 	var fields []string
-	for i := 0; i < len(rn.Content()); i += 2 {
-		fields = append(fields, rn.Content()[i].Value)
-	}
+	visitMappingNodeFields(rn.Content(), func(key, value *yaml.Node) {
+		fields = append(fields, key.Value)
+	})
 	return fields, nil
 }
 
@@ -709,13 +704,12 @@ func (rn *RNode) FieldRNodes() ([]*RNode, error) {
 		return nil, errors.Wrap(err)
 	}
 	var fields []*RNode
-	for i := 0; i < len(rn.Content()); i += 2 {
-		yNode := rn.Content()[i]
+	visitMappingNodeFields(rn.Content(), func(key, value *yaml.Node) {
 		// for each key node in the input mapping node contents create equivalent rNode
 		rNode := &RNode{}
-		rNode.SetYNode(yNode)
+		rNode.SetYNode(key)
 		fields = append(fields, rNode)
-	}
+	})
 	return fields, nil
 }
 
@@ -725,13 +719,11 @@ func (rn *RNode) Field(field string) *MapNode {
 	if rn.YNode().Kind != yaml.MappingNode {
 		return nil
 	}
-	for i := 0; i < len(rn.Content()); i = IncrementFieldIndex(i) {
-		isMatchingField := rn.Content()[i].Value == field
-		if isMatchingField {
-			return &MapNode{Key: NewRNode(rn.Content()[i]), Value: NewRNode(rn.Content()[i+1])}
-		}
-	}
-	return nil
+	var result *MapNode
+	visitMappingNodeFields(rn.Content(), func(key, value *yaml.Node) {
+		result = &MapNode{Key: NewRNode(key), Value: NewRNode(value)}
+	}, field)
+	return result
 }
 
 // VisitFields calls fn for each field in the RNode.
@@ -750,6 +742,47 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 		}
 	}
 	return nil
+}
+
+// visitMappingNodeFields calls fn for fields in the content, in content order.
+// The caller is responsible to ensure the node is a mapping node. If fieldNames
+// are specified, then fn is called only for the fields that match the given
+// fieldNames. fieldNames must contain unique values.
+func visitMappingNodeFields(content []*yaml.Node, fn func(key, value *yaml.Node), fieldNames ...string) {
+	switch len(fieldNames) {
+	case 0: // visit all fields
+		visitFieldsWhileTrue(content, func(key, value *yaml.Node, _ int) bool {
+			fn(key, value)
+			return true
+		})
+	default: // visit specified fields
+		// assumption: fields in content have unique names
+		found := 0
+		visitFieldsWhileTrue(content, func(key, value *yaml.Node, _ int) bool {
+			if key == nil {
+				return true
+			}
+			if !sliceutil.Contains(fieldNames, key.Value) {
+				return true
+			}
+			fn(key, value)
+			found++
+			return found < len(fieldNames)
+		})
+	}
+}
+
+// visitFieldsWhileTrue calls fn for the fields in content, in content order,
+// until either fn returns false or all fields have been visited. The caller
+// should ensure that content is from a mapping node, or fits the same expected
+// pattern (consecutive key/value entries in the slice).
+func visitFieldsWhileTrue(content []*yaml.Node, fn func(key, value *yaml.Node, keyIndex int) bool) {
+	for i := 0; i < len(content); i += 2 {
+		continueVisiting := fn(content[i], content[i+1], i)
+		if !continueVisiting {
+			return
+		}
+	}
 }
 
 // Elements returns the list of elements in the RNode.
@@ -1003,17 +1036,19 @@ func findMergeValues(yn *yaml.Node) ([]*yaml.Node, error) {
 // it fails.
 func getMergeTagValue(yn *yaml.Node) (*yaml.Node, error) {
 	var result *yaml.Node
-	for i := 0; i < len(yn.Content); i += 2 {
-		key := yn.Content[i]
-		value := yn.Content[i+1]
+	var err error
+	visitFieldsWhileTrue(yn.Content, func(key, value *yaml.Node, _ int) bool {
 		if isMerge(key) {
 			if result != nil {
-				return nil, fmt.Errorf("duplicate merge key")
+				err = fmt.Errorf("duplicate merge key")
+				result = nil
+				return false
 			}
 			result = value
 		}
-	}
-	return result, nil
+		return true
+	})
+	return result, err
 }
 
 // removeMergeTags removes all merge tags and returns a ordered list of yaml
