@@ -82,7 +82,7 @@ func TestWriteAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't read kustomization file: %v\n", err)
 	}
-	kustomization.FixKustomizationPostUnmarshalling()
+	kustomization.FixKustomization()
 	if !reflect.DeepEqual(kustomization, content) {
 		t.Fatal("Read kustomization is different from written kustomization")
 	}
@@ -189,7 +189,7 @@ patchesStrategicMerge:
 func TestPreserveCommentsWithAdjust(t *testing.T) {
 	kustomizationContentWithComments := []byte(`
 
-    
+
 
 # Some comments
 # This is some comment we should preserve
@@ -225,7 +225,7 @@ generatorOptions:
 
 	expected := []byte(`
 
-    
+
 
 # Some comments
 # This is some comment we should preserve
@@ -326,7 +326,7 @@ kind: Kustomization
 func TestCommentsWithDocumentSeperatorAtBeginning(t *testing.T) {
 	kustomizationContentWithComments := []byte(`
 
-    
+
 # Some comments
 # This is some comment we should preserve
 # don't delete it
@@ -339,7 +339,7 @@ namespace: mynamespace
 
 	expected := []byte(`
 
-    
+
 # Some comments
 # This is some comment we should preserve
 # don't delete it

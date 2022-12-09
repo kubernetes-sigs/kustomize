@@ -83,6 +83,9 @@ type Kustomization struct {
 	// patch, but this operator is simpler to specify.
 	Images []Image `json:"images,omitempty" yaml:"images,omitempty"`
 
+	// Deprecated: Use the Images field instead.
+	ImageTags []Image `json:"imageTags,omitempty" yaml:"imageTags,omitempty"`
+
 	// Replacements is a list of replacements, which will copy nodes from a
 	// specified source to N specified targets.
 	Replacements []ReplacementField `json:"replacements,omitempty" yaml:"replacements,omitempty"`
@@ -181,6 +184,7 @@ const (
 	deprecatedWarningToRunEditFix              = "Run 'kustomize edit fix' to update your Kustomization automatically."
 	deprecatedWarningToRunEditFixExperimential = "[EXPERIMENTAL] Run 'kustomize edit fix' to update your Kustomization automatically."
 	deprecatedBaseWarningMessage               = "# Warning: 'bases' is deprecated. Please use 'resources' instead." + " " + deprecatedWarningToRunEditFix
+	deprecatedImageTagsWarningMessage          = "# Warning: 'imageTags' is deprecated. Please use 'images' instead." + " " + deprecatedWarningToRunEditFix
 	deprecatedPatchesJson6902Message           = "# Warning: 'patchesJson6902' is deprecated. Please use 'patches' instead." + " " + deprecatedWarningToRunEditFix
 	deprecatedPatchesStrategicMergeMessage     = "# Warning: 'patchesStrategicMerge' is deprecated. Please use 'patches' instead." + " " + deprecatedWarningToRunEditFix
 	deprecatedVarsMessage                      = "# Warning: 'vars' is deprecated. Please use 'replacements' instead." + " " + deprecatedWarningToRunEditFixExperimential
@@ -191,6 +195,9 @@ func (k *Kustomization) CheckDeprecatedFields() *[]string {
 	var warningMessages []string
 	if k.Bases != nil {
 		warningMessages = append(warningMessages, deprecatedBaseWarningMessage)
+	}
+	if k.ImageTags != nil {
+		warningMessages = append(warningMessages, deprecatedImageTagsWarningMessage)
 	}
 	if k.PatchesJson6902 != nil {
 		warningMessages = append(warningMessages, deprecatedPatchesJson6902Message)
@@ -204,11 +211,11 @@ func (k *Kustomization) CheckDeprecatedFields() *[]string {
 	return &warningMessages
 }
 
-// FixKustomizationPostUnmarshalling fixes things
+// FixKustomization fixes things
 // like empty fields that should not be empty, or
 // moving content of deprecated fields to newer
 // fields.
-func (k *Kustomization) FixKustomizationPostUnmarshalling() {
+func (k *Kustomization) FixKustomization() {
 	if k.Kind == "" {
 		k.Kind = KustomizationKind
 	}
@@ -223,6 +230,10 @@ func (k *Kustomization) FixKustomizationPostUnmarshalling() {
 	// 'bases' field was deprecated in favor of the 'resources' field.
 	k.Resources = append(k.Resources, k.Bases...)
 	k.Bases = nil
+
+	// 'imageTags' field was deprecated in favor of the 'images' field.
+	k.Images = append(k.Images, k.ImageTags...)
+	k.ImageTags = nil
 
 	for i, g := range k.ConfigMapGenerator {
 		if g.EnvSource != "" {
