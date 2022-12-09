@@ -71,10 +71,10 @@ follows:
 1. Orchestrator runs the function container and provides the input on `stdin`.
    The input is a Kubernetes object of kind `ResourceList` as described below.
 2. Function reads the input from `stdin` and performs its computations.
-3. Function provides the output as a `ResourceList`, by default to `stdout`.
-   Alternatively the Orchestrator can instruct the Function, via annotation on 
-   the resource list, to write the result to a Orchestrator-defined file, 
-   instead of `stdout`.
+3. Function provides the output as a `ResourceList`, by default to `stdout`.  
+   Alternatively the Orchestrator can instruct the Function, trough an *internal
+   annotation* on the resource list, to write the result to a Orchestrator-defined
+   file, instead of `stdout`.
 4. Orchestrator uses the `stdout` or provided file, `stderr`, and the exit code 
    of the function as it sees fit following to the semantics described below.
    
@@ -82,8 +82,8 @@ follows:
 
 A function MUST accept input from `stdin`.
 
-A function MUST implement `stdout` and file output. It is not necessary to output 
-to both `stdout` and file, but both options must be available.
+A function MUST implement `stdout` and file output.  
+It is not necessary to output to both `stdout` and file, but both options must be available.
 
 A function MAY emit non-structured error message on `stderr`.
 
