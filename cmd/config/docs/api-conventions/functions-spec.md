@@ -65,16 +65,25 @@ follows:
 
 1. Orchestrator runs the function container and provides the input on `stdin`.
    The input is a Kubernetes object of kind `ResourceList` as described below.
-2. Function reads the input from `stdin`, performs computations, and provides
-   the output as a `ResourceList` to `stdout`. The function MAY also emit
-   non-structured error message on `stderr`.
-3. Orchestrator uses the `stdout`, `stderr`, and the exit code of the function
-   as it sees fit following to the semantics described below.
+2. Function reads the input from `stdin` and performs its computations.
+4. Function provides the output as a `ResourceList`, by default to `stdout`.
+   Alternatively the Orchestrator can instruct the Function, via annotation on 
+   the resource list, to write the result to a Orchestrator-defined file, 
+   instead of `stdout`.
+5. Function then MAY emit non-structured error message on `stderr`.
+6. Orchestrator uses the `stdout` or provided file, `stderr`, and the exit code 
+   of the function as it sees fit following to the semantics described below.
+   
+### Input / Output
+
+A function MUST accept input from `stdin`.
+
+A function MUST implement `stdout` and file output. It is not necessary to output 
+to both `stdout` and file, but both options must be available.
 
 ### Schema
 
-A function MUST accept input from `stdin` and MUST output to `stdout` a
-Kubernetes object of kind `ResourceList` with the following OpenAPI schema:
+Input and output MUST be a Kubernetes object of kind `ResourceList` with the following OpenAPI schema.
 
 ```yaml
 swagger: "2.0"
@@ -374,6 +383,24 @@ metadata:
 ```
 
 This represents the third resource in the file.
+
+#### `internal.config.kubernetes.io/output-file`
+
+Records the slash-delimited, OS-agnostic, absolute file path to an output file.
+The Orchestrator ensures the file can written to by the Function.
+
+When this annotation is present the Function should write it's output to the specified
+file, instead of stdout.
+
+A function SHOULD NOT modify these annotations.
+
+Example:
+
+```yaml
+metadata:
+  annotations:
+    internal.config.kubernetes.io/output-file: "/media/output/output.yml"
+```
 
 [1]:
   https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
