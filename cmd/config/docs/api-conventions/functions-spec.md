@@ -88,7 +88,8 @@ to both `stdout` and file, but both options must be available.
 
 ### Schema
 
-Input and output MUST be a Kubernetes object of kind `ResourceList` with the following OpenAPI schema.
+Input and output MUST be a Kubernetes object of kind `ResourceList` with the
+following OpenAPI schema.
 
 ```yaml
 swagger: "2.0"
