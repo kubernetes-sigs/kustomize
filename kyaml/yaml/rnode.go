@@ -435,16 +435,18 @@ func (rn *RNode) getMetaStringField(fName string) string {
 	if md == nil {
 		return ""
 	}
-	f := md.Field(fName)
-	if f.IsNilOrEmpty() {
-		return ""
-	}
-	return GetValue(f.Value)
+	var result string
+	visitMappingNodeFields(md.Content, func(key, value *yaml.Node) {
+		if !IsYNodeNilOrEmpty(value) {
+			result = value.Value
+		}
+	}, fName)
+	return result
 }
 
-// getMetaData returns the RNode holding the value of the metadata field.
+// getMetaData returns the *yaml.Node of the metadata field.
 // Return nil if field not found (no error).
-func (rn *RNode) getMetaData() *RNode {
+func (rn *RNode) getMetaData() *yaml.Node {
 	if IsMissingOrNull(rn) {
 		return nil
 	}
@@ -455,11 +457,13 @@ func (rn *RNode) getMetaData() *RNode {
 	} else {
 		n = rn
 	}
-	mf := n.Field(MetadataField)
-	if mf.IsNilOrEmpty() {
-		return nil
-	}
-	return mf.Value
+	var mf *yaml.Node
+	visitMappingNodeFields(n.Content(), func(key, value *yaml.Node) {
+		if !IsYNodeNilOrEmpty(value) {
+			mf = value
+		}
+	}, MetadataField)
+	return mf
 }
 
 // SetName sets the metadata name field.
@@ -491,14 +495,14 @@ func (rn *RNode) SetNamespace(ns string) error {
 }
 
 // GetAnnotations gets the metadata annotations field.
-// If the field is missing, returns an empty map.
+// If the annotations field is missing, returns an empty map.
 // Use another method to check for missing metadata.
-func (rn *RNode) GetAnnotations() map[string]string {
-	meta := rn.getMetaData()
-	if meta == nil {
-		return make(map[string]string)
-	}
-	return rn.getMapFromMeta(meta, AnnotationsField)
+// If specific annotations are provided, then the map is
+// restricted to only those entries with keys that match
+// one of the specific annotations. If no annotations are
+// provided, then the map will contain all entries.
+func (rn *RNode) GetAnnotations(annotations ...string) map[string]string {
+	return rn.getMapFromMeta(AnnotationsField, annotations...)
 }
 
 // SetAnnotations tries to set the metadata annotations field.
@@ -507,24 +511,45 @@ func (rn *RNode) SetAnnotations(m map[string]string) error {
 }
 
 // GetLabels gets the metadata labels field.
-// If the field is missing, returns an empty map.
+// If the labels field is missing, returns an empty map.
 // Use another method to check for missing metadata.
-func (rn *RNode) GetLabels() map[string]string {
+// If specific labels are provided, then the map is
+// restricted to only those entries with keys that match
+// one of the specific labels. If no labels are
+// provided, then the map will contain all entries.
+func (rn *RNode) GetLabels(labels ...string) map[string]string {
+	return rn.getMapFromMeta(LabelsField, labels...)
+}
+
+// getMapFromMeta returns a map, sometimes empty, from the fName
+// field in the node's metadata field.
+// If specific fields are provided, then the map is
+// restricted to only those entries with keys that match
+// one of the specific fields. If no fields are
+// provided, then the map will contain all entries.
+func (rn *RNode) getMapFromMeta(fName string, fields ...string) map[string]string {
 	meta := rn.getMetaData()
 	if meta == nil {
 		return make(map[string]string)
 	}
-	return rn.getMapFromMeta(meta, LabelsField)
-}
 
-// getMapFromMeta returns map, sometimes empty, from metadata.
-func (rn *RNode) getMapFromMeta(meta *RNode, fName string) map[string]string {
-	result := make(map[string]string)
-	if f := meta.Field(fName); !f.IsNilOrEmpty() {
-		_ = f.Value.VisitFields(func(node *MapNode) error {
-			result[GetValue(node.Key)] = GetValue(node.Value)
-			return nil
-		})
+	var result map[string]string
+
+	visitMappingNodeFields(meta.Content, func(_, fNameValue *yaml.Node) {
+		// fName is found in metadata; create the map from its content
+		expectedSize := len(fields)
+		if expectedSize == 0 {
+			expectedSize = len(fNameValue.Content) / 2
+		}
+		result = make(map[string]string, expectedSize)
+
+		visitMappingNodeFields(fNameValue.Content, func(key, value *yaml.Node) {
+			result[key.Value] = value.Value
+		}, fields...)
+	}, fName)
+
+	if result == nil {
+		return make(map[string]string)
 	}
 	return result
 }
