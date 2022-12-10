@@ -9,6 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/generators"
+	"sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -96,9 +97,9 @@ func (lc *localizer) localize() error {
 
 // load returns the kustomization at lc.root and the file name under which it was found
 func (lc *localizer) load() (*types.Kustomization, string, error) {
-	content, kustFileName, err := loadKustFile(lc.ldr)
+	content, kustFileName, err := target.LoadKustFile(lc.ldr)
 	if err != nil {
-		return nil, "", err
+		return nil, "", errors.Wrap(err)
 	}
 	content, err = types.FixKustomizationPreUnmarshalling(content)
 	if err != nil {

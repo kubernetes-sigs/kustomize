@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/builtins"
@@ -55,7 +54,7 @@ func NewKustTarget(
 
 // Load attempts to load the target's kustomization file.
 func (kt *KustTarget) Load() error {
-	content, kustFileName, err := loadKustFile(kt.ldr)
+	content, kustFileName, err := LoadKustFile(kt.ldr)
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (kt *KustTarget) Kustomization() types.Kustomization {
 	return result
 }
 
-func loadKustFile(ldr ifc.Loader) ([]byte, string, error) {
+func LoadKustFile(ldr ifc.Loader) ([]byte, string, error) {
 	var content []byte
 	match := 0
 	var kustFileName string

@@ -220,38 +220,16 @@ kind: Kustomization
 	checkFSys(t, fSysExpected, fSysActual)
 }
 
-func TestLoadKustomizationError(t *testing.T) {
-	for name, test := range map[string]struct {
-		errSuffix string
-		files     map[string]string
-	}{
-		"missing": {
-			errSuffix: `unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/a'`,
-		},
-		"multiple": {
-			errSuffix: `found multiple kustomization files under: /a`,
-			files: map[string]string{
-				"kustomization.yml": `namePrefix: one`,
-				"Kustomization":     `namePrefix: two`,
-			},
-		},
-		"unknown_fields": {
-			errSuffix: `invalid kustomization: json: unknown field "suffix"`,
-			files: map[string]string{
-				"kustomization.yaml": `namePrefix: valid
+func TestLoadUnknownKustFields(t *testing.T) {
+	fSysExpected, fSysTest := makeFileSystems(t, "/a", map[string]string{
+		"kustomization.yaml": `namePrefix: valid
 suffix: invalid`,
-			},
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			fSysExpected, fSysTest := makeFileSystems(t, "/a", test.files)
+	})
 
-			err := Run("/a", "", "", fSysTest)
-			require.EqualError(t, err, `unable to localize target "/a": `+test.errSuffix)
+	err := Run("/a", "", "", fSysTest)
+	require.EqualError(t, err, `unable to localize target "/a": invalid kustomization: json: unknown field "suffix"`)
 
-			checkFSys(t, fSysExpected, fSysTest)
-		})
-	}
+	checkFSys(t, fSysExpected, fSysTest)
 }
 
 func TestLocalizeFileName(t *testing.T) {

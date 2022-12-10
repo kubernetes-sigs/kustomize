@@ -11,8 +11,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/internal/target"
-	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -155,26 +153,4 @@ func locRootPath(rootURL string, repoDir string, rootDir filesys.ConfirmedDir) s
 	_ = rootURL
 	_, _ = repoDir, rootDir
 	return ""
-}
-
-func loadKustFile(ldr ifc.Loader) ([]byte, string, error) {
-	var content []byte
-	match := 0
-	var kustFileName string
-	for _, kf := range konfig.RecognizedKustomizationFileNames() {
-		c, err := ldr.Load(kf)
-		if err == nil {
-			match += 1
-			content = c
-			kustFileName = kf
-		}
-	}
-	switch match {
-	case 0:
-		return nil, "", target.NewErrMissingKustomization(ldr.Root())
-	case 1:
-		return content, kustFileName, nil
-	default:
-		return nil, "", errors.Errorf("found multiple kustomization files under: %s", ldr.Root())
-	}
 }
