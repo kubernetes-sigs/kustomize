@@ -35,7 +35,10 @@ func PrevIds(n *yaml.RNode) ([]resid.ResId, error) {
 	var ids []resid.ResId
 	// TODO: merge previous names and namespaces into one list of
 	//     pairs on one annotation so there is no chance of error
-	annotations := n.GetAnnotations()
+	annotations := n.GetAnnotations(
+		BuildAnnotationPreviousNames,
+		BuildAnnotationPreviousNamespaces,
+		BuildAnnotationPreviousKinds)
 	if _, ok := annotations[BuildAnnotationPreviousNames]; !ok {
 		return nil, nil
 	}
@@ -51,6 +54,7 @@ func PrevIds(n *yaml.RNode) ([]resid.ResId, error) {
 	}
 	apiVersion := n.GetApiVersion()
 	group, version := resid.ParseGroupVersion(apiVersion)
+	ids = make([]resid.ResId, 0, len(names))
 	for i := range names {
 		gvk := resid.Gvk{
 			Group:   group,
