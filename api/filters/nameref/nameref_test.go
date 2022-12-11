@@ -790,3 +790,155 @@ ref:
 		})
 	}
 }
+
+// Reproduces Issue #4880
+func TestNamerefFilterWithMultiplePossibleReferralTargets(t *testing.T) {
+	testCases := map[string]struct {
+		referrerYaml   string
+		expectedResult string
+		expectedError  string
+	}{
+		"referrer has suffix": {
+			referrerYaml: `
+apiVersion: v1
+kind: Something
+metadata:
+  name: foo-suffix-a
+  namespace: namespace-a
+  annotations:
+    internal.config.kubernetes.io/previousNames: foo,foo
+    internal.config.kubernetes.io/previousNamespaces: my-placeholder,namespace-a
+    internal.config.kubernetes.io/previousKinds: Something,Something
+    internal.config.kubernetes.io/suffixes: -suffix-a
+seq:
+- my-placeholder
+`,
+			expectedResult: `
+apiVersion: v1
+kind: Something
+metadata:
+  name: foo-suffix-a
+  namespace: namespace-a
+  annotations:
+    internal.config.kubernetes.io/previousNames: foo,foo
+    internal.config.kubernetes.io/previousNamespaces: my-placeholder,namespace-a
+    internal.config.kubernetes.io/previousKinds: Something,Something
+    internal.config.kubernetes.io/suffixes: -suffix-a
+seq:
+- my-placeholder
+`, // FIXME: expectedResult should be "".
+			expectedError: "", // FIXME: expectedError should be "Too many possible referral targets to referrer".
+		},
+		"referrer has prefix": {
+			referrerYaml: `
+apiVersion: v1
+kind: Something
+metadata:
+  name: prefix-a-foo
+  namespace: namespace-a
+  annotations:
+    internal.config.kubernetes.io/previousNames: foo,foo
+    internal.config.kubernetes.io/previousNamespaces: my-placeholder,namespace-a
+    internal.config.kubernetes.io/previousKinds: Something,Something
+    internal.config.kubernetes.io/prefixes: prefix-a-
+seq:
+- my-placeholder
+`,
+			expectedResult: `
+apiVersion: v1
+kind: Something
+metadata:
+  name: prefix-a-foo
+  namespace: namespace-a
+  annotations:
+    internal.config.kubernetes.io/previousNames: foo,foo
+    internal.config.kubernetes.io/previousNamespaces: my-placeholder,namespace-a
+    internal.config.kubernetes.io/previousKinds: Something,Something
+    internal.config.kubernetes.io/prefixes: prefix-a-
+seq:
+- my-placeholder
+`, // FIXME: expectedResult should be "".
+			expectedError: "", // FIXME: expectedError should be "Too many possible referral targets to referrer".
+		},
+		"referrer has no prefix or suffix": {
+			referrerYaml: `
+apiVersion: v1
+kind: Something
+metadata:
+  name: foo
+  namespace: namespace-a
+  annotations:
+    internal.config.kubernetes.io/previousNames: foo,foo
+    internal.config.kubernetes.io/previousNamespaces: my-placeholder,namespace-a
+    internal.config.kubernetes.io/previousKinds: Something,Something
+seq:
+- my-placeholder
+`,
+			expectedResult: "",
+			expectedError:  "Too many possible referral targets to referrer",
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			factory := provider.NewDefaultDepProvider().GetResourceFactory()
+			referrer, err := factory.FromBytes([]byte(tc.referrerYaml))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			filter := Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "seq"},
+				ReferralTarget: resid.Gvk{
+					Group:   "",
+					Version: "v1",
+					Kind:    "Namespace",
+				},
+				Referrer: referrer,
+			}
+			// Define multiple candidate namespaces, each of which have a previous name of "my-placeholder" that got replaced
+			// with different names. This can happen, for example, if you have multiple overlays and each of the namespaces
+			// are in a different overlay. In this case, overlay #1 replaced "my-placeholder" with "namespace-a", and
+			// overlay #2 replaced "my-placeholder" with "namespace-b".
+			candidatesRes, err := factory.SliceFromBytes([]byte(`
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-a
+  annotations:
+    internal.config.kubernetes.io/previousNames: my-placeholder
+    internal.config.kubernetes.io/previousNamespaces: _non_namespaceable_
+    internal.config.kubernetes.io/previousKinds: Namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-b
+  annotations:
+    internal.config.kubernetes.io/previousNames: my-placeholder
+    internal.config.kubernetes.io/previousNamespaces: _non_namespaceable_
+    internal.config.kubernetes.io/previousKinds: Namespace
+`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			resMapFactory := resmap.NewFactory(factory)
+			filter.ReferralCandidates = resMapFactory.FromResourceSlice(candidatesRes)
+
+			result, err := filtertest_test.RunFilterE(t, tc.referrerYaml, filter)
+			if len(tc.expectedError) == 0 {
+				if !assert.Nil(t, err) {
+					t.FailNow()
+				}
+			} else if !assert.Contains(t, err.Error(), tc.expectedError) {
+				t.FailNow()
+			}
+			if len(tc.expectedResult) == 0 {
+				if !assert.Empty(t, result) {
+					t.FailNow()
+				}
+			} else if !assert.Equal(t, strings.TrimSpace(tc.expectedResult), strings.TrimSpace(result)) {
+				t.FailNow()
+			}
+		})
+	}
+}
