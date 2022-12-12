@@ -457,7 +457,52 @@ metadata:
 
 func TestMergeAndReplaceDisableNameSuffixHashGenerators(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	makeBaseWithGenerators(th)
+	th.WriteK("app", `
+namePrefix: team-foo-
+commonLabels:
+  app: mynginx
+  org: example.com
+  team: foo
+commonAnnotations:
+  note: This is a test annotation
+resources:
+  - deployment.yaml
+configMapGenerator:
+- name: configmap-in-base
+  literals:
+  - foo=bar
+secretGenerator:
+- name: secret-in-base
+  literals:
+  - username=admin
+  - password=somepw
+`)
+	th.WriteF("app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: nginx-persistent-storage
+          mountPath: /tmp/ps
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: {}
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+`)
 	th.WriteF("overlay/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
@@ -550,26 +595,6 @@ spec:
       - configMap:
           name: staging-team-foo-configmap-in-base
         name: configmap-in-base
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
-  name: staging-team-foo-nginx
-spec:
-  ports:
-  - port: 80
-  selector:
-    app: mynginx
-    env: staging
-    org: example.com
-    team: override-foo
 ---
 apiVersion: v1
 data:
