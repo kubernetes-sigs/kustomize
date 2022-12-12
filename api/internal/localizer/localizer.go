@@ -120,15 +120,6 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 		}
 		kust.Components[i] = newPath
 	}
-	for i := range kust.Patches {
-		if kust.Patches[i].Path != "" {
-			newPath, err := lc.localizeFile(kust.Patches[i].Path)
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize patches path %q", kust.Patches[i].Path)
-			}
-			kust.Patches[i].Path = newPath
-		}
-	}
 
 	for i := range kust.ConfigMapGenerator {
 		if err := lc.localizeGenerator(&kust.ConfigMapGenerator[i].GeneratorArgs); err != nil {
@@ -140,9 +131,39 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			return errors.WrapPrefixf(err, "unable to localize secretGenerator")
 		}
 	}
+	if err := lc.localizePatches(kust.Patches); err != nil {
+		return errors.WrapPrefixf(err, "unable to localize patches")
+	}
+	// Allow use of deprecated field
+	//nolint:staticcheck
+	if err := lc.localizePatches(kust.PatchesJson6902); err != nil {
+		return errors.WrapPrefixf(err, "unable to localize patchesJson6902")
+	}
+	//nolint:staticcheck
+	for i, patch := range kust.PatchesStrategicMerge {
+		_, isFile, err := lc.loadResource(string(patch))
+		if err != nil {
+			return errors.WrapPrefixf(err, "invalid patchesStrategicMerge entry")
+		}
+		if isFile {
+			newPath, err := lc.localizeFile(string(patch))
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to localize patchesStrategicMerge entry")
+			}
+			kust.PatchesStrategicMerge[i] = types.PatchStrategicMerge(newPath)
+		}
+	}
+	for i, replacement := range kust.Replacements {
+		if replacement.Path != "" {
+			newPath, err := lc.localizeFile(replacement.Path)
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to localize replacements entry")
+			}
+			kust.Replacements[i].Path = newPath
+		}
+	}
 
-	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations,
-	// openapi, patchesJson6902, patchesStrategicMerge, replacements
+	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations, openapi
 	return nil
 }
 
@@ -173,6 +194,20 @@ func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) error {
 	}
 	generator.EnvSources = locEnvs
 	generator.FileSources = locFiles
+	return nil
+}
+
+// localizePatches localizes the file paths on patches if they are non-empty
+func (lc *localizer) localizePatches(patches []types.Patch) error {
+	for i := range patches {
+		if patches[i].Path != "" {
+			newPath, err := lc.localizeFile(patches[i].Path)
+			if err != nil {
+				return err
+			}
+			patches[i].Path = newPath
+		}
+	}
 	return nil
 }
 
@@ -303,9 +338,9 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 // loadResource tries to load resourceEntry as a file path or inline.
 // On success, loadResource returns the loaded resource map and whether resourceEntry is a file path.
 func (lc *localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, error) {
-	var fileErr error
 	rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(resourceEntry))
 	if inlineErr != nil {
+		var fileErr error
 		rm, fileErr = lc.rFactory.FromFile(lc.ldr, resourceEntry)
 		if fileErr != nil {
 			err := ResourceLoadError{
@@ -315,5 +350,5 @@ func (lc *localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, er
 			return nil, false, errors.WrapPrefixf(err, "unable to load resource entry %q", resourceEntry)
 		}
 	}
-	return rm, fileErr == nil, nil
+	return rm, inlineErr != nil, nil
 }
