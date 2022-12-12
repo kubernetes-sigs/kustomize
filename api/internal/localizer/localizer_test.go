@@ -24,8 +24,7 @@ spec:
   - name: nginx
     image: nginx:1.14.2
     ports:
-    - containerPort: 80
-`
+    - containerPort: 80`
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	t.Helper()
@@ -290,6 +289,117 @@ spec:
 	checkFSys(t, fSysExpected, fSys)
 }
 
+func TestLocalizePatchesJson(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesJson6902:
+- path: patch.yaml
+  target:
+    annotationSelector: zone=west
+    name: pod
+    version: v1
+- patch: '[{"op": "add", "path": "/new/path", "value": "value"}]'
+  target:
+    group: apps
+    kind: Pod
+- path: patch.json
+  target:
+    namespace: my
+`,
+		"patch.yaml": `- op: add
+  path: /some/new/path
+  value: value
+- op: replace
+  path: /some/existing/path
+  value: new value`,
+		"patch.json": ` [
+   {"op": "copy", "from": "/here", "path": "/there"},
+   {"op": "remove", "path": "/some/existing/path"},
+ ]`,
+	}
+	addFiles(t, fSys, "/alpha/beta", kustAndPatches)
+
+	err := Run("/alpha/beta", "/", "/beta", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/alpha/beta", kustAndPatches)
+	addFiles(t, fSysExpected, "/beta/alpha/beta", kustAndPatches)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizePatchesSM(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patchesStrategicMerge:
+- |-
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: map
+  data:
+  - APPLE: orange
+- patch.yaml
+`,
+		"patch.yaml": podConfiguration,
+	}
+	addFiles(t, fSys, "/a", kustAndPatches)
+
+	err := Run("/a", "", "/dst", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndPatches)
+	addFiles(t, fSysExpected, "/dst", kustAndPatches)
+	checkFSys(t, fSysExpected, fSys)
+}
+
+func TestLocalizeReplacements(t *testing.T) {
+	fSys := makeMemoryFs(t)
+	kustAndReplacement := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+replacements:
+- path: replacement.yaml
+- source:
+    fieldPath: path
+    name: map
+  targets:
+  - fieldPaths:
+    - path
+    select:
+      name: my-map
+`,
+		"replacement.yaml": `source:
+  fieldPath: path.*.to.[some=field]
+  kind: Pod
+  options:
+    delimiter: /
+targets:
+- fieldPaths:
+  - config\.kubernetes\.io.annotations
+  - second.path
+  reject:
+  - group: apps
+    version: v2
+  select:
+    namespace: my`,
+	}
+	addFiles(t, fSys, "/a", kustAndReplacement)
+
+	err := Run("/a", "/", "/dst", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", kustAndReplacement)
+	addFiles(t, fSysExpected, "/dst/a", kustAndReplacement)
+	checkFSys(t, fSysExpected, fSys)
+}
+
 func TestLocalizeConfigMapGenerator(t *testing.T) {
 	fSys := makeMemoryFs(t)
 	kustAndData := map[string]string{
@@ -480,20 +590,20 @@ func TestLocalizeValidators(t *testing.T) {
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 validators:
-- |-
+- |
   apiVersion: builtin
   kind: ReplacementTransformer
   metadata:
     name: replacement
   replacements:
   - source:
-      kind: ConfigMap
-      fieldPath: metadata.name
+      fieldPath: data.[field=value]
+      group: apps
     targets:
-    - select:
-        kind: ConfigMap
-      fieldPaths:
-      - metadata.name
+    - fieldPaths:
+      - spec.*
+      select:
+        kind: Pod
 - replacement.yaml
 `,
 		"replacement.yaml": `apiVersion: builtin
@@ -502,13 +612,14 @@ metadata:
   name: replacement-2
 replacements:
 - source:
-    kind: Secret
-    fieldPath: data.USER_NAME
+    fieldPath: spec.containers.1.image
+    kind: Custom
+    namespace: test
   targets:
-  - select:
-      kind: Secret
-    fieldPaths:
-    - data.USER_NAME
+  - fieldPaths:
+    - path
+    select:
+      namespace: test
 `,
 	}
 	addFiles(t, fSys, "/", kustAndPlugin)
