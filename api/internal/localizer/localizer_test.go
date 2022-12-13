@@ -1053,12 +1053,13 @@ resources:
 	const expectedRootErr = `unable to localize root "b": unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/a/b'`
 	var actualErr PathLocalizeError
 	require.ErrorAs(t, err, &actualErr)
+	require.Equal(t, "b", actualErr.Path)
 	require.EqualError(t, actualErr.FileError, expectedFileErr)
 	require.EqualError(t, actualErr.RootError, expectedRootErr)
 
-	const expectedErrPrefix = `unable to localize target "/a": unable to localize resources entry: unable to localize path "b"`
-	require.EqualError(t, err, fmt.Sprintf(`%s: when localizing as file received error: %s
-when localizing as directory received error: %s`, expectedErrPrefix, expectedFileErr, expectedRootErr))
+	const expectedErrPrefix = `unable to localize target "/a": unable to localize resources entry`
+	require.EqualError(t, err, fmt.Sprintf(`%s: could not localize path "b" as file: %s; could not localize path "b" as directory: %s`,
+		expectedErrPrefix, expectedFileErr, expectedRootErr))
 
 	checkFSys(t, expected, actual)
 }

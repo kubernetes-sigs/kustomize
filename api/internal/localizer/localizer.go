@@ -264,10 +264,11 @@ func (lc *localizer) localizePath(path string) (string, error) {
 		locPath, rootErr = lc.localizeDir(path)
 		if rootErr != nil {
 			err := PathLocalizeError{
+				Path:      path,
 				FileError: fileErr,
 				RootError: rootErr,
 			}
-			return "", errors.WrapPrefixf(err, "unable to localize path %q", path)
+			return "", err
 		}
 	}
 	return locPath, nil
