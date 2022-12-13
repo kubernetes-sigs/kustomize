@@ -85,10 +85,7 @@ spec:
 // test for https://github.com/kubernetes-sigs/kustomize/issues/3812#issuecomment-862339267
 func TestBasicIO3812(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
+	th.WriteK(".", `resources:
   - service.yaml
 `)
 

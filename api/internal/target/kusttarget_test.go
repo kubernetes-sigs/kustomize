@@ -139,10 +139,7 @@ commonLabels:
 
 func TestMakeCustomizedResMap(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/whatever", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namePrefix: foo-
+	th.WriteK("/whatever", `namePrefix: foo-
 nameSuffix: -bar
 namespace: ns1
 commonLabels:
@@ -301,10 +298,7 @@ metadata:
 
 func TestConfigurationsOverrideDefault(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/merge-config", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namePrefix: foo-
+	th.WriteK("/merge-config", `namePrefix: foo-
 nameSuffix: -bar
 namespace: ns1
 resources:
@@ -401,10 +395,7 @@ metadata:
 
 func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/generator", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-generators:
+	th.WriteK("/generator", `generators:
 - |-
   apiVersion: generators.example/v1
   kind: ManifestGenerator
@@ -437,10 +428,7 @@ generators:
 
 func TestDuplicateExternalTransformersForbidden(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("/transformer", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-transformers:
+	th.WriteK("/transformer", `transformers:
 - |-
   apiVersion: transformers.example.co/v1
   kind: ValueAnnotator
