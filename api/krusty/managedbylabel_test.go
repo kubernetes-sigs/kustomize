@@ -20,6 +20,7 @@ spec:
   - port: 7002
 `
 
+// This test may failed when running on package tests using the go command because `v444.333.222` is set on makefile.
 func TestAddManagedbyLabel(t *testing.T) {
 	tests := []struct {
 		kustFile      string
@@ -28,8 +29,6 @@ func TestAddManagedbyLabel(t *testing.T) {
 	}{
 		{
 			kustFile: `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - service.yaml
 `,
@@ -38,8 +37,6 @@ resources:
 		},
 		{
 			kustFile: `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - service.yaml
 buildMetadata: [managedByLabel]

@@ -55,8 +55,6 @@ spec:
   - port: 7002
 `)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - service.yaml
 buildMetadata: [transformerAnnotations]
@@ -93,8 +91,6 @@ spec:
   - port: 7002
 `)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - service.yaml
 buildMetadata: [originAnnotations, transformerAnnotations]
