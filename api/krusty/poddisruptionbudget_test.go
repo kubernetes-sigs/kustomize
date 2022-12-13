@@ -84,8 +84,6 @@ spec:
   maxUnavailable: 100%
 `)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 patches:
 - path: pdb-patch.yaml
   target:

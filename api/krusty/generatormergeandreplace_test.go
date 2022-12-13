@@ -13,8 +13,6 @@ import (
 func TestSimpleBase(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("app/base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: team-foo-
 commonLabels:
   app: mynginx
