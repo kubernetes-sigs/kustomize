@@ -11,8 +11,6 @@ import (
 
 func writeBaseWithCrd(th kusttest_test.Harness) {
 	th.WriteK("base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 crds:
 - mycrd.json
 
@@ -259,8 +257,6 @@ func TestCrdWithOverlay(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeBaseWithCrd(th)
 	th.WriteK("overlay", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: prod-
 resources:
 - ../base
@@ -307,8 +303,6 @@ spec:
 func TestCrdWithContainers(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("crd/containers", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
   - crd.yaml
 images:

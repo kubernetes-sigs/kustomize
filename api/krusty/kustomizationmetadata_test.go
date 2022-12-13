@@ -28,8 +28,6 @@ spec:
       imagePullSecrets: []`)
 
 	th.WriteK("/app", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 metadata:
   annotations:
     config.kubernetes.io/local-config: "true"
@@ -37,7 +35,7 @@ metadata:
     foo: bar
   name: test_kustomization
 resources:
-- resources.yaml  
+- resources.yaml
 `)
 
 	m := th.Run("/app", th.MakeDefaultOptions())

@@ -26,8 +26,6 @@ func findSecret(m resmap.ResMap, prefix string) *resource.Resource {
 func TestDisableNameSuffixHash(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	const kustomizationContent = `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: foo-
 nameSuffix: -bar
 namespace: ns1
@@ -101,8 +99,6 @@ metadata:
 func TestDisableNameSuffixHashPerObject(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	const kustomizationContent = `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 generatorOptions:
   disableNameSuffixHash: false
 secretGenerator:

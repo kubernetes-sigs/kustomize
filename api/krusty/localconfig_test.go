@@ -14,9 +14,7 @@ import (
 // See https://github.com/kubernetes-sigs/kustomize/issues/4124 for details.
 func TestSKipLocalConfigAfterTransform(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
+	th.WriteK(".", `resources:
   - pod.yaml
   - deployment.yaml
 transformers:

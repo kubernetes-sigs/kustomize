@@ -4,8 +4,6 @@
 package types
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -318,17 +316,8 @@ func (k *Kustomization) EnforceFields() []string {
 
 // Unmarshal replace k with the content in YAML input y
 func (k *Kustomization) Unmarshal(y []byte) error {
-	j, err := yaml.YAMLToJSON(y)
-	if err != nil {
-		return err
+	if err := yaml.UnmarshalStrict(y, &k); err != nil {
+		return fmt.Errorf("kustomization unmarshal error: %w", err)
 	}
-	dec := json.NewDecoder(bytes.NewReader(j))
-	dec.DisallowUnknownFields()
-	var nk Kustomization
-	err = dec.Decode(&nk)
-	if err != nil {
-		return err
-	}
-	*k = nk
 	return nil
 }
