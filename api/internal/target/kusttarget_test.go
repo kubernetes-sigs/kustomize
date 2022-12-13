@@ -5,12 +5,15 @@ package target_test
 
 import (
 	"encoding/base64"
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
+	. "sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -20,6 +23,44 @@ import (
 
 // KustTarget is primarily tested in the krusty package with
 // high level tests.
+
+func TestLoadKustFile(t *testing.T) {
+	for name, test := range map[string]struct {
+		fileNames            []string
+		kustFileName, errMsg string
+	}{
+		"missing": {
+			fileNames: []string{"kustomization"},
+			errMsg:    `unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/'`,
+		},
+		"multiple": {
+			fileNames: []string{"kustomization.yaml", "Kustomization"},
+			errMsg: `Found multiple kustomization files under: /
+`,
+		},
+		"valid": {
+			fileNames:    []string{"kustomization.yml", "kust"},
+			kustFileName: "kustomization.yml",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			fSys := th.GetFSys()
+			for _, file := range test.fileNames {
+				require.NoError(t, fSys.WriteFile(file, []byte(fmt.Sprintf("namePrefix: test-%s", file))))
+			}
+
+			content, fileName, err := LoadKustFile(loader.NewFileLoaderAtCwd(fSys))
+			if test.kustFileName != "" {
+				require.NoError(t, err)
+				require.Equal(t, fmt.Sprintf("namePrefix: test-%s", test.kustFileName), string(content))
+				require.Equal(t, test.kustFileName, fileName)
+			} else {
+				require.EqualError(t, err, test.errMsg)
+			}
+		})
+	}
+}
 
 func TestLoad(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
