@@ -25,7 +25,7 @@ var _ kio.Filter = &localizeBuiltinPlugins{}
 
 // Filter localizes the built-in plugins with file paths.
 func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode, error) {
-	newPlugins, err := kio.FilterAll(fsslice.Filter{
+	localizedPlugins, err := kio.FilterAll(fsslice.Filter{
 		FsSlice: types.FsSlice{
 			types.FieldSpec{
 				Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchTransformer.String()},
@@ -36,18 +36,19 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 				Path: "path",
 			},
 		},
-		SetValue: lbp.evaluateField,
+		SetValue: lbp.localizeNode,
 	}).Filter(plugins)
 
-	// TODO(annasong): localize replacements, patchesStrategicMerge, configMapGenerator, secretGenerator
+	// TODO(annasong): localize ReplacementTransformer, PatchStrategicMergeTransformer, ConfigMapGenerator, SecretGenerator
 
-	return newPlugins, errors.Wrap(err)
+	return localizedPlugins, errors.Wrap(err)
 }
 
-func (lbp *localizeBuiltinPlugins) evaluateField(node *yaml.RNode) error {
-	newPath, err := lbp.lc.localizeFile(node.YNode().Value)
+// localizeNode sets the scalar node to its value localized as a file path.
+func (lbp *localizeBuiltinPlugins) localizeNode(node *yaml.RNode) error {
+	localizedPath, err := lbp.lc.localizeFile(node.YNode().Value)
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to localize built-in plugin path")
 	}
-	return filtersutil.SetScalar(newPath)(node)
+	return filtersutil.SetScalar(localizedPath)(node)
 }

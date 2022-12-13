@@ -321,16 +321,16 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to serialize localized %s entry %q", fieldName, entry)
 			}
-			var newEntry string
+			var localizedEntry string
 			if isPath {
-				newEntry, err = lc.localizeFileWithContent(entry, localizedPlugin)
+				localizedEntry, err = lc.localizeFileWithContent(entry, localizedPlugin)
 				if err != nil {
 					return errors.WrapPrefixf(err, "unable to localize %s entry", fieldName)
 				}
 			} else {
-				newEntry = string(localizedPlugin)
+				localizedEntry = string(localizedPlugin)
 			}
-			entries[i] = newEntry
+			entries[i] = localizedEntry
 		}
 	}
 	return nil
