@@ -30,6 +30,13 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 			want: &[]string{deprecatedBaseWarningMessage},
 		},
 		{
+			name: "using_ImageTags",
+			k: Kustomization{
+				ImageTags: []Image{},
+			},
+			want: &[]string{deprecatedImageTagsWarningMessage},
+		},
+		{
 			name: "usingPatchesJson6902",
 			k: Kustomization{
 				PatchesJson6902: []Patch{},
@@ -54,12 +61,14 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 			name: "usingAll",
 			k: Kustomization{
 				Bases:                 []string{"base"},
+				ImageTags:             []Image{},
 				PatchesJson6902:       []Patch{},
 				PatchesStrategicMerge: []PatchStrategicMerge{},
 				Vars:                  []Var{},
 			},
 			want: &[]string{
 				deprecatedBaseWarningMessage,
+				deprecatedImageTagsWarningMessage,
 				deprecatedPatchesJson6902Message,
 				deprecatedPatchesStrategicMergeMessage,
 				deprecatedVarsMessage,
@@ -88,7 +97,7 @@ func TestFixKustomizationPostUnmarshalling(t *testing.T) {
 	k.CommonLabels = map[string]string{
 		"foo": "bar",
 	}
-	k.FixKustomizationPostUnmarshalling()
+	k.FixKustomization()
 
 	expected := Kustomization{
 		TypeMeta: TypeMeta{
@@ -120,7 +129,7 @@ func TestFixKustomizationPostUnmarshalling_2(t *testing.T) {
 		},
 	}
 	k.Bases = append(k.Bases, "foo")
-	k.FixKustomizationPostUnmarshalling()
+	k.FixKustomization()
 
 	expected := Kustomization{
 		TypeMeta: TypeMeta{

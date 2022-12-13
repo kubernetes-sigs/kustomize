@@ -101,10 +101,7 @@ func (lc *localizer) load() (*types.Kustomization, string, error) {
 	if err != nil {
 		return nil, "", errors.Wrap(err)
 	}
-	content, err = types.FixKustomizationPreUnmarshalling(content)
-	if err != nil {
-		return nil, "", errors.WrapPrefixf(err, "invalid kustomization")
-	}
+
 	var kust types.Kustomization
 	err = (&kust).Unmarshal(content)
 	if err != nil {
