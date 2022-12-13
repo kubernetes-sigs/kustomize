@@ -148,11 +148,15 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Crds,
 			lc.localizeFile,
 		},
+		"resources": {
+			kust.Resources,
+			lc.localizePath,
+		},
 	} {
 		for i, path := range field.paths {
 			locPath, err := field.locFn(path)
 			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize %s path", fieldName)
+				return errors.WrapPrefixf(err, "unable to localize %s entry", fieldName)
 			}
 			field.paths[i] = locPath
 		}
@@ -198,8 +202,6 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Replacements[i].Path = newPath
 		}
 	}
-
-	// TODO(annasong): localize all other kustomization fields: resources
 	return nil
 }
 
@@ -252,6 +254,23 @@ func (lc *localizer) localizePatches(patches []types.Patch) error {
 		}
 	}
 	return nil
+}
+
+// localizePath localizes path, a file or root, and returns the localized path
+func (lc *localizer) localizePath(path string) (string, error) {
+	locPath, fileErr := lc.localizeFile(path)
+	if fileErr != nil {
+		var rootErr error
+		locPath, rootErr = lc.localizeDir(path)
+		if rootErr != nil {
+			err := PathLocalizeError{
+				FileError: fileErr,
+				RootError: rootErr,
+			}
+			return "", errors.WrapPrefixf(err, "unable to localize path %q", path)
+		}
+	}
+	return locPath, nil
 }
 
 // localizeFile localizes file path and returns the localized path
