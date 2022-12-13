@@ -50,6 +50,17 @@ func addFiles(t *testing.T, fSys filesys.FileSystem, parentDir string, files map
 	}
 }
 
+func makeFileSystems(t *testing.T, target string, files map[string]string) (expected filesys.FileSystem, actual filesys.FileSystem) {
+	t.Helper()
+
+	copies := make([]filesys.FileSystem, 2)
+	for i := range copies {
+		copies[i] = makeMemoryFs(t)
+		addFiles(t, copies[i], target, files)
+	}
+	return copies[0], copies[1]
+}
+
 func checkFSys(t *testing.T, fSysExpected filesys.FileSystem, fSysActual filesys.FileSystem) {
 	t.Helper()
 
@@ -95,25 +106,22 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 }
 
 func TestTargetIsScope(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustomization := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: my-
 `,
 	}
-	addFiles(t, fSys, "/a", kustomization)
-	err := Run("/a", "", "/a/b/dst", fSys)
+	fSysExpected, fSysActual := makeFileSystems(t, "/a", kustomization)
+
+	err := Run("/a", "", "/a/b/dst", fSysActual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustomization)
 	addFiles(t, fSysExpected, "/a/b/dst", kustomization)
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, fSysExpected, fSysActual)
 }
 
 func TestTargetNestedInScope(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustomization := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -127,18 +135,16 @@ patches:
     labelSelector: env=dev
 `,
 	}
-	addFiles(t, fSys, "/a/b", kustomization)
-	err := Run("/a/b", "/", "/a/b/dst", fSys)
+	fSysExpected, fSysActual := makeFileSystems(t, "/a/b", kustomization)
+
+	err := Run("/a/b", "/", "/a/b/dst", fSysActual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a/b", kustomization)
 	addFiles(t, fSysExpected, "/a/b/dst/a/b", kustomization)
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, fSysExpected, fSysActual)
 }
 
-func TestLocalizeKustomizationName(t *testing.T) {
-	fSys := makeMemoryFs(t)
+func TestLoadKustomizationName(t *testing.T) {
 	kustomization := map[string]string{
 		"Kustomization": `apiVersion: kustomize.config.k8s.io/v1beta1
 commonLabels:
@@ -147,17 +153,83 @@ commonLabels:
 kind: Kustomization
 `,
 	}
-	addFiles(t, fSys, "/a", kustomization)
+	fSysExpected, fSysActual := makeFileSystems(t, "/a", kustomization)
 
-	err := Run("/a", "/", "/dst", fSys)
+	err := Run("/a", "/", "/dst", fSysActual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustomization)
-	addFiles(t, fSysExpected, "/dst/a", map[string]string{
-		"kustomization.yaml": kustomization["Kustomization"],
+	addFiles(t, fSysExpected, "/dst/a", kustomization)
+	checkFSys(t, fSysExpected, fSysActual)
+}
+
+func TestLoadGVKNN(t *testing.T) {
+	for name, kustomization := range map[string]string{
+		"missing": `namePrefix: my-
+`,
+		"wrong": `kind: NotChecked
+`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			files := map[string]string{
+				"kustomization.yaml": kustomization,
+			}
+			fSysExpected, fSysActual := makeFileSystems(t, "/a", files)
+
+			err := Run("/a", "/a", "/dst", fSysActual)
+			require.NoError(t, err)
+
+			addFiles(t, fSysExpected, "/dst", files)
+			checkFSys(t, fSysExpected, fSysActual)
+		})
+	}
+}
+
+func TestLoadLegacyFields(t *testing.T) {
+	// TODO(annasong): add referenced files when implement legacy field localization
+	kustomization := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+bases:
+- beta
+configMapGenerator:
+- env: env.properties
+imageTags:
+- name: postgres
+  newName: my-registry/my-postgres
+  newTag: v1
+kind: Kustomization
+`,
+	}
+	fSysExpected, fSysActual := makeFileSystems(t, "/alpha", kustomization)
+
+	err := Run("/alpha", "/alpha", "/beta", fSysActual)
+	require.NoError(t, err)
+
+	addFiles(t, fSysExpected, "/beta", map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+bases:
+- beta
+configMapGenerator:
+- env: env.properties
+images:
+- name: postgres
+  newName: my-registry/my-postgres
+  newTag: v1
+kind: Kustomization
+`,
 	})
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, fSysExpected, fSysActual)
+}
+
+func TestLoadUnknownKustFields(t *testing.T) {
+	fSysExpected, fSysTest := makeFileSystems(t, "/a", map[string]string{
+		"kustomization.yaml": `namePrefix: valid
+suffix: invalid`,
+	})
+
+	err := Run("/a", "", "", fSysTest)
+	require.EqualError(t, err, `unable to localize target "/a": invalid kustomization: json: unknown field "suffix"`)
+
+	checkFSys(t, fSysExpected, fSysTest)
 }
 
 func TestLocalizeFileName(t *testing.T) {
@@ -169,7 +241,6 @@ func TestLocalizeFileName(t *testing.T) {
 		"kustomization_name":                  "a/kustomization.yaml",
 	} {
 		t.Run(name, func(t *testing.T) {
-			fSys := makeMemoryFs(t)
 			kustAndPatch := map[string]string{
 				"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -178,21 +249,18 @@ patches:
 `, path),
 				path: podConfiguration,
 			}
-			addFiles(t, fSys, "/a", kustAndPatch)
+			expected, actual := makeFileSystems(t, "/a", kustAndPatch)
 
-			err := Run("/a", "/", "/a/dst", fSys)
+			err := Run("/a", "/", "/a/dst", actual)
 			require.NoError(t, err)
 
-			fSysExpected := makeMemoryFs(t)
-			addFiles(t, fSysExpected, "/a", kustAndPatch)
-			addFiles(t, fSysExpected, "/a/dst/a", kustAndPatch)
-			checkFSys(t, fSysExpected, fSys)
+			addFiles(t, expected, "/a/dst/a", kustAndPatch)
+			checkFSys(t, expected, actual)
 		})
 	}
 }
 
 func TestLocalizeFileCleaned(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPatch := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -201,14 +269,12 @@ patches:
 `,
 		"patch.yaml": podConfiguration,
 	}
-	addFiles(t, fSys, "/alpha/beta/gamma", kustAndPatch)
+	expected, actual := makeFileSystems(t, "/alpha/beta/gamma", kustAndPatch)
 
-	err := Run("/alpha/beta/gamma", "/", "", fSys)
+	err := Run("/alpha/beta/gamma", "/", "", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/alpha/beta/gamma", kustAndPatch)
-	addFiles(t, fSysExpected, "/localized-gamma/alpha/beta/gamma", map[string]string{
+	addFiles(t, expected, "/localized-gamma/alpha/beta/gamma", map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
@@ -216,11 +282,10 @@ patches:
 `,
 		"patch.yaml": podConfiguration,
 	})
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeUnreferencedIgnored(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	targetAndUnreferenced := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 configMapGenerator:
@@ -233,22 +298,19 @@ kind: Kustomization
 		"env.properties": "USERNAME=password",
 		"resource.yaml":  podConfiguration,
 	}
-	addFiles(t, fSys, "/alpha/beta", targetAndUnreferenced)
+	expected, actual := makeFileSystems(t, "/alpha/beta", targetAndUnreferenced)
 
-	err := Run("/alpha/beta", "/alpha", "/beta", fSys)
+	err := Run("/alpha/beta", "/alpha", "/beta", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/alpha/beta", targetAndUnreferenced)
-	addFiles(t, fSysExpected, "/beta/beta", map[string]string{
+	addFiles(t, expected, "/beta/beta", map[string]string{
 		"kustomization.yaml": targetAndUnreferenced["kustomization.yaml"],
 		"env":                targetAndUnreferenced["env"],
 	})
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizePatches(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPatch := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -278,19 +340,16 @@ spec:
         image: nginx:1.21.0
 `,
 	}
-	addFiles(t, fSys, "/", kustAndPatch)
+	expected, actual := makeFileSystems(t, "/", kustAndPatch)
 
-	err := Run("/", "", "", fSys)
+	err := Run("/", "", "", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/", kustAndPatch)
-	addFiles(t, fSysExpected, "/localized", kustAndPatch)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/localized", kustAndPatch)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizePatchesJson(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPatches := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -319,19 +378,16 @@ patchesJson6902:
    {"op": "remove", "path": "/some/existing/path"},
  ]`,
 	}
-	addFiles(t, fSys, "/alpha/beta", kustAndPatches)
+	expected, actual := makeFileSystems(t, "/alpha/beta", kustAndPatches)
 
-	err := Run("/alpha/beta", "/", "/beta", fSys)
+	err := Run("/alpha/beta", "/", "/beta", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/alpha/beta", kustAndPatches)
-	addFiles(t, fSysExpected, "/beta/alpha/beta", kustAndPatches)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/beta/alpha/beta", kustAndPatches)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizePatchesSM(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPatches := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -347,19 +403,16 @@ patchesStrategicMerge:
 `,
 		"patch.yaml": podConfiguration,
 	}
-	addFiles(t, fSys, "/a", kustAndPatches)
+	expected, actual := makeFileSystems(t, "/a", kustAndPatches)
 
-	err := Run("/a", "", "/dst", fSys)
+	err := Run("/a", "", "/dst", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustAndPatches)
-	addFiles(t, fSysExpected, "/dst", kustAndPatches)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/dst", kustAndPatches)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeReplacements(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndReplacement := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -389,19 +442,16 @@ targets:
   select:
     namespace: my`,
 	}
-	addFiles(t, fSys, "/a", kustAndReplacement)
+	expected, actual := makeFileSystems(t, "/a", kustAndReplacement)
 
-	err := Run("/a", "/", "/dst", fSys)
+	err := Run("/a", "/", "/dst", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustAndReplacement)
-	addFiles(t, fSysExpected, "/dst/a", kustAndReplacement)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/dst/a", kustAndReplacement)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeConfigMapGenerator(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndData := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 configMapGenerator:
@@ -423,19 +473,16 @@ metadata:
 IS_GLOBAL=true`,
 		"key.properties": "value",
 	}
-	addFiles(t, fSys, "/a/b", kustAndData)
+	expected, actual := makeFileSystems(t, "/a/b", kustAndData)
 
-	err := Run("/a/b", "", "", fSys)
+	err := Run("/a/b", "", "", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a/b", kustAndData)
-	addFiles(t, fSysExpected, "/localized-b", kustAndData)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/localized-b", kustAndData)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeSecretGenerator(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndData := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -459,19 +506,16 @@ secretGenerator:
 		"b/value.properties": "dmFsdWU=",
 		"b/value":            "dmFsdWU=",
 	}
-	addFiles(t, fSys, "/a", kustAndData)
+	expected, actual := makeFileSystems(t, "/a", kustAndData)
 
-	err := Run("/a", "/", "/localized-a", fSys)
+	err := Run("/a", "/", "/localized-a", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustAndData)
-	addFiles(t, fSysExpected, "/localized-a/a", kustAndData)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/localized-a/a", kustAndData)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeFileNoFile(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPatch := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -479,18 +523,15 @@ patches:
 - path: name-DNE.yaml
 `,
 	}
-	addFiles(t, fSys, "/a/b", kustAndPatch)
+	expected, actual := makeFileSystems(t, "/a/b", kustAndPatch)
 
-	err := Run("/a/b", "", "/dst", fSys)
+	err := Run("/a/b", "", "/dst", actual)
 	require.Error(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a/b", kustAndPatch)
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeGenerators(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 generators:
@@ -520,21 +561,18 @@ metadata:
   name: map
 `,
 	}
-	addFiles(t, fSys, "/a", kustAndPlugins)
+	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
 
-	err := Run("/a", "", "/alpha/dst", fSys)
+	err := Run("/a", "", "/alpha/dst", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustAndPlugins)
-	addFiles(t, fSysExpected, "/alpha/dst", map[string]string{
+	addFiles(t, expected, "/alpha/dst", map[string]string{
 		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
 	})
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeTransformers(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -571,21 +609,18 @@ paths:
 - pod.yaml
 `,
 	}
-	addFiles(t, fSys, "/a", kustAndPlugins)
+	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
 
-	err := Run("/a", "", "/dst", fSys)
+	err := Run("/a", "", "/dst", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/a", kustAndPlugins)
-	addFiles(t, fSysExpected, "/dst", map[string]string{
+	addFiles(t, expected, "/dst", map[string]string{
 		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
 	})
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeValidators(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndPlugin := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -622,16 +657,15 @@ replacements:
       namespace: test
 `,
 	}
-	addFiles(t, fSys, "/", kustAndPlugin)
-	err := Run("/", "", "/dst", fSys)
+	expected, actual := makeFileSystems(t, "/", kustAndPlugin)
+
+	err := Run("/", "", "/dst", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/", kustAndPlugin)
-	addFiles(t, fSysExpected, "/dst", map[string]string{
+	addFiles(t, expected, "/dst", map[string]string{
 		"kustomization.yaml": kustAndPlugin["kustomization.yaml"],
 	})
-	checkFSys(t, fSysExpected, fSys)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeBuiltinPluginsNotResource(t *testing.T) {
@@ -679,9 +713,9 @@ metadata:
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			fSys := makeMemoryFs(t)
-			addFiles(t, fSys, "/", test.files)
-			err := Run("/", "", "/dst", fSys)
+			expected, actual := makeFileSystems(t, "/", test.files)
+
+			err := Run("/", "", "/dst", actual)
 
 			var actualErr ResourceLoadError
 			require.ErrorAs(t, err, &actualErr)
@@ -691,9 +725,7 @@ metadata:
 			require.EqualError(t, err, fmt.Sprintf(`unable to localize target "/": %s: when parsing as inline received error: %s
 when parsing as filepath received error: %s`, test.errPrefix, test.inlineErrMsg, test.fileErrMsg))
 
-			fSysExpected := makeMemoryFs(t)
-			addFiles(t, fSysExpected, "/", test.files)
-			checkFSys(t, fSysExpected, fSys)
+			checkFSys(t, expected, actual)
 		})
 	}
 }
@@ -789,22 +821,18 @@ namespace: kustomize-namespace
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			fSys := makeMemoryFs(t)
-			addFiles(t, fSys, "/alpha/beta/gamma", tc.files)
+			expected, actual := makeFileSystems(t, "/alpha/beta/gamma", tc.files)
 
-			err := Run("/alpha/beta/gamma", "/alpha/beta", "/dst", fSys)
+			err := Run("/alpha/beta/gamma", "/alpha/beta", "/dst", actual)
 			require.NoError(t, err)
 
-			fSysExpected := makeMemoryFs(t)
-			addFiles(t, fSysExpected, "/alpha/beta/gamma", tc.files)
-			addFiles(t, fSysExpected, "/dst/gamma", tc.files)
-			checkFSys(t, fSysExpected, fSys)
+			addFiles(t, expected, "/dst/gamma", tc.files)
+			checkFSys(t, expected, actual)
 		})
 	}
 }
 
 func TestLocalizeDirCleanedSibling(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndComponents := map[string]string{
 		// This test checks that winding paths that might traverse through directories
 		// outside of scope, which will not be present at destination, are cleaned.
@@ -817,13 +845,11 @@ kind: Component
 namespace: kustomize-namespace
 `,
 	}
-	addFiles(t, fSys, "/alpha", kustAndComponents)
+	expected, actual := makeFileSystems(t, "/alpha", kustAndComponents)
 
-	err := Run("/alpha/beta/gamma", "/alpha", "/alpha/beta/dst", fSys)
+	err := Run("/alpha/beta/gamma", "/alpha", "/alpha/beta/dst", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/alpha", kustAndComponents)
 	cleanedFiles := map[string]string{
 		"beta/gamma/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 components:
@@ -832,12 +858,11 @@ kind: Kustomization
 `,
 		"beta/sibling/kustomization.yaml": kustAndComponents["beta/sibling/kustomization.yaml"],
 	}
-	addFiles(t, fSysExpected, "/alpha/beta/dst", cleanedFiles)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/alpha/beta/dst", cleanedFiles)
+	checkFSys(t, expected, actual)
 }
 
 func TestLocalizeComponents(t *testing.T) {
-	fSys := makeMemoryFs(t)
 	kustAndComponents := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 components:
@@ -854,13 +879,11 @@ kind: Component
 nameSuffix: -test
 `,
 	}
-	addFiles(t, fSys, "/", kustAndComponents)
+	expected, actual := makeFileSystems(t, "/", kustAndComponents)
 
-	err := Run("/", "", "", fSys)
+	err := Run("/", "", "", actual)
 	require.NoError(t, err)
 
-	fSysExpected := makeMemoryFs(t)
-	addFiles(t, fSysExpected, "/", kustAndComponents)
-	addFiles(t, fSysExpected, "/localized", kustAndComponents)
-	checkFSys(t, fSysExpected, fSys)
+	addFiles(t, expected, "/localized", kustAndComponents)
+	checkFSys(t, expected, actual)
 }
