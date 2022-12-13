@@ -138,27 +138,29 @@ func locFilePath(fileURL string) string {
 		log.Panicf("cannot parse validated file url %q: %s", fileURL, err)
 	}
 
-	// We include both userinfo and port, lest they determine the file read.
-	authority := strings.TrimPrefix((&url.URL{
-		User: u.User,
-		Host: u.Host,
-	}).String(), "//")
-
+	// HTTP requests use the escaped path, so we use it here. Escaped paths also help us
+	// preserve percent-encoding in the original path, in the absence of illegal characters,
+	// in case they have special meaning to the host.
 	// Extraneous '..' parent directory dot-segments should be removed.
 	path := filepath.Join(string(filepath.Separator), filepath.FromSlash(u.EscapedPath()))
 
+	// We intentionally exclude userinfo and port.
 	// Raw github urls are the only type of file urls kustomize officially accepts.
 	// In this case, the path already consists of org, repo, version, and path in repo, in order,
 	// so we can use it as is.
-	return filepath.Join(LocalizeDir, authority, path)
+	return filepath.Join(LocalizeDir, u.Hostname(), path)
 }
 
 // locRootPath returns the relative localized path of the validated root url rootURL, where the local copy of its repo
 // is at repoDir and the copy of its root is at root on fSys.
-func locRootPath(rootURL string, repoDir string, root filesys.ConfirmedDir, fSys filesys.FileSystem) string {
+func locRootPath(rootURL string, repoDir string, root filesys.ConfirmedDir, fSys filesys.FileSystem) (string, error) {
 	repoSpec, err := git.NewRepoSpecFromURL(rootURL)
 	if err != nil {
 		log.Panicf("cannot parse validated repo url %q: %s", rootURL, err)
+	}
+	host, err := parseHost(repoSpec)
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "unable to parse host of remote root %q", rootURL)
 	}
 	repo, err := filesys.ConfirmDir(fSys, repoDir)
 	if err != nil {
@@ -169,31 +171,43 @@ func locRootPath(rootURL string, repoDir string, root filesys.ConfirmedDir, fSys
 	if err != nil {
 		log.Panicf("cannot find path from %q to child directory %q: %s", repo, root, err)
 	}
-	// Like git, we clean dot-segments from OrgRepo.
+	// We do not need to escape OrgRepo, a path on the git server.
+	// However, like git, we clean dot-segments from OrgRepo.
 	// Git does not allow ref value to contain dot-segments.
 	return filepath.Join(LocalizeDir,
-		parseSchemeAuthority(repoSpec),
+		host,
 		filepath.Join(string(filepath.Separator), filepath.FromSlash(repoSpec.OrgRepo)),
 		filepath.FromSlash(repoSpec.Ref),
-		inRepo)
+		inRepo), nil
 }
 
-// parseSchemeAuthority returns the localize directory path corresponding to repoSpec.Host
-func parseSchemeAuthority(repoSpec *git.RepoSpec) string {
-	if repoSpec.Host == "file://" {
-		return FileSchemeDir
+// parseHost returns the localize directory path corresponding to repoSpec.Host
+func parseHost(repoSpec *git.RepoSpec) (string, error) {
+	var target string
+	switch scheme, _, _ := strings.Cut(repoSpec.Host, "://"); scheme {
+	case "gh:":
+		// I assume 'gh' was meant to be a local github.com shorthand,
+		// in which case the .gitconfig file could map it to any host.
+		// We give it a special host directory here under the assumption
+		// that we are unlikely to have another host simply named 'gh'.
+		return "gh", nil
+	case "file":
+		// We put file-scheme repos under a special directory to avoid
+		// colluding local absolute paths with hosts.
+		return FileSchemeDir, nil
+	case "https", "http", "ssh":
+		target = repoSpec.Host
+	default:
+		// For, relative ssh, or scp-like syntax, we attach a scheme
+		// to avoid url.Parse errors
+		target = "ssh://" + repoSpec.Host
 	}
-	target := repoSpec.Host
-	for _, scheme := range []string{"https", "http", "ssh"} {
-		schemePrefix := scheme + "://"
-		if strings.HasPrefix(target, schemePrefix) {
-			target = target[len(schemePrefix):]
-			break
-		}
+	// url.Parse will not recognize ':' delimiter that both RepoSpec and git accept.
+	target = strings.TrimSuffix(target, ":")
+	u, err := url.Parse(target)
+	if err != nil {
+		return "", errors.Wrap(err)
 	}
-	// We remove delimiters in this order, as ':' has different meaning if prefixed by '/'.
-	// We can remove ':/' suffix because ':' delimits empty port in this case.
-	// Note that gh: is handled here.
-	target = strings.TrimSuffix(target, "/")
-	return strings.TrimSuffix(target, ":")
+	// strip scheme, userinfo, port, and any trailing slashes.
+	return u.Hostname(), nil
 }

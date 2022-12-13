@@ -84,9 +84,9 @@ func TestLocFilePath(t *testing.T) {
 			url:  "http://host/path",
 			path: simpleJoin(t, "host", "path"),
 		},
-		"userinfo": {
-			url:  "https://userinfo@host/path",
-			path: simpleJoin(t, "userinfo@host", "path"),
+		"extraneous_components": {
+			url:  "http://userinfo@host:1234/path/file?query",
+			path: simpleJoin(t, "host", "path", "file"),
 		},
 		"empty_path": {
 			url:  "https://host",
@@ -108,10 +108,6 @@ func TestLocFilePath(t *testing.T) {
 			url:  "https://host/foo/bar/baz/../../../../file",
 			path: simpleJoin(t, "host", "file"),
 		},
-		"query": {
-			url:  "https://host/path?query",
-			path: simpleJoin(t, "host", "path"),
-		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			require.Equal(t, simpleJoin(t, LocalizeDir, tUnit.path), locFilePath(tUnit.url))
@@ -119,31 +115,27 @@ func TestLocFilePath(t *testing.T) {
 	}
 }
 
-func TestLocFilePath_Colon(t *testing.T) {
+func TestLocFilePathColon(t *testing.T) {
+	req := require.New(t)
+
 	// The colon is special because it was once used as the unix file separator.
-	for name, authority := range map[string]string{
-		"IPv6": "[2001:4860:4860::8888]",
-		"port": "localhost:8080",
-	} {
-		t.Run(name, func(t *testing.T) {
-			const file = "file.yaml"
-			u := fmt.Sprintf("https://%s/%s", authority, file)
-			require.Equal(t, simpleJoin(t, LocalizeDir, authority, file), locFilePath(u))
+	const url = "https://[2001:4860:4860::8888]/file.yaml"
+	const host = "2001:4860:4860::8888"
+	const file = "file.yaml"
+	req.Equal(simpleJoin(t, LocalizeDir, host, file), locFilePath(url))
 
-			fSys := filesys.MakeFsOnDisk()
-			targetDir := simpleJoin(t, t.TempDir(), authority)
+	fSys := filesys.MakeFsOnDisk()
+	targetDir := simpleJoin(t, t.TempDir(), host)
 
-			// We check that we can create single directory, meaning ':' not used as file separator.
-			require.NoError(t, fSys.Mkdir(targetDir))
-			_, err := fSys.Create(simpleJoin(t, targetDir, file))
-			require.NoError(t, err)
+	// We check that we can create single directory, meaning ':' not used as file separator.
+	req.NoError(fSys.Mkdir(targetDir))
+	_, err := fSys.Create(simpleJoin(t, targetDir, file))
+	req.NoError(err)
 
-			// We check that the directory with such name is readable.
-			files, err := fSys.ReadDir(targetDir)
-			require.NoError(t, err)
-			require.Equal(t, []string{file}, files)
-		})
-	}
+	// We check that the directory with such name is readable.
+	files, err := fSys.ReadDir(targetDir)
+	req.NoError(err)
+	req.Equal([]string{file}, files)
 }
 
 func TestLocFilePath_SpecialChar(t *testing.T) {
@@ -214,17 +206,17 @@ func makeConfirmedDir(t *testing.T) (filesys.FileSystem, filesys.ConfirmedDir) {
 	return fSys, testDir
 }
 
-func TestLocRootPath_SamePathInRepo(t *testing.T) {
+func TestLocRootPath_URLComponents(t *testing.T) {
 	for name, test := range map[string]struct {
 		urlf, path string
 	}{
 		"ssh": {
 			urlf: "ssh://git@github.com/org/repo//%s?ref=value",
-			path: simpleJoin(t, "git@github.com", "org", "repo", "value"),
+			path: simpleJoin(t, "github.com", "org", "repo", "value"),
 		},
 		"rel_ssh": {
 			urlf: "git@github.com:org/repo//%s?ref=value",
-			path: simpleJoin(t, "git@github.com", "org", "repo", "value"),
+			path: simpleJoin(t, "github.com", "org", "repo", "value"),
 		},
 		"https": {
 			urlf: "https://gitlab.com/org/repo//%s?ref=value",
@@ -240,11 +232,11 @@ func TestLocRootPath_SamePathInRepo(t *testing.T) {
 		},
 		"IPv6": {
 			urlf: "https://[2001:4860:4860::8888]/org/repo//%s?ref=value",
-			path: simpleJoin(t, "[2001:4860:4860::8888]", "org", "repo", "value"),
+			path: simpleJoin(t, "2001:4860:4860::8888", "org", "repo", "value"),
 		},
 		"port": {
 			urlf: "https://localhost.com:8080/org/repo//%s?ref=value",
-			path: simpleJoin(t, "localhost.com:8080", "org", "repo", "value"),
+			path: simpleJoin(t, "localhost.com", "org", "repo", "value"),
 		},
 		"no_org": {
 			urlf: "https://github.com/repo//%s?ref=value",
@@ -281,7 +273,8 @@ func TestLocRootPath_SamePathInRepo(t *testing.T) {
 			rootDir := simpleJoin(t, repoDir, "path", "to", "root")
 			require.NoError(t, fSys.MkdirAll(rootDir))
 
-			actual := locRootPath(u, repoDir, filesys.ConfirmedDir(rootDir), fSys)
+			actual, err := locRootPath(u, repoDir, filesys.ConfirmedDir(rootDir), fSys)
+			require.NoError(t, err)
 			require.Equal(t, path, actual)
 
 			require.NoError(t, fSys.MkdirAll(simpleJoin(t, testDir.String(), path)))
@@ -294,7 +287,8 @@ func TestLocRootPath_Repo(t *testing.T) {
 	expected := simpleJoin(t, LocalizeDir, "github.com", "org", "repo", "value")
 
 	fSys, testDir := makeConfirmedDir(t)
-	actual := locRootPath(url, testDir.String(), testDir, fSys)
+	actual, err := locRootPath(url, testDir.String(), testDir, fSys)
+	require.NoError(t, err)
 	require.Equal(t, expected, actual)
 }
 
@@ -307,5 +301,7 @@ func TestLocRootPath_SymlinkPath(t *testing.T) {
 	require.NoError(t, os.Symlink(rootDir, simpleJoin(t, repoDir.String(), "symlink")))
 
 	expected := simpleJoin(t, LocalizeDir, "github.com", "org", "repo", "value", "actual-root")
-	require.Equal(t, expected, locRootPath(url, repoDir.String(), filesys.ConfirmedDir(rootDir), fSys))
+	actual, err := locRootPath(url, repoDir.String(), filesys.ConfirmedDir(rootDir), fSys)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
 }

@@ -226,7 +226,10 @@ func (lc *localizer) localizeDir(path string) (string, error) {
 	if repo := ldr.Repo(); repo != "" {
 		// TODO(annasong): You need to check if you can add a localize directory here to store
 		// the remote file content. There may be a directory that shares the localize directory name.
-		locPath = locRootPath(path, repo, root, lc.fSys)
+		locPath, err = locRootPath(path, repo, root, lc.fSys)
+		if err != nil {
+			return "", err
+		}
 	} else {
 		locPath, err = filepath.Rel(lc.root.String(), root.String())
 		if err != nil {
