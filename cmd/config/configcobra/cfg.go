@@ -13,7 +13,7 @@ func GetCfg(name string) *cobra.Command {
 		Use:   "cfg",
 		Short: "Commands for reading and writing configuration",
 	}
-	
+
 	cmd.AddCommand(commands.CatCommand(name))
 	cmd.AddCommand(commands.CountCommand(name))
 	cmd.AddCommand(commands.GrepCommand(name))
