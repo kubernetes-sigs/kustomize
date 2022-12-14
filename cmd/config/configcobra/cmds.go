@@ -14,6 +14,8 @@ import (
 )
 
 // Export commands publicly for composition
+//
+//nolint:gochecknoglobals
 var (
 	Cat   = commands.CatCommand
 	Count = commands.CountCommand
