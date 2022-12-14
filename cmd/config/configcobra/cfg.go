@@ -14,18 +14,9 @@ func GetCfg(name string) *cobra.Command {
 		Short: "Commands for reading and writing configuration",
 	}
 
-	cmd.AddCommand(commands.AnnotateCommand(name))
 	cmd.AddCommand(commands.CatCommand(name))
 	cmd.AddCommand(commands.CountCommand(name))
-	cmd.AddCommand(commands.CreateSetterCommand(name))
-	cmd.AddCommand(commands.CreateSubstitutionCommand(name))
-	cmd.AddCommand(commands.FmtCommand(name))
 	cmd.AddCommand(commands.GrepCommand(name))
-	cmd.AddCommand(commands.InitCommand(name))
-	cmd.AddCommand(commands.ListSettersCommand(name))
-	cmd.AddCommand(commands.MergeCommand(name))
-	cmd.AddCommand(commands.Merge3Command(name))
-	cmd.AddCommand(commands.SetCommand(name))
 	cmd.AddCommand(commands.TreeCommand(name))
 
 	return cmd

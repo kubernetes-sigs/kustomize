@@ -15,10 +15,5 @@ func GetFn(name string) *cobra.Command {
 	}
 
 	cmd.AddCommand(commands.RunCommand(name))
-	cmd.AddCommand(commands.SinkCommand(name))
-	cmd.AddCommand(commands.SourceCommand(name))
-	cmd.AddCommand(commands.WrapCommand())
-	cmd.AddCommand(commands.XArgsCommand())
-
 	return cmd
 }

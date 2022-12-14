@@ -14,27 +14,14 @@ import (
 )
 
 // Export commands publicly for composition
+//
+//nolint:gochecknoglobals
 var (
-	Annotate           = commands.AnnotateCommand
-	Cat                = commands.CatCommand
-	Count              = commands.CountCommand
-	CreateSetter       = commands.CreateSetterCommand
-	CreateSubstitution = commands.CreateSubstitutionCommand
-	DeleteSetter       = commands.DeleteSetterCommand
-	DeleteSubstitution = commands.DeleteSubstitutionCommand
-	Fmt                = commands.FmtCommand
-	Grep               = commands.GrepCommand
-	Init               = commands.InitCommand
-	ListSetters        = commands.ListSettersCommand
-	Merge              = commands.MergeCommand
-	Merge3             = commands.Merge3Command
-	RunFn              = commands.RunCommand
-	Set                = commands.SetCommand
-	Sink               = commands.SinkCommand
-	Source             = commands.SourceCommand
-	Tree               = commands.TreeCommand
-	Wrap               = commands.WrapCommand
-	XArgs              = commands.XArgsCommand
+	Cat   = commands.CatCommand
+	Count = commands.CountCommand
+	Grep  = commands.GrepCommand
+	RunFn = commands.RunCommand
+	Tree  = commands.TreeCommand
 
 	StackOnError = &runner.StackOnError
 	ExitOnError  = &runner.ExitOnError
