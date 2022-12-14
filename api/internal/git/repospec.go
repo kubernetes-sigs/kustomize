@@ -30,11 +30,11 @@ type RepoSpec struct {
 	// Host, e.g. https://github.com/
 	Host string
 
-	// RepoPath name (organization/repoName),
+	// RepoPath name (Path to repository),
 	// e.g. kubernetes-sigs/kustomize
 	RepoPath string
 
-	// Dir where the RepoPath is cloned to.
+	// Dir is where the repository is cloned to.
 	Dir filesys.ConfirmedDir
 
 	// Relative path in the repository, and in the cloneDir,
