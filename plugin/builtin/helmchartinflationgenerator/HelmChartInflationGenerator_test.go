@@ -9,7 +9,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 func TestHelmChartInflationGenerator(t *testing.T) {
@@ -578,4 +581,220 @@ valuesInline:
     enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, "")
+}
+
+func TestHelmChartInflationGeneratorWithLocalChart(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	abs, err := filepath.Abs(filepath.Dir("./charts"))
+	if err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	if err := copyutil.CopyDir(abs, th.GetRoot()); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: test
+name: test
+chartHome: charts
+releaseName: test
+`)
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: test
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: test-0.1.0
+  name: test
+---
+apiVersion: v1
+data:
+  key-with-yaml-document-end-marker: |
+    #   +------------------+      +---------------+
+    #   +------------------+      +---------------+
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: test
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: test-0.1.0
+  name: test
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: test
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: test-0.1.0
+  name: test
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/name: test
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: test
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: test-0.1.0
+  name: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: test
+      app.kubernetes.io/name: test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/name: test
+    spec:
+      containers:
+      - image: nginx:1.16.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+        name: test
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+        resources: {}
+        securityContext: {}
+      securityContext: {}
+      serviceAccountName: test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: test
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: test-0.1.0
+  name: test-test-connection
+spec:
+  containers:
+  - args:
+    - test:80
+    command:
+    - wget
+    image: busybox
+    name: wget
+  restartPolicy: Never
+`)
+}
+
+func TestHelmChartInflationGeneratorWithRedisCluster(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: redis-cluster
+name: redis-cluster
+repo: https://charts.bitnami.com/bitnami
+version: 8.3.1
+releaseName: redis
+valuesInline:
+  fullnameOverride: redis
+  password: password
+`)
+	mr := rm.GetMatchingResourcesByCurrentId(func(x resid.ResId) bool {
+		return x.Name == "redis-default" && x.Namespace == "default" &&
+			x.Gvk.Kind == "ConfigMap"
+	})
+	fv, _ := mr[0].GetFieldValue(".data.redis-default\\.conf")
+	assert.Contains(t, fv, "+------------------+      +---------------+", "The ConfigMap field value should contain the YAML document end marker substring, '---'")
+	assert.Equal(t, len(rm.Resources()), 6, "The resmaps should be the same length.")
+}
+
+func TestHelmChartInflationGeneratorWithRookCeph(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: rook-ceph
+name: rook-ceph
+repo: https://charts.rook.io/release
+version: v1.10.7
+releaseName: rook-ceph
+`)
+	mr := rm.GetMatchingResourcesByCurrentId(func(x resid.ResId) bool {
+		return x.Name == "cephnfses.ceph.rook.io" &&
+			x.Gvk.Kind == "CustomResourceDefinition"
+	})
+	fv, _ := mr[0].GetFieldValue(".spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.security.properties.kerberos.properties.configFiles.properties.volumeSource.properties.hostPath.description")
+	assert.Contains(t, fv, "--- TODO(jonesdl)", "The CustomResourceDefinition field value should contain the YAML document end marker substring, '---'")
+	assert.Equal(t, len(rm.Resources()), 80, "The resmaps should be the same length.")
+}
+
+func TestHelmChartInflationGeneratorWithStepCertificates(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: step-certificates
+name: step-certificates
+repo: https://smallstep.github.io/helm-charts
+version: 1.23.0
+releaseName: certificates
+`)
+	assert.Equal(t, len(rm.Resources()), 13, "The resmaps should be the same length, despite the presence of empties in helm template output.")
 }
