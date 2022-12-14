@@ -63,7 +63,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 						require.NoErrorf(t, err, "unexpected error creating RepoSpec for uri %s", uri)
 						assert.Equal(t, hostSpec, rs.Host, "unexpected host for uri %s", uri)
 						assert.Equal(t, repoPath, rs.RepoPath, "unexpected RepoPath for uri %s", uri)
-						assert.Equal(t, pathName, rs.KustRootPath, "unexpected path for uri %s", uri)
+						assert.Equal(t, pathName, rs.KustRootPath, "unexpected KustRootPath for uri %s", uri)
 						assert.Equal(t, hrefArg, rs.Ref, "unexpected ref for uri %s", uri)
 					})
 					i++
