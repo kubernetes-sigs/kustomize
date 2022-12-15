@@ -186,13 +186,15 @@ func TestLoadGVKNN(t *testing.T) {
 }
 
 func TestLoadLegacyFields(t *testing.T) {
-	// TODO(annasong): add referenced files when implement legacy field localization
 	kustomization := map[string]string{
+		// TODO(annasong): Adjust test once localize handles helm.
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-bases:
-- beta
-configMapGenerator:
-- env: env.properties
+helmChartInflationGenerator:
+- chartName: minecraft
+  chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
+  chartVersion: v1.2.0
+  releaseName: test
+  values: values.yaml
 imageTags:
 - name: postgres
   newName: my-registry/my-postgres
@@ -485,7 +487,8 @@ func TestLocalizeConfigMapGenerator(t *testing.T) {
 	kustAndData := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 configMapGenerator:
-- envs:
+- env: single.env
+  envs:
   - standard.env
   namespace: my
   options:
@@ -499,6 +502,9 @@ kind: Kustomization
 metadata:
   name: test
 `,
+		"single.env": `MAY=contain
+MORE=than
+ONE=pair`,
 		"standard.env": `SIZE=0.1
 IS_GLOBAL=true`,
 		"key.properties": "value",
@@ -521,14 +527,16 @@ secretGenerator:
   - key
   type: kubernetes.io/tls
 - literals:
-  - APPLE=b3Jhbmdl
-  - PLUM=cGx1b3Q=
+  - APPLE=orange
+  - PLUM=pluot
   name: no-files
+- env: more-fruit
 `,
 		"crt":                "tls.crt=LS0tLS1CRUd...0tLQo=",
 		"key":                "tls.key=LS0tLS1CRUd...0tLQo=",
-		"b/value.properties": "dmFsdWU=",
-		"b/value":            "dmFsdWU=",
+		"more-fruit":         "GRAPE=lime",
+		"b/value.properties": "value",
+		"b/value":            "value",
 	}
 	checkLocalizeInTargetSuccess(t, kustAndData)
 }
@@ -970,6 +978,20 @@ kind: Kustomization
 	}
 	addFiles(t, expected, "/alpha/beta/dst", cleanedFiles)
 	checkFSys(t, expected, actual)
+}
+
+func TestLocalizeBases(t *testing.T) {
+	kustAndBases := map[string]string{
+		"kustomization.yaml": `bases:
+- b
+- c/d
+`,
+		"b/kustomization.yaml": `kind: Kustomization
+`,
+		"c/d/kustomization.yaml": `kind: Kustomization
+`,
+	}
+	checkLocalizeInTargetSuccess(t, kustAndBases)
 }
 
 func TestLocalizeComponents(t *testing.T) {
