@@ -228,46 +228,90 @@ func parsePath(n string) string {
 }
 
 func parseHostSpec(n string) (string, string) {
-	var host string
-	// Start accumulating the host part.
-	for _, p := range []string{
-		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://", "file://",
-		"git@", "github.com:", "github.com/"} {
-		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
-			n = n[len(p):]
-			host += p
-		}
+	// We used to use go-getter to handle our urls: https://github.com/hashicorp/go-getter.
+	// This prefix signaled go-getter to use the git protocol to fetch the url's contents.
+	// We still accept this prefix.
+	n, _ = trimPrefixIgnoreCase(n, "git::")
+	// We support gh: assuming authors use it as a github shorthand, specified in .gitconfig.
+	if rest, found := trimPrefixIgnoreCase(n, "gh:"); found {
+		return "gh:", rest
 	}
-	if host == "git@" {
-		i := strings.Index(n, "/")
-		if i > -1 {
-			host += n[:i+1]
-			n = n[i+1:]
+	scheme, rest, _ := strings.Cut(n, "://")
+	switch scheme = strings.ToLower(scheme); scheme {
+	// no scheme
+	case strings.ToLower(n):
+		scheme = ""
+		rest = n
+	// The file protocol specifies an absolute path to a local git repo. There is no host.
+	case "file":
+		return "file://", rest
+	case "https", "http", "ssh":
+		scheme += "://"
+	// We either
+	//   1. do not support said scheme or
+	//   2. found a part of the path because there is no scheme.
+	// Instead of determining the case, we try to match the host as if under the 2nd case.
+	// If we are actually under the first, host matching will fail.
+	default:
+		scheme = ""
+		rest = n
+	}
+	return matchHost(scheme, rest)
+}
+
+// trimPrefixIgnoreCase returns the rest of s and true if prefix, ignoring case, prefixes s.
+// Otherwise, trimPrefixIgnoreCase returns s and false.
+func trimPrefixIgnoreCase(s, prefix string) (string, bool) {
+	if len(prefix) <= len(s) && strings.ToLower(s[:len(prefix)]) == prefix {
+		return s[len(prefix):], true
+	}
+	return s, false
+}
+
+// matchHost returns a host that kustomize recognizes and the rest of s given scheme and url s.
+// scheme can be any of http;//, https://, ssh://, or empty.
+func matchHost(scheme, s string) (host, rest string) {
+	var isSCP bool
+	if s, isSCP = trimPrefixIgnoreCase(s, "git@"); isSCP {
+		host = "git@"
+	}
+	const httpGithub = "https://github.com/"
+	const scpGithub = "git@github.com:"
+	var normalized, separator string
+	switch scheme {
+	case "":
+		if isSCP {
+			normalized = scpGithub
+			separator = ":"
 		} else {
-			i = strings.Index(n, ":")
-			if i > -1 {
-				host += n[:i+1]
-				n = n[i+1:]
-			}
+			normalized = httpGithub
 		}
-		return host, n
+	case "https://", "http://":
+		normalized = httpGithub
+		separator = "/"
+	case "ssh://":
+		normalized = scpGithub
+		separator = "/"
 	}
-
-	// If host is a http(s) or ssh URL, grab the domain part.
-	for _, p := range []string{
-		"ssh://", "https://", "http://"} {
-		if strings.HasSuffix(host, p) {
-			i := strings.Index(n, "/")
-			if i > -1 {
-				host += n[0 : i+1]
-				n = n[i+1:]
-			}
-			break
+	for _, builtin := range []string{"github.com:", "github.com/"} {
+		rest, found := trimPrefixIgnoreCase(s, builtin)
+		if found {
+			return normalized, rest
 		}
 	}
-
-	return normalizeGitHostSpec(host), n
+	i := strings.Index(s, separator)
+	// There is no host if the separator was not found or the separator delimits an empty
+	// host. Note that this will happen if the separator is empty.
+	if i <= 0 {
+		return "", s
+	}
+	if separator == ":" {
+		// The colon acts as a delimiter for scp protocol only if not prefixed by '/'.
+		if slashIndex := strings.Index(s, "/"); slashIndex != -1 && slashIndex < i {
+			return "", s
+		}
+	}
+	return scheme + host + s[:i+1], s[i+1:]
 }
 
 func normalizeGitHostSpec(host string) string {
