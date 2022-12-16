@@ -95,11 +95,9 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 
 	err = fSysExpected.Walk("/", func(path string, info fs.FileInfo, err error) error {
 		require.NoError(t, err)
-		visited[path] = struct{}{}
 
-		if _, exists := visited[path]; !exists {
-			t.Errorf("expected path %q not found", path)
-		}
+		_, exists := visited[path]
+		assert.Truef(t, exists, "expected path %q not found", path)
 		return nil
 	})
 	require.NoError(t, err)
@@ -531,6 +529,96 @@ patches:
 	checkFSys(t, expected, actual)
 }
 
+func TestLocalizePluginsInlineAndFile(t *testing.T) {
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: builtin
+  kind: PatchTransformer
+  metadata:
+    name: inline
+  path: patchSM-one.yaml
+- patch.yaml
+`,
+		"patch.yaml": `apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: file
+path: patchSM-two.yaml
+`,
+		"patchSM-one.yaml": podConfiguration,
+		"patchSM-two.yaml": podConfiguration,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", kustAndPlugins)
+	checkFSys(t, expected, actual)
+}
+
+func TestLocalizeMultiplePluginsInEntry(t *testing.T) {
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: builtin
+  kind: PatchTransformer
+  metadata:
+    name: one
+  path: patchSM-one.yaml
+  ---
+  apiVersion: builtin
+  kind: PatchTransformer
+  metadata:
+    name: two
+  path: patchSM-two.yaml
+`,
+		"patchSM-one.yaml": podConfiguration,
+		"patchSM-two.yaml": podConfiguration,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", kustAndPlugins)
+	checkFSys(t, expected, actual)
+}
+
+func TestLocalizeCleanedPathInPath(t *testing.T) {
+	const patchf = `apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: cleaned-path
+path: %s
+`
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- patch.yaml
+`,
+		"patch.yaml":   fmt.Sprintf(patchf, "../a/patchSM.yaml"),
+		"patchSM.yaml": podConfiguration,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", map[string]string{
+		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
+		"patch.yaml":         fmt.Sprintf(patchf, "patchSM.yaml"),
+		"patchSM.yaml":       kustAndPlugins["patchSM.yaml"],
+	})
+	checkFSys(t, expected, actual)
+}
+
 func TestLocalizeGenerators(t *testing.T) {
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -566,47 +654,101 @@ metadata:
 	err := Run("/a", "", "/alpha/dst", actual)
 	require.NoError(t, err)
 
-	addFiles(t, expected, "/alpha/dst", map[string]string{
-		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
-	})
+	addFiles(t, expected, "/alpha/dst", kustAndPlugins)
 	checkFSys(t, expected, actual)
 }
 
-func TestLocalizeTransformers(t *testing.T) {
-	kustAndPlugins := map[string]string{
+func TestLocalizeTransformersPatch(t *testing.T) {
+	kustAndPatches := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 transformers:
 - |
   apiVersion: builtin
-  jsonOp: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "ClusterFirst"}]'
-  kind: PatchJson6902Transformer
+  kind: PatchTransformer
   metadata:
-    name: patch6902
+    name: no-path
+  patch: '[{"op": "add", "path": "/path", "value": "value"}]'
   target:
-    name: deployment
-  ---
-  apiVersion: builtin
-  kind: ReplacementTransformer
-  metadata:
-    name: replacement
-  replacements:
-  - source:
-      fieldPath: spec.template.spec.containers.0.image
-      kind: Deployment
-    targets:
-    - fieldPaths:
-      - spec.template.spec.containers.1.image
-      select:
-        kind: Deployment
-- plugin.yaml
+    name: pod
+- patch.yaml
 `,
-		"plugin.yaml": `apiVersion: builtin
-kind: PatchStrategicMergeTransformer
+		"patch.yaml": `apiVersion: builtin
+kind: PatchTransformer
 metadata:
-  name: patchSM
-paths:
-- pod.yaml
+  name: path
+path: patchSM.yaml
+`,
+		"patchSM.yaml": podConfiguration,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustAndPatches)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", kustAndPatches)
+	checkFSys(t, expected, actual)
+}
+
+func TestLocalizeTransformersPatchJson(t *testing.T) {
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- patch.yaml
+`,
+		"patch.yaml": `apiVersion: builtin
+kind: PatchJson6902Transformer
+metadata:
+  name: path
+path: nested-patch.yaml
+target:
+  name: pod
+  namespace: test
+---
+apiVersion: builtin
+jsonOp: |-
+  op: replace
+  path: /path
+  value: new value
+kind: PatchJson6902Transformer
+metadata:
+  name: patch6902
+target:
+  name: deployment
+`,
+		"nested-patch.yaml": ` [
+   {"op": "copy", "from": "/existing/path", "path": "/another/path"},
+ ]
+`,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustAndPatches)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", kustAndPatches)
+	checkFSys(t, expected, actual)
+}
+
+func TestLocalizePluginsNoPaths(t *testing.T) {
+	kustAndPlugins := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: different
+  kind: MyTransformer
+  metadata:
+    name: still-copied
+  path: /nothing/special
+- prefix.yaml
+`,
+		"prefix.yaml": `apiVersion: builtin
+kind: PrefixTransformer
+metadata:
+  name: other-built-ins-still-copied
+prefix: copy
 `,
 	}
 	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
@@ -614,9 +756,7 @@ paths:
 	err := Run("/a", "", "/dst", actual)
 	require.NoError(t, err)
 
-	addFiles(t, expected, "/dst", map[string]string{
-		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
-	})
+	addFiles(t, expected, "/dst", kustAndPlugins)
 	checkFSys(t, expected, actual)
 }
 
@@ -632,13 +772,13 @@ validators:
     name: replacement
   replacements:
   - source:
-      fieldPath: data.[field=value]
-      group: apps
+      fieldPath: metadata.name
+      kind: ConfigMap
     targets:
     - fieldPaths:
-      - spec.*
+      - metadata.name
       select:
-        kind: Pod
+        kind: ConfigMap
 - replacement.yaml
 `,
 		"replacement.yaml": `apiVersion: builtin
@@ -662,9 +802,7 @@ replacements:
 	err := Run("/", "", "/dst", actual)
 	require.NoError(t, err)
 
-	addFiles(t, expected, "/dst", map[string]string{
-		"kustomization.yaml": kustAndPlugin["kustomization.yaml"],
-	})
+	addFiles(t, expected, "/dst", kustAndPlugin)
 	checkFSys(t, expected, actual)
 }
 
