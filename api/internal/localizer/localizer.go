@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -224,7 +223,11 @@ func (lc *localizer) localizeFile(path string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err)
 	}
+	return lc.localizeFileWithContent(path, content)
+}
 
+// localizeFileWithContent writes content to the localized file path and returns the localized path.
+func (lc *localizer) localizeFileWithContent(path string, content []byte) (string, error) {
 	var locPath string
 	if loader.IsRemoteFile(path) {
 		// TODO(annasong): You need to check if you can add a localize directory here to store
@@ -243,10 +246,10 @@ func (lc *localizer) localizeFile(path string) (string, error) {
 		locPath = cleanFilePath(lc.fSys, lc.root, path)
 	}
 	absPath := filepath.Join(lc.dst, locPath)
-	if err = lc.fSys.MkdirAll(filepath.Dir(absPath)); err != nil {
+	if err := lc.fSys.MkdirAll(filepath.Dir(absPath)); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to create directories to localize file %q", path)
 	}
-	if err = lc.fSys.WriteFile(absPath, content); err != nil {
+	if err := lc.fSys.WriteFile(absPath, content); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
 	}
 	return locPath, nil
@@ -297,29 +300,17 @@ func (lc *localizer) localizeDir(path string) (string, error) {
 //
 // Note that the localization in this function has not been implemented yet.
 func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
-	for fieldName, plugins := range map[string]struct {
-		entries   []string
-		localizer kio.Filter
-	}{
-		"generators": {
-			kust.Generators,
-			&localizeBuiltinGenerators{},
-		},
-		"transformers": {
-			kust.Transformers,
-			&localizeBuiltinTransformers{},
-		},
-		"validators": {
-			kust.Validators,
-			&localizeBuiltinTransformers{},
-		},
+	for fieldName, entries := range map[string][]string{
+		"generators":   kust.Generators,
+		"transformers": kust.Transformers,
+		"validators":   kust.Validators,
 	} {
-		for i, entry := range plugins.entries {
+		for i, entry := range entries {
 			rm, isPath, err := lc.loadResource(entry)
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to load %s entry", fieldName)
 			}
-			err = rm.ApplyFilter(plugins.localizer)
+			err = rm.ApplyFilter(&localizeBuiltinPlugins{lc})
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -327,14 +318,16 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to serialize localized %s entry %q", fieldName, entry)
 			}
-			var newEntry string
+			var localizedEntry string
 			if isPath {
-				// TODO(annasong): write localizedPlugin to dst
-				newEntry = entry
+				localizedEntry, err = lc.localizeFileWithContent(entry, localizedPlugin)
+				if err != nil {
+					return errors.WrapPrefixf(err, "unable to localize %s entry", fieldName)
+				}
 			} else {
-				newEntry = string(localizedPlugin)
+				localizedEntry = string(localizedPlugin)
 			}
-			plugins.entries[i] = newEntry
+			entries[i] = localizedEntry
 		}
 	}
 	return nil
