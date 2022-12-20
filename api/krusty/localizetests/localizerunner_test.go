@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package krusty_test
+package localizetests_test
 
 import (
 	"fmt"
@@ -12,12 +12,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
-	. "sigs.k8s.io/kustomize/api/krusty"
+	. "sigs.k8s.io/kustomize/api/krusty/localizetests"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 const (
-	fileURLDir   = "raw.githubusercontent.com/kubernetes-sigs/kustomize/kustomize/v4.5.7/api/krusty/testdata"
 	customSchema = `{
   "definitions": {
     "v1alpha1.MyCRD": {

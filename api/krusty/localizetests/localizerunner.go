@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package krusty
+package localizetests
 
 import (
 	"sigs.k8s.io/kustomize/api/internal/localizer"
