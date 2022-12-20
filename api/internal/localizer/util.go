@@ -153,7 +153,7 @@ func locFilePath(fileURL string) string {
 
 // locRootPath returns the relative localized path of the validated root url rootURL, where the local copy of its repo
 // is at repoDir and the copy of its root is at root on fSys.
-func locRootPath(rootURL string, repoDir string, root filesys.ConfirmedDir, fSys filesys.FileSystem) (string, error) {
+func locRootPath(rootURL, repoDir string, root filesys.ConfirmedDir, fSys filesys.FileSystem) (string, error) {
 	repoSpec, err := git.NewRepoSpecFromURL(rootURL)
 	if err != nil {
 		log.Panicf("cannot parse validated repo url %q: %s", rootURL, err)
@@ -186,8 +186,9 @@ func parseHost(repoSpec *git.RepoSpec) (string, error) {
 	var target string
 	switch scheme, _, _ := strings.Cut(repoSpec.Host, "://"); scheme {
 	case "gh:":
-		// I assume 'gh' was meant to be a local github.com shorthand,
-		// in which case the .gitconfig file could map it to any host.
+		// 'gh' was meant to be a local github.com shorthand, in which case
+		// the .gitconfig file could map it to any host. See origin here:
+		// https://github.com/kubernetes-sigs/kustomize/blob/kustomize/v4.5.7/api/internal/git/repospec.go#L203
 		// We give it a special host directory here under the assumption
 		// that we are unlikely to have another host simply named 'gh'.
 		return "gh", nil
@@ -198,8 +199,8 @@ func parseHost(repoSpec *git.RepoSpec) (string, error) {
 	case "https", "http", "ssh":
 		target = repoSpec.Host
 	default:
-		// For, relative ssh, or scp-like syntax, we attach a scheme
-		// to avoid url.Parse errors
+		// We must have relative ssh url; in other words, the url has scp-like syntax.
+		// We attach a scheme to avoid url.Parse errors.
 		target = "ssh://" + repoSpec.Host
 	}
 	// url.Parse will not recognize ':' delimiter that both RepoSpec and git accept.
