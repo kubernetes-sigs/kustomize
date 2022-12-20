@@ -98,7 +98,7 @@ configurations:
 EOF
 ```
 
-Run `kustomize build` and verify that the images have been updated.
+Run `kustomize build` and verify that the images have been updated. (The expect results of below should be 0, which means images had been updated successfully.)
 
 <!-- @build @testAgainstLatestRelease -->
 ```
