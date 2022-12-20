@@ -172,16 +172,12 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 	}
 	//nolint:staticcheck
 	for i, patch := range kust.PatchesStrategicMerge {
-		_, isFile, err := lc.loadResource(string(patch))
+		localizedPath, err := lc.localizeResource(string(patch))
 		if err != nil {
-			return errors.WrapPrefixf(err, "invalid patchesStrategicMerge entry")
+			return errors.WrapPrefixf(err, "unable to localize patchesStrategicMerge entry")
 		}
-		if isFile {
-			newPath, err := lc.localizeFile(string(patch))
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize patchesStrategicMerge entry")
-			}
-			kust.PatchesStrategicMerge[i] = types.PatchStrategicMerge(newPath)
+		if localizedPath != "" {
+			kust.PatchesStrategicMerge[i] = types.PatchStrategicMerge(localizedPath)
 		}
 	}
 	for i, replacement := range kust.Replacements {
@@ -338,7 +334,7 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to load %s entry", fieldName)
 			}
-			err = rm.ApplyFilter(&localizeBuiltinPlugins{lc})
+			err = rm.ApplyFilter(&localizeBuiltinPlugins{lc: lc})
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -359,6 +355,19 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 		}
 	}
 	return nil
+}
+
+// localizeResource returns the localized file path if resourceEntry is a file containing a resource.
+// localizeResource returns the empty string if resourceEntry is an inline resource.
+func (lc *localizer) localizeResource(resourceEntry string) (string, error) {
+	_, isFile, err := lc.loadResource(resourceEntry)
+	if err != nil {
+		return "", err
+	}
+	if isFile {
+		return lc.localizeFile(resourceEntry)
+	}
+	return "", nil
 }
 
 // loadResource tries to load resourceEntry as a file path or inline.

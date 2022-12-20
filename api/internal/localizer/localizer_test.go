@@ -15,7 +15,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const podConfiguration = `apiVersion: v1
+const (
+	podConfiguration = `apiVersion: v1
 kind: Pod
 metadata:
   name: pod
@@ -25,6 +26,53 @@ spec:
     image: nginx:1.14.2
     ports:
     - containerPort: 80`
+
+	replacementTransformerWithPath = `apiVersion: builtin
+kind: ReplacementTransformer
+metadata:
+  name: replacement
+replacements:
+- path: replacement.yaml
+- source:
+    fieldPath: metadata.[name=my-pod]
+    group: apps
+    namespace: test
+    version: v1
+  targets:
+  - fieldPaths:
+    - spec.containers.0.name
+    select:
+      name: another-pod
+`
+
+	replacements = `
+- source:
+    name: src
+    fieldPath: path
+    options:
+      delimiter: '='
+      index: 1
+  targets:
+  - select:
+      kind: Pod
+    reject:
+      version: v1
+    fieldPaths:
+    - metadata.annotations.config\.kubernetes\.io/local-config
+    - sequence.*
+- source:
+    kind: Deployment
+    fieldPath: sequence.-
+  targets:
+  - select:
+      namespace: my
+    fieldPaths:
+    - path
+    options:
+      delimiter: '='
+      index: 0
+`
+)
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
 	t.Helper()
@@ -454,7 +502,7 @@ kind: Kustomization
 replacements:
 - path: replacement.yaml
 - source:
-    fieldPath: path
+    fieldPath: path.0
     name: map
   targets:
   - fieldPaths:
@@ -462,21 +510,7 @@ replacements:
     select:
       name: my-map
 `,
-		"replacement.yaml": `source:
-  fieldPath: path.to.some.field
-  kind: Pod
-  options:
-    delimiter: /
-targets:
-- fieldPaths:
-  - config\.kubernetes\.io.annotations
-  - second.path
-  - path.*.to.[some=field]
-  reject:
-  - group: apps
-    version: v2
-  select:
-    namespace: my`,
+		"replacement.yaml": replacements,
 	}
 	checkLocalizeInTargetSuccess(t, kustAndReplacement)
 }
@@ -721,6 +755,39 @@ target:
 	checkLocalizeInTargetSuccess(t, kustAndPatches)
 }
 
+func TestLocalizeTransformersPatchSM(t *testing.T) {
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": `transformers:
+- patch.yaml
+`,
+		"patch.yaml": `apiVersion: builtin
+kind: PatchStrategicMergeTransformer
+metadata:
+  name: path
+paths:
+- nested-patch.yaml
+- |-
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: my-pod
+`,
+		"nested-patch.yaml": podConfiguration,
+	}
+	checkLocalizeInTargetSuccess(t, kustAndPatches)
+}
+
+func TestLocalizeTransformersReplacement(t *testing.T) {
+	kustAndReplacements := map[string]string{
+		"kustomization.yaml": `transformers:
+- replacement-transformer.yaml
+`,
+		"replacement-transformer.yaml": replacementTransformerWithPath,
+		"replacement.yaml":             replacements,
+	}
+	checkLocalizeInTargetSuccess(t, kustAndReplacements)
+}
+
 func TestLocalizePluginsNoPaths(t *testing.T) {
 	kustAndPlugins := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -749,37 +816,10 @@ func TestLocalizeValidators(t *testing.T) {
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 validators:
-- |
-  apiVersion: builtin
-  kind: ReplacementTransformer
-  metadata:
-    name: replacement
-  replacements:
-  - source:
-      fieldPath: metadata.name
-      kind: ConfigMap
-    targets:
-    - fieldPaths:
-      - metadata.name
-      select:
-        kind: ConfigMap
-- replacement.yaml
+- replacement-no-change.yaml
 `,
-		"replacement.yaml": `apiVersion: builtin
-kind: ReplacementTransformer
-metadata:
-  name: replacement-2
-replacements:
-- source:
-    fieldPath: spec.containers.1.image
-    kind: Custom
-    namespace: test
-  targets:
-  - fieldPaths:
-    - path.*.to.[some=field]
-    select:
-      namespace: test
-`,
+		"replacement-no-change.yaml": replacementTransformerWithPath,
+		"replacement.yaml":           replacements,
 	}
 	checkLocalizeInTargetSuccess(t, kustAndPlugin)
 }
@@ -844,6 +884,26 @@ when parsing as filepath received error: %s`, test.errPrefix, test.inlineErrMsg,
 			checkFSys(t, expected, actual)
 		})
 	}
+}
+
+func TestLocalizeBuiltinPluginsFileError(t *testing.T) {
+	kustAndPatches := map[string]string{
+		"kustomization.yaml": `transformers:
+- patch.yaml
+`,
+		"patch.yaml": `apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: my-patch
+path: patchSM.yaml
+`,
+	}
+	_, actual := makeFileSystems(t, "/a", kustAndPatches)
+
+	err := Run("/a", "", "/dst", actual)
+	require.EqualError(t, err, "unable to localize target \"/a\": "+
+		"considering field 'path' of object PatchTransformer.builtin.[noGrp]/my-patch.[noNs]: "+
+		"invalid file reference: '/a/patchSM.yaml' doesn't exist")
 }
 
 func TestLocalizeDirInTarget(t *testing.T) {
