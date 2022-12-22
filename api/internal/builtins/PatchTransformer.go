@@ -25,6 +25,8 @@ type PatchTransformerPlugin struct {
 	Options      map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
+// noinspection GoUnusedGlobalVariable
+
 func (p *PatchTransformerPlugin) Config(
 	h *resmap.PluginHelpers, c []byte) error {
 	err := yaml.Unmarshal(c, p)
@@ -97,6 +99,11 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 	if err != nil {
 		return err
 	}
+
+	if len(selected) == 0 {
+		return fmt.Errorf("patches target not found for  %s", p.Target.ResId)
+	}
+
 	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
 }
 
@@ -110,6 +117,11 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap, patch jsonpa
 	if err != nil {
 		return err
 	}
+
+	if len(resources) == 0 {
+		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	}
+
 	for _, res := range resources {
 		res.StorePreviousId()
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
