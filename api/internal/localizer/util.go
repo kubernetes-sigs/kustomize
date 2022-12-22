@@ -21,6 +21,9 @@ const (
 
 	// LocalizeDir is the name of the localize directories used to store remote content in the localize destination
 	LocalizeDir = "localized-files"
+
+	// FileSchemeDir is the name of the directory immediately inside LocalizeDir used to store file-schemed repos
+	FileSchemeDir = "file-schemed"
 )
 
 // establishScope returns the effective scope given localize arguments and targetLdr at rawTarget. For remote rawTarget,
@@ -132,14 +135,16 @@ func locFilePath(fileURL string) string {
 	// File urls must have http or https scheme, so it is safe to use url.Parse.
 	u, err := url.Parse(fileURL)
 	if err != nil {
-		log.Fatalf("cannot parse validated file url %q: %s", fileURL, err.Error())
+		log.Panicf("cannot parse validated file url %q: %s", fileURL, err)
 	}
 
-	// Percent-encodings should be preserved in case sub-delims have special meaning.
+	// HTTP requests use the escaped path, so we use it here. Escaped paths also help us
+	// preserve percent-encoding in the original path, in the absence of illegal characters,
+	// in case they have special meaning to the host.
 	// Extraneous '..' parent directory dot-segments should be removed.
 	path := filepath.Join(string(filepath.Separator), filepath.FromSlash(u.EscapedPath()))
 
-	// The host should not include userinfo or port.
+	// We intentionally exclude userinfo and port.
 	// Raw github urls are the only type of file urls kustomize officially accepts.
 	// In this case, the path already consists of org, repo, version, and path in repo, in order,
 	// so we can use it as is.
@@ -147,10 +152,63 @@ func locFilePath(fileURL string) string {
 }
 
 // locRootPath returns the relative localized path of the validated root url rootURL, where the local copy of its repo
-// is at repoDir and the copy of its root is at rootDir
-// TODO(annasong): implement
-func locRootPath(rootURL string, repoDir string, rootDir filesys.ConfirmedDir) string {
-	_ = rootURL
-	_, _ = repoDir, rootDir
-	return ""
+// is at repoDir and the copy of its root is at root on fSys.
+func locRootPath(rootURL, repoDir string, root filesys.ConfirmedDir, fSys filesys.FileSystem) (string, error) {
+	repoSpec, err := git.NewRepoSpecFromURL(rootURL)
+	if err != nil {
+		log.Panicf("cannot parse validated repo url %q: %s", rootURL, err)
+	}
+	host, err := parseHost(repoSpec)
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "unable to parse host of remote root %q", rootURL)
+	}
+	repo, err := filesys.ConfirmDir(fSys, repoDir)
+	if err != nil {
+		log.Panicf("unable to establish validated repo download location %q: %s", repoDir, err)
+	}
+	// calculate from copy instead of url to straighten symlinks
+	inRepo, err := filepath.Rel(repo.String(), root.String())
+	if err != nil {
+		log.Panicf("cannot find path from %q to child directory %q: %s", repo, root, err)
+	}
+	// We do not need to escape OrgRepo, a path on the git server.
+	// However, like git, we clean dot-segments from OrgRepo.
+	// Git does not allow ref value to contain dot-segments.
+	return filepath.Join(LocalizeDir,
+		host,
+		filepath.Join(string(filepath.Separator), filepath.FromSlash(repoSpec.OrgRepo)),
+		filepath.FromSlash(repoSpec.Ref),
+		inRepo), nil
+}
+
+// parseHost returns the localize directory path corresponding to repoSpec.Host
+func parseHost(repoSpec *git.RepoSpec) (string, error) {
+	var target string
+	switch scheme, _, _ := strings.Cut(repoSpec.Host, "://"); scheme {
+	case "gh:":
+		// 'gh' was meant to be a local github.com shorthand, in which case
+		// the .gitconfig file could map it to any host. See origin here:
+		// https://github.com/kubernetes-sigs/kustomize/blob/kustomize/v4.5.7/api/internal/git/repospec.go#L203
+		// We give it a special host directory here under the assumption
+		// that we are unlikely to have another host simply named 'gh'.
+		return "gh", nil
+	case "file":
+		// We put file-scheme repos under a special directory to avoid
+		// colluding local absolute paths with hosts.
+		return FileSchemeDir, nil
+	case "https", "http", "ssh":
+		target = repoSpec.Host
+	default:
+		// We must have relative ssh url; in other words, the url has scp-like syntax.
+		// We attach a scheme to avoid url.Parse errors.
+		target = "ssh://" + repoSpec.Host
+	}
+	// url.Parse will not recognize ':' delimiter that both RepoSpec and git accept.
+	target = strings.TrimSuffix(target, ":")
+	u, err := url.Parse(target)
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+	// strip scheme, userinfo, port, and any trailing slashes.
+	return u.Hostname(), nil
 }
