@@ -118,12 +118,38 @@ func (lc *localizer) load() (*types.Kustomization, string, error) {
 // localizeNativeFields localizes paths on kustomize-native fields, like configMapGenerator, that kustomize has a
 // built-in understanding of. This excludes helm-related fields, such as `helmGlobals` and `helmCharts`.
 func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
-	for i, path := range kust.Components {
-		newPath, err := lc.localizeDir(path)
+	if path, exists := kust.OpenAPI["path"]; exists {
+		newPath, err := lc.localizeFile(path)
 		if err != nil {
-			return errors.WrapPrefixf(err, "unable to localize components field")
+			return errors.WrapPrefixf(err, "unable to localize openapi path")
 		}
-		kust.Components[i] = newPath
+		kust.OpenAPI["path"] = newPath
+	}
+
+	for fieldName, field := range map[string]struct {
+		paths []string
+		locFn func(string) (string, error)
+	}{
+		"components": {
+			kust.Components,
+			lc.localizeDir,
+		},
+		"configurations": {
+			kust.Configurations,
+			lc.localizeFile,
+		},
+		"crds": {
+			kust.Crds,
+			lc.localizeFile,
+		},
+	} {
+		for i, path := range field.paths {
+			newPath, err := field.locFn(path)
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to localize %s path", fieldName)
+			}
+			field.paths[i] = newPath
+		}
 	}
 
 	for i := range kust.ConfigMapGenerator {
@@ -168,8 +194,7 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 		}
 	}
 
-	// TODO(annasong): localize all other kustomization fields: resources, bases, crds, configurations,
-	// openapi, configMapGenerator.env, secretGenerator.env
+	// TODO(annasong): localize all other kustomization fields: resources, bases, configMapGenerator.env, secretGenerator.env
 	return nil
 }
 
