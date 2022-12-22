@@ -103,6 +103,21 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 	require.NoError(t, err)
 }
 
+func checkLocalizeInTargetSuccess(t *testing.T, files map[string]string) {
+	t.Helper()
+
+	fSys := makeMemoryFs(t)
+	addFiles(t, fSys, "/a", files)
+
+	err := Run("/a", "/", "dst", fSys)
+	require.NoError(t, err)
+
+	fSysExpected := makeMemoryFs(t)
+	addFiles(t, fSysExpected, "/a", files)
+	addFiles(t, fSysExpected, "/dst/a", files)
+	checkFSys(t, fSysExpected, fSys)
+}
+
 func TestTargetIsScope(t *testing.T) {
 	kustomization := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
@@ -151,13 +166,7 @@ commonLabels:
 kind: Kustomization
 `,
 	}
-	fSysExpected, fSysActual := makeFileSystems(t, "/a", kustomization)
-
-	err := Run("/a", "/", "/dst", fSysActual)
-	require.NoError(t, err)
-
-	addFiles(t, fSysExpected, "/dst/a", kustomization)
-	checkFSys(t, fSysExpected, fSysActual)
+	checkLocalizeInTargetSuccess(t, kustomization)
 }
 
 func TestLoadGVKNN(t *testing.T) {
@@ -171,13 +180,7 @@ func TestLoadGVKNN(t *testing.T) {
 			files := map[string]string{
 				"kustomization.yaml": kustomization,
 			}
-			fSysExpected, fSysActual := makeFileSystems(t, "/a", files)
-
-			err := Run("/a", "/a", "/dst", fSysActual)
-			require.NoError(t, err)
-
-			addFiles(t, fSysExpected, "/dst", files)
-			checkFSys(t, fSysExpected, fSysActual)
+			checkLocalizeInTargetSuccess(t, files)
 		})
 	}
 }
@@ -197,25 +200,7 @@ imageTags:
 kind: Kustomization
 `,
 	}
-	fSysExpected, fSysActual := makeFileSystems(t, "/alpha", kustomization)
-
-	err := Run("/alpha", "/alpha", "/beta", fSysActual)
-	require.NoError(t, err)
-
-	addFiles(t, fSysExpected, "/beta", map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-bases:
-- beta
-configMapGenerator:
-- env: env.properties
-imageTags:
-- name: postgres
-  newName: my-registry/my-postgres
-  newTag: v1
-kind: Kustomization
-`,
-	})
-	checkFSys(t, fSysExpected, fSysActual)
+	checkLocalizeInTargetSuccess(t, kustomization)
 }
 
 func TestLoadUnknownKustFields(t *testing.T) {
@@ -247,13 +232,7 @@ patches:
 `, path),
 				path: podConfiguration,
 			}
-			expected, actual := makeFileSystems(t, "/a", kustAndPatch)
-
-			err := Run("/a", "/", "/a/dst", actual)
-			require.NoError(t, err)
-
-			addFiles(t, expected, "/a/dst/a", kustAndPatch)
-			checkFSys(t, expected, actual)
+			checkLocalizeInTargetSuccess(t, kustAndPatch)
 		})
 	}
 }
@@ -292,9 +271,9 @@ configMapGenerator:
   name: referenced-file
 kind: Kustomization
 `,
-		"env":            "APPLE=orange",
-		"env.properties": "USERNAME=password",
-		"resource.yaml":  podConfiguration,
+		"env":               "APPLE=orange",
+		"env.properties":    "USERNAME=password",
+		"dir/resource.yaml": podConfiguration,
 	}
 	expected, actual := makeFileSystems(t, "/alpha/beta", targetAndUnreferenced)
 
@@ -326,25 +305,95 @@ patches:
     allowNameChange: true
   path: patch.yaml
 `,
-		"patch.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Deployment
-metadata:
-  name: not-used
-spec:
-  template:
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.21.0
-`,
+		"patch.yaml": podConfiguration,
 	}
-	expected, actual := makeFileSystems(t, "/", kustAndPatch)
+	checkLocalizeInTargetSuccess(t, kustAndPatch)
+}
 
-	err := Run("/", "", "", actual)
-	require.NoError(t, err)
+func TestLocalizeOpenAPI(t *testing.T) {
+	type testCase struct {
+		name  string
+		files map[string]string
+	}
+	for _, test := range []testCase{
+		{
+			name: "no_path",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+openapi:
+  version: v1.20.4
+`,
+			},
+		},
+		{
+			name: "path",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+openapi:
+  path: openapi.json
+`,
+				"openapi.json": `{
+  "definitions": {
+    "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+}`,
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, test.files)
+		})
+	}
+}
 
-	addFiles(t, expected, "/localized", kustAndPatch)
-	checkFSys(t, expected, actual)
+func TestLocalizeConfigurations(t *testing.T) {
+	kustAndConfigs := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+configurations:
+- commonLabels.yaml
+- namePrefix.yaml
+kind: Kustomization
+`,
+		"commonLabels.yaml": `commonLabels:
+- path: new/path
+  create: true`,
+		"namePrefix.yaml": `namePrefix:
+- version: v1
+  path: metadata/name
+- group: custom
+  path: metadata/name`,
+	}
+	checkLocalizeInTargetSuccess(t, kustAndConfigs)
+}
+
+func TestLocalizeCrds(t *testing.T) {
+	kustAndCrds := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+crds:
+- crd1.yaml
+- crd2.yaml
+kind: Kustomization
+`,
+		"crd1.yaml": `apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: controller.stable.example.com`,
+		"crd2.yaml": `apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crontabs.stable.example.com
+scope: Cluster`,
+	}
+	checkLocalizeInTargetSuccess(t, kustAndCrds)
 }
 
 func TestLocalizePatchesJson(t *testing.T) {
@@ -376,13 +425,7 @@ patchesJson6902:
    {"op": "remove", "path": "/some/existing/path"},
  ]`,
 	}
-	expected, actual := makeFileSystems(t, "/alpha/beta", kustAndPatches)
-
-	err := Run("/alpha/beta", "/", "/beta", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/beta/alpha/beta", kustAndPatches)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPatches)
 }
 
 func TestLocalizePatchesSM(t *testing.T) {
@@ -401,13 +444,7 @@ patchesStrategicMerge:
 `,
 		"patch.yaml": podConfiguration,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPatches)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPatches)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPatches)
 }
 
 func TestLocalizeReplacements(t *testing.T) {
@@ -426,7 +463,7 @@ replacements:
       name: my-map
 `,
 		"replacement.yaml": `source:
-  fieldPath: path.*.to.[some=field]
+  fieldPath: path.to.some.field
   kind: Pod
   options:
     delimiter: /
@@ -434,19 +471,14 @@ targets:
 - fieldPaths:
   - config\.kubernetes\.io.annotations
   - second.path
+  - path.*.to.[some=field]
   reject:
   - group: apps
     version: v2
   select:
     namespace: my`,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndReplacement)
-
-	err := Run("/a", "/", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst/a", kustAndReplacement)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndReplacement)
 }
 
 func TestLocalizeConfigMapGenerator(t *testing.T) {
@@ -471,13 +503,7 @@ metadata:
 IS_GLOBAL=true`,
 		"key.properties": "value",
 	}
-	expected, actual := makeFileSystems(t, "/a/b", kustAndData)
-
-	err := Run("/a/b", "", "", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/localized-b", kustAndData)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndData)
 }
 
 func TestLocalizeSecretGenerator(t *testing.T) {
@@ -504,13 +530,7 @@ secretGenerator:
 		"b/value.properties": "dmFsdWU=",
 		"b/value":            "dmFsdWU=",
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndData)
-
-	err := Run("/a", "/", "/localized-a", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/localized-a/a", kustAndData)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndData)
 }
 
 func TestLocalizeFileNoFile(t *testing.T) {
@@ -551,13 +571,7 @@ path: patchSM-two.yaml
 		"patchSM-one.yaml": podConfiguration,
 		"patchSM-two.yaml": podConfiguration,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPlugins)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPlugins)
 }
 
 func TestLocalizeMultiplePluginsInEntry(t *testing.T) {
@@ -581,13 +595,7 @@ transformers:
 		"patchSM-one.yaml": podConfiguration,
 		"patchSM-two.yaml": podConfiguration,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPlugins)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPlugins)
 }
 
 func TestLocalizeCleanedPathInPath(t *testing.T) {
@@ -649,13 +657,7 @@ metadata:
   name: map
 `,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
-
-	err := Run("/a", "", "/alpha/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/alpha/dst", kustAndPlugins)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPlugins)
 }
 
 func TestLocalizeTransformersPatch(t *testing.T) {
@@ -681,13 +683,7 @@ path: patchSM.yaml
 `,
 		"patchSM.yaml": podConfiguration,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPatches)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPatches)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPatches)
 }
 
 func TestLocalizeTransformersPatchJson(t *testing.T) {
@@ -722,13 +718,7 @@ target:
  ]
 `,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPatches)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPatches)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPatches)
 }
 
 func TestLocalizePluginsNoPaths(t *testing.T) {
@@ -751,13 +741,7 @@ metadata:
 prefix: copy
 `,
 	}
-	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPlugins)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPlugins)
 }
 
 func TestLocalizeValidators(t *testing.T) {
@@ -792,18 +776,12 @@ replacements:
     namespace: test
   targets:
   - fieldPaths:
-    - path
+    - path.*.to.[some=field]
     select:
       namespace: test
 `,
 	}
-	expected, actual := makeFileSystems(t, "/", kustAndPlugin)
-
-	err := Run("/", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", kustAndPlugin)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndPlugin)
 }
 
 func TestLocalizeBuiltinPluginsNotResource(t *testing.T) {
@@ -959,13 +937,7 @@ namespace: kustomize-namespace
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			expected, actual := makeFileSystems(t, "/alpha/beta/gamma", tc.files)
-
-			err := Run("/alpha/beta/gamma", "/alpha/beta", "/dst", actual)
-			require.NoError(t, err)
-
-			addFiles(t, expected, "/dst/gamma", tc.files)
-			checkFSys(t, expected, actual)
+			checkLocalizeInTargetSuccess(t, tc.files)
 		})
 	}
 }
@@ -1017,11 +989,5 @@ kind: Component
 nameSuffix: -test
 `,
 	}
-	expected, actual := makeFileSystems(t, "/", kustAndComponents)
-
-	err := Run("/", "", "", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/localized", kustAndComponents)
-	checkFSys(t, expected, actual)
+	checkLocalizeInTargetSuccess(t, kustAndComponents)
 }
