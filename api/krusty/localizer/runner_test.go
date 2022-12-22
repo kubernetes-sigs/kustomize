@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package localizetests_test
+package localizer_test
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
-	. "sigs.k8s.io/kustomize/api/krusty/localizetests"
+	"sigs.k8s.io/kustomize/api/krusty/localizer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -223,7 +223,7 @@ openapi:
 	})
 
 	dst := testDir.Join("dst")
-	err := (&LocalizeRunner{}).Run(fsActual, testDir.String(), dst)
+	err := localizer.Run(fsActual, testDir.String(), "", dst)
 	require.NoError(t, err)
 
 	localizedPath := getLocFilePath(t, []string{"customschema.json"})
