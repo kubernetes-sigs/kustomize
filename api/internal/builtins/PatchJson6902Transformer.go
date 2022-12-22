@@ -24,6 +24,8 @@ type PatchJson6902TransformerPlugin struct {
 	JsonOp       string          `json:"jsonOp,omitempty" yaml:"jsonOp,omitempty"`
 }
 
+// noinspection GoUnusedGlobalVariable
+
 func (p *PatchJson6902TransformerPlugin) Config(
 	h *resmap.PluginHelpers, c []byte) (err error) {
 	p.ldr = h.Loader()
@@ -78,6 +80,11 @@ func (p *PatchJson6902TransformerPlugin) Transform(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
+
+	if len(resources) == 0 {
+		return fmt.Errorf("patchesJson6902 target not found for %s", p.Target.ResId)
+	}
+
 	for _, res := range resources {
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
 
