@@ -539,7 +539,7 @@ func (rn *RNode) getMapFromMeta(fName string, fields ...string) map[string]strin
 		// fName is found in metadata; create the map from its content
 		expectedSize := len(fields)
 		if expectedSize == 0 {
-			expectedSize = len(fNameValue.Content) / 2
+			expectedSize = len(fNameValue.Content) / 2 //nolint: gomnd
 		}
 		result = make(map[string]string, expectedSize)
 
@@ -772,7 +772,7 @@ func (rn *RNode) VisitFields(fn func(node *MapNode) error) error {
 // visitMappingNodeFields calls fn for fields in the content, in content order.
 // The caller is responsible to ensure the node is a mapping node. If fieldNames
 // are specified, then fn is called only for the fields that match the given
-// fieldNames. fieldNames must contain unique values.
+// fieldNames.
 func visitMappingNodeFields(content []*yaml.Node, fn func(key, value *yaml.Node), fieldNames ...string) {
 	switch len(fieldNames) {
 	case 0: // visit all fields
@@ -780,19 +780,31 @@ func visitMappingNodeFields(content []*yaml.Node, fn func(key, value *yaml.Node)
 			fn(key, value)
 			return true
 		})
-	default: // visit specified fields
-		// assumption: fields in content have unique names
-		found := 0
+	case 1: // visit single field
 		visitFieldsWhileTrue(content, func(key, value *yaml.Node, _ int) bool {
 			if key == nil {
 				return true
 			}
-			if !sliceutil.Contains(fieldNames, key.Value) {
+			if fieldNames[0] == key.Value {
+				fn(key, value)
+				return false
+			}
+			return true
+		})
+	default: // visit specified fields
+		fieldsStillToVisit := make(map[string]bool, len(fieldNames))
+		for _, fieldName := range fieldNames {
+			fieldsStillToVisit[fieldName] = true
+		}
+		visitFieldsWhileTrue(content, func(key, value *yaml.Node, _ int) bool {
+			if key == nil {
 				return true
 			}
-			fn(key, value)
-			found++
-			return found < len(fieldNames)
+			if fieldsStillToVisit[key.Value] {
+				fn(key, value)
+				delete(fieldsStillToVisit, key.Value)
+			}
+			return len(fieldsStillToVisit) > 0
 		})
 	}
 }
