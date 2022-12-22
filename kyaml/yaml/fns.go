@@ -647,16 +647,16 @@ func (s MapEntrySetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	content := rn.Content()
-	stillMissing := true
+	fieldStillNotFound := true
 	visitFieldsWhileTrue(content, func(key, value *yaml.Node, keyIndex int) bool {
 		if key.Value == s.Name {
 			content[keyIndex] = s.Key.YNode()
 			content[keyIndex+1] = s.Value.YNode()
-			stillMissing = false
+			fieldStillNotFound = false
 		}
-		return stillMissing
+		return fieldStillNotFound
 	})
-	if !stillMissing {
+	if !fieldStillNotFound {
 		return rn, nil
 	}
 
