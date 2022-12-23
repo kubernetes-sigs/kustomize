@@ -134,7 +134,12 @@ s390x)
     ;;
 esac
 
-releases=$(curl -s "$release_url")
+# You can authenticate by exporting the GITHUB_TOKEN in the environment
+if [[ -z "${GITHUB_TOKEN}" ]]; then
+    releases=$(curl -s "$release_url")
+else
+    releases=$(curl -s "$release_url" --header "Authorization: Bearer ${GITHUB_TOKEN}")
+fi
 
 if [[ $releases == *"API rate limit exceeded"* ]]; then
   echo "Github rate-limiter failed the request. Either authenticate or wait a couple of minutes."
