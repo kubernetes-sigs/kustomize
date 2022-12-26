@@ -778,6 +778,39 @@ spec:
       some: value
 `,
 		},
+
+		// Issue #4928
+		"support numeric keys": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "foobar"
+`,
+			patch: yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  "9110": "foo-foo"
+`),
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  "9110": "foo-foo"
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
