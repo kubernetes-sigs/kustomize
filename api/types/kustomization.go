@@ -298,6 +298,27 @@ func (k *Kustomization) FixKustomizationPreMarshalling(fSys filesys.FileSystem) 
 	return nil
 }
 
+func (k *Kustomization) CheckEmpty() error {
+	// generate empty Kustomization
+	emptyKustomization := &Kustomization{}
+	emptyKustomization.FixKustomization()
+
+	// compare with yaml string
+	b, err := yaml.Marshal(k)
+	if err != nil {
+		return fmt.Errorf("kustomization marshal error: %w", err)
+	}
+	emptyb, err := yaml.Marshal(emptyKustomization)
+	if err != nil {
+		return fmt.Errorf("empty kustomization marshal error: %w", err)
+	}
+
+	if string(b) == string(emptyb) {
+		return fmt.Errorf("kustomization.yaml is empty")
+	}
+	return nil
+}
+
 func (k *Kustomization) EnforceFields() []string {
 	var errs []string
 	if k.Kind != "" && k.Kind != KustomizationKind && k.Kind != ComponentKind {
