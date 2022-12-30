@@ -4,10 +4,10 @@ go 1.18
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	sigs.k8s.io/kustomize/api v0.12.1
-	sigs.k8s.io/kustomize/kyaml v0.13.9
-	sigs.k8s.io/yaml v1.2.0
+	sigs.k8s.io/kustomize/kyaml v0.13.10
+	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
