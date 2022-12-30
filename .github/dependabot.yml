@@ -2,11 +2,6 @@
 
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
   - package-ecosystem: "docker"
     directory: "/cmd/config/internal/commands/e2e/e2econtainerconfig"
     schedule:
@@ -59,6 +54,11 @@ updates:
 
   - package-ecosystem: "docker"
     directory: "/site"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
 
@@ -279,6 +279,11 @@ updates:
 
   - package-ecosystem: "gomod"
     directory: "/plugin/untested/v1/gogetter"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "npm"
+    directory: "/site"
     schedule:
       interval: "weekly"
 
