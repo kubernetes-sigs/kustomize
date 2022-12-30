@@ -24,6 +24,8 @@ ifndef REPO_NAME
 REPO_NAME := "kustomize"
 endif
 
+# --- Dependabot ---
+include Makefile-dependabot.mk
 
 # --- Plugins ---
 include Makefile-plugins.mk
