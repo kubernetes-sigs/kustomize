@@ -2,11 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 DOCKER_DIRS := $(shell find . -type f -name "Dockerfile" -exec dirname {} \; | sort -u | egrep  '^./' )
-
 GOMOD_DIRS := $(shell find . -type f -name "go.mod" -exec dirname {} \; | sort -u | egrep  '^./' )
-
 NPM_DIRS := $(shell find . -type f -name "package.json" -exec dirname {} \; | sort -u | egrep  '^./' )
-
 DEPENDABOT_PATH=".github/dependabot.yml"
 
 .PHONY: dependabot/update
