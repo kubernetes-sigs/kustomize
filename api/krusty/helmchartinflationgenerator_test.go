@@ -234,6 +234,7 @@ spec:
 `)
 }
 
+// test for https://github.com/kubernetes-sigs/kustomize/issues/4593
 func TestHelmChartInflationGeneratorWithNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()
@@ -512,4 +513,148 @@ spec:
     name: nats-box
   restartPolicy: Never
 `)
+}
+
+func TestHelmChartInflationGeneratorWithNamespaceProdVsDev(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	dirBase := th.MkDir("base")
+	dirDev := th.MkDir("dev")
+
+	th.WriteK(dirBase, `
+helmChartInflationGenerator:
+- chartName: nats
+  chartVersion: v0.13.1
+  chartRepoUrl: https://nats-io.github.io/k8s/helm/charts
+  releaseName: nats
+  releaseNamespace: base
+`)
+
+	th.WriteK(dirDev, `
+resources: ../base
+namespace: dev
+`)
+
+	m := th.Run(dirDev, th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: myProd-test-minecraft
+  namespace: prod
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: myProd-test-minecraft
+  namespace: prod
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-minecraft
+  type: ClusterIP
+`)
+
+	// Both has two namespaces.
+	th.WriteK(th.GetRoot(), `
+namespace: dev1
+helmChartInflationGenerator:
+- chartName: nats
+  chartVersion: v0.13.1
+  chartRepoUrl: https://nats-io.github.io/k8s/helm/charts
+  releaseName: nats
+  releaseNamespace: dev2
+  `)
+
+	m = th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: myDev-test-minecraft
+  namespace: dev
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: myDev-test-minecraft
+  namespace: dev
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-minecraft
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: myProd-test-minecraft
+  namespace: prod
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: myProd-test-minecraft
+  namespace: prod
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-minecraft
+  type: ClusterIP
+`)
+
 }
