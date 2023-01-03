@@ -314,7 +314,7 @@ metadata:
   labels:
     hero: batman
     fiend: riddler
-    1: emmett kelley
+    "1": emmett kelley
     auto: "2"
 `,
 			filter: Filter{

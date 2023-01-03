@@ -146,7 +146,7 @@ metadata:
   annotations:
     hero: batman
     fiend: riddler
-    2: ford
+    "2": ford
     clown: "1"
 `,
 			filter: Filter{Annotations: annoMap{
