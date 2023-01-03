@@ -34,6 +34,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		{"git::https://git.example.com/", "https://git.example.com/"},
 		{"git@github.com:", "git@github.com:"},
 		{"git@github.com/", "git@github.com:"},
+		{"git::git@github.com:", "git@github.com:"},
 	}
 	var repoPaths = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -81,6 +82,10 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"/tmp",
 			"uri looks like abs path",
 		},
+		"relative path": {
+			"../../tmp",
+			"url lacks host",
+		},
 		"no_slashes": {
 			"iauhsdiuashduas",
 			"url lacks repoPath",
@@ -91,7 +96,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"bad_scp": {
 			"git@local/path:file/system",
-			"url lacks host",
+			"url lacks orgRepo",
 		},
 		"no_org_repo": {
 			"ssh://git.example.com",
@@ -108,6 +113,18 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		"path_exits_repo": {
 			"https://github.com/org/repo.git//path/../../exits/repo",
 			"url path exits repo",
+		},
+		"bad github separator": {
+			"github.com!org/repo.git//path",
+			"url lacks host",
+		},
+		"unsupported protocol after username": {
+			"git@scp://github.com/org/repo.git//path",
+			"url lacks host",
+		},
+		"supported protocol after username": {
+			"git@https://github.com/org/repo.git//path",
+			"url lacks host",
 		},
 	}
 
@@ -474,6 +491,19 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				RepoPath:     "org/repo",
 				KustRootPath: "%-invalid-uri-so-not-parsable-by-net/url.Parse",
 				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "non-git username with non-github host",
+			input:     "ssh://myusername@bitbucket.org/ourteamname/ourrepositoryname.git//path?ref=branch",
+			cloneSpec: "ssh://myusername@bitbucket.org/ourteamname/ourrepositoryname.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:      "ssh://myusername@bitbucket.org/",
+				OrgRepo:   "ourteamname/ourrepositoryname",
+				Path:      "/path",
+				Ref:       "branch",
+				GitSuffix: ".git",
 			},
 		},
 	}
