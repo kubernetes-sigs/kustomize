@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -79,99 +80,154 @@ func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
 	return func() error { return fSys.RemoveAll(x.Dir.String()) }
 }
 
+const (
+	refQuery         = "?ref="
+	gitSuffix        = ".git"
+	gitRootDelimiter = "_git/"
+	pathSeparator    = string(filepath.Separator)
+)
+
 // NewRepoSpecFromURL parses git-like urls.
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
-// the parts.
+// the different parts of URL, set into a RepoSpec object and return RepoSpec object.
+// It MUST return an error if the input is not a git-like URL, as this is used by some code paths
+// to distinguish between local and remote paths.
+//
+// In particular, NewRepoSpecFromURL separates the URL used to clone the repo from the
+// elements Kustomize uses for other purposes (e.g. query params that turn into args, and
+// the path to the kustomization root within the repo).
 func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
+	repoSpec := &RepoSpec{raw: n, Dir: notCloned, Timeout: defaultTimeout, Submodules: defaultSubmodules}
 	if filepath.IsAbs(n) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
-	repoSpecVal := parseGitURL(n)
-	if repoSpecVal.RepoPath == "" {
-		return nil, fmt.Errorf("url lacks repoPath: %s", n)
-	}
-	if repoSpecVal.Host == "" {
-		return nil, fmt.Errorf("url lacks host: %s", n)
-	}
-	cleanedPath := filepath.Clean(strings.TrimPrefix(repoSpecVal.KustRootPath, string(filepath.Separator)))
-	if pathElements := strings.Split(cleanedPath, string(filepath.Separator)); len(pathElements) > 0 &&
-		pathElements[0] == filesys.ParentDir {
-		return nil, fmt.Errorf("url path exits repo: %s", n)
-	}
-	return repoSpecVal, nil
-}
 
-const (
-	refQuery     = "?ref="
-	gitSuffix    = ".git"
-	gitDelimiter = "_git/"
-)
-
-// From strings like git@github.com:someOrg/someRepo.git or
-// https://github.com/someOrg/someRepo?ref=someHash, extract
-// the different parts of URL , set into a RepoSpec object and return RepoSpec object.
-func parseGitURL(n string) *RepoSpec {
-	repoSpec := &RepoSpec{raw: n, Dir: notCloned, Timeout: defaultTimeout, Submodules: defaultSubmodules}
-	// parse query first
-	// safe because according to rfc3986: ? only allowed in query
-	// and not recognized %-encoded
-	beforeQuery, query, _ := strings.Cut(n, "?")
-	n = beforeQuery
-	// if no query, defaults returned
+	// Parse the query first. This is safe because according to rfc3986 "?" is only allowed in the
+	// query and is not recognized %-encoded.
+	// Note that parseQuery returns default values for empty parameters.
+	n, query, _ := strings.Cut(n, "?")
 	repoSpec.Ref, repoSpec.Timeout, repoSpec.Submodules = parseQuery(query)
 
-	if strings.Contains(n, gitDelimiter) {
-		index := strings.Index(n, gitDelimiter)
-		// Adding _git/ to host
-		repoSpec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
-		repoSpec.RepoPath = strings.Split(n[index+len(gitDelimiter):], "/")[0]
-		repoSpec.KustRootPath = parsePath(n[index+len(gitDelimiter)+len(repoSpec.RepoPath):])
-		return repoSpec
-	}
-	repoSpec.Host, n = extractHost(n)
-	isLocal := strings.HasPrefix(repoSpec.Host, "file://")
-	if !isLocal {
-		repoSpec.GitSuffix = gitSuffix
-	}
-	if strings.Contains(n, gitSuffix) {
-		repoSpec.GitSuffix = gitSuffix
-		index := strings.Index(n, gitSuffix)
-		repoSpec.RepoPath = n[0:index]
-		n = n[index+len(gitSuffix):]
-		if len(n) > 0 && n[0] == '/' {
-			n = n[1:]
-		}
-		repoSpec.KustRootPath = parsePath(n)
-		return repoSpec
+	var err error
+
+	// Parse the host (e.g. scheme, username, domain) segment.
+	repoSpec.Host, n, err = extractHost(n)
+	if err != nil {
+		return nil, err
 	}
 
-	if isLocal {
-		if idx := strings.Index(n, "//"); idx > 0 {
-			repoSpec.RepoPath = n[:idx]
-			n = n[idx+2:]
-			repoSpec.KustRootPath = parsePath(n)
-			return repoSpec
-		}
-		repoSpec.RepoPath = parsePath(n)
-		return repoSpec
+	// In some cases, we're given a path to a git repo + a path to the kustomization root within
+	// that repo. We need to split them so that we can ultimately give the repo only to the cloner.
+	repoSpec.RepoPath, repoSpec.KustRootPath, err = parsePathParts(n, defaultRepoPathLength(repoSpec.Host))
+	if err != nil {
+		return nil, err
 	}
 
-	i := strings.Index(n, "/")
-	if i < 1 {
-		repoSpec.KustRootPath = parsePath(n)
-		return repoSpec
+	// If the repo name ends in .git, isolate it. It will be added back by the clone spec function.
+	if idx := strings.Index(repoSpec.RepoPath, gitSuffix); idx >= 0 {
+		repoSpec.GitSuffix = gitSuffix
+		repoSpec.RepoPath = repoSpec.RepoPath[:idx]
 	}
-	j := strings.Index(n[i+1:], "/")
-	if j >= 0 {
-		j += i + 1
-		repoSpec.RepoPath = n[:j]
-		repoSpec.KustRootPath = parsePath(n[j+1:])
-		return repoSpec
+	// Force the .git suffix URLs for services whose clone URL is the repo URL + .git.
+	// This allows us to support the repo URL as an input instead of the actual clone URL.
+	if legacyAddGitSuffix(repoSpec.Host, repoSpec.RepoPath) {
+		repoSpec.GitSuffix = gitSuffix
 	}
-	repoSpec.KustRootPath = ""
-	repoSpec.RepoPath = parsePath(n)
-	return repoSpec
+
+	return repoSpec, nil
+}
+
+// legacyAddGitSuffix returns true if the .git suffix has historically been added to the repoSpec
+// (but not necessarily the cloneSpec) for the given host and repoPath.
+// TODO(@knverey): Remove repoSpec.gitSuffix entirely.
+// The .git suffix is a popular convention, but not universally used. Kustomize seems to force it
+// for non-local because of Github, which now handles suffix-less URLs just fine, as do Gitlab and Bitbucket.
+func legacyAddGitSuffix(host, repoPath string) bool {
+	return !strings.Contains(repoPath, gitRootDelimiter) &&
+		!strings.HasPrefix(host, fileScheme)
+}
+
+const allSegments = -999999
+const orgRepoSegments = 2
+
+func defaultRepoPathLength(host string) int {
+	if strings.HasPrefix(host, fileScheme) {
+		return allSegments
+	}
+	return orgRepoSegments
+}
+
+// parsePathParts splits the repo path that will ultimately be passed to git to clone the
+// repo from the kustomization root path, which Kustomize will execute the build in after the repo
+// is cloned.
+//
+// We first try to do this based on explicit markers in the URL (e.g. _git, .git or //).
+// If none are present, we try to apply a historical default repo path length that is derived from
+// Github URLs. If there aren't enough segments, we have historically considered the URL invalid.
+func parsePathParts(n string, defaultSegmentLength int) (string, string, error) {
+	repoPath, kustRootPath, success := tryExplicitMarkerSplit(n)
+	if !success {
+		repoPath, kustRootPath, success = tryDefaultLengthSplit(n, defaultSegmentLength)
+	}
+
+	// Validate the result
+	if !success || len(repoPath) == 0 {
+		return "", "", fmt.Errorf("failed to parse repo path segment")
+	}
+	if kustRootPathExitsRepo(kustRootPath) {
+		return "", "", fmt.Errorf("url path exits repo: %s", n)
+	}
+
+	return repoPath, strings.TrimPrefix(kustRootPath, pathSeparator), nil
+}
+
+func tryExplicitMarkerSplit(n string) (string, string, bool) {
+	// Look for the _git delimiter, which by convention is expected to be ONE directory above the repo root.
+	// If found, split on the NEXT path element, which is the repo root.
+	// Example: https://username@dev.azure.com/org/project/_git/repo/path/to/kustomization/root
+	if gitRootIdx := strings.Index(n, gitRootDelimiter); gitRootIdx >= 0 {
+		gitRootPath := n[:gitRootIdx+len(gitRootDelimiter)]
+		subpathSegments := strings.Split(n[gitRootIdx+len(gitRootDelimiter):], pathSeparator)
+		return gitRootPath + subpathSegments[0], strings.Join(subpathSegments[1:], pathSeparator), true
+
+		// Look for a double-slash in the path, which if present separates the repo root from the kust path.
+		// It is a convention, not a real path element, so do not preserve it in the returned value.
+		// Example: https://github.com/org/repo//path/to/kustomozation/root
+	} else if repoRootIdx := strings.Index(n, "//"); repoRootIdx >= 0 {
+		return n[:repoRootIdx], n[repoRootIdx+2:], true
+
+		// Look for .git in the path, which if present is part of the directory name of the git repo.
+		// This means we want to grab everything up to and including that suffix
+		// Example: https://github.com/org/repo.git/path/to/kustomozation/root
+	} else if gitSuffixIdx := strings.Index(n, gitSuffix); gitSuffixIdx >= 0 {
+		upToGitSuffix := n[:gitSuffixIdx+len(gitSuffix)]
+		afterGitSuffix := n[gitSuffixIdx+len(gitSuffix):]
+		return upToGitSuffix, afterGitSuffix, true
+	}
+	return "", "", false
+}
+
+func tryDefaultLengthSplit(n string, defaultSegmentLength int) (string, string, bool) {
+	// If the default is to take all segments, do so.
+	if defaultSegmentLength == allSegments {
+		return n, "", true
+
+		// If the default is N segments, make sure we have at least that many and take them if so.
+		// If we have less than N, we have historically considered the URL invalid.
+	} else if segments := strings.Split(n, pathSeparator); len(segments) >= defaultSegmentLength {
+		firstNSegments := strings.Join(segments[:defaultSegmentLength], pathSeparator)
+		rest := strings.Join(segments[defaultSegmentLength:], pathSeparator)
+		return firstNSegments, rest, true
+	}
+	return "", "", false
+}
+
+func kustRootPathExitsRepo(kustRootPath string) bool {
+	cleanedPath := filepath.Clean(strings.TrimPrefix(kustRootPath, pathSeparator))
+	pathElements := strings.Split(cleanedPath, pathSeparator)
+	return len(pathElements) > 0 &&
+		pathElements[0] == filesys.ParentDir
 }
 
 // Clone git submodules by default.
@@ -219,16 +275,7 @@ func parseQuery(query string) (string, time.Duration, bool) {
 	return ref, duration, submodules
 }
 
-func parsePath(n string) string {
-	parsed, err := url.Parse(n)
-	// TODO(annasong): decide how to handle error, i.e. return error, empty string, etc.
-	if err != nil {
-		return n
-	}
-	return parsed.Path
-}
-
-func extractHost(n string) (string, string) {
+func extractHost(n string) (string, string, error) {
 	n = ignoreForcedGitProtocol(n)
 	scheme, n := extractScheme(n)
 	username, n := extractUsername(n)
@@ -238,19 +285,20 @@ func extractHost(n string) (string, string) {
 	// Validate the username and scheme before attempting host/path parsing, because if the parsing
 	// so far has not succeeded, we will not be able to extract the host and path correctly.
 	if err := validateScheme(scheme, acceptSCP); err != nil {
-		// TODO: return this error instead.
-		return "", n
+		return "", "", err
 	}
 
 	// Now that we have extracted a valid scheme+username, we can parse host itself.
 
 	// The file protocol specifies an absolute path to a local git repo.
 	// Everything after the scheme (including any 'username' we found) is actually part of that path.
-	if scheme == "file://" {
-		return scheme, username + n
+	if scheme == fileScheme {
+		return scheme, username + n, nil
 	}
-	sepIndex := findPathSeparator(n, acceptSCP)
-	host, rest := n[:sepIndex+1], n[sepIndex+1:]
+	var host, rest = n, ""
+	if sepIndex := findPathSeparator(n, acceptSCP); sepIndex >= 0 {
+		host, rest = n[:sepIndex+1], n[sepIndex+1:]
+	}
 
 	// Github URLs are strictly normalized in a way that may discard scheme and username components.
 	if stdGithub {
@@ -259,10 +307,9 @@ func extractHost(n string) (string, string) {
 
 	// Host is required, so do not concat the scheme and username if we didn't find one.
 	if host == "" {
-		// TODO: This should return an error.
-		return "", n
+		return "", "", errors.Errorf("failed to parse host segment")
 	}
-	return scheme + username + host, rest
+	return scheme + username + host, rest, nil
 }
 
 // ignoreForcedGitProtocol strips the "git::" prefix from URLs.
@@ -298,7 +345,7 @@ func validateScheme(scheme string, acceptSCPStyle bool) error {
 		if !acceptSCPStyle {
 			return fmt.Errorf("failed to parse scheme")
 		}
-	case "ssh://", "file://", "https://", "http://":
+	case sshScheme, fileScheme, httpsScheme, httpScheme:
 		// These are all supported schemes
 	default:
 		// At time of writing, we should never end up here because we do not parse out
@@ -308,8 +355,13 @@ func validateScheme(scheme string, acceptSCPStyle bool) error {
 	return nil
 }
 
+const fileScheme = "file://"
+const httpScheme = "http://"
+const httpsScheme = "https://"
+const sshScheme = "ssh://"
+
 func extractScheme(s string) (string, string) {
-	for _, prefix := range []string{"ssh://", "https://", "http://", "file://"} {
+	for _, prefix := range []string{sshScheme, httpsScheme, httpScheme, fileScheme} {
 		if rest, found := trimPrefixIgnoreCase(s, prefix); found {
 			return prefix, rest
 		}
@@ -340,7 +392,7 @@ func trimPrefixIgnoreCase(s, prefix string) (string, bool) {
 }
 
 func findPathSeparator(hostPath string, acceptSCP bool) int {
-	sepIndex := strings.Index(hostPath, "/")
+	sepIndex := strings.Index(hostPath, pathSeparator)
 	if acceptSCP {
 		// The colon acts as a delimiter in scp-style ssh URLs only if not prefixed by '/'.
 		if colonIndex := strings.Index(hostPath, ":"); colonIndex > 0 && colonIndex < sepIndex {
@@ -350,30 +402,13 @@ func findPathSeparator(hostPath string, acceptSCP bool) int {
 	return sepIndex
 }
 
-const normalizedHTTPGithub = "https://github.com/"
 const gitUsername = "git@"
-const normalizedSCPGithub = gitUsername + "github.com:"
 
 func normalizeGithubHostParts(scheme, username string) (string, string, string) {
-	if strings.HasPrefix(scheme, "ssh://") || username != "" {
+	if strings.HasPrefix(scheme, sshScheme) || username != "" {
 		return "", username, "github.com:"
 	}
-	return "https://", "", "github.com/"
-}
-
-func normalizeGitHostSpec(host string) string {
-	s := strings.ToLower(host)
-	if strings.Contains(s, "github.com") {
-		if strings.Contains(s, gitUsername) || strings.Contains(s, "ssh:") {
-			host = normalizedSCPGithub
-		} else {
-			host = normalizedHTTPGithub
-		}
-	}
-	if strings.HasPrefix(s, "git::") {
-		host = strings.TrimPrefix(s, "git::")
-	}
-	return host
+	return httpsScheme, "", "github.com/"
 }
 
 // The format of Azure repo URL is documented
