@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -162,14 +161,8 @@ func (kvl *loader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, 
 	if len(data) == 2 {
 		kv.Value = data[1]
 	} else {
-		// No value (no `=` in the line) is a signal to obtain the value
-		// from the environment. This behaviour was accidentally imported from kubectl code, and
-		// will be removed in the next major release of Kustomize.
-		_, _ = fmt.Fprintln(os.Stderr, "WARNING: "+
-			"This Kustomization is relying on a bug that loads values from the environment "+
-			"when they are omitted from an env file. "+
-			"This behaviour will be removed in the next major release of Kustomize.")
-		kv.Value = os.Getenv(key)
+		// If there is value (no `=` in the line), we set value to an empty string
+		kv.Value = ""
 	}
 	kv.Key = key
 	return kv, nil
