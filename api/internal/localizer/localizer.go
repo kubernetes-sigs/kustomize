@@ -130,6 +130,12 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 		paths []string
 		locFn func(string) (string, error)
 	}{
+		"bases": {
+			// Allow use of deprecated field
+			//nolint:staticcheck
+			kust.Bases,
+			lc.localizeDir,
+		},
 		"components": {
 			kust.Components,
 			lc.localizeDir,
@@ -144,11 +150,11 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 		},
 	} {
 		for i, path := range field.paths {
-			newPath, err := field.locFn(path)
+			locPath, err := field.locFn(path)
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to localize %s path", fieldName)
 			}
-			field.paths[i] = newPath
+			field.paths[i] = locPath
 		}
 	}
 
@@ -165,7 +171,6 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 	if err := lc.localizePatches(kust.Patches); err != nil {
 		return errors.WrapPrefixf(err, "unable to localize patches")
 	}
-	// Allow use of deprecated field
 	//nolint:staticcheck
 	if err := lc.localizePatches(kust.PatchesJson6902); err != nil {
 		return errors.WrapPrefixf(err, "unable to localize patchesJson6902")
@@ -194,19 +199,25 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 		}
 	}
 
-	// TODO(annasong): localize all other kustomization fields: resources, bases, configMapGenerator.env, secretGenerator.env
+	// TODO(annasong): localize all other kustomization fields: resources
 	return nil
 }
 
 // localizeGenerator localizes the file paths on generator.
-func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) error {
+func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) (err error) {
+	var locEnvSrc string
+	if generator.EnvSource != "" {
+		locEnvSrc, err = lc.localizeFile(generator.EnvSource)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize generator env file")
+		}
+	}
 	locEnvs := make([]string, len(generator.EnvSources))
 	for i, env := range generator.EnvSources {
-		newPath, err := lc.localizeFile(env)
+		locEnvs[i], err = lc.localizeFile(env)
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to localize generator envs file")
 		}
-		locEnvs[i] = newPath
 	}
 	locFiles := make([]string, len(generator.FileSources))
 	for i, file := range generator.FileSources {
@@ -223,6 +234,7 @@ func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) error {
 		}
 		locFiles[i] = newFile
 	}
+	generator.EnvSource = locEnvSrc
 	generator.EnvSources = locEnvs
 	generator.FileSources = locFiles
 	return nil
