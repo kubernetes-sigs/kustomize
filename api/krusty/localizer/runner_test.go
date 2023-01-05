@@ -245,6 +245,52 @@ func setWorkingDir(t *testing.T, workingDir string) {
 	require.NoError(t, err)
 }
 
+func link(t *testing.T, testDir filesys.ConfirmedDir, links map[string]string) {
+	t.Helper()
+
+	for newLink, file := range links {
+		require.NoError(t, os.Symlink(testDir.Join(file), testDir.Join(newLink)))
+	}
+}
+
+func simplePathAndFiles(t *testing.T) (locPath string, files map[string]string) {
+	t.Helper()
+
+	locPath = filepath.Join(LocalizeDir, "github.com",
+		"kubernetes-sigs", "kustomize", "kustomize", "v4.5.7",
+		"api", "krusty", "testdata", "localize", "simple")
+	files = map[string]string{
+		"kustomization.yaml": simpleKustomization,
+		"deployment.yaml":    simpleDeployment,
+		"service.yaml":       simpleService,
+	}
+	return
+}
+
+func remotePathAndFiles(t *testing.T) (locPath string, files map[string]string) {
+	t.Helper()
+
+	locPath = filepath.Join(LocalizeDir, "github.com",
+		"kubernetes-sigs", "kustomize", "master",
+		"api", "krusty", "testdata", "localize", "remote")
+	simplePath, simpleFiles := simplePathAndFiles(t)
+	files = map[string]string{
+		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
+commonLabels:
+  purpose: remoteReference
+kind: Kustomization
+resources:
+- %s
+- hpa.yaml
+`, simplePath),
+		"hpa.yaml": remoteHPA,
+	}
+	for path, content := range simpleFiles {
+		files[filepath.Join(simplePath, path)] = content
+	}
+	return
+}
+
 // checkFs checks fsActual, the real file system, against fsExpected, a file system in memory, for contents
 // in directory walkDir. checkFs does not allow symlinks.
 func checkFs(t *testing.T, walkDir string, fsExpected filesys.FileSystem, fsActual filesys.FileSystem) {
@@ -299,14 +345,6 @@ func TestWorkingDir(t *testing.T) {
 	checkFs(t, dst, fsExpected, fsActual)
 }
 
-func link(t *testing.T, testDir filesys.ConfirmedDir, links map[string]string) {
-	t.Helper()
-
-	for newLink, file := range links {
-		require.NoError(t, os.Symlink(testDir.Join(file), testDir.Join(newLink)))
-	}
-}
-
 func TestSymlinks(t *testing.T) {
 	// test directory
 	// - link to target
@@ -351,20 +389,6 @@ func TestSymlinks(t *testing.T) {
 		filepath.Join("nested", "file"): simpleDeployment,
 	})
 	checkFs(t, dst, fsExpected, fsActual)
-}
-
-func simplePathAndFiles(t *testing.T) (locPath string, files map[string]string) {
-	t.Helper()
-
-	locPath = filepath.Join(LocalizeDir, "github.com",
-		"kubernetes-sigs", "kustomize", "kustomize", "v4.5.7",
-		"api", "krusty", "testdata", "localize", "simple")
-	files = map[string]string{
-		"kustomization.yaml": simpleKustomization,
-		"deployment.yaml":    simpleDeployment,
-		"service.yaml":       simpleService,
-	}
-	return
 }
 
 func TestRemoteTargetDefaultDst(t *testing.T) {
@@ -466,30 +490,6 @@ func TestRemoteRoot(t *testing.T) {
 	})
 	setupDir(t, fsExpected, filepath.Join(dst, localizedPath), files)
 	checkFs(t, dst, fsExpected, fsActual)
-}
-
-func remotePathAndFiles(t *testing.T) (locPath string, files map[string]string) {
-	t.Helper()
-
-	locPath = filepath.Join(LocalizeDir, "github.com",
-		"kubernetes-sigs", "kustomize", "master",
-		"api", "krusty", "testdata", "localize", "remote")
-	simplePath, simpleFiles := simplePathAndFiles(t)
-	files = map[string]string{
-		"kustomization.yaml": fmt.Sprintf(`apiVersion: kustomize.config.k8s.io/v1beta1
-commonLabels:
-  purpose: remoteReference
-kind: Kustomization
-resources:
-- %s
-- hpa.yaml
-`, simplePath),
-		"hpa.yaml": remoteHPA,
-	}
-	for path, content := range simpleFiles {
-		files[filepath.Join(simplePath, path)] = content
-	}
-	return
 }
 
 func TestNestedRemoteRoots(t *testing.T) {
