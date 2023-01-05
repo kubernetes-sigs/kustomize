@@ -50,6 +50,26 @@ func TestKeyValuesFromLines(t *testing.T) {
 			},
 			expectedErr: false,
 		},
+		{
+			desc: "no value with equals",
+			content: `
+		k1=
+		`,
+			expectedPairs: []types.Pair{
+				{Key: "k1", Value: ""},
+			},
+			expectedErr: false,
+		},
+		{
+			desc: "no value without equals",
+			content: `
+		k1
+		`,
+			expectedPairs: []types.Pair{
+				{Key: "k1", Value: ""},
+			},
+			expectedErr: false,
+		},
 		// TODO: add negative testcases
 	}
 
