@@ -10,9 +10,18 @@ type ResourceLoadError struct {
 	FileError   error
 }
 
-var _ error = ResourceLoadError{}
-
 func (rle ResourceLoadError) Error() string {
 	return fmt.Sprintf(`when parsing as inline received error: %s
 when parsing as filepath received error: %s`, rle.InlineError, rle.FileError)
+}
+
+type PathLocalizeError struct {
+	Path      string
+	FileError error
+	RootError error
+}
+
+func (ple PathLocalizeError) Error() string {
+	return fmt.Sprintf(`could not localize path %q as file: %s; could not localize path %q as directory: %s`,
+		ple.Path, ple.FileError, ple.Path, ple.RootError)
 }
