@@ -172,7 +172,7 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 	}
 	//nolint:staticcheck
 	for i, patch := range kust.PatchesStrategicMerge {
-		localizedPath, err := lc.localizeResource(string(patch))
+		localizedPath, err := lc.localizeK8sResource(string(patch))
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to localize patchesStrategicMerge entry")
 		}
@@ -330,7 +330,7 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 		"validators":   kust.Validators,
 	} {
 		for i, entry := range entries {
-			rm, isPath, err := lc.loadResource(entry)
+			rm, isPath, err := lc.loadK8sResource(entry)
 			if err != nil {
 				return errors.WrapPrefixf(err, "unable to load %s entry", fieldName)
 			}
@@ -357,10 +357,12 @@ func (lc *localizer) localizeBuiltinPlugins(kust *types.Kustomization) error {
 	return nil
 }
 
-// localizeResource returns the localized file path if resourceEntry is a file containing a resource.
-// localizeResource returns the empty string if resourceEntry is an inline resource.
-func (lc *localizer) localizeResource(resourceEntry string) (string, error) {
-	_, isFile, err := lc.loadResource(resourceEntry)
+// localizeK8sResource returns the localized file path if resourceEntry is a
+// file containing a kubernetes resource.
+// localizeK8sResource returns the empty string if resourceEntry is an inline
+// resource.
+func (lc *localizer) localizeK8sResource(resourceEntry string) (string, error) {
+	_, isFile, err := lc.loadK8sResource(resourceEntry)
 	if err != nil {
 		return "", err
 	}
@@ -370,9 +372,11 @@ func (lc *localizer) localizeResource(resourceEntry string) (string, error) {
 	return "", nil
 }
 
-// loadResource tries to load resourceEntry as a file path or inline.
-// On success, loadResource returns the loaded resource map and whether resourceEntry is a file path.
-func (lc *localizer) loadResource(resourceEntry string) (resmap.ResMap, bool, error) {
+// loadK8sResource tries to load resourceEntry as a file path or inline
+// kubernetes resource.
+// On success, loadK8sResource returns the loaded resource map and whether
+// resourceEntry is a file path.
+func (lc *localizer) loadK8sResource(resourceEntry string) (resmap.ResMap, bool, error) {
 	rm, inlineErr := lc.rFactory.NewResMapFromBytes([]byte(resourceEntry))
 	if inlineErr != nil {
 		var fileErr error

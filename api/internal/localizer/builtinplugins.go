@@ -21,8 +21,8 @@ import (
 type localizeBuiltinPlugins struct {
 	lc *localizer
 
-	// locFn is used by localizeNode to set the localized path on the plugin.
-	locFn func(string) (string, error)
+	// locPathFn is used by localizeNode to set the localized path on the plugin.
+	locPathFn func(string) (string, error)
 }
 
 var _ kio.Filter = &localizeBuiltinPlugins{}
@@ -46,7 +46,7 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 				},
 			},
 			SetValue: func(node *yaml.RNode) error {
-				lbp.locFn = lbp.lc.localizeFile
+				lbp.locPathFn = lbp.lc.localizeFile
 				return lbp.localizeNode(node)
 			},
 		}, fieldspec.Filter{
@@ -55,11 +55,12 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 				Path: "paths",
 			},
 			SetValue: func(node *yaml.RNode) error {
-				lbp.locFn = lbp.lc.localizeResource
+				lbp.locPathFn = lbp.lc.localizeK8sResource
 				return errors.Wrap(node.VisitElements(lbp.localizeNode))
 			},
 		})
-		// TODO(annasong): localize ConfigMapGenerator, SecretGenerator
+		// TODO(annasong): localize ConfigMapGenerator, SecretGenerator,
+		// HelmChartInflationGenerator
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
@@ -67,9 +68,9 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 	return plugins, nil
 }
 
-// localizeNode sets the scalar node to its value localized by locFn.
+// localizeNode sets the scalar node to its value localized by locPathFn.
 func (lbp *localizeBuiltinPlugins) localizeNode(node *yaml.RNode) error {
-	localizedPath, err := lbp.locFn(node.YNode().Value)
+	localizedPath, err := lbp.locPathFn(node.YNode().Value)
 	if err != nil {
 		return err
 	}
