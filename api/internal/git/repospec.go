@@ -128,7 +128,7 @@ func parseGitURL(n string) *RepoSpec {
 		repoSpec.KustRootPath = parsePath(n[index+len(gitDelimiter)+len(repoSpec.RepoPath):])
 		return repoSpec
 	}
-	repoSpec.Host, n = parseHostSpec(n)
+	repoSpec.Host, n = extractHost(n)
 	isLocal := strings.HasPrefix(repoSpec.Host, "file://")
 	if !isLocal {
 		repoSpec.GitSuffix = gitSuffix
@@ -227,13 +227,13 @@ func parsePath(n string) string {
 	return parsed.Path
 }
 
-func parseHostSpec(n string) (string, string) {
+func extractHost(n string) (string, string) {
 	// We used to use go-getter to handle our urls: https://github.com/hashicorp/go-getter.
 	// This prefix signaled go-getter to use the git protocol to fetch the url's contents.
 	// We still accept this prefix.
 	n, _ = trimPrefixIgnoreCase(n, "git::")
 
-	scheme, n := parseScheme(n)
+	scheme, n := extractScheme(n)
 	if scheme == "file://" || scheme == "gh:" {
 		// We support gh: assuming authors use it as a github shorthand, specified in .gitconfig.
 		// The file protocol specifies an absolute path to a local git repo. There is no host.
@@ -241,7 +241,7 @@ func parseHostSpec(n string) (string, string) {
 		return scheme, n
 	}
 
-	username, n := parseUsername(n)
+	username, n := extractUsername(n)
 
 	if rest, isGithubURL := trimGithubHost(n); isGithubURL {
 		// we strictly normalize Github URLs; this may discard scheme and username components in some cases.
@@ -263,19 +263,16 @@ func validHostSpecParsed(scheme, username, host string) bool {
 		(scheme != "" || isSCP) // scheme may be blank for URLs like git@github.com:org/repo
 }
 
-func parseScheme(s string) (string, string) {
-	var scheme string
+func extractScheme(s string) (string, string) {
 	for _, prefix := range []string{"gh:", "ssh://", "https://", "http://", "file://"} {
 		if rest, found := trimPrefixIgnoreCase(s, prefix); found {
-			scheme = prefix
-			s = rest
-			break
+			return prefix, rest
 		}
 	}
-	return scheme, s
+	return "", s
 }
 
-func parseUsername(s string) (string, string) {
+func extractUsername(s string) (string, string) {
 	if trimmed, found := trimPrefixIgnoreCase(s, gitUsername); found {
 		return gitUsername, trimmed
 	}
