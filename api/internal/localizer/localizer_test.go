@@ -1013,3 +1013,53 @@ nameSuffix: -test
 	}
 	checkLocalizeInTargetSuccess(t, kustAndComponents)
 }
+
+func TestLocalizeResources(t *testing.T) {
+	kustAndResources := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- pod.yaml
+- ../../alpha
+`,
+		"pod.yaml": podConfiguration,
+		"../../alpha/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: my-
+`,
+	}
+	expected, actual := makeFileSystems(t, "/a/b", kustAndResources)
+
+	err := Run("/a/b", "/", "", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/localized-b/a/b", kustAndResources)
+	checkFSys(t, expected, actual)
+}
+
+func TestLocalizePathError(t *testing.T) {
+	kustAndResources := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- b
+`,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustAndResources)
+
+	err := Run("/a", "/", "", actual)
+
+	const expectedFileErr = `invalid file reference: '/a/b' must resolve to a file`
+	const expectedRootErr = `unable to localize root "b": unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/a/b'`
+	var actualErr PathLocalizeError
+	require.ErrorAs(t, err, &actualErr)
+	require.Equal(t, "b", actualErr.Path)
+	require.EqualError(t, actualErr.FileError, expectedFileErr)
+	require.EqualError(t, actualErr.RootError, expectedRootErr)
+
+	const expectedErrPrefix = `unable to localize target "/a": unable to localize resources entry`
+	require.EqualError(t, err, fmt.Sprintf(`%s: could not localize path "b" as file: %s; could not localize path "b" as directory: %s`,
+		expectedErrPrefix, expectedFileErr, expectedRootErr))
+
+	checkFSys(t, expected, actual)
+}
