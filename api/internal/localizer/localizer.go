@@ -148,11 +148,15 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Crds,
 			lc.localizeFile,
 		},
+		"resources": {
+			kust.Resources,
+			lc.localizeResource,
+		},
 	} {
 		for i, path := range field.paths {
 			locPath, err := field.locFn(path)
 			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize %s path", fieldName)
+				return errors.WrapPrefixf(err, "unable to localize %s entry", fieldName)
 			}
 			field.paths[i] = locPath
 		}
@@ -198,8 +202,6 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			kust.Replacements[i].Path = newPath
 		}
 	}
-
-	// TODO(annasong): localize all other kustomization fields: resources
 	return nil
 }
 
@@ -254,6 +256,39 @@ func (lc *localizer) localizePatches(patches []types.Patch) error {
 	return nil
 }
 
+// localizeResource localizes resource path, a file or root, and returns the
+// localized path
+func (lc *localizer) localizeResource(path string) (string, error) {
+	var locPath string
+
+	content, fileErr := lc.ldr.Load(path)
+	// The following check catches the case where path is a repo root.
+	// Load on a repo will successfully return its README in HTML.
+	// Because HTML does not follow resource formatting, we then correctly try
+	// to localize path as a root.
+	if fileErr == nil {
+		_, resErr := lc.rFactory.NewResMapFromBytes(content)
+		if resErr != nil {
+			fileErr = errors.WrapPrefixf(resErr, "invalid resource at file %q", path)
+		} else {
+			locPath, fileErr = lc.localizeFileWithContent(path, content)
+		}
+	}
+	if fileErr != nil {
+		var rootErr error
+		locPath, rootErr = lc.localizeDir(path)
+		if rootErr != nil {
+			err := PathLocalizeError{
+				Path:      path,
+				FileError: fileErr,
+				RootError: rootErr,
+			}
+			return "", err
+		}
+	}
+	return locPath, nil
+}
+
 // localizeFile localizes file path and returns the localized path
 func (lc *localizer) localizeFile(path string) (string, error) {
 	content, err := lc.ldr.Load(path)
@@ -267,8 +302,9 @@ func (lc *localizer) localizeFile(path string) (string, error) {
 func (lc *localizer) localizeFileWithContent(path string, content []byte) (string, error) {
 	var locPath string
 	if loader.IsRemoteFile(path) {
-		// TODO(annasong): You need to check if you can add a localize directory here to store
-		// the remote file content. There may be a directory that shares the localize directory name.
+		if lc.fSys.Exists(lc.root.Join(LocalizeDir)) {
+			return "", errors.Errorf("%s already contains %s needed to store file %q", lc.root, LocalizeDir, path)
+		}
 		locPath = locFilePath(path)
 	} else {
 		// ldr has checked that path must be relative; this is subject to change in beta.
@@ -306,8 +342,9 @@ func (lc *localizer) localizeDir(path string) (string, error) {
 	}
 	var locPath string
 	if repo := ldr.Repo(); repo != "" {
-		// TODO(annasong): You need to check if you can add a localize directory here to store
-		// the remote file content. There may be a directory that shares the localize directory name.
+		if lc.fSys.Exists(lc.root.Join(LocalizeDir)) {
+			return "", errors.Errorf("%s already contains %s needed to store root %q", lc.root, LocalizeDir, path)
+		}
 		locPath, err = locRootPath(path, repo, root, lc.fSys)
 		if err != nil {
 			return "", err
