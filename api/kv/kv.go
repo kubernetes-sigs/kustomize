@@ -161,7 +161,7 @@ func (kvl *loader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, 
 	if len(data) == 2 {
 		kv.Value = data[1]
 	} else {
-		// If there is value (no `=` in the line), we set value to an empty string
+		// If there is no value (no `=` in the line), we set the value to an empty string
 		kv.Value = ""
 	}
 	kv.Key = key
