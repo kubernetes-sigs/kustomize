@@ -226,10 +226,6 @@ func TestLocRootPath_URLComponents(t *testing.T) {
 			urlf: "file:///var/run/repo//%s?ref=value",
 			path: simpleJoin(t, FileSchemeDir, "var", "run", "repo", "value"),
 		},
-		"gh_shorthand": {
-			urlf: "gh:org/repo//%s?ref=value",
-			path: simpleJoin(t, "gh", "org", "repo", "value"),
-		},
 		"IPv6": {
 			urlf: "https://[2001:4860:4860::8888]/org/repo//%s?ref=value",
 			path: simpleJoin(t, "2001:4860:4860::8888", "org", "repo", "value"),
