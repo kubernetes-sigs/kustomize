@@ -234,8 +234,6 @@ spec:
 func TestPathWithCronJobV1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - resources.yaml
 patches:

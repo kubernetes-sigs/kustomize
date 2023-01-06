@@ -86,7 +86,7 @@ patches:
 - path: patch.yaml
   target:
     kind: Deployment
-  options: 
+  options:
     allowNameChange: true
 `)
 	options := th.MakeDefaultOptions()
@@ -721,8 +721,6 @@ spec:
         name: myvol
 `)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 namePrefix: foo-
 resources:
 - resources.yaml
@@ -798,8 +796,6 @@ spec:
         name: myvol
 `)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - statefulset.yaml
 patches:
