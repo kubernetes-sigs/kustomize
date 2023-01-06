@@ -228,37 +228,82 @@ func parsePath(n string) string {
 }
 
 func extractHost(n string) (string, string) {
-	// We used to use go-getter to handle our urls: https://github.com/hashicorp/go-getter.
-	// This prefix signaled go-getter to use the git protocol to fetch the url's contents.
-	// We still accept this prefix.
-	n, _ = trimPrefixIgnoreCase(n, "git::")
-
+	n = ignoreForcedGitProtocol(n)
 	scheme, n := extractScheme(n)
+	username, n := extractUsername(n)
+	n, isGithubURL := trimGithubHost(n)
+
+	// Validate the username and scheme before attempting host/path parsing, because if the parsing
+	// so far has not succeeded, we will not be able to extract the host and path correctly.
+	if err := validateUsernameAndScheme(username, scheme, isGithubURL); err != nil {
+		// TODO: return this error instead.
+		return "", n
+	}
+
+	// Github URLS get special handling because they are strictly normalized in a way that
+	// may discard scheme and username components in some cases.
+	if isGithubURL {
+		return normalizedGithubHost(scheme, username), n
+	}
+
+	// Now that we have extracted a valid scheme+username, we can parse host itself.
+
+	// The file protocol specifies an absolute path to a local git repo. There is no host.
 	if scheme == "file://" {
-		// The file protocol specifies an absolute path to a local git repo. There is no host.
 		return scheme, n
 	}
-
-	username, n := extractUsername(n)
-
-	if rest, isGithubURL := trimGithubHost(n); isGithubURL {
-		// we strictly normalize Github URLs; this may discard scheme and username components in some cases.
-		return normalizedGithubHost(scheme, username), rest
-	}
-
-	sepIndex := findPathSeparator(n, username == gitUsername)
+	sepIndex := findPathSeparator(n, acceptSCPStyle(scheme, username))
 	host, rest := n[:sepIndex+1], n[sepIndex+1:]
 
-	if !validHostSpecParsed(scheme, username, host) {
+	// Host is required, so do not concat the scheme and username if we didn't find one.
+	if host == "" {
+		// TODO: This should return an error.
 		return "", n
 	}
 	return scheme + username + host, rest
 }
 
-func validHostSpecParsed(scheme, username, host string) bool {
-	isSCP := username == gitUsername
-	return len(host) > 0 &&
-		(scheme != "" || isSCP) // scheme may be blank for URLs like git@github.com:org/repo
+// ignoreForcedGitProtocol strips the "git::" prefix from URLs.
+// We used to use go-getter to handle our urls: https://github.com/hashicorp/go-getter.
+// The git:: prefix signaled go-getter to use the git protocol to fetch the url's contents.
+// We silently strip this prefix to allow these go-getter-style urls to continue to work,
+// although the git protocol (which is insecure and unsupported on many platforms, including Github)
+// will not actually be used as intended.
+func ignoreForcedGitProtocol(n string) string {
+	n, _ = trimPrefixIgnoreCase(n, "git::")
+	return n
+}
+
+// acceptSCPStyle returns true if the scheme and username indicate potential use of an SCP-style URL.
+// With this style, the scheme is not explicit and the path is delimited by a colon.
+// Strictly speaking the username is optional in SCP-like syntax, but Kustomize has always required it.
+// Example: user@host.xz:path/to/repo.git/
+func acceptSCPStyle(scheme, username string) bool {
+	return username != "" && scheme == ""
+}
+
+func validateUsernameAndScheme(username, scheme string, isGithubURL bool) error {
+	// see https://git-scm.com/docs/git-fetch#_git_urls for info relevant to these validations
+	switch scheme {
+	case "":
+		// Empty scheme is only ok if it's a Github URL or if it looks like SCP-style syntax
+		if !acceptSCPStyle(scheme, username) && !isGithubURL {
+			return fmt.Errorf("no username or scheme found")
+		}
+	case "ssh://":
+		// usernames are optional for ssh protocol
+		return nil
+	case "https://", "http://", "file://":
+		// usernames are not supported by http or file protocols
+		if username != "" {
+			return fmt.Errorf("username %q specified, but %s does not support usernames", username, scheme)
+		}
+	default:
+		// At time of writing, we should never end up here because we do not parse out
+		// unsupported schemes to begin with.
+		return fmt.Errorf("unsupported scheme %q", scheme)
+	}
+	return nil
 }
 
 func extractScheme(s string) (string, string) {
@@ -295,16 +340,10 @@ func trimPrefixIgnoreCase(s, prefix string) (string, bool) {
 	return s, false
 }
 
-func findPathSeparator(hostPath string, isSCP bool) int {
-	if strings.Contains(hostPath, "://") {
-		// This function assumes that the hostPath does not contain a scheme.
-		// If it does, we return -1 to indicate that the hostPath is invalid.
-		return -1
-	}
-
+func findPathSeparator(hostPath string, acceptSCP bool) int {
 	sepIndex := strings.Index(hostPath, "/")
-	if isSCP {
-		// The colon acts as a delimiter for scp protocol only if not prefixed by '/'.
+	if acceptSCP {
+		// The colon acts as a delimiter in scp-style ssh URLs only if not prefixed by '/'.
 		if colonIndex := strings.Index(hostPath, ":"); colonIndex > 0 && colonIndex < sepIndex {
 			sepIndex = colonIndex
 		}
