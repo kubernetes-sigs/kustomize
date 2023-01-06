@@ -116,16 +116,20 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"github.com!org/repo.git//path",
 			"url lacks host",
 		},
-		"unsupported protocol after username": {
-			"git@scp://github.com/org/repo.git//path",
-			"url lacks host",
-		},
-		"supported protocol after username": {
-			"git@https://github.com/org/repo.git//path",
-			"url lacks host",
-		},
 		"mysterious gh: prefix previously supported is no longer handled": {
 			"gh:org/repo",
+			"url lacks host",
+		},
+		"username unsupported with http": {
+			"http://git@foo.com/path/to/repo",
+			"url lacks host",
+		},
+		"username unsupported with https": {
+			"https://git@foo.com/path/to/repo",
+			"url lacks host",
+		},
+		"username unsupported with file": {
+			"file://git@/path/to/repo",
 			"url lacks orgRepo",
 		},
 	}
@@ -505,6 +509,30 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				OrgRepo:   "ourteamname/ourrepositoryname",
 				Path:      "/path",
 				Ref:       "branch",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "unsupported protocol after username (invalid and will be rejected by git)",
+			input:     "git@scp://github.com/org/repo.git//path",
+			cloneSpec: "git@scp://github.com/org/repo.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:      "git@scp:/",
+				OrgRepo:   "/github.com/org/repo",
+				Path:      "/path",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "supported protocol after username (invalid and will be rejected by git)",
+			input:     "git@ssh://github.com/org/repo.git//path",
+			cloneSpec: "git@ssh://github.com/org/repo.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:      "git@ssh:/",
+				OrgRepo:   "/github.com/org/repo",
+				Path:      "/path",
 				GitSuffix: ".git",
 			},
 		},
