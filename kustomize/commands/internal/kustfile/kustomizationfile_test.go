@@ -383,7 +383,7 @@ foo:
 	}
 
 	_, err = mf.Read()
-	if err == nil || err.Error() != "kustomization unmarshal error: error unmarshaling JSON: while decoding JSON: json: unknown field \"foo\"" {
+	if err == nil || err.Error() != "invalid Kustomization: error unmarshaling JSON: while decoding JSON: json: unknown field \"foo\"" {
 		t.Fatalf("Expect an unknown field error but got: %v", err)
 	}
 }
