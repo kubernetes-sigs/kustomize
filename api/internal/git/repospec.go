@@ -234,10 +234,8 @@ func extractHost(n string) (string, string) {
 	n, _ = trimPrefixIgnoreCase(n, "git::")
 
 	scheme, n := extractScheme(n)
-	if scheme == "file://" || scheme == "gh:" {
-		// We support gh: assuming authors use it as a github shorthand, specified in .gitconfig.
+	if scheme == "file://" {
 		// The file protocol specifies an absolute path to a local git repo. There is no host.
-		// In both cases, we return the scheme and the rest of the url.
 		return scheme, n
 	}
 
@@ -264,7 +262,7 @@ func validHostSpecParsed(scheme, username, host string) bool {
 }
 
 func extractScheme(s string) (string, string) {
-	for _, prefix := range []string{"gh:", "ssh://", "https://", "http://", "file://"} {
+	for _, prefix := range []string{"ssh://", "https://", "http://", "file://"} {
 		if rest, found := trimPrefixIgnoreCase(s, prefix); found {
 			return prefix, rest
 		}

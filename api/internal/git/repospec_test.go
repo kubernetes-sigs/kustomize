@@ -19,8 +19,6 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 	// we probably stil don't want to break backwards compatibility for things
 	// that are unintentionally supported.
 	var schemeAuthority = []struct{ raw, normalized string }{
-		{"gh:", "gh:"},
-		{"GH:", "gh:"},
 		{"gitHub.com/", "https://github.com/"},
 		{"github.com:", "https://github.com/"},
 		{"http://github.com/", "https://github.com/"},
@@ -125,6 +123,10 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		"supported protocol after username": {
 			"git@https://github.com/org/repo.git//path",
 			"url lacks host",
+		},
+		"mysterious gh: prefix previously supported is no longer handled": {
+			"gh:org/repo",
+			"url lacks orgRepo",
 		},
 	}
 
