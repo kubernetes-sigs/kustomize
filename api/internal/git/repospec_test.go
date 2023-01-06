@@ -518,8 +518,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@scp://github.com/org/repo.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "git@scp:/",
-				OrgRepo:   "/github.com/org/repo",
+				Host:      "git@scp:",
+				OrgRepo:   "//github.com/org/repo",
 				Path:      "/path",
 				GitSuffix: ".git",
 			},
@@ -530,8 +530,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@ssh://github.com/org/repo.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "git@ssh:/",
-				OrgRepo:   "/github.com/org/repo",
+				Host:      "git@ssh:",
+				OrgRepo:   "//github.com/org/repo",
 				Path:      "/path",
 				GitSuffix: ".git",
 			},
