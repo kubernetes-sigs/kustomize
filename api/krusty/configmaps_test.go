@@ -6,6 +6,7 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -138,10 +139,10 @@ configMapGenerator:
 - name: json
   literals:
   - 'v2=[{"path": "var/druid/segment-cache"}]'
-  - >- 
-    druid_segmentCache_locations=[{"path": 
-    "var/druid/segment-cache", 
-    "maxSize": 32000000000, 
+  - >-
+    druid_segmentCache_locations=[{"path":
+    "var/druid/segment-cache",
+    "maxSize": 32000000000,
     "freeSpacePercent": 1.0}]
 secretGenerator:
 - name: bob
@@ -201,12 +202,12 @@ metadata:
 ---
 apiVersion: v1
 data:
-  druid_segmentCache_locations: '[{"path":  "var/druid/segment-cache",  "maxSize":
-    32000000000,  "freeSpacePercent": 1.0}]'
+  druid_segmentCache_locations: '[{"path": "var/druid/segment-cache", "maxSize": 32000000000,
+    "freeSpacePercent": 1.0}]'
   v2: '[{"path": "var/druid/segment-cache"}]'
 kind: ConfigMap
 metadata:
-  name: blah-json-5298bc8g99
+  name: blah-json-m8529t979f
 ---
 apiVersion: v1
 data:
@@ -228,7 +229,6 @@ type: Opaque
 `)
 }
 
-// TODO: These should be errors instead.
 func TestGeneratorRepeatsInKustomization(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
@@ -261,24 +261,13 @@ krypton
 xenon
 radon
 `)
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  fruit: apple
-  nobles: |2
-
-    helium
-    neon
-    argon
-    krypton
-    xenon
-    radon
-  vegetable: broccoli
-kind: ConfigMap
-metadata:
-  name: blah-bob-db529cg5bk
-`)
+	err := th.RunWithErr(".", th.MakeDefaultOptions())
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+	assert.Contains(t, err.Error(),
+		"invalid Kustomization: error converting YAML to JSON: yaml: unmarshal errors:\n"+
+			"  line 13: key \"literals\" already set in map\n  line 18: key \"files\" already set in map")
 }
 
 func TestIssue3393(t *testing.T) {
@@ -553,8 +542,6 @@ metadata:
 func TestDataEndsWithQuotes(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 configMapGenerator:
   - name: test
     literals:

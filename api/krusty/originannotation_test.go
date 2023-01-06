@@ -27,8 +27,6 @@ spec:
   - port: 7002
 `)
 	th.WriteK(".", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - service.yaml
 buildMetadata: [originAnnotations]
@@ -175,10 +173,10 @@ configMapGenerator:
 - name: json
   literals:
   - 'v2=[{"path": "var/druid/segment-cache"}]'
-  - >- 
-    druid_segmentCache_locations=[{"path": 
-    "var/druid/segment-cache", 
-    "maxSize": 32000000000, 
+  - >-
+    druid_segmentCache_locations=[{"path":
+    "var/druid/segment-cache",
+    "maxSize": 32000000000,
     "freeSpacePercent": 1.0}]
 secretGenerator:
 - name: bob
@@ -245,8 +243,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  druid_segmentCache_locations: '[{"path":  "var/druid/segment-cache",  "maxSize":
-    32000000000,  "freeSpacePercent": 1.0}]'
+  druid_segmentCache_locations: '[{"path": "var/druid/segment-cache", "maxSize": 32000000000,
+    "freeSpacePercent": 1.0}]'
   v2: '[{"path": "var/druid/segment-cache"}]'
 kind: ConfigMap
 metadata:
@@ -256,7 +254,7 @@ metadata:
       configuredBy:
         apiVersion: builtin
         kind: ConfigMapGenerator
-  name: blah-json-5298bc8g99
+  name: blah-json-m8529t979f
 ---
 apiVersion: v1
 data:
