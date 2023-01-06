@@ -266,7 +266,7 @@ radon
 		t.Fatalf("expected an error")
 	}
 	assert.Contains(t, err.Error(),
-		"kustomization unmarshal error: error converting YAML to JSON: yaml: unmarshal errors:\n"+
+		"invalid Kustomization: error converting YAML to JSON: yaml: unmarshal errors:\n"+
 			"  line 13: key \"literals\" already set in map\n  line 18: key \"files\" already set in map")
 }
 

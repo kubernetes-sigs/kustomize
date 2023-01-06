@@ -105,7 +105,7 @@ func (lc *localizer) load() (*types.Kustomization, string, error) {
 	var kust types.Kustomization
 	err = (&kust).Unmarshal(content)
 	if err != nil {
-		return nil, "", errors.WrapPrefixf(err, "invalid kustomization")
+		return nil, "", errors.Wrap(err)
 	}
 
 	// Localize intentionally does not replace legacy fields to return a localized kustomization
