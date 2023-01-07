@@ -515,7 +515,63 @@ spec:
 `)
 }
 
-func TestHelmChartInflationGeneratorWithNamespaceProdVsDev(t *testing.T) {
+func TestHelmChartInflationGeneratorWithNamespaceBaseDev(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	// namespace configured by both kustomize and helm
+	th.WriteK(th.GetRoot(), `
+namespace: base
+helmChartInflationGenerator:
+- chartName: minecraft
+  chartRepoUrl: https://itzg.github.io/minecraft-server-charts/
+  chartVersion: 3.1.3
+  releaseName: test
+  releaseNamespace: dev
+  `)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: test-minecraft
+  namespace: base
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test
+  name: test-minecraft
+  namespace: base
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-minecraft
+  type: ClusterIP
+`)
+}
+
+func TestHelmChartInflationGeneratorWithNamespaceBaseHelmOverlayKustomize(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()
 	if err := th.ErrIfNoHelm(); err != nil {
@@ -524,17 +580,19 @@ func TestHelmChartInflationGeneratorWithNamespaceProdVsDev(t *testing.T) {
 	dirBase := th.MkDir("base")
 	dirDev := th.MkDir("dev")
 
+	// Base helm namespace, overlay kustomize namespace
 	th.WriteK(dirBase, `
 helmChartInflationGenerator:
-- chartName: nats
-  chartVersion: v0.13.1
-  chartRepoUrl: https://nats-io.github.io/k8s/helm/charts
-  releaseName: nats
-  releaseNamespace: base
+- chartName: minecraft
+  chartRepoUrl: https://itzg.github.io/minecraft-server-charts/
+  chartVersion: 3.1.3
+  releaseName: test
+  releaseNamespace: base 
 `)
 
 	th.WriteK(dirDev, `
-resources: ../base
+resources: 
+  - ../base
 namespace: dev
 `)
 
@@ -550,8 +608,8 @@ metadata:
     chart: minecraft-3.1.3
     heritage: Helm
     release: test
-  name: myProd-test-minecraft
-  namespace: prod
+  name: test-minecraft
+  namespace: dev
 type: Opaque
 ---
 apiVersion: v1
@@ -562,8 +620,8 @@ metadata:
     chart: minecraft-3.1.3
     heritage: Helm
     release: test
-  name: myProd-test-minecraft
-  namespace: prod
+  name: test-minecraft
+  namespace: dev
 spec:
   ports:
   - name: minecraft
@@ -574,19 +632,34 @@ spec:
     app: test-minecraft
   type: ClusterIP
 `)
+}
 
-	// Both has two namespaces.
-	th.WriteK(th.GetRoot(), `
-namespace: dev1
+func TestHelmChartInflationGeneratorWithNamespaceBaseKustomizeOverlayHelm(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	dirBase := th.MkDir("base")
+	dirDev := th.MkDir("dev")
+
+	// Base kustomize namespace, overlay helm namespace
+	th.WriteK(dirBase, `
+namespace: base
+`)
+
+	th.WriteK(dirDev, `
+resources: 
+  - ../base
 helmChartInflationGenerator:
-- chartName: nats
-  chartVersion: v0.13.1
-  chartRepoUrl: https://nats-io.github.io/k8s/helm/charts
-  releaseName: nats
-  releaseNamespace: dev2
-  `)
+- chartName: minecraft
+  chartRepoUrl: https://itzg.github.io/minecraft-server-charts
+  chartVersion: 3.1.3
+  releaseName: test
+  releaseNamespace: dev
+`)
 
-	m = th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	m := th.Run(dirDev, th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
@@ -598,8 +671,7 @@ metadata:
     chart: minecraft-3.1.3
     heritage: Helm
     release: test
-  name: myDev-test-minecraft
-  namespace: dev
+  name: test-minecraft
 type: Opaque
 ---
 apiVersion: v1
@@ -610,42 +682,7 @@ metadata:
     chart: minecraft-3.1.3
     heritage: Helm
     release: test
-  name: myDev-test-minecraft
-  namespace: dev
-spec:
-  ports:
-  - name: minecraft
-    port: 25565
-    protocol: TCP
-    targetPort: minecraft
-  selector:
-    app: test-minecraft
-  type: ClusterIP
----
-apiVersion: v1
-data:
-  rcon-password: Q0hBTkdFTUUh
-kind: Secret
-metadata:
-  labels:
-    app: test-minecraft
-    chart: minecraft-3.1.3
-    heritage: Helm
-    release: test
-  name: myProd-test-minecraft
-  namespace: prod
-type: Opaque
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: test-minecraft
-    chart: minecraft-3.1.3
-    heritage: Helm
-    release: test
-  name: myProd-test-minecraft
-  namespace: prod
+  name: test-minecraft
 spec:
   ports:
   - name: minecraft
@@ -656,5 +693,4 @@ spec:
     app: test-minecraft
   type: ClusterIP
 `)
-
 }
