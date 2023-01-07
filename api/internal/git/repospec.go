@@ -231,19 +231,14 @@ func extractHost(n string) (string, string) {
 	n = ignoreForcedGitProtocol(n)
 	scheme, n := extractScheme(n)
 	username, n := extractUsername(n)
-	n, isGithubURL := trimGithubHost(n)
+	stdGithub := isStandardGithubHost(n)
+	acceptSCP := acceptSCPStyle(scheme, username, stdGithub)
 
 	// Validate the username and scheme before attempting host/path parsing, because if the parsing
 	// so far has not succeeded, we will not be able to extract the host and path correctly.
-	if err := validateUsernameAndScheme(username, scheme, isGithubURL); err != nil {
+	if err := validateUsernameAndScheme(username, scheme, acceptSCP); err != nil {
 		// TODO: return this error instead.
 		return "", n
-	}
-
-	// Github URLS get special handling because they are strictly normalized in a way that
-	// may discard scheme and username components in some cases.
-	if isGithubURL {
-		return normalizedGithubHost(scheme, username), n
 	}
 
 	// Now that we have extracted a valid scheme+username, we can parse host itself.
@@ -252,8 +247,13 @@ func extractHost(n string) (string, string) {
 	if scheme == "file://" {
 		return scheme, n
 	}
-	sepIndex := findPathSeparator(n, acceptSCPStyle(scheme, username))
+	sepIndex := findPathSeparator(n, acceptSCP)
 	host, rest := n[:sepIndex+1], n[sepIndex+1:]
+
+	// Github URLs are strictly normalized in a way that may discard scheme and username components.
+	if stdGithub {
+		scheme, username, host = normalizeGithubHostParts(scheme, username)
+	}
 
 	// Host is required, so do not concat the scheme and username if we didn't find one.
 	if host == "" {
@@ -276,18 +276,19 @@ func ignoreForcedGitProtocol(n string) string {
 
 // acceptSCPStyle returns true if the scheme and username indicate potential use of an SCP-style URL.
 // With this style, the scheme is not explicit and the path is delimited by a colon.
-// Strictly speaking the username is optional in SCP-like syntax, but Kustomize has always required it.
+// Strictly speaking the username is optional in SCP-like syntax, but Kustomize has always
+// required it for non-Github URLs.
 // Example: user@host.xz:path/to/repo.git/
-func acceptSCPStyle(scheme, username string) bool {
-	return username != "" && scheme == ""
+func acceptSCPStyle(scheme, username string, isGithubURL bool) bool {
+	return scheme == "" && (username != "" || isGithubURL)
 }
 
-func validateUsernameAndScheme(username, scheme string, isGithubURL bool) error {
+func validateUsernameAndScheme(username, scheme string, acceptSCPStyle bool) error {
 	// see https://git-scm.com/docs/git-fetch#_git_urls for info relevant to these validations
 	switch scheme {
 	case "":
 		// Empty scheme is only ok if it's a Github URL or if it looks like SCP-style syntax
-		if !acceptSCPStyle(scheme, username) && !isGithubURL {
+		if !acceptSCPStyle {
 			return fmt.Errorf("no username or scheme found")
 		}
 	case "ssh://":
@@ -322,13 +323,10 @@ func extractUsername(s string) (string, string) {
 	return "", s
 }
 
-func trimGithubHost(s string) (string, bool) {
-	for _, prefix := range []string{"github.com/", "github.com:"} {
-		if trimmed, found := trimPrefixIgnoreCase(s, prefix); found {
-			return trimmed, true
-		}
-	}
-	return s, false
+func isStandardGithubHost(s string) bool {
+	lowerCased := strings.ToLower(s)
+	return strings.HasPrefix(lowerCased, "github.com/") ||
+		strings.HasPrefix(lowerCased, "github.com:")
 }
 
 // trimPrefixIgnoreCase returns the rest of s and true if prefix, ignoring case, prefixes s.
@@ -355,11 +353,11 @@ const normalizedHTTPGithub = "https://github.com/"
 const gitUsername = "git@"
 const normalizedSCPGithub = gitUsername + "github.com:"
 
-func normalizedGithubHost(scheme, username string) string {
-	if strings.HasPrefix(scheme, "ssh://") || username == gitUsername {
-		return normalizedSCPGithub
+func normalizeGithubHostParts(scheme, username string) (string, string, string) {
+	if strings.HasPrefix(scheme, "ssh://") || username != "" {
+		return "", username, "github.com:"
 	}
-	return normalizedHTTPGithub
+	return "https://", "", "github.com/"
 }
 
 func normalizeGitHostSpec(host string) string {
