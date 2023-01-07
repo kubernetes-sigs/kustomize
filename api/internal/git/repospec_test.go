@@ -118,7 +118,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"mysterious gh: prefix previously supported is no longer handled": {
 			"gh:org/repo",
-			"url lacks host",
+			"url lacks orgRepo",
 		},
 		"username unsupported with http": {
 			"http://git@foo.com/path/to/repo",
@@ -533,6 +533,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:      "git@ssh:",
 				OrgRepo:   "//github.com/org/repo",
 				Path:      "/path",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "complex github ssh url from docs",
+			input:     "ssh://git@ssh.github.com:443/YOUR-USERNAME/YOUR-REPOSITORY.git",
+			cloneSpec: "ssh://git@ssh.github.com:443/YOUR-USERNAME/YOUR-REPOSITORY.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "ssh://git@ssh.github.com:443/",
+				OrgRepo:   "YOUR-USERNAME/YOUR-REPOSITORY",
+				Path:      "",
 				GitSuffix: ".git",
 			},
 		},
