@@ -171,6 +171,7 @@ func locRootPath(rootURL, repoDir string, root filesys.ConfirmedDir, fSys filesy
 	if err != nil {
 		log.Panicf("cannot find path from %q to child directory %q: %s", repo, root, err)
 	}
+
 	// We do not need to escape RepoPath, a path on the git server.
 	// However, like git, we clean dot-segments from RepoPath.
 	// Git does not allow ref value to contain dot-segments.
