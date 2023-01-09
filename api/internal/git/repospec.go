@@ -5,6 +5,7 @@ package git
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -270,7 +271,12 @@ func extractHost(n string) (string, string) {
 // although the git protocol (which is insecure and unsupported on many platforms, including Github)
 // will not actually be used as intended.
 func ignoreForcedGitProtocol(n string) string {
-	n, _ = trimPrefixIgnoreCase(n, "git::")
+	n, found := trimPrefixIgnoreCase(n, "git::")
+	if found {
+		log.Println("Warning: Forcing the git protocol using the 'git::' URL prefix is not supported. " +
+			"Kustomize currently strips this invalid prefix, but will stop doing so in a future release. " +
+			"Please remove the 'git::' prefix from your configuration.")
+	}
 	return n
 }
 
