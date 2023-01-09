@@ -120,14 +120,6 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"gh:org/repo",
 			"url lacks repoPath",
 		},
-		"username unsupported with http": {
-			"http://git@foo.com/path/to/repo",
-			"url lacks host",
-		},
-		"username unsupported with https": {
-			"https://git@foo.com/path/to/repo",
-			"url lacks host",
-		},
 	}
 
 	for name, testCase := range badData {
@@ -522,7 +514,33 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "unsupported protocol after username (invalid and will be rejected by git)",
+			name:      "username with http protocol (invalid but currently passed through to git)",
+			input:     "http://git@home.com/path/to/repository.git//path?ref=branch",
+			cloneSpec: "http://git@home.com/path/to/repository.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "http://git@home.com/",
+				RepoPath:     "path/to/repository",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "username with https protocol (invalid but currently passed through to git)",
+			input:     "https://git@home.com/path/to/repository.git//path?ref=branch",
+			cloneSpec: "https://git@home.com/path/to/repository.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "https://git@home.com/",
+				RepoPath:     "path/to/repository",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "unsupported protocol after username (invalid but currently passed through to git)",
 			input:     "git@scp://github.com/org/repo.git//path",
 			cloneSpec: "git@scp://github.com/org/repo.git",
 			absPath:   notCloned.Join("path"),
@@ -534,7 +552,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "supported protocol after username (invalid and will be rejected by git)",
+			name:      "supported protocol after username (invalid but currently passed through to git)",
 			input:     "git@ssh://github.com/org/repo.git//path",
 			cloneSpec: "git@ssh://github.com/org/repo.git",
 			absPath:   notCloned.Join("path"),
