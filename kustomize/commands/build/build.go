@@ -134,16 +134,12 @@ func Validate(args []string) error {
 	} else {
 		theArgs.kustomizationPath = args[0]
 	}
-	if err := validateFlagLoadRestrictor(); err != nil {
-		return err
-	}
-	return validateFlagReorderOutput()
+	return validateFlagLoadRestrictor()
 }
 
 // HonorKustomizeFlags feeds command line data to the krusty options.
 // Flags and such are held in private package variables.
 func HonorKustomizeFlags(kOpts *krusty.Options, flags *flag.FlagSet) *krusty.Options {
-	kOpts.Reorder = getFlagReorderOutput(flags)
 	kOpts.LoadRestrictions = getFlagLoadRestrictorValue()
 	if theFlags.enable.plugins {
 		c := types.EnabledPluginConfig(types.BploUseStaticallyLinked)

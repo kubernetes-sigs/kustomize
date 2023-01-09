@@ -5,7 +5,6 @@ package krusty
 
 import (
 	"fmt"
-	"log"
 
 	"sigs.k8s.io/kustomize/api/internal/builtins"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
@@ -137,12 +136,6 @@ func (b *Kustomizer) applySortOrder(m resmap.ResMap, kt *target.KustTarget) erro
 
 	// Case 1: Sort order set in kustomization file.
 	if kt.Kustomization().SortOptions != nil {
-		// If set in CLI flag too, warn the user.
-		if b.options.Reorder != ReorderOptionUnspecified {
-			log.Println("Warning: Sorting order is set both in 'kustomization.yaml'" +
-				" ('sortOptions') and in a CLI flag ('--reorder'). Using the" +
-				" kustomization file over the CLI flag.")
-		}
 		pl := &builtins.SortOrderTransformerPlugin{
 			SortOptions: kt.Kustomization().SortOptions,
 		}
@@ -150,14 +143,6 @@ func (b *Kustomizer) applySortOrder(m resmap.ResMap, kt *target.KustTarget) erro
 		if err != nil {
 			return errors.Wrap(err)
 		}
-	} else if b.options.Reorder == ReorderOptionLegacy || b.options.Reorder == ReorderOptionUnspecified {
-		// Case 2: Sort order set in CLI flag only or not at all.
-		pl := &builtins.SortOrderTransformerPlugin{
-			SortOptions: &types.SortOptions{
-				Order: types.LegacySortOrder,
-			},
-		}
-		return errors.Wrap(pl.Transform(m))
 	}
 	return nil
 }
