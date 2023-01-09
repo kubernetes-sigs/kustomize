@@ -230,6 +230,19 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
+			name:      "non-github_scp incorrectly using slash (invalid but currently passed through to git)",
+			input:     "git@bitbucket.org/company/project.git//path?ref=branch",
+			cloneSpec: "git@bitbucket.org/company/project.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "git@bitbucket.org/",
+				RepoPath:     "company/project",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
 			name:      "non-github_git-user_ssh",
 			input:     "ssh://git@bitbucket.org/company/project.git//path?ref=branch",
 			cloneSpec: "ssh://git@bitbucket.org/company/project.git",
