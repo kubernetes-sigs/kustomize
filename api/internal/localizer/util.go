@@ -82,7 +82,7 @@ func defaultNewDir(targetLdr ifc.Loader, spec *git.RepoSpec) string {
 		// kustomize doesn't download repo into repo-named folder
 		// must find repo folder name from url
 		if repo == targetLdr.Root() {
-			targetDir = urlBase(spec.OrgRepo)
+			targetDir = urlBase(spec.RepoPath)
 		}
 		return strings.Join([]string{DstPrefix, targetDir, strings.ReplaceAll(spec.Ref, "/", "-")}, "-")
 	}
@@ -171,12 +171,13 @@ func locRootPath(rootURL, repoDir string, root filesys.ConfirmedDir, fSys filesy
 	if err != nil {
 		log.Panicf("cannot find path from %q to child directory %q: %s", repo, root, err)
 	}
-	// We do not need to escape OrgRepo, a path on the git server.
-	// However, like git, we clean dot-segments from OrgRepo.
+
+	// We do not need to escape RepoPath, a path on the git server.
+	// However, like git, we clean dot-segments from RepoPath.
 	// Git does not allow ref value to contain dot-segments.
 	return filepath.Join(LocalizeDir,
 		host,
-		filepath.Join(string(filepath.Separator), filepath.FromSlash(repoSpec.OrgRepo)),
+		filepath.Join(string(filepath.Separator), filepath.FromSlash(repoSpec.RepoPath)),
 		filepath.FromSlash(repoSpec.Ref),
 		inRepo), nil
 }
