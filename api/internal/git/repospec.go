@@ -298,18 +298,8 @@ func validateUsernameAndScheme(username, scheme string, acceptSCPStyle bool) err
 		if !acceptSCPStyle {
 			return fmt.Errorf("no username or scheme found")
 		}
-	case "ssh://":
-		// usernames are optional for ssh protocol
-		return nil
-	case "file://":
-		// everything following the scheme in the file protocol is a path on the local filesystem,
-		// which may contain arbitrary characters (theoretically including `@`, which we'd mistake for a username)
-		return nil
-	case "https://", "http://":
-		// usernames are not supported by the http protocol
-		if username != "" {
-			return fmt.Errorf("username %q specified, but %s does not support usernames", username, scheme)
-		}
+	case "ssh://", "file://", "https://", "http://":
+		// These are all supported schemes
 	default:
 		// At time of writing, we should never end up here because we do not parse out
 		// unsupported schemes to begin with.
