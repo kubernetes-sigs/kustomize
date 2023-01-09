@@ -30,16 +30,16 @@ type RepoSpec struct {
 	// Host, e.g. https://github.com/
 	Host string
 
-	// orgRepo name (organization/repoName),
+	// RepoPath name (Path to repository),
 	// e.g. kubernetes-sigs/kustomize
-	OrgRepo string
+	RepoPath string
 
-	// Dir where the orgRepo is cloned to.
+	// Dir is where the repository is cloned to.
 	Dir filesys.ConfirmedDir
 
 	// Relative path in the repository, and in the cloneDir,
 	// to a Kustomization.
-	Path string
+	KustRootPath string
 
 	// Branch or tag reference.
 	Ref string
@@ -57,9 +57,9 @@ type RepoSpec struct {
 // CloneSpec returns a string suitable for "git clone {spec}".
 func (x *RepoSpec) CloneSpec() string {
 	if isAzureHost(x.Host) || isAWSHost(x.Host) {
-		return x.Host + x.OrgRepo
+		return x.Host + x.RepoPath
 	}
-	return x.Host + x.OrgRepo + x.GitSuffix
+	return x.Host + x.RepoPath + x.GitSuffix
 }
 
 func (x *RepoSpec) CloneDir() filesys.ConfirmedDir {
@@ -71,7 +71,7 @@ func (x *RepoSpec) Raw() string {
 }
 
 func (x *RepoSpec) AbsPath() string {
-	return x.Dir.Join(x.Path)
+	return x.Dir.Join(x.KustRootPath)
 }
 
 func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
@@ -87,13 +87,13 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		return nil, fmt.Errorf("uri looks like abs path: %s", n)
 	}
 	repoSpecVal := parseGitURL(n)
-	if repoSpecVal.OrgRepo == "" {
-		return nil, fmt.Errorf("url lacks orgRepo: %s", n)
+	if repoSpecVal.RepoPath == "" {
+		return nil, fmt.Errorf("url lacks repoPath: %s", n)
 	}
 	if repoSpecVal.Host == "" {
 		return nil, fmt.Errorf("url lacks host: %s", n)
 	}
-	cleanedPath := filepath.Clean(strings.TrimPrefix(repoSpecVal.Path, string(filepath.Separator)))
+	cleanedPath := filepath.Clean(strings.TrimPrefix(repoSpecVal.KustRootPath, string(filepath.Separator)))
 	if pathElements := strings.Split(cleanedPath, string(filepath.Separator)); len(pathElements) > 0 &&
 		pathElements[0] == filesys.ParentDir {
 		return nil, fmt.Errorf("url path exits repo: %s", n)
@@ -124,8 +124,8 @@ func parseGitURL(n string) *RepoSpec {
 		index := strings.Index(n, gitDelimiter)
 		// Adding _git/ to host
 		repoSpec.Host = normalizeGitHostSpec(n[:index+len(gitDelimiter)])
-		repoSpec.OrgRepo = strings.Split(n[index+len(gitDelimiter):], "/")[0]
-		repoSpec.Path = parsePath(n[index+len(gitDelimiter)+len(repoSpec.OrgRepo):])
+		repoSpec.RepoPath = strings.Split(n[index+len(gitDelimiter):], "/")[0]
+		repoSpec.KustRootPath = parsePath(n[index+len(gitDelimiter)+len(repoSpec.RepoPath):])
 		return repoSpec
 	}
 	repoSpec.Host, n = parseHostSpec(n)
@@ -136,40 +136,40 @@ func parseGitURL(n string) *RepoSpec {
 	if strings.Contains(n, gitSuffix) {
 		repoSpec.GitSuffix = gitSuffix
 		index := strings.Index(n, gitSuffix)
-		repoSpec.OrgRepo = n[0:index]
+		repoSpec.RepoPath = n[0:index]
 		n = n[index+len(gitSuffix):]
 		if len(n) > 0 && n[0] == '/' {
 			n = n[1:]
 		}
-		repoSpec.Path = parsePath(n)
+		repoSpec.KustRootPath = parsePath(n)
 		return repoSpec
 	}
 
 	if isLocal {
 		if idx := strings.Index(n, "//"); idx > 0 {
-			repoSpec.OrgRepo = n[:idx]
+			repoSpec.RepoPath = n[:idx]
 			n = n[idx+2:]
-			repoSpec.Path = parsePath(n)
+			repoSpec.KustRootPath = parsePath(n)
 			return repoSpec
 		}
-		repoSpec.OrgRepo = parsePath(n)
+		repoSpec.RepoPath = parsePath(n)
 		return repoSpec
 	}
 
 	i := strings.Index(n, "/")
 	if i < 1 {
-		repoSpec.Path = parsePath(n)
+		repoSpec.KustRootPath = parsePath(n)
 		return repoSpec
 	}
 	j := strings.Index(n[i+1:], "/")
 	if j >= 0 {
 		j += i + 1
-		repoSpec.OrgRepo = n[:j]
-		repoSpec.Path = parsePath(n[j+1:])
+		repoSpec.RepoPath = n[:j]
+		repoSpec.KustRootPath = parsePath(n[j+1:])
 		return repoSpec
 	}
-	repoSpec.Path = ""
-	repoSpec.OrgRepo = parsePath(n)
+	repoSpec.KustRootPath = ""
+	repoSpec.RepoPath = parsePath(n)
 	return repoSpec
 }
 
