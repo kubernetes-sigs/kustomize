@@ -94,7 +94,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"bad_scp": {
 			"git@local/path:file/system",
-			"url lacks orgRepo",
+			"url lacks repoPath",
 		},
 		"no_org_repo": {
 			"ssh://git.example.com",
@@ -118,7 +118,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"mysterious gh: prefix previously supported is no longer handled": {
 			"gh:org/repo",
-			"url lacks orgRepo",
+			"url lacks repoPath",
 		},
 		"username unsupported with http": {
 			"http://git@foo.com/path/to/repo",
@@ -130,7 +130,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"username unsupported with file": {
 			"file://git@/path/to/repo",
-			"url lacks orgRepo",
+			"url lacks repoPath",
 		},
 	}
 
@@ -223,7 +223,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
 				Host:      "git@gitlab2.sqtools.ru:",
-				RepoPath:   "infra/kubernetes/thanos-base",
+				RepoPath:  "infra/kubernetes/thanos-base",
 				Ref:       "v0.1.0",
 				GitSuffix: ".git",
 			},
@@ -234,11 +234,11 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@bitbucket.org:company/project.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "git@bitbucket.org:",
-				RepoPath:   "company/project",
-				KustRootPath:      "/path",
-				Ref:       "branch",
-				GitSuffix: ".git",
+				Host:         "git@bitbucket.org:",
+				RepoPath:     "company/project",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -247,11 +247,11 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "ssh://git@bitbucket.org/company/project.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "ssh://git@bitbucket.org/",
-				RepoPath:   "company/project",
-				KustRootPath:      "/path",
-				Ref:       "branch",
-				GitSuffix: ".git",
+				Host:         "ssh://git@bitbucket.org/",
+				RepoPath:     "company/project",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -505,11 +505,11 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "ssh://myusername@bitbucket.org/ourteamname/ourrepositoryname.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "ssh://myusername@bitbucket.org/",
-				OrgRepo:   "ourteamname/ourrepositoryname",
-				Path:      "/path",
-				Ref:       "branch",
-				GitSuffix: ".git",
+				Host:         "ssh://myusername@bitbucket.org/",
+				RepoPath:     "ourteamname/ourrepositoryname",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -518,10 +518,10 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@scp://github.com/org/repo.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "git@scp:",
-				OrgRepo:   "//github.com/org/repo",
-				Path:      "/path",
-				GitSuffix: ".git",
+				Host:         "git@scp:",
+				RepoPath:     "//github.com/org/repo",
+				KustRootPath: "/path",
+				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -530,10 +530,10 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@ssh://github.com/org/repo.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:      "git@ssh:",
-				OrgRepo:   "//github.com/org/repo",
-				Path:      "/path",
-				GitSuffix: ".git",
+				Host:         "git@ssh:",
+				RepoPath:     "//github.com/org/repo",
+				KustRootPath: "/path",
+				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -542,10 +542,10 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "ssh://git@ssh.github.com:443/YOUR-USERNAME/YOUR-REPOSITORY.git",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "ssh://git@ssh.github.com:443/",
-				OrgRepo:   "YOUR-USERNAME/YOUR-REPOSITORY",
-				Path:      "",
-				GitSuffix: ".git",
+				Host:         "ssh://git@ssh.github.com:443/",
+				RepoPath:     "YOUR-USERNAME/YOUR-REPOSITORY",
+				KustRootPath: "",
+				GitSuffix:    ".git",
 			},
 		},
 	}
