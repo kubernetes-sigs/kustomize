@@ -244,9 +244,10 @@ func extractHost(n string) (string, string) {
 
 	// Now that we have extracted a valid scheme+username, we can parse host itself.
 
-	// The file protocol specifies an absolute path to a local git repo. There is no host.
+	// The file protocol specifies an absolute path to a local git repo.
+	// Everything after the scheme (including any 'username' we found) is actually part of that path.
 	if scheme == "file://" {
-		return scheme, n
+		return scheme, username + n
 	}
 	sepIndex := findPathSeparator(n, acceptSCP)
 	host, rest := n[:sepIndex+1], n[sepIndex+1:]
@@ -300,8 +301,12 @@ func validateUsernameAndScheme(username, scheme string, acceptSCPStyle bool) err
 	case "ssh://":
 		// usernames are optional for ssh protocol
 		return nil
-	case "https://", "http://", "file://":
-		// usernames are not supported by http or file protocols
+	case "file://":
+		// everything following the scheme in the file protocol is a path on the local filesystem,
+		// which may contain arbitrary characters (theoretically including `@`, which we'd mistake for a username)
+		return nil
+	case "https://", "http://":
+		// usernames are not supported by the http protocol
 		if username != "" {
 			return fmt.Errorf("username %q specified, but %s does not support usernames", username, scheme)
 		}
