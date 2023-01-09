@@ -128,10 +128,6 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"https://git@foo.com/path/to/repo",
 			"url lacks host",
 		},
-		"username unsupported with file": {
-			"file://git@/path/to/repo",
-			"url lacks repoPath",
-		},
 	}
 
 	for name, testCase := range badData {
@@ -507,6 +503,19 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "ssh://myusername@bitbucket.org/",
 				RepoPath:     "ourteamname/ourrepositoryname",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "username-like filepath with file protocol",
+			input:     "file://git@home/path/to/repository.git//path?ref=branch",
+			cloneSpec: "file://git@home/path/to/repository.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "file://",
+				RepoPath:     "git@home/path/to/repository",
 				KustRootPath: "/path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
