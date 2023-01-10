@@ -92,10 +92,6 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"htxxxtp://github.com/",
 			"url lacks host",
 		},
-		"bad_scp": {
-			"git@local/path:file/system",
-			"url lacks repoPath",
-		},
 		"no_org_repo": {
 			"ssh://git.example.com",
 			"url lacks repoPath",
@@ -585,6 +581,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:         "ssh://git@ssh.github.com:443/",
 				RepoPath:     "YOUR-USERNAME/YOUR-REPOSITORY",
 				KustRootPath: "",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "colon behind slash not scp delimiter",
+			input:     "git@gitlab.com/user:name/YOUR-REPOSITORY.git/path",
+			cloneSpec: "git@gitlab.com/user:name/YOUR-REPOSITORY.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "git@gitlab.com/",
+				RepoPath:     "user:name/YOUR-REPOSITORY",
+				KustRootPath: "path",
 				GitSuffix:    ".git",
 			},
 		},
