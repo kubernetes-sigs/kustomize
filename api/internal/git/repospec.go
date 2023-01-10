@@ -5,6 +5,7 @@ package git
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -128,7 +129,7 @@ func parseGitURL(n string) *RepoSpec {
 		repoSpec.KustRootPath = parsePath(n[index+len(gitDelimiter)+len(repoSpec.RepoPath):])
 		return repoSpec
 	}
-	repoSpec.Host, n = parseHostSpec(n)
+	repoSpec.Host, n = extractHost(n)
 	isLocal := strings.HasPrefix(repoSpec.Host, "file://")
 	if !isLocal {
 		repoSpec.GitSuffix = gitSuffix
@@ -227,56 +228,146 @@ func parsePath(n string) string {
 	return parsed.Path
 }
 
-func parseHostSpec(n string) (string, string) {
-	var host string
-	// Start accumulating the host part.
-	for _, p := range []string{
-		// Order matters here.
-		"git::", "gh:", "ssh://", "https://", "http://", "file://",
-		"git@", "github.com:", "github.com/"} {
-		if len(p) < len(n) && strings.ToLower(n[:len(p)]) == p {
-			n = n[len(p):]
-			host += p
-		}
-	}
-	if host == "git@" {
-		i := strings.Index(n, "/")
-		if i > -1 {
-			host += n[:i+1]
-			n = n[i+1:]
-		} else {
-			i = strings.Index(n, ":")
-			if i > -1 {
-				host += n[:i+1]
-				n = n[i+1:]
-			}
-		}
-		return host, n
+func extractHost(n string) (string, string) {
+	n = ignoreForcedGitProtocol(n)
+	scheme, n := extractScheme(n)
+	username, n := extractUsername(n)
+	stdGithub := isStandardGithubHost(n)
+	acceptSCP := acceptSCPStyle(scheme, username, stdGithub)
+
+	// Validate the username and scheme before attempting host/path parsing, because if the parsing
+	// so far has not succeeded, we will not be able to extract the host and path correctly.
+	if err := validateScheme(scheme, acceptSCP); err != nil {
+		// TODO: return this error instead.
+		return "", n
 	}
 
-	// If host is a http(s) or ssh URL, grab the domain part.
-	for _, p := range []string{
-		"ssh://", "https://", "http://"} {
-		if strings.HasSuffix(host, p) {
-			i := strings.Index(n, "/")
-			if i > -1 {
-				host += n[0 : i+1]
-				n = n[i+1:]
-			}
-			break
-		}
+	// Now that we have extracted a valid scheme+username, we can parse host itself.
+
+	// The file protocol specifies an absolute path to a local git repo.
+	// Everything after the scheme (including any 'username' we found) is actually part of that path.
+	if scheme == "file://" {
+		return scheme, username + n
+	}
+	sepIndex := findPathSeparator(n, acceptSCP)
+	host, rest := n[:sepIndex+1], n[sepIndex+1:]
+
+	// Github URLs are strictly normalized in a way that may discard scheme and username components.
+	if stdGithub {
+		scheme, username, host = normalizeGithubHostParts(scheme, username)
 	}
 
-	return normalizeGitHostSpec(host), n
+	// Host is required, so do not concat the scheme and username if we didn't find one.
+	if host == "" {
+		// TODO: This should return an error.
+		return "", n
+	}
+	return scheme + username + host, rest
+}
+
+// ignoreForcedGitProtocol strips the "git::" prefix from URLs.
+// We used to use go-getter to handle our urls: https://github.com/hashicorp/go-getter.
+// The git:: prefix signaled go-getter to use the git protocol to fetch the url's contents.
+// We silently strip this prefix to allow these go-getter-style urls to continue to work,
+// although the git protocol (which is insecure and unsupported on many platforms, including Github)
+// will not actually be used as intended.
+func ignoreForcedGitProtocol(n string) string {
+	n, found := trimPrefixIgnoreCase(n, "git::")
+	if found {
+		log.Println("Warning: Forcing the git protocol using the 'git::' URL prefix is not supported. " +
+			"Kustomize currently strips this invalid prefix, but will stop doing so in a future release. " +
+			"Please remove the 'git::' prefix from your configuration.")
+	}
+	return n
+}
+
+// acceptSCPStyle returns true if the scheme and username indicate potential use of an SCP-style URL.
+// With this style, the scheme is not explicit and the path is delimited by a colon.
+// Strictly speaking the username is optional in SCP-like syntax, but Kustomize has always
+// required it for non-Github URLs.
+// Example: user@host.xz:path/to/repo.git/
+func acceptSCPStyle(scheme, username string, isGithubURL bool) bool {
+	return scheme == "" && (username != "" || isGithubURL)
+}
+
+func validateScheme(scheme string, acceptSCPStyle bool) error {
+	// see https://git-scm.com/docs/git-fetch#_git_urls for info relevant to these validations
+	switch scheme {
+	case "":
+		// Empty scheme is only ok if it's a Github URL or if it looks like SCP-style syntax
+		if !acceptSCPStyle {
+			return fmt.Errorf("failed to parse scheme")
+		}
+	case "ssh://", "file://", "https://", "http://":
+		// These are all supported schemes
+	default:
+		// At time of writing, we should never end up here because we do not parse out
+		// unsupported schemes to begin with.
+		return fmt.Errorf("unsupported scheme %q", scheme)
+	}
+	return nil
+}
+
+func extractScheme(s string) (string, string) {
+	for _, prefix := range []string{"ssh://", "https://", "http://", "file://"} {
+		if rest, found := trimPrefixIgnoreCase(s, prefix); found {
+			return prefix, rest
+		}
+	}
+	return "", s
+}
+
+func extractUsername(s string) (string, string) {
+	if trimmed, found := trimPrefixIgnoreCase(s, gitUsername); found {
+		return gitUsername, trimmed
+	}
+	return "", s
+}
+
+func isStandardGithubHost(s string) bool {
+	lowerCased := strings.ToLower(s)
+	return strings.HasPrefix(lowerCased, "github.com/") ||
+		strings.HasPrefix(lowerCased, "github.com:")
+}
+
+// trimPrefixIgnoreCase returns the rest of s and true if prefix, ignoring case, prefixes s.
+// Otherwise, trimPrefixIgnoreCase returns s and false.
+func trimPrefixIgnoreCase(s, prefix string) (string, bool) {
+	if len(prefix) <= len(s) && strings.ToLower(s[:len(prefix)]) == prefix {
+		return s[len(prefix):], true
+	}
+	return s, false
+}
+
+func findPathSeparator(hostPath string, acceptSCP bool) int {
+	sepIndex := strings.Index(hostPath, "/")
+	if acceptSCP {
+		// The colon acts as a delimiter in scp-style ssh URLs only if not prefixed by '/'.
+		if colonIndex := strings.Index(hostPath, ":"); colonIndex > 0 && colonIndex < sepIndex {
+			sepIndex = colonIndex
+		}
+	}
+	return sepIndex
+}
+
+const normalizedHTTPGithub = "https://github.com/"
+const gitUsername = "git@"
+const normalizedSCPGithub = gitUsername + "github.com:"
+
+func normalizeGithubHostParts(scheme, username string) (string, string, string) {
+	if strings.HasPrefix(scheme, "ssh://") || username != "" {
+		return "", username, "github.com:"
+	}
+	return "https://", "", "github.com/"
 }
 
 func normalizeGitHostSpec(host string) string {
 	s := strings.ToLower(host)
 	if strings.Contains(s, "github.com") {
-		if strings.Contains(s, "git@") || strings.Contains(s, "ssh:") {
-			host = "git@github.com:"
+		if strings.Contains(s, gitUsername) || strings.Contains(s, "ssh:") {
+			host = normalizedSCPGithub
 		} else {
-			host = "https://github.com/"
+			host = normalizedHTTPGithub
 		}
 	}
 	if strings.HasPrefix(s, "git::") {

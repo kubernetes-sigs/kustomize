@@ -19,8 +19,6 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 	// we probably stil don't want to break backwards compatibility for things
 	// that are unintentionally supported.
 	var schemeAuthority = []struct{ raw, normalized string }{
-		{"gh:", "gh:"},
-		{"GH:", "gh:"},
 		{"gitHub.com/", "https://github.com/"},
 		{"github.com:", "https://github.com/"},
 		{"http://github.com/", "https://github.com/"},
@@ -34,6 +32,7 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		{"git::https://git.example.com/", "https://git.example.com/"},
 		{"git@github.com:", "git@github.com:"},
 		{"git@github.com/", "git@github.com:"},
+		{"git::git@github.com:", "git@github.com:"},
 	}
 	var repoPaths = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -81,6 +80,10 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 			"/tmp",
 			"uri looks like abs path",
 		},
+		"relative path": {
+			"../../tmp",
+			"url lacks host",
+		},
 		"no_slashes": {
 			"iauhsdiuashduas",
 			"url lacks repoPath",
@@ -104,6 +107,14 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		"path_exits_repo": {
 			"https://github.com/org/repo.git//path/../../exits/repo",
 			"url path exits repo",
+		},
+		"bad github separator": {
+			"github.com!org/repo.git//path",
+			"url lacks host",
+		},
+		"mysterious gh: prefix previously supported is no longer handled": {
+			"gh:org/repo",
+			"url lacks repoPath",
 		},
 	}
 
@@ -191,24 +202,50 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		},
 		{
 			name:      "t6",
-			input:     "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git?ref=v0.1.0",
-			cloneSpec: "git@gitlab2.sqtools.ru:10022/infra/kubernetes/thanos-base.git",
+			input:     "git@gitlab2.sqtools.ru:infra/kubernetes/thanos-base.git?ref=v0.1.0",
+			cloneSpec: "git@gitlab2.sqtools.ru:infra/kubernetes/thanos-base.git",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "git@gitlab2.sqtools.ru:10022/",
+				Host:      "git@gitlab2.sqtools.ru:",
 				RepoPath:  "infra/kubernetes/thanos-base",
 				Ref:       "v0.1.0",
 				GitSuffix: ".git",
 			},
 		},
 		{
-			name:      "t7",
+			name:      "non-github_scp",
 			input:     "git@bitbucket.org:company/project.git//path?ref=branch",
 			cloneSpec: "git@bitbucket.org:company/project.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
-				Host:         "git@bitbucket.org:company/",
-				RepoPath:     "project",
+				Host:         "git@bitbucket.org:",
+				RepoPath:     "company/project",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "non-github_scp incorrectly using slash (invalid but currently passed through to git)",
+			input:     "git@bitbucket.org/company/project.git//path?ref=branch",
+			cloneSpec: "git@bitbucket.org/company/project.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "git@bitbucket.org/",
+				RepoPath:     "company/project",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "non-github_git-user_ssh",
+			input:     "ssh://git@bitbucket.org/company/project.git//path?ref=branch",
+			cloneSpec: "ssh://git@bitbucket.org/company/project.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "ssh://git@bitbucket.org/",
+				RepoPath:     "company/project",
 				KustRootPath: "/path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
@@ -456,6 +493,106 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:         "https://authority/",
 				RepoPath:     "org/repo",
 				KustRootPath: "%-invalid-uri-so-not-parsable-by-net/url.Parse",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "non-git username with non-github host",
+			input:     "ssh://myusername@bitbucket.org/ourteamname/ourrepositoryname.git//path?ref=branch",
+			cloneSpec: "ssh://myusername@bitbucket.org/ourteamname/ourrepositoryname.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "ssh://myusername@bitbucket.org/",
+				RepoPath:     "ourteamname/ourrepositoryname",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "username-like filepath with file protocol",
+			input:     "file://git@home/path/to/repository.git//path?ref=branch",
+			cloneSpec: "file://git@home/path/to/repository.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "file://",
+				RepoPath:     "git@home/path/to/repository",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "username with http protocol (invalid but currently passed through to git)",
+			input:     "http://git@home.com/path/to/repository.git//path?ref=branch",
+			cloneSpec: "http://git@home.com/path/to/repository.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "http://git@home.com/",
+				RepoPath:     "path/to/repository",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "username with https protocol (invalid but currently passed through to git)",
+			input:     "https://git@home.com/path/to/repository.git//path?ref=branch",
+			cloneSpec: "https://git@home.com/path/to/repository.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "https://git@home.com/",
+				RepoPath:     "path/to/repository",
+				KustRootPath: "/path",
+				Ref:          "branch",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "unsupported protocol after username (invalid but currently passed through to git)",
+			input:     "git@scp://github.com/org/repo.git//path",
+			cloneSpec: "git@scp://github.com/org/repo.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "git@scp:",
+				RepoPath:     "//github.com/org/repo",
+				KustRootPath: "/path",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "supported protocol after username (invalid but currently passed through to git)",
+			input:     "git@ssh://github.com/org/repo.git//path",
+			cloneSpec: "git@ssh://github.com/org/repo.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "git@ssh:",
+				RepoPath:     "//github.com/org/repo",
+				KustRootPath: "/path",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "complex github ssh url from docs",
+			input:     "ssh://git@ssh.github.com:443/YOUR-USERNAME/YOUR-REPOSITORY.git",
+			cloneSpec: "ssh://git@ssh.github.com:443/YOUR-USERNAME/YOUR-REPOSITORY.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:         "ssh://git@ssh.github.com:443/",
+				RepoPath:     "YOUR-USERNAME/YOUR-REPOSITORY",
+				KustRootPath: "",
+				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "colon behind slash not scp delimiter",
+			input:     "git@gitlab.com/user:name/YOUR-REPOSITORY.git/path",
+			cloneSpec: "git@gitlab.com/user:name/YOUR-REPOSITORY.git",
+			absPath:   notCloned.Join("path"),
+			repoSpec: RepoSpec{
+				Host:         "git@gitlab.com/",
+				RepoPath:     "user:name/YOUR-REPOSITORY",
+				KustRootPath: "path",
 				GitSuffix:    ".git",
 			},
 		},
