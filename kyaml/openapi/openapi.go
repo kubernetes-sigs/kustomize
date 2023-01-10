@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 
 	openapi_v2 "github.com/google/gnostic/openapiv2"
 	"google.golang.org/protobuf/proto"
@@ -21,14 +22,27 @@ import (
 	k8syaml "sigs.k8s.io/yaml"
 )
 
-// globalSchema contains global state information about the openapi
-var globalSchema openapiData
+var (
+	// schemaLock is the lock for schema related globals.
+	//
+	// NOTE: This lock helps with preventing panics that might occur due to the data
+	// race that concurrent access on this variable might cause but it doesn't
+	// fully fix the issue described in https://github.com/kubernetes-sigs/kustomize/issues/4824.
+	// For instance concurrently running goroutines where each of them calls SetSchema()
+	// and/or GetSchemaVersion might end up received nil errors (success) whereas the
+	// seconds one would overwrite the global variable that has been written by the
+	// first one.
+	schemaLock sync.RWMutex //nolint:gochecknoglobals
 
-// kubernetesOpenAPIVersion specifies which builtin kubernetes schema to use
-var kubernetesOpenAPIVersion string
+	// kubernetesOpenAPIVersion specifies which builtin kubernetes schema to use.
+	kubernetesOpenAPIVersion string //nolint:gochecknoglobals
 
-// customSchemaFile stores the custom OpenApi schema if it is provided
-var customSchema []byte
+	// globalSchema contains global state information about the openapi
+	globalSchema openapiData //nolint:gochecknoglobals
+
+	// customSchemaFile stores the custom OpenApi schema if it is provided
+	customSchema []byte //nolint:gochecknoglobals
+)
 
 // openapiData contains the parsed openapi state.  this is in a struct rather than
 // a list of vars so that it can be reset from tests.
@@ -278,9 +292,12 @@ func AddSchema(s []byte) error {
 
 // ResetOpenAPI resets the openapi data to empty
 func ResetOpenAPI() {
+	schemaLock.Lock()
+	defer schemaLock.Unlock()
+
 	globalSchema = openapiData{}
-	kubernetesOpenAPIVersion = ""
 	customSchema = nil
+	kubernetesOpenAPIVersion = ""
 }
 
 // AddDefinitions adds the definitions to the global schema.
@@ -551,6 +568,9 @@ const (
 
 // SetSchema sets the kubernetes OpenAPI schema version to use
 func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error {
+	schemaLock.Lock()
+	defer schemaLock.Unlock()
+
 	// this should only be set once
 	schemaIsSet := (kubernetesOpenAPIVersion != "") || customSchema != nil
 	if schemaIsSet && !reset {
@@ -588,6 +608,9 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 
 // GetSchemaVersion returns what kubernetes OpenAPI version is being used
 func GetSchemaVersion() string {
+	schemaLock.RLock()
+	defer schemaLock.RUnlock()
+
 	switch {
 	case kubernetesOpenAPIVersion == "" && customSchema == nil:
 		return kubernetesOpenAPIDefaultVersion
@@ -600,6 +623,9 @@ func GetSchemaVersion() string {
 
 // initSchema parses the json schema
 func initSchema() {
+	schemaLock.Lock()
+	defer schemaLock.Unlock()
+
 	if globalSchema.schemaInit {
 		return
 	}
