@@ -237,7 +237,7 @@ func extractHost(n string) (string, string) {
 
 	// Validate the username and scheme before attempting host/path parsing, because if the parsing
 	// so far has not succeeded, we will not be able to extract the host and path correctly.
-	if err := validateUsernameAndScheme(username, scheme, acceptSCP); err != nil {
+	if err := validateScheme(scheme, acceptSCP); err != nil {
 		// TODO: return this error instead.
 		return "", n
 	}
@@ -290,13 +290,13 @@ func acceptSCPStyle(scheme, username string, isGithubURL bool) bool {
 	return scheme == "" && (username != "" || isGithubURL)
 }
 
-func validateUsernameAndScheme(username, scheme string, acceptSCPStyle bool) error {
+func validateScheme(scheme string, acceptSCPStyle bool) error {
 	// see https://git-scm.com/docs/git-fetch#_git_urls for info relevant to these validations
 	switch scheme {
 	case "":
 		// Empty scheme is only ok if it's a Github URL or if it looks like SCP-style syntax
 		if !acceptSCPStyle {
-			return fmt.Errorf("no username or scheme found")
+			return fmt.Errorf("failed to parse scheme")
 		}
 	case "ssh://", "file://", "https://", "http://":
 		// These are all supported schemes
