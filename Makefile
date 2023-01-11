@@ -32,6 +32,11 @@ include Makefile-plugins.mk
 # --- Tool management ---
 include Makefile-tools.mk
 
+
+# --- Dependabot ---
+include Makefile-dependabot.mk
+
+
 .PHONY: install-tools
 install-tools: \
 	install-local-tools \
