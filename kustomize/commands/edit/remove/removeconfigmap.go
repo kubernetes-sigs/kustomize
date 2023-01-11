@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
@@ -18,7 +17,7 @@ import (
 )
 
 type removeConfigMapOptions struct {
-	configMapNames []string
+	configMapNamesToRemove []string
 }
 
 // newCmdRemoveResource remove the name of a file containing a resource to the kustomization file.
@@ -46,12 +45,12 @@ func newCmdRemoveConfigMap(fSys filesys.FileSystem) *cobra.Command {
 // Validate validates removeConfigMap command.
 func (o *removeConfigMapOptions) Validate(args []string) error {
 	if len(args) == 0 {
-		return errors.New("must specify a configmap name")
+		return errors.New("must specify a ConfigMap name")
 	}
 	if len(args) > 1 {
-		return fmt.Errorf("too many arguments: %s; to provide multiple config map options, please separate options by comma", args)
+		return fmt.Errorf("too many arguments: %s; to provide multiple ConfigMaps to remove, please separate ConfigMap names by commas", args)
 	}
-	o.configMapNames = strings.Split(args[0], ",")
+	o.configMapNamesToRemove = strings.Split(args[0], ",")
 	return nil
 }
 
@@ -59,30 +58,27 @@ func (o *removeConfigMapOptions) Validate(args []string) error {
 func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
-		return fmt.Errorf("configmap cannot load from file system, got %w", err)
+		return fmt.Errorf("could not read kustomization file: %w", err)
 	}
 
 	m, err := mf.Read()
 	if err != nil {
-		return fmt.Errorf("configmap cannot read from file, got %w", err)
+		return fmt.Errorf("could not read kustomization file: %w", err)
 	}
 
-	foundConfigMaps := make(map[string]bool)
-	for _, removeName := range o.configMapNames {
-		foundConfigMaps[removeName] = false
-	}
+	foundConfigMaps := make(map[string]struct{})
 
 	newConfigMaps := make([]types.ConfigMapArgs, 0, len(m.ConfigMapGenerator))
 	for _, currentConfigMap := range m.ConfigMapGenerator {
-		if kustfile.StringInSlice(currentConfigMap.Name, o.configMapNames) {
-			foundConfigMaps[currentConfigMap.Name] = true
+		if kustfile.StringInSlice(currentConfigMap.Name, o.configMapNamesToRemove) {
+			foundConfigMaps[currentConfigMap.Name] = struct{}{}
 			continue
 		}
 		newConfigMaps = append(newConfigMaps, currentConfigMap)
 	}
 
-	for name, found := range foundConfigMaps {
-		if !found {
+	for _, name := range o.configMapNamesToRemove {
+		if _, found := foundConfigMaps[name]; !found {
 			log.Printf("configmap %s doesn't exist in kustomization file", name)
 		}
 	}
