@@ -46,7 +46,6 @@ func TestFieldOrder(t *testing.T) {
 		"Configurations",
 		"Generators",
 		"Transformers",
-		"Inventory",
 		"Components",
 		"OpenAPI",
 		"BuildMetadata",
