@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/internal/plugins/execplugin"
@@ -22,6 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 )
@@ -216,11 +216,11 @@ func (l *Loader) loadAndConfigurePlugin(
 	}
 	yaml, err := res.AsYAML()
 	if err != nil {
-		return nil, errors.Wrapf(err, "marshalling yaml from res %s", res.OrgId())
+		return nil, errors.WrapPrefixf(err, "marshalling yaml from res %s", res.OrgId())
 	}
 	err = c.Config(resmap.NewPluginHelpers(ldr, v, l.rf, l.pc), yaml)
 	if err != nil {
-		return nil, errors.Wrapf(
+		return nil, errors.WrapPrefixf(
 			err, "plugin %s fails configuration", res.OrgId())
 	}
 	return c, nil
@@ -246,12 +246,12 @@ func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error)
 		// validation check that function mounts are under the current kustomization directory
 		for _, mount := range spec.Container.StorageMounts {
 			if filepath.IsAbs(mount.Src) {
-				return nil, errors.New(fmt.Sprintf("plugin %s with mount path '%s' is not permitted; "+
-					"mount paths must be relative to the current kustomization directory", res.OrgId(), mount.Src))
+				return nil, errors.Errorf("plugin %s with mount path '%s' is not permitted; "+
+					"mount paths must be relative to the current kustomization directory", res.OrgId(), mount.Src)
 			}
 			if strings.HasPrefix(filepath.Clean(mount.Src), "../") {
-				return nil, errors.New(fmt.Sprintf("plugin %s with mount path '%s' is not permitted; "+
-					"mount paths must be under the current kustomization directory", res.OrgId(), mount.Src))
+				return nil, errors.Errorf("plugin %s with mount path '%s' is not permitted; "+
+					"mount paths must be under the current kustomization directory", res.OrgId(), mount.Src)
 			}
 		}
 		return fnplugin.NewFnPlugin(&l.pc.FnpLoadingOptions), nil
@@ -307,11 +307,11 @@ func (l *Loader) loadGoPlugin(id resid.ResId, absPath string) (resmap.Configurab
 	log.Printf("Attempting plugin load from '%s'", absPath)
 	p, err := plugin.Open(absPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "plugin %s fails to load", absPath)
+		return nil, errors.WrapPrefixf(err, "plugin %s fails to load", absPath)
 	}
 	symbol, err := p.Lookup(konfig.PluginSymbol)
 	if err != nil {
-		return nil, errors.Wrapf(
+		return nil, errors.WrapPrefixf(
 			err, "plugin %s doesn't have symbol %s",
 			regId, konfig.PluginSymbol)
 	}

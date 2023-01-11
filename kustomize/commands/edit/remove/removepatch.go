@@ -6,11 +6,11 @@ package remove
 import (
 	"log"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -55,7 +55,7 @@ exactly match the patch item to successfully remote the item.`,
 // Validate validates removePatch command.
 func (o *removePatchOptions) Validate() error {
 	if o.Patch.Patch != "" && o.Patch.Path != "" {
-		return errors.New("patch and path can't be set at the same time")
+		return errors.Errorf("patch and path can't be set at the same time")
 	}
 	return nil
 }

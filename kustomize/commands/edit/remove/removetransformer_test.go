@@ -6,8 +6,8 @@ package remove
 import (
 	"testing"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/remove_test"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 func TestRemoveTransformer(t *testing.T) {
@@ -76,7 +76,7 @@ func TestRemoveTransformer(t *testing.T) {
 			Description: "no arguments",
 			Given:       remove_test.Given{},
 			Expected: remove_test.Expected{
-				Err: errors.New("must specify a transformer file"),
+				Err: errors.Errorf("must specify a transformer file"),
 			},
 		},
 		{
