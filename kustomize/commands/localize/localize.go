@@ -4,21 +4,16 @@
 package localize
 
 import (
-	"fmt"
 	"io"
 	"log"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/konfig"
 	lclzr "sigs.k8s.io/kustomize/api/krusty/localizer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const cmdName = "localize"
 const numArgs = 2
-const alphaWarning = `Warning: This is currently an alpha command.
-`
 
 type arguments struct {
 	target string
@@ -34,11 +29,11 @@ func NewCmdLocalize(fs filesys.FileSystem, writer io.Writer) *cobra.Command {
 	log.SetOutput(writer)
 	var f flags
 	cmd := &cobra.Command{
-		Use:   fmt.Sprintf("%s [target [destination]]", cmdName),
-		Short: "Creates localized copy of target kustomization root at destination",
-		Long: fmt.Sprintf(`Creates copy of target kustomization directory
-or versioned URL at destination, where remote references in the original are 
-replaced by local references to the downloaded remote content.
+		Use:   "localize [target [destination]]",
+		Short: "[Alpha] Creates localized copy of target kustomization root at destination",
+		Long: `[Alpha] Creates copy of target kustomization directory or 
+versioned URL at destination, where remote references in the original 
+are replaced by local references to the downloaded remote content.
 
 If target is not specified, the current working directory will be used. 
 Destination is a path to a new directory in an existing directory. If 
@@ -50,27 +45,32 @@ For details, see: https://kubectl.docs.kubernetes.io/references/kustomize/cmd/
 Disclaimer:
 This command does not yet localize helm or KRM plugin fields. This command also
 alphabetizes kustomization fields in the localized copy.
-
-%s`, alphaWarning),
-		Example: fmt.Sprintf(`
+`,
+		Example: `
 # Localize the current working directory, with default scope and destination
-%s %s 
+kustomize localize 
 
 # Localize some local directory, with scope and default destination
-%s %s /home/path/scope/target --scope /home/path/scope
+kustomize localize /home/path/scope/target --scope /home/path/scope
 
 # Localize remote at set destination relative to working directory
-%s %s https://github.com/kubernetes-sigs/kustomize//api/krusty/testdata/localize/simple?ref=v4.5.7 path/non-existing-dir
-`, konfig.ProgramName, cmdName, konfig.ProgramName, cmdName, konfig.ProgramName, cmdName),
+kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/testdata/localize/simple?ref=v4.5.7 path/non-existing-dir
+`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(numArgs),
 		RunE: func(cmd *cobra.Command, rawArgs []string) error {
-			_, _ = writer.Write([]byte(alphaWarning))
 			args := matchArgs(rawArgs)
 			return errors.Wrap(lclzr.Run(fs, args.target, f.scope, args.dest))
 		},
 	}
-	AddFlagScope(&f, cmd.Flags())
+	// no shorthand to avoid conflation with other flags
+	cmd.Flags().StringVar(&f.scope,
+		"scope",
+		"",
+		`Path to directory inside of which localize is limited to running.
+Cannot specify for remote targets, as scope is by default the containing repo.
+If not specified for local target, scope defaults to target.
+`)
 	return cmd
 }
 

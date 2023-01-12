@@ -96,7 +96,7 @@ func TestOptionalArgs(t *testing.T) {
 	}
 }
 
-func TestOut(t *testing.T) {
+func TestOutput(t *testing.T) {
 	kustomization := map[string]string{
 		"kustomization.yaml": `namePrefix: test-
 `,
@@ -114,12 +114,21 @@ func TestOut(t *testing.T) {
 	loctest.SetupDir(t, expected, target.Join("dst"), kustomization)
 	loctest.CheckFs(t, target.String(), expected, actual)
 
-	require.Equal(t, `Warning: This is currently an alpha command.
-`, buffy.String())
+	require.Empty(t, buffy.String())
 
 	const msg = "Check that cmd log output is hooked to buffy."
 	log.Print(msg)
 	require.Contains(t, buffy.String(), msg)
+}
+
+func TestAlpha(t *testing.T) {
+	_, actual, _ := loctest.PrepareFs(t, nil, map[string]string{
+		"kustomization.yaml": `namePrefix: test-`,
+	})
+
+	cmd := localize.NewCmdLocalize(actual, new(bytes.Buffer))
+	require.Contains(t, cmd.Short, "[Alpha]")
+	require.Contains(t, cmd.Long, "[Alpha]")
 }
 
 func TestTooManyArgs(t *testing.T) {
