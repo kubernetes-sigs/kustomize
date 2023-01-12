@@ -5,7 +5,6 @@ package localizer_test
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/api/krusty/localizer"
+	. "sigs.k8s.io/kustomize/api/testutils/localizertest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -201,50 +201,6 @@ spec:
 	urlQuery = "?submodules=0&ref=kustomize/v4.5.7&timeout=300"
 )
 
-func prepareFs(t *testing.T, dirs []string, files map[string]string) (
-	memoryFs filesys.FileSystem, actualFs filesys.FileSystem, testDir filesys.ConfirmedDir) {
-	t.Helper()
-
-	memoryFs = filesys.MakeFsInMemory()
-	actualFs = filesys.MakeFsOnDisk()
-
-	testDir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(t, err)
-
-	setupDir(t, memoryFs, testDir.String(), files)
-	for _, dirPath := range dirs {
-		require.NoError(t, actualFs.MkdirAll(testDir.Join(dirPath)))
-	}
-	setupDir(t, actualFs, testDir.String(), files)
-
-	t.Cleanup(func() {
-		_ = actualFs.RemoveAll(testDir.String())
-	})
-
-	return memoryFs, actualFs, testDir
-}
-
-func setupDir(t *testing.T, targetFs filesys.FileSystem, parentDir string, files map[string]string) {
-	t.Helper()
-
-	for file, content := range files {
-		require.NoError(t, targetFs.WriteFile(filepath.Join(parentDir, file), []byte(content)))
-	}
-}
-
-func setWorkingDir(t *testing.T, workingDir string) {
-	t.Helper()
-
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, os.Chdir(wd))
-	})
-
-	err = os.Chdir(workingDir)
-	require.NoError(t, err)
-}
-
 func link(t *testing.T, testDir filesys.ConfirmedDir, links map[string]string) {
 	t.Helper()
 
@@ -291,39 +247,6 @@ resources:
 	return
 }
 
-// checkFs checks fsActual, the real file system, against fsExpected, a file system in memory, for contents
-// in directory walkDir. checkFs does not allow symlinks.
-func checkFs(t *testing.T, walkDir string, fsExpected filesys.FileSystem, fsActual filesys.FileSystem) {
-	t.Helper()
-
-	err := fsActual.Walk(walkDir, func(path string, info fs.FileInfo, err error) error {
-		require.NoError(t, err)
-
-		require.NotEqual(t, os.ModeSymlink, info.Mode()&os.ModeSymlink)
-		require.True(t, fsExpected.Exists(path), "unexpected file %q", path)
-		return nil
-	})
-	require.NoError(t, err)
-
-	err = fsExpected.Walk(walkDir, func(path string, info fs.FileInfo, err error) error {
-		require.NoError(t, err)
-
-		if info.IsDir() {
-			require.DirExists(t, path)
-		} else {
-			require.FileExists(t, path)
-
-			expectedContent, err := fsExpected.ReadFile(path)
-			require.NoError(t, err)
-			actualContent, err := fsActual.ReadFile(path)
-			require.NoError(t, err)
-			require.Equal(t, string(expectedContent), string(actualContent))
-		}
-		return nil
-	})
-	require.NoError(t, err)
-}
-
 func TestWorkingDir(t *testing.T) {
 	files := map[string]string{
 		filepath.Join("target", "kustomization.yaml"): fmt.Sprintf(`resources:
@@ -334,15 +257,14 @@ func TestWorkingDir(t *testing.T) {
 `,
 		filepath.Join("base", "deployment.yaml"): simpleDeployment,
 	}
-	fsExpected, fsActual, wd := prepareFs(t, []string{"target", "base"}, files)
-	setWorkingDir(t, wd.String())
+	fsExpected, fsActual, wd := PrepareFs(t, []string{"target", "base"}, files)
+	SetWorkingDir(t, wd.String())
 
 	err := localizer.Run(fsActual, "target", ".", "")
 	require.NoError(t, err)
 
-	dst := wd.Join("localized-target")
-	setupDir(t, fsExpected, dst, files)
-	checkFs(t, dst, fsExpected, fsActual)
+	SetupDir(t, fsExpected, wd.Join("localized-target"), files)
+	CheckFs(t, wd.String(), fsExpected, fsActual)
 }
 
 func TestSymlinks(t *testing.T) {
@@ -356,7 +278,7 @@ func TestSymlinks(t *testing.T) {
 	//   - nested root
 	//     - file
 	//     - kustomization
-	fsExpected, fsActual, testDir := prepareFs(t, []string{"target",
+	fsExpected, fsActual, testDir := PrepareFs(t, []string{"target",
 		filepath.Join("target", "base"),
 		filepath.Join("target", "nested")}, map[string]string{
 		filepath.Join("target", "base", "kustomization.yaml"): `namePrefix: test-
@@ -373,13 +295,13 @@ func TestSymlinks(t *testing.T) {
 		"file-link":   filepath.Join("target", "nested", "file"),
 		filepath.Join("target", "kustomization.yaml"): filepath.Join("target", "nested", "kustomization"),
 	})
-	setWorkingDir(t, testDir.String())
+	SetWorkingDir(t, testDir.String())
 
 	err := localizer.Run(fsActual, "target-link", "target", "")
 	require.NoError(t, err)
 
 	dst := testDir.Join("localized-target")
-	setupDir(t, fsExpected, dst, map[string]string{
+	SetupDir(t, fsExpected, dst, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
 - base
@@ -388,12 +310,12 @@ func TestSymlinks(t *testing.T) {
 `,
 		filepath.Join("nested", "file"): simpleDeployment,
 	})
-	checkFs(t, dst, fsExpected, fsActual)
+	CheckFs(t, dst, fsExpected, fsActual)
 }
 
 func TestRemoteTargetDefaultDst(t *testing.T) {
-	fsExpected, fsActual, testDir := prepareFs(t, nil, nil)
-	setWorkingDir(t, testDir.String())
+	fsExpected, fsActual, testDir := PrepareFs(t, nil, nil)
+	SetWorkingDir(t, testDir.String())
 
 	const target = simpleURL + urlQuery
 	err := localizer.Run(fsActual, target, "", "")
@@ -401,10 +323,10 @@ func TestRemoteTargetDefaultDst(t *testing.T) {
 
 	dst := testDir.Join("localized-simple-kustomize-v4.5.7")
 	_, files := simplePathAndFiles(t)
-	setupDir(t, fsExpected,
+	SetupDir(t, fsExpected,
 		filepath.Join(dst, "api", "krusty", "testdata", "localize", "simple"),
 		files)
-	checkFs(t, testDir.String(), fsExpected, fsActual)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
 
 func TestBadArgs(t *testing.T) {
@@ -435,14 +357,14 @@ func TestBadArgs(t *testing.T) {
 			kust := map[string]string{
 				"kustomization.yaml": "namePrefix: test-",
 			}
-			fsExpected, fsActual, testDir := prepareFs(t, nil, kust)
-			setWorkingDir(t, testDir.String())
+			fsExpected, fsActual, testDir := PrepareFs(t, nil, kust)
+			SetWorkingDir(t, testDir.String())
 
 			err := localizer.Run(fsActual, test.target, test.scope, test.dst)
 			require.EqualError(t, err, test.err)
 
-			setupDir(t, fsExpected, testDir.String(), kust)
-			checkFs(t, testDir.String(), fsExpected, fsActual)
+			SetupDir(t, fsExpected, testDir.String(), kust)
+			CheckFs(t, testDir.String(), fsExpected, fsActual)
 		})
 	}
 }
@@ -453,7 +375,7 @@ kind: Kustomization
 openapi:
   path: %s
 `
-	fsExpected, fsActual, testDir := prepareFs(t, nil, map[string]string{
+	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(kustf, `https://raw.githubusercontent.com/kubernetes-sigs/kustomize/kustomize/v4.5.7/api/krusty/testdata/customschema.json`),
 	})
 
@@ -464,15 +386,15 @@ openapi:
 	localizedPath := filepath.Join(LocalizeDir, "raw.githubusercontent.com",
 		"kubernetes-sigs", "kustomize", "kustomize", "v4.5.7", "api", "krusty",
 		"testdata", "customschema.json")
-	setupDir(t, fsExpected, dst, map[string]string{
+	SetupDir(t, fsExpected, dst, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(kustf, localizedPath),
 		localizedPath:        customSchema,
 	})
-	checkFs(t, testDir.String(), fsExpected, fsActual)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
 
 func TestRemoteRoot(t *testing.T) {
-	fsExpected, fsActual, testDir := prepareFs(t, nil, map[string]string{
+	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
 `, simpleURL+urlQuery),
@@ -483,17 +405,17 @@ func TestRemoteRoot(t *testing.T) {
 	require.NoError(t, err)
 
 	localizedPath, files := simplePathAndFiles(t)
-	setupDir(t, fsExpected, dst, map[string]string{
+	SetupDir(t, fsExpected, dst, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
 `, localizedPath),
 	})
-	setupDir(t, fsExpected, filepath.Join(dst, localizedPath), files)
-	checkFs(t, dst, fsExpected, fsActual)
+	SetupDir(t, fsExpected, filepath.Join(dst, localizedPath), files)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
 
 func TestNestedRemoteRoots(t *testing.T) {
-	fsExpected, fsActual, testDir := prepareFs(t, nil, map[string]string{
+	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		// TODO(annasong): Change the ref to the release after kustomize/v4.5.7.
 		// We need changes to remote post-kustomize/v4.5.7.
 		"kustomization.yaml": `resources:
@@ -506,13 +428,13 @@ func TestNestedRemoteRoots(t *testing.T) {
 	require.NoError(t, err)
 
 	localizedPath, files := remotePathAndFiles(t)
-	setupDir(t, fsExpected, dst, map[string]string{
+	SetupDir(t, fsExpected, dst, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
 `, localizedPath),
 	})
-	setupDir(t, fsExpected, filepath.Join(dst, localizedPath), files)
-	checkFs(t, dst, fsExpected, fsActual)
+	SetupDir(t, fsExpected, filepath.Join(dst, localizedPath), files)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
 
 func TestResourcesRepoNotFile(t *testing.T) {
@@ -522,7 +444,7 @@ func TestResourcesRepoNotFile(t *testing.T) {
 - %s
 `, repo),
 	}
-	fsExpected, fsActual, testDir := prepareFs(t, nil, kustomization)
+	fsExpected, fsActual, testDir := PrepareFs(t, nil, kustomization)
 
 	err := localizer.Run(fsActual, testDir.String(), "", testDir.Join("dst"))
 
@@ -535,8 +457,8 @@ func TestResourcesRepoNotFile(t *testing.T) {
 	require.EqualError(t, actualErr.FileError, fileErr)
 	require.ErrorContains(t, actualErr.RootError, rootErr)
 
-	setupDir(t, fsExpected, testDir.String(), kustomization)
-	checkFs(t, testDir.String(), fsExpected, fsActual)
+	SetupDir(t, fsExpected, testDir.String(), kustomization)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
 
 func TestRemoteRootNoRef(t *testing.T) {
@@ -546,7 +468,7 @@ func TestRemoteRootNoRef(t *testing.T) {
 - %s
 `, root),
 	}
-	fsExpected, fsActual, testDir := prepareFs(t, nil, kustomization)
+	fsExpected, fsActual, testDir := PrepareFs(t, nil, kustomization)
 
 	err := localizer.Run(fsActual, testDir.String(), "", testDir.Join("dst"))
 
@@ -558,8 +480,8 @@ func TestRemoteRootNoRef(t *testing.T) {
 	require.EqualError(t, actualErr.FileError, fileErr)
 	require.EqualError(t, actualErr.RootError, rootErr)
 
-	setupDir(t, fsExpected, testDir.String(), kustomization)
-	checkFs(t, testDir.String(), fsExpected, fsActual)
+	SetupDir(t, fsExpected, testDir.String(), kustomization)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
 
 func TestExistingCacheDir(t *testing.T) {
@@ -570,11 +492,11 @@ func TestExistingCacheDir(t *testing.T) {
 `, remoteFile),
 		filepath.Join(LocalizeDir, "file"): "existing",
 	}
-	fsExpected, fsActual, testDir := prepareFs(t, []string{LocalizeDir}, file)
+	fsExpected, fsActual, testDir := PrepareFs(t, []string{LocalizeDir}, file)
 
 	err := localizer.Run(fsActual, testDir.String(), "", testDir.Join("dst"))
 	require.ErrorContains(t, err, fmt.Sprintf(`already contains localized-files needed to store file "%s"`, remoteFile))
 
-	setupDir(t, fsExpected, testDir.String(), file)
-	checkFs(t, testDir.String(), fsExpected, fsActual)
+	SetupDir(t, fsExpected, testDir.String(), file)
+	CheckFs(t, testDir.String(), fsExpected, fsActual)
 }
