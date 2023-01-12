@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
@@ -18,7 +17,7 @@ import (
 )
 
 type removeSecretOptions struct {
-	secretNames []string
+	secretNamesToRemove []string
 }
 
 // newCmdRemoveSecret remove the name of a file containing a secret to the kustomization file.
@@ -46,12 +45,12 @@ func newCmdRemoveSecret(fSys filesys.FileSystem) *cobra.Command {
 // Validate validates removeSecret command.
 func (o *removeSecretOptions) Validate(args []string) error {
 	if len(args) == 0 {
-		return errors.New("must specify a secret name")
+		return errors.New("must specify a Secret name")
 	}
 	if len(args) > 1 {
-		return fmt.Errorf("too many arguments: %s; to provide multiple config map options, please separate options by comma", args)
+		return fmt.Errorf("too many arguments: %s; to provide multiple Secrets to remove, please separate Secret names by commas", args)
 	}
-	o.secretNames = strings.Split(args[0], ",")
+	o.secretNamesToRemove = strings.Split(args[0], ",")
 	return nil
 }
 
@@ -59,34 +58,30 @@ func (o *removeSecretOptions) Validate(args []string) error {
 func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
-		return fmt.Errorf("secret cannot load from file system, got %w", err)
+		return fmt.Errorf("could not read kustomization file: %w", err)
 	}
 
 	m, err := mf.Read()
 	if err != nil {
-		return fmt.Errorf("secret cannot read from file, got %w", err)
+		return fmt.Errorf("could not read kustomization file: %w", err)
 	}
 
-	foundSecrets := make(map[string]bool)
-	for _, removeName := range o.secretNames {
-		foundSecrets[removeName] = false
-	}
+	foundSecrets := make(map[string]struct{})
 
 	newSecrets := make([]types.SecretArgs, 0, len(m.SecretGenerator))
 	for _, currentSecret := range m.SecretGenerator {
-		if kustfile.StringInSlice(currentSecret.Name, o.secretNames) {
-			foundSecrets[currentSecret.Name] = true
+		if kustfile.StringInSlice(currentSecret.Name, o.secretNamesToRemove) {
+			foundSecrets[currentSecret.Name] = struct{}{}
 			continue
 		}
 		newSecrets = append(newSecrets, currentSecret)
 	}
 
-	for name, found := range foundSecrets {
-		if !found {
+	for _, name := range o.secretNamesToRemove {
+		if _, found := foundSecrets[name]; !found {
 			log.Printf("secret %s doesn't exist in kustomization file", name)
 		}
 	}
-
 	m.SecretGenerator = newSecrets
 
 	err = mf.Write(m)
