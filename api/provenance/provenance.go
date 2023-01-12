@@ -53,14 +53,7 @@ func GetProvenance() Provenance {
 		switch setting.Key {
 		case "vcs.revision":
 			p.GitCommit = setting.Value
-		case "vcs.modified":
-			switch setting.Value {
-			case "true":
-				p.GitTreeState = "dirty" // TODO: This ends up being "dirty" in goreleaser for some reason.
-			case "false":
-				p.GitTreeState = "clean"
-			}
-		case "vcs.time": // TODO: This is the commit time, not the build time.
+		case "vcs.time":
 			p.BuildDate = setting.Value
 		case "GOARCH":
 			p.GoArch = setting.Value
