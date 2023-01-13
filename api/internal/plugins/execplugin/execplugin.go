@@ -13,9 +13,9 @@ import (
 
 	"github.com/google/shlex"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -151,17 +151,17 @@ func (p *ExecPlugin) Transform(rm resmap.ResMap) error {
 func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	f, err := os.CreateTemp("", tmpConfigFilePrefix)
 	if err != nil {
-		return nil, errors.Wrap(
+		return nil, errors.WrapPrefixf(
 			err, "creating tmp plugin config file")
 	}
 	_, err = f.Write(p.cfg)
 	if err != nil {
-		return nil, errors.Wrap(
+		return nil, errors.WrapPrefixf(
 			err, "writing plugin config to "+f.Name())
 	}
 	err = f.Close()
 	if err != nil {
-		return nil, errors.Wrap(
+		return nil, errors.WrapPrefixf(
 			err, "closing plugin config file "+f.Name())
 	}
 	//nolint:gosec
@@ -175,7 +175,7 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	}
 	result, err := cmd.Output()
 	if err != nil {
-		return nil, errors.Wrapf(
+		return nil, errors.WrapPrefixf(
 			err, "failure in plugin configured via %s; %v",
 			f.Name(), err.Error())
 	}
