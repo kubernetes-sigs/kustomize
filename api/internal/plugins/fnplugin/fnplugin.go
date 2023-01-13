@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -194,7 +194,7 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 
 	err = p.runFns.Execute()
 	if err != nil {
-		return nil, errors.Wrap(
+		return nil, errors.WrapPrefixf(
 			err, "couldn't execute function")
 	}
 

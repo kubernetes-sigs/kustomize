@@ -17,9 +17,9 @@ import (
 	"strings"
 
 	"github.com/imdario/mergo"
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -106,7 +106,7 @@ func (p *plugin) validateArgs() (err error) {
 	// ConfigHome is not loaded by the plugin, and can be located anywhere.
 	if p.ConfigHome == "" {
 		if err = p.establishTmpDir(); err != nil {
-			return errors.Wrap(
+			return errors.WrapPrefixf(
 				err, "unable to create tmp dir for HELM_CONFIG_HOME")
 		}
 		p.ConfigHome = filepath.Join(p.tmpDir, "helm")
@@ -150,7 +150,7 @@ func (p *plugin) runHelmCommand(
 	err := cmd.Run()
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
-		err = errors.Wrap(
+		err = errors.WrapPrefixf(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?)",
 				helm, strings.Join(args, " "), env, helm),
@@ -213,7 +213,7 @@ func (p *plugin) writeValuesBytes(
 		return "", fmt.Errorf("cannot create tmp dir to write helm values")
 	}
 	path := filepath.Join(p.tmpDir, p.Name+"-kustomize-values.yaml")
-	return path, errors.Wrap(os.WriteFile(path, b, 0644), "failed to write values file")
+	return path, errors.WrapPrefixf(os.WriteFile(path, b, 0644), "failed to write values file")
 }
 
 func (p *plugin) cleanup() {

@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/evanphx/json-patch v4.11.0+incompatible
-	github.com/pkg/errors v0.9.1
 	sigs.k8s.io/kustomize/api v0.11.5
 	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.3.0
@@ -26,6 +25,7 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect

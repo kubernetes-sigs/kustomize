@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // Compiler creates Go plugin object files.
@@ -86,7 +86,7 @@ func (b *Compiler) Compile() error {
 	cmd.Dir = b.workDir
 	if err := cmd.Run(); err != nil {
 		b.report()
-		return errors.Wrapf(
+		return errors.WrapPrefixf(
 			err, "cannot compile %s:\nSTDERR\n%s\n",
 			b.srcPath(), b.stderr.String())
 	}

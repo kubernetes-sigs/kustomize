@@ -11,10 +11,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/generators"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 var utf8bom = []byte{0xEF, 0xBB, 0xBF}
@@ -40,23 +40,23 @@ func (kvl *loader) Load(
 	args types.KvPairSources) (all []types.Pair, err error) {
 	pairs, err := kvl.keyValuesFromEnvFiles(args.EnvSources)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
+		return nil, errors.WrapPrefixf(err,
 			"env source files: %v",
-			args.EnvSources))
+			args.EnvSources)
 	}
 	all = append(all, pairs...)
 
 	pairs, err = keyValuesFromLiteralSources(args.LiteralSources)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"literal sources %v", args.LiteralSources))
+		return nil, errors.WrapPrefixf(err,
+			"literal sources %v", args.LiteralSources)
 	}
 	all = append(all, pairs...)
 
 	pairs, err = kvl.keyValuesFromFileSources(args.FileSources)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(
-			"file sources: %v", args.FileSources))
+		return nil, errors.WrapPrefixf(err,
+			"file sources: %v", args.FileSources)
 	}
 	return append(all, pairs...), nil
 }
