@@ -1075,7 +1075,6 @@ func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
 		// A list doesn't require a name.
 		return m, nil
 	}
-	fmt.Printf("name: %s, generateName: %s\n", m.NameMeta.Name, m.NameMeta.GenerateName)
 	if m.NameMeta.Name == "" && m.NameMeta.GenerateName == "" {
 		return m, fmt.Errorf("missing metadata.name and metadata.generateName in object %v", m)
 	}
