@@ -133,6 +133,8 @@ type NameMeta struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Namespace is the metadata.namespace field of a Resource
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	// GenerateName is the metadata.generateName field of a Resource
+	GenerateName string `json:"generateName,omitempty" yaml:"generateName,omitempty"`
 }
 
 // ResourceMeta contains the metadata for a both Resource Type and Resource.

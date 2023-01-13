@@ -293,6 +293,10 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 		m.Name = f.Value.YNode().Value
 		missingMeta = false
 	}
+	if f := meta.Field(GenerateNameField); !f.IsNilOrEmpty() {
+		m.GenerateName = f.Value.YNode().Value
+		missingMeta = false
+	}
 	if f := meta.Field(NamespaceField); !f.IsNilOrEmpty() {
 		m.Namespace = GetValue(f.Value)
 		missingMeta = false
@@ -1071,8 +1075,9 @@ func (rn *RNode) GetValidatedMetadata() (ResourceMeta, error) {
 		// A list doesn't require a name.
 		return m, nil
 	}
-	if m.NameMeta.Name == "" {
-		return m, fmt.Errorf("missing metadata.name in object %v", m)
+	fmt.Printf("name: %s, generateName: %s\n", m.NameMeta.Name, m.NameMeta.GenerateName)
+	if m.NameMeta.Name == "" && m.NameMeta.GenerateName == "" {
+		return m, fmt.Errorf("missing metadata.name and metadata.generateName in object %v", m)
 	}
 	return m, nil
 }
