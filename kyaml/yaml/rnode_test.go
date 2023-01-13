@@ -403,7 +403,7 @@ func TestRNodeGetValidatedMetadata(t *testing.T) {
 				"kind":       "ConfigMap",
 			},
 			rsExp: resultExpected{
-				errMsg: "missing metadata.name",
+				errMsg: "missing metadata.name and metadata.generateName",
 			},
 		},
 		"configmap": {
@@ -454,6 +454,28 @@ func TestRNodeGetValidatedMetadata(t *testing.T) {
 					TypeMeta: TypeMeta{
 						APIVersion: "v1",
 						Kind:       "ConfigMapList",
+					},
+				},
+			},
+		},
+		"jobGenerateName": {
+			theMap: map[string]interface{}{
+				"apiVersion": "batch/v1",
+				"kind":       "Job",
+				"metadata": map[string]interface{}{
+					"generateName": "winnie-",
+				},
+			},
+			rsExp: resultExpected{
+				out: ResourceMeta{
+					TypeMeta: TypeMeta{
+						APIVersion: "batch/v1",
+						Kind:       "Job",
+					},
+					ObjectMeta: ObjectMeta{
+						NameMeta: NameMeta{
+							GenerateName: "winnie-",
+						},
 					},
 				},
 			},
