@@ -199,6 +199,10 @@ spec:
   maxReplicas: 10`
 
 	urlQuery = "?submodules=0&ref=kustomize/v4.5.7&timeout=300"
+
+	valuesFile = `minecraftServer:
+  difficulty: peaceful
+`
 )
 
 func link(t *testing.T, testDir filesys.ConfirmedDir, links map[string]string) {
@@ -267,7 +271,7 @@ func TestWorkingDir(t *testing.T) {
 	CheckFs(t, wd.String(), fsExpected, fsActual)
 }
 
-func TestSymlinks(t *testing.T) {
+func TestLoaderSymlinks(t *testing.T) {
 	// test directory
 	// - link to target
 	// - link to base
@@ -499,4 +503,145 @@ func TestExistingCacheDir(t *testing.T) {
 
 	SetupDir(t, fsExpected, testDir.String(), file)
 	CheckFs(t, testDir.String(), fsExpected, fsActual)
+}
+
+func TestHelmNestedHome(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": fmt.Sprintf(`helmGlobals:
+  chartHome: %s
+`, filepath.Join("nested", "dirs", "home")),
+		filepath.Join("nested", "dirs", "home", "name", "values.yaml"): `
+minecraftServer:
+  difficulty: peaceful
+`,
+	}
+	fsExpected, fsActual, testDir := PrepareFs(t, []string{
+		filepath.Join("nested", "dirs", "home", "name"),
+	}, files)
+
+	dst := testDir.Join("dst")
+	err := localizer.Run(fsActual, testDir.String(), "", dst)
+	require.NoError(t, err)
+
+	SetupDir(t, fsExpected, dst, files)
+	CheckFs(t, dst, fsExpected, fsActual)
+}
+
+func TestHelmLinkedHome(t *testing.T) {
+	// scope
+	// - target
+	//   - kustomization
+	//   - myValues.yaml
+	//   - link to home
+	// - home
+	//   - name
+	//     - values.yaml
+	fsExpected, fsActual, scope := PrepareFs(t, []string{
+		"target",
+		filepath.Join("home", "name"),
+	},
+		map[string]string{
+			filepath.Join("target", "Kustomization"): `helmCharts:
+- name: name
+  valuesFile: myValues.yaml
+helmGlobals:
+  chartHome: home-link
+`,
+			filepath.Join("target", "myValues.yaml"):     valuesFile,
+			filepath.Join("home", "name", "values.yaml"): valuesFile,
+		})
+	link(t, scope, map[string]string{
+		filepath.Join("target", "home-link"): "home",
+	})
+
+	dst := scope.Join("dst")
+	err := localizer.Run(fsActual, scope.Join("target"), scope.String(), dst)
+	require.NoError(t, err)
+
+	SetupDir(t, fsExpected, dst, map[string]string{
+		filepath.Join("target", "Kustomization"): fmt.Sprintf(`helmCharts:
+- name: name
+  valuesFile: myValues.yaml
+helmGlobals:
+  chartHome: %s
+`, filepath.Join("..", "home")),
+		filepath.Join("target", "myValues.yaml"):     valuesFile,
+		filepath.Join("home", "name", "values.yaml"): valuesFile,
+	})
+	CheckFs(t, dst, fsExpected, fsActual)
+}
+
+func TestHelmLinkedDefaultHome(t *testing.T) {
+	// target
+	// - kustomization
+	// - link to home (named charts)
+	// - home
+	//   - name
+	//     - values.yaml
+	fsExpected, fsActual, target := PrepareFs(t, []string{
+		filepath.Join("home", "default"),
+		filepath.Join("home", "same"),
+	}, map[string]string{
+		"kustomization.yaml": fmt.Sprintf(`helmCharts:
+- name: default
+helmChartInflationGenerator:
+- chartHome: %s
+  chartName: same
+`, filepath.Join("home", "..", "charts")),
+		filepath.Join("home", "default", "values.yaml"): valuesFile,
+		filepath.Join("home", "same", "values.yaml"):    valuesFile,
+	})
+	link(t, target, map[string]string{"charts": "home"})
+
+	dst := target.Join("dst")
+	err := localizer.Run(fsActual, target.String(), "", dst)
+	require.NoError(t, err)
+
+	SetupDir(t, fsExpected, dst, map[string]string{
+		"kustomization.yaml": `helmChartInflationGenerator:
+- chartHome: charts
+  chartName: same
+helmCharts:
+- name: default
+`,
+		filepath.Join("charts", "default", "values.yaml"): valuesFile,
+		filepath.Join("charts", "same", "values.yaml"):    valuesFile,
+	})
+	CheckFs(t, dst, fsExpected, fsActual)
+}
+
+func TestHelmHomeEscapesScope(t *testing.T) {
+	// test directory
+	// - dir
+	// - file
+	// - target (and scope)
+	//   - kustomization
+	//   - home
+	//     - link to dir
+	//     - link to file
+	fsExpected, fsActual, testDir := PrepareFs(t, []string{
+		"dir",
+		filepath.Join("target", "home"),
+	}, map[string]string{
+		"file": valuesFile,
+		filepath.Join("target", "kustomization.yaml"): `helmGlobals:
+  chartHome: home
+`,
+	})
+	link(t, testDir, map[string]string{
+		filepath.Join("target", "home", "dir-link"):  "dir",
+		filepath.Join("target", "home", "file-link"): "file",
+	})
+
+	dst := testDir.Join("dst")
+	err := localizer.Run(fsActual, testDir.Join("target"), "", dst)
+	require.NoError(t, err)
+
+	SetupDir(t, fsExpected, dst, map[string]string{
+		"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+	})
+	require.NoError(t, fsExpected.Mkdir(filepath.Join(dst, "home")))
+	CheckFs(t, dst, fsExpected, fsActual)
 }
