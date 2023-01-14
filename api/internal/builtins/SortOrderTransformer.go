@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/yaml"
 )
@@ -26,7 +26,7 @@ type SortOrderTransformerPlugin struct {
 
 func (p *SortOrderTransformerPlugin) Config(
 	_ *resmap.PluginHelpers, c []byte) error {
-	return errors.Wrap(yaml.Unmarshal(c, p), "Failed to unmarshal SortOrderTransformer config")
+	return errors.WrapPrefixf(yaml.Unmarshal(c, p), "Failed to unmarshal SortOrderTransformer config")
 }
 
 func (p *SortOrderTransformerPlugin) applyDefaults() {
@@ -69,7 +69,7 @@ func (p *SortOrderTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 	p.applyDefaults()
 	err = p.validate()
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	// Sort
@@ -94,14 +94,14 @@ func applyOrdering(m resmap.ResMap, ordering []resid.ResId) error {
 	for i, id := range ordering {
 		resources[i], err = m.GetByCurrentId(id)
 		if err != nil {
-			return errors.Wrap(err, "expected match for sorting")
+			return errors.WrapPrefixf(err, "expected match for sorting")
 		}
 	}
 	m.Clear()
 	for _, r := range resources {
 		err = m.Append(r)
 		if err != nil {
-			return errors.Wrap(err, "SortOrderTransformer: Failed to append to resources")
+			return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
 		}
 	}
 	return nil
