@@ -28,6 +28,10 @@ func TestPathSplitter(t *testing.T) {
 			exp:  []string{"a", "b", "c"},
 		},
 		{
+			path: "/a/b/c",
+			exp:  []string{"a", "b", "c"},
+		},
+		{
 			path: `a/b[]/c`,
 			exp:  []string{"a", "b[]", "c"},
 		},
