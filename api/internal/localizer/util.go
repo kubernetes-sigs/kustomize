@@ -11,7 +11,6 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -216,18 +215,4 @@ func parseHost(repoSpec *git.RepoSpec) (string, error) {
 	}
 	// strip scheme, userinfo, port, and any trailing slashes.
 	return u.Hostname(), nil
-}
-
-// useDefaultChartHome returns whether the helm fields in kust use the default
-// chart home. This is true when kust has helm charts without a chart home.
-func useDefaultChartHome(kust *types.Kustomization) bool {
-	var inLegacy bool
-	for _, legacy := range kust.HelmChartInflationGenerator {
-		if legacy.ChartHome == "" {
-			inLegacy = true
-		}
-	}
-	chartsExist := len(kust.HelmCharts) > 0
-	inGlobals := kust.HelmGlobals == nil || kust.HelmGlobals.ChartHome == ""
-	return inLegacy || (chartsExist && inGlobals)
 }

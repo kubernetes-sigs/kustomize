@@ -587,7 +587,7 @@ patches:
 	expected, actual := makeFileSystems(t, "/a/b", kustAndPatch)
 
 	err := Run("/a/b", "", "/dst", actual)
-	require.Error(t, err)
+	require.EqualError(t, err, `unable to localize target "/a/b": unable to localize patches: invalid file reference: '/a/b/name-DNE.yaml' doesn't exist`)
 
 	checkFSys(t, expected, actual)
 }
@@ -1125,7 +1125,7 @@ resources:
 	checkFSys(t, expected, actual)
 }
 
-func TestLocalizeHelm(t *testing.T) {
+func TestLocalizeHelmChartInflationGenerator(t *testing.T) {
 	helmKust := map[string]string{
 		"kustomization.yaml": `helmChartInflationGenerator:
 - chartName: nothing-to-localize
@@ -1139,37 +1139,63 @@ func TestLocalizeHelm(t *testing.T) {
   valuesMerge: replace
 - chartHome: home
   chartName: copy-chartHome
-helmCharts:
-- name: again-nothing-to-localize
-  repo: https://helm.releases.hashicorp.com
-  version: 1.0.0
-- includeCRDs: true
-  name: localize-valuesFile
-  valuesFile: anotherValues
-helmGlobals:
-  chartHome: global-home
-  configHome: .
 `,
 		"minecraftValues.yaml":               valuesFile,
-		"anotherValues":                      valuesFile,
 		"charts/localize-values/values.yaml": valuesFile,
 		"home/copy-chartHome/values.yaml":    valuesFile,
-		"global-home/terraform/values.yaml":  valuesFile,
 	}
 	checkLocalizeInTargetSuccess(t, helmKust)
 }
 
-func TestLocalizeHelmDefault(t *testing.T) {
-	files := map[string]string{
-		"kustomization.yaml": `helmCharts:
-- name: default
+func TestLocalizeHelmCharts(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		files map[string]string
+	}{
+		{
+			name: "charts_only",
+			files: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: nothing-to-localize
+  repo: https://helm.releases.hashicorp.com
+  version: 1.0.0
+- includeCRDs: true
+  name: localize-valuesFile
+  valuesFile: file
 `,
-		"charts/name/values.yaml": valuesFile,
+				"file":                                   valuesFile,
+				"charts/nothing-to-localize/values.yaml": valuesFile,
+				"charts/localize-valuesFile/values.yaml": valuesFile,
+			},
+		},
+		{
+			name: "charts_globals_no_home",
+			files: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: default
+helmGlobals:
+  configHome: .
+`,
+				"charts/default/values.yaml": valuesFile,
+			},
+		},
+		{
+			name: "home_only",
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+				"home/name/values.yaml": valuesFile,
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, test.files)
+		})
 	}
-	checkLocalizeInTargetSuccess(t, files)
 }
 
-func TestLocalizeHelmNoDefault(t *testing.T) {
+func TestLocalizeHelmChartsNoDefault(t *testing.T) {
 	files := map[string]string{
 		"kustomization.yaml": `helmGlobals:
   chartHome: home
@@ -1284,6 +1310,45 @@ func TestCopyChartHomeError(t *testing.T) {
 			require.EqualError(t, err, test.err)
 
 			checkFSys(t, expected, actual)
+		})
+	}
+}
+
+func TestLocalizeEmpty(t *testing.T) {
+	for name, kustomization := range map[string]string{
+		"file": `configurations:
+- ""
+`,
+		"root": `bases:
+- ""
+`,
+		"resource": `resources:
+- ""
+`,
+		"generator_file_src": `configMapGenerator:
+- files:
+  - ""
+`,
+		"patchesStrategicMerge": `patchesStrategicMerge:
+- ""
+`,
+		"custom_transformers": `transformers:
+- ""
+`,
+		"custom_transformer_field": `transformers:
+- |
+  apiVersion: builtin
+  kind: PatchStrategicMergeTransformer
+  metadata:
+    name: empty
+  paths:
+  - ""
+`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, map[string]string{
+				"kustomization.yaml": kustomization,
+			})
 		})
 	}
 }

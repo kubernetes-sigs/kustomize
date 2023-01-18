@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -301,89 +300,4 @@ func TestLocRootPath_SymlinkPath(t *testing.T) {
 	actual, err := locRootPath(url, repoDir.String(), filesys.ConfirmedDir(rootDir), fSys)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)
-}
-
-func TestUseDefaultChartHome_True(t *testing.T) {
-	for name, fields := range map[string]types.Kustomization{
-		"helmChartInflationGenerator": {
-			HelmChartInflationGenerator: []types.HelmChartArgs{
-				{
-					ChartName: "minecraft",
-					ChartHome: "home",
-				},
-				{
-					ChartName:    "no-home",
-					ChartRepoURL: "https://itzg.github.io/minecraft-server-charts",
-				},
-				{
-					ChartName: "warcraft",
-					ChartHome: "home",
-				},
-			},
-			HelmGlobals: &types.HelmGlobals{
-				ChartHome: "home",
-			},
-		},
-		"no_helmGlobals": {
-			HelmChartInflationGenerator: []types.HelmChartArgs{
-				{
-					ChartName: "minecraft",
-					ChartHome: "home",
-				},
-			},
-			HelmCharts: []types.HelmChart{
-				{
-					Name: "no-globals",
-				},
-			},
-		},
-		"helmGlobals_no_home": {
-			HelmCharts: []types.HelmChart{
-				{
-					Name: "globals-no-home",
-				},
-			},
-			HelmGlobals: &types.HelmGlobals{
-				ConfigHome: "/a/b/c",
-			},
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			helmKustomization := fields
-			require.True(t, useDefaultChartHome(&helmKustomization))
-		})
-	}
-}
-
-func TestUseDefaultChartHome_False(t *testing.T) {
-	for name, fields := range map[string]types.Kustomization{
-		"helmChartInflationGenerator": {
-			HelmChartInflationGenerator: []types.HelmChartArgs{
-				{
-					ChartName: "minecraft",
-					ChartHome: "charts",
-				},
-			},
-		},
-		"helmCharts": {
-			HelmCharts: []types.HelmChart{
-				{
-					Name: "minecraft",
-				},
-			},
-			HelmGlobals: &types.HelmGlobals{
-				ChartHome: "charts",
-			},
-		},
-		"no_helmCharts": {
-			HelmGlobals: &types.HelmGlobals{
-				ConfigHome: "/a/b/c",
-			},
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			helmKustomization := fields
-			require.False(t, useDefaultChartHome(&helmKustomization))
-		})
-	}
 }
