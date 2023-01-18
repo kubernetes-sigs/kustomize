@@ -159,7 +159,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		absPath   string
 	}{
 		{
-			name:      "t1",
+			name:      "https aws code commit url",
 			input:     "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir",
 			cloneSpec: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
 			absPath:   notCloned.Join("somedir"),
@@ -167,11 +167,10 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:         "https://git-codecommit.us-east-2.amazonaws.com/",
 				RepoPath:     "someorg/somerepo",
 				KustRootPath: "somedir",
-				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t2",
+			name:      "https aws code commit url with params",
 			input:     "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somedir?ref=testbranch",
 			cloneSpec: "https://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
 			absPath:   notCloned.Join("somedir"),
@@ -180,43 +179,61 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				RepoPath:     "someorg/somerepo",
 				KustRootPath: "somedir",
 				Ref:          "testbranch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t3",
+			name:      "legacy azure https url with params",
 			input:     "https://fabrikops2.visualstudio.com/someorg/somerepo?ref=master",
 			cloneSpec: "https://fabrikops2.visualstudio.com/someorg/somerepo",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "https://fabrikops2.visualstudio.com/",
-				RepoPath:  "someorg/somerepo",
-				Ref:       "master",
-				GitSuffix: ".git",
+				Host:     "https://fabrikops2.visualstudio.com/",
+				RepoPath: "someorg/somerepo",
+				Ref:      "master",
 			},
 		},
 		{
-			name:      "t4",
+			name:      "http github url without git suffix",
 			input:     "http://github.com/someorg/somerepo/somedir",
-			cloneSpec: "https://github.com/someorg/somerepo.git",
+			cloneSpec: "https://github.com/someorg/somerepo",
 			absPath:   notCloned.Join("somedir"),
 			repoSpec: RepoSpec{
 				Host:         "https://github.com/",
 				RepoPath:     "someorg/somerepo",
 				KustRootPath: "somedir",
-				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t5",
+			name:      "scp github url without git suffix",
 			input:     "git@github.com:someorg/somerepo/somedir",
-			cloneSpec: "git@github.com:someorg/somerepo.git",
+			cloneSpec: "git@github.com:someorg/somerepo",
 			absPath:   notCloned.Join("somedir"),
 			repoSpec: RepoSpec{
 				Host:         "git@github.com:",
 				RepoPath:     "someorg/somerepo",
 				KustRootPath: "somedir",
-				GitSuffix:    ".git",
+			},
+		},
+		{
+			name:      "http github url with git suffix",
+			input:     "http://github.com/someorg/somerepo.git/somedir",
+			cloneSpec: "https://github.com/someorg/somerepo.git",
+			absPath:   notCloned.Join("somedir"),
+			repoSpec: RepoSpec{
+				Host:         "https://github.com/",
+				RepoPath:     "someorg/somerepo.git",
+				KustRootPath: "somedir",
+			},
+		},
+		{
+			name:      "scp github url with git suffix",
+			input:     "git@github.com:someorg/somerepo.git/somedir",
+			cloneSpec: "git@github.com:someorg/somerepo.git",
+			absPath:   notCloned.Join("somedir"),
+			repoSpec: RepoSpec{
+				Host:         "git@github.com:",
+				RepoPath:     "someorg/somerepo.git",
+				KustRootPath: "somedir",
 			},
 		},
 		{
@@ -225,10 +242,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@gitlab2.sqtools.ru:infra/kubernetes/thanos-base.git",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "git@gitlab2.sqtools.ru:",
-				RepoPath:  "infra/kubernetes/thanos-base",
-				Ref:       "v0.1.0",
-				GitSuffix: ".git",
+				Host:     "git@gitlab2.sqtools.ru:",
+				RepoPath: "infra/kubernetes/thanos-base.git",
+				Ref:      "v0.1.0",
 			},
 		},
 		{
@@ -238,10 +254,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "git@bitbucket.org:",
-				RepoPath:     "company/project",
+				RepoPath:     "company/project.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -251,10 +266,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "git@bitbucket.org/",
-				RepoPath:     "company/project",
+				RepoPath:     "company/project.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -264,10 +278,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "ssh://git@bitbucket.org/",
-				RepoPath:     "company/project",
+				RepoPath:     "company/project.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -314,18 +327,17 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t12",
+			name:      "https bitbucket url with git suffix",
 			input:     "https://bitbucket.example.com/scm/project/repository.git",
 			cloneSpec: "https://bitbucket.example.com/scm/project/repository.git",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "https://bitbucket.example.com/",
-				RepoPath:  "scm/project/repository",
-				GitSuffix: ".git",
+				Host:     "https://bitbucket.example.com/",
+				RepoPath: "scm/project/repository.git",
 			},
 		},
 		{
-			name:      "t13",
+			name:      "ssh aws code commit url",
 			input:     "ssh://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo/somepath",
 			cloneSpec: "ssh://git-codecommit.us-east-2.amazonaws.com/someorg/somerepo",
 			absPath:   notCloned.Join("somepath"),
@@ -333,32 +345,29 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:         "ssh://git-codecommit.us-east-2.amazonaws.com/",
 				RepoPath:     "someorg/somerepo",
 				KustRootPath: "somepath",
-				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t14",
+			name:      "scp Github with slash fixed to colon",
 			input:     "git@github.com/someorg/somerepo/somepath",
-			cloneSpec: "git@github.com:someorg/somerepo.git",
+			cloneSpec: "git@github.com:someorg/somerepo",
 			absPath:   notCloned.Join("somepath"),
 			repoSpec: RepoSpec{
 				Host:         "git@github.com:",
 				RepoPath:     "someorg/somerepo",
 				KustRootPath: "somepath",
-				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t15",
+			name:      "https Github with double slash path delimiter and params",
 			input:     "https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6",
-			cloneSpec: "https://github.com/kubernetes-sigs/kustomize.git",
+			cloneSpec: "https://github.com/kubernetes-sigs/kustomize",
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
 				Host:         "https://github.com/",
 				RepoPath:     "kubernetes-sigs/kustomize",
 				KustRootPath: "examples/multibases/dev/",
 				Ref:          "v1.0.6",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -368,10 +377,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("somepath"),
 			repoSpec: RepoSpec{
 				Host:         "file://",
-				RepoPath:     "a/b/c/someRepo",
+				RepoPath:     "a/b/c/someRepo.git",
 				KustRootPath: "somepath",
 				Ref:          "someBranch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -409,16 +417,15 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t20",
+			name:      "ssh Github with double-slashed path delimiter and params",
 			input:     "ssh://git@github.com/kubernetes-sigs/kustomize//examples/multibases/dev?ref=v1.0.6",
-			cloneSpec: "git@github.com:kubernetes-sigs/kustomize.git",
+			cloneSpec: "git@github.com:kubernetes-sigs/kustomize",
 			absPath:   notCloned.Join("examples/multibases/dev"),
 			repoSpec: RepoSpec{
 				Host:         "git@github.com:",
 				RepoPath:     "kubernetes-sigs/kustomize",
 				KustRootPath: "examples/multibases/dev",
 				Ref:          "v1.0.6",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -442,75 +449,80 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "double-slash path delimiter https",
-			input:     "https://fake-git-hosting.org/path/to/repo//examples/multibases/dev",
-			cloneSpec: "https://fake-git-hosting.org/path/to/repo.git",
+			name:      "arbitrary https host with double-slash path delimiter",
+			input:     "https://example.org/path/to/repo//examples/multibases/dev",
+			cloneSpec: "https://example.org/path/to/repo",
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
-				Host:         "https://fake-git-hosting.org/",
+				Host:         "https://example.org/",
 				RepoPath:     "path/to/repo",
 				KustRootPath: "examples/multibases/dev",
-				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "double-slash path delimeter ssh",
-			input:     "ssh://alice@acme.co/path/to/repo//examples/multibases/dev",
-			cloneSpec: "ssh://alice@acme.co/path/to/repo.git",
+			name:      "arbitrary https host with .git repo suffix",
+			input:     "https://example.org/path/to/repo.git/examples/multibases/dev",
+			cloneSpec: "https://example.org/path/to/repo.git",
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
-				Host:         "ssh://alice@acme.co/",
+				Host:         "https://example.org/",
+				RepoPath:     "path/to/repo.git",
+				KustRootPath: "examples/multibases/dev",
+			},
+		},
+		{
+			name:      "arbitrary ssh host with double-slash path delimiter",
+			input:     "ssh://alice@example.com/path/to/repo//examples/multibases/dev",
+			cloneSpec: "ssh://alice@example.com/path/to/repo",
+			absPath:   notCloned.Join("/examples/multibases/dev"),
+			repoSpec: RepoSpec{
+				Host:         "ssh://alice@example.com/",
 				RepoPath:     "path/to/repo",
 				KustRootPath: "examples/multibases/dev",
-				GitSuffix:    ".git",
 			},
 		},
 		{
 			name:      "query_slash",
 			input:     "https://authority/org/repo?ref=group/version",
-			cloneSpec: "https://authority/org/repo.git",
+			cloneSpec: "https://authority/org/repo",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "https://authority/",
-				RepoPath:  "org/repo",
-				Ref:       "group/version",
-				GitSuffix: ".git",
+				Host:     "https://authority/",
+				RepoPath: "org/repo",
+				Ref:      "group/version",
 			},
 		},
 		{
 			name:      "query_git_delimiter",
 			input:     "https://authority/org/repo/?ref=includes_git/for_some_reason",
-			cloneSpec: "https://authority/org/repo.git",
+			cloneSpec: "https://authority/org/repo",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "https://authority/",
-				RepoPath:  "org/repo",
-				Ref:       "includes_git/for_some_reason",
-				GitSuffix: ".git",
+				Host:     "https://authority/",
+				RepoPath: "org/repo",
+				Ref:      "includes_git/for_some_reason",
 			},
 		},
 		{
 			name:      "query_git_suffix",
 			input:     "https://authority/org/repo/?ref=includes.git/for_some_reason",
-			cloneSpec: "https://authority/org/repo.git",
+			cloneSpec: "https://authority/org/repo",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "https://authority/",
-				RepoPath:  "org/repo",
-				Ref:       "includes.git/for_some_reason",
-				GitSuffix: ".git",
+				Host:     "https://authority/",
+				RepoPath: "org/repo",
+				Ref:      "includes.git/for_some_reason",
 			},
 		},
 		{
 			name:      "non_parsable_path",
 			input:     "https://authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
-			cloneSpec: "https://authority/org/repo.git",
+			cloneSpec: "https://authority/org/repo",
 			absPath:   notCloned.Join("%-invalid-uri-so-not-parsable-by-net/url.Parse"),
 			repoSpec: RepoSpec{
 				Host:         "https://authority/",
 				RepoPath:     "org/repo",
 				KustRootPath: "%-invalid-uri-so-not-parsable-by-net/url.Parse",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -520,10 +532,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "ssh://myusername@bitbucket.org/",
-				RepoPath:     "ourteamname/ourrepositoryname",
+				RepoPath:     "ourteamname/ourrepositoryname.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -533,10 +544,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "file://",
-				RepoPath:     "git@home/path/to/repository",
+				RepoPath:     "git@home/path/to/repository.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -546,10 +556,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "http://git@home.com/",
-				RepoPath:     "path/to/repository",
+				RepoPath:     "path/to/repository.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -559,10 +568,9 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "https://git@home.com/",
-				RepoPath:     "path/to/repository",
+				RepoPath:     "path/to/repository.git",
 				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -572,9 +580,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
 				Host:         "ssh://git@ssh.github.com:443/",
-				RepoPath:     "YOUR-USERNAME/YOUR-REPOSITORY",
+				RepoPath:     "YOUR-USERNAME/YOUR-REPOSITORY.git",
 				KustRootPath: "",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -584,9 +591,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "git@gitlab.com/",
-				RepoPath:     "user:name/YOUR-REPOSITORY",
+				RepoPath:     "user:name/YOUR-REPOSITORY.git",
 				KustRootPath: "path",
-				GitSuffix:    ".git",
 			},
 		},
 		{
@@ -595,20 +601,18 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			cloneSpec: "git@gitlab.com:gitlab-tests/sample-project.git",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "git@gitlab.com:",
-				RepoPath:  "gitlab-tests/sample-project",
-				GitSuffix: ".git",
+				Host:     "git@gitlab.com:",
+				RepoPath: "gitlab-tests/sample-project.git",
 			},
 		},
 		{
 			name:      "gitlab URLs without explicit git suffix",
 			input:     "git@gitlab.com:gitlab-tests/sample-project",
-			cloneSpec: "git@gitlab.com:gitlab-tests/sample-project.git",
+			cloneSpec: "git@gitlab.com:gitlab-tests/sample-project",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "git@gitlab.com:",
-				RepoPath:  "gitlab-tests/sample-project",
-				GitSuffix: ".git",
+				Host:     "git@gitlab.com:",
+				RepoPath: "gitlab-tests/sample-project",
 			},
 		},
 		{
@@ -620,7 +624,17 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:         "https://username@dev.azure.com/",
 				RepoPath:     "org/project/_git/repo",
 				KustRootPath: "path/to/kustomization/root",
-				GitSuffix:    "",
+			},
+		},
+		{
+			name:      "legacy format azure host with _git",
+			input:     "https://org.visualstudio.com/project/_git/repo/path/to/kustomization/root",
+			cloneSpec: "https://org.visualstudio.com/project/_git/repo",
+			absPath:   notCloned.Join("path/to/kustomization/root"),
+			repoSpec: RepoSpec{
+				Host:         "https://org.visualstudio.com/",
+				RepoPath:     "project/_git/repo",
+				KustRootPath: "path/to/kustomization/root",
 			},
 		},
 	}
@@ -647,36 +661,6 @@ func TestNewRepoSpecFromURL_DefaultQueryParams(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, defaultSubmodules, repoSpec.Submodules)
 	require.Equal(t, defaultTimeout, repoSpec.Timeout)
-}
-
-func TestIsAzureHost(t *testing.T) {
-	testcases := []struct {
-		input  string
-		expect bool
-	}{
-		{
-			input:  "https://git-codecommit.us-east-2.amazonaws.com",
-			expect: false,
-		},
-		{
-			input:  "ssh://git-codecommit.us-east-2.amazonaws.com",
-			expect: false,
-		},
-		{
-			input:  "https://fabrikops2.visualstudio.com/",
-			expect: true,
-		},
-		{
-			input:  "https://dev.azure.com/myorg/myproject/",
-			expect: true,
-		},
-	}
-	for _, testcase := range testcases {
-		actual := isAzureHost(testcase.input)
-		if actual != testcase.expect {
-			t.Errorf("IsAzureHost: expected %v, but got %v on %s", testcase.expect, actual, testcase.input)
-		}
-	}
 }
 
 func TestParseQuery(t *testing.T) {
@@ -813,35 +797,5 @@ func TestParseQuery(t *testing.T) {
 			assert.Equal(t, tc.timeout, timeout, "timeout mismatch")
 			assert.Equal(t, tc.submodules, submodules, "submodules mismatch")
 		})
-	}
-}
-
-func TestIsAWSHost(t *testing.T) {
-	testcases := []struct {
-		input  string
-		expect bool
-	}{
-		{
-			input:  "https://git-codecommit.us-east-2.amazonaws.com",
-			expect: true,
-		},
-		{
-			input:  "ssh://git-codecommit.us-east-2.amazonaws.com",
-			expect: true,
-		},
-		{
-			input:  "git@github.com:",
-			expect: false,
-		},
-		{
-			input:  "http://github.com/",
-			expect: false,
-		},
-	}
-	for _, testcase := range testcases {
-		actual := isAWSHost(testcase.input)
-		if actual != testcase.expect {
-			t.Errorf("IsAWSHost: expected %v, but got %v on %s", testcase.expect, actual, testcase.input)
-		}
 	}
 }

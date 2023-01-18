@@ -171,13 +171,16 @@ func locRootPath(rootURL, repoDir string, root filesys.ConfirmedDir, fSys filesy
 	if err != nil {
 		log.Panicf("cannot find path from %q to child directory %q: %s", repo, root, err)
 	}
+	// the git-server-side directory name conventionally (but not universally) ends in .git, which
+	// is conventionally stripped from the client-side directory name used for the clone.
+	localRepoPath := strings.TrimSuffix(repoSpec.RepoPath, ".git")
 
 	// We do not need to escape RepoPath, a path on the git server.
 	// However, like git, we clean dot-segments from RepoPath.
 	// Git does not allow ref value to contain dot-segments.
 	return filepath.Join(LocalizeDir,
 		host,
-		filepath.Join(string(filepath.Separator), filepath.FromSlash(repoSpec.RepoPath)),
+		filepath.Join(string(filepath.Separator), filepath.FromSlash(localRepoPath)),
 		filepath.FromSlash(repoSpec.Ref),
 		inRepo), nil
 }
