@@ -192,14 +192,6 @@ resources:
 			expected: simpleBuild,
 		},
 		{
-			name: "triple slash absolute path",
-			kustomization: `
-resources:
-- file:///$ROOT/simple.git
-`,
-			expected: simpleBuild,
-		},
-		{
 			name: "has submodule but not initialized",
 			kustomization: `
 resources:

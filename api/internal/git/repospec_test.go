@@ -82,27 +82,31 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"relative path": {
 			"../../tmp",
-			"url lacks host",
+			"failed to parse scheme",
+		},
+		"local path that looks somewhat like a github url": {
+			"src/github.com/org/repo/path",
+			"failed to parse scheme",
 		},
 		"no_slashes": {
 			"iauhsdiuashduas",
-			"url lacks repoPath",
+			"failed to parse scheme",
 		},
 		"bad_scheme": {
 			"htxxxtp://github.com/",
-			"url lacks host",
+			"failed to parse scheme",
 		},
 		"no_org_repo": {
 			"ssh://git.example.com",
-			"url lacks repoPath",
+			"failed to parse repo path segment",
 		},
 		"hashicorp_git_only": {
 			"git::___",
-			"url lacks repoPath",
+			"failed to parse scheme",
 		},
 		"query_after_host": {
 			"https://host?ref=group/version/minor_version",
-			"url lacks repoPath",
+			"failed to parse repo path segment",
 		},
 		"path_exits_repo": {
 			"https://github.com/org/repo.git//path/../../exits/repo",
@@ -110,11 +114,27 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"bad github separator": {
 			"github.com!org/repo.git//path",
-			"url lacks host",
+			"failed to parse scheme",
 		},
 		"mysterious gh: prefix previously supported is no longer handled": {
 			"gh:org/repo",
-			"url lacks repoPath",
+			"failed to parse scheme",
+		},
+		"invalid Github url missing orgrepo": {
+			"https://github.com/thisisa404.yaml",
+			"failed to parse repo path segment",
+		},
+		"file protocol with excessive slashes": { // max valid is three: two for the scheme and one for the root
+			"file:////tmp//path/to/whatever",
+			"failed to parse repo path segment",
+		},
+		"unsupported protocol after username (invalid)": {
+			"git@scp://github.com/org/repo.git//path",
+			"failed to parse repo path segment",
+		},
+		"supported protocol after username (invalid)": {
+			"git@ssh://github.com/org/repo.git//path",
+			"failed to parse repo path segment",
 		},
 	}
 
@@ -137,7 +157,6 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		repoSpec  RepoSpec
 		cloneSpec string
 		absPath   string
-		skip      string
 	}{
 		{
 			name:      "t1",
@@ -201,7 +220,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t6",
+			name:      "non-github_scp",
 			input:     "git@gitlab2.sqtools.ru:infra/kubernetes/thanos-base.git?ref=v0.1.0",
 			cloneSpec: "git@gitlab2.sqtools.ru:infra/kubernetes/thanos-base.git",
 			absPath:   notCloned.String(),
@@ -213,14 +232,14 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "non-github_scp",
+			name:      "non-github_scp with path delimiter",
 			input:     "git@bitbucket.org:company/project.git//path?ref=branch",
 			cloneSpec: "git@bitbucket.org:company/project.git",
 			absPath:   notCloned.Join("path"),
 			repoSpec: RepoSpec{
 				Host:         "git@bitbucket.org:",
 				RepoPath:     "company/project",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
 			},
@@ -233,7 +252,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "git@bitbucket.org/",
 				RepoPath:     "company/project",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
 			},
@@ -246,52 +265,52 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "ssh://git@bitbucket.org/",
 				RepoPath:     "company/project",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t8",
+			name:      "_git host delimiter in non-github url",
 			input:     "https://itfs.mycompany.com/collection/project/_git/somerepos",
 			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:     "https://itfs.mycompany.com/collection/project/_git/",
-				RepoPath: "somerepos",
+				Host:     "https://itfs.mycompany.com/",
+				RepoPath: "collection/project/_git/somerepos",
 			},
 		},
 		{
-			name:      "t9",
+			name:      "_git host delimiter in non-github url with params",
 			input:     "https://itfs.mycompany.com/collection/project/_git/somerepos?version=v1.0.0",
 			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:     "https://itfs.mycompany.com/collection/project/_git/",
-				RepoPath: "somerepos",
+				Host:     "https://itfs.mycompany.com/",
+				RepoPath: "collection/project/_git/somerepos",
 				Ref:      "v1.0.0",
 			},
 		},
 		{
-			name:      "t10",
+			name:      "_git host delimiter in non-github url with kust root path and params",
 			input:     "https://itfs.mycompany.com/collection/project/_git/somerepos/somedir?version=v1.0.0",
 			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
 			absPath:   notCloned.Join("somedir"),
 			repoSpec: RepoSpec{
-				Host:         "https://itfs.mycompany.com/collection/project/_git/",
-				RepoPath:     "somerepos",
-				KustRootPath: "/somedir",
+				Host:         "https://itfs.mycompany.com/",
+				RepoPath:     "collection/project/_git/somerepos",
+				KustRootPath: "somedir",
 				Ref:          "v1.0.0",
 			},
 		},
 		{
-			name:      "t11",
+			name:      "_git host delimiter in non-github url with no kust root path",
 			input:     "git::https://itfs.mycompany.com/collection/project/_git/somerepos",
 			cloneSpec: "https://itfs.mycompany.com/collection/project/_git/somerepos",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:     "https://itfs.mycompany.com/collection/project/_git/",
-				RepoPath: "somerepos",
+				Host:     "https://itfs.mycompany.com/",
+				RepoPath: "collection/project/_git/somerepos",
 			},
 		},
 		{
@@ -337,13 +356,13 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "https://github.com/",
 				RepoPath:     "kubernetes-sigs/kustomize",
-				KustRootPath: "/examples/multibases/dev/",
+				KustRootPath: "examples/multibases/dev/",
 				Ref:          "v1.0.6",
 				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t16",
+			name:      "file protocol with git-suffixed repo path and params",
 			input:     "file://a/b/c/someRepo.git/somepath?ref=someBranch",
 			cloneSpec: "file://a/b/c/someRepo.git",
 			absPath:   notCloned.Join("somepath"),
@@ -356,7 +375,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t17",
+			name:      "file protocol with two slashes, with kust root path and params",
 			input:     "file://a/b/c/someRepo//somepath?ref=someBranch",
 			cloneSpec: "file://a/b/c/someRepo",
 			absPath:   notCloned.Join("somepath"),
@@ -368,7 +387,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t18",
+			name:      "file protocol with two slashes, with ref and no kust root path",
 			input:     "file://a/b/c/someRepo?ref=someBranch",
 			cloneSpec: "file://a/b/c/someRepo",
 			absPath:   notCloned.String(),
@@ -379,7 +398,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t19",
+			name:      "file protocol with three slashes, with ref and no kust root path",
 			input:     "file:///a/b/c/someRepo?ref=someBranch",
 			cloneSpec: "file:///a/b/c/someRepo",
 			absPath:   notCloned.String(),
@@ -397,13 +416,13 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "git@github.com:",
 				RepoPath:     "kubernetes-sigs/kustomize",
-				KustRootPath: "/examples/multibases/dev",
+				KustRootPath: "examples/multibases/dev",
 				Ref:          "v1.0.6",
 				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t21",
+			name:      "file protocol with three slashes, no kust root path or params",
 			input:     "file:///a/b/c/someRepo",
 			cloneSpec: "file:///a/b/c/someRepo",
 			absPath:   notCloned.String(),
@@ -413,7 +432,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t22",
+			name:      "file protocol with three slashes, no repo or kust root path or params",
 			input:     "file:///",
 			cloneSpec: "file:///",
 			absPath:   notCloned.String(),
@@ -423,28 +442,26 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			},
 		},
 		{
-			name:      "t23",
-			skip:      "the `//` repo separator does not work",
+			name:      "double-slash path delimiter https",
 			input:     "https://fake-git-hosting.org/path/to/repo//examples/multibases/dev",
-			cloneSpec: "https://fake-git-hosting.org/path/to.git",
+			cloneSpec: "https://fake-git-hosting.org/path/to/repo.git",
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
 				Host:         "https://fake-git-hosting.org/",
 				RepoPath:     "path/to/repo",
-				KustRootPath: "/examples/multibases/dev",
+				KustRootPath: "examples/multibases/dev",
 				GitSuffix:    ".git",
 			},
 		},
 		{
-			name:      "t24",
-			skip:      "the `//` repo separator does not work",
+			name:      "double-slash path delimeter ssh",
 			input:     "ssh://alice@acme.co/path/to/repo//examples/multibases/dev",
 			cloneSpec: "ssh://alice@acme.co/path/to/repo.git",
 			absPath:   notCloned.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
-				Host:         "ssh://alice@acme.co",
+				Host:         "ssh://alice@acme.co/",
 				RepoPath:     "path/to/repo",
-				KustRootPath: "/examples/multibases/dev",
+				KustRootPath: "examples/multibases/dev",
 				GitSuffix:    ".git",
 			},
 		},
@@ -504,7 +521,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "ssh://myusername@bitbucket.org/",
 				RepoPath:     "ourteamname/ourrepositoryname",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
 			},
@@ -517,7 +534,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "file://",
 				RepoPath:     "git@home/path/to/repository",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
 			},
@@ -530,7 +547,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "http://git@home.com/",
 				RepoPath:     "path/to/repository",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
 				GitSuffix:    ".git",
 			},
@@ -543,32 +560,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			repoSpec: RepoSpec{
 				Host:         "https://git@home.com/",
 				RepoPath:     "path/to/repository",
-				KustRootPath: "/path",
+				KustRootPath: "path",
 				Ref:          "branch",
-				GitSuffix:    ".git",
-			},
-		},
-		{
-			name:      "unsupported protocol after username (invalid but currently passed through to git)",
-			input:     "git@scp://github.com/org/repo.git//path",
-			cloneSpec: "git@scp://github.com/org/repo.git",
-			absPath:   notCloned.Join("path"),
-			repoSpec: RepoSpec{
-				Host:         "git@scp:",
-				RepoPath:     "//github.com/org/repo",
-				KustRootPath: "/path",
-				GitSuffix:    ".git",
-			},
-		},
-		{
-			name:      "supported protocol after username (invalid but currently passed through to git)",
-			input:     "git@ssh://github.com/org/repo.git//path",
-			cloneSpec: "git@ssh://github.com/org/repo.git",
-			absPath:   notCloned.Join("path"),
-			repoSpec: RepoSpec{
-				Host:         "git@ssh:",
-				RepoPath:     "//github.com/org/repo",
-				KustRootPath: "/path",
 				GitSuffix:    ".git",
 			},
 		},
@@ -596,13 +589,43 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				GitSuffix:    ".git",
 			},
 		},
+		{
+			name:      "gitlab URLs with explicit git suffix",
+			input:     "git@gitlab.com:gitlab-tests/sample-project.git",
+			cloneSpec: "git@gitlab.com:gitlab-tests/sample-project.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "git@gitlab.com:",
+				RepoPath:  "gitlab-tests/sample-project",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "gitlab URLs without explicit git suffix",
+			input:     "git@gitlab.com:gitlab-tests/sample-project",
+			cloneSpec: "git@gitlab.com:gitlab-tests/sample-project.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "git@gitlab.com:",
+				RepoPath:  "gitlab-tests/sample-project",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "azure host with _git and // path separator",
+			input:     "https://username@dev.azure.com/org/project/_git/repo//path/to/kustomization/root",
+			cloneSpec: "https://username@dev.azure.com/org/project/_git/repo",
+			absPath:   notCloned.Join("path/to/kustomization/root"),
+			repoSpec: RepoSpec{
+				Host:         "https://username@dev.azure.com/",
+				RepoPath:     "org/project/_git/repo",
+				KustRootPath: "path/to/kustomization/root",
+				GitSuffix:    "",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.skip != "" {
-				t.Skip(tc.skip)
-			}
-
 			rs, err := NewRepoSpecFromURL(tc.input)
 			require.NoError(t, err)
 			assert.Equal(t, tc.cloneSpec, rs.CloneSpec(), "cloneSpec mismatch")
