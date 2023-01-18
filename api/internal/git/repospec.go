@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -370,8 +371,10 @@ func extractScheme(s string) (string, string) {
 }
 
 func extractUsername(s string) (string, string) {
-	if trimmed, found := trimPrefixIgnoreCase(s, gitUsername); found {
-		return gitUsername, trimmed
+	var userRegexp = regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9-]*)@`)
+	if m := userRegexp.FindStringSubmatch(s); m != nil {
+		username := m[1] + "@"
+		return username, s[len(username):]
 	}
 	return "", s
 }
@@ -401,8 +404,6 @@ func findPathSeparator(hostPath string, acceptSCP bool) int {
 	}
 	return sepIndex
 }
-
-const gitUsername = "git@"
 
 func normalizeGithubHostParts(scheme, username string) (string, string, string) {
 	if strings.HasPrefix(scheme, sshScheme) || username != "" {
