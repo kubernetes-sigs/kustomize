@@ -609,7 +609,7 @@ func initSchema() {
 	if customSchema != nil {
 		err := parse(customSchema, JsonOrYaml)
 		if err != nil {
-			panic("invalid schema file")
+			panic(fmt.Errorf("invalid schema file: %w", err))
 		}
 	} else {
 		if kubernetesOpenAPIVersion == "" {
