@@ -259,9 +259,7 @@ func (lc *localizer) localizeHelmInflationGenerator(kust *types.Kustomization) e
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to copy helmChartInflationGenerator entry %d", i)
 		}
-		if chart.ChartHome != "" {
-			kust.HelmChartInflationGenerator[i].ChartHome = locDir
-		}
+		kust.HelmChartInflationGenerator[i].ChartHome = locDir
 	}
 	return nil
 }
@@ -276,7 +274,7 @@ func (lc *localizer) localizeHelmCharts(kust *types.Kustomization) error {
 		}
 		kust.HelmCharts[i].ValuesFile = locFile
 	}
-	if kust.HelmGlobals != nil && kust.HelmGlobals.ChartHome != "" {
+	if kust.HelmGlobals != nil {
 		locDir, err := lc.copyChartHome(kust.HelmGlobals.ChartHome)
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to copy helmGlobals")
@@ -436,13 +434,17 @@ func (lc *localizer) copyChartHome(path string) (string, error) {
 	if filepath.IsAbs(path) {
 		return "", errors.Errorf("absolute path %q not handled in alpha", path)
 	}
+	locPath, err := filepath.Rel(lc.root.String(), lc.root.Join(path))
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "no path from root to chart home")
+	}
 	if path == "" {
 		path = types.HelmDefaultHome
+		locPath = ""
 	}
-	unclean := lc.root.Join(path)
 	// chart home may serve as untar destination
-	if !lc.fSys.Exists(unclean) {
-		return path, nil
+	if !lc.fSys.Exists(lc.root.Join(path)) {
+		return locPath, nil
 	}
 	// perform localize directory checks
 	ldr, err := lc.ldr.New(path)
@@ -451,27 +453,28 @@ func (lc *localizer) copyChartHome(path string) (string, error) {
 	}
 	clean, err := filesys.ConfirmDir(lc.fSys, ldr.Root())
 	if err != nil {
-		log.Panicf("unable to establish validated directory %q: %s", path, err)
+		log.Panicf("unable to establish validated directory %q: %s", ldr.Root(), err)
 	}
-	var copiedPath string
-	isDefault := unclean == lc.root.Join(types.HelmDefaultHome)
+	var copyDst string
+	isDefault := lc.root.Join(path) == lc.root.Join(types.HelmDefaultHome)
 	if isDefault {
-		copiedPath = types.HelmDefaultHome
+		copyDst = types.HelmDefaultHome
 		if lc.copiedHelmDefaultHome {
-			return copiedPath, nil
+			return locPath, nil
 		}
 	} else {
-		copiedPath, err = filepath.Rel(lc.root.String(), clean.String())
+		copyDst, err = filepath.Rel(lc.root.String(), clean.String())
 		if err != nil {
 			log.Panicf("no relative path between scoped directories %q and %q: %s", lc.root, clean, err)
 		}
+		locPath = copyDst
 	}
-	err = lc.copyDir(clean, filepath.Join(lc.dst, copiedPath))
+	err = lc.copyDir(clean, filepath.Join(lc.dst, copyDst))
 	if err != nil {
 		return "", errors.WrapPrefixf(err, "unable to copy chart home %q", path)
 	}
 	lc.copiedHelmDefaultHome = isDefault
-	return copiedPath, nil
+	return locPath, nil
 }
 
 // copyDir copies src to dst. copyDir does not follow symlinks.

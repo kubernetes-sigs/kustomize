@@ -1270,6 +1270,43 @@ func TestCopyChartHomeEmpty(t *testing.T) {
 	checkFSys(t, expected, actual)
 }
 
+func TestCopyChartHomeCleanNonExistent(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": `helmGlobals:
+  chartHome: ../a/home
+`,
+	}
+	expected, actual := makeFileSystems(t, "/a", files)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", map[string]string{
+		"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+	})
+	checkFSys(t, expected, actual)
+}
+
+func TestCopyChartHomeExitScope(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": `helmGlobals:
+  chartHome: ../home
+`,
+		"../../home/name/values.yaml": valuesFile,
+	}
+	expected, actual := makeFileSystems(t, "/a/b", files)
+
+	err := Run("/a/b", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", map[string]string{
+		"kustomization.yaml": files["kustomization.yaml"],
+	})
+	checkFSys(t, expected, actual)
+}
+
 func TestCopyChartHomeError(t *testing.T) {
 	for name, test := range map[string]struct {
 		err   string
