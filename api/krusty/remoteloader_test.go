@@ -300,6 +300,13 @@ resources:
 `,
 		},
 		{
+			name: "https with explicit .git suffix",
+			kustomization: `
+resources:
+- https://github.com/kubernetes-sigs/kustomize.git//examples/multibases/dev/?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300
+`,
+		},
+		{
 			name: "git double-colon https",
 			kustomization: `
 resources:

@@ -46,9 +46,6 @@ type RepoSpec struct {
 	// Branch or tag reference.
 	Ref string
 
-	// e.g. .git or empty in case of _git is present
-	GitSuffix string
-
 	// Submodules indicates whether or not to clone git submodules.
 	Submodules bool
 
@@ -58,10 +55,7 @@ type RepoSpec struct {
 
 // CloneSpec returns a string suitable for "git clone {spec}".
 func (x *RepoSpec) CloneSpec() string {
-	if isAzureHost(x.Host) || isAWSHost(x.Host) {
-		return x.Host + x.RepoPath
-	}
-	return x.Host + x.RepoPath + x.GitSuffix
+	return x.Host + x.RepoPath
 }
 
 func (x *RepoSpec) CloneDir() filesys.ConfirmedDir {
@@ -124,28 +118,7 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		return nil, err
 	}
 
-	// If the repo name ends in .git, isolate it. It will be added back by the clone spec function.
-	if idx := strings.Index(repoSpec.RepoPath, gitSuffix); idx >= 0 {
-		repoSpec.GitSuffix = gitSuffix
-		repoSpec.RepoPath = repoSpec.RepoPath[:idx]
-	}
-	// Force the .git suffix URLs for services whose clone URL is the repo URL + .git.
-	// This allows us to support the repo URL as an input instead of the actual clone URL.
-	if legacyAddGitSuffix(repoSpec.Host, repoSpec.RepoPath) {
-		repoSpec.GitSuffix = gitSuffix
-	}
-
 	return repoSpec, nil
-}
-
-// legacyAddGitSuffix returns true if the .git suffix has historically been added to the repoSpec
-// (but not necessarily the cloneSpec) for the given host and repoPath.
-// TODO(@knverey): Remove repoSpec.gitSuffix entirely.
-// The .git suffix is a popular convention, but not universally used. Kustomize seems to force it
-// for non-local because of Github, which now handles suffix-less URLs just fine, as do Gitlab and Bitbucket.
-func legacyAddGitSuffix(host, repoPath string) bool {
-	return !strings.Contains(repoPath, gitRootDelimiter) &&
-		!strings.HasPrefix(host, fileScheme)
 }
 
 const allSegments = -999999
@@ -409,17 +382,4 @@ func normalizeGithubHostParts(scheme, username string) (string, string, string) 
 		return "", username, "github.com:"
 	}
 	return httpsScheme, "", "github.com/"
-}
-
-// The format of Azure repo URL is documented
-// https://docs.microsoft.com/en-us/azure/devops/repos/git/clone?view=vsts&tabs=visual-studio#clone_url
-func isAzureHost(host string) bool {
-	return strings.Contains(host, "dev.azure.com") ||
-		strings.Contains(host, "visualstudio.com")
-}
-
-// The format of AWS repo URL is documented
-// https://docs.aws.amazon.com/codecommit/latest/userguide/regions.html
-func isAWSHost(host string) bool {
-	return strings.Contains(host, "amazonaws.com")
 }
