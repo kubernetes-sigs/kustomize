@@ -284,7 +284,7 @@ kind: Pod
 metadata:
   annotations:
     alpha.config.kubernetes.io/transformations: |
-      - repo: https://github.com/kubernetes-sigs/kustomize.git
+      - repo: https://github.com/kubernetes-sigs/kustomize
         ref: v1.0.6
         configuredIn: examples/multibases/production/kustomization.yaml
         configuredBy:
