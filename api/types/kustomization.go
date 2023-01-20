@@ -171,10 +171,6 @@ type Kustomization struct {
 	// Validators is a list of files containing validators
 	Validators []string `json:"validators,omitempty" yaml:"validators,omitempty"`
 
-	// Inventory appends an object that contains the record
-	// of all other objects, which can be used in apply, prune and delete
-	Inventory *Inventory `json:"inventory,omitempty" yaml:"inventory,omitempty"`
-
 	// BuildMetadata is a list of strings used to toggle different build options
 	BuildMetadata []string `json:"buildMetadata,omitempty" yaml:"buildMetadata,omitempty"`
 }

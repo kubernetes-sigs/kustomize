@@ -65,7 +65,6 @@ func determineFieldOrder() []string {
 		"Configurations",
 		"Generators",
 		"Transformers",
-		"Inventory",
 		"Components",
 		"OpenAPI",
 		"BuildMetadata",

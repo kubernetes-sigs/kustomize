@@ -43,9 +43,6 @@ type Options struct {
 	// See type definition.
 	LoadRestrictions types.LoadRestrictions
 
-	// Create an inventory object for pruning.
-	DoPrune bool
-
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
 }
@@ -56,7 +53,6 @@ func MakeDefaultOptions() *Options {
 		Reorder:           ReorderOptionNone,
 		AddManagedbyLabel: false,
 		LoadRestrictions:  types.LoadRestrictionsRootOnly,
-		DoPrune:           false,
 		PluginConfig:      types.DisabledPluginConfig(),
 	}
 }
