@@ -33,6 +33,8 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		{"git@github.com:", "git@github.com:"},
 		{"git@github.com/", "git@github.com:"},
 		{"git::git@github.com:", "git@github.com:"},
+		{"org-12345@github.com:", "org-12345@github.com:"},
+		{"org-12345@github.com/", "org-12345@github.com:"},
 	}
 	var repoPaths = []string{"someOrg/someRepo", "kubernetes/website"}
 	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
@@ -635,6 +637,28 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				Host:         "https://org.visualstudio.com/",
 				RepoPath:     "project/_git/repo",
 				KustRootPath: "path/to/kustomization/root",
+			},
+		},
+		{
+			name:      "ssh on github with custom username for custom ssh certificate authority",
+			input:     "ssh://org-12345@github.com/kubernetes-sigs/kustomize",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "org-12345@github.com:",
+				RepoPath:  "kubernetes-sigs/kustomize",
+				GitSuffix: ".git",
+			},
+		},
+		{
+			name:      "scp on github with custom username for custom ssh certificate authority",
+			input:     "org-12345@github.com/kubernetes-sigs/kustomize",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:      "org-12345@github.com:",
+				RepoPath:  "kubernetes-sigs/kustomize",
+				GitSuffix: ".git",
 			},
 		},
 	}
