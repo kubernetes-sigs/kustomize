@@ -6,7 +6,7 @@ To extend the supported format, Kustomize has a [plugin] system that allows one 
 
 [remote target]: /examples/remoteBuild.md
 [Git repository specs]: /api/internal/git/repospec_test.go
-[plugin]: /docs/plugins
+[plugin]: /plugin
 [hashicorp/go-getter]: https://github.com/hashicorp/go-getter
 
 ## Make a place to work
