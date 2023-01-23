@@ -642,23 +642,21 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 		{
 			name:      "ssh on github with custom username for custom ssh certificate authority",
 			input:     "ssh://org-12345@github.com/kubernetes-sigs/kustomize",
-			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "org-12345@github.com:",
-				RepoPath:  "kubernetes-sigs/kustomize",
-				GitSuffix: ".git",
+				Host:     "org-12345@github.com:",
+				RepoPath: "kubernetes-sigs/kustomize",
 			},
 		},
 		{
 			name:      "scp on github with custom username for custom ssh certificate authority",
 			input:     "org-12345@github.com/kubernetes-sigs/kustomize",
-			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize.git",
+			cloneSpec: "org-12345@github.com:kubernetes-sigs/kustomize",
 			absPath:   notCloned.String(),
 			repoSpec: RepoSpec{
-				Host:      "org-12345@github.com:",
-				RepoPath:  "kubernetes-sigs/kustomize",
-				GitSuffix: ".git",
+				Host:     "org-12345@github.com:",
+				RepoPath: "kubernetes-sigs/kustomize",
 			},
 		},
 	}
