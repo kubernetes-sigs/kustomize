@@ -35,10 +35,6 @@ type localizer struct {
 
 	// destination directory in newDir that mirrors root
 	dst string
-
-	// copiedHelmDefaultHome indicates whether the default helm chart home has
-	// been copied to dst at this root
-	copiedHelmDefaultHome bool
 }
 
 // Run attempts to localize the kustomization root at target with the given localize arguments
@@ -255,7 +251,7 @@ func (lc *localizer) localizeHelmInflationGenerator(kust *types.Kustomization) e
 		}
 		kust.HelmChartInflationGenerator[i].Values = locFile
 
-		locDir, err := lc.copyChartHome(chart.ChartHome)
+		locDir, err := lc.copyChartHomeEntry(chart.ChartHome)
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to copy helmChartInflationGenerator entry %d", i)
 		}
@@ -275,13 +271,13 @@ func (lc *localizer) localizeHelmCharts(kust *types.Kustomization) error {
 		kust.HelmCharts[i].ValuesFile = locFile
 	}
 	if kust.HelmGlobals != nil {
-		locDir, err := lc.copyChartHome(kust.HelmGlobals.ChartHome)
+		locDir, err := lc.copyChartHomeEntry(kust.HelmGlobals.ChartHome)
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to copy helmGlobals")
 		}
 		kust.HelmGlobals.ChartHome = locDir
 	} else if len(kust.HelmCharts) > 0 {
-		_, err := lc.copyChartHome("")
+		_, err := lc.copyChartHomeEntry("")
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to copy default chart home")
 		}
@@ -425,56 +421,71 @@ func (lc *localizer) localizeRoot(path string) (string, error) {
 	return locPath, nil
 }
 
-// copyChartHome copies helm chart home path, relative to root that lc is at, to
-// the same location relative to dst and returns said relative copied location.
+// copyChartHomeEntry copies the helm chart home entry to lc dst
+// at the same location relative to the root and returns said relative path.
+// If entry is empty, copyChartHomeEntry returns the empty string.
+// If entry does not exist, copyChartHome returns entry.
 //
-// If path indicates the default chart home, copyChartHome copies chart home to
-// the same location in dst, without following symlinks.
-func (lc *localizer) copyChartHome(path string) (string, error) {
+// copyChartHomeEntry copies the default home to the same location at dst,
+// without following symlinks. An empty entry also indicates the default home.
+func (lc *localizer) copyChartHomeEntry(entry string) (string, error) {
+	path := entry
+	if entry == "" {
+		path = types.HelmDefaultHome
+	}
 	if filepath.IsAbs(path) {
 		return "", errors.Errorf("absolute path %q not handled in alpha", path)
 	}
-	locPath, err := filepath.Rel(lc.root.String(), lc.root.Join(path))
+	isDefault := lc.root.Join(path) == lc.root.Join(types.HelmDefaultHome)
+	locPath, err := lc.copyChartHome(path, !isDefault)
 	if err != nil {
-		return "", errors.WrapPrefixf(err, "no path from root to chart home")
+		return "", errors.WrapPrefixf(err, "unable to copy home %q", entry)
 	}
-	if path == "" {
-		path = types.HelmDefaultHome
-		locPath = ""
+	if entry == "" {
+		return "", nil
 	}
-	// chart home may serve as untar destination
+	return locPath, nil
+}
+
+// copyChartHome copies path relative to lc root to dst and returns the
+// copied location relative to dst. If clean is true, copyChartHome uses path's
+// delinked location as the copy destination.
+//
+// If path does not exist, copyChartHome returns path.
+func (lc *localizer) copyChartHome(path string, clean bool) (string, error) {
+	path, err := filepath.Rel(lc.root.String(), lc.root.Join(path))
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "no path to chart home %q", path)
+	}
+	// Chart home may serve as untar destination.
+	// Note that we don't check if path is in scope.
 	if !lc.fSys.Exists(lc.root.Join(path)) {
-		return locPath, nil
+		return path, nil
 	}
-	// perform localize directory checks
+	// Perform localize directory checks.
 	ldr, err := lc.ldr.New(path)
 	if err != nil {
-		return "", errors.Wrap(err)
+		return "", errors.WrapPrefixf(err, "invalid chart home")
 	}
-	clean, err := filesys.ConfirmDir(lc.fSys, ldr.Root())
+	cleaned, err := filesys.ConfirmDir(lc.fSys, ldr.Root())
 	if err != nil {
-		log.Panicf("unable to establish validated directory %q: %s", ldr.Root(), err)
+		log.Panicf("unable to confirm validated directory %q: %s", ldr.Root(), err)
 	}
-	var copyDst string
-	isDefault := lc.root.Join(path) == lc.root.Join(types.HelmDefaultHome)
-	if isDefault {
-		copyDst = types.HelmDefaultHome
-		if lc.copiedHelmDefaultHome {
-			return locPath, nil
-		}
-	} else {
-		copyDst, err = filepath.Rel(lc.root.String(), clean.String())
+	toDst := path
+	if clean {
+		toDst, err = filepath.Rel(lc.root.String(), cleaned.String())
 		if err != nil {
-			log.Panicf("no relative path between scoped directories %q and %q: %s", lc.root, clean, err)
+			log.Panicf("no path between scoped directories %q and %q: %s", lc.root, cleaned, err)
 		}
-		locPath = copyDst
 	}
-	err = lc.copyDir(clean, filepath.Join(lc.dst, copyDst))
-	if err != nil {
-		return "", errors.WrapPrefixf(err, "unable to copy chart home %q", path)
+	// Note this check does not guarantee that we copied the entire directory.
+	if dst := filepath.Join(lc.dst, toDst); !lc.fSys.Exists(dst) {
+		err = lc.copyDir(cleaned, filepath.Join(lc.dst, toDst))
+		if err != nil {
+			return "", errors.WrapPrefixf(err, "unable to copy chart home %q", path)
+		}
 	}
-	lc.copiedHelmDefaultHome = isDefault
-	return locPath, nil
+	return toDst, nil
 }
 
 // copyDir copies src to dst. copyDir does not follow symlinks.

@@ -1215,7 +1215,7 @@ func TestLocalizeHelmChartsNoDefault(t *testing.T) {
 	checkFSys(t, expected, actual)
 }
 
-func TestCopyChartHome(t *testing.T) {
+func TestCopyChartHomeSimple(t *testing.T) {
 	for _, test := range []struct {
 		name  string
 		files map[string]string
@@ -1252,6 +1252,84 @@ func TestCopyChartHome(t *testing.T) {
 	}
 }
 
+func TestCopyChartHomeChanges(t *testing.T) {
+	for name, test := range map[string]struct {
+		files       map[string]string
+		copiedFiles map[string]string
+	}{
+		"clean_does_not_exist": {
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../b/home
+`,
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+			},
+		},
+		"clean_default": {
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../b/charts
+`,
+				"charts/name/values.yaml": valuesFile,
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: charts
+`,
+				"charts/name/values.yaml": valuesFile,
+			},
+		},
+		"not_copied": {
+			files: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: name
+  valuesFile: home/name/values.yaml
+helmGlobals:
+  chartHome: home
+`,
+				"home/name/values.yaml":      valuesFile,
+				"home/name/many-other-files": "other contents",
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: name
+  valuesFile: home/name/values.yaml
+helmGlobals:
+  chartHome: home
+`,
+				"home/name/values.yaml": valuesFile,
+			},
+		},
+		"does_not_exist_exits_scope": {
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../home
+`,
+				"../../home/will-exist-at-dst/values.yaml": valuesFile,
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../home
+`,
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			expected, actual := makeFileSystems(t, "/a/b", test.files)
+
+			err := Run("/a/b", "/a/b", "/dst", actual)
+			require.NoError(t, err)
+
+			addFiles(t, expected, "/dst", test.copiedFiles)
+			checkFSys(t, expected, actual)
+		})
+	}
+}
+
 func TestCopyChartHomeEmpty(t *testing.T) {
 	kustomization := map[string]string{
 		"kustomization.yaml": `helmGlobals:
@@ -1270,50 +1348,13 @@ func TestCopyChartHomeEmpty(t *testing.T) {
 	checkFSys(t, expected, actual)
 }
 
-func TestCopyChartHomeCleanNonExistent(t *testing.T) {
-	files := map[string]string{
-		"kustomization.yaml": `helmGlobals:
-  chartHome: ../a/home
-`,
-	}
-	expected, actual := makeFileSystems(t, "/a", files)
-
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", map[string]string{
-		"kustomization.yaml": `helmGlobals:
-  chartHome: home
-`,
-	})
-	checkFSys(t, expected, actual)
-}
-
-func TestCopyChartHomeExitScope(t *testing.T) {
-	files := map[string]string{
-		"kustomization.yaml": `helmGlobals:
-  chartHome: ../home
-`,
-		"../../home/name/values.yaml": valuesFile,
-	}
-	expected, actual := makeFileSystems(t, "/a/b", files)
-
-	err := Run("/a/b", "", "/dst", actual)
-	require.NoError(t, err)
-
-	addFiles(t, expected, "/dst", map[string]string{
-		"kustomization.yaml": files["kustomization.yaml"],
-	})
-	checkFSys(t, expected, actual)
-}
-
 func TestCopyChartHomeError(t *testing.T) {
 	for name, test := range map[string]struct {
 		err   string
 		files map[string]string
 	}{
 		"absolute": {
-			err: `unable to localize target "/a/b": unable to copy helmGlobals: absolute path "/a/b/home" not handled in alpha`,
+			err: `unable to copy helmGlobals: absolute path "/a/b/home" not handled in alpha`,
 			files: map[string]string{
 				"a/b/kustomization.yaml": `helmGlobals:
   chartHome: /a/b/home
@@ -1322,7 +1363,7 @@ func TestCopyChartHomeError(t *testing.T) {
 			},
 		},
 		"file": {
-			err: `unable to localize target "/a/b": unable to copy helmGlobals: invalid root reference: must build at directory: '/a/b/home': file is not directory`,
+			err: `unable to copy helmGlobals: unable to copy home "home": invalid chart home: invalid root reference: must build at directory: '/a/b/home': file is not directory`,
 			files: map[string]string{
 				"a/b/kustomization.yaml": `helmGlobals:
   chartHome: home
@@ -1331,7 +1372,7 @@ func TestCopyChartHomeError(t *testing.T) {
 			},
 		},
 		"scope": {
-			err: `unable to localize target "/a/b": unable to copy helmGlobals: root "/alpha/home" outside localize scope "/a"`,
+			err: `unable to copy helmGlobals: unable to copy home "../../alpha/home": invalid chart home: root "/alpha/home" outside localize scope "/a"`,
 			files: map[string]string{
 				"a/b/kustomization.yaml": `helmGlobals:
   chartHome: ../../alpha/home
@@ -1344,7 +1385,8 @@ func TestCopyChartHomeError(t *testing.T) {
 			expected, actual := makeFileSystems(t, "/", test.files)
 
 			err := Run("/a/b", "/a", "/dst", actual)
-			require.EqualError(t, err, test.err)
+			const prefix = `unable to localize target "/a/b"`
+			require.EqualError(t, err, fmt.Sprintf("%s: %s", prefix, test.err))
 
 			checkFSys(t, expected, actual)
 		})
