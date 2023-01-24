@@ -453,6 +453,190 @@ metadata:
 `)
 }
 
+func TestMergeAndReplaceDisableNameSuffixHashGenerators(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("app", `
+namePrefix: team-foo-
+commonLabels:
+  app: mynginx
+  org: example.com
+  team: foo
+commonAnnotations:
+  note: This is a test annotation
+resources:
+  - deployment.yaml
+configMapGenerator:
+- name: configmap-in-base
+  literals:
+  - foo=bar
+secretGenerator:
+- name: secret-in-base
+  literals:
+  - username=admin
+  - password=somepw
+`)
+	th.WriteF("app/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: nginx-persistent-storage
+          mountPath: /tmp/ps
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: {}
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+`)
+	th.WriteF("overlay/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      volumes:
+      - name: nginx-persistent-storage
+        emptyDir: null
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-overlay
+        name: configmap-in-overlay
+`)
+	th.WriteK("overlay", `
+namePrefix: staging-
+commonLabels:
+  env: staging
+  team: override-foo
+patchesStrategicMerge:
+- deployment.yaml
+resources:
+- ../app
+configMapGenerator:
+- name: configmap-in-overlay
+  literals:
+  - hello=world
+  options:
+    disableNameSuffixHash: true
+- name: configmap-in-base
+  behavior: replace
+  literals:
+  - foo=override-bar
+  options:
+    disableNameSuffixHash: true
+secretGenerator:
+- name: secret-in-base
+  behavior: merge
+  literals:
+  - proxy=haproxy
+  options:
+    disableNameSuffixHash: true
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-nginx
+spec:
+  selector:
+    matchLabels:
+      app: mynginx
+      env: staging
+      org: example.com
+      team: override-foo
+  template:
+    metadata:
+      annotations:
+        note: This is a test annotation
+      labels:
+        app: mynginx
+        env: staging
+        org: example.com
+        team: override-foo
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: staging-configmap-in-overlay
+        name: configmap-in-overlay
+      - configMap:
+          name: staging-team-foo-configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: v1
+data:
+  foo: override-bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-configmap-in-base
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  proxy: aGFwcm94eQ==
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-secret-in-base
+type: Opaque
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: override-foo
+  name: staging-configmap-in-overlay
+`)
+}
+
 func TestGeneratingIntoNamespaces(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("app", `
