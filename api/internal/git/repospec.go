@@ -79,7 +79,7 @@ const (
 	refQuery         = "?ref="
 	gitSuffix        = ".git"
 	gitRootDelimiter = "_git/"
-	pathSeparator    = string(filepath.Separator)
+	pathSeparator    = "/" // do not use filepath.Separator, as this is a URL
 )
 
 // NewRepoSpecFromURL parses git-like urls.
@@ -198,8 +198,8 @@ func tryDefaultLengthSplit(n string, defaultSegmentLength int) (string, string, 
 }
 
 func kustRootPathExitsRepo(kustRootPath string) bool {
-	cleanedPath := filepath.Clean(strings.TrimPrefix(kustRootPath, pathSeparator))
-	pathElements := strings.Split(cleanedPath, pathSeparator)
+	cleanedPath := filepath.Clean(strings.TrimPrefix(kustRootPath, string(filepath.Separator)))
+	pathElements := strings.Split(cleanedPath, string(filepath.Separator))
 	return len(pathElements) > 0 &&
 		pathElements[0] == filesys.ParentDir
 }
