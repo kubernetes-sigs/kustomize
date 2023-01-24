@@ -108,19 +108,10 @@ verify-kustomize-repo: \
 prow-presubmit-check: \
 	install-tools \
 	test-unit-kustomize-plugins \
+	test-go-mod \
 	build-non-plugin-all \
 	test-examples-kustomize-against-HEAD \
 	test-examples-kustomize-against-v4-release
-	# TODO(annasong): Find permanent solution.
-	# We have temporarily commented out this job because it fails for public
-	# cross-module changes, given that we've removed replace directives with go
-	# workspace and the job runs on the latest released modules. This
-	# complicates releases.
-	# This job is also less effective than intended because it only detects
-	# go mod tidy errors, instead of any changes to the original code that
-	# go mod tidy makes.
-
-	# test-go-mod
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
@@ -161,7 +152,9 @@ functions-examples-all:
 	done
 
 test-go-mod:
-	./hack/for-each-module.sh "go list -m -json all > /dev/null && go mod tidy -v"
+	./hack/for-each-module.sh $$(pwd)/hack/replace.sh; \
+	./hack/for-each-module.sh "go mod tidy -v"; \
+	./hack/for-each-module.sh $$(pwd)/hack/dropReplace.sh
 
 .PHONY:
 verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
