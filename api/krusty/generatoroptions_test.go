@@ -94,8 +94,6 @@ metadata:
 func TestGeneratorOptionsOverlayDisableNameSuffixHash(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 generatorOptions:
   disableNameSuffixHash: false
   labels:
@@ -106,8 +104,6 @@ configMapGenerator:
   - foo=bar
 `)
 	th.WriteK("overlay", `
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 resources:
 - ../base
 generatorOptions:
