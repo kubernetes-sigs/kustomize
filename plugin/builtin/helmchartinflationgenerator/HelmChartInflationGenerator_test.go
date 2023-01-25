@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -578,4 +579,97 @@ valuesInline:
     enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, "")
+}
+
+func TestHelmChartInflationGeneratorWithSameChartMultipleVersions(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	tests := []struct {
+		name    string
+		version string
+		config  string
+	}{
+		{
+			name:    "terraform chart with no version grabs latest",
+			version: "",
+			config: `
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: terraform
+name: terraform
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars
+`,
+		},
+		{
+			name:    "terraform chart with version 1.1.1",
+			version: "1.1.1",
+			config: `
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: terraform
+name: terraform
+version: 1.1.1
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars-1
+`,
+		},
+		{
+			name:    "terraform chart with version 1.1.1 again",
+			version: "1.1.1",
+			config: `
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: terraform
+name: terraform
+version: 1.1.1
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars-2
+`,
+		},
+		{
+			name:    "terraform chart with version 1.1.2",
+			version: "1.1.2",
+			config: `
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: terraform
+name: terraform
+version: 1.1.2
+repo: https://helm.releases.hashicorp.com
+releaseName: terraforming-mars-3
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rm := th.LoadAndRunGenerator(tt.config)
+			assert.True(t, len(rm.Resources()) > 0)
+
+			chartDir := "charts/terraform"
+			if tt.version != "" {
+				chartDir = fmt.Sprintf("%s-%s/terraform", chartDir, tt.version)
+			}
+
+			d, err := th.GetFSys().ReadFile(filepath.Join(th.GetRoot(), chartDir, "Chart.yaml"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Contains(t, string(d), "name: terraform")
+			if tt.version != "" {
+				assert.Contains(t, string(d), fmt.Sprintf("version: %s", tt.version))
+			}
+		})
+	}
 }
