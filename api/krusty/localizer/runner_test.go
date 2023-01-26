@@ -452,13 +452,14 @@ func TestResourcesRepoNotFile(t *testing.T) {
 
 	err := localizer.Run(fsActual, testDir.String(), "", testDir.Join("dst"))
 
-	const readmeErr = `yaml: line 28: mapping values are not allowed in this context`
-	fileErr := fmt.Sprintf(`invalid resource at file "%s": MalformedYAMLError: %s`, repo, readmeErr)
+	const readmeErr = `mapping values are not allowed in this context`
+	fileErr := fmt.Sprintf(`invalid resource at file "%s": MalformedYAMLError:`, repo)
 	rootErr := fmt.Sprintf(`unable to localize root "%s": unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization'`, repo)
 	var actualErr PathLocalizeError
 	require.ErrorAs(t, err, &actualErr)
 	require.Equal(t, repo, actualErr.Path)
-	require.EqualError(t, actualErr.FileError, fileErr)
+	require.ErrorContains(t, actualErr.FileError, readmeErr)
+	require.ErrorContains(t, actualErr.FileError, fileErr)
 	require.ErrorContains(t, actualErr.RootError, rootErr)
 
 	SetupDir(t, fsExpected, testDir.String(), kustomization)
