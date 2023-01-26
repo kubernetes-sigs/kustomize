@@ -99,7 +99,7 @@ curl -s -o "$DEMO_HOME/#1.yaml" \
 >               name: mysql-pass
 >               key: password
 > ```
-初始化容器的命令需要依赖于k8s资源对象字段的信息，由占位符变量 $(WORDPRESS_SERVICE) 和 $(MYSQL_SERVICE) 表示。
+初始化容器的命令需要依赖于k8s资源对象字段的信息，由占位符变量 `$(WORDPRESS_SERVICE)` 和 `$(MYSQL_SERVICE)` 表示。
 
 ### 将变量绑定到k8s对象字段
 
