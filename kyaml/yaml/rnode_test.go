@@ -2311,6 +2311,28 @@ func TestGetAnnotations(t *testing.T) {
 	}
 }
 
+func BenchmarkGetAnnotations(b *testing.B) {
+	counts := []int{0, 2, 5, 8}
+	for _, count := range counts {
+		appliedAnnotations := make(map[string]string, count)
+		for i := 1; i <= count; i++ {
+			key := fmt.Sprintf("annotation-key-%d", i)
+			value := fmt.Sprintf("annotation-value-%d", i)
+			appliedAnnotations[key] = value
+		}
+		rn := NewRNode(nil)
+		if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
+			b.Fatalf("unexpected unmarshaljson err: %v", err)
+		}
+		assert.NoError(b, rn.SetAnnotations(appliedAnnotations))
+		b.Run(fmt.Sprintf("%02d", count), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_ = rn.GetAnnotations()
+			}
+		})
+	}
+}
+
 func TestGetFieldValueWithDot(t *testing.T) {
 	const input = `
 kind: Pod
