@@ -57,7 +57,11 @@ type HelmChart struct {
 	// in the helm template
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
-	// ValuesFile is local file path to a values file to use _instead of_
+	// AdditionalValuesFiles are local file paths to values files to be used in
+	// addition to either the default values file or the values specified in ValuesFile.
+	AdditionalValuesFiles []string `json:"additionalValuesFiles,omitempty" yaml:"additionalValuesFiles,omitempty"`
+
+	// ValuesFile is a local file path to a values file to use _instead of_
 	// the default values that accompanied the chart.
 	// The default values are in '{ChartHome}/{Name}/values.yaml'.
 	ValuesFile string `json:"valuesFile,omitempty" yaml:"valuesFile,omitempty"`
@@ -78,6 +82,18 @@ type HelmChart struct {
 	// SkipHooks sets the --no-hooks flag when calling helm template. This prevents
 	// helm from erroneously rendering test templates.
 	SkipHooks bool `json:"skipHooks,omitempty" yaml:"skipHooks,omitempty"`
+
+	// ApiVersions is the kubernetes apiversions used for Capabilities.APIVersions
+	ApiVersions []string `json:"apiVerions,omitempty" yaml:"apiVersions,omitempty"`
+
+	// Description is a custom description to add when rendering the helm chart.
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+
+	// NameTemplate is for specifying the name template used to name the release.
+	NameTemplate string `json:"nameTemplate,omitempty" yaml:"nameTemplate,omitempty"`
+
+	// SkipTests skips tests from templated output.
+	SkipTests bool `json:"skipTests,omitempty" yaml:"skipTests,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.

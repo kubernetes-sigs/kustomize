@@ -1,0 +1,6 @@
+rbac:
+  create: true
+  rules:
+    - apiGroups: [""]
+      verbs: ["*"]
+      resources: ["*"]

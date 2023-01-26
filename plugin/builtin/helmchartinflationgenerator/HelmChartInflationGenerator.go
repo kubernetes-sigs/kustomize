@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -92,11 +93,19 @@ func (p *plugin) validateArgs() (err error) {
 		p.ChartHome = types.HelmDefaultHome
 	}
 
-	// The ValuesFile may be consulted by the plugin, so it must
+	// The ValuesFile(s) may be consulted by the plugin, so it must
 	// be under the loader root (unless root restrictions are
 	// disabled).
 	if p.ValuesFile == "" {
 		p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
+	}
+	for i, file := range p.AdditionalValuesFiles {
+		// use Load() to enforce root restrictions
+		if _, err := p.h.Loader().Load(file); err != nil {
+			return errors.WrapPrefixf(err, "could not load additionalValuesFile")
+		}
+		// the additional values filepaths must be relative to the kust root
+		p.AdditionalValuesFiles[i] = filepath.Join(p.h.Loader().Root(), file)
 	}
 
 	if err = p.errIfIllegalValuesMerge(); err != nil {
@@ -251,17 +260,23 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 		return nil, err
 	}
 
-	rm, err = p.h.ResmapFactory().NewResMapFromBytes(stdout)
-	if err == nil {
+	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	if resMapErr == nil {
 		return rm, nil
 	}
 	// try to remove the contents before first "---" because
 	// helm may produce messages to stdout before it
-	stdoutStr := string(stdout)
-	if idx := strings.Index(stdoutStr, "\n---\n"); idx != -1 {
-		return p.h.ResmapFactory().NewResMapFromBytes([]byte(stdoutStr[idx:]))
+	r := &kio.ByteReader{Reader: bytes.NewBufferString(string(stdout)), OmitReaderAnnotations: true}
+	nodes, err := r.Read()
+
+	if len(nodes) != 0 {
+		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w\n", err)
+		}
+		return rm, nil
 	}
-	return nil, err
+	return nil, fmt.Errorf("could not parse bytes into resource map: %w\n", resMapErr)
 }
 
 func (p *plugin) templateCommand() []string {
@@ -269,12 +284,32 @@ func (p *plugin) templateCommand() []string {
 	if p.ReleaseName != "" {
 		args = append(args, p.ReleaseName)
 	}
+	if p.Name != "" {
+		args = append(args, filepath.Join(p.absChartHome(), p.Name))
+	}
+
+	return append(args, templateArgs(p.HelmChart)...)
+}
+
+func templateArgs(p types.HelmChart) []string {
+	args := make([]string, 0, 10)
+
 	if p.Namespace != "" {
 		args = append(args, "--namespace", p.Namespace)
 	}
-	args = append(args, filepath.Join(p.absChartHome(), p.Name))
+	if p.NameTemplate != "" {
+		args = append(args, "--name-template", p.NameTemplate)
+	}
+
 	if p.ValuesFile != "" {
 		args = append(args, "--values", p.ValuesFile)
+	}
+	for _, valuesFile := range p.AdditionalValuesFiles {
+		args = append(args, "-f", valuesFile)
+	}
+
+	for _, apiVer := range p.ApiVersions {
+		args = append(args, "--api-versions", apiVer)
 	}
 	if p.ReleaseName == "" {
 		// AFAICT, this doesn't work as intended due to a bug in helm.
@@ -282,8 +317,14 @@ func (p *plugin) templateCommand() []string {
 		// I've tried placing the flag before and after the name argument.
 		args = append(args, "--generate-name")
 	}
+	if p.Description != "" {
+		args = append(args, "--description", p.Description)
+	}
 	if p.IncludeCRDs {
 		args = append(args, "--include-crds")
+	}
+	if p.SkipTests {
+		args = append(args, "--skip-tests")
 	}
 	if p.SkipHooks {
 		args = append(args, "--no-hooks")

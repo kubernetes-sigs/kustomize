@@ -1,0 +1,44 @@
+{{ if .Values.buildImage }}
+
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+status: 
+  lastVersion: 0
+metadata:
+  name: {{ template "ocp-pipeline.fullname" . }}
+  labels:
+    app: {{ template "ocp-pipeline.name" . }}
+    chart: {{ template "ocp-pipeline.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  nodeSelector: {}
+  resources:
+    requests:
+        cpu: 2000m
+        memory: 4G
+    limits:
+        cpu: 3000m
+        memory: 8G
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ template "ocp-pipeline.fullname" . }}:{{ .Values.repo.tag }}
+  source:
+    type: Git
+    git:
+      ref: {{ .Values.repo.ref | quote }}
+      uri: {{ .Values.repo.url | quote }}
+    
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  successfulBuildsHistoryLimit: 5
+  triggers:
+    - type: "GitHub"
+      github: 
+        secretReference:
+          name: "{{ .Release.Name }}-git-webhook-secret"
+
+{{- end }}
