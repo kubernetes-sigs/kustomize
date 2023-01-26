@@ -4,7 +4,9 @@
 package localizer
 
 import (
+	"io/fs"
 	"log"
+	"os"
 	"path/filepath"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -119,11 +121,11 @@ func (lc *localizer) load() (*types.Kustomization, string, error) {
 // built-in understanding of. This excludes helm-related fields, such as `helmGlobals` and `helmCharts`.
 func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 	if path, exists := kust.OpenAPI["path"]; exists {
-		newPath, err := lc.localizeFile(path)
+		locPath, err := lc.localizeFile(path)
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to localize openapi path")
 		}
-		kust.OpenAPI["path"] = newPath
+		kust.OpenAPI["path"] = locPath
 	}
 
 	for fieldName, field := range map[string]struct {
@@ -134,11 +136,11 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			// Allow use of deprecated field
 			//nolint:staticcheck
 			kust.Bases,
-			lc.localizeDir,
+			lc.localizeRoot,
 		},
 		"components": {
 			kust.Components,
-			lc.localizeDir,
+			lc.localizeRoot,
 		},
 		"configurations": {
 			kust.Configurations,
@@ -172,6 +174,12 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 			return errors.WrapPrefixf(err, "unable to localize secretGenerator")
 		}
 	}
+	if err := lc.localizeHelmInflationGenerator(kust); err != nil {
+		return err
+	}
+	if err := lc.localizeHelmCharts(kust); err != nil {
+		return err
+	}
 	if err := lc.localizePatches(kust.Patches); err != nil {
 		return errors.WrapPrefixf(err, "unable to localize patches")
 	}
@@ -181,34 +189,29 @@ func (lc *localizer) localizeNativeFields(kust *types.Kustomization) error {
 	}
 	//nolint:staticcheck
 	for i, patch := range kust.PatchesStrategicMerge {
-		localizedPath, err := lc.localizeK8sResource(string(patch))
+		locPath, err := lc.localizeK8sResource(string(patch))
 		if err != nil {
 			return errors.WrapPrefixf(err, "unable to localize patchesStrategicMerge entry")
 		}
-		if localizedPath != "" {
-			kust.PatchesStrategicMerge[i] = types.PatchStrategicMerge(localizedPath)
+		if locPath != "" {
+			kust.PatchesStrategicMerge[i] = types.PatchStrategicMerge(locPath)
 		}
 	}
 	for i, replacement := range kust.Replacements {
-		if replacement.Path != "" {
-			newPath, err := lc.localizeFile(replacement.Path)
-			if err != nil {
-				return errors.WrapPrefixf(err, "unable to localize replacements entry")
-			}
-			kust.Replacements[i].Path = newPath
+		locPath, err := lc.localizeFile(replacement.Path)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize replacements entry")
 		}
+		kust.Replacements[i].Path = locPath
 	}
 	return nil
 }
 
 // localizeGenerator localizes the file paths on generator.
-func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) (err error) {
-	var locEnvSrc string
-	if generator.EnvSource != "" {
-		locEnvSrc, err = lc.localizeFile(generator.EnvSource)
-		if err != nil {
-			return errors.WrapPrefixf(err, "unable to localize generator env file")
-		}
+func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) error {
+	locEnvSrc, err := lc.localizeFile(generator.EnvSource)
+	if err != nil {
+		return errors.WrapPrefixf(err, "unable to localize generator env file")
 	}
 	locEnvs := make([]string, len(generator.EnvSources))
 	for i, env := range generator.EnvSources {
@@ -238,16 +241,58 @@ func (lc *localizer) localizeGenerator(generator *types.GeneratorArgs) (err erro
 	return nil
 }
 
+// localizeHelmInflationGenerator localizes helmChartInflationGenerator on kust.
+// localizeHelmInflationGenerator localizes values files and copies local chart homes.
+func (lc *localizer) localizeHelmInflationGenerator(kust *types.Kustomization) error {
+	for i, chart := range kust.HelmChartInflationGenerator {
+		locFile, err := lc.localizeFile(chart.Values)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize helmChartInflationGenerator entry %d values", i)
+		}
+		kust.HelmChartInflationGenerator[i].Values = locFile
+
+		locDir, err := lc.copyChartHomeEntry(chart.ChartHome)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to copy helmChartInflationGenerator entry %d", i)
+		}
+		kust.HelmChartInflationGenerator[i].ChartHome = locDir
+	}
+	return nil
+}
+
+// localizeHelmCharts localizes helmCharts and helmGlobals on kust.
+// localizeHelmCharts localizes values files and copies a local chart home.
+func (lc *localizer) localizeHelmCharts(kust *types.Kustomization) error {
+	for i, chart := range kust.HelmCharts {
+		locFile, err := lc.localizeFile(chart.ValuesFile)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to localize helmCharts entry %d valuesFile", i)
+		}
+		kust.HelmCharts[i].ValuesFile = locFile
+	}
+	if kust.HelmGlobals != nil {
+		locDir, err := lc.copyChartHomeEntry(kust.HelmGlobals.ChartHome)
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to copy helmGlobals")
+		}
+		kust.HelmGlobals.ChartHome = locDir
+	} else if len(kust.HelmCharts) > 0 {
+		_, err := lc.copyChartHomeEntry("")
+		if err != nil {
+			return errors.WrapPrefixf(err, "unable to copy default chart home")
+		}
+	}
+	return nil
+}
+
 // localizePatches localizes the file paths on patches if they are non-empty
 func (lc *localizer) localizePatches(patches []types.Patch) error {
 	for i := range patches {
-		if patches[i].Path != "" {
-			newPath, err := lc.localizeFile(patches[i].Path)
-			if err != nil {
-				return err
-			}
-			patches[i].Path = newPath
+		locPath, err := lc.localizeFile(patches[i].Path)
+		if err != nil {
+			return err
 		}
+		patches[i].Path = locPath
 	}
 	return nil
 }
@@ -272,7 +317,7 @@ func (lc *localizer) localizeResource(path string) (string, error) {
 	}
 	if fileErr != nil {
 		var rootErr error
-		locPath, rootErr = lc.localizeDir(path)
+		locPath, rootErr = lc.localizeRoot(path)
 		if rootErr != nil {
 			err := PathLocalizeError{
 				Path:      path,
@@ -285,8 +330,13 @@ func (lc *localizer) localizeResource(path string) (string, error) {
 	return locPath, nil
 }
 
-// localizeFile localizes file path and returns the localized path
+// localizeFile localizes file path if set and returns the localized path
 func (lc *localizer) localizeFile(path string) (string, error) {
+	// Some localizable fields can be empty, for example, replacements.path.
+	// We rely on the build command to throw errors for the ones that cannot.
+	if path == "" {
+		return "", nil
+	}
 	content, err := lc.ldr.Load(path)
 	if err != nil {
 		return "", errors.Wrap(err)
@@ -324,8 +374,11 @@ func (lc *localizer) localizeFileWithContent(path string, content []byte) (strin
 	return locPath, nil
 }
 
-// localizeDir localizes root path and returns the localized path
-func (lc *localizer) localizeDir(path string) (string, error) {
+// localizeRoot localizes root path if set and returns the localized path
+func (lc *localizer) localizeRoot(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
 	ldr, err := lc.ldr.New(path)
 	if err != nil {
 		return "", errors.Wrap(err)
@@ -366,6 +419,106 @@ func (lc *localizer) localizeDir(path string) (string, error) {
 		return "", errors.WrapPrefixf(err, "unable to localize root %q", path)
 	}
 	return locPath, nil
+}
+
+// copyChartHomeEntry copies the helm chart home entry to lc dst
+// at the same location relative to the root and returns said relative path.
+// If entry is empty, copyChartHomeEntry returns the empty string.
+// If entry does not exist, copyChartHome returns entry.
+//
+// copyChartHomeEntry copies the default home to the same location at dst,
+// without following symlinks. An empty entry also indicates the default home.
+func (lc *localizer) copyChartHomeEntry(entry string) (string, error) {
+	path := entry
+	if entry == "" {
+		path = types.HelmDefaultHome
+	}
+	if filepath.IsAbs(path) {
+		return "", errors.Errorf("absolute path %q not handled in alpha", path)
+	}
+	isDefault := lc.root.Join(path) == lc.root.Join(types.HelmDefaultHome)
+	locPath, err := lc.copyChartHome(path, !isDefault)
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "unable to copy home %q", entry)
+	}
+	if entry == "" {
+		return "", nil
+	}
+	return locPath, nil
+}
+
+// copyChartHome copies path relative to lc root to dst and returns the
+// copied location relative to dst. If clean is true, copyChartHome uses path's
+// delinked location as the copy destination.
+//
+// If path does not exist, copyChartHome returns path.
+func (lc *localizer) copyChartHome(path string, clean bool) (string, error) {
+	path, err := filepath.Rel(lc.root.String(), lc.root.Join(path))
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "no path to chart home %q", path)
+	}
+	// Chart home may serve as untar destination.
+	// Note that we don't check if path is in scope.
+	if !lc.fSys.Exists(lc.root.Join(path)) {
+		return path, nil
+	}
+	// Perform localize directory checks.
+	ldr, err := lc.ldr.New(path)
+	if err != nil {
+		return "", errors.WrapPrefixf(err, "invalid chart home")
+	}
+	cleaned, err := filesys.ConfirmDir(lc.fSys, ldr.Root())
+	if err != nil {
+		log.Panicf("unable to confirm validated directory %q: %s", ldr.Root(), err)
+	}
+	toDst := path
+	if clean {
+		toDst, err = filepath.Rel(lc.root.String(), cleaned.String())
+		if err != nil {
+			log.Panicf("no path between scoped directories %q and %q: %s", lc.root, cleaned, err)
+		}
+	}
+	// Note this check does not guarantee that we copied the entire directory.
+	if dst := filepath.Join(lc.dst, toDst); !lc.fSys.Exists(dst) {
+		err = lc.copyDir(cleaned, filepath.Join(lc.dst, toDst))
+		if err != nil {
+			return "", errors.WrapPrefixf(err, "unable to copy chart home %q", path)
+		}
+	}
+	return toDst, nil
+}
+
+// copyDir copies src to dst. copyDir does not follow symlinks.
+func (lc *localizer) copyDir(src filesys.ConfirmedDir, dst string) error {
+	err := lc.fSys.Walk(src.String(),
+		func(path string, info fs.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			pathToCreate, err := filepath.Rel(src.String(), path)
+			if err != nil {
+				log.Panicf("no path from %q to child file %q: %s", src, path, err)
+			}
+			pathInDst := filepath.Join(dst, pathToCreate)
+			if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+				return nil
+			}
+			if info.IsDir() {
+				err = lc.fSys.MkdirAll(pathInDst)
+			} else {
+				var content []byte
+				content, err = lc.fSys.ReadFile(path)
+				if err != nil {
+					return errors.Wrap(err)
+				}
+				err = lc.fSys.WriteFile(pathInDst, content)
+			}
+			return errors.Wrap(err)
+		})
+	if err != nil {
+		return errors.WrapPrefixf(err, "unable to copy directory %q", src)
+	}
+	return nil
 }
 
 // localizeBuiltinPlugins localizes built-in plugins on kust that can contain file paths. The built-in plugins

@@ -72,6 +72,10 @@ replacements:
       delimiter: '='
       index: 0
 `
+
+	valuesFile = `minecraftServer:
+  difficulty: peaceful
+`
 )
 
 func makeMemoryFs(t *testing.T) filesys.FileSystem {
@@ -208,10 +212,11 @@ patches:
 func TestLoadKustomizationName(t *testing.T) {
 	kustomization := map[string]string{
 		"Kustomization": `apiVersion: kustomize.config.k8s.io/v1beta1
-commonLabels:
-  label-one: value-one
-  label-two: value-two
 kind: Kustomization
+labels:
+- pairs:
+    label-one: value-one
+    label-two: value-two
 `,
 	}
 	checkLocalizeInTargetSuccess(t, kustomization)
@@ -235,14 +240,9 @@ func TestLoadGVKNN(t *testing.T) {
 
 func TestLoadLegacyFields(t *testing.T) {
 	kustomization := map[string]string{
-		// TODO(annasong): Adjust test once localize handles helm.
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
-helmChartInflationGenerator:
-- chartName: minecraft
-  chartRepoUrl: https://kubernetes-charts.storage.googleapis.com
-  chartVersion: v1.2.0
-  releaseName: test
-  values: values.yaml
+commonLabels:
+  app: bingo
 imageTags:
 - name: postgres
   newName: my-registry/my-postgres
@@ -587,7 +587,7 @@ patches:
 	expected, actual := makeFileSystems(t, "/a/b", kustAndPatch)
 
 	err := Run("/a/b", "", "/dst", actual)
-	require.Error(t, err)
+	require.EqualError(t, err, `unable to localize target "/a/b": unable to localize patches: invalid file reference: '/a/b/name-DNE.yaml' doesn't exist`)
 
 	checkFSys(t, expected, actual)
 }
@@ -1123,4 +1123,311 @@ resources:
 		expectedErrPrefix, expectedFileErr, expectedRootErr))
 
 	checkFSys(t, expected, actual)
+}
+
+func TestLocalizeHelmChartInflationGenerator(t *testing.T) {
+	helmKust := map[string]string{
+		"kustomization.yaml": `helmChartInflationGenerator:
+- chartName: nothing-to-localize
+  chartRepoUrl: https://itzg.github.io/warcraft-server-charts
+  releaseName: moria
+- chartName: localize-values
+  values: minecraftValues.yaml
+  valuesLocal:
+    minecraftServer:
+      eula: true
+  valuesMerge: replace
+- chartHome: home
+  chartName: copy-chartHome
+`,
+		"minecraftValues.yaml":               valuesFile,
+		"charts/localize-values/values.yaml": valuesFile,
+		"home/copy-chartHome/values.yaml":    valuesFile,
+	}
+	checkLocalizeInTargetSuccess(t, helmKust)
+}
+
+func TestLocalizeHelmCharts(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		files map[string]string
+	}{
+		{
+			name: "charts_only",
+			files: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: nothing-to-localize
+  repo: https://helm.releases.hashicorp.com
+  version: 1.0.0
+- includeCRDs: true
+  name: localize-valuesFile
+  valuesFile: file
+`,
+				"file":                                   valuesFile,
+				"charts/nothing-to-localize/values.yaml": valuesFile,
+				"charts/localize-valuesFile/values.yaml": valuesFile,
+			},
+		},
+		{
+			name: "charts_globals_no_home",
+			files: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: default
+helmGlobals:
+  configHome: .
+`,
+				"charts/default/values.yaml": valuesFile,
+			},
+		},
+		{
+			name: "home_only",
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+				"home/name/values.yaml": valuesFile,
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, test.files)
+		})
+	}
+}
+
+func TestLocalizeHelmChartsNoDefault(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+		"home/name/values.yaml":   valuesFile,
+		"charts/name/values.yaml": valuesFile,
+	}
+	expected, actual := makeFileSystems(t, "/a", files)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", map[string]string{
+		"kustomization.yaml":    files["kustomization.yaml"],
+		"home/name/values.yaml": valuesFile,
+	})
+	checkFSys(t, expected, actual)
+}
+
+func TestCopyChartHomeSimple(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		files map[string]string
+	}{
+		{
+			name: "does_not_exist",
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: untar-dir
+`,
+			},
+		},
+		{
+			name: "chart_home_structure",
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+				"home/minecraft-3.1.3.tgz": "blah",
+				"home/terraform-1.0.0.tgz": "la",
+				"home/minecraft/Chart.yaml": `annotations:
+  artifacthub.io/links: |
+  - name: source
+    url: https://minecraft.net/
+`,
+				"home/terraform/Chart.yaml": `description: Minecraft server
+`,
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, test.files)
+		})
+	}
+}
+
+func TestCopyChartHomeChanges(t *testing.T) {
+	for name, test := range map[string]struct {
+		files       map[string]string
+		copiedFiles map[string]string
+	}{
+		"clean_does_not_exist": {
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../b/home
+`,
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+			},
+		},
+		"clean_default": {
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../b/charts
+`,
+				"charts/name/values.yaml": valuesFile,
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: charts
+`,
+				"charts/name/values.yaml": valuesFile,
+			},
+		},
+		"not_copied": {
+			files: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: name
+  valuesFile: home/name/values.yaml
+helmGlobals:
+  chartHome: home
+`,
+				"home/name/values.yaml":      valuesFile,
+				"home/name/many-other-files": "other contents",
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmCharts:
+- name: name
+  valuesFile: home/name/values.yaml
+helmGlobals:
+  chartHome: home
+`,
+				"home/name/values.yaml": valuesFile,
+			},
+		},
+		"does_not_exist_exits_scope": {
+			files: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../home
+`,
+				"../../home/will-exist-at-dst/values.yaml": valuesFile,
+			},
+			copiedFiles: map[string]string{
+				"kustomization.yaml": `helmGlobals:
+  chartHome: ../home
+`,
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			expected, actual := makeFileSystems(t, "/a/b", test.files)
+
+			err := Run("/a/b", "/a/b", "/dst", actual)
+			require.NoError(t, err)
+
+			addFiles(t, expected, "/dst", test.copiedFiles)
+			checkFSys(t, expected, actual)
+		})
+	}
+}
+
+func TestCopyChartHomeEmpty(t *testing.T) {
+	kustomization := map[string]string{
+		"kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+	}
+	expected, actual := makeFileSystems(t, "/a", kustomization)
+	require.NoError(t, actual.Mkdir("/a/home"))
+	require.NoError(t, expected.Mkdir("/a/home"))
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", kustomization)
+	require.NoError(t, expected.Mkdir("/dst/home"))
+	checkFSys(t, expected, actual)
+}
+
+func TestCopyChartHomeError(t *testing.T) {
+	for name, test := range map[string]struct {
+		err   string
+		files map[string]string
+	}{
+		"absolute": {
+			err: `unable to copy helmGlobals: absolute path "/a/b/home" not handled in alpha`,
+			files: map[string]string{
+				"a/b/kustomization.yaml": `helmGlobals:
+  chartHome: /a/b/home
+`,
+				"a/b/home/name/values.yaml": valuesFile,
+			},
+		},
+		"file": {
+			err: `unable to copy helmGlobals: unable to copy home "home": invalid chart home: invalid root reference: must build at directory: '/a/b/home': file is not directory`,
+			files: map[string]string{
+				"a/b/kustomization.yaml": `helmGlobals:
+  chartHome: home
+`,
+				"a/b/home": valuesFile,
+			},
+		},
+		"scope": {
+			err: `unable to copy helmGlobals: unable to copy home "../../alpha/home": invalid chart home: root "/alpha/home" outside localize scope "/a"`,
+			files: map[string]string{
+				"a/b/kustomization.yaml": `helmGlobals:
+  chartHome: ../../alpha/home
+`,
+				"alpha/home/values.yaml": valuesFile,
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			expected, actual := makeFileSystems(t, "/", test.files)
+
+			err := Run("/a/b", "/a", "/dst", actual)
+			const prefix = `unable to localize target "/a/b"`
+			require.EqualError(t, err, fmt.Sprintf("%s: %s", prefix, test.err))
+
+			checkFSys(t, expected, actual)
+		})
+	}
+}
+
+func TestLocalizeEmpty(t *testing.T) {
+	for name, kustomization := range map[string]string{
+		"file": `configurations:
+- ""
+`,
+		"root": `bases:
+- ""
+`,
+		"resource": `resources:
+- ""
+`,
+		"generator_file_src": `configMapGenerator:
+- files:
+  - ""
+`,
+		"patchesStrategicMerge": `patchesStrategicMerge:
+- ""
+`,
+		"custom_transformers": `transformers:
+- ""
+`,
+		"custom_transformer_field": `transformers:
+- |
+  apiVersion: builtin
+  kind: PatchStrategicMergeTransformer
+  metadata:
+    name: empty
+  paths:
+  - ""
+`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, map[string]string{
+				"kustomization.yaml": kustomization,
+			})
+		})
+	}
 }
