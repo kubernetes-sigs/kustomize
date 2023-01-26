@@ -3,6 +3,8 @@
 
 package types
 
+const HelmDefaultHome = "charts"
+
 type HelmGlobals struct {
 	// ChartHome is a file path, relative to the kustomization root,
 	// to a directory containing a subdirectory for each chart to be

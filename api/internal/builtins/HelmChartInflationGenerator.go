@@ -83,7 +83,7 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 	// the loader root (unless root restrictions are
 	// disabled, in which case this can be an absolute path).
 	if p.ChartHome == "" {
-		p.ChartHome = "charts"
+		p.ChartHome = types.HelmDefaultHome
 	}
 
 	// The ValuesFile may be consulted by the plugin, so it must
