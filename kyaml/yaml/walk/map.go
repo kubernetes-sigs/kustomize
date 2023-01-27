@@ -58,7 +58,7 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 		if l.Schema != nil {
 			s = l.Schema.Field(key)
 		}
-		fv, commentSch := l.fieldValue(key)
+		fv, commentSch, keyStyle := l.fieldValue(key)
 		if commentSch != nil {
 			s = commentSch
 		}
@@ -90,7 +90,13 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 		}
 
 		// this handles empty and non-empty values
-		_, err = dest.Pipe(yaml.FieldSetter{Name: key, Comments: comments, Value: val})
+		fieldSetter := yaml.FieldSetter{
+			Name:           key,
+			Comments:       comments,
+			AppendKeyStyle: keyStyle,
+			Value:          val,
+		}
+		_, err = dest.Pipe(fieldSetter)
 		if err != nil {
 			return nil, err
 		}
@@ -153,10 +159,12 @@ func (l Walker) fieldNames() []string {
 	return result
 }
 
-// fieldValue returns a slice containing each source's value for fieldName
-func (l Walker) fieldValue(fieldName string) ([]*yaml.RNode, *openapi.ResourceSchema) {
+// fieldValue returns a slice containing each source's value for fieldName,
+// the schema, and the style for the key.
+func (l Walker) fieldValue(fieldName string) ([]*yaml.RNode, *openapi.ResourceSchema, yaml.Style) {
 	var fields []*yaml.RNode
 	var sch *openapi.ResourceSchema
+	var keyStyle yaml.Style
 	for i := range l.Sources {
 		if l.Sources[i] == nil {
 			fields = append(fields, nil)
@@ -168,6 +176,9 @@ func (l Walker) fieldValue(fieldName string) ([]*yaml.RNode, *openapi.ResourceSc
 		if sch == nil && !s.IsMissingOrNull() {
 			sch = s
 		}
+		if keyStyle == 0 && field != nil && field.Key != nil && field.Key.YNode() != nil {
+			keyStyle = field.Key.YNode().Style
+		}
 	}
-	return fields, sch
+	return fields, sch, keyStyle
 }
