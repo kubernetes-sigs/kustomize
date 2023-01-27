@@ -646,3 +646,33 @@ func TestHelmHomeEscapesScope(t *testing.T) {
 	require.NoError(t, fsExpected.Mkdir(filepath.Join(dst, "home")))
 	CheckFs(t, dst, fsExpected, fsActual)
 }
+
+func TestSymlinkedFileSource(t *testing.T) {
+	// target (and scope)
+	// - kustomization
+	// - file
+	// - link to file
+	fsExpected, fsActual, target := PrepareFs(t, nil, map[string]string{
+		"kustomization.yaml": `configMapGenerator:
+- files:
+  - filename-used-as-key-in-configMap
+`,
+		"different-key": "properties",
+	})
+	link(t, target, map[string]string{
+		"filename-used-as-key-in-configMap": "different-key",
+	})
+
+	dst := target.Join("dst")
+	err := localizer.Run(fsActual, target.String(), "", dst)
+	require.NoError(t, err)
+
+	SetupDir(t, fsExpected, dst, map[string]string{
+		"kustomization.yaml": `configMapGenerator:
+- files:
+  - different-key
+`,
+		"different-key": "properties",
+	})
+	CheckFs(t, dst, fsExpected, fsActual)
+}
