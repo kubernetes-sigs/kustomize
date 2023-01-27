@@ -9,9 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
-	"sigs.k8s.io/kustomize/api/types"
 )
 
 func TestHelmChartInflationGenerator(t *testing.T) {
@@ -580,29 +578,4 @@ valuesInline:
     enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, "")
-}
-
-func TestTemplateCommand(t *testing.T) {
-	p := types.HelmChart{
-		Version:               "1.0.0",
-		Repo:                  "https://helm.releases.hashicorp.com",
-		ApiVersions:           []string{"foo", "bar"},
-		Description:           "desc",
-		NameTemplate:          "template",
-		SkipTests:             true,
-		IncludeCRDs:           true,
-		SkipHooks:             true,
-		AdditionalValuesFiles: []string{"values1", "values2"},
-		Namespace:             "my-ns",
-	}
-	require.Equal(t, templateArgs(p),
-		[]string{"--namespace", "my-ns",
-			"--name-template", "template",
-			"-f", "values1", "-f", "values2",
-			"--api-versions", "foo", "--api-versions", "bar",
-			"--generate-name",
-			"--description", "desc",
-			"--include-crds",
-			"--skip-tests",
-			"--no-hooks"})
 }

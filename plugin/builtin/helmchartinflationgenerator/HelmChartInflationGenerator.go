@@ -288,48 +288,7 @@ func (p *plugin) templateCommand() []string {
 		args = append(args, filepath.Join(p.absChartHome(), p.Name))
 	}
 
-	return append(args, templateArgs(p.HelmChart)...)
-}
-
-func templateArgs(p types.HelmChart) []string {
-	args := make([]string, 0, 10)
-
-	if p.Namespace != "" {
-		args = append(args, "--namespace", p.Namespace)
-	}
-	if p.NameTemplate != "" {
-		args = append(args, "--name-template", p.NameTemplate)
-	}
-
-	if p.ValuesFile != "" {
-		args = append(args, "--values", p.ValuesFile)
-	}
-	for _, valuesFile := range p.AdditionalValuesFiles {
-		args = append(args, "-f", valuesFile)
-	}
-
-	for _, apiVer := range p.ApiVersions {
-		args = append(args, "--api-versions", apiVer)
-	}
-	if p.ReleaseName == "" {
-		// AFAICT, this doesn't work as intended due to a bug in helm.
-		// See https://github.com/helm/helm/issues/6019
-		// I've tried placing the flag before and after the name argument.
-		args = append(args, "--generate-name")
-	}
-	if p.Description != "" {
-		args = append(args, "--description", p.Description)
-	}
-	if p.IncludeCRDs {
-		args = append(args, "--include-crds")
-	}
-	if p.SkipTests {
-		args = append(args, "--skip-tests")
-	}
-	if p.SkipHooks {
-		args = append(args, "--no-hooks")
-	}
-	return args
+	return append(args, p.HelmChart.AsHelmArgs()...)
 }
 
 func (p *plugin) pullCommand() []string {

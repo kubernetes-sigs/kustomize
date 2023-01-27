@@ -142,3 +142,44 @@ func makeHelmChartFromHca(old *HelmChartArgs) (c HelmChart) {
 	c.ReleaseName = old.ReleaseName
 	return
 }
+
+func (h HelmChart) AsHelmArgs() []string {
+	args := make([]string, 0, 10)
+
+	if h.Namespace != "" {
+		args = append(args, "--namespace", h.Namespace)
+	}
+	if h.NameTemplate != "" {
+		args = append(args, "--name-template", h.NameTemplate)
+	}
+
+	if h.ValuesFile != "" {
+		args = append(args, "--values", h.ValuesFile)
+	}
+	for _, valuesFile := range h.AdditionalValuesFiles {
+		args = append(args, "-f", valuesFile)
+	}
+
+	for _, apiVer := range h.ApiVersions {
+		args = append(args, "--api-versions", apiVer)
+	}
+	if h.ReleaseName == "" {
+		// AFAICT, this doesn't work as intended due to a bug in helm.
+		// See https://github.com/helm/helm/issues/6019
+		// I've tried placing the flag before and after the name argument.
+		args = append(args, "--generate-name")
+	}
+	if h.Description != "" {
+		args = append(args, "--description", h.Description)
+	}
+	if h.IncludeCRDs {
+		args = append(args, "--include-crds")
+	}
+	if h.SkipTests {
+		args = append(args, "--skip-tests")
+	}
+	if h.SkipHooks {
+		args = append(args, "--no-hooks")
+	}
+	return args
+}
