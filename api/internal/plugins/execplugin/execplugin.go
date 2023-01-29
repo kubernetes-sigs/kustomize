@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/google/shlex"
+	"mvdan.cc/sh/v3/shell"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -93,7 +93,9 @@ func (p *ExecPlugin) processOptionalArgsFields() error {
 		return err
 	}
 	if c.ArgsOneLiner != "" {
-		p.args, _ = shlex.Split(c.ArgsOneLiner)
+		p.args, _ = shell.Fields(c.ArgsOneLiner, func(name string) string {
+			return "" // leave it unset
+		})
 	}
 	if c.ArgsFromFile != "" {
 		content, err := p.h.Loader().Load(c.ArgsFromFile)
