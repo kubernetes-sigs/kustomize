@@ -593,8 +593,36 @@ patches:
 }
 
 func TestLocalizePluginsInlineAndFile(t *testing.T) {
-	kustAndPlugins := map[string]string{
-		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+	for _, test := range []struct {
+		name  string
+		files map[string]string
+	}{
+		{
+			name: "generators",
+			files: map[string]string{
+				"kustomization.yaml": `generators:
+- generator.yaml
+- |
+  apiVersion: builtin
+  env: second.properties
+  kind: ConfigMapGenerator
+  metadata:
+    name: inline
+`,
+				"generator.yaml": `apiVersion: builtin
+env: first.properties
+kind: ConfigMapGenerator
+metadata:
+  name: file
+`,
+				"first.properties":  "APPLE=orange",
+				"second.properties": "BANANA=pear",
+			},
+		},
+		{
+			name: "transformers",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 transformers:
 - |
@@ -605,16 +633,39 @@ transformers:
   path: patchSM-one.yaml
 - patch.yaml
 `,
-		"patch.yaml": `apiVersion: builtin
+				"patch.yaml": `apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: file
 path: patchSM-two.yaml
 `,
-		"patchSM-one.yaml": podConfiguration,
-		"patchSM-two.yaml": podConfiguration,
+				"patchSM-one.yaml": podConfiguration,
+				"patchSM-two.yaml": podConfiguration,
+			},
+		},
+		{
+			name: "validators",
+			files: map[string]string{
+				"kustomization.yaml": `validators:
+- |
+  apiVersion: builtin
+  kind: ReplacementTransformer
+  metadata:
+    name: inline
+  replacements:
+  - path: first.yaml
+- second.yaml
+`,
+				"first.yaml":       replacementTransformerWithPath,
+				"second.yaml":      replacementTransformerWithPath,
+				"replacement.yaml": replacements,
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			checkLocalizeInTargetSuccess(t, test.files)
+		})
 	}
-	checkLocalizeInTargetSuccess(t, kustAndPlugins)
 }
 
 func TestLocalizeMultiplePluginsInEntry(t *testing.T) {
