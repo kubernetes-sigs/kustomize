@@ -102,6 +102,14 @@ func addFiles(t *testing.T, fSys filesys.FileSystem, parentDir string, files map
 	}
 }
 
+func checkRun(t *testing.T, fSys filesys.FileSystem, target, scope, dst string) {
+	t.Helper()
+
+	actualDst, err := Run(target, scope, dst, fSys)
+	require.NoError(t, err)
+	require.Equal(t, dst, actualDst)
+}
+
 func makeFileSystems(t *testing.T, target string, files map[string]string) (expected filesys.FileSystem, actual filesys.FileSystem) {
 	t.Helper()
 
@@ -161,9 +169,7 @@ func checkLocalizeInTargetSuccess(t *testing.T, files map[string]string) {
 	fSys := makeMemoryFs(t)
 	addFiles(t, fSys, "/a", files)
 
-	err := Run("/a", "/", "dst", fSys)
-	require.NoError(t, err)
-
+	checkRun(t, fSys, "/a", "/", "/dst")
 	fSysExpected := makeMemoryFs(t)
 	addFiles(t, fSysExpected, "/a", files)
 	addFiles(t, fSysExpected, "/dst/a", files)
@@ -179,9 +185,7 @@ namePrefix: my-
 	}
 	fSysExpected, fSysActual := makeFileSystems(t, "/a", kustomization)
 
-	err := Run("/a", "", "/a/b/dst", fSysActual)
-	require.NoError(t, err)
-
+	checkRun(t, fSysActual, "/a", "/a", "/a/b/dst")
 	addFiles(t, fSysExpected, "/a/b/dst", kustomization)
 	checkFSys(t, fSysExpected, fSysActual)
 }
@@ -202,9 +206,7 @@ patches:
 	}
 	fSysExpected, fSysActual := makeFileSystems(t, "/a/b", kustomization)
 
-	err := Run("/a/b", "/", "/a/b/dst", fSysActual)
-	require.NoError(t, err)
-
+	checkRun(t, fSysActual, "/a/b", "/", "/a/b/dst")
 	addFiles(t, fSysExpected, "/a/b/dst/a/b", kustomization)
 	checkFSys(t, fSysExpected, fSysActual)
 }
@@ -259,7 +261,7 @@ func TestLoadUnknownKustFields(t *testing.T) {
 suffix: invalid`,
 	})
 
-	err := Run("/a", "", "", fSysTest)
+	_, err := Run("/a", "", "", fSysTest)
 	require.EqualError(t, err,
 		`unable to localize target "/a": invalid Kustomization: error unmarshaling JSON: while decoding JSON: json: unknown field "suffix"`)
 
@@ -299,9 +301,7 @@ patches:
 	}
 	expected, actual := makeFileSystems(t, "/alpha/beta/gamma", kustAndPatch)
 
-	err := Run("/alpha/beta/gamma", "/", "", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/alpha/beta/gamma", "/", "/localized-gamma")
 	addFiles(t, expected, "/localized-gamma/alpha/beta/gamma", map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -328,9 +328,7 @@ kind: Kustomization
 	}
 	expected, actual := makeFileSystems(t, "/alpha/beta", targetAndUnreferenced)
 
-	err := Run("/alpha/beta", "/alpha", "/beta", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/alpha/beta", "/alpha", "/beta")
 	addFiles(t, expected, "/beta/beta", map[string]string{
 		"kustomization.yaml": targetAndUnreferenced["kustomization.yaml"],
 		"env":                targetAndUnreferenced["env"],
@@ -586,7 +584,7 @@ patches:
 	}
 	expected, actual := makeFileSystems(t, "/a/b", kustAndPatch)
 
-	err := Run("/a/b", "", "/dst", actual)
+	_, err := Run("/a/b", "", "/dst", actual)
 	require.EqualError(t, err, `unable to localize target "/a/b": unable to localize patches: invalid file reference: '/a/b/name-DNE.yaml' doesn't exist`)
 
 	checkFSys(t, expected, actual)
@@ -710,9 +708,7 @@ transformers:
 	}
 	expected, actual := makeFileSystems(t, "/a", kustAndPlugins)
 
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/a", "/a", "/dst")
 	addFiles(t, expected, "/dst", map[string]string{
 		"kustomization.yaml": kustAndPlugins["kustomization.yaml"],
 		"patch.yaml":         fmt.Sprintf(patchf, "patchSM.yaml"),
@@ -971,7 +967,7 @@ metadata:
 		t.Run(test.name, func(t *testing.T) {
 			expected, actual := makeFileSystems(t, "/", test.files)
 
-			err := Run("/", "", "/dst", actual)
+			_, err := Run("/", "", "/dst", actual)
 
 			var actualErr ResourceLoadError
 			require.ErrorAs(t, err, &actualErr)
@@ -1025,7 +1021,7 @@ func TestLocalizeBuiltinPlugins_Errors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			expected, actual := makeFileSystems(t, "/a", test.files)
-			err := Run("/a", "", "/dst", actual)
+			_, err := Run("/a", "", "/dst", actual)
 			const errPrefix = `unable to localize target "/a"`
 			require.EqualError(t, err, fmt.Sprintf(
 				"%s: %s: %s", errPrefix, test.fieldSpecErr, test.locErr))
@@ -1145,9 +1141,7 @@ namespace: kustomize-namespace
 	}
 	expected, actual := makeFileSystems(t, "/alpha", kustAndComponents)
 
-	err := Run("/alpha/beta/gamma", "/alpha", "/alpha/beta/dst", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/alpha/beta/gamma", "/alpha", "/alpha/beta/dst")
 	cleanedFiles := map[string]string{
 		"beta/gamma/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 components:
@@ -1210,9 +1204,7 @@ namePrefix: my-
 	}
 	expected, actual := makeFileSystems(t, "/a/b", kustAndResources)
 
-	err := Run("/a/b", "/", "", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/a/b", "/", "/localized-b")
 	addFiles(t, expected, "/localized-b/a/b", kustAndResources)
 	checkFSys(t, expected, actual)
 }
@@ -1227,7 +1219,7 @@ resources:
 	}
 	expected, actual := makeFileSystems(t, "/a", kustAndResources)
 
-	err := Run("/a", "/", "", actual)
+	_, err := Run("/a", "/", "", actual)
 
 	const expectedFileErr = `invalid file reference: '/a/b' must resolve to a file`
 	const expectedRootErr = `unable to localize root "b": unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/a/b'`
@@ -1324,9 +1316,7 @@ func TestLocalizeHelmChartsNoDefault(t *testing.T) {
 	}
 	expected, actual := makeFileSystems(t, "/a", files)
 
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/a", "/a", "/dst")
 	addFiles(t, expected, "/dst", map[string]string{
 		"kustomization.yaml":    files["kustomization.yaml"],
 		"home/name/values.yaml": valuesFile,
@@ -1440,9 +1430,7 @@ helmGlobals:
 		t.Run(name, func(t *testing.T) {
 			expected, actual := makeFileSystems(t, "/a/b", test.files)
 
-			err := Run("/a/b", "/a/b", "/dst", actual)
-			require.NoError(t, err)
-
+			checkRun(t, actual, "/a/b", "/a/b", "/dst")
 			addFiles(t, expected, "/dst", test.copiedFiles)
 			checkFSys(t, expected, actual)
 		})
@@ -1459,9 +1447,7 @@ func TestCopyChartHomeEmpty(t *testing.T) {
 	require.NoError(t, actual.Mkdir("/a/home"))
 	require.NoError(t, expected.Mkdir("/a/home"))
 
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/a", "/a", "/dst")
 	addFiles(t, expected, "/dst", kustomization)
 	require.NoError(t, expected.Mkdir("/dst/home"))
 	checkFSys(t, expected, actual)
@@ -1503,7 +1489,7 @@ func TestCopyChartHomeError(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			expected, actual := makeFileSystems(t, "/", test.files)
 
-			err := Run("/a/b", "/a", "/dst", actual)
+			_, err := Run("/a/b", "/a", "/dst", actual)
 			const prefix = `unable to localize target "/a/b"`
 			require.EqualError(t, err, fmt.Sprintf("%s: %s", prefix, test.err))
 
@@ -1558,9 +1544,7 @@ metadata:
 	}
 	expected, actual := makeFileSystems(t, "/a", files)
 
-	err := Run("/a", "", "/dst", actual)
-	require.NoError(t, err)
-
+	checkRun(t, actual, "/a", "/a", "/dst")
 	addFiles(t, expected, "/dst", map[string]string{
 		"kustomization.yaml": files["kustomization.yaml"],
 		"configMap.yaml":     files["configMap.yaml"],
