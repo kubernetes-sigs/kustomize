@@ -1461,6 +1461,62 @@ func TestCopyChartHomeError(t *testing.T) {
 	}
 }
 
+func TestLocalizeGeneratorsHelm(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": `generators:
+- default.yaml
+- explicit.yaml
+`,
+		"default.yaml": `apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: no-explicit-references
+name: minecraft
+releaseName: moria
+repo: https://itzg.github.io/minecraft-server-charts
+version: 3.1.3
+`,
+		"explicit.yaml": `apiVersion: builtin
+chartHome: home
+kind: HelmChartInflationGenerator
+metadata:
+  name: explicit-references
+name: mapleStory
+valuesFile: mapleValues.yaml
+`,
+		"mapleValues.yaml":             valuesFile,
+		"home/mapleStory/values.yaml":  valuesFile,
+		"charts/minecraft/values.yaml": valuesFile,
+	}
+	checkLocalizeInTargetSuccess(t, files)
+}
+
+func TestLocalizeGeneratorsNoHelm(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": `generators:
+- configMap.yaml
+`,
+		"configMap.yaml": `apiVersion: builtin
+kind: ConfigMapGenerator
+literals:
+- APPLE=orange
+metadata:
+  name: not-helm-shouldn't-copy-default-helm-chart-home
+`,
+		"charts/minecraft/values.yaml": valuesFile,
+	}
+	expected, actual := makeFileSystems(t, "/a", files)
+
+	err := Run("/a", "", "/dst", actual)
+	require.NoError(t, err)
+
+	addFiles(t, expected, "/dst", map[string]string{
+		"kustomization.yaml": files["kustomization.yaml"],
+		"configMap.yaml":     files["configMap.yaml"],
+	})
+	checkFSys(t, expected, actual)
+}
+
 func TestLocalizeEmpty(t *testing.T) {
 	for name, kustomization := range map[string]string{
 		"file": `configurations:
