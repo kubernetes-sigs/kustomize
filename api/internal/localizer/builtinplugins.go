@@ -49,6 +49,10 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 					Path: "envs",
 				},
 				types.FieldSpec{
+					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
+					Path: "valuesFile",
+				},
+				types.FieldSpec{
 					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchTransformer.String()},
 					Path: "path",
 				},
@@ -82,6 +86,24 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 					return lbp.localizeAll(node)
 				},
 			},
+			yaml.FilterFunc(func(node *yaml.RNode) (*yaml.RNode, error) {
+				isHelm := node.GetApiVersion() == konfig.BuiltinPluginApiVersion &&
+					node.GetKind() == builtinhelpers.HelmChartInflationGenerator.String()
+				if !isHelm {
+					return node, nil
+				}
+				home, err := node.Pipe(yaml.Lookup("chartHome"))
+				if err != nil {
+					return nil, errors.Wrap(err)
+				}
+				if home == nil {
+					_, err = lbp.lc.copyChartHomeEntry("")
+				} else {
+					lbp.locPathFn = lbp.lc.copyChartHomeEntry
+					err = lbp.localizeScalar(home)
+				}
+				return node, errors.WrapPrefixf(err, "plugin %s", resid.FromRNode(node))
+			}),
 			fieldspec.Filter{
 				FieldSpec: types.FieldSpec{
 					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchStrategicMergeTransformer.String()},
@@ -92,7 +114,6 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 					return lbp.localizeAll(node)
 				},
 			})
-		// TODO(annasong): localize HelmChartInflationGenerator
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
