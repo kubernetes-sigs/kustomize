@@ -38,10 +38,11 @@ type localizer struct {
 }
 
 // Run attempts to localize the kustomization root at target with the given localize arguments
-func Run(target string, scope string, newDir string, fSys filesys.FileSystem) error {
+// and returns the path to the created newDir.
+func Run(target, scope, newDir string, fSys filesys.FileSystem) (string, error) {
 	ldr, args, err := NewLoader(target, scope, newDir, fSys)
 	if err != nil {
-		return errors.Wrap(err)
+		return "", errors.Wrap(err)
 	}
 	defer func() { _ = ldr.Cleanup() }()
 
@@ -51,7 +52,7 @@ func Run(target string, scope string, newDir string, fSys filesys.FileSystem) er
 	}
 	dst := args.NewDir.Join(toDst)
 	if err = fSys.MkdirAll(dst); err != nil {
-		return errors.WrapPrefixf(err, "unable to create directory in localize destination")
+		return "", errors.WrapPrefixf(err, "unable to create directory in localize destination")
 	}
 
 	err = (&localizer{
@@ -66,9 +67,9 @@ func Run(target string, scope string, newDir string, fSys filesys.FileSystem) er
 		if errCleanup != nil {
 			log.Printf("unable to clean localize destination: %s", errCleanup)
 		}
-		return errors.WrapPrefixf(err, "unable to localize target %q", target)
+		return "", errors.WrapPrefixf(err, "unable to localize target %q", target)
 	}
-	return nil
+	return args.NewDir.String(), nil
 }
 
 // localize localizes the root that lc is at
