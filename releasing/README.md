@@ -62,6 +62,8 @@ The dependencies determine the release order:
 
 Thus, do `kyaml` first, then `cmd/config`, etc.
 
+**⚠️ IMPORTANT:** The full release sequence should always be completed unless there is a really compelling reason not to AND the new release is fully backwards compatible with the latest released versions of our modules that depend on it (this is not detected by our CI, as we develop against the head versions of all modules). If we end up with a situation where the latest kyaml is not compatible with the latest api, for example, it causes end user confusion, particularly when automation attempts to upgrade kyaml for them.
+
 ## Prep work
 
 ### ⚠️ IMPORTANT: Check for [release-blocking issues](https://github.com/kubernetes-sigs/kustomize/issues?q=label%3Arelease-blocker+is%3Aopen)
