@@ -9,7 +9,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// Run `kustomize localize`s files referenced by kustomization target in scope to destination newDir on fSys.
-func Run(fSys filesys.FileSystem, target, scope, newDir string) error {
-	return errors.Wrap(localizer.Run(target, scope, newDir, fSys))
+// Run executes `kustomize localize` on fSys given the `localize` arguments and
+// returns the path to the created newDir.
+func Run(fSys filesys.FileSystem, target, scope, newDir string) (string, error) {
+	dst, err := localizer.Run(target, scope, newDir, fSys)
+	return dst, errors.Wrap(err)
 }
