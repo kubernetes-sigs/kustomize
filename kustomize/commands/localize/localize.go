@@ -4,6 +4,7 @@
 package localize
 
 import (
+	"fmt"
 	"io"
 	"log"
 
@@ -60,7 +61,13 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 		Args:         cobra.MaximumNArgs(numArgs),
 		RunE: func(cmd *cobra.Command, rawArgs []string) error {
 			args := matchArgs(rawArgs)
-			return errors.Wrap(lclzr.Run(fs, args.target, f.scope, args.dest))
+			dst, err := lclzr.Run(fs, args.target, f.scope, args.dest)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			successMsg := fmt.Sprintf("SUCCESS: localized %q to directory %s\n", args.target, dst)
+			_, err = writer.Write([]byte(successMsg))
+			return errors.Wrap(err)
 		},
 	}
 	// no shorthand to avoid conflation with other flags

@@ -84,7 +84,8 @@ func TestOptionalArgs(t *testing.T) {
 			loctest.SetupDir(t, actual, target, kust)
 			loctest.SetWorkingDir(t, target)
 
-			cmd := localize.NewCmdLocalize(actual, new(bytes.Buffer))
+			buffy := new(bytes.Buffer)
+			cmd := localize.NewCmdLocalize(actual, buffy)
 			err := cmd.RunE(cmd, args)
 			require.NoError(t, err)
 
@@ -92,6 +93,10 @@ func TestOptionalArgs(t *testing.T) {
 			dst := filepath.Join(target, "localized-target")
 			loctest.SetupDir(t, expected, dst, kust)
 			loctest.CheckFs(t, testDir.String(), expected, actual)
+
+			successMsg := fmt.Sprintf(`SUCCESS: localized "." to directory %s
+`, dst)
+			require.Equal(t, successMsg, buffy.String())
 		})
 	}
 }
@@ -114,7 +119,9 @@ func TestOutput(t *testing.T) {
 	loctest.SetupDir(t, expected, target.Join("dst"), kustomization)
 	loctest.CheckFs(t, target.String(), expected, actual)
 
-	require.Empty(t, buffy.String())
+	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
+`, target.String(), target.Join("dst"))
+	require.Equal(t, successMsg, buffy.String())
 
 	const msg = "Check that cmd log output is hooked to buffy."
 	log.Print(msg)
