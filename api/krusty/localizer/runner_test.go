@@ -456,7 +456,7 @@ func TestResourcesRepoNotFile(t *testing.T) {
 
 	_, err := localizer.Run(fsActual, testDir.String(), "", testDir.Join("dst"))
 
-	fileErr := fmt.Sprintf(`invalid resource at file "%s": MalformedYAMLError`, repo)
+	fileErr := fmt.Sprintf(`invalid resource at file "%s"`, repo)
 	rootErr := fmt.Sprintf(`unable to localize root "%s": unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization'`, repo)
 	var actualErr PathLocalizeError
 	require.ErrorAs(t, err, &actualErr)
