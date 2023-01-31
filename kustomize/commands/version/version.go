@@ -67,6 +67,9 @@ func (o *Options) Run() error {
 		if o.Short {
 			fmt.Fprintln(o.Writer, provenance.GetProvenance().Short())
 		} else {
+			fmt.Fprintln(os.Stderr, "WARNING: This version information is deprecated and "+
+				"will be replaced with the output from kustomize version --short. "+
+				"Use --output=yaml|json to get the full version.")
 			fmt.Fprintln(o.Writer, provenance.GetProvenance().Full())
 		}
 	case "yaml":

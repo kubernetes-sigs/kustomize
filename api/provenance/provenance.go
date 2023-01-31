@@ -10,14 +10,19 @@ import (
 	"strings"
 )
 
+// These variables are set at build time using ldflags.
+//
 //nolint:gochecknoglobals
 var (
-	version = "unknown"
-	// sha1 from git, output of $(git rev-parse HEAD)
-	gitCommit = "unknown"
+	// During a release, this will be set to the release tag, e.g. "kustomize/v4.5.7"
+	version = developmentVersion
 	// build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
 	buildDate = "unknown"
 )
+
+// This default value, (devel), matches
+// the value debug.BuildInfo uses for an unset main module version.
+const developmentVersion = "(devel)"
 
 // Provenance holds information about the build of an executable.
 type Provenance struct {
@@ -40,7 +45,7 @@ func GetProvenance() Provenance {
 	p := Provenance{
 		BuildDate: buildDate,
 		Version:   version,
-		GitCommit: gitCommit,
+		GitCommit: "unknown",
 		GoOs:      runtime.GOOS,
 		GoArch:    runtime.GOARCH,
 		GoVersion: runtime.Version(),
@@ -50,15 +55,11 @@ func GetProvenance() Provenance {
 		return p
 	}
 
-	// override with values from BuildInfo
 	for _, setting := range info.Settings {
-		switch setting.Key {
-		case "vcs.revision":
-			if p.Version == "(devel)" {
-				p.GitCommit = setting.Value
-			}
-		case "GOOS":
-			p.GoOs = setting.Value
+		// For now, the git commit is the only information of interest.
+		// We could consider adding other info such as the commit date in the future.
+		if setting.Key == "vcs.revision" {
+			p.GitCommit = setting.Value
 		}
 	}
 	return p

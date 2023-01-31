@@ -4,17 +4,22 @@
 package provenance_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/provenance"
 )
 
+const expectedBuildDateFromLdFlag = "2023-01-31T23:38:41Z"
+const expectedVersionFromLdFlag = "(test)"
+
 func TestGetProvenance(t *testing.T) {
 	p := provenance.GetProvenance()
-	// These are not set during go test: https://github.com/golang/go/issues/33976
+	// These are set by ldflags in our Makefile
 	assert.Equal(t, "(test)", p.Version)
-	assert.Equal(t, "unknown", p.BuildDate)
+	assert.Equal(t, expectedBuildDateFromLdFlag, p.BuildDate)
+	// This comes from BuildInfo, which is not set during go test: https://github.com/golang/go/issues/33976
 	assert.Equal(t, "unknown", p.GitCommit)
 
 	// These are set properly during go test
@@ -35,7 +40,7 @@ func TestProvenance_Short(t *testing.T) {
 func TestProvenance_Full(t *testing.T) {
 	p := provenance.GetProvenance()
 	// Most values are not set during go test: https://github.com/golang/go/issues/33976
-	assert.Contains(t, p.Full(), "{Version:(test) GitCommit:unknown BuildDate:unknown")
+	assert.Contains(t, p.Full(), fmt.Sprintf("{Version:%s GitCommit:unknown BuildDate:%s", expectedVersionFromLdFlag, expectedBuildDateFromLdFlag))
 	assert.Regexp(t, "GoOs:\\w+ GoArch:\\w+ GoVersion:go1", p.Full())
 }
 
