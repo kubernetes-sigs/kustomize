@@ -12,6 +12,7 @@ import (
 
 func TestAsHelmArgs(t *testing.T) {
 	p := types.HelmChart{
+		Name:                  "chart-name",
 		Version:               "1.0.0",
 		Repo:                  "https://helm.releases.hashicorp.com",
 		ApiVersions:           []string{"foo", "bar"},
@@ -24,8 +25,9 @@ func TestAsHelmArgs(t *testing.T) {
 		AdditionalValuesFiles: []string{"values1", "values2"},
 		Namespace:             "my-ns",
 	}
-	require.Equal(t, p.AsHelmArgs(),
-		[]string{"--namespace", "my-ns",
+	require.Equal(t, p.AsHelmArgs("/home/charts"),
+		[]string{"template", "/home/charts/chart-name",
+			"--namespace", "my-ns",
 			"--name-template", "template",
 			"--values", "values",
 			"-f", "values1", "-f", "values2",

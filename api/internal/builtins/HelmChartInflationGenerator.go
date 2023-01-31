@@ -249,7 +249,7 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 		return nil, err
 	}
 	var stdout []byte
-	stdout, err = p.runHelmCommand(p.templateCommand())
+	stdout, err = p.runHelmCommand(p.AsHelmArgs(p.absChartHome()))
 	if err != nil {
 		return nil, err
 	}
@@ -271,18 +271,6 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 		return rm, nil
 	}
 	return nil, fmt.Errorf("could not parse bytes into resource map: %w\n", resMapErr)
-}
-
-func (p *HelmChartInflationGeneratorPlugin) templateCommand() []string {
-	args := []string{"template"}
-	if p.ReleaseName != "" {
-		args = append(args, p.ReleaseName)
-	}
-	if p.Name != "" {
-		args = append(args, filepath.Join(p.absChartHome(), p.Name))
-	}
-
-	return append(args, p.HelmChart.AsHelmArgs()...)
 }
 
 func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {

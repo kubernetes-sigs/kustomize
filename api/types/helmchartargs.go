@@ -3,6 +3,8 @@
 
 package types
 
+import "path/filepath"
+
 const HelmDefaultHome = "charts"
 
 type HelmGlobals struct {
@@ -143,9 +145,14 @@ func makeHelmChartFromHca(old *HelmChartArgs) (c HelmChart) {
 	return
 }
 
-func (h HelmChart) AsHelmArgs() []string {
-	args := make([]string, 0, 10)
-
+func (h HelmChart) AsHelmArgs(absChartHome string) []string {
+	args := []string{"template"}
+	if h.ReleaseName != "" {
+		args = append(args, h.ReleaseName)
+	}
+	if h.Name != "" {
+		args = append(args, filepath.Join(absChartHome, h.Name))
+	}
 	if h.Namespace != "" {
 		args = append(args, "--namespace", h.Namespace)
 	}
