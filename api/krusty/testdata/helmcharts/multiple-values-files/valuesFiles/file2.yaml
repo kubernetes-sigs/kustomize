@@ -1,6 +1,2 @@
-rbac:
-  create: true
-  rules:
-    - apiGroups: [""]
-      verbs: ["*"]
-      resources: ["*"]
+data:
+  namespace: file-2

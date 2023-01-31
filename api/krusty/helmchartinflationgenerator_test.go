@@ -248,10 +248,8 @@ func TestHelmChartInflationGeneratorMultipleValuesFiles(t *testing.T) {
 
 	th.WriteK(th.GetRoot(), `
 helmCharts:
-  - name: ocp-pipeline
-    version: 0.1.16
-    namespace: mynamespace
-    releaseName: moria
+  - name: test-chart
+    releaseName: test-chart
     additionalValuesFiles:
     - file1.yaml
     - file2.yaml
@@ -260,33 +258,24 @@ helmCharts:
 	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
 	asYaml, err := m.AsYaml()
 	require.NoError(t, err)
-	require.Contains(t, string(asYaml), `apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+	require.Equal(t, string(asYaml), `apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: moria-ocp-pipeline
-  namespace: mynamespace
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - '*'
-  verbs:
-  - '*'
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: moria-ocp-pipeline
-  namespace: mynamespace
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: moria-ocp-pipeline
-subjects:
-- kind: ServiceAccount
-  name: jenkins
-  namespace: mynamespace`)
-	require.Contains(t, string(asYaml), `def releaseNamespace = ""`)
+  labels:
+    chart: test-1.0.0
+  name: my-deploy
+  namespace: file-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    spec:
+      containers:
+      - image: test-image-file1:file1
+        imagePullPolicy: Never
+`)
 }
 
 func copyFileIntoHarness(th *kusttest_test.HarnessEnhanced, src, dst string) {
@@ -297,24 +286,16 @@ func copyFileIntoHarness(th *kusttest_test.HarnessEnhanced, src, dst string) {
 func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 	t.Helper()
 
-	thDir := filepath.Join(th.GetRoot(), "charts", "ocp-pipeline")
-	chartDir := "./testdata/helmcharts/multiple-values-files/charts/ocp-pipeline"
+	thDir := filepath.Join(th.GetRoot(), "charts", "test-chart")
+	chartDir := "./testdata/helmcharts/multiple-values-files/charts/test-chart"
 
 	fs := th.GetFSys()
 	require.NoError(t, fs.MkdirAll(filepath.Join(thDir, "templates")))
 
-	copyFileIntoHarness(th, filepath.Join(chartDir, ".helmignore"), filepath.Join(thDir, ".helmignore"))
 	copyFileIntoHarness(th, filepath.Join(chartDir, "Chart.yaml"), filepath.Join(thDir, "Chart.yaml"))
 	copyFileIntoHarness(th, filepath.Join(chartDir, "README.md"), filepath.Join(thDir, "README.md"))
 	copyFileIntoHarness(th, filepath.Join(chartDir, "values.yaml"), filepath.Join(thDir, "values.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "_helpers.tpl"), filepath.Join(thDir, "templates", "_helpers.tpl"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "deploymentValuesSecret.yaml"), filepath.Join(thDir, "templates", "deploymentValuesSecret.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "NOTES.txt"), filepath.Join(thDir, "templates", "NOTES.txt"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "oc-deploy.yaml"), filepath.Join(thDir, "templates", "oc-deploy.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "oc-gitWebhookSecret.yaml"), filepath.Join(thDir, "templates", "oc-gitWebhookSecret.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "oc-imageBuild.yaml"), filepath.Join(thDir, "templates", "oc-imageBuild.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "oc-imageStream.yaml"), filepath.Join(thDir, "templates", "oc-imageStream.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "rbac.yaml"), filepath.Join(thDir, "templates", "rbac.yaml"))
+	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "deployment.yaml"), filepath.Join(thDir, "templates", "deployment.yaml"))
 	copyFileIntoHarness(th, "./testdata/helmcharts/multiple-values-files/valuesFiles/file1.yaml", filepath.Join(th.GetRoot(), "file1.yaml"))
 	copyFileIntoHarness(th, "./testdata/helmcharts/multiple-values-files/valuesFiles/file2.yaml", filepath.Join(th.GetRoot(), "file2.yaml"))
 }

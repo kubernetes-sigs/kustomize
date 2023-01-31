@@ -1,1 +1,5 @@
-releaseNamespace: ""
+data:
+  image:
+    name: test-image-file1
+    tag: file1
+    imagePullPolicy: Never
