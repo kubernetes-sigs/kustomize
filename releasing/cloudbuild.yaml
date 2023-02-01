@@ -43,6 +43,8 @@ steps:
   entrypoint: /bin/bash
   dir: myClone
   secretEnv: ['GITHUB_TOKEN']
+  env:
+  - 'GITHUB_USERNAME=KnVerey' # used to make authenticated curl requests to Github in releasing/compile-changelog.sh
   args:
   - releasing/cloudbuild.sh
   - $TAG_NAME
@@ -59,6 +61,7 @@ timeout: 14m
 # The base64 of that is shown below.  It's decrypted by cloud build
 # and provided back to goreleaser.
 # IMPORTANT: make sure the token does not end with a newline when you encrypt it!
+# IMPORTANT: update the GITHUB_USERNAME env var above to match the github user whose token this is
 secrets:
 - kmsKeyName: projects/k8s-staging-kustomize/locations/global/keyRings/kust-cloud-key-ring/cryptoKeys/kust-cloud-key-name
   secretEnv:
