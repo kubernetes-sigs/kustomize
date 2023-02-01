@@ -1273,8 +1273,13 @@ func TestLocalizeHelmCharts(t *testing.T) {
 - includeCRDs: true
   name: localize-valuesFile
   valuesFile: file
+- additionalValuesFiles:
+  - another
+  - third
 `,
 				"file":                                   valuesFile,
+				"another":                                valuesFile,
+				"third":                                  valuesFile,
 				"charts/nothing-to-localize/values.yaml": valuesFile,
 				"charts/localize-valuesFile/values.yaml": valuesFile,
 			},
@@ -1513,7 +1518,11 @@ releaseName: moria
 repo: https://itzg.github.io/minecraft-server-charts
 version: 3.1.3
 `,
-		"explicit.yaml": `apiVersion: builtin
+		"explicit.yaml": `additionalValuesFiles:
+- time.yaml
+- life.yaml
+- light.yaml
+apiVersion: builtin
 chartHome: home
 kind: HelmChartInflationGenerator
 metadata:
@@ -1521,6 +1530,9 @@ metadata:
 name: mapleStory
 valuesFile: mapleValues.yaml
 `,
+		"time.yaml":                    valuesFile,
+		"life.yaml":                    valuesFile,
+		"light.yaml":                   valuesFile,
 		"mapleValues.yaml":             valuesFile,
 		"home/mapleStory/values.yaml":  valuesFile,
 		"charts/minecraft/values.yaml": valuesFile,
