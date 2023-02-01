@@ -86,10 +86,7 @@ type HelmChart struct {
 	SkipHooks bool `json:"skipHooks,omitempty" yaml:"skipHooks,omitempty"`
 
 	// ApiVersions is the kubernetes apiversions used for Capabilities.APIVersions
-	ApiVersions []string `json:"apiVerions,omitempty" yaml:"apiVersions,omitempty"`
-
-	// Description is a custom description to add when rendering the helm chart.
-	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	ApiVersions []string `json:"apiVersions,omitempty" yaml:"apiVersions,omitempty"`
 
 	// NameTemplate is for specifying the name template used to name the release.
 	NameTemplate string `json:"nameTemplate,omitempty" yaml:"nameTemplate,omitempty"`
@@ -149,6 +146,11 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	args := []string{"template"}
 	if h.ReleaseName != "" {
 		args = append(args, h.ReleaseName)
+	} else {
+		// AFAICT, this doesn't work as intended due to a bug in helm.
+		// See https://github.com/helm/helm/issues/6019
+		// I've tried placing the flag before and after the name argument.
+		args = append(args, "--generate-name")
 	}
 	if h.Name != "" {
 		args = append(args, filepath.Join(absChartHome, h.Name))
@@ -161,7 +163,7 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	}
 
 	if h.ValuesFile != "" {
-		args = append(args, "--values", h.ValuesFile)
+		args = append(args, "-f", h.ValuesFile)
 	}
 	for _, valuesFile := range h.AdditionalValuesFiles {
 		args = append(args, "-f", valuesFile)
@@ -169,15 +171,6 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 
 	for _, apiVer := range h.ApiVersions {
 		args = append(args, "--api-versions", apiVer)
-	}
-	if h.ReleaseName == "" {
-		// AFAICT, this doesn't work as intended due to a bug in helm.
-		// See https://github.com/helm/helm/issues/6019
-		// I've tried placing the flag before and after the name argument.
-		args = append(args, "--generate-name")
-	}
-	if h.Description != "" {
-		args = append(args, "--description", h.Description)
 	}
 	if h.IncludeCRDs {
 		args = append(args, "--include-crds")

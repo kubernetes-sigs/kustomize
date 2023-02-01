@@ -1,5 +1,5 @@
 ---
-apiVersion: apps/v1
+apiVersion: {{ template "apiversion" . }}
 kind: Deployment
 metadata:
   labels:

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -306,7 +307,7 @@ func TestCopyDir(t *testing.T) {
 
 	d := t.TempDir()
 
-	err = CopyDir(s, d)
+	err = CopyDir(filesys.MakeFsOnDisk(), s, d)
 	assert.NoError(t, err)
 
 	diff, err := Diff(d, v)

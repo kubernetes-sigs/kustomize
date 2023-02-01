@@ -4,12 +4,12 @@
 package krusty_test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 const expectedHelm = `
@@ -251,8 +251,8 @@ helmCharts:
   - name: test-chart
     releaseName: test-chart
     additionalValuesFiles:
-    - file1.yaml
-    - file2.yaml
+    - charts/valuesFiles/file1.yaml
+    - charts/valuesFiles/file2.yaml
 `)
 
 	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
@@ -275,27 +275,154 @@ spec:
       containers:
       - image: test-image-file1:file1
         imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+  name: test-chart
 `)
 }
 
-func copyFileIntoHarness(th *kusttest_test.HarnessEnhanced, src, dst string) {
-	bytes, _ := os.ReadFile(src)
-	th.WriteF(dst, string(bytes))
+func TestHelmChartInflationGeneratorApiVersions(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: test-chart
+    releaseName: test-chart
+    apiVersions:
+    - foo/v1
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	asYaml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(asYaml), `apiVersion: foo/v1
+kind: Deployment
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: my-deploy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    spec:
+      containers:
+      - image: test-image:v1.0.0
+        imagePullPolicy: Always
+---
+apiVersion: foo/v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+  name: test-chart
+`)
+}
+
+func TestHelmChartInflationGeneratorSkipTests(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: test-chart
+    releaseName: test-chart
+    skipTests: true
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	asYaml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(asYaml), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: my-deploy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    spec:
+      containers:
+      - image: test-image:v1.0.0
+        imagePullPolicy: Always
+`)
+}
+
+func TestHelmChartInflationGeneratorNameTemplate(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: test-chart
+    nameTemplate: name-template
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	asYaml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(asYaml), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: my-deploy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    spec:
+      containers:
+      - image: test-image:v1.0.0
+        imagePullPolicy: Always
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+  name: name-template
+`)
 }
 
 func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 	t.Helper()
 
-	thDir := filepath.Join(th.GetRoot(), "charts", "test-chart")
-	chartDir := "./testdata/helmcharts/multiple-values-files/charts/test-chart"
+	thDir := filepath.Join(th.GetRoot(), "charts")
+	chartDir := "testdata/helmcharts"
 
 	fs := th.GetFSys()
 	require.NoError(t, fs.MkdirAll(filepath.Join(thDir, "templates")))
-
-	copyFileIntoHarness(th, filepath.Join(chartDir, "Chart.yaml"), filepath.Join(thDir, "Chart.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "README.md"), filepath.Join(thDir, "README.md"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "values.yaml"), filepath.Join(thDir, "values.yaml"))
-	copyFileIntoHarness(th, filepath.Join(chartDir, "templates", "deployment.yaml"), filepath.Join(thDir, "templates", "deployment.yaml"))
-	copyFileIntoHarness(th, "./testdata/helmcharts/multiple-values-files/valuesFiles/file1.yaml", filepath.Join(th.GetRoot(), "file1.yaml"))
-	copyFileIntoHarness(th, "./testdata/helmcharts/multiple-values-files/valuesFiles/file2.yaml", filepath.Join(th.GetRoot(), "file2.yaml"))
+	require.NoError(t, copyutil.CopyDir(th.GetFSys(), chartDir, thDir))
 }
