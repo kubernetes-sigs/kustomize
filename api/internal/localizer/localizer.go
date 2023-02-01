@@ -280,6 +280,14 @@ func (lc *localizer) localizeHelmCharts(kust *types.Kustomization) error {
 			return errors.WrapPrefixf(err, "unable to localize helmCharts entry %d valuesFile", i)
 		}
 		kust.HelmCharts[i].ValuesFile = locFile
+
+		for j, valuesFile := range chart.AdditionalValuesFiles {
+			locFile, err = lc.localizeFile(valuesFile)
+			if err != nil {
+				return errors.WrapPrefixf(err, "unable to localize helmCharts entry %d additionalValuesFiles", i)
+			}
+			kust.HelmCharts[i].AdditionalValuesFiles[j] = locFile
+		}
 	}
 	if kust.HelmGlobals != nil {
 		locDir, err := lc.copyChartHomeEntry(kust.HelmGlobals.ChartHome)
