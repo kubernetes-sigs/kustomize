@@ -57,7 +57,7 @@ for((i=0; i < ${#commits[@]}; i+=batchSize))
 do
   commitList=$(IFS="+"; echo "${commits[@]:i:batchSize}" | sed 's/ /+/g')
 
-  if ! newResultsRaw=$(curl -sSL "https://api.github.com/search/issues?q=$commitList+repo%3Akubernetes-sigs%2Fkustomize+is:pull-request" "${github_auth_string}"); then
+  if ! newResultsRaw=$(curl -sSL "https://api.github.com/search/issues?q=$commitList+repo%3Akubernetes-sigs%2Fkustomize+is:pull-request" $github_auth_string); then
     echo "Failed to fetch results for commits (exit code $?): $commitList"
     exit 1
   fi
