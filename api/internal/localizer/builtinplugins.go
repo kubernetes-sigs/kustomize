@@ -53,6 +53,10 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 					Path: "valuesFile",
 				},
 				types.FieldSpec{
+					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
+					Path: "additionalValuesFiles",
+				},
+				types.FieldSpec{
 					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchTransformer.String()},
 					Path: "path",
 				},
