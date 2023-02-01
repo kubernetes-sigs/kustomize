@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
@@ -117,7 +118,7 @@ Deployment: 1
 			defer openapi.ResetOpenAPI()
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
 			baseDir := t.TempDir()
-			copyutil.CopyDir(sourceDir, baseDir)
+			assert.NoError(t, copyutil.CopyDir(filesys.MakeFsOnDisk(), sourceDir, baseDir))
 			runner := commands.GetCountRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)

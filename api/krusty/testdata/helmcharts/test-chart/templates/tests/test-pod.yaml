@@ -1,0 +1,6 @@
+apiVersion: {{ template "apiversion" . }}
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": test
