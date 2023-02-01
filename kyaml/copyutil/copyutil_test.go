@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	. "sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // TestDiff_identical verifies identical directories return an empty set
@@ -306,7 +307,7 @@ func TestCopyDir(t *testing.T) {
 
 	d := t.TempDir()
 
-	err = CopyDir(s, d)
+	err = CopyDir(filesys.MakeFsOnDisk(), s, d)
 	assert.NoError(t, err)
 
 	diff, err := Diff(d, v)

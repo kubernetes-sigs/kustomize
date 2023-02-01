@@ -1,0 +1,18 @@
+---
+apiVersion: {{ template "apiversion" . }}
+kind: Deployment
+metadata:
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  name: my-deploy
+  namespace: {{ .Values.data.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    spec:
+      containers:
+        - image: "{{ .Values.data.image.name }}:{{ .Values.data.image.tag }}"
+          imagePullPolicy: {{ .Values.data.image.imagePullPolicy }}

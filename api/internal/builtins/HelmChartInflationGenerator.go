@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -86,11 +87,19 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 		p.ChartHome = types.HelmDefaultHome
 	}
 
-	// The ValuesFile may be consulted by the plugin, so it must
+	// The ValuesFile(s) may be consulted by the plugin, so it must
 	// be under the loader root (unless root restrictions are
 	// disabled).
 	if p.ValuesFile == "" {
 		p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
+	}
+	for i, file := range p.AdditionalValuesFiles {
+		// use Load() to enforce root restrictions
+		if _, err := p.h.Loader().Load(file); err != nil {
+			return errors.WrapPrefixf(err, "could not load additionalValuesFile")
+		}
+		// the additional values filepaths must be relative to the kust root
+		p.AdditionalValuesFiles[i] = filepath.Join(p.h.Loader().Root(), file)
 	}
 
 	if err = p.errIfIllegalValuesMerge(); err != nil {
@@ -240,49 +249,28 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 		return nil, err
 	}
 	var stdout []byte
-	stdout, err = p.runHelmCommand(p.templateCommand())
+	stdout, err = p.runHelmCommand(p.AsHelmArgs(p.absChartHome()))
 	if err != nil {
 		return nil, err
 	}
 
-	rm, err = p.h.ResmapFactory().NewResMapFromBytes(stdout)
-	if err == nil {
+	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
+	if resMapErr == nil {
 		return rm, nil
 	}
 	// try to remove the contents before first "---" because
 	// helm may produce messages to stdout before it
-	stdoutStr := string(stdout)
-	if idx := strings.Index(stdoutStr, "\n---\n"); idx != -1 {
-		return p.h.ResmapFactory().NewResMapFromBytes([]byte(stdoutStr[idx:]))
-	}
-	return nil, err
-}
+	r := &kio.ByteReader{Reader: bytes.NewBufferString(string(stdout)), OmitReaderAnnotations: true}
+	nodes, err := r.Read()
 
-func (p *HelmChartInflationGeneratorPlugin) templateCommand() []string {
-	args := []string{"template"}
-	if p.ReleaseName != "" {
-		args = append(args, p.ReleaseName)
+	if len(nodes) != 0 {
+		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w\n", err)
+		}
+		return rm, nil
 	}
-	if p.Namespace != "" {
-		args = append(args, "--namespace", p.Namespace)
-	}
-	args = append(args, filepath.Join(p.absChartHome(), p.Name))
-	if p.ValuesFile != "" {
-		args = append(args, "--values", p.ValuesFile)
-	}
-	if p.ReleaseName == "" {
-		// AFAICT, this doesn't work as intended due to a bug in helm.
-		// See https://github.com/helm/helm/issues/6019
-		// I've tried placing the flag before and after the name argument.
-		args = append(args, "--generate-name")
-	}
-	if p.IncludeCRDs {
-		args = append(args, "--include-crds")
-	}
-	if p.SkipHooks {
-		args = append(args, "--no-hooks")
-	}
-	return args
+	return nil, fmt.Errorf("could not parse bytes into resource map: %w\n", resMapErr)
 }
 
 func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {

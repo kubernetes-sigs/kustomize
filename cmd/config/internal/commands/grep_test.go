@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/internal/commands"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // TestGrepCommand_files verifies grep reads the files and filters them
@@ -396,7 +397,7 @@ spec:
 		t.Run(test.name, func(t *testing.T) {
 			sourceDir := filepath.Join("test", "testdata", test.dataset)
 			baseDir := t.TempDir()
-			copyutil.CopyDir(sourceDir, baseDir)
+			assert.NoError(t, copyutil.CopyDir(filesys.MakeFsOnDisk(), sourceDir, baseDir))
 			runner := commands.GetGrepRunner("")
 			actual := &bytes.Buffer{}
 			runner.Command.SetOut(actual)

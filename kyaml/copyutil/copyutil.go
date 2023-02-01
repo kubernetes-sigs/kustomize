@@ -12,12 +12,14 @@ import (
 	"strings"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
 // CopyDir copies a src directory to a dst directory.  CopyDir skips copying the .git directory from the src.
-func CopyDir(src string, dst string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+func CopyDir(fSys filesys.FileSystem, src string, dst string) error {
+	return errors.Wrap(fSys.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -36,21 +38,21 @@ func CopyDir(src string, dst string) error {
 
 		// make directories that don't exist
 		if info.IsDir() {
-			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+			return errors.Wrap(fSys.MkdirAll(filepath.Join(dst, copyTo)))
 		}
 
 		// copy file by reading and writing it
-		b, err := os.ReadFile(filepath.Join(src, copyTo))
+		b, err := fSys.ReadFile(filepath.Join(src, copyTo))
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
-		err = os.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		err = fSys.WriteFile(filepath.Join(dst, copyTo), b)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
 // Diff returns a list of files that differ between the source and destination.

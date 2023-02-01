@@ -110,6 +110,7 @@ linters-settings:
   gomnd:
     ignored-functions:
     - os.WriteFile
+    - make
   gomoddirectives:
     replace-local: true
   gosec:
