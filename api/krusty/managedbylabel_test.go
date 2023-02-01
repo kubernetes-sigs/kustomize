@@ -13,14 +13,14 @@ const expected = `apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/managed-by: kustomize-v444.333.222
+    app.kubernetes.io/managed-by: kustomize-(test)
   name: myService
 spec:
   ports:
   - port: 7002
 `
 
-// This test may failed when running on package tests using the go command because `v444.333.222` is set on makefile.
+// This test may fail when running on package tests using the go command because `(test)` is set on makefile.
 func TestAddManagedbyLabel(t *testing.T) {
 	tests := []struct {
 		kustFile      string
