@@ -258,7 +258,7 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 	// try to remove the contents before first "---" because
 	// helm may produce messages to stdout before it
 	stdoutStr := string(stdout)
-	if idx := strings.Index(stdoutStr, "\n---\n"); idx != -1 {
+	if idx := strings.Index(stdoutStr, "---"); idx != -1 {
 		return p.h.ResmapFactory().NewResMapFromBytes([]byte(stdoutStr[idx:]))
 	}
 	return nil, err
