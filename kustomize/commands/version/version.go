@@ -40,7 +40,7 @@ func NewCmdVersion(w io.Writer) *cobra.Command {
 	}
 
 	versionCmd.Flags().BoolVar(&o.Short, "short", false, "short form")
-	_ = versionCmd.Flags().MarkDeprecated("short", "and will be removed in the future. The --short output will become the default.")
+	_ = versionCmd.Flags().MarkDeprecated("short", "and will be removed in the future.")
 	versionCmd.Flags().StringVarP(&o.Output, "output", "o", o.Output, "One of 'yaml' or 'json'.")
 	return &versionCmd
 }
@@ -67,10 +67,7 @@ func (o *Options) Run() error {
 		if o.Short {
 			fmt.Fprintln(o.Writer, provenance.GetProvenance().Short())
 		} else {
-			fmt.Fprintln(os.Stderr, "WARNING: This version information is deprecated and "+
-				"will be replaced with the output from kustomize version --short. "+
-				"Use --output=yaml|json to get the full version.")
-			fmt.Fprintln(o.Writer, provenance.GetProvenance().Full())
+			fmt.Fprintln(o.Writer, provenance.GetProvenance().Semver())
 		}
 	case "yaml":
 		marshalled, err := yaml.Marshal(provenance.GetProvenance())

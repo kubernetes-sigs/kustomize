@@ -65,14 +65,14 @@ func GetProvenance() Provenance {
 	return p
 }
 
-// Full returns the full provenance stamp.
-func (v Provenance) Full() string {
-	return fmt.Sprintf("%+v", v)
-}
-
-// Short returns the semantic version.
+// Short returns the shortened provenance stamp.
 func (v Provenance) Short() string {
-	return v.Semver()
+	return fmt.Sprintf(
+		"%v",
+		Provenance{
+			Version:   v.Version,
+			BuildDate: v.BuildDate,
+		})
 }
 
 // Semver returns the semantic version of kustomize.
