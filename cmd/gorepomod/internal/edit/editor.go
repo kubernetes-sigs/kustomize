@@ -34,7 +34,7 @@ func (e *Editor) run(args ...string) error {
 	if e.doIt {
 		out, err := c.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("failed to run go mod command in %s: %s (stdout=%q)", e.module.ShortName(), err.Error(), out)
+			return fmt.Errorf("failed to run go mod command in %s: %w (stdout=%q)", e.module.ShortName(), err, out)
 		}
 	} else {
 		fmt.Printf("in %-60s; %s\n", c.Dir, c.String())
