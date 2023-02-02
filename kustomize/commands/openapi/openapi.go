@@ -7,8 +7,8 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/openapi/fetch"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/openapi/info"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/openapi/fetch"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/openapi/info"
 )
 
 // NewCmdOpenAPI makes a new openapi command.
