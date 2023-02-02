@@ -11,11 +11,11 @@ import (
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resource"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/add"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/fix"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/listbuiltin"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/remove"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/set"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit/add"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit/fix"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit/listbuiltin"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit/remove"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit/set"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
