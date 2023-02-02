@@ -153,7 +153,7 @@ functions-examples-all:
 	done
 
 test-go-mod:
-	./hack/for-each-module.sh "\$$KUSTOMIZE_ROOT/hack/with-unpinned-kust-dev.sh 'go mod tidy -v'"
+	./hack/for-each-module.sh "go mod tidy -v"
 
 .PHONY:
 verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
