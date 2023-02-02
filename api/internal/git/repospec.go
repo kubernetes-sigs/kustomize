@@ -370,8 +370,9 @@ func trimPrefixIgnoreCase(s, prefix string) (string, bool) {
 func findPathSeparator(hostPath string, acceptSCP bool) int {
 	sepIndex := strings.Index(hostPath, pathSeparator)
 	if acceptSCP {
+		colonIndex := strings.Index(hostPath, ":")
 		// The colon acts as a delimiter in scp-style ssh URLs only if not prefixed by '/'.
-		if colonIndex := strings.Index(hostPath, ":"); colonIndex > 0 && colonIndex < sepIndex {
+		if sepIndex == -1 || (colonIndex > 0 && colonIndex < sepIndex) {
 			sepIndex = colonIndex
 		}
 	}
