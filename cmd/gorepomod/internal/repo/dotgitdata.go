@@ -45,8 +45,9 @@ func (dg *DotGitData) AbsPath() string {
 
 // NewDotGitDataFromPath wants the incoming path to hold dotGit
 // E.g.
-//   ~/gopath/src/sigs.k8s.io/kustomize
-//   ~/gopath/src/github.com/monopole/gorepomod
+//
+//	~/gopath/src/sigs.k8s.io/kustomize
+//	~/gopath/src/github.com/monopole/gorepomod
 func NewDotGitDataFromPath(path string) (*DotGitData, error) {
 	if !utils.DirExists(filepath.Join(path, dotGitFileName)) {
 		return nil, fmt.Errorf(
@@ -126,7 +127,7 @@ func (dg *DotGitData) checkModules(modules []*protoModule) error {
 			}
 		} else {
 			// Do the relative path and short name make sense?
-			if !strings.HasSuffix(pm.PathToGoMod(), string(shortName)) {
+			if !strings.HasPrefix(string(shortName), "plugin/") && !strings.HasSuffix(pm.PathToGoMod(), string(shortName)) {
 				return fmt.Errorf(
 					"in %q, the module name %q doesn't match the file's pathToGoMod %q",
 					file, shortName, pm.PathToGoMod())
