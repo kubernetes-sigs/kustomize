@@ -20,7 +20,7 @@ This tool is sponsored by [sig-cli] ([KEP]).
 
 ## kubectl integration
 
-To find the kustomize version embedded in recently version of kubectl, run `kubectl version`:
+To find the kustomize version embedded in recent versions of kubectl, run `kubectl version`:
 
 ```sh
 > kubectl version --short --client
