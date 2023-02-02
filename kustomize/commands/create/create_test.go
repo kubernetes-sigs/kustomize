@@ -9,7 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 

@@ -20,6 +20,14 @@ This tool is sponsored by [sig-cli] ([KEP]).
 
 ## kubectl integration
 
+To find the kustomize version embedded in recently version of kubectl, run `kubectl version`:
+
+```sh
+> kubectl version --short --client
+Client Version: v1.26.0
+Kustomize Version: v4.5.7
+```
+
 The kustomize build flow at [v2.0.3] was added
 to [kubectl v1.14][kubectl announcement].  The kustomize
 flow in kubectl remained frozen at v2.0.3 until kubectl v1.21,

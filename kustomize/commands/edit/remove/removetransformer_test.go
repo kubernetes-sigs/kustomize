@@ -6,7 +6,7 @@ package remove
 import (
 	"testing"
 
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/edit/remove_test"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit/remove_test"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
