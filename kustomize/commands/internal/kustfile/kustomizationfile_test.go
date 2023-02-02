@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v4/commands/internal/testutils"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 

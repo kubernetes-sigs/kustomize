@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	loctest "sigs.k8s.io/kustomize/api/testutils/localizertest"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/localize"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/localize"
 )
 
 const deployment = `apiVersion: apps/v1
