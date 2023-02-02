@@ -659,6 +659,26 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				RepoPath: "kubernetes-sigs/kustomize",
 			},
 		},
+		{
+			name:      "scp format gist url",
+			input:     "git@gist.github.com:bc7947cb727d7f9217e7862d961a1ffd.git",
+			cloneSpec: "git@gist.github.com:bc7947cb727d7f9217e7862d961a1ffd.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:     "git@gist.github.com:",
+				RepoPath: "bc7947cb727d7f9217e7862d961a1ffd.git",
+			},
+		},
+		{
+			name:      "https gist url",
+			input:     "https://gist.github.com/bc7947cb727d7f9217e7862d961a1ffd.git",
+			cloneSpec: "https://gist.github.com/bc7947cb727d7f9217e7862d961a1ffd.git",
+			absPath:   notCloned.String(),
+			repoSpec: RepoSpec{
+				Host:     "https://gist.github.com/",
+				RepoPath: "bc7947cb727d7f9217e7862d961a1ffd.git",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
