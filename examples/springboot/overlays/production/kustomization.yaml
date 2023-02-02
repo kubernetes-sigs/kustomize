@@ -1,7 +1,7 @@
 resources:
 - ../../base
-patchesStrategicMerge:
-- patch.yaml
-- healthcheck_patch.yaml
-- memorylimit_patch.yaml
+patches:
+- path: patch.yaml
+- path: healthcheck_patch.yaml
+- path: memorylimit_patch.yaml
 namePrefix: production-
