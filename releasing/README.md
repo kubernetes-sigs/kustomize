@@ -73,6 +73,9 @@ We use the `release-blocker` tag to track issues that need to be solved before t
 It is also a good idea to scan any [untriaged issues](https://github.com/kubernetes-sigs/kustomize/issues?q=is%3Aissue+is%3Aopen+label%3Aneeds-triage) for potential blockers we haven't labelled yet before proceeding.
 
 ### Consider fetching new OpenAPI data
+
+Ideally, Kustomize's embedded openapi data would cover a wide range of Kubernetes releases. But today, we only embed a specific version. This means updating that version can be disruptive to people who still use older Kubernetes versions and depend on API versions that were removed in later releases. However, by remaining out of date, we will not support GVKs introduced in more recent releases. So far, we have leaned in favour of the older versions, because some removed GVs are for very popular APIs. This should be constantly reevaluated until a better solution is in place. See issue https://github.com/kubernetes-sigs/kustomize/issues/5016.
+
 The Kubernetes OpenAPI data changes no more frequently than once per quarter.
 You can check the current builtin versions that kustomize is using with the
 following command.
@@ -105,10 +108,7 @@ source releasing/helpers.sh
 #### Authenticate to github using [gh](https://github.com/cli/cli) (version [1.8.1](https://github.com/cli/cli/releases/tag/v1.8.1) or higher).
 
 ```
-# Use your own token
-GITHUB_TOKEN=deadbeefdeadbeef
-
-echo $GITHUB_TOKEN | gh auth login --scopes repo --with-token
+gh auth login
 ```
 
 ## Release `kyaml`
@@ -158,12 +158,7 @@ Undraft the release on the [kustomize repo release page]:
 #### Pin to the most recent kyaml
 
 ```
-gorepomod pin kyaml --doIt &&
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/prefixtransformer/go.mod &&
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/suffixtransformer/go.mod &&
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/replicacounttransformer/go.mod &&
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/patchtransformer/go.mod &&
-go mod edit -require=sigs.k8s.io/kustomize/kyaml@$versionKyaml plugin/builtin/patchjson6902transformer/go.mod
+gorepomod pin kyaml --doIt
 ```
 
 Create the PR:
@@ -174,20 +169,9 @@ createBranch pinToKyaml "Update kyaml to $versionKyaml"
 createPr
 ```
 
-Run local tests while GH runs tests in the cloud:
-```
-testKustomizeRepo
-```
+Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
-Wait for tests to pass, then merge the PR:
-```
-gh pr status
-```
-```
-gh pr merge -m
-```
-
-Get back on master and do paranoia test:
+Once the PR merges, get back on master and do paranoia test:
 ```
 refreshMaster &&
 testKustomizeRepo
@@ -238,20 +222,9 @@ createBranch pinToCmdConfig "Update cmd/config to $versionCmdConfig" &&
 createPr
 ```
 
-Run local tests while GH runs tests in the cloud:
-```
-testKustomizeRepo
-```
+Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
-Wait for tests to pass, then merge the PR:
-```
-gh pr status  # rinse, repeat
-```
-```
-gh pr merge -m
-```
-
-Get back on master and do paranoia test:
+Once the PR merges, get back on master and do paranoia test:
 ```
 refreshMaster &&
 testKustomizeRepo
@@ -287,6 +260,14 @@ Undraft the release on the [kustomize repo release page]:
 
 ## Release the kustomize CLI
 
+#### For major releases: increment the module version
+
+Update `module sigs.k8s.io/kustomize/kustomize/vX` in `kustomize/go.mod` to the version you're about to release, and then update all the `require` statements across the module to match.
+
+Search for uses of the version number across the codebase and update them as needed.
+
+Example: https://github.com/kubernetes-sigs/kustomize/pull/5021
+
 #### Pin to the new API
 
 ```
@@ -299,20 +280,9 @@ createBranch pinToApi "Update api to $versionApi" &&
 createPr
 ```
 
-Run local tests while GH runs tests in the cloud:
-```
-testKustomizeRepo
-```
+Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
-Wait for tests to pass, then merge the PR:
-```
-gh pr status  # rinse, repeat
-```
-```
-gh pr merge -m
-```
-
-Get back on master and do paranoia test:
+Once the PR merges, get back on master and do paranoia test:
 ```
 refreshMaster &&
 testKustomizeRepo
@@ -351,29 +321,38 @@ Undraft the release on the [kustomize repo release page]:
 
 * Visit the [release page] and edit the release notes as desired.
 
-## Update example test target
+## Return the repo to development mode
+
+Go back into development mode, where all modules depend on in-repo code:
+
+```
+gorepomod unpin api         --doIt &&
+gorepomod unpin cmd/config  --doIt &&
+gorepomod unpin kyaml       --doIt
+```
 
 [Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
 
 Edit the `prow-presubmit-target` in the [Makefile]
-to test examples against your new release.
+to test examples against your new release. For example:
 
 ```
-sed -i "" "s/LATEST_V4_RELEASE=.*/LATEST_V4_RELEASE=v4.3.0/" Makefile
+sed -i "" "s/LATEST_V5_RELEASE=.*/LATEST_V5_RELEASE=v4.3.0/" Makefile
 ```
+
+Create the PR:
 ```
-createBranch updateProwExamplesTarget "Test examples against latest release" &&
+createBranch unpinEverything "Back to development mode; unpin the modules" &&
 createPr
 ```
 
-Wait for tests to pass, then merge the PR:
-```
-gh pr status  # rinse, repeat
-```
-```
-gh pr merge -m
-```
+Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
+Once the PR merges, get back on master and do paranoia test:
+```
+refreshMaster &&
+testKustomizeRepo
+```
 
 ## Publish Official Docker Image
 
