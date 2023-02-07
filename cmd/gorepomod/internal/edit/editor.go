@@ -34,7 +34,7 @@ func (e *Editor) run(args ...string) error {
 	if e.doIt {
 		out, err := c.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("%s out=%q", err.Error(), out)
+			return fmt.Errorf("failed to run go mod command in %s: %w (stdout=%q)", e.module.ShortName(), err, out)
 		}
 	} else {
 		fmt.Printf("in %-60s; %s\n", c.Dir, c.String())
@@ -57,6 +57,8 @@ func (e *Editor) Tidy() error {
 func (e *Editor) Pin(target misc.LaModule, oldV, newV semver.SemVer) error {
 	err := e.run(
 		"edit",
+		"-dropreplace="+target.ImportPath(),
+		"-dropreplace="+target.ImportPath()+"@"+oldV.String(),
 		"-require="+target.ImportPath()+"@"+newV.String(),
 	)
 	if err != nil {

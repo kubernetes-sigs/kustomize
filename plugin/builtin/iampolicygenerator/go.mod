@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/plugin/builtin/iampolicypgenerator
+module sigs.k8s.io/kustomize/plugin/builtin/iampolicygenerator
 
 go 1.19
 
