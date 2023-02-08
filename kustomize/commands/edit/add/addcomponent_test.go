@@ -38,7 +38,7 @@ func TestAddComponentHappyPath(t *testing.T) {
 }
 
 func TestAddComponentAlreadyThere(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
@@ -52,7 +52,7 @@ func TestAddComponentAlreadyThere(t *testing.T) {
 }
 
 func TestAddKustomizationFileAsComponent(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(componentFileName, []byte(componentFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
@@ -63,7 +63,7 @@ func TestAddKustomizationFileAsComponent(t *testing.T) {
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
 	require.NoError(t, err)
-	assert.NotContains(t, string(content), componentFileName)
+	assert.Contains(t, string(content), componentFileName)
 }
 
 func TestAddComponentNoArgs(t *testing.T) {

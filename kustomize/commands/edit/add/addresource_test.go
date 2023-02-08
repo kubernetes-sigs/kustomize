@@ -57,7 +57,7 @@ replacements:
 }
 
 func TestAddResourceAlreadyThere(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
@@ -71,7 +71,7 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 }
 
 func TestAddKustomizationFileAsResource(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
+	fSys := filesys.MakeEmptyDirInMemory()
 	err := fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
 	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
@@ -83,7 +83,7 @@ func TestAddKustomizationFileAsResource(t *testing.T) {
 	content, err := testutils_test.ReadTestKustomization(fSys)
 	assert.NoError(t, err)
 
-	assert.NotContains(t, string(content), resourceFileName)
+	assert.Contains(t, string(content), resourceFileName)
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
