@@ -127,7 +127,7 @@ func (dg *DotGitData) checkModules(modules []*protoModule) error {
 			}
 		} else {
 			// Do the relative path and short name make sense?
-			if !strings.HasPrefix(string(shortName), "plugin/") && !strings.HasSuffix(pm.PathToGoMod(), string(shortName)) {
+			if !strings.HasSuffix(pm.PathToGoMod(), string(shortName)) {
 				return fmt.Errorf(
 					"in %q, the module name %q doesn't match the file's pathToGoMod %q",
 					file, shortName, pm.PathToGoMod())
