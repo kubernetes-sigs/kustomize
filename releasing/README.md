@@ -337,7 +337,7 @@ Edit the `prow-presubmit-target` in the [Makefile]
 to test examples against your new release. For example:
 
 ```
-sed -i "" "s/LATEST_V5_RELEASE=.*/LATEST_V5_RELEASE=v4.3.0/" Makefile
+sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=v5.0.0/" Makefile
 ```
 
 Create the PR:
