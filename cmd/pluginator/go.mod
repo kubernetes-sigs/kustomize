@@ -36,5 +36,3 @@ require (
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../api
