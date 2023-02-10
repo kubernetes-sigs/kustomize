@@ -196,7 +196,8 @@ func (rf *Factory) inlineAnyEmbeddedLists(
 		}
 		items, ok := m["items"]
 		if !ok {
-			// treat as an empty list
+			// list is empty nothing to replace node with
+			result = append(result, n0)
 			continue
 		}
 		slice, ok := items.([]interface{})
