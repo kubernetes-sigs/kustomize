@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -53,7 +54,7 @@ func TestScopeFlag(t *testing.T) {
 		"base",
 	}, kustomizations)
 
-	cmd := localize.NewCmdLocalize(actual, new(bytes.Buffer))
+	cmd := localize.NewCmdLocalize(actual)
 	require.NoError(t, cmd.Flags().Set("scope", testDir.String()))
 	err := cmd.RunE(cmd, []string{
 		testDir.Join("target"),
@@ -85,7 +86,11 @@ func TestOptionalArgs(t *testing.T) {
 			loctest.SetWorkingDir(t, target)
 
 			buffy := new(bytes.Buffer)
-			cmd := localize.NewCmdLocalize(actual, buffy)
+			log.SetOutput(buffy)
+			defer func() {
+				log.SetOutput(os.Stderr)
+			}()
+			cmd := localize.NewCmdLocalize(actual)
 			err := cmd.RunE(cmd, args)
 			require.NoError(t, err)
 
@@ -96,7 +101,7 @@ func TestOptionalArgs(t *testing.T) {
 
 			successMsg := fmt.Sprintf(`SUCCESS: localized "." to directory %s
 `, dst)
-			require.Equal(t, successMsg, buffy.String())
+			require.Contains(t, buffy.String(), successMsg)
 		})
 	}
 }
@@ -109,7 +114,11 @@ func TestOutput(t *testing.T) {
 	expected, actual, target := loctest.PrepareFs(t, nil, kustomization)
 
 	buffy := new(bytes.Buffer)
-	cmd := localize.NewCmdLocalize(actual, buffy)
+	log.SetOutput(buffy)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+	cmd := localize.NewCmdLocalize(actual)
 	err := cmd.RunE(cmd, []string{
 		target.String(),
 		target.Join("dst"),
@@ -121,11 +130,7 @@ func TestOutput(t *testing.T) {
 
 	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
 `, target.String(), target.Join("dst"))
-	require.Equal(t, successMsg, buffy.String())
-
-	const msg = "Check that cmd log output is hooked to buffy."
-	log.Print(msg)
-	require.Contains(t, buffy.String(), msg)
+	require.Contains(t, buffy.String(), successMsg)
 }
 
 func TestAlpha(t *testing.T) {
@@ -133,7 +138,7 @@ func TestAlpha(t *testing.T) {
 		"kustomization.yaml": `namePrefix: test-`,
 	})
 
-	cmd := localize.NewCmdLocalize(actual, new(bytes.Buffer))
+	cmd := localize.NewCmdLocalize(actual)
 	require.Contains(t, cmd.Short, "[Alpha]")
 	require.Contains(t, cmd.Long, "[Alpha]")
 }
@@ -143,7 +148,7 @@ func TestTooManyArgs(t *testing.T) {
 		"kustomization.yaml": `namePrefix: test-`,
 	})
 
-	cmd := localize.NewCmdLocalize(actual, new(bytes.Buffer))
+	cmd := localize.NewCmdLocalize(actual)
 	err := cmd.Args(cmd, []string{
 		target.String(),
 		target.Join("dst"),

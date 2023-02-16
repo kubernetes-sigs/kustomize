@@ -54,7 +54,7 @@ See https://sigs.k8s.io/kustomize
 		create.NewCmdCreate(fSys, pvd.GetResourceFactory()),
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
-		localize.NewCmdLocalize(fSys, stdOut),
+		localize.NewCmdLocalize(fSys),
 	)
 	configcobra.AddCommands(c, konfig.ProgramName)
 
