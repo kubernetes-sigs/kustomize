@@ -18,7 +18,7 @@ type Gvk struct {
 	Kind    string `json:"kind,omitempty" yaml:"kind,omitempty"`
 	// isClusterScoped is true if the object is known, per the openapi
 	// data in use, to be cluster scoped, and false otherwise.
-	isClusterScoped bool
+	isClusterScoped bool `json:"-"`
 }
 
 func NewGvk(g, v, k string) Gvk {
