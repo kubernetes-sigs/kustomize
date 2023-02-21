@@ -6,6 +6,7 @@ package localizer_test
 import (
 	"bytes"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,6 +38,9 @@ func TestLocalLoadNewAndCleanup(t *testing.T) {
 
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
 	// typical setup
 	ldr, args, err := NewLoader("a", "/", "/newDir", fSys)
 	req.NoError(err)
@@ -223,6 +227,9 @@ func TestNewLocLoaderFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var buf bytes.Buffer
 			log.SetOutput(&buf)
+			defer func() {
+				log.SetOutput(os.Stderr)
+			}()
 
 			_, _, err := NewLoader(params.target, params.scope, params.dest, makeMemoryFs(t))
 			require.Error(t, err)

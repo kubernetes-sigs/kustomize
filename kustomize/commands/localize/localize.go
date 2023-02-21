@@ -4,8 +4,6 @@
 package localize
 
 import (
-	"fmt"
-	"io"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -26,8 +24,7 @@ type flags struct {
 }
 
 // NewCmdLocalize returns a new localize command.
-func NewCmdLocalize(fs filesys.FileSystem, writer io.Writer) *cobra.Command {
-	log.SetOutput(writer)
+func NewCmdLocalize(fs filesys.FileSystem) *cobra.Command {
 	var f flags
 	cmd := &cobra.Command{
 		Use:   "localize [target [destination]]",
@@ -65,9 +62,8 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			successMsg := fmt.Sprintf("SUCCESS: localized %q to directory %s\n", args.target, dst)
-			_, err = writer.Write([]byte(successMsg))
-			return errors.Wrap(err)
+			log.Printf("SUCCESS: localized %q to directory %s\n", args.target, dst)
+			return nil
 		},
 	}
 	// no shorthand to avoid conflation with other flags
