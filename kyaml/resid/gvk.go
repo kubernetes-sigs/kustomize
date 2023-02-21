@@ -122,13 +122,10 @@ func (x Gvk) stableSortString() string {
 
 // ApiVersion returns the combination of Group and Version
 func (x Gvk) ApiVersion() string {
-	var sb strings.Builder
 	if x.Group != "" {
-		sb.WriteString(x.Group)
-		sb.WriteString("/")
+		return x.Group + "/" + x.Version
 	}
-	sb.WriteString(x.Version)
-	return sb.String()
+	return x.Version
 }
 
 // StringWoEmptyField returns a string representation of the GVK. Non-exist
