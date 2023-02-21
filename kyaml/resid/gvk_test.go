@@ -4,6 +4,7 @@
 package resid
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -126,6 +127,23 @@ func TestApiVersion(t *testing.T) {
 		{Gvk{Group: "g", Version: "v", Kind: "k"}, "g/v"},
 	} {
 		assert.Equal(t, hey.exp, hey.x.ApiVersion())
+	}
+}
+
+func BenchmarkApiVersion(b *testing.B) {
+	for i, bench := range []Gvk{
+		{Kind: "k"},
+		{Version: "v", Kind: "k"},
+		{Group: "g", Kind: "k"},
+		{Group: "g", Version: "v"},
+		{Group: "g", Version: "v", Kind: "k"},
+		{Group: "bitnami.com", Version: "v1alpha1", Kind: "SealedSecret"},
+	} {
+		b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_ = bench.ApiVersion()
+			}
+		})
 	}
 }
 
