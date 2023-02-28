@@ -213,8 +213,8 @@ func fieldRetrievalError(fieldPath string, isCreate bool) string {
 	return fmt.Sprintf("unable to find field %q in replacement target", fieldPath)
 }
 
-func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
-	value = value.Copy()
+func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, ovalue *yaml.RNode) error {
+	value := ovalue.Copy()
 	if options != nil && options.Delimiter != "" {
 		if targetField.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
@@ -222,6 +222,15 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 		tv := strings.Split(targetField.YNode().Value, options.Delimiter)
 		v := yaml.GetValue(value)
 		// TODO: Add a way to remove an element
+
+		if options.Match != "" {
+			for i, s := range tv {
+				if s == options.Match {
+					options.Index = i
+					break
+				}
+			}
+		}
 		switch {
 		case options.Index < 0: // prefix
 			tv = append([]string{v}, tv...)

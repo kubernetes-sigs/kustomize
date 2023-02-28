@@ -1184,6 +1184,82 @@ spec:
 `,
 			expectedErr: "options.index -1 is out of bounds for value group2",
 		},
+		"partial string replacement with match value": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/target
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 0
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths:
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      match: target
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/group2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+		},
 		"create": {
 			input: `apiVersion: v1
 kind: Pod
@@ -2779,7 +2855,7 @@ spec:
           name: myingress
         fieldPaths:
           - spec.tls.0.hosts.0
-          - spec.tls.0.secretName          
+          - spec.tls.0.secretName
         options:
           create: true
 `,
