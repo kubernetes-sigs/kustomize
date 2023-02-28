@@ -94,3 +94,13 @@ func TestAddResourceNoArgs(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, "must specify a resource file", err.Error())
 }
+
+func TestAddResourceFileNotFound(t *testing.T) {
+	fSys := filesys.MakeEmptyDirInMemory()
+
+	cmd := newCmdAddResource(fSys)
+	args := []string{resourceFileName}
+
+	err := cmd.RunE(cmd, args)
+	assert.EqualError(t, err, resourceFileName+" has no match: must build at directory: not a valid directory: '"+resourceFileName+"' doesn't exist")
+}
