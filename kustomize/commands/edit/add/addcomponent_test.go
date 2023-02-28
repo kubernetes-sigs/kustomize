@@ -73,3 +73,13 @@ func TestAddComponentNoArgs(t *testing.T) {
 	err := cmd.Execute()
 	assert.EqualError(t, err, "must specify a component file")
 }
+
+func TestAddComponentFileNotFound(t *testing.T) {
+	fSys := filesys.MakeEmptyDirInMemory()
+
+	cmd := newCmdAddComponent(fSys)
+	args := []string{componentFileName}
+
+	err := cmd.RunE(cmd, args)
+	assert.EqualError(t, err, componentFileName+" has no match: must build at directory: not a valid directory: '"+componentFileName+"' doesn't exist")
+}
