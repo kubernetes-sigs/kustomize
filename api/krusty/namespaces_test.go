@@ -472,28 +472,28 @@ vars:
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 - name: elasticsearch-test-protocol
   objref:
     kind: Service
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: spec.ports[0].protocol
+    fieldPath: spec.ports[0].protocol
 - name: elasticsearch-dev-service-name
   objref:
     kind: Service
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 - name: elasticsearch-dev-protocol
   objref:
     kind: Service
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: spec.ports[0].protocol
+    fieldPath: spec.ports[0].protocol
 `
 
 const namespaceNeedInVarDevResources string = `
@@ -643,14 +643,14 @@ vars:
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 - name: elasticsearch-dev-protocol
   objref:
     kind: Service
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: spec.ports[0].protocol
+    fieldPath: spec.ports[0].protocol
 `
 
 const namespaceNeedInVarTestFolder string = `
@@ -663,14 +663,14 @@ vars:
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 - name: elasticsearch-test-protocol
   objref:
     kind: Service
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: spec.ports[0].protocol
+    fieldPath: spec.ports[0].protocol
 `
 
 // TestVariablesAmbiguousWorkaround demonstrates a possible workaround
@@ -705,7 +705,7 @@ vars:
     namespace: test
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 - name: elasticsearch-test-protocol
   objref:
     kind: Service
@@ -713,7 +713,7 @@ vars:
     namespace: test
     apiVersion: v1
   fieldref:
-    fieldpath: spec.ports[0].protocol
+    fieldPath: spec.ports[0].protocol
 - name: elasticsearch-dev-service-name
   objref:
     kind: Service
@@ -721,7 +721,7 @@ vars:
     namespace: dev
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 - name: elasticsearch-dev-protocol
   objref:
     kind: Service
@@ -729,7 +729,7 @@ vars:
     namespace: dev
     apiVersion: v1
   fieldref:
-    fieldpath: spec.ports[0].protocol
+    fieldPath: spec.ports[0].protocol
 `
 
 // TestVariablesDisambiguatedWithNamespace demonstrates that adding the namespace

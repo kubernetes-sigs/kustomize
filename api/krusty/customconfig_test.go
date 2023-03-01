@@ -20,13 +20,13 @@ vars:
     kind: Giraffe
     name: april
   fieldref:
-    fieldpath: spec.diet
+    fieldPath: spec.diet
 - name: KOKO_DIET
   objref:
     kind: Gorilla
     name: koko
   fieldref:
-    fieldpath: spec.diet
+    fieldPath: spec.diet
 resources:
 - animalPark.yaml
 - giraffes.yaml

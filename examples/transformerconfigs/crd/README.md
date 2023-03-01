@@ -106,7 +106,7 @@ vars:
     name: bee
     apiVersion: v1beta1
   fieldref:
-    fieldpath: spec.action
+    fieldPath: spec.action
 EOF
 ```
 

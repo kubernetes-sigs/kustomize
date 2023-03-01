@@ -23,7 +23,7 @@ vars:
     kind: Pod
     name: clown
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 
 	th.WriteF("pod.yaml", `
@@ -74,7 +74,7 @@ vars:
     kind: Pod
     name: kelley
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base1/pod.yaml", `
 apiVersion: v1
@@ -104,7 +104,7 @@ vars:
     kind: Pod
     name: grimaldi
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base2/pod.yaml", `
 apiVersion: v1
@@ -150,7 +150,7 @@ vars:
     kind: Pod
     name: kelley
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base1/pod.yaml", `
 apiVersion: v1
@@ -180,7 +180,7 @@ vars:
     kind: Pod
     name: grimaldi
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base2/pod.yaml", `
 apiVersion: v1
@@ -293,7 +293,7 @@ vars:
     kind: Pod
     name: myServerPod
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base/pod.yaml", `
 apiVersion: v1
@@ -309,12 +309,12 @@ spec:
           value: $(POD_NAME)
 `)
 	th.WriteK("o1", `
-nameprefix: p1-
+namePrefix: p1-
 resources:
 - ../base
 `)
 	th.WriteK("o2", `
-nameprefix: p2-
+namePrefix: p2-
 resources:
 - ../base
 `)
@@ -373,7 +373,7 @@ vars:
      name: cockroachdb
      apiVersion: apps/v1beta1
    fieldref:
-     fieldpath: spec.template.spec.containers[0].ports[1].containerPort
+     fieldPath: spec.template.spec.containers[0].ports[1].containerPort
 `)
 	th.WriteF("service.yaml", `
 apiVersion: v1
@@ -462,11 +462,11 @@ vars:
     name: kustomize-vars
     apiVersion: v1
   fieldref:
-    fieldpath: data.DBT_TARGET
+    fieldPath: data.DBT_TARGET
 - name: SUSPENDED
   objref: *config-map-ref
   fieldref:
-    fieldpath: data.SUSPENDED
+    fieldPath: data.SUSPENDED
 `)
 	th.WriteF("workflow.yaml", `
 apiVersion: argoproj.io/v1alpha1
@@ -563,28 +563,28 @@ vars:
         name: cockroachdb-public
         apiVersion: v1
    fieldref:
-        fieldpath: metadata.name
+        fieldPath: metadata.name
  - name: CDB_STATEFULSET_NAME
    objref:
         kind: StatefulSet
         name: cockroachdb
         apiVersion: apps/v1beta1
    fieldref:
-        fieldpath: metadata.name
+        fieldPath: metadata.name
  - name: CDB_HTTP_PORT
    objref:
         kind: StatefulSet
         name: cockroachdb
         apiVersion: apps/v1beta1
    fieldref:
-        fieldpath: spec.template.spec.containers[0].ports[1].containerPort
+        fieldPath: spec.template.spec.containers[0].ports[1].containerPort
  - name: CDB_STATEFULSET_SVC
    objref:
         kind: Service
         name: cockroachdb
         apiVersion: v1
    fieldref:
-        fieldpath: metadata.name
+        fieldPath: metadata.name
 
  - name: TEST_CONFIG_MAP
    objref:
@@ -592,7 +592,7 @@ vars:
         name: test-config-map
         apiVersion: v1
    fieldref:
-        fieldpath: metadata.name`)
+        fieldPath: metadata.name`)
 	th.WriteF("base/cronjob.yaml", `
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -1121,7 +1121,7 @@ vars:
     kind: Deployment
     name: nginxDep
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("deployment.yaml", `
 apiVersion: apps/v1
@@ -1179,7 +1179,7 @@ vars:
     kind: Deployment
     name: nginx
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
@@ -1240,7 +1240,7 @@ spec:
     targetPort: http
 `)
 	th.WriteK("overlay", `
-nameprefix: kustomized-
+namePrefix: kustomized-
 resources:
 - ../base
 `)
@@ -1455,7 +1455,7 @@ vars:
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 
 `)
 	th.WriteF("base/dev/elasticsearch-dev-service.yml", `
@@ -1495,7 +1495,7 @@ vars:
     name: elasticsearch
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base/test/elasticsearch-test-service.yml", `
 apiVersion: apps/v1
@@ -1598,7 +1598,7 @@ vars:
     name: nfs-server-service
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 	th.WriteF("base/pv_pvc.yaml", `
 apiVersion: v1
@@ -1905,7 +1905,7 @@ spec:
     readOnly: false
 `)
 	th.WriteK("overlay", `
-nameprefix: kustomized-
+namePrefix: kustomized-
 resources:
 - ../base
 `)
@@ -2224,7 +2224,7 @@ vars:
     name: theConfigMap
     apiVersion: v1
   fieldref:
-    fieldpath: data.waterway
+    fieldPath: data.waterway
 
 commonAnnotations:
   river: $(SOMERIVER)

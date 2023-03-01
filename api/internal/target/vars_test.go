@@ -57,7 +57,7 @@ vars:
       name: nobelPrize
       apiVersion: v7
     fieldref:
-      fieldpath: some.arbitrary.path
+      fieldPath: some.arbitrary.path
   - name: BIRD
     objref:
       kind: Service
@@ -93,7 +93,7 @@ vars:
       name: nobelPrize
       apiVersion: v7
     fieldref:
-      fieldpath: some.arbitrary.path
+      fieldPath: some.arbitrary.path
   - name: BIRD
     objref:
       kind: Service
@@ -151,7 +151,7 @@ vars:
       name: nobelPrize
       apiVersion: v7
     fieldref:
-      fieldpath: some.arbitrary.path
+      fieldPath: some.arbitrary.path
   - name: BIRD
     objref:
       kind: Service

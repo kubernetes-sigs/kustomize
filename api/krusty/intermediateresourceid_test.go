@@ -258,7 +258,7 @@ vars:
     name: xql-secret
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 
 	th.WriteF("app/resources/xql/xql-one/config/xql-one-secret.env", `
@@ -281,7 +281,7 @@ vars:
     name: xql-secret
     apiVersion: v1
   fieldref:
-    fieldpath: metadata.name
+    fieldPath: metadata.name
 `)
 
 	th.WriteF("app/resources/xql/xql-zero/config/xql-zero-secret.env", `

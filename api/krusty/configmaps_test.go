@@ -266,8 +266,9 @@ radon
 		t.Fatalf("expected an error")
 	}
 	assert.Contains(t, err.Error(),
-		"invalid Kustomization: error converting YAML to JSON: yaml: unmarshal errors:\n"+
-			"  line 13: key \"literals\" already set in map\n  line 18: key \"files\" already set in map")
+		"invalid Kustomization: yaml: unmarshal errors:\n"+
+			"  line 12: mapping key \"literals\" already defined at line 9\n"+
+			"  line 17: mapping key \"files\" already defined at line 15")
 }
 
 func TestIssue3393(t *testing.T) {

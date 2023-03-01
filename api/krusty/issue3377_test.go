@@ -37,14 +37,14 @@ vars:
     kind: Ingress
     name: service-a
   fieldref:
-    fieldpath: spec.rules[0].host
+    fieldPath: spec.rules[0].host
 - name: SERVICE_B_DNS_NAME
   objref:
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     name: service-b
   fieldref:
-    fieldpath: spec.rules[0].host
+    fieldPath: spec.rules[0].host
 `)
 
 	th.WriteF("service-a.yaml", `

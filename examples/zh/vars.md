@@ -113,7 +113,7 @@ vars:
       name: wordpress
       apiVersion: v1
     fieldref:
-      fieldpath: metadata.name
+      fieldPath: metadata.name
   - name: MYSQL_SERVICE
     objref:
       kind: Service

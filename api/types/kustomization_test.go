@@ -278,7 +278,8 @@ unknown: foo`)
 	if err == nil {
 		t.Fatalf("expect an error")
 	}
-	expect := "invalid Kustomization: error unmarshaling JSON: while decoding JSON: json: unknown field \"unknown\""
+	expect := "invalid Kustomization: yaml: unmarshal errors:\n" +
+		"  line 4: field unknown not found in type types.Kustomization"
 	if err.Error() != expect {
 		t.Fatalf("expect %v but got: %v", expect, err.Error())
 	}

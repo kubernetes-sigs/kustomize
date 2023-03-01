@@ -263,7 +263,8 @@ suffix: invalid`,
 
 	_, err := Run("/a", "", "", fSysTest)
 	require.EqualError(t, err,
-		`unable to localize target "/a": invalid Kustomization: error unmarshaling JSON: while decoding JSON: json: unknown field "suffix"`)
+		`unable to localize target "/a": invalid Kustomization: yaml: unmarshal errors:
+  line 2: field suffix not found in type types.Kustomization`)
 
 	checkFSys(t, fSysExpected, fSysTest)
 }
