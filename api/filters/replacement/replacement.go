@@ -216,30 +216,9 @@ func fieldRetrievalError(fieldPath string, isCreate bool) string {
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, ovalue *yaml.RNode) error {
 	value := ovalue.Copy()
 	if options != nil && options.Delimiter != "" {
-		if targetField.YNode().Kind != yaml.ScalarNode {
-			return fmt.Errorf("delimiter option can only be used with scalar nodes")
+		if err := setWithDelimiter(options, targetField, value); err != nil {
+			return err
 		}
-		tv := strings.Split(targetField.YNode().Value, options.Delimiter)
-		v := yaml.GetValue(value)
-		// TODO: Add a way to remove an element
-
-		if options.Match != "" {
-			for i, s := range tv {
-				if s == options.Match {
-					options.Index = i
-					break
-				}
-			}
-		}
-		switch {
-		case options.Index < 0: // prefix
-			tv = append([]string{v}, tv...)
-		case options.Index >= len(tv): // suffix
-			tv = append(tv, v)
-		default: // replace an element
-			tv[options.Index] = v
-		}
-		value.YNode().Value = strings.Join(tv, options.Delimiter)
 	}
 
 	if targetField.YNode().Kind == yaml.ScalarNode {
@@ -250,4 +229,47 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, ovalue 
 	}
 
 	return nil
+}
+
+func setWithDelimiter(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
+	if targetField.YNode().Kind != yaml.ScalarNode {
+		return fmt.Errorf("delimiter option can only be used with scalar nodes")
+	}
+
+	sourceValue := yaml.GetValue(value)
+	// TODO: Add a way to remove an element
+
+	if options.Match != "" {
+		replacedLeastOnce := false
+		retValue := targetField.YNode().Value
+		for i, s := range strings.Split(targetField.YNode().Value, options.Delimiter) {
+			if s == options.Match {
+				retValue = setWithDelimiterIndex(i, options.Delimiter, retValue, sourceValue)
+				replacedLeastOnce = true
+			}
+		}
+
+		if !replacedLeastOnce {
+			return fmt.Errorf("%s is not found in the %s", options.Match, retValue)
+		}
+		value.YNode().Value = retValue
+	} else {
+		// The decision index parameter is set if `match` is not setted.
+		value.YNode().Value = setWithDelimiterIndex(options.Index, options.Delimiter, targetField.YNode().Value, sourceValue)
+	}
+
+	return nil
+}
+
+func setWithDelimiterIndex(index int, delimiter, targetValue, value string) string {
+	targetValues := strings.Split(targetValue, delimiter)
+	switch {
+	case index < 0: // prefix
+		targetValues = append([]string{value}, targetValues...)
+	case index >= len(targetValues): // suffix
+		targetValues = append(targetValues, value)
+	default: // replace an element
+		targetValues[index] = value
+	}
+	return strings.Join(targetValues, delimiter)
 }

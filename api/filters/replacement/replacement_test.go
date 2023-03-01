@@ -1260,6 +1260,203 @@ spec:
             path: group2
 `,
 		},
+		"partial string replacement with many match value": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/user_name/app1/user_name
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: dir/Alice/app
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 1
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths:
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      match: user_name
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/Alice/app1/Alice
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: dir/Alice/app
+`,
+		},
+		"partial string replacement with match value contains the delimiter character": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.7.9
+    env:
+    - name: domain
+      value: www.example.com
+---
+apiVersion: v1
+data:
+  SubDomain: www.site
+  TLD: co.jp
+kind: ConfigMap
+metadata:
+  name: config-data
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: config-data
+    fieldPath: data.SubDomain
+  targets:
+  - select:
+      name: myapp
+    fieldPaths:
+    - spec.containers.[name=nginx].env.0.value
+    options:
+      delimiter: "."
+      match: "www"
+- source:
+    kind: ConfigMap
+    name: config-data
+    fieldPath: data.TLD
+  targets:
+  - select:
+      name: myapp
+    fieldPaths:
+    - spec.containers.[name=nginx].env.0.value
+    options:
+      delimiter: "."
+      match: "com"
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.7.9
+    env:
+    - name: domain
+      value: www.site.example.co.jp
+---
+apiVersion: v1
+data:
+  SubDomain: www.site
+  TLD: co.jp
+kind: ConfigMap
+metadata:
+  name: config-data
+`,
+		},
+		"partial string replacement with match value not found": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: my/target
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+spec:
+  volumes:
+  - projected:
+      sources:
+      - configMap:
+          name: myconfigmap
+          items:
+          - key: config
+            path: group2
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod2
+    fieldPath: spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      index: 0
+  targets:
+  - select:
+      kind: Pod
+      name: pod1
+    fieldPaths:
+    - spec.volumes.0.projected.sources.0.configMap.items.0.path
+    options:
+      delimiter: '/'
+      match: target_is_not_found
+`,
+			expectedErr: `target_is_not_found is not found in the my/target`,
+		},
 		"create": {
 			input: `apiVersion: v1
 kind: Pod
