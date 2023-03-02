@@ -387,16 +387,38 @@ func GetSchema(s string, schema *spec.Schema) (*ResourceSchema, error) {
 // be true if the resource is namespace-scoped, and false if the type is
 // cluster-scoped.
 func IsNamespaceScoped(typeMeta yaml.TypeMeta) (bool, bool) {
-	if res, f := precomputedIsNamespaceScoped[typeMeta]; f {
-		return res, true
+	if isNamespaceScoped, found := precomputedIsNamespaceScoped[typeMeta]; found {
+		return isNamespaceScoped, found
 	}
-	return isNamespaceScopedFromSchema(typeMeta)
-}
-
-func isNamespaceScopedFromSchema(typeMeta yaml.TypeMeta) (bool, bool) {
-	initSchema()
+	if isInitSchemaNeededForNamespaceScopeCheck() {
+		initSchema()
+	}
 	isNamespaceScoped, found := globalSchema.namespaceabilityByResourceType[typeMeta]
 	return isNamespaceScoped, found
+}
+
+// isInitSchemaNeededForNamespaceScopeCheck returns true if initSchema is needed
+// to ensure globalSchema.namespaceabilityByResourceType is fully populated for
+// cases where a custom or non-default built-in schema is in use.
+func isInitSchemaNeededForNamespaceScopeCheck() bool {
+	schemaLock.Lock()
+	defer schemaLock.Unlock()
+
+	if globalSchema.schemaInit {
+		return false // globalSchema already is initialized.
+	}
+	if customSchema != nil {
+		return true // initSchema is needed.
+	}
+	if kubernetesOpenAPIVersion == "" || kubernetesOpenAPIVersion == kubernetesOpenAPIDefaultVersion {
+		// The default built-in schema is in use. Since
+		// precomputedIsNamespaceScoped aligns with the default built-in schema
+		// (verified by TestIsNamespaceScopedPrecompute), there is no need to
+		// call initSchema.
+		return false
+	}
+	// A non-default built-in schema is in use. initSchema is needed.
+	return true
 }
 
 // IsCertainlyClusterScoped returns true for Node, Namespace, etc. and
