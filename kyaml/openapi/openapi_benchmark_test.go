@@ -5,6 +5,7 @@ package openapi
 
 import (
 	"path/filepath"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"strings"
 	"testing"
 
@@ -29,5 +30,21 @@ func BenchmarkProtoUnmarshal(t *testing.B) {
 		if err := proto.Unmarshal(b, &openapi_v2.Document{}); err != nil {
 			t.Fatalf("proto.Unmarshal failed: %v", err)
 		}
+	}
+}
+
+func BenchmarkPrecomputedIsNamespaceScoped(b *testing.B) {
+	testcases := map[string]yaml.TypeMeta{
+		"namespace scoped": {APIVersion: "apps/v1", Kind: "ControllerRevision"},
+		"cluster scoped":   {APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole"},
+		"unknown resource": {APIVersion: "custom.io/v1", Kind: "Custom"},
+	}
+	for name, testcase := range testcases {
+		b.Run(name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				ResetOpenAPI()
+				_, _ = IsNamespaceScoped(testcase)
+			}
+		})
 	}
 }
