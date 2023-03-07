@@ -66,6 +66,12 @@ func (s nbrSlice) Less(i, j int) bool {
 	return s[i].Gvk.IsLessThan(s[j].Gvk)
 }
 
+func (s nbrSlice) DeepCopy() nbrSlice {
+	ret := make(nbrSlice, len(s))
+	copy(ret, s)
+	return ret
+}
+
 func (s nbrSlice) mergeAll(o nbrSlice) (result nbrSlice, err error) {
 	result = s
 	for _, r := range o {

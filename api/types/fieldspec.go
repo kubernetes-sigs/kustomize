@@ -50,6 +50,12 @@ func (s FsSlice) Less(i, j int) bool {
 	return s[i].Gvk.IsLessThan(s[j].Gvk)
 }
 
+func (s FsSlice) DeepCopy() FsSlice {
+	ret := make(FsSlice, len(s))
+	copy(ret, s)
+	return ret
+}
+
 // MergeAll merges the argument into this, returning the result.
 // Items already present are ignored.
 // Items that conflict (primary key matches, but remain data differs)

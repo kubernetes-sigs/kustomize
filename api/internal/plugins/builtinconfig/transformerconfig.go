@@ -6,6 +6,7 @@ package builtinconfig
 import (
 	"log"
 	"sort"
+	"sync"
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/konfig/builtinpluginconsts"
@@ -32,14 +33,38 @@ func MakeEmptyConfig() *TransformerConfig {
 	return &TransformerConfig{}
 }
 
+func (t *TransformerConfig) DeepCopy() *TransformerConfig {
+	return &TransformerConfig{
+		NamePrefix:        t.NamePrefix.DeepCopy(),
+		NameSuffix:        t.NameSuffix.DeepCopy(),
+		NameSpace:         t.NameSpace.DeepCopy(),
+		CommonLabels:      t.CommonLabels.DeepCopy(),
+		TemplateLabels:    t.TemplateLabels.DeepCopy(),
+		CommonAnnotations: t.CommonAnnotations.DeepCopy(),
+		NameReference:     t.NameReference.DeepCopy(),
+		VarReference:      t.VarReference.DeepCopy(),
+		Images:            t.Images.DeepCopy(),
+		Replicas:          t.Replicas.DeepCopy(),
+	}
+}
+
+var (
+	initDefaultConfig sync.Once
+	defaultConfig     *TransformerConfig
+)
+
 // MakeDefaultConfig returns a default TransformerConfig.
 func MakeDefaultConfig() *TransformerConfig {
-	c, err := makeTransformerConfigFromBytes(
-		builtinpluginconsts.GetDefaultFieldSpecs())
-	if err != nil {
-		log.Fatalf("Unable to make default transformconfig: %v", err)
-	}
-	return c
+	initDefaultConfig.Do(func() {
+		var err error
+		defaultConfig, err = makeTransformerConfigFromBytes(
+			builtinpluginconsts.GetDefaultFieldSpecs())
+		if err != nil {
+			log.Fatalf("Unable to make default transformconfig: %v", err)
+		}
+	})
+
+	return defaultConfig.DeepCopy()
 }
 
 // MakeTransformerConfig returns a merger of custom config,
