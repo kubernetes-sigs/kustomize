@@ -26,6 +26,10 @@ type resWrangler struct {
 	// specify in kustomizations to be maintained and
 	// available as an option for final YAML rendering.
 	rList []*resource.Resource
+
+	// Map of used ids in the rList, to avoid recalculating
+	// resource ids and to get quick duplicate checks in Append
+	ids map[resid.ResId]bool
 }
 
 func newOne() *resWrangler {
@@ -37,17 +41,30 @@ func newOne() *resWrangler {
 // Clear implements ResMap.
 func (m *resWrangler) Clear() {
 	m.rList = nil
+	m.ids = make(map[resid.ResId]bool)
 }
 
 // DropEmpties quickly drops empty resources.
 // It doesn't use Append, which checks for Id collisions.
 func (m *resWrangler) DropEmpties() {
 	var rList []*resource.Resource
+	dropped := false
 	for _, r := range m.rList {
 		if !r.IsNilOrEmpty() {
 			rList = append(rList, r)
+		} else {
+			dropped = true
 		}
 	}
+
+	if dropped {
+		ids := make(map[resid.ResId]bool, len(rList))
+		for _, r := range rList {
+			ids[r.CurId()] = true
+		}
+		m.ids = ids
+	}
+
 	m.rList = rList
 }
 
@@ -75,25 +92,30 @@ func (m *resWrangler) Resources() []*resource.Resource {
 // Append implements ResMap.
 func (m *resWrangler) Append(res *resource.Resource) error {
 	id := res.CurId()
-	if r := m.GetMatchingResourcesByCurrentId(id.Equals); len(r) > 0 {
+	if m.ids[id] {
 		return fmt.Errorf(
 			"may not add resource with an already registered id: %s", id)
 	}
-	m.append(res)
+	m.append(res, id)
 	return nil
 }
 
 // append appends without performing an Id check
-func (m *resWrangler) append(res *resource.Resource) {
+func (m *resWrangler) append(res *resource.Resource, id resid.ResId) {
 	m.rList = append(m.rList, res)
+	m.ids[id] = true
 }
 
 // Remove implements ResMap.
 func (m *resWrangler) Remove(adios resid.ResId) error {
 	var rList []*resource.Resource
+	found := false
+	delete(m.ids, adios)
 	for _, r := range m.rList {
-		if r.CurId() != adios {
+		if found || r.CurId() != adios {
 			rList = append(rList, r)
+		} else {
+			found = true
 		}
 	}
 	if len(rList) != m.Size()-1 {
@@ -178,7 +200,8 @@ func (m *resWrangler) GetMatchingResourcesByCurrentId(
 
 // GetMatchingResourcesByAnyId implements ResMap.
 func (m *resWrangler) GetMatchingResourcesByAnyId(
-	matches IdMatcher) []*resource.Resource {
+	matches IdMatcher,
+) []*resource.Resource {
 	var result []*resource.Resource
 	for _, r := range m.rList {
 		for _, id := range append(r.PrevIds(), r.CurId()) {
@@ -223,7 +246,8 @@ func (m *resWrangler) GetById(
 type resFinder func(IdMatcher) []*resource.Resource
 
 func demandOneMatch(
-	f resFinder, id resid.ResId, s string) (*resource.Resource, error) {
+	f resFinder, id resid.ResId, s string,
+) (*resource.Resource, error) {
 	r := f(id.Equals)
 	if len(r) == 1 {
 		return r[0], nil
@@ -404,19 +428,19 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 		id := possibleTarget.CurId()
 		if id.IsClusterScoped() {
 			// A cluster-scoped resource can be referred to by anything.
-			result.append(possibleTarget)
+			result.append(possibleTarget, id)
 			continue
 		}
 		if id.IsNsEquals(referrerId) {
 			// The two objects are in the same namespace.
-			result.append(possibleTarget)
+			result.append(possibleTarget, id)
 			continue
 		}
 		// The two objects are namespaced (not cluster-scoped), AND
 		// are in different namespaces.
 		// There's still a chance they can refer to each other.
 		if roleBindingNamespaces[possibleTarget.GetNamespace()] {
-			result.append(possibleTarget)
+			result.append(possibleTarget, id)
 		}
 	}
 	return result, nil
