@@ -93,6 +93,9 @@ linters:
     - interfacebloat
     - loggercheck
     - reassign
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - musttag
 
 linters-settings:
   dupl:
