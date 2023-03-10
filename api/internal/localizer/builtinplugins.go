@@ -131,6 +131,7 @@ func (lbp *localizeBuiltinPlugins) localizeAll(node *yaml.RNode) error {
 	// We rely on the build command to throw errors for nodes in
 	// built-in plugins that are sequences when expected to be scalar,
 	// and vice versa.
+	//nolint: exhaustive
 	switch node.YNode().Kind {
 	case yaml.SequenceNode:
 		return errors.Wrap(node.VisitElements(lbp.localizeScalar))
