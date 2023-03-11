@@ -18,6 +18,7 @@ type TransformerConfig struct {
 	NamePrefix        types.FsSlice `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
 	NameSuffix        types.FsSlice `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
 	NameSpace         types.FsSlice `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Labels            types.FsSlice `json:"labels,omitempty" yaml:"labels,omitempty"`
 	CommonLabels      types.FsSlice `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
 	TemplateLabels    types.FsSlice `json:"templateLabels,omitempty" yaml:"templateLabels,omitempty"`
 	CommonAnnotations types.FsSlice `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
@@ -62,6 +63,7 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.NamePrefix)
 	sort.Sort(t.NameSuffix)
 	sort.Sort(t.NameSpace)
+	sort.Sort(t.Labels)
 	sort.Sort(t.CommonLabels)
 	sort.Sort(t.TemplateLabels)
 	sort.Sort(t.CommonAnnotations)
@@ -126,6 +128,10 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 		input.CommonAnnotations)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "failed to merge CommonAnnotations fieldSpec")
+	}
+	merged.Labels, err = t.Labels.MergeAll(input.Labels)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "failed to merge Labels fieldSpec")
 	}
 	merged.CommonLabels, err = t.CommonLabels.MergeAll(input.CommonLabels)
 	if err != nil {
