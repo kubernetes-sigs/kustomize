@@ -75,9 +75,9 @@ nameSuffix:
 
 ## Labels transformer
 
-The labels transformer adds labels to the `metadata/labels` field for all resources. It also adds labels to the `spec/selector` field in all Service resources as well as the `spec/selector/matchLabels` field in all Deployment resources.
+The labels transformer (`commonLabels` and `labels`) adds labels to the `metadata/labels` field for all resources. `commonLabels` also adds labels to the `spec/selector` field in all Service resources as well as the `spec/selector/matchLabels` field in all Deployment resources.
 
-Example:
+### Example (`commonLabels`):
 
 ```yaml
 commonLabels:
@@ -101,6 +101,28 @@ commonLabels:
   someName: someValue
   owner: alice
   app: bingo
+```
+
+### Example (`labels`):
+
+```yaml
+labels:
+- path: metadata/labels
+  create: true
+```
+
+Example kustomization.yaml:
+
+```yaml
+labels:
+- pairs:
+    someName: someValue
+- pairs:
+    owner: alice
+  includeSelectors: true
+- pairs:
+    app: bingo
+  includeTemplates: true
 ```
 
 ## Annotations transformer
