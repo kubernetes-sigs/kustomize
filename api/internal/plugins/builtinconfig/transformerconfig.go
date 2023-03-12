@@ -16,6 +16,7 @@ import (
 
 // TransformerConfig holds the data needed to perform transformations.
 type TransformerConfig struct {
+	// if any fields are added, update the DeepCopy implementation
 	NamePrefix        types.FsSlice `json:"namePrefix,omitempty" yaml:"namePrefix,omitempty"`
 	NameSuffix        types.FsSlice `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
 	NameSpace         types.FsSlice `json:"namespace,omitempty" yaml:"namespace,omitempty"`
@@ -33,6 +34,7 @@ func MakeEmptyConfig() *TransformerConfig {
 	return &TransformerConfig{}
 }
 
+// DeepCopy returns a new copy of TransformerConfig
 func (t *TransformerConfig) DeepCopy() *TransformerConfig {
 	return &TransformerConfig{
 		NamePrefix:        t.NamePrefix.DeepCopy(),
@@ -48,13 +50,16 @@ func (t *TransformerConfig) DeepCopy() *TransformerConfig {
 	}
 }
 
+// the default transformer config is initialized by MakeDefaultConfig,
+// and must only be accessed via that function.
 var (
-	initDefaultConfig sync.Once
-	defaultConfig     *TransformerConfig
+	initDefaultConfig sync.Once          //nolint:gochecknoglobals
+	defaultConfig     *TransformerConfig //nolint:gochecknoglobals
 )
 
 // MakeDefaultConfig returns a default TransformerConfig.
 func MakeDefaultConfig() *TransformerConfig {
+	// parsing is expensive when having a large tree with many kustomization modules, so only do it once
 	initDefaultConfig.Do(func() {
 		var err error
 		defaultConfig, err = makeTransformerConfigFromBytes(
@@ -64,6 +69,7 @@ func MakeDefaultConfig() *TransformerConfig {
 		}
 	})
 
+	// return a copy to avoid any mutations to protect the reference copy
 	return defaultConfig.DeepCopy()
 }
 
