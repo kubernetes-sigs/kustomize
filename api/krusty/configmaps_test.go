@@ -6,7 +6,6 @@ package krusty_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -229,6 +228,9 @@ type: Opaque
 `)
 }
 
+// TODO: This should be an error instead. However, we can't strict unmarshal until we have a yaml
+// lib that support case-insensitive keys and anchors.
+// See https://github.com/kubernetes-sigs/kustomize/issues/5061
 func TestGeneratorRepeatsInKustomization(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
@@ -261,13 +263,24 @@ krypton
 xenon
 radon
 `)
-	err := th.RunWithErr(".", th.MakeDefaultOptions())
-	if err == nil {
-		t.Fatalf("expected an error")
-	}
-	assert.Contains(t, err.Error(),
-		"invalid Kustomization: error converting YAML to JSON: yaml: unmarshal errors:\n"+
-			"  line 13: key \"literals\" already set in map\n  line 18: key \"files\" already set in map")
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  fruit: apple
+  nobles: |2
+
+    helium
+    neon
+    argon
+    krypton
+    xenon
+    radon
+  vegetable: broccoli
+kind: ConfigMap
+metadata:
+  name: blah-bob-db529cg5bk
+`)
 }
 
 func TestIssue3393(t *testing.T) {

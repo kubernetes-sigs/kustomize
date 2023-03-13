@@ -4,6 +4,8 @@
 package types
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -313,8 +315,20 @@ func (k *Kustomization) EnforceFields() []string {
 
 // Unmarshal replace k with the content in YAML input y
 func (k *Kustomization) Unmarshal(y []byte) error {
-	if err := yaml.UnmarshalStrict(y, &k); err != nil {
+	// TODO: switch to strict decoding to catch duplicate keys.
+	// We can't do so until there is a yaml decoder that supports anchors AND case-insensitive keys.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/5061
+	j, err := yaml.YAMLToJSON(y)
+	if err != nil {
 		return errors.WrapPrefixf(err, "invalid Kustomization")
 	}
+	dec := json.NewDecoder(bytes.NewReader(j))
+	dec.DisallowUnknownFields()
+	var nk Kustomization
+	err = dec.Decode(&nk)
+	if err != nil {
+		return errors.WrapPrefixf(err, "invalid Kustomization")
+	}
+	*k = nk
 	return nil
 }
