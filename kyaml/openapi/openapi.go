@@ -44,6 +44,16 @@ var (
 	customSchema []byte //nolint:gochecknoglobals
 )
 
+// schemaParseStatus is used in cases when a schema should be parsed, but the
+// parsing may be delayed to a later time.
+type schemaParseStatus uint32
+
+const (
+	schemaNotParsed schemaParseStatus = 1 << iota
+	schemaParseDelayed
+	schemaParsed
+)
+
 // openapiData contains the parsed openapi state.  this is in a struct rather than
 // a list of vars so that it can be reset from tests.
 type openapiData struct {
@@ -57,13 +67,17 @@ type openapiData struct {
 	// is namespaceable or not
 	namespaceabilityByResourceType map[yaml.TypeMeta]bool
 
-	// noUseBuiltInSchema stores whether we want to prevent using the built-n
+	// noUseBuiltInSchema stores whether we want to prevent using the built-in
 	// Kubernetes schema as part of the global schema
 	noUseBuiltInSchema bool
 
 	// schemaInit stores whether or not we've parsed the schema already,
 	// so that we only reparse the when necessary (to speed up performance)
 	schemaInit bool
+
+	// defaultBuiltInSchemaParseStatus stores the parse status of the default
+	// built-in schema.
+	defaultBuiltInSchemaParseStatus schemaParseStatus
 }
 
 type format string
@@ -415,6 +429,11 @@ func isInitSchemaNeededForNamespaceScopeCheck() bool {
 		// precomputedIsNamespaceScoped aligns with the default built-in schema
 		// (verified by TestIsNamespaceScopedPrecompute), there is no need to
 		// call initSchema.
+		if globalSchema.defaultBuiltInSchemaParseStatus == schemaNotParsed {
+			// The schema may be needed for purposes other than namespace scope
+			// checks. Flag it to be parsed when that need arises.
+			globalSchema.defaultBuiltInSchemaParseStatus = schemaParseDelayed
+		}
 		return false
 	}
 	// A non-default built-in schema is in use. initSchema is needed.
@@ -660,11 +679,17 @@ func initSchema() {
 			panic(fmt.Errorf("invalid schema file: %w", err))
 		}
 	} else {
-		if kubernetesOpenAPIVersion == "" {
+		if kubernetesOpenAPIVersion == "" || kubernetesOpenAPIVersion == kubernetesOpenAPIDefaultVersion {
 			parseBuiltinSchema(kubernetesOpenAPIDefaultVersion)
+			globalSchema.defaultBuiltInSchemaParseStatus = schemaParsed
 		} else {
 			parseBuiltinSchema(kubernetesOpenAPIVersion)
 		}
+	}
+
+	if globalSchema.defaultBuiltInSchemaParseStatus == schemaParseDelayed {
+		parseBuiltinSchema(kubernetesOpenAPIDefaultVersion)
+		globalSchema.defaultBuiltInSchemaParseStatus = schemaParsed
 	}
 
 	if err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName), JsonOrYaml); err != nil {

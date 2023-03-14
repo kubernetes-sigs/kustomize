@@ -5,13 +5,13 @@ package openapi
 
 import (
 	"path/filepath"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"strings"
 	"testing"
 
 	openapi_v2 "github.com/google/gnostic/openapiv2"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func BenchmarkProtoUnmarshal(t *testing.B) {
