@@ -1007,7 +1007,11 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 	case yaml.ScalarNode:
 		return yn, nil
 	case yaml.AliasNode:
-		return deAnchor(yn.Alias)
+		result, err := deAnchor(yn.Alias)
+		if err != nil {
+			return nil, err
+		}
+		return CopyYNode(result), nil
 	case yaml.MappingNode:
 		toMerge, err := removeMergeTags(yn)
 		if err != nil {
