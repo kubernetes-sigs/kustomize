@@ -409,6 +409,49 @@ spec:
 `)
 }
 
+func TestImageTagTransformerAnchor(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ImageTagTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ImageTagTransformer
+metadata:
+  name: notImportantHere
+imageTag:
+  name: nginx
+  newName: my-nginx
+fieldSpecs:
+- path: spec/template/spec/containers[]/image
+`, `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: &name nginx
+spec:
+  template:
+    spec:
+      containers:
+      - image: *name
+        name: *name
+`)
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - image: my-nginx
+        name: nginx
+`)
+}
+
 func TestImageTagTransformerTagWithBraces(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("ImageTagTransformer")
