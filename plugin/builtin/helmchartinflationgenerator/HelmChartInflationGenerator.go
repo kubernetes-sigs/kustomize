@@ -161,8 +161,8 @@ func (p *plugin) runHelmCommand(
 		helm := p.h.GeneralConfig().HelmConfig.Command
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
-				"unable to run: '%s %s' with env=%s (is '%s' installed?)",
-				helm, strings.Join(args, " "), env, helm),
+				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
+				helm, strings.Join(args, " "), env, helm, err),
 			stderr.String(),
 		)
 	}
