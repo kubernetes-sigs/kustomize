@@ -268,15 +268,18 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 	// helm may produce messages to stdout before it
 	r := &kio.ByteReader{Reader: bytes.NewBufferString(string(stdout)), OmitReaderAnnotations: true}
 	nodes, err := r.Read()
+	if err != nil {
+		return nil, fmt.Errorf("error reading helm output: %w", err)
+	}
 
 	if len(nodes) != 0 {
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w\n", err)
+			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
 		}
 		return rm, nil
 	}
-	return nil, fmt.Errorf("could not parse bytes into resource map: %w\n", resMapErr)
+	return nil, fmt.Errorf("could not parse bytes into resource map: %w", resMapErr)
 }
 
 func (p *plugin) pullCommand() []string {
