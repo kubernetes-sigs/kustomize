@@ -22,6 +22,10 @@ func NewCmdRemove(
 	kustomize edit remove resource {filepath} {filepath}
 	kustomize edit remove resource {pattern}
 
+	# Removes components from the kustomization file
+	kustomize edit remove component {filepath} {filepath}
+	kustomize edit remove component {pattern}
+
 	# Removes one or more patches from the kustomization file
 	kustomize edit remove patch --path {filepath} --group {target group name} --version {target version}
 
@@ -38,6 +42,7 @@ func NewCmdRemove(
 	}
 	c.AddCommand(
 		newCmdRemoveResource(fSys),
+		newCmdRemoveComponent(fSys),
 		newCmdRemoveLabel(fSys, v.MakeLabelNameValidator()),
 		newCmdRemoveAnnotation(fSys, v.MakeAnnotationNameValidator()),
 		newCmdRemovePatch(fSys),
