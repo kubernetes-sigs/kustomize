@@ -71,6 +71,7 @@ func ExecuteTestCases(t *testing.T, testCases []Case, collectionName string,
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 			}
+
 			for _, itemFileName := range tc.Expected.Items {
 				if !strings.Contains(string(content), itemFileName) {
 					t.Errorf("expected item not found in kustomization file.\nItem: %s\nKustomization file:\n%s",
