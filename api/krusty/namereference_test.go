@@ -42,7 +42,7 @@ spec:
       serviceAccountName: mySvcAcct
       containers:
       - name: whatever
-        image: k8s.gcr.io/governmentCheese
+        image: registry.k8s.io/governmentCheese
 `)
 	th.WriteF("base/serviceAccount.yaml", `
 apiVersion: v1
@@ -61,7 +61,7 @@ spec:
   template:
     spec:
       containers:
-      - image: k8s.gcr.io/governmentCheese
+      - image: registry.k8s.io/governmentCheese
         name: whatever
       serviceAccountName: mySvcAcct
 ---
@@ -80,7 +80,7 @@ spec:
   template:
     spec:
       containers:
-      - image: k8s.gcr.io/governmentCheese
+      - image: registry.k8s.io/governmentCheese
         name: whatever
       serviceAccountName: mySvcAcct-private
 ---
@@ -115,7 +115,7 @@ commonLabels:
   app: external-dns
   instance: public
 images:
-- name: k8s.gcr.io/external-dns/external-dns
+- name: registry.k8s.io/external-dns/external-dns
   newName: xxx.azurecr.io/external-dns
   newTag: v0.7.4_sylr.1
 - name: quay.io/sylr/external-dns
@@ -153,7 +153,7 @@ commonLabels:
   app: external-dns
   instance: private
 images:
-- name: k8s.gcr.io/external-dns/external-dns
+- name: registry.k8s.io/external-dns/external-dns
   newName: xxx.azurecr.io/external-dns
   newTag: v0.7.4_sylr.1
 - name: quay.io/sylr/external-dns
@@ -192,7 +192,7 @@ commonLabels:
   app: external-dns
   instance: public
 images:
-- name: k8s.gcr.io/external-dns/external-dns
+- name: registry.k8s.io/external-dns/external-dns
   newName: quay.io/sylr/external-dns
   newTag: v0.7.4-73-g00a9a0c7
 secretGenerator:
@@ -243,7 +243,7 @@ spec:
       serviceAccountName: external-dns
       containers:
       - name: external-dns
-        image: k8s.gcr.io/external-dns/external-dns
+        image: registry.k8s.io/external-dns/external-dns
         args:
         - --domain-filter=""
         - --txt-owner-id=""
