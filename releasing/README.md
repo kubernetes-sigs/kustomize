@@ -363,7 +363,7 @@ Fork and clone the [k8s.io] repo.
 
 Checkout a new branch.
 
-Edit file `k8s.gcr.io/images/k8s-staging-kustomize/images.yaml`
+Edit file `registry.k8s.io/images/k8s-staging-kustomize/images.yaml`
 to add the new kustomize version and the image sha256.
 
 Image sha256 can be found in the image registry in the GCP 

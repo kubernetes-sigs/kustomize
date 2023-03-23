@@ -37,7 +37,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: k8s.gcr.io/nginx-slim:0.8
+        image: registry.k8s.io/nginx-slim:0.8
         ports:
         - containerPort: 80
           name: web
@@ -62,7 +62,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: k8s.gcr.io/nginx-slim:0.8
+        image: registry.k8s.io/nginx-slim:0.8
         ports:
         - containerPort: 80
           name: web
@@ -116,7 +116,7 @@ spec:
         notIn: arrays
     spec:
       containers:
-      - image: k8s.gcr.io/nginx-slim:0.8
+      - image: registry.k8s.io/nginx-slim:0.8
         name: nginx
         ports:
         - containerPort: 80
@@ -142,7 +142,7 @@ spec:
         notIn: arrays
     spec:
       containers:
-      - image: k8s.gcr.io/nginx-slim:0.8
+      - image: registry.k8s.io/nginx-slim:0.8
         name: nginx
         ports:
         - containerPort: 80
