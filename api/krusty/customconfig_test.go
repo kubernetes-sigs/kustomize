@@ -314,3 +314,56 @@ spec:
   location: Arizona
 `)
 }
+
+func TestCustomConfigLabelsMerge(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+commonLabels:
+  app: myApp
+labels:
+- pairs:
+    giraffe: giraffe
+resources:
+- animalPark.yaml
+configurations:
+- config/defaults.yaml
+- config/custom.yaml
+`)
+	th.WriteF("base/animalPark.yaml", `
+apiVersion: foo
+kind: AnimalPark
+metadata:
+  name: sandiego
+spec:
+  giraffeRef:
+    name: april
+`)
+	th.WriteLegacyConfigs("base/config/defaults.yaml")
+	th.WriteF("base/config/custom.yaml", `
+commonLabels:
+- kind: AnimalPark
+  path: spec/giraffeRef/metadata/labels
+  create: true
+labels:
+- kind: AnimalPark
+  path: spec/giraffeRef/metadata/labels
+  create: true
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: foo
+kind: AnimalPark
+metadata:
+  labels:
+    app: myApp
+    giraffe: giraffe
+  name: sandiego
+spec:
+  giraffeRef:
+    metadata:
+      labels:
+        app: myApp
+        giraffe: giraffe
+    name: april
+`)
+}
