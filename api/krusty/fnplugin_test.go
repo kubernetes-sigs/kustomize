@@ -504,213 +504,49 @@ func skipIfNoDocker(t *testing.T) {
 }
 
 func TestFnContainerGenerator(t *testing.T) {
-	t.Skip("wait for #3881")
 	skipIfNoDocker(t)
-
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK(".", `
-resources:
-- short_secret.yaml
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
-- gener.yaml
-`)
-	// Create generator config
-	th.WriteF("gener.yaml", `
-apiVersion: examples.config.kubernetes.io/v1beta1
-kind: CockroachDB
+- project-service-set.yaml
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "project-service-set.yaml"), []byte(`
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: ProjectServiceSet
 metadata:
   name: demo
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kustomize-functions/example-cockroachdb:v0.1.0
+        image: gcr.io/kpt-fn/enable-gcp-services:v0.1.0
 spec:
-  replicas: 3
-`)
-	// Create some additional resource just to make sure everything is added
-	th.WriteF("short_secret.yaml", `
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    airshipit.org/ephemeral-user-data: "true"
-  name: node1-bmc-secret
-type: Opaque
-stringData:
-  userData: |
-    bootcmd:
-    - mkdir /mnt/vda
-`)
-	m := th.Run(".", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    airshipit.org/ephemeral-user-data: "true"
-  name: node1-bmc-secret
-stringData:
-  userData: |
-    bootcmd:
-    - mkdir /mnt/vda
-type: Opaque
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  labels:
-    app: cockroachdb
-    name: demo
-  name: demo-budget
-spec:
-  minAvailable: 67%
-  selector:
-    matchLabels:
-      app: cockroachdb
-      name: demo
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: cockroachdb
-    name: demo
-  name: demo-public
-spec:
-  ports:
-  - name: grpc
-    port: 26257
-    targetPort: 26257
-  - name: http
-    port: 8080
-    targetPort: 8080
-  selector:
-    app: cockroachdb
-    name: demo
----
-apiVersion: v1
+  services:
+    - compute.googleapis.com
+  projectID: foo
+`)))
+	m, err := b.Run(fSys, tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
 kind: Service
 metadata:
   annotations:
-    prometheus.io/path: _status/vars
-    prometheus.io/port: "8080"
-    prometheus.io/scrape: "true"
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-  labels:
-    app: cockroachdb
-    name: demo
-  name: demo
+    blueprints.cloud.google.com/ownerReference: blueprints.cloud.google.com/ProjectServiceSet/demo
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-fn/enable-gcp-services:v0.1.0
+  name: demo-compute
 spec:
-  clusterIP: None
-  ports:
-  - name: grpc
-    port: 26257
-    targetPort: 26257
-  - name: http
-    port: 8080
-    targetPort: 8080
-  selector:
-    app: cockroachdb
-    name: demo
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  labels:
-    app: cockroachdb
-    name: demo
-  name: demo
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: cockroachdb
-      name: demo
-  serviceName: demo
-  template:
-    metadata:
-      labels:
-        app: cockroachdb
-        name: demo
-    spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                  - cockroachdb
-              topologyKey: kubernetes.io/hostname
-            weight: 100
-      containers:
-      - command:
-        - /bin/bash
-        - -ecx
-        - |
-          # The use of qualified `+"`hostname -f`"+` is crucial:
-          # Other nodes aren't able to look up the unqualified hostname.
-          CRARGS=("start" "--logtostderr" "--insecure" "--host" "$(hostname -f)" "--http-host" "0.0.0.0")
-          # We only want to initialize a new cluster (by omitting the join flag)
-          # if we're sure that we're the first node (i.e. index 0) and that
-          # there aren't any other nodes running as part of the cluster that
-          # this is supposed to be a part of (which indicates that a cluster
-          # already exists and we should make sure not to create a new one).
-          # It's fine to run without --join on a restart if there aren't any
-          # other nodes.
-          if [ ! "$(hostname)" == "cockroachdb-0" ] ||              [ -e "/cockroach/cockroach-data/cluster_exists_marker" ]
-          then
-            # We don't join cockroachdb in order to avoid a node attempting
-            # to join itself, which currently doesn't work
-            # (https://github.com/cockroachdb/cockroach/issues/9625).
-            CRARGS+=("--join" "cockroachdb-public")
-          fi
-          exec /cockroach/cockroach ${CRARGS[*]}
-        image: cockroachdb/cockroach:v1.1.0
-        imagePullPolicy: IfNotPresent
-        name: demo
-        ports:
-        - containerPort: 26257
-          name: grpc
-        - containerPort: 8080
-          name: http
-        volumeMounts:
-        - mountPath: /cockroach/cockroach-data
-          name: datadir
-      initContainers:
-      - args:
-        - -on-start=/on-start.sh
-        - -service=cockroachdb
-        env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        image: cockroachdb/cockroach-k8s-init:0.1
-        imagePullPolicy: IfNotPresent
-        name: bootstrap
-        volumeMounts:
-        - mountPath: /cockroach/cockroach-data
-          name: datadir
-      terminationGracePeriodSeconds: 60
-      volumes:
-      - name: datadir
-        persistentVolumeClaim:
-          claimName: datadir
-  volumeClaimTemplates:
-  - metadata:
-      name: datadir
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 1Gi
-`)
+  projectRef:
+    external: foo
+  resourceID: compute.googleapis.com
+`, string(actual))
 }
 
 func TestFnContainerTransformer(t *testing.T) {
@@ -733,7 +569,6 @@ kind: Deployment
 metadata:
   name: foo
 `)))
-
 	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "e2econtainerconfig.yaml"), []byte(`
 apiVersion: example.com/v1alpha1
 kind: Input
