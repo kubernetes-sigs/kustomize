@@ -6,96 +6,34 @@ run:
   go: '1.19'
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
-  enable:
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - contextcheck
-#    - cyclop
-    - depguard
-    - dogsled
-    - dupl
-    - dupword
-    - durationcheck
-    - errcheck
-    - errname
-    - errorlint
-    - exhaustive
-#    - exhaustivestruct
-    - exportloopref
-#    - forbidigo
-    - forcetypeassert
-#    - funlen
-#    - gci
-    - gochecknoglobals
-    - gochecknoinits
-#    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-#    - godot
-#    - godox
-#    - goerr113
-    - gofmt
-#    - gofumpt
-    - goheader
-    - goimports
-    - gomnd
-    - gomoddirectives
-    - gomodguard
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-#    - ifshort # too many false positives
-    - importas
-    - ineffassign
-#    - ireturn
-    - lll
-    - makezero
-    - misspell
-    - nakedret
-    - nestif
-    - nilerr
-#    - nilnil
-#    - nlreturn
-#    - noctx
-    - nolintlint
-#    - paralleltest
-    - prealloc
-    - predeclared
-    - promlinter
-    - revive
-    - rowserrcheck
-    - sqlclosecheck
-    - staticcheck
-#    - stylecheck
-    - tagliatelle
-    - tenv
-    - testpackage
-    - testableexamples
-    - thelper
-    - tparallel
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-#    - varnamelen
-    - wastedassign
-    - whitespace
-    - wrapcheck
-#    - wsl
-    - asasalint
-    - usestdlibvars
-    - interfacebloat
-    - loggercheck
-    - reassign
-    - ginkgolinter
-    - gocheckcompilerdirectives
-    - musttag
+  enable-all: true
+  disable:
+    - cyclop
+    - exhaustivestruct
+    - forbidigo
+    - funlen
+    - gci
+    - gocognit
+    - godot
+    - godox
+    - goerr113
+    - gofumpt
+    - ifshort # too many false positives
+    - ireturn
+    - nilnil
+    - nlreturn
+    - noctx
+    - paralleltest
+    - stylecheck
+    - varnamelen
+    - wsl
+    - exhaustruct
+    - deadcode
+    - scopelint
+    - nonamedreturns
+    - golint
+    - maintidx
+    - nosnakecase
 
 linters-settings:
   dupl:
