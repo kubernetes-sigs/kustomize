@@ -714,103 +714,49 @@ spec:
 }
 
 func TestFnContainerTransformer(t *testing.T) {
-	t.Skip("wait for #3881")
 	skipIfNoDocker(t)
-
-	// Function plugins should not need the env setup done by MakeEnhancedHarness
 	th := kusttest_test.MakeHarness(t)
-
-	th.WriteK(".", `
+	o := th.MakeOptionsPluginsEnabled()
+	fSys := filesys.MakeFsOnDisk()
+	b := MakeKustomizer(&o)
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 resources:
-- data.yaml
+- deployment.yaml
 transformers:
-- transf1.yaml
-- transf2.yaml
-`)
-
-	th.WriteF("data.yaml", `
+- e2econtainerconfig.yaml
+`)))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "deployment.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx
-  labels:
-    app: nginx
-  annotations:
-    tshirt-size: small # this injects the resource reservations
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-`)
-	// This transformer should add resource reservations based on annotation in data.yaml
-	// See https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/injection-tshirt-sizes
-	th.WriteF("transf1.yaml", `
-apiVersion: examples.config.kubernetes.io/v1beta1
-kind: Validator
+  name: foo
+`)))
+
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "e2econtainerconfig.yaml"), []byte(`
+apiVersion: example.com/v1alpha1
+kind: Input
 metadata:
-  name: valid
-  annotations:
-    config.kubernetes.io/function: |-
-      container:
-        image: gcr.io/kustomize-functions/example-tshirt:v0.2.0
-`)
-	// This transformer will check resources without and won't do any changes
-	// See https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/validator-kubeval
-	th.WriteF("transf2.yaml", `
-apiVersion: examples.config.kubernetes.io/v1beta1
-kind: Kubeval
-metadata:
-  name: validate
+  name: foo
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kustomize-functions/example-validator-kubeval:v0.1.0
-spec:
-  strict: true
-  ignoreMissingSchemas: true
-
-  # TODO: Update this to use network/volumes features.
-  # Relevant issues:
-  #   - https://github.com/kubernetes-sigs/kustomize/issues/1901
-  #   - https://github.com/kubernetes-sigs/kustomize/issues/1902
-  kubernetesVersion: "1.16.0"
-  schemaLocation: "file:///schemas"
-`)
-	m := th.Run(".", th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
+        image: "gcr.io/kustomize-functions/e2econtainerconfig"
+`)))
+	m, err := b.Run(fSys, tmpDir.String())
+	assert.NoError(t, err)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-        resources:
-          requests:
-            cpu: 200m
-            memory: 50M
-`)
+    a-bool-value: "false"
+    a-int-value: "0"
+    a-string-value: ""
+  name: foo
+`, string(actual))
 }
 
 func TestFnContainerTransformerWithConfig(t *testing.T) {
