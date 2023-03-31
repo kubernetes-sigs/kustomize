@@ -97,11 +97,11 @@ func (p *plugin) validateArgs() (err error) {
 	// be under the loader root (unless root restrictions are
 	// disabled).
 	if p.ValuesFile == "" {
-		p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
-
 		// If the version is specified, use the versioned values file.
 		if p.Version != "" {
 			p.ValuesFile = filepath.Join(p.ChartHome, fmt.Sprintf("%s-%s", p.Name, p.Version), p.Name, "values.yaml")
+		} else {
+			p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
 		}
 	}
 	for i, file := range p.AdditionalValuesFiles {
@@ -143,10 +143,17 @@ func (p *plugin) errIfIllegalValuesMerge() error {
 }
 
 func (p *plugin) absChartHome() string {
+	var chartHome string
 	if filepath.IsAbs(p.ChartHome) {
-		return p.ChartHome
+		chartHome = p.ChartHome
+	} else {
+		chartHome = filepath.Join(p.h.Loader().Root(), p.ChartHome)
 	}
-	return filepath.Join(p.h.Loader().Root(), p.ChartHome)
+
+	if p.Version != "" {
+		return filepath.Join(chartHome, fmt.Sprintf("%s-%s", p.Name, p.Version))
+	}
+	return chartHome
 }
 
 func (p *plugin) runHelmCommand(
@@ -260,7 +267,7 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 		return nil, err
 	}
 	var stdout []byte
-	stdout, err = p.runHelmCommand(p.AsHelmArgs(p.chartPath()))
+	stdout, err = p.runHelmCommand(p.AsHelmArgs(p.absChartHome()))
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +298,7 @@ func (p *plugin) pullCommand() []string {
 	args := []string{
 		"pull",
 		"--untar",
-		"--untardir", p.chartPath(),
+		"--untardir", p.absChartHome(),
 		"--repo", p.Repo,
 		p.Name}
 	if p.Version != "" {
@@ -303,7 +310,7 @@ func (p *plugin) pullCommand() []string {
 // chartExistsLocally will return true if the chart does exist in
 // local chart home.
 func (p *plugin) chartExistsLocally() (string, bool) {
-	path := filepath.Join(p.chartPath(), p.Name)
+	path := filepath.Join(p.absChartHome(), p.Name)
 	s, err := os.Stat(path)
 	if err != nil {
 		return "", false
@@ -333,13 +340,4 @@ func (p *plugin) checkHelmVersion() error {
 		return fmt.Errorf("this plugin requires helm V3 but got v%s", v)
 	}
 	return nil
-}
-
-// chartPath will return the path to the chart and handle the case where a version
-// is specified
-func (p *plugin) chartPath() string {
-	if p.Version != "" {
-		return filepath.Join(p.absChartHome(), fmt.Sprintf("%s-%s", p.Name, p.Version))
-	}
-	return p.absChartHome()
 }

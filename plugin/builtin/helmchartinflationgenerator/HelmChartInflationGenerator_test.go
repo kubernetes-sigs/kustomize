@@ -642,9 +642,11 @@ releaseName: %s
 			rm := th.LoadAndRunGenerator(config)
 			assert.True(t, len(rm.Resources()) > 0)
 
-			chartDir := fmt.Sprintf("charts/%s", tt.chartName)
+			var chartDir string
 			if tt.version != "" {
 				chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
+			} else {
+				chartDir = fmt.Sprintf("charts/%s", tt.chartName)
 			}
 
 			d, err := th.GetFSys().ReadFile(filepath.Join(th.GetRoot(), chartDir, "Chart.yaml"))
