@@ -828,3 +828,65 @@ spec:
           protocol: TCP
 `)
 }
+
+func TestPatchTransformerAnchor(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: test-transformer
+patch: |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: test-deployment
+  spec:
+    selector:
+      matchLabels:
+        app: &name test-label
+    template:
+      metadata:
+        labels:
+          app: *name
+target:
+  kind: Deployment
+  name: test-deployment
+`, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &name test-deployment
+spec:
+  selector:
+    matchLabels:
+      app: *name
+  template:
+    metadata:
+      labels:
+        app: *name
+    spec:
+      containers:
+      - image: test-image
+        name: *name
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  selector:
+    matchLabels:
+      app: test-label
+  template:
+    metadata:
+      labels:
+        app: test-label
+    spec:
+      containers:
+      - image: test-image
+        name: test-deployment
+`)
+}
