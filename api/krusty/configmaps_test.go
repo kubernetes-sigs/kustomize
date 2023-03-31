@@ -571,3 +571,23 @@ metadata:
   name: test-k9cc55dfm5
 `)
 }
+
+func TestDataIsSingleQuote(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+configMapGenerator:
+  - name: test
+    literals:
+      - TEST='
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(
+		m, `apiVersion: v1
+data:
+  TEST: ''''
+kind: ConfigMap
+metadata:
+  name: test-m8t7bmb6g2
+`)
+}
