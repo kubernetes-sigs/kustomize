@@ -174,6 +174,60 @@ spec:
 `)
 }
 
+func TestReplacementTransformerAnchor(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("ReplacementTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: ReplacementTransformer
+metadata:
+  name: notImportantHere
+replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.1.name
+`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &name origin
+spec:
+  template:
+    spec:
+      containers:
+      - image: foobar:1
+        name: replaced
+      - image: foobar:1
+        name: *name
+      - image: foobar:1
+        name: *name
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: origin
+spec:
+  template:
+    spec:
+      containers:
+      - image: foobar:1
+        name: replaced
+      - image: foobar:1
+        name: replaced
+      - image: foobar:1
+        name: origin
+`)
+}
+
 func TestReplacementTransformerComplexType(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("ReplacementTransformer")
