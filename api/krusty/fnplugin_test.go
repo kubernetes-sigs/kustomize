@@ -565,23 +565,21 @@ func TestFnContainerTransformer(t *testing.T) {
 	skipIfNoDocker(t)
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
-	fSys := filesys.MakeFsOnDisk()
-	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
 	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	th.WriteK(tmpDir.String(), `
 resources:
 - deployment.yaml
 transformers:
 - e2econtainerconfig.yaml
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "deployment.yaml"), []byte(`
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "deployment.yaml"), `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "e2econtainerconfig.yaml"), []byte(`
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "e2econtainerconfig.yaml"), `
 apiVersion: example.com/v1alpha1
 kind: Input
 metadata:
@@ -590,9 +588,8 @@ metadata:
     config.kubernetes.io/function: |
       container:
         image: "gcr.io/kustomize-functions/e2econtainerconfig"
-`)))
-	m, err := b.Run(fSys, tmpDir.String())
-	assert.NoError(t, err)
+`)
+	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
