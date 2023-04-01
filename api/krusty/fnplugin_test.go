@@ -507,15 +507,16 @@ func TestFnContainerGenerator(t *testing.T) {
 	skipIfNoDocker(t)
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
-	fSys := filesys.MakeFsOnDisk()
-	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
 	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	th.WriteK(tmpDir.String(), `
+resources:
+- deployment.yaml
 generators:
 - project-service-set.yaml
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "project-service-set.yaml"), []byte(`
+`)
+	// Create generator config
+	th.WriteF(filepath.Join(tmpDir.String(), "project-service-set.yaml"), `
 apiVersion: blueprints.cloud.google.com/v1alpha1
 kind: ProjectServiceSet
 metadata:
@@ -528,12 +529,23 @@ spec:
   services:
     - compute.googleapis.com
   projectID: foo
-`)))
-	m, err := b.Run(fSys, tmpDir.String())
-	assert.NoError(t, err)
+`)
+	// Create another resource just to make sure everything is added
+	th.WriteF(filepath.Join(tmpDir.String(), "deployment.yaml"), `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`)
+	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+---
+apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
 kind: Service
 metadata:
   annotations:
