@@ -1079,3 +1079,131 @@ spec:
 	assert.Error(t, err)
 	assert.EqualError(t, err, "couldn't execute function: root working directory '/' not allowed")
 }
+
+func TestFnExecValidator(t *testing.T) {
+	fSys := filesys.MakeFsOnDisk()
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	o := th.MakeOptionsPluginsEnabled()
+	o.PluginConfig.FnpLoadingOptions.EnableExec = true
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	th.WriteK(tmpDir.String(), `
+resources:
+- configmap.yaml
+validators:
+- validator.yaml
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "configmap.yaml"), `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  foo: bar
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "validator.sh"), `#!/bin/bash
+
+# Do whatever you want here. In this example we
+# just print out the input
+
+cat
+`)
+	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "validator.sh"), 0777))
+	th.WriteF(filepath.Join(tmpDir.String(), "validator.yaml"), `
+kind: Validator
+metadata:
+  name: notImportantHere
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./validator.sh
+`)
+	m := th.Run(tmpDir.String(), o)
+	yml, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: cm
+`, string(yml))
+}
+
+func TestFnContainerValidator(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	o := th.MakeOptionsPluginsEnabled()
+	tmpDir, err := filesys.NewTmpConfirmedDir()
+	assert.NoError(t, err)
+	th.WriteK(tmpDir.String(), `
+resources:
+- data.yaml
+validators:
+- validator.yaml
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "data.yaml"), `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+	th.WriteF(filepath.Join(tmpDir.String(), "validator.yaml"), `
+apiVersion: examples.config.kubernetes.io/v1beta1
+kind: Kubeval
+metadata:
+  name: validate
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kustomize-functions/example-validator-kubeval
+spec:
+  strict: true
+  ignoreMissingSchemas: true
+
+  # TODO: Update this to use network/volumes features.
+  # Relevant issues:
+  #   - https://github.com/kubernetes-sigs/kustomize/issues/1901
+  #   - https://github.com/kubernetes-sigs/kustomize/issues/1902
+  kubernetesVersion: "1.16.0"
+  schemaLocation: "file:///schemas"
+`)
+	build := exec.Command("docker", "build", ".", "-t", "gcr.io/kustomize-functions/example-validator-kubeval")
+	build.Dir = "../../functions/examples/validator-kubeval/image"
+	assert.NoError(t, build.Run())
+	m := th.Run(tmpDir.String(), o)
+	actual, err := m.AsYaml()
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`, string(actual))
+}
