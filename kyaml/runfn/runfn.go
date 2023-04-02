@@ -190,7 +190,8 @@ func (r RunFns) runFunctions(
 	} else {
 		// write to the output instead of the directory if r.Output is specified or
 		// the output is nil (reading from Input)
-		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
+		// remove PathAnnotation and LegacyPathAnnotation explicitly because ByteWriter won't clear them by default
+		outputs = append(outputs, kio.ByteWriter{Writer: r.Output, ClearAnnotations: []string{kioutil.PathAnnotation, kioutil.LegacyPathAnnotation}})
 	}
 
 	var err error
