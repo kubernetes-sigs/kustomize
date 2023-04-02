@@ -381,7 +381,7 @@ func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
 		if err = kt.removeValidatedByLabel(newMap); err != nil {
 			return err
 		}
-		if err = orignal.ErrorIfNotEqualSets(newMap); err != nil {
+		if err = orignal.ErrorIfNotEqualLists(newMap); err != nil {
 			return fmt.Errorf("validator shouldn't modify the resource map: %v", err)
 		}
 	}
