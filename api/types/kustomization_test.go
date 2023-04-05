@@ -295,7 +295,7 @@ func TestUnmarshal_Failed(t *testing.T) {
 			kustomizationYamls: []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 unknown`),
-			errMsg: "yaml: line 4: could not find expected ':'",
+			errMsg: "invalid Kustomization: yaml: line 4: could not find expected ':'",
 		},
 	}
 	for _, tt := range tests {
@@ -318,6 +318,16 @@ func TestKustomization_CheckEmpty(t *testing.T) {
 			name:          "empty kustomization.yaml",
 			kustomization: &Kustomization{},
 			wantErr:       true,
+		},
+		{
+			name: "empty kustomization.yaml",
+			kustomization: &Kustomization{
+				TypeMeta: TypeMeta{
+					Kind:       KustomizationKind,
+					APIVersion: KustomizationVersion,
+				},
+			},
+			wantErr: true,
 		},
 		{
 			name:          "non empty kustomization.yaml",
