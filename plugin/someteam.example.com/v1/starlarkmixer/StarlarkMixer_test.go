@@ -44,8 +44,6 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    config.kubernetes.io/path: configmap_some-cm.yaml
-    internal.config.kubernetes.io/path: configmap_some-cm.yaml
     modified-by: mixer-instance
   name: some-cm
 ---
@@ -54,17 +52,11 @@ data:
   foo: bar
 kind: ConfigMap
 metadata:
-  annotations:
-    config.kubernetes.io/path: configmap_some-cm-copy.yaml
-    internal.config.kubernetes.io/path: configmap_some-cm-copy.yaml
   name: some-cm-copy
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  annotations:
-    config.kubernetes.io/path: configmap_net-new.yaml
-    internal.config.kubernetes.io/path: configmap_net-new.yaml
   name: net-new
 `)
 }
