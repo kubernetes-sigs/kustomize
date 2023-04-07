@@ -15,7 +15,7 @@ fi
 
 cmd=$1
 skip_pattern="${2-}"
-expected_module_count=${3:-44}
+expected_module_count=${3:-45}
 
 seen=()
 # Hack scripts must be run from the root of the repository.
