@@ -1,0 +1,131 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.11.3
+  creationTimestamp: null
+  name: exampleapps.platform.example.com
+spec:
+  group: platform.example.com
+  names:
+    kind: ExampleApp
+    listKind: ExampleAppList
+    plural: exampleapps
+    singular: exampleapp
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        additionalProperties: false
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          appImage:
+            type: string
+          datastores:
+            additionalProperties: false
+            properties:
+              postgresInstance:
+                type: string
+            type: object
+          env:
+            enum:
+            - production
+            - staging
+            - development
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          overrides:
+            minProperties: 1
+            additionalProperties: false
+            properties:
+              additionalResources:
+                items:
+                  type: string
+                type: array
+              containerPatches:
+                items:
+                  type: string
+                type: array
+              resourcePatches:
+                items:
+                  type: string
+                type: array
+            type: object
+          workloads:
+            minProperties: 1
+            additionalProperties: false
+            properties:
+              jobWorkers:
+                items:
+                  additionalProperties: false
+                  properties:
+                    name:
+                      pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$
+                      type: string
+                    queues:
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                      uniqueItems: true
+                    replicas:
+                      minimum: 0
+                      type: integer
+                    resources:
+                      enum:
+                      - small
+                      - medium
+                      - large
+                      type: string
+                  required:
+                  - name
+                  - queues
+                  type: object
+                type: array
+              webWorkers:
+                items:
+                  additionalProperties: false
+                  properties:
+                    domains:
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                      uniqueItems: true
+                    name:
+                      pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$
+                      type: string
+                    replicas:
+                      minimum: 0
+                      type: integer
+                    resources:
+                      enum:
+                      - small
+                      - medium
+                      - large
+                      type: string
+                  required:
+                  - domains
+                  - name
+                  type: object
+                type: array
+            type: object
+        required:
+        - env
+        - metadata
+        - workloads
+        type: object
+    served: true
+    storage: true
