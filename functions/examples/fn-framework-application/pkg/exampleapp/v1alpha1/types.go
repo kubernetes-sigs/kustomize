@@ -1,3 +1,6 @@
+// Copyright 2023 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 // +groupName=platform.example.com
 // +versionName=v1alpha1
 // +kubebuilder:validation:Required

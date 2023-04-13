@@ -1,3 +1,6 @@
+// Copyright 2023 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package dispatcher
 
 import (
