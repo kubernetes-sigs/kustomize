@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name:  {{ .Name }}
+    env: {{ .Environment }}
+    type: jobs
+  name:  {{ .Name }}
+spec:
+  replicas: {{ .Replicas }}
+  selector:
+    matchLabels:
+      type: jobs
+      name: {{ .Name }}
+      env: {{ .Environment }}
+  template:
+    metadata:
+      labels:
+        type: jobs
+        name: {{ .Name }}
+        env: {{ .Environment }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: app
+        image: {{ .AppImage }}
+        args: [
+          "job-worker",
+          "--queues",
+          "{{ .QueueList }}",
+          "--workers", "{{ .ProcessPoolSize }}",
+        ]
+        readinessProbe:
+          exec:
+            command:
+              - "bin/job-worker-readiness-probe"
+        resources: {{ .Resources }}
+        env:
+          - name: KUBE_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: ENV
+            value: {{ .Environment }}

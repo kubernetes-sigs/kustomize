@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-worker
+spec:
+  template:
+    spec:
+      containers:
+        - name: sidecar
+          image: registry.example.com/path/to/custom-sidecar
+          args:
+          - run

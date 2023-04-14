@@ -10,6 +10,7 @@ use (
 	./cmd/mdtogo
 	./cmd/pluginator
 	./functions/examples/application-cr/image
+	./functions/examples/fn-framework-application
 	./functions/examples/injection-tshirt-sizes/image
 	./functions/examples/template-go-nginx/image
 	./functions/examples/validator-kubeval/image

@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Name }}
+  labels:
+    name: {{ .Name }}
+    env: {{ .Environment }}
+    type: web
+spec:
+  replicas: {{ .Replicas }}
+  selector:
+    matchLabels:
+        name: {{ .Name }}
+        env: {{ .Environment }}
+        type: web
+  template:
+    metadata:
+      labels:
+        name: {{ .Name }}
+        env: {{ .Environment }}
+        type: web
+    spec:
+      containers:
+        - name: app
+          image: {{ .AppImage }}
+          args:
+            - web
+          ports:
+            - containerPort: {{ .Port }}
+              name: http
+          readinessProbe:
+            httpGet:
+              path: "/ping"
+              port: {{ .Port }}
+              httpHeaders:
+                - name: "X-Forwarded-Proto"
+                  value: "https"
+            initialDelaySeconds: 20
+            timeoutSeconds: 3
+          env:
+            - name: ENV
+              value: {{ .Environment }}
+            - name: PORT
+              value: "{{ .Port }}"
+            - name: KUBE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources: {{ .Resources }}

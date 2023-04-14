@@ -21,7 +21,7 @@ else
 fi
 
 args=(
-  -y 2022
+  -y $(date +"%Y")
   -c "The Kubernetes Authors."
   -f LICENSE_TEMPLATE
   -ignore "kyaml/internal/forked/github.com/**/*"

@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-worker
+  labels:
+    name: job-worker
+    type: jobs
+    env: production
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      name: job-worker
+      type: jobs
+      env: production
+  template:
+    metadata:
+      labels:
+        name: job-worker
+        type: jobs
+        env: production
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: app
+        image: registry.example.com/path/to/simple-app-sample
+        args: ["job-worker", "--queues", "high,medium,low", "--workers", "6"]
+        env:
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ENV
+          value: production
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-url
+              key: DATABASE_URL
+        resources: {"limits": {"cpu": "2", "memory": "2Gi"}, "requests": {"cpu": "1", "memory": "1Gi"}}
+        readinessProbe:
+          exec:
+            command:
+            - "bin/job-worker-readiness-probe"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-worker-2
+  labels:
+    name: job-worker-2
+    type: jobs
+    env: production
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      name: job-worker-2
+      type: jobs
+      env: production
+  template:
+    metadata:
+      labels:
+        name: job-worker-2
+        type: jobs
+        env: production
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: app
+        image: registry.example.com/path/to/simple-app-sample
+        args: ["job-worker", "--queues", "bg2", "--workers", "2"]
+        env:
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ENV
+          value: production
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-url
+              key: DATABASE_URL
+        resources: {"limits": {"cpu": "500m", "memory": "512Mi"}, "requests": {"cpu": "100m", "memory": "128Mi"}}
+        readinessProbe:
+          exec:
+            command:
+            - "bin/job-worker-readiness-probe"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-worker
+  labels:
+    name: web-worker
+    type: web
+    env: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: web-worker
+      type: web
+      env: production
+  template:
+    metadata:
+      labels:
+        name: web-worker
+        type: web
+        env: production
+    spec:
+      containers:
+      - name: app
+        image: registry.example.com/path/to/simple-app-sample
+        args:
+        - web
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: ENV
+          value: production
+        - name: PORT
+          value: "8080"
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-url
+              key: DATABASE_URL
+        resources: {"limits": {"cpu": "500m", "memory": "512Mi"}, "requests": {"cpu": "100m", "memory": "128Mi"}}
+        readinessProbe:
+          httpGet:
+            port: 8080
+            httpHeaders:
+            - name: "X-Forwarded-Proto"
+              value: "https"
+            path: "/ping"
+          initialDelaySeconds: 20
+          timeoutSeconds: 3
+---
+apiVersion: apps.example.com/v1
+kind: PostgresSecretRequest
+metadata:
+  name: simple-app-sample-postgres
