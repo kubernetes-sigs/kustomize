@@ -36,11 +36,16 @@ be updated on a regular basis going forward, and such updates
 will be reflected in the Kubernetes release notes.
 
 | Kubectl version | Kustomize version |
-| --- | --- |
-| < v1.14 | n/a |
-| v1.14-v1.20 | v2.0.3 |
-| v1.21 | v4.0.5 |
-| v1.22 | v4.2.0 |
+| --------------- | ----------------- |
+| < v1.14         | n/a               |
+| v1.14-v1.20     | v2.0.3            |
+| v1.21           | v4.0.5            |
+| v1.22           | v4.2.0            |
+| v1.23           | v4.4.1            |
+| v1.24           | v4.5.4            |
+| v1.25           | v4.5.7            |
+| v1.26           | v4.5.7            |
+| v1.27           | v5.0.1            |
 
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [#2506]: https://github.com/kubernetes-sigs/kustomize/issues/2506
@@ -63,7 +68,37 @@ This file should declare those resources, and any
 customization to apply to them, e.g. _add a common
 label_.
 
-![base image][imageBase]
+```
+
+base: kustomization + resources
+
+kustomization.yaml                      deployment.yaml                                                 service.yaml
++-------------------------------+       +-------------------------------------------------------+       +-----------------------------------+
+| commonLabels:                 |       | apiVersion: apps/v1                                   |       | apiVersion: v1                    |
+|   app: myapp                  |       | kind: Deployment                                      |       | kind: Service                     |
+| resources:                    |       | metadata:                                             |       | metadata:                         |
+|   - deployment.yaml           |       |   name: myapp                                         |       |   name: myapp                     |
+|   - service.yaml              |       | spec:                                                 |       | spec:                             |
+| configMapGenerator:           |       |   selector:                                           |       |   selector:                       |
+|   - name: myapp-map           |       |     matchLabels:                                      |       |     app: myapp                    |
+|     files:                    |       |       app: myapp                                      |       |   ports:                          |
+|       - env.startup.txt       |       |   template:                                           |       |     - port: <Port>                |
++-------------------------------+       |     metadata:                                         |       |       targetPort: <Target Port>   |
+                                        |       labels:                                         |       +-----------------------------------+
+                                        |         app: myapp                                    |
+                                        |     spec:                                             |
+                                        |       containers:                                     |
+                                        |         - name: myapp                                 |
+                                        |           image: <Image>                              |
+                                        |           resources:                                  |
+                                        |             limits:                                   |
+                                        |               memory: "128Mi"                         |
+                                        |               cpu: "500m"                             |
+                                        |           ports:                                      |
+                                        |             - containerPort: <Port>                   |
+                                        +-------------------------------------------------------+
+
+```
 
 File structure:
 
@@ -99,20 +134,47 @@ Manage traditional [variants] of a configuration - like
 _development_, _staging_ and _production_ - using
 [overlays] that modify a common [base].
 
-![overlay image][imageOverlay]
+```
+
+overlay: kustomization + patches + more resources
+
+kustomization.yaml                              replica_count.yaml                     cpu_count.yaml
++---------------------------------------+       +-------------------------------+      +------------------------------------------+
+| commonLabels:                         |       | apiVersion: apps/v1           |      | apiVersion: apps/v1                      |
+|   app: myapp                          |       | kind: Deployment              |      | kind: Deployment                         |
+| resources:                            |       | metadata:                     |      | metadata:                                |
+|   - ../../base                        |       |   name: myapp                 |      |   name: myapp                            |
+| patches:                              |       | spec:                         |      | spec:                                    |
+|   - path: replica_count.yaml          |       |   selector:                   |      |   selector:                              |
+|   - path: cpu_count.yaml              |       |     matchLabels:              |      |     matchLabels:                         |
+|                                       |       |       app: myapp              |      |       app: myapp                         |
+|                                       |       |   template:                   |      |   template:                              |
+|                                       |       |     metadata:                 |      |     metadata:                            |
+|                                       |       |       labels:                 |      |       labels:                            |
+|                                       |       |         app: myapp            |      |         app: myapp                       |
+|                                       |       |     spec:                     |      |     spec:                                |
+|                                       |       |       replicas: 80            |      |       containers:                        |
+|                                       |       |                               |      |         - name: myapp                    |
+|                                       |       |                               |      |           resources:                     |
+|                                       |       |                               |      |             limits:                      |
+|                                       |       |                               |      |               memory: "128Mi"            |
+|                                       |       |                               |      |               cpu: "7000m"               |
++---------------------------------------+       +-------------------------------+      +------------------------------------------+
+```
+
 
 File structure:
 > ```
 > ~/someApp
 > ├── base
-> │   ├── deployment.yaml
-> │   ├── kustomization.yaml
-> │   └── service.yaml
+> │   ├── deployment.yaml
+> │   ├── kustomization.yaml
+> │   └── service.yaml
 > └── overlays
 >     ├── development
->     │   ├── cpu_count.yaml
->     │   ├── kustomization.yaml
->     │   └── replica_count.yaml
+>     │   ├── cpu_count.yaml
+>     │   ├── kustomization.yaml
+>     │   └── replica_count.yaml
 >     └── production
 >         ├── cpu_count.yaml
 >         ├── kustomization.yaml
