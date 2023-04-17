@@ -125,8 +125,8 @@ env:
 # Used to change the archive formats for specific GOOSs.
 # Most common use case is to archive as zip on Windows.
 format_overrides:
-  - goos: windows
-    format: zip
+- goos: windows
+  format: zip
 
 release:
   github:
