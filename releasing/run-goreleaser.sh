@@ -94,6 +94,11 @@ project_name: $module
 
 archives:
 - name_template: "${module}_${semVer}_{{ .Os }}_{{ .Arch }}"
+  # Used to change the archive formats for specific GOOSs.
+  # Most common use case is to archive as zip on Windows.
+  format_overrides:
+  - goos: windows
+    format: zip
 
 builds:
 - skip: $skipBuild
@@ -121,12 +126,6 @@ env:
 - CGO_ENABLED=0
 - GO111MODULE=on
 - GOWORK=off
-
-# Used to change the archive formats for specific GOOSs.
-# Most common use case is to archive as zip on Windows.
-format_overrides:
-- goos: windows
-  format: zip
 
 release:
   github:
