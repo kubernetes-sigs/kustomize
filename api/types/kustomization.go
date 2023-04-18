@@ -14,11 +14,13 @@ import (
 )
 
 const (
-	KustomizationVersion  = "kustomize.config.k8s.io/v1beta1"
-	KustomizationKind     = "Kustomization"
-	ComponentVersion      = "kustomize.config.k8s.io/v1alpha1"
-	ComponentKind         = "Component"
-	MetadataNamespacePath = "metadata/namespace"
+	KustomizationVersion        = "kustomize.config.k8s.io/v1beta1"
+	KustomizationKind           = "Kustomization"
+	ComponentVersion            = "kustomize.config.k8s.io/v1alpha1"
+	ComponentKind               = "Component"
+	MetadataNamespacePath       = "metadata/namespace"
+	MetadataNamespaceApiVersion = "v1"
+	MetadataNamePath            = "metadata/name"
 
 	OriginAnnotations      = "originAnnotations"
 	TransformerAnnotations = "transformerAnnotations"
