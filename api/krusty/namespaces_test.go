@@ -801,3 +801,31 @@ metadata:
   namespace: iter8-monitoring
 `)
 }
+
+// Demonstrates that metadata.name is only overridden for a kind: Namespace with apiVersion: v1
+// Test for issue #5072
+func TestNameNotOveriddenForNonCoreApiVersionOnANamespaceKind(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+
+	th.WriteF("azure-servicebus.yaml", `
+apiVersion: servicebus.azure.com/v1beta20210101preview
+kind: Namespace
+metadata:
+  name: core-sb-99
+  namespace: without-podinfo
+`)
+	th.WriteK(".", `
+namespace: podinfo
+resources:
+  - azure-servicebus.yaml
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: servicebus.azure.com/v1beta20210101preview
+kind: Namespace
+metadata:
+  name: core-sb-99
+  namespace: podinfo
+`)
+}
