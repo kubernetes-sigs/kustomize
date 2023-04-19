@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/patchtransformer
 
-go 1.19
+go 1.20
 
 require (
 	github.com/evanphx/json-patch v4.11.0+incompatible

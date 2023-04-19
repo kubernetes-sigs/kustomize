@@ -86,7 +86,7 @@ func (c *Converter) Convert() error {
 }
 
 func (c *Converter) getDockerfile() string {
-	return `FROM golang:1.19-bullseye
+	return `FROM golang:1.20-bullseye
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY . .
@@ -151,13 +151,13 @@ func (c *Converter) mkDstDir() error {
 		return fmt.Errorf("directory %s has already existed", p)
 	}
 
-	return os.MkdirAll(p, 0755)
+	return os.MkdirAll(p, 0o755)
 }
 
 func (c *Converter) write(m map[string]string) error {
 	for k, v := range m {
 		p := filepath.Join(c.outputDir, k)
-		err := os.WriteFile(p, []byte(v), 0644)
+		err := os.WriteFile(p, []byte(v), 0o644)
 		if err != nil {
 			return err
 		}

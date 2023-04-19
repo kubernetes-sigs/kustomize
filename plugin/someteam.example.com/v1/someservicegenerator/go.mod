@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/someservicegenerator
 
-go 1.19
+go 1.20
 
 require (
 	sigs.k8s.io/kustomize/api v0.13.2

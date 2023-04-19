@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/config
 
-go 1.19
+go 1.20
 
 require (
 	github.com/go-errors/errors v1.4.2
