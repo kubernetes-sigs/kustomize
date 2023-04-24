@@ -366,7 +366,7 @@ func (lc *localizer) localizeFile(path string) (string, error) {
 // localizeFileWithContent writes content to the localized file path and returns the localized path.
 func (lc *localizer) localizeFileWithContent(path string, content []byte) (string, error) {
 	var locPath string
-	if loader.IsRemoteFile(path) {
+	if remote, _ := loader.IsRemoteFile(path); remote {
 		if lc.fSys.Exists(lc.root.Join(LocalizeDir)) {
 			return "", errors.Errorf("%s already contains %s needed to store file %q", lc.root, LocalizeDir, path)
 		}
