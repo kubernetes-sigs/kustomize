@@ -127,7 +127,6 @@ func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
 		origin = &resource.Origin{}
 	}
 	kt.origin = origin
-	fmt.Println("--in makeCustomizedResMap--")
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err
@@ -194,7 +193,6 @@ func (kt *KustTarget) AccumulateTarget() (
 // (or empty if the Component does not have a parent).
 func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	resRa *accumulator.ResAccumulator, err error) {
-	fmt.Println("--in accumulateTarget--")
 	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "accumulating resources")
@@ -313,7 +311,6 @@ func (kt *KustTarget) configureExternalGenerators() (
 			return nil, errors.WrapPrefixf(err, "configuring external generator")
 		}
 	}
-	fmt.Println("--in configureExternalGenerator--")
 	ra, err := kt.accumulateResources(ra, generatorPaths)
 	if err != nil {
 		return nil, err
@@ -361,7 +358,6 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]*r
 			return nil, errors.WrapPrefixf(err, "configuring external transformer")
 		}
 	}
-	fmt.Println("--in configureExternalTransformer--")
 	ra, err := kt.accumulateResources(ra, transformerPaths)
 	if err != nil {
 		return nil, err
@@ -412,14 +408,12 @@ func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) error {
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
 	for _, path := range paths {
-		fmt.Printf("\naccumulateResources - Accumulate path %s", path)
 		// try loading resource as file then as base (directory, git repository, or oci manifest)
 		if errF := kt.accumulateFile(ra, path); errF != nil {
 			// not much we can do if the error is an HTTP error so we bail out
 			if errors.Is(errF, load.ErrHTTP) {
 				return nil, errF
 			}
-			fmt.Printf("\n Loading new path: %s - kt: %#v\n\n", path, kt.ldr)
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
 				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
@@ -509,7 +503,6 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 
 	var subRa *accumulator.ResAccumulator
-	fmt.Println("--in accumulateDirectory--")
 	if isComponent {
 		// Components don't create a new accumulator: the kustomization directives are added to the current accumulator
 		subRa, err = subKt.accumulateTarget(ra)
@@ -534,11 +527,9 @@ func (kt *KustTarget) accumulateDirectory(
 func (kt *KustTarget) accumulateFile(
 	ra *accumulator.ResAccumulator, path string) error {
 	resources, err := kt.rFactory.FromFile(kt.ldr, path)
-	fmt.Printf("\naccumulateFile - Trying to accumulate file %s as %v\n with err: %v\n\n", path, resources, err)
 	if err != nil {
 		return errors.WrapPrefixf(err, "accumulating resources from '%s'", path)
 	}
-	fmt.Printf("\naccumulateFile - We have origin? %v\n", kt.origin)
 	if kt.origin != nil {
 		originAnno, err := kt.origin.Append(path).String()
 		if err != nil {
@@ -549,12 +540,10 @@ func (kt *KustTarget) accumulateFile(
 			return errors.WrapPrefixf(err, "cannot add path annotation for '%s'", path)
 		}
 	}
-	fmt.Println("Appending all resources")
 	err = ra.AppendAll(resources)
 	if err != nil {
 		return errors.WrapPrefixf(err, "merging resources from '%s'", path)
 	}
-	fmt.Println("---- DONE with resource ----")
 	return nil
 }
 

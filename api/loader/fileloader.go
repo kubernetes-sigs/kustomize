@@ -26,6 +26,13 @@ func IsRemoteFile(path string) bool {
 	return err == nil && (u.Scheme == "http" || u.Scheme == "https")
 }
 
+// IsOCIManifest returns whether path has an oci scheme that kustomize allows for
+// remote files. See https://github.com/kubernetes-sigs/kustomize/blob/master/examples/remoteBuild.md
+func IsOCIManifest(path string) bool {
+	u, err := url.Parse(path)
+	return err == nil && u.Scheme == "oci"
+}
+
 // fileLoader is a kustomization's interface to files.
 //
 // The directory in which a kustomization file sits
@@ -355,6 +362,9 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 	if IsRemoteFile(path) {
 		return fl.httpClientGetContent(path)
 	}
+	if IsOCIManifest(path) {
+		return fl.pullOCIManifest(path)
+	}
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)
 	}
@@ -387,6 +397,10 @@ func (fl *fileLoader) httpClientGetContent(path string) ([]byte, error) {
 	}
 	content, err := io.ReadAll(resp.Body)
 	return content, errors.Wrap(err)
+}
+
+func (fl *fileLoader) pullOCIManifest(path string) ([]byte, error) {
+	return []byte{}, fmt.Errorf("oci manifest pull not yet implemented")
 }
 
 // Cleanup runs the cleaner.

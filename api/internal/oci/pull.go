@@ -80,6 +80,7 @@ const (
 // elements Kustomize uses for other purposes (e.g. query params that turn into args, and
 // the path to the kustomization root within the repo).
 func NewOCISpecFromURL(n string) (*OciSpec, error) {
+	fmt.Printf("\nWorking on: %s", n)
 	ociSpec := &OciSpec{
 		raw:     n,
 		Dir:     notPulled,
@@ -89,6 +90,7 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 
 	// parse repo URL
 	ociTag, err := name.NewTag(strings.Replace(n, ociPrefix, "", 1))
+	fmt.Printf("\nMy tag is: %v - err: %v", ociTag, err)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +111,7 @@ func PullArtifact(ociSpec *OciSpec) error {
 	}
 	ociSpec.Dir = dir
 	ociURL, err := fluxClient.ParseArtifactURL(ociSpec.raw)
-	fmt.Printf("Cloning: %s - err? %v\n", ociURL, err)
+	fmt.Printf("\n\nCloning: %s - err? %v\n", ociURL, err)
 	if err != nil {
 		return err
 	}
