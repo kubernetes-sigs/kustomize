@@ -35,9 +35,8 @@ func NewLoader(
 	ociSpec, err := oci.NewOCISpecFromURL(target)
 	fmt.Printf("Spec: %#v", ociSpec)
 	if err == nil {
-		return nil, errors.Errorf("not yet implemented")
-		// return newLoaderAtOCIManifest(
-		// 	ociSpec, fSys, nil, oci.DownloadImg)
+		return newLoaderAtOCIManifest(
+			ociSpec, fSys, nil, oci.PullArtifact)
 	}
 
 	// target is a local filesystem

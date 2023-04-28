@@ -2,10 +2,10 @@ package oci
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 
+	fluxClient "github.com/fluxcd/pkg/oci/client"
 	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/api/filesys"
 )
@@ -24,14 +24,14 @@ type OciSpec struct {
 	// Host, e.g. ghcr.io, gcr.io, docker.io, etc.
 	Registry string
 
-	// RepoPath name (Path to repository),
+	// RepoPath name (Path to artifact org/name),
 	// e.g. kubernetes-sigs/kustomize
 	RepoPath string
 
-	// Dir is where the repository is cloned to.
+	// Dir is where the artifact is unpacked.
 	Dir filesys.ConfirmedDir
 
-	// Relative path in the repository, and in the cloneDir,
+	// Relative path in the artifact, and in the cloneDir,
 	// to a Kustomization.
 	KustRootPath string
 
@@ -86,11 +86,9 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 		Timeout: defaultTimeout,
 	}
 	ociSpec.provider.Set("generic")
-	if filepath.IsAbs(n) {
-		return nil, fmt.Errorf("uri looks like abs path: %s", n)
-	}
+
 	// parse repo URL
-	ociTag, err := name.NewTag(strings.Replace(n, "oci://", "", 1))
+	ociTag, err := name.NewTag(strings.Replace(n, ociPrefix, "", 1))
 	if err != nil {
 		return nil, err
 	}
@@ -101,19 +99,29 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 	return ociSpec, nil
 }
 
-/*
-func pullArtifact(args arguments, localizeFlags theFlags) error {
-	output := args.dest
-	ociURL, err := oci.ParseArtifactURL(args.target)
+// Puller is a function that can pull an OCI image
+type Puller func(ociSpec *OciSpec) error
+
+func PullArtifact(ociSpec *OciSpec) error {
+	dir, err := filesys.NewTmpConfirmedDir()
 	if err != nil {
 		return err
 	}
+	ociSpec.Dir = dir
+	ociURL, err := fluxClient.ParseArtifactURL(ociSpec.raw)
+	fmt.Printf("Cloning: %s - err? %v\n", ociURL, err)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+/*
 	timeout := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	ociClient := oci.NewLocalClient()
+	ociClient := fluxClient.NewLocalClient()
 
 	if localizeFlags.provider.String() == v1beta2.GenericOCIProvider && localizeFlags.creds != "" {
 		log.Println("logging in to registry with credentials")

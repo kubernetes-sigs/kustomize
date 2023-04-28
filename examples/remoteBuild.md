@@ -10,13 +10,13 @@ some query string parameters. Kustomize does not currently support ports in the
 URL. The directory is specified by appending a `//` after the repo URL. The
 following query string parameters can also be specified:
 
- * `ref` - a [`git fetch`-able ref](https://git-scm.com/docs/git-fetch), typically a branch, tag, or full commit hash
-   (short hashes are not supported)
- * `version` - same as `ref`. If `ref` is provided, this is ignored.
- * `timeout` (default `27s`) - a number in seconds, or a go duration. specifies
-   the timeout for fetching the resource
- * `submodules` (default `true`) - a boolean specifying whether to clone
-   submodules or not
+- `ref` - a [`git fetch`-able ref](https://git-scm.com/docs/git-fetch), typically a branch, tag, or full commit hash
+  (short hashes are not supported)
+- `version` - same as `ref`. If `ref` is provided, this is ignored.
+- `timeout` (default `27s`) - a number in seconds, or a go duration. specifies
+  the timeout for fetching the resource
+- `submodules` (default `true`) - a boolean specifying whether to clone
+  submodules or not
 
 For example,
 `https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6`
@@ -35,7 +35,10 @@ of the `ref`. This behavior is differs from a direct path reference
 like `/path/to/repo/someSubdir`, in which case Kustomize will not use Git at
 all, and process the files at the path directly.
 
+`oci://` clones are supported. For example, `oci://ghcr.io/frenchben/kustomize-manifest:latest` will download and extract the manifest via registry pull, and run `kustomize build` inside of the root directory.
+
 ## remote files
+
 Resources can reference remote files via their raw GitHub urls, such
 as `https://raw.githubusercontent.com/kubernetes-sigs/kustomize/8ea501347443c7760217f2c1817c5c60934cf6a5/examples/helloWorld/deployment.yaml`
 .
@@ -43,10 +46,20 @@ as `https://raw.githubusercontent.com/kubernetes-sigs/kustomize/8ea501347443c776
 # Examples
 
 To try this immediately, run a build against the kustomization
-in the [multibases](multibases/README.md) example.  There's
+in the [multibases](multibases/README.md) example. There's
 one pod in the output:
 
 <!-- @remoteOverlayBuild @testAgainstLatestRelease -->
+
+```
+target="oci://ghcr.io/frenchben/kustomize-manifest:latest"
+test 1 == \
+  $(kustomize build $target | grep nginx-deployment | wc -l); \
+  echo $?
+```
+
+<!-- @remoteOverlayBuild @testAgainstLatestRelease -->
+
 ```
 target="https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
 test 1 == \
@@ -59,6 +72,7 @@ Run against the overlay in that example to get three pods
 someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @testAgainstLatestRelease -->
+
 ```
 target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
 test 3 == \
@@ -69,6 +83,7 @@ test 3 == \
 A remote kustomization directory resource can also be a URL:
 
 <!-- @createOverlay @testAgainstLatestRelease -->
+
 ```
 DEMO_HOME=$(mktemp -d)
 
@@ -83,9 +98,33 @@ Build this to confirm that all three pods from the base
 have the `remote-` prefix.
 
 <!-- @remoteBases @testAgainstLatestRelease -->
+
 ```
 test 3 == \
   $(kustomize build $DEMO_HOME | grep remote-.*-myapp-pod | wc -l); \
+  echo $?
+```
+
+<!-- @createOverlay @testAgainstLatestRelease -->
+
+```
+MANIFEST_HOME=$(mktemp -d)
+
+cat <<EOF >$MANIFEST_HOME/kustomization.yaml
+resources:
+- oci://ghcr.io/frenchben/kustomize-manifest:latest
+namePrefix: remote-
+EOF
+```
+
+Build this to confirm that all three pods from the base
+have the `remote-` prefix.
+
+<!-- @remoteBases @testAgainstLatestRelease -->
+
+```
+test 1 == \
+  $(kustomize build $MANIFEST_HOME | grep remote-.*-nginx-deployment | wc -l); \
   echo $?
 ```
 
@@ -101,6 +140,7 @@ subdirectories).
 Here are some examples of legacy urls
 
 <!-- @createOverlay @testAgainstLatestRelease -->
+
 ```
 DEMO_HOME=$(mktemp -d)
 
