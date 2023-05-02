@@ -54,8 +54,8 @@ See [GCR page] for available images.
 The following commands are how to pull and run kustomize {{<example-semver-version>}} docker image.
 
 ```bash
-docker pull k8s.gcr.io/kustomize/kustomize:{{< example-version >}}
-docker run k8s.gcr.io/kustomize/kustomize:{{< example-version >}} version
+docker pull registry.k8s.io/kustomize/kustomize:{{< example-version >}}
+docker run registry.k8s.io/kustomize/kustomize:{{< example-version >}} version
 ```
 
 ## Go Source

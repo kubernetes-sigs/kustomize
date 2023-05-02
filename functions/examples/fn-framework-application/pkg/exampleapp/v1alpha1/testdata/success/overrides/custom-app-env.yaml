@@ -1,0 +1,6 @@
+env:
+- name: MY_NEW_VAR
+  value: "new value"
+envFrom:
+- configMapRef:
+    name: custom-configmap

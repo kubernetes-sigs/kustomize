@@ -97,7 +97,12 @@ func (p *plugin) validateArgs() (err error) {
 	// be under the loader root (unless root restrictions are
 	// disabled).
 	if p.ValuesFile == "" {
-		p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
+		// If the version is specified, use the versioned values file.
+		if p.Version != "" {
+			p.ValuesFile = filepath.Join(p.ChartHome, fmt.Sprintf("%s-%s", p.Name, p.Version), p.Name, "values.yaml")
+		} else {
+			p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
+		}
 	}
 	for i, file := range p.AdditionalValuesFiles {
 		// use Load() to enforce root restrictions
@@ -138,10 +143,17 @@ func (p *plugin) errIfIllegalValuesMerge() error {
 }
 
 func (p *plugin) absChartHome() string {
+	var chartHome string
 	if filepath.IsAbs(p.ChartHome) {
-		return p.ChartHome
+		chartHome = p.ChartHome
+	} else {
+		chartHome = filepath.Join(p.h.Loader().Root(), p.ChartHome)
 	}
-	return filepath.Join(p.h.Loader().Root(), p.ChartHome)
+
+	if p.Version != "" {
+		return filepath.Join(chartHome, fmt.Sprintf("%s-%s", p.Name, p.Version))
+	}
+	return chartHome
 }
 
 func (p *plugin) runHelmCommand(
@@ -161,8 +173,8 @@ func (p *plugin) runHelmCommand(
 		helm := p.h.GeneralConfig().HelmConfig.Command
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
-				"unable to run: '%s %s' with env=%s (is '%s' installed?)",
-				helm, strings.Join(args, " "), env, helm),
+				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
+				helm, strings.Join(args, " "), env, helm, err),
 			stderr.String(),
 		)
 	}
@@ -268,15 +280,18 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 	// helm may produce messages to stdout before it
 	r := &kio.ByteReader{Reader: bytes.NewBufferString(string(stdout)), OmitReaderAnnotations: true}
 	nodes, err := r.Read()
+	if err != nil {
+		return nil, fmt.Errorf("error reading helm output: %w", err)
+	}
 
 	if len(nodes) != 0 {
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w\n", err)
+			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
 		}
 		return rm, nil
 	}
-	return nil, fmt.Errorf("could not parse bytes into resource map: %w\n", resMapErr)
+	return nil, fmt.Errorf("could not parse bytes into resource map: %w", resMapErr)
 }
 
 func (p *plugin) pullCommand() []string {
