@@ -82,20 +82,20 @@ kustomization.yaml                      deployment.yaml                         
 | configMapGenerator:           |       |   selector:                                           |       |   selector:                       |
 |   - name: myapp-map           |       |     matchLabels:                                      |       |     app: myapp                    |
 |     files:                    |       |       app: myapp                                      |       |   ports:                          |
-|       - env.startup.txt       |       |   template:                                           |       |     - port: <Port>                |
-+-------------------------------+       |     metadata:                                         |       |       targetPort: <Target Port>   |
+|       - env.startup.txt       |       |   template:                                           |       |     - port: 6060                  |
++-------------------------------+       |     metadata:                                         |       |       targetPort: 6060            |
                                         |       labels:                                         |       +-----------------------------------+
                                         |         app: myapp                                    |
                                         |     spec:                                             |
                                         |       containers:                                     |
                                         |         - name: myapp                                 |
-                                        |           image: <Image>                              |
+                                        |           image: myapp                                |
                                         |           resources:                                  |
                                         |             limits:                                   |
                                         |               memory: "128Mi"                         |
                                         |               cpu: "500m"                             |
                                         |           ports:                                      |
-                                        |             - containerPort: <Port>                   |
+                                        |             - containerPort: 6060                     |
                                         +-------------------------------------------------------+
 
 ```
@@ -145,20 +145,13 @@ kustomization.yaml                              replica_count.yaml              
 | resources:                            |       | metadata:                     |      | metadata:                                |
 |   - ../../base                        |       |   name: myapp                 |      |   name: myapp                            |
 | patches:                              |       | spec:                         |      | spec:                                    |
-|   - path: replica_count.yaml          |       |   selector:                   |      |   selector:                              |
-|   - path: cpu_count.yaml              |       |     matchLabels:              |      |     matchLabels:                         |
-|                                       |       |       app: myapp              |      |       app: myapp                         |
-|                                       |       |   template:                   |      |   template:                              |
-|                                       |       |     metadata:                 |      |     metadata:                            |
-|                                       |       |       labels:                 |      |       labels:                            |
-|                                       |       |         app: myapp            |      |         app: myapp                       |
-|                                       |       |     spec:                     |      |     spec:                                |
-|                                       |       |       replicas: 80            |      |       containers:                        |
-|                                       |       |                               |      |         - name: myapp                    |
-|                                       |       |                               |      |           resources:                     |
-|                                       |       |                               |      |             limits:                      |
-|                                       |       |                               |      |               memory: "128Mi"            |
-|                                       |       |                               |      |               cpu: "7000m"               |
+|   - path: replica_count.yaml          |       |   spec:                       |      |   spec:                                  |
+|                                       |       |     replicas: 80              |      |     containers:                          |
+|                                       |       |                               |      |       - name: myapp                      |
+|                                       |       |                               |      |         resources:                       |
+|                                       |       |                               |      |           limits:                        |
+|                                       |       |                               |      |             memory: "128Mi"              |
+|                                       |       |                               |      |             cpu: "7000m"                 |
 +---------------------------------------+       +-------------------------------+      +------------------------------------------+
 ```
 
@@ -228,8 +221,6 @@ is governed by the [Kubernetes Code of Conduct].
 [applied]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#apply
 [base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
 [declarative configuration]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#declarative-application-management
-[imageBase]: images/base.jpg
-[imageOverlay]: images/overlay.jpg
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
 [kubernetes style]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kubernetes-style-object
