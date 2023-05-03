@@ -4,8 +4,6 @@
 package resmap
 
 import (
-	"fmt"
-
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/kusterr"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -56,7 +54,6 @@ func (rmF *Factory) FromResourceSlice(ress []*resource.Resource) ResMap {
 func (rmF *Factory) FromFile(
 	loader ifc.Loader, path string) (ResMap, error) {
 	content, err := loader.Load(path)
-	fmt.Printf("\nFromFile - Loaded content %v for path: %s - err: %v\n\n", content, path, err)
 	if err != nil {
 		return nil, err
 	}

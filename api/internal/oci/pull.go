@@ -1,7 +1,9 @@
 package oci
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -80,7 +82,6 @@ const (
 // elements Kustomize uses for other purposes (e.g. query params that turn into args, and
 // the path to the kustomization root within the repo).
 func NewOCISpecFromURL(n string) (*OciSpec, error) {
-	fmt.Printf("\nWorking on: %s", n)
 	ociSpec := &OciSpec{
 		raw:     n,
 		Dir:     notPulled,
@@ -88,9 +89,13 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 	}
 	ociSpec.provider.Set("generic")
 
+	// check if string starts with  "oci://"
+	if !strings.Contains(n, ociPrefix) {
+		return nil, fmt.Errorf("URL must be in format 'oci://<domain>/<org>/<repo>'")
+	}
+
 	// parse repo URL
 	ociTag, err := name.NewTag(strings.Replace(n, ociPrefix, "", 1))
-	fmt.Printf("\nMy tag is: %v - err: %v", ociTag, err)
 	if err != nil {
 		return nil, err
 	}
@@ -111,50 +116,23 @@ func PullArtifact(ociSpec *OciSpec) error {
 	}
 	ociSpec.Dir = dir
 	ociURL, err := fluxClient.ParseArtifactURL(ociSpec.raw)
-	fmt.Printf("\n\nCloning: %s - err? %v\n", ociURL, err)
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-/*
 	timeout := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	ociClient := fluxClient.NewLocalClient()
 
-	if localizeFlags.provider.String() == v1beta2.GenericOCIProvider && localizeFlags.creds != "" {
-		log.Println("logging in to registry with credentials")
-		if err := ociClient.LoginWithCredentials(localizeFlags.creds); err != nil {
-			return fmt.Errorf("could not login with credentials: %w", err)
-		}
-	}
-
-	if localizeFlags.provider.String() != v1beta2.GenericOCIProvider {
-		log.Println("logging in to registry with provider credentials")
-		ociProvider, err := localizeFlags.provider.ToOCIProvider()
-		if err != nil {
-			return fmt.Errorf("provider not supported: %w", err)
-		}
-
-		if err := ociClient.LoginWithProvider(ctx, ociURL, ociProvider); err != nil {
-			return fmt.Errorf("error during login with provider: %w", err)
-		}
-	}
-
-	log.Printf("pulling artifact from %s", ociURL)
-
-	meta, err := ociClient.Pull(ctx, ociURL, output)
+	meta, err := ociClient.Pull(ctx, ociURL, ociSpec.Dir.String())
 	if err != nil {
 		return err
 	}
 
 	log.Printf("source %s", meta.Source)
-	log.Printf("revision %s", meta.Revision)
-	log.Printf("digest %s", meta.Digest)
-	log.Printf("artifact content extracted to %s", output)
+	// log.Printf("revision %s", meta.Revision)
+	// log.Printf("digest %s", meta.Digest)
+	// log.Printf("artifact content extracted to %s", ociSpec.Dir.String())
 	return nil
 }
-*/

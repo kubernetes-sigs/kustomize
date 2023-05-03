@@ -182,7 +182,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
 		return nil, errors.Errorf("new root cannot be empty")
 	}
-
+	// Assume it's a git repo
 	repoSpec, err := git.NewRepoSpecFromURL(path)
 	if err == nil {
 		// Treat this as git repo clone request.
@@ -192,7 +192,13 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		return newLoaderAtGitClone(
 			repoSpec, fl.fSys, fl, fl.cloner)
 	}
-
+	// Assume it's an OCI manifest
+	ociSpec, err := oci.NewOCISpecFromURL(path)
+	if err == nil {
+		return newLoaderAtOCIManifest(
+			ociSpec, fl.fSys, fl, oci.PullArtifact)
+	}
+	// Assume its a local dir
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
@@ -363,7 +369,7 @@ func (fl *fileLoader) Load(path string) ([]byte, error) {
 		return fl.httpClientGetContent(path)
 	}
 	if IsOCIManifest(path) {
-		return fl.pullOCIManifest(path)
+		return []byte{}, fmt.Errorf("oci manifest needs to be pulled")
 	}
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)
@@ -397,10 +403,6 @@ func (fl *fileLoader) httpClientGetContent(path string) ([]byte, error) {
 	}
 	content, err := io.ReadAll(resp.Body)
 	return content, errors.Wrap(err)
-}
-
-func (fl *fileLoader) pullOCIManifest(path string) ([]byte, error) {
-	return []byte{}, fmt.Errorf("oci manifest pull not yet implemented")
 }
 
 // Cleanup runs the cleaner.
