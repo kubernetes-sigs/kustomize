@@ -97,7 +97,12 @@ func (p *plugin) validateArgs() (err error) {
 	// be under the loader root (unless root restrictions are
 	// disabled).
 	if p.ValuesFile == "" {
-		p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
+		// If the version is specified, use the versioned values file.
+		if p.Version != "" {
+			p.ValuesFile = filepath.Join(p.ChartHome, fmt.Sprintf("%s-%s", p.Name, p.Version), p.Name, "values.yaml")
+		} else {
+			p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
+		}
 	}
 	for i, file := range p.AdditionalValuesFiles {
 		// use Load() to enforce root restrictions
@@ -138,10 +143,17 @@ func (p *plugin) errIfIllegalValuesMerge() error {
 }
 
 func (p *plugin) absChartHome() string {
+	var chartHome string
 	if filepath.IsAbs(p.ChartHome) {
-		return p.ChartHome
+		chartHome = p.ChartHome
+	} else {
+		chartHome = filepath.Join(p.h.Loader().Root(), p.ChartHome)
 	}
-	return filepath.Join(p.h.Loader().Root(), p.ChartHome)
+
+	if p.Version != "" {
+		return filepath.Join(chartHome, fmt.Sprintf("%s-%s", p.Name, p.Version))
+	}
+	return chartHome
 }
 
 func (p *plugin) runHelmCommand(

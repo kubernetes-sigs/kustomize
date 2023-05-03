@@ -1,0 +1,21 @@
+apiVersion: platform.example.com/v1alpha1
+kind: ExampleApp
+metadata:
+  name: simple-app-sample
+env: production
+workloads:
+  webWorkers:
+    - name: web-worker
+      domains:
+      - first.example.com
+    - name: web-worker-no-sidecar
+      domains:
+      - second.example.com
+
+overrides:
+  additionalResources:
+    - custom-configmap.yaml
+  resourcePatches:
+    - web-worker-sidecar.yaml
+  containerPatches:
+    - custom-app-env.yaml
