@@ -124,7 +124,7 @@ have the `remote-` prefix.
 
 ```
 test 1 == \
-  $(kustomize build $MANIFEST_HOME | grep remote-.*-nginx-deployment | wc -l); \
+  $(kustomize build $MANIFEST_HOME | grep remote-nginx-deployment | wc -l); \
   echo $?
 ```
 
