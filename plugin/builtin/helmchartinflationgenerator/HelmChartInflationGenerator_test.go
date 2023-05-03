@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -578,4 +579,140 @@ valuesInline:
     enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, "")
+}
+
+func TestHelmChartInflationGeneratorWithSameChartMultipleVersions(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	tests := []struct {
+		name        string
+		chartName   string
+		repo        string
+		version     string
+		releaseName string
+	}{
+		{
+			name:        "terraform chart with no version grabs latest",
+			chartName:   "terraform",
+			repo:        "https://helm.releases.hashicorp.com",
+			version:     "",
+			releaseName: "terraform-latest",
+		},
+		{
+			name:        "terraform chart with version 1.1.1",
+			chartName:   "terraform",
+			repo:        "https://helm.releases.hashicorp.com",
+			version:     "1.1.1",
+			releaseName: "terraform-1.1.1",
+		},
+		{
+			name:        "terraform chart with version 1.1.1 again",
+			chartName:   "terraform",
+			repo:        "https://helm.releases.hashicorp.com",
+			version:     "1.1.1",
+			releaseName: "terraform-1.1.1-1",
+		},
+		{
+			name:        "terraform chart with version 1.1.2",
+			chartName:   "terraform",
+			repo:        "https://helm.releases.hashicorp.com",
+			version:     "1.1.2",
+			releaseName: "terraform-1.1.2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := fmt.Sprintf(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: %s
+name: %s
+version: %s
+repo: %s
+releaseName: %s
+`, tt.chartName, tt.chartName, tt.version, tt.repo, tt.releaseName)
+
+			rm := th.LoadAndRunGenerator(config)
+			assert.True(t, len(rm.Resources()) > 0)
+
+			var chartDir string
+			if tt.version != "" {
+				chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
+			} else {
+				chartDir = fmt.Sprintf("charts/%s", tt.chartName)
+			}
+
+			d, err := th.GetFSys().ReadFile(filepath.Join(th.GetRoot(), chartDir, "Chart.yaml"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Contains(t, string(d), fmt.Sprintf("name: %s", tt.chartName))
+			if tt.version != "" {
+				assert.Contains(t, string(d), fmt.Sprintf("version: %s", tt.version))
+			}
+		})
+	}
+}
+
+// Test that verifies +1 instances of same chart with different versions
+// https://github.com/kubernetes-sigs/kustomize/issues/4813
+func TestHelmChartInflationGeneratorWithMultipleInstancesSameChartDifferentVersions(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	podinfo1 := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: podinfo
+name: podinfo
+version: 6.2.1
+repo: https://stefanprodan.github.io/podinfo
+releaseName: podinfo1
+`)
+
+	podinfo2 := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+ name: podinfo
+name: podinfo
+version: 6.1.8
+repo: https://stefanprodan.github.io/podinfo
+releaseName: podinfo2
+`)
+
+	podinfo1Img, err := podinfo1.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
+	assert.NoError(t, err)
+	assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.2.1", podinfo1Img)
+
+	podinfo2Img, err := podinfo2.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
+	assert.NoError(t, err)
+	assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.1.8", podinfo2Img)
+
+	podinfo1ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.2.1/podinfo")
+	assert.True(t, th.GetFSys().Exists(podinfo1ChartsDir))
+
+	podinfo2ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.1.8/podinfo")
+	assert.True(t, th.GetFSys().Exists(podinfo2ChartsDir))
+
+	podinfo1ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo1ChartsDir, "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(podinfo1ChartContents), "version: 6.2.1")
+
+	podinfo2ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo2ChartsDir, "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
 }

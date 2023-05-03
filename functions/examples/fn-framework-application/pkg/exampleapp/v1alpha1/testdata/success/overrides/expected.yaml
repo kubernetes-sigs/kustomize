@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-worker
+  labels:
+    name: web-worker
+    type: web
+    env: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: web-worker
+      type: web
+      env: production
+  template:
+    metadata:
+      labels:
+        name: web-worker
+        type: web
+        env: production
+    spec:
+      containers:
+      - name: app
+        image: registry.example.com/path/to/simple-app-sample
+        args:
+        - web
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: custom-configmap
+        env:
+        - name: ENV
+          value: production
+        - name: PORT
+          value: "8080"
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_NEW_VAR
+          value: "new value"
+        resources: {"limits": {"cpu": "500m", "memory": "512Mi"}, "requests": {"cpu": "100m", "memory": "128Mi"}}
+        readinessProbe:
+          httpGet:
+            port: 8080
+            httpHeaders:
+            - name: "X-Forwarded-Proto"
+              value: "https"
+            path: "/ping"
+          initialDelaySeconds: 20
+          timeoutSeconds: 3
+      - name: sidecar
+        image: registry.example.com/path/to/custom-sidecar
+        args:
+        - run
+        envFrom:
+        - configMapRef:
+            name: custom-configmap
+        env:
+        - name: MY_NEW_VAR
+          value: "new value"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-worker-no-sidecar
+  labels:
+    name: web-worker-no-sidecar
+    type: web
+    env: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: web-worker-no-sidecar
+      type: web
+      env: production
+  template:
+    metadata:
+      labels:
+        name: web-worker-no-sidecar
+        type: web
+        env: production
+    spec:
+      containers:
+      - name: app
+        image: registry.example.com/path/to/simple-app-sample
+        args:
+        - web
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: custom-configmap
+        env:
+        - name: ENV
+          value: production
+        - name: PORT
+          value: "8080"
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_NEW_VAR
+          value: "new value"
+        resources: {"limits": {"cpu": "500m", "memory": "512Mi"}, "requests": {"cpu": "100m", "memory": "128Mi"}}
+        readinessProbe:
+          httpGet:
+            port: 8080
+            httpHeaders:
+            - name: "X-Forwarded-Proto"
+              value: "https"
+            path: "/ping"
+          initialDelaySeconds: 20
+          timeoutSeconds: 3
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-configmap
+data:
+  LOADED: "true"

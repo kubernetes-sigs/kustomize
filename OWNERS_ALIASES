@@ -13,19 +13,12 @@ aliases:
     - yuwenma
     - annasong20
     - koba1t
-
-  kyaml-approvers:
-    - mengqiy
-    - mortent
-    - phanimarupaka
-  kyaml-reviewers:
-    - mengqiy
-    - mortent
-    - phanimarupaka
-
-  emeritus-approvers:
-    - liujingfang1
-    - Shell32-Natsu
-    - justinsb
-    - monopole
-    - pwittrock
+  #  emeritus:
+  #    - liujingfang1
+  #    - Shell32-Natsu
+  #    - justinsb
+  #    - monopole
+  #    - pwittrock
+  #    - mengqiy
+  #    - mortent
+  #    - phanimarupaka

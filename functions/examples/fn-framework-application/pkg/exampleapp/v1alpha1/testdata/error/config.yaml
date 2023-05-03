@@ -1,0 +1,21 @@
+apiVersion: platform.example.com/v1alpha1
+kind: ExampleApp
+metadata:
+  name: simple-app-sample
+env: invalid
+workloads:
+  webWorkers:
+    - name: web-worker
+      replicas: -1
+      resources: small
+      domains:
+      - example.com
+    - name: web-worker-2
+      domains:
+      - example.com
+  jobWorkers:
+    - name: job-worker-$$
+      queues: []
+datastores:
+  mongoDB: simple-app-sample-mongo
+extraProperty: true

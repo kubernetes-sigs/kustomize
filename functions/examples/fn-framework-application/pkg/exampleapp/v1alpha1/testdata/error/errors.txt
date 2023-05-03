@@ -1,0 +1,8 @@
+validation failure list:
+.extraProperty in body is a forbidden property
+workloads.jobWorkers\[0\].name in body should match
+workloads.jobWorkers\[0\].queues in body should have at least 1 items
+workloads.webWorkers\[0\].replicas in body should be greater than or equal to 0
+datastores.mongoDB in body is a forbidden property
+env in body should be one of \[production staging development\]
+duplicate domain \"example.com\" in worker 1
