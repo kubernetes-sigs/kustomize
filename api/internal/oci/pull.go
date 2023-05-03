@@ -3,7 +3,6 @@ package oci
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -125,14 +124,9 @@ func PullArtifact(ociSpec *OciSpec) error {
 
 	ociClient := fluxClient.NewLocalClient()
 
-	meta, err := ociClient.Pull(ctx, ociURL, ociSpec.Dir.String())
+	_, err = ociClient.Pull(ctx, ociURL, ociSpec.Dir.String())
 	if err != nil {
 		return err
 	}
-
-	log.Printf("source %s", meta.Source)
-	// log.Printf("revision %s", meta.Revision)
-	// log.Printf("digest %s", meta.Digest)
-	// log.Printf("artifact content extracted to %s", ociSpec.Dir.String())
 	return nil
 }
