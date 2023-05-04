@@ -72,31 +72,31 @@ label_.
 
 base: kustomization + resources
 
-kustomization.yaml                      deployment.yaml                                                 service.yaml
-+-------------------------------+       +-------------------------------------------------------+       +-----------------------------------+
-| commonLabels:                 |       | apiVersion: apps/v1                                   |       | apiVersion: v1                    |
-|   app: myapp                  |       | kind: Deployment                                      |       | kind: Service                     |
-| resources:                    |       | metadata:                                             |       | metadata:                         |
-|   - deployment.yaml           |       |   name: myapp                                         |       |   name: myapp                     |
-|   - service.yaml              |       | spec:                                                 |       | spec:                             |
-| configMapGenerator:           |       |   selector:                                           |       |   selector:                       |
-|   - name: myapp-map           |       |     matchLabels:                                      |       |     app: myapp                    |
-|     files:                    |       |       app: myapp                                      |       |   ports:                          |
-|       - env.startup.txt       |       |   template:                                           |       |     - port: 6060                  |
-+-------------------------------+       |     metadata:                                         |       |       targetPort: 6060            |
-                                        |       labels:                                         |       +-----------------------------------+
-                                        |         app: myapp                                    |
-                                        |     spec:                                             |
-                                        |       containers:                                     |
-                                        |         - name: myapp                                 |
-                                        |           image: myapp                                |
-                                        |           resources:                                  |
-                                        |             limits:                                   |
-                                        |               memory: "128Mi"                         |
-                                        |               cpu: "500m"                             |
-                                        |           ports:                                      |
-                                        |             - containerPort: 6060                     |
-                                        +-------------------------------------------------------+
+kustomization.yaml                                      deployment.yaml                                                 service.yaml
++---------------------------------------------+         +-------------------------------------------------------+       +-----------------------------------+
+| apiVersion: kustomize.config.k8s.io/v1beta1 |         | apiVersion: apps/v1                                   |       | apiVersion: v1                    |
+| kind: Kustomization                         |         | kind: Deployment                                      |       | kind: Service                     |
+|.commonLabels:                               |         | metadata:                                             |       | metadata:                         |
+|   app: myapp                                |         |   name: myapp                                         |       |   name: myapp                     |
+| resources:                                  |         | spec:                                                 |       | spec:                             |
+|   - deployment.yaml                         |         |   selector:                                           |       |   selector:                       |
+|   - service.yaml                            |         |     matchLabels:                                      |       |     app: myapp                    |
+| configMapGenerator:                         |         |       app: myapp                                      |       |   ports:                          |
+|   - name: myapp-map                         |         |   template:                                           |       |     - port: 6060                  |
+|     literals:                               |         |     metadata:                                         |       |       targetPort: 6060            |
+|       - KEY=value                           |         |       labels:                                         |       +-----------------------------------+
++---------------------------------------------+         |         app: myapp                                    |
+                                                        |     spec:                                             |
+                                                        |       containers:                                     |
+                                                        |         - name: myapp                                 |
+                                                        |           image: myapp                                |
+                                                        |           resources:                                  |
+                                                        |             limits:                                   |
+                                                        |               memory: "128Mi"                         |
+                                                        |               cpu: "500m"                             |
+                                                        |           ports:                                      |
+                                                        |             - containerPort: 6060                     |
+                                                        +-------------------------------------------------------+
 
 ```
 
@@ -136,23 +136,24 @@ _development_, _staging_ and _production_ - using
 
 ```
 
-overlay: kustomization + patches + more resources
+overlay: kustomization + patches
 
-kustomization.yaml                              replica_count.yaml                     cpu_count.yaml
-+---------------------------------------+       +-------------------------------+      +------------------------------------------+
-| commonLabels:                         |       | apiVersion: apps/v1           |      | apiVersion: apps/v1                      |
-|   app: myapp                          |       | kind: Deployment              |      | kind: Deployment                         |
-| resources:                            |       | metadata:                     |      | metadata:                                |
-|   - ../../base                        |       |   name: myapp                 |      |   name: myapp                            |
-| patches:                              |       | spec:                         |      | spec:                                    |
-|   - path: replica_count.yaml          |       |   spec:                       |      |   spec:                                  |
-|                                       |       |     replicas: 80              |      |     containers:                          |
-|                                       |       |                               |      |       - name: myapp                      |
-|                                       |       |                               |      |         resources:                       |
-|                                       |       |                               |      |           limits:                        |
-|                                       |       |                               |      |             memory: "128Mi"              |
-|                                       |       |                               |      |             cpu: "7000m"                 |
-+---------------------------------------+       +-------------------------------+      +------------------------------------------+
+kustomization.yaml                                      replica_count.yaml                      cpu_count.yaml
++-----------------------------------------------+       +-------------------------------+       +------------------------------------------+
+| apiVersion: kustomize.config.k8s.io/v1beta1   |       | apiVersion: apps/v1           |       | apiVersion: apps/v1                      |
+| kind: Kustomization                           |       | kind: Deployment              |       | kind: Deployment                         |
+| commonLabels:                                 |       | metadata:                     |       | metadata:                                |  
+|   variant: prod                               |       |   name: myapp                 |       |   name: myapp                            |
+| resources:                                    |       | spec:                         |       | spec:                                    |
+|   - ../../base                                |       |   replicas: 80                |       |  template:                               |
+| patches:                                      |       +-------------------------------+       |     spec:                                |
+|   - path: replica_count.yaml                  |                                               |       containers:                        |
++-----------------------------------------------+                                               |         - name: myapp                    |
+                                                                                                |           resources:                     |
+                                                                                                |             limits:                      |
+                                                                                                |               memory: "128Mi"            |
+                                                                                                |               cpu: "7000m"               |
+                                                                                                +------------------------------------------+
 ```
 
 
