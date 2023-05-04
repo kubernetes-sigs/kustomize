@@ -148,8 +148,8 @@ kustomization.yaml                                      replica_count.yaml      
 |   - ../../base                                |       |   replicas: 80                |       |  template:                               |
 | patches:                                      |       +-------------------------------+       |     spec:                                |
 |   - path: replica_count.yaml                  |                                               |       containers:                        |
-+-----------------------------------------------+                                               |         - name: myapp                    |
-                                                                                                |           resources:                     |
+|   - path: cpu_count.yaml                      |                                               |         - name: myapp                    |  
++-----------------------------------------------+                                               |           resources:                     |
                                                                                                 |             limits:                      |
                                                                                                 |               memory: "128Mi"            |
                                                                                                 |               cpu: "7000m"               |
