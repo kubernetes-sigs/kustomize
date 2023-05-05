@@ -400,6 +400,94 @@ spec:
 	}
 }
 
+func TestRemoteLoad_OciManifests(t *testing.T) {
+	// TODO: Move the OCI manifest to be hosted under kubernetes-sigs/kustomize
+	tests := []struct {
+		name          string
+		kustomization string
+		err           string
+		errT          error
+		beforeTest    func(t *testing.T)
+	}{
+		{
+			name: "oci with tag",
+			kustomization: `
+resources:
+- oci://ghcr.io/frenchben/kustomize-manifest:latest
+`,
+		},
+		{
+			name: "oci without tag",
+			kustomization: `
+resources:
+- oci://ghcr.io/frenchben/kustomize-manifest
+`,
+		},
+		{
+			name: "oci with path",
+			kustomization: `
+resources:
+- oci://ghcr.io/frenchben/kustomize-manifest?path=/
+`,
+		},
+		{
+			name: "oci invalid path error",
+			kustomization: `
+resources:
+- oci://ghcr.io/frenchben/kustomize-manifest?path=invalid
+`,
+			err: "accumulating resources: accumulation err='accumulating resources from 'oci://ghcr.io/frenchben/kustomize-manifest?path=invalid': oci manifest needs to be pulled': not a valid directory",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.beforeTest != nil {
+				test.beforeTest(t)
+			}
+			fSys, tmpDir := createKustDir(t, test.kustomization)
+
+			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
+			m, err := b.Run(
+				fSys,
+				tmpDir.String())
+
+			if test.err != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), test.err)
+				if test.errT != nil {
+					assert.ErrorIs(t, err, test.errT)
+				}
+			} else {
+				require.NoError(t, err)
+				const multibaseDevExampleBuild = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:1.14.2
+        name: nginx
+        ports:
+        - containerPort: 80
+`
+				checkYaml(t, m, multibaseDevExampleBuild)
+			}
+		})
+	}
+}
+
 func configureGitSSHCommand(t *testing.T) {
 	t.Helper()
 
