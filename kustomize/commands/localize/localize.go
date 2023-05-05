@@ -5,6 +5,7 @@ package localize
 
 import (
 	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 	lclzr "sigs.k8s.io/kustomize/api/krusty/localizer"
@@ -19,13 +20,16 @@ type arguments struct {
 	dest   string
 }
 
-type flags struct {
-	scope string
+type theFlags struct {
+	scope    string
+	creds    string
+	provider lclzr.SourceOCIProvider
 }
 
 // NewCmdLocalize returns a new localize command.
 func NewCmdLocalize(fs filesys.FileSystem) *cobra.Command {
-	var f flags
+	var f theFlags
+	f.provider.Set("generic")
 	cmd := &cobra.Command{
 		Use:   "localize [target [destination]]",
 		Short: "[Alpha] Creates localized copy of target kustomization root at destination",
@@ -53,15 +57,26 @@ kustomize localize /home/path/scope/target --scope /home/path/scope
 
 # Localize remote at set destination relative to working directory
 kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/testdata/localize/simple?ref=v4.5.7 path/non-existing-dir
+
+# Localize remote OCI manifest (if no folder is provided, the current folder is used)
+kustomize localize oci://ghcr.io/my-user/oci-manifest:latest oci-manifest
 `,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(numArgs),
 		RunE: func(cmd *cobra.Command, rawArgs []string) error {
 			args := matchArgs(rawArgs)
-			dst, err := lclzr.Run(fs, args.target, f.scope, args.dest)
+			var dst string
+			var err error
+			// if it's an artifact download it
+			if strings.HasPrefix(args.target, "oci://") {
+				dst, err = lclzr.Pull(args.target, args.dest, f.provider, f.creds)
+			} else {
+				dst, err = lclzr.Run(fs, args.target, f.scope, args.dest)
+			}
 			if err != nil {
 				return errors.Wrap(err)
 			}
+
 			log.Printf("SUCCESS: localized %q to directory %s\n", args.target, dst)
 			return nil
 		},
@@ -74,6 +89,8 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 Cannot specify for remote targets, as scope is by default the containing repo.
 If not specified for local target, scope defaults to target.
 `)
+	cmd.Flags().StringVar(&f.creds, "creds", "", "credentials for OCI registry in the format <username>[:<password>] if --provider is generic")
+	cmd.Flags().Var(&f.provider, "provider", f.provider.Description())
 	return cmd
 }
 

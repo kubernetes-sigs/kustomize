@@ -348,6 +348,12 @@ func newLoaderAtOCIManifest(
 			"'%s' refers to file '%s'; expecting directory",
 			ociSpec.AbsPath(), f)
 	}
+	// Append the path given for the kustomization manifest
+	root, err = filesys.ConfirmDir(fSys, root.Join(ociSpec.Path))
+	if err != nil {
+		cleaner()
+		return nil, err
+	}
 
 	return &fileLoader{
 		// Manifest never allowed to escape root.

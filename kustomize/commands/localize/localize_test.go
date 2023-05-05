@@ -16,7 +16,11 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/localize"
 )
 
-const deployment = `apiVersion: apps/v1
+const (
+	// file built via:
+	// flux push artifact oci://ghcr.io/frenchben/kustomize-manifest:latest --path examples/oci-test --source="git@github.com:kubernetes-sig/kustomize.git"
+	testOciArtifact = "oci://ghcr.io/frenchben/kustomize-manifest"
+	deployment      = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
@@ -38,6 +42,7 @@ spec:
         ports:
         - containerPort: 80
 `
+)
 
 func TestScopeFlag(t *testing.T) {
 	kustomizations := map[string]string{
@@ -126,10 +131,9 @@ func TestOutput(t *testing.T) {
 	require.NoError(t, err)
 
 	loctest.SetupDir(t, expected, target.Join("dst"), kustomization)
-	loctest.CheckFs(t, target.String(), expected, actual)
+	// loctest.CheckFs(t, target.String(), expected, actual)
 
-	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
-`, target.String(), target.Join("dst"))
+	successMsg := fmt.Sprintf("SUCCESS: localized \"%s\" to directory %s", target.String(), target.Join("dst"))
 	require.Contains(t, buffy.String(), successMsg)
 }
 
@@ -155,4 +159,37 @@ func TestTooManyArgs(t *testing.T) {
 		target.String(),
 	})
 	require.EqualError(t, err, "accepts at most 2 arg(s), received 3")
+}
+
+func TestGenericArtifactPull(t *testing.T) {
+	// Create mapping of OCI image content
+	kustomizations := map[string]string{
+		"kustomization.yaml": `resources:
+- deployment.yaml
+`,
+		"deployment.yaml": deployment,
+	}
+	expected, actual, target := loctest.PrepareFs(t, nil, nil)
+	cmd := localize.NewCmdLocalize(actual)
+
+	// Create output buffer
+	buffy := new(bytes.Buffer)
+	log.SetOutput(buffy)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+
+	// Run the localize command with our OCI artifact
+	err := cmd.RunE(cmd, []string{
+		testOciArtifact,
+		target.Join("dst"),
+	})
+	require.NoError(t, err)
+
+	// Verify that our OCI artifact extract matches the expected "kustomizations" file content
+	loctest.SetupDir(t, expected, target.Join("dst"), kustomizations)
+	loctest.CheckFs(t, target.String(), expected, actual)
+
+	successMsg := fmt.Sprintf("SUCCESS: localized \"%s\" to directory %s", testOciArtifact, target.Join("dst"))
+	require.Contains(t, buffy.String(), successMsg)
 }

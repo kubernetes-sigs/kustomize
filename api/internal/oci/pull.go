@@ -16,14 +16,24 @@ import (
 // in various outputs (especially tests). Not using an
 // actual directory name here, as that's a temporary directory
 // with a unique name that isn't created until clone time.
-const notPulled = filesys.ConfirmedDir("/notPulled")
+const (
+	notPulled      = filesys.ConfirmedDir("/notPulled")
+	pathQuery      = "?path="
+	pathSeparator  = "/" // do not use filepath.Separator, as this is a URL
+	defaultTimeout = 5 * time.Minute
+)
 
 type OciSpec struct {
 	raw      string
+	image    string
 	provider SourceOCIProvider
 
 	// Host, e.g. ghcr.io, gcr.io, docker.io, etc.
 	Registry string
+
+	// Path to the kustomize.yaml file in the OCI archive (if non-root)
+	// e.g. prod/cluster-only
+	Path string
 
 	// RepoPath name (Path to artifact org/name),
 	// e.g. kubernetes-sigs/kustomize
@@ -64,12 +74,6 @@ func (x *OciSpec) Cleaner(fSys filesys.FileSystem) func() error {
 	return func() error { return fSys.RemoveAll(x.Dir.String()) }
 }
 
-const (
-	ociPrefix      = "oci://"
-	pathSeparator  = "/" // do not use filepath.Separator, as this is a URL
-	defaultTimeout = 5 * time.Minute
-)
-
 // NewRepoSpecFromURL parses git-like urls.
 // From strings like git@github.com:someOrg/someRepo.git or
 // https://github.com/someOrg/someRepo?ref=someHash, extract
@@ -88,13 +92,20 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 	}
 	ociSpec.provider.Set("generic")
 
-	// check if string starts with  "oci://"
-	if !strings.Contains(n, ociPrefix) {
-		return nil, fmt.Errorf("URL must be in format 'oci://<domain>/<org>/<repo>'")
+	splitUrl := strings.Split(n, pathQuery)
+	if len(splitUrl) > 1 {
+		ociSpec.Path = splitUrl[1]
 	}
 
+	// check if string starts with  "oci://"
+	ociURL, err := fluxClient.ParseArtifactURL(splitUrl[0])
+	if err != nil {
+		return nil, err
+	}
+	ociSpec.image = ociURL
+
 	// parse repo URL
-	ociTag, err := name.NewTag(strings.Replace(n, ociPrefix, "", 1))
+	ociTag, err := name.NewTag(ociSpec.image)
 	if err != nil {
 		return nil, err
 	}
@@ -109,22 +120,19 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 type Puller func(ociSpec *OciSpec) error
 
 func PullArtifact(ociSpec *OciSpec) error {
-	dir, err := filesys.NewTmpConfirmedDir()
-	if err != nil {
-		return err
-	}
-	ociSpec.Dir = dir
-	ociURL, err := fluxClient.ParseArtifactURL(ociSpec.raw)
-	if err != nil {
-		return err
+	if ociSpec.Dir.String() == "" || ociSpec.Dir == notPulled {
+		dir, err := filesys.NewTmpConfirmedDir()
+		if err != nil {
+			return err
+		}
+		ociSpec.Dir = dir
 	}
 	timeout := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	ociClient := fluxClient.NewLocalClient()
-
-	_, err = ociClient.Pull(ctx, ociURL, ociSpec.Dir.String())
+	_, err := ociClient.Pull(ctx, ociSpec.image, ociSpec.Dir.String())
 	if err != nil {
 		return err
 	}
