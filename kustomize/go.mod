@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/text v0.6.0
 	sigs.k8s.io/kustomize/api v0.13.2
-	sigs.k8s.io/kustomize/cmd/config v0.11.1
+	sigs.k8s.io/kustomize/cmd/config v0.11.2
 	sigs.k8s.io/kustomize/kyaml v0.14.2
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -43,5 +43,3 @@ require (
 )
 
 replace sigs.k8s.io/kustomize/api => ../api
-
-replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
