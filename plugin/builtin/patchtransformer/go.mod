@@ -4,8 +4,8 @@ go 1.19
 
 require (
 	github.com/evanphx/json-patch v4.11.0+incompatible
-	sigs.k8s.io/kustomize/api v0.13.2
-	sigs.k8s.io/kustomize/kyaml v0.14.1
+	sigs.k8s.io/kustomize/api v0.13.3
+	sigs.k8s.io/kustomize/kyaml v0.14.2
 	sigs.k8s.io/yaml v1.3.0
 )
 
