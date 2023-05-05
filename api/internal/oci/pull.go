@@ -24,9 +24,8 @@ const (
 )
 
 type OciSpec struct {
-	raw      string
-	image    string
-	provider SourceOCIProvider
+	raw   string
+	image string
 
 	// Host, e.g. ghcr.io, gcr.io, docker.io, etc.
 	Registry string
@@ -90,7 +89,6 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 		Dir:     notPulled,
 		Timeout: defaultTimeout,
 	}
-	ociSpec.provider.Set("generic")
 
 	splitUrl := strings.Split(n, pathQuery)
 	if len(splitUrl) > 1 {

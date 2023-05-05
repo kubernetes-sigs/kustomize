@@ -10,10 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-type SourceOCIProvider struct {
-	oci.SourceOCIProvider
-}
-
 // Run executes `kustomize localize` on fSys given the `localize` arguments and
 // returns the path to the created newDir.
 func Run(fSys filesys.FileSystem, target, scope, newDir string) (string, error) {
@@ -23,7 +19,7 @@ func Run(fSys filesys.FileSystem, target, scope, newDir string) (string, error) 
 
 // Pull executes `kustomize localize` on OCI artifacts
 // returns the path to the created destination
-func Pull(target, destination string, provider SourceOCIProvider, creds string) (string, error) {
+func Pull(target, destination string) (string, error) {
 	if destination == "" {
 		destination = filesys.SelfDir
 	}
