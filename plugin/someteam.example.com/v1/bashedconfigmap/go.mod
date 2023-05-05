@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/bashedconfigmap
 
 go 1.19
 
-require sigs.k8s.io/kustomize/api v0.13.2
+require sigs.k8s.io/kustomize/api v0.13.3
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -31,5 +31,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.14.2 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../../api
