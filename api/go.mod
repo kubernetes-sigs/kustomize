@@ -35,5 +35,3 @@ require (
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace sigs.k8s.io/kustomize/kyaml => ../kyaml
