@@ -145,6 +145,8 @@ honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596 h1:8cNCQs+WqqnSpZ7y0LMQPKD+RZUHU17VqLPMW3qxnxc=
 k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596/go.mod h1:/BYxry62FuDzmI+i9B+X2pqfySRmSOW2ARmj5Zbqhj0=
+sigs.k8s.io/kustomize/api v0.13.4 h1:E38Hfx0G9R9v7vRgKshviPotJQETG0S2gD3JdHLCAsI=
+sigs.k8s.io/kustomize/api v0.13.4/go.mod h1:Bkaavz5RKK6ZzP0zgPrB7QbpbBJKiHuD3BB0KujY7Ls=
 sigs.k8s.io/kustomize/kyaml v0.14.2 h1:9WSwztbzwGszG1bZTziQUmVMrJccnyrLb5ZMKpJGvXw=
 sigs.k8s.io/kustomize/kyaml v0.14.2/go.mod h1:AN1/IpawKilWD7V+YvQwRGUvuUOOWpjsHu6uHwonSF4=
 sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
