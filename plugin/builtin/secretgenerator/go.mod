@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/secretgenerator
 go 1.19
 
 require (
-	sigs.k8s.io/kustomize/api v0.13.3
+	sigs.k8s.io/kustomize/api v0.13.4
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -33,5 +33,3 @@ require (
 	k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.14.2 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../api
