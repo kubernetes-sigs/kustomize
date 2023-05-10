@@ -281,8 +281,16 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 		"pull",
 		"--untar",
 		"--untardir", p.absChartHome(),
-		"--repo", p.Repo,
-		p.Name}
+	}
+	if p.Repo != "" {
+		if strings.Contains(p.Repo, "oci://") {
+			args = append(args, fmt.Sprintf("%s/%s", strings.TrimRight(p.Repo, "/"), p.Name))
+		} else {
+			args = append(args, "--repo", p.Repo)
+		}
+	} else {
+		args = append(args, p.Name)
+	}
 	if p.Version != "" {
 		args = append(args, "--version", p.Version)
 	}
