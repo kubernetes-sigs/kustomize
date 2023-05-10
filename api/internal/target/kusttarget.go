@@ -197,10 +197,6 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "accumulating resources")
 	}
-	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "accumulating components")
-	}
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
@@ -237,6 +233,11 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.WrapPrefixf(
 			err, "merging vars %v", kt.kustomization.Vars)
+	}
+	// components are accumulated last.
+	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "accumulating components")
 	}
 	return ra, nil
 }
