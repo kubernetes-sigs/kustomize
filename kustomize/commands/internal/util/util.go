@@ -30,8 +30,8 @@ func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) 
 	return result, nil
 }
 
-// GlobPatterns accepts a slice of glob strings and returns the set of
-// matching file paths. If files are not found, will try load from remote.
+// GlobPatterns accepts a slice of glob strings and returns the set of matching file paths. If files are not found, will try load from remote.
+// It returns an error if there are no matching files or it can't load from remote.
 func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []string) ([]string, error) {
 	var result []string
 	for _, pattern := range patterns {
