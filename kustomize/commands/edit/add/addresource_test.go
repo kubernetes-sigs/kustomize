@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/konfig"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -70,20 +71,20 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 	assert.NoError(t, cmd.RunE(cmd, args))
 }
 
+// Test for trying to add the kustomization.yaml file itself for resources.
+// This adding operation is not allowed.
 func TestAddKustomizationFileAsResource(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	err := fSys.WriteFile(resourceFileName, []byte(resourceFileContent))
-	require.NoError(t, err)
 	testutils_test.WriteTestKustomization(fSys)
 
 	cmd := newCmdAddResource(fSys)
-	args := []string{resourceFileName}
+	args := []string{konfig.DefaultKustomizationFileName()}
 	assert.NoError(t, cmd.RunE(cmd, args))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
 	assert.NoError(t, err)
 
-	assert.Contains(t, string(content), resourceFileName)
+	assert.NotContains(t, string(content), konfig.DefaultKustomizationFileName())
 }
 
 func TestAddResourceNoArgs(t *testing.T) {
