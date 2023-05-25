@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/untested/v1/gogetter
 
 go 1.19
 
-require sigs.k8s.io/kustomize/api v0.13.3
+require sigs.k8s.io/kustomize/api v0.13.4
 
 require github.com/josharian/intern v1.0.0 // indirect
 

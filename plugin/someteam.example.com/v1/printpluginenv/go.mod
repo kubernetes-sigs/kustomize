@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/printpluginenv
 
 go 1.19
 
-require sigs.k8s.io/kustomize/api v0.13.3
+require sigs.k8s.io/kustomize/api v0.13.4
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

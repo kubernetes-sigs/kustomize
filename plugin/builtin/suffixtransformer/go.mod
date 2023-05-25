@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/suffixtransformer
 go 1.19
 
 require (
-	sigs.k8s.io/kustomize/api v0.13.3
+	sigs.k8s.io/kustomize/api v0.13.4
 	sigs.k8s.io/kustomize/kyaml v0.14.2
 )
 
