@@ -292,7 +292,7 @@ func (p *plugin) pullCommand() []string {
 		if strings.Contains(p.Repo, "oci://") {
 			args = append(args, fmt.Sprintf("%s/%s", strings.TrimRight(p.Repo, "/"), p.Name))
 		} else {
-			args = append(args, "--repo", p.Repo, p.Name) 
+			args = append(args, "--repo", p.Repo, p.Name)
 		}
 	} else {
 		args = append(args, p.Name)
