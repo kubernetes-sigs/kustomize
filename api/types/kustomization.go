@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -295,6 +296,20 @@ func (k *Kustomization) FixKustomizationPreMarshalling(fSys filesys.FileSystem) 
 		}
 		k.Labels = append(k.Labels, *cl)
 		k.CommonLabels = nil
+	}
+
+	return nil
+}
+
+func (k *Kustomization) CheckEmpty() error {
+	// generate empty Kustomization
+	emptyKustomization := &Kustomization{}
+
+	// k.TypeMeta is metadata. It Isn't related to whether empty or not.
+	emptyKustomization.TypeMeta = k.TypeMeta
+
+	if reflect.DeepEqual(k, emptyKustomization) {
+		return fmt.Errorf("kustomization.yaml is empty")
 	}
 
 	return nil
