@@ -79,6 +79,7 @@ func TestLoad(t *testing.T) {
 			k: types.Kustomization{
 				TypeMeta: expectedTypeMeta,
 			},
+			errContains: "kustomization.yaml is empty",
 		},
 		"nonsenseLatin": {
 			errContains: "found a tab character that violates indentation",

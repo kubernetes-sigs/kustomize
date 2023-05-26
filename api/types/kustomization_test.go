@@ -284,14 +284,64 @@ unknown: foo`)
 	}
 }
 
-func TestUnmarshal_InvalidYaml(t *testing.T) {
-	y := []byte(`
-apiVersion: kustomize.config.k8s.io/v1beta1
+func TestUnmarshal_Failed(t *testing.T) {
+	tests := []struct {
+		name               string
+		kustomizationYamls []byte
+		errMsg             string
+	}{
+		{
+			name: "invalid yaml",
+			kustomizationYamls: []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-unknown`)
-	var k Kustomization
-	err := k.Unmarshal(y)
-	if err == nil {
-		t.Fatalf("expect an error")
+unknown`),
+			errMsg: "invalid Kustomization: yaml: line 4: could not find expected ':'",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var k Kustomization
+			if err := k.Unmarshal(tt.kustomizationYamls); err == nil || err.Error() != tt.errMsg {
+				t.Errorf("Kustomization.Unmarshal() error = %v, wantErr %v", err, tt.errMsg)
+			}
+		})
+	}
+}
+
+func TestKustomization_CheckEmpty(t *testing.T) {
+	tests := []struct {
+		name          string
+		kustomization *Kustomization
+		wantErr       bool
+	}{
+		{
+			name:          "empty kustomization.yaml",
+			kustomization: &Kustomization{},
+			wantErr:       true,
+		},
+		{
+			name: "empty kustomization.yaml",
+			kustomization: &Kustomization{
+				TypeMeta: TypeMeta{
+					Kind:       KustomizationKind,
+					APIVersion: KustomizationVersion,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:          "non empty kustomization.yaml",
+			kustomization: &Kustomization{Resources: []string{"res"}},
+			wantErr:       false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := tt.kustomization
+			k.FixKustomization()
+			if err := k.CheckEmpty(); (err != nil) != tt.wantErr {
+				t.Errorf("Kustomization.CheckEmpty() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
