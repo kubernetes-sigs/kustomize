@@ -92,7 +92,7 @@ func (ll *Loader) Load(path string) ([]byte, error) {
 	if filepath.IsAbs(path) {
 		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path %q is absolute", path)
 	}
-	if !loader.IsRemoteFile(path) && ll.local {
+	if remote, _ := loader.IsRemoteFile(path); !remote && ll.local {
 		cleanPath := cleanFilePath(ll.fSys, filesys.ConfirmedDir(ll.Root()), path)
 		cleanAbs := filepath.Join(ll.Root(), cleanPath)
 		dir := filesys.ConfirmedDir(filepath.Dir(cleanAbs))

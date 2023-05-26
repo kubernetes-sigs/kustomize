@@ -3,10 +3,12 @@ module sigs.k8s.io/kustomize/api
 go 1.19
 
 require (
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 	github.com/evanphx/json-patch v4.11.0+incompatible
 	github.com/go-errors/errors v1.4.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/imdario/mergo v0.3.6
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596
