@@ -46,7 +46,7 @@ spec:
   type: ClusterIP
 `
 
-const expectedHelmExternalDns = `
+const expectedHelmExternalDNS = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -201,7 +201,7 @@ helmCharts:
 `)
 
 	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
-	th.AssertActualEqualsExpected(m, expectedHelmExternalDns)
+	th.AssertActualEqualsExpected(m, expectedHelmExternalDNS)
 }
 
 // Last mile helm - show how kustomize puts helm charts into different
