@@ -22,6 +22,10 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	if err = r.run("init"); err != nil {
 		return err
 	}
+	if err = r.run(
+		"remote", "add", "origin", repoSpec.CloneSpec()); err != nil {
+		return err
+	}
 	ref := "HEAD"
 	if repoSpec.Ref != "" {
 		ref = repoSpec.Ref
