@@ -663,7 +663,7 @@ func TestOrderOfAccumulatedComponent(t *testing.T) {
 		input          []FileGen
 		expectedOutput string
 	}{
-		"a": {
+		"components_using_a_generated_resource_by_configMapGenerator": {
 			input: []FileGen{
 				writeK("", `
 resources:
