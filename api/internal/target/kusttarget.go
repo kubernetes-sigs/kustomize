@@ -221,6 +221,14 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, err
 	}
+
+	// components are expected to execute after reading resources and adding generators ,before applying transformers and validation.
+	// https://github.com/kubernetes-sigs/kustomize/pull/5170#discussion_r1212101287
+	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "accumulating components")
+	}
+
 	err = kt.runTransformers(ra)
 	if err != nil {
 		return nil, err
@@ -233,12 +241,6 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.WrapPrefixf(
 			err, "merging vars %v", kt.kustomization.Vars)
-	}
-	// components are accumulated last.
-	// components are expected to execute after reading resources, adding generators, and applying transformers.
-	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "accumulating components")
 	}
 	return ra, nil
 }

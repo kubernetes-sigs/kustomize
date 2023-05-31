@@ -704,6 +704,56 @@ kind: ConfigMap
 metadata:
   name: generated-resource-suffix
 `},
+		"components_are_applied_before_replacements_transformer_applied": {
+			input: []FileGen{
+				writeK("", `
+resources:
+- resource.yaml
+components:
+- components
+replacements:
+- source:
+    kind: Pod
+    name: myapp-pod
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: Pod
+      name: myapp-pod
+    fieldPaths:
+    - spec.containers.[name=myapp-container].env.[name=CURRENT_POD_NAMESPACE].value`),
+				writeF("resource.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: dev-assa
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    env:
+    - name: CURRENT_POD_NAMESPACE
+      value: "$(PLACEHOLDER)"`),
+				writeC("/components", `
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace`),
+			},
+			expectedOutput: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: kustomize-namespace
+spec:
+  containers:
+  - env:
+    - name: CURRENT_POD_NAMESPACE
+      value: kustomize-namespace
+    image: busybox
+    name: myapp-container
+`},
 	}
 
 	for testName, test := range tests {
