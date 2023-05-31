@@ -235,6 +235,7 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
 	// components are accumulated last.
+	// components are expected to execute after reading resources, adding generators, and applying transformers.
 	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "accumulating components")
