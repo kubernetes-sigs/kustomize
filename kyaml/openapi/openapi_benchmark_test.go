@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	openapi_v2 "github.com/google/gnostic/openapiv2"
+	openapi_v2 "github.com/google/gnostic-models/openapiv2"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 )
