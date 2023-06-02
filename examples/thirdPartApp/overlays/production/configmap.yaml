@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-app-configmap
+data:
+  DATABASE_URL: "production_database_url"
+  API_KEY: "production_api_key"
