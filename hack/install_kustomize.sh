@@ -7,7 +7,7 @@
 # kustomize binary to your current working directory.
 # (e.g. 'install_kustomize.sh')
 #
-# If one argument is given -> 
+# If one argument is given ->
 # If that argument is in the format of #.#.#, downloads the specified
 # version of the kustomize binary to your current working directory.
 # If that argument is something else, downloads the most recently released
@@ -79,7 +79,7 @@ function find_release_url() {
   local arch=$3
 
   echo "${releases}" |\
-    grep "browser_download.*${opsys}_${arch}" |\
+    grep -o "\"browser_download_url\":[[:space:]]*\"[^\"]\+${opsys}_${arch}[^\"]\+" |\
     cut -d '"' -f 4 |\
     sort -V | tail -n 1
 }
