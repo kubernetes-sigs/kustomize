@@ -436,7 +436,7 @@ resources:
 resources:
 - oci://ghcr.io/frenchben/kustomize-manifest?path=invalid
 `,
-			err: "accumulating resources: accumulation err='accumulating resources from 'oci://ghcr.io/frenchben/kustomize-manifest?path=invalid': oci manifest needs to be pulled': not a valid directory",
+			err: "accumulating resources from 'oci://ghcr.io/frenchben/kustomize-manifest?path=invalid': oci manifest needs to be pulled': not a valid directory",
 		},
 	}
 

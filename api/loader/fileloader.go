@@ -330,20 +330,20 @@ func newLoaderAtOCIManifest(
 	cleaner := ociSpec.Cleaner(fSys)
 	err := puller(ociSpec)
 	if err != nil {
-		cleaner()
+		_ = cleaner()
 		return nil, err
 	}
 	root, f, err := fSys.CleanedAbs(ociSpec.AbsPath())
 	if err != nil {
-		cleaner()
-		return nil, err
+		_ = cleaner()
+		return nil, fmt.Errorf("[CleanedAbs] error: %w", err)
 	}
 	// We don't know that the path requested in ociSpec
 	// is a directory until we actually clone it and look
 	// inside.  That just happened, hence the error check
 	// is here.
 	if f != "" {
-		cleaner()
+		_ = cleaner()
 		return nil, fmt.Errorf(
 			"'%s' refers to file '%s'; expecting directory",
 			ociSpec.AbsPath(), f)
@@ -351,8 +351,8 @@ func newLoaderAtOCIManifest(
 	// Append the path given for the kustomization manifest
 	root, err = filesys.ConfirmDir(fSys, root.Join(ociSpec.Path))
 	if err != nil {
-		cleaner()
-		return nil, err
+		_ = cleaner()
+		return nil, fmt.Errorf("[ConfirmDir] error: %w", err)
 	}
 
 	return &fileLoader{

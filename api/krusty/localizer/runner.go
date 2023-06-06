@@ -4,6 +4,8 @@
 package localizer
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/internal/localizer"
 	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -25,12 +27,12 @@ func Pull(target, destination string) (string, error) {
 	}
 	ociSpec, err := oci.NewOCISpecFromURL(target)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("[NewOCISepcFromURL] error: %w", err)
 	}
 	ociSpec.Dir = filesys.ConfirmedDir(destination)
 	err = oci.PullArtifact(ociSpec)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("[PullArtifact] error: %w", err)
 	}
 
 	return destination, nil

@@ -8,7 +8,7 @@ import (
 
 	fluxClient "github.com/fluxcd/pkg/oci/client"
 	"github.com/google/go-containerregistry/pkg/name"
-	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // Used as a temporary non-empty occupant of the cloneDir
@@ -70,7 +70,7 @@ func (x *OciSpec) AbsPath() string {
 }
 
 func (x *OciSpec) Cleaner(fSys filesys.FileSystem) func() error {
-	return func() error { return fSys.RemoveAll(x.Dir.String()) }
+	return func() error { return fmt.Errorf("%w", fSys.RemoveAll(x.Dir.String())) }
 }
 
 // NewRepoSpecFromURL parses git-like urls.
@@ -90,22 +90,22 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 		Timeout: defaultTimeout,
 	}
 
-	splitUrl := strings.Split(n, pathQuery)
-	if len(splitUrl) > 1 {
-		ociSpec.Path = splitUrl[1]
+	splitURL := strings.Split(n, pathQuery)
+	if len(splitURL) > 1 {
+		ociSpec.Path = splitURL[1]
 	}
 
 	// check if string starts with  "oci://"
-	ociURL, err := fluxClient.ParseArtifactURL(splitUrl[0])
+	ociURL, err := fluxClient.ParseArtifactURL(splitURL[0])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[ParseArtifactURL] error: %w", err)
 	}
 	ociSpec.image = ociURL
 
 	// parse repo URL
 	ociTag, err := name.NewTag(ociSpec.image)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[NewTag] error: %w", err)
 	}
 	ociSpec.Registry = ociTag.RegistryStr()
 	ociSpec.RepoPath = ociTag.RepositoryStr()
@@ -121,18 +121,17 @@ func PullArtifact(ociSpec *OciSpec) error {
 	if ociSpec.Dir.String() == "" || ociSpec.Dir == notPulled {
 		dir, err := filesys.NewTmpConfirmedDir()
 		if err != nil {
-			return err
+			return fmt.Errorf("[NewTmpConfirmedDir] error: %w", err)
 		}
 		ociSpec.Dir = dir
 	}
-	timeout := 5 * time.Minute
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
 	ociClient := fluxClient.NewLocalClient()
 	_, err := ociClient.Pull(ctx, ociSpec.image, ociSpec.Dir.String())
 	if err != nil {
-		return err
+		return fmt.Errorf("[Pull] error: %w", err)
 	}
 	return nil
 }
