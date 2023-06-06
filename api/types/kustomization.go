@@ -7,10 +7,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"reflect"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/yaml"
 )
 
@@ -268,18 +271,9 @@ func (k *Kustomization) FixKustomizationPreMarshalling(fSys filesys.FileSystem) 
 	k.Patches = append(k.Patches, k.PatchesJson6902...)
 	k.PatchesJson6902 = nil
 
-	if k.PatchesStrategicMerge != nil {
-		for _, patchStrategicMerge := range k.PatchesStrategicMerge {
-			// check this patch is file path select.
-			if _, err := fSys.ReadFile(string(patchStrategicMerge)); err == nil {
-				// path patch
-				k.Patches = append(k.Patches, Patch{Path: string(patchStrategicMerge)})
-			} else {
-				// inline string patch
-				k.Patches = append(k.Patches, Patch{Patch: string(patchStrategicMerge)})
-			}
-		}
-		k.PatchesStrategicMerge = nil
+	// Convert patchesStrategicMerge to patches.
+	if err := k.fixPatchesStrategicMerge(fSys); err != nil {
+		return err
 	}
 
 	// this fix is not in FixKustomizationPostUnmarshalling because
@@ -297,6 +291,39 @@ func (k *Kustomization) FixKustomizationPreMarshalling(fSys filesys.FileSystem) 
 		k.Labels = append(k.Labels, *cl)
 		k.CommonLabels = nil
 	}
+
+	return nil
+}
+
+// fixPatchesStrategicMerge converts PatchesStrategicMerge to Patches.
+func (k *Kustomization) fixPatchesStrategicMerge(fSys filesys.FileSystem) error {
+	if k.PatchesStrategicMerge == nil {
+		return nil
+	}
+
+	for _, patchStrategicMerge := range k.PatchesStrategicMerge {
+		patchString := string(patchStrategicMerge)
+		if fSys.Exists(patchString) {
+			// file patch
+			patchPaths, err := splitPatchFile(patchString, fSys)
+			if err != nil {
+				return err
+			}
+			for _, patchPath := range patchPaths {
+				k.Patches = append(k.Patches, Patch{Path: patchPath})
+			}
+		} else {
+			// inline string patch
+			inlinePatches, err := splitInlinePatch(patchString)
+			if err != nil {
+				return err
+			}
+			for _, inlinePatch := range inlinePatches {
+				k.Patches = append(k.Patches, Patch{Patch: inlinePatch})
+			}
+		}
+	}
+	k.PatchesStrategicMerge = nil
 
 	return nil
 }
@@ -348,4 +375,102 @@ func (k *Kustomization) Unmarshal(y []byte) error {
 	}
 	*k = nk
 	return nil
+}
+
+// splitPatchFile splits a single PatchStrategicMerge file into multiple PatchStrategicMerge files, if the
+// file contains multiple documents separated by the yaml separator. The list of new patch files is returned.
+func splitPatchFile(originalPatchPath string, fSys filesys.FileSystem) ([]string, error) {
+	patchContentBytes, err := fSys.ReadFile(originalPatchPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", originalPatchPath, err)
+	}
+
+	splitPatchContent, err := kio.SplitDocuments(string(patchContentBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to split patch file %s: %w", originalPatchPath, err)
+	}
+
+	// If the split resulted in only one document, there is nothing to do, so just return the patch path
+	if len(splitPatchContent) == 1 {
+		return []string{originalPatchPath}, nil
+	}
+
+	// Find the new patches, removing any empty ones.
+	var newPatches []string
+	for _, pc := range splitPatchContent {
+		trimmedPatchContent := strings.TrimSpace(pc)
+		if len(trimmedPatchContent) > 0 {
+			newPatches = append(newPatches, trimmedPatchContent+"\n")
+		}
+	}
+
+	// If there is only one new patch, that means there was one or more empty ones that were discarded. In this case,
+	// overwrite the original patch file with the new patch content and return it.
+	if len(newPatches) == 1 {
+		err := fSys.WriteFile(originalPatchPath, []byte(newPatches[0]))
+		if err != nil {
+			return nil, fmt.Errorf("failed to write file %s: %w", originalPatchPath, err)
+		}
+		return []string{originalPatchPath}, nil
+	}
+
+	// If there are multiple new patches, create new patch files for each one, remove the original patch file, and
+	// return the list of new patch files.
+	result := make([]string, len(newPatches))
+	for i, newPatchContent := range newPatches {
+		newPatchPath, err := availableFilename(originalPatchPath, i+1, fSys)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find available filename for %s: %w", originalPatchPath, err)
+		}
+		err = fSys.WriteFile(newPatchPath, []byte(newPatchContent))
+		if err != nil {
+			return nil, fmt.Errorf("failed to write file %s: %w", newPatchPath, err)
+		}
+		result[i] = newPatchPath
+	}
+
+	err = fSys.RemoveAll(originalPatchPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove file %s: %w", originalPatchPath, err)
+	}
+
+	return result, nil
+}
+
+// splitInlinePatch splits a single inline PatchStrategicMerge into multiple inline PatchStrategicMerges,
+// if it contains multiple documents separated by the yaml separator.
+func splitInlinePatch(originalPatch string) ([]string, error) {
+	splitPatchContent, err := kio.SplitDocuments(originalPatch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to split inline patch: %w", err)
+	}
+
+	// If the split resulted in only one document, there is nothing to do, so just return the original patch without any changes.
+	if len(splitPatchContent) == 1 {
+		return []string{originalPatch}, nil
+	}
+
+	// Find the new patches, removing any empty ones.
+	var newPatches []string
+	for _, pc := range splitPatchContent {
+		trimmedPatchContent := strings.TrimSpace(pc)
+		if len(trimmedPatchContent) > 0 {
+			newPatches = append(newPatches, trimmedPatchContent+"\n")
+		}
+	}
+	return newPatches, nil
+}
+
+// availableFilename returns a filename that does not already exist in the filesystem, by repeatedly appending a suffix
+// to the filename until a non-existing filename is found.
+func availableFilename(originalFilename string, suffix int, fSys filesys.FileSystem) (string, error) {
+	ext := filepath.Ext(originalFilename)
+	base := strings.TrimSuffix(originalFilename, ext)
+	for i := 0; i < 100; i++ {
+		base += fmt.Sprintf("-%d", suffix)
+		if !fSys.Exists(base + ext) {
+			return base + ext, nil
+		}
+	}
+	return "", fmt.Errorf("unable to find available filename for %s and suffix %d", originalFilename, suffix)
 }

@@ -164,15 +164,13 @@ type ByteReader struct {
 
 var _ Reader = &ByteReader{}
 
-// splitDocuments returns a slice of all documents contained in a YAML string. Multiple documents can be divided by the
+// SplitDocuments returns a slice of all documents contained in a YAML string. Multiple documents can be divided by the
 // YAML document separator (---). It allows for white space and comments to be after the separator on the same line,
 // but will return an error if anything else is on the line.
-func splitDocuments(s string) ([]string, error) {
+func SplitDocuments(s string) ([]string, error) {
 	docs := make([]string, 0)
 	if len(s) > 0 {
-		// The YAML document separator is any line that starts with ---
-		yamlSeparatorRegexp := regexp.MustCompile(`\n---.*\n`)
-
+		yamlSeparatorRegexp := regexp.MustCompile("(?m)^---.*$") // Matches any line that starts with ---
 		// Find all separators, check them for invalid content, and append each document to docs
 		separatorLocations := yamlSeparatorRegexp.FindAllStringIndex(s, -1)
 		prev := 0
@@ -181,13 +179,21 @@ func splitDocuments(s string) ([]string, error) {
 			separator := s[loc[0]:loc[1]]
 
 			// If the next non-whitespace character on the line following the separator is not a comment, return an error
-			trimmedContentAfterSeparator := strings.TrimSpace(separator[4:])
-			if len(trimmedContentAfterSeparator) > 0 && trimmedContentAfterSeparator[0] != '#' {
-				return nil, errors.Errorf("invalid document separator: %s", strings.TrimSpace(separator))
+			const yamlSeparatorLength = 3
+			if len(separator) > yamlSeparatorLength {
+				trimmedContentAfterSeparator := strings.TrimSpace(separator[yamlSeparatorLength:])
+				if len(trimmedContentAfterSeparator) > 0 && trimmedContentAfterSeparator[0] != '#' {
+					return nil, errors.Errorf("invalid document separator: %s", strings.TrimSpace(separator))
+				}
 			}
 
 			docs = append(docs, s[prev:loc[0]])
 			prev = loc[1]
+
+			// If the separator has a newline after it, skip the newline, so we don't introduce extra whitespace.
+			if prev < len(s) && s[prev] == '\n' {
+				prev++
+			}
 		}
 		docs = append(docs, s[prev:])
 	}
@@ -212,7 +218,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 	// Replace the ending \r\n (line ending used in windows) with \n and then split it into multiple YAML documents
 	// if it contains document separators (---)
-	values, err := splitDocuments(strings.ReplaceAll(input.String(), "\r\n", "\n"))
+	values, err := SplitDocuments(strings.ReplaceAll(input.String(), "\r\n", "\n"))
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}

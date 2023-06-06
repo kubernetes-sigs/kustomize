@@ -1102,3 +1102,84 @@ env:
 		})
 	}
 }
+
+func TestSplitDocuments(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected []string
+		err      string
+	}{
+		{
+			name:     "empty content",
+			input:    "",
+			expected: []string{},
+		},
+		{
+			name:     "separator only",
+			input:    "---",
+			expected: []string{"", ""},
+		},
+		{
+			name: "separator can have a comment on the same line",
+			input: `---
+content1
+--- #comment
+content2
+`,
+			expected: []string{"", "content1\n", "content2\n"},
+		},
+		{
+			name: "separator with non-comment on the same line should fail",
+			input: `---
+content1
+--- extra
+content2
+`,
+			err: "invalid document separator: --- extra",
+		},
+		{
+			name: "split on multiple separators",
+			input: `content1
+---
+content2
+---
+content3`,
+			expected: []string{"content1\n", "content2\n", "content3"},
+		},
+		{
+			name: "whitespace should be preserved when splitting",
+			input: `content1
+
+---
+
+content2
+
+---
+content3
+`,
+			expected: []string{"content1\n\n", "\ncontent2\n\n", "content3\n"},
+		},
+		{
+			name: "whitespace should be preserved when not splitting",
+			input: `
+
+content1
+
+`,
+			expected: []string{"\n\ncontent1\n\n"},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := SplitDocuments(tc.input)
+			if tc.err != "" {
+				assert.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}

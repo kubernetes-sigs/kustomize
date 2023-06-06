@@ -6,6 +6,10 @@ package types
 import (
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func fixKustomizationPostUnmarshallingCheck(k, e *Kustomization) bool {
@@ -341,6 +345,653 @@ func TestKustomization_CheckEmpty(t *testing.T) {
 			k.FixKustomization()
 			if err := k.CheckEmpty(); (err != nil) != tt.wantErr {
 				t.Errorf("Kustomization.CheckEmpty() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestFixKustomizationPreMarshalling_SplitPatches(t *testing.T) {
+	testCases := map[string]struct {
+		kustomization         Kustomization
+		files                 map[string]string
+		expectedKustomization Kustomization
+		expectedFiles         map[string]string
+	}{
+		"no split needed": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml"},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Path: "secret.patch.yaml"}},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch.yaml": `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+			},
+		},
+
+		"no split needed (inline)": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`},
+			},
+			files: map[string]string{},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Patch: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`}},
+			},
+			expectedFiles: map[string]string{},
+		},
+
+		"remove unnecessary document separators": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml"},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+--- # Some comment
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+---
+---
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Path: "secret.patch.yaml"}},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+			},
+		},
+
+		"remove unnecessary document separators (inline)": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{`
+--- # Some comment
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+---
+---
+`},
+			},
+			files: map[string]string{},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Patch: `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`}},
+			},
+			expectedFiles: map[string]string{},
+		},
+
+		"split into two patches": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml"},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Path: "secret.patch-1.yaml"}, {Path: "secret.patch-2.yaml"}},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch-1.yaml": `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+				"secret.patch-2.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+			},
+		},
+
+		"split into two patches (inline)": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{`
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`},
+			},
+			files: map[string]string{},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Patch: `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`}, {Patch: `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`}},
+			},
+			expectedFiles: map[string]string{},
+		},
+
+		"split should not affect existing patch": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml"},
+				Patches:               []Patch{{Path: "existing.patch.yaml"}},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"existing.patch.yaml": `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo1
+spec: something
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Path: "existing.patch.yaml"}, {Path: "secret.patch-1.yaml"}, {Path: "secret.patch-2.yaml"}},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch-1.yaml": `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+				"secret.patch-2.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"existing.patch.yaml": `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo1
+spec: something
+`,
+			},
+		},
+
+		"split into two patches handle filename collision": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml"},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"secret.patch-1.yaml":       `# I'm here to cause a filename collision`,
+				"secret.patch-2.yaml":       `# I'm here to cause a filename collision`,
+				"secret.patch-2-2.yaml":     `# I'm here to cause a filename collision`,
+				"secret.patch-2-2-2.yaml":   `# I'm here to cause a filename collision`,
+				"secret.patch-2-2-2-2.yaml": `# I'm here to cause a filename collision`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Path: "secret.patch-1-1.yaml"}, {Path: "secret.patch-2-2-2-2-2.yaml"}},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch-1-1.yaml": `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+				"secret.patch-2-2-2-2-2.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"secret.patch-1.yaml":       `# I'm here to cause a filename collision`,
+				"secret.patch-2.yaml":       `# I'm here to cause a filename collision`,
+				"secret.patch-2-2.yaml":     `# I'm here to cause a filename collision`,
+				"secret.patch-2-2-2.yaml":   `# I'm here to cause a filename collision`,
+				"secret.patch-2-2-2-2.yaml": `# I'm here to cause a filename collision`,
+			},
+		},
+
+		"split into two patches and handle unnecessary document separators": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml"},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+---
+---
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+--- # Something here
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+---
+
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{{Path: "secret.patch-1.yaml"}, {Path: "secret.patch-2.yaml"}},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch-1.yaml": `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+				"secret.patch-2.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+			},
+		},
+
+		"split multiple patches into multiple patches": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml", "foo.patch.yaml", "bar.patch.yaml"},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"foo.patch.yaml": `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo1
+spec: something
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo2
+spec: something
+`,
+				"bar.patch.yaml": `
+apiVersion: v1
+kind: Bar
+metadata:
+  name: bar1
+spec: something
+---
+apiVersion: v1
+kind: Bar
+metadata:
+  name: bar2
+spec: something
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{
+					{Path: "secret.patch-1.yaml"},
+					{Path: "secret.patch-2.yaml"},
+					{Path: "foo.patch-1.yaml"},
+					{Path: "foo.patch-2.yaml"},
+					{Path: "bar.patch-1.yaml"},
+					{Path: "bar.patch-2.yaml"},
+				},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch-1.yaml": `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+				"secret.patch-2.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"foo.patch-1.yaml": `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo1
+spec: something
+`,
+				"foo.patch-2.yaml": `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo2
+spec: something
+`,
+				"bar.patch-1.yaml": `apiVersion: v1
+kind: Bar
+metadata:
+  name: bar1
+spec: something
+`,
+				"bar.patch-2.yaml": `apiVersion: v1
+kind: Bar
+metadata:
+  name: bar2
+spec: something
+`,
+			},
+		},
+
+		"split multiple patches into multiple patches (mix of files and inline)": {
+			kustomization: Kustomization{
+				PatchesStrategicMerge: []PatchStrategicMerge{"secret.patch.yaml", "foo.patch.yaml", `
+--- # Some comment
+apiVersion: v1
+kind: Bar
+metadata:
+  name: bar1
+spec: something
+---
+---   
+apiVersion: v1
+kind: Bar
+metadata:
+  name: bar2
+spec: something
+---
+`},
+			},
+			files: map[string]string{
+				"secret.patch.yaml": `
+# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"foo.patch.yaml": `
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo1
+spec: something
+---
+apiVersion: v1
+kind: Foo
+metadata:
+  name: foo2
+spec: something
+`,
+			},
+			expectedKustomization: Kustomization{
+				Patches: []Patch{
+					{Path: "secret.patch-1.yaml"},
+					{Path: "secret.patch-2.yaml"},
+					{Path: "foo.patch-1.yaml"},
+					{Path: "foo.patch-2.yaml"},
+					{Patch: `apiVersion: v1
+kind: Bar
+metadata:
+  name: bar1
+spec: something
+`},
+					{Patch: `apiVersion: v1
+kind: Bar
+metadata:
+  name: bar2
+spec: something
+`},
+				},
+			},
+			expectedFiles: map[string]string{
+				"secret.patch-1.yaml": `# secret.patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret1
+type: Opaque
+stringData:
+  admin.password: newpassword
+`,
+				"secret.patch-2.yaml": `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret2
+type: Opaque
+stringData:
+  admin.user: newuser
+`,
+				"foo.patch-1.yaml": `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo1
+spec: something
+`,
+				"foo.patch-2.yaml": `apiVersion: v1
+kind: Foo
+metadata:
+  name: foo2
+spec: something
+`,
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			fSys := filesys.MakeFsInMemory()
+			for filename, content := range tc.files {
+				require.NoError(t, fSys.WriteFile(filename, []byte(content)))
+			}
+
+			err := tc.kustomization.FixKustomizationPreMarshalling(fSys)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			require.Emptyf(t, cmp.Diff(tc.expectedKustomization, tc.kustomization), "kustomization mismatch")
+
+			for filename, expectedContent := range tc.expectedFiles {
+				actualContent, err := fSys.ReadFile(filename)
+				if err != nil {
+					t.Fatalf("failed to read expected file %s: %v", filename, err)
+				}
+				require.Emptyf(t, cmp.Diff(expectedContent, string(actualContent)), "file %s content mismatch", filename)
+			}
+
+			for filename := range tc.files {
+				if _, ok := tc.expectedFiles[filename]; ok {
+					continue
+				}
+				if fSys.Exists(filename) {
+					t.Errorf("expected file %s to have been deleted", filename)
+				}
 			}
 		})
 	}
