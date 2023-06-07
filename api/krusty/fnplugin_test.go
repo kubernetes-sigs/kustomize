@@ -589,8 +589,11 @@ metadata:
       container:
         image: "gcr.io/kustomize-functions/e2econtainerconfig"
 `)
-	build := exec.Command("docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
-	build.Dir = "../../cmd/config/internal/commands/e2e/e2econtainerconfig"
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainerconfig/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainerconfig",
+	)
+	build.Dir = "../../" // Repo root
 	assert.NoError(t, build.Run())
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()

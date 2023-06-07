@@ -785,9 +785,11 @@ func build() string {
 		if os.Getenv("KUSTOMIZE_DOCKER_E2E") == "false" {
 			return
 		}
-		build = exec.Command(
-			"docker", "build", ".", "-t", "gcr.io/kustomize-functions/e2econtainerconfig")
-		build.Dir = e2eConfigDir
+		build = exec.Command("docker", "build", ".",
+			"-f", "./cmd/config/internal/commands/e2e/e2econtainerconfig/Dockerfile",
+			"-t", "gcr.io/kustomize-functions/e2econtainerconfig",
+		)
+		build.Dir = "../../../../../" // Repo root
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
 		err = build.Run()
