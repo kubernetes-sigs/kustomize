@@ -1,6 +1,6 @@
 module main
 
-go 1.19
+go 1.20
 
 require (
 	github.com/spf13/cobra v1.4.0
@@ -8,4 +8,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.2.0
 )
-
