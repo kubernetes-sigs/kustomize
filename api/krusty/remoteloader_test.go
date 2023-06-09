@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -19,7 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -264,7 +263,7 @@ resources:
 			}
 
 			kust := strings.ReplaceAll(test.kustomization, "$ROOT", repos.root)
-			fSys, tmpDir := createKustDir(t, kust)
+			fSys, tmpDir := kusttest_test.CreateKustDir(t, kust)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 			m, err := b.Run(
@@ -368,7 +367,7 @@ resources:
 			if test.beforeTest != nil {
 				test.beforeTest(t)
 			}
-			fSys, tmpDir := createKustDir(t, test.kustomization)
+			fSys, tmpDir := kusttest_test.CreateKustDir(t, test.kustomization)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 			m, err := b.Run(
@@ -422,16 +421,6 @@ func configureGitSSHCommand(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(f.Name())
 	})
-}
-
-func createKustDir(t *testing.T, content string) (filesys.FileSystem, filesys.ConfirmedDir) {
-	t.Helper()
-
-	fSys := filesys.MakeFsOnDisk()
-	tmpDir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(t, err)
-	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(content)))
-	return fSys, tmpDir
 }
 
 func checkYaml(t *testing.T, actual resmap.ResMap, expected string) {
