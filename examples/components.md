@@ -127,8 +127,8 @@ secretGenerator:
       - site_key.txt
       - secret_key.txt
 
-patchesStrategicMerge:
-  - configmap.yaml
+patches:
+  - path: configmap.yaml
 
 patchesJson6902:
 - target:
@@ -225,8 +225,8 @@ secretGenerator:
     files:
       - dbpass.txt
 
-patchesStrategicMerge:
-  - configmap.yaml
+patches:
+  - path: configmap.yaml
 
 patchesJson6902:
 - target:
@@ -326,8 +326,8 @@ secretGenerator:
       - site_key.txt
       - secret_key.txt
 
-patchesStrategicMerge:
-  - configmap.yaml
+patches:
+  - path: configmap.yaml
 
 patchesJson6902:
 - target:
@@ -536,8 +536,8 @@ secretGenerator:
   files:
     - dbpass.txt
 
-patchesStrategicMerge:
-  - configmap.yaml
+patches:
+  - path: configmap.yaml
 
 patchesJson6902:
 - target:
@@ -592,8 +592,8 @@ secretGenerator:
   files:
     - ldappass.txt
 
-patchesStrategicMerge:
-  - configmap.yaml
+patches:
+  - path: configmap.yaml
 
 patchesJson6902:
 - target:
