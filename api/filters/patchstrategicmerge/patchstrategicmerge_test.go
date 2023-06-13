@@ -852,7 +852,7 @@ metadata:
   name: blabla
   namespace: blabla-ns
 data:
-  "6443": "foobar"
+  "6443": "key-double-quoted"
 `,
 			patch: yaml.MustParse(`
 apiVersion: v1
@@ -861,7 +861,7 @@ metadata:
   name: blabla
   namespace: blabla-ns
 data:
-  "6443": "barfoo"
+  6443: "key as int"
   '9110': "foo-foo"
 `),
 			expected: `
@@ -871,7 +871,7 @@ metadata:
   name: blabla
   namespace: blabla-ns
 data:
-  "6443": "barfoo"
+  "6443": "key as int"
   '9110': "foo-foo"
 `,
 		},
