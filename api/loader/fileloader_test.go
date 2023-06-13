@@ -196,13 +196,31 @@ func TestLoaderBadRelative(t *testing.T) {
 	require.Error(err)
 }
 
-func TestLoaderMisc(t *testing.T) {
-	l := makeLoader()
-	_, err := l.New("")
+func TestNewEmptyLoader(t *testing.T) {
+	_, err := makeLoader().New("")
 	require.Error(t, err)
+}
 
-	_, err = l.New("https://google.com/project")
-	require.Error(t, err)
+func TestNewLoaderHTTP(t *testing.T) {
+	t.Run("doesn't exist", func(t *testing.T) {
+		_, err := makeLoader().New("https://google.com/project")
+		require.Error(t, err)
+	})
+	// Though it is unlikely and we do not weigh this use case in our designs,
+	// it is possible for a reference that is considered a remote file to
+	// actually be a directory
+	t.Run("exists", func(t *testing.T) {
+		const remoteFileLikeRoot = "https://domain"
+		require.True(t, IsRemoteFile(remoteFileLikeRoot))
+		fSys, dir := setupOnDisk(t)
+		require.NoError(t, fSys.MkdirAll(dir.Join("https:/domain")))
+		ldr, err := newLoaderOrDie(RestrictionRootOnly,
+			fSys,
+			dir.String(),
+		).New(remoteFileLikeRoot)
+		require.NoError(t, err)
+		require.Empty(t, ldr.Repo())
+	})
 }
 
 const (
@@ -212,17 +230,17 @@ const (
 
 // Create a structure like this
 //
-//   /tmp/kustomize-test-random
-//   ├── base
-//   │   ├── okayData
-//   │   ├── symLinkToOkayData -> okayData
-//   │   └── symLinkToExteriorData -> ../exteriorData
-//   └── exteriorData
-//
+//	/tmp/kustomize-test-random
+//	├── base
+//	│   ├── okayData
+//	│   ├── symLinkToOkayData -> okayData
+//	│   └── symLinkToExteriorData -> ../exteriorData
+//	└── exteriorData
 func commonSetupForLoaderRestrictionTest(t *testing.T) (string, filesys.FileSystem) {
 	t.Helper()
-	dir := t.TempDir()
-	fSys := filesys.MakeFsOnDisk()
+	fSys, tmpDir := setupOnDisk(t)
+	dir := tmpDir.String()
+
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
 	fSys.WriteFile(
@@ -446,12 +464,8 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 }
 
 func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
-	fSys := filesys.MakeFsOnDisk()
-	dir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = fSys.RemoveAll(dir.String())
-	})
+	fSys, dir := setupOnDisk(t)
+
 	repo := dir.Join("repo")
 	require.NoError(t, fSys.Mkdir(repo))
 
@@ -617,4 +631,18 @@ func TestLoaderHTTP(t *testing.T) {
 		_, err := l2.Load(x.path)
 		require.Error(err)
 	}
+}
+
+// setupOnDisk sets up a file system on disk and directory that is cleaned after
+// test completion.
+func setupOnDisk(t *testing.T) (filesys.FileSystem, filesys.ConfirmedDir) {
+	t.Helper()
+
+	fSys := filesys.MakeFsOnDisk()
+	dir, err := filesys.NewTmpConfirmedDir()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = fSys.RemoveAll(dir.String())
+	})
+	return fSys, dir
 }
