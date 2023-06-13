@@ -4,12 +4,16 @@
 package krusty_test
 
 import (
+	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/target"
 	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -159,4 +163,73 @@ spec:
     - www.xyz.me
     secretName: cert-tls
 `)
+}
+
+func TestAccumulateResourcesErrors(t *testing.T) {
+	type testcase struct {
+		name     string
+		resource string
+		// regex error message that is output when kustomize tries to
+		// accumulate resource as file and dir, respectively
+		errFile, errDir string
+	}
+	buildError := func(tc testcase) string {
+		const (
+			prefix            = "accumulating resources"
+			filePrefixf       = "accumulating resources from '%s'"
+			fileWrapperIfDirf = "accumulation err='%s'"
+			separator         = ": "
+		)
+		parts := []string{
+			prefix,
+			strings.Join([]string{
+				fmt.Sprintf(filePrefixf, regexp.QuoteMeta(tc.resource)),
+				tc.errFile,
+			}, separator),
+		}
+		if tc.errDir != "" {
+			parts[1] = fmt.Sprintf(fileWrapperIfDirf, parts[1])
+			parts = append(parts, tc.errDir)
+		}
+		return strings.Join(parts, separator)
+	}
+	for _, test := range []testcase{
+		{
+			name: "remote file not considered repo",
+			// This url is too short to be considered a remote repo.
+			resource: "https://raw.githubusercontent.com/kustomize",
+			// It is acceptable that the error for a remote file-like reference
+			// (that is not long enough to be considered a repo) does not
+			// indicate said reference is not a local directory.
+			// Though it is possible for the remote file-like reference to be
+			// a local directory, it is very unlikely.
+			errFile: `HTTP Error: status code 400 \(Bad Request\)\z`,
+		},
+		{
+			name:     "remote file qualifies as repo",
+			resource: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/kustomize/v5.0.0/examples/helloWorld/configMap",
+			// TODO(4788): This error message is technically wrong. Just
+			// because we fail to GET a reference does not mean the reference is
+			// not a remote file. We should return the GET status code instead.
+			errFile: "URL is a git repository",
+			errDir:  `failed to run \S+/git fetch --depth=1 .+`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			// should use real file system to indicate that we are creating
+			// new temporary directories on disk when we attempt to fetch repos
+			fSys, tmpDir := kusttest_test.CreateKustDir(t, fmt.Sprintf(`
+resources:
+- %s
+`, test.resource))
+			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
+			_, err := b.Run(fSys, tmpDir.String())
+			require.Regexp(t, buildError(test), err.Error())
+		})
+	}
+	// TODO(annasong): add tests that check accumulateResources errors for
+	// - local files
+	// - repos
+	// - local directories
+	// - files that yield malformed yaml errors
 }
