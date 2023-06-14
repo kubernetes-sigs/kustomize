@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
+	depproviderapi "sigs.k8s.io/kustomize/api/internal/provider"
 	"sigs.k8s.io/kustomize/api/internal/target"
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -32,7 +33,7 @@ func makeKustTargetWithRf(
 	t *testing.T,
 	fSys filesys.FileSystem,
 	root string,
-	pvd *provider.DepProvider) *target.KustTarget {
+	pvd *depproviderapi.DepProvider) *target.KustTarget {
 	t.Helper()
 	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys)
 	if err != nil {
