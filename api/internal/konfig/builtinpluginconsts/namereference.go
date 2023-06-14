@@ -317,6 +317,8 @@ nameReference:
   - path: webhooks/clientConfig/service
     kind: MutatingWebhookConfiguration
     group: admissionregistration.k8s.io
+  - path: spec/rules/backendRefs/name
+    kind: HTTPRoute
 
 - kind: Role
   group: rbac.authorization.k8s.io
