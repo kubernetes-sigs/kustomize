@@ -196,7 +196,7 @@ func TestPreserveCommentsWithAdjust(t *testing.T) {
 RESOURCES:
 - ../namespaces
 - pod.yaml
-  # See which field this comment goes into
+# See which field this comment goes into
 - service.yaml
 
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -229,10 +229,10 @@ generatorOptions:
 # Some comments
 # This is some comment we should preserve
 # don't delete it
-  # See which field this comment goes into
 resources:
 - ../namespaces
 - pod.yaml
+# See which field this comment goes into
 - service.yaml
 
 apiVersion: kustomize.config.k8s.io/v1beta1

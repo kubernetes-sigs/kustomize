@@ -11,6 +11,7 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -113,6 +114,13 @@ type kustomizationFile struct {
 	path           string
 	fSys           filesys.FileSystem
 	originalFields []*commentedField
+	commentedLines []*commentedLine
+}
+
+type commentedLine struct {
+	line    string
+	comment []byte
+	added  bool
 }
 
 // NewKustomizationFile returns a new instance.
@@ -213,7 +221,15 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments)})
 				comments = [][]byte{}
 			} else if len(comments) > 0 && len(mf.originalFields) > 0 {
-				mf.originalFields[len(mf.originalFields)-1].appendComment(squash(comments))
+				/*
+					What we want to do is attach the comment to the line not the field. Actual comments above a field will be handled in the true
+					case of this if stmt.
+				*/
+				mf.commentedLines = append(mf.commentedLines, &commentedLine{
+					line:    string(line),
+					comment: squash(comments),
+				})
+
 				comments = [][]byte{}
 			}
 		}
@@ -246,6 +262,35 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 			return content, nil
 		}
 		output = append(output, content...)
+	}
+
+	// try to read though each line of the file and if a commented line matches insert the comment above it
+
+	output, err := comment(output, mf)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func comment(input []byte, mf *kustomizationFile) ([]byte, error) {
+	buffer := bytes.NewBuffer(input)
+	output := input
+	line, err := buffer.ReadBytes('\n')
+	for err == nil {
+		for _, cline := range mf.commentedLines {
+			if strings.TrimSpace(cline.line) == strings.TrimSpace(string(line)) {
+				if !cline.added {
+					output = []byte(strings.Replace(string(output), string(line), (string(cline.comment) + string(line)), 1))
+					cline.added = true
+				}
+			}
+		}
+		line, err = buffer.ReadBytes('\n')
+	}
+	if err != io.EOF {
+		return output, err
 	}
 	return output, nil
 }
