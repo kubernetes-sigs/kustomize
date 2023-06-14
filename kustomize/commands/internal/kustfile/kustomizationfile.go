@@ -120,7 +120,7 @@ type kustomizationFile struct {
 type commentedLine struct {
 	line    string
 	comment []byte
-	added  bool
+	added   bool
 }
 
 // NewKustomizationFile returns a new instance.
