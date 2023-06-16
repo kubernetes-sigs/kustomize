@@ -32,7 +32,7 @@ Dev guides:
 - [Windows Dev Guide]
 
 
-**Forking Kustomize and Making a Pull Request (PR):**
+Forking Kustomize and Making a Pull Request (PR):
 
 
 Navigate to the Kustomize repository on [GitHub](https://github.com/kubernetes-sigs/kustomize)
@@ -57,7 +57,7 @@ Visit the original Kustomize repository and click on the "Compare & pull request
 
 
 
-**Building Kustomize Locally:**
+Building Kustomize Locally:
 
 
 
@@ -73,7 +73,7 @@ Optionally, you can add the bin directory to your system's PATH environment vari
 
 
 
-**Overview of Important Make Targets and Running Tests Locally:**
+Overview of Important Make Targets and Running Tests Locally:
 
 
 The Kustomize repository provides several make targets to perform different tasks. Here are some of the important ones:
