@@ -31,6 +31,47 @@ Dev guides:
 - [MacOS Dev Guide]
 - [Windows Dev Guide]
 
+- Forking Kustomize and Making a Pull Request (PR)
+
+Navigate to the Kustomize repository on [GitHub](https://github.com/kubernetes-sigs/kustomize)
+Click on the "Fork" button in the top-right corner to create a fork of the repository under your GitHub account.
+Clone your forked repository to your local machine using the following command:
+`git clone https://github.com/your-username/kustomize.git`
+Create a new branch for your changes:
+`git checkout -b my-branch-name`
+Make the necessary changes to the codebase, add new features, fix bugs, etc.
+Commit your changes and push them to your forked repository:
+`git add .`
+`git commit -m "Description of your changes"`
+`git push origin my-branch-name`
+Visit the original Kustomize repository and click on the "Compare & pull request" button to create a PR with your changes.
+
+- Building Kustomize Locally
+
+Ensure that you have Go installed on your system. Refer to the [Go](https://golang.org/doc/install) installation guide for your platform.
+Open a terminal and navigate to the root directory of your cloned Kustomize repository.
+Run the following command to build Kustomize:
+`make build`
+This will compile the Kustomize binary, and you can find it in the bin directory.
+Optionally, you can add the bin directory to your system's PATH environment variable to use the locally built Kustomize binary.
+
+- Overview of Important Make Targets and Running Tests Locally
+
+The Kustomize repository provides several make targets to perform different tasks. Here are some of the important ones:
+
+`make test`: Run the tests for Kustomize locally.
+`make test-e2e`: Run end-to-end (E2E) tests for Kustomize.
+`make coverage`: Generate code coverage report.
+`make clean`: Clean the build artifacts and temporary files.
+
+To run the tests locally, execute the following command:
+
+Clone the repository: Use `git clone` to download a copy of the repository to your local machine.
+Install dependencies: Check the repository's documentation for instructions on installing any required dependencies using package managers like `npm` or `pip`.
+Set up the test environment: Follow any provided instructions to configure the test environment, such as setting up a test database or providing necessary environment variables.
+Run the tests: Execute the test command specified in the repository's documentation, such as `npm test` or `pytest`, to run the tests locally.
+Review the results: Examine the output or generated reports to see which tests passed and which failed, along with any error messages or logs.
+
 General resources for contributors:
 
 - [Contributor License Agreement] - Kubernetes projects require that you sign a Contributor License Agreement (CLA) before we can accept your pull requests.
