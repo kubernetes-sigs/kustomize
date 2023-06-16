@@ -147,23 +147,25 @@ func removeEmptyOrNewLine(original []string) []string {
 
 	return result
 }
-
+// sort keys in the order they were passed in from kustomization file
 func orderKeys(keys []string, yml []byte) ([]byte, error) {
 	buffer := bytes.NewBuffer(yml)
-	done := false
 	var lines []string
 
 	line, err := buffer.ReadBytes('\n')
 
-	for done == false {
+	for err == nil {
 		if slices.Contains(keys, strings.TrimSpace(strings.Split(string(line), ":")[0])) {
 			for i := 0; i < len(keys); i++ {
 				lines = append(lines, strings.TrimSpace(string(line)))
-				line, err = buffer.ReadBytes('\n')
-				done = true
+				line, _ = buffer.ReadBytes('\n')
 			}
 		}
 		line, err = buffer.ReadBytes('\n')
+	}
+
+	if err != io.EOF {
+		return nil, err
 	}
 
 	var newLineIndex = -1
@@ -181,7 +183,7 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 		lines[oldLineIndex] = tmp
 	}
 
-	// lines is now in order now of the original keys
+	// lines is now in order of the original keys
 
 	ymlLines := bytes.Split(yml, []byte("\n"))
 
@@ -197,11 +199,6 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 	}
 
 	modifiedData := bytes.Join(ymlLines, []byte("\n"))
-	
-	if err != nil {
-		return nil, err
-	}
-
 	return modifiedData, nil
 }
 
