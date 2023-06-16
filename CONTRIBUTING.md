@@ -33,19 +33,15 @@ Dev guides:
 
 
 **Forking Kustomize and Making a Pull Request (PR):**
-``
+
 
 Navigate to the Kustomize repository on [GitHub](https://github.com/kubernetes-sigs/kustomize)
 
 Click on the "Fork" button in the top-right corner to create a fork of the repository under your GitHub account.
 
-Clone your forked repository to your local machine using the following command:
+Clone your forked repository to your local machine using the following command: `git clone https://github.com/your-username/kustomize.git`
 
-`git clone https://github.com/your-username/kustomize.git`
-
-Create a new branch for your changes:
-
-`git checkout -b my-branch-name`
+Create a new branch for your changes: `git checkout -b my-branch-name`
 
 Make the necessary changes to the codebase, add new features, fix bugs, etc.
 
@@ -69,9 +65,7 @@ Ensure that you have Go installed on your system. Refer to the [Go](https://gola
 
 Open a terminal and navigate to the root directory of your cloned Kustomize repository.
 
-Run the following command to build Kustomize:
-
-`make build`
+Run the following command to build Kustomize: `make build`
 
 This will compile the Kustomize binary, and you can find it in the bin directory.
 
