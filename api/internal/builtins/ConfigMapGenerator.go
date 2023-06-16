@@ -29,7 +29,7 @@ func (p *ConfigMapGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte
 	return
 }
 
-func (p *ConfigMapGeneratorPlugin) Generate() (resmap.ResMap, error) {
+func (p *ConfigMapGeneratorPlugin) Generate() (resmap.ResMap, []string, error) {
 	return p.h.ResmapFactory().FromConfigMapArgs(
 		kv.NewLoader(p.h.Loader(), p.h.Validator()), p.ConfigMapArgs)
 }

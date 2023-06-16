@@ -20,12 +20,12 @@ func (p *IAMPolicyGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte
 	return
 }
 
-func (p *IAMPolicyGeneratorPlugin) Generate() (resmap.ResMap, error) {
+func (p *IAMPolicyGeneratorPlugin) Generate() (resmap.ResMap, []string, error) {
 	r := resmap.New()
 	err := r.ApplyFilter(iampolicygenerator.Filter{
 		IAMPolicyGenerator: p.IAMPolicyGeneratorArgs,
 	})
-	return r, err
+	return r, nil, err
 }
 
 func NewIAMPolicyGeneratorPlugin() resmap.GeneratorPlugin {

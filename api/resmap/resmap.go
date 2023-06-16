@@ -30,13 +30,22 @@ type TransformerWithProperties struct {
 
 // A Generator creates an instance of ResMap.
 type Generator interface {
-	Generate() (ResMap, error)
+	Generate() (ResMap, []string, error)
+}
+
+type OrderlyGenerator interface {
+	Generate() (ResMap, []string, error)
 }
 
 // A GeneratorWithProperties contains a Generator and stores
 // some of its properties
 type GeneratorWithProperties struct {
 	Generator
+	Origin *resource.Origin
+}
+
+type OrderlyGeneratorWithProperties struct {
+	OrderlyGenerator
 	Origin *resource.Origin
 }
 
@@ -175,6 +184,8 @@ type ResMap interface {
 
 	// AsYaml returns the yaml form of resources.
 	AsYaml() ([]byte, error)
+
+	AsYamlOrdered(kays []string) ([]byte, error)
 
 	// GetByIndex returns a resource at the given index,
 	// nil if out of range.

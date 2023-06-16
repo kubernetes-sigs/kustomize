@@ -79,7 +79,7 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 	kvLdr ifc.KvLoader, argList []types.ConfigMapArgs) (ResMap, error) {
 	var resources []*resource.Resource
 	for i := range argList {
-		res, err := rmF.resF.MakeConfigMap(kvLdr, &argList[i])
+		res, _,err := rmF.resF.MakeConfigMap(kvLdr, &argList[i])
 		if err != nil {
 			return nil, errors.WrapPrefixf(err, "NewResMapFromConfigMapArgs")
 		}
@@ -90,12 +90,12 @@ func (rmF *Factory) NewResMapFromConfigMapArgs(
 
 // FromConfigMapArgs creates a new ResMap containing one ConfigMap.
 func (rmF *Factory) FromConfigMapArgs(
-	kvLdr ifc.KvLoader, args types.ConfigMapArgs) (ResMap, error) {
-	res, err := rmF.resF.MakeConfigMap(kvLdr, &args)
+	kvLdr ifc.KvLoader, args types.ConfigMapArgs) (ResMap, []string ,error) {
+	res, keys, err := rmF.resF.MakeConfigMap(kvLdr, &args)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return rmF.FromResource(res), nil
+	return rmF.FromResource(res), keys, nil
 }
 
 // NewResMapFromSecretArgs takes a SecretArgs slice, generates
@@ -115,12 +115,12 @@ func (rmF *Factory) NewResMapFromSecretArgs(
 
 // FromSecretArgs creates a new ResMap containing one secret.
 func (rmF *Factory) FromSecretArgs(
-	kvLdr ifc.KvLoader, args types.SecretArgs) (ResMap, error) {
+	kvLdr ifc.KvLoader, args types.SecretArgs) (ResMap, []string,error) {
 	res, err := rmF.resF.MakeSecret(kvLdr, &args)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return rmF.FromResource(res), nil
+	return rmF.FromResource(res), nil, nil
 }
 
 func newResMapFromResourceSlice(

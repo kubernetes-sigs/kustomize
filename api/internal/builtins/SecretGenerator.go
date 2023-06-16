@@ -29,7 +29,7 @@ func (p *SecretGeneratorPlugin) Config(h *resmap.PluginHelpers, config []byte) (
 	return
 }
 
-func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, error) {
+func (p *SecretGeneratorPlugin) Generate() (resmap.ResMap, []string, error) {
 	return p.h.ResmapFactory().FromSecretArgs(
 		kv.NewLoader(p.h.Loader(), p.h.Validator()), p.SecretArgs)
 }

@@ -377,6 +377,10 @@ func (m *resWrangler) DeepCopy() ResMap {
 		})
 }
 
+func (m *resWrangler) AsYamlOrdered(keys []string) ([]byte, error) {
+	return []byte(""), nil
+}
+
 // makeCopy copies the ResMap.
 func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 	result := &resWrangler{}

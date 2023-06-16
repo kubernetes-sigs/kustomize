@@ -4,12 +4,15 @@
 package build
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/types"
@@ -79,24 +82,35 @@ func NewCmdBuild(
 			k := krusty.MakeKustomizer(
 				HonorKustomizeFlags(krusty.MakeDefaultOptions(), cmd.Flags()),
 			)
-			m, err := k.Run(fSys, theArgs.kustomizationPath)
+			var keys []string
+			m, keys, err := k.Run(fSys, theArgs.kustomizationPath)
+
 			if err != nil {
 				return err
 			}
+			keys = removeEmptyOrNewLine(keys)
+
 			if theFlags.outputPath != "" && fSys.IsDir(theFlags.outputPath) {
 				// Ignore writer; write to o.outputPath directly.
 				return MakeWriter(fSys).WriteIndividualFiles(
 					theFlags.outputPath, m)
 			}
+
 			yml, err := m.AsYaml()
 			if err != nil {
 				return err
 			}
+
+			newYml, err := orderKeys(keys, yml)
+			if err != nil {
+				return err
+			}
+
 			if theFlags.outputPath != "" {
 				// Ignore writer; write to o.outputPath directly.
-				return fSys.WriteFile(theFlags.outputPath, yml)
+				return fSys.WriteFile(theFlags.outputPath, newYml)
 			}
-			_, err = writer.Write(yml)
+			_, err = writer.Write(newYml)
 			return err
 		},
 	}
@@ -120,6 +134,113 @@ func NewCmdBuild(
 
 	AddFlagEnableHelm(cmd.Flags())
 	return cmd
+}
+
+func removeEmptyOrNewLine(original []string) []string {
+	var result []string
+
+	for _, s := range original {
+		if s != "\n" && s != "" {
+			result = append(result, s)
+		}
+	}
+
+	return result
+}
+
+//TDOD finish this function
+
+func orderKeys(keys []string, yml []byte) ([]byte, error) {
+	buffer := bytes.NewBuffer(yml)
+	//prevLine := []byte("")
+	//_ := -1
+	done := false
+	var lines []string
+
+	line, err := buffer.ReadBytes('\n')
+
+	for done == false {
+		if slices.Contains(keys, strings.TrimSpace(strings.Split(string(line), ":")[0])) {
+			println("match")
+			//once in here we should be finishing doing all the work. so swap the next len(keys) lines in yml with keys!!
+			for i := 0; i < len(keys); i++ {
+				lines = append(lines, strings.TrimSpace(string(line)))
+				line, err = buffer.ReadBytes('\n')
+				done = true
+			}
+		}
+		//prevLine = line
+		line, err = buffer.ReadBytes('\n')
+	}
+
+	//lines and keys
+	//sort lines
+	//loop back through yaml
+	//repalce yaml lines with lines lines
+
+	/*
+
+		1
+		2
+		3
+		4
+		5
+
+
+
+
+
+	*/
+
+	var newLineIndex = -1
+	var oldLineIndex = -1
+	for keyIndex, key := range keys {
+		for lineIndex, line := range lines {
+			if strings.Contains(line, key) {
+				newLineIndex = keyIndex
+				oldLineIndex = lineIndex
+				break
+			}
+		}
+		var tmp = lines[newLineIndex]
+		lines[newLineIndex] = lines[oldLineIndex]
+		lines[oldLineIndex] = tmp
+	}
+
+	println("+++++++ordered+++++++++")
+	for _, v := range lines {
+		//println(lines[i])
+		println(v)
+	}
+	println("+++++++ordered+++++++++")
+
+	//lines is in order now of the original keys
+
+	ymlLines := bytes.Split(yml, []byte("\n"))
+
+	for i, ymlLine := range ymlLines {
+		if slices.Contains(lines, strings.TrimSpace(string(ymlLine))) {
+			//replace the nex n lines
+			for j := 0; j < len(lines); j++ {
+				println("swappinng")
+				println(string(ymlLines[i]))
+				println(string(lines[j]))
+				ymlLines[i] = []byte(lines[j])
+				i++
+			}
+			break
+		}
+	}
+
+	modifiedData := bytes.Join(ymlLines, []byte("\n"))
+	
+	if err != nil {
+		return nil, err
+	}
+
+	println(string(modifiedData))
+
+	return modifiedData, nil
 }
 
 // Validate validates build command args and flags.

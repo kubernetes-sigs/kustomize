@@ -17,7 +17,7 @@ import (
 // see other tests in this package.
 func TestEmptyFileSystem(t *testing.T) {
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
-	_, err := b.Run(filesys.MakeFsInMemory(), "noSuchThing")
+	_, _,err := b.Run(filesys.MakeFsInMemory(), "noSuchThing")
 	if err == nil {
 		t.Fatalf("expected error")
 	}
