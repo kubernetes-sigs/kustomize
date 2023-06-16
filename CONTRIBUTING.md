@@ -31,6 +31,7 @@ Dev guides:
 - [MacOS Dev Guide]
 - [Windows Dev Guide]
 
+
 **Forking Kustomize and Making a Pull Request (PR):**
 
 
@@ -59,7 +60,9 @@ Commit your changes and push them to your forked repository:
 Visit the original Kustomize repository and click on the "Compare & pull request" button to create a PR with your changes.
 
 
+
 **Building Kustomize Locally:**
+
 
 
 Ensure that you have Go installed on your system. Refer to the [Go](https://golang.org/doc/install) installation guide for your platform.
@@ -73,6 +76,7 @@ Run the following command to build Kustomize:
 This will compile the Kustomize binary, and you can find it in the bin directory.
 
 Optionally, you can add the bin directory to your system's PATH environment variable to use the locally built Kustomize binary.
+
 
 
 **Overview of Important Make Targets and Running Tests Locally:**
