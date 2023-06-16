@@ -148,12 +148,8 @@ func removeEmptyOrNewLine(original []string) []string {
 	return result
 }
 
-//TDOD finish this function
-
 func orderKeys(keys []string, yml []byte) ([]byte, error) {
 	buffer := bytes.NewBuffer(yml)
-	//prevLine := []byte("")
-	//_ := -1
 	done := false
 	var lines []string
 
@@ -161,36 +157,14 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 
 	for done == false {
 		if slices.Contains(keys, strings.TrimSpace(strings.Split(string(line), ":")[0])) {
-			println("match")
-			//once in here we should be finishing doing all the work. so swap the next len(keys) lines in yml with keys!!
 			for i := 0; i < len(keys); i++ {
 				lines = append(lines, strings.TrimSpace(string(line)))
 				line, err = buffer.ReadBytes('\n')
 				done = true
 			}
 		}
-		//prevLine = line
 		line, err = buffer.ReadBytes('\n')
 	}
-
-	//lines and keys
-	//sort lines
-	//loop back through yaml
-	//repalce yaml lines with lines lines
-
-	/*
-
-		1
-		2
-		3
-		4
-		5
-
-
-
-
-
-	*/
 
 	var newLineIndex = -1
 	var oldLineIndex = -1
@@ -207,14 +181,7 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 		lines[oldLineIndex] = tmp
 	}
 
-	println("+++++++ordered+++++++++")
-	for _, v := range lines {
-		//println(lines[i])
-		println(v)
-	}
-	println("+++++++ordered+++++++++")
-
-	//lines is in order now of the original keys
+	// lines is now in order now of the original keys
 
 	ymlLines := bytes.Split(yml, []byte("\n"))
 
@@ -222,9 +189,6 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 		if slices.Contains(lines, strings.TrimSpace(string(ymlLine))) {
 			//replace the nex n lines
 			for j := 0; j < len(lines); j++ {
-				println("swappinng")
-				println(string(ymlLines[i]))
-				println(string(lines[j]))
 				ymlLines[i] = []byte(lines[j])
 				i++
 			}
@@ -237,8 +201,6 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	println(string(modifiedData))
 
 	return modifiedData, nil
 }
