@@ -10,12 +10,13 @@ import (
 	"strconv"
 	"strings"
 
+	"sigs.k8s.io/yaml"
+
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
-	"sigs.k8s.io/yaml"
 )
 
 func ConvertVarsToReplacements(fSys filesys.FileSystem, k *types.Kustomization) error {
@@ -134,7 +135,7 @@ func getNodesFromFile(fileName string, fSys filesys.FileSystem) ([]*kyaml.RNode,
 	}
 	out := &bytes.Buffer{}
 	r := kio.ByteReadWriter{
-		Reader:                bytes.NewBufferString(string(b)),
+		Reader:                bytes.NewReader(b),
 		Writer:                out,
 		KeepReaderAnnotations: true,
 		OmitReaderAnnotations: true,
@@ -284,7 +285,11 @@ func constructTargets(file string, node *kyaml.RNode, fieldPaths []string,
 func writePatchTargets(patch types.Patch, node *kyaml.RNode, fieldPaths []string,
 	options []*types.FieldOptions) ([]*types.TargetSelector, error) {
 	var result []*types.TargetSelector
-	selector := patch.Target.Copy()
+
+	selector := types.Selector{}
+	if patch.Target != nil {
+		selector = patch.Target.Copy()
+	}
 
 	for i := range fieldPaths {
 		target := &types.TargetSelector{
