@@ -24,6 +24,8 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/sys v0.8.0 // indirect
@@ -31,9 +33,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.14.2 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.14.3 // indirect
 )
 
 replace sigs.k8s.io/kustomize/api => ../../../../api
-
-replace sigs.k8s.io/kustomize/kyaml => ../../../../kyaml
