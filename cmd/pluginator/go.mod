@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.1
-	sigs.k8s.io/kustomize/api v0.13.4
+	sigs.k8s.io/kustomize/api v0.14.0
 	sigs.k8s.io/kustomize/kyaml v0.14.3
 )
 
@@ -35,5 +35,3 @@ require (
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../api
