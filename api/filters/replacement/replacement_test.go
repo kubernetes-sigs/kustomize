@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	filtertest "sigs.k8s.io/kustomize/api/testutils/filtertest"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 func TestFilter(t *testing.T) {
@@ -1198,6 +1198,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
 `,
 			replacements: `replacements:
 - source:
@@ -1211,6 +1216,15 @@ metadata:
     - spec.template.spec.containers
     options:
       create: true
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+  targets:
+  - select:
+      name: deploy2
+    fieldPaths:
+    - spec.template.spec.containers
 `,
 			expected: `apiVersion: v1
 kind: Pod
@@ -1231,6 +1245,11 @@ spec:
       containers:
       - image: busybox
         name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
 `,
 		},
 		"complex type with delimiter in source": {
@@ -1485,85 +1504,6 @@ spec:
         - name: deployment-name
           value: sample-deploy`,
 		},
-		"one replacements target should create multiple values": {
-			input: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: sample-deploy
-  name: sample-deploy
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sample-deploy
-  template:
-    metadata:
-      labels:
-        app: sample-deploy
-    spec:
-      containers:
-      - image: other
-        name: do-not-modify-me
-        env:
-        - name: foo
-          value: bar
-      - image: nginx
-        name: main
-        env:
-        - name: foo
-          value: bar
-      - image: nginx
-        name: sidecar
-`,
-			replacements: `replacements:
-- source:
-    kind: Deployment
-    name: sample-deploy
-    fieldPath: metadata.name
-  targets:
-  - select:
-      kind: Deployment
-    options:
-      create: true
-    fieldPaths:
-    - spec.template.spec.containers.[image=nginx].env.[name=deployment-name].value
-`,
-			expected: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: sample-deploy
-  name: sample-deploy
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sample-deploy
-  template:
-    metadata:
-      labels:
-        app: sample-deploy
-    spec:
-      containers:
-      - image: other
-        name: do-not-modify-me
-        env:
-        - name: foo
-          value: bar
-      - image: nginx
-        name: main
-        env:
-        - name: foo
-          value: bar
-        - name: deployment-name
-          value: sample-deploy
-      - image: nginx
-        name: sidecar
-        env:
-        - name: deployment-name
-          value: sample-deploy`,
-		},
 		"index contains '*' character": {
 			input: `apiVersion: apps/v1
 kind: Deployment
@@ -1731,110 +1671,7 @@ spec:
     options:
       create: true
 `,
-			expected: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: sample-deploy
-  name: sample-deploy
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sample-deploy
-  template:
-    metadata:
-      labels:
-        app: sample-deploy
-    spec:
-      containers:
-      - image: nginx
-        name: main
-        env:
-        - name: other-env
-          value: YYYYY
-        - name: deployment-name
-          value: sample-deploy
-`,
-		},
-		"Issue 1493: wildcard to create or replace field in all containers in all workloads": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: policy
-data:
-  restart: OnFailure
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod1
-spec:
-  containers:
-  - image: nginx
-    name: main
-  - image: nginx
-    name: sidecar
-    imagePullPolicy: Always
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod2
-spec:
-  containers:
-  - image: nginx
-    name: main
-    imagePullPolicy: Always
-  - image: nginx
-    name: sidecar
-`,
-			replacements: `replacements:
-- source:
-    kind: ConfigMap
-    name: policy
-    fieldPath: data.restart
-  targets:
-  - select:
-      kind: Pod
-    fieldPaths:
-    - spec.containers.*.imagePullPolicy
-    options:
-      create: true
-`,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: policy
-data:
-  restart: OnFailure
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod1
-spec:
-  containers:
-  - image: nginx
-    name: main
-    imagePullPolicy: OnFailure
-  - image: nginx
-    name: sidecar
-    imagePullPolicy: OnFailure
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod2
-spec:
-  containers:
-  - image: nginx
-    name: main
-    imagePullPolicy: OnFailure
-  - image: nginx
-    name: sidecar
-    imagePullPolicy: OnFailure
-`,
+			expectedErr: "cannot support create option in a multi-value target",
 		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
@@ -2578,257 +2415,6 @@ spec:
     name: myapp-container
   restartPolicy: new
 `,
-		},
-		"issue4761 - path not in target with create: true": {
-			input: `
----
-apiVersion: networking.istio.io/v1alpha3
-kind: EnvoyFilter
-metadata:
-  name: request-id
-spec:
-  configPatches:
-    - applyTo: NETWORK_FILTER
-    - applyTo: NETWORK_FILTER
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: istio-version
-  annotations:
-    config.kubernetes.io/local-config: true
-data:
-  ISTIO_REGEX: '^1\.14.*'
-`,
-			replacements: `
-replacements:
-  - source:
-      kind: ConfigMap
-      name: istio-version
-      fieldPath: data.ISTIO_REGEX
-    targets:
-      - select:
-          kind: EnvoyFilter
-        fieldPaths:
-          - spec.configPatches.0.match.proxy.proxyVersion
-          - spec.configPatches.1.match.proxy.proxyVersion
-          - spec.configPatches.2.match.proxy.proxyVersion
-          - spec.configPatches.3.match.proxy.proxyVersion
-        options:
-          create: true
-`,
-			expected: `
-apiVersion: networking.istio.io/v1alpha3
-kind: EnvoyFilter
-metadata:
-  name: request-id
-spec:
-  configPatches:
-  - applyTo: NETWORK_FILTER
-    match:
-      proxy:
-        proxyVersion: ^1\.14.*
-  - applyTo: NETWORK_FILTER
-    match:
-      proxy:
-        proxyVersion: ^1\.14.*
-  - match:
-      proxy:
-        proxyVersion: ^1\.14.*
-  - match:
-      proxy:
-        proxyVersion: ^1\.14.*
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: istio-version
-  annotations:
-    config.kubernetes.io/local-config: true
-data:
-  ISTIO_REGEX: '^1\.14.*'
-`,
-		},
-		"issue4761 - path not in target with create: false": {
-			input: `
----
-apiVersion: networking.istio.io/v1alpha3
-kind: EnvoyFilter
-metadata:
-  name: request-id
-spec:
-  configPatches:
-    - applyTo: NETWORK_FILTER
-    - applyTo: NETWORK_FILTER
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: istio-version
-  annotations:
-    config.kubernetes.io/local-config: true
-data:
-  ISTIO_REGEX: '^1\.14.*'
-`,
-			replacements: `
-replacements:
-  - source:
-      kind: ConfigMap
-      name: istio-version
-      fieldPath: data.ISTIO_REGEX
-    targets:
-      - select:
-          kind: EnvoyFilter
-        fieldPaths:
-          - spec.configPatches.0.match.proxy.proxyVersion
-          - spec.configPatches.1.match.proxy.proxyVersion
-          - spec.configPatches.2.match.proxy.proxyVersion
-          - spec.configPatches.3.match.proxy.proxyVersion
-        options:
-          create: false
-`,
-			expectedErr: "unable to find field \"spec.configPatches.0.match.proxy.proxyVersion\" in replacement target",
-		},
-		"issue4761 - wildcard solution": {
-			input: `
----
-apiVersion: networking.istio.io/v1alpha3
-kind: EnvoyFilter
-metadata:
-  name: request-id
-spec:
-  configPatches:
-    - applyTo: NETWORK_FILTER
-    - applyTo: NETWORK_FILTER
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: istio-version
-  annotations:
-    config.kubernetes.io/local-config: true
-data:
-  ISTIO_REGEX: '^1\.14.*'
-`,
-			replacements: `
-replacements:
-  - source:
-      kind: ConfigMap
-      name: istio-version
-      fieldPath: data.ISTIO_REGEX
-    targets:
-      - select:
-          kind: EnvoyFilter
-        fieldPaths:
-          - spec.configPatches.*.match.proxy.proxyVersion
-        options:
-          create: true
-`,
-			expected: `
-apiVersion: networking.istio.io/v1alpha3
-kind: EnvoyFilter
-metadata:
-  name: request-id
-spec:
-  configPatches:
-  - applyTo: NETWORK_FILTER
-    match:
-      proxy:
-        proxyVersion: ^1\.14.*
-  - applyTo: NETWORK_FILTER
-    match:
-      proxy:
-        proxyVersion: ^1\.14.*
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: istio-version
-  annotations:
-    config.kubernetes.io/local-config: true
-data:
-  ISTIO_REGEX: '^1\.14.*'
-`,
-		},
-		"append to sequence using index": {
-			input: `apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: myingress
-spec:
-  rules:
-    - host: myingress.example.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-svc
-                port:
-                  number: 80
-`,
-			replacements: `replacements:
-  - source:
-      kind: Ingress
-      name: myingress
-      fieldPath: spec.rules.0.host
-    targets:
-      - select:
-          kind: Ingress
-          name: myingress
-        fieldPaths:
-          - spec.tls.0.hosts.0
-          - spec.tls.0.secretName          
-        options:
-          create: true
-`,
-			expected: `apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: myingress
-spec:
-  rules:
-  - host: myingress.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: my-svc
-            port:
-              number: 80
-  tls:
-  - hosts:
-    - myingress.example.com
-    secretName: myingress.example.com`,
-		},
-		"fail to append to sequence using a distant index": {
-			input: `apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: myingress
-spec:
-  rules:
-    - host: myingress.example.com
-`,
-			replacements: `replacements:
-  - source:
-      kind: Ingress
-      name: myingress
-      fieldPath: spec.rules.0.host
-    targets:
-      - select:
-          kind: Ingress
-          name: myingress
-        fieldPaths:
-          - spec.tls.5.hosts.5
-          - spec.tls.5.secretName
-        options:
-          create: true
-`,
-			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
 		},
 	}
 
