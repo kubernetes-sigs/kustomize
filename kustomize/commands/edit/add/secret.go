@@ -113,7 +113,7 @@ func addSecret(
 	// Validate by trying to create corev1.secret.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)
-	_, err := rf.MakeSecret(ldr, args)
+	_, _, err := rf.MakeSecret(ldr, args)
 	return err
 }
 

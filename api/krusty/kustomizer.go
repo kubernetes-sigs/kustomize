@@ -53,7 +53,7 @@ func MakeKustomizer(o *Options) *Kustomizer {
 // of internal paths (e.g. the filesystem may contain multiple overlays,
 // and Run can be called on each of them).
 func (b *Kustomizer) Run(
-	fSys filesys.FileSystem, path string) (resmap.ResMap, []string, error) {
+	fSys filesys.FileSystem, path string) (resmap.ResMap, [][]string, error) {
 	resmapFactory := resmap.NewFactory(b.depProvider.GetResourceFactory())
 	lr := fLdr.RestrictionNone
 	if b.options.LoadRestrictions == types.LoadRestrictionsRootOnly {
@@ -61,7 +61,7 @@ func (b *Kustomizer) Run(
 	}
 	ldr, err := fLdr.NewLoader(lr, path, fSys)
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 	defer ldr.Cleanup()
 	kt := target.NewKustTarget(
@@ -73,29 +73,29 @@ func (b *Kustomizer) Run(
 	)
 	err = kt.Load()
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 	var bytes []byte
 	if openApiPath, exists := kt.Kustomization().OpenAPI["path"]; exists {
 		bytes, err = ldr.Load(openApiPath)
 		if err != nil {
-			return nil, nil,err
+			return nil, nil, err
 		}
 	}
 	err = openapi.SetSchema(kt.Kustomization().OpenAPI, bytes, true)
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 	var m resmap.ResMap
-	var keys []string
+	var keys [][]string
 	m, keys, err = kt.MakeCustomizedResMap()
-	
+
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 	err = b.applySortOrder(m, kt)
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 	if b.options.AddManagedbyLabel || utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.ManagedByLabelOption) {
 		t := builtins.LabelTransformerPlugin{
@@ -109,20 +109,20 @@ func (b *Kustomizer) Run(
 		}
 		err = t.Transform(m)
 		if err != nil {
-			return nil, nil,err
+			return nil, nil, err
 		}
 	}
 	m.RemoveBuildAnnotations()
 	if !utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.OriginAnnotations) {
 		err = m.RemoveOriginAnnotations()
 		if err != nil {
-			return nil, nil,errors.WrapPrefixf(err, "failed to clean up origin tracking annotations")
+			return nil, nil, errors.WrapPrefixf(err, "failed to clean up origin tracking annotations")
 		}
 	}
 	if !utils.StringSliceContains(kt.Kustomization().BuildMetadata, types.TransformerAnnotations) {
 		err = m.RemoveTransformerAnnotations()
 		if err != nil {
-			return nil, nil,errors.WrapPrefixf(err, "failed to clean up transformer annotations")
+			return nil, nil, errors.WrapPrefixf(err, "failed to clean up transformer annotations")
 		}
 	}
 	return m, keys, nil

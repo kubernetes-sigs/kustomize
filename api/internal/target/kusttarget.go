@@ -122,19 +122,19 @@ func LoadKustFile(ldr ifc.Loader) ([]byte, string, error) {
 
 // MakeCustomizedResMap creates a fully customized ResMap
 // per the instructions contained in its kustomization instance.
-func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, []string, error) {
+func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, [][]string, error) {
 	return kt.makeCustomizedResMap()
 }
 
-func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap,[]string, error) {
+func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, [][]string, error) {
 	var origin *resource.Origin
 	if len(kt.kustomization.BuildMetadata) != 0 {
 		origin = &resource.Origin{}
 	}
 	kt.origin = origin
-	ra,keys, err := kt.AccumulateTarget()
+	ra, keys, err := kt.AccumulateTarget()
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 
 	// The following steps must be done last, not as part of
@@ -142,25 +142,25 @@ func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap,[]string, error) {
 
 	err = kt.addHashesToNames(ra)
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
 	err = ra.FixBackReferences()
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 
 	// With all the back references fixed, it's OK to resolve Vars.
 	err = ra.ResolveVars()
 	if err != nil {
-		return nil, nil,err
+		return nil, nil, err
 	}
 
 	err = kt.IgnoreLocal(ra)
 	if err != nil {
-		return  nil,nil,err
+		return nil, nil, err
 	}
 
 	return ra.ResMap(), keys, nil
@@ -190,17 +190,17 @@ func (kt *KustTarget) addHashesToNames(
 // accordingly. When a remote base is found, it updates `origin.repo`
 // and `origin.ref` accordingly.
 func (kt *KustTarget) AccumulateTarget() (
-	ra *accumulator.ResAccumulator,keys []string, err error) {
+	ra *accumulator.ResAccumulator, keys [][]string, err error) {
 	return kt.accumulateTarget(accumulator.MakeEmptyAccumulator())
 }
 
 // ra should be empty when this KustTarget is a Kustomization, or the ra of the parent if this KustTarget is a Component
 // (or empty if the Component does not have a parent).
 func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
-	resRa *accumulator.ResAccumulator, keys []string, err error) {
+	resRa *accumulator.ResAccumulator, keys [][]string, err error) {
 	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
-		return nil, nil,errors.WrapPrefixf(err, "accumulating resources")
+		return nil, nil, errors.WrapPrefixf(err, "accumulating resources")
 	}
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
@@ -247,7 +247,7 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 		return nil, nil, errors.WrapPrefixf(
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
-	return ra, keys,nil
+	return ra, keys, nil
 }
 
 // IgnoreLocal drops the local resource by checking the annotation "config.kubernetes.io/local-config".
@@ -264,9 +264,9 @@ func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
 }
 
 func (kt *KustTarget) runGenerators(
-	ra *accumulator.ResAccumulator) ([]string, error) {
+	ra *accumulator.ResAccumulator) ([][]string, error) {
 	var generators []*resmap.GeneratorWithProperties
-	var orderedKeys []string
+	var orderedKeys [][]string
 	gs, err := kt.configureBuiltinGenerators()
 	if err != nil {
 		return nil, err
@@ -280,7 +280,7 @@ func (kt *KustTarget) runGenerators(
 	generators = append(generators, gs...)
 	for i, g := range generators {
 		resMap, keys, err := g.Generate()
-		orderedKeys = append(orderedKeys,keys...)
+		orderedKeys = append(orderedKeys, keys)
 		if err != nil {
 			return nil, err
 		}
@@ -516,12 +516,12 @@ func (kt *KustTarget) accumulateDirectory(
 	var subRa *accumulator.ResAccumulator
 	if isComponent {
 		// Components don't create a new accumulator: the kustomization directives are added to the current accumulator
-		subRa, _,err = subKt.accumulateTarget(ra)
+		subRa, _, err = subKt.accumulateTarget(ra)
 		ra = accumulator.MakeEmptyAccumulator()
 	} else {
 		// Child Kustomizations create a new accumulator which resolves their kustomization directives, which will later
 		// be merged into the current accumulator.
-		subRa, _,err = subKt.AccumulateTarget()
+		subRa, _, err = subKt.AccumulateTarget()
 	}
 	if err != nil {
 		return nil, errors.WrapPrefixf(

@@ -6,17 +6,16 @@ package build
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"log"
-	"strings"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"io"
 	"k8s.io/utils/strings/slices"
+	"log"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"strings"
 )
 
 var theArgs struct {
@@ -82,7 +81,7 @@ func NewCmdBuild(
 			k := krusty.MakeKustomizer(
 				HonorKustomizeFlags(krusty.MakeDefaultOptions(), cmd.Flags()),
 			)
-			var keys []string
+			var keys [][]string
 			m, keys, err := k.Run(fSys, theArgs.kustomizationPath)
 
 			if err != nil {
@@ -136,31 +135,49 @@ func NewCmdBuild(
 	return cmd
 }
 
-func removeEmptyOrNewLine(original []string) []string {
-	var result []string
+func removeEmptyOrNewLine(original [][]string) [][]string {
+	var result [][]string
 
-	for _, s := range original {
-		if s != "\n" && s != "" {
-			result = append(result, s)
+	for _, keySet := range original {
+		var innerResult []string
+		for _, key := range keySet {
+			if key != "\n" && key != "" {
+				innerResult = append(innerResult, key)
+			}
 		}
+		if len(innerResult) > 0 {
+			result = append(result, innerResult)
+		}
+
 	}
 
 	return result
 }
+
 // sort keys in the order they were passed in from kustomization file
-func orderKeys(keys []string, yml []byte) ([]byte, error) {
+func orderKeys(keys [][]string, yml []byte) ([]byte, error) {
+
 	buffer := bytes.NewBuffer(yml)
-	var lines []string
+	var lines [][]string
 
 	line, err := buffer.ReadBytes('\n')
 
+	//reading input yml line by line
 	for err == nil {
-		if slices.Contains(keys, strings.TrimSpace(strings.Split(string(line), ":")[0])) {
-			for i := 0; i < len(keys); i++ {
-				lines = append(lines, strings.TrimSpace(string(line)))
-				line, _ = buffer.ReadBytes('\n')
+		//loop through each set of keys
+		for _, keys := range keys {
+			var innerLines []string
+			if slices.Contains(keys, strings.TrimSpace(strings.Split(string(line), ":")[0])) {
+				for i := 0; i < len(keys); i++ {
+					innerLines = append(innerLines, strings.TrimSuffix(string(line), "\n"))
+					line, _ = buffer.ReadBytes('\n')
+				}
+			}
+			if len(innerLines) > 0 {
+				lines = append(lines, innerLines)
 			}
 		}
+
 		line, err = buffer.ReadBytes('\n')
 	}
 
@@ -168,38 +185,140 @@ func orderKeys(keys []string, yml []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	for _, keySet := range keys {
+		for _, lineSet := range lines {
+			orderLinesByKeys(keySet, lineSet)
+		}
+	}
+
+	for _, key := range lines {
+		println("*")
+		for _, s := range key {
+			println(s)
+		}
+	}
+
+	println("==================New Debugging=======================")
+
+	/*
+		keys - [][]string
+		lines - [][]string
+
+	*/
+
+	//for _, keys := range keys {
+	//	for _, lines := range lines {
+	//		println(key)
+	//		//orderLinesByKeys(keys, lines)
+	//	}
+	//}
+
+	//for _, keys := range keys {
+	//	for _, s := range keys {
+	//		println(s)
+	//		//orderLinesByKeys(keys, lines)
+	//	}
+	//}
+	//
+	//for _, lines := range lines {
+	//	for _, s := range lines {
+	//		println(s)
+	//	}
+	//}
+
+	//
+	//// lines is now in order of the original keys
+	//
+	ymlLines := bytes.Split(yml, []byte("\n"))
+
+	// loops are out of order  outside loop should be lines [][]string
+	//
+
+	for _, lineSet := range lines {
+		for i := 0; i < len(ymlLines)-1; i++ {
+
+			if slices.Contains(lineSet, string(ymlLines[i])) {
+				for _, s := range lineSet {
+					println("replacing")
+					println(string(ymlLines[i]))
+					println(s)
+					ymlLines[i] = []byte(s)
+					i++
+				}
+				break
+			}
+		}
+
+	}
+
+	//for i, ymlLine := range ymlLines {
+	//	//println(string(ymlLine))
+	//	for _, line1 := range lines {
+	//		//for _, s := range line1 {
+	//		if slices.Contains(line1, string(ymlLine)) {
+	//			for _, line := range line1 {
+	//				println("replacing")
+	//				println(string(ymlLines[i-1]))
+	//				println(string([]byte(line)))
+	//				ymlLines[i-1] = []byte(line)
+	//				i++
+	//			}
+	//			break
+	//		}
+	//		//println(s)
+	//		//	println(strings.Contains(string(ymlLine), s))
+	//
+	//		// replace next n lines
+	//
+	//		//for j := 0; j < len(line1)-1; j++ {
+	//		//	println("replacing")
+	//		//	println(string(ymlLines[i]))
+	//		//	println(string([]byte(line1[j])))
+	//		//	ymlLines[i] = []byte(line1[j])
+	//		//	i++
+	//		//}
+	//		break
+	//
+	//		break
+	//	}
+	//	//break
+	//
+	//	//println("\n")
+	//}
+
+	//for i, ymlLine := range ymlLines {
+	//	if slices.Contains(lines, strings.TrimSpace(string(ymlLine))) {
+	//		//replace the nex n lines
+	//		for j := 0; j < len(lines); j++ {
+	//			ymlLines[i] = []byte(lines[j])
+	//			i++
+	//		}
+	//		break
+	//	}
+	//}
+	//
+	modifiedData := bytes.Join(ymlLines, []byte("\n"))
+	//return []byte(""), nil
+	return modifiedData, nil
+}
+
+func orderLinesByKeys(keys []string, linesToOrder []string) {
+	var lines = &linesToOrder
+
 	var newLineIndex = -1
 	var oldLineIndex = -1
 	for keyIndex, key := range keys {
-		for lineIndex, line := range lines {
+		for lineIndex, line := range *lines {
 			if strings.Contains(line, key) {
 				newLineIndex = keyIndex
 				oldLineIndex = lineIndex
 				break
 			}
 		}
-		var tmp = lines[newLineIndex]
-		lines[newLineIndex] = lines[oldLineIndex]
-		lines[oldLineIndex] = tmp
+		var tmp = linesToOrder[newLineIndex]
+		linesToOrder[newLineIndex] = linesToOrder[oldLineIndex]
+		linesToOrder[oldLineIndex] = tmp
 	}
-
-	// lines is now in order of the original keys
-
-	ymlLines := bytes.Split(yml, []byte("\n"))
-
-	for i, ymlLine := range ymlLines {
-		if slices.Contains(lines, strings.TrimSpace(string(ymlLine))) {
-			//replace the nex n lines
-			for j := 0; j < len(lines); j++ {
-				ymlLines[i] = []byte(lines[j])
-				i++
-			}
-			break
-		}
-	}
-
-	modifiedData := bytes.Join(ymlLines, []byte("\n"))
-	return modifiedData, nil
 }
 
 // Validate validates build command args and flags.
