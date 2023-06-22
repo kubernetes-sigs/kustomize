@@ -161,10 +161,7 @@ func orderKeys(keys [][]string, yml []byte) ([]byte, error) {
 	var lines [][]string
 
 	line, err := buffer.ReadBytes('\n')
-
-	//reading input yml line by line
 	for err == nil {
-		//loop through each set of keys
 		for _, keys := range keys {
 			var innerLines []string
 			if slices.Contains(keys, strings.TrimSpace(strings.Split(string(line), ":")[0])) {
@@ -191,114 +188,21 @@ func orderKeys(keys [][]string, yml []byte) ([]byte, error) {
 		}
 	}
 
-	for _, key := range lines {
-		println("*")
-		for _, s := range key {
-			println(s)
-		}
-	}
-
-	println("==================New Debugging=======================")
-
-	/*
-		keys - [][]string
-		lines - [][]string
-
-	*/
-
-	//for _, keys := range keys {
-	//	for _, lines := range lines {
-	//		println(key)
-	//		//orderLinesByKeys(keys, lines)
-	//	}
-	//}
-
-	//for _, keys := range keys {
-	//	for _, s := range keys {
-	//		println(s)
-	//		//orderLinesByKeys(keys, lines)
-	//	}
-	//}
-	//
-	//for _, lines := range lines {
-	//	for _, s := range lines {
-	//		println(s)
-	//	}
-	//}
-
-	//
-	//// lines is now in order of the original keys
-	//
 	ymlLines := bytes.Split(yml, []byte("\n"))
-
-	// loops are out of order  outside loop should be lines [][]string
-	//
 
 	for _, lineSet := range lines {
 		for i := 0; i < len(ymlLines)-1; i++ {
-
 			if slices.Contains(lineSet, string(ymlLines[i])) {
 				for _, s := range lineSet {
-					println("replacing")
-					println(string(ymlLines[i]))
-					println(s)
 					ymlLines[i] = []byte(s)
 					i++
 				}
 				break
 			}
 		}
-
 	}
 
-	//for i, ymlLine := range ymlLines {
-	//	//println(string(ymlLine))
-	//	for _, line1 := range lines {
-	//		//for _, s := range line1 {
-	//		if slices.Contains(line1, string(ymlLine)) {
-	//			for _, line := range line1 {
-	//				println("replacing")
-	//				println(string(ymlLines[i-1]))
-	//				println(string([]byte(line)))
-	//				ymlLines[i-1] = []byte(line)
-	//				i++
-	//			}
-	//			break
-	//		}
-	//		//println(s)
-	//		//	println(strings.Contains(string(ymlLine), s))
-	//
-	//		// replace next n lines
-	//
-	//		//for j := 0; j < len(line1)-1; j++ {
-	//		//	println("replacing")
-	//		//	println(string(ymlLines[i]))
-	//		//	println(string([]byte(line1[j])))
-	//		//	ymlLines[i] = []byte(line1[j])
-	//		//	i++
-	//		//}
-	//		break
-	//
-	//		break
-	//	}
-	//	//break
-	//
-	//	//println("\n")
-	//}
-
-	//for i, ymlLine := range ymlLines {
-	//	if slices.Contains(lines, strings.TrimSpace(string(ymlLine))) {
-	//		//replace the nex n lines
-	//		for j := 0; j < len(lines); j++ {
-	//			ymlLines[i] = []byte(lines[j])
-	//			i++
-	//		}
-	//		break
-	//	}
-	//}
-	//
 	modifiedData := bytes.Join(ymlLines, []byte("\n"))
-	//return []byte(""), nil
 	return modifiedData, nil
 }
 
