@@ -171,15 +171,13 @@ func (ra *ResAccumulator) FixBackReferences() (err error) {
 // Intersection drops the resources which "other" does not have.
 func (ra *ResAccumulator) Intersection(other resmap.ResMap) error {
 	otherIds := other.AllIds()
+	seen := make(map[resid.ResId]struct{}, len(otherIds))
+	for _, id := range otherIds {
+		seen[id] = struct{}{}
+	}
 	for _, curId := range ra.resMap.AllIds() {
-		toDelete := true
-		for _, otherId := range otherIds {
-			if otherId == curId {
-				toDelete = false
-				break
-			}
-		}
-		if toDelete {
+		_, inOtherSet := seen[curId]
+		if !inOtherSet {
 			err := ra.resMap.Remove(curId)
 			if err != nil {
 				return err
