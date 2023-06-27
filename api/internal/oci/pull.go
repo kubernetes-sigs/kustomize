@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	fluxClient "github.com/fluxcd/pkg/oci/client"
 	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -96,7 +95,7 @@ func NewOCISpecFromURL(n string) (*OciSpec, error) {
 	}
 
 	// check if string starts with  "oci://"
-	ociURL, err := fluxClient.ParseArtifactURL(splitURL[0])
+	ociURL, err := ParseArtifactURL(splitURL[0])
 	if err != nil {
 		return nil, fmt.Errorf("[ParseArtifactURL] error: %w", err)
 	}
@@ -128,7 +127,7 @@ func PullArtifact(ociSpec *OciSpec) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	ociClient := fluxClient.NewLocalClient()
+	ociClient := NewClient(DefaultOptions())
 	_, err := ociClient.Pull(ctx, ociSpec.image, ociSpec.Dir.String())
 	if err != nil {
 		return fmt.Errorf("[Pull] error: %w", err)
