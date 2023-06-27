@@ -39,7 +39,7 @@ resources:
 - deploy.yaml
 configMapGenerator:
 - name: my-configmap
-  literals:	
+  literals:
   - testValue=purple
   - otherValue=green
 `)
@@ -64,7 +64,7 @@ resources:
 configMapGenerator:
 - name: my-configmap
   behavior: merge
-  literals:	
+  literals:
   - testValue=blue
   - compValue=red
 `)
@@ -154,7 +154,7 @@ spec:
 configMapGenerator:
 - name: my-configmap
   behavior: merge
-  literals:	
+  literals:
   - otherValue=orange
 `),
 				writeK("prod", `
@@ -319,7 +319,7 @@ resources:
 configMapGenerator:
 - name: my-configmap
   behavior: merge
-  literals:	
+  literals:
   - compValue=red
   - testValue=blue
 `),
@@ -350,7 +350,7 @@ kind: Component
 configMapGenerator:
 - name: my-configmap
   behavior: merge
-  literals:	
+  literals:
   - otherValue=orange
 `),
 			},
@@ -562,7 +562,7 @@ kind: Component
 configMapGenerator:
 - name: my-configmap
   behavior: merge
-  literals:	
+  literals:
   - otherValue=orange
 `),
 			},
@@ -654,6 +654,116 @@ components:
 			if err == nil || !strings.Contains(err.Error(), tc.expectedError) {
 				t.Fatalf("unexpected error: %s", err)
 			}
+		})
+	}
+}
+
+func TestOrderOfAccumulatedComponent(t *testing.T) {
+	tests := map[string]struct {
+		input          []FileGen
+		expectedOutput string
+	}{
+		"components_using_a_generated_resource_by_configMapGenerator": {
+			input: []FileGen{
+				writeK("", `
+resources:
+- resource.yaml
+components:
+- components
+configMapGenerator:
+- name: generated-resource
+  literals:
+  - key=value
+  options:
+    disableNameSuffixHash: true`),
+				writeF("resource.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-from-resources
+data:
+  foo: bar`),
+				writeC("/components", `
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+nameSuffix: -suffix
+`),
+			},
+			expectedOutput: `
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: config-from-resources-suffix
+---
+apiVersion: v1
+data:
+  key: value
+kind: ConfigMap
+metadata:
+  name: generated-resource-suffix
+`},
+		"components_are_applied_before_replacements_transformer_applied": {
+			input: []FileGen{
+				writeK("", `
+resources:
+- resource.yaml
+components:
+- components
+replacements:
+- source:
+    kind: Pod
+    name: myapp-pod
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: Pod
+      name: myapp-pod
+    fieldPaths:
+    - spec.containers.[name=myapp-container].env.[name=CURRENT_POD_NAMESPACE].value`),
+				writeF("resource.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: dev-assa
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+    env:
+    - name: CURRENT_POD_NAMESPACE
+      value: "$(PLACEHOLDER)"`),
+				writeC("/components", `
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+namespace: kustomize-namespace`),
+			},
+			expectedOutput: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: kustomize-namespace
+spec:
+  containers:
+  - env:
+    - name: CURRENT_POD_NAMESPACE
+      value: kustomize-namespace
+    image: busybox
+    name: myapp-container
+`},
+	}
+
+	for testName, test := range tests {
+		t.Run(testName, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			for _, f := range test.input {
+				f(th)
+			}
+			m := th.Run(".", th.MakeDefaultOptions())
+			th.AssertActualEqualsExpected(m, test.expectedOutput)
 		})
 	}
 }

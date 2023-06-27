@@ -5,6 +5,7 @@ package loader
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"plugin"
@@ -303,6 +304,7 @@ func (l *Loader) loadGoPlugin(id resid.ResId, absPath string) (resmap.Configurab
 		return nil, fmt.Errorf(
 			"expected file with Go object code at: %s", absPath)
 	}
+	log.Printf("Attempting plugin load from '%s'", absPath)
 	p, err := plugin.Open(absPath)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "plugin %s fails to load", absPath)
