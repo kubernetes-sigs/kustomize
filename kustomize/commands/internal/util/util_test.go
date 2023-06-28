@@ -89,8 +89,11 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	}
 
 	// test load invalid file
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{"http://invalid"})
-	if err != nil {
+	invalidURL := "http://invalid"
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL})
+	if err == nil {
+		t.Fatalf("expected error but did not receive one")
+	} else if err.Error() != invalidURL+" has no match: "+invalidURL+" not exist" {
 		t.Fatalf("unexpected load error: %v", err)
 	}
 	if len(resources) > 0 {

@@ -7,6 +7,7 @@ aliases:
   kustomize-approvers:
     - knverey
     - natasha41575
+    - annasong20
   kustomize-reviewers:
     - knverey
     - natasha41575
