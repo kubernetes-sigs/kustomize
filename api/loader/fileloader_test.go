@@ -31,6 +31,11 @@ func TestIsRemoteFile(t *testing.T) {
 			"https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/configMap.yaml",
 			true,
 		},
+		"malformed https": {
+			// TODO(annasong): Maybe we want to fix this. Needs more research.
+			"https:/raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/configMap.yaml",
+			true,
+		},
 		"https dir": {
 			"https://github.com/kubernetes-sigs/kustomize//examples/helloWorld/",
 			true,
@@ -201,23 +206,44 @@ func TestNewEmptyLoader(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestNewLoaderHTTP(t *testing.T) {
-	t.Run("doesn't exist", func(t *testing.T) {
-		_, err := makeLoader().New("https://google.com/project")
-		require.Error(t, err)
-	})
-	// Though it is unlikely and we do not weigh this use case in our designs,
-	// it is possible for a reference that is considered a remote file to
-	// actually be a directory
-	t.Run("exists", func(t *testing.T) {
-		const remoteFileLikeRoot = "https://domain"
-		require.True(t, IsRemoteFile(remoteFileLikeRoot))
+func TestNewRemoteLoaderDoesNotExist(t *testing.T) {
+	_, err := makeLoader().New("https://example.com/project")
+	require.Error(t, err)
+}
+
+func TestLoaderLocalScheme(t *testing.T) {
+	// It is unlikely but possible for a reference with a url scheme to
+	// actually refer to a local file or directory.
+	t.Run("file", func(t *testing.T) {
 		fSys, dir := setupOnDisk(t)
-		require.NoError(t, fSys.MkdirAll(dir.Join("https:/domain")))
+		parts := []string{
+			"ssh:",
+			"resource.yaml",
+		}
+		require.NoError(t, fSys.Mkdir(dir.Join(parts[0])))
+		const content = "resource config"
+		require.NoError(t, fSys.WriteFile(
+			dir.Join(filepath.Join(parts...)),
+			[]byte(content),
+		))
+		actualContent, err := newLoaderOrDie(RestrictionRootOnly,
+			fSys,
+			dir.String(),
+		).Load(strings.Join(parts, "//"))
+		require.NoError(t, err)
+		require.Equal(t, content, string(actualContent))
+	})
+	t.Run("directory", func(t *testing.T) {
+		fSys, dir := setupOnDisk(t)
+		parts := []string{
+			"https:",
+			"root",
+		}
+		require.NoError(t, fSys.MkdirAll(dir.Join(filepath.Join(parts...))))
 		ldr, err := newLoaderOrDie(RestrictionRootOnly,
 			fSys,
 			dir.String(),
-		).New(remoteFileLikeRoot)
+		).New(strings.Join(parts, "//"))
 		require.NoError(t, err)
 		require.Empty(t, ldr.Repo())
 	})
@@ -635,6 +661,8 @@ func TestLoaderHTTP(t *testing.T) {
 
 // setupOnDisk sets up a file system on disk and directory that is cleaned after
 // test completion.
+// TODO(annasong): Move all loader tests that require real file system into
+// api/krusty.
 func setupOnDisk(t *testing.T) (filesys.FileSystem, filesys.ConfirmedDir) {
 	t.Helper()
 
