@@ -45,14 +45,17 @@ const (
 	// OCIRepositoryPrefix is the prefix used for OCIRepository URLs.
 	OCIRepositoryPrefix = "oci://"
 
-	// DefaultMaxUntarSize defines the default (100MB) max amount of bytes that Untar will process.
-	DefaultMaxUntarSize = 100 << (10 * 2)
+	// DefaultMaxUntarSize defines the default (100MB) max amount of bytes that Untar will process. (100 times 2, 20 times)
+	DefaultMaxUntarSize = 100 << 20
 
 	// UnlimitedUntarSize defines the value which disables untar size checks for maxUntarSize.
 	UnlimitedUntarSize = -1
 
 	// bufferSize defines the size of the buffer used when copying the tar file entries.
 	bufferSize = 32 * 1024
+
+	// set the directory permissions
+	uRWXgRXoRX = 0755
 )
 
 // Client holds the options for accessing remote OCI registries.
@@ -64,8 +67,8 @@ type Client struct {
 // https://github.com/opencontainers/image-spec/blob/main/annotations.md
 type Metadata struct {
 	Created     string            `json:"created"`
-	Source      string            `json:"source_url"`
-	Revision    string            `json:"source_revision"`
+	Source      string            `json:"source_url"`      //nolint:tagliatelle
+	Revision    string            `json:"source_revision"` //nolint:tagliatelle
 	Digest      string            `json:"digest"`
 	URL         string            `json:"url"`
 	Annotations map[string]string `json:"annotations,omitempty"`
@@ -145,7 +148,7 @@ func (c *Client) Pull(ctx context.Context, url, outDir string) (*Metadata, error
 
 	img, err := crane.Pull(url, c.optionsWithContext(ctx)...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[Pull] error: %w", err)
 	}
 
 	digest, err := img.Digest()
@@ -160,7 +163,7 @@ func (c *Client) Pull(ctx context.Context, url, outDir string) (*Metadata, error
 
 	meta, err := MetadataFromAnnotations(manifest.Annotations)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[Pull] MetadataFromAnnotations error: %w", err)
 	}
 	meta.Digest = ref.Context().Digest(digest.String()).String()
 
@@ -230,6 +233,8 @@ func (t *tarOpts) applyOpts(tarOpts ...TarOption) {
 //
 // If dir is a relative path, it cannot ascend from the current working dir.
 // If dir exists, it must be a directory.
+//
+//nolint:gocyclo
 func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 	opts := tarOpts{
 		maxUntarSize: DefaultMaxUntarSize,
@@ -240,12 +245,12 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 	if !filepath.IsAbs(dir) {
 		cwd, err := os.Getwd()
 		if err != nil {
-			return err
+			return fmt.Errorf("[Untar] Getwd error: %w", err)
 		}
 
 		dir, err = securejoin.SecureJoin(cwd, dir)
 		if err != nil {
-			return err
+			return fmt.Errorf("[Untar] SecureJoin error: %w", err)
 		}
 	}
 
@@ -273,7 +278,7 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 	buf := make([]byte, bufferSize)
 	for {
 		f, err := tr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -301,8 +306,8 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 			// write will fail with the same error.
 			dir := filepath.Dir(abs)
 			if !madeDir[dir] {
-				if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
-					return err
+				if err := os.MkdirAll(filepath.Dir(abs), uRWXgRXoRX); err != nil {
+					return fmt.Errorf("[Untar] MkdirAll error: %w", err)
 				}
 				madeDir[dir] = true
 			}
@@ -315,16 +320,16 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 				// file first does clear the cache. See #54132.
 				err := os.Remove(abs)
 				if err != nil && !errors.Is(err, fs.ErrNotExist) {
-					return err
+					return fmt.Errorf("[Untar] Remove error: %w", err)
 				}
 			}
 			wf, err := os.OpenFile(abs, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode.Perm())
 			if err != nil {
-				return err
+				return fmt.Errorf("[Untar] OpenFile error: %w", err)
 			}
 
 			n, err := copyBuffer(wf, tr, buf)
-			if err != nil && err != io.EOF {
+			if err != nil && !errors.Is(err, io.EOF) {
 				return fmt.Errorf("error copying buffer: %w", err)
 			}
 
@@ -339,7 +344,7 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 			}
 			modTime := f.ModTime
 			if modTime.After(t0) {
-				// Ensures that that files extracted are not newer then the
+				// Ensures that files extracted are not newer then the
 				// current system time.
 				modTime = t0
 			}
@@ -349,8 +354,8 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 				}
 			}
 		case mode.IsDir():
-			if err := os.MkdirAll(abs, 0o755); err != nil {
-				return err
+			if err := os.MkdirAll(abs, uRWXgRXoRX); err != nil {
+				return fmt.Errorf("[Untar] MkdirAll error: %w", err)
 			}
 			madeDir[abs] = true
 		default:
@@ -369,11 +374,11 @@ func Untar(r io.Reader, dir string, inOpts ...TarOption) (err error) {
 // https://github.com/golang/go/blob/6f445a9db55f65e55c5be29d3c506ecf3be37915/src/io/io.go#L405
 func copyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err error) {
 	if buf == nil {
-		return 0, fmt.Errorf("buf is nil")
+		return 0, fmt.Errorf("[copyBuffer] error: buffer is nil")
 	}
 	for {
 		nr, er := src.Read(buf)
-		if nr > 0 {
+		if nr > 0 { //nolint:nestif
 			nw, ew := dst.Write(buf[0:nr])
 			if nw < 0 || nr < nw {
 				nw = 0
