@@ -34,6 +34,7 @@ import (
 func (kt *KustTarget) configureBuiltinGenerators() (
 	result []*resmap.GeneratorWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
+		builtinhelpers.ResourceGenerator,
 		builtinhelpers.ConfigMapGenerator,
 		builtinhelpers.SecretGenerator,
 		builtinhelpers.HelmChartInflationGenerator,
@@ -66,9 +67,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 	return result, nil
 }
 
-func (kt *KustTarget) configureBuiltinTransformers(
-	tc *builtinconfig.TransformerConfig) (
-	result []*resmap.TransformerWithProperties, err error) {
+func (kt *KustTarget) configureBuiltinTransformers(tc *builtinconfig.TransformerConfig) (result []*resmap.TransformerWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.PatchStrategicMergeTransformer,
 		builtinhelpers.PatchTransformer,
@@ -114,6 +113,22 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	kt *KustTarget,
 	bpt builtinhelpers.BuiltinPluginType,
 	factory gFactory) (result []resmap.Generator, err error){
+	builtinhelpers.ResourceGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
+		result []resmap.Generator, err error) {
+		var c struct {
+			resource string
+		}
+		for _, args := range kt.kustomization.Resources {
+			c.resource = args
+			p := f()
+			if err := kt.configureBuiltinPlugin(p, c, bpt); err != nil {
+				return nil, err
+			}
+			result = append(result, p)
+		}
+		return
+	},
+
 	builtinhelpers.SecretGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {

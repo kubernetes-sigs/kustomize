@@ -196,34 +196,33 @@ func (kt *KustTarget) AccumulateTarget() (
 
 // ra should be empty when this KustTarget is a Kustomization, or the ra of the parent if this KustTarget is a Component
 // (or empty if the Component does not have a parent).
-func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
-	resRa *accumulator.ResAccumulator, err error) {
-	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources)
+func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (resRa *accumulator.ResAccumulator, err error) {
+	// read `resources`
+	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources) // it needs to remove
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "accumulating resources")
 	}
+
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
 		return nil, err
 	}
-	err = ra.MergeConfig(tConfig)
-	if err != nil {
-		return nil, errors.WrapPrefixf(
-			err, "merging config %v", tConfig)
+	if err := ra.MergeConfig(tConfig); err != nil {
+		return nil, errors.WrapPrefixf(err, "merging config %v", tConfig)
 	}
+
+	// load CRDs schemas
 	crdTc, err := accumulator.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
-		return nil, errors.WrapPrefixf(
-			err, "loading CRDs %v", kt.kustomization.Crds)
+		return nil, errors.WrapPrefixf(err, "loading CRDs %v", kt.kustomization.Crds)
 	}
-	err = ra.MergeConfig(crdTc)
-	if err != nil {
-		return nil, errors.WrapPrefixf(
-			err, "merging CRDs %v", crdTc)
+	if err := ra.MergeConfig(crdTc); err != nil {
+		return nil, errors.WrapPrefixf(err, "merging CRDs %v", crdTc)
 	}
-	err = kt.runGenerators(ra)
-	if err != nil {
+
+	// exec Generators
+	if err := kt.runGenerators(ra); err != nil {
 		return nil, err
 	}
 
@@ -234,16 +233,19 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 		return nil, errors.WrapPrefixf(err, "accumulating components")
 	}
 
-	err = kt.runTransformers(ra)
-	if err != nil {
+	// exec Transformers
+	if err := kt.runTransformers(ra); err != nil {
 		return nil, err
 	}
-	err = kt.runValidators(ra)
-	if err != nil {
+
+	// exec Validators
+	if err := kt.runValidators(ra); err != nil {
 		return nil, err
 	}
-	err = ra.MergeVars(kt.kustomization.Vars)
-	if err != nil {
+
+	// merging `vars`
+	//nolint:staticcheck
+	if err := ra.MergeVars(kt.kustomization.Vars); err != nil {
 		return nil, errors.WrapPrefixf(
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
