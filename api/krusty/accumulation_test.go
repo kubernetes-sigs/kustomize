@@ -17,6 +17,18 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+const validResource = `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  selector:
+    backend: bungie
+  ports:
+    - port: 7002
+`
+
 func TestTargetMustHaveKustomizationFile(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("service.yaml", `
@@ -63,17 +75,7 @@ func TestBaseMustHaveKustomizationFile(t *testing.T) {
 resources:
 - base
 `)
-	th.WriteF("base/service.yaml", `
-apiVersion: v1
-kind: Service
-metadata:
-  name: myService
-spec:
-  selector:
-    backend: bungie
-  ports:
-    - port: 7002
-`)
+	th.WriteF("base/service.yaml", validResource)
 	err := th.RunWithErr(".", th.MakeDefaultOptions())
 	if err == nil {
 		t.Fatalf("expected an error")
@@ -167,11 +169,34 @@ spec:
 
 func TestAccumulateResourcesErrors(t *testing.T) {
 	type testcase struct {
-		name     string
-		resource string
-		// regex error message that is output when kustomize tries to
-		// accumulate resource as file and dir, respectively
+		name       string
+		resource   string
+		isAbsolute bool
+		files      map[string]string
+		// errFile, errDir are regex for the expected error message output
+		// when kustomize tries to accumulate resource as file and dir,
+		// respectively. The test substitutes occurrences of "%s" in the
+		// error strings with the absolute path where kustomize looks for it.
 		errFile, errDir string
+	}
+	populateAbsolutePaths := func(tc testcase, dir string) testcase {
+		filePaths := make(map[string]string, len(tc.files)+1)
+		for file, content := range tc.files {
+			filePaths[filepath.Join(dir, file)] = content
+		}
+		resourcePath := filepath.Join(dir, tc.resource)
+		if tc.isAbsolute {
+			tc.resource = resourcePath
+		}
+		filePaths[filepath.Join(dir, "kustomization.yaml")] = fmt.Sprintf(`
+resources:
+- %s
+`, tc.resource)
+		tc.files = filePaths
+		regPath := regexp.QuoteMeta(resourcePath)
+		tc.errFile = strings.ReplaceAll(tc.errFile, "%s", regPath)
+		tc.errDir = strings.ReplaceAll(tc.errDir, "%s", regPath)
+		return tc
 	}
 	buildError := func(tc testcase) string {
 		const (
@@ -196,39 +221,89 @@ func TestAccumulateResourcesErrors(t *testing.T) {
 	for _, test := range []testcase{
 		{
 			name: "remote file not considered repo",
-			// This url is too short to be considered a remote repo.
-			resource: "https://raw.githubusercontent.com/kustomize",
-			// It is acceptable that the error for a remote file-like reference
-			// (that is not long enough to be considered a repo) does not
-			// indicate said reference is not a local directory.
-			// Though it is possible for the remote file-like reference to be
-			// a local directory, it is very unlikely.
-			errFile: `HTTP Error: status code 400 \(Bad Request\)\z`,
+			// The example.com second-level domain is reserved and
+			// safe to access, see RFC 2606.
+			resource: "https://example.com/segments-too-few-to-be-repo",
+			// It's acceptable for the error output of a remote file-like
+			// resource to not indicate the resource's status as a
+			// local directory. Though it is possible for a remote file-like
+			// resource to be a local directory, it is very unlikely.
+			errFile: `HTTP Error: status code 404 \(Not Found\)\z`,
 		},
 		{
 			name:     "remote file qualifies as repo",
-			resource: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/kustomize/v5.0.0/examples/helloWorld/configMap",
+			resource: "https://example.com/long/enough/to/have/org/and/repo",
 			// TODO(4788): This error message is technically wrong. Just
-			// because we fail to GET a reference does not mean the reference is
-			// not a remote file. We should return the GET status code instead.
+			// because we fail to GET a resource does not mean the resource is
+			// not a remote file. We should return the GET status code as well.
 			errFile: "URL is a git repository",
 			errDir:  `failed to run \S+/git fetch --depth=1 .+`,
 		},
+		{
+			name: "local file qualifies as repo",
+			// The .example top level domain is reserved for example purposes,
+			// see RFC 2606.
+			resource: "package@v1.28.0.example/configs/base",
+			errFile:  `evalsymlink failure on '%s' .+`,
+			errDir:   `failed to run \S+/git fetch --depth=1 .+`,
+		},
+		{
+			name:     "relative path does not exist",
+			resource: "file-or-directory",
+			errFile:  `evalsymlink failure on '%s' .+`,
+			errDir:   `must build at directory: not a valid directory: evalsymlink failure .+`,
+		},
+		{
+			name:       "absolute path does not exist",
+			resource:   "file-or-directory",
+			isAbsolute: true,
+			errFile:    `evalsymlink failure on '%s' .+`,
+			errDir:     `new root '%s' cannot be absolute`,
+		},
+		{
+			name:     "relative file violates restrictions",
+			resource: "../base/resource.yaml",
+			files: map[string]string{
+				"../base/resource.yaml": validResource,
+			},
+			errFile: "security; file '%s' is not in or below .+",
+			// TODO(4348): Over-inclusion of directory error message when we
+			// know resource is file.
+			errDir: "must build at directory: '%s': file is not directory",
+		},
+		{
+			name:       "absolute file violates restrictions",
+			resource:   "../base/resource.yaml",
+			isAbsolute: true,
+			files: map[string]string{
+				"../base/resource.yaml": validResource,
+			},
+			errFile: "security; file '%s' is not in or below .+",
+			// TODO(4348): Over-inclusion of directory error message when we
+			// know resource is file.
+			errDir: `new root '%s' cannot be absolute`,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			// should use real file system to indicate that we are creating
-			// new temporary directories on disk when we attempt to fetch repos
-			fSys, tmpDir := kusttest_test.CreateKustDir(t, fmt.Sprintf(`
-resources:
-- %s
-`, test.resource))
+			// Should use real file system to indicate that we are creating
+			// new temporary directories on disk when we attempt to fetch repos.
+			fs, tmpDir := kusttest_test.Setup(t)
+			root := tmpDir.Join("root")
+			require.NoError(t, fs.Mkdir(root))
+
+			test = populateAbsolutePaths(test, root)
+			for file, content := range test.files {
+				dir := filepath.Dir(file)
+				require.NoError(t, fs.MkdirAll(dir))
+				require.NoError(t, fs.WriteFile(file, []byte(content)))
+			}
+
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
-			_, err := b.Run(fSys, tmpDir.String())
+			_, err := b.Run(fs, root)
 			require.Regexp(t, buildError(test), err.Error())
 		})
 	}
 	// TODO(annasong): add tests that check accumulateResources errors for
-	// - local files
 	// - repos
 	// - local directories
 	// - files that yield malformed yaml errors
