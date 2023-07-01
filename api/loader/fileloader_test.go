@@ -207,8 +207,8 @@ func TestNewEmptyLoader(t *testing.T) {
 }
 
 func TestNewRemoteLoaderDoesNotExist(t *testing.T) {
-	_, err := makeLoader().New("https://example.com/project")
-	require.Error(t, err)
+	_, err := makeLoader().New("https://example.com/org/repo")
+	require.ErrorContains(t, err, "fetch")
 }
 
 func TestLoaderLocalScheme(t *testing.T) {

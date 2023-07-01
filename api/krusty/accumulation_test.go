@@ -184,15 +184,15 @@ func TestAccumulateResourcesErrors(t *testing.T) {
 		for file, content := range tc.files {
 			filePaths[filepath.Join(dir, file)] = content
 		}
-		tc.files = filePaths
 		resourcePath := filepath.Join(dir, tc.resource)
 		if tc.isAbsolute {
 			tc.resource = resourcePath
 		}
-		tc.files[filepath.Join(dir, "kustomization.yaml")] = fmt.Sprintf(`
+		filePaths[filepath.Join(dir, "kustomization.yaml")] = fmt.Sprintf(`
 resources:
 - %s
 `, tc.resource)
+		tc.files = filePaths
 		regPath := regexp.QuoteMeta(resourcePath)
 		tc.errFile = strings.ReplaceAll(tc.errFile, "%s", regPath)
 		tc.errDir = strings.ReplaceAll(tc.errDir, "%s", regPath)
@@ -220,7 +220,9 @@ resources:
 	}
 	for _, test := range []testcase{
 		{
-			name:     "remote file not considered repo",
+			name: "remote file not considered repo",
+			// The example.com second-level domain is reserved and
+			// safe to access, see RFC 2606.
 			resource: "https://example.com/segments-too-few-to-be-repo",
 			// It's acceptable for the error output of a remote file-like
 			// resource to not indicate the resource's status as a
