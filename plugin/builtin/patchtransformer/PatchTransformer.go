@@ -52,9 +52,10 @@ func (p *plugin) Config(
 	}
 
 	patchesSM, errSM := h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patch))
-	patchJson, errJson := jsonPatchFromBytes([]byte(p.Patch))
+	patchesJson, errJson := jsonPatchFromBytes([]byte(p.Patch))
+
 	if (errSM == nil && errJson == nil) ||
-		(patchesSM != nil && patchJson != nil) {
+		(patchesSM != nil && patchesJson != nil) {
 		return fmt.Errorf(
 			"illegally qualifies as both an SM and JSON patch: [%v]",
 			p.Patch)
@@ -74,14 +75,14 @@ func (p *plugin) Config(
 			}
 		}
 	} else {
-		p.jsonPatch = patchJson
+		p.jsonPatch = patchesJson
 	}
 	return nil
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
 	if p.smPatches == nil {
-		return p.transformJson6902(m, p.jsonPatch)
+		return p.transformJson6902(m)
 	}
 	// The patch was a strategic merge patch
 	return p.transformStrategicMerge(m)
@@ -101,6 +102,9 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap) error {
 				return fmt.Errorf("%w", err)
 			}
 			continue
+		} else if len(p.smPatches) > 1 {
+			// detail: https://github.com/kubernetes-sigs/kustomize/issues/5049#issuecomment-1440604403
+			return fmt.Errorf("Multiple Strategic-Merge Patch in 'patches' is not allowed to set 'patches.target' field.")
 		}
 
 		selected, err := m.Select(*p.Target)
@@ -116,7 +120,7 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap) error {
 
 // transformJson6902 applies the provided json6902 patch
 // to all the resources in the ResMap that match the Target.
-func (p *plugin) transformJson6902(m resmap.ResMap, patch jsonpatch.Patch) error {
+func (p *plugin) transformJson6902(m resmap.ResMap) error {
 	if p.Target == nil {
 		return fmt.Errorf("must specify a target for patch %s", p.Patch)
 	}

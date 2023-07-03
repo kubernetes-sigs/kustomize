@@ -198,6 +198,69 @@ Patch: "something"
 	})
 }
 
+func TestPatchTransformerNotAllowedMultipleStrategicMergePatches(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF(`multiplepatches.yaml`, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - image: AUDIT_IMAGE
+        name: manager
+        args:
+        - --port=8443
+        - --logtostderr
+        - --emit-admission-events
+        - --exempt-namespace=gatekeeper-system
+        - --operation=webhook
+        - --disable-opa-builtin=http.send
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - image: CONTROLLER_IMAGE
+        name: manager
+        args:
+        - --emit-audit-events
+        - --operation=audit
+        - --operation=status
+        - --logtostderr`)
+
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+Path: multiplepatches.yaml
+target:
+  name: .*Deploy
+  kind: Deployment
+`, someDeploymentResources, func(t *testing.T, err error) {
+		t.Helper()
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+		if !strings.Contains(err.Error(),
+			"Multiple Strategic-Merge Patch in 'patches' is not allowed to set 'patches.target' field.") {
+			t.Fatalf("unexpected err: %v", err)
+		}
+	})
+}
+
 func TestPatchTransformerFromFiles(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
