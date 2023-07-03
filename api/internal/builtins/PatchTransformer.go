@@ -17,12 +17,12 @@ import (
 )
 
 type PatchTransformerPlugin struct {
-	loadedPatches []*resource.Resource
-	decodedPatch  jsonpatch.Patch
-	Path          string          `json:"path,omitempty" yaml:"path,omitempty"`
-	Patch         string          `json:"patch,omitempty" yaml:"patch,omitempty"`
-	Target        *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
-	Options       map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
+	smPatches []*resource.Resource // strategic-merge patches
+	jsonPatch jsonpatch.Patch      // json6902 patch
+	Path      string               `json:"path,omitempty"    yaml:"path,omitempty"`
+	Patch     string               `json:"patch,omitempty"   yaml:"patch,omitempty"`
+	Target    *types.Selector      `json:"target,omitempty"  yaml:"target,omitempty"`
+	Options   map[string]bool      `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 func (p *PatchTransformerPlugin) Config(
@@ -61,8 +61,8 @@ func (p *PatchTransformerPlugin) Config(
 			"unable to parse SM or JSON patch from [%v]", p.Patch)
 	}
 	if errSM == nil {
-		p.loadedPatches = patchesSM
-		for _, loadedPatch := range p.loadedPatches {
+		p.smPatches = patchesSM
+		for _, loadedPatch := range p.smPatches {
 			if p.Options["allowNameChange"] {
 				loadedPatch.AllowNameChange()
 			}
@@ -71,24 +71,24 @@ func (p *PatchTransformerPlugin) Config(
 			}
 		}
 	} else {
-		p.decodedPatch = patchJson
+		p.jsonPatch = patchJson
 	}
 	return nil
 }
 
 func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
-	if p.loadedPatches == nil {
-		return p.transformJson6902(m, p.decodedPatch)
+	if p.smPatches == nil {
+		return p.transformJson6902(m, p.jsonPatch)
 	}
 	// The patch was a strategic merge patch
 	return p.transformStrategicMerge(m)
 }
 
-// transformStrategicMerge applies the provided strategic merge patch
-// to all the resources in the ResMap that match either the Target or
-// the identifier of the patch.
+// transformStrategicMerge applies each loaded strategic merge patch
+// to the resource in the ResMap that matches the identifier of the patch.
+// If only one patch is specified, the Target can be used instead.
 func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error {
-	for _, patch := range p.loadedPatches {
+	for _, patch := range p.smPatches {
 		if p.Target == nil {
 			target, err := m.GetById(patch.OrgId())
 			if err != nil {
