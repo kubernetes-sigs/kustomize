@@ -26,6 +26,7 @@ func NewCmdSet(fSys filesys.FileSystem, ldr ifc.KvLoader, v ifc.Validator) *cobr
 	}
 
 	c.AddCommand(
+		newCmdSetGeneratorOptions(fSys),
 		newCmdSetNamePrefix(fSys),
 		newCmdSetNameSuffix(fSys),
 		newCmdSetNamespace(fSys, v),
