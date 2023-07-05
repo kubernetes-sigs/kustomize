@@ -97,6 +97,31 @@ func TestSetImage(t *testing.T) {
 				}},
 		},
 		{
+			given: given{
+				args: []string{"my-image1:my-tag@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: my-image1",
+					"  newTag: my-tag",
+				}},
+		},
+		{
+			given: given{
+				args: []string{"image1=my-image1:my-tag@sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3"},
+			},
+			expected: expected{
+				fileOutput: []string{
+					"images:",
+					"- digest: sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3",
+					"  name: image1",
+					"  newName: my-image1",
+					"  newTag: my-tag",
+				}},
+		},
+		{
 			description: "<image>=<image>",
 			given: given{
 				args: []string{"ngnix=localhost:5000/my-project/ngnix"},
