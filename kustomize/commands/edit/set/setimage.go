@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/pkg/util"
 	"sigs.k8s.io/kustomize/api/types"
 
 	"github.com/spf13/cobra"
@@ -31,8 +32,10 @@ var (
 	errImageInvalidArgs = errors.New(`invalid format of image, use one of the following options:
 - <image>=<newimage>:<newtag>
 - <image>=<newimage>@<digest>
+- <image>=<newimage>:<newtag>@<digest>
 - <image>=<newimage>
 - <image>:<newtag>
+- <image>:<newtag>@<digest>
 - <image>@<digest>`)
 )
 
@@ -76,7 +79,7 @@ images:
 to the kustomization file if it doesn't exist,
 and overwrite the previous ones if the image name exists.
 
-The image tag can only contain alphanumeric, '.', '_' and '-'. Passing * (asterisk) either as the new name, 
+The image tag can only contain alphanumeric, '.', '_' and '-'. Passing * (asterisk) either as the new name,
 the new tag, or the digest will preserve the appropriate values from the kustomization file.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -204,52 +207,46 @@ func replaceDigest(image types.Image, digest string) types.Image {
 }
 
 func parse(arg string) (types.Image, error) {
-	// matches if there is an image name to overwrite
-	// <image>=<new-image><:|@><new-tag>
-	if s := strings.Split(arg, separator); len(s) == 2 {
-		p, err := parseOverwrite(s[1], true)
-		return types.Image{
-			Name:    s[0],
-			NewName: p.name,
-			NewTag:  p.tag,
-			Digest:  p.digest,
-		}, err
+	// matches if there is an image name
+	// <image>=<new-image>:<new-tag>@<digest>
+	// supports digest and tag and override the image name
+	key, value, err := imageArgParse(arg)
+	if err != nil {
+		return types.Image{}, err
 	}
 
-	// matches only for <tag|digest> overwrites
-	// <image><:|@><new-tag>
-	p, err := parseOverwrite(arg, false)
-	return types.Image{
-		Name:   p.name,
-		NewTag: p.tag,
-		Digest: p.digest,
-	}, err
+	name, tag, digest := util.SplitImageName(value)
+	if name == arg {
+		return types.Image{}, errImageInvalidArgs
+	}
+
+	newImage := types.Image{
+		NewTag: tag,
+		Digest: digest,
+	}
+
+	if key == "" {
+		newImage.Name = name
+	} else {
+		newImage.Name = key
+		newImage.NewName = name
+	}
+
+	return newImage, nil
 }
 
-// parseOverwrite parses the overwrite parameters
-// from the given arg into a struct
-func parseOverwrite(arg string, overwriteImage bool) (overwrite, error) {
-	// match <image>@<digest>
-	if d := strings.Split(arg, "@"); len(d) > 1 {
-		return overwrite{
-			name:   d[0],
-			digest: d[1],
-		}, nil
-	}
+func imageArgParse(arg string) (key string, value string, err error) {
+	const maxArgsSeparatorCount = 2
+	const keyAndValueArgsCount = 2
 
-	// match <image>:<tag>
-	if t := pattern.FindStringSubmatch(arg); len(t) == 3 {
-		return overwrite{
-			name: t[1],
-			tag:  t[2],
-		}, nil
+	s := strings.SplitN(arg, separator, maxArgsSeparatorCount)
+	if len(s) == keyAndValueArgsCount {
+		// If separator is found it returns the key and value
+		return s[0], s[1], nil
+	} else if len(s) == 1 {
+		// If no separator is found it returns the whole string as value
+		// and the key is empty
+		return "", s[0], nil
 	}
-
-	// match <image>
-	if len(arg) > 0 && overwriteImage {
-		return overwrite{
-			name: arg,
-		}, nil
-	}
-	return overwrite{}, errImageInvalidArgs
+	return "", "", errImageInvalidArgs
 }
