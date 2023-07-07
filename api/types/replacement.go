@@ -27,6 +27,12 @@ type SourceSelector struct {
 	// A specific object to read it from.
 	resid.ResId `json:",inline,omitempty" yaml:",inline,omitempty"`
 
+	// Reads an object from a given label or annotation.
+	Select *Selector `json:"select,omitempty" yaml:"select,omitempty"`
+
+	// From the allowed set, remove objects that match this.
+	Reject []*Selector `json:"reject,omitempty" yaml:"reject,omitempty"`
+
 	// Structured field path expected in the allowed object.
 	FieldPath string `json:"fieldPath,omitempty" yaml:"fieldPath,omitempty"`
 
