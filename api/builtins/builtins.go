@@ -29,6 +29,7 @@ type (
 	ValueAddTransformerPlugin            = internal.ValueAddTransformerPlugin
 )
 
+//nolint:gochecknoglobals
 var (
 	NewAnnotationsTransformerPlugin         = internal.NewAnnotationsTransformerPlugin
 	NewResourceGeneratorPlugin              = internal.NewResourceGeneratorPlugin

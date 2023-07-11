@@ -200,7 +200,7 @@ resources:
 	}
 	buildError := func(tc testcase) string {
 		const (
-			prefix            = "accumulating resources"
+			prefix            = "failed to accumulateResource"
 			filePrefixf       = "accumulating resources from '%s'"
 			fileWrapperIfDirf = "accumulation err='%s'"
 			separator         = ": "

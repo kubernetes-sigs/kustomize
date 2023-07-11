@@ -109,6 +109,11 @@ func (kt *KustTarget) configureBuiltinTransformers(tc *builtinconfig.Transformer
 
 type gFactory func() resmap.GeneratorPlugin
 
+type ResourceArgs struct {
+	Resource string      `json:"resource,omitempty" yaml:"resource,omitempty"`
+	Kt       *KustTarget `json:"kusttarget,omitempty" yaml:"kusttarget,omitempty"`
+}
+
 var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	kt *KustTarget,
 	bpt builtinhelpers.BuiltinPluginType,
@@ -116,11 +121,12 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.ResourceGenerator: func(kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f gFactory) (
 		result []resmap.Generator, err error) {
 		var c struct {
-			resource string
+			Resource string `json:"resource" yaml:"resource"`
 		}
 		for _, args := range kt.kustomization.Resources {
-			c.resource = args
+			c.Resource = args
 			p := f()
+
 			if err := kt.configureBuiltinPlugin(p, c, bpt); err != nil {
 				return nil, err
 			}

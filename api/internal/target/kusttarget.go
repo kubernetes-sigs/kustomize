@@ -34,7 +34,7 @@ type KustTarget struct {
 	ldr           ifc.Loader
 	validator     ifc.Validator
 	rFactory      *resmap.Factory
-	pLdr          *loader.Loader
+	pLdr          *loader.Loader // plugin loader
 	origin        *resource.Origin
 }
 
@@ -176,6 +176,15 @@ func (kt *KustTarget) addHashesToNames(
 	return ra.Transform(p)
 }
 
+// AccumulateResource fills the given resourceAccumulator with resources read from the given path from external package.
+func (kt *KustTarget) AccumulateResource(path string) (rm resmap.ResMap, err error) {
+	ra := accumulator.MakeEmptyAccumulator()
+	if err := kt.accumulateResource(ra, path); err != nil {
+		return nil, fmt.Errorf("failed to accumulateResource: %w", err)
+	}
+	return ra.ResMap(), nil
+}
+
 // AccumulateTarget returns a new ResAccumulator,
 // holding customized resources and the data/rules used
 // to do so.  The name back references and vars are
@@ -197,12 +206,6 @@ func (kt *KustTarget) AccumulateTarget() (
 // ra should be empty when this KustTarget is a Kustomization, or the ra of the parent if this KustTarget is a Component
 // (or empty if the Component does not have a parent).
 func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (resRa *accumulator.ResAccumulator, err error) {
-	// read `resources`
-	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources) // it needs to remove
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "accumulating resources")
-	}
-
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
@@ -419,40 +422,50 @@ func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) error {
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
 	for _, path := range paths {
-		// try loading resource as file then as base (directory or git repository)
-		if errF := kt.accumulateFile(ra, path); errF != nil {
-			// not much we can do if the error is an HTTP error so we bail out
-			if errors.Is(errF, load.ErrHTTP) {
-				return nil, errF
-			}
-			ldr, err := kt.ldr.New(path)
-			if err != nil {
-				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
-					return nil, errF
-				}
-				return nil, errors.WrapPrefixf(
-					err, "accumulation err='%s'", errF.Error())
-			}
-			// store the origin, we'll need it later
-			origin := kt.origin.Copy()
-			if kt.origin != nil {
-				kt.origin = kt.origin.Append(path)
-				ra, err = kt.accumulateDirectory(ra, ldr, false)
-				// after we are done recursing through the directory, reset the origin
-				kt.origin = &origin
-			} else {
-				ra, err = kt.accumulateDirectory(ra, ldr, false)
-			}
-			if err != nil {
-				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
-					return nil, errF
-				}
-				return nil, errors.WrapPrefixf(
-					err, "accumulation err='%s'", errF.Error())
-			}
+		if err := kt.accumulateResource(ra, path); err != nil {
+			return nil, err
 		}
 	}
 	return ra, nil
+}
+
+// accumulateResource fills the given resourceAccumulator with resources read from the given path.
+func (kt *KustTarget) accumulateResource(ra *accumulator.ResAccumulator, path string) error {
+	// try loading resource as file then as base (directory or git repository)
+	if errF := kt.accumulateFile(ra, path); errF != nil { //nolint:nestif
+		// not much we can do if the error is an HTTP error so we bail out
+		if errors.Is(errF, load.ErrHTTP) {
+			return errF
+		}
+		ldr, err := kt.ldr.New(path)
+		if err != nil {
+			// Some error occurred while tyring to decode YAML file
+			if kusterr.IsMalformedYAMLError(errF) {
+				return errF
+			}
+			return errors.WrapPrefixf(
+				err, "accumulation err='%s'", errF.Error())
+		}
+		// store the origin, we'll need it later
+		origin := kt.origin.Copy()
+		if kt.origin != nil {
+			kt.origin = kt.origin.Append(path)
+			_, err = kt.accumulateDirectory(ra, ldr, false)
+			// after we are done recursing through the directory, reset the origin
+			kt.origin = &origin
+		} else {
+			_, err = kt.accumulateDirectory(ra, ldr, false)
+		}
+		if err != nil {
+			// Some error occurred while tyring to decode YAML file
+			if kusterr.IsMalformedYAMLError(errF) {
+				return errF
+			}
+			return errors.WrapPrefixf(
+				err, "accumulation err='%s'", errF.Error())
+		}
+	}
+	return nil
 }
 
 // accumulateResources fills the given resourceAccumulator
@@ -527,8 +540,7 @@ func (kt *KustTarget) accumulateDirectory(
 		return nil, errors.WrapPrefixf(
 			err, "recursed accumulation of path '%s'", ldr.Root())
 	}
-	err = ra.MergeAccumulator(subRa)
-	if err != nil {
+	if err := ra.MergeAccumulator(subRa); err != nil {
 		return nil, errors.WrapPrefixf(
 			err, "recursed merging from path '%s'", ldr.Root())
 	}
@@ -569,8 +581,8 @@ func (kt *KustTarget) configureBuiltinPlugin(
 		}
 	}
 	err = p.Config(
-		resmap.NewPluginHelpers(
-			kt.ldr, kt.validator, kt.rFactory, kt.pLdr.Config()),
+		resmap.NewPluginHelpersWithKt(
+			kt.ldr, kt.validator, kt.rFactory, kt.pLdr.Config(), kt),
 		y)
 	if err != nil {
 		return errors.WrapPrefixf(
