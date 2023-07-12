@@ -27,13 +27,6 @@ if [[ -z "${1-}" ]] || [[ -z "${2-}" ]]; then
   exit 1
 fi
 
-if [[ -z "${GITHUB_USERNAME-}" ]] || [[ -z "${GITHUB_TOKEN-}" ]]; then
-  echo "WARNING: Please set GITHUB_USERNAME and GITHUB_TOKEN to avoid GitHub API rate limits."
-  github_auth_string=""
-else
-  github_auth_string="-u ${GITHUB_USERNAME}:${GITHUB_TOKEN}"
-fi
-
 module=$1
 fullTag=$2
 changeLogFile="${3:-}"
@@ -57,12 +50,21 @@ for((i=0; i < ${#commits[@]}; i+=batchSize))
 do
   commitList=$(IFS="+"; echo "${commits[@]:i:batchSize}" | sed 's/ /+/g')
 
-  if ! newResultsRaw=$(curl -sSL "https://api.github.com/search/issues?q=$commitList+repo%3Akubernetes-sigs%2Fkustomize+is:pull-request" $github_auth_string); then
-    echo "Failed to fetch results for commits (exit code $?): $commitList"
-    exit 1
+  if [[ -z "${GITHUB_TOKEN-}" ]]; then
+    echo "WARNING: Please set GITHUB_TOKEN to avoid GitHub API rate limits."
+    if ! newResultsRaw=$(curl -sSL "https://api.github.com/search/issues?q=$commitList+repo%3Akubernetes-sigs%2Fkustomize+is:pull-request"); then
+      echo "Failed to fetch results for commits (exit code $?): $commitList"
+      exit 1
+    fi
+  else
+    if ! newResultsRaw=$(curl -sSL "https://api.github.com/search/issues?q=$commitList+repo%3Akubernetes-sigs%2Fkustomize+is:pull-request" -H "Authorization: Bearer $GITHUB_TOKEN"); then
+      echo "Failed to fetch results for commits (exit code $?): $commitList"
+      exit 1
+    fi
   fi
+
   if [[ "${newResultsRaw}" == *"API rate limit exceeded"* ]]; then
-    echo "GitHub API rate limit exceeded. Please set GITHUB_USERNAME and GITHUB_TOKEN to avoid this."
+    echo "GitHub API rate limit exceeded. Please set GITHUB_TOKEN to avoid this."
     exit 1
   fi
 

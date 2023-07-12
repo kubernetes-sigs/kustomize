@@ -1,17 +1,20 @@
 # Releasing
 
 [release page]: /../../releases
-[`cloud-build-local`]: https://github.com/GoogleCloudPlatform/cloud-build-local
+[GitHub Actions]: /../../actions
 [Google Cloud Build]: https://cloud.google.com/cloud-build
 [semver]: https://semver.org
 [Go modules]: https://github.com/golang/go/wiki/Modules
 [multi-module repo]: https://github.com/go-modules-by-example/index/blob/master/009_submodules/README.md
 [semver review]: #semver-review
 [semver release]: #semver-review
-[`cloudbuild.yaml`]: cloudbuild.yaml
+[`cloudbuild_kustomize_image.yaml`]: cloudbuild_kustomize_image.yaml
+[`release.yaml`]: ../.github/workflows/release.yaml
+[`create-release.sh`]: create-release.sh
 [kustomize repo release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [OpenAPI Readme]: ../kyaml/openapi/README.md
-[project cloud build history page]: https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-kustomize
+[the build status for container image]: https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-kustomize
+[build history of GitHub Actions job]: /../../actions
 
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
@@ -23,11 +26,10 @@ branch is also created as necessary to track patch releases.
 A properly formatted tag (described below) contains
 the module name and version.
 
-Pushing the tag upstream will trigger [Google Cloud Build] to build a release
-and make it available on the  [release page].
+Pushing the tag upstream will trigger [GitHub Actions] to build a release and make it available on the  [release page].
+[GitHub Actions] reads its instructions from the [`release.yaml`] file in `.github/workflows` directory.
 
-Cloud build reads its instructions from the
-[`cloudbuild.yaml`] file in this directory.
+And, container image contains `kustomize` binary will build [Google Cloud Build] that instructions from [`cloudbuild_kustomize_image.yaml`] file triggered by tags contain `kustomize` and release versions.
 
 We use a Go program to make the tagging and branch
 creation process less error prone.
@@ -123,7 +125,7 @@ testKustomizeRepo
 While you're waiting for the tests, review the commit log:
 
 ```
-releasing/compile-changelog.sh kyaml HEAD 
+releasing/compile-changelog.sh kyaml HEAD
 ```
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
@@ -144,8 +146,7 @@ Note the version:
 versionKyaml=v0.10.20   # EDIT THIS!
 ```
 
-See the process of the cloud build job
-on the [project cloud build history page].
+See the process of the [build history of GitHub Actions job].
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
@@ -180,7 +181,7 @@ testKustomizeRepo
 While you're waiting for the tests, review the commit log:
 
 ```
-releasing/compile-changelog.sh cmd/config HEAD 
+releasing/compile-changelog.sh cmd/config HEAD
 ```
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
@@ -196,8 +197,7 @@ Note the version:
 versionCmdConfig=v0.9.12 # EDIT THIS!
 ```
 
-See the process of the cloud build job
-on the [project cloud build history page].
+See the process of the [build history of GitHub Actions job].
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
@@ -233,7 +233,7 @@ testKustomizeRepo
 While you're waiting for the tests, review the commit log:
 
 ```
-releasing/compile-changelog.sh api HEAD 
+releasing/compile-changelog.sh api HEAD
 ```
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
@@ -249,8 +249,7 @@ Note the version:
 versionApi=v0.8.10 # EDIT THIS!
 ```
 
-See the process of the cloud build job
-on the [project cloud build history page].
+See the process of the [build history of GitHub Actions job].
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
@@ -291,7 +290,7 @@ testKustomizeRepo
 While you're waiting for the tests, review the commit log:
 
 ```
-releasing/compile-changelog.sh kustomize HEAD 
+releasing/compile-changelog.sh kustomize HEAD
 ```
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
@@ -302,8 +301,9 @@ Based on the changes to be included in this release, decide whether a patch, min
 gorepomod release kustomize [patch|minor|major] --doIt
 ```
 
-See the process of the cloud build job
-on the [project cloud build history page].
+See the process of the [build history of GitHub Actions job].
+
+And check the process of [the build status for container image].
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
@@ -366,8 +366,7 @@ Checkout a new branch.
 Edit file `registry.k8s.io/images/k8s-staging-kustomize/images.yaml`
 to add the new kustomize version and the image sha256.
 
-Image sha256 can be found in the image registry in the GCP 
-project [k8s-staging-kustomize].
+Image sha256 can be found in the image registry in the GCP project [k8s-staging-kustomize].
 
 Commit and push your changes. Then create a PR to [k8s.io] to promote
 the new image.
@@ -400,4 +399,5 @@ https://github.com/kubernetes/kubernetes/pull/106389
 
 # Testing changes to the release pipeline
 
-You can test the release script locally by running [cloudbuild.sh](cloudbuild.sh) in a container or by installing Cloud Build Local and running [cloudbuild-local.sh](cloudbuild-local.sh). See each of those files for more details on their usage.
+You can test the release script locally by running [`create-release.sh`].
+See each of those files for more details on their usage.
