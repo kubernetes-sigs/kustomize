@@ -5,6 +5,7 @@ package builtins
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
@@ -24,8 +25,6 @@ type PatchTransformerPlugin struct {
 	Target       *types.Selector `json:"target,omitempty" yaml:"target,omitempty"`
 	Options      map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
 }
-
-// noinspection GoUnusedGlobalVariable
 
 func (p *PatchTransformerPlugin) Config(
 	h *resmap.PluginHelpers, c []byte) error {
@@ -100,8 +99,8 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 		return err
 	}
 
-	if len(selected) == 0 {
-		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
 	}
 
 	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
@@ -118,8 +117,8 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap, patch jsonpa
 		return err
 	}
 
-	if len(resources) == 0 {
-		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
 	}
 
 	for _, res := range resources {

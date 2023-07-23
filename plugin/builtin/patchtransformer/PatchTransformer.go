@@ -101,8 +101,8 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap, patch *resource.Resour
 		return err
 	}
 
-	if len(selected) == 0 {
-		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
 	}
 
 	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
@@ -119,8 +119,8 @@ func (p *plugin) transformJson6902(m resmap.ResMap, patch jsonpatch.Patch) error
 		return err
 	}
 
-	if len(resources) == 0 {
-		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
 	}
 
 	for _, res := range resources {
