@@ -5,6 +5,7 @@ package builtins
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
@@ -137,8 +138,8 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap) error {
 		return err
 	}
 
-	if len(resources) == 0 {
-		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
 	}
 
 	for _, res := range resources {
