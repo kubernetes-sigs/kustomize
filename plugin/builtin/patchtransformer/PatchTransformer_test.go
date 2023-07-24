@@ -255,7 +255,7 @@ target:
 			t.Fatalf("expected error")
 		}
 		if !strings.Contains(err.Error(),
-			"Multiple Strategic-Merge Patch in 'patches' is not allowed to set 'patches.target' field.") {
+			"Multiple Strategic-Merge Patch file in one 'patches' entry is not allowed to set 'patches.target' field.") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})

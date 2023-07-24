@@ -104,7 +104,7 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap) error {
 			continue
 		} else if len(p.smPatches) > 1 {
 			// detail: https://github.com/kubernetes-sigs/kustomize/issues/5049#issuecomment-1440604403
-			return fmt.Errorf("Multiple Strategic-Merge Patch in 'patches' is not allowed to set 'patches.target' field.")
+			return fmt.Errorf("Multiple Strategic-Merge Patch file in one 'patches' entry is not allowed to set 'patches.target' field.")
 		}
 
 		selected, err := m.Select(*p.Target)
