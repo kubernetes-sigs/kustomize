@@ -207,8 +207,7 @@ func TestPatchTransformerNotAllowedMultipleStrategicMergePatches(t *testing.T) {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: audit
-  namespace: system
+  name: myDeploy
 spec:
   template:
     spec:
@@ -226,8 +225,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
-  namespace: system
+  name: yourDeploy
 spec:
   template:
     spec:

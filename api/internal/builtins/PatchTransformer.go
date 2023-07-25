@@ -89,26 +89,31 @@ func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
 // to the resource in the ResMap that matches the identifier of the patch.
 // If only one patch is specified, the Target can be used instead.
 func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error {
-	for _, patch := range p.smPatches {
-		if p.Target == nil {
-			target, err := m.GetById(patch.OrgId())
-			if err != nil {
-				return fmt.Errorf("unable to find patch target %s: %w", patch.OrgId().Name, err)
-			}
-			if err := target.ApplySmPatch(patch); err != nil {
-				return fmt.Errorf("%w", err)
-			}
-			continue
-		} else if len(p.smPatches) > 1 {
+	if p.Target != nil {
+		if len(p.smPatches) > 1 {
 			// detail: https://github.com/kubernetes-sigs/kustomize/issues/5049#issuecomment-1440604403
 			return fmt.Errorf("Multiple Strategic-Merge Patch file in one 'patches' entry is not allowed to set 'patches.target' field.")
 		}
 
+		// single patch
+		patch := p.smPatches[0]
 		selected, err := m.Select(*p.Target)
 		if err != nil {
 			return fmt.Errorf("unable to find patch target in ResMap %s: %w", p.Target, err)
 		}
 		if err := m.ApplySmPatch(resource.MakeIdSet(selected), patch); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+		return nil
+	}
+
+	// contain multiple patches
+	for _, patch := range p.smPatches {
+		target, err := m.GetById(patch.OrgId())
+		if err != nil {
+			return fmt.Errorf("unable to find patch target %s: %w", patch.OrgId().Name, err)
+		}
+		if err := target.ApplySmPatch(patch); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 	}
