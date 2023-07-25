@@ -259,6 +259,71 @@ target:
 	})
 }
 
+func TestPatchTransformerNotAllowedMultipleJsonPatches(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+	oneDeployment := `
+apiVersion: apps/v1
+metadata:
+  name: oneDeploy
+kind: Deployment
+spec:
+  replica: 1
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+      - name: sidecar
+        image: busybox:1.36.1
+`
+	config := `
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+patch: |-
+  - op: replace
+    path: /spec/template/spec/containers/0/image
+    value: nginx:latest
+  ---
+  - op: replace
+    path: /spec/template/spec/containers/1/image
+    value: busybox:latest
+target:
+  name: .*Deploy
+  kind: Deployment
+`
+
+	// TODO(5049): Multiple JSON patch Yaml documents are not allowed and need to return error, but we don't implement it yet.
+	th.RunTransformerAndCheckResult(config, oneDeployment, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oneDeploy
+spec:
+  replica: 1
+  template:
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+      - image: busybox:1.36.1
+        name: sidecar
+`)
+	// th.RunTransformerAndCheckError(config, oneDeployment, func(t *testing.T, err error) {
+	// 	t.Helper()
+	// 	if err == nil {
+	// 		t.Fatalf("expected error")
+	// 	}
+	// 	if !strings.Contains(err.Error(),
+	// 		"Multiple Json6902 Patch in 'patches' is not allowed.") {
+	// 		t.Fatalf("unexpected err: %v", err)
+	// 	}
+	// })
+}
+
 func TestPatchTransformerFromFiles(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")

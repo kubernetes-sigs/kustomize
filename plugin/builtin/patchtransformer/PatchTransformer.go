@@ -152,16 +152,16 @@ func (p *plugin) transformJson6902(m resmap.ResMap) error {
 	return nil
 }
 
-// jsonPatchFromBytes loads a Json 6902 patch from
-// a bytes input
-func jsonPatchFromBytes(
-	in []byte) (jsonpatch.Patch, error) {
+// jsonPatchFromBytes loads a Json 6902 patch from a bytes input
+func jsonPatchFromBytes(in []byte) (jsonpatch.Patch, error) {
 	ops := string(in)
 	if ops == "" {
 		return nil, fmt.Errorf("empty json patch operations")
 	}
 
 	if ops[0] != '[' {
+		// TODO(5049): In the case of multiple yaml documents, return error instead of ignoring all but first
+		// Details: https://github.com/kubernetes-sigs/kustomize/pull/5194#discussion_r1256686728
 		jsonOps, err := yaml.YAMLToJSON(in)
 		if err != nil {
 			return nil, err
