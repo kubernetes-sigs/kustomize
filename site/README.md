@@ -12,6 +12,7 @@ The top bar is customized with the sections I think make sense to split. However
 ## Building
 
 Build and run using Docker or Hugo, then access the site at `http://localhost:1313`.
+Please note that this directory contains nested submodules. Follow instructions in [the git submodules documentation](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to initialize.
 
 ### Docker
 Dependencies:
