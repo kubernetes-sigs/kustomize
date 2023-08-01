@@ -14,6 +14,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -23,6 +24,13 @@ import (
 func IsRemoteFile(path string) bool {
 	u, err := url.Parse(path)
 	return err == nil && (u.Scheme == "http" || u.Scheme == "https")
+}
+
+// IsOCIManifest returns whether path has an oci scheme that kustomize allows for
+// remote files. See https://github.com/kubernetes-sigs/kustomize/blob/master/examples/remoteBuild.md
+func IsOCIManifest(path string) bool {
+	u, err := url.Parse(path)
+	return err == nil && u.Scheme == "oci"
 }
 
 // fileLoader is a kustomization's interface to files.
@@ -94,6 +102,10 @@ type fileLoader struct {
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
 
+	// If this is non-nil, the files were
+	// obtained from the given artifact.
+	ociSpec *oci.OciSpec
+
 	// File system utilities.
 	fSys filesys.FileSystem
 
@@ -102,6 +114,9 @@ type fileLoader struct {
 
 	// Used to clone repositories.
 	cloner git.Cloner
+
+	// Used to pull OCI artifact
+	puller oci.Puller
 
 	// Used to clean up, as needed.
 	cleaner func() error
@@ -168,7 +183,7 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 	if path == "" {
 		return nil, errors.Errorf("new root cannot be empty")
 	}
-
+	// Assume it's a git repo
 	repoSpec, err := git.NewRepoSpecFromURL(path)
 	if err == nil {
 		// Treat this as git repo clone request.
@@ -178,7 +193,13 @@ func (fl *fileLoader) New(path string) (ifc.Loader, error) {
 		return newLoaderAtGitClone(
 			repoSpec, fl.fSys, fl, fl.cloner)
 	}
-
+	// Assume it's an OCI manifest
+	ociSpec, err := oci.NewOCISpecFromURL(path)
+	if err == nil {
+		return newLoaderAtOCIManifest(
+			ociSpec, fl.fSys, fl, oci.PullArtifact)
+	}
+	// Assume its a local dir
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
@@ -302,12 +323,60 @@ func (fl *fileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 	return fl.referrer.errIfRepoCycle(newRepoSpec)
 }
 
+// newLoaderAtOCIManifest returns a new Loader pinned to a temporary
+// directory holding an OCI image.
+func newLoaderAtOCIManifest(
+	ociSpec *oci.OciSpec, fSys filesys.FileSystem,
+	referrer *fileLoader, puller oci.Puller) (ifc.Loader, error) {
+	cleaner := ociSpec.Cleaner(fSys)
+	err := puller(ociSpec)
+	if err != nil {
+		_ = cleaner()
+		return nil, err
+	}
+	root, f, err := fSys.CleanedAbs(ociSpec.AbsPath())
+	if err != nil {
+		_ = cleaner()
+		return nil, fmt.Errorf("[CleanedAbs] error: %w", err)
+	}
+	// We don't know that the path requested in ociSpec
+	// is a directory until we actually clone it and look
+	// inside.  That just happened, hence the error check
+	// is here.
+	if f != "" {
+		_ = cleaner()
+		return nil, fmt.Errorf(
+			"'%s' refers to file '%s'; expecting directory",
+			ociSpec.AbsPath(), f)
+	}
+	// Append the path given for the kustomization manifest
+	root, err = filesys.ConfirmDir(fSys, root.Join(ociSpec.Path))
+	if err != nil {
+		_ = cleaner()
+		return nil, fmt.Errorf("[ConfirmDir] error: %w", err)
+	}
+
+	return &fileLoader{
+		// Manifest never allowed to escape root.
+		loadRestrictor: RestrictionRootOnly,
+		root:           root,
+		referrer:       referrer,
+		ociSpec:        ociSpec,
+		fSys:           fSys,
+		puller:         puller,
+		cleaner:        cleaner,
+	}, nil
+}
+
 // Load returns the content of file at the given path,
 // else an error. Relative paths are taken relative
 // to the root.
 func (fl *fileLoader) Load(path string) ([]byte, error) {
 	if IsRemoteFile(path) {
 		return fl.httpClientGetContent(path)
+	}
+	if IsOCIManifest(path) {
+		return []byte{}, fmt.Errorf("oci manifest needs to be pulled")
 	}
 	if !filepath.IsAbs(path) {
 		path = fl.root.Join(path)

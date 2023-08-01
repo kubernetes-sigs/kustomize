@@ -417,7 +417,7 @@ func (kt *KustTarget) removeValidatedByLabel(rm resmap.ResMap) error {
 func (kt *KustTarget) accumulateResources(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
 	for _, path := range paths {
-		// try loading resource as file then as base (directory or git repository)
+		// try loading resource as file then as base (directory, git repository, or oci manifest)
 		if errF := kt.accumulateFile(ra, path); errF != nil {
 			// not much we can do if the error is an HTTP error so we bail out
 			if errors.Is(errF, load.ErrHTTP) {

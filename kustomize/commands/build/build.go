@@ -59,7 +59,10 @@ If DIR is omitted, '.' is assumed.
 
 # Build from github
   %s %s https://github.com/kubernetes-sigs/kustomize.git/examples/helloWorld?ref=v1.0.6
-`, pgmName, cmdName, pgmName, cmdName, pgmName, cmdName),
+
+# Build from OCI manifest
+  %s %s oci://ghcr.io/my-user/oci-manifest:latest?path=overlay
+`, pgmName, cmdName, pgmName, cmdName, pgmName, cmdName, pgmName, cmdName),
 	}
 }
 
