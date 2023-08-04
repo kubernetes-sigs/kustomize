@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -1160,6 +1161,25 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
+func TestCmd_Execute_clearAnnotations(t *testing.T) {
+	dir := setupTest(t)
+
+	out := &bytes.Buffer{}
+	instance := RunFns{
+		Output:                 out, // write to out
+		Path:                   dir,
+		functionFilterProvider: getFilterProvider(t),
+	}
+	// initialize the defaults
+	instance.init()
+
+	if !assert.NoError(t, instance.Execute()) {
+		return
+	}
+	assert.NotContains(t, out.String(), kioutil.PathAnnotation)
+	assert.NotContains(t, out.String(), kioutil.LegacyPathAnnotation)
 }
 
 // TestCmd_Execute_enableLogSteps tests the execution of a filter with LogSteps enabled.
