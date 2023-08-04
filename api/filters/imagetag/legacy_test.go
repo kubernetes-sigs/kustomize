@@ -121,6 +121,37 @@ spec:
 				},
 			},
 		},
+		"non update on CRD": {
+			input: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  containers:
+  - image:
+      somefield: somevalue
+      someotherfield: someothervalue
+`,
+			expectedOutput: `
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: instance
+spec:
+  containers
+  - image:
+      somefield: somevalue
+      someotherfield: someothervalue
+`,
+			filter: LegacyFilter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					NewTag:  "3.2.1",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {

@@ -22,7 +22,7 @@ type imageTagUpdater struct {
 
 func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	if err := yaml.ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
-		return err
+		return nil // skip any error with other node types
 	}
 
 	value := rn.YNode().Value
