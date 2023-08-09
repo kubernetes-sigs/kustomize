@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/konfig/builtinpluginconsts"
+	"sigs.k8s.io/kustomize/api/internal/konfig/builtinpluginconsts"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
