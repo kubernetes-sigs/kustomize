@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -198,7 +199,7 @@ Patch: "something"
 	})
 }
 
-func TestPatchTransformerNotAllowedMultipleStrategicMergePatches(t *testing.T) {
+func TestMultipleSMPatchesAndTarget(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
@@ -250,20 +251,13 @@ target:
 `, someDeploymentResources, func(t *testing.T, err error) {
 		t.Helper()
 		if err == nil {
-			t.Fatalf("expected error")
+			t.Fatalf("Multiple SMPatch will cause error if use 'target' field, but error didn't happen.")
 		}
-		if !strings.Contains(err.Error(),
-			"Multiple Strategic-Merge Patch file in one 'patches' entry is not allowed to set 'patches.target' field.") {
-			t.Fatalf("unexpected err: %v", err)
-		}
+		require.ErrorContains(t, err, "Multiple Strategic-Merge Patches in one `patches` entry is not allowed to set `patches.target` field")
 	})
 }
 
-func TestPatchTransformerNotAllowedMultipleJsonPatches(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PatchTransformer")
-	defer th.Reset()
-	oneDeployment := `
+const oneDeployment = `
 apiVersion: apps/v1
 metadata:
   name: oneDeploy
@@ -278,7 +272,7 @@ spec:
       - name: sidecar
         image: busybox:1.36.1
 `
-	config := `
+const multiplePatchTransformerConfig = `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -296,8 +290,13 @@ target:
   kind: Deployment
 `
 
-	// TODO(5049): Multiple JSON patch Yaml documents are not allowed and need to return error, but we don't implement it yet.
-	th.RunTransformerAndCheckResult(config, oneDeployment, `
+func TestPatchTransformerNotAllowedMultipleJsonPatches(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	// TODO(5049): Multiple JSON patch Yaml documents are not allowed and need to return error.
+	th.RunTransformerAndCheckResult(multiplePatchTransformerConfig, oneDeployment, `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -312,7 +311,7 @@ spec:
       - image: busybox:1.36.1
         name: sidecar
 `)
-	// th.RunTransformerAndCheckError(config, oneDeployment, func(t *testing.T, err error) {
+	// th.RunTransformerAndCheckError(multiplePatchTransformerConfig, oneDeployment, func(t *testing.T, err error) {
 	// 	t.Helper()
 	// 	if err == nil {
 	// 		t.Fatalf("expected error")

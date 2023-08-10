@@ -12,17 +12,18 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/yaml"
 )
 
 type PatchTransformerPlugin struct {
-	smPatches []*resource.Resource // strategic-merge patches
-	jsonPatch jsonpatch.Patch      // json6902 patch
-	Path      string               `json:"path,omitempty"    yaml:"path,omitempty"`
-	Patch     string               `json:"patch,omitempty"   yaml:"patch,omitempty"`
-	Target    *types.Selector      `json:"target,omitempty"  yaml:"target,omitempty"`
-	Options   map[string]bool      `json:"options,omitempty" yaml:"options,omitempty"`
+	smPatches   []*resource.Resource // strategic-merge patches
+	jsonPatches jsonpatch.Patch      // json6902 patch
+	Path        string               `json:"path,omitempty"    yaml:"path,omitempty"`
+	Patch       string               `json:"patch,omitempty"   yaml:"patch,omitempty"`
+	Target      *types.Selector      `json:"target,omitempty"  yaml:"target,omitempty"`
+	Options     map[string]bool      `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 func (p *PatchTransformerPlugin) Config(
@@ -72,17 +73,16 @@ func (p *PatchTransformerPlugin) Config(
 			}
 		}
 	} else {
-		p.jsonPatch = patchesJson
+		p.jsonPatches = patchesJson
 	}
 	return nil
 }
 
 func (p *PatchTransformerPlugin) Transform(m resmap.ResMap) error {
-	if p.smPatches == nil {
-		return p.transformJson6902(m)
+	if p.smPatches != nil {
+		return p.transformStrategicMerge(m)
 	}
-	// The patch was a strategic merge patch
-	return p.transformStrategicMerge(m)
+	return p.transformJson6902(m)
 }
 
 // transformStrategicMerge applies each loaded strategic merge patch
@@ -92,36 +92,31 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error 
 	if p.Target != nil {
 		if len(p.smPatches) > 1 {
 			// detail: https://github.com/kubernetes-sigs/kustomize/issues/5049#issuecomment-1440604403
-			return fmt.Errorf("Multiple Strategic-Merge Patch file in one 'patches' entry is not allowed to set 'patches.target' field.")
+			return fmt.Errorf("Multiple Strategic-Merge Patches in one `patches` entry is not allowed to set `patches.target` field")
 		}
 
 		// single patch
 		patch := p.smPatches[0]
 		selected, err := m.Select(*p.Target)
 		if err != nil {
-			return fmt.Errorf("unable to find patch target in ResMap %s: %w", p.Target, err)
+			return fmt.Errorf("unable to find patch target %q in `resources`: %w", p.Target, err)
 		}
-		if err := m.ApplySmPatch(resource.MakeIdSet(selected), patch); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-		return nil
+		return errors.Wrap(m.ApplySmPatch(resource.MakeIdSet(selected), patch))
 	}
 
-	// contain multiple patches
 	for _, patch := range p.smPatches {
 		target, err := m.GetById(patch.OrgId())
 		if err != nil {
-			return fmt.Errorf("unable to find patch target %s: %w", patch.OrgId().Name, err)
+			return fmt.Errorf("unable to find patch target %q: %w", patch.OrgId().Name, err)
 		}
 		if err := target.ApplySmPatch(patch); err != nil {
-			return fmt.Errorf("%w", err)
+			return errors.Wrap(err)
 		}
 	}
 	return nil
 }
 
-// transformJson6902 applies the provided json6902 patch
-// to all the resources in the ResMap that match the Target.
+// transformJson6902 applies json6902 Patch to all the resources in the ResMap that match Target.
 func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap) error {
 	if p.Target == nil {
 		return fmt.Errorf("must specify a target for patch %s", p.Patch)
@@ -157,8 +152,9 @@ func jsonPatchFromBytes(in []byte) (jsonpatch.Patch, error) {
 	}
 
 	if ops[0] != '[' {
-		// TODO(5049): In the case of multiple yaml documents, return error instead of ignoring all but first
-		// Details: https://github.com/kubernetes-sigs/kustomize/pull/5194#discussion_r1256686728
+		// TODO(5049):
+		//   In the case of multiple yaml documents, return error instead of ignoring all but first.
+		//   Details: https://github.com/kubernetes-sigs/kustomize/pull/5194#discussion_r1256686728
 		jsonOps, err := yaml.YAMLToJSON(in)
 		if err != nil {
 			return nil, err
