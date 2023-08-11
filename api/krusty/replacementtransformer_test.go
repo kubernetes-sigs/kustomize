@@ -604,7 +604,7 @@ spec:
     spec:
       containers:
       - image: app1:1.0
-        name: something-else
+        name: app
 ---
 apiVersion: v1
 data:
