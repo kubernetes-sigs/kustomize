@@ -283,6 +283,37 @@ resources:
 			// know resource is file.
 			errDir: `new root '%s' cannot be absolute`,
 		},
+		{
+			name: "non-http scheme repo does not exist",
+		},
+		{
+			name: "scp-like repo does not exist locally",
+		},
+		{
+			name: "scp-like repo also localized",
+		},
+		{
+			name:     "http repo path does not exist",
+			resource: "https://github.com/kubernetes-sigs/kustomize//non-existent/path?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300",
+		},
+		{
+			name:     "repo missing kustomization.yaml",
+			resource: "file://",
+		},
+		{
+			name:     "http repo root has README.md",
+			resource: "https://github.com/kubernetes-sigs/kustomize?submodules=0&ref=kustomize%2Fv4.5.7&timeout=300",
+		},
+		{
+			name:     "repo cycle",
+			resource: "file://",
+		},
+		{
+			name:     "non-http repo resource error",
+			resource: "file://",
+		},
+		// TODO(annasong): Add http repo resource error test
+		// after merging testdata/error
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// Should use real file system to indicate that we are creating
@@ -304,7 +335,6 @@ resources:
 		})
 	}
 	// TODO(annasong): add tests that check accumulateResources errors for
-	// - repos
 	// - local directories
 	// - files that yield malformed yaml errors
 }

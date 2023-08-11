@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: repeat-error
+resources:
+- deployment.yaml
+- deployment.yaml
