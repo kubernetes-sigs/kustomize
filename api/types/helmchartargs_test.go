@@ -17,6 +17,7 @@ func TestAsHelmArgs(t *testing.T) {
 			Version:               "1.0.0",
 			Repo:                  "https://helm.releases.hashicorp.com",
 			ApiVersions:           []string{"foo", "bar"},
+			KubeVersion:           "1.27",
 			NameTemplate:          "template",
 			SkipTests:             true,
 			IncludeCRDs:           true,
@@ -33,6 +34,7 @@ func TestAsHelmArgs(t *testing.T) {
 				"-f", "values",
 				"-f", "values1", "-f", "values2",
 				"--api-versions", "foo", "--api-versions", "bar",
+				"--kube-version", "1.27",
 				"--include-crds",
 				"--skip-tests",
 				"--no-hooks"})
