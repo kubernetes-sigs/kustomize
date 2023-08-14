@@ -53,6 +53,15 @@ func (p *HelmChartInflationGeneratorPlugin) Config(
 	if h.GeneralConfig().HelmConfig.Command == "" {
 		return fmt.Errorf("must specify --helm-command")
 	}
+
+	// CLI args takes precedence
+	if h.GeneralConfig().HelmConfig.KubeVersion != "" {
+		p.HelmChart.KubeVersion = h.GeneralConfig().HelmConfig.KubeVersion
+	}
+	if len(h.GeneralConfig().HelmConfig.ApiVersions) != 0 {
+		p.HelmChart.ApiVersions = h.GeneralConfig().HelmConfig.ApiVersions
+	}
+
 	p.h = h
 	if err = yaml.Unmarshal(config, p); err != nil {
 		return
