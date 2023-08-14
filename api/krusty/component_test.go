@@ -754,6 +754,42 @@ spec:
     image: busybox
     name: myapp-container
 `},
+		"components_are_applied_before_overlay_applied": {
+			input: []FileGen{
+				writeK("", `
+resources:
+- base
+components:
+- components
+configMapGenerator:
+  - name: literals-configmap
+    behavior: merge
+    literals:
+      - literal_variable_one=overlay-value`),
+				writeK("/base", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+  - name: literals-configmap
+    literals:
+      - literal_variable_one=base-value`),
+				writeC("/components", `
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+configMapGenerator:
+  - name: literals-configmap
+    behavior: merge
+    literals:
+      - literal_variable_one=component-value`),
+			},
+			expectedOutput: `
+apiVersion: v1
+data:
+  literal_variable_one: overlay-value
+kind: ConfigMap
+metadata:
+  name: literals-configmap-h9bhhg655t
+`},
 	}
 
 	for testName, test := range tests {
