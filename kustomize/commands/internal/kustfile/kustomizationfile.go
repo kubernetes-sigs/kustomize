@@ -113,6 +113,8 @@ type kustomizationFile struct {
 	path           string
 	fSys           filesys.FileSystem
 	originalFields []*commentedField
+
+	lastComments []byte
 }
 
 // NewKustomizationFile returns a new instance.
@@ -223,6 +225,8 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	if err != io.EOF {
 		return err
 	}
+
+	mf.lastComments = append(mf.lastComments, squash(comments)...)
 	return nil
 }
 
@@ -247,7 +251,7 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 		}
 		output = append(output, content...)
 	}
-	return output, nil
+	return append(output, mf.lastComments...), nil
 }
 
 func (mf *kustomizationFile) hasField(name string) bool {
