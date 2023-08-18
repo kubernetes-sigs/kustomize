@@ -64,6 +64,35 @@ Administrative notes:
 - The [OWNERS file spec] is a useful resources in making changes.
 - Maintainers and admins must be added to the appropriate lists in both [Kustomize OWNERS_ALIASES] and [SIG-CLI Teams]. If this isn't done, the individual in question will lack either PR approval rights (Kustomize list) or the appropriate Github repository permissions (community list).
 
+## Project/Product Managers
+
+Kustomize will have opportunities to join in a project/product manager role. You can
+typically start working on this role as part of a kustomize training cohort, so please
+keep an eye out for that or reach out to the leads if you are interested in this type of
+work. Expectations for this role are:
+
+- Triage 1 feature request each week, and bring it to weekly stand-up for discussion. Feature
+requests are issues labeled kind/feature, and you can find them [here](https://github.com/kubernetes-sigs/kustomize/issues?q=is%3Aissue+is%3Aopen+kind+feature+label%3Akind%2Ffeature).
+Triaging a feature request means:
+  - Understand what the user is asking for, and their use case.
+  - Verify that it is not an [eschewed feature](https://kubectl.docs.kubernetes.io/faq/kustomize/eschewedfeatures/#build-time-side-effects-from-cli-args-or-env-variables)
+  - Verify that it is not a duplicate issue.
+  - Look into workarounds. Is there another way that the user can achieve their use case with existing features?
+  - If you are new to this role, prior to leaving a comment on the issue, please bring it to weekly standup
+    for group discussion to make sure that we are all on the same page.
+  - Once you feel ready, you can label it with a triage label. Here's an [example](https://github.com/kubernetes-sigs/kustomize/issues/5049). You can also
+look at other feature request issues to see how they were triaged and resolved. There are a few different triage labels that you can use, you can see the
+full list [here](https://github.com/kubernetes-sigs/kustomize/labels?q=triage).
+- Monitor the kustomize Slack channel and try to help users if you can. It is a pretty
+active channel, so responding to 4-5 users per week is sufficient even if some
+questions go unanswered. If there is an interesting topic or a recurring problem that many
+users are having, please bring it up in weekly stand-up.
+- Keeping track of a queue of backlog issues or PRs that are not being actively looked at in any existing project board.
+- Organizing or reorganizing project tracking boards when it makes sense.
+
+You will also be asked to help with roadmap planning, deprecation communication, prioritization,
+and doing research on kustomize usage when appropriate, though these responsibilities will occur less
+frequently.
 
 ## Contact Information
 
