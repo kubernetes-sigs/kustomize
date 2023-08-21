@@ -198,7 +198,7 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 		if err != nil {
 			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0))
 		}
-		if len(targetFields) == 0 {
+		if len(targetFields) == 0 && !selector.Options.RegexFindMode {
 			return errors.Errorf(fieldRetrievalError(fp, createKind != 0))
 		}
 

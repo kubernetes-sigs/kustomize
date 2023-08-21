@@ -19,6 +19,90 @@ func TestFilter(t *testing.T) {
 		expected     string
 		expectedErr  string
 	}{
+		"regexsimpleempty": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    options:
+      regexfindmode: true
+    fieldPaths:
+    - spec.template.spec.containers.[name=myservice-*].image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"regexsimple": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: myservice-postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    options:
+      regexfindmode: true
+    fieldPaths:
+    - spec.template.spec.containers.[name=myservice-*].image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: myservice-postgresdb
+`,
+		},
 		"simple": {
 			input: `apiVersion: v1
 kind: Deployment
