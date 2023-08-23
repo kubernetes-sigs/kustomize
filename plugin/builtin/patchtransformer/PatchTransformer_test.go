@@ -199,12 +199,7 @@ Patch: "something"
 	})
 }
 
-func TestMultipleSMPatchesAndTarget(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarness(t).
-		PrepBuiltin("PatchTransformer")
-	defer th.Reset()
-
-	th.WriteF(`multiplepatches.yaml`, `
+const multipleSMPatchesFile = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -213,15 +208,8 @@ spec:
   template:
     spec:
       containers:
-      - image: AUDIT_IMAGE
-        name: manager
-        args:
-        - --port=8443
-        - --logtostderr
-        - --emit-admission-events
-        - --exempt-namespace=gatekeeper-system
-        - --operation=webhook
-        - --disable-opa-builtin=http.send
+      - image: public.ecr.aws/nginx/nginx:mainline
+        name: nginx
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -229,15 +217,121 @@ metadata:
   name: yourDeploy
 spec:
   template:
+    metadata:
+      labels:
+        new-label: new-value-with-multipleSMPatchesFile
+`
+
+const multipleSMPatchesSuccesfulResult = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
     spec:
       containers:
-      - image: CONTROLLER_IMAGE
-        name: manager
-        args:
-        - --emit-audit-events
-        - --operation=audit
-        - --operation=status
-        - --logtostderr`)
+      - image: public.ecr.aws/nginx/nginx:mainline
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 1
+  template:
+    metadata:
+      labels:
+        new-label: new-value-with-multipleSMPatchesFile
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`
+
+func TestMultipleSMPatchesWithFilePath(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF(`multiplepatches.yaml`, multipleSMPatchesFile)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+Path: multiplepatches.yaml
+`, someDeploymentResources, multipleSMPatchesSuccesfulResult)
+}
+
+func TestMultipleSMPatchesWithPatch(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF(`multiplepatches.yaml`, multipleSMPatchesFile)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+patch: |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: myDeploy
+  spec:
+    template:
+      spec:
+        containers:
+        - image: public.ecr.aws/nginx/nginx:mainline
+          name: nginx
+  ---
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: yourDeploy
+  spec:
+    template:
+      metadata:
+        labels:
+          new-label: new-value-with-multipleSMPatchesFile
+`, someDeploymentResources, multipleSMPatchesSuccesfulResult)
+}
+
+func TestMultipleSMPatchesAndTarget(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF(`multiplepatches.yaml`, multipleSMPatchesFile)
 
 	th.RunTransformerAndCheckError(`
 apiVersion: builtin
