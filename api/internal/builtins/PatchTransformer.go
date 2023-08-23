@@ -20,47 +20,51 @@ import (
 type PatchTransformerPlugin struct {
 	smPatches   []*resource.Resource // strategic-merge patches
 	jsonPatches jsonpatch.Patch      // json6902 patch
-	Path        string               `json:"path,omitempty"    yaml:"path,omitempty"`
-	Patch       string               `json:"patch,omitempty"   yaml:"patch,omitempty"`
-	Target      *types.Selector      `json:"target,omitempty"  yaml:"target,omitempty"`
-	Options     map[string]bool      `json:"options,omitempty" yaml:"options,omitempty"`
+	// patchText is pure patch text created by Path or Patch
+	patchText string
+	// patchSource is patch source message
+	patchSource string
+	Path        string          `json:"path,omitempty"    yaml:"path,omitempty"`
+	Patch       string          `json:"patch,omitempty"   yaml:"patch,omitempty"`
+	Target      *types.Selector `json:"target,omitempty"  yaml:"target,omitempty"`
+	Options     map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
-func (p *PatchTransformerPlugin) Config(
-	h *resmap.PluginHelpers, c []byte) error {
-	err := yaml.Unmarshal(c, p)
-	if err != nil {
+func (p *PatchTransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) error {
+	if err := yaml.Unmarshal(c, p); err != nil {
 		return err
 	}
+
 	p.Patch = strings.TrimSpace(p.Patch)
-	if p.Patch == "" && p.Path == "" {
-		return fmt.Errorf(
-			"must specify one of patch and path in\n%s", string(c))
-	}
-	if p.Patch != "" && p.Path != "" {
-		return fmt.Errorf(
-			"patch and path can't be set at the same time\n%s", string(c))
-	}
-	if p.Path != "" {
-		loaded, loadErr := h.Loader().Load(p.Path)
-		if loadErr != nil {
-			return loadErr
+	switch {
+	case p.Patch == "" && p.Path == "":
+		return fmt.Errorf("must specify one of patch and path in\n%s", string(c))
+	case p.Patch != "" && p.Path != "":
+		return fmt.Errorf("patch and path can't be set at the same time\n%s", string(c))
+	case p.Patch != "":
+		p.patchText = p.Patch
+		p.patchSource = fmt.Sprintf("[patch: %q]", p.patchText)
+	case p.Path != "":
+		loaded, err := h.Loader().Load(p.Path)
+		if err != nil {
+			return fmt.Errorf("failed to get the patch file from path(%s): %w", p.Path, err)
 		}
-		p.Patch = string(loaded)
+		p.patchText = string(loaded)
+		p.patchSource = fmt.Sprintf("[path: %q]", p.Path)
 	}
 
-	patchesSM, errSM := h.ResmapFactory().RF().SliceFromBytes([]byte(p.Patch))
-	patchesJson, errJson := jsonPatchFromBytes([]byte(p.Patch))
+	patchesSM, errSM := h.ResmapFactory().RF().SliceFromBytes([]byte(p.patchText))
+	patchesJson, errJson := jsonPatchFromBytes([]byte(p.patchText))
 
 	if (errSM == nil && errJson == nil) ||
 		(patchesSM != nil && patchesJson != nil) {
 		return fmt.Errorf(
-			"illegally qualifies as both an SM and JSON patch: [%v]",
-			p.Patch)
+			"illegally qualifies as both an SM and JSON patch: %s",
+			p.patchSource)
 	}
 	if errSM != nil && errJson != nil {
 		return fmt.Errorf(
-			"unable to parse SM or JSON patch from [%v]", p.Patch)
+			"unable to parse SM or JSON patch from %s", p.patchSource)
 	}
 	if errSM == nil {
 		p.smPatches = patchesSM
@@ -92,7 +96,7 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error 
 	if p.Target != nil {
 		if len(p.smPatches) > 1 {
 			// detail: https://github.com/kubernetes-sigs/kustomize/issues/5049#issuecomment-1440604403
-			return fmt.Errorf("Multiple Strategic-Merge Patches in one `patches` entry is not allowed to set `patches.target` field")
+			return fmt.Errorf("Multiple Strategic-Merge Patches in one `patches` entry is not allowed to set `patches.target` field: %s", p.patchSource)
 		}
 
 		// single patch
@@ -119,7 +123,7 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error 
 // transformJson6902 applies json6902 Patch to all the resources in the ResMap that match Target.
 func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap) error {
 	if p.Target == nil {
-		return fmt.Errorf("must specify a target for patch %s", p.Patch)
+		return fmt.Errorf("must specify a target for patch %s", p.patchText)
 	}
 	resources, err := m.Select(*p.Target)
 	if err != nil {
@@ -129,7 +133,7 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap) error {
 		res.StorePreviousId()
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
 		err = res.ApplyFilter(patchjson6902.Filter{
-			Patch: p.Patch,
+			Patch: p.patchText,
 		})
 		if err != nil {
 			return err
