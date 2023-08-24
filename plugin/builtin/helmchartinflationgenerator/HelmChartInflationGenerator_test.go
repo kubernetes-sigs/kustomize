@@ -670,6 +670,12 @@ func TestHelmChartInflationGeneratorWithSameChartMultipleVersions(t *testing.T) 
 			version:     "1.1.2",
 			releaseName: "terraform-1.1.2",
 		},
+		{
+			name:        "terraform chart with version 1.1.2 but without repo",
+			chartName:   "terraform",
+			version:     "1.1.2",
+			releaseName: "terraform-1.1.2",
+		},
 	}
 
 	for _, tt := range tests {
@@ -689,11 +695,13 @@ releaseName: %s
 			assert.True(t, len(rm.Resources()) > 0)
 
 			var chartDir string
-			if tt.version != "" {
+			if tt.version != "" && tt.repo != "" {
 				chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
 			} else {
 				chartDir = fmt.Sprintf("charts/%s", tt.chartName)
 			}
+
+			fmt.Printf("%s: %s\n", tt.name, chartDir)
 
 			d, err := th.GetFSys().ReadFile(filepath.Join(th.GetRoot(), chartDir, "Chart.yaml"))
 			if err != nil {
@@ -761,4 +769,56 @@ releaseName: podinfo2
 	podinfo2ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo2ChartsDir, "Chart.yaml"))
 	assert.NoError(t, err)
 	assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
+
+}
+
+// Addressed: https://github.com/kubernetes-sigs/kustomize/issues/5163
+func TestHelmChartInflationGeneratorWithLocalChartWithVersion(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.GetFSys().MkdirAll(filepath.Join(th.GetRoot(), "charts/dummy/templates"))
+	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/Chart.yaml"), `
+apiVersion: v1
+appVersion: 1.0.0
+description: Dummy
+name: dummy
+version: 1.0.0
+`)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/values.yaml"), `
+foo: bar
+`)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/templates/cm.yaml"), `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.foo }}
+`)
+
+	dummyInlineHelmChart := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: dummy
+name: dummy
+version: 1.0.0
+releaseName: dummy
+`)
+
+	dummyConfigmap, err := dummyInlineHelmChart.Resources()[0].GetFieldValue("metadata.name")
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", dummyConfigmap)
+
+	dummyChartsDir := filepath.Join(th.GetRoot(), "charts/dummy")
+	assert.True(t, th.GetFSys().Exists(dummyChartsDir))
+
+	dummyChartsContent, err := th.GetFSys().ReadFile(filepath.Join(dummyChartsDir, "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(dummyChartsContent), "version: 1.0.0")
 }
