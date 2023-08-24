@@ -97,12 +97,7 @@ func (p *plugin) validateArgs() (err error) {
 	// be under the loader root (unless root restrictions are
 	// disabled).
 	if p.ValuesFile == "" {
-		// If the version is specified, use the versioned values file.
-		if p.Version != "" {
-			p.ValuesFile = filepath.Join(p.ChartHome, fmt.Sprintf("%s-%s", p.Name, p.Version), p.Name, "values.yaml")
-		} else {
-			p.ValuesFile = filepath.Join(p.ChartHome, p.Name, "values.yaml")
-		}
+		p.ValuesFile = filepath.Join(p.absChartHome(), p.Name, "values.yaml")
 	}
 	for i, file := range p.AdditionalValuesFiles {
 		// use Load() to enforce root restrictions
@@ -150,7 +145,7 @@ func (p *plugin) absChartHome() string {
 		chartHome = filepath.Join(p.h.Loader().Root(), p.ChartHome)
 	}
 
-	if p.Version != "" {
+	if p.Version != "" && p.Repo != "" {
 		return filepath.Join(chartHome, fmt.Sprintf("%s-%s", p.Name, p.Version))
 	}
 	return chartHome
