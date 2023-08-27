@@ -4,6 +4,8 @@
 package imagetag
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 
 	"sigs.k8s.io/kustomize/api/image"
@@ -48,8 +50,10 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		tag = ""
 		digest = u.ImageTag.Digest
 	case u.ImageTag.TagSuffix != "":
-		tag += u.ImageTag.TagSuffix
+		fmt.Println(tag, u.ImageTag.TagSuffix)
+		tag = fmt.Sprintf("%s%s", tag, u.ImageTag.TagSuffix)
 		digest = ""
+		u.ImageTag.TagSuffix = ""
 	}
 
 	// build final image name
@@ -60,10 +64,14 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		name += "@" + digest
 	}
 
+	fmt.Println(tag, digest, "final")
+	fmt.Println(rn)
+
 	return u.trackableSetter.SetScalar(name)(rn)
 }
 
 func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+	fmt.Println("call filter", u)
 	if err := u.SetImageValue(rn); err != nil {
 		return nil, err
 	}
