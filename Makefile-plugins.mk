@@ -91,7 +91,25 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator $(MYGOBIN)/goimports
 
 # Target is for debugging.
 .PHONY: generate-kustomize-builtin-plugins
-generate-kustomize-builtin-plugins: $(builtinplugins)
+generate-kustomize-builtin-plugins: $(builtplugins)
+	for plugin in $(abspath $(wildcard $(pSrc)/*)); do \
+		echo "generating $${plugin} ..."; \
+		set -e; \
+		cd $${plugin}; \
+		go generate pluginator .; \
+	done; \
+	cd ../../../; \
+	make no-diff \
+
+.PHONY: no-diff
+no-diff: $(builtplugins)
+	for file in $(abspath $(builtinplugins)); do \
+		echo "Checking for diff... $${file}" ; \
+		set -e ; \
+		if [ "`git diff $${file} | wc -c`" -gt 0 ]; then\
+			echo "Error(1): diff found on $${file}"; exit 1; \
+		fi \
+	done
 
 .PHONY: build-kustomize-external-go-plugin
 build-kustomize-external-go-plugin:
