@@ -112,7 +112,9 @@ prow-presubmit-check: \
 	test-go-mod \
 	build-non-plugin-all \
 	test-examples-kustomize-against-HEAD \
-	test-examples-kustomize-against-latest-release
+	test-examples-kustomize-against-latest-release \
+	workspace-sync \
+	generate-kustomize-builtin-plugins
 
 .PHONY: license
 license: $(MYGOBIN)/addlicense
@@ -181,7 +183,15 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh v5@$(LATEST_RELEASE)
 
+.PHONY: generate-kustomize-builtin-plugins
+generate-kustomize-builtin-plugins:
+	$(MAKE) -f Makefile-plugin.mk
 
+# Pushes dependencies in the go.work file back to go.mod files of each workspace module.
+.PHONY: workspace-sync
+workspace sync:
+	go work sync
+	
 # --- Cleanup targets ---
 .PHONY: clean
 clean: clean-kustomize-external-go-plugin uninstall-tools
