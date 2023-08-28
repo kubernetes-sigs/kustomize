@@ -3,8 +3,8 @@ module sigs.k8s.io/kustomize/plugin/builtin/patchjson6902transformer
 go 1.20
 
 require (
-	github.com/evanphx/json-patch v4.12.0+incompatible
-	sigs.k8s.io/kustomize/api v0.14.0
+	gopkg.in/evanphx/json-patch.v5 v5.6.0
+	sigs.k8s.io/kustomize/api v0.13.4
 	sigs.k8s.io/kustomize/kyaml v0.14.3
 	sigs.k8s.io/yaml v1.3.0
 )
