@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -781,7 +782,9 @@ func TestHelmChartInflationGeneratorWithLocalChartWithVersion(t *testing.T) {
 		t.Skip("skipping: " + err.Error())
 	}
 
-	th.GetFSys().MkdirAll(filepath.Join(th.GetRoot(), "charts/dummy/templates"))
+	err := th.GetFSys().MkdirAll(filepath.Join(th.GetRoot(), "charts/dummy/templates"))
+	require.NoError(t, err)
+
 	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/Chart.yaml"), `
 apiVersion: v1
 appVersion: 1.0.0
