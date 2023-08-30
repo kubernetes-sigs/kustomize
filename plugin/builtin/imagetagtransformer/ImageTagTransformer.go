@@ -5,8 +5,6 @@
 package main
 
 import (
-	"fmt"
-
 	"sigs.k8s.io/kustomize/api/filters/imagetag"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
@@ -30,15 +28,11 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	fmt.Println("Call TransForm")
-	fmt.Println(p.ImageTag, p.ImageTag.Name, p.ImageTag.TagSuffix)
 	if err := m.ApplyFilter(imagetag.LegacyFilter{
 		ImageTag: p.ImageTag,
 	}); err != nil {
 		return err
 	}
-	fmt.Println(p.ImageTag, p.ImageTag.Name, p.ImageTag.TagSuffix)
-	fmt.Println("fields", p.FieldSpecs, p.ImageTag)
 	if p.ImageTag.TagSuffix != "" {
 		p.ImageTag.TagSuffix = ""
 	}

@@ -50,7 +50,6 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		tag = ""
 		digest = u.ImageTag.Digest
 	case u.ImageTag.TagSuffix != "":
-		fmt.Println(tag, u.ImageTag.TagSuffix)
 		tag = fmt.Sprintf("%s%s", tag, u.ImageTag.TagSuffix)
 		digest = ""
 		u.ImageTag.TagSuffix = ""
@@ -64,14 +63,10 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		name += "@" + digest
 	}
 
-	fmt.Println(tag, digest, "final")
-	fmt.Println(rn)
-
 	return u.trackableSetter.SetScalar(name)(rn)
 }
 
 func (u imageTagUpdater) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
-	fmt.Println("call filter", u)
 	if err := u.SetImageValue(rn); err != nil {
 		return nil, err
 	}
