@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -28,6 +28,7 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 		root          string
 		simple        string
 		noSuffix      string
+		hash          string
 		multiBaseDev  string
 		withSubmodule string
 	}
@@ -36,9 +37,10 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 	// root/
 	//   simple.git/			- base with just a pod
 	//   nosuffix/				- same as simple.git/ without the .git suffix
+	//   hash-xx/				- same as simple.git/ with random hash at xx
 	//   multibase.git/			- base with a dev overlay
 	//   with-submodule.git/	- includes `simple` as a submodule
-	//     submodule/			- the submodule referencing `simple
+	//     submodule/			- the submodule referencing `simple`
 	createGitRepos := func(t *testing.T) testRepos {
 		t.Helper()
 
@@ -50,10 +52,16 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 			}
 		}
 		root := t.TempDir()
+
+		hashPath, err := os.MkdirTemp(root, "hash-")
+		require.NoError(t, err)
+		hashDir := filepath.Base(hashPath)
+
 		bash(fmt.Sprintf(`
 set -eux
 
 export ROOT="%s"
+export HASH_DIR="%s"
 export GIT_AUTHOR_EMAIL=nobody@kustomize.io
 export GIT_AUTHOR_NAME=Nobody
 export GIT_COMMITTER_EMAIL=nobody@kustomize.io
@@ -85,19 +93,27 @@ cp -r testdata/remoteload/multibase $ROOT/multibase.git
 	git add .
 	git commit -m "import"
 )
+cp -r testdata/remoteload/with-submodule $ROOT/with-submodule.git # see README
+cp -r $ROOT/simple.git/. $ROOT/$HASH_DIR
 (
-	mkdir $ROOT/with-submodule.git
 	cd $ROOT/with-submodule.git
 	git init --initial-branch=main
-	git submodule add $ROOT/simple.git submodule
+	git add .
 	git commit -m "import"
+	git checkout -b relative-submodule
+	git submodule add ../$HASH_DIR submodule
+	git commit -m "relative submodule"
+	git checkout main
+	git submodule add $ROOT/simple.git submodule
+	git commit -m "submodule"	
 )
-`, root))
+`, root, hashDir))
 		return testRepos{
 			root: root,
 			// The strings below aren't currently used, and more serve as documentation.
 			simple:        "simple.git",
 			noSuffix:      "nosuffix",
+			hash:          hashDir,
 			multiBaseDev:  "multibase.git",
 			withSubmodule: "with-submodule.git",
 		}
@@ -184,6 +200,15 @@ resources:
 			expected: simpleBuild,
 		},
 		{
+			name: "has relative submodule",
+			kustomization: `
+resources:
+- file://$ROOT/with-submodule.git/submodule?ref=relative-submodule
+`,
+			// TODO(annasong): Replace with simpleBuild once #5131 is fixed.
+			err: `failed to run '\S+/git submodule update --init --recursive'`,
+		},
+		{
 			name: "has timeout",
 			kustomization: `
 resources:
@@ -264,7 +289,7 @@ resources:
 			}
 
 			kust := strings.ReplaceAll(test.kustomization, "$ROOT", repos.root)
-			fSys, tmpDir := createKustDir(t, kust)
+			fSys, tmpDir := kusttest_test.CreateKustDir(t, kust)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 			m, err := b.Run(
@@ -273,7 +298,7 @@ resources:
 
 			if test.err != "" {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), test.err)
+				require.Regexp(t, test.err, err.Error())
 			} else {
 				require.NoError(t, err)
 				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", repos.root))
@@ -368,7 +393,7 @@ resources:
 			if test.beforeTest != nil {
 				test.beforeTest(t)
 			}
-			fSys, tmpDir := createKustDir(t, test.kustomization)
+			fSys, tmpDir := kusttest_test.CreateKustDir(t, test.kustomization)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 			m, err := b.Run(
@@ -422,16 +447,6 @@ func configureGitSSHCommand(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(f.Name())
 	})
-}
-
-func createKustDir(t *testing.T, content string) (filesys.FileSystem, filesys.ConfirmedDir) {
-	t.Helper()
-
-	fSys := filesys.MakeFsOnDisk()
-	tmpDir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(t, err)
-	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(content)))
-	return fSys, tmpDir
 }
 
 func checkYaml(t *testing.T, actual resmap.ResMap, expected string) {

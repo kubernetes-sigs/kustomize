@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.1
-	sigs.k8s.io/kustomize/api v0.13.4
-	sigs.k8s.io/kustomize/kyaml v0.14.2
+	sigs.k8s.io/kustomize/api v0.14.0
+	sigs.k8s.io/kustomize/kyaml v0.14.3
 )
 
 require (
