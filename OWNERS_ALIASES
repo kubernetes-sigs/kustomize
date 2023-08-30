@@ -7,25 +7,19 @@ aliases:
   kustomize-approvers:
     - knverey
     - natasha41575
+    - annasong20
   kustomize-reviewers:
     - knverey
     - natasha41575
     - yuwenma
     - annasong20
     - koba1t
-
-  kyaml-approvers:
-    - mengqiy
-    - mortent
-    - phanimarupaka
-  kyaml-reviewers:
-    - mengqiy
-    - mortent
-    - phanimarupaka
-
-  emeritus-approvers:
-    - liujingfang1
-    - Shell32-Natsu
-    - justinsb
-    - monopole
-    - pwittrock
+  #  emeritus:
+  #    - liujingfang1
+  #    - Shell32-Natsu
+  #    - justinsb
+  #    - monopole
+  #    - pwittrock
+  #    - mengqiy
+  #    - mortent
+  #    - phanimarupaka

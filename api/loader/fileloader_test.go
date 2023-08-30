@@ -31,6 +31,11 @@ func TestIsRemoteFile(t *testing.T) {
 			"https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/configMap.yaml",
 			true,
 		},
+		"malformed https": {
+			// TODO(annasong): Maybe we want to fix this. Needs more research.
+			"https:/raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/configMap.yaml",
+			true,
+		},
 		"https dir": {
 			"https://github.com/kubernetes-sigs/kustomize//examples/helloWorld/",
 			true,
@@ -196,13 +201,52 @@ func TestLoaderBadRelative(t *testing.T) {
 	require.Error(err)
 }
 
-func TestLoaderMisc(t *testing.T) {
-	l := makeLoader()
-	_, err := l.New("")
+func TestNewEmptyLoader(t *testing.T) {
+	_, err := makeLoader().New("")
 	require.Error(t, err)
+}
 
-	_, err = l.New("https://google.com/project")
-	require.Error(t, err)
+func TestNewRemoteLoaderDoesNotExist(t *testing.T) {
+	_, err := makeLoader().New("https://example.com/org/repo")
+	require.ErrorContains(t, err, "fetch")
+}
+
+func TestLoaderLocalScheme(t *testing.T) {
+	// It is unlikely but possible for a reference with a url scheme to
+	// actually refer to a local file or directory.
+	t.Run("file", func(t *testing.T) {
+		fSys, dir := setupOnDisk(t)
+		parts := []string{
+			"ssh:",
+			"resource.yaml",
+		}
+		require.NoError(t, fSys.Mkdir(dir.Join(parts[0])))
+		const content = "resource config"
+		require.NoError(t, fSys.WriteFile(
+			dir.Join(filepath.Join(parts...)),
+			[]byte(content),
+		))
+		actualContent, err := newLoaderOrDie(RestrictionRootOnly,
+			fSys,
+			dir.String(),
+		).Load(strings.Join(parts, "//"))
+		require.NoError(t, err)
+		require.Equal(t, content, string(actualContent))
+	})
+	t.Run("directory", func(t *testing.T) {
+		fSys, dir := setupOnDisk(t)
+		parts := []string{
+			"https:",
+			"root",
+		}
+		require.NoError(t, fSys.MkdirAll(dir.Join(filepath.Join(parts...))))
+		ldr, err := newLoaderOrDie(RestrictionRootOnly,
+			fSys,
+			dir.String(),
+		).New(strings.Join(parts, "//"))
+		require.NoError(t, err)
+		require.Empty(t, ldr.Repo())
+	})
 }
 
 const (
@@ -212,17 +256,17 @@ const (
 
 // Create a structure like this
 //
-//   /tmp/kustomize-test-random
-//   ├── base
-//   │   ├── okayData
-//   │   ├── symLinkToOkayData -> okayData
-//   │   └── symLinkToExteriorData -> ../exteriorData
-//   └── exteriorData
-//
+//	/tmp/kustomize-test-random
+//	├── base
+//	│   ├── okayData
+//	│   ├── symLinkToOkayData -> okayData
+//	│   └── symLinkToExteriorData -> ../exteriorData
+//	└── exteriorData
 func commonSetupForLoaderRestrictionTest(t *testing.T) (string, filesys.FileSystem) {
 	t.Helper()
-	dir := t.TempDir()
-	fSys := filesys.MakeFsOnDisk()
+	fSys, tmpDir := setupOnDisk(t)
+	dir := tmpDir.String()
+
 	fSys.Mkdir(filepath.Join(dir, "base"))
 
 	fSys.WriteFile(
@@ -446,12 +490,8 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 }
 
 func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
-	fSys := filesys.MakeFsOnDisk()
-	dir, err := filesys.NewTmpConfirmedDir()
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = fSys.RemoveAll(dir.String())
-	})
+	fSys, dir := setupOnDisk(t)
+
 	repo := dir.Join("repo")
 	require.NoError(t, fSys.Mkdir(repo))
 
@@ -617,4 +657,20 @@ func TestLoaderHTTP(t *testing.T) {
 		_, err := l2.Load(x.path)
 		require.Error(err)
 	}
+}
+
+// setupOnDisk sets up a file system on disk and directory that is cleaned after
+// test completion.
+// TODO(annasong): Move all loader tests that require real file system into
+// api/krusty.
+func setupOnDisk(t *testing.T) (filesys.FileSystem, filesys.ConfirmedDir) {
+	t.Helper()
+
+	fSys := filesys.MakeFsOnDisk()
+	dir, err := filesys.NewTmpConfirmedDir()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = fSys.RemoveAll(dir.String())
+	})
+	return fSys, dir
 }

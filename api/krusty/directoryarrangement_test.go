@@ -9,9 +9,20 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+const expectedResources = `apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - port: 7002
+`
+
 func TestIssue596AllowDirectoriesThatAreSubstringsOfEachOther(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	th.WriteK("base", "")
+	th.WriteF("base/service.yaml", expectedResources)
+	th.WriteK("base", `resources:
+- service.yaml`)
 	th.WriteK("overlays/aws", `
 resources:
 - ../../base
@@ -25,5 +36,5 @@ resources:
 - ../aws-nonprod
 `)
 	m := th.Run("overlays/aws-sandbox2.us-east-1", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, "")
+	th.AssertActualEqualsExpected(m, expectedResources)
 }

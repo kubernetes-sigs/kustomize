@@ -73,6 +73,11 @@ func (kt *KustTarget) Load() error {
 
 	k.FixKustomization()
 
+	// check that Kustomization is empty
+	if err := k.CheckEmpty(); err != nil {
+		return err
+	}
+
 	errs := k.EnforceFields()
 	if len(errs) > 0 {
 		return fmt.Errorf(
@@ -197,10 +202,6 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "accumulating resources")
 	}
-	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
-	if err != nil {
-		return nil, errors.WrapPrefixf(err, "accumulating components")
-	}
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
@@ -225,6 +226,14 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, err
 	}
+
+	// components are expected to execute after reading resources and adding generators ,before applying transformers and validation.
+	// https://github.com/kubernetes-sigs/kustomize/pull/5170#discussion_r1212101287
+	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "accumulating components")
+	}
+
 	err = kt.runTransformers(ra)
 	if err != nil {
 		return nil, err
