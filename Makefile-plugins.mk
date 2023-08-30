@@ -101,7 +101,7 @@ generate-kustomize-builtin-plugins: $(builtplugins)
 	cd ../../../; \
 	make no-diff \
 
-# Check for diff, if diff is found, throw error code 1 (subject to change based on discussion)
+# Check for diff, if diff is found, throw error code 1 (subject to change based on discussion).
 .PHONY: no-diff
 no-diff: $(builtplugins)
 	for file in $(abspath $(builtinplugins)); do \
