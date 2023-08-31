@@ -342,3 +342,13 @@ func (gr *Runner) DeleteTagFromRemote(
 	gr.comment("deleting tags from remote")
 	return gr.runNoOut(undoPainful, "push", string(remote), ":"+refsTags+tag)
 }
+
+// Check if a file at filePath is different from the original on the remote branch.
+func (gr *Runner) CheckDiffOnFile(filePath string) (string, error) {
+	gr.comment("checking a file for a diff")
+	out, err := gr.run(noHarmDone, "diff", filePath)
+	if err != nil {
+		return out, err
+	}
+	return out, nil
+}
