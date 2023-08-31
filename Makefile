@@ -186,6 +186,7 @@ test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
 # Pushes dependencies in the go.work file back to go.mod files of each workspace module.
 .PHONY: workspace-sync
 workspace sync:
+	go mod tidy
 	go work sync
 	
 # --- Cleanup targets ---
