@@ -7,6 +7,8 @@ description: >
   AnnotationsTransformer adds annotations to user-input resources.
 ---
 
+See [Transformers]({{< relref "../Transformers" >}}) for common required fields.
+
 * **apiVersion**: builtin
 * **kind**: AnnotationsTransformer
 * **metadata** ([ObjectMeta](https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/object-meta/#ObjectMeta))
@@ -16,6 +18,8 @@ description: >
 * **annotations** (map[string]string)
 
   Map of annotations that AnnotationsTransformer will add to resources.
+
+  If not specified, AnnotationsTransformer leaves the resources unchanged.
 
 * **fieldSpecs** (\[\][FieldSpec]({{< relref "../Common%20Definitions/FieldSpec.md" >}}))
 
