@@ -49,7 +49,7 @@ var (
 type schemaParseStatus uint32
 
 const (
-	schemaNotParsed schemaParseStatus = 1 << iota
+	schemaNotParsed schemaParseStatus = iota
 	schemaParseDelayed
 	schemaParsed
 )
