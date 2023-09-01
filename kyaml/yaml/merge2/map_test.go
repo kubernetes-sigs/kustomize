@@ -422,4 +422,45 @@ spec:
 			ListIncreaseDirection: yaml.MergeOptionsListAppend,
 		},
 	},
+
+	//
+	// Test Case
+	//
+	{description: `Verify key style behavior`,
+		source: `
+kind: Deployment
+spec:
+  source-and-dest: source-and-dest
+  source-only: source-only
+  "source-only-key-double-quoted": source-only
+  source-and-dest-key-style-diff-1: source-and-dest
+  'source-and-dest-key-style-diff-2': source-and-dest
+  "source-and-dest-key-style-diff-3": source-and-dest
+`,
+		dest: `
+kind: Deployment
+spec:
+  source-and-dest: source-and-dest
+  'source-and-dest-key-style-diff-1': source-and-dest
+  "source-and-dest-key-style-diff-2": source-and-dest
+  source-and-dest-key-style-diff-3: source-and-dest
+  dest-only: dest-only
+  'dest-only-key-single-quoted': dest-only 
+`,
+		expected: `
+kind: Deployment
+spec:
+  source-and-dest: source-and-dest
+  'source-and-dest-key-style-diff-1': source-and-dest
+  "source-and-dest-key-style-diff-2": source-and-dest
+  source-and-dest-key-style-diff-3: source-and-dest
+  dest-only: dest-only
+  'dest-only-key-single-quoted': dest-only 
+  source-only: source-only
+  "source-only-key-double-quoted": source-only
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
 }
