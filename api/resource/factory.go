@@ -275,19 +275,19 @@ func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resour
 }
 
 // MakeConfigMap makes an instance of Resource for ConfigMap
-func (rf *Factory) MakeConfigMap(kvLdr ifc.KvLoader, args *types.ConfigMapArgs) (*Resource, error) {
-	rn, err := generators.MakeConfigMap(kvLdr, args)
+func (rf *Factory) MakeConfigMap(kvLdr ifc.KvLoader, args *types.ConfigMapArgs) (*Resource, []string, error) {
+	rn, orderKeys, err := generators.MakeConfigMap(kvLdr, args)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return rf.makeOne(rn, &args.GeneratorArgs), nil
+	return rf.makeOne(rn, &args.GeneratorArgs), orderKeys, nil
 }
 
 // MakeSecret makes an instance of Resource for Secret
-func (rf *Factory) MakeSecret(kvLdr ifc.KvLoader, args *types.SecretArgs) (*Resource, error) {
-	rn, err := generators.MakeSecret(kvLdr, args)
+func (rf *Factory) MakeSecret(kvLdr ifc.KvLoader, args *types.SecretArgs) (*Resource, []string, error) {
+	rn, orderKeys, err := generators.MakeSecret(kvLdr, args)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return rf.makeOne(rn, &args.GeneratorArgs), nil
+	return rf.makeOne(rn, &args.GeneratorArgs), orderKeys, nil
 }
