@@ -306,4 +306,61 @@ metadata:
   name: foo
   annotations: {}
 `},
+
+	//
+	// Test Case
+	//
+	{
+		description: `Verify key style behavior`,
+		origin: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foo
+data:
+  unchanged: origin
+  unchanged-varying-key-style: origin
+  deleted-in-update: origin
+  deleted-in-local: origin
+`,
+		update: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foo
+data:
+  unchanged: origin
+  'unchanged-varying-key-style': origin
+  deleted-in-local: origin
+  'added-in-update': 'update'
+  'added-in-update-and-local-same-value': 'update-and-local'
+  'added-in-update-and-local-diff-value': 'update'
+`,
+		local: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foo
+data:
+  unchanged: origin
+  "unchanged-varying-key-style": origin
+  deleted-in-update: origin
+  "added-in-local": "local"
+  "added-in-update-and-local-same-value": "update-and-local"
+  "added-in-update-and-local-diff-value": "local"
+`,
+		expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foo
+data:
+  unchanged: origin
+  "unchanged-varying-key-style": origin
+  "added-in-local": "local"
+  "added-in-update-and-local-same-value": "update-and-local"
+  "added-in-update-and-local-diff-value": "update"
+  'added-in-update': 'update'
+`,
+	},
 }

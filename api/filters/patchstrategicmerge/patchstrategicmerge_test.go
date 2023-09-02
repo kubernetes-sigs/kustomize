@@ -778,6 +778,133 @@ spec:
       some: value
 `,
 		},
+
+		// Issue #4928
+		"support numeric keys": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "foobar"
+`,
+			patch: yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  "9110": "foo-foo"
+`),
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  "9110": "foo-foo"
+`,
+		},
+
+		"honor different key style one": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  '6443': "foobar"
+`,
+			patch: yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  9110: "foo-foo"
+`),
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  '6443': "barfoo"
+  9110: "foo-foo"
+`,
+		},
+
+		"honor different key style two": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "foobar"
+`,
+			patch: yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  '9110': "foo-foo"
+`),
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "barfoo"
+  '9110': "foo-foo"
+`,
+		},
+
+		"different key types": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "key-string-double-quoted"
+`,
+			patch: yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  6443: "key-int"
+`),
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blabla
+  namespace: blabla-ns
+data:
+  "6443": "key-int"
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
