@@ -4,7 +4,13 @@
 package add
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/provider"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/kv"
@@ -89,4 +95,145 @@ func TestMergeFlagsIntoSecretArgs_DisableNameSuffixHash(t *testing.T) {
 		&args.GeneratorArgs,
 		flagsAndArgs{DisableNameSuffixHash: true})
 	assert.True(t, k.SecretGenerator[0].Options.DisableNameSuffixHash)
+}
+
+// TestEditAddSecretWithLiteralSource executes the same command flow as the CLI invocation
+// with a --from-literal flag
+func TestEditAddSecretWithLiteralSource(t *testing.T) {
+	const (
+		secretName    = "test-kustomization"
+		literalSource = "test-key=test-value"
+	)
+
+	fSys := filesys.MakeEmptyDirInMemory()
+	testutils_test.WriteTestKustomization(fSys)
+
+	pvd := provider.NewDefaultDepProvider()
+	ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
+
+	args := []string{
+		secretName,
+		fmt.Sprintf(flagFormat, fromLiteralFlag, literalSource),
+	}
+	cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
+	cmd.SetArgs(args)
+	require.NoError(t, cmd.Execute())
+
+	_, err := testutils_test.ReadTestKustomization(fSys)
+	require.NoError(t, err)
+
+	mf, err := kustfile.NewKustomizationFile(fSys)
+	require.NoError(t, err)
+
+	kustomization, err := mf.Read()
+	require.NoError(t, err)
+
+	require.NotNil(t, kustomization)
+	require.NotEmpty(t, kustomization.SecretGenerator)
+	require.Equal(t, 1, len(kustomization.SecretGenerator))
+
+	newSecretGenerator := kustomization.SecretGenerator[0]
+	require.NotNil(t, newSecretGenerator)
+	require.Equal(t, secretName, newSecretGenerator.Name)
+	require.Contains(t, newSecretGenerator.LiteralSources, literalSource)
+}
+
+// TestEditAddSecretWithEnvSource executes the same command flow as the CLI invocation
+// with a --from-env-file flag
+func TestEditAddSecretWithEnvSource(t *testing.T) {
+	const (
+		secretName = "test-kustomization"
+		envSource  = "test-env-source"
+	)
+
+	fSys := filesys.MakeEmptyDirInMemory()
+	testutils_test.WriteTestKustomization(fSys)
+
+	pvd := provider.NewDefaultDepProvider()
+	ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
+
+	envFileContent, err := fSys.Create("test-env-source")
+	require.NoError(t, err)
+
+	_, err = envFileContent.Write([]byte("TEST=value"))
+	require.NoError(t, err)
+
+	err = envFileContent.Close()
+	require.NoError(t, err)
+
+	args := []string{
+		secretName,
+		fmt.Sprintf(flagFormat, fromEnvFileFlag, envSource),
+	}
+	cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
+	cmd.SetArgs(args)
+	require.NoError(t, cmd.Execute())
+
+	_, err = testutils_test.ReadTestKustomization(fSys)
+	require.NoError(t, err)
+
+	mf, err := kustfile.NewKustomizationFile(fSys)
+	require.NoError(t, err)
+
+	kustomization, err := mf.Read()
+	require.NoError(t, err)
+
+	require.NotNil(t, kustomization)
+	require.NotEmpty(t, kustomization.SecretGenerator)
+	require.Equal(t, 1, len(kustomization.SecretGenerator))
+
+	newSecretGenerator := kustomization.SecretGenerator[0]
+	require.NotNil(t, newSecretGenerator)
+	require.Equal(t, secretName, newSecretGenerator.Name)
+	require.Contains(t, newSecretGenerator.EnvSources, envSource)
+}
+
+// TestEditAddSecretWithFileSource executes the same command flow as the CLI invocation
+// with a --from-file flag
+func TestEditAddSecretWithFileSource(t *testing.T) {
+	const (
+		secretName = "test-kustomization"
+		fileSource = "test-file-source"
+	)
+
+	fSys := filesys.MakeEmptyDirInMemory()
+	testutils_test.WriteTestKustomization(fSys)
+
+	pvd := provider.NewDefaultDepProvider()
+	ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
+
+	fileContent, err := fSys.Create("test-file-source")
+	require.NoError(t, err)
+
+	_, err = fileContent.Write([]byte("any content here"))
+	require.NoError(t, err)
+
+	err = fileContent.Close()
+	require.NoError(t, err)
+
+	args := []string{
+		secretName,
+		fmt.Sprintf(flagFormat, fromFileFlag, fileSource),
+	}
+	cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
+	cmd.SetArgs(args)
+	require.NoError(t, cmd.Execute())
+
+	_, err = testutils_test.ReadTestKustomization(fSys)
+	require.NoError(t, err)
+
+	mf, err := kustfile.NewKustomizationFile(fSys)
+	require.NoError(t, err)
+
+	kustomization, err := mf.Read()
+	require.NoError(t, err)
+
+	require.NotNil(t, kustomization)
+	require.NotEmpty(t, kustomization.SecretGenerator)
+	require.Equal(t, 1, len(kustomization.SecretGenerator))
+
+	newSecretGenerator := kustomization.SecretGenerator[0]
+	require.NotNil(t, newSecretGenerator)
+	require.Equal(t, secretName, newSecretGenerator.Name)
+	require.Contains(t, newSecretGenerator.FileSources, fileSource)
 }

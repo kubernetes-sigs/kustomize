@@ -4,6 +4,8 @@
 package add
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -16,7 +18,8 @@ import (
 func newCmdAddConfigMap(
 	fSys filesys.FileSystem,
 	ldr ifc.KvLoader,
-	rf *resource.Factory) *cobra.Command {
+	rf *resource.Factory,
+) *cobra.Command {
 	var flags flagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
@@ -36,63 +39,35 @@ func newCmdAddConfigMap(
 	kustomize edit add configmap my-configmap --behavior=merge --from-env-file=env/path.env	
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
-			err := flags.ExpandFileSource(fSys)
-			if err != nil {
-				return err
-			}
-
-			err = flags.Validate(args)
-			if err != nil {
-				return err
-			}
-
-			// Load the kustomization file.
-			mf, err := kustfile.NewKustomizationFile(fSys)
-			if err != nil {
-				return err
-			}
-
-			kustomization, err := mf.Read()
-			if err != nil {
-				return err
-			}
-
-			// Add the flagsAndArgs map to the kustomization file.
-			err = addConfigMap(ldr, kustomization, flags, rf)
-			if err != nil {
-				return err
-			}
-
-			// Write out the kustomization file with added configmap.
-			return mf.Write(kustomization)
+			return runEditAddConfigMap(flags, fSys, args, ldr, rf)
 		},
 	}
 
 	cmd.Flags().StringSliceVar(
 		&flags.FileSources,
-		"from-file",
+		fromFileFlag,
 		[]string{},
 		"Key file can be specified using its file path, in which case file basename will be used as configmap "+
 			"key, or optionally with a key and file path, in which case the given key will be used.  Specifying a "+
 			"directory will iterate each named file in the directory whose basename is a valid configmap key.")
 	cmd.Flags().StringArrayVar(
 		&flags.LiteralSources,
-		"from-literal",
+		fromLiteralFlag,
 		[]string{},
 		"Specify a key and literal value to insert in configmap (i.e. mykey=somevalue)")
 	cmd.Flags().StringVar(
 		&flags.EnvFileSource,
-		"from-env-file",
+		fromEnvFileFlag,
 		"",
 		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
 	cmd.Flags().BoolVar(
 		&flags.DisableNameSuffixHash,
-		"disableNameSuffixHash",
+		flagDisableNameSuffixHash,
 		false,
 		"Disable the name suffix for the configmap")
 	cmd.Flags().StringVar(
 		&flags.Behavior,
-		"behavior",
+		flagBehavior,
 		"",
 		"Specify the behavior for config map generation, i.e whether to create a new configmap (the default),  "+
 			"to merge with a previously defined one, or to replace an existing one. Merge and replace should be used only "+
@@ -101,15 +76,60 @@ func newCmdAddConfigMap(
 	return cmd
 }
 
+func runEditAddConfigMap(
+	flags flagsAndArgs,
+	fSys filesys.FileSystem,
+	args []string,
+	ldr ifc.KvLoader,
+	rf *resource.Factory,
+) error {
+	err := flags.ExpandFileSource(fSys)
+	if err != nil {
+		return fmt.Errorf("failed to expand file source: %w", err)
+	}
+
+	err = flags.Validate(args)
+	if err != nil {
+		return fmt.Errorf("failed to validate flags: %w", err)
+	}
+
+	// Load the kustomization file.
+	mf, err := kustfile.NewKustomizationFile(fSys)
+	if err != nil {
+		return fmt.Errorf("failed to load kustomization file: %w", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		return fmt.Errorf("failed to read kustomization file: %w", err)
+	}
+
+	// Add the flagsAndArgs map to the kustomization file.
+	err = addConfigMap(ldr, kustomization, flags, rf)
+	if err != nil {
+		return fmt.Errorf("failed to create configmap: %w", err)
+	}
+
+	// Write out the kustomization file with added configmap.
+	err = mf.Write(kustomization)
+	if err != nil {
+		return fmt.Errorf("failed to write kustomization file: %w", err)
+	}
+
+	return nil
+}
+
 // addConfigMap adds a configmap to a kustomization file.
 // Note: error may leave kustomization file in an undefined state.
 // Suggest passing a copy of kustomization file.
 func addConfigMap(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags flagsAndArgs, rf *resource.Factory) error {
+	flags flagsAndArgs,
+	rf *resource.Factory,
+) error {
 	args := findOrMakeConfigMapArgs(k, flags.Name)
-	mergeFlagsIntoCmArgs(args, flags)
+	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.configmap.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)
@@ -124,30 +144,9 @@ func findOrMakeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigM
 		}
 	}
 	// config map not found, create new one and add it to the kustomization file.
-	cm := &types.ConfigMapArgs{GeneratorArgs: types.GeneratorArgs{Name: name}}
+	cm := &types.ConfigMapArgs{
+		GeneratorArgs: types.GeneratorArgs{Name: name},
+	}
 	m.ConfigMapGenerator = append(m.ConfigMapGenerator, *cm)
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]
-}
-
-func mergeFlagsIntoCmArgs(args *types.ConfigMapArgs, flags flagsAndArgs) {
-	if len(flags.LiteralSources) > 0 {
-		args.LiteralSources = append(
-			args.LiteralSources, flags.LiteralSources...)
-	}
-	if len(flags.FileSources) > 0 {
-		args.FileSources = append(
-			args.FileSources, flags.FileSources...)
-	}
-	if flags.EnvFileSource != "" {
-		args.EnvSources = append(
-			args.EnvSources, flags.EnvFileSource)
-	}
-	if flags.DisableNameSuffixHash {
-		args.Options = &types.GeneratorOptions{
-			DisableNameSuffixHash: true,
-		}
-	}
-	if flags.Behavior != "" {
-		args.Behavior = flags.Behavior
-	}
 }

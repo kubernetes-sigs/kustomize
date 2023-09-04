@@ -79,9 +79,9 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 	for _, test := range tests {
 		err := test.fa.Validate([]string{"name"})
 		if test.shouldFail {
-			assert.Error(t, err)
+			require.Error(t, err)
 		} else {
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		}
 	}
 }

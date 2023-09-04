@@ -13,6 +13,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const fromFileFlag = "from-file"
+const fromLiteralFlag = "from-literal"
+const fromEnvFileFlag = "from-env-file"
+const flagFormat = "--%s=%s"
+const flagDisableNameSuffixHash = "disableNameSuffixHash"
+const flagBehavior = "behavior"
+
 // flagsAndArgs encapsulates the options for add secret/configmap commands.
 type flagsAndArgs struct {
 	// Name of configMap/Secret (required)
@@ -104,4 +111,27 @@ func (a *flagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
 	}
 	a.FileSources = results
 	return nil
+}
+
+func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags flagsAndArgs) {
+	if len(flags.LiteralSources) > 0 {
+		args.LiteralSources = append(
+			args.LiteralSources, flags.LiteralSources...)
+	}
+	if len(flags.FileSources) > 0 {
+		args.FileSources = append(
+			args.FileSources, flags.FileSources...)
+	}
+	if flags.EnvFileSource != "" {
+		args.EnvSources = append(
+			args.EnvSources, flags.EnvFileSource)
+	}
+	if flags.DisableNameSuffixHash {
+		args.Options = &types.GeneratorOptions{
+			DisableNameSuffixHash: true,
+		}
+	}
+	if flags.Behavior != "" {
+		args.Behavior = flags.Behavior
+	}
 }
