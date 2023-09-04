@@ -28,11 +28,6 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	if err := m.ApplyFilter(imagetag.LegacyFilter{
-		ImageTag: p.ImageTag,
-	}); err != nil {
-		return err
-	}
 	return m.ApplyFilter(imagetag.Filter{
 		ImageTag: p.ImageTag,
 		FsSlice:  p.FieldSpecs,
