@@ -16,7 +16,7 @@ two releases between deprecation and removal of Kustomization v1beta1 support fr
 kustomize CLI, and removal itself will happen in a future major version bump.
 
 Please move your `patchesStrategicMerge` into
-the [patches](/references/kustomize/kustomization/patches) field. This field supports patchesStrategicMerge,
+the [patches](/docs/reference/api/patches) field. This field supports patchesStrategicMerge,
 but with slightly different syntax. You can run `kustomize edit fix` to automatically convert
 `patchesStrategicMerge` to `patches`.
 {{% /pageinfo %}}

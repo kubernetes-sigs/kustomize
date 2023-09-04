@@ -7,7 +7,7 @@ description: >
     Substitute name references.
 ---
 
-[replacements]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/replacements/
+[replacements]: /docs/reference/api/replacements/
 
 {{% pageinfo color="warning" %}}
 The `vars` field was deprecated in v5.0.0. This field will never be removed from the
@@ -18,7 +18,7 @@ two releases between deprecation and removal of Kustomization v1beta1 support fr
 kustomize CLI, and removal itself will happen in a future major version bump.
 
 Please try to migrate to the
-the [replacements](/references/kustomize/kustomization/replacements) field. If you are
+the [replacements](/docs/reference/api/replacements) field. If you are
 unable to restructure your configuration to use replacements instead of vars, please
 ask for help in slack or file an issue for guidance.
 

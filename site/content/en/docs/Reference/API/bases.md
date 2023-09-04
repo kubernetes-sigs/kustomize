@@ -18,7 +18,7 @@ kustomize CLI, and removal itself will happen in a future major version bump.
 You can run `kustomize edit fix` to automatically convert `bases` to `resources`.
 {{% /pageinfo %}}
 
-Move entries into the [resources](/references/kustomize/kustomization/resource)
+Move entries into the [resources](/docs/reference/api/resources)
 field.  This allows bases - which are still a
 [central concept](/references/kustomize/glossary#base) - to be
 ordered relative to other input resources.
