@@ -113,7 +113,7 @@ func addConfigMap(
 	// Validate by trying to create corev1.configmap.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)
-	_, err := rf.MakeConfigMap(ldr, args)
+	_, _, err := rf.MakeConfigMap(ldr, args)
 	return err
 }
 

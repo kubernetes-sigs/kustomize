@@ -36,7 +36,7 @@ func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 
 // The plan here is to convert the plugin's input
 // into the format used by the builtin secret generator plugin.
-func (p *plugin) Generate() (resmap.ResMap, error) {
+func (p *plugin) Generate() (resmap.ResMap, []string, error) {
 	args := types.SecretArgs{}
 	args.Name = p.Name
 	args.Namespace = p.Namespace

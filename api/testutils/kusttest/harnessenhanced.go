@@ -167,7 +167,7 @@ func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
-	rm, err := g.Generate()
+	rm, _, err := g.Generate()
 	if err != nil {
 		th.t.Fatalf("generate err: %v", err)
 	}

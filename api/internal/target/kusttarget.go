@@ -278,7 +278,7 @@ func (kt *KustTarget) runGenerators(
 	}
 	generators = append(generators, gs...)
 	for i, g := range generators {
-		resMap, err := g.Generate()
+		resMap, _, err := g.Generate()
 		if err != nil {
 			return err
 		}
