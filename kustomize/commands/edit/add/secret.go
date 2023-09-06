@@ -20,7 +20,7 @@ func newCmdAddSecret(
 	ldr ifc.KvLoader,
 	rf *resource.Factory,
 ) *cobra.Command {
-	var flags flagsAndArgs
+	var flags configmapSecretFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "secret NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--type=Opaque|kubernetes.io/tls]",
 		Short: "Adds a secret to the kustomization file.",
@@ -76,7 +76,13 @@ func newCmdAddSecret(
 	return cmd
 }
 
-func runEditAddSecret(flags flagsAndArgs, fSys filesys.FileSystem, args []string, ldr ifc.KvLoader, rf *resource.Factory) error {
+func runEditAddSecret(
+	flags configmapSecretFlagsAndArgs,
+	fSys filesys.FileSystem,
+	args []string,
+	ldr ifc.KvLoader,
+	rf *resource.Factory,
+) error {
 	err := flags.ExpandFileSource(fSys)
 	if err != nil {
 		return fmt.Errorf("failed to expand file source: %w", err)
@@ -98,7 +104,7 @@ func runEditAddSecret(flags flagsAndArgs, fSys filesys.FileSystem, args []string
 		return fmt.Errorf("failed to read kustomization file: %w", err)
 	}
 
-	// Add the flagsAndArgs map to the kustomization file.
+	// Add the configmapSecretFlagsAndArgs map to the kustomization file.
 	err = addSecret(ldr, kustomization, flags, rf)
 	if err != nil {
 		return fmt.Errorf("failed to create secret: %w", err)
@@ -119,7 +125,7 @@ func runEditAddSecret(flags flagsAndArgs, fSys filesys.FileSystem, args []string
 func addSecret(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags flagsAndArgs, rf *resource.Factory) error {
+	flags configmapSecretFlagsAndArgs, rf *resource.Factory) error {
 	args := findOrMakeSecretArgs(k, flags.Name, flags.Namespace, flags.Type)
 	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.

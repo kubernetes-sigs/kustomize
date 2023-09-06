@@ -7,31 +7,30 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestDataValidation_NoName(t *testing.T) {
-	fa := flagsAndArgs{}
-	assert.Error(t, fa.Validate([]string{}))
+	fa := configmapSecretFlagsAndArgs{}
+	require.Error(t, fa.Validate([]string{}))
 }
 
 func TestDataValidation_MoreThanOneName(t *testing.T) {
-	fa := flagsAndArgs{}
+	fa := configmapSecretFlagsAndArgs{}
 
-	assert.Error(t, fa.Validate([]string{"name", "othername"}))
+	require.Error(t, fa.Validate([]string{"name", "othername"}))
 }
 
 func TestDataConfigValidation_Flags(t *testing.T) {
 	tests := []struct {
 		name       string
-		fa         flagsAndArgs
+		fa         configmapSecretFlagsAndArgs
 		shouldFail bool
 	}{
 		{
 			name: "env-file-source and literal are both set",
-			fa: flagsAndArgs{
+			fa: configmapSecretFlagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				EnvFileSource:  "three",
 			},
@@ -39,7 +38,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name: "env-file-source and from-file are both set",
-			fa: flagsAndArgs{
+			fa: configmapSecretFlagsAndArgs{
 				FileSources:   []string{"one", "two"},
 				EnvFileSource: "three",
 			},
@@ -47,12 +46,12 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name:       "we don't have any option set",
-			fa:         flagsAndArgs{},
+			fa:         configmapSecretFlagsAndArgs{},
 			shouldFail: true,
 		},
 		{
 			name: "we have from-file and literal ",
-			fa: flagsAndArgs{
+			fa: configmapSecretFlagsAndArgs{
 				LiteralSources: []string{"one", "two"},
 				FileSources:    []string{"three", "four"},
 			},
@@ -60,7 +59,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name: "correct behavior",
-			fa: flagsAndArgs{
+			fa: configmapSecretFlagsAndArgs{
 				EnvFileSource: "foo",
 				Behavior:      "merge",
 			},
@@ -68,7 +67,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 		},
 		{
 			name: "incorrect behavior",
-			fa: flagsAndArgs{
+			fa: configmapSecretFlagsAndArgs{
 				EnvFileSource: "foo",
 				Behavior:      "merge-unknown",
 			},
@@ -94,7 +93,7 @@ func TestExpandFileSource(t *testing.T) {
 	require.NoError(t, err)
 	_, err = fSys.Create("dir/readme")
 	require.NoError(t, err)
-	fa := flagsAndArgs{
+	fa := configmapSecretFlagsAndArgs{
 		FileSources: []string{"dir/fa*"},
 	}
 	err = fa.ExpandFileSource(fSys)
@@ -118,7 +117,7 @@ func TestExpandFileSourceWithKey(t *testing.T) {
 	require.NoError(t, err)
 	_, err = fSys.Create("dir/readme")
 	require.NoError(t, err)
-	fa := flagsAndArgs{
+	fa := configmapSecretFlagsAndArgs{
 		FileSources: []string{"foo-key=dir/fa*", "bar-key=dir/foobar", "dir/simplebar"},
 	}
 	err = fa.ExpandFileSource(fSys)
@@ -141,7 +140,7 @@ func TestExpandFileSourceWithKeyAndError(t *testing.T) {
 	require.NoError(t, err)
 	_, err = fSys.Create("dir/readme")
 	require.NoError(t, err)
-	fa := flagsAndArgs{
+	fa := configmapSecretFlagsAndArgs{
 		FileSources: []string{"foo-key=dir/fa*"},
 	}
 	err = fa.ExpandFileSource(fSys)

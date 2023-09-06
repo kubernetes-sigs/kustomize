@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/api/provider"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/kv"
-	ldrhelper "sigs.k8s.io/kustomize/api/pkg/loader"
+	"sigs.k8s.io/kustomize/api/pkg/loader"
+	"sigs.k8s.io/kustomize/api/provider"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -25,7 +24,7 @@ func TestNewCmdAddSecretIsNotNil(t *testing.T) {
 	assert.NotNil(t, newCmdAddSecret(
 		fSys,
 		kv.NewLoader(
-			ldrhelper.NewFileLoaderAtCwd(fSys),
+			loader.NewFileLoaderAtCwd(fSys),
 			valtest_test.MakeFakeValidator()),
 		nil))
 }
@@ -54,10 +53,10 @@ func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{LiteralSources: []string{"k1=v1"}})
+		configmapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{LiteralSources: []string{"k2=v2"}})
+		configmapSecretFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
 	assert.Equal(t, "k1=v1", k.SecretGenerator[0].LiteralSources[0])
 	assert.Equal(t, "k2=v2", k.SecretGenerator[0].LiteralSources[1])
 }
@@ -67,10 +66,10 @@ func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{FileSources: []string{"file1"}})
+		configmapSecretFlagsAndArgs{FileSources: []string{"file1"}})
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{FileSources: []string{"file2"}})
+		configmapSecretFlagsAndArgs{FileSources: []string{"file2"}})
 	assert.Equal(t, "file1", k.SecretGenerator[0].FileSources[0])
 	assert.Equal(t, "file2", k.SecretGenerator[0].FileSources[1])
 }
@@ -80,10 +79,10 @@ func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{EnvFileSource: "env1"})
+		configmapSecretFlagsAndArgs{EnvFileSource: "env1"})
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{EnvFileSource: "env2"})
+		configmapSecretFlagsAndArgs{EnvFileSource: "env2"})
 	assert.Equal(t, "env1", k.SecretGenerator[0].EnvSources[0])
 	assert.Equal(t, "env2", k.SecretGenerator[0].EnvSources[1])
 }
@@ -93,7 +92,7 @@ func TestMergeFlagsIntoSecretArgs_DisableNameSuffixHash(t *testing.T) {
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{DisableNameSuffixHash: true})
+		configmapSecretFlagsAndArgs{DisableNameSuffixHash: true})
 	assert.True(t, k.SecretGenerator[0].Options.DisableNameSuffixHash)
 }
 

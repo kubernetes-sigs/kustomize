@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/api/provider"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/kv"
-	ldrhelper "sigs.k8s.io/kustomize/api/pkg/loader"
+	"sigs.k8s.io/kustomize/api/pkg/loader"
+	"sigs.k8s.io/kustomize/api/provider"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -25,7 +24,7 @@ func TestNewAddConfigMapIsNotNil(t *testing.T) {
 	assert.NotNil(t, newCmdAddConfigMap(
 		fSys,
 		kv.NewLoader(
-			ldrhelper.NewFileLoaderAtCwd(fSys),
+			loader.NewFileLoaderAtCwd(fSys),
 			valtest_test.MakeFakeValidator()),
 		nil))
 }
@@ -53,10 +52,10 @@ func TestMergeFlagsIntoConfigMapArgs_LiteralSources(t *testing.T) {
 	args := findOrMakeConfigMapArgs(k, "foo")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{LiteralSources: []string{"k1=v1"}})
+		configmapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{LiteralSources: []string{"k2=v2"}})
+		configmapSecretFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
 	assert.Equal(t, "k1=v1", k.ConfigMapGenerator[0].LiteralSources[0])
 	assert.Equal(t, "k2=v2", k.ConfigMapGenerator[0].LiteralSources[1])
 }
@@ -66,10 +65,10 @@ func TestMergeFlagsIntoConfigMapArgs_FileSources(t *testing.T) {
 	args := findOrMakeConfigMapArgs(k, "foo")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{FileSources: []string{"file1"}})
+		configmapSecretFlagsAndArgs{FileSources: []string{"file1"}})
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{FileSources: []string{"file2"}})
+		configmapSecretFlagsAndArgs{FileSources: []string{"file2"}})
 	assert.Equal(t, "file1", k.ConfigMapGenerator[0].FileSources[0])
 	assert.Equal(t, "file2", k.ConfigMapGenerator[0].FileSources[1])
 }
@@ -79,10 +78,10 @@ func TestMergeFlagsIntoConfigMapArgs_EnvSource(t *testing.T) {
 	args := findOrMakeConfigMapArgs(k, "foo")
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{EnvFileSource: "env1"})
+		configmapSecretFlagsAndArgs{EnvFileSource: "env1"})
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		flagsAndArgs{EnvFileSource: "env2"})
+		configmapSecretFlagsAndArgs{EnvFileSource: "env2"})
 	assert.Equal(t, "env1", k.ConfigMapGenerator[0].EnvSources[0])
 	assert.Equal(t, "env2", k.ConfigMapGenerator[0].EnvSources[1])
 }
@@ -91,7 +90,7 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeConfigMapArgs(k, "foo")
 
-	createBehaviorFlags := flagsAndArgs{
+	createBehaviorFlags := configmapSecretFlagsAndArgs{
 		Behavior:      "create",
 		EnvFileSource: "env1",
 	}
@@ -100,7 +99,7 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 		createBehaviorFlags)
 	assert.Equal(t, "create", k.ConfigMapGenerator[0].Behavior)
 
-	mergeBehaviorFlags := flagsAndArgs{
+	mergeBehaviorFlags := configmapSecretFlagsAndArgs{
 		Behavior:      "merge",
 		EnvFileSource: "env1",
 	}
@@ -109,7 +108,7 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 		mergeBehaviorFlags)
 	assert.Equal(t, "merge", k.ConfigMapGenerator[0].Behavior)
 
-	replaceBehaviorFlags := flagsAndArgs{
+	replaceBehaviorFlags := configmapSecretFlagsAndArgs{
 		Behavior:      "replace",
 		EnvFileSource: "env1",
 	}

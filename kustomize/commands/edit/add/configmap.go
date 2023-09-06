@@ -20,7 +20,7 @@ func newCmdAddConfigMap(
 	ldr ifc.KvLoader,
 	rf *resource.Factory,
 ) *cobra.Command {
-	var flags flagsAndArgs
+	var flags configmapSecretFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
 		Short: "Adds a configmap to the kustomization file",
@@ -77,7 +77,7 @@ func newCmdAddConfigMap(
 }
 
 func runEditAddConfigMap(
-	flags flagsAndArgs,
+	flags configmapSecretFlagsAndArgs,
 	fSys filesys.FileSystem,
 	args []string,
 	ldr ifc.KvLoader,
@@ -104,7 +104,7 @@ func runEditAddConfigMap(
 		return fmt.Errorf("failed to read kustomization file: %w", err)
 	}
 
-	// Add the flagsAndArgs map to the kustomization file.
+	// Add the configmapSecretFlagsAndArgs map to the kustomization file.
 	err = addConfigMap(ldr, kustomization, flags, rf)
 	if err != nil {
 		return fmt.Errorf("failed to create configmap: %w", err)
@@ -125,7 +125,7 @@ func runEditAddConfigMap(
 func addConfigMap(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags flagsAndArgs,
+	flags configmapSecretFlagsAndArgs,
 	rf *resource.Factory,
 ) error {
 	args := findOrMakeConfigMapArgs(k, flags.Name)

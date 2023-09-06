@@ -13,15 +13,17 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const fromFileFlag = "from-file"
-const fromLiteralFlag = "from-literal"
-const fromEnvFileFlag = "from-env-file"
-const flagFormat = "--%s=%s"
-const flagDisableNameSuffixHash = "disableNameSuffixHash"
-const flagBehavior = "behavior"
+const (
+	fromFileFlag              = "from-file"
+	fromLiteralFlag           = "from-literal"
+	fromEnvFileFlag           = "from-env-file"
+	flagDisableNameSuffixHash = "disableNameSuffixHash"
+	flagBehavior              = "behavior"
+	flagFormat                = "--%s=%s"
+)
 
-// flagsAndArgs encapsulates the options for add secret/configmap commands.
-type flagsAndArgs struct {
+// configmapSecretFlagsAndArgs encapsulates the options for add secret/configmap commands.
+type configmapSecretFlagsAndArgs struct {
 	// Name of configMap/Secret (required)
 	Name string
 	// FileSources to derive the configMap/Secret from (optional)
@@ -42,7 +44,7 @@ type flagsAndArgs struct {
 }
 
 // Validate validates required fields are set to support structured generation.
-func (a *flagsAndArgs) Validate(args []string) error {
+func (a *configmapSecretFlagsAndArgs) Validate(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("name must be specified once")
 	}
@@ -78,7 +80,7 @@ func (a *flagsAndArgs) Validate(args []string) error {
 // and the key, if missing, is the same as the value.
 // In the case where the key is explicitly declared,
 // the globbing, if present, must have exactly one match.
-func (a *flagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
+func (a *configmapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
 	var results []string
 	for _, pattern := range a.FileSources {
 		var patterns []string
@@ -113,7 +115,7 @@ func (a *flagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
 	return nil
 }
 
-func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags flagsAndArgs) {
+func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags configmapSecretFlagsAndArgs) {
 	if len(flags.LiteralSources) > 0 {
 		args.LiteralSources = append(
 			args.LiteralSources, flags.LiteralSources...)
