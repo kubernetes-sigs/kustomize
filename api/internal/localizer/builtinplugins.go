@@ -33,39 +33,39 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 		err := singlePlugin.PipeE(fsslice.Filter{
 			FsSlice: types.FsSlice{
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.ConfigMapGenerator.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ConfigMapGenerator.String()},
 					Path: "env",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.ConfigMapGenerator.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ConfigMapGenerator.String()},
 					Path: "envs",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.SecretGenerator.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.SecretGenerator.String()},
 					Path: "env",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.SecretGenerator.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.SecretGenerator.String()},
 					Path: "envs",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
 					Path: "valuesFile",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
 					Path: "additionalValuesFiles",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchTransformer.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.PatchTransformer.String()},
 					Path: "path",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchJson6902Transformer.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.PatchJson6902Transformer.String()},
 					Path: "path",
 				},
 				types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.ReplacementTransformer.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ReplacementTransformer.String()},
 					Path: "replacements/path",
 				},
 			},
@@ -77,11 +77,11 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 			fsslice.Filter{
 				FsSlice: types.FsSlice{
 					types.FieldSpec{
-						Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.ConfigMapGenerator.String()},
+						Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ConfigMapGenerator.String()},
 						Path: "files",
 					},
 					types.FieldSpec{
-						Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.SecretGenerator.String()},
+						Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.SecretGenerator.String()},
 						Path: "files",
 					},
 				},
@@ -91,7 +91,7 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 				},
 			},
 			yaml.FilterFunc(func(node *yaml.RNode) (*yaml.RNode, error) {
-				isHelm := node.GetApiVersion() == konfig.BuiltinPluginApiVersion &&
+				isHelm := (node.GetApiVersion() == konfig.BuiltinPluginApiGroup || node.GetApiVersion() == konfig.BuiltinPluginApiVersion) &&
 					node.GetKind() == builtinhelpers.HelmChartInflationGenerator.String()
 				if !isHelm {
 					return node, nil
@@ -110,7 +110,7 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 			}),
 			fieldspec.Filter{
 				FieldSpec: types.FieldSpec{
-					Gvk:  resid.Gvk{Version: konfig.BuiltinPluginApiVersion, Kind: builtinhelpers.PatchStrategicMergeTransformer.String()},
+					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.PatchStrategicMergeTransformer.String()},
 					Path: "paths",
 				},
 				SetValue: func(node *yaml.RNode) error {

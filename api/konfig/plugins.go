@@ -30,7 +30,15 @@ const (
 	// The value of kubernetes ApiVersion to use in configuration
 	// files for builtin plugins.
 	// The value for non-builtins can be anything.
-	BuiltinPluginApiVersion = BuiltinPluginPackage
+	BuiltinPluginApiVersion = BuiltinPluginApiGroup + "/" + BuiltinPluginVersion
+
+	// The value of kubernetes ApiGroup to use in configuration
+	// files for builtin plugins.
+	BuiltinPluginApiGroup = BuiltinPluginPackage
+
+	// The value of kubernetes Version to use in configuration
+	// files for builtin plugins.
+	BuiltinPluginVersion = "v1beta1"
 
 	// Domain from which kustomize code is imported, for locating
 	// plugin source code under $GOPATH when GOPATH is defined.

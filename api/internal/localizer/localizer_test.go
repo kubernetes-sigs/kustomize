@@ -999,7 +999,7 @@ func TestLocalizeBuiltinPlugins_Errors(t *testing.T) {
   path: patchSM.yaml
 `,
 			},
-			fieldSpecErr: "considering field 'path' of object PatchTransformer.builtin.[noGrp]/file-does-not-exist.[noNs]",
+			fieldSpecErr: "considering field 'path' of object PatchTransformer.[noVer].builtin/file-does-not-exist.[noNs]",
 			locErr:       "invalid file reference: '/a/patchSM.yaml' doesn't exist",
 		},
 		"not_sequence_or_scalar": {
@@ -1015,7 +1015,7 @@ func TestLocalizeBuiltinPlugins_Errors(t *testing.T) {
 `,
 				"patchSM.yaml": podConfiguration,
 			},
-			fieldSpecErr: "considering field 'path' of object PatchTransformer.builtin.[noGrp]/path-node-has-wrong-kind.[noNs]",
+			fieldSpecErr: "considering field 'path' of object PatchTransformer.[noVer].builtin/path-node-has-wrong-kind.[noNs]",
 			locErr:       "expected sequence or scalar node",
 		},
 	} {
@@ -1523,6 +1523,43 @@ version: 3.1.3
 - life.yaml
 - light.yaml
 apiVersion: builtin
+chartHome: home
+kind: HelmChartInflationGenerator
+metadata:
+  name: explicit-references
+name: mapleStory
+valuesFile: mapleValues.yaml
+`,
+		"time.yaml":                    valuesFile,
+		"life.yaml":                    valuesFile,
+		"light.yaml":                   valuesFile,
+		"mapleValues.yaml":             valuesFile,
+		"home/mapleStory/values.yaml":  valuesFile,
+		"charts/minecraft/values.yaml": valuesFile,
+	}
+	checkLocalizeInTargetSuccess(t, files)
+}
+
+func TestLocalizeGeneratorsHelmV1Beta1(t *testing.T) {
+	files := map[string]string{
+		"kustomization.yaml": `generators:
+- default.yaml
+- explicit.yaml
+`,
+		"default.yaml": `apiVersion: builtin/v1beta1
+kind: HelmChartInflationGenerator
+metadata:
+  name: no-explicit-references
+name: minecraft
+releaseName: moria
+repo: https://itzg.github.io/minecraft-server-charts
+version: 3.1.3
+`,
+		"explicit.yaml": `additionalValuesFiles:
+- time.yaml
+- life.yaml
+- light.yaml
+apiVersion: builtin/v1beta1
 chartHome: home
 kind: HelmChartInflationGenerator
 metadata:

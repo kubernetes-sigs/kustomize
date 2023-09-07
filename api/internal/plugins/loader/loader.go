@@ -175,9 +175,8 @@ func (l *Loader) absPluginHome() (string, error) {
 }
 
 func isBuiltinPlugin(res *resource.Resource) bool {
-	// TODO: the special string should appear in Group, not Version.
-	return res.GetGvk().Group == "" &&
-		res.GetGvk().Version == konfig.BuiltinPluginApiVersion
+	return res.GetGvk().Group == konfig.BuiltinPluginApiGroup &&
+		(res.GetGvk().Version == "" || res.GetGvk().Version == konfig.BuiltinPluginVersion)
 }
 
 func (l *Loader) loadAndConfigurePlugin(
