@@ -4,6 +4,8 @@
 package generators
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -38,7 +40,7 @@ func MakeConfigMap(
 		return nil, nil, err
 	}
 	if err = rn.LoadMapIntoConfigMapData(m); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to LoadMapIntoConfigMapData, error:%w", err)
 	}
 	err = copyLabelsAndAnnotations(rn, args.Options)
 	if err != nil {

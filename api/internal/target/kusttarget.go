@@ -122,19 +122,19 @@ func LoadKustFile(ldr ifc.Loader) ([]byte, string, error) {
 
 // MakeCustomizedResMap creates a fully customized ResMap
 // per the instructions contained in its kustomization instance.
-func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
+func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, [][]string, error) {
 	return kt.makeCustomizedResMap()
 }
 
-func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
+func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, [][]string, error) {
 	var origin *resource.Origin
 	if len(kt.kustomization.BuildMetadata) != 0 {
 		origin = &resource.Origin{}
 	}
 	kt.origin = origin
-	ra, err := kt.AccumulateTarget()
+	ra, keys, err := kt.AccumulateTarget()
 	if err != nil {
-		return nil, err
+		return nil, keys, err
 	}
 
 	// The following steps must be done last, not as part of
@@ -142,28 +142,28 @@ func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
 
 	err = kt.addHashesToNames(ra)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Given that names have changed (prefixs/suffixes added),
 	// fix all the back references to those names.
 	err = ra.FixBackReferences()
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to FixBackReferences, error:%w", err)
 	}
 
 	// With all the back references fixed, it's OK to resolve Vars.
 	err = ra.ResolveVars()
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to ResolveVars, error:%w", err)
 	}
 
 	err = kt.IgnoreLocal(ra)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return ra.ResMap(), nil
+	return ra.ResMap(), keys, nil
 }
 
 func (kt *KustTarget) addHashesToNames(
@@ -190,64 +190,64 @@ func (kt *KustTarget) addHashesToNames(
 // accordingly. When a remote base is found, it updates `origin.repo`
 // and `origin.ref` accordingly.
 func (kt *KustTarget) AccumulateTarget() (
-	ra *accumulator.ResAccumulator, err error) {
+	ra *accumulator.ResAccumulator, keys [][]string, err error) {
 	return kt.accumulateTarget(accumulator.MakeEmptyAccumulator())
 }
 
 // ra should be empty when this KustTarget is a Kustomization, or the ra of the parent if this KustTarget is a Component
 // (or empty if the Component does not have a parent).
 func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
-	resRa *accumulator.ResAccumulator, err error) {
+	resRa *accumulator.ResAccumulator, keys [][]string, err error) {
 	ra, err = kt.accumulateResources(ra, kt.kustomization.Resources)
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, "accumulating resources")
+		return nil, nil, errors.WrapPrefixf(err, "accumulating resources")
 	}
 	tConfig, err := builtinconfig.MakeTransformerConfig(
 		kt.ldr, kt.kustomization.Configurations)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to MakeTransformerConfig, error:%w", err)
 	}
 	err = ra.MergeConfig(tConfig)
 	if err != nil {
-		return nil, errors.WrapPrefixf(
+		return nil, nil, errors.WrapPrefixf(
 			err, "merging config %v", tConfig)
 	}
 	crdTc, err := accumulator.LoadConfigFromCRDs(kt.ldr, kt.kustomization.Crds)
 	if err != nil {
-		return nil, errors.WrapPrefixf(
+		return nil, nil, errors.WrapPrefixf(
 			err, "loading CRDs %v", kt.kustomization.Crds)
 	}
 	err = ra.MergeConfig(crdTc)
 	if err != nil {
-		return nil, errors.WrapPrefixf(
+		return nil, nil, errors.WrapPrefixf(
 			err, "merging CRDs %v", crdTc)
 	}
-	err = kt.runGenerators(ra)
+	keys, err = kt.runGenerators(ra)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// components are expected to execute after reading resources and adding generators ,before applying transformers and validation.
 	// https://github.com/kubernetes-sigs/kustomize/pull/5170#discussion_r1212101287
 	ra, err = kt.accumulateComponents(ra, kt.kustomization.Components)
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, "accumulating components")
+		return nil, nil, errors.WrapPrefixf(err, "accumulating components")
 	}
 
 	err = kt.runTransformers(ra)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	err = kt.runValidators(ra)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	err = ra.MergeVars(kt.kustomization.Vars)
 	if err != nil {
-		return nil, errors.WrapPrefixf(
+		return nil, nil, errors.WrapPrefixf(
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
-	return ra, nil
+	return ra, keys, nil
 }
 
 // IgnoreLocal drops the local resource by checking the annotation "config.kubernetes.io/local-config".
@@ -264,36 +264,39 @@ func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
 }
 
 func (kt *KustTarget) runGenerators(
-	ra *accumulator.ResAccumulator) error {
+	ra *accumulator.ResAccumulator) ([][]string, error) {
 	var generators []*resmap.GeneratorWithProperties
+
 	gs, err := kt.configureBuiltinGenerators()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	generators = append(generators, gs...)
 
 	gs, err = kt.configureExternalGenerators()
 	if err != nil {
-		return errors.WrapPrefixf(err, "loading generator plugins")
+		return nil, errors.WrapPrefixf(err, "loading generator plugins")
 	}
 	generators = append(generators, gs...)
+	orderKeys := make([][]string, 0)
 	for i, g := range generators {
-		resMap, _, err := g.Generate()
+		resMap, keys, err := g.Generate()
+		orderKeys = append(orderKeys, keys)
 		if err != nil {
-			return err
+			return nil, fmt.Errorf("failed to generate, error:%w", err)
 		}
 		if resMap != nil {
 			err = resMap.AddOriginAnnotation(generators[i].Origin)
 			if err != nil {
-				return errors.WrapPrefixf(err, "adding origin annotations for generator %v", g)
+				return nil, errors.WrapPrefixf(err, "adding origin annotations for generator %v", g)
 			}
 		}
 		err = ra.AbsorbAll(resMap)
 		if err != nil {
-			return errors.WrapPrefixf(err, "merging from generator %v", g)
+			return nil, errors.WrapPrefixf(err, "merging from generator %v", g)
 		}
 	}
-	return nil
+	return orderKeys, nil
 }
 
 func (kt *KustTarget) configureExternalGenerators() (
@@ -514,12 +517,12 @@ func (kt *KustTarget) accumulateDirectory(
 	var subRa *accumulator.ResAccumulator
 	if isComponent {
 		// Components don't create a new accumulator: the kustomization directives are added to the current accumulator
-		subRa, err = subKt.accumulateTarget(ra)
+		subRa, _, err = subKt.accumulateTarget(ra)
 		ra = accumulator.MakeEmptyAccumulator()
 	} else {
 		// Child Kustomizations create a new accumulator which resolves their kustomization directives, which will later
 		// be merged into the current accumulator.
-		subRa, err = subKt.AccumulateTarget()
+		subRa, _, err = subKt.AccumulateTarget()
 	}
 	if err != nil {
 		return nil, errors.WrapPrefixf(

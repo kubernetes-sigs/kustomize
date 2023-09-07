@@ -4,6 +4,8 @@
 package generators
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -44,14 +46,14 @@ func MakeSecret(
 		yaml.FieldSetter{
 			Name:  "type",
 			Value: yaml.NewStringRNode(t)}); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to MakeSecret, error:%w", err)
 	}
 	m, orderKeys, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to makeValidatedDataMap, error:%w", err)
 	}
 	if err = rn.LoadMapIntoSecretData(m); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to LoadMapIntoSecretData, error:%w", err)
 	}
 	copyLabelsAndAnnotations(rn, args.Options)
 	setImmutable(rn, args.Options)

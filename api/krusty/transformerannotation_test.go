@@ -267,7 +267,7 @@ resources:
 - github.com/kubernetes-sigs/kustomize/examples/multibases/production/?ref=v1.0.6
 buildMetadata: [transformerAnnotations]
 `)))
-	m, err := b.Run(
+	m, _, err := b.Run(
 		fSys,
 		tmpDir.String())
 	if utils.IsErrTimeout(err) {

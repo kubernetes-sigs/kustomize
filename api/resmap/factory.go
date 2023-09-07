@@ -4,6 +4,8 @@
 package resmap
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/kusterr"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -93,7 +95,7 @@ func (rmF *Factory) FromConfigMapArgs(
 	kvLdr ifc.KvLoader, args types.ConfigMapArgs) (ResMap, []string, error) {
 	res, orderKeys, err := rmF.resF.MakeConfigMap(kvLdr, &args)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("resF failed to make configmap, error:%w", err)
 	}
 	return rmF.FromResource(res), orderKeys, nil
 }
@@ -102,10 +104,8 @@ func (rmF *Factory) FromConfigMapArgs(
 // secrets from each entry, and accumulates them in a ResMap.
 func (rmF *Factory) NewResMapFromSecretArgs(
 	kvLdr ifc.KvLoader, argsList []types.SecretArgs) (ResMap, []string, error) {
-	var (
-		resources []*resource.Resource
-		orderKeys []string
-	)
+	resources := make([]*resource.Resource, 0)
+	var orderKeys []string
 	for i := range argsList {
 		res, keys, err := rmF.resF.MakeSecret(kvLdr, &argsList[i])
 		if err != nil {
@@ -124,7 +124,7 @@ func (rmF *Factory) FromSecretArgs(
 	kvLdr ifc.KvLoader, args types.SecretArgs) (ResMap, []string, error) {
 	res, orderKeys, err := rmF.resF.MakeSecret(kvLdr, &args)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("resF failed to make secret, error:%w", err)
 	}
 	return rmF.FromResource(res), orderKeys, nil
 }

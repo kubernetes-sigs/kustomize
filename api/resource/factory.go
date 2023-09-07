@@ -278,7 +278,7 @@ func (rf *Factory) SliceFromBytesWithNames(names []string, in []byte) ([]*Resour
 func (rf *Factory) MakeConfigMap(kvLdr ifc.KvLoader, args *types.ConfigMapArgs) (*Resource, []string, error) {
 	rn, orderKeys, err := generators.MakeConfigMap(kvLdr, args)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to generate configmap, error:%w", err)
 	}
 	return rf.makeOne(rn, &args.GeneratorArgs), orderKeys, nil
 }
@@ -287,7 +287,7 @@ func (rf *Factory) MakeConfigMap(kvLdr ifc.KvLoader, args *types.ConfigMapArgs) 
 func (rf *Factory) MakeSecret(kvLdr ifc.KvLoader, args *types.SecretArgs) (*Resource, []string, error) {
 	rn, orderKeys, err := generators.MakeSecret(kvLdr, args)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to generate secret, error:%w", err)
 	}
-	return rf.makeOne(rn, &args.GeneratorArgs), orderKeys, nil
+	return rf.makeOne(rn, &args.GeneratorArgs), orderKeys, fmt.Errorf("failed to generate secret, error:%w", err)
 }

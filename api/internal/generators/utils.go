@@ -47,7 +47,7 @@ func makeValidatedDataMap(
 	for _, p := range pairs {
 		// legal key: alphanumeric characters, '-', '_' or '.'
 		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("failed to validate key, error:%w", err)
 		}
 		if _, ok := knownKeys[p.Key]; ok {
 			return nil, nil, errors.Errorf(

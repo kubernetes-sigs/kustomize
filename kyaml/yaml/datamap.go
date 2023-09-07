@@ -5,6 +5,7 @@ package yaml
 
 import (
 	"encoding/base64"
+	"fmt"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -29,7 +30,7 @@ func (rn *RNode) LoadMapIntoConfigMapData(m map[string]string) error {
 		if _, err := rn.Pipe(
 			LookupCreate(MappingNode, fldName),
 			SetField(k, vrN)); err != nil {
-			return err
+			return fmt.Errorf("failed to LoadMapIntoConfigMapData, error:%w", err)
 		}
 	}
 	return nil
