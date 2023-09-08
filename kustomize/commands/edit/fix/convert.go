@@ -284,11 +284,15 @@ func constructTargets(file string, node *kyaml.RNode, fieldPaths []string,
 func writePatchTargets(patch types.Patch, node *kyaml.RNode, fieldPaths []string,
 	options []*types.FieldOptions) ([]*types.TargetSelector, error) {
 	var result []*types.TargetSelector
-	selector := patch.Target.Copy()
+	var selector *types.Selector
+	if patch.Target != nil {
+		actSelector := patch.Target.Copy()
+		selector = &actSelector
+	}
 
 	for i := range fieldPaths {
 		target := &types.TargetSelector{
-			Select:     &selector,
+			Select:     selector,
 			FieldPaths: []string{fieldPaths[i]},
 		}
 		if options[i].String() != "" {
