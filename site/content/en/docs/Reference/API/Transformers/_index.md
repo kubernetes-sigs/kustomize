@@ -8,7 +8,7 @@ description: >
 ---
 
 Transformers are Kubernetes objects that dictate how Kustomize changes other Kubernetes objects that users provide.
-The following required Kubernetes fields are also required on transformers:
+Besides `spec`, transformers require the same [fields](https://kubernetes.io/docs/concepts/overview/working-with-objects/#required-fields), listed below, as other Kubernetes objects:
 
 * `apiVersion`
 * `kind`
