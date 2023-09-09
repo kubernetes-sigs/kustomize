@@ -327,5 +327,5 @@ sortOptions:
 
 	kustOptions := th.MakeDefaultOptions()
 	err := th.RunWithErr("base", kustOptions)
-	require.ErrorContains(t, err, "unable to load builtin SortOrderTransformer.builtin.[noGrp]")
+	require.ErrorContains(t, err, "unable to load builtin SortOrderTransformer.[noVer].builtin")
 }
