@@ -47,7 +47,7 @@ func FormatNonStringStyle(node *Node, schema spec.Schema) {
 	}
 
 	// if the node tag is null, make sure we don't add any non-null tags
-	// https://github.com/GoogleContainerTools/kpt/issues/2321
+	// https://github.com/kptdev/kpt/issues/2321
 	if node.Tag == NodeTagNull {
 		// must NOT quote null values
 		node.Style = 0
