@@ -2,7 +2,7 @@
 title: "Kustomization File"
 linkTitle: "Kustomization File"
 weight: 1
-date: 2017-01-05
+date: 2023-07-28
 description: >
-  Reference for the Kustomization file
+  The Kustomization file is the entry point for Kustomize execution.
 ---

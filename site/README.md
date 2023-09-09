@@ -23,17 +23,28 @@ docker-compomse up -d
 ```
 
 ### hugo
-Building using the `hugo` command requires the following dependencies:
-* [hugo CLI](https://gohugo.io/getting-started/installing/)
-* [Go](https://go.dev/learn/)
-* [Node.js](https://nodejs.org/en/)
-* npm dependencies
+1. Building using the `hugo` command requires the following dependencies:
+  * [hugo CLI](https://gohugo.io/getting-started/installing/)
+  * [Go](https://go.dev/learn/)
+  * [Node.js](https://nodejs.org/en/)
+  * npm dependencies
+     ```bash
+     npm install -D autoprefixer
+     npm install -D postcss-cli
+     npm install -D postcss
+     ```
+1. Initialize [Docsy](https://www.docsy.dev/docs/) and nested [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
    ```bash
-   npm install -D autoprefixer
-   npm install -D postcss-cli
-   npm install -D postcss
+   # In Kustomize repository root directory, fetch docsy submodule at site/themes/docsy.
+   # See alternative submodule cloning options in the submodule documentation linked above.
+   git submodule init
+   git submodule update
+   # Fetch submodules nested in docsy.
+   cd site/themes/docsy
+   git submodule init
+   git submodule update
    ```
-Start in development mode:
-```bash
-hugo serve -D
-```
+1. Start in development mode:
+   ```bash
+   hugo serve -D
+   ```
