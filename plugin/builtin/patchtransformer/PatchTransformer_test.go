@@ -125,7 +125,7 @@ patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "Cluste
 			t.Fatalf("expected error")
 		}
 		if !strings.Contains(err.Error(),
-			"must specify a target for patch") {
+			"must specify a target for JSON patch") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})

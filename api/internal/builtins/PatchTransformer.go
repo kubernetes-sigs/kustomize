@@ -111,7 +111,7 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error 
 	for _, patch := range p.smPatches {
 		target, err := m.GetById(patch.OrgId())
 		if err != nil {
-			return fmt.Errorf("unable to find patch target %q: %w", patch.OrgId().Name, err)
+			return fmt.Errorf("no resource matches strategic merge patch %q: %w", patch.OrgId(), err)
 		}
 		if err := target.ApplySmPatch(patch); err != nil {
 			return errors.Wrap(err)
@@ -123,7 +123,7 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error 
 // transformJson6902 applies json6902 Patch to all the resources in the ResMap that match Target.
 func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap) error {
 	if p.Target == nil {
-		return fmt.Errorf("must specify a target for patch %s", p.patchText)
+		return fmt.Errorf("must specify a target for JSON patch %s", p.patchSource)
 	}
 	resources, err := m.Select(*p.Target)
 	if err != nil {
