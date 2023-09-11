@@ -199,7 +199,8 @@ Patch: "something"
 	})
 }
 
-const multipleSMPatchesFile = `
+const (
+	multipleSMPatchesFile = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -222,7 +223,7 @@ spec:
         new-label: new-value-with-multipleSMPatchesFile
 `
 
-const multipleSMPatchesSuccesfulResult = `
+	multipleSMPatchesSuccesfulResult = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -273,6 +274,7 @@ spec:
       - image: nginx
         name: nginx
 `
+)
 
 func TestMultipleSMPatchesWithFilePath(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
@@ -294,8 +296,6 @@ func TestMultipleSMPatchesWithPatch(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
-
-	th.WriteF(`multiplepatches.yaml`, multipleSMPatchesFile)
 
 	th.RunTransformerAndCheckResult(`
 apiVersion: builtin
@@ -344,14 +344,12 @@ target:
   kind: Deployment
 `, someDeploymentResources, func(t *testing.T, err error) {
 		t.Helper()
-		if err == nil {
-			t.Fatalf("Multiple SMPatch will cause error if use 'target' field, but error didn't happen.")
-		}
 		require.ErrorContains(t, err, "Multiple Strategic-Merge Patches in one `patches` entry is not allowed to set `patches.target` field")
 	})
 }
 
-const oneDeployment = `
+const (
+	oneDeployment = `
 apiVersion: apps/v1
 metadata:
   name: oneDeploy
@@ -366,7 +364,7 @@ spec:
       - name: sidecar
         image: busybox:1.36.1
 `
-const multiplePatchTransformerConfig = `
+	multiplePatchTransformerConfig = `
 apiVersion: builtin
 kind: PatchTransformer
 metadata:
@@ -383,6 +381,7 @@ target:
   name: .*Deploy
   kind: Deployment
 `
+)
 
 func TestPatchTransformerNotAllowedMultipleJsonPatches(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
