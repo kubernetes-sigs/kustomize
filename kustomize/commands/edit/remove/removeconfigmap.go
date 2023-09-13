@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package remove
@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -26,8 +26,9 @@ func newCmdRemoveConfigMap(fSys filesys.FileSystem) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use: "configmap",
-		Short: "Removes specified configmap" +
+		Short: "Removes the specified configmap(s) from " +
 			konfig.DefaultKustomizationFileName(),
+		Long: "",
 		Example: `
 		remove configmap my-configmap
 		`,
@@ -44,12 +45,13 @@ func newCmdRemoveConfigMap(fSys filesys.FileSystem) *cobra.Command {
 
 // Validate validates removeConfigMap command.
 func (o *removeConfigMapOptions) Validate(args []string) error {
-	if len(args) == 0 {
-		return errors.New("must specify a ConfigMap name")
+	switch {
+	case len(args) == 0:
+		return errors.New("at least one configmap name must be specified")
+	case len(args) > 1:
+		return fmt.Errorf("too many arguments: %s; to provide multiple configmaps to remove, please separate configmap names by commas", args)
 	}
-	if len(args) > 1 {
-		return fmt.Errorf("too many arguments: %s; to provide multiple ConfigMaps to remove, please separate ConfigMap names by commas", args)
-	}
+
 	o.configMapNamesToRemove = strings.Split(args[0], ",")
 	return nil
 }
@@ -63,7 +65,7 @@ func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) err
 
 	m, err := mf.Read()
 	if err != nil {
-		return fmt.Errorf("could not read kustomization file: %w", err)
+		return fmt.Errorf("could not read kustomization file contents: %w", err)
 	}
 
 	foundConfigMaps := make(map[string]struct{})
@@ -77,6 +79,11 @@ func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) err
 		newConfigMaps = append(newConfigMaps, currentConfigMap)
 	}
 
+	if len(foundConfigMaps) == 0 {
+		return fmt.Errorf("no specified configmap(s) were found in the %s file",
+			konfig.DefaultKustomizationFileName())
+	}
+
 	for _, name := range o.configMapNamesToRemove {
 		if _, found := foundConfigMaps[name]; !found {
 			log.Printf("configmap %s doesn't exist in kustomization file", name)
@@ -86,7 +93,7 @@ func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) err
 	m.ConfigMapGenerator = newConfigMaps
 	err = mf.Write(m)
 	if err != nil {
-		return fmt.Errorf("configmap cannot write back to file, got %w", err)
+		return fmt.Errorf("failed to write kustomization file: %w", err)
 	}
 	return nil
 }
