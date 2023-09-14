@@ -4,15 +4,13 @@ linkTitle: "generatorOptions"
 type: docs
 weight: 8
 description: >
-    Control behavior of [ConfigMap]() and
-    [Secret]() generators.
+    Control behavior of [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) and
+    [Secret](https://kubernetes.io/docs/concepts/configuration/secret/) generators.
 ---
-
-
 
 Additionally, generatorOptions can be set on a per resource level within each
 generator. For details on per-resource generatorOptions usage see
-[field-name-configMapGenerator]() and See [field-name-secretGenerator]().
+[configMapGenerator](/docs/reference/api/configmapgenerator/) and see [secretGenerator](/docs/reference/api/secretgenerator/).
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
