@@ -20,5 +20,5 @@ You can run `kustomize edit fix` to automatically convert `bases` to `resources`
 
 Move entries into the [resources](/docs/reference/api/resources)
 field.  This allows bases - which are still a
-[central concept](/references/kustomize/glossary#base) - to be
+[central concept](/docs/concepts/bases) - to be
 ordered relative to other input resources.

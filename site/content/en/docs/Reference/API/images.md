@@ -140,7 +140,7 @@ the image name is `foo` and an image was built for the source code at commit `1b
 then the container image would be `foo:1bb359ccce344ca5d263cd257958ea035c978fd3`.
 
 A simple way to push an image that was just built without manually updating the image tags is to
-download the [kustomize standalone](https://github.com/kubernetes-sigs/kustomize/) tool and run
+[download the kustomize standalone](/docs/getting-started/installation/) tool and run
 `kustomize edit set image` command to update the tags for you.
 
 **Example:** Set the latest git commit SHA as the image tag for `foo` images.
