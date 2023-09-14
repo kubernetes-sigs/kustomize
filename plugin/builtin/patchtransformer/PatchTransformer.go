@@ -100,6 +100,11 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap, patch *resource.Resour
 	if err != nil {
 		return err
 	}
+
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
+	}
+
 	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
 }
 
@@ -113,6 +118,11 @@ func (p *plugin) transformJson6902(m resmap.ResMap, patch jsonpatch.Patch) error
 	if err != nil {
 		return err
 	}
+
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
+	}
+
 	for _, res := range resources {
 		res.StorePreviousId()
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)

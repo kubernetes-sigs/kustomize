@@ -5,6 +5,7 @@ package builtins
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	jsonpatch "gopkg.in/evanphx/json-patch.v5"
@@ -97,6 +98,11 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap, patch 
 	if err != nil {
 		return err
 	}
+
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
+	}
+
 	return m.ApplySmPatch(resource.MakeIdSet(selected), patch)
 }
 
@@ -110,6 +116,11 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap, patch jsonpa
 	if err != nil {
 		return err
 	}
+
+	if p.Options["allowNoTargetMatch"] {
+		log.Println("Warning: patches target not found for Target")
+	}
+
 	for _, res := range resources {
 		res.StorePreviousId()
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
