@@ -1,12 +1,13 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package image
+package image_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/api/internal/image"
 )
 
 func TestIsImageMatched(t *testing.T) {
@@ -50,7 +51,7 @@ func TestIsImageMatched(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			assert.Equal(t, tc.isMatched, IsImageMatched(tc.value, tc.name))
+			assert.Equal(t, tc.isMatched, image.IsImageMatched(tc.value, tc.name))
 		})
 	}
 }
@@ -116,7 +117,7 @@ func TestSplit(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			name, tag, digest := Split(tc.value)
+			name, tag, digest := image.Split(tc.value)
 			assert.Equal(t, tc.name, name)
 			assert.Equal(t, tc.tag, tag)
 			assert.Equal(t, tc.digest, digest)
