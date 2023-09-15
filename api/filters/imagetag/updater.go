@@ -4,7 +4,7 @@
 package imagetag
 
 import (
-	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 
@@ -50,9 +50,12 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		tag = ""
 		digest = u.ImageTag.Digest
 	case u.ImageTag.TagSuffix != "":
-		tag = fmt.Sprintf("%s%s", tag, u.ImageTag.TagSuffix)
+		// this is a temporary fix and should be removed
+		// when legacyFilter is deprecated
+		if !strings.Contains(tag, u.ImageTag.TagSuffix) {
+			tag += u.ImageTag.TagSuffix
+		}
 		digest = ""
-		u.ImageTag.TagSuffix = ""
 	}
 
 	// build final image name

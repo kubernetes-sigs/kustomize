@@ -33,9 +33,6 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	}); err != nil {
 		return err
 	}
-	if p.ImageTag.TagSuffix != "" {
-		p.ImageTag.TagSuffix = ""
-	}
 	return m.ApplyFilter(imagetag.Filter{
 		ImageTag: p.ImageTag,
 		FsSlice:  p.FieldSpecs,
