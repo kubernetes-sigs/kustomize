@@ -6,8 +6,6 @@ package krusty_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -303,20 +301,15 @@ patchesStrategicMerge:
 	m = th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, expected)
 
-	// Technique 4: "patches:" field, one patch file.  Fails.
+	// Technique 4: "patches:" field, one patch file.
 	th.WriteK("overlay", `
 resources:
 - ../base
 patches:
 - path: twoPatchesInOneFile.yaml
 `)
-	err := th.RunWithErr("overlay", th.MakeDefaultOptions())
-	assert.Error(t, err)
-	// This should fail, because the semantics of the `patches` field.
-	// That field allows specific patch targeting to a list of targets,
-	// while the `patchesStrategicMerge` field accepts patches that
-	// implicitly identify their targets via GVKN.
-	assert.Contains(t, err.Error(), "unable to parse SM or JSON patch from ")
+	m = th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, expected)
 }
 
 func TestRemoveEmptyDirWithNullFieldInSmp(t *testing.T) {
@@ -1670,7 +1663,7 @@ spec:
   template:
     spec:
       containers:
-        - image: fluentd:latest 
+        - image: fluentd:latest
           name: fluentd
       serviceAccountName: fluentd-sa
 ---
