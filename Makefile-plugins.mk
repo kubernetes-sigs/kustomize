@@ -89,7 +89,7 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator $(MYGOBIN)/goimports
 		$(MYGOBIN)/goimports -w $*.go \
 	)
 
-# Target is for debugging.
+# Generate builtin plugins
 .PHONY: generate-kustomize-builtin-plugins
 generate-kustomize-builtin-plugins: $(builtplugins)
 	for plugin in $(abspath $(wildcard $(pSrc)/*)); do \
@@ -101,7 +101,7 @@ generate-kustomize-builtin-plugins: $(builtplugins)
 	cd ../../../; \
 	make no-diff \
 
-# Check for diff, if diff is found, throw error code 1 (subject to change based on discussion)
+# Check for diff, if diff is found, throw error code 1
 .PHONY: no-diff
 no-diff: $(builtplugins)
 	for file in $(abspath $(builtinplugins)); do \
