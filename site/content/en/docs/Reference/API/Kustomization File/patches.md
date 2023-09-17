@@ -7,8 +7,8 @@ description: >
     Patch resources
 ---
 
-[strategic merge]: /docs/reference/api/patchesstrategicmerge/
-[JSON6902]: /docs/reference/api/patchesjson6902/
+[strategic merge]: /docs/reference/api/kustomization-file/patchesstrategicmerge/
+[JSON6902]: /docs/reference/api/kustomization-file/patchesjson6902/
 
 Patches (also called overlays) add or override fields on resources.  They are provided using the
 `patches` Kustomization field.
