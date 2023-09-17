@@ -7,7 +7,7 @@ description: >
     Add labels and selectors to add all resources.
 ---
 
-[labels]: /docs/reference/api/labels/
+[labels]: /docs/reference/api/kustomization-file/labels/
 
 Add labels and selectors to all resources.  If the label key already is present on the resource,
 the value will be overridden.
