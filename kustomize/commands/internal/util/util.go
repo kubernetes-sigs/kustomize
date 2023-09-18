@@ -30,28 +30,35 @@ func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) 
 	return result, nil
 }
 
-// GlobPatterns accepts a slice of glob strings and returns the set of matching file paths. If files are not found, will try load from remote.
-// It returns an error if there are no matching files or it can't load from remote.
-func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []string) ([]string, error) {
+// GlobPatterns accepts a slice of glob strings and returns the set of matching file paths.
+// If validation is skipped, then it will return the patterns as provided.
+// Otherwise, It will try to load the files from the filesystem.
+// If files are not found in the filesystem, it will try to load from remote.
+// It returns an error if validation is not skipped and there are no matching files or it can't load from remote.
+func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []string, skipValidation bool) ([]string, error) {
 	var result []string
 	for _, pattern := range patterns {
-		files, err := fSys.Glob(pattern)
-		if err != nil {
-			return nil, err
-		}
-		if len(files) == 0 {
-			loader, err := ldr.New(pattern)
+		if skipValidation {
+			result = append(result, pattern)
+		} else {
+			files, err := fSys.Glob(pattern)
 			if err != nil {
-				return nil, fmt.Errorf("%s has no match: %w", pattern, err)
+				return nil, err
+			}
+			if len(files) != 0 {
+				result = append(result, files...)
 			} else {
-				result = append(result, pattern)
-				if loader != nil {
-					loader.Cleanup()
+				loader, err := ldr.New(pattern)
+				if err != nil {
+					return nil, fmt.Errorf("%s has no match: %w", pattern, err)
+				} else {
+					result = append(result, pattern)
+					if loader != nil {
+						loader.Cleanup()
+					}
 				}
 			}
-			continue
 		}
-		result = append(result, files...)
 	}
 	return result, nil
 }
