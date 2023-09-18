@@ -15,7 +15,7 @@ fi
 
 cmd=$1
 skip_pattern="${2-}"
-expected_module_count=${3:-45}
+expected_module_count=${3:-46}
 
 seen=()
 # Hack scripts must be run from the root of the repository.
@@ -25,11 +25,11 @@ export KUSTOMIZE_ROOT
 # verify all modules pass validation
 for i in $(find . -name go.mod -not -path "./site/*" -not -path "$skip_pattern"); do
   pushd .
-  cd $(dirname $i);
+  cd $(dirname "$i");
 
   set +x
   dir=$(pwd)
-  module="${dir#$KUSTOMIZE_ROOT}"
+  module="${dir#"$KUSTOMIZE_ROOT"}"
   echo -e "\n----------------------------------------------------------"
   echo "Running command in $module"
   echo -e "----------------------------------------------------------"

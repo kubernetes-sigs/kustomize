@@ -127,7 +127,7 @@ check-license: $(MYGOBIN)/addlicense
 
 .PHONY: lint
 lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
-	./hack/for-each-module.sh "make lint"
+	./hack/for-each-module.sh "make lint" 46
 
 .PHONY: apidiff
 apidiff: go-apidiff ## Run the go-apidiff to verify any API differences compared with origin/master
@@ -145,11 +145,11 @@ test-unit-all: \
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
 test-unit-non-plugin:
-	./hack/for-each-module.sh "make test" "./plugin/*" 16
+	./hack/for-each-module.sh "make test" "./plugin/*" 17
 
 .PHONY: build-non-plugin-all
 build-non-plugin-all:
-	./hack/for-each-module.sh "make build" "./plugin/*" 16
+	./hack/for-each-module.sh "make build" "./plugin/*" 17
 
 .PHONY: test-unit-kustomize-plugins
 test-unit-kustomize-plugins:

@@ -4,6 +4,7 @@ use (
 	./api
 	./cmd/config
 	./cmd/config/internal/commands/e2e/e2econtainerconfig
+	./cmd/config/internal/commands/e2e/e2econtainerenvgenerator
 	./cmd/depprobcheck
 	./cmd/gorepomod
 	./cmd/k8scopy
