@@ -71,7 +71,7 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	}
 
 	// test load remote file
-	resources, err := GlobPatternsWithLoader(fSys, ldr, []string{httpPath})
+	resources, err := GlobPatternsWithLoader(fSys, ldr, []string{httpPath}, false)
 	if err != nil {
 		t.Fatalf("unexpected load error: %v", err)
 	}
@@ -80,7 +80,7 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	}
 
 	// test load local and remote file
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{httpPath, "/test.yml"})
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{httpPath, "/test.yml"}, false)
 	if err != nil {
 		t.Fatalf("unexpected load error: %v", err)
 	}
@@ -90,13 +90,22 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 
 	// test load invalid file
 	invalidURL := "http://invalid"
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL})
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL}, false)
 	if err == nil {
 		t.Fatalf("expected error but did not receive one")
 	} else if err.Error() != invalidURL+" has no match: "+invalidURL+" not exist" {
 		t.Fatalf("unexpected load error: %v", err)
 	}
 	if len(resources) > 0 {
+		t.Fatalf("incorrect resources: %v", resources)
+	}
+
+	// test load unreachable remote file with skipped verification
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL}, true)
+	if err != nil {
+		t.Fatalf("unexpected load error: %v", err)
+	}
+	if len(resources) != 1 || resources[0] != invalidURL {
 		t.Fatalf("incorrect resources: %v", resources)
 	}
 }

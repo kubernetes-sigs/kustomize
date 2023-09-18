@@ -49,7 +49,7 @@ func (o *addComponentOptions) Validate(args []string) error {
 
 // RunAddComponent runs addComponent command (do real work).
 func (o *addComponentOptions) RunAddComponent(fSys filesys.FileSystem) error {
-	components, err := util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), o.componentFilePaths)
+	components, err := util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), o.componentFilePaths, false)
 	if err != nil {
 		return err
 	}

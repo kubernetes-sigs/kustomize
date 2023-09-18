@@ -99,7 +99,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, rf *resource.Factory) 
 	var resources []string
 	var err error
 	if opts.resources != "" {
-		resources, err = util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), strings.Split(opts.resources, ","))
+		resources, err = util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), strings.Split(opts.resources, ","), false)
 		if err != nil {
 			return err
 		}
