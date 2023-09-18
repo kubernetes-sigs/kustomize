@@ -679,7 +679,6 @@ metadata:
 }
 
 func TestFnContainerEnvVars(t *testing.T) {
-	t.Skip("it may failed by arm architecture")
 	skipIfNoDocker(t)
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
@@ -695,22 +694,28 @@ generators:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: demo
+  name: e2econtainerenvgenerator
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: quay.io/aodinokov/kpt-templater:0.0.1
+        image: gcr.io/kustomize-functions/e2econtainerenvgenerator
         envs:
         - TESTTEMPLATE=value
-data:
-  template: |
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: env
-    data:
-      value: '{{ env "TESTTEMPLATE" }}'
+template: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: env
+  data:
+    value: %q
 `)))
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainerenvgenerator/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainerenvgenerator",
+	)
+	build.Dir = "../../" // Repo root
+	assert.NoError(t, build.Run())
+
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
