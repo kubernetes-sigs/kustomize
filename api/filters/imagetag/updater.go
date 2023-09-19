@@ -52,7 +52,7 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	case u.ImageTag.TagSuffix != "":
 		// this is a temporary fix and should be removed
 		// when legacyFilter is deprecated
-		if !strings.Contains(tag, u.ImageTag.TagSuffix) {
+		if !strings.HasSuffix(tag, u.ImageTag.TagSuffix) {
 			tag += u.ImageTag.TagSuffix
 		}
 		digest = ""
