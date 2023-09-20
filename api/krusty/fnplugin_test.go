@@ -15,6 +15,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const (
+	repoRootDir = "../../"
+)
+
 const generateDeploymentDotSh = `#!/bin/sh
 
 cat <<EOF
@@ -504,7 +508,6 @@ func skipIfNoDocker(t *testing.T) {
 }
 
 func TestFnContainerGenerator(t *testing.T) {
-	t.Skip("it may failed by arm architecture")
 	skipIfNoDocker(t)
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
@@ -514,51 +517,58 @@ func TestFnContainerGenerator(t *testing.T) {
 resources:
 - deployment.yaml
 generators:
-- project-service-set.yaml
+- service-set.yaml
 `)
 	// Create generator config
-	th.WriteF(filepath.Join(tmpDir.String(), "project-service-set.yaml"), `
-apiVersion: blueprints.cloud.google.com/v1alpha1
-kind: ProjectServiceSet
+	th.WriteF(filepath.Join(tmpDir.String(), "service-set.yaml"), `
+apiVersion: kustomize.sigs.k8s.io/v1alpha1
+kind: ServiceGenerator
 metadata:
-  name: demo
+  name: simplegenerator
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kpt-fn/enable-gcp-services:v0.1.0
+        image: gcr.io/kustomize-functions/e2econtainersimplegenerator
 spec:
-  services:
-    - compute.googleapis.com
-  projectID: foo
+  port: 8081
 `)
 	// Create another resource just to make sure everything is added
 	th.WriteF(filepath.Join(tmpDir.String(), "deployment.yaml"), `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: foo
+  name: simplegenerator
 `)
+
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainersimplegenerator/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainersimplegenerator",
+	)
+	build.Dir = repoRootDir
+	assert.NoError(t, build.Run())
+
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: foo
+  name: simplegenerator
 ---
-apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
+apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    blueprints.cloud.google.com/ownerReference: blueprints.cloud.google.com/ProjectServiceSet/demo
-    config.kubernetes.io/function: |
-      container:
-        image: gcr.io/kpt-fn/enable-gcp-services:v0.1.0
-  name: demo-compute
+  labels:
+    app: simplegenerator
+  name: simplegenerator-svc
 spec:
-  projectRef:
-    external: foo
-  resourceID: compute.googleapis.com
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: simplegenerator
 `, string(actual))
 }
 
@@ -594,7 +604,7 @@ metadata:
 		"-f", "./cmd/config/internal/commands/e2e/e2econtainerconfig/Dockerfile",
 		"-t", "gcr.io/kustomize-functions/e2econtainerconfig",
 	)
-	build.Dir = "../../" // Repo root
+	build.Dir = repoRootDir
 	assert.NoError(t, build.Run())
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
@@ -691,8 +701,8 @@ generators:
 - gener.yaml
 `)))
 	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
-apiVersion: v1
-kind: ConfigMap
+apiVersion: kustomize.sigs.k8s.io/v1alpha1
+kind: EnvTemplateGenerator
 metadata:
   name: e2econtainerenvgenerator
   annotations:
@@ -713,7 +723,7 @@ template: |
 		"-f", "./cmd/config/internal/commands/e2e/e2econtainerenvgenerator/Dockerfile",
 		"-t", "gcr.io/kustomize-functions/e2econtainerenvgenerator",
 	)
-	build.Dir = "../../" // Repo root
+	build.Dir = repoRootDir
 	assert.NoError(t, build.Run())
 
 	m, err := b.Run(
