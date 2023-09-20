@@ -1,4 +1,4 @@
-// Copyright 2022 The Kubernetes Authors.
+// Copyright 2023 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package remove //nolint:testpackage
@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -105,7 +103,7 @@ kind: Kustomization
 
 			if tc.expectedErr != "" {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr)
+				require.Contains(t, err.Error(), tc.expectedErr)
 				return
 			}
 
