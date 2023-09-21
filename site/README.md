@@ -19,7 +19,7 @@ Dependencies:
 * [docker-compose](https://docs.docker.com/compose/install/)
 ```bash
 docker-compose build
-docker-compomse up -d
+docker-compose up -d
 ```
 
 ### hugo
