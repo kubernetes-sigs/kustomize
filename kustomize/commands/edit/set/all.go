@@ -21,6 +21,9 @@ func NewCmdSet(fSys filesys.FileSystem, ldr ifc.KvLoader, v ifc.Validator) *cobr
 
 	# Sets the namesuffix field
 	kustomize edit set namesuffix <suffix-value>
+
+	# Sets the labels or commonLabels field
+	kustomize edit set label {labelKey1:labelValue1} {labelKey2:labelValue2}
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
