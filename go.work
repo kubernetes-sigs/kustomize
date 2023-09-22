@@ -5,6 +5,7 @@ use (
 	./cmd/config
 	./cmd/config/internal/commands/e2e/e2econtainerconfig
 	./cmd/config/internal/commands/e2e/e2econtainerenvgenerator
+	./cmd/config/internal/commands/e2e/e2econtainermountbind
 	./cmd/config/internal/commands/e2e/e2econtainersimplegenerator
 	./cmd/depprobcheck
 	./cmd/gorepomod
