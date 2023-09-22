@@ -72,7 +72,7 @@ contributions in the description.
 
 To reach approver status, you must:
 - Meet all the requirements of a reviewer
-- Have been involved in kustomize for 6+ months
+- Have been actively involved in kustomize for 6+ months
 - Review at least 15 PRs that have been driven through to completion (see the reviewer guide below)
 - Authored PRs meeting *either* of the following requirements:
   - 15 PRs that have been approved and merged
@@ -100,7 +100,7 @@ if you are missing one or two of the requirements. Please contact the maintainer
 
 To reach owner status, you must:
 - Meet all the requirements of an approver
-- Have been involved with kustomize for 1+ year
+- Have been actively involved with kustomize for 1+ year
 - Assisted the current owner in driving the roadmap. This can be explicit or implicit help, such as:
   - Editing the roadmap directly
   - Reviewing the roadmap
