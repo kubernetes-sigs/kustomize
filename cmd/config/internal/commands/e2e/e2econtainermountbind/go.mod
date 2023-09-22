@@ -1,4 +1,4 @@
-module sigs.k8s.io/kustomize/cmd/config/internal/commands/e2e/e2econtainerenvgenerator
+module sigs.k8s.io/kustomize/cmd/config/internal/commands/e2e/e2econtainer-render-helm-chart
 
 go 1.20
 

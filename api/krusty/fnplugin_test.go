@@ -742,7 +742,6 @@ metadata:
 }
 
 func TestFnContainerFnMounts(t *testing.T) {
-	t.Skip("it may failed by arm architecture")
 	skipIfNoDocker(t)
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
@@ -755,44 +754,36 @@ generators:
 - gener.yaml
 `)))
 	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
-apiVersion: v1alpha1
+apiVersion: kustomize.sigs.k8s.io/v1alpha1
 kind: RenderHelmChart
 metadata:
   name: demo
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+        image: gcr.io/kustomize-functions/e2econtainermountbind
         mounts:
         - type: "bind"
-          src: "./charts"
-          dst: "/tmp/charts"
-helmCharts:
-- name: helloworld-chart
-  releaseName: test
-  valuesFile: /tmp/charts/helloworld-values/values.yaml
+          src: "./yaml"
+          dst: "/tmp/yaml"
+path: /tmp/yaml/resources.yaml
 `)))
-	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates")))
-	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-values")))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "Chart.yaml"), []byte(`
-apiVersion: v2
-name: helloworld-chart
-description: A Helm chart for Kubernetes
-type: application
-version: 0.1.0
-appVersion: 1.16.0
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates", "deployment.yaml"), []byte(`
+	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "yaml", "tmp")))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "yaml", "resources.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: name
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 3
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-values", "values.yaml"), []byte(`
-replicaCount: 5
-`)))
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainermountbind/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainermountbind",
+	)
+	build.Dir = repoRootDir
+	assert.NoError(t, build.Run())
+
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
@@ -804,7 +795,7 @@ kind: Deployment
 metadata:
   name: name
 spec:
-  replicas: 5
+  replicas: 3
 `, string(actual))
 }
 
