@@ -12,7 +12,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-const expectedHelm = `
+const (
+	expectedHelm = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -46,7 +47,7 @@ spec:
   type: ClusterIP
 `
 
-const expectedHelmExternalDNS = `
+	expectedHelmExternalDNS = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -136,6 +137,7 @@ spec:
       serviceAccountName: default
       volumes: null
 `
+)
 
 func TestHelmChartInflationGeneratorOld(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
