@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -124,7 +125,7 @@ patch: '[{"op": "add", "path": "/spec/template/spec/dnsPolicy", "value": "Cluste
 			t.Fatalf("expected error")
 		}
 		if !strings.Contains(err.Error(),
-			"must specify a target for patch") {
+			"must specify a target for JSON patch") {
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
@@ -196,6 +197,223 @@ Patch: "something"
 			t.Fatalf("unexpected err: %v", err)
 		}
 	})
+}
+
+const (
+	multipleSMPatchesFile = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: public.ecr.aws/nginx/nginx:mainline
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yourDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        new-label: new-value-with-multipleSMPatchesFile
+`
+
+	multipleSMPatchesSuccesfulResult = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    old-label: old-value
+  name: myDeploy
+spec:
+  replica: 2
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: public.ecr.aws/nginx/nginx:mainline
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    new-label: new-value
+  name: yourDeploy
+spec:
+  replica: 1
+  template:
+    metadata:
+      labels:
+        new-label: new-value-with-multipleSMPatchesFile
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+---
+apiVersion: apps/v1
+kind: MyKind
+metadata:
+  label:
+    old-label: old-value
+  name: myDeploy
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+`
+)
+
+func TestMultipleSMPatchesWithFilePath(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF(`multiplepatches.yaml`, multipleSMPatchesFile)
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+Path: multiplepatches.yaml
+`, someDeploymentResources, multipleSMPatchesSuccesfulResult)
+}
+
+func TestMultipleSMPatchesWithPatch(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+patch: |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: myDeploy
+  spec:
+    template:
+      spec:
+        containers:
+        - image: public.ecr.aws/nginx/nginx:mainline
+          name: nginx
+  ---
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: yourDeploy
+  spec:
+    template:
+      metadata:
+        labels:
+          new-label: new-value-with-multipleSMPatchesFile
+`, someDeploymentResources, multipleSMPatchesSuccesfulResult)
+}
+
+func TestMultipleSMPatchesAndTarget(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF(`multiplepatches.yaml`, multipleSMPatchesFile)
+
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+Path: multiplepatches.yaml
+target:
+  name: .*Deploy
+  kind: Deployment
+`, someDeploymentResources, func(t *testing.T, err error) {
+		t.Helper()
+		require.ErrorContains(t, err, "Multiple Strategic-Merge Patches in one `patches` entry is not allowed to set `patches.target` field")
+	})
+}
+
+const (
+	oneDeployment = `
+apiVersion: apps/v1
+metadata:
+  name: oneDeploy
+kind: Deployment
+spec:
+  replica: 1
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+      - name: sidecar
+        image: busybox:1.36.1
+`
+	multiplePatchTransformerConfig = `
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+patch: |-
+  - op: replace
+    path: /spec/template/spec/containers/0/image
+    value: nginx:latest
+  ---
+  - op: replace
+    path: /spec/template/spec/containers/1/image
+    value: busybox:latest
+target:
+  name: .*Deploy
+  kind: Deployment
+`
+)
+
+func TestPatchTransformerNotAllowedMultipleJsonPatches(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	// TODO(5049): Multiple JSON patch Yaml documents are not allowed and need to return error.
+	th.RunTransformerAndCheckResult(multiplePatchTransformerConfig, oneDeployment, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oneDeploy
+spec:
+  replica: 1
+  template:
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+      - image: busybox:1.36.1
+        name: sidecar
+`)
+	// th.RunTransformerAndCheckError(multiplePatchTransformerConfig, oneDeployment, func(t *testing.T, err error) {
+	// 	t.Helper()
+	// 	if err == nil {
+	// 		t.Fatalf("expected error")
+	// 	}
+	// 	if !strings.Contains(err.Error(),
+	// 		"Multiple Json6902 Patch in 'patches' is not allowed.") {
+	// 		t.Fatalf("unexpected err: %v", err)
+	// 	}
+	// })
 }
 
 func TestPatchTransformerFromFiles(t *testing.T) {

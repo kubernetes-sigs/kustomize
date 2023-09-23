@@ -61,7 +61,7 @@ func NewCmdCreate(fSys filesys.FileSystem, rf *resource.Factory) *cobra.Command 
 		&opts.namespace,
 		"namespace",
 		"",
-		"Set the value of the namespace field in the customization file.")
+		"Set the value of the namespace field in the kustomization file.")
 	c.Flags().StringVar(
 		&opts.annotations,
 		"annotations",

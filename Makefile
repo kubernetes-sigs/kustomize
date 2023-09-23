@@ -3,7 +3,7 @@
 #
 # Makefile for kustomize CLI and API.
 
-LATEST_RELEASE=v5.1.0
+LATEST_RELEASE=v5.1.1
 
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
@@ -125,6 +125,14 @@ check-license: $(MYGOBIN)/addlicense
 .PHONY: lint
 lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
+
+.PHONY: apidiff
+apidiff: go-apidiff ## Run the go-apidiff to verify any API differences compared with origin/master
+	$(GOBIN)/go-apidiff master --compare-imports --print-compatible --repo-path=.
+
+.PHONY: go-apidiff
+go-apidiff:
+	go install github.com/joelanford/go-apidiff@v0.6.0
 
 .PHONY: test-unit-all
 test-unit-all: \

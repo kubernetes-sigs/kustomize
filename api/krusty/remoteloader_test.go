@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -27,6 +28,7 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 		root          string
 		simple        string
 		noSuffix      string
+		hash          string
 		multiBaseDev  string
 		withSubmodule string
 	}
@@ -35,9 +37,10 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 	// root/
 	//   simple.git/			- base with just a pod
 	//   nosuffix/				- same as simple.git/ without the .git suffix
+	//   hash-xx/				- same as simple.git/ with random hash at xx
 	//   multibase.git/			- base with a dev overlay
 	//   with-submodule.git/	- includes `simple` as a submodule
-	//     submodule/			- the submodule referencing `simple
+	//     submodule/			- the submodule referencing `simple`
 	createGitRepos := func(t *testing.T) testRepos {
 		t.Helper()
 
@@ -49,10 +52,16 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 			}
 		}
 		root := t.TempDir()
+
+		hashPath, err := os.MkdirTemp(root, "hash-")
+		require.NoError(t, err)
+		hashDir := filepath.Base(hashPath)
+
 		bash(fmt.Sprintf(`
 set -eux
 
 export ROOT="%s"
+export HASH_DIR="%s"
 export GIT_AUTHOR_EMAIL=nobody@kustomize.io
 export GIT_AUTHOR_NAME=Nobody
 export GIT_COMMITTER_EMAIL=nobody@kustomize.io
@@ -84,19 +93,27 @@ cp -r testdata/remoteload/multibase $ROOT/multibase.git
 	git add .
 	git commit -m "import"
 )
+cp -r testdata/remoteload/with-submodule $ROOT/with-submodule.git # see README
+cp -r $ROOT/simple.git/. $ROOT/$HASH_DIR
 (
-	mkdir $ROOT/with-submodule.git
 	cd $ROOT/with-submodule.git
 	git init --initial-branch=main
-	git submodule add $ROOT/simple.git submodule
+	git add .
 	git commit -m "import"
+	git checkout -b relative-submodule
+	git submodule add ../$HASH_DIR submodule
+	git commit -m "relative submodule"
+	git checkout main
+	git submodule add $ROOT/simple.git submodule
+	git commit -m "submodule"	
 )
-`, root))
+`, root, hashDir))
 		return testRepos{
 			root: root,
 			// The strings below aren't currently used, and more serve as documentation.
 			simple:        "simple.git",
 			noSuffix:      "nosuffix",
+			hash:          hashDir,
 			multiBaseDev:  "multibase.git",
 			withSubmodule: "with-submodule.git",
 		}
@@ -181,6 +198,15 @@ resources:
 - file://$ROOT/with-submodule.git/submodule
 `,
 			expected: simpleBuild,
+		},
+		{
+			name: "has relative submodule",
+			kustomization: `
+resources:
+- file://$ROOT/with-submodule.git/submodule?ref=relative-submodule
+`,
+			// TODO(annasong): Replace with simpleBuild once #5131 is fixed.
+			err: `failed to run '\S+/git submodule update --init --recursive'`,
 		},
 		{
 			name: "has timeout",
@@ -272,7 +298,7 @@ resources:
 
 			if test.err != "" {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), test.err)
+				require.Regexp(t, test.err, err.Error())
 			} else {
 				require.NoError(t, err)
 				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", repos.root))
