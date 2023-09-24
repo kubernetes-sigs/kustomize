@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/go-errors/errors v1.4.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/imdario/mergo v0.3.6
+	github.com/imdario/mergo v0.3.13
 	github.com/stretchr/testify v1.8.1
 	gopkg.in/evanphx/json-patch.v5 v5.6.0
 	gopkg.in/yaml.v2 v2.4.0

@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/helmchartinflationgenerator
 go 1.20
 
 require (
-	github.com/imdario/mergo v0.3.6
+	github.com/imdario/mergo v0.3.13
 	github.com/stretchr/testify v1.8.1
 	sigs.k8s.io/kustomize/api v0.14.0
 	sigs.k8s.io/kustomize/kyaml v0.14.3
