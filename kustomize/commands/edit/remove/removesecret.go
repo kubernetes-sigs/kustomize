@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2023 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package remove
@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v4/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -20,14 +20,15 @@ type removeSecretOptions struct {
 	secretNamesToRemove []string
 }
 
-// newCmdRemoveSecret remove the name of a file containing a secret to the kustomization file.
+// newCmdRemoveSecret removes secretGenerator(s) with the specified name(s).
 func newCmdRemoveSecret(fSys filesys.FileSystem) *cobra.Command {
 	var o removeSecretOptions
 
 	cmd := &cobra.Command{
 		Use: "secret",
-		Short: "Removes specified secret" +
+		Short: "Removes the specified secret(s) from " +
 			konfig.DefaultKustomizationFileName(),
+		Long: "",
 		Example: `
 		remove secret my-secret
 		`,
@@ -44,12 +45,13 @@ func newCmdRemoveSecret(fSys filesys.FileSystem) *cobra.Command {
 
 // Validate validates removeSecret command.
 func (o *removeSecretOptions) Validate(args []string) error {
-	if len(args) == 0 {
-		return errors.New("must specify a Secret name")
+	switch {
+	case len(args) == 0:
+		return errors.New("at least one secret name must be specified")
+	case len(args) > 1:
+		return fmt.Errorf("too many arguments: %s; to provide multiple secrets to remove, please separate secret names by commas", args)
 	}
-	if len(args) > 1 {
-		return fmt.Errorf("too many arguments: %s; to provide multiple Secrets to remove, please separate Secret names by commas", args)
-	}
+
 	o.secretNamesToRemove = strings.Split(args[0], ",")
 	return nil
 }
@@ -63,7 +65,7 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 
 	m, err := mf.Read()
 	if err != nil {
-		return fmt.Errorf("could not read kustomization file: %w", err)
+		return fmt.Errorf("could not read kustomization file contents: %w", err)
 	}
 
 	foundSecrets := make(map[string]struct{})
@@ -77,6 +79,11 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 		newSecrets = append(newSecrets, currentSecret)
 	}
 
+	if len(foundSecrets) == 0 {
+		return fmt.Errorf("no specified secret(s) were found in the %s file",
+			konfig.DefaultKustomizationFileName())
+	}
+
 	for _, name := range o.secretNamesToRemove {
 		if _, found := foundSecrets[name]; !found {
 			log.Printf("secret %s doesn't exist in kustomization file", name)
@@ -86,7 +93,7 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 
 	err = mf.Write(m)
 	if err != nil {
-		return fmt.Errorf("secret cannot write back to file, got %w", err)
+		return fmt.Errorf("failed to write kustomization file: %w", err)
 	}
 	return nil
 }
