@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 func TestHelmChartInflationGenerator(t *testing.T) {
@@ -578,4 +580,49 @@ valuesInline:
     enabled: false
 `)
 	th.AssertActualEqualsExpected(rm, "")
+}
+
+func TestHelmChartInflationGeneratorIssue4905(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyTestChartsIntoHarness(t, th)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: issue4905
+name: issue4905
+releaseName: issue4905
+chartHome: ./charts
+valuesInline:
+  config:
+    item1: 1
+    item2: 2
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+data:
+  config.yaml: |-
+    item1: 1
+    item2: 2
+kind: ConfigMap
+metadata:
+  name: issue4905
+`)
+}
+
+func copyTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+	t.Helper()
+
+	thDir := filepath.Join(th.GetRoot(), "charts")
+	chartDir := "testdata/charts"
+
+	require.NoError(t, copyutil.CopyDir(th.GetFSys(), chartDir, thDir))
 }
