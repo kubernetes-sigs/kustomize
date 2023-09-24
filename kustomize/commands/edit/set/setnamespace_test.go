@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
+	valtest "sigs.k8s.io/kustomize/api/testutils/valtest"
+	testutils "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -19,15 +19,15 @@ const (
 
 func TestSetNamespaceHappyPath(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdSetNamespace(fSys, valtest_test.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, valtest.MakeFakeValidator())
 	args := []string{goodNamespaceValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := testutils_test.ReadTestKustomization(fSys)
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -39,9 +39,9 @@ func TestSetNamespaceHappyPath(t *testing.T) {
 
 func TestSetNamespaceOverride(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
+	testutils.WriteTestKustomization(fSys)
 
-	cmd := newCmdSetNamespace(fSys, valtest_test.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, valtest.MakeFakeValidator())
 	args := []string{goodNamespaceValue}
 	err := cmd.RunE(cmd, args)
 	if err != nil {
@@ -52,7 +52,7 @@ func TestSetNamespaceOverride(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected cmd error: %v", err)
 	}
-	content, err := testutils_test.ReadTestKustomization(fSys)
+	content, err := testutils.ReadTestKustomization(fSys)
 	if err != nil {
 		t.Errorf("unexpected read error: %v", err)
 	}
@@ -65,7 +65,7 @@ func TestSetNamespaceOverride(t *testing.T) {
 func TestSetNamespaceNoArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 
-	cmd := newCmdSetNamespace(fSys, valtest_test.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, valtest.MakeFakeValidator())
 	err := cmd.Execute()
 	if err == nil {
 		t.Errorf("expected error: %v", err)
@@ -78,7 +78,7 @@ func TestSetNamespaceNoArgs(t *testing.T) {
 func TestSetNamespaceInvalid(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 
-	cmd := newCmdSetNamespace(fSys, valtest_test.MakeFakeValidator())
+	cmd := newCmdSetNamespace(fSys, valtest.MakeFakeValidator())
 	args := []string{"/badnamespace/"}
 	err := cmd.RunE(cmd, args)
 	if err == nil {

@@ -11,7 +11,7 @@ import (
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -42,7 +42,7 @@ func makeKustTargetWithRf(
 	pc := types.DisabledPluginConfig()
 	return target.NewKustTarget(
 		ldr,
-		valtest_test.MakeFakeValidator(),
+		valtest.MakeFakeValidator(),
 		rf,
 		pLdr.NewLoader(pc, rf, fSys))
 }

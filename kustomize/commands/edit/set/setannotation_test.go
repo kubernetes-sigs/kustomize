@@ -6,10 +6,10 @@ package set
 import (
 	"testing"
 
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
+	testutils "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -19,7 +19,7 @@ const invalidAnnotationKey string = "invalid annotation key: see the syntax and 
 func makeAnnotationKustomization(t *testing.T) *types.Kustomization {
 	t.Helper()
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
+	testutils.WriteTestKustomization(fSys)
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
@@ -55,7 +55,7 @@ func TestRunSetAnnotation(t *testing.T) {
 
 func TestSetAnnotationNoArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeHappyMapValidator(t)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	err := cmd.Execute()
 	v.VerifyNoCall()
@@ -70,7 +70,7 @@ func TestSetAnnotationNoArgs(t *testing.T) {
 
 func TestSetAnnotationInvalidFormat(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeSadMapValidator(t)
+	v := valtest.MakeSadMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"exclamation!:point"}
 	err := cmd.RunE(cmd, args)
@@ -79,7 +79,7 @@ func TestSetAnnotationInvalidFormat(t *testing.T) {
 		t.Errorf("expected an error")
 		t.FailNow()
 	}
-	if err.Error() != valtest_test.SAD {
+	if err.Error() != valtest.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
@@ -112,7 +112,7 @@ func TestSetAnnotation253Prefix63Name(t *testing.T) {
 
 func TestSetAnnotation254Prefix62Name(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeHappyMapValidator(t)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi" +
 		"jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
@@ -132,7 +132,7 @@ func TestSetAnnotation254Prefix62Name(t *testing.T) {
 
 func TestSetAnnotation252Prefix64Name(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeHappyMapValidator(t)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghi" +
 		"jklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn" +
@@ -152,7 +152,7 @@ func TestSetAnnotation252Prefix64Name(t *testing.T) {
 
 func TestSetAnnotationNoKey(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeHappyMapValidator(t)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
@@ -168,8 +168,8 @@ func TestSetAnnotationNoKey(t *testing.T) {
 
 func TestSetAnnotationTooManyColons(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"key:v1:v2"}
 	err := cmd.RunE(cmd, args)
@@ -181,8 +181,8 @@ func TestSetAnnotationTooManyColons(t *testing.T) {
 
 func TestSetAnnotationNoValue(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"no,value:"}
 	err := cmd.RunE(cmd, args)
@@ -198,8 +198,8 @@ func TestSetAnnotationNoValue(t *testing.T) {
 
 func TestSetAnnotationMultipleArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"this:input", "has:spaces"}
 	err := cmd.RunE(cmd, args)
@@ -211,8 +211,8 @@ func TestSetAnnotationMultipleArgs(t *testing.T) {
 
 func TestSetAnnotationExisting(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetAnnotation(fSys, v.Validator)
 	args := []string{"key:foo"}
 	err := cmd.RunE(cmd, args)
@@ -220,7 +220,7 @@ func TestSetAnnotationExisting(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err.Error())
 	}
-	v = valtest_test.MakeHappyMapValidator(t)
+	v = valtest.MakeHappyMapValidator(t)
 	cmd = newCmdSetAnnotation(fSys, v.Validator)
 	err = cmd.RunE(cmd, args)
 	v.VerifyCall()

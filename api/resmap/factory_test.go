@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/loader"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -124,7 +124,7 @@ func TestNewFromConfigMaps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kvLdr := kv.NewLoader(ldr, valtest_test.MakeFakeValidator())
+	kvLdr := kv.NewLoader(ldr, valtest.MakeFakeValidator())
 	testCases := []testCase{
 		{
 			description: "construct config map from env",
@@ -250,7 +250,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	actual, err := rmF.NewResMapFromSecretArgs(
 		kv.NewLoader(
 			loader.NewFileLoaderAtRoot(fSys),
-			valtest_test.MakeFakeValidator()), secrets)
+			valtest.MakeFakeValidator()), secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

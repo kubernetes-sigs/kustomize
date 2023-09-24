@@ -6,17 +6,17 @@ package set
 import (
 	"testing"
 
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
+	testutils "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func makeKustomization(t *testing.T) *types.Kustomization {
 	t.Helper()
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
+	testutils.WriteTestKustomization(fSys)
 	kf, err := kustfile.NewKustomizationFile(fSys)
 	if err != nil {
 		t.Errorf("unexpected new error %v", err)
@@ -52,7 +52,7 @@ func TestRunSetLabel(t *testing.T) {
 
 func TestSetLabelNoArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeHappyMapValidator(t)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	err := cmd.Execute()
 	v.VerifyNoCall()
@@ -66,7 +66,7 @@ func TestSetLabelNoArgs(t *testing.T) {
 
 func TestSetLabelInvalidFormat(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeSadMapValidator(t)
+	v := valtest.MakeSadMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	args := []string{"exclamation!:point"}
 	err := cmd.RunE(cmd, args)
@@ -74,14 +74,14 @@ func TestSetLabelInvalidFormat(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != valtest_test.SAD {
+	if err.Error() != valtest.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
 
 func TestSetLabelNoKey(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	v := valtest_test.MakeHappyMapValidator(t)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
@@ -96,8 +96,8 @@ func TestSetLabelNoKey(t *testing.T) {
 
 func TestSetLabelTooManyColons(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	args := []string{"key:v1:v2"}
 	err := cmd.RunE(cmd, args)
@@ -109,8 +109,8 @@ func TestSetLabelTooManyColons(t *testing.T) {
 
 func TestSetLabelNoValue(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	args := []string{"no,value:"}
 	err := cmd.RunE(cmd, args)
@@ -122,8 +122,8 @@ func TestSetLabelNoValue(t *testing.T) {
 
 func TestSetLabelMultipleArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	args := []string{"this:input", "has:spaces"}
 	err := cmd.RunE(cmd, args)
@@ -135,8 +135,8 @@ func TestSetLabelMultipleArgs(t *testing.T) {
 
 func TestSetLabelExisting(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-	v := valtest_test.MakeHappyMapValidator(t)
+	testutils.WriteTestKustomization(fSys)
+	v := valtest.MakeHappyMapValidator(t)
 	cmd := newCmdSetLabel(fSys, v.Validator)
 	args := []string{"key:foo"}
 	err := cmd.RunE(cmd, args)
@@ -144,7 +144,7 @@ func TestSetLabelExisting(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err.Error())
 	}
-	v = valtest_test.MakeHappyMapValidator(t)
+	v = valtest.MakeHappyMapValidator(t)
 	cmd = newCmdSetLabel(fSys, v.Validator)
 	err = cmd.RunE(cmd, args)
 	v.VerifyCall()

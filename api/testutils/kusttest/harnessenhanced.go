@@ -16,7 +16,7 @@ import (
 	fLdr "sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
+	valtest "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -163,7 +163,7 @@ func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
 		th.t.Fatalf("Err: %v", err)
 	}
 	g, err := th.pl.LoadGenerator(
-		th.ldr, valtest_test.MakeFakeValidator(), res)
+		th.ldr, valtest.MakeFakeValidator(), res)
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
@@ -220,7 +220,7 @@ func (th *HarnessEnhanced) RunTransformerFromResMap(
 		th.t.Fatalf("Err: %v", err)
 	}
 	g, err := th.pl.LoadTransformer(
-		th.ldr, valtest_test.MakeFakeValidator(), transConfig)
+		th.ldr, valtest.MakeFakeValidator(), transConfig)
 	if err != nil {
 		return nil, err
 	}
