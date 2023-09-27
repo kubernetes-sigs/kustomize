@@ -45,7 +45,7 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 
 		files, err := fSys.Glob(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("error on checking the filesystem: %w", err)
+			return nil, fmt.Errorf("error checking the filesystem: %w", err)
 		}
 
 		if len(files) != 0 {
@@ -55,13 +55,13 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 
 		loader, err := ldr.New(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("%s has no match: %w", pattern, err)
+			return nil, fmt.Errorf("pattern %s has no match: %w", pattern, err)
 		}
 
 		result = append(result, pattern)
 		if loader != nil {
 			if err = loader.Cleanup(); err != nil {
-				return nil, fmt.Errorf("error on cleaning up loader: %w", err)
+				return nil, fmt.Errorf("error cleaning up loader: %w", err)
 			}
 		}
 	}
