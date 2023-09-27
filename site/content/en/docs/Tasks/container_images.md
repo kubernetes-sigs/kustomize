@@ -23,4 +23,6 @@ Typical uses cases include:
 - Copy or Fork an existing Project and change the Image Tag for a container
 - Change the registry used for an image
 
-See the [Reference](/docs/reference/) section for [examples](/docs/reference/api/kustomization-file/images/) of working with container images.
+{{< alert color="success" title="Command and Examples" >}}
+See the [Reference](/docs/reference/) section for the [images](/docs/reference/api/kustomization-file/images/) command and examples.
+{{< /alert >}}
