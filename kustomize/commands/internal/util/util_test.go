@@ -76,7 +76,7 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	invalidURL := "http://invalid"
 	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL}, false)
 	require.Error(t, err, "expected error but did not receive one")
-	require.Equal(t, "pattern "+invalidURL+" has no match: "+invalidURL+" not exist", err.Error(), "unexpected load error")
+	require.Equal(t, invalidURL+" has no match: "+invalidURL+" not exist", err.Error(), "unexpected load error")
 	require.Equal(t, 0, len(resources), "incorrect resources")
 
 	// test load unreachable remote file with skipped verification

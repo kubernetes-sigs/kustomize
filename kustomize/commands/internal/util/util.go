@@ -55,7 +55,7 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 
 		loader, err := ldr.New(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("pattern %s has no match: %w", pattern, err)
+			return nil, fmt.Errorf("%s has no match: %w", pattern, err)
 		}
 
 		result = append(result, pattern)

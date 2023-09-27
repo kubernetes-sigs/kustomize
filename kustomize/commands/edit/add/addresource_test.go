@@ -103,5 +103,5 @@ func TestAddResourceFileNotFound(t *testing.T) {
 	args := []string{resourceFileName}
 
 	err := cmd.RunE(cmd, args)
-	assert.EqualError(t, err, "pattern "+resourceFileName+" has no match: must build at directory: not a valid directory: '"+resourceFileName+"' doesn't exist")
+	assert.EqualError(t, err, resourceFileName+" has no match: must build at directory: not a valid directory: '"+resourceFileName+"' doesn't exist")
 }
