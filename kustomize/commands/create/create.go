@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/loader"
+	ldrhelper "sigs.k8s.io/kustomize/api/pkg/loader"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
@@ -99,7 +99,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, rf *resource.Factory) 
 	var resources []string
 	var err error
 	if opts.resources != "" {
-		resources, err = util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), strings.Split(opts.resources, ","))
+		resources, err = util.GlobPatternsWithLoader(fSys, ldrhelper.NewFileLoaderAtCwd(fSys), strings.Split(opts.resources, ","))
 		if err != nil {
 			return err
 		}
