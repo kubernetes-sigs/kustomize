@@ -16,9 +16,10 @@ description: >
 ## Motivation
 It may be useful to enforce consistency across the namespace and names of all Resources within a project.
 
+Typical use cases include:
 - Ensure all Resources are in the correct Namespace
 - Ensure all Resources share a common naming convention
-- Copy or Fork an existing Project and change the Namespace / Names
+- Copy or fork an existing project and change the Namespace or Resource name
 
 ## Setting Namespace
 The Namespace for all namespaced Resources declared in the Resource Config may be set with `namespace`. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources within a project.
@@ -28,9 +29,9 @@ See the [Reference](/docs/reference/) section for the [namespace](/docs/referenc
 {{< /alert >}}
 
 ## Setting Resource Name prefix and suffix
-The prefix or suffix value may be added to the names of all generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources within a project.
+The prefix or suffix value may be added to the name of all generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources within a project.
 
-The name prefix and suffix is propagated to references to Resources. This includes the scenarios below:
+The name prefix and suffix is propagated to references to the Resource. Common scenarios include:
 - Service references from StatefulSets
 - ConfigMap references from PodSpecs
 - Secret references from PodSpecs

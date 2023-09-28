@@ -32,7 +32,7 @@ The kubernetes.io documentation defines a set of [Common Labeling Conventions](h
 
 **Note:** `commonLabels` should only be set for immutable labels because they will be applied to Selectors.
 
-Labeling Workload Resources simplifies queries for Pods and Pod logs.
+Labeling Workload Resources simplifies queries for Pods and getting Pod logs.
 
 {{< alert color="success" title="Command and Examples" >}}
 See the [Reference](/docs/reference/) section for the [commonLabels](/docs/reference/api/kustomization-file/commonlabels/) command and examples.
