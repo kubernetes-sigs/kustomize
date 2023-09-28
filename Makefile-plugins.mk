@@ -97,13 +97,12 @@ generate-kustomize-builtin-plugins: $(builtplugins)
 		set -e; \
 		cd $${plugin}; \
 		go generate pluginator .; \
-	done; \
-	cd ../../../; \
-	make no-diff \
+	done
 
-# Check for diff, if diff is found, throw error code 1
-.PHONY: no-diff
-no-diff: $(builtplugins)
+# Check for diff by comparing current revision of generated plugins on HEAD and newly generated plugins on local branch, 
+# If diff is found, throw error code 1
+.PHONY: builtin-plugins-diff
+builtin-plugins-diff: $(builtplugins)
 	for file in $(abspath $(builtinplugins)); do \
 		echo "Checking for diff... $${file}" ; \
 		set -e ; \
