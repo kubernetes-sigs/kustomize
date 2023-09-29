@@ -4,8 +4,6 @@ name: APIDiff
 on:
   push:
   pull_request:
-    paths-ignore:
-      - 'site/**'
 
 jobs:
   go-apidiff:
