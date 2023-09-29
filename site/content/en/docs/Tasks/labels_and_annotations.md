@@ -13,7 +13,7 @@ description: >
 {{< /alert >}}
 
 ## Motivation
-Users may want to define a common set of labels or annotations for all the Resources in a project.
+It may be useful to define a common set of labels or annotations for all the Resources in a project.
 
 Typical use cases include:
 - Identify the Resources within a project by querying their labels.
