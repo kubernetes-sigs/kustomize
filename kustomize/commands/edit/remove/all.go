@@ -25,6 +25,9 @@ func NewCmdRemove(
 	# Removes one or more configmap from the kustomization file
 	kustomize edit remove configmap {name1},{name2}
 
+	# Removes one or more secret from the kustomization file
+	kustomize edit remove secret {name1},{name2}
+
 	# Removes one or more patches from the kustomization file
 	kustomize edit remove patch --path {filepath} --group {target group name} --version {target version}
 
@@ -41,6 +44,7 @@ func NewCmdRemove(
 	}
 	c.AddCommand(
 		newCmdRemoveConfigMap(fSys),
+		newCmdRemoveSecret(fSys),
 		newCmdRemoveResource(fSys),
 		newCmdRemoveLabel(fSys, v.MakeLabelNameValidator()),
 		newCmdRemoveAnnotation(fSys, v.MakeAnnotationNameValidator()),
