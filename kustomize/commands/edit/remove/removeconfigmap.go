@@ -20,7 +20,7 @@ type removeConfigMapOptions struct {
 	configMapNamesToRemove []string
 }
 
-// newCmdRemoveResource remove the name of a file containing a resource to the kustomization file.
+// newCmdRemoveConfigMap removes configMapGenerator(s) with the specified name(s).
 func newCmdRemoveConfigMap(fSys filesys.FileSystem) *cobra.Command {
 	var o removeConfigMapOptions
 
