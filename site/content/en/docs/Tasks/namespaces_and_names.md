@@ -2,7 +2,7 @@
 title: "Namespaces and Names"
 linkTitle: "Namespaces and Names"
 weight: 3
-date: 2017-01-05
+date: 2023-09-29
 description: >
   Working with Namespaces and Names
 ---

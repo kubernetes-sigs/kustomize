@@ -2,7 +2,7 @@
 title: "ConfigMaps and Secrets"
 linkTitle: "ConfigMaps and Secrets"
 weight: 1
-date: 2017-01-05
+date: 2023-09-29
 description: >
   Working with ConfigMaps and Secrets
 ---

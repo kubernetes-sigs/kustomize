@@ -2,7 +2,7 @@
 title: "Labels and Annotations"
 linkTitle: "Labels and Annotations"
 weight: 4
-date: 2017-01-05
+date: 2023-09-29
 description: >
   Working with Labels and Annotations
 ---
