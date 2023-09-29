@@ -40,7 +40,7 @@ It is important to note that rollout behavior depends on how the workload consum
 - ConfigMaps mounted in a volume are updated automatically.
 - ConfigMaps consumed as environment variables are not updated automatically and require a pod restart.
 
-Typically users want to perform a rolling update of the ConfigMap changes to Pods as soon as the ConfigMap changes are pushed.
+It is common practice to perform a rolling update of the ConfigMap changes to Pods as soon as the ConfigMap changes are pushed.
 
 Apply facilitates rolling updates for ConfigMaps by creating a new ConfigMap for each change to the data. Workloads (e.g. Deployments, StatefulSets, etc) are updated to point to a new ConfigMap instead of the old one. This allows the change to be gradually rolled the same way other Pod Template changes are rolled out.
 
