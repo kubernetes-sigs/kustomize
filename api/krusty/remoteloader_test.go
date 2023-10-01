@@ -205,8 +205,8 @@ resources:
 resources:
 - file://$ROOT/with-submodule.git/submodule?ref=relative-submodule
 `,
-			// TODO(annasong): Replace with simpleBuild once #5131 is fixed.
-			err: `failed to run '\S+/git submodule update --init --recursive'`,
+
+			expected: simpleBuild,
 		},
 		{
 			name: "has timeout",
