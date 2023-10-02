@@ -53,7 +53,7 @@ func (o *addResourceOptions) Validate(args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fSys filesys.FileSystem) error {
-	resources, err := util.GlobPatternsWithLoader(fSys, loader.NewFileLoaderAtCwd(fSys), o.resourceFilePaths, o.skipValidation)
+	resources, err := util.GlobPatternsWithLoader(fSys, ldrhelper.NewFileLoaderAtCwd(fSys), o.resourceFilePaths, o.skipValidation)
 	if err != nil {
 		return err
 	}
