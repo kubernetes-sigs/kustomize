@@ -26,7 +26,7 @@ jobs:
           compare-imports: true
           print-compatible: true
       - name: Report failure
-        uses: nashmaniac/create-issue-action@v1.1
+        uses: nashmaniac/create-issue-action@v1.2
         # Only report failures of pushes (PRs have are visible through the Checks section) to the default branch
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
