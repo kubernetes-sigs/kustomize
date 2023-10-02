@@ -93,8 +93,9 @@ func MakeFakeFs(td []testData) filesys.FileSystem {
 	return fSys
 }
 
-func makeLoader() *fileLoader {
-	return NewFileLoaderAtRoot(MakeFakeFs(testCases))
+func makeLoader() *FileLoader {
+	return NewLoaderOrDie(
+		RestrictionRootOnly, MakeFakeFs(testCases), filesys.Separator)
 }
 
 func TestLoaderLoad(t *testing.T) {
@@ -226,7 +227,7 @@ func TestLoaderLocalScheme(t *testing.T) {
 			dir.Join(filepath.Join(parts...)),
 			[]byte(content),
 		))
-		actualContent, err := newLoaderOrDie(RestrictionRootOnly,
+		actualContent, err := NewLoaderOrDie(RestrictionRootOnly,
 			fSys,
 			dir.String(),
 		).Load(strings.Join(parts, "//"))
@@ -240,7 +241,7 @@ func TestLoaderLocalScheme(t *testing.T) {
 			"root",
 		}
 		require.NoError(t, fSys.MkdirAll(dir.Join(filepath.Join(parts...))))
-		ldr, err := newLoaderOrDie(RestrictionRootOnly,
+		ldr, err := NewLoaderOrDie(RestrictionRootOnly,
 			fSys,
 			dir.String(),
 		).New(strings.Join(parts, "//"))
@@ -322,7 +323,7 @@ func TestRestrictionRootOnlyInRealLoader(t *testing.T) {
 
 	var l ifc.Loader
 
-	l = newLoaderOrDie(RestrictionRootOnly, fSys, dir)
+	l = NewLoaderOrDie(RestrictionRootOnly, fSys, dir)
 
 	l = doSanityChecksAndDropIntoBase(t, l)
 
@@ -343,7 +344,7 @@ func TestRestrictionNoneInRealLoader(t *testing.T) {
 
 	var l ifc.Loader
 
-	l = newLoaderOrDie(RestrictionNone, fSys, dir)
+	l = NewLoaderOrDie(RestrictionNone, fSys, dir)
 
 	l = doSanityChecksAndDropIntoBase(t, l)
 
@@ -442,7 +443,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 
 	// Establish that a local overlay can navigate
 	// to the local bases.
-	l1 = newLoaderOrDie(
+	l1 = NewLoaderOrDie(
 		RestrictionRootOnly, fSys, cloneRoot+"/foo/overlay")
 	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
 
@@ -600,7 +601,8 @@ func TestLoaderHTTP(t *testing.T) {
 		},
 	}
 
-	l1 := NewFileLoaderAtRoot(MakeFakeFs(testCasesFile))
+	l1 := NewLoaderOrDie(
+		RestrictionRootOnly, MakeFakeFs(testCasesFile), filesys.Separator)
 	require.Equal("/", l1.Root())
 
 	for _, x := range testCasesFile {

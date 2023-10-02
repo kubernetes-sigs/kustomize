@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/internal/loader"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/loader"
-	"sigs.k8s.io/kustomize/api/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
