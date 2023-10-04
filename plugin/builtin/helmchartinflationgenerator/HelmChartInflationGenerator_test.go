@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -770,11 +769,10 @@ releaseName: podinfo2
 	podinfo2ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo2ChartsDir, "Chart.yaml"))
 	assert.NoError(t, err)
 	assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
-
 }
 
 // Addressed: https://github.com/kubernetes-sigs/kustomize/issues/5163
-func TestHelmChartInflationGeneratorWithLocalChartWithVersion(t *testing.T) {
+func TestHelmChartInflationGeneratorWithLocalChartWithVersion5163(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
 	defer th.Reset()
@@ -782,46 +780,27 @@ func TestHelmChartInflationGeneratorWithLocalChartWithVersion(t *testing.T) {
 		t.Skip("skipping: " + err.Error())
 	}
 
-	err := th.GetFSys().MkdirAll(filepath.Join(th.GetRoot(), "charts/dummy/templates"))
-	require.NoError(t, err)
+	copyTestChartsIntoHarness(t, th)
 
-	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/Chart.yaml"), `
-apiVersion: v1
-appVersion: 1.0.0
-description: Dummy
-name: dummy
-version: 1.0.0
-`)
-
-	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/values.yaml"), `
-foo: bar
-`)
-
-	th.WriteF(filepath.Join(th.GetRoot(), "charts/dummy/templates/cm.yaml"), `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.foo }}
-`)
-
-	dummyInlineHelmChart := th.LoadAndRunGenerator(`
+	rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
-  name: dummy
-name: dummy
+  name: issue5163
+name: issue5163
 version: 1.0.0
-releaseName: dummy
+releaseName: issue5163
+chartHome: ./charts
 `)
 
-	dummyConfigmap, err := dummyInlineHelmChart.Resources()[0].GetFieldValue("metadata.name")
+	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
 	assert.NoError(t, err)
-	assert.Equal(t, "bar", dummyConfigmap)
+	assert.Equal(t, "bar", cm)
 
-	dummyChartsDir := filepath.Join(th.GetRoot(), "charts/dummy")
-	assert.True(t, th.GetFSys().Exists(dummyChartsDir))
+	chartDir := filepath.Join(th.GetRoot(), "charts/issue5163")
+	assert.True(t, th.GetFSys().Exists(chartDir))
 
-	dummyChartsContent, err := th.GetFSys().ReadFile(filepath.Join(dummyChartsDir, "Chart.yaml"))
+	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
 	assert.NoError(t, err)
-	assert.Contains(t, string(dummyChartsContent), "version: 1.0.0")
+	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }
