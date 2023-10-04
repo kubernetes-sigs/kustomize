@@ -386,3 +386,87 @@ foo:
 		t.Fatalf("Expect an unknown field error but got: %v", err)
 	}
 }
+
+func TestPreserveTrailingCommentsEndLine(t *testing.T) {
+	kustomizationContentWithTrailingComments := []byte(`
+# Leading comments
+apiVersion: kustomize.config.k8s.io/v1beta1 # example
+kind: Kustomization
+resources:
+- ./deployment.yaml
+`)
+
+	expected := []byte(`
+# Leading comments
+apiVersion: kustomize.config.k8s.io/v1beta1 # example
+kind: Kustomization
+resources:
+- ./deployment.yaml
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(
+		fSys, kustomizationContentWithTrailingComments)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
+func TestPreserveTrailingCommentsEndFile(t *testing.T) {
+	kustomizationContentWithTrailingComments := []byte(`
+# Leading comments
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ./deployment.yaml
+
+# Trailing comments
+# should preserve also.
+`)
+
+	expected := []byte(`
+# Leading comments
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ./deployment.yaml
+
+# Trailing comments
+# should preserve also.
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(
+		fSys, kustomizationContentWithTrailingComments)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
