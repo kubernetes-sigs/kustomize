@@ -36,11 +36,16 @@ be updated on a regular basis going forward, and such updates
 will be reflected in the Kubernetes release notes.
 
 | Kubectl version | Kustomize version |
-| --- | --- |
-| < v1.14 | n/a |
-| v1.14-v1.20 | v2.0.3 |
-| v1.21 | v4.0.5 |
-| v1.22 | v4.2.0 |
+| --------------- | ----------------- |
+| < v1.14         | n/a               |
+| v1.14-v1.20     | v2.0.3            |
+| v1.21           | v4.0.5            |
+| v1.22           | v4.2.0            |
+| v1.23           | v4.4.1            |
+| v1.24           | v4.5.4            |
+| v1.25           | v4.5.7            |
+| v1.26           | v4.5.7            |
+| v1.27           | v5.0.1            |
 
 [v2.0.3]: https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3
 [#2506]: https://github.com/kubernetes-sigs/kustomize/issues/2506
@@ -63,7 +68,37 @@ This file should declare those resources, and any
 customization to apply to them, e.g. _add a common
 label_.
 
-![base image][imageBase]
+```
+
+base: kustomization + resources
+
+kustomization.yaml                                      deployment.yaml                                                 service.yaml
++---------------------------------------------+         +-------------------------------------------------------+       +-----------------------------------+
+| apiVersion: kustomize.config.k8s.io/v1beta1 |         | apiVersion: apps/v1                                   |       | apiVersion: v1                    |
+| kind: Kustomization                         |         | kind: Deployment                                      |       | kind: Service                     |
+|.commonLabels:                               |         | metadata:                                             |       | metadata:                         |
+|   app: myapp                                |         |   name: myapp                                         |       |   name: myapp                     |
+| resources:                                  |         | spec:                                                 |       | spec:                             |
+|   - deployment.yaml                         |         |   selector:                                           |       |   selector:                       |
+|   - service.yaml                            |         |     matchLabels:                                      |       |     app: myapp                    |
+| configMapGenerator:                         |         |       app: myapp                                      |       |   ports:                          |
+|   - name: myapp-map                         |         |   template:                                           |       |     - port: 6060                  |
+|     literals:                               |         |     metadata:                                         |       |       targetPort: 6060            |
+|       - KEY=value                           |         |       labels:                                         |       +-----------------------------------+
++---------------------------------------------+         |         app: myapp                                    |
+                                                        |     spec:                                             |
+                                                        |       containers:                                     |
+                                                        |         - name: myapp                                 |
+                                                        |           image: myapp                                |
+                                                        |           resources:                                  |
+                                                        |             limits:                                   |
+                                                        |               memory: "128Mi"                         |
+                                                        |               cpu: "500m"                             |
+                                                        |           ports:                                      |
+                                                        |             - containerPort: 6060                     |
+                                                        +-------------------------------------------------------+
+
+```
 
 File structure:
 
@@ -99,20 +134,41 @@ Manage traditional [variants] of a configuration - like
 _development_, _staging_ and _production_ - using
 [overlays] that modify a common [base].
 
-![overlay image][imageOverlay]
+```
+
+overlay: kustomization + patches
+
+kustomization.yaml                                      replica_count.yaml                      cpu_count.yaml
++-----------------------------------------------+       +-------------------------------+       +------------------------------------------+
+| apiVersion: kustomize.config.k8s.io/v1beta1   |       | apiVersion: apps/v1           |       | apiVersion: apps/v1                      |
+| kind: Kustomization                           |       | kind: Deployment              |       | kind: Deployment                         |
+| commonLabels:                                 |       | metadata:                     |       | metadata:                                |  
+|   variant: prod                               |       |   name: myapp                 |       |   name: myapp                            |
+| resources:                                    |       | spec:                         |       | spec:                                    |
+|   - ../../base                                |       |   replicas: 80                |       |  template:                               |
+| patches:                                      |       +-------------------------------+       |     spec:                                |
+|   - path: replica_count.yaml                  |                                               |       containers:                        |
+|   - path: cpu_count.yaml                      |                                               |         - name: myapp                    |  
++-----------------------------------------------+                                               |           resources:                     |
+                                                                                                |             limits:                      |
+                                                                                                |               memory: "128Mi"            |
+                                                                                                |               cpu: "7000m"               |
+                                                                                                +------------------------------------------+
+```
+
 
 File structure:
 > ```
 > ~/someApp
 > ├── base
-> │   ├── deployment.yaml
-> │   ├── kustomization.yaml
-> │   └── service.yaml
+> │   ├── deployment.yaml
+> │   ├── kustomization.yaml
+> │   └── service.yaml
 > └── overlays
 >     ├── development
->     │   ├── cpu_count.yaml
->     │   ├── kustomization.yaml
->     │   └── replica_count.yaml
+>     │   ├── cpu_count.yaml
+>     │   ├── kustomization.yaml
+>     │   └── replica_count.yaml
 >     └── production
 >         ├── cpu_count.yaml
 >         ├── kustomization.yaml
@@ -166,8 +222,6 @@ is governed by the [Kubernetes Code of Conduct].
 [applied]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#apply
 [base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
 [declarative configuration]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#declarative-application-management
-[imageBase]: images/base.jpg
-[imageOverlay]: images/overlay.jpg
 [kubectl announcement]: https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement
 [kubernetes documentation]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/
 [kubernetes style]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#kubernetes-style-object

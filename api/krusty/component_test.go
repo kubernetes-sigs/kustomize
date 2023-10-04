@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/internal/loader"
 	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/loader"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 

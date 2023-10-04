@@ -9,8 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/api/ifc"
+	loader "sigs.k8s.io/kustomize/api/internal/loader"
 	"sigs.k8s.io/kustomize/api/kv"
-	"sigs.k8s.io/kustomize/api/loader"
+	ldrpkg "sigs.k8s.io/kustomize/api/pkg/loader"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	resmaptest_test "sigs.k8s.io/kustomize/api/testutils/resmaptest"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
@@ -249,7 +250,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 
 	actual, err := rmF.NewResMapFromSecretArgs(
 		kv.NewLoader(
-			loader.NewFileLoaderAtRoot(fSys),
+			ldrpkg.NewFileLoaderAtRoot(fSys),
 			valtest_test.MakeFakeValidator()), secrets)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
