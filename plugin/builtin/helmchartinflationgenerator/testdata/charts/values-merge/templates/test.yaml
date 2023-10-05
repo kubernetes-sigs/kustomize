@@ -1,0 +1,14 @@
+---
+apiVersion: test.kustomize.io/v1
+kind: ValuesMergeTest
+metadata:
+  name: {{ .Chart.Name }}
+obj:
+  a: {{ .Values.a }}
+  b: {{ .Values.b }}
+  c: {{ .Values.c }}
+  list: {{ .Values.list | toYaml | nindent 2 }}
+  map:
+    a: {{ .Values.map.a }}
+    b: {{ .Values.map.b }}
+    c: {{ .Values.map.c }}

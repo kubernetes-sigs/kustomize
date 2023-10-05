@@ -16,11 +16,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/imdario/mergo"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -207,18 +208,29 @@ func (p *plugin) replaceValuesInline() error {
 	if err != nil {
 		return err
 	}
-	chValues := make(map[string]interface{})
-	if err = yaml.Unmarshal(pValues, &chValues); err != nil {
+	chValues, err := kyaml.Parse(string(pValues))
+	if err != nil {
 		return err
 	}
+	inlineValues, err := kyaml.FromMap(p.ValuesInline)
+	if err != nil {
+		return err
+	}
+	var outValues *kyaml.RNode
 	switch p.ValuesMerge {
 	case valuesMergeOptionOverride:
-		err = mergo.Merge(
-			&chValues, p.ValuesInline, mergo.WithOverride)
+		outValues, err = merge2.Merge(inlineValues, chValues, kyaml.MergeOptions{})
 	case valuesMergeOptionMerge:
-		err = mergo.Merge(&chValues, p.ValuesInline)
+		outValues, err = merge2.Merge(chValues, inlineValues, kyaml.MergeOptions{})
 	}
-	p.ValuesInline = chValues
+	if err != nil {
+		return err
+	}
+	mapValues, err := outValues.Map()
+	if err != nil {
+		return err
+	}
+	p.ValuesInline = mapValues
 	return err
 }
 

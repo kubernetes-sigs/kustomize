@@ -619,6 +619,99 @@ metadata:
 `)
 }
 
+func TestHelmChartInflationGeneratorValuesOverride(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyTestChartsIntoHarness(t, th)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: values-merge
+name: values-merge
+releaseName: values-merge
+valuesMerge: override
+valuesInline:
+  a: 4
+  c: 3
+  list:
+  - c
+  map:
+    a: 7
+    c: 6
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: test.kustomize.io/v1
+kind: ValuesMergeTest
+metadata:
+  name: values-merge
+obj:
+  a: 4
+  b: 2
+  c: 3
+  list:
+  - c
+  map:
+    a: 7
+    b: 5
+    c: 6
+`)
+}
+
+func TestHelmChartInflationGeneratorValuesMerge(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyTestChartsIntoHarness(t, th)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: values-merge
+name: values-merge
+releaseName: values-merge
+valuesMerge: merge
+valuesInline:
+  a: 4
+  c: 3
+  list:
+  - c
+  map:
+    a: 7
+    c: 6
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: test.kustomize.io/v1
+kind: ValuesMergeTest
+metadata:
+  name: values-merge
+obj:
+  a: 1
+  b: 2
+  c: 3
+  list:
+  - a
+  - b
+  map:
+    a: 4
+    b: 5
+    c: 6
+`)
+}
+
 func copyTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 	t.Helper()
 
