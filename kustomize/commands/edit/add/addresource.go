@@ -16,6 +16,7 @@ import (
 
 type addResourceOptions struct {
 	resourceFilePaths []string
+	noVerify          bool
 }
 
 // newCmdAddResource adds the name of a file containing a resource to the kustomization file.
@@ -35,6 +36,9 @@ func newCmdAddResource(fSys filesys.FileSystem) *cobra.Command {
 			return o.RunAddResource(fSys)
 		},
 	}
+	cmd.Flags().BoolVar(&o.noVerify, "no-verify", false,
+		"skip validation for resources",
+	)
 	return cmd
 }
 
@@ -49,7 +53,7 @@ func (o *addResourceOptions) Validate(args []string) error {
 
 // RunAddResource runs addResource command (do real work).
 func (o *addResourceOptions) RunAddResource(fSys filesys.FileSystem) error {
-	resources, err := util.GlobPatternsWithLoader(fSys, ldrhelper.NewFileLoaderAtCwd(fSys), o.resourceFilePaths)
+	resources, err := util.GlobPatternsWithLoader(fSys, ldrhelper.NewFileLoaderAtCwd(fSys), o.resourceFilePaths, o.noVerify)
 	if err != nil {
 		return err
 	}
