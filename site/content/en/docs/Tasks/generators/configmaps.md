@@ -29,7 +29,7 @@ configMapGenerator:
   - application.properties
 ```
 
-2. Create a `.properties` file
+2. Create a `.properties` file.
 ```yaml
 # application.properties
 FOO=Bar
@@ -64,7 +64,7 @@ list of `literals`.
 
 The following example generates a ConfigMap with two data items generated from literals.
 
-1. Create a Kustomization file
+1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -106,7 +106,7 @@ single `envs` entry, e.g. `envs: [ 'config.env' ]`.
 
 The following example generates a ConfigMap with three data items generated from an environment file.
 
-1. Create a Kustomization file
+1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -117,7 +117,7 @@ configMapGenerator:
   - tracing.env
 ```
 
-2. Create an environment file
+2. Create an environment file.
 ```bash
 # tracing.env
 ENABLE_TRACING=true
@@ -192,7 +192,7 @@ Kustomize will update the name to include the suffix applied to the ConfigMap na
 
 The following example generates a ConfigMap and propogates the ConfigMap name, including the suffix, to a Deployment that mounts the ConfigMap.
 
-1. Create a Kustomization file
+1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -206,7 +206,7 @@ resources:
 - deployment.yaml
 ```
 
-2. Create a Deployment manifest
+2. Create a Deployment manifest.
 ```yaml
 # deployment.yaml
 apiVersion: apps/v1
