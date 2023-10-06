@@ -16,9 +16,9 @@ Resource for a file, add an entry to `configMapGenerator` with the filename.
 
 The ConfigMaps will have data values populated from the file contents. The contents of each file will appear as a single data item in the ConfigMap keyed by the filename.
 
-This example demonstrates out to generate a ConfigMap with a data item containing the contents of a file.
+The following example generates a ConfigMap with a data item containing the contents of a file.
 
-1. Create the Kustomization file.
+1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -29,7 +29,7 @@ configMapGenerator:
   - application.properties
 ```
 
-2. Create the `.properties` file
+2. Create a `.properties` file
 ```yaml
 # application.properties
 FOO=Bar
@@ -53,6 +53,95 @@ metadata:
 
 ## Generate a ConfigMap from literals
 
+ConfigMap Resources may be generated from literal key-value pairs - such as `JAVA_HOME=/opt/java/jdk`.
+To generate a ConfigMap Resource from literal key-value pairs, add an entry to `configMapGenerator` with a
+list of `literals`.
+
+{{< alert color="success" title="Literal Syntax" >}}
+- The key/value are separated by a `=` sign (left side is the key)
+- The value of each literal will appear as a data item in the ConfigMap keyed by its key.
+{{< /alert >}}
+
+The following example generates a ConfigMap with two data items generated from literals.
+
+1. Create a Kustomization file
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- name: my-java-server-env-vars
+  literals:
+  - JAVA_HOME=/opt/java/jdk
+  - JAVA_TOOL_OPTIONS=-agentlib:hprof
+```
+
+2. Create the ConfigMap using `kustomize build`:
+```bash
+kustomize build .
+```
+
+3. The output is similar to:
+```yaml
+apiVersion: v1
+data:
+  JAVA_HOME: /opt/java/jdk
+  JAVA_TOOL_OPTIONS: -agentlib:hprof
+kind: ConfigMap
+metadata:
+  name: my-java-server-env-vars-44k658k8gk
+```
+
 ## Generate a ConfigMap from an `env` file
+ConfigMap Resources may be generated from key-value pairs much the same as using the literals option
+but taking the key-value pairs from an environment file. These generally end in `.env`.
+To generate a ConfigMap Resource from an environment file, add an entry to `configMapGenerator` with a
+single `envs` entry, e.g. `envs: [ 'config.env' ]`.
+
+{{< alert color="success" title="Environment File Syntax" >}}
+- The key/value pairs inside of the environment file are separated by a `=` sign (left side is the key)
+- The value of each line will appear as a data item in the ConfigMap keyed by its key.
+- Pairs may span a single line only.
+{{< /alert >}}
+
+The following example generates a ConfigMap with three data items generated from an environment file.
+
+1. Create a Kustomization file
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- name: tracing-options
+  envs:
+  - tracing.env
+```
+
+2. Create an environment file
+```bash
+# tracing.env
+ENABLE_TRACING=true
+SAMPLER_TYPE=probabilistic
+SAMPLER_PARAMETERS=0.1
+```
+
+3. Create the ConfigMap using `kustomize build`:
+```bash
+kustomize build .
+```
+
+4. The output is similar to:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # The name has had a suffix applied
+  name: tracing-options-6bh8gkdf7k
+# The data has been populated from each literal pair
+data:
+  ENABLE_TRACING: "true"
+  SAMPLER_TYPE: "probabilistic"
+  SAMPLER_PARAMETERS: "0.1"
+```
 
 ## Override base ConfigMap values
