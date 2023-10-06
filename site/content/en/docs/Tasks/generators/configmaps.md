@@ -145,3 +145,144 @@ data:
 ```
 
 ## Override base ConfigMap values
+ConfigMap values from bases may be overridden by adding another generator for the ConfigMap
+in the overlay and specifying the `behavior` field.
+
+`behavior` may be one of:
+* `create` (default value): used to create a new ConfigMap. A name conflict error will be thrown if a ConfigMap with the same name and namespace already exists.
+* `replace`: replace an existing ConfigMap from the base.
+* `merge`: add or update the values in an existing ConfigMap from the base.
+
+When updating an existing ConfigMap with the `merge` or `replace` strategies, you must ensure that both the name and namespace match the ConfigMap you're targeting. For example, if the namespace is unspecified in the base, you should not specify it in the overlay. Conversely, if it is specified in the base, you must specify it in the overlay as well. This is true even if the overlay Kustomization includes a namespace, because `configMapGenerator` runs before the namespace transformer.
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: my-new-namespace
+
+resources:
+- ../base
+
+configMapGenerator:
+  - name: existing-name
+    namespace: existing-ns # needs to match target ConfigMap from base
+    behavior: replace
+    literals:
+      - ENV=dev
+```
+
+{{< alert color="warning" title="Name suffixing with overlay configMapGenerator" >}}
+When using `configMapGenerator` to override values of an existing ConfigMap, the overlay `configMapGenerator` does not cause suffixing of the existing ConfigMap's name to occur. To take advantage of name suffixing, use `configMapGenerator` in the base, and the overlay generator will correctly update the suffix based on the new content. 
+{{< /alert >}}
+
+
+## Propagating the Name Suffix
+
+Workloads that reference the ConfigMap or Secret will need to know the name of the generated Resource,
+including the suffix. Kustomize takes care of this automatically by identifying
+references to generated ConfigMaps and Secrets, and updating them.
+
+In the following example, the generated ConfigMap name will be `my-java-server-env-vars` with a suffix unique to its contents.
+Changes to the contents will change the name suffix, resulting in the creation of a new ConfigMap,
+which Kustomize will transform Workloads to point to.
+
+The PodTemplate volume references the ConfigMap by the name specified in the generator (excluding the suffix).
+Kustomize will update the name to include the suffix applied to the ConfigMap name.
+
+The following example generates a ConfigMap and propogates the ConfigMap name, including the suffix, to a Deployment that mounts the ConfigMap.
+
+1. Create a Kustomization file
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- name: my-java-server-env-vars
+  literals:
+  - JAVA_HOME=/opt/java/jdk
+  - JAVA_TOOL_OPTIONS=-agentlib:hprof
+resources:
+- deployment.yaml
+```
+
+2. Create a Deployment manifest
+```yaml
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  labels:
+    app: test
+spec:
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: container
+        image: registry.k8s.io/busybox
+        command: [ "/bin/sh", "-c", "ls /etc/config/" ]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: my-java-server-env-vars
+```
+
+3. Create the ConfigMap using `kustomize build`:
+```bash
+kustomize build .
+```
+
+4. The output is similar to: 
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # The name has been updated to include the suffix
+  name: my-java-server-env-vars-k44mhd6h5f
+data:
+  JAVA_HOME: /opt/java/jdk
+  JAVA_TOOL_OPTIONS: -agentlib:hprof
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test
+  name: test-deployment
+spec:
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - ls /etc/config/
+        image: registry.k8s.io/busybox
+        name: container
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+      volumes:
+      - configMap:
+          # The name has been updated to include the
+          # suffix matching the ConfigMap
+          name: my-java-server-env-vars-k44mhd6h5f
+        name: config-volume
+```
