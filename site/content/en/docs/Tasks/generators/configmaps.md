@@ -1,8 +1,8 @@
 ---
-title: "Generate ConfigMaps"
-linkTitle: "Generate ConfigMaps"
+title: "Generating ConfigMaps"
+linkTitle: "Generating ConfigMaps"
 weight: 1
 date: 2023-10-06
 description: >
-  Generating ConfigMap Resources
+  Creating ConfigMap objects using `configMapGenerator`
 ---

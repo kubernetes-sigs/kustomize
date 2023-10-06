@@ -1,8 +1,8 @@
 ---
-title: "Generate Secrets"
-linkTitle: "Generate Secrets"
-weight: 2
+title: "Generating Secrets"
+linkTitle: "Generating Secrets"
+weight: 1
 date: 2023-10-06
 description: >
-  Generating Secret Resources
+  Creating Secret objects using `secretGenerator`
 ---
