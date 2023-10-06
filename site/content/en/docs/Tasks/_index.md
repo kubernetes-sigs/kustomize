@@ -1,7 +1,7 @@
 ---
 title: "Tasks"
 linkTitle: "Tasks"
-weight: 1
+weight: 4
 date: 2023-10-06
 description: >
   Kustomize core tasks
