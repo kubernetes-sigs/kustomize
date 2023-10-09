@@ -306,7 +306,6 @@ func TestEditAddConfigMapWithFileSource(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			fSys := filesys.MakeEmptyDirInMemory()
 			testutils_test.WriteTestKustomization(fSys)
 
