@@ -57,6 +57,7 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 	if err := m.SetStyle(nodes); err != nil {
 		return nil, err
 	}
+
 	if yaml.IsMissingOrNull(nodes.Dest()) {
 		// Add
 		ps, _ := determineSmpDirective(nodes.Origin())
@@ -66,12 +67,17 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 
 		// If Origin is missing, preserve explicitly set null in Dest ("null", "~", etc)
 		if nodes.Origin().IsNil() && !nodes.Dest().IsNil() && len(nodes.Dest().YNode().Value) > 0 {
-			// Return a new node so that it won't have a "!!null" tag and therefore won't be cleared.
-			return yaml.NewScalarRNode(nodes.Dest().YNode().Value), nil
+			return nodes.Dest(), nil
+		}
+
+		// Clear
+		if nodes.Origin().IsTaggedNull() {
+			return walk.ClearNode, nil
 		}
 
 		return nodes.Origin(), nil
 	}
+
 	if nodes.Origin().IsTaggedNull() {
 		// clear the value
 		return walk.ClearNode, nil
@@ -99,6 +105,10 @@ func (m Merger) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yam
 	if err := m.SetStyle(nodes); err != nil {
 		return nil, err
 	}
+
+	if nodes.Origin().IsTaggedNull() {
+		return walk.ClearNode, nil
+	}
 	// Override value
 	if nodes.Origin() != nil {
 		return nodes.Origin(), nil
@@ -115,6 +125,11 @@ func (m Merger) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind wa
 		return nil, err
 	}
 	if kind == walk.NonAssociateList {
+		// Clear
+		if nodes.Origin().IsTaggedNull() {
+			return walk.ClearNode, nil
+		}
+
 		// Override value
 		if nodes.Origin() != nil {
 			return nodes.Origin(), nil

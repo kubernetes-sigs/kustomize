@@ -107,6 +107,49 @@ spec:
 	assert.Equal(t, expected, actual)
 }
 
+func TestMerge_null(t *testing.T) {
+	dest := yaml.MustParse(`
+kind: Deployment
+metadata:
+  annotations: null
+`)
+	src := yaml.MustParse(`
+kind: Deployment
+`)
+
+	expected, err := filters.FormatInput(bytes.NewBufferString(`
+kind: Deployment
+metadata:
+  annotations: null
+`))
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Merge the same src several times to test idempotency
+	// https://github.com/kubernetes-sigs/kustomize/issues/5031
+	for i := 0; i < 3; i++ {
+		result, err := Merge(src, dest, yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		})
+
+		if !assert.NoError(t, err) {
+			return
+		}
+		got, err := result.String()
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		formatted, err := filters.FormatInput(bytes.NewBufferString(got))
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, expected, formatted)
+		dest = result
+	}
+}
+
 func TestMerge_clear(t *testing.T) {
 	dest := yaml.MustParse(dest)
 	src := yaml.MustParse(`

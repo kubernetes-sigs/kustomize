@@ -725,7 +725,7 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	}
 
 	// Clear the field if it is empty, or explicitly null
-	if s.Value == nil || s.Value.IsTaggedNull() {
+	if s.Value == nil {
 		return rn.Pipe(Clear(s.Name))
 	}
 
