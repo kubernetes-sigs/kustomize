@@ -22,7 +22,7 @@ func newCmdAddConfigMap(
 ) *cobra.Command {
 	var flags configmapSecretFlagsAndArgs
 	cmd := &cobra.Command{
-		Use:   "configmap NAME [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
+		Use:   "configmap NAME [--namespace=namespace-name] [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
 		Short: "Adds a configmap to the kustomization file",
 		Long:  "",
 		Example: `
@@ -36,7 +36,10 @@ func newCmdAddConfigMap(
 	kustomize edit add configmap my-configmap --from-env-file=env/path.env
 
 	# Adds a configmap from env-file with behavior merge
-	kustomize edit add configmap my-configmap --behavior=merge --from-env-file=env/path.env	
+	kustomize edit add configmap my-configmap --behavior=merge --from-env-file=env/path.env
+
+    # Adds a configmap to the kustomization file with a specific namespace
+    kustomize edit add configmap my-configmap --namespace test-ns --from-literal=my-key=my-value
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
 			return runEditAddConfigMap(flags, fSys, args, ldr, rf)
@@ -62,16 +65,21 @@ func newCmdAddConfigMap(
 		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
 	cmd.Flags().BoolVar(
 		&flags.DisableNameSuffixHash,
-		flagDisableNameSuffixHash,
+		disableNameSuffixHashFlag,
 		false,
 		"Disable the name suffix for the configmap")
 	cmd.Flags().StringVar(
 		&flags.Behavior,
-		flagBehavior,
+		behaviorFlag,
 		"",
 		"Specify the behavior for config map generation, i.e whether to create a new configmap (the default),  "+
 			"to merge with a previously defined one, or to replace an existing one. Merge and replace should be used only "+
 			" when overriding an existing configmap defined in a base")
+	cmd.Flags().StringVar(
+		&flags.Namespace,
+		namespaceFlag,
+		"",
+		"Specify the namespace of the ConfigMap")
 
 	return cmd
 }
@@ -128,7 +136,7 @@ func addConfigMap(
 	flags configmapSecretFlagsAndArgs,
 	rf *resource.Factory,
 ) error {
-	args := findOrMakeConfigMapArgs(k, flags.Name)
+	args := findOrMakeConfigMapArgs(k, flags.Name, flags.Namespace)
 	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.configmap.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
@@ -137,15 +145,15 @@ func addConfigMap(
 	return err
 }
 
-func findOrMakeConfigMapArgs(m *types.Kustomization, name string) *types.ConfigMapArgs {
+func findOrMakeConfigMapArgs(m *types.Kustomization, name, namespace string) *types.ConfigMapArgs {
 	for i, v := range m.ConfigMapGenerator {
-		if name == v.Name {
+		if name == v.Name && namespace == v.Namespace {
 			return &m.ConfigMapGenerator[i]
 		}
 	}
 	// config map not found, create new one and add it to the kustomization file.
 	cm := &types.ConfigMapArgs{
-		GeneratorArgs: types.GeneratorArgs{Name: name},
+		GeneratorArgs: types.GeneratorArgs{Name: name, Namespace: namespace},
 	}
 	m.ConfigMapGenerator = append(m.ConfigMapGenerator, *cm)
 	return &m.ConfigMapGenerator[len(m.ConfigMapGenerator)-1]

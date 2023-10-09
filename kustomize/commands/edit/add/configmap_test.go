@@ -19,6 +19,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const (
+	configMapNamespace = "test-ns"
+)
+
 func TestNewAddConfigMapIsNotNil(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	assert.NotNil(t, newCmdAddConfigMap(
@@ -39,17 +43,17 @@ func TestMakeConfigMapArgs(t *testing.T) {
 	if len(kustomization.ConfigMapGenerator) != 0 {
 		t.Fatal("Initial kustomization should not have any configmaps")
 	}
-	args := findOrMakeConfigMapArgs(kustomization, cmName)
+	args := findOrMakeConfigMapArgs(kustomization, cmName, configMapNamespace)
 	assert.NotNil(t, args)
 	assert.Equal(t, 1, len(kustomization.ConfigMapGenerator))
 	assert.Equal(t, &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1], args)
-	assert.Equal(t, args, findOrMakeConfigMapArgs(kustomization, cmName))
+	assert.Equal(t, args, findOrMakeConfigMapArgs(kustomization, cmName, configMapNamespace))
 	assert.Equal(t, 1, len(kustomization.ConfigMapGenerator))
 }
 
 func TestMergeFlagsIntoConfigMapArgs_LiteralSources(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeConfigMapArgs(k, "foo")
+	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		configmapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
@@ -62,7 +66,7 @@ func TestMergeFlagsIntoConfigMapArgs_LiteralSources(t *testing.T) {
 
 func TestMergeFlagsIntoConfigMapArgs_FileSources(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeConfigMapArgs(k, "foo")
+	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		configmapSecretFlagsAndArgs{FileSources: []string{"file1"}})
@@ -75,7 +79,7 @@ func TestMergeFlagsIntoConfigMapArgs_FileSources(t *testing.T) {
 
 func TestMergeFlagsIntoConfigMapArgs_EnvSource(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeConfigMapArgs(k, "foo")
+	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		configmapSecretFlagsAndArgs{EnvFileSource: "env1"})
@@ -88,7 +92,7 @@ func TestMergeFlagsIntoConfigMapArgs_EnvSource(t *testing.T) {
 
 func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 	k := &types.Kustomization{}
-	args := findOrMakeConfigMapArgs(k, "foo")
+	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
 
 	createBehaviorFlags := configmapSecretFlagsAndArgs{
 		Behavior:      "create",
@@ -97,6 +101,7 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		createBehaviorFlags)
+	require.Equal(t, configMapNamespace, k.ConfigMapGenerator[0].Namespace)
 	assert.Equal(t, "create", k.ConfigMapGenerator[0].Behavior)
 
 	mergeBehaviorFlags := configmapSecretFlagsAndArgs{
@@ -106,6 +111,7 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		mergeBehaviorFlags)
+	require.Equal(t, configMapNamespace, k.ConfigMapGenerator[0].Namespace)
 	assert.Equal(t, "merge", k.ConfigMapGenerator[0].Behavior)
 
 	replaceBehaviorFlags := configmapSecretFlagsAndArgs{
@@ -115,6 +121,7 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 	mergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		replaceBehaviorFlags)
+	require.Equal(t, configMapNamespace, k.ConfigMapGenerator[0].Namespace)
 	assert.Equal(t, "replace", k.ConfigMapGenerator[0].Behavior)
 }
 
@@ -123,40 +130,65 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 func TestEditAddConfigMapWithLiteralSource(t *testing.T) {
 	const (
 		configMapName = "test-kustomization"
-		literalSource = "test-key=test-value"
 	)
 
-	fSys := filesys.MakeEmptyDirInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-
-	pvd := provider.NewDefaultDepProvider()
-	ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
-
-	args := []string{
-		configMapName,
-		fmt.Sprintf(flagFormat, fromLiteralFlag, literalSource),
+	testCases := []struct {
+		name               string
+		literalSource      string
+		configMapName      string
+		configMapNamespace string
+	}{
+		{
+			name:               "use literal-source with default namespace",
+			literalSource:      "test-key=test-value",
+			configMapName:      configMapName,
+			configMapNamespace: "",
+		},
+		{
+			name:               "use literal-source with specified namespace",
+			literalSource:      "other-key=other-value",
+			configMapName:      configMapName,
+			configMapNamespace: configMapNamespace,
+		},
 	}
-	cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
-	cmd.SetArgs(args)
-	require.NoError(t, cmd.Execute())
 
-	_, err := testutils_test.ReadTestKustomization(fSys)
-	require.NoError(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fSys := filesys.MakeEmptyDirInMemory()
+			testutils_test.WriteTestKustomization(fSys)
 
-	mf, err := kustfile.NewKustomizationFile(fSys)
-	require.NoError(t, err)
+			pvd := provider.NewDefaultDepProvider()
+			ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
 
-	kustomization, err := mf.Read()
-	require.NoError(t, err)
+			args := []string{
+				tc.configMapName,
+				fmt.Sprintf(flagFormat, fromLiteralFlag, tc.literalSource),
+				fmt.Sprintf(flagFormat, namespaceFlag, tc.configMapNamespace),
+			}
+			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.Execute())
 
-	require.NotNil(t, kustomization)
-	require.NotEmpty(t, kustomization.ConfigMapGenerator)
-	require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+			_, err := testutils_test.ReadTestKustomization(fSys)
+			require.NoError(t, err)
 
-	newCmGenerator := kustomization.ConfigMapGenerator[0]
-	require.NotNil(t, newCmGenerator)
-	require.Equal(t, configMapName, newCmGenerator.Name)
-	require.Contains(t, newCmGenerator.LiteralSources, literalSource)
+			mf, err := kustfile.NewKustomizationFile(fSys)
+			require.NoError(t, err)
+
+			kustomization, err := mf.Read()
+			require.NoError(t, err)
+
+			require.NotNil(t, kustomization)
+			require.NotEmpty(t, kustomization.ConfigMapGenerator)
+			require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+
+			newCmGenerator := kustomization.ConfigMapGenerator[0]
+			require.NotNil(t, newCmGenerator)
+			require.Equal(t, tc.configMapName, newCmGenerator.Name)
+			require.Equal(t, tc.configMapNamespace, newCmGenerator.Namespace)
+			require.Contains(t, newCmGenerator.LiteralSources, tc.literalSource)
+		})
+	}
 }
 
 // TestEditAddConfigMapWithEnvSource executes the same command flow as the CLI invocation
@@ -165,48 +197,79 @@ func TestEditAddConfigMapWithEnvSource(t *testing.T) {
 	const (
 		configMapName = "test-kustomization"
 		envSource     = "test-env-source"
+		content       = "TEST=value"
 	)
 
-	fSys := filesys.MakeEmptyDirInMemory()
-	testutils_test.WriteTestKustomization(fSys)
+	testCases := []struct {
+		name               string
+		envSource          string
+		content            string
+		configMapName      string
+		configMapNamespace string
+	}{
+		{
+			name:               "use env-source with default namespace",
+			envSource:          envSource,
+			content:            content,
+			configMapName:      configMapName,
+			configMapNamespace: "",
+		},
+		{
+			name: "use env-source with a specified namespace",
 
-	pvd := provider.NewDefaultDepProvider()
-	ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
-
-	envFileContent, err := fSys.Create("test-env-source")
-	require.NoError(t, err)
-
-	_, err = envFileContent.Write([]byte("TEST=value"))
-	require.NoError(t, err)
-
-	err = envFileContent.Close()
-	require.NoError(t, err)
-
-	args := []string{
-		configMapName,
-		fmt.Sprintf(flagFormat, fromEnvFileFlag, envSource),
+			envSource:          envSource,
+			content:            content,
+			configMapName:      configMapName,
+			configMapNamespace: configMapNamespace,
+		},
 	}
-	cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
-	cmd.SetArgs(args)
-	require.NoError(t, cmd.Execute())
 
-	_, err = testutils_test.ReadTestKustomization(fSys)
-	require.NoError(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fSys := filesys.MakeEmptyDirInMemory()
+			testutils_test.WriteTestKustomization(fSys)
 
-	mf, err := kustfile.NewKustomizationFile(fSys)
-	require.NoError(t, err)
+			pvd := provider.NewDefaultDepProvider()
+			ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
 
-	kustomization, err := mf.Read()
-	require.NoError(t, err)
+			envFileContent, err := fSys.Create(tc.envSource)
+			require.NoError(t, err)
 
-	require.NotNil(t, kustomization)
-	require.NotEmpty(t, kustomization.ConfigMapGenerator)
-	require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+			_, err = envFileContent.Write([]byte(tc.content))
+			require.NoError(t, err)
 
-	newCmGenerator := kustomization.ConfigMapGenerator[0]
-	require.NotNil(t, newCmGenerator)
-	require.Equal(t, configMapName, newCmGenerator.Name)
-	require.Contains(t, newCmGenerator.EnvSources, envSource)
+			err = envFileContent.Close()
+			require.NoError(t, err)
+
+			args := []string{
+				tc.configMapName,
+				fmt.Sprintf(flagFormat, fromEnvFileFlag, tc.envSource),
+				fmt.Sprintf(flagFormat, namespaceFlag, tc.configMapNamespace),
+			}
+			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.Execute())
+
+			_, err = testutils_test.ReadTestKustomization(fSys)
+			require.NoError(t, err)
+
+			mf, err := kustfile.NewKustomizationFile(fSys)
+			require.NoError(t, err)
+
+			kustomization, err := mf.Read()
+			require.NoError(t, err)
+
+			require.NotNil(t, kustomization)
+			require.NotEmpty(t, kustomization.ConfigMapGenerator)
+			require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+
+			newCmGenerator := kustomization.ConfigMapGenerator[0]
+			require.NotNil(t, newCmGenerator)
+			require.Equal(t, tc.configMapName, newCmGenerator.Name)
+			require.Equal(t, tc.configMapNamespace, newCmGenerator.Namespace)
+			require.Contains(t, newCmGenerator.EnvSources, tc.envSource)
+		})
+	}
 }
 
 // TestEditAddConfigMapWithFileSource executes the same command flow as the CLI invocation
@@ -215,46 +278,77 @@ func TestEditAddConfigMapWithFileSource(t *testing.T) {
 	const (
 		configMapName = "test-kustomization"
 		fileSource    = "test-file-source"
+		content       = "any content here"
 	)
 
-	fSys := filesys.MakeEmptyDirInMemory()
-	testutils_test.WriteTestKustomization(fSys)
-
-	pvd := provider.NewDefaultDepProvider()
-	ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
-
-	fileContent, err := fSys.Create("test-file-source")
-	require.NoError(t, err)
-
-	_, err = fileContent.Write([]byte("any content here"))
-	require.NoError(t, err)
-
-	err = fileContent.Close()
-	require.NoError(t, err)
-
-	args := []string{
-		configMapName,
-		fmt.Sprintf(flagFormat, fromFileFlag, fileSource),
+	testCases := []struct {
+		name               string
+		fileSource         string
+		content            string
+		configMapName      string
+		configMapNamespace string
+	}{
+		{
+			name:               "use file-source with default namespace",
+			fileSource:         fileSource,
+			content:            content,
+			configMapName:      configMapName,
+			configMapNamespace: "",
+		},
+		{
+			name:               "use file-source with specified namespace",
+			fileSource:         fileSource,
+			content:            content,
+			configMapName:      configMapName,
+			configMapNamespace: configMapNamespace,
+		},
 	}
-	cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
-	cmd.SetArgs(args)
-	require.NoError(t, cmd.Execute())
 
-	_, err = testutils_test.ReadTestKustomization(fSys)
-	require.NoError(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 
-	mf, err := kustfile.NewKustomizationFile(fSys)
-	require.NoError(t, err)
+			fSys := filesys.MakeEmptyDirInMemory()
+			testutils_test.WriteTestKustomization(fSys)
 
-	kustomization, err := mf.Read()
-	require.NoError(t, err)
+			pvd := provider.NewDefaultDepProvider()
+			ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
 
-	require.NotNil(t, kustomization)
-	require.NotEmpty(t, kustomization.ConfigMapGenerator)
-	require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+			fileContent, err := fSys.Create(tc.fileSource)
+			require.NoError(t, err)
 
-	newCmGenerator := kustomization.ConfigMapGenerator[0]
-	require.NotNil(t, newCmGenerator)
-	require.Equal(t, configMapName, newCmGenerator.Name)
-	require.Contains(t, newCmGenerator.FileSources, fileSource)
+			_, err = fileContent.Write([]byte(tc.content))
+			require.NoError(t, err)
+
+			err = fileContent.Close()
+			require.NoError(t, err)
+
+			args := []string{
+				tc.configMapName,
+				fmt.Sprintf(flagFormat, fromFileFlag, tc.fileSource),
+				fmt.Sprintf(flagFormat, namespaceFlag, tc.configMapNamespace),
+			}
+			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.Execute())
+
+			_, err = testutils_test.ReadTestKustomization(fSys)
+			require.NoError(t, err)
+
+			mf, err := kustfile.NewKustomizationFile(fSys)
+			require.NoError(t, err)
+
+			kustomization, err := mf.Read()
+			require.NoError(t, err)
+
+			require.NotNil(t, kustomization)
+			require.NotEmpty(t, kustomization.ConfigMapGenerator)
+			require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+
+			newCmGenerator := kustomization.ConfigMapGenerator[0]
+			require.NotNil(t, newCmGenerator)
+			require.Equal(t, tc.configMapName, newCmGenerator.Name)
+			require.Equal(t, tc.configMapNamespace, newCmGenerator.Namespace)
+			require.Contains(t, newCmGenerator.FileSources, tc.fileSource)
+		})
+	}
 }
