@@ -14,13 +14,13 @@ import (
 
 func TestDataValidation_NoName(t *testing.T) {
 	fa := ConfigMapSecretFlagsAndArgs{}
-	require.Error(t, fa.Validate([]string{}))
+	require.Error(t, fa.ValidateAdd([]string{}))
 }
 
 func TestDataValidation_MoreThanOneName(t *testing.T) {
 	fa := ConfigMapSecretFlagsAndArgs{}
 
-	require.Error(t, fa.Validate([]string{"name", "othername"}))
+	require.Error(t, fa.ValidateAdd([]string{"name", "othername"}))
 }
 
 func TestDataConfigValidation_Flags(t *testing.T) {
@@ -77,7 +77,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := test.fa.Validate([]string{"name"})
+		err := test.fa.ValidateAdd([]string{"name"})
 		if test.shouldFail {
 			require.Error(t, err)
 		} else {

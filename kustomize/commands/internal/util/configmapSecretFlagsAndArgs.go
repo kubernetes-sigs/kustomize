@@ -23,31 +23,35 @@ const (
 
 // ConfigMapSecretFlagsAndArgs encapsulates the options for add secret/configmap commands.
 type ConfigMapSecretFlagsAndArgs struct {
-	// Name of configMap/Secret (required)
+	// Name of ConfigMap/Secret (required)
 	Name string
-	// FileSources to derive the configMap/Secret from (optional)
+	// FileSources to derive the ConfigMap/Secret from (optional)
 	FileSources []string
-	// LiteralSources to derive the configMap/Secret from (optional)
+	// LiteralSources to derive the ConfigMap/Secret from (optional)
 	LiteralSources []string
-	// EnvFileSource to derive the configMap/Secret from (optional)
+	// EnvFileSource to derive the ConfigMap/Secret from (optional)
 	// TODO: Rationalize this name with Generic.EnvSource
 	EnvFileSource string
 	// Resource generation behavior (optional)
 	Behavior string
 	// Type of secret to create
 	Type string
-	// Namespace of secret
+	// Namespace of ConfigMap/Secret (optional) -- if unspecified, default is assumed
 	Namespace string
 	// Disable name suffix
 	DisableNameSuffixHash bool
+	// NewNamespace for ConfigMap/Secret (optional) -- only for 'edit set' command
+	NewNamespace string
 }
 
-// Validate validates required fields are set to support structured generation.
-func (a *ConfigMapSecretFlagsAndArgs) Validate(args []string) error {
+// ValidateAdd validates required fields are set to support structured generation for the
+// edit add command.
+func (a *ConfigMapSecretFlagsAndArgs) ValidateAdd(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("name must be specified once")
 	}
 	a.Name = args[0]
+
 	if len(a.EnvFileSource) == 0 && len(a.FileSources) == 0 && len(a.LiteralSources) == 0 {
 		return fmt.Errorf("at least from-env-file, or from-file or from-literal must be set")
 	}
@@ -62,24 +66,45 @@ func (a *ConfigMapSecretFlagsAndArgs) Validate(args []string) error {
 	return nil
 }
 
+// ValidateSet validates required fields are set to support structured generation for the
+// edit set command.
+func (a *ConfigMapSecretFlagsAndArgs) ValidateSet(args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("name must be specified once")
+	}
+	a.Name = args[0]
+
+	if len(a.LiteralSources) == 0 && a.NewNamespace == "" {
+		return fmt.Errorf("at least one of [--from-literal, --new-namespace] must be specified")
+	}
+
+	return nil
+}
+
 // ExpandFileSource normalizes a string list, possibly
 // containing globs, into a validated, globless list.
 // For example, this list:
-//     some/path
-//     some/dir/a*
-//     bfile=some/dir/b*
+//
+//	some/path
+//	some/dir/a*
+//	bfile=some/dir/b*
+//
 // becomes:
-//     some/path
-//     some/dir/airplane
-//     some/dir/ant
-//     some/dir/apple
-//     bfile=some/dir/banana
+//
+//	some/path
+//	some/dir/airplane
+//	some/dir/ant
+//	some/dir/apple
+//	bfile=some/dir/banana
+//
 // i.e. everything is converted to a key=value pair,
 // where the value is always a relative file path,
 // and the key, if missing, is the same as the value.
 // In the case where the key is explicitly declared,
 // the globbing, if present, must have exactly one match.
 func (a *ConfigMapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
+	const NumberComponentsWithKey = 2
+
 	var results []string
 	for _, pattern := range a.FileSources {
 		var patterns []string
@@ -87,7 +112,7 @@ func (a *ConfigMapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) 
 		// check if the pattern is in `--from-file=[key=]source` format
 		// and if so split it to send only the file-pattern to glob function
 		s := strings.Split(pattern, "=")
-		if len(s) == 2 {
+		if len(s) == NumberComponentsWithKey {
 			patterns = append(patterns, s[1])
 			key = s[0]
 		} else {
@@ -111,6 +136,39 @@ func (a *ConfigMapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) 
 		}
 	}
 	a.FileSources = results
+	return nil
+}
+
+// UpdateLiteralSources looks for literal sources that already exist and tries
+// to replace their values with new values.
+// The key specified must exist in the target resource (ConfigMap or Secret).
+func UpdateLiteralSources(
+	args *types.GeneratorArgs,
+	flags ConfigMapSecretFlagsAndArgs,
+) error {
+	sources := make(map[string]any)
+	for _, val := range args.LiteralSources {
+		key, value, _ := strings.Cut(val, "=")
+		sources[key] = value
+	}
+
+	for _, val := range flags.LiteralSources {
+		key, value, _ := strings.Cut(val, "=")
+		if _, ok := sources[key]; !ok {
+			return fmt.Errorf("key '%s' not found in resource", key)
+		}
+
+		sources[key] = value
+	}
+
+	// re-assemble key-pairs
+	newLiteralSources := make([]string, 0)
+	for key, val := range sources {
+		newLiteralSources = append(newLiteralSources, fmt.Sprintf("%s=%s", key, val))
+	}
+
+	args.LiteralSources = newLiteralSources
+
 	return nil
 }
 
