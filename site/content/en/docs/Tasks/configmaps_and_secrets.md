@@ -288,7 +288,7 @@ spec:
 ```
 
 
-## Creating a TLS Secret
+## Create a TLS Secret
 
 The following example generates a TLS Secret with certificate and private key data files.
 
@@ -339,7 +339,7 @@ It is important to note that the secrets are `base64` encoded
 {{< /alert >}}
 
 
-## Rolling updates
+## Roll out updates
 
 There are four different ways that you can use a ConfigMap to configure a container inside a Pod:
 
