@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -21,26 +22,18 @@ func TestConvertToMap(t *testing.T) {
 	expected["g"] = "h:k"
 
 	result, err := ConvertToMap(args, "annotation")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err.Error())
-	}
+	require.NoError(t, err, "unexpected error")
 
 	eq := reflect.DeepEqual(expected, result)
-	if !eq {
-		t.Errorf("Converted map does not match expected, expected: %v, result: %v\n", expected, result)
-	}
+	require.True(t, eq, "Converted map does not match expected")
 }
 
 func TestConvertToMapError(t *testing.T) {
 	args := "a:b,c:\"d\",:f:g"
 
 	_, err := ConvertToMap(args, "annotation")
-	if err == nil {
-		t.Errorf("expected an error")
-	}
-	if err.Error() != "invalid annotation: ':f:g' (need k:v pair where v may be quoted)" {
-		t.Errorf("incorrect error: %v", err.Error())
-	}
+	require.Error(t, err, "expected error but did not receive one")
+	require.Equal(t, "invalid annotation: ':f:g' (need k:v pair where v may be quoted)", err.Error(), "incorrect error")
 }
 
 func TestConvertSliceToMap(t *testing.T) {
@@ -52,14 +45,10 @@ func TestConvertSliceToMap(t *testing.T) {
 	expected["g"] = "h:k"
 
 	result, err := ConvertSliceToMap(args, "annotation")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err.Error())
-	}
+	require.NoError(t, err, "unexpected error")
 
 	eq := reflect.DeepEqual(expected, result)
-	if !eq {
-		t.Errorf("Converted map does not match expected, expected: %v, result: %v\n", expected, result)
-	}
+	require.True(t, eq, "Converted map does not match expected")
 }
 
 func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
@@ -71,34 +60,30 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	}
 
 	// test load remote file
-	resources, err := GlobPatternsWithLoader(fSys, ldr, []string{httpPath})
-	if err != nil {
-		t.Fatalf("unexpected load error: %v", err)
-	}
-	if len(resources) != 1 || resources[0] != httpPath {
-		t.Fatalf("incorrect resources: %v", resources)
-	}
+	resources, err := GlobPatternsWithLoader(fSys, ldr, []string{httpPath}, false)
+	require.NoError(t, err, "unexpected load error")
+	require.Equal(t, 1, len(resources), "incorrect resources")
+	require.Equal(t, httpPath, resources[0], "incorrect resources")
 
 	// test load local and remote file
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{httpPath, "/test.yml"})
-	if err != nil {
-		t.Fatalf("unexpected load error: %v", err)
-	}
-	if len(resources) != 2 || resources[0] != httpPath || resources[1] != "/test.yml" {
-		t.Fatalf("incorrect resources: %v", resources)
-	}
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{httpPath, "/test.yml"}, false)
+	require.NoError(t, err, "unexpected load error")
+	require.Equal(t, 2, len(resources), "incorrect resources")
+	require.Equal(t, httpPath, resources[0], "incorrect resources")
+	require.Equal(t, "/test.yml", resources[1], "incorrect resources")
 
 	// test load invalid file
 	invalidURL := "http://invalid"
-	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL})
-	if err == nil {
-		t.Fatalf("expected error but did not receive one")
-	} else if err.Error() != invalidURL+" has no match: "+invalidURL+" not exist" {
-		t.Fatalf("unexpected load error: %v", err)
-	}
-	if len(resources) > 0 {
-		t.Fatalf("incorrect resources: %v", resources)
-	}
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL}, false)
+	require.Error(t, err, "expected error but did not receive one")
+	require.Equal(t, invalidURL+" has no match: "+invalidURL+" not exist", err.Error(), "unexpected load error")
+	require.Equal(t, 0, len(resources), "incorrect resources")
+
+	// test load unreachable remote file with skipped verification
+	resources, err = GlobPatternsWithLoader(fSys, ldr, []string{invalidURL}, true)
+	require.NoError(t, err, "unexpected load error")
+	require.Equal(t, 1, len(resources), "incorrect resources")
+	require.Equal(t, invalidURL, resources[0], "incorrect resources")
 }
 
 type fakeLoader struct {

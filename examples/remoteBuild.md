@@ -19,15 +19,15 @@ following query string parameters can also be specified:
    submodules or not
 
 For example,
-`https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6`
-will essentially clone the git repo via HTTPS, checkout `v1.0.6` and run
+`https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?timeout=120&ref=v3.3.1`
+will essentially clone the git repo via HTTPS, checkout `v3.3.1` and run
 `kustomize build` inside the `examples/multibases/dev` directory.
 
 SSH clones are also supported either with `git@github.com:owner/repo` or
 `ssh://git@github.com/owner/repo` URLs.
 
 `file:///` clones are supported. For
-example, `file:///path/to/repo//someSubdir?ref=v1.0.6`, references the absolute
+example, `file:///path/to/repo//someSubdir?ref=v3.3.1`, references the absolute
 path to the repo at `/path/to/repo`, and a kustomization directory
 at `someSubdir` within that repo. `//` to delimits the root of the repo.
 Kustomize will clone the repo to a temporary directory and do a clean checkout
@@ -48,7 +48,7 @@ one pod in the output:
 
 <!-- @remoteOverlayBuild @testAgainstLatestRelease -->
 ```
-target="https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize//examples/multibases/dev/?timeout=120&ref=v3.3.1"
 test 1 == \
   $(kustomize build $target | grep dev-myapp-pod | wc -l); \
   echo $?
@@ -60,7 +60,7 @@ someone who wants to send them all at the same time):
 
 <!-- @remoteBuild @testAgainstLatestRelease -->
 ```
-target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6"
+target="https://github.com/kubernetes-sigs/kustomize//examples/multibases?timeout=120&ref=v3.3.1"
 test 3 == \
   $(kustomize build $target | grep cluster-a-.*-myapp-pod | wc -l); \
   echo $?
@@ -74,7 +74,7 @@ DEMO_HOME=$(mktemp -d)
 
 cat <<EOF >$DEMO_HOME/kustomization.yaml
 resources:
-- https://github.com/kubernetes-sigs/kustomize//examples/multibases?ref=v1.0.6
+- https://github.com/kubernetes-sigs/kustomize//examples/multibases?timeout=120&ref=v3.3.1
 namePrefix: remote-
 EOF
 ```
