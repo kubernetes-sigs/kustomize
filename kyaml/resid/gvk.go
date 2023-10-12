@@ -10,8 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const deprecatedBuiltinPluginApiVersion = "builtin"
-
 // Gvk identifies a Kubernetes API type.
 // https://git.k8s.io/design-proposals-archive/api-machinery/api-group.md
 type Gvk struct {
@@ -44,10 +42,6 @@ func FromKind(k string) Gvk {
 func ParseGroupVersion(apiVersion string) (group, version string) {
 	if i := strings.Index(apiVersion, "/"); i > -1 {
 		return apiVersion[:i], apiVersion[i+1:]
-	}
-	// The old builtin plugin apiVersion is "builtin"
-	if apiVersion == deprecatedBuiltinPluginApiVersion {
-		return apiVersion, ""
 	}
 	return "", apiVersion
 }
@@ -216,16 +210,14 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 // anything in the corresponding fields, e.g.
 //
 // this item:
-//
-//	<Group: "extensions", Version: "v1beta1", Kind: "Deployment">
+//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">
 //
 // is selected by
-//
-//	<Group: "",           Version: "",        Kind: "Deployment">
+//       <Group: "",           Version: "",        Kind: "Deployment">
 //
 // but rejected by
+//       <Group: "apps",       Version: "",        Kind: "Deployment">
 //
-//	<Group: "apps",       Version: "",        Kind: "Deployment">
 func (x Gvk) IsSelected(selector *Gvk) bool {
 	if selector == nil {
 		return true

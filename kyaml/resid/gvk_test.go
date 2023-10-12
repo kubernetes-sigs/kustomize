@@ -165,8 +165,6 @@ func TestParseGroupVersion(t *testing.T) {
 		{input: "/v1", g: "", v: "v1"},
 		{input: "apps/", g: "apps", v: ""},
 		{input: "/apps/", g: "", v: "apps/"},
-		{input: "builtin", g: "builtin", v: ""},
-		{input: "builtin/v1beta1", g: "builtin", v: "v1beta1"},
 	}
 	for _, tc := range tests {
 		g, v := ParseGroupVersion(tc.input)

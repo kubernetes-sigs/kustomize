@@ -121,7 +121,7 @@ func (th *HarnessEnhanced) GetPluginConfig() *types.PluginConfig {
 }
 
 func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
-	return th.BuildGoPlugin(konfig.BuiltinPluginPackage, "", k)
+	return th.BuildGoPlugin(konfig.BuiltinPluginGroup, "", k)
 }
 
 func (th *HarnessEnhanced) BuildGoPlugin(g, v, k string) *HarnessEnhanced {

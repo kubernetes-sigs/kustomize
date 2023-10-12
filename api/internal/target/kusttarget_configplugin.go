@@ -9,6 +9,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -52,7 +53,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
-						APIVersion: "builtin",
+						APIVersion: konfig.DeprecatedBuiltinPluginApiVersion,
 						Kind:       bpt.String(),
 					},
 				},
@@ -95,7 +96,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
-						APIVersion: "builtin",
+						APIVersion: konfig.DeprecatedBuiltinPluginApiVersion,
 						Kind:       bpt.String(),
 					},
 				},

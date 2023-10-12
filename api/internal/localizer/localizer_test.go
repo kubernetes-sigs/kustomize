@@ -596,7 +596,7 @@ func TestLocalizePluginsInlineAndFile(t *testing.T) {
 		files map[string]string
 	}{
 		{
-			name: "generators",
+			name: "builtin apiVersion generators",
 			files: map[string]string{
 				"kustomization.yaml": `generators:
 - generator.yaml
@@ -618,7 +618,29 @@ metadata:
 			},
 		},
 		{
-			name: "transformers",
+			name: "builtin/v1beta1 apiVersion generators",
+			files: map[string]string{
+				"kustomization.yaml": `generators:
+- generator.yaml
+- |
+  apiVersion: builtin/v1beta1
+  env: second.properties
+  kind: ConfigMapGenerator
+  metadata:
+    name: inline
+`,
+				"generator.yaml": `apiVersion: builtin/v1beta1
+env: first.properties
+kind: ConfigMapGenerator
+metadata:
+  name: file
+`,
+				"first.properties":  "APPLE=orange",
+				"second.properties": "BANANA=pear",
+			},
+		},
+		{
+			name: "builtin apiVersion transformers",
 			files: map[string]string{
 				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -642,11 +664,53 @@ path: patchSM-two.yaml
 			},
 		},
 		{
-			name: "validators",
+			name: "builtin/v1beta1 apiVersion transformers",
+			files: map[string]string{
+				"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+transformers:
+- |
+  apiVersion: builtin/v1beta1
+  kind: PatchTransformer
+  metadata:
+    name: inline
+  path: patchSM-one.yaml
+- patch.yaml
+`,
+				"patch.yaml": `apiVersion: builtin/v1beta1
+kind: PatchTransformer
+metadata:
+  name: file
+path: patchSM-two.yaml
+`,
+				"patchSM-one.yaml": podConfiguration,
+				"patchSM-two.yaml": podConfiguration,
+			},
+		},
+		{
+			name: "builtin apiVersion validators",
 			files: map[string]string{
 				"kustomization.yaml": `validators:
 - |
   apiVersion: builtin
+  kind: ReplacementTransformer
+  metadata:
+    name: inline
+  replacements:
+  - path: first.yaml
+- second.yaml
+`,
+				"first.yaml":       replacementTransformerWithPath,
+				"second.yaml":      replacementTransformerWithPath,
+				"replacement.yaml": replacements,
+			},
+		},
+		{
+			name: "builtin/v1beta1 apiVersion validators",
+			files: map[string]string{
+				"kustomization.yaml": `validators:
+- |
+  apiVersion: builtin/v1beta1
   kind: ReplacementTransformer
   metadata:
     name: inline
@@ -999,7 +1063,7 @@ func TestLocalizeBuiltinPlugins_Errors(t *testing.T) {
   path: patchSM.yaml
 `,
 			},
-			fieldSpecErr: "considering field 'path' of object PatchTransformer.[noVer].builtin/file-does-not-exist.[noNs]",
+			fieldSpecErr: "considering field 'path' of object PatchTransformer.builtin.[noGrp]/file-does-not-exist.[noNs]",
 			locErr:       "invalid file reference: '/a/patchSM.yaml' doesn't exist",
 		},
 		"not_sequence_or_scalar": {
@@ -1015,7 +1079,7 @@ func TestLocalizeBuiltinPlugins_Errors(t *testing.T) {
 `,
 				"patchSM.yaml": podConfiguration,
 			},
-			fieldSpecErr: "considering field 'path' of object PatchTransformer.[noVer].builtin/path-node-has-wrong-kind.[noNs]",
+			fieldSpecErr: "considering field 'path' of object PatchTransformer.builtin.[noGrp]/path-node-has-wrong-kind.[noNs]",
 			locErr:       "expected sequence or scalar node",
 		},
 	} {

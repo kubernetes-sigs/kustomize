@@ -4,7 +4,6 @@
 package localizer
 
 import (
-	"sigs.k8s.io/kustomize/api/filters/fieldspec"
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/api/filters/fsslice"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
@@ -30,68 +29,33 @@ var _ kio.Filter = &localizeBuiltinPlugins{}
 // Filter localizes the built-in plugins with file paths.
 func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode, error) {
 	for _, singlePlugin := range plugins {
-		err := singlePlugin.PipeE(fsslice.Filter{
-			FsSlice: types.FsSlice{
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ConfigMapGenerator.String()},
-					Path: "env",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ConfigMapGenerator.String()},
-					Path: "envs",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.SecretGenerator.String()},
-					Path: "env",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.SecretGenerator.String()},
-					Path: "envs",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
-					Path: "valuesFile",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.HelmChartInflationGenerator.String()},
-					Path: "additionalValuesFiles",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.PatchTransformer.String()},
-					Path: "path",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.PatchJson6902Transformer.String()},
-					Path: "path",
-				},
-				types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ReplacementTransformer.String()},
-					Path: "replacements/path",
-				},
-			},
-			SetValue: func(node *yaml.RNode) error {
-				lbp.locPathFn = lbp.lc.localizeFile
-				return lbp.localizeAll(node)
-			},
-		},
+		err := singlePlugin.PipeE(
 			fsslice.Filter{
-				FsSlice: types.FsSlice{
-					types.FieldSpec{
-						Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.ConfigMapGenerator.String()},
-						Path: "files",
-					},
-					types.FieldSpec{
-						Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.SecretGenerator.String()},
-						Path: "files",
-					},
+				FsSlice: flattenFieldSpecs(
+					builtinPluginFieldSpecs(builtinhelpers.ConfigMapGenerator, "env", "envs"),
+					builtinPluginFieldSpecs(builtinhelpers.SecretGenerator, "env", "envs"),
+					builtinPluginFieldSpecs(builtinhelpers.HelmChartInflationGenerator, "valuesFile", "additionalValuesFiles"),
+					builtinPluginFieldSpecs(builtinhelpers.PatchTransformer, "path"),
+					builtinPluginFieldSpecs(builtinhelpers.PatchJson6902Transformer, "path"),
+					builtinPluginFieldSpecs(builtinhelpers.ReplacementTransformer, "replacements/path"),
+				),
+				SetValue: func(node *yaml.RNode) error {
+					lbp.locPathFn = lbp.lc.localizeFile
+					return lbp.localizeAll(node)
 				},
+			},
+			fsslice.Filter{
+				FsSlice: flattenFieldSpecs(
+					builtinPluginFieldSpecs(builtinhelpers.ConfigMapGenerator, "files"),
+					builtinPluginFieldSpecs(builtinhelpers.SecretGenerator, "files"),
+				),
 				SetValue: func(node *yaml.RNode) error {
 					lbp.locPathFn = lbp.lc.localizeFileSource
 					return lbp.localizeAll(node)
 				},
 			},
 			yaml.FilterFunc(func(node *yaml.RNode) (*yaml.RNode, error) {
-				isHelm := (node.GetApiVersion() == konfig.BuiltinPluginApiGroup || node.GetApiVersion() == konfig.BuiltinPluginApiVersion) &&
+				isHelm := (node.GetApiVersion() == konfig.BuiltinPluginApiVersion || node.GetApiVersion() == konfig.DeprecatedBuiltinPluginApiVersion) &&
 					node.GetKind() == builtinhelpers.HelmChartInflationGenerator.String()
 				if !isHelm {
 					return node, nil
@@ -108,11 +72,8 @@ func (lbp *localizeBuiltinPlugins) Filter(plugins []*yaml.RNode) ([]*yaml.RNode,
 				}
 				return node, errors.WrapPrefixf(err, "plugin %s", resid.FromRNode(node))
 			}),
-			fieldspec.Filter{
-				FieldSpec: types.FieldSpec{
-					Gvk:  resid.Gvk{Group: konfig.BuiltinPluginApiGroup, Kind: builtinhelpers.PatchStrategicMergeTransformer.String()},
-					Path: "paths",
-				},
+			fsslice.Filter{
+				FsSlice: builtinPluginFieldSpecs(builtinhelpers.PatchStrategicMergeTransformer, "paths"),
 				SetValue: func(node *yaml.RNode) error {
 					lbp.locPathFn = lbp.lc.localizeK8sResource
 					return lbp.localizeAll(node)
@@ -149,4 +110,32 @@ func (lbp *localizeBuiltinPlugins) localizeScalar(node *yaml.RNode) error {
 		return err
 	}
 	return filtersutil.SetScalar(localizedPath)(node)
+}
+
+// builtinPluginFieldSpecs generates field specs to match with the given BuiltinPluginType and paths.
+// Note that the builtin plugin apiVersion is either "builtin" or "builtin/v1beta1"
+func builtinPluginFieldSpecs(typ builtinhelpers.BuiltinPluginType, paths ...string) []types.FieldSpec {
+	specs := make([]types.FieldSpec, 0, len(paths)*2)
+	for _, path := range paths {
+		specs = append(specs,
+			types.FieldSpec{
+				Gvk:  resid.Gvk{Group: konfig.BuiltinPluginGroup, Version: konfig.BuiltinPluginVersion, Kind: typ.String()},
+				Path: path,
+			},
+			types.FieldSpec{
+				Gvk:  resid.Gvk{Version: konfig.BuiltinPluginGroup, Kind: typ.String()},
+				Path: path,
+			})
+	}
+	return specs
+}
+
+func flattenFieldSpecs(fieldSpecArr ...[]types.FieldSpec) []types.FieldSpec {
+	var specs []types.FieldSpec
+	for _, fieldSpecs := range fieldSpecArr {
+		for _, fieldSpec := range fieldSpecs {
+			specs = append(specs, fieldSpec)
+		}
+	}
+	return specs
 }

@@ -4,6 +4,7 @@
 package konfig
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -24,21 +25,14 @@ const (
 	// e.g. AbsPluginHome = XDG_CONFIG_HOME/kustomize/plugin
 	RelPluginHome = "plugin"
 
-	// Location of builtin plugins below AbsPluginHome.
-	BuiltinPluginPackage = "builtin"
+	// Group of builtin plugins.
+	BuiltinPluginGroup = "builtin"
 
-	// The value of kubernetes ApiVersion to use in configuration
-	// files for builtin plugins.
-	// The value for non-builtins can be anything.
-	BuiltinPluginApiVersion = BuiltinPluginApiGroup + "/" + BuiltinPluginVersion
-
-	// The value of kubernetes ApiGroup to use in configuration
-	// files for builtin plugins.
-	BuiltinPluginApiGroup = BuiltinPluginPackage
-
-	// The value of kubernetes Version to use in configuration
-	// files for builtin plugins.
+	// Version of builtin plugins.
 	BuiltinPluginVersion = "v1beta1"
+
+	// Deprecated ApiVersion for builtin plugins
+	DeprecatedBuiltinPluginApiVersion = BuiltinPluginGroup
 
 	// Domain from which kustomize code is imported, for locating
 	// plugin source code under $GOPATH when GOPATH is defined.
@@ -48,6 +42,11 @@ const (
 	// Provides a clue in flows that shouldn't happen.
 	NoPluginHomeSentinal = "/No/non-builtin/plugins!"
 )
+
+// The value of kubernetes ApiVersion to use in configuration
+// files for builtin plugins.
+// The value for non-builtins can be anything.
+var BuiltinPluginApiVersion = fmt.Sprintf("%s/%s", BuiltinPluginGroup, BuiltinPluginVersion)
 
 type NotedFunc struct {
 	Note string
