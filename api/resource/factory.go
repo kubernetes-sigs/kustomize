@@ -41,8 +41,11 @@ func (rf *Factory) Hasher() ifc.KustHasher {
 }
 
 // FromMap returns a new instance of Resource.
-func (rf *Factory) FromMap(m map[string]interface{}) (*Resource) {
-	res, _ := rf.FromMapAndOption(m, nil)
+func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
+	res, err := rf.FromMapAndOption(m, nil)
+	if err != nil {
+		log.Fatal("Option must not be null")
+	}
 	return res
 }
 
@@ -53,7 +56,10 @@ func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource
 
 // FromMapWithNamespaceAndName returns a new instance with the given "original" namespace.
 func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string]interface{}) *Resource {
-	r, _ := rf.FromMapAndOption(m, nil)
+	r, err := rf.FromMapAndOption(m, nil)
+	if err != nil {
+		log.Fatal("Option must not be null")
+	}
 	return r.setPreviousId(ns, n, r.GetKind())
 }
 
