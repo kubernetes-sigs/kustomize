@@ -38,8 +38,8 @@ func newCmdAddConfigMap(
 	# Adds a configmap from env-file with behavior merge
 	kustomize edit add configmap my-configmap --behavior=merge --from-env-file=env/path.env
 
-    # Adds a configmap to the kustomization file with a specific namespace
-    kustomize edit add configmap my-configmap --namespace test-ns --from-literal=my-key=my-value
+	# Adds a configmap to the kustomization file with a specific namespace
+	kustomize edit add configmap my-configmap --namespace test-ns --from-literal=my-key=my-value
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
 			return runEditAddConfigMap(flags, fSys, args, ldr, rf)
