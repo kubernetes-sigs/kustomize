@@ -823,6 +823,7 @@ func TestAppendAll(t *testing.T) {
 }
 
 func makeMap1(t *testing.T) ResMap {
+	t.Helper()
 	r, err := rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
@@ -843,7 +844,7 @@ func makeMap1(t *testing.T) ResMap {
 	return rmF.FromResource(r)
 }
 
-func makeMap2(b types.GenerationBehavior, t *testing.T) ResMap {
+func makeMap2(t *testing.T, b types.GenerationBehavior) ResMap {
 	r, err := rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
