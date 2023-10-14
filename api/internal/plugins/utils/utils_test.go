@@ -89,7 +89,10 @@ func TestUpdateResourceOptions(t *testing.T) {
 		name := fmt.Sprintf("test%d", i)
 		err := in.Append(makeConfigMap(rf, name, c.behavior, c.hashValue))
 		require.NoError(t, err)
-		config := makeConfigMap(rf, name, c.behavior, c.hashValue)
+		config, err := makeConfigMapOptions(rf, name, c.behavior, !c.needsHash)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 		err = expected.Append(config)
 		require.NoError(t, err)
 	}
