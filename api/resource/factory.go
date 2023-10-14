@@ -68,7 +68,7 @@ func (rf *Factory) FromMapAndOption(
 	m map[string]interface{}, args *types.GeneratorArgs) (*Resource, error) {
 	n, err := yaml.FromMap(m)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert map to YAML node: %w", err)
 	}
 	return rf.makeOne(n, args), nil
 }
