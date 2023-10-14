@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/types"
-
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -17,8 +16,9 @@ const (
 	fromFileFlag              = "from-file"
 	fromLiteralFlag           = "from-literal"
 	fromEnvFileFlag           = "from-env-file"
-	flagDisableNameSuffixHash = "disableNameSuffixHash"
-	flagBehavior              = "behavior"
+	disableNameSuffixHashFlag = "disableNameSuffixHash"
+	behaviorFlag              = "behavior"
+	namespaceFlag             = "namespace"
 	flagFormat                = "--%s=%s"
 )
 
