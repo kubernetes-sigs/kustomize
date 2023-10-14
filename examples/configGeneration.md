@@ -1,6 +1,6 @@
-[patch]: ../docs/glossary.md#patch
-[resource]: ../docs/glossary.md#resource
-[variant]: ../docs/glossary.md#variant
+[patch]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#patch
+[resource]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#resource
+[variant]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
 
 ## ConfigMap generation and rolling updates
 

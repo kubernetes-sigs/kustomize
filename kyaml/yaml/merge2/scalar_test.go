@@ -110,7 +110,7 @@ kind: Deployment
 	{description: `remove scalar -- empty in src`,
 		source: `
 kind: Deployment
-field: null
+field:
 `,
 		dest: `
 kind: Deployment
