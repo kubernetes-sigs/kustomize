@@ -186,7 +186,7 @@ In the following example, the generated ConfigMap name will be `my-java-server-e
 
 The PodTemplate volume references the ConfigMap by the name specified in the generator (excluding the suffix). Kustomize will update the name to include the suffix applied to the ConfigMap name.
 
-The following example generates a ConfigMap and propogates the ConfigMap name, including the suffix, to a Deployment that mounts the ConfigMap.
+The following example generates a ConfigMap and propagates the ConfigMap name, including the suffix, to a Deployment that mounts the ConfigMap.
 
 1. Create a Kustomization file.
 ```yaml
