@@ -187,6 +187,35 @@ func TestHelmChartInflationGeneratorWithOciRepository(t *testing.T) {
 	th.WriteK(th.GetRoot(), `
 helmCharts:
 - name: external-dns
+  repo: oci://registry-1.docker.io/bitnamicharts
+  version: 6.19.2
+  releaseName: test
+  valuesInline:
+    crd:
+      create: false
+    rbac:
+      create: false
+    serviceAccount:
+      create: false
+    service:
+      enabled: false
+
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, expectedHelmExternalDNS)
+}
+
+func TestHelmChartInflationGeneratorWithOciRepositoryWithAppendSlash(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: external-dns
   repo: oci://registry-1.docker.io/bitnamicharts/
   version: 6.19.2
   releaseName: test
