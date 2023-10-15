@@ -436,6 +436,84 @@ metadata:
 `)
 }
 
+func TestHelmChartInflationGeneratorSetFile(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "game.properties"), `
+enemy.types=aliens,monsters
+player.maximum-lives=5
+`)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "user-interface.yaml"), `
+color:
+  good: purple
+  bad: yellow
+allow:
+  textmode: true
+`)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: test-chart
+    releaseName: test-chart
+    setFile:
+      config.game: game.properties
+      config.ui: user-interface.yaml
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	asYaml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(asYaml), `apiVersion: v1
+data:
+  game.properties: |2
+
+    enemy.types=aliens,monsters
+    player.maximum-lives=5
+  user-interface.yaml: |2
+
+    color:
+      good: purple
+      bad: yellow
+    allow:
+      textmode: true
+kind: ConfigMap
+metadata:
+  name: game-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: my-deploy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    spec:
+      containers:
+      - image: test-image:v1.0.0
+        imagePullPolicy: Always
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+  name: test-chart
+`)
+}
+
 func TestHelmChartInflationGeneratorApiVersions(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()

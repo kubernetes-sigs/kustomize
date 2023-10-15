@@ -430,6 +430,62 @@ valuesFile: myValues.yaml
 		))
 }
 
+func TestHelmChartInflationGeneratorSetFile(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyTestChartsIntoHarness(t, th)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "game.properties"), `
+enemy.types=aliens,monsters
+player.maximum-lives=5
+`)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "user-interface.yaml"), `
+color:
+  good: purple
+  bad: yellow
+allow:
+  textmode: true
+`)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: test-chart
+name: test-chart
+releaseName: test-chart
+chartHome: ./charts
+setFile:
+  config.game: game.properties
+  config.ui: user-interface.yaml
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+data:
+  game.properties: |2
+
+    enemy.types=aliens,monsters
+    player.maximum-lives=5
+  user-interface.yaml: |2
+
+    color:
+      good: purple
+      bad: yellow
+    allow:
+      textmode: true
+kind: ConfigMap
+metadata:
+  name: bar
+`)
+}
+
 func TestHelmChartInflationGeneratorWithInLineReplace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")

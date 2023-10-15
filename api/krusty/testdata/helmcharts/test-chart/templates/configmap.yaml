@@ -1,8 +1,9 @@
+---
+{{- if .Values.config }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.foo }}
-{{- if .Values.config }}
+  name: game-demo
 data:
   # file-like keys
   game.properties: {{ .Values.config.game | toYaml | indent 2 }}

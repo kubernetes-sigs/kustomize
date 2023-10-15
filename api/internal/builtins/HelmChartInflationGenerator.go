@@ -101,6 +101,14 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 		// the additional values filepaths must be relative to the kust root
 		p.AdditionalValuesFiles[i] = filepath.Join(p.h.Loader().Root(), file)
 	}
+	for key, file := range p.SetFile {
+		// use Load() to enforce root restrictions
+		if _, err := p.h.Loader().Load(file); err != nil {
+			return errors.WrapPrefixf(err, "could not load file '%s' specified in SetFile", file)
+		}
+		// the filepaths must be relative to the kust root
+		p.SetFile[key] = filepath.Join(p.h.Loader().Root(), file)
+	}
 
 	if err = p.errIfIllegalValuesMerge(); err != nil {
 		return err

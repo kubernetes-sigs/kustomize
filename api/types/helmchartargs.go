@@ -63,6 +63,11 @@ type HelmChart struct {
 	// addition to either the default values file or the values specified in ValuesFile.
 	AdditionalValuesFiles []string `json:"additionalValuesFiles,omitempty" yaml:"additionalValuesFiles,omitempty"`
 
+	// SetFile holds value mappings where the value is specified in a file.
+	// This allows setting values from respective files. The file's content
+	// will become the value's content.
+	SetFile map[string]string `json:"setFile,omitempty" yaml:"setFile,omitempty"`
+
 	// ValuesFile is a local file path to a values file to use _instead of_
 	// the default values that accompanied the chart.
 	// The default values are in '{ChartHome}/{Name}/values.yaml'.
@@ -167,6 +172,9 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	}
 	for _, valuesFile := range h.AdditionalValuesFiles {
 		args = append(args, "-f", valuesFile)
+	}
+	for key, file := range h.SetFile {
+		args = append(args, "--set-file", key+"="+file)
 	}
 
 	for _, apiVer := range h.ApiVersions {
