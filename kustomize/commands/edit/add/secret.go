@@ -64,12 +64,12 @@ func newCmdAddSecret(
 		"Specify the secret type this can be 'Opaque' (default), or 'kubernetes.io/tls'")
 	cmd.Flags().StringVar(
 		&flags.Namespace,
-		"namespace",
+		namespaceFlag,
 		"",
 		"Specify the namespace of the secret")
 	cmd.Flags().BoolVar(
 		&flags.DisableNameSuffixHash,
-		flagDisableNameSuffixHash,
+		disableNameSuffixHashFlag,
 		false,
 		"Disable the name suffix for the secret")
 
@@ -125,7 +125,9 @@ func runEditAddSecret(
 func addSecret(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags configmapSecretFlagsAndArgs, rf *resource.Factory) error {
+	flags configmapSecretFlagsAndArgs,
+	rf *resource.Factory,
+) error {
 	args := findOrMakeSecretArgs(k, flags.Name, flags.Namespace, flags.Type)
 	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.
