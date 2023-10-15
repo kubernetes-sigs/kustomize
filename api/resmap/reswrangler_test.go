@@ -903,9 +903,7 @@ func TestAbsorbAll(t *testing.T) {
 	assert.NoError(t, w.AbsorbAll(w2))
 	w2.RemoveBuildAnnotations()
 	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
-	w = makeMap1(t)
-	w2 = makeMap2(t, types.BehaviorUnspecified)
-	err = w.AbsorbAll(w2)
+	err = makeMap1(t).AbsorbAll(makeMap2(t, types.BehaviorUnspecified))
 	assert.Error(t, err)
 	assert.True(
 		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
