@@ -91,7 +91,7 @@ func TestUpdateResourceOptions(t *testing.T) {
 		require.NoError(t, err)
 		config, err := makeConfigMapOptions(rf, name, c.behavior, !c.needsHash)
 		if err != nil {
-			t.Errorf("unexpected error: %v", err)
+			t.Errorf("expected new instance with an options but got error: %v", err)
 		}
 		err = expected.Append(config)
 		require.NoError(t, err)

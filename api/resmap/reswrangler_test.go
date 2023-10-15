@@ -839,7 +839,7 @@ func makeMap1(t *testing.T) ResMap {
 			Behavior: "create",
 		})
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("expected new intance with an options but got error: %v", err)
 	}
 	return rmF.FromResource(r)
 }
@@ -861,7 +861,7 @@ func makeMap2(t *testing.T, b types.GenerationBehavior) ResMap {
 			Behavior: b.String(),
 		})
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("expected new intance with an options but got error: %v", err)
 	}
 	return rmF.FromResource(r)
 }
@@ -886,11 +886,11 @@ func TestAbsorbAll(t *testing.T) {
 			Behavior: "create",
 		})
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("expected new intance with an options but got error: %v", err)
 	}
 	expected := rmF.FromResource(r)
 	w := makeMap1(t)
-	assert.NoError(t, w.AbsorbAll(makeMap2(types.BehaviorMerge, t)))
+	assert.NoError(t, w.AbsorbAll(makeMap2(t, types.BehaviorMerge)))
 	expected.RemoveBuildAnnotations()
 	w.RemoveBuildAnnotations()
 	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
@@ -899,12 +899,12 @@ func TestAbsorbAll(t *testing.T) {
 	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1(t)))
 
 	w = makeMap1(t)
-	w2 := makeMap2(types.BehaviorReplace, t)
+	w2 := makeMap2(t, types.BehaviorReplace)
 	assert.NoError(t, w.AbsorbAll(w2))
 	w2.RemoveBuildAnnotations()
 	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
 	w = makeMap1(t)
-	w2 = makeMap2(types.BehaviorUnspecified, t)
+	w2 = makeMap2(t, types.BehaviorUnspecified)
 	err = w.AbsorbAll(w2)
 	assert.Error(t, err)
 	assert.True(
