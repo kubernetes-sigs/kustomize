@@ -904,7 +904,7 @@ func TestAbsorbAll(t *testing.T) {
 	assert.NoError(t, w.AbsorbAll(w2))
 	expected = makeMap2(types.BehaviorUnspecified)
 	expected.RemoveBuildAnnotations()
-	expected.AnnotateAll(utils.BuildAnnotationsGenAddHashSuffix, "enabled")
+	assert.NoError(t, expected.AnnotateAll(utils.BuildAnnotationsGenAddHashSuffix, "enabled"))
 	assert.NoError(t, w.ErrorIfNotEqualLists(expected))
 }
 
