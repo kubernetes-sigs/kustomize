@@ -12,7 +12,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-const expectedHelm = `
+const (
+	expectedHelm = `
 apiVersion: v1
 data:
   rcon-password: Q0hBTkdFTUUh
@@ -45,6 +46,98 @@ spec:
     app: test-minecraft
   type: ClusterIP
 `
+
+	expectedHelmExternalDNS = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-6.19.2
+  name: test-external-dns
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: test
+      app.kubernetes.io/name: external-dns
+  template:
+    metadata:
+      annotations: null
+      labels:
+        app.kubernetes.io/instance: test
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: external-dns
+        helm.sh/chart: external-dns-6.19.2
+    spec:
+      affinity:
+        nodeAffinity: null
+        podAffinity: null
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/instance: test
+                  app.kubernetes.io/name: external-dns
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - args:
+        - --metrics-address=:7979
+        - --log-level=info
+        - --log-format=text
+        - --policy=upsert-only
+        - --provider=aws
+        - --registry=txt
+        - --interval=1m
+        - --source=service
+        - --source=ingress
+        - --aws-api-retries=3
+        - --aws-zone-type=
+        - --aws-batch-change-size=1000
+        env:
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        envFrom: null
+        image: docker.io/bitnami/external-dns:0.13.4-debian-11-r14
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: external-dns
+        ports:
+        - containerPort: 7979
+          name: http
+        readinessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits: {}
+          requests: {}
+        volumeMounts: null
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      serviceAccountName: default
+      volumes: null
+`
+)
 
 func TestHelmChartInflationGeneratorOld(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
@@ -82,6 +175,64 @@ helmCharts:
 
 	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, expectedHelm)
+}
+
+func TestHelmChartInflationGeneratorWithOciRepository(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: external-dns
+  repo: oci://registry-1.docker.io/bitnamicharts
+  version: 6.19.2
+  releaseName: test
+  valuesInline:
+    crd:
+      create: false
+    rbac:
+      create: false
+    serviceAccount:
+      create: false
+    service:
+      enabled: false
+
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, expectedHelmExternalDNS)
+}
+
+func TestHelmChartInflationGeneratorWithOciRepositoryWithAppendSlash(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: external-dns
+  repo: oci://registry-1.docker.io/bitnamicharts/
+  version: 6.19.2
+  releaseName: test
+  valuesInline:
+    crd:
+      create: false
+    rbac:
+      create: false
+    serviceAccount:
+      create: false
+    service:
+      enabled: false
+
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, expectedHelmExternalDNS)
 }
 
 // Last mile helm - show how kustomize puts helm charts into different
