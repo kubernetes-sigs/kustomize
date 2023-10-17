@@ -556,3 +556,108 @@ spec:
 		return
 	}
 }
+
+// TestTreeCommand_images tests that the image flag returns the image specified
+// by various workloads.
+func TestTreeCommand_images(t *testing.T) {
+	d := t.TempDir()
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, os.Chdir(d)) {
+		return
+	}
+
+	t.Cleanup(func() {
+		if !assert.NoError(t, os.Chdir(cwd)) {
+			t.FailNow()
+		}
+	})
+
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  template:
+    spec:
+      containers:
+        - name: test-deployment
+          image: docker.io/bash:alpine3.18
+---
+kind: StatefulSet
+metadata:
+  name: statefulset
+spec:
+  template:
+    spec:
+      containers:
+        - name: test-statefulset
+          image: gcr.io/distroless/static-debian12:nonroot
+---
+kind: Job
+metadata:
+  name: job
+spec:
+  template:
+    spec:
+      containers:
+        - name: job
+          image: tagless
+---
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: test-cronjob
+              image: local-image:v1.0.0
+---
+kind: Service
+metadata:
+  name: service
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := commands.GetTreeRunner("")
+	r.Command.SetArgs([]string{"--image"})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, `.
+├── [f1.yaml]  CronJob cronjob
+│   └── spec.jobTemplate.spec.template.spec.containers
+│       └── 0
+│           └── image: local-image:v1.0.0
+├── [f1.yaml]  Deployment deployment
+│   └── spec.template.spec.containers
+│       └── 0
+│           └── image: docker.io/bash:alpine3.18
+├── [f1.yaml]  Job job
+│   └── spec.template.spec.containers
+│       └── 0
+│           └── image: tagless
+├── [f1.yaml]  Service service
+└── [f1.yaml]  StatefulSet statefulset
+    └── spec.template.spec.containers
+        └── 0
+            └── image: gcr.io/distroless/static-debian12:nonroot
+`, b.String()) {
+		return
+	}
+}
