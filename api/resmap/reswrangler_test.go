@@ -845,6 +845,7 @@ func makeMap1(t *testing.T) ResMap {
 }
 
 func makeMap2(t *testing.T, b types.GenerationBehavior) ResMap {
+	t.Helper()
 	r, err := rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
