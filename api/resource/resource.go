@@ -523,7 +523,7 @@ func mergeStringMapsWithBuildAnnotations(maps ...map[string]string) map[string]s
 	result := mergeStringMaps(maps...)
 	for i := range BuildAnnotations {
 		if len(maps) > 0 {
-                        // not delete BuildAnnotationsGenAddHashSuffix to work with kustomize.config.k8s.io/needs-hash annotation in generator options
+			// not delete BuildAnnotationsGenAddHashSuffix to work with kustomize.config.k8s.io/needs-hash annotation in generator options
 			if BuildAnnotations[i] == utils.BuildAnnotationsGenAddHashSuffix {
 				continue
 			}
