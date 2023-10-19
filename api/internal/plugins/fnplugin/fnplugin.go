@@ -6,13 +6,16 @@ package fnplugin
 import (
 	"bytes"
 	"fmt"
+	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	k8syaml "sigs.k8s.io/yaml"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -61,6 +64,37 @@ func GetFunctionSpec(res *resource.Resource) (*runtimeutil.FunctionSpec, error) 
 		return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
 	}
 	return functionSpec, nil
+}
+
+func GetFunctionSpecFromCatalog(res *resource.Resource) (*runtimeutil.FunctionSpec, error) {
+	if res.GetKind() != framework.CatalogKind || res.GetApiVersion() != framework.FunctionDefinitionGroupVersion {
+		return nil, fmt.Errorf("invalid resource kind: %q and apiversion: %q", res.GetKind(), res.GetApiVersion())
+	}
+
+	rnode, err := resourceToRNode(res)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert resource to RNode: %w", err)
+	}
+
+	n, err := rnode.Pipe(yaml.Lookup("metadata", "configFn"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to look up metadata.configFn: %w", err)
+	}
+	if yaml.IsMissingOrNull(n) {
+		return nil, nil
+	}
+	var fs runtimeutil.FunctionSpec
+
+	s, err := n.String()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "configFn parse error: %v\n", err)
+		return nil, fmt.Errorf("configFn parse error: %w", err)
+	}
+	if err := k8syaml.UnmarshalStrict([]byte(s), &fs); err != nil {
+		return nil, fmt.Errorf("%s unmarshal error: %w", "configFn", err)
+	}
+	return &fs, nil
+
 }
 
 func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
