@@ -59,9 +59,9 @@ function build_kustomize_binary {
         -X sigs.k8s.io/kustomize/api/provenance.buildDate=$build_date"\
         kustomize/main.go
       if [ "$os" == "windows" ]; then
-        zip "${release_dir}/kustomize_${version}_${os}_${arch}.zip" output/kustomize
+        zip -j "${release_dir}/kustomize_${version}_${os}_${arch}.zip" output/kustomize
       else
-        tar cvfz "${release_dir}/kustomize_${version}_${os}_${arch}.tar.gz" output/kustomize
+        tar cvfz "${release_dir}/kustomize_${version}_${os}_${arch}.tar.gz" -C output kustomize
       fi
       rm output/kustomize
     done
