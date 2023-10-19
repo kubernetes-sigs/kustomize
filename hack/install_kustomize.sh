@@ -7,7 +7,7 @@
 # kustomize binary to your current working directory.
 # (e.g. 'install_kustomize.sh')
 #
-# If one argument is given -> 
+# If one argument is given ->
 # If that argument is in the format of #.#.#, downloads the specified
 # version of the kustomize binary to your current working directory.
 # If that argument is something else, downloads the most recently released
@@ -165,7 +165,7 @@ curl -sLO "$RELEASE_URL"
 
 tar xzf ./kustomize_v*_${opsys}_${arch}.tar.gz
 
-cp ./kustomize "$where"
+cp ./output/kustomize "$where"
 
 popd >& /dev/null
 
