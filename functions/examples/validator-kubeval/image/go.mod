@@ -42,3 +42,5 @@ require (
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace sigs.k8s.io/yaml => github.com/liggitt/kubernetes-yaml v1.2.1-0.20231023131723-3f79f32f41c9
