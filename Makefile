@@ -3,7 +3,7 @@
 #
 # Makefile for kustomize CLI and API.
 
-LATEST_RELEASE=v5.1.1
+LATEST_RELEASE=v5.2.1
 
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
@@ -108,6 +108,9 @@ verify-kustomize-repo: \
 .PHONY: prow-presubmit-check
 prow-presubmit-check: \
 	install-tools \
+	workspace-sync \
+	generate-kustomize-builtin-plugins \
+	builtin-plugins-diff \
 	test-unit-kustomize-plugins \
 	test-go-mod \
 	build-non-plugin-all \
@@ -181,7 +184,12 @@ test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
 test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh v5@$(LATEST_RELEASE)
 
-
+# Pushes dependencies in the go.work file back to go.mod files of each workspace module.
+.PHONY: workspace-sync
+workspace-sync:
+	go work sync
+	./hack/doGoMod.sh tidy
+	
 # --- Cleanup targets ---
 .PHONY: clean
 clean: clean-kustomize-external-go-plugin uninstall-tools

@@ -62,7 +62,6 @@ func ConvertToBuiltInPlugin() (retErr error) {
 	w.write(
 		fmt.Sprintf(
 			"// pluginator %s\n", provenance.GetProvenance().Short()))
-	w.write("\n")
 	w.write("package " + packageForGeneratedCode)
 
 	pType := unknown
@@ -73,6 +72,8 @@ func ConvertToBuiltInPlugin() (retErr error) {
 			continue
 		}
 		if strings.HasPrefix(l, "var "+konfig.PluginSymbol+" plugin") {
+			// Hack to skip leading new line
+			scanner.Scan()
 			continue
 		}
 		if strings.Contains(l, " Transform(") {
@@ -93,7 +94,7 @@ func ConvertToBuiltInPlugin() (retErr error) {
 	}
 	w.write("")
 	w.write("func New" + root + "Plugin() resmap." + pType.String() + "Plugin {")
-	w.write("  return &" + root + "Plugin{}")
+	w.write("	return &" + root + "Plugin{}")
 	w.write("}")
 
 	return nil
