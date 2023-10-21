@@ -142,18 +142,16 @@ LS0tLS1CRUd...0tLQo=
 kustomize build .
 ```
 
-The output is similar to:
+The Secret manifest is generated.
 ```yaml
 apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: app-tls-c888dfbhf8
 data:
   tls.crt: TFMwdExTMUNSVWQuLi50Q2c9PQ==
   tls.key: TFMwdExTMUNSVWQuLi4wdExRbz0=
-kind: Secret
-metadata:
-  name: app-tls-c888dfbhf8
-type: kubernetes.io/tls
 ```
 
-{{< alert color="warning" title="Important" >}}
 It is important to note that the secrets are `base64` encoded.
-{{< /alert >}}
