@@ -143,6 +143,57 @@ data:
   SAMPLER_PARAMETERS: "0.1"
 ```
 
+## Create ConfigMap with options
+The labels and annotations of a generated ConfigMap can be set with the `options` field. The name suffix hash can also be disabled.
+
+Labels and annotations added with `options` will not be overwritten by values defind in the `generatorOptions` field. Note that `disableNameSuffixHash: true` defined in `globalOptions` will override the locally defined `options`. This is a result of boolean behavior.
+
+The following example generates a ConfigMap with labels, annotations and does not add a suffix hash to the name.
+
+1. Create a Kustomization file.
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  labels:
+    fruit: apple
+
+configMapGenerator:
+- name: my-java-server-env-vars
+  literals:
+  - JAVA_HOME=/opt/java/jdk
+  - JAVA_TOOL_OPTIONS=-agentlib:hprof
+  options:
+    disableNameSuffixHash: true
+    labels:
+      pet: dog
+    annotations:
+      dashboard: "1"
+```
+
+2. Create the ConfigMap using `kustomize build`.
+```bash
+kustomize build .
+```
+
+The ConfigMap manifest is created with labels and annotations.
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-java-server-env-vars
+  labels:
+    fruit: apple
+    pet: dog
+  annotations:
+    dashboard: "1"
+data:
+  JAVA_HOME: /opt/java/jdk
+  JAVA_TOOL_OPTIONS: -agentlib:hprof
+```
+
 ## Override base ConfigMap values
 ConfigMap values from bases may be overridden by adding another generator for the ConfigMap
 in the overlay and specifying the `behavior` field.
