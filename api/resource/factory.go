@@ -44,6 +44,7 @@ func (rf *Factory) Hasher() ifc.KustHasher {
 func (rf *Factory) FromMap(m map[string]interface{}) *Resource {
 	res, err := rf.FromMapAndOption(m, nil)
 	if err != nil {
+		// TODO: return err instead of log.
 		log.Fatalf("failed to create resource from map: %v", err)
 	}
 	return res
@@ -58,6 +59,7 @@ func (rf *Factory) FromMapWithName(n string, m map[string]interface{}) *Resource
 func (rf *Factory) FromMapWithNamespaceAndName(ns string, n string, m map[string]interface{}) *Resource {
 	r, err := rf.FromMapAndOption(m, nil)
 	if err != nil {
+		// TODO: return err instead of log.
 		log.Fatalf("failed to create resource from map: %v", err)
 	}
 	return r.setPreviousId(ns, n, r.GetKind())
