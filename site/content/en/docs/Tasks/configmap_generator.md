@@ -50,6 +50,21 @@ metadata:
   name: my-application-properties-f7mm6mhf59
 ```
 
+It is also possible to [define a key](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#define-the-key-to-use-when-creating-a-configmap-from-a-file) to set a name different than the filename.
+
+The example below creates a ConfigMap with the name of file as `myFileName.ini` while the _actual_ filename from which the configmap is created is `whatever.ini`.
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+configMapGenerator:
+- name: app-whatever
+  files:
+  - myFileName.ini=whatever.ini
+```
+
+
 ## Create ConfigMap from literals
 
 ConfigMap Resources may be generated from literal key-value pairs - such as `JAVA_HOME=/opt/java/jdk`.
