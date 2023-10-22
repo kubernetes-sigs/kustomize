@@ -85,7 +85,7 @@ spec:
         name: nginx
 ```
 
-## Add Labels and disable Selector and Template udpates
+## Disable Selector and Template updates
 Add Labels to Resources in a project without propagating the Labels to the Selectors with the `labels` field. The `includeSelectors` and `includeTemplates` flags enable Label propagation to Selectors and Templates respectivley. These flags are disabled by default.
 
 The following example adds Labels to a Deployment and Service without changing the Selector and Template Labels.
@@ -147,7 +147,8 @@ metadata:
     someName: someValue
   name: example
 ```
-## Add Labels and update Selectors
+
+## Update Selectors with Labels
 
 The following example adds Labels and Selector Labels to a Deployment and Service. This is equivalent to using the `commonLabels` field.
 
@@ -226,7 +227,8 @@ spec:
         owner: alice
         someName: someValue
 ```
-## Add Labels and update Templates
+
+## Update Templates with Labels
 
 The following example adds Labels and Template Labels to a Deployment and Service without changing the Selector Labels.
 
