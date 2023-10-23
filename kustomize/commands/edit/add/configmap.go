@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -20,7 +21,7 @@ func newCmdAddConfigMap(
 	ldr ifc.KvLoader,
 	rf *resource.Factory,
 ) *cobra.Command {
-	var flags configmapSecretFlagsAndArgs
+	var flags util.ConfigMapSecretFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "configmap NAME [--namespace=namespace-name] [--behavior={create|merge|replace}] [--from-file=[key=]source] [--from-literal=key1=value1]",
 		Short: "Adds a configmap to the kustomization file",
@@ -48,36 +49,36 @@ func newCmdAddConfigMap(
 
 	cmd.Flags().StringSliceVar(
 		&flags.FileSources,
-		fromFileFlag,
+		util.FromFileFlag,
 		[]string{},
 		"Key file can be specified using its file path, in which case file basename will be used as configmap "+
 			"key, or optionally with a key and file path, in which case the given key will be used.  Specifying a "+
 			"directory will iterate each named file in the directory whose basename is a valid configmap key.")
 	cmd.Flags().StringArrayVar(
 		&flags.LiteralSources,
-		fromLiteralFlag,
+		util.FromLiteralFlag,
 		[]string{},
 		"Specify a key and literal value to insert in configmap (i.e. mykey=somevalue)")
 	cmd.Flags().StringVar(
 		&flags.EnvFileSource,
-		fromEnvFileFlag,
+		util.FromEnvFileFlag,
 		"",
 		"Specify the path to a file to read lines of key=val pairs to create a configmap (i.e. a Docker .env file).")
 	cmd.Flags().BoolVar(
 		&flags.DisableNameSuffixHash,
-		disableNameSuffixHashFlag,
+		util.DisableNameSuffixHashFlag,
 		false,
 		"Disable the name suffix for the configmap")
 	cmd.Flags().StringVar(
 		&flags.Behavior,
-		behaviorFlag,
+		util.BehaviorFlag,
 		"",
 		"Specify the behavior for config map generation, i.e whether to create a new configmap (the default),  "+
 			"to merge with a previously defined one, or to replace an existing one. Merge and replace should be used only "+
 			" when overriding an existing configmap defined in a base")
 	cmd.Flags().StringVar(
 		&flags.Namespace,
-		namespaceFlag,
+		util.NamespaceFlag,
 		"",
 		"Specify the namespace of the ConfigMap")
 
@@ -85,7 +86,7 @@ func newCmdAddConfigMap(
 }
 
 func runEditAddConfigMap(
-	flags configmapSecretFlagsAndArgs,
+	flags util.ConfigMapSecretFlagsAndArgs,
 	fSys filesys.FileSystem,
 	args []string,
 	ldr ifc.KvLoader,
@@ -133,11 +134,11 @@ func runEditAddConfigMap(
 func addConfigMap(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags configmapSecretFlagsAndArgs,
+	flags util.ConfigMapSecretFlagsAndArgs,
 	rf *resource.Factory,
 ) error {
 	args := findOrMakeConfigMapArgs(k, flags.Name, flags.Namespace)
-	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
+	util.MergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.configmap.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)

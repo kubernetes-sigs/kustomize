@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -20,7 +21,7 @@ func newCmdAddSecret(
 	ldr ifc.KvLoader,
 	rf *resource.Factory,
 ) *cobra.Command {
-	var flags configmapSecretFlagsAndArgs
+	var flags util.ConfigMapSecretFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "secret NAME [--from-file=[key=]source] [--from-literal=key1=value1] [--type=Opaque|kubernetes.io/tls]",
 		Short: "Adds a secret to the kustomization file.",
@@ -42,19 +43,19 @@ func newCmdAddSecret(
 
 	cmd.Flags().StringSliceVar(
 		&flags.FileSources,
-		fromFileFlag,
+		util.FromFileFlag,
 		[]string{},
 		"Key file can be specified using its file path, in which case file basename will be used as secret "+
 			"key, or optionally with a key and file path, in which case the given key will be used.  Specifying a "+
 			"directory will iterate each named file in the directory whose basename is a valid secret key.")
 	cmd.Flags().StringArrayVar(
 		&flags.LiteralSources,
-		fromLiteralFlag,
+		util.FromLiteralFlag,
 		[]string{},
 		"Specify a key and literal value to insert in secret (i.e. mykey=somevalue)")
 	cmd.Flags().StringVar(
 		&flags.EnvFileSource,
-		fromEnvFileFlag,
+		util.FromEnvFileFlag,
 		"",
 		"Specify the path to a file to read lines of key=val pairs to create a secret (i.e. a Docker .env file).")
 	cmd.Flags().StringVar(
@@ -64,12 +65,12 @@ func newCmdAddSecret(
 		"Specify the secret type this can be 'Opaque' (default), or 'kubernetes.io/tls'")
 	cmd.Flags().StringVar(
 		&flags.Namespace,
-		namespaceFlag,
+		util.NamespaceFlag,
 		"",
 		"Specify the namespace of the secret")
 	cmd.Flags().BoolVar(
 		&flags.DisableNameSuffixHash,
-		disableNameSuffixHashFlag,
+		util.DisableNameSuffixHashFlag,
 		false,
 		"Disable the name suffix for the secret")
 
@@ -77,7 +78,7 @@ func newCmdAddSecret(
 }
 
 func runEditAddSecret(
-	flags configmapSecretFlagsAndArgs,
+	flags util.ConfigMapSecretFlagsAndArgs,
 	fSys filesys.FileSystem,
 	args []string,
 	ldr ifc.KvLoader,
@@ -125,11 +126,11 @@ func runEditAddSecret(
 func addSecret(
 	ldr ifc.KvLoader,
 	k *types.Kustomization,
-	flags configmapSecretFlagsAndArgs,
+	flags util.ConfigMapSecretFlagsAndArgs,
 	rf *resource.Factory,
 ) error {
 	args := findOrMakeSecretArgs(k, flags.Name, flags.Namespace, flags.Type)
-	mergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
+	util.MergeFlagsIntoGeneratorArgs(&args.GeneratorArgs, flags)
 	// Validate by trying to create corev1.secret.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)

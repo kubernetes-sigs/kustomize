@@ -1,29 +1,28 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package add
+package util
 
 import (
 	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 const (
-	fromFileFlag              = "from-file"
-	fromLiteralFlag           = "from-literal"
-	fromEnvFileFlag           = "from-env-file"
-	disableNameSuffixHashFlag = "disableNameSuffixHash"
-	behaviorFlag              = "behavior"
-	namespaceFlag             = "namespace"
-	flagFormat                = "--%s=%s"
+	FromFileFlag              = "from-file"
+	FromLiteralFlag           = "from-literal"
+	FromEnvFileFlag           = "from-env-file"
+	DisableNameSuffixHashFlag = "disableNameSuffixHash"
+	BehaviorFlag              = "behavior"
+	NamespaceFlag             = "namespace"
+	FlagFormat                = "--%s=%s"
 )
 
-// configmapSecretFlagsAndArgs encapsulates the options for add secret/configmap commands.
-type configmapSecretFlagsAndArgs struct {
+// ConfigMapSecretFlagsAndArgs encapsulates the options for add secret/configmap commands.
+type ConfigMapSecretFlagsAndArgs struct {
 	// Name of configMap/Secret (required)
 	Name string
 	// FileSources to derive the configMap/Secret from (optional)
@@ -44,7 +43,7 @@ type configmapSecretFlagsAndArgs struct {
 }
 
 // Validate validates required fields are set to support structured generation.
-func (a *configmapSecretFlagsAndArgs) Validate(args []string) error {
+func (a *ConfigMapSecretFlagsAndArgs) Validate(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("name must be specified once")
 	}
@@ -80,7 +79,7 @@ func (a *configmapSecretFlagsAndArgs) Validate(args []string) error {
 // and the key, if missing, is the same as the value.
 // In the case where the key is explicitly declared,
 // the globbing, if present, must have exactly one match.
-func (a *configmapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
+func (a *ConfigMapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
 	var results []string
 	for _, pattern := range a.FileSources {
 		var patterns []string
@@ -94,7 +93,7 @@ func (a *configmapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) 
 		} else {
 			patterns = append(patterns, s[0])
 		}
-		result, err := util.GlobPatterns(fSys, patterns)
+		result, err := GlobPatterns(fSys, patterns)
 		if err != nil {
 			return err
 		}
@@ -115,7 +114,7 @@ func (a *configmapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) 
 	return nil
 }
 
-func mergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags configmapSecretFlagsAndArgs) {
+func MergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags ConfigMapSecretFlagsAndArgs) {
 	if len(flags.LiteralSources) > 0 {
 		args.LiteralSources = append(
 			args.LiteralSources, flags.LiteralSources...)

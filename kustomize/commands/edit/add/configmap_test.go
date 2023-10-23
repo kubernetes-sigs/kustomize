@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -54,12 +55,12 @@ func TestMakeConfigMapArgs(t *testing.T) {
 func TestMergeFlagsIntoConfigMapArgs_LiteralSources(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
-	mergeFlagsIntoGeneratorArgs(
+		util.ConfigMapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
+		util.ConfigMapSecretFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
 	assert.Equal(t, "k1=v1", k.ConfigMapGenerator[0].LiteralSources[0])
 	assert.Equal(t, "k2=v2", k.ConfigMapGenerator[0].LiteralSources[1])
 }
@@ -67,12 +68,12 @@ func TestMergeFlagsIntoConfigMapArgs_LiteralSources(t *testing.T) {
 func TestMergeFlagsIntoConfigMapArgs_FileSources(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{FileSources: []string{"file1"}})
-	mergeFlagsIntoGeneratorArgs(
+		util.ConfigMapSecretFlagsAndArgs{FileSources: []string{"file1"}})
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{FileSources: []string{"file2"}})
+		util.ConfigMapSecretFlagsAndArgs{FileSources: []string{"file2"}})
 	assert.Equal(t, "file1", k.ConfigMapGenerator[0].FileSources[0])
 	assert.Equal(t, "file2", k.ConfigMapGenerator[0].FileSources[1])
 }
@@ -80,12 +81,12 @@ func TestMergeFlagsIntoConfigMapArgs_FileSources(t *testing.T) {
 func TestMergeFlagsIntoConfigMapArgs_EnvSource(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{EnvFileSource: "env1"})
-	mergeFlagsIntoGeneratorArgs(
+		util.ConfigMapSecretFlagsAndArgs{EnvFileSource: "env1"})
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{EnvFileSource: "env2"})
+		util.ConfigMapSecretFlagsAndArgs{EnvFileSource: "env2"})
 	assert.Equal(t, "env1", k.ConfigMapGenerator[0].EnvSources[0])
 	assert.Equal(t, "env2", k.ConfigMapGenerator[0].EnvSources[1])
 }
@@ -94,31 +95,31 @@ func TestMergeFlagsIntoConfigMapArgs_Behavior(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeConfigMapArgs(k, "foo", configMapNamespace)
 
-	createBehaviorFlags := configmapSecretFlagsAndArgs{
+	createBehaviorFlags := util.ConfigMapSecretFlagsAndArgs{
 		Behavior:      "create",
 		EnvFileSource: "env1",
 	}
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		createBehaviorFlags)
 	require.Equal(t, configMapNamespace, k.ConfigMapGenerator[0].Namespace)
 	assert.Equal(t, "create", k.ConfigMapGenerator[0].Behavior)
 
-	mergeBehaviorFlags := configmapSecretFlagsAndArgs{
+	mergeBehaviorFlags := util.ConfigMapSecretFlagsAndArgs{
 		Behavior:      "merge",
 		EnvFileSource: "env1",
 	}
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		mergeBehaviorFlags)
 	require.Equal(t, configMapNamespace, k.ConfigMapGenerator[0].Namespace)
 	assert.Equal(t, "merge", k.ConfigMapGenerator[0].Behavior)
 
-	replaceBehaviorFlags := configmapSecretFlagsAndArgs{
+	replaceBehaviorFlags := util.ConfigMapSecretFlagsAndArgs{
 		Behavior:      "replace",
 		EnvFileSource: "env1",
 	}
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
 		replaceBehaviorFlags)
 	require.Equal(t, configMapNamespace, k.ConfigMapGenerator[0].Namespace)
@@ -162,8 +163,8 @@ func TestEditAddConfigMapWithLiteralSource(t *testing.T) {
 
 			args := []string{
 				tc.configMapName,
-				fmt.Sprintf(flagFormat, fromLiteralFlag, tc.literalSource),
-				fmt.Sprintf(flagFormat, namespaceFlag, tc.configMapNamespace),
+				fmt.Sprintf(util.FlagFormat, util.FromLiteralFlag, tc.literalSource),
+				fmt.Sprintf(util.FlagFormat, util.NamespaceFlag, tc.configMapNamespace),
 			}
 			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
 			cmd.SetArgs(args)
@@ -243,8 +244,8 @@ func TestEditAddConfigMapWithEnvSource(t *testing.T) {
 
 			args := []string{
 				tc.configMapName,
-				fmt.Sprintf(flagFormat, fromEnvFileFlag, tc.envSource),
-				fmt.Sprintf(flagFormat, namespaceFlag, tc.configMapNamespace),
+				fmt.Sprintf(util.FlagFormat, util.FromEnvFileFlag, tc.envSource),
+				fmt.Sprintf(util.FlagFormat, util.NamespaceFlag, tc.configMapNamespace),
 			}
 			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
 			cmd.SetArgs(args)
@@ -323,8 +324,8 @@ func TestEditAddConfigMapWithFileSource(t *testing.T) {
 
 			args := []string{
 				tc.configMapName,
-				fmt.Sprintf(flagFormat, fromFileFlag, tc.fileSource),
-				fmt.Sprintf(flagFormat, namespaceFlag, tc.configMapNamespace),
+				fmt.Sprintf(util.FlagFormat, util.FromFileFlag, tc.fileSource),
+				fmt.Sprintf(util.FlagFormat, util.NamespaceFlag, tc.configMapNamespace),
 			}
 			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
 			cmd.SetArgs(args)
