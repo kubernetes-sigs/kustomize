@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/sets"
+	//"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
+	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
 // CopyYNode returns a distinct copy of its argument.

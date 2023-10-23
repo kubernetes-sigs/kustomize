@@ -41,3 +41,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
 )
+
+replace sigs.k8s.io/yaml => github.com/natasha41575/yaml-1 v1.3.1-0.20231023160344-f2c02299d455
