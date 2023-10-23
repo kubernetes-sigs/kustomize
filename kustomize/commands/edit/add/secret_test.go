@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -51,12 +52,12 @@ func TestMakeSecretArgs(t *testing.T) {
 func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
-	mergeFlagsIntoGeneratorArgs(
+		util.ConfigMapSecretFlagsAndArgs{LiteralSources: []string{"k1=v1"}})
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
+		util.ConfigMapSecretFlagsAndArgs{LiteralSources: []string{"k2=v2"}})
 	assert.Equal(t, "k1=v1", k.SecretGenerator[0].LiteralSources[0])
 	assert.Equal(t, "k2=v2", k.SecretGenerator[0].LiteralSources[1])
 }
@@ -64,12 +65,12 @@ func TestMergeFlagsIntoSecretArgs_LiteralSources(t *testing.T) {
 func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{FileSources: []string{"file1"}})
-	mergeFlagsIntoGeneratorArgs(
+		util.ConfigMapSecretFlagsAndArgs{FileSources: []string{"file1"}})
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{FileSources: []string{"file2"}})
+		util.ConfigMapSecretFlagsAndArgs{FileSources: []string{"file2"}})
 	assert.Equal(t, "file1", k.SecretGenerator[0].FileSources[0])
 	assert.Equal(t, "file2", k.SecretGenerator[0].FileSources[1])
 }
@@ -77,12 +78,12 @@ func TestMergeFlagsIntoSecretArgs_FileSources(t *testing.T) {
 func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{EnvFileSource: "env1"})
-	mergeFlagsIntoGeneratorArgs(
+		util.ConfigMapSecretFlagsAndArgs{EnvFileSource: "env1"})
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{EnvFileSource: "env2"})
+		util.ConfigMapSecretFlagsAndArgs{EnvFileSource: "env2"})
 	assert.Equal(t, "env1", k.SecretGenerator[0].EnvSources[0])
 	assert.Equal(t, "env2", k.SecretGenerator[0].EnvSources[1])
 }
@@ -90,9 +91,9 @@ func TestMergeFlagsIntoSecretArgs_EnvSource(t *testing.T) {
 func TestMergeFlagsIntoSecretArgs_DisableNameSuffixHash(t *testing.T) {
 	k := &types.Kustomization{}
 	args := findOrMakeSecretArgs(k, "foo", "bar", "forbidden")
-	mergeFlagsIntoGeneratorArgs(
+	util.MergeFlagsIntoGeneratorArgs(
 		&args.GeneratorArgs,
-		configmapSecretFlagsAndArgs{DisableNameSuffixHash: true})
+		util.ConfigMapSecretFlagsAndArgs{DisableNameSuffixHash: true})
 	assert.True(t, k.SecretGenerator[0].Options.DisableNameSuffixHash)
 }
 
@@ -112,7 +113,7 @@ func TestEditAddSecretWithLiteralSource(t *testing.T) {
 
 	args := []string{
 		secretName,
-		fmt.Sprintf(flagFormat, fromLiteralFlag, literalSource),
+		fmt.Sprintf(util.FlagFormat, util.FromLiteralFlag, literalSource),
 	}
 	cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
 	cmd.SetArgs(args)
@@ -162,7 +163,7 @@ func TestEditAddSecretWithEnvSource(t *testing.T) {
 
 	args := []string{
 		secretName,
-		fmt.Sprintf(flagFormat, fromEnvFileFlag, envSource),
+		fmt.Sprintf(util.FlagFormat, util.FromEnvFileFlag, envSource),
 	}
 	cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
 	cmd.SetArgs(args)
@@ -212,7 +213,7 @@ func TestEditAddSecretWithFileSource(t *testing.T) {
 
 	args := []string{
 		secretName,
-		fmt.Sprintf(flagFormat, fromFileFlag, fileSource),
+		fmt.Sprintf(util.FlagFormat, util.FromFileFlag, fileSource),
 	}
 	cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
 	cmd.SetArgs(args)
