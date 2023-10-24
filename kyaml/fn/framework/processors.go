@@ -176,6 +176,9 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 	return schemaValidationError
 }
 
+// combineErrors produces a CompositeValidationError for the given schemaErr and givenErr.
+// If either is already a CompsiteError, its constituent errors become part of the new
+// composite error. If both given errors are nil, this function returns nil.
 func combineErrors(schemaErr, customErr error) error {
 	combined := validationErrors.CompositeValidationError()
 	if compositeSchemaErr, ok := schemaErr.(*validationErrors.CompositeError); ok {
