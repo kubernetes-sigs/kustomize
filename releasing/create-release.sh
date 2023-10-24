@@ -68,12 +68,12 @@ function build_kustomize_binary {
   done
 
   # create checksums.txt
-  cd "${release_dir}"
+  pushd "${release_dir}"
   for release in *; do
     echo "generate checksum: $release"
     sha256sum "$release" >> checksums.txt
   done
-  cd ../
+  popd
 
   rmdir output
 }
