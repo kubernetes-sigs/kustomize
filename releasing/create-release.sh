@@ -52,18 +52,20 @@ function build_kustomize_binary {
     for arch in "${arch_list[@]}" ; do
       echo "Building $os-$arch"
     #   CGO_ENABLED=0 GOWORK=off GOOS=$os GOARCH=$arch go build -o output/kustomize -ldflags\
-      CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -o output/kustomize -ldflags\
+      binary_name="kustomize"
+      [[ "$os" == "windows" ]] && binary_name="kustomize.exe"
+      CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -o output/$binary_name -ldflags\
         "-s -w\
         -X sigs.k8s.io/kustomize/api/provenance.version=$version\
         -X sigs.k8s.io/kustomize/api/provenance.gitCommit=$(git rev-parse HEAD)\
         -X sigs.k8s.io/kustomize/api/provenance.buildDate=$build_date"\
         kustomize/main.go
       if [ "$os" == "windows" ]; then
-        zip -j "${release_dir}/kustomize_${version}_${os}_${arch}.zip" output/kustomize
+        zip -j "${release_dir}/kustomize_${version}_${os}_${arch}.zip" output/$binary_name
       else
-        tar cvfz "${release_dir}/kustomize_${version}_${os}_${arch}.tar.gz" -C output kustomize
+        tar cvfz "${release_dir}/kustomize_${version}_${os}_${arch}.tar.gz" -C output $binary_name
       fi
-      rm output/kustomize
+      rm output/$binary_name
     done
     rmdir output
   done
