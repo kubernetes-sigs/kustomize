@@ -6,7 +6,7 @@ require (
 	k8s.io/apimachinery v0.27.0
 	sigs.k8s.io/application v0.8.2
 	sigs.k8s.io/kustomize/kyaml v0.13.7
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
