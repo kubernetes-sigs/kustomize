@@ -11,7 +11,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961
 	sigs.k8s.io/kustomize/kyaml v0.15.0
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
