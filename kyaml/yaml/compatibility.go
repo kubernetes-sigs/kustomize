@@ -9,7 +9,6 @@ import (
 
 	y1_1 "gopkg.in/yaml.v2"
 	"k8s.io/kube-openapi/pkg/validation/spec"
-	//y1_2 "sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
 	y1_2 "sigs.k8s.io/yaml/goyaml.v3"
 )
 
