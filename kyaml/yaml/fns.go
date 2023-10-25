@@ -11,7 +11,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
+	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
 // Append creates an ElementAppender

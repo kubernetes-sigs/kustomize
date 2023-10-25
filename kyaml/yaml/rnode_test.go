@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml"
+	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
 func TestRNodeHasNilEntryInList(t *testing.T) {
