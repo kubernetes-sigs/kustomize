@@ -1,112 +1,173 @@
-# Kustomize roadmap 2022
+# Kustomize roadmap 2023-2024
 
-Presented at the [January 26, 2022, SIG-CLI meeting](https://youtu.be/l2plzJ9MRlk?t=1321)
+This document describes the items that we hope to make progress on over the next
+1 year (H2 2023 and H1 2024). Take this roadmap as more of what we hope to achieve
+rather than what we promise to achieve, as some items in this doc are highly dependent
+on the success that we have on-ramping new contributors to the project, and other
+items will depend on external contributions, which can vary.
 
-kustomize maintainers: @knverey, @natasha41575
+If you are interested in contributing to a particular area, you can look through
+the project board for that area and assign yourself to one of the issues. It is
+recommended to start with smaller issues to ramp up on the project before starting
+to tackle larger issues.
 
-[Objective: Improve contributor community](#objective-improve-contributor-community)
+## Kustomize contributors (at time of writing):
 
-[Objective: Improve end-user experience](#objective-improve-end-user-experience)
+kustomize owner: @natasha41575
 
-[Objective: Improve extension experience](#objective-improve-extension-experience)
+kustomize maintainers: @annasong20, @koba1t
 
-## Objective: Improve contributor community
-
-**_WHO: End user who also contributes source code._**
-
-Top priority:
-
-- Kustomization v1 (also end-user impact) ([PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/12))
-  - Remove the following fields:
-    - [vars](https://github.com/kubernetes-sigs/kustomize/issues/2052)
-    - [patchesJson6902, patchesStrategicMerge (consolidate on \`patches)](https://github.com/kubernetes-sigs/kustomize/issues/4376)
-    - [helmChartInflationGenerator, helmCharts, helmGlobals](https://github.com/kubernetes-sigs/kustomize/issues/4401)
-    - all long-deprecated fields in Kustomization v1 such as \`bases\` and those being accommodate by kustomize edit \[[see code snippet](https://github.com/kubernetes-sigs/kustomize/blob/ee4b7847f0beb6c0d2070673b10f23f7b3e92e82/api/types/fix.go#L15)\]
-  - Ensure that \`kustomize edit fix\` handles migrations for all those, and that anything it changes is not still present in v1.
-  - [Add reorder field](https://github.com/kubernetes-sigs/kustomize/issues/3913). Default should be FIFO and legacy should also be supported (could add alphabetic and custom sort support eventually). Replaces -reorder flag.
-  - [Reconcile openapi and crds field](https://github.com/kubernetes-sigs/kustomize/issues/3944)
-  - [Consider deprecating configurations field](https://github.com/kubernetes-sigs/kustomize/issues/3945) (old, pre-plugin, pre-openapi global configuration)
-  - [Add a field to enable the managedby label](https://github.com/kubernetes-sigs/kustomize/issues/4047)
-
-Second priority:
-
-- Improve contributor documentation
-  - [Instructions to upgrade kustomize-in-kubectl](https://github.com/kubernetes-sigs/kustomize/issues/3951)
-
-Also very valuable to the project:
-
-- [Improve the release process](https://github.com/kubernetes-sigs/kustomize/issues/3952) to support regular biweekly releases [PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/7)
-- Release sigs.k8s.io/kustomize/api v1.0.0 [PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/5)
-  - [Reduce the public surface of the API module](https://github.com/kubernetes-sigs/kustomize/issues/3942)
-  - [Vendor all transitive deps](https://github.com/kubernetes-sigs/kustomize/issues/3706). Since kustomize is in kubectl, we must do as kubectl does to manage deps, exposing new transitive deps in code review.
-- Project administration
-  - [Rename master branch to main](https://github.com/kubernetes-sigs/kustomize/issues/3954)
+kustomize contributors: @varshaprasad96
 
 
+# H2 2023
 
-## Objective: Improve end-user experience
+## Goal: Create kustomize leadership and contributor playbooks
 
-**_WHO: End user that wants kustomize build artifacts (binaries, containers)._**
+Contributors: natasha41575, annasong20
 
-Top priorities:
+Priority: High
 
-- Bug fixes:
-  - Fix bugs in basic anchor support: [issue query](https://github.com/kubernetes-sigs/kustomize/issues?q=is%3Aopen+is%3Aissue+label%3Aarea%2Fanchors)
-  - integer keys support: [#3446](https://github.com/kubernetes-sigs/kustomize/issues/3446)
-  - kyaml not respecting \`$patch replace|retainKeys\`: [#2037](https://github.com/kubernetes-sigs/kustomize/issues/2037)
-  - kustomize removing quotes from namespace field values: [#4146](https://github.com/kubernetes-sigs/kustomize/issues/4146)
-  - Kustomize doesn’t support metadata.generateName: [#641](https://github.com/kubernetes-sigs/kustomize/issues/641)
-- Send kustomize CLI version number into kubectl ([kubectl issue](https://github.com/kubernetes/kubectl/issues/797) / [kustomize issue](https://github.com/kubernetes-sigs/kustomize/issues/1424))
-- Kustomize performance investigations/improvements [PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/13)
-- [Support generic resource references in name reference tracking](https://github.com/kubernetes-sigs/kustomize/issues/3418)
-- [KEP 4267: retain the resource origin and transformer data in annotations](https://github.com/kubernetes-sigs/kustomize/pull/4267)
+Effort: Medium
 
-Secondary priorities:
+In the past, when the leads have left in various kubernetes projects, it
+left a wide hole that few could easily fill, leaving the remaining leads in a
+bad position and the project understaffed. We should assume that we will need
+to onboard new maintainers in the future, and should have playbooks for doing so.
+As we grow the contributor base in kustomize, we will build these playbooks for
+those who are contributing and those who are looking to grow into kustomize leaders.
+To ensure the long term health and stability of the project, we should have:
 
-- kustomize cli v5 ([PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/14))
-  - [Drop the --reorder flag](https://github.com/kubernetes-sigs/kustomize/issues/3947)
-  - [Graduate cfg read-only commands out of alpha](https://github.com/kubernetes-sigs/kustomize/issues/4090).
-  - [Drop the –enable-managedby-label](https://github.com/kubernetes-sigs/kustomize/issues/4047)
-  - Drop old plugin-related fields in favor of [the Catalog-style fields](https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/2906-kustomize-function-catalog).
-  - [Drop the helm flags](https://github.com/kubernetes-sigs/kustomize/issues/4401)
-- [Confusion around namespace replacement](https://github.com/kubernetes-sigs/kustomize/issues/880).
+- On-boarding guides for new contributors
+- Clear guidelines for how to climb the kustomize ladder from contributor to approver to owner
+- A plan (maybe a schedule) for future kustomize cohorts
+- A succession plan, in case the current kustomize leads ever decide to step down
 
-Also very valuable to the project:
+## Goal: Onboard 2-5 new contributors to kustomize
 
-- [Overinclusion of root directory error in error messages](https://github.com/kubernetes-sigs/kustomize/issues/4348)
-- [Add kustomize localize command](https://github.com/kubernetes-sigs/kustomize/issues/3980)
-- [Fix Windows support in test suite](https://github.com/kubernetes-sigs/kustomize/issues/4001)
-- Improve end-user documentation [PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/9)
+Contributors: natasha41575, annasong20, koba1t
 
+Priority: High
 
-## Objective: Improve extension experience
+Effort: High
 
-**_WHO: Plugin developers: end users who extend kustomize, but don’t think about internals._**
+In order to make progress on kustomize goals in the future, we need to increase the
+level of staffing on kustomize. We should leverage community contributions to keep kustomize
+healthy and making progress.
 
-This objective is described in detail in the [Kustomize Plugin Graduation KEP](https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/2953-kustomize-plugin-graduation) / [PROJECT](https://github.com/kubernetes-sigs/kustomize/projects/15) .
+The primary means in which we will try to find new kustomize contributors is through the new kustomize
+maintainer training cohort. We will lead a group of ~20 kubernetes community members through a 3-6 month
+training program, involving talk sessions, bug scrubs, issue triage, PR reviews, and coding projects for
+each member. The effort from existing kustomize maintainers here will be to:
+- Organize the cohort, so that each cohort member feels productive and understands what they should work on
+- Align motivation of the cohort members with the work that we assign to them.
+- Review PRs from cohort members in a timely manner.
+- Be the point(s) of contact for questions/escalations
+- Lead weekly stand-ups and monthly bug scrubs
 
-Top priorities:
+At the end of all this, if we have a small team of contributors to kustomize, who understand its founding
+philosophy and intentions, we should be able to keep the project up to date.
 
-- Fix core usability issues with KRM Function extensions:
-  - [Better errors for function config failures](https://github.com/kubernetes-sigs/kustomize/issues/4398)
-  - [Container KRM Mounts are not mounting via function parameters](https://github.com/kubernetes-sigs/kustomize/issues/4290)
-  - [Resolution of local file references in extensions transformer configuration](https://github.com/kubernetes-sigs/kustomize/issues/4154)
-  - [Do not silently ignore plugins when config has typo](https://github.com/kubernetes-sigs/kustomize/issues/4399)
-  - [KRM Exec Function can't locate executable when referencing a base](https://github.com/kubernetes-sigs/kustomize/issues/4347)
-- Once core usability issues are fixed, [deprecate legacy exec and Go plugin support](https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/2953-kustomize-plugin-graduation)
-- [Catalog KEP](https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/2906-kustomize-function-catalog)
+## Goal: Improve kustomize extensibility through KRM functions and CRD support
 
-Secondary priorities:
+Contributors: koba1t, varshaprasad96, external contributors
 
-- [Remove Starlark support](https://github.com/kubernetes-sigs/kustomize/issues/4349)
-- [Composition KEP](https://github.com/kubernetes/enhancements/pull/2300). The implementation is complete in [#4223](https://github.com/kubernetes-sigs/kustomize/pull/4323), but depends on:
-  - [Convert resources and components to be backed by a reusable generator](https://github.com/kubernetes-sigs/kustomize/issues/4402)
-  - [Enable explicitly invoked transformers to use default fieldSpecs](https://github.com/kubernetes-sigs/kustomize/issues/4404)
-  - [Enable built-in generators to be used in the transformers field ](https://github.com/kubernetes-sigs/kustomize/issues/4403)
+Priority: High
 
+Effort: High
 
-Also very valuable to the project:
+Project board: https://github.com/orgs/kubernetes-sigs/projects/53/views/1
 
-- [Improve docs for kyaml libraries](https://github.com/kubernetes-sigs/kustomize/issues/3950), especially by adding examples.
-- [Create a reserved field for plugin runtime information](https://github.com/kubernetes-sigs/kustomize/issues/4405)
-- [Develop new standard process for implementing builtin transformers](https://github.com/kubernetes-sigs/kustomize/issues/4400)
+For a long time, we have supported KRM functions as the proper way to implement custom generators and transformers.
+However, due to limited staffing, we have been unable to drive this feature out of alpha in kustomize. The two
+main features which we hope to make progress on are Composition and Catalog, two long-standing proposals for which
+numerous users have been waiting for a long time. There are several open issues
+regarding KRM functions where our long-term answer has been these two features, but users have been hearing about them
+for over a year without seeing any progress. If we can implement them, they will vastly improve usability and security
+of KRM functions.
+
+One item that falls under this category that does not currently have a contributor is improving CRD support.
+Currently, it is difficult to use CRDs properly, as there are three different fields (configurations, openapi, and crds)
+where users have to input their CRD configuration. We need to consolidate these fields into one easy to use feature to
+support CRDs. If you are interested in putting together a design proposal for how to tackle this task, please reach
+out to the kustomize maintainers.
+
+# H1 2024
+
+## Goal: Improve the kustomize documentation
+
+Contributors: annasong20, external contributions
+
+Priority: High
+
+Effort: High
+
+Project board: https://github.com/orgs/kubernetes-sigs/projects/50
+
+The kustomize documentation is currently fragmented, out of date, and lacks examples to fully understand its value.
+We have had a "docs project" for a long time; we need to prioritize implementing it so that the documentation is in
+one place, easy to find, and helps new users get started more easily. Some outcomes from this project should be:
+
+- A single, unified website hosted on kustomize.io
+- Updated information architecture, and a plan to keep it up to date
+- End to end examples of using kustomize, including complex use cases
+
+## Goal: Fix core usability bugs in kustomize
+
+Contributors: external contributions
+
+Priority: High
+
+Effort: High
+
+Project board: https://github.com/orgs/kubernetes-sigs/projects/51
+
+There are several core usability issues that block some users from adopting kustomize features or in
+some base block users from using kustomize entirely. These issues range from small bugs with workable but
+inconvenient workarounds, to enormous feature gaps.
+
+As part of this goal, we should work toward reducing the number of such issues that we have, making
+kustomize work more smoothly and predictably, and be usable for a larger range of users.
+
+There are a lot of important issues in this project, but the biggest and highest priority one is that
+kustomize doesn't currently support metadata.GenerateName. Unfortunately, we don't currently have anyone
+actively working on this issue, we would need an external contributor to reach out to the kustomize
+maintainers to pick it up.
+
+## Goal: Improve kustomize CI, release, & security patch processes
+
+Contributors: external contributions
+
+Priority: Medium
+
+Effort: High
+
+Project board: https://github.com/orgs/kubernetes-sigs/projects/54
+
+The kustomize release process is currently done on-demand and is strictly linear. This means that if we find a CVE,
+we are forced to release the next version of kustomize ASAP, and we are required to release every PR that has merged
+since the last release. This can put us in a sticky situation if we have a breaking change that we are
+not ready to release yet, but we need a patch quickly.
+
+We should try to improve the kustomize release process so that we can release frequently, reliably, and with some
+flexibility. The outcome of this effort should be:
+
+- kustomize is released on a regular cadence (biweekly or monthly)
+- kustomize is able to separate patch and feature releases, so that we can fix CVEs without needing to release
+everything that we have in flight
+- We can detect and fix CVEs early
+
+## Goal: Take long-standing alpha commands out of alpha
+
+Contributors: external contributions
+
+Priority: Medium
+
+Effort: Medium
+
+Project board: https://github.com/orgs/kubernetes-sigs/projects/52
+
+There are several commands in kustomize that have been alpha for a long time, including the cfg command group and
+localize. Moving them forward can indicate good health of a project and these commands are useful to many users.
+Some of these projects can be good starter issues for new contributors to have an easier onramp while others will
+require more effort and thought.
