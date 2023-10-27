@@ -53,7 +53,7 @@ func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *strin
 	return r
 }
 
-func makeConfigMapOptions(rf *resource.Factory, name, behavior string, disableHash bool) *resource.Resource {
+func makeConfigMapOptions(rf *resource.Factory, name, behavior string, disableHash bool) (*resource.Resource, error) {
 	return rf.FromMapAndOption(map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
@@ -89,7 +89,11 @@ func TestUpdateResourceOptions(t *testing.T) {
 		name := fmt.Sprintf("test%d", i)
 		err := in.Append(makeConfigMap(rf, name, c.behavior, c.hashValue))
 		require.NoError(t, err)
-		err = expected.Append(makeConfigMapOptions(rf, name, c.behavior, !c.needsHash))
+		config, err := makeConfigMapOptions(rf, name, c.behavior, !c.needsHash)
+		if err != nil {
+			t.Errorf("expected new instance with an options but got error: %v", err)
+		}
+		err = expected.Append(config)
 		require.NoError(t, err)
 	}
 	actual, err := UpdateResourceOptions(in)

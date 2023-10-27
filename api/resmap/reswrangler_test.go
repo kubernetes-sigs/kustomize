@@ -822,8 +822,9 @@ func TestAppendAll(t *testing.T) {
 	}
 }
 
-func makeMap1() ResMap {
-	return rmF.FromResource(rf.FromMapAndOption(
+func makeMap1(t *testing.T) ResMap {
+	t.Helper()
+	r, err := rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "ConfigMap",
@@ -836,11 +837,16 @@ func makeMap1() ResMap {
 			},
 		}, &types.GeneratorArgs{
 			Behavior: "create",
-		}))
+		})
+	if err != nil {
+		t.Fatalf("expected new intance with an options but got error: %v", err)
+	}
+	return rmF.FromResource(r)
 }
 
-func makeMap2(b types.GenerationBehavior) ResMap {
-	return rmF.FromResource(rf.FromMapAndOption(
+func makeMap2(t *testing.T, b types.GenerationBehavior) ResMap {
+	t.Helper()
+	r, err := rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "ConfigMap",
@@ -854,14 +860,19 @@ func makeMap2(b types.GenerationBehavior) ResMap {
 			},
 		}, &types.GeneratorArgs{
 			Behavior: b.String(),
-		}))
+		})
+	if err != nil {
+		t.Fatalf("expected new intance with an options but got error: %v", err)
+	}
+	return rmF.FromResource(r)
 }
 
 func TestAbsorbAll(t *testing.T) {
 	metadata := map[string]interface{}{
 		"name": "cmap",
 	}
-	expected := rmF.FromResource(rf.FromMapAndOption(
+
+	r, err := rf.FromMapAndOption(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "ConfigMap",
@@ -874,24 +885,26 @@ func TestAbsorbAll(t *testing.T) {
 		},
 		&types.GeneratorArgs{
 			Behavior: "create",
-		}))
-	w := makeMap1()
-	assert.NoError(t, w.AbsorbAll(makeMap2(types.BehaviorMerge)))
+		})
+	if err != nil {
+		t.Fatalf("expected new intance with an options but got error: %v", err)
+	}
+	expected := rmF.FromResource(r)
+	w := makeMap1(t)
+	assert.NoError(t, w.AbsorbAll(makeMap2(t, types.BehaviorMerge)))
 	expected.RemoveBuildAnnotations()
 	w.RemoveBuildAnnotations()
 	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
-	w = makeMap1()
+	w = makeMap1(t)
 	assert.NoError(t, w.AbsorbAll(nil))
-	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1()))
+	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1(t)))
 
-	w = makeMap1()
-	w2 := makeMap2(types.BehaviorReplace)
+	w = makeMap1(t)
+	w2 := makeMap2(t, types.BehaviorReplace)
 	assert.NoError(t, w.AbsorbAll(w2))
 	w2.RemoveBuildAnnotations()
 	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
-	w = makeMap1()
-	w2 = makeMap2(types.BehaviorUnspecified)
-	err := w.AbsorbAll(w2)
+	err = makeMap1(t).AbsorbAll(makeMap2(t, types.BehaviorUnspecified))
 	assert.Error(t, err)
 	assert.True(
 		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
