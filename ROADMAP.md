@@ -11,6 +11,13 @@ the project board for that area and assign yourself to one of the issues. It is
 recommended to start with smaller issues to ramp up on the project before starting
 to tackle larger issues.
 
+Project boards:
+https://github.com/orgs/kubernetes-sigs/projects/50
+https://github.com/orgs/kubernetes-sigs/projects/51
+https://github.com/orgs/kubernetes-sigs/projects/52
+https://github.com/orgs/kubernetes-sigs/projects/53
+https://github.com/orgs/kubernetes-sigs/projects/54
+
 ## Kustomize contributors (at time of writing):
 
 kustomize owner: @natasha41575
@@ -30,11 +37,11 @@ Priority: High
 
 Effort: Medium
 
-In the past, when the leads have left in various kubernetes projects, it
-left a wide hole that few could easily fill, leaving the remaining leads in a
-bad position and the project understaffed. We should assume that we will need
-to onboard new maintainers in the future, and should have playbooks for doing so.
-As we grow the contributor base in kustomize, we will build these playbooks for
+In the past, when the leads stopped contributing (for various reasons, not covered here)
+in various kubernetes projects, it left a wide hole that few could easily fill,
+leaving the remaining leads in a bad position and the project understaffed. We should assume
+that we will need to onboard new maintainers in the future, and should have playbooks
+for doing so. As we grow the contributor base in kustomize, we will build these playbooks for
 those who are contributing and those who are looking to grow into kustomize leaders.
 To ensure the long term health and stability of the project, we should have:
 
@@ -58,7 +65,12 @@ healthy and making progress.
 The primary means in which we will try to find new kustomize contributors is through the new kustomize
 maintainer training cohort. We will lead a group of ~20 kubernetes community members through a 3-6 month
 training program, involving talk sessions, bug scrubs, issue triage, PR reviews, and coding projects for
-each member. The effort from existing kustomize maintainers here will be to:
+each member.
+
+See [our call for help](https://groups.google.com/a/kubernetes.io/g/dev/c/M5OphEVsv5o/m/zc6G4H15AAAJ) for more
+specific details about the program.
+
+The effort from existing kustomize maintainers here will be to:
 - Organize the cohort, so that each cohort member feels productive and understands what they should work on
 - Align motivation of the cohort members with the work that we assign to them.
 - Review PRs from cohort members in a timely manner.

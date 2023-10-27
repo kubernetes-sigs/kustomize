@@ -166,10 +166,8 @@ behavior, do your best to explain to the user why this is the case.
 - If it seems to be a genuine bug, you can /triage accept the issue. In addition, investigate if there are workarounds or
 alternative solutions for the user that they can try until the issue gets resolved.
 
-Administrative notes:
-
-- The [OWNERS file spec] is a useful resources in making changes.
-- Maintainers and admins must be added to the appropriate lists in both [Kustomize OWNERS_ALIASES] and [SIG-CLI Teams]. If this isn't done, the individual in question will lack either PR approval rights (Kustomize list) or the appropriate Github repository permissions (community list).
+The triage party for kustomize is here https://cli.triage.k8s.io/s/kustomize and can be a easy way to
+find issues that have not been triaged yet.
 
 ## Project/Product Managers
 
@@ -193,6 +191,11 @@ users are having, please bring it up in weekly stand-up.
 You will also be asked to help with roadmap planning, deprecation communication, prioritization,
 and doing research on kustomize usage when appropriate, though these responsibilities will occur less
 frequently.
+
+## Administrative notes:
+
+- The [OWNERS file spec] is a useful resources in making changes.
+- Maintainers and admins must be added to the appropriate lists in both [Kustomize OWNERS_ALIASES] and [SIG-CLI Teams]. If this isn't done, the individual in question will lack either PR approval rights (Kustomize list) or the appropriate Github repository permissions (community list).
 
 ## Contact Information
 
