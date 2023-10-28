@@ -6,6 +6,7 @@ package build
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -21,6 +22,15 @@ func AddFlagLoadRestrictor(set *pflag.FlagSet) {
 			"', local kustomizations may load files from outside their root. "+
 			"This does, however, break the "+
 			"relocatability of the kustomization.")
+}
+
+func AddFlagLoadRestrictorCompletion(cmd *cobra.Command) {
+	cmd.RegisterFlagCompletionFunc(flagLoadRestrictorName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{
+			types.LoadRestrictionsNone.String(),
+			types.LoadRestrictionsRootOnly.String(),
+		}, cobra.ShellCompDirectiveNoFileComp
+	})
 }
 
 func validateFlagLoadRestrictor() error {
