@@ -786,10 +786,10 @@ func TestHelmChartInflationGeneratorUsingVersionWithoutRepo(t *testing.T) {
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
-  name: foo-chart
-name: foo-chart
+  name: test-chart
+name: test-chart
 version: 1.0.0
-releaseName: foo-chart
+releaseName: test
 chartHome: ./charts
 `)
 
@@ -797,11 +797,11 @@ chartHome: ./charts
 	assert.NoError(t, err)
 	assert.Equal(t, "bar", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/foo-chart")
+	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
 	assert.True(t, th.GetFSys().Exists(chartDir))
 
 	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
 	assert.NoError(t, err)
-	assert.Contains(t, string(chartYamlContent), "name: foo-chart")
+	assert.Contains(t, string(chartYamlContent), "name: test-chart")
 	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }

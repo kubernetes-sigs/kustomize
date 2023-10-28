@@ -567,6 +567,123 @@ metadata:
 `)
 }
 
+// Reference: https://github.com/kubernetes-sigs/kustomize/issues/5163
+func TestHelmChartInflationGeneratorForMultipleChartsDifferentVersion(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+namespace: default
+helmCharts:
+  - name: test-chart
+    releaseName: test
+    version: 1.0.0
+    skipTests: true
+  - name: minecraft
+    repo: https://itzg.github.io/minecraft-server-charts
+    version: 3.1.3
+    releaseName: test-1
+  - name: minecraft
+    repo: https://itzg.github.io/minecraft-server-charts
+    version: 3.1.4
+    releaseName: test-2
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: my-deploy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    spec:
+      containers:
+      - image: test-image:v1.0.0
+        imagePullPolicy: Always
+---
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-1-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test-1
+  name: test-1-minecraft
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-1-minecraft
+    chart: minecraft-3.1.3
+    heritage: Helm
+    release: test-1
+  name: test-1-minecraft
+  namespace: default
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-1-minecraft
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-2-minecraft
+    chart: minecraft-3.1.4
+    heritage: Helm
+    release: test-2
+  name: test-2-minecraft
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-2-minecraft
+    chart: minecraft-3.1.4
+    heritage: Helm
+    release: test-2
+  name: test-2-minecraft
+  namespace: default
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-2-minecraft
+  type: ClusterIP
+`)
+}
+
 func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 	t.Helper()
 
