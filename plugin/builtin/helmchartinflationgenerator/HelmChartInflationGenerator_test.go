@@ -771,8 +771,8 @@ releaseName: podinfo2
 	assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
 }
 
-// Addressed: https://github.com/kubernetes-sigs/kustomize/issues/5163
-func TestHelmChartInflationGeneratorWithLocalChartWithVersion5163(t *testing.T) {
+// Reference: https://github.com/kubernetes-sigs/kustomize/issues/5163
+func TestHelmChartInflationGeneratorUsingVersionWithoutRepo(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
 	defer th.Reset()
@@ -786,10 +786,10 @@ func TestHelmChartInflationGeneratorWithLocalChartWithVersion5163(t *testing.T) 
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
-  name: issue5163
-name: issue5163
+  name: foo-chart
+name: foo-chart
 version: 1.0.0
-releaseName: issue5163
+releaseName: foo-chart
 chartHome: ./charts
 `)
 
@@ -797,10 +797,11 @@ chartHome: ./charts
 	assert.NoError(t, err)
 	assert.Equal(t, "bar", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/issue5163")
+	chartDir := filepath.Join(th.GetRoot(), "charts/foo-chart")
 	assert.True(t, th.GetFSys().Exists(chartDir))
 
 	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
 	assert.NoError(t, err)
+	assert.Contains(t, string(chartYamlContent), "name: foo-chart")
 	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }
