@@ -105,9 +105,11 @@ func NewCmdBuild(
 	AddFlagOutputPath(cmd.Flags())
 	AddFunctionBasicsFlags(cmd.Flags())
 	AddFlagLoadRestrictor(cmd.Flags())
+	AddFlagLoadRestrictorCompletion(cmd)
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
+
 	msg := "Error marking flag '%s' as deprecated: %v"
 	err := cmd.Flags().MarkDeprecated(flagReorderOutputName,
 		"use the new 'sortOptions' field in kustomization.yaml instead.")
