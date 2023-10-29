@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/slices"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -18,6 +19,7 @@ const (
 	DisableNameSuffixHashFlag = "disableNameSuffixHash"
 	BehaviorFlag              = "behavior"
 	NamespaceFlag             = "namespace"
+	NewNamespaceFlag          = "new-namespace"
 	FlagFormat                = "--%s=%s"
 )
 
@@ -84,19 +86,15 @@ func (a *ConfigMapSecretFlagsAndArgs) ValidateSet(args []string) error {
 // ExpandFileSource normalizes a string list, possibly
 // containing globs, into a validated, globless list.
 // For example, this list:
-//
-//	some/path
-//	some/dir/a*
-//	bfile=some/dir/b*
-//
+// - some/path
+// - some/dir/a*
+// - bfile=some/dir/b*
 // becomes:
-//
-//	some/path
-//	some/dir/airplane
-//	some/dir/ant
-//	some/dir/apple
-//	bfile=some/dir/banana
-//
+// - some/path
+// - some/dir/airplane
+// - some/dir/ant
+// - some/dir/apple
+// - bfile=some/dir/banana
 // i.e. everything is converted to a key=value pair,
 // where the value is always a relative file path,
 // and the key, if missing, is the same as the value.
@@ -148,12 +146,19 @@ func UpdateLiteralSources(
 ) error {
 	sources := make(map[string]any)
 	for _, val := range args.LiteralSources {
-		key, value, _ := strings.Cut(val, "=")
+		key, value, found := strings.Cut(val, "=")
+		if !found { // this is unlikely to happen since these are already validated during the add process
+			return fmt.Errorf("invalid format: literal values must be specified in the key=value format")
+		}
 		sources[key] = value
 	}
 
 	for _, val := range flags.LiteralSources {
-		key, value, _ := strings.Cut(val, "=")
+		key, value, found := strings.Cut(val, "=")
+		if !found {
+			return fmt.Errorf("invalid format: literal values must be specified in the key=value format")
+		}
+
 		if _, ok := sources[key]; !ok {
 			return fmt.Errorf("key '%s' not found in resource", key)
 		}
@@ -166,6 +171,9 @@ func UpdateLiteralSources(
 	for key, val := range sources {
 		newLiteralSources = append(newLiteralSources, fmt.Sprintf("%s=%s", key, val))
 	}
+
+	// guarantee order is predictable
+	slices.Sort(newLiteralSources)
 
 	args.LiteralSources = newLiteralSources
 

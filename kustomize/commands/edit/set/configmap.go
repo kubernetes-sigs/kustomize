@@ -23,7 +23,7 @@ func NewCmdSetConfigMap(
 ) *cobra.Command {
 	var flags util.ConfigMapSecretFlagsAndArgs
 	cmd := &cobra.Command{
-		Use:   "configmap NAME [--from-literal=key1=value1]",
+		Use:   "configmap NAME [--from-literal=key1=value1] [--namespace=namespace-name] [--new-namespace=new-namespace-name]",
 		Short: "Edits the value for an existing key for a configmap in the kustomization file",
 		Long: `Edits the value for an existing key in an existing configmap in the kustomization file.
 Both configmap name and key name must exist for this command to succeed.`,
@@ -31,8 +31,8 @@ Both configmap name and key name must exist for this command to succeed.`,
 	# Edits an existing configmap in the kustomization file, changing value of key1 to 2
 	kustomize edit set configmap my-configmap --from-literal=key1=2
 
-	# Edits an existing configmap in the kustomization file, changing namespace to 'new-test-ns'
-	kustomize edit set configmap my-configmap --namespace=current-test-ns --new-namespace=new-test-ns
+	# Edits an existing configmap in the kustomization file, changing namespace to 'new-namespace'
+	kustomize edit set configmap my-configmap --namespace=current-namespace --new-namespace=new-namespace
 `,
 		RunE: func(_ *cobra.Command, args []string) error {
 			return runEditSetConfigMap(flags, fSys, args, ldr, rf)
@@ -46,12 +46,12 @@ Both configmap name and key name must exist for this command to succeed.`,
 		"Specify an existing key and a new value to update a ConfigMap (i.e. mykey=newvalue)")
 	cmd.Flags().StringVar(
 		&flags.Namespace,
-		"namespace",
+		util.NamespaceFlag,
 		"",
 		"Current namespace of the target ConfigMap")
 	cmd.Flags().StringVar(
 		&flags.NewNamespace,
-		"new-namespace",
+		util.NewNamespaceFlag,
 		"",
 		"New namespace value for the target ConfigMap")
 

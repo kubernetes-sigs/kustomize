@@ -8,26 +8,101 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/types"
 	. "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func TestDataValidation_NoName(t *testing.T) {
+func TestValidateAdd(t *testing.T) {
 	fa := ConfigMapSecretFlagsAndArgs{}
-	require.Error(t, fa.ValidateAdd([]string{}))
+
+	testCases := []struct {
+		name    string
+		args    []string
+		wantErr func(require.TestingT, error, ...interface{})
+	}{
+		{
+			"validateAdd with no arguments",
+			[]string{},
+			require.Error,
+		},
+		{
+			"validateAdd with more than one name",
+			[]string{"name", "othername"},
+			require.Error,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.wantErr(t, fa.ValidateAdd(tc.args))
+		})
+	}
 }
 
-func TestDataValidation_MoreThanOneName(t *testing.T) {
-	fa := ConfigMapSecretFlagsAndArgs{}
+func TestValidateSet(t *testing.T) {
+	testCases := []struct {
+		name    string
+		args    []string
+		fa      ConfigMapSecretFlagsAndArgs
+		wantErr func(require.TestingT, error, ...interface{})
+	}{
+		{
+			// must have one single name
+			name:    "fails with no arguments",
+			args:    []string{},
+			fa:      ConfigMapSecretFlagsAndArgs{},
+			wantErr: require.Error,
+		},
+		{
+			// must have one single name
+			name:    "fails with more than one name",
+			args:    []string{"testname", "testname2"},
+			fa:      ConfigMapSecretFlagsAndArgs{},
+			wantErr: require.Error,
+		},
+		{
+			// must have at least --from-literal or --new-namespace
+			name: "succeeds with --from-literal",
+			args: []string{"test-configmap"},
+			fa: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{"key1=value1"},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			// must have at least --from-literal or --new-namespace
+			name: "succeeds with --new-namespace",
+			args: []string{"test-configmap"},
+			fa: ConfigMapSecretFlagsAndArgs{
+				NewNamespace: "new-namespace",
+			},
+			wantErr: require.NoError,
+		},
+		{
+			// must have at least --from-literal or --new-namespace
+			name: "succeeds with --new-namespace and --from-literal",
+			args: []string{"test-configmap"},
+			fa: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{"key1=value1"},
+				NewNamespace:   "new-namespace",
+			},
+			wantErr: require.NoError,
+		},
+	}
 
-	require.Error(t, fa.ValidateAdd([]string{"name", "othername"}))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.wantErr(t, tc.fa.ValidateSet(tc.args))
+		})
+	}
 }
 
 func TestDataConfigValidation_Flags(t *testing.T) {
 	tests := []struct {
-		name       string
-		fa         ConfigMapSecretFlagsAndArgs
-		shouldFail bool
+		name    string
+		fa      ConfigMapSecretFlagsAndArgs
+		wantErr func(require.TestingT, error, ...interface{})
 	}{
 		{
 			name: "env-file-source and literal are both set",
@@ -35,7 +110,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 				LiteralSources: []string{"one", "two"},
 				EnvFileSource:  "three",
 			},
-			shouldFail: true,
+			wantErr: require.Error,
 		},
 		{
 			name: "env-file-source and from-file are both set",
@@ -43,12 +118,12 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 				FileSources:   []string{"one", "two"},
 				EnvFileSource: "three",
 			},
-			shouldFail: true,
+			wantErr: require.Error,
 		},
 		{
-			name:       "we don't have any option set",
-			fa:         ConfigMapSecretFlagsAndArgs{},
-			shouldFail: true,
+			name:    "we don't have any option set",
+			fa:      ConfigMapSecretFlagsAndArgs{},
+			wantErr: require.Error,
 		},
 		{
 			name: "we have from-file and literal ",
@@ -56,7 +131,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 				LiteralSources: []string{"one", "two"},
 				FileSources:    []string{"three", "four"},
 			},
-			shouldFail: false,
+			wantErr: require.NoError,
 		},
 		{
 			name: "correct behavior",
@@ -64,7 +139,7 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 				EnvFileSource: "foo",
 				Behavior:      "merge",
 			},
-			shouldFail: false,
+			wantErr: require.NoError,
 		},
 		{
 			name: "incorrect behavior",
@@ -72,17 +147,14 @@ func TestDataConfigValidation_Flags(t *testing.T) {
 				EnvFileSource: "foo",
 				Behavior:      "merge-unknown",
 			},
-			shouldFail: true,
+			wantErr: require.Error,
 		},
 	}
 
 	for _, test := range tests {
-		err := test.fa.ValidateAdd([]string{"name"})
-		if test.shouldFail {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			test.wantErr(t, test.fa.ValidateAdd([]string{"name"}))
+		})
 	}
 }
 
@@ -147,5 +219,99 @@ func TestExpandFileSourceWithKeyAndError(t *testing.T) {
 	err = fa.ExpandFileSource(fSys)
 	if err == nil {
 		t.Fatalf("FileSources should not be correctly expanded: %v", fa.FileSources)
+	}
+}
+
+func TestUpdateLiteralSources(t *testing.T) {
+	testCases := []struct {
+		name         string
+		args         *types.GeneratorArgs
+		flags        ConfigMapSecretFlagsAndArgs
+		expectedArgs *types.GeneratorArgs
+		wantErr      func(require.TestingT, error, ...interface{})
+	}{
+		{
+			name: "fails when key doesn't exist",
+			args: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key1=val1", "otherkey=value"},
+				},
+			},
+			flags: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{
+					"key2=value",
+				},
+			},
+			expectedArgs: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key1=val1", "otherkey=value"},
+				},
+			},
+			wantErr: require.Error,
+		},
+		{
+			name: "updates correctly an existing key",
+			args: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1", "otherkey=value"},
+				},
+			},
+			flags: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{
+					"key2=value",
+				},
+			},
+			expectedArgs: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=value", "otherkey=value"},
+				},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			name: "fails when format for literal sources is incorrect in flags",
+			args: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1", "otherkey=value"},
+				},
+			},
+			flags: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{
+					"key2",
+				},
+			},
+			expectedArgs: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1", "otherkey=value"},
+				},
+			},
+			wantErr: require.Error,
+		},
+		{
+			name: "fails when format for literal sources is incorrect in existing args",
+			args: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2", "otherkey=value"},
+				},
+			},
+			flags: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{
+					"key2=val2",
+				},
+			},
+			expectedArgs: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2", "otherkey=value"},
+				},
+			},
+			wantErr: require.Error,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.wantErr(t, UpdateLiteralSources(tc.args, tc.flags))
+			require.Equal(t, tc.expectedArgs.LiteralSources, tc.args.LiteralSources)
+		})
 	}
 }

@@ -27,7 +27,7 @@ func TestEditSetConfigMapError(t *testing.T) {
 		expectedErrorMsg string
 	}{
 		{
-			name: "fail to set a value because key doesn't exist",
+			name: "fails to set a value because key doesn't exist",
 			input: `---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -41,7 +41,7 @@ configMapGenerator:
 			expectedErrorMsg: "key 'key3' not found in resource",
 		},
 		{
-			name: "fail to set a value because configmap doesn't exist",
+			name: "fails to set a value because configmap doesn't exist",
 			input: `---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -55,7 +55,7 @@ configMapGenerator:
 			expectedErrorMsg: "unable to find ConfigMap with name 'test-cm2'",
 		},
 		{
-			name: "error on validate because no attributes are being changed",
+			name: "fails validation because no attributes are being changed",
 			input: `---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -68,6 +68,20 @@ configMapGenerator:
 `,
 			args:             []string{"test-cm", "--namespace=test-ns"},
 			expectedErrorMsg: "at least one of [--from-literal, --new-namespace] must be specified",
+		},
+		{
+			name: "fails when a literal source doesn't have a key",
+			input: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - test=value
+  - key1=val1
+  name: test-cm
+`,
+			args:             []string{"test-cm", "--from-literal=value"},
+			expectedErrorMsg: "literal values must be specified in the key=value format",
 		},
 	}
 
