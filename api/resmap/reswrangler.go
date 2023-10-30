@@ -519,6 +519,23 @@ func (m *resWrangler) RemoveOriginAnnotations() error {
 	return nil
 }
 
+// Transform implements ResMap
+func (m *resWrangler) Transform(cb func(*resource.Resource) error) error {
+	ids := make(map[resid.ResId]*resource.Resource)
+	for _, res := range m.rList {
+		if err := cb(res); err != nil {
+			return err
+		}
+		newId := res.CurId()
+		if other, found := ids[newId]; found {
+			return fmt.Errorf(
+				"transformation produces ID conflict: %+v, %+v", res, other)
+		}
+		ids[newId] = res
+	}
+	return nil
+}
+
 // AddTransformerAnnotation implements ResMap
 func (m *resWrangler) AddTransformerAnnotation(origin *resource.Origin) error {
 	for _, res := range m.rList {
