@@ -4,10 +4,10 @@
 package builtins
 
 import (
-	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/yaml"
@@ -46,27 +46,20 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 	if len(p.Namespace) == 0 {
 		return nil
 	}
-	for _, r := range m.Resources() {
+
+	return m.Transform(func(r *resource.Resource) error {
 		if r.IsNilOrEmpty() {
 			// Don't mutate empty objects?
-			continue
+			return nil
 		}
 		r.StorePreviousId()
-		if err := r.ApplyFilter(namespace.Filter{
+		return r.ApplyFilter(namespace.Filter{
 			Namespace:              p.Namespace,
 			FsSlice:                p.FieldSpecs,
 			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
 			UnsetOnly:              p.UnsetOnly,
-		}); err != nil {
-			return err
-		}
-		matches := m.GetMatchingResourcesByCurrentId(r.CurId().Equals)
-		if len(matches) != 1 {
-			return fmt.Errorf(
-				"namespace transformation produces ID conflict: %+v", matches)
-		}
-	}
-	return nil
+		})
+	})
 }
 
 func NewNamespaceTransformerPlugin() resmap.TransformerPlugin {
