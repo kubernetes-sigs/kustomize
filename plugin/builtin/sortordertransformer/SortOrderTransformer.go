@@ -82,11 +82,9 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 
 		// Clear the map and re-add the resources in the sorted order.
 		m.Clear()
-		for _, r := range s.resources {
-			err := m.Append(r)
-			if err != nil {
-				return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
-			}
+		err := m.AppendMany(s.resources...)
+		if err != nil {
+			return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
 		}
 	}
 	return nil
@@ -102,6 +100,7 @@ func (p *plugin) Transform(m resmap.ResMap) (err error) {
 type legacyIDSorter struct {
 	// resids only stores the metadata of the object. This is an optimization as
 	// it's expensive to compute these again and again during ordering.
+
 	resids []resid.ResId
 	// Initially, we sorted the metadata (ResId) of each object and then called GetByCurrentId on each to construct the final list.
 	// The problem is that GetByCurrentId is inefficient and does a linear scan in a list every time we do that.
