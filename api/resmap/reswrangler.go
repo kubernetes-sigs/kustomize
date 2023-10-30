@@ -485,12 +485,7 @@ func (m *resWrangler) AppendAll(other ResMap) error {
 
 // appendAll appends all the resources, error on Id collision.
 func (m *resWrangler) appendAll(list []*resource.Resource) error {
-	for _, res := range list {
-		if err := m.Append(res); err != nil {
-			return err
-		}
-	}
-	return nil
+	return m.AppendMany(list...)
 }
 
 // AbsorbAll implements ResMap.
