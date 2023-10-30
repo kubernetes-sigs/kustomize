@@ -83,6 +83,27 @@ func (m *resWrangler) Append(res *resource.Resource) error {
 	return nil
 }
 
+// Append implements ResMap.
+func (m *resWrangler) AppendMany(resources ...*resource.Resource) error {
+	ids := m.AllIds()
+	seen := make(map[resid.ResId]struct{}, len(ids)+len(resources))
+	for _, id := range ids {
+		seen[id] = struct{}{}
+	}
+
+	for _, res := range resources {
+		newId := res.CurId()
+		if _, ok := seen[newId]; ok {
+			return fmt.Errorf(
+				"may not add resource with an already registered id: %s", newId)
+		}
+		seen[newId] = struct{}{}
+		m.append(res)
+	}
+
+	return nil
+}
+
 // append appends without performing an Id check
 func (m *resWrangler) append(res *resource.Resource) {
 	m.rList = append(m.rList, res)
