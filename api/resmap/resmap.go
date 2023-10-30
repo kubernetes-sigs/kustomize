@@ -330,4 +330,6 @@ type ResMap interface {
 	// struct data members, i.e. the Resource struct is replaced by RNode
 	// and use of (slow) k8s metadata annotations inside the RNode.
 	ApplyFilter(f kio.Filter) error
+
+	Transform(func(r *resource.Resource) error) error
 }
