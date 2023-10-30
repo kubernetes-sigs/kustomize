@@ -79,11 +79,9 @@ func (p *SortOrderTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 
 		// Clear the map and re-add the resources in the sorted order.
 		m.Clear()
-		for _, r := range s.resources {
-			err := m.Append(r)
-			if err != nil {
-				return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
-			}
+		err := m.AppendMany(s.resources...)
+		if err != nil {
+			return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
 		}
 	}
 	return nil
