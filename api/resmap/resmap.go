@@ -133,6 +133,8 @@ type ResMap interface {
 	// in the cluster with the same Id.
 	Append(*resource.Resource) error
 
+	AppendMany(res ...*resource.Resource) error
+
 	// AppendAll appends another ResMap to self,
 	// failing on any CurId collision.
 	AppendAll(ResMap) error
