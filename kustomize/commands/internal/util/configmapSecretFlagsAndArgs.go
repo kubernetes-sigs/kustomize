@@ -101,7 +101,7 @@ func (a *ConfigMapSecretFlagsAndArgs) ValidateSet(args []string) error {
 // In the case where the key is explicitly declared,
 // the globbing, if present, must have exactly one match.
 func (a *ConfigMapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) error {
-	const NumberComponentsWithKey = 2
+	const numberComponentsWithKey = 2
 
 	var results []string
 	for _, pattern := range a.FileSources {
@@ -110,7 +110,7 @@ func (a *ConfigMapSecretFlagsAndArgs) ExpandFileSource(fSys filesys.FileSystem) 
 		// check if the pattern is in `--from-file=[key=]source` format
 		// and if so split it to send only the file-pattern to glob function
 		s := strings.Split(pattern, "=")
-		if len(s) == NumberComponentsWithKey {
+		if len(s) == numberComponentsWithKey {
 			patterns = append(patterns, s[1])
 			key = s[0]
 		} else {
@@ -145,18 +145,19 @@ func UpdateLiteralSources(
 	flags ConfigMapSecretFlagsAndArgs,
 ) error {
 	sources := make(map[string]any)
+
 	for _, val := range args.LiteralSources {
-		key, value, found := strings.Cut(val, "=")
-		if !found { // this is unlikely to happen since these are already validated during the add process
-			return fmt.Errorf("invalid format: literal values must be specified in the key=value format")
+		key, value, err := validateAndExtractLiteralSource(val)
+		if err != nil {
+			return fmt.Errorf("failed to update resource: %w", err)
 		}
 		sources[key] = value
 	}
 
 	for _, val := range flags.LiteralSources {
-		key, value, found := strings.Cut(val, "=")
-		if !found {
-			return fmt.Errorf("invalid format: literal values must be specified in the key=value format")
+		key, value, err := validateAndExtractLiteralSource(val)
+		if err != nil {
+			return fmt.Errorf("failed to update resource: %w", err)
 		}
 
 		if _, ok := sources[key]; !ok {
@@ -178,6 +179,22 @@ func UpdateLiteralSources(
 	args.LiteralSources = newLiteralSources
 
 	return nil
+}
+
+func validateAndExtractLiteralSource(val string) (string, string, error) {
+	// This is the separator to be used as a boundary for the key/value pair
+	const keyValueSeparator = "="
+	// Maximum number of times the separator can appear in the string
+	const maximumSeparatorNumber = 1
+
+	count := strings.Count(val, keyValueSeparator)
+	if count <= 0 || count > maximumSeparatorNumber {
+		return "", "", fmt.Errorf("invalid format: literal values must be specified in the key=value format")
+	}
+
+	key, value, _ := strings.Cut(val, keyValueSeparator) // we don't need the value of found because of prior validation
+
+	return key, value, nil
 }
 
 func MergeFlagsIntoGeneratorArgs(args *types.GeneratorArgs, flags ConfigMapSecretFlagsAndArgs) {

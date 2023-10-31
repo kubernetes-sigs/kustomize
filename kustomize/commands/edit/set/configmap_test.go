@@ -52,7 +52,7 @@ configMapGenerator:
   name: test-cm
 `,
 			args:             []string{"test-cm2", "--from-literal=key3=val2"},
-			expectedErrorMsg: "unable to find ConfigMap with name 'test-cm2'",
+			expectedErrorMsg: "unable to find ConfigMap with name '\"test-cm2\"'",
 		},
 		{
 			name: "fails validation because no attributes are being changed",

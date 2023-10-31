@@ -287,7 +287,7 @@ func TestUpdateLiteralSources(t *testing.T) {
 			},
 			wantErr: require.Error,
 		},
-		{
+		{ // unlikely to happen
 			name: "fails when format for literal sources is incorrect in existing args",
 			args: &types.GeneratorArgs{
 				KvPairSources: types.KvPairSources{
@@ -302,6 +302,44 @@ func TestUpdateLiteralSources(t *testing.T) {
 			expectedArgs: &types.GeneratorArgs{
 				KvPairSources: types.KvPairSources{
 					LiteralSources: []string{"key2", "otherkey=value"},
+				},
+			},
+			wantErr: require.Error,
+		},
+		{
+			name: "fails when literal sources from flags contain more than one =",
+			args: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1", "otherkey=value"},
+				},
+			},
+			flags: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{
+					"key2=val2=val3",
+				},
+			},
+			expectedArgs: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1", "otherkey=value"},
+				},
+			},
+			wantErr: require.Error,
+		},
+		{ // unlikely to happen
+			name: "fails when literal sources contain more than one = in existing args",
+			args: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1=val3", "otherkey=value"},
+				},
+			},
+			flags: ConfigMapSecretFlagsAndArgs{
+				LiteralSources: []string{
+					"key2=val2",
+				},
+			},
+			expectedArgs: &types.GeneratorArgs{
+				KvPairSources: types.KvPairSources{
+					LiteralSources: []string{"key2=val1=val3", "otherkey=value"},
 				},
 			},
 			wantErr: require.Error,
