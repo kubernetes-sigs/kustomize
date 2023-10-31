@@ -144,7 +144,7 @@ func findConfigMapArgs(m *types.Kustomization, name, namespace string) (*types.C
 	})
 
 	if cmIndex == -1 {
-		return nil, fmt.Errorf("unable to find ConfigMap with name '%s'", name)
+		return nil, fmt.Errorf("unable to find ConfigMap with name '%q'", name)
 	}
 
 	return &m.ConfigMapGenerator[cmIndex], nil
