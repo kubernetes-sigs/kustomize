@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/xlab/treeprint v1.2.0
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
-	golang.org/x/sys v0.12.0
+	golang.org/x/sys v0.13.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961
