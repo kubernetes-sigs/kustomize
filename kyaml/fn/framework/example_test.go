@@ -479,7 +479,7 @@ kind: ResourceList
 items:
 - kind: Deployment
   apiVersion: apps/v1
-  metadata: 
+  metadata:
     name: custom
   spec:
     replicas: 6
@@ -555,7 +555,7 @@ items:
   kind: Deployment
   metadata:
     name: foo
-    namespace: default 
+    namespace: default
 - apiVersion: apps/v1
   kind: StatefulSet
   metadata:
@@ -1034,7 +1034,7 @@ func ExampleVersionedAPIProcessor() {
 apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 functionConfig:
-  apiVersion: example.com/v1alpha1 
+  apiVersion: example.com/v1alpha1
   kind: JavaSpringBoot
   metadata:
     name: my-app
