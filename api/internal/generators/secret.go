@@ -4,6 +4,8 @@
 package generators
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -31,10 +33,10 @@ import (
 // cannot make use of this data; it's up to a controller or some pod's service
 // to interpret the value, using `type` as a clue as to how to do this.
 func MakeSecret(
-	ldr ifc.KvLoader, args *types.SecretArgs) (rn *yaml.RNode, err error) {
+	ldr ifc.KvLoader, args *types.SecretArgs) (rn *yaml.RNode, orderKeys []string, err error) {
 	rn, err = makeBaseNode("Secret", args.Name, args.Namespace)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	t := "Opaque"
 	if args.Type != "" {
@@ -44,16 +46,16 @@ func MakeSecret(
 		yaml.FieldSetter{
 			Name:  "type",
 			Value: yaml.NewStringRNode(t)}); err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to MakeSecret, error:%w", err)
 	}
-	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	m, orderKeys, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to makeValidatedDataMap, error:%w", err)
 	}
 	if err = rn.LoadMapIntoSecretData(m); err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to LoadMapIntoSecretData, error:%w", err)
 	}
 	copyLabelsAndAnnotations(rn, args.Options)
 	setImmutable(rn, args.Options)
-	return rn, nil
+	return rn, orderKeys, nil
 }

@@ -4,6 +4,8 @@
 package generators
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -28,25 +30,25 @@ import (
 // In a ConfigMap, any key used in `data` cannot also be used in `binaryData`
 // and vice-versa.  A key must be unique across both maps.
 func MakeConfigMap(
-	ldr ifc.KvLoader, args *types.ConfigMapArgs) (rn *yaml.RNode, err error) {
+	ldr ifc.KvLoader, args *types.ConfigMapArgs) (rn *yaml.RNode, orderKeys []string, err error) {
 	rn, err = makeBaseNode("ConfigMap", args.Name, args.Namespace)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	m, orderKeys, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err = rn.LoadMapIntoConfigMapData(m); err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to LoadMapIntoConfigMapData, error:%w", err)
 	}
 	err = copyLabelsAndAnnotations(rn, args.Options)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	err = setImmutable(rn, args.Options)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return rn, nil
+	return rn, orderKeys, nil
 }

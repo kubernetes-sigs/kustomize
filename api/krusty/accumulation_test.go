@@ -299,7 +299,7 @@ resources:
 			}
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
-			_, err := b.Run(fs, root)
+			_, _, err := b.Run(fs, root)
 			require.Regexp(t, buildError(test), err.Error())
 		})
 	}

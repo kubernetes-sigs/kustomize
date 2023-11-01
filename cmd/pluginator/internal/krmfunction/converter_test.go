@@ -185,7 +185,7 @@ func (p *plugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	return
 }
 
-func (p *plugin) Generate() (resmap.ResMap, error) {
+func (p *plugin) Generate() (resmap.ResMap, []string, error) {
 	return p.h.ResmapFactory().FromConfigMapArgs(
 		kv.NewLoader(p.h.Loader(), p.h.Validator()), p.ConfigMapArgs)
 }`)

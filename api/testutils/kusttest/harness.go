@@ -95,7 +95,7 @@ func (th Harness) MakeOptionsPluginsEnabled() krusty.Options {
 
 // Run, failing on error.
 func (th Harness) Run(path string, o krusty.Options) resmap.ResMap {
-	m, err := krusty.MakeKustomizer(&o).Run(th.fSys, path)
+	m, _, err := krusty.MakeKustomizer(&o).Run(th.fSys, path)
 	if err != nil {
 		th.t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func (th Harness) Run(path string, o krusty.Options) resmap.ResMap {
 
 // Run, failing if there is no error.
 func (th Harness) RunWithErr(path string, o krusty.Options) error {
-	_, err := krusty.MakeKustomizer(&o).Run(th.fSys, path)
+	_, _, err := krusty.MakeKustomizer(&o).Run(th.fSys, path)
 	if err == nil {
 		th.t.Fatalf("expected error")
 	}

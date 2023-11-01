@@ -649,7 +649,7 @@ data:
   label_name: my-ns-name
   label_value: function-test
 `)))
-	m, err := b.Run(
+	m, _, err := b.Run(
 		fSys,
 		tmpDir.String())
 	assert.NoError(t, err)
@@ -703,7 +703,7 @@ data:
     data:
       value: '{{ env "TESTTEMPLATE" }}'
 `)))
-	m, err := b.Run(
+	m, _, err := b.Run(
 		fSys,
 		tmpDir.String())
 	assert.NoError(t, err)
@@ -769,7 +769,7 @@ spec:
 	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-values", "values.yaml"), []byte(`
 replicaCount: 5
 `)))
-	m, err := b.Run(
+	m, _, err := b.Run(
 		fSys,
 		tmpDir.String())
 	assert.NoError(t, err)
@@ -808,7 +808,7 @@ generators:
               src: "/tmp/dir"
               dst: "/tmp/charts"
 `)))
-	_, err = b.Run(
+	_, _, err = b.Run(
 		fSys,
 		tmpDir.String())
 	assert.Error(t, err)
@@ -841,7 +841,7 @@ generators:
               src: "./tmp/../../dir"
               dst: "/tmp/charts"
 `)))
-	_, err = b.Run(
+	_, _, err = b.Run(
 		fSys,
 		tmpDir.String())
 	assert.Error(t, err)

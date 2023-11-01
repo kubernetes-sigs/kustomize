@@ -23,10 +23,10 @@ func (p *plugin) Config(h *resmap.PluginHelpers, config []byte) (err error) {
 	return
 }
 
-func (p *plugin) Generate() (resmap.ResMap, error) {
+func (p *plugin) Generate() (resmap.ResMap, []string, error) {
 	r := resmap.New()
 	err := r.ApplyFilter(iampolicygenerator.Filter{
 		IAMPolicyGenerator: p.IAMPolicyGeneratorArgs,
 	})
-	return r, err
+	return r, nil, err
 }

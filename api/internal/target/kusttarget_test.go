@@ -289,7 +289,7 @@ metadata:
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/whatever", pvd)
 	assert.NoError(t, kt.Load())
-	actual, err := kt.MakeCustomizedResMap()
+	actual, _, err := kt.MakeCustomizedResMap()
 	assert.NoError(t, err)
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
@@ -386,7 +386,7 @@ metadata:
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/merge-config", pvd)
 	require.NoError(t, kt.Load())
-	actual, err := kt.MakeCustomizedResMap()
+	actual, _, err := kt.MakeCustomizedResMap()
 	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
@@ -422,7 +422,7 @@ func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
     image: 'someimage:12345'
     configPath: another_config.json
 `)
-	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/generator").AccumulateTarget()
+	_, _, err := makeAndLoadKustTarget(t, th.GetFSys(), "/generator").AccumulateTarget()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ManifestGenerator.v1.generators.example/ManifestGenerator")
 }
@@ -451,7 +451,7 @@ func TestDuplicateExternalTransformersForbidden(t *testing.T) {
           image: example.docker.com/my-functions/valueannotator:1.0.0
   value: 'fail'
 `)
-	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
+	_, _, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ValueAnnotator.v1.transformers.example.co/notImportantHere")
 }

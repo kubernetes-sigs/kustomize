@@ -206,7 +206,7 @@ immutable: true
 	for n := range testCases {
 		tc := testCases[n]
 		t.Run(n, func(t *testing.T) {
-			rn, err := MakeConfigMap(kvLdr, &tc.args)
+			rn, _, err := MakeConfigMap(kvLdr, &tc.args)
 			if err != nil {
 				if !assert.EqualError(t, err, tc.exp.errMsg) {
 					t.FailNow()

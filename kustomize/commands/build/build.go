@@ -79,7 +79,7 @@ func NewCmdBuild(
 			k := krusty.MakeKustomizer(
 				HonorKustomizeFlags(krusty.MakeDefaultOptions(), cmd.Flags()),
 			)
-			m, err := k.Run(fSys, theArgs.kustomizationPath)
+			m, _, err := k.Run(fSys, theArgs.kustomizationPath)
 			if err != nil {
 				return err
 			}

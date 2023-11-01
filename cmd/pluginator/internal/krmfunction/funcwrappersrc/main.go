@@ -43,7 +43,7 @@ func main() {
 				return err
 			}
 		} else if g, ok := plugin.(resmap.GeneratorPlugin); ok {
-			resMap, err = g.Generate()
+			resMap, _, err = g.Generate()
 			if err != nil {
 				return err
 			}

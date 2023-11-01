@@ -232,18 +232,18 @@ func (p *plugin) cleanup() {
 }
 
 // Generate implements generator
-func (p *plugin) Generate() (rm resmap.ResMap, err error) {
+func (p *plugin) Generate() (rm resmap.ResMap, orderKeys []string, err error) {
 	defer p.cleanup()
 	if err = p.checkHelmVersion(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if path, exists := p.chartExistsLocally(); !exists {
 		if p.Repo == "" {
-			return nil, fmt.Errorf(
+			return nil, nil, fmt.Errorf(
 				"no repo specified for pull, no chart found at '%s'", path)
 		}
 		if _, err := p.runHelmCommand(p.pullCommand()); err != nil {
-			return nil, err
+			return nil,nil, err
 		}
 	}
 	if len(p.ValuesInline) > 0 {
@@ -252,34 +252,34 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 		p.ValuesFile, err = p.copyValuesFile()
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var stdout []byte
 	stdout, err = p.runHelmCommand(p.AsHelmArgs(p.absChartHome()))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
 	if resMapErr == nil {
-		return rm, nil
+		return rm, nil, nil
 	}
 	// try to remove the contents before first "---" because
 	// helm may produce messages to stdout before it
 	r := &kio.ByteReader{Reader: bytes.NewBufferString(string(stdout)), OmitReaderAnnotations: true}
 	nodes, err := r.Read()
 	if err != nil {
-		return nil, fmt.Errorf("error reading helm output: %w", err)
+		return nil, nil, fmt.Errorf("error reading helm output: %w", err)
 	}
 
 	if len(nodes) != 0 {
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
+			return nil, nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
 		}
-		return rm, nil
+		return rm, nil, nil
 	}
-	return nil, fmt.Errorf("could not parse bytes into resource map: %w", resMapErr)
+	return nil, nil, fmt.Errorf("could not parse bytes into resource map: %w", resMapErr)
 }
 
 func (p *plugin) pullCommand() []string {

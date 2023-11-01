@@ -292,7 +292,7 @@ resources:
 			fSys, tmpDir := kusttest_test.CreateKustDir(t, kust)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
-			m, err := b.Run(
+			m, _, err := b.Run(
 				fSys,
 				tmpDir.String())
 
@@ -396,7 +396,7 @@ resources:
 			fSys, tmpDir := kusttest_test.CreateKustDir(t, test.kustomization)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
-			m, err := b.Run(
+			m, _, err := b.Run(
 				fSys,
 				tmpDir.String())
 

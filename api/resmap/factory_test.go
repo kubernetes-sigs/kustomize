@@ -248,7 +248,7 @@ func TestNewResMapFromSecretArgs(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	fSys.Mkdir(filesys.SelfDir)
 
-	actual, err := rmF.NewResMapFromSecretArgs(
+	actual, _, err := rmF.NewResMapFromSecretArgs(
 		kv.NewLoader(
 			ldrpkg.NewFileLoaderAtRoot(fSys),
 			valtest_test.MakeFakeValidator()), secrets)

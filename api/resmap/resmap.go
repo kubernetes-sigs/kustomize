@@ -30,7 +30,7 @@ type TransformerWithProperties struct {
 
 // A Generator creates an instance of ResMap.
 type Generator interface {
-	Generate() (ResMap, error)
+	Generate() (ResMap, []string, error)
 }
 
 // A GeneratorWithProperties contains a Generator and stores
