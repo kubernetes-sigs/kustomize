@@ -15,6 +15,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const (
+	repoRootDir = "../../"
+)
+
 const generateDeploymentDotSh = `#!/bin/sh
 
 cat <<EOF
@@ -513,51 +517,58 @@ func TestFnContainerGenerator(t *testing.T) {
 resources:
 - deployment.yaml
 generators:
-- project-service-set.yaml
+- service-set.yaml
 `)
 	// Create generator config
-	th.WriteF(filepath.Join(tmpDir.String(), "project-service-set.yaml"), `
-apiVersion: blueprints.cloud.google.com/v1alpha1
-kind: ProjectServiceSet
+	th.WriteF(filepath.Join(tmpDir.String(), "service-set.yaml"), `
+apiVersion: kustomize.sigs.k8s.io/v1alpha1
+kind: ServiceGenerator
 metadata:
-  name: demo
+  name: simplegenerator
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kpt-fn/enable-gcp-services:v0.1.0
+        image: gcr.io/kustomize-functions/e2econtainersimplegenerator
 spec:
-  services:
-    - compute.googleapis.com
-  projectID: foo
+  port: 8081
 `)
 	// Create another resource just to make sure everything is added
 	th.WriteF(filepath.Join(tmpDir.String(), "deployment.yaml"), `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: foo
+  name: simplegenerator
 `)
+
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainersimplegenerator/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainersimplegenerator",
+	)
+	build.Dir = repoRootDir
+	assert.NoError(t, build.Run())
+
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: foo
+  name: simplegenerator
 ---
-apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
+apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    blueprints.cloud.google.com/ownerReference: blueprints.cloud.google.com/ProjectServiceSet/demo
-    config.kubernetes.io/function: |
-      container:
-        image: gcr.io/kpt-fn/enable-gcp-services:v0.1.0
-  name: demo-compute
+  labels:
+    app: simplegenerator
+  name: simplegenerator-svc
 spec:
-  projectRef:
-    external: foo
-  resourceID: compute.googleapis.com
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: simplegenerator
 `, string(actual))
 }
 
@@ -593,7 +604,7 @@ metadata:
 		"-f", "./cmd/config/internal/commands/e2e/e2econtainerconfig/Dockerfile",
 		"-t", "gcr.io/kustomize-functions/e2econtainerconfig",
 	)
-	build.Dir = "../../" // Repo root
+	build.Dir = repoRootDir
 	assert.NoError(t, build.Run())
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
@@ -611,6 +622,12 @@ metadata:
 
 func TestFnContainerTransformerWithConfig(t *testing.T) {
 	skipIfNoDocker(t)
+	//https://docs.docker.com/engine/reference/commandline/build/#git-repositories
+	build := exec.Command("docker", "build", "https://github.com/GoogleContainerTools/kpt-functions-sdk.git#go-sdk-v0.0.1:ts/hello-world",
+		"-f", "build/label_namespace.Dockerfile",
+		"-t", "gcr.io/kpt-functions/label-namespace:go-sdk-v0.0.1",
+	)
+	assert.NoError(t, build.Run())
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
 	fSys := filesys.MakeFsOnDisk()
@@ -644,7 +661,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |-
       container:
-        image: gcr.io/kpt-functions/label-namespace@sha256:4f030738d6d25a207641ca517916431517578bd0eb8d98a8bde04e3bb9315dcd
+        image: gcr.io/kpt-functions/label-namespace:go-sdk-v0.0.1
 data:
   label_name: my-ns-name
   label_value: function-test
@@ -684,25 +701,31 @@ generators:
 - gener.yaml
 `)))
 	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
-apiVersion: v1
-kind: ConfigMap
+apiVersion: kustomize.sigs.k8s.io/v1alpha1
+kind: EnvTemplateGenerator
 metadata:
-  name: demo
+  name: e2econtainerenvgenerator
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: quay.io/aodinokov/kpt-templater:0.0.1
+        image: gcr.io/kustomize-functions/e2econtainerenvgenerator
         envs:
         - TESTTEMPLATE=value
-data:
-  template: |
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: env
-    data:
-      value: '{{ env "TESTTEMPLATE" }}'
+template: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: env
+  data:
+    value: %q
 `)))
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainerenvgenerator/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainerenvgenerator",
+	)
+	build.Dir = repoRootDir
+	assert.NoError(t, build.Run())
+
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
@@ -731,44 +754,36 @@ generators:
 - gener.yaml
 `)))
 	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
-apiVersion: v1alpha1
+apiVersion: kustomize.sigs.k8s.io/v1alpha1
 kind: RenderHelmChart
 metadata:
   name: demo
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/kpt-fn/render-helm-chart:v0.1.0
+        image: gcr.io/kustomize-functions/e2econtainermountbind
         mounts:
         - type: "bind"
-          src: "./charts"
-          dst: "/tmp/charts"
-helmCharts:
-- name: helloworld-chart
-  releaseName: test
-  valuesFile: /tmp/charts/helloworld-values/values.yaml
+          src: "./yaml"
+          dst: "/tmp/yaml"
+path: /tmp/yaml/resources.yaml
 `)))
-	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates")))
-	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "charts", "helloworld-values")))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "Chart.yaml"), []byte(`
-apiVersion: v2
-name: helloworld-chart
-description: A Helm chart for Kubernetes
-type: application
-version: 0.1.0
-appVersion: 1.16.0
-`)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-chart", "templates", "deployment.yaml"), []byte(`
+	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "yaml", "tmp")))
+	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "yaml", "resources.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: name
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 3
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "charts", "helloworld-values", "values.yaml"), []byte(`
-replicaCount: 5
-`)))
+	build := exec.Command("docker", "build", ".",
+		"-f", "./cmd/config/internal/commands/e2e/e2econtainermountbind/Dockerfile",
+		"-t", "gcr.io/kustomize-functions/e2econtainermountbind",
+	)
+	build.Dir = repoRootDir
+	assert.NoError(t, build.Run())
+
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
@@ -780,7 +795,7 @@ kind: Deployment
 metadata:
   name: name
 spec:
-  replicas: 5
+  replicas: 3
 `, string(actual))
 }
 
