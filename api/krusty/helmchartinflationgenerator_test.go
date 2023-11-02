@@ -684,6 +684,208 @@ spec:
 `)
 }
 
+func TestHelmChartInflationGeneratorForMultipleKubeVersions(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+namespace: default
+helmCharts:
+  - name: minecraft
+    repo: https://itzg.github.io/minecraft-server-charts
+    version: 4.11.0
+    releaseName: test
+    kubeVersion: "1.16"
+    valuesInline:
+      minecraftServer:
+        extraPorts:
+          - name: map
+            containerPort: 8123
+            protocol: TCP
+            service:
+              enabled: false
+            ingress:
+              enabled: true
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft-rcon
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft-curseforge
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft
+  namespace: default
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-minecraft
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: test-minecraft-map
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft-map
+  namespace: default
+spec:
+  rules: null
+`)
+
+	th.WriteK(th.GetRoot(), `
+namespace: default
+helmCharts:
+  - name: minecraft
+    repo: https://itzg.github.io/minecraft-server-charts
+    version: 4.11.0
+    releaseName: test
+    kubeVersion: "1.27"
+    valuesInline:
+      minecraftServer:
+        extraPorts:
+          - name: map
+            containerPort: 8123
+            protocol: TCP
+            service:
+              enabled: false
+            ingress:
+              enabled: true
+`)
+
+	m = th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  rcon-password: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft-rcon
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft-curseforge
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft
+  namespace: default
+spec:
+  ports:
+  - name: minecraft
+    port: 25565
+    protocol: TCP
+    targetPort: minecraft
+  selector:
+    app: test-minecraft
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: test-minecraft-map
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.11.0
+    chart: minecraft-4.11.0
+    heritage: Helm
+    release: test
+  name: test-minecraft-map
+  namespace: default
+spec:
+  rules: null
+`)
+}
+
 func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 	t.Helper()
 
