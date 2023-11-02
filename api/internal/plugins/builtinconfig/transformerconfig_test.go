@@ -173,3 +173,22 @@ func TestMerge(t *testing.T) {
 		t.Fatalf("expected: %v\n but got: %v\n", cfga, actual)
 	}
 }
+
+func TestMakeDefaultConfig_mutation(t *testing.T) {
+	a := MakeDefaultConfig()
+
+	// mutate
+	a.NameReference[0].Kind = "mutated"
+	a.NameReference = a.NameReference[:1]
+
+	clean := MakeDefaultConfig()
+	if clean.NameReference[0].Kind == "mutated" {
+		t.Errorf("MakeDefaultConfig() did not return a clean copy: %+v", clean.NameReference)
+	}
+}
+
+func BenchmarkMakeDefaultConfig(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = MakeDefaultConfig()
+	}
+}
