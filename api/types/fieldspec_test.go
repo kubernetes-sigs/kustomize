@@ -142,3 +142,27 @@ func TestFsSlice_MergeAll(t *testing.T) {
 		}
 	}
 }
+
+func TestFsSlice_DeepCopy(t *testing.T) {
+	original := make(FsSlice, 2, 4)
+	original[0] = FieldSpec{Path: "a"}
+	original[1] = FieldSpec{Path: "b"}
+
+	copied := original.DeepCopy()
+
+	original, _ = original.MergeOne(FieldSpec{Path: "c"})
+
+	// perform mutations which should not affect original
+	copied.Swap(0, 1)
+	_, _ = copied.MergeOne(FieldSpec{Path: "d"})
+
+	// if DeepCopy does not work, original would be {b,a,d} instead of {a,b,c}
+	expected := FsSlice{
+		{Path: "a"},
+		{Path: "b"},
+		{Path: "c"},
+	}
+	if !reflect.DeepEqual(original, expected) {
+		t.Fatalf("original affected by mutations to copied object:\ngot\t%+v,\nexpected: %+v", original, expected)
+	}
+}
