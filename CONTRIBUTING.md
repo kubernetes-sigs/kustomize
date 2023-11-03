@@ -97,6 +97,9 @@ make kustomize
 # Run unit tests
 make test-unit-all
 
+# Run linter
+make lint
+
 # Test examples against HEAD
 make test-examples-kustomize-against-HEAD
 
