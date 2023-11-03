@@ -95,7 +95,7 @@ cd kustomize
 make kustomize
 
 # Run unit tests
-make unit-test-all
+make test-unit-all
 
 # Test examples against HEAD
 make test-examples-kustomize-against-HEAD
