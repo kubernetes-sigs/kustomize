@@ -65,7 +65,7 @@ You will need to periodically fetch changes from the `upstream` repository to ke
 cd kustomize
 git fetch upstream
 git checkout myfeature
-git merge upstream/master
+git rebase upstream/master
 ```
 
 ### Push to GitHub
