@@ -12,6 +12,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+// DefaultNamespace is the default namespace name in Kubernetes.
+const DefaultNamespace = "default"
+
 // GlobPatterns accepts a slice of glob strings and returns the set of
 // matching file paths.
 func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) {
@@ -30,7 +33,7 @@ func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) 
 	return result, nil
 }
 
-// GlobPatterns accepts a slice of glob strings and returns the set of matching file paths.
+// GlobPatternsWithLoader accepts a slice of glob strings and returns the set of matching file paths.
 // If validation is skipped, then it will return the patterns as provided.
 // Otherwise, It will try to load the files from the filesystem.
 // If files are not found in the filesystem, it will try to load from remote.
@@ -108,4 +111,19 @@ func trimQuotes(s string) string {
 		}
 	}
 	return s
+}
+
+// NamespaceEqual checks if two namespaces are the same. It considers the empty namespace and the default namespace to
+// be the same. As such, when one namespace is the empty string ('""') and the other namespace is "default", this function
+// will return true.
+func NamespaceEqual(namespace string, otherNamespace string) bool {
+	if "" == namespace {
+		namespace = DefaultNamespace
+	}
+
+	if "" == otherNamespace {
+		otherNamespace = DefaultNamespace
+	}
+
+	return namespace == otherNamespace
 }

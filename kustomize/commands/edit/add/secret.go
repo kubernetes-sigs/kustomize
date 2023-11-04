@@ -140,7 +140,7 @@ func addSecret(
 
 func findOrMakeSecretArgs(m *types.Kustomization, name, namespace, secretType string) *types.SecretArgs {
 	for i, v := range m.SecretGenerator {
-		if name == v.Name && namespace == v.Namespace {
+		if name == v.Name && util.NamespaceEqual(v.Namespace, namespace) {
 			return &m.SecretGenerator[i]
 		}
 	}
