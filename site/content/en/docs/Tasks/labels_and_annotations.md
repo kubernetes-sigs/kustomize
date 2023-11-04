@@ -9,9 +9,69 @@ description: >
 
 A common set of Labels and Annotations can be applied to all Resources in a project by adding a `commonLabels` and a `commonAnnotations` entry to the `kustomization.yaml` file.
 
-
 # Labels
+## Add Labels
+Add Labels to Resources metadata in a project. The `includeSelectors` and `includeTemplates` flags enable Label propagation to Selectors and Templates respectively. These flags are disabled by default.
 
+The following example adds Labels to a Deployment and Service without changing the Selector and Template Labels.
+
+1. Create a Kustomization file.
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - pairs:
+      someName: someValue
+      owner: alice
+      app: bingo
+
+resources:
+- deploy.yaml
+- service.yaml
+```
+
+2. Create Deployment and Service manifests.
+```yaml
+# deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example
+```
+```yaml
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: example
+```
+
+3. Add Labels with `kustomize build`.
+```bash
+kustomize build .
+```
+The output shows that labels are added to the metadata field while the template and selector fields remain unchanged.
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: bingo
+    owner: alice
+    someName: someValue
+  name: example
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bingo
+    owner: alice
+    someName: someValue
+  name: example
+```
 ## Add common Labels
 Add Labels to all Resources in a project with the `commonLabels` field. This will override values for Label keys that already exist. The `commonLabels` field also adds Labels to Selectors and Templates. Selector Labels should not be changed after Workload and Service Resources have been created in a cluster.
 
@@ -87,70 +147,6 @@ spec:
       - image: nginx
         name: nginx
 ```
-
-## Disable Selector and Template updates
-Add Labels to Resources in a project without propagating the Labels to the Selectors with the `labels` field. The `includeSelectors` and `includeTemplates` flags enable Label propagation to Selectors and Templates respectivley. These flags are disabled by default.
-
-The following example adds Labels to a Deployment and Service without changing the Selector and Template Labels.
-
-1. Create a Kustomization file.
-```yaml
-# kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-labels:
-  - pairs:
-      someName: someValue
-      owner: alice
-      app: bingo
-
-resources:
-- deploy.yaml
-- service.yaml
-```
-
-2. Create Deployment and Service manifests.
-```yaml
-# deploy.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: example
-```
-```yaml
-# service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: example
-```
-
-3. Add Labels with `kustomize build`.
-```bash
-kustomize build .
-```
-The output shows that labels are added to the metadata field while the template and selector fields remain unchanged.
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: bingo
-    owner: alice
-    someName: someValue
-  name: example
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: bingo
-    owner: alice
-    someName: someValue
-  name: example
-```
-
 ## Update Selectors with Labels
 
 The following example adds Labels and Selector Labels to a Deployment and Service. This is equivalent to using the `commonLabels` field.
@@ -230,7 +226,6 @@ spec:
         owner: alice
         someName: someValue
 ```
-
 ## Update Templates with Labels
 
 The following example adds Labels and Template Labels to a Deployment and Service without changing the Selector Labels.
@@ -300,9 +295,7 @@ spec:
         owner: alice
         someName: someValue
 ```
-
 # Annotations
-
 ## Add common Annotations
 Add Annotations to all Resources in a project with the `commonAnnotations` field. This will override values for Annotations keys that already exist. Annotations are propagated to Pod Templates.
 
