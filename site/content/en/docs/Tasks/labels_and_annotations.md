@@ -9,6 +9,9 @@ description: >
 
 A common set of Labels and Annotations can be applied to all Resources in a project by adding a `commonLabels` and a `commonAnnotations` entry to the `kustomization.yaml` file.
 
+
+# Labels
+
 ## Add common Labels
 Add Labels to all Resources in a project with the `commonLabels` field. This will override values for Label keys that already exist. The `commonLabels` field also adds Labels to Selectors and Templates. Selector Labels should not be changed after Workload and Service Resources have been created in a cluster.
 
@@ -297,6 +300,8 @@ spec:
         owner: alice
         someName: someValue
 ```
+
+# Annotations
 
 ## Add common Annotations
 Add Annotations to all Resources in a project with the `commonAnnotations` field. This will override values for Annotations keys that already exist. Annotations are propagated to Pod Templates.
