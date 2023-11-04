@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/exp/slices"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -172,9 +171,6 @@ func UpdateLiteralSources(
 	for key, val := range sources {
 		newLiteralSources = append(newLiteralSources, fmt.Sprintf("%s=%s", key, val))
 	}
-
-	// guarantee order is predictable
-	slices.Sort(newLiteralSources)
 
 	args.LiteralSources = newLiteralSources
 

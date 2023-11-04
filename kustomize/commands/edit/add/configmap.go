@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -143,10 +142,6 @@ func addConfigMap(
 	// Validate by trying to create corev1.configmap.
 	args.Options = types.MergeGlobalOptionsIntoLocal(
 		args.Options, k.GeneratorOptions)
-
-	// guarantee end order is predictable
-	slices.Sort(args.LiteralSources)
-
 	_, err := rf.MakeConfigMap(ldr, args)
 	return err
 }
