@@ -413,9 +413,9 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
-	cmd := NewCmdFix(fSys, os.Stdout)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
+	var cmd = NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)

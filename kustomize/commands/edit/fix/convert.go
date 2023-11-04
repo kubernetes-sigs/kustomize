@@ -10,13 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	"sigs.k8s.io/yaml"
-
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 func ConvertVarsToReplacements(fSys filesys.FileSystem, k *types.Kustomization) error {
@@ -135,7 +134,7 @@ func getNodesFromFile(fileName string, fSys filesys.FileSystem) ([]*kyaml.RNode,
 	}
 	out := &bytes.Buffer{}
 	r := kio.ByteReadWriter{
-		Reader:                bytes.NewReader(b),
+		Reader:                bytes.NewBuffer(b),
 		Writer:                out,
 		KeepReaderAnnotations: true,
 		OmitReaderAnnotations: true,
