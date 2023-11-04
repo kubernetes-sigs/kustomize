@@ -148,7 +148,7 @@ func addConfigMap(
 
 func findOrMakeConfigMapArgs(m *types.Kustomization, name, namespace string) *types.ConfigMapArgs {
 	for i, v := range m.ConfigMapGenerator {
-		if name == v.Name && namespace == v.Namespace {
+		if name == v.Name && util.NamespaceEqual(v.Namespace, namespace) {
 			return &m.ConfigMapGenerator[i]
 		}
 	}

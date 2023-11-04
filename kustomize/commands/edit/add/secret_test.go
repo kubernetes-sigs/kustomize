@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -236,4 +237,151 @@ func TestEditAddSecretWithFileSource(t *testing.T) {
 	require.NotNil(t, newSecretGenerator)
 	require.Equal(t, secretName, newSecretGenerator.Name)
 	require.Contains(t, newSecretGenerator.FileSources, fileSource)
+}
+
+// TestEditAddSecretNamespaced tests situations regarding namespacing. For example, it
+// verifies that the empty namespace and the default namespace are treated the
+// same when adding a configmap to a kustomization file.
+func TestEditAddSecretNamespaced(t *testing.T) {
+	testCases := []struct {
+		name                string
+		secretName          string
+		secretNamespace     string
+		literalSources      []string
+		initialArgs         string
+		expectedResult      []types.SecretArgs
+		expectedSliceLength int
+	}{
+		{
+			name:            "adds new key to secret when default namespace matches empty",
+			secretName:      "test-secret",
+			secretNamespace: "default",
+			literalSources:  []string{"key1=value1"},
+			initialArgs: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- literals:
+  - key=value
+  name: test-secret
+  type: Opaque
+`,
+			expectedResult: []types.SecretArgs{
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "",
+						Name:      "test-secret",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key=value", "key1=value1"},
+						},
+					},
+					Type: ifc.SecretTypeOpaque,
+				},
+			},
+			expectedSliceLength: 1,
+		},
+		{
+			name:            "adds new key to secret when empty namespace matches default",
+			secretName:      "test-secret",
+			secretNamespace: "",
+			literalSources:  []string{"key1=value1"},
+			initialArgs: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- literals:
+  - key=value
+  name: test-secret
+  namespace: default
+  type: Opaque
+`,
+			expectedResult: []types.SecretArgs{
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "default",
+						Name:      "test-secret",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key=value", "key1=value1"},
+						},
+					},
+					Type: ifc.SecretTypeOpaque,
+				},
+			},
+			expectedSliceLength: 1,
+		},
+		{
+			name:            "creates a new generator when namespaces don't match",
+			secretName:      "test-secret",
+			secretNamespace: "",
+			literalSources:  []string{"key1=value1"},
+			initialArgs: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- literals:
+  - key=value
+  name: test-secret
+  namespace: ns1
+  type: Opaque
+`,
+			expectedResult: []types.SecretArgs{
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "ns1",
+						Name:      "test-secret",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key=value"},
+						},
+					},
+					Type: ifc.SecretTypeOpaque,
+				},
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "",
+						Name:      "test-secret",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key1=value1"},
+						},
+					},
+					Type: ifc.SecretTypeOpaque,
+				},
+			},
+			expectedSliceLength: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fSys := filesys.MakeEmptyDirInMemory()
+			testutils_test.WriteTestKustomizationWith(fSys, []byte(tc.initialArgs))
+
+			pvd := provider.NewDefaultDepProvider()
+			ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
+
+			args := []string{
+				tc.secretName,
+				fmt.Sprintf(util.FlagFormat, util.NamespaceFlag, tc.secretNamespace),
+			}
+
+			for _, source := range tc.literalSources {
+				args = append(args, fmt.Sprintf(util.FlagFormat, util.FromLiteralFlag, source))
+			}
+
+			cmd := newCmdAddSecret(fSys, ldr, pvd.GetResourceFactory())
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.Execute())
+
+			_, err := testutils_test.ReadTestKustomization(fSys)
+			require.NoError(t, err)
+
+			mf, err := kustfile.NewKustomizationFile(fSys)
+			require.NoError(t, err)
+
+			kustomization, err := mf.Read()
+			require.NoError(t, err)
+
+			require.Len(t, kustomization.SecretGenerator, tc.expectedSliceLength)
+			require.ElementsMatch(t, tc.expectedResult, kustomization.SecretGenerator)
+		})
+	}
 }
