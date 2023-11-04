@@ -7,6 +7,4 @@ description: >
     Generate Secret resources.
 ---
 
-Each entry in the argument list results in the creation of one Secret resource (it's a generator of N secrets).
-
-This works like the [configMapGenerator](/docs/reference/api/kustomization-file/configmapgenerator).
+The Tasks section contains examples of how to use [`secretGenerator`](/docs/tasks/secret_generator/).
