@@ -44,7 +44,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -120,7 +120,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -198,7 +198,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -277,7 +277,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -356,7 +356,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	err := cmd.RunE(cmd, nil)
@@ -534,8 +534,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -658,8 +658,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -781,8 +781,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -911,8 +911,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -1024,8 +1024,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationOverlay)
-	fSys.WriteFile("base/pod.yaml", pod)
-	fSys.WriteFile("base/kustomization.yaml", kustomizationBase)
+	assert.NoError(t, fSys.WriteFile("base/pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("base/kustomization.yaml", kustomizationBase))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -1105,7 +1105,7 @@ metadata:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -1176,7 +1176,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
