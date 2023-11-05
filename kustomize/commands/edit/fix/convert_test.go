@@ -1161,7 +1161,6 @@ vars:
 `)
 	patch := []byte(`
 apiVersion: apps/v1
-kapiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller-manager
@@ -1204,7 +1203,6 @@ replacements:
 	assert.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: apps/v1
-kapiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller-manager
