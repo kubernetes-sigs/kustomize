@@ -11,9 +11,9 @@ A common set of labels can be applied to all Resources in a project by adding a 
 
 # Labels
 ## Add Labels
-Add labels to metadata for Resources in a project. The `includeSelectors` and `includeTemplates` flags enable label propagation to Selectors and Templates respectively. These flags are disabled by default.
+Add labels to all Resources in a project. This will override values for label keys that already exist. The `includeSelectors` and `includeTemplates` flags enable label propagation to Selectors and Templates respectively. These flags are disabled by default.
 
-The following example adds labels to a Deployment and Service without changing the Selector and Template labels.
+The following example adds labels to a Deployment and Service without changing the selector and Template labels.
 
 1. Create a Kustomization file.
 ```yaml
@@ -73,7 +73,7 @@ metadata:
   name: example
 ```
 ## Add Template Labels
-Add labels to Resources and templates with the `labels.includeTemplate` field.
+Add labels to Resource templates with the `labels.includeTemplate` field.
 
 The following example adds labels and template labels to a Deployment and Service without changing the selector labels.
 
@@ -143,8 +143,9 @@ spec:
         someName: someValue
 ```
 ## Add Selector Labels
+Add labels to Resource selectors and templates with the `labels.includeSelectors` field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster. This is equivalent to using the `commonLabels` field.
 
-The following example adds labels and Selector labels to a Deployment and Service. This is equivalent to using the `commonLabels` field.
+The following example adds labels and selector labels to a Deployment and Service.
 
 1. Create a Kustomization file.
 ```yaml
@@ -180,7 +181,7 @@ metadata:
   name: example
 ```
 
-3. Add Labels with `kustomize build`.
+3. Add labels with `kustomize build`.
 ```bash
 kustomize build .
 ```
@@ -221,82 +222,21 @@ spec:
         owner: alice
         someName: someValue
 ```
-## Add common Labels
-Add labels to all Resources in a project with the `commonLabels` field. This will override values for label keys that already exist. The `commonLabels` field also adds labels to Selectors and Templates. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
 
-The following example adds common labels to a Deployment, the Pod Selectors, and the Pod Template spec.
-
-1. Create a Kustomization file.
+The following example produces the same result. The `commonLabels` field is equivalent to using `labels.includeSelectors`.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 commonLabels:
-  app: foo
-  environment: test
+  someName: someValue
+  owner: alice
+  app: bingo
+
 resources:
 - deploy.yaml
+- service.yaml
 ```
-
-2. Create a Deployment manifest.
-```yaml
-# deploy.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-    bar: baz
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-      bar: baz
-  template:
-    metadata:
-      labels:
-        app: nginx
-        bar: baz
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-```
-
-3. Add Labels with `kustomize build`.
-```bash
-kustomize build .
-```
-
-The output shows that labels are added and updated in the metadata, selector, and template fields.
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: foo # Update
-    environment: test # Add
-    bar: baz # Existing labels are ignored
-spec:
-  selector:
-    matchLabels:
-      app: foo # Update
-      environment: test # Add
-      bar: baz # Existing labels are ignored
-  template:
-    metadata:
-      labels:
-        app: foo # Update
-        environment: test # Add
-        bar: baz # Existing labels are ignored
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-```
-
 
 # Annotations
 ## Add Annotations
