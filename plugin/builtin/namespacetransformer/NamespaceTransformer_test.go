@@ -762,3 +762,40 @@ subjects:
 `)
 		})
 }
+
+func TestNamespaceTransformer_ingoreGvks(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+	th.RunTransformerAndCheckResult(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+ignoredGvks:
+- ClusterKind.v1.test.io
+`,
+		`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+---
+apiVersion: test.io/v1
+kind: ClusterKind
+metadata:
+  name: cm
+`, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  namespace: test
+---
+apiVersion: test.io/v1
+kind: ClusterKind
+metadata:
+  name: cm
+`)
+}

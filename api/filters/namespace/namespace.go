@@ -30,6 +30,8 @@ type Filter struct {
 	// - none: all subjects will be skipped.
 	SetRoleBindingSubjects RoleBindingSubjectMode `json:"setRoleBindingSubjects" yaml:"setRoleBindingSubjects"`
 
+	IgnoredGvks []string
+
 	trackableSetter filtersutil.TrackableSetter
 }
 
@@ -94,6 +96,9 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 	if gvk.IsClusterScoped() {
 		return nil
 	}
+	if ns.ignoreGvk(gvk) {
+		return nil
+	}
 	f := fsslice.Filter{
 		FsSlice: []types.FieldSpec{
 			{Path: types.MetadataNamespacePath, CreateIfNotPresent: true},
@@ -103,6 +108,15 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 	}
 	_, err := f.Filter(obj)
 	return err
+}
+
+func (ns Filter) ignoreGvk(gvk resid.Gvk) bool {
+	for _, ignoredGvk := range ns.IgnoredGvks {
+		if gvk.String() == ignoredGvk {
+			return true
+		}
+	}
+	return false
 }
 
 // roleBindingHack is a hack for implementing the transformer's SetRoleBindingSubjects option
@@ -119,10 +133,10 @@ func (ns Filter) metaNamespaceHack(obj *yaml.RNode, gvk resid.Gvk) error {
 //
 // kind: RoleBinding
 // subjects:
-// - name: "default" # this will have the namespace set
-//   ...
-// - name: "something-else" # this will not have the namespace set
-//   ...
+//   - name: "default" # this will have the namespace set
+//     ...
+//   - name: "something-else" # this will not have the namespace set
+//     ...
 func (ns Filter) roleBindingHack(obj *yaml.RNode) error {
 	var visitor filtersutil.SetFn
 	switch ns.SetRoleBindingSubjects {

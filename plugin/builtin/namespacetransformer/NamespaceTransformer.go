@@ -20,6 +20,7 @@ type plugin struct {
 	FieldSpecs             []types.FieldSpec                `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 	UnsetOnly              bool                             `json:"unsetOnly" yaml:"unsetOnly"`
 	SetRoleBindingSubjects namespace.RoleBindingSubjectMode `json:"setRoleBindingSubjects" yaml:"setRoleBindingSubjects"`
+	IgnoredGvks            []string                         `json:"ignoredGvks" yaml:"ignoredGvks"`
 }
 
 var KustomizePlugin plugin //nolint:gochecknoglobals
@@ -60,6 +61,7 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			FsSlice:                p.FieldSpecs,
 			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
 			UnsetOnly:              p.UnsetOnly,
+			IgnoredGvks:            p.IgnoredGvks,
 		}); err != nil {
 			return err
 		}
