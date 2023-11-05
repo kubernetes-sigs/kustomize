@@ -7,13 +7,13 @@ description: >
   Working with Labels and Annotations
 ---
 
-A common set of labels can be applied to all Resources in a project by adding a `labels` or `commonLabels` entry to to the `kustomization.yaml` file. Similarly, a common set of annotations can be applied to Resources with the `commonAnnotations` field.
+A common set of labels can be applied to all Resources in a project by adding a [`labels`] or [`commonLabels`] entry to the `kustomization.yaml` file. Similarly, a common set of annotations can be applied to Resources with the [`commonAnnotations`] field.
 
 # Labels
 ## Add Labels
-Add labels to all Resources in a project with the `labels` field. This will override values for label keys that already exist. The `includeSelectors` and `includeTemplates` flags enable label propagation to Selectors and Templates respectively. These flags are disabled by default.
+Add labels to all Resources in a project with the [`labels`] field. This will override values for label keys that already exist. The `includeSelectors` field enables label propagation to selectors and templates. The `includeTemplates` field enables label propagation to only templates. Both fields are disabled by default.
 
-The following example adds labels to a Deployment and Service without changing the selector and Template labels.
+The following example adds labels to a Deployment and Service without changing the selector and template labels.
 
 1. Create a Kustomization file.
 ```yaml
@@ -73,7 +73,7 @@ metadata:
   name: example
 ```
 ## Add Template Labels
-Add labels to Resource templates with the `labels.includeTemplate` field.
+Add labels to Resource templates with the [`labels.includeTemplates`] field.
 
 The following example adds labels and template labels to a Deployment and Service without changing the selector labels.
 
@@ -143,7 +143,7 @@ spec:
         someName: someValue
 ```
 ## Add Selector Labels
-Add labels to Resource selectors and templates with the `labels.includeSelectors` field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
+Add labels to Resource selectors and templates with the [`labels.includeSelectors`] field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
 
 The following example adds labels and selector labels to a Deployment and Service.
 
@@ -223,7 +223,7 @@ spec:
         someName: someValue
 ```
 
-The following example produces the same result. The `commonLabels` field is equivalent to using `labels.includeSelectors`.
+The following example produces the same result. The [`commonLabels`] field is equivalent to using [`labels.includeSelectors`].
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -238,9 +238,10 @@ resources:
 - deploy.yaml
 - service.yaml
 ```
+
 # Annotations
 ## Add Annotations
-Add annotations to all Resources in a project with the `commonAnnotations` field. This will override values for annotations keys that already exist. annotations are propagated to Pod Templates.
+Add annotations to all Resources in a project with the [`commonAnnotations`] field. This will override values for annotations keys that already exist. Annotations are propagated to Pod templates.
 
 The following example adds common annotations to a Deployment.
 
@@ -284,3 +285,9 @@ spec:
       annotations:
         oncallPager: 800-867-5309
 ```
+
+[`labels`]: /docs/reference/api/kustomization-file/labels/
+[`labels.includeTemplates`]: /docs/reference/api/kustomization-file/labels/
+[`labels.includeSelectors`]: /docs/reference/api/kustomization-file/labels/
+[`commonLabels`]: /docs/reference/api/kustomization-file/commonlabels/
+[`commonAnnotations`]: /docs/reference/api/kustomization-file/commonannotations/
