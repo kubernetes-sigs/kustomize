@@ -10,9 +10,9 @@ description: >
 The Namespace can be set for all Resources in a project by adding the `namespace` entry to the `kustomization.yaml` file. Consistent naming conventions can be applied to Resource Names in a project with the `namePrefix` and `nameSuffix` fields.
 
 ## Add Namespace
-The Namespace for all namespaced Resources in a project can be set with the `namespace` field. This will override Namespace values that already exist.
+The Namespace for all namespaced Resources in a project can be set with the `namespace` field. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources. This will override Namespace values that already exist.
 
-The following example sets the Namespace of a Deployment.
+The following example sets the Namespace of a Deployment and a generated ConfigMap.
 
 1. Create a Kustomization file.
 ```yaml
@@ -20,6 +20,12 @@ The following example sets the Namespace of a Deployment.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-namespace
+
+configMapGenerator:
+- name: my-config
+  literals:
+  - FOO=BAR
+
 resources:
 - deploy.yaml
 ```
@@ -38,13 +44,21 @@ metadata:
 kustomize build .
 ```
 
-The output shows that namespace is added to the metadata field.
+The output shows that Namespace is added to the metadata field of the Deployment and generated ConfigMap.
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example
   namespace: my-namespace
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config-m2mg5mb749
+  namespace: my-namespace
+data:
+  FOO: BAR
 ```
 
 ## Update object name prefix
