@@ -11,7 +11,7 @@ A common set of labels can be applied to all Resources in a project by adding a 
 
 # Labels
 ## Add Labels
-Add labels to all Resources in a project. This will override values for label keys that already exist. The `includeSelectors` and `includeTemplates` flags enable label propagation to Selectors and Templates respectively. These flags are disabled by default.
+Add labels to all Resources in a project with the `labels` field. This will override values for label keys that already exist. The `includeSelectors` and `includeTemplates` flags enable label propagation to Selectors and Templates respectively. These flags are disabled by default.
 
 The following example adds labels to a Deployment and Service without changing the selector and Template labels.
 
@@ -143,7 +143,7 @@ spec:
         someName: someValue
 ```
 ## Add Selector Labels
-Add labels to Resource selectors and templates with the `labels.includeSelectors` field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster. This is equivalent to using the `commonLabels` field.
+Add labels to Resource selectors and templates with the `labels.includeSelectors` field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
 
 The following example adds labels and selector labels to a Deployment and Service.
 
@@ -228,6 +228,7 @@ The following example produces the same result. The `commonLabels` field is equi
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 commonLabels:
   someName: someValue
   owner: alice
@@ -237,7 +238,6 @@ resources:
 - deploy.yaml
 - service.yaml
 ```
-
 # Annotations
 ## Add Annotations
 Add annotations to all Resources in a project with the `commonAnnotations` field. This will override values for annotations keys that already exist. annotations are propagated to Pod Templates.
@@ -251,10 +251,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 commonAnnotations:
-  oncallPager: 800-555-1212
+  oncallPager: 800-867-5309
 
-commonLabels:
-  app: bingo
 resources:
 - deploy.yaml
 ```
@@ -277,19 +275,12 @@ The output shows that annotations are added to the metadata field.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    oncallPager: 800-555-1212
-  labels:
-    app: bingo
   name: example
+  annotations:
+    oncallPager: 800-867-5309
 spec:
-  selector:
-    matchLabels:
-      app: bingo
   template:
     metadata:
       annotations:
-        oncallPager: 800-555-1212
-      labels:
-        app: bingo
+        oncallPager: 800-867-5309
 ```
