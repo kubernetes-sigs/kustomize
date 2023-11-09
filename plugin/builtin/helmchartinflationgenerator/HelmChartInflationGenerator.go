@@ -112,14 +112,6 @@ func (p *plugin) validateArgs() (err error) {
 		return err
 	}
 
-	// ConfigHome is not loaded by the plugin, and can be located anywhere.
-	if p.ConfigHome == "" {
-		if err = p.establishTmpDir(); err != nil {
-			return errors.WrapPrefixf(
-				err, "unable to create tmp dir for HELM_CONFIG_HOME")
-		}
-		p.ConfigHome = filepath.Join(p.tmpDir, "helm")
-	}
 	return nil
 }
 
@@ -158,11 +150,15 @@ func (p *plugin) runHelmCommand(
 	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	env := []string{
-		fmt.Sprintf("HELM_CONFIG_HOME=%s", p.ConfigHome),
-		fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.ConfigHome),
-		fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
-	cmd.Env = append(os.Environ(), env...)
+	env := []string{}
+	if p.ConfigHome != "" {
+		env = []string{
+			fmt.Sprintf("HELM_CONFIG_HOME=%s", p.ConfigHome),
+			fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.ConfigHome),
+			fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
+		cmd.Env = append(os.Environ(), env...)
+	}
+
 	err := cmd.Run()
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
