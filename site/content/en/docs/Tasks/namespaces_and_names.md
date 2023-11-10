@@ -65,6 +65,8 @@ data:
 ## Working with Names
 A prefix or suffix can be set for all Resources in a project with the `namePrefix` and `nameSuffix` fields. This sets a name prefix and suffix for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources.
 
+The name prefix and suffix will also propagate to Resource references in a project. Typical uses cases include Service references from StatefulSets, ConfigMap references from PodSpecs, and Secret references from PodSpecs.
+
 ### Add Name Prefix
 The following example adds a prefix to the name of a Deployment and a generated ConfigMap.
 
@@ -151,3 +153,98 @@ metadata:
 [`namespace`]: /docs/reference/api/kustomization-file/namespace/
 [`namePrefix`]: /docs/reference/api/kustomization-file/nameprefix/
 [`nameSuffix`]: /docs/reference/api/kustomization-file/namesuffix/
+
+### Propagate Name Prefix to Resource Reference
+The following example adds a prefix to the name of a Deployment and a generated ConfigMap. The generated ConfigMap name prefix is propagated to the PodSpec.
+
+1. Create a Kustomization file.
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: foo-
+
+configMapGenerator:
+- name: special-config
+  literals:
+  - special.how=very
+
+resources:
+- deploy.yaml
+```
+
+2. Create a Deployment manifest.
+```yaml
+# deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: example
+  name: example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+      - image: registry.k8s.io/busybox
+        name: busybox
+        command: [ "/bin/sh", "-c", "env" ]
+        env:
+          - name: SPECIAL_LEVEL_KEY
+            valueFrom:
+              configMapKeyRef:
+                name: special-config
+                key: special.how
+```
+
+3. Add name prefix with `kustomize build`.
+```bash
+kustomize build .
+```
+
+The output shows that the name prefix is propagated to the PodSpec ConfigMap reference.
+```yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: foo-special-config-9k6fhm8659
+data:
+  special.how: very
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: example
+  name: foo-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - env
+        env:
+        - name: SPECIAL_LEVEL_KEY
+          valueFrom:
+            configMapKeyRef:
+              key: special.how
+              name: foo-special-config-9k6fhm8659
+        image: registry.k8s.io/busybox
+        name: busybox
+```
