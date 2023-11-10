@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 	. "sigs.k8s.io/kustomize/api/internal/utils"
 )
 
@@ -61,4 +62,21 @@ func TestTimedCallSlowWithError(t *testing.T) {
 	} else {
 		t.Fail()
 	}
+}
+
+func TestTimedCallGoroutineLeak(t *testing.T) {
+	defer goleak.VerifyNone(t)
+	err := TimedCall("function done, no goroutine leaks", timeToWait, func() error {
+		time.Sleep(tooSlow)
+		return fmt.Errorf("function done")
+	})
+	if assert.Error(t, err) {
+		assert.EqualError(t, err, errMsg("function done, no goroutine leaks"))
+	} else {
+		t.Fail()
+	}
+
+	// The code introduces a 2-second sleep to allow the goroutine to complete its execution.
+	// Subsequently, it verifies if the goroutine created by the function exits as expected.
+	time.Sleep(tooSlow)
 }
