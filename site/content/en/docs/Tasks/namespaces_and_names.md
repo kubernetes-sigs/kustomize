@@ -61,7 +61,7 @@ data:
   FOO: BAR
 ```
 
-## Update object name prefix
+## Add Name Prefix
 
 The following example adds a prefix to the name of a Deployment.
 
@@ -97,7 +97,7 @@ metadata:
   name: foo-example
 ```
 
-## Update object name suffix
+## Add Name Suffix
 The following example adds a suffix to the name of a Deployment.
 
 1. Create a Kustomization file.
