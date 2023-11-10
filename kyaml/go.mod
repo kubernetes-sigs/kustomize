@@ -15,7 +15,6 @@ require (
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
 	golang.org/x/sys v0.13.0
 	google.golang.org/protobuf v1.30.0
-	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961
 	sigs.k8s.io/yaml v1.4.0
 )
