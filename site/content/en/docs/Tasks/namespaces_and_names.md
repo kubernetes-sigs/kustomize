@@ -65,7 +65,7 @@ data:
 ## Working with Names
 A prefix or suffix can be set for all Resources in a project with the `namePrefix` and `nameSuffix` fields. This sets a name prefix and suffix for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources.
 
-The name prefix and suffix will also propagate to Resource references in a project. Typical uses cases include Service references from StatefulSets, ConfigMap references from PodSpecs, and Secret references from PodSpecs.
+Resources such as Deployments and StatefulSets may reference other Resources such as ConfigMaps and Secrets in the Pod Spec. The name prefix and suffix will also propagate to Resource references in a project. Typical uses cases include Service reference from a StatefulSet, ConfigMap reference from a Pod Spec, and Secret reference from a Pod Spec.
 
 ### Add Name Prefix
 The following example adds a prefix to the name of a Deployment and a generated ConfigMap.
@@ -155,7 +155,7 @@ metadata:
 [`nameSuffix`]: /docs/reference/api/kustomization-file/namesuffix/
 
 ### Propagate Name Prefix to Resource Reference
-The following example adds a prefix to the name of a Deployment and a generated ConfigMap. The generated ConfigMap name prefix is propagated to the PodSpec.
+The following example adds a prefix to the name of a Deployment and a generated ConfigMap. The generated ConfigMap name prefix is propagated to the Pod Spec.
 
 1. Create a Kustomization file.
 ```yaml
