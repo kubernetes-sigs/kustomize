@@ -9,8 +9,8 @@ description: >
 
 A common set of labels can be applied to all Resources in a project by adding a [`labels`] or [`commonLabels`] entry to the `kustomization.yaml` file. Similarly, a common set of annotations can be applied to Resources with the [`commonAnnotations`] field.
 
-# Labels
-## Add Labels
+## Working with Labels
+### Add Labels
 Add labels to all Resources in a project with the [`labels`] field. This will override values for label keys that already exist. The `includeSelectors` field enables label propagation to selectors and templates. The `includeTemplates` field enables label propagation to only templates. Both fields are disabled by default.
 
 The following example adds labels to a Deployment and Service without changing the selector and template labels.
@@ -72,7 +72,7 @@ metadata:
     someName: someValue
   name: example
 ```
-## Add Template Labels
+### Add Template Labels
 Add labels to Resource templates with the [`labels.includeTemplates`] field.
 
 The following example adds labels and template labels to a Deployment and Service without changing the selector labels.
@@ -142,7 +142,7 @@ spec:
         owner: alice
         someName: someValue
 ```
-## Add Selector Labels
+### Add Selector Labels
 Add labels to Resource selectors and templates with the [`labels.includeSelectors`] field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
 
 The following example adds labels and selector labels to a Deployment and Service.
@@ -239,8 +239,8 @@ resources:
 - service.yaml
 ```
 
-# Annotations
-## Add Annotations
+## Working with Annotations
+### Add Annotations
 Add annotations to all Resources in a project with the [`commonAnnotations`] field. This will override values for annotations keys that already exist. Annotations are propagated to Pod templates.
 
 The following example adds common annotations to a Deployment.

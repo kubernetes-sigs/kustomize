@@ -9,7 +9,8 @@ description: >
 
 The Namespace can be set for all Resources in a project by adding the `namespace` entry to the `kustomization.yaml` file. Consistent naming conventions can be applied to Resource Names in a project with the `namePrefix` and `nameSuffix` fields.
 
-## Add Namespace
+## Working with Namespaces
+### Add Namespace
 The Namespace for all namespaced Resources in a project can be set with the `namespace` field. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources. This will override Namespace values that already exist.
 
 The following example sets the Namespace of a Deployment and a generated ConfigMap.
@@ -61,7 +62,8 @@ data:
   FOO: BAR
 ```
 
-## Add Name Prefix
+## Working with Names
+### Add Name Prefix
 
 The following example adds a prefix to the name of a Deployment.
 
@@ -97,7 +99,7 @@ metadata:
   name: foo-example
 ```
 
-## Add Name Suffix
+### Add Name Suffix
 The following example adds a suffix to the name of a Deployment.
 
 1. Create a Kustomization file.
