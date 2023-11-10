@@ -7,12 +7,12 @@ description: >
   Working with Namespaces and Names
 ---
 
-The Namespace can be set for all Resources in a project by adding the `namespace` entry to the `kustomization.yaml` file. Consistent naming conventions can be applied to Resource Names in a project with the `namePrefix` and `nameSuffix` fields.
+The Namespace can be set for all Resources in a project by adding the [`namespace`] entry to the `kustomization.yaml` file. Consistent naming conventions can be applied to Resource Names in a project with the [`namePrefix`] and [`nameSuffix`] fields.
 
 ## Working with Namespaces
-### Add Namespace
-The Namespace for all namespaced Resources in a project can be set with the `namespace` field. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources. This will override Namespace values that already exist.
+The Namespace for all namespaced Resources in a project can be set with the [`namespace`] field. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources. This will override Namespace values that already exist.
 
+### Add Namespace
 The following example sets the Namespace of a Deployment and a generated ConfigMap.
 
 1. Create a Kustomization file.
@@ -63,8 +63,9 @@ data:
 ```
 
 ## Working with Names
-### Add Name Prefix
+A prefix or suffix can be set for all Resources in a project with the `namePrefix` and `nameSuffix` fields. This sets a name prefix and suffix for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources.
 
+### Add Name Prefix
 The following example adds a prefix to the name of a Deployment.
 
 1. Create a Kustomization file.
@@ -133,3 +134,7 @@ kind: Deployment
 metadata:
   name: example-bar
 ```
+
+[`namespace`]: /docs/reference/api/kustomization-file/namespace/
+[`namePrefix`]: /docs/reference/api/kustomization-file/nameprefix/
+[`nameSuffix`]: /docs/reference/api/kustomization-file/namesuffix/
