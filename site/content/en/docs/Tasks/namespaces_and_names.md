@@ -66,7 +66,7 @@ data:
 A prefix or suffix can be set for all Resources in a project with the `namePrefix` and `nameSuffix` fields. This sets a name prefix and suffix for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources.
 
 ### Add Name Prefix
-The following example adds a prefix to the name of a Deployment.
+The following example adds a prefix to the name of a Deployment and a generated ConfigMap.
 
 1. Create a Kustomization file.
 ```yaml
@@ -74,6 +74,12 @@ The following example adds a prefix to the name of a Deployment.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: foo-
+
+configMapGenerator:
+- name: my-config
+  literals:
+  - FOO=BAR
+
 resources:
 - deploy.yaml
 ```
@@ -92,8 +98,15 @@ metadata:
 kustomize build .
 ```
 
-The output shows that a prefix is added to the name.
+The output shows that a prefix is added to the name of the Deployment and generated ConfigMap.
 ```yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: foo-my-config-m2mg5mb749
+data:
+  FOO: BAR
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
