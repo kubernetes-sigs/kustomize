@@ -10,8 +10,25 @@ permissions:
   contents: read
 
 jobs:
+  conditional-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      doc: ${{ steps.filter.outputs.doc }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          doc:
+            - 'site/**'
+
   lint:
     name: Lint
+    needs: conditional-changes
+    if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
@@ -30,6 +47,8 @@ jobs:
 
   test-linux:
     name: Test Linux
+    needs: conditional-changes
+    if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
@@ -46,6 +65,8 @@ jobs:
 
   test-macos:
     name: Test MacOS
+    needs: conditional-changes
+    if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [macos-latest]
     steps:
     - name: Check out code into the Go module directory
@@ -62,6 +83,8 @@ jobs:
 
   test-windows:
     name: Test Windows
+    needs: conditional-changes
+    if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [windows-latest]
     steps:
     - name: Check out code into the Go module directory
