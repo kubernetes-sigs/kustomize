@@ -145,7 +145,7 @@ spec:
 ### Add Selector Labels
 Add labels to Resource selectors and templates with the [`labels.includeSelectors`] field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
 
-The following example adds labels and selector labels to a Deployment and Service.
+The following example adds labels, selector labels, and template labels to a Deployment and Service.
 
 1. Create a Kustomization file.
 ```yaml
