@@ -76,11 +76,6 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.LegacyIndexAnnotation))
-			if err != nil {
-				return errors.Wrap(err)
-			}
-
 			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.SeqIndentAnnotation))
 			if err != nil {
 				return errors.Wrap(err)

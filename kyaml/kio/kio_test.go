@@ -204,34 +204,9 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 		}
 		return nodes, nil
 	}
-	changeLegacyAnnos := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-		for _, rn := range nodes {
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, "new")); err != nil {
-				return nil, err
-			}
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyIndexAnnotation, "new")); err != nil {
-				return nil, err
-			}
-		}
-		return nodes, nil
-	}
 	changeBothPathAnnosMatch := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 		for _, rn := range nodes {
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, "new")); err != nil {
-				return nil, err
-			}
 			if err := rn.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, "new")); err != nil {
-				return nil, err
-			}
-		}
-		return nodes, nil
-	}
-	changeBothPathAnnosMismatch := func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-		for _, rn := range nodes {
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, "foo")); err != nil {
-				return nil, err
-			}
-			if err := rn.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, "bar")); err != nil {
 				return nil, err
 			}
 		}
@@ -243,9 +218,7 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 		FilterFunc(noopFilter2),
 	}
 	internal := []Filter{FilterFunc(changeInternalAnnos)}
-	legacy := []Filter{FilterFunc(changeLegacyAnnos)}
 	changeBothMatch := []Filter{FilterFunc(changeBothPathAnnosMatch), FilterFunc(noopFilter1)}
-	changeBothMismatch := []Filter{FilterFunc(changeBothPathAnnosMismatch), FilterFunc(noopFilter1)}
 
 	testCases := map[string]struct {
 		input       string
@@ -253,61 +226,15 @@ func TestLegacyAnnotationReconciliation(t *testing.T) {
 		expected    string
 		expectedErr string
 	}{
-		// the orchestrator should copy the legacy annotations to the new
-		// annotations
-		"legacy annotations only": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters: noops,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-		},
-		// the orchestrator should copy the new annotations to the
-		// legacy annotations
+		// the orchestrator should copy the annotations correctly
 		"new annotations only": {
 			input: `apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ports-from
   annotations:
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'configmap.yaml'
+    config.kubernetes.io/index: '0'
 data:
   grpcPort: 8080
 ---
@@ -316,37 +243,13 @@ kind: ConfigMap
 metadata:
   name: ports-to
   annotations:
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: "configmap.yaml"
+    config.kubernetes.io/index: '1'
 data:
   grpcPort: 8081
 `,
 			filters: noops,
 			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-		},
-		// the orchestrator should detect that the legacy annotations
-		// have been changed by the function
-		"change only legacy annotations": {
-			input: `apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ports-from
@@ -363,27 +266,6 @@ metadata:
   annotations:
     config.kubernetes.io/path: "configmap.yaml"
     config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters: legacy,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'new'
-    config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: 'new'
 data:
   grpcPort: 8081
 `,
@@ -433,149 +315,6 @@ data:
   grpcPort: 8081
 `,
 		},
-		// the orchestrator should detect that the legacy annotations
-		// have been changed by the function
-		"change only internal annotations while input is legacy annotations": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters: internal,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'new'
-    config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8081
-`,
-		},
-		// the orchestrator should detect that the new internal annotations
-		// have been changed by the function
-		"change only legacy annotations while input is internal annotations": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters: legacy,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    internal.config.kubernetes.io/path: 'new'
-    internal.config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    internal.config.kubernetes.io/path: "new"
-    internal.config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8081
-`,
-		},
-		// the orchestrator should detect that the legacy annotations
-		// have been changed by the function
-		"change only legacy annotations while input has both": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-    internal.config.kubernetes.io/path: 'configmap.yaml'
-    internal.config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters: legacy,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'new'
-    config.kubernetes.io/index: 'new'
-    internal.config.kubernetes.io/path: 'new'
-    internal.config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: 'new'
-    internal.config.kubernetes.io/path: 'new'
-    internal.config.kubernetes.io/index: 'new'
-data:
-  grpcPort: 8081
-`,
-		},
 		// the orchestrator should detect that the new internal annotations
 		// have been changed by the function
 		"change only internal annotations while input has both": {
@@ -584,8 +323,6 @@ kind: ConfigMap
 metadata:
   name: ports-from
   annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'configmap.yaml'
     internal.config.kubernetes.io/index: '0'
 data:
@@ -596,8 +333,6 @@ kind: ConfigMap
 metadata:
   name: ports-to
   annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: "configmap.yaml"
     internal.config.kubernetes.io/index: '1'
 data:
@@ -609,8 +344,6 @@ kind: ConfigMap
 metadata:
   name: ports-from
   annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: 'new'
     internal.config.kubernetes.io/path: 'new'
     internal.config.kubernetes.io/index: 'new'
 data:
@@ -621,8 +354,6 @@ kind: ConfigMap
 metadata:
   name: ports-to
   annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: 'new'
     internal.config.kubernetes.io/path: "new"
     internal.config.kubernetes.io/index: 'new'
 data:
@@ -637,8 +368,6 @@ kind: ConfigMap
 metadata:
   name: ports-from
   annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'configmap.yaml'
     internal.config.kubernetes.io/index: '0'
 data:
@@ -649,8 +378,6 @@ kind: ConfigMap
 metadata:
   name: ports-to
   annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: "configmap.yaml"
     internal.config.kubernetes.io/index: '1'
 data:
@@ -662,8 +389,6 @@ kind: ConfigMap
 metadata:
   name: ports-from
   annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'new'
     internal.config.kubernetes.io/index: '0'
 data:
@@ -674,55 +399,8 @@ kind: ConfigMap
 metadata:
   name: ports-to
   annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: "new"
     internal.config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-		},
-		// the orchestrator should detect that the new internal annotations
-		// have been changed by the function
-		"change both to matching value while input is legacy": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters: changeBothMatch,
-			expected: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "new"
-    config.kubernetes.io/index: '1'
 data:
   grpcPort: 8081
 `,
@@ -771,90 +449,6 @@ metadata:
 data:
   grpcPort: 8081
 `,
-		},
-		// the function changes both the legacy and new path annotation, and they mismatch,
-		// so we should get an error
-		"change both but mismatch while input is legacy": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters:     changeBothMismatch,
-			expectedErr: "resource input to function has mismatched legacy and internal path annotations",
-		},
-		// the function changes both the legacy and new path annotation, and they mismatch,
-		// so we should get an error
-		"change both but mismatch while input is internal": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters:     changeBothMismatch,
-			expectedErr: "resource input to function has mismatched legacy and internal path annotations",
-		},
-		// the function changes both the legacy and new path annotation, and they mismatch,
-		// so we should get an error
-		"change both but mismatch while input has both": {
-			input: `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-from
-  annotations:
-    config.kubernetes.io/path: 'configmap.yaml'
-    config.kubernetes.io/index: '0'
-    config.k8s.io/id: '1'
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '0'
-data:
-  grpcPort: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ports-to
-  annotations:
-    config.kubernetes.io/path: "configmap.yaml"
-    config.kubernetes.io/index: '1'
-    config.k8s.io/id: '2'
-    internal.config.kubernetes.io/path: "configmap.yaml"
-    internal.config.kubernetes.io/index: '1'
-data:
-  grpcPort: 8081
-`,
-			filters:     changeBothMismatch,
-			expectedErr: "resource input to function has mismatched legacy and internal path annotations",
 		},
 	}
 

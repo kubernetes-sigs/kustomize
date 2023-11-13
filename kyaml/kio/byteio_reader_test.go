@@ -181,7 +181,6 @@ i: j
 c: d
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/index: '0'
 `,
 				`# second resource
@@ -190,13 +189,11 @@ g:
 - h
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/index: '1'
 `,
 				`i: j
 metadata:
   annotations:
-    config.kubernetes.io/index: '2'
     internal.config.kubernetes.io/index: '2'
 `,
 			},
@@ -262,7 +259,6 @@ a: b # first resource
 c: d
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/index: '0'
 `,
 				`
@@ -272,14 +268,12 @@ g:
 - h
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/index: '1'
 `,
 				`
 i: j
 metadata:
   annotations:
-    config.kubernetes.io/index: '2'
     internal.config.kubernetes.io/index: '2'
 `,
 			},
@@ -375,7 +369,7 @@ metadata:
 `,
 			expectedItems: []string{
 				`
-{"a": "b", "c": [1, 2], metadata: {annotations: {config.kubernetes.io/index: '0', internal.config.kubernetes.io/index: '0'}}}
+{"a": "b", "c": [1, 2], metadata: {annotations: {internal.config.kubernetes.io/index: '0'}}}
 `,
 			},
 			instance: ByteReader{},

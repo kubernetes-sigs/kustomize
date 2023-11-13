@@ -248,16 +248,12 @@ metadata:
   annotations:
     internal.config.kubernetes.io/index: 0
     internal.config.kubernetes.io/path: "a/b/a_test.yaml"
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-    config.kubernetes.io/index: '0'
 ---
 c: d # second
 metadata:
   annotations:
     internal.config.kubernetes.io/index: 1
     internal.config.kubernetes.io/path: "a/b/a_test.yaml"
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
-    config.kubernetes.io/index: '1'
 ---
 e: f
 g:
@@ -268,8 +264,6 @@ metadata:
   annotations:
     internal.config.kubernetes.io/index: 0
     internal.config.kubernetes.io/path: "a/b/b_test.yaml"
-    config.kubernetes.io/path: 'a/b/b_test.yaml'
-    config.kubernetes.io/index: '0'
 `,
 		},
 
@@ -309,13 +303,11 @@ a: b #first
 metadata:
   annotations:
     internal.config.kubernetes.io/path: "a/b/a_test.yaml"
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
 ---
 c: d # second
 metadata:
   annotations:
     internal.config.kubernetes.io/path: "a/b/a_test.yaml"
-    config.kubernetes.io/path: 'a/b/a_test.yaml'
 `,
 		},
 

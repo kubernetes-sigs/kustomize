@@ -75,16 +75,12 @@ func TestLocalPackageWriter_Write_keepReaderAnnotations(t *testing.T) {
 		require.Equal(t, `a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: "0"
-    config.kubernetes.io/path: "a/b/a_test.yaml"
     internal.config.kubernetes.io/path: 'a/b/a_test.yaml'
     internal.config.kubernetes.io/index: '0'
 ---
 c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: "1"
-    config.kubernetes.io/path: "a/b/a_test.yaml"
     internal.config.kubernetes.io/path: 'a/b/a_test.yaml'
     internal.config.kubernetes.io/index: '1'
 `, string(b))
@@ -98,8 +94,6 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: "0"
-    config.kubernetes.io/path: "a/b/b_test.yaml"
     internal.config.kubernetes.io/path: 'a/b/b_test.yaml'
     internal.config.kubernetes.io/index: '0'
 `, string(b))

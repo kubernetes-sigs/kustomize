@@ -49,11 +49,6 @@ type TreeWriterField struct {
 }
 
 func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
-	for i := range nodes {
-		if err := kioutil.CopyLegacyAnnotations(nodes[i]); err != nil {
-			return err
-		}
-	}
 	indexByPackage := p.index(nodes)
 
 	// create the new tree
