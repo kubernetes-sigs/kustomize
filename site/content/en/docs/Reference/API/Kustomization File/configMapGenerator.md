@@ -17,9 +17,20 @@ See [Generating ConfigMaps Tasks] for examples of how to use `configMapGenerator
 
 * **apiVersion**: kustomize.config.k8s.io/v1beta1
 * **kind**: Kustomization
-* **labels**:
-* **annotations**:
-* **disableNameSuffixHash**
-* **immutable**:
+* **labels** (map[string]string)
+
+    Map of string keys and values that can be added as labels to the generated ConfigMap.
+
+* **annotations** (map[string]string)
+
+    Map of string key and values that can be added as annotations to the generated ConfigMap.
+
+* **disableNameSuffixHash** (boolean)
+
+    If set to true, then the default behavior of adding a hash suffix to the generated ConfigMap name is disabled.
+
+* **immutable** (boolean)
+
+    If set to true, then then generated ConfigMap is immutable. This ensures that data in the ConfigMap cannot be updated.
 
 [Generating ConfigMaps Tasks]: /docs/tasks/configmap_generator/
