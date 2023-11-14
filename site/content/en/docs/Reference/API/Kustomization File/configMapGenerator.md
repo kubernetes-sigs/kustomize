@@ -17,6 +17,31 @@ See [Generating ConfigMaps Tasks] for examples of how to use `configMapGenerator
 
 * **apiVersion**: kustomize.config.k8s.io/v1beta1
 * **kind**: Kustomization
+* **configMapGenerator** ([][ConfigMapArgs](#configmapargs))
+
+    List of ConfigMaps to generate.
+
+
+### ConfigMapArgs
+
+ConfigMapArgs contains the metadata of the generated ConfigMap.
+
+* **name** (string)
+
+    Name of the generated ConfigMap. A hash suffix will be added to the Name by default.
+
+* **namespace** (string)
+
+    Namespace of the generated ConfigMap.
+
+* **options** ([GeneratorOptions](#generatoroptions))
+
+    Options override global `generatorOptions` field.
+
+### GeneratorOptions
+
+GeneratorOptions modify behavior of ConfigMap generation.
+
 * **labels** (map[string]string)
 
     Map of string keys and values that can be added as labels to the generated ConfigMap.
