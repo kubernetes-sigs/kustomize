@@ -5,6 +5,7 @@ package repo
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -48,39 +49,67 @@ func (dg *DotGitData) AbsPath() string {
 //
 //	~/gopath/src/sigs.k8s.io/kustomize
 //	~/gopath/src/github.com/monopole/gorepomod
-func NewDotGitDataFromPath(path string) (*DotGitData, error) {
+func NewDotGitDataFromPath(path string, localFlag bool) (*DotGitData, error) {
+
 	if !utils.DirExists(filepath.Join(path, dotGitFileName)) {
 		return nil, fmt.Errorf(
 			"%q doesn't have a %q file", path, dotGitFileName)
 	}
-	// This is an attempt to figure out where the user has cloned
-	// their repos.  In the old days, it was an import path under
-	// $GOPATH/src.  If we cannot guess it, we may need to ask for it,
-	// or maybe proceed without knowing it.
-	index := strings.Index(path, srcHint)
-	if index < 0 {
-		return nil, fmt.Errorf(
-			"path %q doesn't contain %q", path, srcHint)
+
+	// If local flag is supplied, use local git naming instead of production (sigs.k8s.io)
+	if localFlag {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("error extracting git repository %q", err.Error())
+		}
+
+		pathSlice := strings.Split(wd, "/")
+
+		return &DotGitData{
+			srcPath:  strings.Join(pathSlice[:len(pathSlice)-1], "/"),
+			repoPath: pathSlice[len(pathSlice)-1],
+		}, nil
+	} else {
+		// This is an attempt to figure out where the user has cloned
+		// their repos.  In the old days, it was an import path under
+		// $GOPATH/src.  If we cannot guess it, we may need to ask for it,
+		// or maybe proceed without knowing it.
+		index := strings.Index(path, srcHint)
+		if index < 0 {
+			return nil, fmt.Errorf(
+				"path %q doesn't contain %q", path, srcHint)
+		}
+
+		return &DotGitData{
+			srcPath:  path[:index+len(srcHint)-1],
+			repoPath: path[index+len(srcHint):],
+		}, nil
 	}
-	return &DotGitData{
-		srcPath:  path[:index+len(srcHint)-1],
-		repoPath: path[index+len(srcHint):],
-	}, nil
+
 }
 
 // It's a factory factory.
 func (dg *DotGitData) NewRepoFactory(
-	exclusions []string) (*ManagerFactory, error) {
+	exclusions []string, localFlag bool) (*ManagerFactory, error) {
 	modules, err := loadProtoModules(dg.AbsPath(), exclusions)
-	if err != nil {
-		return nil, err
-	}
-	err = dg.checkModules(modules)
+
 	if err != nil {
 		return nil, err
 	}
 
-	runner := git.NewQuiet(dg.AbsPath(), true)
+	if localFlag {
+		err = dg.checkModulesLocal(modules)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = dg.checkModules(modules)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	runner := git.NewQuiet(dg.AbsPath(), true, localFlag)
 	remoteName, err := runner.DetermineRemoteToUse()
 	if err != nil {
 		return nil, err
@@ -133,6 +162,19 @@ func (dg *DotGitData) checkModules(modules []*protoModule) error {
 					file, shortName, pm.PathToGoMod())
 			}
 		}
+	}
+	return nil
+}
+
+func (dg *DotGitData) checkModulesLocal(modules []*protoModule) error {
+	for _, pm := range modules {
+		file := filepath.Join(pm.PathToGoMod(), goModFile)
+		_, err := os.Stat(file)
+		if err != nil {
+			return fmt.Errorf(
+				"cannot find go.mod file in %q", file)
+		}
+		pm.ShortNameWithLocalFlag(dg.RepoPath())
 	}
 	return nil
 }

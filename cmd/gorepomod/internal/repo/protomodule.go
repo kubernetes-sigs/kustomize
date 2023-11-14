@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
@@ -28,13 +29,20 @@ func (pm *protoModule) FullPath() string {
 	return pm.mf.Module.Mod.Path
 }
 
+func (pm *protoModule) FullLocalPath() string {
+	localPrefix := "github.com/antoooks"
+	var pathToModule string = pm.mf.Module.Mod.Path
+	pathSlice := strings.Split(pathToModule, "/")
+	return localPrefix + "/" + strings.Join(pathSlice[1:], "/")
+}
+
 func (pm *protoModule) PathToGoMod() string {
 	return pm.pathToGoMod
 }
 
 // Represents the trailing version label in a module name.
 // See https://blog.golang.org/v2-go-modules
-var trailingVersionPattern = regexp.MustCompile("/v\\d+$")
+var trailingVersionPattern = regexp.MustCompile(`/v\\d+$`)
 
 func (pm *protoModule) ShortName(
 	repoImportPath string) misc.ModuleShortName {
@@ -45,6 +53,19 @@ func (pm *protoModule) ShortName(
 	p := fp[len(repoImportPath)+1:]
 	stripped := trailingVersionPattern.ReplaceAllString(p, "")
 	return misc.ModuleShortName(stripped)
+}
+
+func (pm *protoModule) ShortNameWithLocalFlag(
+	repoImportPath string) misc.ModuleShortName {
+	fp := pm.FullLocalPath()
+
+	if fp == repoImportPath {
+		return misc.ModuleAtTop
+	}
+	p := fp[len(repoImportPath)+1:]
+	stripped := trailingVersionPattern.ReplaceAllString(p, "")
+	pathSlice := strings.Split(stripped, "/")
+	return misc.ModuleShortName(strings.Join(pathSlice[3:], "/"))
 }
 
 func loadProtoModules(

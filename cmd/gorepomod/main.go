@@ -19,14 +19,19 @@ func loadRepoManager(args *arguments.Args) (*repo.Manager, error) {
 	if err != nil {
 		return nil, err
 	}
-	dg, err := repo.NewDotGitDataFromPath(path)
+	dg, err := repo.NewDotGitDataFromPath(path, args.LocalFlag())
 	if err != nil {
 		return nil, err
 	}
-	pr, err := dg.NewRepoFactory(args.Exclusions())
+	pr, err := dg.NewRepoFactory(args.Exclusions(), args.LocalFlag())
 	if err != nil {
 		return nil, err
 	}
+
+	if args.LocalFlag() {
+		return pr.NewRepoManagerWithLocalFlag(args.AllowedReplacements()), nil
+	}
+
 	return pr.NewRepoManager(args.AllowedReplacements()), nil
 }
 
@@ -74,11 +79,11 @@ func actualMain() error {
 	case arguments.UnPin:
 		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 	case arguments.Release:
-		return mgr.Release(targetModule, args.Bump(), args.DoIt())
+		return mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
 	case arguments.UnRelease:
-		return mgr.UnRelease(targetModule, args.DoIt())
+		return mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
 	case arguments.Debug:
-		return mgr.Debug(targetModule, args.DoIt())
+		return mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
 	default:
 		return fmt.Errorf("cannot handle cmd %v", args.GetCommand())
 	}

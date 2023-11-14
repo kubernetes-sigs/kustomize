@@ -48,20 +48,22 @@ type Runner struct {
 	workDir string
 	// Run commands, or merely print commands.
 	doIt bool
+	// Indicate local execution to adapt with path.
+	localFlag bool
 	// Run commands, or merely print commands.
 	verbosity Verbosity
 }
 
-func NewLoud(wd string, doIt bool) *Runner {
-	return newRunner(wd, doIt, High)
+func NewLoud(wd string, doIt bool, localFlag bool) *Runner {
+	return newRunner(wd, doIt, High, localFlag)
 }
 
-func NewQuiet(wd string, doIt bool) *Runner {
-	return newRunner(wd, doIt, Low)
+func NewQuiet(wd string, doIt bool, localFlag bool) *Runner {
+	return newRunner(wd, doIt, Low, localFlag)
 }
 
-func newRunner(wd string, doIt bool, v Verbosity) *Runner {
-	return &Runner{workDir: wd, doIt: doIt, verbosity: v}
+func newRunner(wd string, doIt bool, v Verbosity, localFlag bool) *Runner {
+	return &Runner{workDir: wd, doIt: doIt, verbosity: v, localFlag: localFlag}
 }
 
 func (gr *Runner) comment(f string) {

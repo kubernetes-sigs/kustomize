@@ -113,8 +113,8 @@ func determineBranchAndTag(
 		string(m.ShortName()) + "/" + v.String()
 }
 
-func (mgr *Manager) Debug(_ misc.LaModule, doIt bool) error {
-	gr := git.NewLoud(mgr.AbsPath(), doIt)
+func (mgr *Manager) Debug(_ misc.LaModule, doIt bool, localFlag bool) error {
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 	return gr.Debug(mgr.remoteName)
 }
 
@@ -122,9 +122,8 @@ func (mgr *Manager) Debug(_ misc.LaModule, doIt bool) error {
 //
 // * All development happens in the branch named "master".
 // * Each minor release gets its own branch.
-//
 func (mgr *Manager) Release(
-	target misc.LaModule, bump semver.SvBump, doIt bool) error {
+	target misc.LaModule, bump semver.SvBump, doIt bool, localFlag bool) error {
 
 	if reps := target.GetDisallowedReplacements(
 		mgr.allowedReplacements); len(reps) > 0 {
@@ -145,7 +144,7 @@ func (mgr *Manager) Release(
 			newVersion, target.VersionRemote())
 	}
 
-	gr := git.NewLoud(mgr.AbsPath(), doIt)
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
 	relBranch, relTag := determineBranchAndTag(target, newVersion)
 
@@ -189,14 +188,14 @@ func (mgr *Manager) Release(
 	return nil
 }
 
-func (mgr *Manager) UnRelease(target misc.LaModule, doIt bool) error {
+func (mgr *Manager) UnRelease(target misc.LaModule, doIt bool, localFlag bool) error {
 	fmt.Printf(
 		"Unreleasing %s/%s\n",
 		target.ShortName(), target.VersionRemote())
 
 	_, tag := determineBranchAndTag(target, target.VersionRemote())
 
-	gr := git.NewLoud(mgr.AbsPath(), doIt)
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
 	if err := gr.DeleteTagFromRemote(mgr.remoteName, tag); err != nil {
 		return err
