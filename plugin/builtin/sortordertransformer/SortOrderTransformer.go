@@ -167,6 +167,7 @@ func gvkLessThan(gvk1, gvk2 resid.Gvk, typeOrders map[string]int) bool {
 		return legacyGVKSortString(gvk1) > legacyGVKSortString(gvk2)
 	}
 	return legacyGVKSortString(gvk1) < legacyGVKSortString(gvk)
+}
 
 // legacyGVKSortString returns a string representation of given GVK used for
 // stable sorting.
