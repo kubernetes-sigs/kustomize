@@ -166,7 +166,7 @@ func gvkLessThan(gvk1, gvk2 resid.Gvk, typeOrders map[string]int) bool {
 	if (gvk1.Kind == types.NamespaceKind && gvk2.Kind == types.NamespaceKind) && (gvk1.Group == "" || gvk2.Group == "") {
 		return legacyGVKSortString(gvk1) > legacyGVKSortString(gvk2)
 	}
-	return legacyGVKSortString(gvk1) < legacyGVKSortString(gvk)
+	return legacyGVKSortString(gvk1) < legacyGVKSortString(gvk2)
 }
 
 // legacyGVKSortString returns a string representation of given GVK used for
