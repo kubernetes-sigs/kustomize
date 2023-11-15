@@ -34,6 +34,7 @@ linters:
     - golint
     - maintidx
     - nosnakecase
+    - testpackage # it's better to keep tests in the same package for now because kustomize does open box testing
 
 linters-settings:
   dupl:
