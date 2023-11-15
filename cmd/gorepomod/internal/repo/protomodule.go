@@ -42,7 +42,7 @@ func (pm *protoModule) PathToGoMod() string {
 
 // Represents the trailing version label in a module name.
 // See https://blog.golang.org/v2-go-modules
-var trailingVersionPattern = regexp.MustCompile(`/v\\d+$`)
+var trailingVersionPattern = regexp.MustCompile("/v\\d+$")
 
 func (pm *protoModule) ShortName(
 	repoImportPath string) misc.ModuleShortName {
