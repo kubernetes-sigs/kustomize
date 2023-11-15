@@ -86,6 +86,58 @@ func TestGlobPatternsWithLoaderRemoteFile(t *testing.T) {
 	require.Equal(t, invalidURL, resources[0], "incorrect resources")
 }
 
+func TestNamespaceEqual(t *testing.T) {
+	testCases := []struct {
+		name       string
+		namespace1 string
+		namespace2 string
+		want       func(require.TestingT, bool, ...interface{})
+	}{
+		{
+			name:       "succeeds when namespaces are the same",
+			namespace1: "ns1",
+			namespace2: "ns1",
+			want:       require.True,
+		},
+		{
+			name:       "succeeds when namespaces are default and empty string",
+			namespace1: "",
+			namespace2: DefaultNamespace,
+			want:       require.True,
+		},
+		{
+			name:       "succeeds when namespaces are empty string and default",
+			namespace1: DefaultNamespace,
+			namespace2: "",
+			want:       require.True,
+		},
+		{
+			name:       "fails when namespaces are not the same",
+			namespace1: "ns1",
+			namespace2: "ns2",
+			want:       require.False,
+		},
+		{
+			name:       "fails when one is empty and other is different from default",
+			namespace1: "",
+			namespace2: "ns1",
+			want:       require.False,
+		},
+		{
+			name:       "fails when one is different from default and other is empty",
+			namespace1: "ns1",
+			namespace2: "",
+			want:       require.False,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.want(t, NamespaceEqual(tc.namespace1, tc.namespace2))
+		})
+	}
+}
+
 type fakeLoader struct {
 	path string
 }
