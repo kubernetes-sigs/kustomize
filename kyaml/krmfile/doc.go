@@ -5,15 +5,15 @@
 //
 // Example Krmfile
 //
-//    apiVersion: config.k8s.io/v1alpha1
-//    kind: Krmfile
-//    openAPI:
-//      definitions:
-//        io.k8s.cli.setters.replicas:
-//          x-k8s-cli:
-//            setter:
-//              name: replicas
-//              value: "3"
-//              setBy: me
-//          description: "hello world"
+//	apiVersion: config.k8s.io/v1alpha1
+//	kind: Krmfile
+//	openAPI:
+//	  definitions:
+//	    io.k8s.cli.setters.replicas:
+//	      x-k8s-cli:
+//	        setter:
+//	          name: replicas
+//	          value: "3"
+//	          setBy: me
+//	      description: "hello world"
 package krmfile

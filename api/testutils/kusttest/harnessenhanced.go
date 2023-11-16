@@ -220,7 +220,7 @@ func (th *HarnessEnhanced) RunTransformerFromResMap(
 		th.t.Fatalf("Err: %v", err)
 	}
 	g, err := th.pl.LoadTransformer(
-		th.ldr, valtest_test.MakeFakeValidator(), transConfig)
+		th.ldr, valtest_test.MakeFakeValidator(), transConfig, nil)
 	if err != nil {
 		return nil, err
 	}

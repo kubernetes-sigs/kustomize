@@ -1,3 +1,4 @@
+//go:build notravis
 // +build notravis
 
 // Copyright 2019 The Kubernetes Authors.

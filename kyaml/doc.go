@@ -4,17 +4,19 @@
 // Package kyaml contains libraries for reading and writing Kubernetes Resource configuration
 // as yaml.
 //
-// Resources
+// # Resources
 //
 // Individual Resources are manipulated using the yaml package.
-//  import (
-//      "sigs.k8s.io/kustomize/kyaml/yaml"
-//  )
 //
-// Collections of Resources
+//	import (
+//	    "sigs.k8s.io/kustomize/kyaml/yaml"
+//	)
+//
+// # Collections of Resources
 //
 // Collections of Resources are manipulated using the kio package.
-//  import (
-//      "sigs.k8s.io/kustomize/kyaml/kio"
-//  )
+//
+//	import (
+//	    "sigs.k8s.io/kustomize/kyaml/kio"
+//	)
 package kyaml

@@ -18,7 +18,6 @@
 //		AdditionalSchemas: parser.SchemaFiles("path/to/crd-schemas"),
 //	}
 //
-//
 // All the parser in this file are compatible with embed.FS filesystems. To load from an embed.FS
 // instead of local disk, use `.FromFS`. For example, if you embed filesystems as follows:
 //

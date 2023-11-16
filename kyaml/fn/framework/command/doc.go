@@ -7,64 +7,64 @@
 // Configuration Functions Specification (e.g. Kustomize generators or transformers):
 // https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 //
-// Example standalone usage
+// # Example standalone usage
 //
 // Function template input:
 //
-//    # config.yaml -- this is the input to the template
-//    apiVersion: example.com/v1alpha1
-//    kind: Example
-//    Key: a
-//    Value: b
+//	# config.yaml -- this is the input to the template
+//	apiVersion: example.com/v1alpha1
+//	kind: Example
+//	Key: a
+//	Value: b
 //
 // Additional function inputs:
 //
-//    # patch.yaml -- this will be applied as a patch
-//    apiVersion: apps/v1
-//    kind: Deployment
-//    metadata:
-//      name: foo
-//      namespace: default
-//      annotations:
-//        patch-key: patch-value
+//	# patch.yaml -- this will be applied as a patch
+//	apiVersion: apps/v1
+//	kind: Deployment
+//	metadata:
+//	  name: foo
+//	  namespace: default
+//	  annotations:
+//	    patch-key: patch-value
 //
 // Manually run the function:
 //
-//    # build the function
-//    $ go build example-fn/
+//	# build the function
+//	$ go build example-fn/
 //
-//    # run the function
-//    $ ./example-fn config.yaml patch.yaml
+//	# run the function
+//	$ ./example-fn config.yaml patch.yaml
 //
 // Go implementation
 //
-//   // example-fn/main.go
-//	func main() {
-//		// Define the template used to generate resources
-//		p := framework.TemplateProcessor{
-//			MergeResources: true, // apply inputs as patches to the template output
-//			TemplateData: new(struct {
-//				Key   string `json:"key" yaml:"key"`
-//				Value string `json:"value" yaml:"value"`
-//			}),
-//			ResourceTemplates: []framework.ResourceTemplate{{
-//				Templates: framework.StringTemplates(`
-//	  apiVersion: apps/v1
-//	  kind: Deployment
-//	  metadata:
-//		name: foo
-//		namespace: default
-//		annotations:
-//		  {{ .Key }}: {{ .Value }}
-//	  `)}},
-//		}
+//	  // example-fn/main.go
+//		func main() {
+//			// Define the template used to generate resources
+//			p := framework.TemplateProcessor{
+//				MergeResources: true, // apply inputs as patches to the template output
+//				TemplateData: new(struct {
+//					Key   string `json:"key" yaml:"key"`
+//					Value string `json:"value" yaml:"value"`
+//				}),
+//				ResourceTemplates: []framework.ResourceTemplate{{
+//					Templates: framework.StringTemplates(`
+//		  apiVersion: apps/v1
+//		  kind: Deployment
+//		  metadata:
+//			name: foo
+//			namespace: default
+//			annotations:
+//			  {{ .Key }}: {{ .Value }}
+//		  `)}},
+//			}
 //
-//		// Run the command
-//		if err := command.Build(p, command.StandaloneEnabled, true).Execute(); err != nil {
-//			fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
-//			os.Exit(1)
+//			// Run the command
+//			if err := command.Build(p, command.StandaloneEnabled, true).Execute(); err != nil {
+//				fmt.Fprintf(cmd.ErrOrStderr(), "%v\n", err)
+//				os.Exit(1)
+//			}
 //		}
-//	}
 //
 // Example function implementation using command.Build with flag input
 //

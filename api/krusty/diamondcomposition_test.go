@@ -116,12 +116,11 @@ patchesStrategicMerge:
 // of it, without using any of the `namePrefix`, `nameSuffix` or `namespace`
 // kustomization keywords.
 //
-//            composite
-//          /     |     \
-//       probe   dns  restart
-//          \     |     /
-//              base
-//
+//	     composite
+//	   /     |     \
+//	probe   dns  restart
+//	   \     |     /
+//	       base
 func TestIssue1251_CompositeDiamond_Failure(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	writeDeploymentBase(th)
@@ -282,7 +281,9 @@ spec:
 `
 
 // This test does what
-//    TestIssue1251_Patches_ProdVsDev_Failure
+//
+//	TestIssue1251_Patches_ProdVsDev_Failure
+//
 // failed to do, because this test does the equivalent
 // os specifying `--load_restrictor none` on the build.
 //

@@ -1,3 +1,4 @@
+//go:build notravis
 // +build notravis
 
 // Copyright 2019 The Kubernetes Authors.
@@ -19,7 +20,9 @@ import (
 // applied to all its resources.
 //
 // The helm chart used is downloaded from
-//   https://github.com/helm/charts/tree/master/stable/minecraft
+//
+//	https://github.com/helm/charts/tree/master/stable/minecraft
+//
 // with each test run, so it's a bit brittle as that
 // chart could change obviously and break the test.
 //

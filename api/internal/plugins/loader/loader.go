@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
@@ -79,7 +80,8 @@ func (l *Loader) LoadGenerators(
 
 func (l *Loader) LoadGenerator(
 	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (resmap.Generator, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, v, res)
+	// TODO: enable accepting catalogs through generators in follow up.
+	c, err := l.loadAndConfigurePlugin(ldr, v, res, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -91,10 +93,10 @@ func (l *Loader) LoadGenerator(
 }
 
 func (l *Loader) LoadTransformers(
-	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]*resmap.TransformerWithProperties, error) {
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap, catalogs []framework.Catalog) ([]*resmap.TransformerWithProperties, error) {
 	var result []*resmap.TransformerWithProperties
 	for _, res := range rm.Resources() {
-		t, err := l.LoadTransformer(ldr, v, res)
+		t, err := l.LoadTransformer(ldr, v, res, catalogs)
 		if err != nil {
 			return nil, err
 		}
@@ -108,8 +110,8 @@ func (l *Loader) LoadTransformers(
 }
 
 func (l *Loader) LoadTransformer(
-	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (*resmap.TransformerWithProperties, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, v, res)
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource, catalogs []framework.Catalog) (*resmap.TransformerWithProperties, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, v, res, catalogs)
 	if err != nil {
 		return nil, err
 	}
@@ -183,11 +185,11 @@ func isBuiltinPlugin(res *resource.Resource) bool {
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader,
 	v ifc.Validator,
-	res *resource.Resource) (c resmap.Configurable, err error) {
+	res *resource.Resource, catalog []framework.Catalog) (c resmap.Configurable, err error) {
 	if isBuiltinPlugin(res) {
 		switch l.pc.BpLoadingOptions {
 		case types.BploLoadFromFileSys:
-			c, err = l.loadPlugin(res)
+			c, err = l.loadPlugin(res, catalog)
 		case types.BploUseStaticallyLinked:
 			// Instead of looking for and loading a .so file,
 			// instantiate the plugin from a generated factory
@@ -202,7 +204,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	} else {
 		switch l.pc.PluginRestrictions {
 		case types.PluginRestrictionsNone:
-			c, err = l.loadPlugin(res)
+			c, err = l.loadPlugin(res, catalog)
 		case types.PluginRestrictionsBuiltinsOnly:
 			err = types.NewErrOnlyBuiltinPluginsAllowed(res.OrgId().Kind)
 		default:
@@ -237,8 +239,8 @@ func (l *Loader) makeBuiltinPlugin(r resid.Gvk) (resmap.Configurable, error) {
 	return nil, errors.Errorf("unable to load builtin %s", r)
 }
 
-func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error) {
-	spec, err := fnplugin.GetFunctionSpec(res)
+func (l *Loader) loadPlugin(res *resource.Resource, catalog []framework.Catalog) (resmap.Configurable, error) {
+	spec, err := fnplugin.GetFunctionSpec(res, catalog)
 	if err != nil {
 		return nil, fmt.Errorf("loader: %w", err)
 	}
@@ -254,6 +256,7 @@ func (l *Loader) loadPlugin(res *resource.Resource) (resmap.Configurable, error)
 					"mount paths must be under the current kustomization directory", res.OrgId(), mount.Src)
 			}
 		}
+		l.pc.FnpLoadingOptions.Catalogs = catalog
 		return fnplugin.NewFnPlugin(&l.pc.FnpLoadingOptions), nil
 	}
 	return l.loadExecOrGoPlugin(res.OrgId())

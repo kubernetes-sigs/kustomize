@@ -3,16 +3,18 @@
 
 package types
 
+import "sigs.k8s.io/kustomize/kyaml/fn/framework"
+
 // Some plugin classes
-// - builtin: plugins defined in the kustomize repo.
-//   May be freely used and re-configured.
-// - local: plugins that aren't builtin but are
-//   locally defined (presumably by the user), meaning
-//   the kustomization refers to them via a relative
-//   file path, not a URL.
-// - remote: require a build-time download to obtain.
-//   Unadvised, unless one controls the
-//   serving site.
+//   - builtin: plugins defined in the kustomize repo.
+//     May be freely used and re-configured.
+//   - local: plugins that aren't builtin but are
+//     locally defined (presumably by the user), meaning
+//     the kustomization refers to them via a relative
+//     file path, not a URL.
+//   - remote: require a build-time download to obtain.
+//     Unadvised, unless one controls the
+//     serving site.
 //
 //go:generate stringer -type=PluginRestrictions
 type PluginRestrictions int
@@ -28,6 +30,7 @@ const (
 )
 
 // BuiltinPluginLoadingOptions distinguish ways in which builtin plugins are used.
+//
 //go:generate stringer -type=BuiltinPluginLoadingOptions
 type BuiltinPluginLoadingOptions int
 
@@ -59,4 +62,5 @@ type FnPluginLoadingOptions struct {
 	AsCurrentUser bool
 	// Run in this working directory
 	WorkingDir string
+	Catalogs   []framework.Catalog
 }

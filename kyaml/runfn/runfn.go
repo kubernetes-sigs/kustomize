@@ -16,6 +16,7 @@ import (
 	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -104,6 +105,8 @@ type RunFns struct {
 
 	// WorkingDir specifies which working directory an exec function should run in.
 	WorkingDir string
+
+	Catalogs []framework.Catalog
 }
 
 // Execute runs the command
@@ -308,10 +311,27 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 	var fltrs []kio.Filter
 	for i := range fns {
 		api := fns[i]
-		spec, err := runtimeutil.GetFunctionSpec(api)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
+
+		var (
+			spec *runtimeutil.FunctionSpec
+			err  error
+		)
+
+		if len(r.Catalogs) > 0 {
+			spec, err = framework.FindMatchingFunctionSpec(api, r.Catalogs)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get FunctionSpec from catalogs: %w", err)
+			}
 		}
+
+		// if runtime spec cannot be fetched from the catalog then check the annotations.
+		if spec == nil {
+			spec, err = runtimeutil.GetFunctionSpec(api)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
+			}
+		}
+
 		if spec == nil {
 			// resource doesn't have function spec
 			continue

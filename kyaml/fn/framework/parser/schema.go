@@ -21,18 +21,17 @@ const (
 //
 // This is a helper for use with framework.TemplateProcessor#AdditionalSchemas. Example:
 //
-//	processor := framework.TemplateProcessor{
-//		//...
-//		AdditionalSchemas: parser.SchemaStrings(`
-//        {
-//          "definitions": {
-//            "com.example.v1.Foo": {
-//               ...
-//            }
-//          }
-//        }
-//		`),
-//
+//		processor := framework.TemplateProcessor{
+//			//...
+//			AdditionalSchemas: parser.SchemaStrings(`
+//	       {
+//	         "definitions": {
+//	           "com.example.v1.Foo": {
+//	              ...
+//	           }
+//	         }
+//	       }
+//			`),
 func SchemaStrings(data ...string) framework.SchemaParser {
 	return framework.SchemaParserFunc(func() ([]*spec.Definitions, error) {
 		var defs []*spec.Definitions
@@ -51,6 +50,7 @@ func SchemaStrings(data ...string) framework.SchemaParser {
 
 // SchemaFiles returns a SchemaParser that will parse the schemas in the given files.
 // This is a helper for use with framework.TemplateProcessor#AdditionalSchemas.
+//
 //	processor := framework.TemplateProcessor{
 //		//...
 //		AdditionalSchemas: parser.SchemaFiles("path/to/crd-schemas", "path/to/special-schema.json),

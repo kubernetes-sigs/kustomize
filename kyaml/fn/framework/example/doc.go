@@ -7,13 +7,13 @@
 //
 // To execute the function, run:
 //
-//   $ cat testdata/basic/input.yaml | go run ./main.go --value=foo
+//	$ cat testdata/basic/input.yaml | go run ./main.go --value=foo
 //
 // Alternatively, you can provide the value via a config file instead of a flag:
 //
-//   $ go run ./main.go testdata/basic/config.yaml testdata/basic/input.yaml
+//	$ go run ./main.go testdata/basic/config.yaml testdata/basic/input.yaml
 //
 // To generate the Dockerfile for the function image run:
 //
-//   $ go run ./main.go gen ./
+//	$ go run ./main.go gen ./
 package main

@@ -4,10 +4,13 @@
 package target
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
@@ -222,6 +225,11 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 		return nil, errors.WrapPrefixf(
 			err, "merging CRDs %v", crdTc)
 	}
+	catalogs, err := LoadCatalogFile(kt.ldr, kt.kustomization.Catalogs)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshalling catalogs %w", err)
+	}
+
 	err = kt.runGenerators(ra)
 	if err != nil {
 		return nil, err
@@ -234,11 +242,11 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 		return nil, errors.WrapPrefixf(err, "accumulating components")
 	}
 
-	err = kt.runTransformers(ra)
+	err = kt.runTransformers(ra, catalogs)
 	if err != nil {
 		return nil, err
 	}
-	err = kt.runValidators(ra)
+	err = kt.runValidators(ra, catalogs)
 	if err != nil {
 		return nil, err
 	}
@@ -248,6 +256,37 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 			err, "merging vars %v", kt.kustomization.Vars)
 	}
 	return ra, nil
+}
+
+// TODO: add details on whether this is a trusted catalog or not.
+func LoadCatalogFile(ldr ifc.Loader, paths []string) ([]framework.Catalog, error) {
+	catalogs := []framework.Catalog{}
+
+	if len(paths) == 0 {
+		return catalogs, nil
+	}
+
+	for _, path := range paths {
+		content, err := ldr.Load(path)
+		if err != nil {
+			return nil, errors.WrapPrefixf(err, "unable to load catalog path")
+		}
+
+		j, err := yaml.YAMLToJSON(content)
+		if err != nil {
+			return nil, errors.WrapPrefixf(err, "invalid catalog")
+		}
+
+		dec := json.NewDecoder(bytes.NewReader(j))
+		dec.DisallowUnknownFields()
+
+		var c framework.Catalog
+		if err := dec.Decode(&c); err != nil {
+			return nil, errors.WrapPrefixf(err, "unable to find catalog")
+		}
+		catalogs = append(catalogs, c)
+	}
+	return catalogs, nil
 }
 
 // IgnoreLocal drops the local resource by checking the annotation "config.kubernetes.io/local-config".
@@ -327,7 +366,7 @@ func (kt *KustTarget) configureExternalGenerators() (
 	return kt.pLdr.LoadGenerators(kt.ldr, kt.validator, ra.ResMap())
 }
 
-func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
+func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator, catalogs []framework.Catalog) error {
 	var r []*resmap.TransformerWithProperties
 	tConfig := ra.GetTransformerConfig()
 	lts, err := kt.configureBuiltinTransformers(tConfig)
@@ -335,7 +374,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	r = append(r, lts...)
-	lts, err = kt.configureExternalTransformers(kt.kustomization.Transformers)
+	lts, err = kt.configureExternalTransformers(kt.kustomization.Transformers, catalogs)
 	if err != nil {
 		return err
 	}
@@ -343,7 +382,7 @@ func (kt *KustTarget) runTransformers(ra *accumulator.ResAccumulator) error {
 	return ra.Transform(newMultiTransformer(r))
 }
 
-func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]*resmap.TransformerWithProperties, error) {
+func (kt *KustTarget) configureExternalTransformers(transformers []string, catalogs []framework.Catalog) ([]*resmap.TransformerWithProperties, error) {
 	ra := accumulator.MakeEmptyAccumulator()
 	var transformerPaths []string
 	for _, p := range transformers {
@@ -371,11 +410,16 @@ func (kt *KustTarget) configureExternalTransformers(transformers []string) ([]*r
 	if err != nil {
 		return nil, err
 	}
-	return kt.pLdr.LoadTransformers(kt.ldr, kt.validator, ra.ResMap())
+	resMap, err := kt.pLdr.LoadTransformers(kt.ldr, kt.validator, ra.ResMap(), catalogs)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "loading transformer")
+	}
+	return resMap, nil
 }
 
-func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator) error {
-	validators, err := kt.configureExternalTransformers(kt.kustomization.Validators)
+// TODO(Varsha): Enable support for catalogs while running transformers.
+func (kt *KustTarget) runValidators(ra *accumulator.ResAccumulator, _ []framework.Catalog) error {
+	validators, err := kt.configureExternalTransformers(kt.kustomization.Validators, nil)
 	if err != nil {
 		return err
 	}

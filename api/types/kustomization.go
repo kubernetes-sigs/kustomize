@@ -19,6 +19,8 @@ const (
 	KustomizationKind           = "Kustomization"
 	ComponentVersion            = "kustomize.config.k8s.io/v1alpha1"
 	ComponentKind               = "Component"
+	CatalogKind                 = "Catalog"
+	CatalogVersion              = "config.kubernetes.io/v1alpha1"
 	MetadataNamespacePath       = "metadata/namespace"
 	MetadataNamespaceApiVersion = "v1"
 	MetadataNamePath            = "metadata/name"
@@ -173,6 +175,9 @@ type Kustomization struct {
 	// Transformers is a list of files containing transformers
 	Transformers []string `json:"transformers,omitempty" yaml:"transformers,omitempty"`
 
+	// Catalogs is a list of catalog files specifying krm functions
+	Catalogs []string `json:"catalogs,omitempty" yaml:"catalogs,omitempty"`
+
 	// Validators is a list of files containing validators
 	Validators []string `json:"validators,omitempty" yaml:"validators,omitempty"`
 
@@ -226,6 +231,8 @@ func (k *Kustomization) FixKustomization() {
 	if k.APIVersion == "" {
 		if k.Kind == ComponentKind {
 			k.APIVersion = ComponentVersion
+		} else if k.Kind == CatalogKind {
+			k.APIVersion = CatalogVersion
 		} else {
 			k.APIVersion = KustomizationVersion
 		}

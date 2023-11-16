@@ -599,7 +599,6 @@ func TestFormatInput_resources(t *testing.T) {
 	assert.Equal(t, expectedOutput.String(), s.String())
 }
 
-//
 func TestFormatInput_failMissingKind(t *testing.T) {
 	y := `
 spec:
