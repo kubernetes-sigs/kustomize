@@ -20,7 +20,7 @@ SecretGenerator generates [Secret] objects.
 
     List of metadata to generate Secrets.
 
-     _SecretArgs represents Secret metadata._
+     _SecretArgs represents metadata and options for Secret generation._
 
     {{< include "../included/secretargs.md" >}}
 

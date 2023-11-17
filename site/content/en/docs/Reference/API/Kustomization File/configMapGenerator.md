@@ -19,7 +19,7 @@ ConfigMapGenerator generates [ConfigMap] objects.
 
     List of metadata to generate ConfigMaps.
 
-    _ConfigMapArgs represents ConfigMap metadata._
+    _ConfigMapArgs represents metadata and options for ConfigMap generation._
 
     {{< include "../included/generatorargs.md" >}}
 
