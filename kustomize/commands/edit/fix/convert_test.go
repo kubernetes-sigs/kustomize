@@ -43,7 +43,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -119,7 +119,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -197,7 +197,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -276,7 +276,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -355,7 +355,7 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	err := cmd.RunE(cmd, nil)
@@ -412,8 +412,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -533,8 +533,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -657,8 +657,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -780,8 +780,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -910,8 +910,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -1023,8 +1023,8 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationOverlay)
-	fSys.WriteFile("base/pod.yaml", pod)
-	fSys.WriteFile("base/kustomization.yaml", kustomizationBase)
+	assert.NoError(t, fSys.WriteFile("base/pod.yaml", pod))
+	assert.NoError(t, fSys.WriteFile("base/kustomization.yaml", kustomizationBase))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -1104,7 +1104,7 @@ metadata:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	assert.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
 	assert.NoError(t, cmd.Flags().Set("vars", "true"))
 	assert.NoError(t, cmd.RunE(cmd, nil))
@@ -1141,5 +1141,76 @@ metadata:
   name: my-pod
   annotations:
     a.b.c: SOME_SECRET_NAME_PLACEHOLDER
+`, string(content))
+}
+
+func TestFixVarsWithPatch(t *testing.T) {
+	kustomization := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patchesStrategicMerge:
+  - patch.yaml
+
+vars:
+  - name: CERTIFICATE_NAMESPACE
+    objref:
+      name: system
+    fieldref:
+      fieldpath: metadata.namespace
+`)
+	patch := []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: $(CERTIFICATE_NAMESPACE)
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
+	assert.NoError(t, fSys.WriteFile("patch.yaml", patch))
+	cmd := NewCmdFix(fSys, os.Stdout)
+	assert.NoError(t, cmd.Flags().Set("vars", "true"))
+	assert.NoError(t, cmd.RunE(cmd, nil))
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	assert.NoError(t, err)
+
+	assert.Equal(t, `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+
+patches:
+- path: patch.yaml
+replacements:
+- source:
+    fieldPath: metadata.namespace
+    name: system
+  targets:
+  - fieldPaths:
+    - spec.template.spec.containers.0.name
+    select:
+      namespace: system
+`, string(content))
+
+	content, err = fSys.ReadFile("patch.yaml")
+	assert.NoError(t, err)
+	assert.Equal(t, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: CERTIFICATE_NAMESPACE_PLACEHOLDER
 `, string(content))
 }
