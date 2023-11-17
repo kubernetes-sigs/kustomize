@@ -4,7 +4,7 @@ linkTitle: "kustomization"
 type: docs
 weight: 1
 description: >
-    Kustomiation contains information to generate customized resources.
+    Kustomization contains information to generate customized resources.
 ---
 
 `apiVersion: kustomize.config.k8s.io/v1beta1`
@@ -15,107 +15,107 @@ description: >
 
 * **apiVersion**: kustomize.config.k8s.io/v1beta1
 * **kind**: Kustomization
-* **OpenAPI** (map[string]string)
+* **openAPI** (map[string]string)
 
-	OpenAPI contains information about what kubernetes schema to use.
+	[OpenAPI]({{< ref "openapi.md" >}}) contains information about what kubernetes schema to use.
 
-* **NamePrefix** (string)
+* **namePrefix** (string)
 
-	NamePrefix will prefix the names of all resources mentioned in the kustomization file including generated configmaps and secrets.
+	[NamePrefix]({{< ref "namePrefix.md" >}}) will prefix the names of all resources mentioned in the kustomization file including generated configmaps and secrets.
 
-* **NameSuffix** (string)
+* **nameSuffix** (string)
 
-	NameSuffix will suffix the names of all resources mentioned in the kustomization file including generated configmaps and secrets.
+	[NameSuffix]({{< ref "nameSuffix.md" >}}) will suffix the names of all resources mentioned in the kustomization file including generated configmaps and secrets.
 
-* **Namespace** (string)
+* **namespace** (string)
 
-	Namespace to add to all objects.
+	[Namespace]({{< ref "namespace.md" >}}) to add to all objects.
 
-* **CommonLabels** (map[string]string)
+* **commonLabels** (map[string]string)
 
-	CommonLabels to add to all objects and selectors.
+	[CommonLabels]({{< ref "commonLabels.md" >}}) to add to all objects and selectors.
 
-* **Labels** ([]Label)
+* **labels** ([][Label]({{< ref "labels.md" >}}))
 
 	Labels to add to all objects but not selectors.
 
 * **commonAnnotations** (map[string]string)
 
-	CommonAnnotations to add to all objects.
+	[CommonAnnotations]({{< ref "commonAnnotations.md" >}}) to add to all objects.
 
-* **PatchesStrategicMerge** ([]PatchStrategicMerge)
+* **patchesStrategicMerge** ([][PatchStrategicMerge]({{< ref "patchesStrategicMerge.md" >}}))
 
 	Deprecated: Use the Patches field instead, which provides a superset of the functionality of PatchesStrategicMerge.
 
-* **PatchesJson6902** ([]Patch)
+* **patchesJson6902** ([][Patch]({{< ref "patches.md" >}}))
 
-	Deprecated: Use the Patches field instead, which provides a superset of the functionality of JSONPatches. JSONPatches is a list of JSONPatch for applying JSON patch.
+	Deprecated: Use the Patches field instead, which provides a superset of the functionality of JSONPatches. [JSONPatches]({{< ref "patchesjson6902.md" >}}) is a list of JSONPatch for applying JSON patch.
 
-* **Patches** ([]Patch)
+* **patches** ([][Patch]({{< ref "patches.md" >}}))
 
 	Patches is a list of patches, where each one can be either a Strategic Merge Patch or a JSON patch. Each patch can be applied to multiple target objects.
 
-* **Images** ([]Image)
+* **images** ([][Image]({{< ref "images.md" >}}))
 
 	Images is a list of (image name, new name, new tag or digest) for changing image names, tags or digests. This can also be achieved with a patch, but this operator is simpler to specify.
 
-* **ImageTags** ([]Image)
+* **imageTags** ([][Image]({{< ref "images.md" >}}))
 
 	Deprecated: Use the Images field instead.
 
-* **Replacements** ([]ReplacementField)
+* **replacements** ([][ReplacementField]({{< ref "replacements.md" >}}))
 
 	Replacements is a list of replacements, which will copy nodes from a specified source to N specified targets.
 
-* **Replicas** ([]Replica)
+* **replicas** ([][Replica]({{< ref "replicas.md" >}}))
 
 	Replicas is a list of {resourcename, count} that allows for simpler replica specification. This can also be done with a patch.
 
-* **Vars** ([]Var)
+* **vars** ([][Var]({{< ref "vars.md" >}}))
 
 	Deprecated: Vars will be removed in future release. Migrate to Replacements instead. Vars allow things modified by kustomize to be injected into a kubernetes object specification.
 
-* **SortOptions** (SortOptions)
+* **sortOptions** ([sortOptions]({{< ref "sortOptions.md" >}}))
 
 	SortOptions change the order that kustomize outputs resources.
 
-* **Resources** ([]string)
+* **resources** ([]string)
 
-	Resources specifies relative paths to files holding YAML representations of kubernetes API objects, or specifications of other kustomizations via relative paths, absolute paths, or URLs.
+	[Resources]({{< ref "resources.md" >}}) specifies relative paths to files holding YAML representations of kubernetes API objects, or specifications of other kustomizations via relative paths, absolute paths, or URLs.
 
-* **Components** ([]string)
+* **components** ([]string)
 
-	Components specifies relative paths to specifications of other Components via relative paths, absolute paths, or URLs.
+	[Components]({{< ref "components.md" >}}) specifies relative paths to specifications of other Components via relative paths, absolute paths, or URLs.
 
-* **Crds** ([]string)
+* **crds** ([]string)
 
-	Crds specifies relative paths to Custom Resource Definition files. This allows custom resources to be recognized as operands, making it possible to add them to the Resources list. CRDs themselves are not modified.
+	[Crds]({{< ref "crds.md" >}}) specifies relative paths to Custom Resource Definition files. This allows custom resources to be recognized as operands, making it possible to add them to the Resources list. CRDs themselves are not modified.
 
 * **bases** ([]string)
 
-	Deprecated: Anything that would have been specified here should be specified in the Resources field instead.
+	Deprecated: Anything that would have been specified here should be specified in the Resources field instead. [Bases]({{< ref "bases.md" >}}) specifies relative paths to files holding YAML representations of Kubernetes API objects.
 
-* **configMapGenerator** ([]ConfigMapArgs)
+* **configMapGenerator** ([][ConfigMapArgs]({{< ref "configMapGenerator.md#configmapargs" >}}))
 
-	ConfigMapGenerator is a list of configmaps to generate from local data (one configMap per list item). The resulting resource is a normal operand, subject to name prefixing, patching, etc.  By default, the name of the map will have a suffix hash generated from its contents.
+	[ConfigMapGenerator]({{< ref "configMapGenerator.md" >}}) is a list of configmaps to generate from local data (one configMap per list item). The resulting resource is a normal operand, subject to name prefixing, patching, etc.  By default, the name of the map will have a suffix hash generated from its contents.
 
-* **secretGenerator** ([]SecretArgs)
+* **secretGenerator** ([][SecretArgs]({{< ref "secretGenerator.md#secretargs" >}}))
 
-	SecretGenerator is a list of secrets to generate from local data (one secret per list item). The resulting resource is a normal operand, subject to name prefixing, patching, etc.  By default, the name of the map will have a suffix hash generated from its contents.
+	[SecretGenerator]({{< ref "secretGenerator.md" >}}) is a list of secrets to generate from local data (one secret per list item). The resulting resource is a normal operand, subject to name prefixing, patching, etc.  By default, the name of the map will have a suffix hash generated from its contents.
 
 * **helmGlobals** (HelmGlobals)
 
 	HelmGlobals contains helm configuration that isn't chart specific.
 
-* **helmCharts** ([]HelmChart)
+* **helmCharts** ([][HelmChart]({{< ref "helmCharts.md" >}}))
 
 	HelmCharts is a list of helm chart configuration instances.
 
 * **helmChartInflationGenerator** ([]HelmChartArgs)
 
-	Deprecated: Auto-converted to HelmGlobals and HelmCharts. HelmChartInflationGenerator is a list of helm chart configurations.
+	Deprecated: Auto-converted to HelmGlobals and [HelmCharts]({{< ref "helmCharts.md" >}}). HelmChartInflationGenerator is a list of helm chart configurations.
 
-* **generatorOptions** (GeneratorOptions)
+* **generatorOptions** ([GeneratorOptions]({{< ref "../Common%20Definitions/GeneratorOptions.md" >}}))
 
 	GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 
@@ -137,4 +137,4 @@ description: >
 
 * **buildMetadata** ([]string)
 
-	BuildMetadata is a list of strings used to toggle different build options
+	[BuildMetadata]({{< ref "buildMetadata.md" >}}) is a list of strings used to toggle different build options
