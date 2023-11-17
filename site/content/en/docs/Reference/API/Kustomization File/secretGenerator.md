@@ -16,13 +16,13 @@ SecretGenerator generates [Secret] objects.
 
 ---
 
-* **secretGenerator** ([][ConfigMapArgs](#configmapargs))
+* **secretGenerator** ([][SecaretArgs](#secretargs))
 
     List of metadata to generate Secrets.
 
 
 ### SecretArgs
-ConfigMapArgs is metadata used to generate a ConfigMap.
+SecretArgs is metadata used to generate a Secret.
 
 ---
 
