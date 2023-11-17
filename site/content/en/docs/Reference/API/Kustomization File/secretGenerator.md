@@ -16,7 +16,7 @@ SecretGenerator generates [Secret] objects.
 
 ---
 
-* **secretGenerator** ([][SecaretArgs](#secretargs))
+* **secretGenerator** ([][SecretArgs](#secretargs))
 
     List of metadata to generate Secrets.
 

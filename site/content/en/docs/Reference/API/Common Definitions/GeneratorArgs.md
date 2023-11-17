@@ -26,9 +26,9 @@ GeneratorArgs contains arguments common to generators.
 
     Behavior of generated resource, must be one of:
 
-    * **create**: Create new ConfigMap
-    * **replace**: Replace existing ConfigMap
-    * **merge**: Merge with existing ConfigMap
+    * **create**: Create new resource
+    * **replace**: Replace existing resource
+    * **merge**: Merge with existing resource
 
 * **literals** ([]string), optional
 
@@ -36,7 +36,7 @@ GeneratorArgs contains arguments common to generators.
 
 * **files** ([]string), optional
 
-    List of files paths to use in creating a list of key value pairs. A source should be in the form [{key}=]{path}. If the `key=` argument is not provided, the key is the path's basename. If the `key=` argument is provided, it becomes the key. The value is the file contents. Specifying a directory will iterate each named file in the directory whose basename is a valid ConfigMap key.
+    List of files paths to use in creating a list of key value pairs. A source should be in the form [{key}=]{path}. If the `key=` argument is not provided, the key is the path's basename. If the `key=` argument is provided, it becomes the key. The value is the file contents. Specifying a directory will iterate each named file in the directory whose basename is a valid resource key.
 
 * **envs** ([]string), optional
 
