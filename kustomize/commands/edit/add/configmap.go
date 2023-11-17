@@ -97,7 +97,7 @@ func runEditAddConfigMap(
 		return fmt.Errorf("failed to expand file source: %w", err)
 	}
 
-	err = flags.Validate(args)
+	err = flags.ValidateAdd(args)
 	if err != nil {
 		return fmt.Errorf("failed to validate flags: %w", err)
 	}
