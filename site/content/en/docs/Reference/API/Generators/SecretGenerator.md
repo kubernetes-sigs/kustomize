@@ -8,7 +8,7 @@ description: >
 ---
 
 ## SecretGenerator
-SeretGenerator generates [Secret] objects.
+SecretGenerator generates [Secret] objects.
 
 ---
 
