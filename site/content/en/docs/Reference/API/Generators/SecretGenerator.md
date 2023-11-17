@@ -18,10 +18,6 @@ SeretGenerator generates [Secret] objects.
 
   Standard object's metadata.
 
-{{< include "../included/generatorargs.md" >}}
-
-* **type** (string), optional
-
-    Type of the secret. Must be `Opaque` or `kubernetes.io/tls`. Defaults to `Opaque`.
+{{< include "../included/secretargs.md" >}}
 
 [Secret]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/secret-v1/

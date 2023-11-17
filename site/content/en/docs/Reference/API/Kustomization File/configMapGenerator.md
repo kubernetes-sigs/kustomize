@@ -15,19 +15,13 @@ ConfigMapGenerator generates [ConfigMap] objects.
 
 ---
 
-* **configMapGenerator** ([][ConfigMapArgs](#configmapargs))
+* **configMapGenerator** ([]ConfigMapArgs)
 
     List of metadata to generate ConfigMaps.
 
+    _ConfigMapArgs represents ConfigMap metadata._
 
-### ConfigMapArgs
-ConfigMapArgs is metadata used to generate a ConfigMap.
-
----
-
-* **GeneratorArgs** ([GeneratorArgs](/docs/reference/api/common-definitions/generatorargs/))
-
-    GeneratorArgs contains arguments common to generators.
+    {{< include "../included/generatorargs.md" >}}
 
 
 [Tasks section]: /docs/tasks/configmap_generator/

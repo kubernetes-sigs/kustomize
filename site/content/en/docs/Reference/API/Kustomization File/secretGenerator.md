@@ -16,23 +16,13 @@ SecretGenerator generates [Secret] objects.
 
 ---
 
-* **secretGenerator** ([][SecretArgs](#secretargs))
+* **secretGenerator** ([]SecretArgs)
 
     List of metadata to generate Secrets.
 
+     _SecretArgs represents Secret metadata._
 
-### SecretArgs
-SecretArgs is metadata used to generate a Secret.
-
----
-
-* **GeneratorArgs** ([GeneratorArgs](/docs/reference/api/common-definitions/generatorargs/))
-
-    GeneratorArgs contains arguments common to generators.
-
-* **type** (string), optional
-
-    Type of the secret. Must be `Opaque` or `kubernetes.io/tls`. Defaults to `Opaque`.
+    {{< include "../included/secretargs.md" >}}
 
 [Tasks section]: /docs/tasks/secret_generator/
 [Secret]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/secret-v1/
