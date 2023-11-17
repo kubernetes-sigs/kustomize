@@ -144,6 +144,64 @@ configMapGenerator:
 			args:              []string{"test-cm", "--namespace=test-ns", "--new-namespace=test-new-ns"},
 			expectedNamespace: "test-new-ns",
 		},
+		{
+			name: "successfully update namespace of target configmap with empty namespace in file and namespace specified in command",
+			input: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - test=value
+  - key1=val1
+  name: test-cm
+`,
+			args:              []string{"test-cm", "--namespace=default", "--new-namespace=test-new-ns"},
+			expectedNamespace: "test-new-ns",
+		},
+		{
+			name: "successfully update namespace of target configmap with default namespace and no namespace specified in command",
+			input: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - test=value
+  - key1=val1
+  name: test-cm
+  namespace: default
+`,
+			args:              []string{"test-cm", "--new-namespace=test-new-ns"},
+			expectedNamespace: "test-new-ns",
+		},
+		{
+			name: "successfully update literal source of target configmap with empty namespace in file and namespace specified in command",
+			input: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - test=value
+  - key1=val1
+  name: test-cm
+`,
+			args:             []string{"test-cm", "--namespace=default", "--from-literal=key1=val2"},
+			expectedLiterals: []string{"test=value", "key1=val2"},
+		},
+		{
+			name: "successfully update namespace of target configmap with default namespace and no namespace specified in command",
+			input: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - test=value
+  - key1=val1
+  name: test-cm
+  namespace: default
+`,
+			args:             []string{"test-cm", "--namespace=default", "--from-literal=key1=val2"},
+			expectedLiterals: []string{"test=value", "key1=val2"},
+		},
 	}
 
 	for _, tc := range testCases {

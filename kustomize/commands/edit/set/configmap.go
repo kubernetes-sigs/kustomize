@@ -140,7 +140,7 @@ func setConfigMap(
 // ConfigMap name. ConfigMap must exist for this command to be successful.
 func findConfigMapArgs(m *types.Kustomization, name, namespace string) (*types.ConfigMapArgs, error) {
 	cmIndex := slices.IndexFunc(m.ConfigMapGenerator, func(cmArgs types.ConfigMapArgs) bool {
-		return name == cmArgs.Name && namespace == cmArgs.Namespace
+		return name == cmArgs.Name && util.NamespaceEqual(namespace, cmArgs.Namespace)
 	})
 
 	if cmIndex == -1 {
