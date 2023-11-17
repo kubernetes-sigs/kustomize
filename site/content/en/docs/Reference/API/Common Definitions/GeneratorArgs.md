@@ -7,6 +7,13 @@ description: >
   GeneratorArgs contains arguments common to generators.
 ---
 
+`apiVersion: kustomize.config.k8s.io/v1beta1`
+
+## GeneratorArgs
+GeneratorArgs contains arguments common to generators.
+
+---
+
 * **name** (string), optional
 
     Name of the generated resource. A hash suffix will be added to the Name by default.
