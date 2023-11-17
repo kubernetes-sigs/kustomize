@@ -16,7 +16,7 @@ SeretGenerator generates [Secret] objects.
 * **kind**: SecretGenerator
 * **metadata** ([ObjectMeta](https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/object-meta/#ObjectMeta))
 
-  Standard object's metadata.
+  Kubernetes API object metadata.
 
 {{< include "../included/secretargs.md" >}}
 
