@@ -1,7 +1,7 @@
 // Copyright 2023 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package set_test
+package set
 
 import (
 	"testing"
@@ -10,7 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
 	"sigs.k8s.io/kustomize/api/provider"
-	. "sigs.k8s.io/kustomize/kustomize/v5/commands/edit/set"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -87,7 +86,7 @@ configMapGenerator:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cmd := NewCmdSetConfigMap(
+			cmd := newCmdSetConfigMap(
 				fSys,
 				kv.NewLoader(
 					loader.NewFileLoaderAtCwd(fSys),
@@ -149,7 +148,7 @@ configMapGenerator:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cmd := NewCmdSetConfigMap(
+			cmd := newCmdSetConfigMap(
 				fSys,
 				kv.NewLoader(
 					loader.NewFileLoaderAtCwd(fSys),

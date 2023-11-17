@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func NewCmdSetConfigMap(
+func newCmdSetConfigMap(
 	fSys filesys.FileSystem,
 	ldr ifc.KvLoader,
 	rf *resource.Factory,

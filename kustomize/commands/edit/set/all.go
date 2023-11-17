@@ -32,7 +32,7 @@ func NewCmdSet(
 	}
 
 	c.AddCommand(
-		NewCmdSetConfigMap(fSys, ldr, rf),
+		newCmdSetConfigMap(fSys, ldr, rf),
 		newCmdSetNamePrefix(fSys),
 		newCmdSetNameSuffix(fSys),
 		newCmdSetNamespace(fSys, v),
