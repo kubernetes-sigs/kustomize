@@ -115,7 +115,7 @@ description: >
 
 	Deprecated: Auto-converted to HelmGlobals and [HelmCharts]({{< ref "helmCharts.md" >}}). HelmChartInflationGenerator is a list of helm chart configurations.
 
-* **generatorOptions** ([GeneratorOptions]({{< ref "../Common%20Definitions/GeneratorOptions.md" >}}))
+* **generatorOptions** ([GeneratorOptions]({{< ref "generatorOptions.md" >}}))
 
 	GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 
