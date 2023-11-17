@@ -1,17 +1,14 @@
 ---
 title: "GeneratorArgs"
-linkTitle: "GeneratorAgs"
 weight: 2
 date: 2023-11-15
 description: >
   GeneratorArgs contains arguments common to generators.
----
-
-`apiVersion: kustomize.config.k8s.io/v1beta1`
-
-## GeneratorArgs
-GeneratorArgs contains arguments common to generators.
-
+headless: true
+_build:
+  list: never
+  render: never
+  publishResources: false
 ---
 
 * **name** (string), optional

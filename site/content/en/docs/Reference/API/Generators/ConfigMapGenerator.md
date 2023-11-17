@@ -18,8 +18,6 @@ ConfigMapGenerator generates [ConfigMap] objects.
 
   Standard object's metadata.
 
-* **generatorArgs** ([GeneratorArgs]({{< relref "../Common%20Definitions/GeneratorArgs.md" >}}))
-
-    GeneratorArgs contains arguments common to generators.
+{{< include "../included/generatorargs.md" >}}
 
 [ConfigMap]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/

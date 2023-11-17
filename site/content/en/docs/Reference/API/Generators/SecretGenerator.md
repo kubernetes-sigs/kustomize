@@ -18,9 +18,7 @@ SeretGenerator generates [Secret] objects.
 
   Standard object's metadata.
 
-* **generatorArgs** ([GeneratorArgs]({{< relref "../Common%20Definitions/GeneratorArgs.md" >}}))
-
-    GeneratorArgs contains arguments common to generators.
+{{< include "../included/generatorargs.md" >}}
 
 * **type** (string), optional
 
