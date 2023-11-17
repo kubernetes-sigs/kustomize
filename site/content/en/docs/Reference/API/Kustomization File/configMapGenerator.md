@@ -6,25 +6,22 @@ weight: 6
 description: >
     Generate ConfigMap objects.
 ---
-
-### configMapGenerator
-
-ConfigMapGenerator generates ConfigMap objects.
+`apiVersion: kustomize.config.k8s.io/v1beta1`
 
 See the [Tasks section] for examples of how to use `configMapGenerator`.
 
+### configMapGenerator
+ConfigMapGenerator generates ConfigMap objects.
+
 ---
 
-* **apiVersion**: kustomize.config.k8s.io/v1beta1
-* **kind**: Kustomization
 * **configMapGenerator** ([][ConfigMapArgs](#configmapargs))
 
-    List of ConfigMaps to generate.
+    List of metadata to generate ConfigMaps.
 
 
 ### ConfigMapArgs
-
-ConfigMapArgs contains the metadata of the generated ConfigMap.
+ConfigMapArgs is metadata used to generate a ConfigMap.
 
 ---
 
