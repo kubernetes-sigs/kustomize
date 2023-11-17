@@ -11,7 +11,7 @@ description: >
 See the [Tasks section] for examples of how to use `configMapGenerator`.
 
 ### configMapGenerator
-ConfigMapGenerator generates ConfigMap objects.
+ConfigMapGenerator generates [ConfigMap] objects.
 
 ---
 
@@ -31,3 +31,4 @@ ConfigMapArgs is metadata used to generate a ConfigMap.
 
 
 [Tasks section]: /docs/tasks/configmap_generator/
+[ConfigMap]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/
