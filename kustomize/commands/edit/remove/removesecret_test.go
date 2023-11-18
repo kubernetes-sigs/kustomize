@@ -1,10 +1,9 @@
 // Copyright 2023 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package remove //nolint:testpackage
+package remove
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,84 +12,187 @@ import (
 )
 
 func TestRemoveSecret(t *testing.T) {
-	const secretName01 = "example-secret-01"
-	const secretName02 = "example-secret-02"
-
 	tests := map[string]struct {
 		input          string
 		args           []string
 		expectedOutput string
+		wantErr        bool
 		expectedErr    string
 	}{
-		"happy path": {
-			input: fmt.Sprintf(`
+		"removes a secret successfully": {
+			input: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 secretGenerator:
-- name: %s
+- name: test-secret-1
   files:
   - longsecret.txt
-`, secretName01),
-			args: []string{secretName01},
+`,
+			args: []string{"test-secret-1"},
 			expectedOutput: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `,
 		},
-		"multiple": {
-			input: fmt.Sprintf(`
+		"removes multiple secrets successfully": {
+			input: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 secretGenerator:
-- name: %s
+- name: test-secret-1
   files:
   - longsecret.txt
-- name: %s
+- name: test-secret-2
   files:
   - longsecret.txt
-`, secretName01, secretName02),
-			args: []string{
-				fmt.Sprintf("%s,%s", secretName01, secretName02),
-			},
+`,
+			args: []string{"test-secret-1,test-secret-2"},
 			expectedOutput: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `,
 		},
-		"miss": {
-			input: fmt.Sprintf(`
+		"removes a secret successfully when single secret name is specified, it exists, but is not the only secret present": {
+			input: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 secretGenerator:
-- name: %s
+- name: test-secret-1
+  namespace: test-ns
   files:
   - longsecret.txt
-`, secretName01),
-			args:        []string{"foo"},
-			expectedErr: "no specified secret(s) were found",
-		},
-		"no secret name specified": {
-			args:        []string{},
-			expectedErr: "at least one secret name must be specified",
-		},
-		"too many secret names specified": {
-			args:        []string{"test1", "test2"},
-			expectedErr: "too many arguments",
-		},
-		"one existing and one non-existing": {
-			input: fmt.Sprintf(`
+- name: test-secret-2
+  namespace: default
+  literals:
+  - test-key=test-secret
+`,
+			args:    []string{"test-secret-1", "--namespace=test-ns"},
+			wantErr: false,
+			expectedOutput: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 secretGenerator:
-- name: %s
+- literals:
+  - test-key=test-secret
+  name: test-secret-2
+  namespace: default
+`,
+		},
+		"succeeds when one secret name exists and one doesn't exist": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret-1
   files:
   - application.properties
-`, secretName01),
-			args: []string{fmt.Sprintf("%s,%s", secretName01, "foo")},
+`,
+			args: []string{"test-secret-1,test-secret-2"},
 			expectedOutput: `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 `,
+		},
+		"succeeds when one secret name exists in the specified namespace": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret
+  namespace: test-ns
+  files:
+  - application.properties
+`,
+			args: []string{"test-secret", "--namespace=test-ns"},
+			expectedOutput: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`,
+		},
+		"handles empty namespace as default in the args": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret
+  namespace: default
+  files:
+  - application.properties
+`,
+			expectedOutput: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`,
+			wantErr: false,
+			args:    []string{"test-secret"},
+		},
+		"handles empty namespace as default in the kustomization file": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret
+  files:
+  - application.properties
+`,
+			expectedOutput: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`,
+			wantErr: false,
+			args:    []string{"test-secret", "--namespace=default"},
+		},
+		"fails when single secret name is specified and doesn't exist": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret-1
+  files:
+  - longsecret.txt
+`,
+			args:        []string{"foo"},
+			wantErr:     true,
+			expectedErr: "no specified secret(s) were found",
+		},
+		"fails when single secret name is specified and doesn't exist in the specified namespace": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret-1
+  namespace: test-ns
+  files:
+  - longsecret.txt
+`,
+			args:        []string{"test-secret-1"},
+			wantErr:     true,
+			expectedErr: "no specified secret(s) were found",
+		},
+
+		"fails when single secret name is specified and doesn't exist in the specified namespace, and neither namespace is the default one": {
+			input: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator:
+- name: test-secret-1
+  namespace: test-ns
+  files:
+  - longsecret.txt
+`,
+			args:        []string{"test-secret-1", "--namespace=other-ns"},
+			wantErr:     true,
+			expectedErr: "no specified secret(s) were found",
+		},
+		"fails when no secret name is specified": {
+			args:        []string{},
+			wantErr:     true,
+			expectedErr: "at least one secret name must be specified",
+		},
+		"fails when too many secret names are specified": {
+			args:        []string{"test1", "test2"},
+			wantErr:     true,
+			expectedErr: "too many arguments",
 		},
 	}
 
@@ -99,9 +201,10 @@ kind: Kustomization
 			fSys := filesys.MakeFsInMemory()
 			testutils_test.WriteTestKustomizationWith(fSys, []byte(tc.input))
 			cmd := newCmdRemoveSecret(fSys)
-			err := cmd.RunE(cmd, tc.args)
+			cmd.SetArgs(tc.args)
+			err := cmd.Execute()
 
-			if tc.expectedErr != "" {
+			if tc.wantErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
 				return
