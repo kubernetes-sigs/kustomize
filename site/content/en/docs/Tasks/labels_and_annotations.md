@@ -143,7 +143,7 @@ spec:
         someName: someValue
 ```
 ### Add Selector Labels
-[`labels.includeSelectors`] field be used to add labels to the `spec.selectors` field of all Resources in a project. Note that this also adds labels to the `spec.template` field for applicable Resources.
+[`labels.includeSelectors`] can be used to add labels to the `spec.selectors` field of all Resources in a project. Note that this also adds labels to the `spec.template` field for applicable Resources.
 
 Labels added to the `spec.selectors` field should not be changed after Workload and Service Resources have been created in a cluster.
 

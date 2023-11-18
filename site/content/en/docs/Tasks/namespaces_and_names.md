@@ -10,10 +10,10 @@ description: >
 The Namespace can be set for all Resources in a project by adding the [`namespace`] entry to the `kustomization.yaml` file. Consistent naming conventions can be applied to Resource Names in a project with the [`namePrefix`] and [`nameSuffix`] fields.
 
 ## Working with Namespaces
-The Namespace for all namespaced Resources in a project can be set with the [`namespace`] field. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources. This will override Namespace values that already exist.
+[`namespace`] sets the Namespace for all namespaced Resources in a project. This sets the Namespace for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources. This will override Namespace values that already exist.
 
 ### Add Namespace
-The following example sets the Namespace of a Deployment and a generated ConfigMap.
+Here is an example of how to set the Namespace of a Deployment and a generated ConfigMap. The ConfigMap is generated with [`configMapGenerator`].
 
 1. Create a Kustomization file.
 ```yaml
@@ -45,7 +45,7 @@ metadata:
 kustomize build .
 ```
 
-The output shows that Namespace is added to the metadata field of the Deployment and generated ConfigMap.
+The output shows that the `namespace` field is used to set the Namespace of the Deployment and the generated ConfigMap.
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -63,12 +63,14 @@ data:
 ```
 
 ## Working with Names
-A prefix or suffix can be set for all Resources in a project with the `namePrefix` and `nameSuffix` fields. This sets a name prefix and suffix for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources.
+A prefix or suffix can be set for all Resources in a project with the [`namePrefix`] and [`nameSuffix`] fields. This sets a name prefix and suffix for both generated Resources (e.g. ConfigMaps and Secrets) and non-generated Resources.
 
 Resources such as Deployments and StatefulSets may reference other Resources such as ConfigMaps and Secrets in the Pod Spec. The name prefix and suffix will also propagate to Resource references in a project. Typical uses cases include Service reference from a StatefulSet, ConfigMap reference from a Pod Spec, and Secret reference from a Pod Spec.
 
 ### Add Name Prefix
-The following example adds a prefix to the name of a Deployment and a generated ConfigMap.
+[`namePrefix`] can be used to add a prefix to the name of all Resources in a project.
+
+Here is an example of how to add a prefix to a Deployment.
 
 1. Create a Kustomization file.
 ```yaml
@@ -76,11 +78,6 @@ The following example adds a prefix to the name of a Deployment and a generated 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: foo-
-
-configMapGenerator:
-- name: my-config
-  literals:
-  - FOO=BAR
 
 resources:
 - deploy.yaml
@@ -100,15 +97,8 @@ metadata:
 kustomize build .
 ```
 
-The output shows that a prefix is added to the name of the Deployment and generated ConfigMap.
+The output shows that the `namePrefix` field is used to add a prefix to the name of the Deployment.
 ```yaml
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: foo-my-config-m2mg5mb749
-data:
-  FOO: BAR
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -116,7 +106,9 @@ metadata:
 ```
 
 ### Add Name Suffix
-The following example adds a suffix to the name of a Deployment.
+[`nameSuffix`] can be used to add a suffix to the name of all Resources in a project.
+
+Here is an example of how to add a suffix to the name of a Deployment and a generated ConfigMap. The ConfigMap is generated with [`configMapGenerator`].
 
 1. Create a Kustomization file.
 ```yaml
@@ -124,6 +116,12 @@ The following example adds a suffix to the name of a Deployment.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 nameSuffix: -bar
+
+configMapGenerator:
+- name: my-config
+  literals:
+  - FOO=BAR
+
 resources:
 - deploy.yaml
 ```
@@ -142,21 +140,25 @@ metadata:
 kustomize build .
 ```
 
-The output shows that a suffix is added to the name.
+The output shows that the `nameSuffix` field is used to add a suffix to the name of the Deployment and the generated ConfigMap.
 ```yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: my-config-bar-m2mg5mb749
+data:
+  FOO: BAR
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example-bar
 ```
 
-[`namespace`]: /docs/reference/api/kustomization-file/namespace/
-[`namePrefix`]: /docs/reference/api/kustomization-file/nameprefix/
-[`nameSuffix`]: /docs/reference/api/kustomization-file/namesuffix/
-
 ### Propagate Name Prefix to Resource Reference
-The following example adds a prefix to the name of a Deployment and a generated ConfigMap. The generated ConfigMap name prefix is propagated to the Pod Spec.
+[`namePrefix`] and [`nameSuffix`] propagate Resources name changes to Resource references in a project.
 
+Here is an example of how the name prefix of a generated ConfigMap is propagated to the Pod Spec of a Deployment that references the ConfigMap to set a container environment variable.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -173,7 +175,7 @@ resources:
 - deploy.yaml
 ```
 
-2. Create a Deployment manifest.
+2. Create a Deployment manifest. This Deployment is configured to set an environment variable in the `busybox` container using data from the generated ConfigMap.
 ```yaml
 # deploy.yaml
 apiVersion: apps/v1
@@ -209,7 +211,7 @@ spec:
 kustomize build .
 ```
 
-The output shows that the name prefix is propagated to the PodSpec ConfigMap reference.
+The output shows that the name prefix is propagated to the ConfigMap name reference in the Deployment Pod Spec.
 ```yaml
 kind: ConfigMap
 apiVersion: v1
@@ -248,3 +250,8 @@ spec:
         image: registry.k8s.io/busybox
         name: busybox
 ```
+
+[`namespace`]: /docs/reference/api/kustomization-file/namespace/
+[`namePrefix`]: /docs/reference/api/kustomization-file/nameprefix/
+[`nameSuffix`]: /docs/reference/api/kustomization-file/namesuffix/
+[`configMapGenerator`]: /docs/reference/api/kustomization-file/configmapgenerator/
