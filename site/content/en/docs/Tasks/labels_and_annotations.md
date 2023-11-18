@@ -11,10 +11,9 @@ A common set of labels can be applied to all Resources in a project by adding a 
 
 ## Working with Labels
 ### Add Labels
-Add labels to all Resources in a project with the [`labels`] field. This will override values for label keys that already exist. The `includeSelectors` field enables label propagation to selectors and templates. The `includeTemplates` field enables label propagation to only templates. Both fields are disabled by default.
+[`labels`] can be used to add labels to the `metadata` field of all Resources in a project. This will override values for label keys that already exist.
 
-The following example adds labels to a Deployment and Service without changing the selector and template labels.
-
+Here is an example of how to add labels to the `metadata` field.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -22,10 +21,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 labels:
-  - pairs:
-      someName: someValue
-      owner: alice
-      app: bingo
+- pairs:
+    someName: someValue
+    owner: alice
+    app: bingo
 
 resources:
 - deploy.yaml
@@ -52,7 +51,8 @@ metadata:
 ```bash
 kustomize build .
 ```
-The output shows that labels are added to the metadata field while the template and selector fields remain unchanged.
+
+The output shows that the `labels` field is used to add labels to the `metadata` field of the Service and Deployment Resources.
 ```yaml
 apiVersion: v1
 kind: Service
@@ -73,10 +73,9 @@ metadata:
   name: example
 ```
 ### Add Template Labels
-Add labels to Resource templates with the [`labels.includeTemplates`] field.
+[`labels.includeTemplates`] can be used to add labels to the `spec.template` field of all applicable Resources in a project.
 
-The following example adds labels and template labels to a Deployment and Service without changing the selector labels.
-
+Here is an example of how to add labels to the `spec.template` field of a Deployment.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -84,11 +83,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 labels:
-  - pairs:
-      someName: someValue
-      owner: alice
-      app: bingo
-    includeTemplates: true
+- pairs:
+    someName: someValue
+    owner: alice
+    app: bingo
+  includeTemplates: true
 
 resources:
 - deploy.yaml
@@ -115,7 +114,8 @@ metadata:
 ```bash
 kustomize build .
 ```
-The output shows that labels are added to the metadata and template fields while the selector field remains unchanged.
+
+The output shows that the `labels.includeTemplates` field is used to add labels to the `spec.template` field of the Deployment. The Service Resource API does not have a `spec.template` field and Kustomize does not add this field.
 ```yaml
 apiVersion: v1
 kind: Service
@@ -143,10 +143,11 @@ spec:
         someName: someValue
 ```
 ### Add Selector Labels
-Add labels to Resource selectors and templates with the [`labels.includeSelectors`] field. Selector labels should not be changed after Workload and Service Resources have been created in a cluster.
+[`labels.includeSelectors`] field be used to add labels to the `spec.selectors` field of all Resources in a project. Note that this also adds labels to the `spec.template` field for applicable Resources.
 
-The following example adds labels, selector labels, and template labels to a Deployment and Service.
+Labels added to the `spec.selectors` field should not be changed after Workload and Service Resources have been created in a cluster.
 
+Here is an example of how to add labels to the `spec.selectors` field.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -185,7 +186,8 @@ metadata:
 ```bash
 kustomize build .
 ```
-The output shows that labels are added to the metadata, selector, and template fields.
+
+The output shows that the `labels.includeSelectors` field is used to add labels to the `spec.selector` and `spec.template` fields of the Deployment. The Service Resource API does not have a `spec.template` field and Kustomize does not add this field.
 ```yaml
 apiVersion: v1
 kind: Service
