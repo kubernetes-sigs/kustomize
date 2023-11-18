@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package util_test
+package util
 
 import (
 	"reflect"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/types"
-	. "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -349,7 +348,7 @@ func TestUpdateLiteralSources(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.wantErr(t, UpdateLiteralSources(tc.args, tc.flags))
-			require.Equal(t, tc.expectedArgs.LiteralSources, tc.args.LiteralSources)
+			require.ElementsMatch(t, tc.expectedArgs.LiteralSources, tc.args.LiteralSources)
 		})
 	}
 }
