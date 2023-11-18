@@ -243,10 +243,9 @@ resources:
 
 ## Working with Annotations
 ### Add Annotations
-Add annotations to all Resources in a project with the [`commonAnnotations`] field. This will override values for annotations keys that already exist. Annotations are propagated to Pod templates.
+[`commonAnnotations`] can be used to add annotations to all Resources in a project. This will override values for annotations keys that already exist. Annotations are propagated to the Deployment Pod template.
 
-The following example adds common annotations to a Deployment.
-
+Here is an example of how to add annotations to a Deployment.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -273,7 +272,7 @@ metadata:
 ```bash
 kustomize build .
 ```
-The output shows that annotations are added to the metadata field.
+The output shows that the `commonAnnotations` field is used to add annotations to a Deployment.
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
