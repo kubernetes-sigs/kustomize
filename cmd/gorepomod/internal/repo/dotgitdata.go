@@ -6,9 +6,11 @@ package repo
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
+	v "github.com/spf13/viper"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/utils"
@@ -58,6 +60,8 @@ func NewDotGitDataFromPath(path string, localFlag bool) (*DotGitData, error) {
 
 	// If local flag is supplied, use local git naming instead of production (sigs.k8s.io)
 	if localFlag {
+		localPrefix := getLocalPrefix(path)
+		v.Set("LocalGitPrefix", localPrefix)
 		wd, err := os.Getwd()
 		if err != nil {
 			return nil, fmt.Errorf("error extracting git repository %q", err.Error())
@@ -177,4 +181,21 @@ func (dg *DotGitData) checkModulesLocal(modules []*protoModule) error {
 		pm.ShortNameWithLocalFlag(dg.RepoPath())
 	}
 	return nil
+}
+
+// Extract local prefix from origin url information retrieved from .git
+func getLocalPrefix(dgAbsPath string) string {
+	_, err := os.Stat(dgAbsPath + ".git")
+	if err != nil {
+		fmt.Errorf(".git directory does not exist int path %q", dgAbsPath)
+	}
+
+	out, err := exec.Command("git", "config", "--get", "remote.origin.url").Output()
+	if err != nil {
+		fmt.Errorf("failed extracting git information: %q", err.Error())
+	}
+
+	var originUrlString string = string(out)
+	var localPrefix string = utils.ParseGitRepositoryPath(originUrlString)
+	return localPrefix
 }

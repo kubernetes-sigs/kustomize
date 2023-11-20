@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	v "github.com/spf13/viper"
 	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/utils"
@@ -30,7 +31,7 @@ func (pm *protoModule) FullPath() string {
 }
 
 func (pm *protoModule) FullLocalPath() string {
-	localPrefix := "github.com/antoooks"
+	var localPrefix string = v.GetString("LocalGitPrefix")
 	var pathToModule string = pm.mf.Module.Mod.Path
 	pathSlice := strings.Split(pathToModule, "/")
 	return localPrefix + "/" + strings.Join(pathSlice[1:], "/")
@@ -62,7 +63,7 @@ func (pm *protoModule) ShortNameWithLocalFlag(
 	if fp == repoImportPath {
 		return misc.ModuleAtTop
 	}
-	p := fp[len(repoImportPath)+1:]
+	p := fp[len(repoImportPath)+2:]
 	stripped := trailingVersionPattern.ReplaceAllString(p, "")
 	pathSlice := strings.Split(stripped, "/")
 	return misc.ModuleShortName(strings.Join(pathSlice[3:], "/"))

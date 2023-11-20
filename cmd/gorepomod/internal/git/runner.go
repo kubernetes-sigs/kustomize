@@ -167,8 +167,16 @@ func (gr *Runner) LoadLocalTags() (result misc.VersionMap, err error) {
 
 func (gr *Runner) LoadRemoteTags(
 	remote misc.TrackedRepo) (result misc.VersionMap, err error) {
-	gr.comment("loading remote tags")
+	gr.comment("updating tags from upstream")
 	var out string
+
+	// Update latest tags from upstream
+	out, err = gr.run(noHarmDone, "fetch", "-t", string(remoteUpstream), "master")
+	if err != nil {
+		return nil, err
+	}
+
+	gr.comment("loading remote tags")
 	out, err = gr.run(noHarmDone, "ls-remote", "--ref", string(remote))
 	if err != nil {
 		return nil, err
