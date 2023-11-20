@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os/exec"
 	"testing"
@@ -34,7 +33,5 @@ func TestLoadRepoManager(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println(out.String())
 	}
 }

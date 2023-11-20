@@ -167,10 +167,10 @@ func (gr *Runner) LoadLocalTags() (result misc.VersionMap, err error) {
 
 func (gr *Runner) LoadRemoteTags(
 	remote misc.TrackedRepo) (result misc.VersionMap, err error) {
-	gr.comment("updating tags from upstream")
 	var out string
 
 	// Update latest tags from upstream
+	gr.comment("updating tags from upstream")
 	out, err = gr.run(noHarmDone, "fetch", "-t", string(remoteUpstream), "master")
 	if err != nil {
 		return nil, err
@@ -351,4 +351,21 @@ func (gr *Runner) DeleteTagFromRemote(
 	remote misc.TrackedRepo, tag string) error {
 	gr.comment("deleting tags from remote")
 	return gr.runNoOut(undoPainful, "push", string(remote), ":"+refsTags+tag)
+}
+
+func (gr *Runner) GetLatestTag(module string) (string, error) {
+	var latestTag string
+
+	gr.comment("getting latest tag from upstream")
+	gr.run(noHarmDone, "fetch", "upstream/master", "--tags")
+
+	// Assuming release branch has this format: release/path/to/module
+	// and each release branch maintains tags
+	upstreamReleaseBranch := fmt.Sprintf("%s/release/%s", "upstream", module)
+	gr.comment("getting latest tag from release branch")
+	latestTag, err := gr.run(noHarmDone, "tag", "--merged", string(upstreamReleaseBranch), "--contains", "--sort=creatordate")
+	if err != nil {
+		fmt.Errorf("error getting latest tag for %s: %q", module, err.Error())
+	}
+	return latestTag, nil
 }

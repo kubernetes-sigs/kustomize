@@ -51,6 +51,18 @@ func (mgr *Manager) Tidy(doIt bool) error {
 
 func (mgr *Manager) Pin(
 	doIt bool, target misc.LaModule, newV semver.SemVer) error {
+	// Always use latest tag while does not removing manual usage capability
+	if newV == semver.Zero() {
+		gr := git.NewLoud(mgr.AbsPath(), doIt, false)
+		latest, err := gr.GetLatestTag(string(target.ShortName()))
+		if err != nil {
+			fmt.Errorf("cannot get latest tag for %s", target)
+		}
+		newV, err = semver.Parse(latest)
+		if err != nil {
+			fmt.Errorf("failed to parse value for %s", latest)
+		}
+	}
 	return mgr.modules.Apply(func(m misc.LaModule) error {
 		if yes, oldVersion := m.DependsOn(target); yes {
 			return edit.New(m, doIt).Pin(target, oldVersion, newV)
@@ -80,6 +92,15 @@ func (mgr *Manager) hasUnPinnedDeps(m misc.LaModule) string {
 }
 
 func (mgr *Manager) List() error {
+	// Auto-update local tags
+	gr := git.NewQuiet(mgr.AbsPath(), false, false)
+	for _, module := range mgr.modules {
+		_, err := gr.GetLatestTag(string(module.ShortName()))
+		if err != nil {
+			fmt.Errorf("failed getting latest tags for %s", module)
+		}
+	}
+
 	fmt.Printf("   src path: %s\n", mgr.dg.SrcPath())
 	fmt.Printf("  repo path: %s\n", mgr.RepoPath())
 	fmt.Printf("     remote: %s\n", mgr.remoteName)
