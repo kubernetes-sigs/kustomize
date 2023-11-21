@@ -53,8 +53,9 @@ func (mgr *Manager) Pin(
 	doIt bool, target misc.LaModule, newV semver.SemVer) error {
 	// Always use latest tag while does not removing manual usage capability
 	if newV == semver.Zero() {
+		releaseBranch := fmt.Sprintf("release-%s", target.ShortName())
 		gr := git.NewLoud(mgr.AbsPath(), doIt, false)
-		latest, err := gr.GetLatestTag(string(target.ShortName()))
+		latest, err := gr.GetLatestTag(string(releaseBranch))
 		if err != nil {
 			fmt.Errorf("cannot get latest tag for %s", target)
 		}
@@ -95,7 +96,8 @@ func (mgr *Manager) List() error {
 	// Auto-update local tags
 	gr := git.NewQuiet(mgr.AbsPath(), false, false)
 	for _, module := range mgr.modules {
-		_, err := gr.GetLatestTag(string(module.ShortName()))
+		releaseBranch := fmt.Sprintf("release-%s", module.ShortName())
+		_, err := gr.GetLatestTag(string(releaseBranch))
 		if err != nil {
 			fmt.Errorf("failed getting latest tags for %s", module)
 		}
