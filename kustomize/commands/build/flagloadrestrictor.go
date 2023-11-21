@@ -24,13 +24,19 @@ func AddFlagLoadRestrictor(set *pflag.FlagSet) {
 			"relocatability of the kustomization.")
 }
 
-func AddFlagLoadRestrictorCompletion(cmd *cobra.Command) {
-	cmd.RegisterFlagCompletionFunc(flagLoadRestrictorName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+func AddFlagLoadRestrictorCompletion(cmd *cobra.Command) error {
+	err := cmd.RegisterFlagCompletionFunc(flagLoadRestrictorName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{
 			types.LoadRestrictionsNone.String(),
 			types.LoadRestrictionsRootOnly.String(),
 		}, cobra.ShellCompDirectiveNoFileComp
 	})
+
+	if err != nil {
+		return fmt.Errorf("unable to add completion for --%s flag: %w", flagLoadRestrictorName, err)
+	}
+
+	return nil
 }
 
 func validateFlagLoadRestrictor() error {
