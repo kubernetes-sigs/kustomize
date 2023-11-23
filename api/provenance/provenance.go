@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+
+	"github.com/blang/semver/v4"
 )
 
 // These variables are set at build time using ldflags.
@@ -62,7 +64,32 @@ func GetProvenance() Provenance {
 			p.GitCommit = setting.Value
 		}
 	}
+
+	for _, dep := range info.Deps {
+		if dep != nil && dep.Path == "sigs.k8s.io/kustomize/kustomize/v5" {
+			p.Version = GetMostRecentTag(*dep)
+		}
+	}
+
 	return p
+}
+
+func GetMostRecentTag(m debug.Module) string {
+	for m.Replace != nil {
+		m = *m.Replace
+	}
+
+	split := strings.Split(m.Version, "-")
+	sv, err := semver.Parse(strings.TrimPrefix(split[0], "v"))
+
+	if err != nil {
+		return "unknown"
+	}
+
+	if len(split) > 1 && sv.Patch > 0 {
+		sv.Patch -= 1
+	}
+	return fmt.Sprintf("v%s", sv.FinalizeVersion())
 }
 
 // Short returns the shortened provenance stamp.
