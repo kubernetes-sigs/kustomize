@@ -5,6 +5,7 @@ package provenance_test
 
 import (
 	"fmt"
+	"runtime/debug"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,4 +45,53 @@ func TestProvenance_Semver(t *testing.T) {
 
 	p.Version = "kustomize/v4.11.12"
 	assert.Equal(t, "v4.11.12", p.Semver())
+}
+
+func mockModule(version string) debug.Module {
+	return debug.Module{
+		Path:    "sigs.k8s.io/kustomize/kustomize/v5",
+		Version: version,
+		Replace: nil,
+	}
+}
+
+func TestGetMostRecentTag(t *testing.T) {
+	tests := []struct {
+		name        string
+		module      debug.Module
+		expectedTag string
+	}{
+		{
+			name:        "Standard version",
+			module:      mockModule("v1.2.3"),
+			expectedTag: "v1.2.3",
+		},
+		{
+			name:        "Pseudo-version with patch increment",
+			module:      mockModule("v0.0.0-20210101010101-abcdefabcdef"),
+			expectedTag: "v0.0.0",
+		},
+		{
+			name:        "Invalid semver string",
+			module:      mockModule("invalid-version"),
+			expectedTag: "unknown",
+		},
+		{
+			name:        "Valid semver with patch increment and pre-release info",
+			module:      mockModule("v1.2.3-0.20210101010101-abcdefabcdef"),
+			expectedTag: "v1.2.2",
+		},
+		{
+			name:        "Valid semver no patch increment",
+			module:      mockModule("v1.2.0"),
+			expectedTag: "v1.2.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tag := provenance.GetMostRecentTag(tt.module)
+			assert.Equal(t, tt.expectedTag, tag)
+		})
+	}
 }
