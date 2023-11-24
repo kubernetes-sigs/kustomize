@@ -73,9 +73,9 @@ metadata:
   name: example
 ```
 ### Add Template Labels
-[`labels.includeTemplates`] can be used to add labels to the `spec.template` field of all applicable Resources in a project.
+[`labels.includeTemplates`] can be used to add labels to the template field of all applicable Resources in a project.
 
-Here is an example of how to add labels to the `spec.template` field of a Deployment.
+Here is an example of how to add labels to the template field of a Deployment.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -115,7 +115,8 @@ metadata:
 kustomize build .
 ```
 
-The output shows that the `labels.includeTemplates` field is used to add labels to the `spec.template` field of the Deployment. The Service Resource API does not have a `spec.template` field and Kustomize does not add this field.
+The output shows that labels are added to the `metadata` field and the `labels.includeTemplates` field is used to add labels to the template field of the Deployment. However, the [Service Resource API] does not have a template field, and Kustomize does not add this field.
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -143,11 +144,11 @@ spec:
         someName: someValue
 ```
 ### Add Selector Labels
-[`labels.includeSelectors`] can be used to add labels to the `spec.selectors` field of all Resources in a project. Note that this also adds labels to the `spec.template` field for applicable Resources.
+[`labels.includeSelectors`] can be used to add labels to the selector field of applicable Resources in a project. Note that this also adds labels to the template field for applicable Resources.
 
-Labels added to the `spec.selectors` field should not be changed after Workload and Service Resources have been created in a cluster.
+Labels added to the selector field should not be changed after Workload and Service Resources have been created in a cluster.
 
-Here is an example of how to add labels to the `spec.selectors` field.
+Here is an example of how to add labels to the selector field.
 1. Create a Kustomization file.
 ```yaml
 # kustomization.yaml
@@ -155,11 +156,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 labels:
-  - pairs:
-      someName: someValue
-      owner: alice
-      app: bingo
-    includeSelectors: true
+- pairs:
+    someName: someValue
+    owner: alice
+    app: bingo
+  includeSelectors: true
 
 resources:
 - deploy.yaml
@@ -187,7 +188,7 @@ metadata:
 kustomize build .
 ```
 
-The output shows that the `labels.includeSelectors` field is used to add labels to the `spec.selector` and `spec.template` fields of the Deployment. The Service Resource API does not have a `spec.template` field and Kustomize does not add this field.
+The output shows that labels are added to the `metadata` field and the `labels.includeSelectors` field is used to add labels to the selector and template fields for applicable Resources. However, the [Service Resource API] does not have a template field, and Kustomize does not add this field.
 ```yaml
 apiVersion: v1
 kind: Service
@@ -292,3 +293,4 @@ spec:
 [`labels.includeSelectors`]: /docs/reference/api/kustomization-file/labels/
 [`commonLabels`]: /docs/reference/api/kustomization-file/commonlabels/
 [`commonAnnotations`]: /docs/reference/api/kustomization-file/commonannotations/
+[Service Resource API]: https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
