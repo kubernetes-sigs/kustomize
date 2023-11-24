@@ -115,7 +115,7 @@ metadata:
 kustomize build .
 ```
 
-The output shows that labels are added to the `metadata` field and the `labels.includeTemplates` field is used to add labels to the template field of the Deployment. However, the [Service Resource API] does not have a template field, and Kustomize does not add this field.
+The output shows that labels are added to the `metadata` field and the `labels.includeTemplates` field is used to add labels to the template field of the Deployment. However, the [Service] Resource does not have a template field, and Kustomize does not add this field.
 
 ```yaml
 apiVersion: v1
@@ -188,7 +188,7 @@ metadata:
 kustomize build .
 ```
 
-The output shows that labels are added to the `metadata` field and the `labels.includeSelectors` field is used to add labels to the selector and template fields for applicable Resources. However, the [Service Resource API] does not have a template field, and Kustomize does not add this field.
+The output shows that labels are added to the `metadata` field and the `labels.includeSelectors` field is used to add labels to the selector and template fields for applicable Resources. However, the [Service] Resource does not have a template field, and Kustomize does not add this field.
 ```yaml
 apiVersion: v1
 kind: Service
@@ -293,4 +293,4 @@ spec:
 [`labels.includeSelectors`]: /docs/reference/api/kustomization-file/labels/
 [`commonLabels`]: /docs/reference/api/kustomization-file/commonlabels/
 [`commonAnnotations`]: /docs/reference/api/kustomization-file/commonannotations/
-[Service Resource API]: https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
+[Service]: https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/
