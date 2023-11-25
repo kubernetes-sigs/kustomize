@@ -51,19 +51,6 @@ func (mgr *Manager) Tidy(doIt bool) error {
 
 func (mgr *Manager) Pin(
 	doIt bool, target misc.LaModule, newV semver.SemVer) error {
-	// Always use latest tag while does not removing manual usage capability
-	if newV == semver.Zero() {
-		releaseBranch := fmt.Sprintf("release-%s", target.ShortName())
-		gr := git.NewLoud(mgr.AbsPath(), doIt, false)
-		latest, err := gr.GetLatestTag(string(releaseBranch))
-		if err != nil {
-			fmt.Errorf("cannot get latest tag for %s", target)
-		}
-		newV, err = semver.Parse(latest)
-		if err != nil {
-			fmt.Errorf("failed to parse value for %s", latest)
-		}
-	}
 	return mgr.modules.Apply(func(m misc.LaModule) error {
 		if yes, oldVersion := m.DependsOn(target); yes {
 			return edit.New(m, doIt).Pin(target, oldVersion, newV)

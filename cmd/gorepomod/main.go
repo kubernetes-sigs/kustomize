@@ -8,8 +8,10 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/arguments"
+	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/repo"
+	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
 )
 
 //go:generate go run internal/gen/main.go
@@ -72,10 +74,37 @@ func actualMain() error {
 		return mgr.Tidy(args.DoIt())
 	case arguments.Pin:
 		v := args.Version()
+		// Update branch history
+		gr := git.NewQuiet(mgr.AbsPath(), args.DoIt(), false)
+		gr.FetchRemote("master")
+
 		if v.IsZero() {
-			v = targetModule.VersionLocal()
+			// Always use latest tag while does not removing manual usage capability
+			releaseBranch := fmt.Sprintf("release-%s", targetModule.ShortName())
+			fmt.Printf("new version not specified, fall back to latest version according to release branch: %s-*\n", releaseBranch)
+			latest, err := gr.GetLatestTag(string(releaseBranch))
+			if err != nil {
+				fmt.Errorf("cannot get latest tag for %s, falling back to local version %s", targetModule.ShortName(), targetModule.VersionLocal())
+				v = targetModule.VersionLocal()
+				return mgr.Pin(args.DoIt(), targetModule, v)
+
+			}
+			v, err = semver.Parse(latest)
+			if err != nil {
+				fmt.Errorf("failed to parse value for %s, falling back to local version %s", latest, targetModule.VersionLocal())
+				v = targetModule.VersionLocal()
+				return mgr.Pin(args.DoIt(), targetModule, v)
+			}
 		}
-		return mgr.Pin(args.DoIt(), targetModule, v)
+
+		// If we can't find revision extracted from latest version specified on release branch
+		err = mgr.Pin(args.DoIt(), targetModule, v)
+		if err != nil {
+			fmt.Errorf("cannot determine latest version existence, retrying with local version %s", targetModule.VersionLocal())
+			v = targetModule.VersionLocal()
+			err = mgr.Pin(args.DoIt(), targetModule, v)
+		}
+		return err
 	case arguments.UnPin:
 		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 	case arguments.Release:

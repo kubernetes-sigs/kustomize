@@ -261,7 +261,12 @@ func (gr *Runner) CheckoutMainBranch() error {
 // FetchRemote does that.
 func (gr *Runner) FetchRemote(remote misc.TrackedRepo) error {
 	gr.comment("fetching remote")
-	return gr.runNoOut(noHarmDone, "fetch", string(remote))
+	err := gr.runNoOut(noHarmDone, "fetch", string(remote))
+	if err != nil {
+		// If current repo is fork
+		return gr.runNoOut(noHarmDone, "fetch", string(remoteUpstream))
+	}
+	return err
 }
 
 // MergeFromRemoteMain does a fast forward only merge with main branch.
@@ -357,15 +362,19 @@ func (gr *Runner) DeleteTagFromRemote(
 func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
 	var latestTag string
 	// Assuming release branch has this format: release-path/to/module-vX.Y.Z
-	// and each release branch maintains tags, get latest tag from `releaseBranch`
-	gr.comment("getting latest tags from release branch")
-	latestTag, err := gr.run(noHarmDone, "describe", "--tags", "--abbrev=0")
-	if err != nil {
-		fmt.Errorf("error getting latest tag for %s: %q", releaseBranch, err.Error())
-	}
-	if len(latestTag) < 1 {
+	// and each release branch maintains tags, extract version from latest `releaseBranch`
+	gr.comment("extract version from latest release branch")
+	filteredBranchList, err := gr.run(noHarmDone, "branch", "-a", "--list", "*"+string(releaseBranch)+"*", "--sort=-committerdate")
+	if len(filteredBranchList) < 1 {
 		fmt.Errorf("latest tag not found for %s", releaseBranch)
 		return "", err
 	}
+	newestBranch := strings.Split(strings.ReplaceAll(filteredBranchList, "\r\n", "\n"), "\n")
+	split := strings.Split(newestBranch[0], "-")
+	latestTag = split[len(split)-1]
+	if err != nil {
+		fmt.Errorf("error getting latest tag for %s: %q", releaseBranch, err.Error())
+	}
+
 	return latestTag, nil
 }
