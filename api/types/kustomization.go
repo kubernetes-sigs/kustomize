@@ -197,6 +197,9 @@ func (k *Kustomization) CheckDeprecatedFields() *[]string {
 	if k.Bases != nil {
 		warningMessages = append(warningMessages, deprecatedBaseWarningMessage)
 	}
+	if k.CommonLabels != nil {
+		warningMessages = append(warningMessages, deprecatedCommonLabelsWarningMessage)
+	}
 	if k.ImageTags != nil {
 		warningMessages = append(warningMessages, deprecatedImageTagsWarningMessage)
 	}
@@ -208,9 +211,6 @@ func (k *Kustomization) CheckDeprecatedFields() *[]string {
 	}
 	if k.Vars != nil {
 		warningMessages = append(warningMessages, deprecatedVarsMessage)
-	}
-	if k.CommonLabels != nil {
-		warningMessages = append(warningMessages, deprecatedCommonLabelsWarningMessage)
 	}
 	return &warningMessages
 }
