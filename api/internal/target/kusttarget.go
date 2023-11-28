@@ -71,7 +71,7 @@ func (kt *KustTarget) Load() error {
 	// show warning message when using deprecated fields.
 	if warningMessages := k.CheckDeprecatedFields(); warningMessages != nil {
 		for _, msg := range *warningMessages {
-			kt.logger.Warn("%v", msg)
+			kt.logger.Warn(msg)
 		}
 	}
 

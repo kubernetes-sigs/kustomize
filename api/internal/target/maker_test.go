@@ -44,9 +44,8 @@ func makeKustTargetWithRf(
 	pc := types.DisabledPluginConfig()
 
 	opts := &slog.HandlerOptions{
-		Level: slog.LevelWarn,
+		Level: slog.LevelError,
 	}
-
 	return target.NewKustTarget(
 		ldr,
 		valtest_test.MakeFakeValidator(),

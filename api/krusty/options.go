@@ -58,7 +58,7 @@ func MakeDefaultOptions() *Options {
 		AddManagedbyLabel: false,
 		LoadRestrictions:  types.LoadRestrictionsRootOnly,
 		PluginConfig:      types.DisabledPluginConfig(),
-		LogLevel:          slog.LevelWarn,
+		LogLevel:          slog.LevelInfo,
 	}
 }
 
