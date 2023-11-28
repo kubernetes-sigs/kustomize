@@ -4,6 +4,7 @@
 package krusty
 
 import (
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -45,6 +46,9 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// Flag to set slog level
+	LogLevel slog.Level
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -54,6 +58,7 @@ func MakeDefaultOptions() *Options {
 		AddManagedbyLabel: false,
 		LoadRestrictions:  types.LoadRestrictionsRootOnly,
 		PluginConfig:      types.DisabledPluginConfig(),
+		LogLevel:          slog.LevelWarn,
 	}
 }
 

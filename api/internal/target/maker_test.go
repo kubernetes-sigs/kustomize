@@ -4,8 +4,10 @@
 package target_test
 
 import (
+	"os"
 	"testing"
 
+	"golang.org/x/exp/slog"
 	fLdr "sigs.k8s.io/kustomize/api/internal/loader"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
@@ -40,9 +42,16 @@ func makeKustTargetWithRf(
 	}
 	rf := resmap.NewFactory(pvd.GetResourceFactory())
 	pc := types.DisabledPluginConfig()
+
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelWarn,
+	}
+
 	return target.NewKustTarget(
 		ldr,
 		valtest_test.MakeFakeValidator(),
 		rf,
-		pLdr.NewLoader(pc, rf, fSys))
+		pLdr.NewLoader(pc, rf, fSys),
+		slog.New(slog.NewTextHandler(os.Stdout, opts)),
+	)
 }

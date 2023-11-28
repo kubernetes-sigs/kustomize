@@ -6,9 +6,9 @@ package target
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/accumulator"
 	"sigs.k8s.io/kustomize/api/internal/builtins"
@@ -36,6 +36,7 @@ type KustTarget struct {
 	rFactory      *resmap.Factory
 	pLdr          *loader.Loader
 	origin        *resource.Origin
+	logger        *slog.Logger
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -43,12 +44,15 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
-	pLdr *loader.Loader) *KustTarget {
+	pLdr *loader.Loader,
+	logger *slog.Logger,
+) *KustTarget {
 	return &KustTarget{
 		ldr:       ldr,
 		validator: validator,
 		rFactory:  rFactory,
 		pLdr:      pLdr.LoaderWithWorkingDir(ldr.Root()),
+		logger:    logger,
 	}
 }
 
@@ -67,7 +71,7 @@ func (kt *KustTarget) Load() error {
 	// show warning message when using deprecated fields.
 	if warningMessages := k.CheckDeprecatedFields(); warningMessages != nil {
 		for _, msg := range *warningMessages {
-			fmt.Fprintf(os.Stderr, "%v\n", msg)
+			kt.logger.Warn("%v", msg)
 		}
 	}
 
@@ -484,7 +488,8 @@ func (kt *KustTarget) accumulateComponents(
 func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
-	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
+
+	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr, kt.logger)
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.WrapPrefixf(

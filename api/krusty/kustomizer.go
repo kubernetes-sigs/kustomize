@@ -6,7 +6,9 @@ package krusty
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"golang.org/x/exp/slog"
 	"sigs.k8s.io/kustomize/api/internal/builtins"
 	fLdr "sigs.k8s.io/kustomize/api/internal/loader"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
@@ -64,12 +66,20 @@ func (b *Kustomizer) Run(
 		return nil, err
 	}
 	defer ldr.Cleanup()
+
+	opts := &slog.HandlerOptions{
+		Level: b.options.LogLevel,
+	}
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout, opts))
+
 	kt := target.NewKustTarget(
 		ldr,
 		b.depProvider.GetFieldValidator(),
 		resmapFactory,
 		// The plugin configs are always located on disk, regardless of the fSys passed in
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory, filesys.MakeFsOnDisk()),
+		logger,
 	)
 	err = kt.Load()
 	if err != nil {
