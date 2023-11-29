@@ -76,7 +76,7 @@ kustomization.yaml                                      deployment.yaml         
 +---------------------------------------------+         +-------------------------------------------------------+       +-----------------------------------+
 | apiVersion: kustomize.config.k8s.io/v1beta1 |         | apiVersion: apps/v1                                   |       | apiVersion: v1                    |
 | kind: Kustomization                         |         | kind: Deployment                                      |       | kind: Service                     |
-|.commonLabels:                               |         | metadata:                                             |       | metadata:                         |
+| commonLabels:                               |         | metadata:                                             |       | metadata:                         |
 |   app: myapp                                |         |   name: myapp                                         |       |   name: myapp                     |
 | resources:                                  |         | spec:                                                 |       | spec:                             |
 |   - deployment.yaml                         |         |   selector:                                           |       |   selector:                       |
