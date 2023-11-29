@@ -71,7 +71,7 @@ func (b *Kustomizer) Run(
 		Level: b.options.LogLevel,
 	}
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, opts))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 
 	kt := target.NewKustTarget(
 		ldr,

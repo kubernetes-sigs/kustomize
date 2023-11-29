@@ -51,6 +51,6 @@ func makeKustTargetWithRf(
 		valtest_test.MakeFakeValidator(),
 		rf,
 		pLdr.NewLoader(pc, rf, fSys),
-		slog.New(slog.NewTextHandler(os.Stdout, opts)),
+		slog.New(slog.NewJSONHandler(os.Stdout, opts)),
 	)
 }
