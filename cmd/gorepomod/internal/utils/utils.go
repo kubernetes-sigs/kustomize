@@ -51,22 +51,23 @@ func SliceContains(slice []string, target string) bool {
 // Receive git remote url as input and produce string containing git repository name
 // e.g. kustomize, myrepo/kustomize
 func ParseGitRepositoryPath(urlString string) string {
-	var d []string = getUrlStringArray(urlString)
+	var d []string = getURLStringArray(urlString)
 	protocol := d[0]
 
 	var repoPath string
 
 	// for ssh protocol git@github.com:path/repo.git
-	if protocol == "git" {
+	switch protocol {
+	case "git":
 		repoPath = strings.Join(d[2:len(d)-1], "/") + "/" + d[3][:len(d[3])-4]
 		// https protocol https://github.com/path/repo.git
-	} else if protocol == "https" {
+	case "https":
 		repoPath = strings.Join(d[2:], "/")
 		repoPath = repoPath[:len(repoPath)-4]
 		// unsupported format
 		// TODO: confirm if we should handle other formats not commonly supported by Github
-	} else {
-		fmt.Errorf("protocol format is not supported: %s", protocol)
+	default:
+		_ = fmt.Errorf("protocol format is not supported: %s", protocol)
 		return ""
 	}
 
@@ -74,12 +75,10 @@ func ParseGitRepositoryPath(urlString string) string {
 }
 
 // Extract array of string from urlString
-func getUrlStringArray(urlString string) []string {
+func getURLStringArray(urlString string) []string {
 	// Supported git regex based on URI allowed regex as defined under RFC3986
-	re, err := regexp.Compile(`[A-Za-z0-9][A-Za-z0-9+.-]*`)
-	if err != nil {
-		fmt.Errorf("error when parsing regex: %q", err.Error())
-	}
+	const rfc3986 = `[A-Za-z0-9][A-Za-z0-9+.-]*`
+	re := regexp.MustCompile(rfc3986)
 	var u []string = re.FindAllString(urlString, -1)
 	return u
 }

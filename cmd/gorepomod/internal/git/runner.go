@@ -174,7 +174,10 @@ func (gr *Runner) LoadRemoteTags(
 	_, err = gr.run(noHarmDone, "fetch", "-t", string(remoteUpstream), "master")
 	if err != nil {
 		// Handle if repo is not a fork
-		gr.run(noHarmDone, "fetch", "-t", "master")
+		_, err = gr.run(noHarmDone, "fetch", "-t", "master")
+		if err != nil {
+			_ = fmt.Errorf("failed to fetch tags from master")
+		}
 	}
 
 	gr.comment("loading remote tags")
@@ -364,16 +367,16 @@ func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
 	// Assuming release branch has this format: release-path/to/module-vX.Y.Z
 	// and each release branch maintains tags, extract version from latest `releaseBranch`
 	gr.comment("extract version from latest release branch")
-	filteredBranchList, err := gr.run(noHarmDone, "branch", "-a", "--list", "*"+string(releaseBranch)+"*", "--sort=-committerdate")
+	filteredBranchList, err := gr.run(noHarmDone, "branch", "-a", "--list", "*"+releaseBranch+"*", "--sort=-committerdate")
 	if len(filteredBranchList) < 1 {
-		fmt.Errorf("latest tag not found for %s", releaseBranch)
+		_ = fmt.Errorf("latest tag not found for %s", releaseBranch)
 		return "", err
 	}
 	newestBranch := strings.Split(strings.ReplaceAll(filteredBranchList, "\r\n", "\n"), "\n")
 	split := strings.Split(newestBranch[0], "-")
 	latestTag = split[len(split)-1]
 	if err != nil {
-		fmt.Errorf("error getting latest tag for %s: %q", releaseBranch, err.Error())
+		_ = fmt.Errorf("error getting latest tag for %s", releaseBranch)
 	}
 
 	return latestTag, nil
