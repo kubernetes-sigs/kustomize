@@ -123,7 +123,7 @@ bases:
 `,
 			k: types.Kustomization{
 				TypeMeta:  expectedTypeMeta,
-				Resources: []string{"ldap"}, //Moved to resources by FixKustomization()
+				Resources: []string{"ldap"},
 			},
 		},
 	}
