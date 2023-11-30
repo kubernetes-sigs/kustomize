@@ -71,7 +71,7 @@ func (b *Kustomizer) Run(
 		Level: b.options.LogLevel,
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
+	errLogger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 
 	kt := target.NewKustTarget(
 		ldr,
@@ -79,7 +79,7 @@ func (b *Kustomizer) Run(
 		resmapFactory,
 		// The plugin configs are always located on disk, regardless of the fSys passed in
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory, filesys.MakeFsOnDisk()),
-		logger,
+		errLogger,
 	)
 	err = kt.Load()
 	if err != nil {
