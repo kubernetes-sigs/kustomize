@@ -310,6 +310,7 @@ func (r RunFns) mergeExecEnv(envs []string) []string {
 
 	for _, env := range append(envs, r.Env...) {
 		res := strings.Split(env, "=")
+		//nolint:gomnd
 		if len(res) == 2 {
 			envMap[res[0]] = res[1]
 		}
