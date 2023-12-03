@@ -76,7 +76,7 @@ func actualMain() error {
 		v := args.Version()
 		// Update branch history
 		gr := git.NewQuiet(mgr.AbsPath(), args.DoIt(), false)
-		gr.FetchRemote("master")
+		gr.FetchRemote(misc.TrackedRepo(gr.GetMainBranch()))
 
 		if v.IsZero() {
 			// Always use latest tag while does not removing manual usage capability

@@ -195,7 +195,9 @@ func getLocalPrefix(dgAbsPath string) string {
 		fmt.Errorf("failed extracting git information: %q", err.Error())
 	}
 
-	var originUrlString string = string(out)
-	var localPrefix string = utils.ParseGitRepositoryPath(originUrlString)
+	localPrefix := utils.ParseGitRepositoryPath(string(out))
+	if len(localPrefix) == 0 {
+		fmt.Errorf("parsed git repository path is empty: %q", err.Error())
+	}
 	return localPrefix
 }

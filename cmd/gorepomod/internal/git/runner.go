@@ -171,12 +171,12 @@ func (gr *Runner) LoadRemoteTags(
 
 	// Update latest tags from upstream
 	gr.comment("updating tags from upstream")
-	_, err = gr.run(noHarmDone, "fetch", "-t", string(remoteUpstream), "master")
+	_, err = gr.run(noHarmDone, "fetch", "-t", string(remoteUpstream), string(mainBranch))
 	if err != nil {
 		// Handle if repo is not a fork
-		_, err = gr.run(noHarmDone, "fetch", "-t", "master")
+		_, err = gr.run(noHarmDone, "fetch", "-t", string(mainBranch))
 		if err != nil {
-			_ = fmt.Errorf("failed to fetch tags from master")
+			_ = fmt.Errorf("failed to fetch tags from %s", string(mainBranch))
 		}
 	}
 
@@ -380,4 +380,8 @@ func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
 	}
 
 	return latestTag, nil
+}
+
+func (gr *Runner) GetMainBranch() string {
+	return string(mainBranch)
 }

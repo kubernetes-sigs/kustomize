@@ -56,16 +56,16 @@ func ParseGitRepositoryPath(urlString string) string {
 
 	var repoPath string
 
-	// for ssh protocol git@github.com:path/repo.git
+	// TODO(antoooks): Confirm if we should handle other formats not commonly supported by Github
 	switch protocol {
+	// ssh protocol, e.g. git@github.com:path/repo.git
 	case "git":
 		repoPath = strings.Join(d[2:len(d)-1], "/") + "/" + d[3][:len(d[3])-4]
-		// https protocol https://github.com/path/repo.git
+	// https protocol, e.g. https://github.com/path/repo.git
 	case "https":
 		repoPath = strings.Join(d[2:], "/")
 		repoPath = repoPath[:len(repoPath)-4]
-		// unsupported format
-		// TODO: confirm if we should handle other formats not commonly supported by Github
+	// unsupported format
 	default:
 		_ = fmt.Errorf("protocol format is not supported: %s", protocol)
 		return ""
