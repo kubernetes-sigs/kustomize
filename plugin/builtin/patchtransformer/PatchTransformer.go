@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	jsonpatch "gopkg.in/evanphx/json-patch.v5"
+	jsonpatch "github.com/evanphx/json-patch"
 	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
