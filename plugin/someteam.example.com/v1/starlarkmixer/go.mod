@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/starlarkmixer
 
 go 1.20
 
-require sigs.k8s.io/kustomize/api v0.15.0
+require sigs.k8s.io/kustomize/api v0.16.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -32,5 +32,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.16.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../../api
