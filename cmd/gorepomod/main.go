@@ -76,43 +76,48 @@ func actualMain() error {
 		v := args.Version()
 		// Update branch history
 		gr := git.NewQuiet(mgr.AbsPath(), args.DoIt(), false)
-		gr.FetchRemote(misc.TrackedRepo(gr.GetMainBranch()))
+		err = gr.FetchRemote(misc.TrackedRepo(gr.GetMainBranch()))
+		if err != nil {
+			return err
+		}
 
 		if v.IsZero() {
 			// Always use latest tag while does not removing manual usage capability
 			releaseBranch := fmt.Sprintf("release-%s", targetModule.ShortName())
 			fmt.Printf("new version not specified, fall back to latest version according to release branch: %s-*\n", releaseBranch)
-			latest, err := gr.GetLatestTag(string(releaseBranch))
+			latest, err := gr.GetLatestTag(releaseBranch)
 			if err != nil {
-				fmt.Errorf("cannot get latest tag for %s, falling back to local version %s", targetModule.ShortName(), targetModule.VersionLocal())
 				v = targetModule.VersionLocal()
-				return mgr.Pin(args.DoIt(), targetModule, v)
-
+				err = mgr.Pin(args.DoIt(), targetModule, v)
+				return fmt.Errorf("%w", err)
 			}
 			v, err = semver.Parse(latest)
 			if err != nil {
-				fmt.Errorf("failed to parse value for %s, falling back to local version %s", latest, targetModule.VersionLocal())
 				v = targetModule.VersionLocal()
-				return mgr.Pin(args.DoIt(), targetModule, v)
+				err = mgr.Pin(args.DoIt(), targetModule, v)
+				return fmt.Errorf("%w", err)
 			}
 		}
 
 		// If we can't find revision extracted from latest version specified on release branch
 		err = mgr.Pin(args.DoIt(), targetModule, v)
 		if err != nil {
-			fmt.Errorf("cannot determine latest version existence, retrying with local version %s", targetModule.VersionLocal())
 			v = targetModule.VersionLocal()
 			err = mgr.Pin(args.DoIt(), targetModule, v)
 		}
-		return err
+		return fmt.Errorf("%w", err)
 	case arguments.UnPin:
-		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
+		err = mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
+		return fmt.Errorf("%w", err)
 	case arguments.Release:
-		return mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		err = mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		return fmt.Errorf("%w", err)
 	case arguments.UnRelease:
-		return mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
+		err = mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
+		return fmt.Errorf("%w", err)
 	case arguments.Debug:
-		return mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
+		err = mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
+		return fmt.Errorf("%w", err)
 	default:
 		return fmt.Errorf("cannot handle cmd %v", args.GetCommand())
 	}

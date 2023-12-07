@@ -52,7 +52,6 @@ func (dg *DotGitData) AbsPath() string {
 //	~/gopath/src/sigs.k8s.io/kustomize
 //	~/gopath/src/github.com/monopole/gorepomod
 func NewDotGitDataFromPath(path string, localFlag bool) (*DotGitData, error) {
-
 	if !utils.DirExists(filepath.Join(path, dotGitFileName)) {
 		return nil, fmt.Errorf(
 			"%q doesn't have a %q file", path, dotGitFileName)
@@ -89,7 +88,6 @@ func NewDotGitDataFromPath(path string, localFlag bool) (*DotGitData, error) {
 			repoPath: path[index+len(srcHint):],
 		}, nil
 	}
-
 }
 
 // It's a factory factory.
@@ -187,17 +185,17 @@ func (dg *DotGitData) checkModulesLocal(modules []*protoModule) error {
 func getLocalPrefix(dgAbsPath string) string {
 	_, err := os.Stat(dgAbsPath + ".git")
 	if err != nil {
-		fmt.Errorf(".git directory does not exist int path %q", dgAbsPath)
+		_ = fmt.Errorf(".git directory does not exist int path %w", dgAbsPath)
 	}
 
 	out, err := exec.Command("git", "config", "--get", "remote.origin.url").Output()
 	if err != nil {
-		fmt.Errorf("failed extracting git information: %q", err.Error())
+		_ = fmt.Errorf("failed extracting git information: %w", err.Error())
 	}
 
 	localPrefix := utils.ParseGitRepositoryPath(string(out))
 	if len(localPrefix) == 0 {
-		fmt.Errorf("parsed git repository path is empty: %q", err.Error())
+		_ = fmt.Errorf("parsed git repository path is empty: %w", err.Error())
 	}
 	return localPrefix
 }

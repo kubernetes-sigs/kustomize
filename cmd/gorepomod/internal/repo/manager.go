@@ -84,7 +84,7 @@ func (mgr *Manager) List() error {
 	gr := git.NewQuiet(mgr.AbsPath(), false, false)
 	for _, module := range mgr.modules {
 		releaseBranch := fmt.Sprintf("release-%s", module.ShortName())
-		_, err := gr.GetLatestTag(string(releaseBranch))
+		_, err := gr.GetLatestTag(releaseBranch)
 		if err != nil {
 			fmt.Errorf("failed getting latest tags for %s", module)
 		}
@@ -134,7 +134,6 @@ func (mgr *Manager) Debug(_ misc.LaModule, doIt bool, localFlag bool) error {
 // * Each minor release gets its own branch.
 func (mgr *Manager) Release(
 	target misc.LaModule, bump semver.SvBump, doIt bool, localFlag bool) error {
-
 	if reps := target.GetDisallowedReplacements(
 		mgr.allowedReplacements); len(reps) > 0 {
 		return fmt.Errorf(

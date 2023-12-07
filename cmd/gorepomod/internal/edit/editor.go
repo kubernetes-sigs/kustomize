@@ -62,7 +62,7 @@ func (e *Editor) Pin(target misc.LaModule, oldV, newV semver.SemVer) error {
 		"-require=sigs.k8s.io/kustomize/"+string(target.ShortName())+"@"+newV.String(),
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w", err)
 	}
 	return e.run("tidy")
 }
@@ -81,7 +81,7 @@ func (e *Editor) UnPin(target misc.LaModule, oldV semver.SemVer) error {
 		"-replace="+r.String(),
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w", err)
 	}
 	return e.run("tidy")
 }

@@ -267,9 +267,12 @@ func (gr *Runner) FetchRemote(remote misc.TrackedRepo) error {
 	err := gr.runNoOut(noHarmDone, "fetch", string(remote))
 	if err != nil {
 		// If current repo is fork
-		return gr.runNoOut(noHarmDone, "fetch", string(remoteUpstream))
+		err = gr.runNoOut(noHarmDone, "fetch", string(remoteUpstream))
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
 	}
-	return err
+	return fmt.Errorf("%w", err)
 }
 
 // MergeFromRemoteMain does a fast forward only merge with main branch.
