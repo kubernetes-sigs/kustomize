@@ -272,7 +272,7 @@ func (gr *Runner) FetchRemote(remote misc.TrackedRepo) error {
 			return fmt.Errorf("%w", err)
 		}
 	}
-	return fmt.Errorf("%w", err)
+	return nil
 }
 
 // MergeFromRemoteMain does a fast forward only merge with main branch.

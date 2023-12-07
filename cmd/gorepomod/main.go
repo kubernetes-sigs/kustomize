@@ -78,7 +78,7 @@ func actualMain() error {
 		gr := git.NewQuiet(mgr.AbsPath(), args.DoIt(), false)
 		err = gr.FetchRemote(misc.TrackedRepo(gr.GetMainBranch()))
 		if err != nil {
-			return err
+			return fmt.Errorf("%w", err)
 		}
 
 		if v.IsZero() {
@@ -89,13 +89,13 @@ func actualMain() error {
 			if err != nil {
 				v = targetModule.VersionLocal()
 				err = mgr.Pin(args.DoIt(), targetModule, v)
-				return fmt.Errorf("%w", err)
+				return err
 			}
 			v, err = semver.Parse(latest)
 			if err != nil {
 				v = targetModule.VersionLocal()
 				err = mgr.Pin(args.DoIt(), targetModule, v)
-				return fmt.Errorf("%w", err)
+				return err
 			}
 		}
 
@@ -103,21 +103,17 @@ func actualMain() error {
 		err = mgr.Pin(args.DoIt(), targetModule, v)
 		if err != nil {
 			v = targetModule.VersionLocal()
-			err = mgr.Pin(args.DoIt(), targetModule, v)
+			return mgr.Pin(args.DoIt(), targetModule, v)
 		}
-		return fmt.Errorf("%w", err)
+		return err
 	case arguments.UnPin:
-		err = mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
-		return fmt.Errorf("%w", err)
+		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 	case arguments.Release:
-		err = mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
-		return fmt.Errorf("%w", err)
+		return mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
 	case arguments.UnRelease:
-		err = mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
-		return fmt.Errorf("%w", err)
+		return mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
 	case arguments.Debug:
-		err = mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
-		return fmt.Errorf("%w", err)
+		return mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
 	default:
 		return fmt.Errorf("cannot handle cmd %v", args.GetCommand())
 	}

@@ -33,7 +33,11 @@ func TestListCommand(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		out, err := exec.Command("bash", "-c", tc.cmd).Output()
+		bash, err := exec.LookPath("bash")
+		if err != nil {
+			t.Error("bash not found")
+		}
+		out, err := exec.Command(bash, "-c", tc.cmd).Output()
 		if err != nil {
 			assert.Error(t, err, "exit status 1")
 		}
@@ -66,7 +70,11 @@ func TestPinCommand(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		out, err := exec.Command("bash", "-c", tc.cmd).Output()
+		bash, err := exec.LookPath("bash")
+		if err != nil {
+			t.Error("bash not found")
+		}
+		out, err := exec.Command(bash, "-c", tc.cmd).Output()
 		if err != nil {
 			assert.Error(t, err, "exit status 1")
 		}

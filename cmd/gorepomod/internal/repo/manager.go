@@ -86,7 +86,7 @@ func (mgr *Manager) List() error {
 		releaseBranch := fmt.Sprintf("release-%s", module.ShortName())
 		_, err := gr.GetLatestTag(releaseBranch)
 		if err != nil {
-			fmt.Errorf("failed getting latest tags for %s", module)
+			return fmt.Errorf("failed getting latest tags for %s", module)
 		}
 	}
 

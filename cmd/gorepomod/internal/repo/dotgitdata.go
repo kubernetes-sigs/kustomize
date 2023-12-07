@@ -59,11 +59,14 @@ func NewDotGitDataFromPath(path string, localFlag bool) (*DotGitData, error) {
 
 	// If local flag is supplied, use local git naming instead of production (sigs.k8s.io)
 	if localFlag {
-		localPrefix := getLocalPrefix(path)
+		localPrefix, err := getLocalPrefix(path)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
 		v.Set("LocalGitPrefix", localPrefix)
 		wd, err := os.Getwd()
 		if err != nil {
-			return nil, fmt.Errorf("error extracting git repository %q", err.Error())
+			return nil, fmt.Errorf("error extracting git repository %w", err)
 		}
 
 		pathSlice := strings.Split(wd, "/")
@@ -182,20 +185,20 @@ func (dg *DotGitData) checkModulesLocal(modules []*protoModule) error {
 }
 
 // Extract local prefix from origin url information retrieved from .git
-func getLocalPrefix(dgAbsPath string) string {
-	_, err := os.Stat(dgAbsPath + ".git")
+func getLocalPrefix(dgAbsPath string) (string, error) {
+	_, err := os.Stat(dgAbsPath + "/.git")
 	if err != nil {
-		_ = fmt.Errorf(".git directory does not exist int path %w", dgAbsPath)
+		return "", fmt.Errorf(".git directory does not exist in path %s", dgAbsPath)
 	}
 
 	out, err := exec.Command("git", "config", "--get", "remote.origin.url").Output()
 	if err != nil {
-		_ = fmt.Errorf("failed extracting git information: %w", err.Error())
+		return "", fmt.Errorf("failed extracting git information: %w", err)
 	}
 
 	localPrefix := utils.ParseGitRepositoryPath(string(out))
 	if len(localPrefix) == 0 {
-		_ = fmt.Errorf("parsed git repository path is empty: %w", err.Error())
+		_ = fmt.Errorf("parsed git repository path is empty: %w", err)
 	}
-	return localPrefix
+	return localPrefix, nil
 }
