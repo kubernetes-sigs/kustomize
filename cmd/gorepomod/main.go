@@ -89,13 +89,19 @@ func actualMain() error {
 			if err != nil {
 				v = targetModule.VersionLocal()
 				err = mgr.Pin(args.DoIt(), targetModule, v)
-				return err
+				if err != nil {
+					return fmt.Errorf("error: %w", err)
+				}
+				return nil
 			}
 			v, err = semver.Parse(latest)
 			if err != nil {
 				v = targetModule.VersionLocal()
 				err = mgr.Pin(args.DoIt(), targetModule, v)
-				return err
+				if err != nil {
+					return fmt.Errorf("error: %w", err)
+				}
+				return nil
 			}
 		}
 
@@ -103,17 +109,37 @@ func actualMain() error {
 		err = mgr.Pin(args.DoIt(), targetModule, v)
 		if err != nil {
 			v = targetModule.VersionLocal()
-			return mgr.Pin(args.DoIt(), targetModule, v)
+			err = mgr.Pin(args.DoIt(), targetModule, v)
+			if err != nil {
+				return fmt.Errorf("error: %w", err)
+			}
+			return nil
 		}
-		return err
+		return nil
 	case arguments.UnPin:
-		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
+		err = mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.Release:
-		return mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		err = mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.UnRelease:
-		return mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
+		err = mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.Debug:
-		return mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
+		err = mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	default:
 		return fmt.Errorf("cannot handle cmd %v", args.GetCommand())
 	}
