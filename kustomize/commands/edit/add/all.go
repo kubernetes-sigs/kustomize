@@ -47,6 +47,9 @@ func NewCmdAdd(
 
 	# Adds a transformer configuration to the kustomization
 	kustomize edit add transformer <filepath>
+
+	# Adds a replacement to the kustomization
+	kustomize edit add replacement --path {filepath}
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
@@ -62,6 +65,7 @@ func NewCmdAdd(
 		newCmdAddAnnotation(fSys, ldr.Validator().MakeAnnotationValidator()),
 		newCmdAddTransformer(fSys),
 		newCmdAddGenerator(fSys),
+		newCmdAddReplacement(fSys),
 	)
 	return c
 }
