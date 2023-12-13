@@ -45,9 +45,9 @@ func MergeStrings(srcStr, destStr string, infer bool, mergeOptions yaml.MergeOpt
 }
 
 type Merger struct {
-	// for forwards compatibility when new functions are added to the interface
 }
 
+// for forwards compatibility when new functions are added to the interface
 var _ walk.Visitor = Merger{}
 
 func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
