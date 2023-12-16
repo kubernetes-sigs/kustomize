@@ -111,9 +111,8 @@ If you have a PR, link to it at the top of this section.
 
 ### Replacement the value in structured data
 
-I propose to add options for replacing the value in structured data to replacements function. My sample implementation is [here](https://github.com/kubernetes-sigs/kustomize/pull/4518).\
-This idea is add two parameter `format` and `formatPath` to [options](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L67-L80) in replacement [TargetSelector](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L52-L64). The `format` option is used by select to structured data format like "json" or "yaml", and The `formatPath` option is "path" to target to change values in structured data with selected format from `format` option.\
-I think these two parameters can't select a specific default value. Therefore kustomize return error message for the user if only one parameter was set.\
+I propose to extend the `fieldPath` and `fieldPaths` fields to replace the value in structured data with the replacements function.\
+This idea is extending how to select any field in replacement [TargetSelector](https://github.com/kubernetes-sigs/kustomize/blob/8668691ade05bc17b3c6f44bcd4723735033196e/api/types/replacement.go#L52-L64). If the `source.fieldPath` and `targets.fieldPaths` had extra values after a specific string literal in Yaml, Kustomize tries to parse that string as structure data and tries to drill down using that additional values.
 
 #### Example.
 
@@ -129,10 +128,7 @@ replacements:
       kind: ConfigMap
       name: target-configmap
     fieldPaths:
-    - data.config\.json
-    options:
-      format: 'json'                  # Setting structured data format.
-      formatPath: '/config/hostname'  # Setting replacements path.
+    - data.config\.json.config.hostname # A path after `config\.json` is pointing one place in the structured data.
 ```
 
 Please check [Story 1](#Story-1).
@@ -249,10 +245,7 @@ replacements:
       kind: ConfigMap
       name: target-configmap
     fieldPaths:
-    - data.config\.json
-    options:
-      format: 'json'
-      formatPath: '/config/hostname'
+    - data.config\.json.config.hostname
 ```
 
 ```yaml
@@ -393,10 +386,7 @@ replacements:
       kind: ConfigMap
       name: prometheus-config
     fieldPaths:
-    - data.prometheus\.yml
-    options:
-      format: 'yaml'
-      formatPath: '/global/external_labels/prometheus_env'
+    - data.prometheus\.yml.global.external_labels?prometheus_env
 ```
 
 ```yaml
@@ -471,10 +461,7 @@ replacements:
       kind: ConServicefigMap
       name: appA-svc
     fieldPaths:
-    - metadata.annotations.cloud-provider/backend-config
-    options:
-      format: 'json'
-      formatPath: '/ports/appA'
+    - metadata.annotations.cloud-provider/backend-config.ports.appA
 ```
 
 ```yaml
