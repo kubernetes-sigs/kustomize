@@ -2,7 +2,7 @@
 
 # Demo: Multiple Deployments
 
-This demo helps you to multiple services on same kubenetes cluster using kustomize.
+This demo helps you to multiple services on same kubernetes cluster using kustomize.
 
 Steps:
 1. Create the resources files for wordpress service.
