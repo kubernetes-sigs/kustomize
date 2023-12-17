@@ -69,7 +69,7 @@ func (e *Editor) Pin(target misc.LaModule, oldV, newV semver.SemVer) error {
 
 func (e *Editor) UnPin(target misc.LaModule, oldV semver.SemVer) error {
 	var r strings.Builder
-	r.WriteString(target.ImportPath())
+	r.WriteString("sigs.k8s.io/kustomize/" + string(target.ShortName()))
 	// Don't specify the old version.
 	// r.WriteString("@")
 	// r.WriteString(oldV.String())
