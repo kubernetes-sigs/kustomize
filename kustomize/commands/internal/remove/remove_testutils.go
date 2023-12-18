@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package remove_test
+package remove
 
 import (
 	"fmt"
@@ -41,11 +41,15 @@ type Case struct {
 	Expected Expected
 }
 
-// ExecuteTestCases executes the provided test cases against the specified command
+// ExecuteRemoveTestCases executes the provided test cases against the specified command
 // for a particular collection (e.g. ) tests a command defined by the provided
 // collection Name (e.g. transformers or resources) and newRemoveCmdToTest function.
-func ExecuteTestCases(t *testing.T, testCases []Case, collectionName string,
-	newRemoveCmdToTest func(filesys.FileSystem) *cobra.Command) {
+func ExecuteRemoveTestCases(
+	t *testing.T,
+	testCases []Case,
+	collectionName string,
+	newRemoveCmdToTest func(filesys.FileSystem) *cobra.Command,
+) {
 	t.Helper()
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
