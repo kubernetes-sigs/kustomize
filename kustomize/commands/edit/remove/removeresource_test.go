@@ -7,14 +7,14 @@ import (
 	"errors"
 	"testing"
 
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/remove"
+	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 )
 
 func TestRemoveResources(t *testing.T) {
-	testCases := []remove.Case{
+	testCases := []testutils_test.Case{
 		{
 			Description: "remove resources",
-			Given: remove.Given{
+			Given: testutils_test.Given{
 				Items: []string{
 					"resource1.yaml",
 					"resource2.yaml",
@@ -22,7 +22,7 @@ func TestRemoveResources(t *testing.T) {
 				},
 				RemoveArgs: []string{"resource1.yaml"},
 			},
-			Expected: remove.Expected{
+			Expected: testutils_test.Expected{
 				Items: []string{
 					"resource2.yaml",
 					"resource3.yaml",
@@ -34,7 +34,7 @@ func TestRemoveResources(t *testing.T) {
 		},
 		{
 			Description: "remove resource with pattern",
-			Given: remove.Given{
+			Given: testutils_test.Given{
 				Items: []string{
 					"foo/resource1.yaml",
 					"foo/resource2.yaml",
@@ -43,7 +43,7 @@ func TestRemoveResources(t *testing.T) {
 				},
 				RemoveArgs: []string{"foo/resource*.yaml"},
 			},
-			Expected: remove.Expected{
+			Expected: testutils_test.Expected{
 				Items: []string{
 					"do/not/deleteme/please.yaml",
 				},
@@ -56,7 +56,7 @@ func TestRemoveResources(t *testing.T) {
 		},
 		{
 			Description: "nothing found to remove",
-			Given: remove.Given{
+			Given: testutils_test.Given{
 				Items: []string{
 					"resource1.yaml",
 					"resource2.yaml",
@@ -64,7 +64,7 @@ func TestRemoveResources(t *testing.T) {
 				},
 				RemoveArgs: []string{"foo"},
 			},
-			Expected: remove.Expected{
+			Expected: testutils_test.Expected{
 				Items: []string{
 					"resource2.yaml",
 					"resource3.yaml",
@@ -74,14 +74,14 @@ func TestRemoveResources(t *testing.T) {
 		},
 		{
 			Description: "no arguments",
-			Given:       remove.Given{},
-			Expected: remove.Expected{
+			Given:       testutils_test.Given{},
+			Expected: testutils_test.Expected{
 				Err: errors.New("must specify a resource file"),
 			},
 		},
 		{
 			Description: "remove with multiple pattern arguments",
-			Given: remove.Given{
+			Given: testutils_test.Given{
 				Items: []string{
 					"foo/foo.yaml",
 					"bar/bar.yaml",
@@ -94,7 +94,7 @@ func TestRemoveResources(t *testing.T) {
 					"res*.yaml",
 				},
 			},
-			Expected: remove.Expected{
+			Expected: testutils_test.Expected{
 				Items: []string{
 					"do/not/deleteme/please.yaml",
 				},
@@ -107,5 +107,5 @@ func TestRemoveResources(t *testing.T) {
 		},
 	}
 
-	remove.ExecuteRemoveTestCases(t, testCases, "resources", newCmdRemoveResource)
+	testutils_test.ExecuteRemoveTestCases(t, testCases, "resources", newCmdRemoveResource)
 }

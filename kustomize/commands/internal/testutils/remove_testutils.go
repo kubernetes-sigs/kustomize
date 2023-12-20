@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package remove
+package testutils_test
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -54,7 +53,7 @@ func ExecuteRemoveTestCases(
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			fSys := filesys.MakeFsInMemory()
-			testutils_test.WriteTestKustomizationWith(
+			WriteTestKustomizationWith(
 				fSys,
 				[]byte(fmt.Sprintf("%s:\n  - %s",
 					collectionName,
@@ -71,7 +70,7 @@ func ExecuteRemoveTestCases(
 				}
 				return
 			}
-			content, err := testutils_test.ReadTestKustomization(fSys)
+			content, err := ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 			}
