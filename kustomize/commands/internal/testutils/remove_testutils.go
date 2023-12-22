@@ -1,7 +1,7 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package remove_test
+package testutils_test
 
 import (
 	"fmt"
@@ -9,21 +9,20 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// Given represents the provided inputs for the test case.
-type Given struct {
+// RemoveTestGivenValues represents the provided inputs for the test case.
+type RemoveTestGivenValues struct {
 	// Items is the given input items.
 	Items []string
 	// RemoveArgs are the arguments to pass to the remove command.
 	RemoveArgs []string
 }
 
-// Expected represents the expected outputs of the test case.
-type Expected struct {
-	// Expected is the collection of expected output items.
+// RemoveTestExpectedValues represents the expected outputs of the test case.
+type RemoveTestExpectedValues struct {
+	// RemoveTestExpectedValues is the collection of expected output items.
 	Items []string
 	// Deleted is the collection of expected Deleted items (if any).
 	Deleted []string
@@ -31,26 +30,30 @@ type Expected struct {
 	Err error
 }
 
-// Case represents a test case to execute.
-type Case struct {
+// RemoveTestCase represents a test case to execute.
+type RemoveTestCase struct {
 	// Description is the description of the test case.
 	Description string
 	// Given is the provided inputs for the test case.
-	Given Given
+	Given RemoveTestGivenValues
 	// Expected is the expected outputs for the test case.
-	Expected Expected
+	Expected RemoveTestExpectedValues
 }
 
-// ExecuteTestCases executes the provided test cases against the specified command
+// ExecuteRemoveTestCases executes the provided test cases against the specified command
 // for a particular collection (e.g. ) tests a command defined by the provided
 // collection Name (e.g. transformers or resources) and newRemoveCmdToTest function.
-func ExecuteTestCases(t *testing.T, testCases []Case, collectionName string,
-	newRemoveCmdToTest func(filesys.FileSystem) *cobra.Command) {
+func ExecuteRemoveTestCases(
+	t *testing.T,
+	testCases []RemoveTestCase,
+	collectionName string,
+	newRemoveCmdToTest func(filesys.FileSystem) *cobra.Command,
+) {
 	t.Helper()
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			fSys := filesys.MakeFsInMemory()
-			testutils_test.WriteTestKustomizationWith(
+			WriteTestKustomizationWith(
 				fSys,
 				[]byte(fmt.Sprintf("%s:\n  - %s",
 					collectionName,
@@ -61,13 +64,13 @@ func ExecuteTestCases(t *testing.T, testCases []Case, collectionName string,
 				t.Errorf("unexpected cmd error: %v", err)
 			} else if tc.Expected.Err != nil {
 				if err.Error() != tc.Expected.Err.Error() {
-					t.Errorf("expected error did not occurred. Expected: %v. Actual: %v",
+					t.Errorf("expected error did not occur. Expected: %v. Actual: %v",
 						tc.Expected.Err,
 						err)
 				}
 				return
 			}
-			content, err := testutils_test.ReadTestKustomization(fSys)
+			content, err := ReadTestKustomization(fSys)
 			if err != nil {
 				t.Errorf("unexpected read error: %v", err)
 			}
