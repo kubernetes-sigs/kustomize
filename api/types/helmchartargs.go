@@ -96,6 +96,10 @@ type HelmChart struct {
 
 	// SkipTests skips tests from templated output.
 	SkipTests bool `json:"skipTests,omitempty" yaml:"skipTests,omitempty"`
+
+	// ServerValidation makes api calls to the kubernetes cluster. Enables helm lookup
+	// as well as checking cluster capabilities
+	ServerValidation bool `json:"serverValidation,omitempty" yaml:"serverValidation,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.
@@ -187,6 +191,10 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	}
 	if h.SkipHooks {
 		args = append(args, "--no-hooks")
+	}
+	if h.ServerValidation {
+		args = append(args, "--validate")
+		args = append(args, "--dry-run=server")
 	}
 	return args
 }
