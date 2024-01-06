@@ -1,0 +1,88 @@
+name: release-api
+
+on: 
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        description: release type (major, minor, or patch).
+        options:
+          - major
+          - minor
+          - patch
+        required: true
+      release_branch:
+        type: string
+        description: release branch name "release-api-v*"
+        required: true
+
+jobs:
+  pre-build: 
+    name: Pre-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Unit test
+        id: unit_test
+        run: |
+          echo "Executing unit test"
+          make test-unit-all >> "${GITHUB_OUTPUT}"
+      - name: Notify build result
+        uses: ShaunLWM/action-join@master
+        env:
+          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
+          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
+          JOIN_TEXT: Your project has been built.
+          JOIN_TITLE: Build Complete
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pin kyaml, cmd/config
+        run: |
+          gorepomod pin kyaml --doIt
+          gorepomod pin cmd/config --doIt
+      - name: Build api
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Notify build result
+        uses: ShaunLWM/action-join@master
+        env:
+          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
+          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
+          JOIN_TEXT: Your project has been built.
+          JOIN_TITLE: Build Complete
+  e2e-test:
+    name: End-to-end Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: End-to-end testing   
+        id: e2e_test
+        run: make verify-kustomize-e2e
+      - name: Notify build result
+        uses: ShaunLWM/action-join@master
+        env:
+          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
+          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
+          JOIN_TEXT: Your project has been built.
+          JOIN_TITLE: Build Complete
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release kyaml
+        run: |
+          make install-local-tools
+          gorepomod release kyaml ${{ inputs.release_type }} --doIt
+      - name: Notify build result
+        uses: ShaunLWM/action-join@master
+        env:
+          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
+          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
+          JOIN_TEXT: Your project has been built.
+          JOIN_TITLE: Build Complete
