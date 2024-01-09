@@ -22,6 +22,7 @@ func TestAsHelmArgs(t *testing.T) {
 			SkipTests:             true,
 			IncludeCRDs:           true,
 			SkipHooks:             true,
+			ServerValidation:	   true,
 			ValuesFile:            "values",
 			AdditionalValuesFiles: []string{"values1", "values2"},
 			Namespace:             "my-ns",
@@ -37,7 +38,9 @@ func TestAsHelmArgs(t *testing.T) {
 				"--kube-version", "1.27",
 				"--include-crds",
 				"--skip-tests",
-				"--no-hooks"})
+				"--no-hooks",
+				"--validate",
+				"--dry-run=server"})
 	})
 
 	t.Run("use release-name", func(t *testing.T) {
