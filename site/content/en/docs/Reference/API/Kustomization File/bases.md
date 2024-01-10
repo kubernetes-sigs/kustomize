@@ -2,7 +2,7 @@
 title: "bases"
 linkTitle: "bases"
 type: docs
-weight: 1
+weight: 2
 description: >
     Add resources from a kustomization dir.
 ---
