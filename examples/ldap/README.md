@@ -3,8 +3,8 @@
 [kustomization]: ../../docs/glossary.md#kustomization
 [overlay]: ../../docs/glossary.md#overlay
 [overlays]: ../../docs/glossary.md#overlay
-[variant]: ../../docs/glossary.md#variant
-[variants]: ../../docs/glossary.md#variant
+[variant]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
+[variants]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
 
 # Demo: LDAP with variants
 
