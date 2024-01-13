@@ -27,8 +27,8 @@ jobs:
                 force: 'true'
           - name: Run script
             run: |
-                apt-get update
-                apt-get install wget -y
+                sudo apt-get update
+                sudo apt-get install wget -y
                 ./hack/unwanted-dependencies-check.sh
           - name: Report failure
             uses: nashmaniac/create-issue-action@v1.2
