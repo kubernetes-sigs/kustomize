@@ -22,7 +22,6 @@ func TestAsHelmArgs(t *testing.T) {
 			SkipTests:             true,
 			IncludeCRDs:           true,
 			SkipHooks:             true,
-			ServerValidation:	   true,
 			ValuesFile:            "values",
 			AdditionalValuesFiles: []string{"values1", "values2"},
 			Namespace:             "my-ns",
@@ -38,9 +37,7 @@ func TestAsHelmArgs(t *testing.T) {
 				"--kube-version", "1.27",
 				"--include-crds",
 				"--skip-tests",
-				"--no-hooks",
-				"--validate",
-				"--dry-run=server"})
+				"--no-hooks"})
 	})
 
 	t.Run("use release-name", func(t *testing.T) {
@@ -62,5 +59,23 @@ func TestAsHelmArgs(t *testing.T) {
 				"-f", "values",
 				"-f", "values1", "-f", "values2",
 				"--api-versions", "foo", "--api-versions", "bar"})
+	})
+}
+
+func TestAsHelmArgsServerValidation(t *testing.T) {
+	t.Run("use server-validation", func(t *testing.T) {
+		p := types.HelmChart{
+			Name:                  "chart-name",
+			Version:               "1.0.0",
+			Repo:                  "https://helm.releases.hashicorp.com",
+			ValuesFile:            "values",
+			ServerValidation:	   true,
+		}
+		require.Equal(t, p.AsHelmArgs("/home/charts"),
+			[]string{"template", "--generate-name",
+				"/home/charts/chart-name",
+				"-f", "values",
+				"--validate",
+				"--dry-run=server"})
 	})
 }
