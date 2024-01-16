@@ -63,7 +63,8 @@ func (m *Module) AbsPath() string {
 
 func (m *Module) DependsOn(target misc.LaModule) (bool, semver.SemVer) {
 	for _, r := range m.mf.Require {
-		if r.Mod.Path == target.ImportPath() {
+		targetImportPath := fmt.Sprintf("sigs.k8s.io/kustomize/%s", string(target.ShortName()))
+		if r.Mod.Path == targetImportPath {
 			v, err := semver.Parse(r.Mod.Version)
 			if err != nil {
 				panic(err)
