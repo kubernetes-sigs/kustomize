@@ -8,8 +8,10 @@ import (
 	"os"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/arguments"
+	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/repo"
+	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
 )
 
 //go:generate go run internal/gen/main.go
@@ -19,14 +21,19 @@ func loadRepoManager(args *arguments.Args) (*repo.Manager, error) {
 	if err != nil {
 		return nil, err
 	}
-	dg, err := repo.NewDotGitDataFromPath(path)
+	dg, err := repo.NewDotGitDataFromPath(path, args.LocalFlag())
 	if err != nil {
 		return nil, err
 	}
-	pr, err := dg.NewRepoFactory(args.Exclusions())
+	pr, err := dg.NewRepoFactory(args.Exclusions(), args.LocalFlag())
 	if err != nil {
 		return nil, err
 	}
+
+	if args.LocalFlag() {
+		return pr.NewRepoManagerWithLocalFlag(args.AllowedReplacements()), nil
+	}
+
 	return pr.NewRepoManager(args.AllowedReplacements()), nil
 }
 
@@ -67,18 +74,72 @@ func actualMain() error {
 		return mgr.Tidy(args.DoIt())
 	case arguments.Pin:
 		v := args.Version()
-		if v.IsZero() {
-			v = targetModule.VersionLocal()
+		// Update branch history
+		gr := git.NewQuiet(mgr.AbsPath(), args.DoIt(), false)
+		err = gr.FetchRemote(misc.TrackedRepo(gr.GetMainBranch()))
+		if err != nil {
+			return fmt.Errorf("%w", err)
 		}
-		return mgr.Pin(args.DoIt(), targetModule, v)
+
+		if v.IsZero() {
+			// Always use latest tag while does not removing manual usage capability
+			releaseBranch := fmt.Sprintf("release-%s", targetModule.ShortName())
+			fmt.Printf("new version not specified, fall back to latest version according to release branch: %s-*\n", releaseBranch)
+			latest, err := gr.GetLatestTag(releaseBranch)
+			if err != nil {
+				v = targetModule.VersionLocal()
+				err = mgr.Pin(args.DoIt(), targetModule, v)
+				if err != nil {
+					return fmt.Errorf("error: %w", err)
+				}
+				return nil
+			}
+			v, err = semver.Parse(latest)
+			if err != nil {
+				v = targetModule.VersionLocal()
+				err = mgr.Pin(args.DoIt(), targetModule, v)
+				if err != nil {
+					return fmt.Errorf("error: %w", err)
+				}
+				return nil
+			}
+		}
+
+		// If we can't find revision extracted from latest version specified on release branch
+		err = mgr.Pin(args.DoIt(), targetModule, v)
+		if err != nil {
+			v = targetModule.VersionLocal()
+			err = mgr.Pin(args.DoIt(), targetModule, v)
+			if err != nil {
+				return fmt.Errorf("error: %w", err)
+			}
+			return nil
+		}
+		return nil
 	case arguments.UnPin:
-		return mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
+		err = mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.Release:
-		return mgr.Release(targetModule, args.Bump(), args.DoIt())
+		err = mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.UnRelease:
-		return mgr.UnRelease(targetModule, args.DoIt())
+		err = mgr.UnRelease(targetModule, args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.Debug:
-		return mgr.Debug(targetModule, args.DoIt())
+		err = mgr.Debug(targetModule, args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	default:
 		return fmt.Errorf("cannot handle cmd %v", args.GetCommand())
 	}

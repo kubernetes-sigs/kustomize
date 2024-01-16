@@ -3,7 +3,10 @@
 
 package repo
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestLoadTags(t *testing.T) {
+func TestLoadRepoManager(t *testing.T) {
+	t.Skip()
 }

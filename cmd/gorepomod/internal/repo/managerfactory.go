@@ -37,3 +37,23 @@ func (mf *ManagerFactory) NewRepoManager(allowedReplacements []string) *Manager 
 	result.allowedReplacements = allowedReplacements
 	return result
 }
+
+func (mf *ManagerFactory) NewRepoManagerWithLocalFlag(allowedReplacements []string) *Manager {
+	result := &Manager{
+		dg:         mf.dg,
+		remoteName: mf.remoteName,
+	}
+	var modules misc.LesModules
+	for _, pm := range mf.modules {
+		shortName := pm.ShortNameWithLocalFlag(mf.dg.RepoPath())
+		modules = append(
+			modules,
+			mod.New(
+				result, shortName, pm.mf,
+				mf.versionMapLocal.Latest(shortName),
+				mf.versionMapRemote.Latest(shortName)))
+	}
+	result.modules = modules
+	result.allowedReplacements = allowedReplacements
+	return result
+}
