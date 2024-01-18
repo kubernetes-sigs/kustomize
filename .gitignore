@@ -27,6 +27,7 @@ publishedSite/
 site/public/
 site/resources/
 site/.hugo_build.lock
+site/container-image.sentinel
 **/node_modules/
 
 # goreleaser artifacts
