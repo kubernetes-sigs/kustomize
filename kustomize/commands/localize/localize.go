@@ -20,7 +20,8 @@ type arguments struct {
 }
 
 type flags struct {
-	scope string
+	scope    string
+	noVerify bool
 }
 
 // NewCmdLocalize returns a new localize command.
@@ -29,14 +30,14 @@ func NewCmdLocalize(fs filesys.FileSystem) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "localize [target [destination]]",
 		Short: "[Alpha] Creates localized copy of target kustomization root at destination",
-		Long: `[Alpha] Creates copy of target kustomization directory or 
-versioned URL at destination, where remote references in the original 
+		Long: `[Alpha] Creates copy of target kustomization directory or
+versioned URL at destination, where remote references in the original
 are replaced by local references to the downloaded remote content.
 
-If target is not specified, the current working directory will be used. 
-Destination is a path to a new directory in an existing directory. If 
-destination is not specified, a new directory will be created in the current 
-working directory. 
+If target is not specified, the current working directory will be used.
+Destination is a path to a new directory in an existing directory. If
+destination is not specified, a new directory will be created in the current
+working directory.
 
 For details, see: https://kubectl.docs.kubernetes.io/references/kustomize/cmd/
 
@@ -46,7 +47,7 @@ alphabetizes kustomization fields in the localized copy.
 `,
 		Example: `
 # Localize the current working directory, with default scope and destination
-kustomize localize 
+kustomize localize
 
 # Localize some local directory, with scope and default destination
 kustomize localize /home/path/scope/target --scope /home/path/scope
@@ -74,6 +75,12 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 Cannot specify for remote targets, as scope is by default the containing repo.
 If not specified for local target, scope defaults to target.
 `)
+	cmd.Flags().BoolVar(&f.noVerify,
+		"no-verify",
+		false,
+		`Do not verify that the outputs of kustomize build for target and
+destination are the same after localization.`)
+
 	return cmd
 }
 
