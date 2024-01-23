@@ -210,25 +210,29 @@ func (p *plugin) replaceValuesInline() error {
 	}
 	chValues, err := kyaml.Parse(string(pValues))
 	if err != nil {
-		return err
+		return errors.WrapPrefixf(err, "could not parse values file into rnode")
 	}
 	inlineValues, err := kyaml.FromMap(p.ValuesInline)
 	if err != nil {
-		return err
+		return errors.WrapPrefixf(err, "could not parse values inline into rnode")
 	}
 	var outValues *kyaml.RNode
 	switch p.ValuesMerge {
+	// Function `merge2.Merge` overrides values in dest with values from src.
+	// To achieve override or merge behavior, we pass parameters in different order.
+	// Object passed as dest will be modified, so we copy it just in case someone
+	// decides to use it after this is called.
 	case valuesMergeOptionOverride:
-		outValues, err = merge2.Merge(inlineValues, chValues, kyaml.MergeOptions{})
+		outValues, err = merge2.Merge(inlineValues, chValues.Copy(), kyaml.MergeOptions{})
 	case valuesMergeOptionMerge:
-		outValues, err = merge2.Merge(chValues, inlineValues, kyaml.MergeOptions{})
+		outValues, err = merge2.Merge(chValues, inlineValues.Copy(), kyaml.MergeOptions{})
 	}
 	if err != nil {
-		return err
+		return errors.WrapPrefixf(err, "could not merge values")
 	}
 	mapValues, err := outValues.Map()
 	if err != nil {
-		return err
+		return errors.WrapPrefixf(err, "could not parse merged values into map")
 	}
 	p.ValuesInline = mapValues
 	return err
