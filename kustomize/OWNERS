@@ -1,0 +1,6 @@
+# See https://github.com/kubernetes/community/blob/master/community-membership.md
+approvers:
+  - commands-approvers
+
+reviewers:
+  - commands-reviewers
