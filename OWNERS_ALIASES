@@ -3,21 +3,28 @@
 aliases:
   kustomize-owners:
     - knverey
-    - natasha41575
+    - koba1t
   kustomize-approvers:
     - knverey
-    - natasha41575
-    - annasong20
     - koba1t
+    - varshaprasad96
   kustomize-reviewers:
     - knverey
-    - natasha41575
-    - yuwenma
-    - annasong20
     - koba1t
     - stormqueen1990
     - varshaprasad96
     - ncapps
+
+  docs-approvers:
+    - ncapps
+  docs-reviewers:
+    - ncapps
+
+  commands-approvers:
+    - stormqueen1990
+  commands-reviewers:
+    - stormqueen1990
+
   #  emeritus:
   #    - liujingfang1
   #    - Shell32-Natsu
@@ -27,3 +34,6 @@ aliases:
   #    - mengqiy
   #    - mortent
   #    - phanimarupaka
+  #    - natasha41575
+  #    - annasong20
+  #    - yuwenma
