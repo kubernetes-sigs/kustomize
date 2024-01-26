@@ -4,8 +4,9 @@ linkTitle: "bases"
 type: docs
 weight: 2
 description: >
-    Add resources from a kustomization dir.
+    Add resources from a kustomization directory.
 ---
+`apiVersion: kustomize.config.k8s.io/v1beta1`
 
 {{% pageinfo color="warning" %}}
 The `bases` field was deprecated in v2.1.0. This field will never be removed from the
@@ -18,7 +19,14 @@ kustomize CLI, and removal itself will happen in a future major version bump.
 You can run `kustomize edit fix` to automatically convert `bases` to `resources`.
 {{% /pageinfo %}}
 
-Move entries into the [resources](/docs/reference/api/kustomization-file/resources)
-field.  This allows bases - which are still a
-[central concept](/docs/concepts/bases) - to be
-ordered relative to other input resources.
+### bases
+A base is a kustomization referred to by some other kustomization. Move entries into the [resources] field.
+
+---
+
+* **bases** ([]string)
+
+    List of relative paths to kustomization specifications.
+
+
+[resources]: /docs/reference/api/kustomization-file/resources
