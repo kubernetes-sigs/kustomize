@@ -75,7 +75,9 @@ $(MYGOBIN)/pluginator:
 # Build from local source.
 $(MYGOBIN)/kustomize: build-kustomize-api
 	cd kustomize; \
-	go install -ldflags "-X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+	go install -ldflags \
+	"-X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
+	 -X sigs.k8s.io/kustomize/api/provenance.version=$(shell git describe --tags --always --dirty)" \
 	.
 
 kustomize: $(MYGOBIN)/kustomize
