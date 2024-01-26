@@ -11,7 +11,7 @@ Kustomize build information can be added to resource labels or annotations with 
 
 ## Add Managed By Label
 
-Specify the `managedByLabel` option in the `buildMetadata` field to mark the resource as having been managed by kustomize.
+Specify the `managedByLabel` option in the `buildMetadata` field to mark the resource as having been managed by Kustomize.
 
 The following example adds the `app.kubernetes.io/managed-by` label to a resource.
 
@@ -22,7 +22,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - service.yaml
-buildMetadata: [managedByLabel]
+buildMetadata:
+- managedByLabel
 ```
 
 2. Create a Service manifest.
@@ -39,7 +40,7 @@ spec:
 
 3. Add label with `kustomize build`.
 
-The output shows that the `managedByLabel` option adds the `app.kubernetes.io/managed-by` label to provide information about the resource manifest.
+The output shows that the `managedByLabel` option adds the `app.kubernetes.io/managed-by` label with Kustomize build information.
 
 ```yaml
 apiVersion: v1
@@ -60,13 +61,12 @@ Specify the `originAnnotations` option in the `buildMetadata` field to annotate 
 The possible fields of these annotations are:
 
 - `path`: The path to a resource file itself.
-- `ref`: If from a remote file or generator, the ref of the repo URL.
-- `repo`: If from a remote file or generator, the repo source.
-- `configuredIn`: If a generated resource, the path to the generator config. If a generator is invoked via a field
-in the kustomization file, this would point to the kustomization file itself.
-- `configuredBy`: If a generated resource, the ObjectReference of the generator config.
+- `ref`: If from a remote file or generator, the git reference of the repository URL.
+- `repo`: If from a remote file or generator, the repository source.
+- `configuredIn`: The path to the generator configuration for a generated resource. This would point to the Kustomization file itself if a generator is invoked via a field.
+- `configuredBy`: The ObjectReference of the generator configuration for a generated resource.
 
-If the resource is from the `resources` field, this annotation contains data about the file it originated from. All local file paths are relative to the top-level kustomization, i.e. the kustomization file in the directory upon
+If the resource is from the `resources` field, this annotation contains data about the file it originated from. All local file paths are relative to the top-level Kustomization, i.e. the Kustomization file in the directory upon
 which `kustomize build` was invoked. For example, if someone were to run `kustomize build foo`, all file paths
 in the annotation output would be relative to `foo/kustomization.yaml`. All remote file paths are relative to the root of the
 remote repository. Any fields that are not applicable would be omitted from the final output.
@@ -80,7 +80,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - service.yaml
-buildMetadata: [originAnnotations]
+buildMetadata:
+- originAnnotations
 ```
 
 2. Create a Service manifest.
@@ -97,7 +98,7 @@ spec:
 
 3. Add origin annotation with `kustomize build`.
 
-The output shows that the `originAnnotations` option adds the `config.kubernetes.io/origin` annotation to provide information about the resource manifest.
+The output shows that the `originAnnotations` option adds the `config.kubernetes.io/origin` annotation with Kustomize build information.
 
 ```yaml
 apiVersion: v1
@@ -128,12 +129,13 @@ configMapGenerator:
   literals:
   - JAVA_HOME=/opt/java/jdk
   - JAVA_TOOL_OPTIONS=-agentlib:hprof
-buildMetadata: [originAnnotations]
+buildMetadata:
+- originAnnotations
 ```
 
 2. Generate a ConfigMap that includes an origin annotation with `kustomize build`.
 
-The output shows that the `originAnnotations` option adds the `config.kubernetes.io/origin` annotation to provide information about the local ConfigMapGenerator that generated the ConfigMap.
+The output shows that the `originAnnotations` option adds the `config.kubernetes.io/origin` annotation with information about the local ConfigMapGenerator that generated the ConfigMap.
 
 ```yaml
 kind: ConfigMap
@@ -164,10 +166,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - github.com/examplerepo/?ref=v1.0.6
-buildMetadata: [originAnnotations]
+buildMetadata:
+- originAnnotations
 ```
 
-2. This example uses a remote base with the following kustomization.
+2. This example uses a remote base with the following Kustomization.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -181,7 +184,7 @@ configMapGenerator:
 
 3. Generate a ConfigMap that includes an origin annotation with `kustomize build`.
 
-The output shows that the `originAnnotations` option adds the `config.kubernetes.io/origin` annotation to provide information about the remote ConfigMapGenerator that generated the ConfigMap.
+The output shows that the `originAnnotations` option adds the `config.kubernetes.io/origin` annotation with build information about the remote ConfigMapGenerator that generated the ConfigMap.
 
 ```yaml
 kind: ConfigMap
@@ -210,21 +213,20 @@ While this field is in alpha, it will receive the `alpha` prefix, so you will se
 
 Add the `transformerAnnotations` option to the `buildMetadata` field to annotate resources with information about the transformers that have acted on them.
 
-When the `transformerAnnotations` option is set, kustomize will add annotations with information about what transformers
-have acted on each resource. Transformers can be invoked either through various fields in the kustomization file
+When the `transformerAnnotations` option is set, Kustomize will add annotations with information about what transformers
+have acted on each resource. Transformers can be invoked either through various fields in the Kustomization file
 (e.g. the `replacements` field will invoke the ReplacementTransformer), or through the `transformers` field.
 
 The annotation key for transformer annotations will be `alpha.config.kubernetes.io/transformations`, which will contain a list of transformer data. The possible fields in each item in this list is identical to the possible fields in `config.kubernetes.io/origin`, except that the transformer annotation does not have a `path` field:
 
 The possible fields of these annotations are:
 
-- `ref`: If from a remote file or generator, the ref of the repo URL.
-- `repo`: If from a remote file or generator, the repo source.
-- `configuredIn`: The path to the transformer config. If a transformer is invoked via a field
-in the kustomization file, this would point to the kustomization file itself.
-- `configuredBy`: The ObjectReference of the transformer config.
+- `ref`: If from a remote file or generator, the git reference of the repository URL.
+- `repo`: If from a remote file or generator, the repository source.
+- `configuredIn`: The path to the transformer configuration. This would point to the Kustomization file itself if a transformer is invoked via a field.
+- `configuredBy`: The ObjectReference of the transformer configuration.
 
-All local file paths are relative to the top-level kustomization. This behavior is similar to how the `originAnnotations` option works.
+All local file paths are relative to the top-level Kustomization. This behavior is similar to how the `originAnnotations` option works.
 
 The following example adds the `alpha.config.kubernetes.io/transformations` annotation to a resource updated with the NamespaceTransformer.
 
@@ -236,7 +238,8 @@ kind: Kustomization
 namespace: app
 resources:
 - service.yaml
-buildMetadata: [transformerAnnotations]
+buildMetadata:
+- transformerAnnotations
 ```
 
 2. Create a Service manifest.
@@ -253,7 +256,7 @@ spec:
 
 3. Add transformer annotation with `kustomize build`.
 
-The output shows that the `transformerAnnotations` option adds the `alpha.config.kubernetes.io/transformations` annotation to provide information about the transformer that updated the resource.
+The output shows that the `transformerAnnotations` option adds the `alpha.config.kubernetes.io/transformations` annotation with build information about the transformer that updated the resource.
 
 ```yaml
 apiVersion: v1
@@ -274,7 +277,7 @@ spec:
 
 ## Add Annotation with Local and Remote Transformer
 
-The following example adds the `alpha.config.kubernetes.io/transformations` annotation to a resource updated a local and remote transformer.
+The following example adds the `alpha.config.kubernetes.io/transformations` annotation to a resource updated by a local and remote transformer.
 
 1. Create a Kustomization file.
 ```yaml
@@ -284,10 +287,11 @@ kind: Kustomization
 namespace: app
 resources:
 - github.com/examplerepo/?ref=v1.0.6
-buildMetadata: [transformerAnnotations]
+buildMetadata:
+- transformerAnnotations
 ```
 
-2. This example uses a remote base with the following kustomization.
+2. This example uses a remote base with the following Kustomization.
 ```yaml
 # kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -309,9 +313,9 @@ spec:
   - port: 7002
 ```
 
-3. Run `kustomize build` to transformer and add transformer annotations.
+3. Run `kustomize build`.
 
-The output shows that the `transformerAnnotations` option adds the `alpha.config.kubernetes.io/transformations` annotation to provide information about the transformers that updated the resource.
+The output shows that the `transformerAnnotations` option adds the `alpha.config.kubernetes.io/transformations` annotation with build information about the transformers that updated the resource.
 
 ```yaml
 apiVersion: v1
