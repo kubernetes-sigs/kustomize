@@ -1,7 +1,5 @@
 # Credit to the Kubernetes Website team. (https://github.com/kubernetes/website/blob/main/Makefile)
 HUGO_VERSION      = $(shell grep ^HUGO_VERSION netlify.toml | tail -n 1 | cut -d '=' -f 2 | tr -d " \"\n")
-NODE_BIN          = node_modules/.bin
-NETLIFY_FUNC      = $(NODE_BIN)/netlify-lambda
 
 # The CONTAINER_ENGINE variable is used for specifying the container engine. By default 'docker' is used
 # but this can be overridden when calling make, e.g.
@@ -16,9 +14,6 @@ CONTAINER_RUN     = "$(CONTAINER_ENGINE)" run --rm --interactive --tty --volume 
 
 CCRED=\033[0;31m
 CCEND=\033[0m
-
-# Docker buildx related settings for multi-arch images
-DOCKER_BUILDX ?= docker buildx
 
 .PHONY: help
 help: ## Show this help.
@@ -48,21 +43,18 @@ build-preview: module-check ## Build site with drafts and future posts enabled
 serve: module-check ## Boot the development server.
 	hugo server --buildFuture --environment development
 
-container-image.sentinel: netlify.toml Dockerfile hugo.toml Makefile
+## Build a container image for the preview of the website
+.PHONY: container-image
+container-image: netlify.toml Dockerfile hugo.toml
 	$(CONTAINER_ENGINE) build . \
 		--network=host \
 		--tag $(CONTAINER_IMAGE) \
 		--build-arg HUGO_VERSION=$(HUGO_VERSION)
-	@touch $@
-
-## Build a container image for the preview of the website
-.PHONY: container-image
-container-image: container-image.sentinel
 
 # no build lock to allow for read-only mounts
 ## Boot the development server using container.
 .PHONY: container-serve
-container-serve: module-check container-image.sentinel
+container-serve: module-check
 	$(CONTAINER_RUN) \
 		--cap-drop=ALL \
 		--cap-add=AUDIT_WRITE \
