@@ -7,7 +7,7 @@ NETLIFY_FUNC      = $(NODE_BIN)/netlify-lambda
 # but this can be overridden when calling make, e.g.
 # CONTAINER_ENGINE=podman make container-image
 CONTAINER_ENGINE ?= docker
-IMAGE_REGISTRY ?= gcr.io/k8s-staging-sig-docs
+IMAGE_REGISTRY ?= registry.local:5000
 IMAGE_VERSION=$(shell scripts/hash-files.sh Dockerfile Makefile | cut -c 1-12)
 CONTAINER_IMAGE   = $(IMAGE_REGISTRY)/kustomize-website-hugo:v$(HUGO_VERSION)-$(IMAGE_VERSION)
 # Mount read-only to allow use with tools like Podman in SELinux mode
@@ -70,10 +70,10 @@ container-serve: module-check container-image.sentinel
 		--mount type=tmpfs,destination=/tmp,tmpfs-mode=01777 \
 		-p 1313:1313 $(CONTAINER_IMAGE) \
 		hugo server \
-		--source site \
-		--buildFuture \
-		--environment development \
-		--bind 0.0.0.0 \
-		--destination /tmp/hugo \
-		--cleanDestinationDir \
-		--noBuildLock
+		  --source site \
+		  --buildFuture \
+		  --environment development \
+		  --bind 0.0.0.0 \
+		  --destination /tmp/hugo \
+		  --cleanDestinationDir \
+		  --noBuildLock
