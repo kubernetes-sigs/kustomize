@@ -665,6 +665,67 @@ obj:
 `)
 }
 
+func TestHelmChartInflationGeneratorValuesReplace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyTestChartsIntoHarness(t, th)
+
+	th.WriteF(filepath.Join(th.GetRoot(), "replacedValues.yaml"), `
+  a: 7
+  b: 7
+  c: 7
+  list:
+  - g
+  map:
+    a: 7
+    b: 7
+    c: 7
+  `)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: values-merge
+name: values-merge
+releaseName: values-merge
+valuesMerge: replace
+valuesFile: replacedValues.yaml
+valuesInline:
+  a: 1
+  b: 2
+  list:
+  - c
+  map:
+    a: 4
+    b: 5
+`)
+
+	// replace option does not ignore values file from the chart
+	// it only replaces the values files specified in the kustomization
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: test.kustomize.io/v1
+kind: ValuesMergeTest
+metadata:
+  name: values-merge
+obj:
+  a: 1
+  b: 2
+  c: null
+  list:
+  - c
+  map:
+    a: 4
+    b: 5
+    c: null
+`)
+}
+
 func TestHelmChartInflationGeneratorValuesMerge(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
