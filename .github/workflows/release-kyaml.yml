@@ -33,13 +33,6 @@ jobs:
         run: |
           echo "Executing unit test"
           make test-unit-all >> "${GITHUB_OUTPUT}"
-      - name: Notify test result
-        uses: ShaunLWM/action-join@master
-        env:
-          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
-          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
-          JOIN_TEXT: Your project has been built.
-          JOIN_TITLE: Build Complete
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -48,26 +41,12 @@ jobs:
         run: |
           make install-local-tools
           make build-kustomize-api
-      - name: Notify build result
-        uses: ShaunLWM/action-join@master
-        env:
-          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
-          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
-          JOIN_TEXT: Your project has been built.
-          JOIN_TITLE: Build Complete
   e2e-test:
     name: End-to-end Testing
     runs-on: ubuntu-latest
     steps:
       - name: End-to-end testing   
         run: make verify-kustomize-e2e
-      - name: Notify build result
-        uses: ShaunLWM/action-join@master
-        env:
-          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
-          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
-          JOIN_TEXT: Your project has been built.
-          JOIN_TITLE: Build Complete
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -76,10 +55,3 @@ jobs:
         run: |
           make install-local-tools
           gorepomod release kyaml ${{ inputs.release_type }}
-      - name: Notify build result
-        uses: ShaunLWM/action-join@master
-        env:
-          JOIN_API_KEY: ${{ secrets.JOIN_API_KEY }}
-          JOIN_DEVICE_ID: ${{ secrets.JOIN_DEVICE_ID }}
-          JOIN_TEXT: Your project has been built.
-          JOIN_TITLE: Build Complete
