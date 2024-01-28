@@ -81,16 +81,12 @@ func SetupEditSetConfigMapSecretTest(
 		return nil, err
 	}
 
-	require.NoError(t, err)
-
 	_, err = testutils_test.ReadTestKustomization(fSys)
 	require.NoError(t, err)
 
 	mf, err := kustfile.NewKustomizationFile(fSys)
 	require.NoError(t, err)
 
-	kustomization, err := mf.Read()
-	require.NoError(t, err)
-
-	return kustomization, nil
+	//nolint: wrapcheck
+	return mf.Read()
 }
