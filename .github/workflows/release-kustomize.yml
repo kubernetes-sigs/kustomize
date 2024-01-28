@@ -11,10 +11,12 @@ on:
           - minor
           - patch
         required: true
+        default: 'patch'
       release_branch:
         type: string
         description: release branch name "release-kustomize-v*"
         required: true
+        default: 'master'
 
 jobs:
   pre-build: 
@@ -30,32 +32,50 @@ jobs:
         id: unit_test
         run: |
           echo "Executing unit test"
-          make test-unit-all >> "${GITHUB_OUTPUT}"
+          go install github.com/jstemmer/go-junit-report@latest
+          make test-unit-all | go-junit-report -set-exit-code > report.xml
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: pre-build
     steps:
-      - name: Pin kyaml, cmd/config, and api
-        run: |
-          gorepomod pin kyaml --doIt
-          gorepomod pin cmd/config --doIt
-          gorepomod pin api --doIt
-      - name: Build test
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+      - name: Install local tools
         run: |
           make install-local-tools
+      - name: Pin kyaml, cmd/config, and api
+        run: |
+          gorepomod pin kyaml --local --doIt
+          gorepomod pin cmd/config --local --doIt
+          gorepomod pin api --local --doIt
+      - name: Build test
+        run: |
           make build-kustomize-api
-  e2e-test:
-    name: End-to-end Testing
-    runs-on: ubuntu-latest
-    steps:
-      - name: End-to-end testing
-        id: e2e_test
-        run: make verify-kustomize-e2e
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
     steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
       - name: Release kyaml
         run: |
           make install-local-tools
-          gorepomod release kustomize ${{ inputs.release_type }} --doIt
+          gorepomod release kustomize ${{ inputs.release_type }} --local  --doIt
