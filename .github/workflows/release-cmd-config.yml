@@ -11,10 +11,12 @@ on:
           - minor
           - patch
         required: true
+        default: 'patch'
       release_branch:
         type: string
         description: release branch name "release-cmd/config-v*"
         required: true
+        default: 'master'
 
 jobs:
   pre-build: 
@@ -26,33 +28,76 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
       - name: Unit test
         id: unit_test
         run: |
           echo "Executing unit test"
-          make test-unit-all >> "${GITHUB_OUTPUT}"
+          go install github.com/jstemmer/go-junit-report@latest
+          make test-unit-all | go-junit-report -set-exit-code > report.xml
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: pre-build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    permissions:
+      contents: write
     steps:
-      - name: Pin kyaml
-        run: |
-          gorepomod pin kyaml --doIt
-      - name: Build test
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+      - name: Install local tools
         run: |
           make install-local-tools
+      - name: Pin kyaml
+        run: |
+          git remote add upstream "https://x-access-token:${GITHUB_TOKEN}@github.com/antoooks/kustomize.git"
+          git remote -v 
+          gorepomod pin kyaml --local --doIt
+      - name: Build test
+        run: |
           make build-kustomize-api
-  e2e-test:
-    name: End-to-end Testing
-    runs-on: ubuntu-latest
-    steps:
-      - name: End-to-end testing   
-        run: make verify-kustomize-e2e
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    permissions:
+      contents: write
     steps:
-      - name: Release cmd/config
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+      - name: Install local tools
         run: |
           make install-local-tools
-          gorepomod release cmd/config ${{ inputs.release_type }} --doIt
+      - name: Pin kyaml
+        run: |
+          git config --global user.email "development@email.com"
+          git config --global user.name "Development"
+          git remote add upstream "https://x-access-token:${GITHUB_TOKEN}@github.com/antoooks/kustomize.git"
+          git remote -v 
+          gorepomod pin kyaml --local --doIt
+          git add --all
+          git commit -m "pin kyaml"
+          git push
+      - name: Release cmd/config
+        run: |
+          gorepomod release cmd/config ${{ inputs.release_type }} --local --doIt

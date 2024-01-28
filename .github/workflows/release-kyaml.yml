@@ -11,47 +11,75 @@ on:
           - minor
           - patch
         required: true
+        default: 'patch'
       release_branch:
         type: string
         description: release branch name "release-kyaml-v*"
         required: true
+        default: 'master'
 
 jobs:
   pre-build: 
     name: Pre-build
     runs-on: ubuntu-latest
-    outputs:
-        unit_test_result: ${{ steps.unit_test.outputs }}
     steps:
       - name: Fetch changes
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
       - name: Unit test
         id: unit_test
         run: |
           echo "Executing unit test"
-          make test-unit-all >> "${GITHUB_OUTPUT}"
+          go install github.com/jstemmer/go-junit-report@latest
+          make test-unit-all | go-junit-report -set-exit-code > report.xml
+      - name: Test Summary
+        uses: test-summary/action@v1
+        with:
+          paths: |
+            ./report.xml      
+        if: always()
   build:
     name: Build
+    needs: pre-build
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
       - name: Build test
         run: |
-          make install-local-tools
           make build-kustomize-api
-  e2e-test:
-    name: End-to-end Testing
-    runs-on: ubuntu-latest
-    steps:
-      - name: End-to-end testing   
-        run: make verify-kustomize-e2e
   release:
     name: Release
+    needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
       - name: Release kyaml
         run: |
-          make install-local-tools
-          gorepomod release kyaml ${{ inputs.release_type }}
+          git config --global user.email "development@email.com"
+          git config --global user.name "Development"
+          make install-tools
+          gorepomod release kyaml ${{ inputs.release_type }} --local --doIt

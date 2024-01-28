@@ -94,29 +94,33 @@ function build_kustomize_binary {
 }
 
 function create_release {
-  source ./helpers.sh
+  source ./releasing/helpers.sh
 
   git_tag=$1
 
   # Take everything before the last slash.
   # This is expected to match $module.
   module=${git_tag%/*}
+  module_slugified=$(echo $module | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
 
   # Take everything after the last slash.
   version=${git_tag##*/}
 
+  release_branch="release-${module_slugified}/${version}"
+
+  # Create release branch release-{module}/{version}
+  echo "Creating release..."
+  createBranch $release_branch "create release branch $release_branch"
+
   # Generate the changelog for this release
   # using the last two tags for the module
   changelog_file=$(mktemp)
-  ./releasing/compile-changelog.sh "$module" "$git_tag" "$changelog_file"
+  ./releasing/compile-changelog.sh "$module" "HEAD" "$changelog_file"
 
   additional_release_artifacts_arg=""
 
-  echo "release tag: $git_tag"
-  createBranch $git_tag "creating release branch $git_tag..."
-
   # Trigger workflow for respective modeule release
-  gh workflow run "release-${module}" -f "release_type=${release_type}" -f "release_branch=${git_tag}"
+  gh workflow run "release-${module}.yml" -f "release_type=${release_type}" -f "release_branch=${release_branch}"
 
   # build `kustomize` binary
   if [[ "$module" == "kustomize" ]]; then
