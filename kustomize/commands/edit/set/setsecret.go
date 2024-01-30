@@ -150,7 +150,7 @@ func findSecretArgs(m *types.Kustomization, name, namespace string) (*types.Secr
 	})
 
 	if cmIndex == -1 {
-		return nil, fmt.Errorf("unable to find Secret with name '%q'", name)
+		return nil, fmt.Errorf("unable to find Secret with name %q", name)
 	}
 
 	return &m.SecretGenerator[cmIndex], nil
