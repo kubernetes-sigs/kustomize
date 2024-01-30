@@ -1,6 +1,7 @@
 // Copyright 2023 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
-
+//
+//nolint:dupl
 package set
 
 import (
@@ -25,15 +26,19 @@ func newCmdSetSecret(
 	var flags util.ConfigMapSecretFlagsAndArgs
 	cmd := &cobra.Command{
 		Use:   "secret NAME [--from-literal=key1=value1] [--namespace=namespace-name] [--new-namespace=new-namespace-name]",
-		Short: fmt.Sprintf("Edits the value for an existing key for a secret in the %s file", konfig.DefaultKustomizationFileName()),
-		Long: fmt.Sprintf(`Edits the value for an existing key in an existing secret in the %s file.
-Both secret name and key name must exist for this command to succeed.`, konfig.DefaultKustomizationFileName()),
+		Short: fmt.Sprintf("Edits the value for an existing key for a Secret in the %s file", konfig.DefaultKustomizationFileName()),
+		Long: fmt.Sprintf(`Edits the value for an existing key in an existing Secret in the %[1]s file.
+Secret name, Secret namespace, and key name must match an existing entry in the %[1]s file for this command to succeed.
+When namespace is omitted, the default namespace is used.`, konfig.DefaultKustomizationFileName()),
 		Example: fmt.Sprintf(`
-    # Edits an existing secret in the %[1]s file, changing the value of key1 to 2
-    kustomize edit set secret my-secret --from-literal=key1=2
+	# Edits an existing Secret in the %[1]s file, changing the value of key1 to 2, and namespace is implicitly defined as "default"
+	kustomize edit set secret my-secret --from-literal=key1=2
 
-    # Edits an existing secret in the %[1]s file, changing namespace to 'new-namespace'
-    kustomize edit set secret my-secret --namespace=current-namespace --new-namespace=new-namespace
+	# Edits an existing Secret in the %[1]s file, changing the value of key1 to 2, and explicitly define namespace as "default"
+	kustomize edit set secret my-secret --from-literal=key1=2 --namespace default
+
+	# Edits an existing Secret in the %[1]s file, changing namespace to "new-namespace"
+	kustomize edit set secret my-secret --namespace=current-namespace --new-namespace=new-namespace
 `, konfig.DefaultKustomizationFileName()),
 		RunE: func(_ *cobra.Command, args []string) error {
 			return runEditSetSecret(flags, fSys, args, ldr, rf)
