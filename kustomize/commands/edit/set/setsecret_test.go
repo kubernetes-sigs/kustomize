@@ -52,7 +52,7 @@ secretGenerator:
   type: Opaque
 `,
 			Args:             []string{"test-secret2", "--from-literal=key3=val2"},
-			ExpectedErrorMsg: "unable to find Secret with name '\"test-secret2\"'",
+			ExpectedErrorMsg: "unable to find Secret with name \"test-secret2\"",
 		},
 		{
 			Name: "fails validation because no attributes are being changed",
@@ -82,6 +82,16 @@ secretGenerator:
 `,
 			Args:             []string{"test-secret", "--from-literal=value"},
 			ExpectedErrorMsg: "literal values must be specified in the key=value format",
+		},
+		{
+			Name: "fails when the secretGenerator field has no items",
+			KustomizationFileContent: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+secretGenerator: []
+`,
+			Args:             []string{"test-secret", "--from-literal=value"},
+			ExpectedErrorMsg: "unable to find Secret with name \"test-secret\"",
 		},
 	}
 

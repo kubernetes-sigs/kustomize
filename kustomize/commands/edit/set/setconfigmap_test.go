@@ -46,7 +46,7 @@ configMapGenerator:
   name: test-cm
 `,
 			Args:             []string{"test-cm2", "--from-literal=test-key=test-value"},
-			ExpectedErrorMsg: "unable to find ConfigMap with name '\"test-cm2\"'",
+			ExpectedErrorMsg: "unable to find ConfigMap with name \"test-cm2\"",
 		},
 		{
 			Name: "fails validation because no attributes are being changed",
@@ -75,6 +75,16 @@ configMapGenerator:
 `,
 			Args:             []string{"test-cm", "--from-literal=value"},
 			ExpectedErrorMsg: "literal values must be specified in the key=value format",
+		},
+		{
+			Name: "fails when the configMapGenerator field has no items",
+			KustomizationFileContent: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator: []
+`,
+			Args:             []string{"test-cm", "--from-literal=value"},
+			ExpectedErrorMsg: "unable to find ConfigMap with name \"test-cm\"",
 		},
 	}
 
