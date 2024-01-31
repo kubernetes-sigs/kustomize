@@ -20,7 +20,9 @@ theme = ["docsy"]
 enableGitInfo = true
 
 # Comment out to enable taxonomies in Docsy
-# disableKinds = ["taxonomy", "taxonomyTerm"]
+disableKinds = ["taxonomy"]
+
+ignoreFiles = [ "README[-]+[a-z]*\\.md", "^node_modules$" ]
 
 # Highlighting config
 pygmentsCodeFences = true
@@ -58,26 +60,29 @@ id = "UA-00000000-0"
 [languages]
 [languages.en]
 title = "Kustomize"
-description = "Documentation for Kustomize"
 languageName ="English"
 # Weight used for sorting.
 weight = 1
+languagedirection = "ltr"
+i18nDir = "./data/i18n"
 
-# [languages.no]
-# title = "Kustomize"
-# description = "Docsy er operativsystem for skyen"
-# languageName ="Norsk"
-# contentDir = "content/no"
-# time_format_default = "02.01.2006"
-# time_format_blog = "02.01.2006"
 
-# [languages.fa]
-# title = "اسناد گلدی"
-# description = "یک نمونه برای پوسته داکسی"
-# languageName ="فارسی"
-# contentDir = "content/fa"
-# time_format_default = "2006.01.02"
-# time_format_blog = "2006.01.02"
+[caches]
+ [caches.assets]
+  dir = ":cacheDir/_gen"
+  maxAge = -1
+ [caches.getcsv]
+  dir = ":cacheDir/:project"
+  maxAge = "60s"
+ [caches.getjson]
+  dir = ":cacheDir/:project"
+  maxAge = "60s"
+ [caches.images]
+  dir = ":cacheDir/_images"
+  maxAge = -1
+ [caches.modules]
+  dir = ":cacheDir/modules"
+  maxAge = -1
 
 [markup]
   [markup.goldmark]
