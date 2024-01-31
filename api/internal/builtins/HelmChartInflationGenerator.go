@@ -12,11 +12,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/imdario/mergo"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -201,18 +202,33 @@ func (p *HelmChartInflationGeneratorPlugin) replaceValuesInline() error {
 	if err != nil {
 		return err
 	}
-	chValues := make(map[string]interface{})
-	if err = yaml.Unmarshal(pValues, &chValues); err != nil {
-		return err
+	chValues, err := kyaml.Parse(string(pValues))
+	if err != nil {
+		return errors.WrapPrefixf(err, "could not parse values file into rnode")
 	}
+	inlineValues, err := kyaml.FromMap(p.ValuesInline)
+	if err != nil {
+		return errors.WrapPrefixf(err, "could not parse values inline into rnode")
+	}
+	var outValues *kyaml.RNode
 	switch p.ValuesMerge {
+	// Function `merge2.Merge` overrides values in dest with values from src.
+	// To achieve override or merge behavior, we pass parameters in different order.
+	// Object passed as dest will be modified, so we copy it just in case someone
+	// decides to use it after this is called.
 	case valuesMergeOptionOverride:
-		err = mergo.Merge(
-			&chValues, p.ValuesInline, mergo.WithOverride)
+		outValues, err = merge2.Merge(inlineValues, chValues.Copy(), kyaml.MergeOptions{})
 	case valuesMergeOptionMerge:
-		err = mergo.Merge(&chValues, p.ValuesInline)
+		outValues, err = merge2.Merge(chValues, inlineValues.Copy(), kyaml.MergeOptions{})
 	}
-	p.ValuesInline = chValues
+	if err != nil {
+		return errors.WrapPrefixf(err, "could not merge values")
+	}
+	mapValues, err := outValues.Map()
+	if err != nil {
+		return errors.WrapPrefixf(err, "could not parse merged values into map")
+	}
+	p.ValuesInline = mapValues
 	return err
 }
 

@@ -1,0 +1,4 @@
+---
+apiVersion: v2
+name: values-merge
+version: 1.0.0
