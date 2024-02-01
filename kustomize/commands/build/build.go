@@ -102,12 +102,18 @@ func NewCmdBuild(
 			return err
 		},
 	}
+
 	AddFlagOutputPath(cmd.Flags())
 	AddFunctionBasicsFlags(cmd.Flags())
 	AddFlagLoadRestrictor(cmd.Flags())
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
+
+	if err := AddFlagLoadRestrictorCompletion(cmd); err != nil {
+		log.Fatalf("Error adding completion for flag '--%s': %v", flagLoadRestrictorName, err)
+	}
+
 	msg := "Error marking flag '%s' as deprecated: %v"
 	err := cmd.Flags().MarkDeprecated(flagReorderOutputName,
 		"use the new 'sortOptions' field in kustomization.yaml instead.")
