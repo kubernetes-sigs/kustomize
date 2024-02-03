@@ -43,7 +43,7 @@ jobs:
         uses: test-summary/action@v1
         with:
           paths: |
-            ./report.xml      
+            ./report.xml
         if: always()
   build:
     name: Build
@@ -80,11 +80,16 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/*.sum"
+      - name: Create release changelog
+        run: |
+
+          # Prepare git
+          git config --global user.email "development@kustomize.io"
+          git config --global user.name "Development"
+          ./releasing/compile-changelog.sh kyaml HEAD
       - name: Release kyaml
         run: |
 
           # Release kyaml
-          git config --global user.email "development@email.com"
-          git config --global user.name "Development"
           make install-tools
           gorepomod release kyaml ${{ inputs.release_type }} --local --doIt
