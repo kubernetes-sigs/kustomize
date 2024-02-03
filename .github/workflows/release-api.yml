@@ -103,16 +103,21 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/*.sum"
-      - name: Create release draft
+      - name: Release api
         run: |
 
           # Prepare git
           git config --global user.email "development@kustomize.io"
           git config --global user.name "Development"
-          ./releasing/compile-changelog.sh api HEAD
-      - name: Release api
-        run: |
 
           # Release api
           make install-local-tools
           gorepomod release api ${{ inputs.release_type }} --local --doIt
+      - name: Create release changelog
+        run: |
+
+          # Create release draft
+          changelog_file=$(mktemp)
+          currentBranch=$(git rev-parse --abbrev-ref HEAD)
+          currentTag=${currentBranch#*-}
+          ./releasing/compile-changelog.sh "api" "${currentTag}" "${changelog_file}"

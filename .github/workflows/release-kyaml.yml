@@ -80,16 +80,21 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/*.sum"
-      - name: Create release changelog
+      - name: Release kyaml
         run: |
 
           # Prepare git
           git config --global user.email "development@kustomize.io"
           git config --global user.name "Development"
-          ./releasing/compile-changelog.sh kyaml HEAD
-      - name: Release kyaml
-        run: |
 
           # Release kyaml
           make install-tools
           gorepomod release kyaml ${{ inputs.release_type }} --local --doIt
+      - name: Create release changelog
+        run: |
+
+          # Create release draft
+          changelog_file=$(mktemp)
+          currentBranch=$(git rev-parse --abbrev-ref HEAD)
+          currentTag=${currentBranch#*-}
+          ./releasing/compile-changelog.sh "kyaml" "${currentTag}" "${changelog_file}"
