@@ -35,12 +35,6 @@ elif [[ ! "${RELEASE_TYPES[*]}" =~ "${2}" ]]; then
   exit 1
 fi
 
-module=$1
-release_type=$2
-
-echo "module: $module"
-echo "release type: $release_type"
-
 # Build the release binaries for every OS/arch combination.
 # It builds compressed artifacts on $release_dir.
 function build_kustomize_binary {
@@ -93,16 +87,8 @@ function create_release {
 
   # Take everything before the last slash.
   # This is expected to match $module.
-  module=$1
+  module=${git_tag%/*}
   module_slugified=$(echo $module | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
-
-  # Take everything after the last slash.
-  version=${git_tag##*/}
-
-  determineNextVersion $@
-
-  release_branch="release-${module}/${nextVersion}"
-  git_tag="${module}/${nextVersion}"
 
   # Create release branch release-{module}/{version}
   echo "Creating release branch $release_branch..."
@@ -110,11 +96,6 @@ function create_release {
   git branch $release_branch $origin_master
   git commit -a -m "create release branch $release_branch" || true
   git push -f origin $release_branch
-
-  # Generate the changelog for this release
-  # using the last two tags for the module
-  changelog_file=$(mktemp)
-  ./releasing/compile-changelog.sh "${module}" "${git_tag}" "${changelog_file}"
 
   additional_release_artifacts_arg=""
 
@@ -147,6 +128,7 @@ function create_release {
 }
 
 function determineNextVersion {
+    module=$1
     currentTag=$(git tag --list "${module}*"  --sort=-creatordate | head -n1)
     currentVersion=$(echo ${currentTag##*/} | cut -d'v' -f2)
     majorVer=$(echo $currentVersion | cut -d'.' -f1)
@@ -164,9 +146,24 @@ function determineNextVersion {
       exit 1
     fi
 
-    nextVersion="$majorVer.$minorVer.$patchVer"
-    return 
+    echo "$majorVer.$minorVer.$patchVer"
 }
 
-## create release
-create_release "$git_tag"
+main() {
+
+  module=$1
+  release_type=$2
+  nextVersion=$(determineNextVersion $module)
+
+  release_branch="release-${module}/v${nextVersion}"
+  git_tag="${module}/${nextVersion}"
+
+  echo "module: $module"
+  echo "release type: $release_type"
+  echo "tag: ${git_tag}"
+  
+  ## create release
+  create_release "$git_tag"
+}
+
+main $@
