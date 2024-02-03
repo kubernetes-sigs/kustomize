@@ -32,6 +32,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
       - name: Unit test
         id: unit_test
         run: |
@@ -58,6 +59,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
       - name: Build test
         run: |
           make build-kustomize-api
@@ -77,8 +79,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
       - name: Release kyaml
         run: |
+
+          # Release kyaml
           git config --global user.email "development@email.com"
           git config --global user.name "Development"
           make install-tools

@@ -258,7 +258,8 @@ func (gr *Runner) AssureOnMainBranch() error {
 // CheckoutMainBranch does that.
 func (gr *Runner) CheckoutMainBranch() error {
 	gr.comment("checking out main branch")
-	return gr.runNoOut(noHarmDone, "checkout", mainBranch)
+	fullBranchSpec := fmt.Sprintf("%s/%s", remoteOrigin, mainBranch)
+	return gr.runNoOut(noHarmDone, "checkout", fullBranchSpec)
 }
 
 // FetchRemote does that.
