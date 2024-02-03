@@ -34,6 +34,17 @@ jobs:
           echo "Executing unit test"
           go install github.com/jstemmer/go-junit-report@latest
           make test-unit-all | go-junit-report -set-exit-code > report.xml
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Test Summary
+        uses: test-summary/action@v1
+        with:
+          paths: |
+            ./report.xml
+        if: always()
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -91,6 +102,13 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/*.sum"
+      - name: Create release changelog
+        run: |
+
+          # Prepare git
+          git config --global user.email "development@kustomize.io"
+          git config --global user.name "Development"
+          ./releasing/compile-changelog.sh kustomize HEAD
       - name: Release kyaml
         run: |
 

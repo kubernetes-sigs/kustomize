@@ -176,15 +176,16 @@ func (mgr *Manager) Release(
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
 	}
-	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
-		return err
-	}
-	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
-		return err
-	}
-	if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
-		return err
-	}
+	// Deprecated: no need to create new release branch
+	// if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
+	// 	return err
+	// }
+	// if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
+	// 	return err
+	// }
+	// if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
+	// 	return err
+	// }
 	if err := gr.CreateLocalReleaseTag(relTag, relBranch); err != nil {
 		return err
 	}
