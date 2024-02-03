@@ -53,12 +53,27 @@ jobs:
           make install-local-tools
       - name: Pin kyaml, cmd/config, and api
         run: |
+
+          # Prepare git
+          git config --global user.email "development@kustomize.io"
+          git config --global user.name "Development"
+          git remote add upstream "https://x-access-token:${GITHUB_TOKEN}@github.com/antoooks/kustomize.git"
+          git remote -v 
+          
+          # Pin dependencies: kyaml, cmd/config, api
           gorepomod pin kyaml --local --doIt
           gorepomod pin cmd/config --local --doIt
           gorepomod pin api --local --doIt
       - name: Build test
         run: |
           make build-kustomize-api
+      - name: Commit pinned dependencies
+        run: |
+
+          # Commit pinned dependencies and handle no commit          
+          git add --all
+          git commit -m "pin kyaml, cmd/config, api" || true
+          git push
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -75,7 +90,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
       - name: Release kyaml
         run: |
+
+          # Release kustomize
           make install-local-tools
           gorepomod release kustomize ${{ inputs.release_type }} --local  --doIt
