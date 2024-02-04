@@ -204,7 +204,8 @@ func (mgr *Manager) Release(
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
 	}
-	// Deprecated: no need to create new release branch
+	// Deprecated: no need to create new release branch,
+	// gorepomod will determine new version to publish based on release branch
 	// if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
 	// 	return err
 	// }
