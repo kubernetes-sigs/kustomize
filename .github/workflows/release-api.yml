@@ -90,6 +90,8 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     permissions:
       contents: write
     steps:
@@ -121,3 +123,9 @@ jobs:
           currentBranch=$(git rev-parse --abbrev-ref HEAD)
           currentTag=${currentBranch#*-}
           ./releasing/compile-changelog.sh "api" "${currentTag}" "${changelog_file}"
+          
+          # Create github releases
+          gh release create "${currentTag}" \
+          --title "${currentTag}" \
+          --draft \
+          --notes-file "${changelog_file}"

@@ -66,6 +66,8 @@ jobs:
   release:
     name: Release
     needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -98,3 +100,11 @@ jobs:
           currentBranch=$(git rev-parse --abbrev-ref HEAD)
           currentTag=${currentBranch#*-}
           ./releasing/compile-changelog.sh "kyaml" "${currentTag}" "${changelog_file}"
+
+          # Create github releases
+          gh release create "${currentTag}" \
+          --title "${currentTag}" \
+          --draft \
+          --notes-file "${changelog_file}"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
