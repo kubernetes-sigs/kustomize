@@ -6,6 +6,7 @@ package repo
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/edit"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
@@ -144,11 +145,33 @@ func (mgr *Manager) Release(
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
 	newVersionString := gr.GetCurrentVersionFromHead()
-	newVersion, err := semver.Parse(newVersionString)
+
+	if len(newVersionString) == 0 {
+		return fmt.Errorf("error getting version from remote")
+	}
+
+	// TODO(antoooks): workaround to determine new version from release branch
+	// because Parse() function is buggy. Use Parse() after it's fixed
+	newVersionStringSplit := strings.Split(newVersionString[1:], ".")
+
+	major, err := strconv.Atoi(strings.TrimSpace(newVersionStringSplit[0]))
 
 	if err != nil {
 		_ = fmt.Errorf("error parsing version string")
 	}
+
+	minor, err := strconv.Atoi(strings.TrimSpace(newVersionStringSplit[1]))
+
+	if err != nil {
+		_ = fmt.Errorf("error parsing version string")
+	}
+
+	patch, err := strconv.Atoi(strings.TrimSpace(newVersionStringSplit[2]))
+
+	if err != nil {
+		_ = fmt.Errorf("error parsing version string")
+	}
+	newVersion := semver.New(major, minor, patch)
 
 	if newVersion.Equals(target.VersionRemote()) {
 		return fmt.Errorf(
