@@ -391,7 +391,7 @@ func (gr *Runner) GetMainBranch() string {
 }
 
 func (gr *Runner) GetCurrentVersionFromHead() string {
-	currentBranchName, err := gr.run(noHarmDone, "rev-parse", "--abbrev-ref", "HEAD")
+	currentBranchName, err := gr.run(noHarmDone, "rev-parse", "--abbrev-ref", "release-kyaml-v0.16.3")
 	if err != nil {
 		_ = fmt.Errorf("error getting current version")
 	}
