@@ -121,7 +121,9 @@ jobs:
           # Create release draft
           changelog_file=$(mktemp)
           currentBranch=$(git rev-parse --abbrev-ref HEAD)
-          currentTag=${currentBranch#*-}
+          module=$(echo "${currentBranch}" | cut -d'-' -f1)
+          version=${currentBranch##*-}
+          currentTag="${module}/${version}"
           ./releasing/compile-changelog.sh "api" "${currentTag}" "${changelog_file}"
           
           # Create github releases
