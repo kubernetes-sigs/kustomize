@@ -84,8 +84,8 @@ func (mgr *Manager) List() error {
 	// Auto-update local tags
 	gr := git.NewQuiet(mgr.AbsPath(), false, false)
 	for _, module := range mgr.modules {
-		releaseBranch := fmt.Sprintf("release-%s", module.ShortName())
-		_, err := gr.GetLatestTag(releaseBranch)
+		releaseTag := string(module.ShortName())
+		_, err := gr.GetLatestTag(releaseTag)
 		if err != nil {
 			return fmt.Errorf("failed getting latest tags for %s", module)
 		}
@@ -204,17 +204,6 @@ func (mgr *Manager) Release(
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
 	}
-	// Deprecated: no need to create new release branch,
-	// gorepomod will determine new version to publish based on release branch
-	// if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
-	// 	return err
-	// }
-	// if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
-	// 	return err
-	// }
-	// if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
-	// 	return err
-	// }
 	if err := gr.CreateLocalReleaseTag(relTag, relBranch); err != nil {
 		return err
 	}

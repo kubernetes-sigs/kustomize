@@ -36,13 +36,13 @@ jobs:
       - name: Unit test
         id: unit_test
         run: |
-          
+
           # Run unit test
           echo "Executing unit test"
           go install github.com/jstemmer/go-junit-report@latest
           make test-unit-all | go-junit-report -set-exit-code > report.xml
       - name: Test Summary
-        uses: test-summary/action@v1
+        uses: test-summary/action@v2
         with:
           paths: |
             ./report.xml
@@ -79,7 +79,7 @@ jobs:
           git remote -v
 
           # Pin dependencies: kyaml
-          gorepomod pin kyaml --local --doIt
+          gorepomod pin kyaml v0.16.0 --local --doIt
       - name: Build test
         run: |
           make build-kustomize-api
@@ -88,7 +88,7 @@ jobs:
 
           # Commit pinned dependencies and handle no commit          
           git add --all
-          git commit -m "pin kyaml, cmd/config" || true
+          git commit -m "pin kyaml" || true
           git push
   release:
     name: Release
@@ -124,10 +124,7 @@ jobs:
 
           # Create release draft
           changelog_file=$(mktemp)
-          currentBranch=$(git rev-parse --abbrev-ref HEAD)
-          module=$(echo "${currentBranch}" | cut -d'-' -f1)
-          version=${currentBranch##*-}
-          currentTag="${module}/${version}"
+          currentTag=$(git describe --tags)
           ./releasing/compile-changelog.sh "cmd/config" "${currentTag}" "${changelog_file}"
 
           # Create github releases
