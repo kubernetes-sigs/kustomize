@@ -81,7 +81,10 @@ main() {
   release_type=$2
   nextVersion=$(determineNextVersion $module)
 
-  release_branch="release-${module}/v${nextVersion}"
+  # Release branch naming format: release-{module}-{version}
+  release_branch="release-${module}-v${nextVersion}"
+
+  # Release tag naming format: {module}/{version}
   git_tag="${module}/${nextVersion}"
 
   echo "module: $module"

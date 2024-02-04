@@ -141,7 +141,14 @@ func (mgr *Manager) Release(
 			target.ShortName(), reps)
 	}
 
-	newVersion := target.VersionLocal().Bump(bump)
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
+
+	newVersionString := gr.GetCurrentVersion()
+	newVersion, err := semver.Parse(newVersionString)
+
+	if err != nil {
+		_ = fmt.Errorf("error parsing version string")
+	}
 
 	if newVersion.Equals(target.VersionRemote()) {
 		return fmt.Errorf(
@@ -153,13 +160,11 @@ func (mgr *Manager) Release(
 			newVersion, target.VersionRemote())
 	}
 
-	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
-
 	relBranch, relTag := determineBranchAndTag(target, newVersion)
 
 	fmt.Printf(
-		"Releasing %s, stepping from %s to %s\n",
-		target.ShortName(), target.VersionLocal(), newVersion)
+		"Releasing %s, with version %s\n",
+		target.ShortName(), newVersion)
 
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
