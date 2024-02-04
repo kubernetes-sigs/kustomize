@@ -83,9 +83,9 @@ func actualMain() error {
 
 		if v.IsZero() {
 			// Always use latest tag while does not removing manual usage capability
-			releaseBranch := fmt.Sprintf("release-%s", targetModule.ShortName())
-			fmt.Printf("new version not specified, fall back to latest version according to release branch: %s-*\n", releaseBranch)
-			latest, err := gr.GetLatestTag(releaseBranch)
+			releaseTag := string(targetModule.ShortName())
+			fmt.Printf("new version not specified, fall back to latest version according to release tag: %s/*\n", releaseTag)
+			latest, err := gr.GetLatestTag(releaseTag)
 			if err != nil {
 				v = targetModule.VersionLocal()
 				err = mgr.Pin(args.DoIt(), targetModule, v)
@@ -94,6 +94,7 @@ func actualMain() error {
 				}
 				return nil
 			}
+			fmt.Printf("setting release tag to %s ...\n", latest)
 			v, err = semver.Parse(latest)
 			if err != nil {
 				v = targetModule.VersionLocal()

@@ -28,9 +28,16 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
       - name: Unit test
         id: unit_test
         run: |
+
+          # Run unit test
           echo "Executing unit test"
           go install github.com/jstemmer/go-junit-report@latest
           make test-unit-all | go-junit-report -set-exit-code > report.xml
@@ -40,7 +47,7 @@ jobs:
           go-version-file: go.work
           cache-dependency-path: "**/*.sum"
       - name: Test Summary
-        uses: test-summary/action@v1
+        uses: test-summary/action@v2
         with:
           paths: |
             ./report.xml
@@ -74,9 +81,10 @@ jobs:
           git remote -v 
           
           # Pin dependencies: kyaml, cmd/config, api
-          gorepomod pin kyaml --local --doIt
-          gorepomod pin cmd/config --local --doIt
-          gorepomod pin api --local --doIt
+          # TODO: delete hardcoded version after stable
+          gorepomod pin kyaml v0.16.0 --doIt
+          gorepomod pin cmd/config v0.13.0 --doIt
+          gorepomod pin api v0.16.0 --doIt
       - name: Build test
         run: |
           make build-kustomize-api
