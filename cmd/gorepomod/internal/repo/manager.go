@@ -143,7 +143,7 @@ func (mgr *Manager) Release(
 
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
-	newVersionString := gr.GetCurrentVersion()
+	newVersionString := gr.GetCurrentVersionFromHead()
 	newVersion, err := semver.Parse(newVersionString)
 
 	if err != nil {
