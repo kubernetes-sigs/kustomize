@@ -49,6 +49,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: pre-build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
       - name: Fetch changes
         uses: actions/checkout@v4
@@ -89,6 +91,8 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     permissions:
       contents: write
     steps:
@@ -112,11 +116,8 @@ jobs:
           # Release kustomize
           make install-local-tools
           gorepomod release kustomize ${{ inputs.release_type }} --local  --doIt
-      - name: Create release changelog
+      - name: Build kustomize library and create release
         run: |
 
           # Create release draft
-          changelog_file=$(mktemp)
-          currentBranch=$(git rev-parse --abbrev-ref HEAD)
-          currentTag=${currentBranch#*-}
-          ./releasing/compile-changelog.sh "kustomize" "${currentTag}" "${changelog_file}"
+          ./releasing/build-kustomize-library.sh

@@ -127,3 +127,9 @@ jobs:
           currentBranch=$(git rev-parse --abbrev-ref HEAD)
           currentTag=${currentBranch#*-}
           ./releasing/compile-changelog.sh "cmd/config" "${currentTag}" "${changelog_file}"
+
+          # Create github releases
+          gh release create "${currentTag}" \
+          --title "${currentTag}" \
+          --draft \
+          --notes-file "${changelog_file}"
