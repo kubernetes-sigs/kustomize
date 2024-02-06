@@ -23,14 +23,14 @@ import (
 // but the loaded .so files are in shared memory, so one will get
 // "this plugin already loaded" errors if the registry is maintained
 // as a Loader instance variable.  So make it a package variable.
-var registry = make(map[string]resmap.Configurable)
+var registry = make(map[string]resmap.Configurable) //nolint:gochecknoglobals
 
 func copyPlugin(c resmap.Configurable) resmap.Configurable {
 	indirect := reflect.Indirect(reflect.ValueOf(c))
 	newIndirect := reflect.New(indirect.Type())
 	newIndirect.Elem().Set(reflect.ValueOf(indirect.Interface()))
 	newNamed := newIndirect.Interface()
-	return newNamed.(resmap.Configurable)
+	return newNamed.(resmap.Configurable) //nolint:forcetypeassert
 }
 
 func (l *Loader) loadGoPlugin(id resid.ResId, absPath string) (resmap.Configurable, error) {
