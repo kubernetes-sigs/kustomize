@@ -29,7 +29,9 @@ func newCmdSetSecret(
 		Short: fmt.Sprintf("Edits the value for an existing key for a Secret in the %s file", konfig.DefaultKustomizationFileName()),
 		Long: fmt.Sprintf(`Edits the value for an existing key in an existing Secret in the %[1]s file.
 Secret name, Secret namespace, and key name must match an existing entry in the %[1]s file for this command to succeed.
-When namespace is omitted, the default namespace is used.`, konfig.DefaultKustomizationFileName()),
+When namespace is omitted, the default namespace is used. Conversely, when an entry without a specified namespace exists
+in the %[1]s file, it can be updated by either omitting the namespace on the kustomize edit set secret invocation or by
+specifying --namespace=default.`, konfig.DefaultKustomizationFileName()),
 		Example: fmt.Sprintf(`
 	# Edits an existing Secret in the %[1]s file, changing the value of key1 to 2, and namespace is implicitly defined as "default"
 	kustomize edit set secret my-secret --from-literal=key1=2
