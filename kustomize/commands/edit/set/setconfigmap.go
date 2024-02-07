@@ -30,7 +30,9 @@ func newCmdSetConfigMap(
 		Short: fmt.Sprintf("Edits the value for an existing key for a ConfigMap in the %s file", konfig.DefaultKustomizationFileName()),
 		Long: fmt.Sprintf(`Edits the value for an existing key in an existing ConfigMap in the %[1]s file.
 ConfigMap name, ConfigMap namespace, and key name must match an existing entry in the %[1]s file for this command to succeed.
-When namespace is omitted, the default namespace is used.`, konfig.DefaultKustomizationFileName()),
+When namespace is omitted, the default namespace is used. Conversely, when an entry without a specified namespace exists
+in the %[1]s file, it can be updated by either omitting the namespace on the kustomize edit set configmap invocation or by
+specifying --namespace=default.`, konfig.DefaultKustomizationFileName()),
 		Example: fmt.Sprintf(`
 	# Edits an existing ConfigMap in the %[1]s file, changing value of key1 to 2, and namespace is implicitly defined as "default" 
 	kustomize edit set configmap my-configmap --from-literal=key1=2
