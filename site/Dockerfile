@@ -28,8 +28,14 @@ RUN apk add --no-cache \
     git \
     openssh-client \
     rsync \
-    npm && \
-    npm install -D autoprefixer postcss-cli
+    npm
+
+RUN mkdir -p /usr/local/node_packages
+WORKDIR /usr/local/node_packages
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install -D autoprefixer postcss-cli
+ENV PATH="/usr/local/node_packages/node_modules/.bin:${PATH}"
 
 RUN mkdir -p /var/hugo && \
     addgroup -Sg 1000 hugo && \
