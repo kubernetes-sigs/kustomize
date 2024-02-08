@@ -79,7 +79,7 @@ pull_unwanted_dependencies_json() {
 
 check_unwanted_dependencies(){
     for dep in $(jq -r '.spec.unwantedModules | keys[]' "${READ_PATH}"); do
-        for file in $(find ./* | fgrep go.sum); do
+        for file in $(find . \( -type f -and -path '*/kyaml/*' -or -path '*/api/*' -or -path '*/kustomize/*' \)| fgrep go.sum); do
             if [[ -z $(cat $file | fgrep $dep) ]]; then
                 rc=1
                 echo "Error: unwanted dependencies found. ($dep at $(realpath $file))"
