@@ -27,12 +27,19 @@ func NewCmdSet(
 
 	# Sets the namesuffix field
 	kustomize edit set namesuffix <suffix-value>
+
+	# Edits a field in an existing configmap in the kustomization file
+	kustomize edit set configmap my-configmap --from-literal=key1=value1
+
+	# Edits a field in an existing secret in the kustomization file
+	kustomize edit set secret my-secret --from-literal=key1=value1
 `,
 		Args: cobra.MinimumNArgs(1),
 	}
 
 	c.AddCommand(
 		newCmdSetConfigMap(fSys, ldr, rf),
+		newCmdSetSecret(fSys, ldr, rf),
 		newCmdSetNamePrefix(fSys),
 		newCmdSetNameSuffix(fSys),
 		newCmdSetNamespace(fSys, v),
