@@ -16,6 +16,7 @@ use (
 	./functions/examples/fn-framework-application
 	./functions/examples/injection-tshirt-sizes/image
 	./functions/examples/template-go-nginx/image
+	./functions/examples/template-heredoc-cockroachdb/image/tools
 	./functions/examples/validator-kubeval/image
 	./functions/examples/validator-resource-requests/image
 	./hack
