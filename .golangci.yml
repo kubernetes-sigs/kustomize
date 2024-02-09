@@ -35,6 +35,10 @@ linters:
     - maintidx
     - nosnakecase
     - testpackage # it's better to keep tests in the same package for now because kustomize does open box testing
+    - structcheck # abandoned by author
+    - varcheck # abandoned by author
+    - maligned # abandoned by author
+    - interfacer # archived by author
 
 linters-settings:
   dupl:

@@ -91,7 +91,7 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator $(MYGOBIN)/goimports
 
 # Generate builtin plugins
 .PHONY: generate-kustomize-builtin-plugins
-generate-kustomize-builtin-plugins: $(builtplugins)
+generate-kustomize-builtin-plugins: $(builtplugins) $(MYGOBIN)/pluginator
 	for plugin in $(abspath $(wildcard $(pSrc)/*)); do \
 		echo "generating $${plugin} ..."; \
 		set -e; \
@@ -112,7 +112,7 @@ builtin-plugins-diff: $(builtplugins)
 	done
 
 .PHONY: build-kustomize-external-go-plugin
-build-kustomize-external-go-plugin:
+build-kustomize-external-go-plugin: generate-kustomize-builtin-plugins
 	./hack/buildExternalGoPlugins.sh ./plugin
 
 .PHONY: clean-kustomize-external-go-plugin
