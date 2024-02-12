@@ -19,6 +19,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
-func (l *Loader) loadGoPlugin(id resid.ResId, absPath string) (resmap.Configurable, error) {
+func (l *Loader) loadGoPlugin(_ resid.ResId, _ string) (resmap.Configurable, error) {
 	return nil, errors.New("plugin load is disabled")
 }

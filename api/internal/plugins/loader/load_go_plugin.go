@@ -42,7 +42,7 @@ func (l *Loader) loadGoPlugin(id resid.ResId, absPath string) (resmap.Configurab
 		return nil, fmt.Errorf(
 			"expected file with Go object code at: %s", absPath)
 	}
-	log.Printf("Attempting plugin load from '%s'", absPath)
+	log.Printf("Attempting plugin load from %q", absPath)
 	p, err := plugin.Open(absPath)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "plugin %s fails to load", absPath)
@@ -55,7 +55,7 @@ func (l *Loader) loadGoPlugin(id resid.ResId, absPath string) (resmap.Configurab
 	}
 	c, ok := symbol.(resmap.Configurable)
 	if !ok {
-		return nil, fmt.Errorf("plugin '%s' not configurable", regId)
+		return nil, fmt.Errorf("plugin %q not configurable", regId)
 	}
 	registry[regId] = c
 	return copyPlugin(c), nil
