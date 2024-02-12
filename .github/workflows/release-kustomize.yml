@@ -77,14 +77,14 @@ jobs:
           # Prepare git
           git config --global user.email "development@kustomize.io"
           git config --global user.name "Development"
+          # TODO: change to kustomize token and url
           git remote add upstream "https://x-access-token:${GITHUB_TOKEN}@github.com/antoooks/kustomize.git"
           git remote -v 
           
           # Pin dependencies: kyaml, cmd/config, api
-          # TODO: delete hardcoded version after stable
-          gorepomod pin kyaml v0.16.0 --doIt
-          gorepomod pin cmd/config v0.13.0 --doIt
-          gorepomod pin api v0.16.0 --doIt
+          gorepomod pin kyaml --local --doIt
+          gorepomod pin cmd/config --local --doIt
+          gorepomod pin api --local --doIt
       - name: Build test
         run: |
           make build-kustomize-api
