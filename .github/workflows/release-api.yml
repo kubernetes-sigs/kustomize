@@ -76,8 +76,8 @@ jobs:
           git remote -v 
           
           # Pin dependencies: kyaml, cmd/config
-          gorepomod pin kyaml v0.16.0 --local --doIt
-          gorepomod pin cmd/config v0.13.0 --local --doIt
+          gorepomod pin kyaml --local --doIt
+          gorepomod pin cmd/config --local --doIt
       - name: Build api
         run: |
           make build-kustomize-api
