@@ -66,6 +66,36 @@ func TestScopeFlag(t *testing.T) {
 	loctest.CheckFs(t, testDir.String(), expected, actual)
 }
 
+func TestNoVerifyFlag(t *testing.T) {
+	kustomization := map[string]string{
+		"kustomization.yaml": `namePrefix: test-
+`,
+	}
+	expected, actual, target := loctest.PrepareFs(t, nil, kustomization)
+
+	buffy := new(bytes.Buffer)
+	log.SetOutput(buffy)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+	cmd := localize.NewCmdLocalize(actual)
+	require.NoError(t, cmd.Flags().Set("no-verify", "true"))
+	err := cmd.RunE(cmd, []string{
+		target.String(),
+		target.Join("dst"),
+	})
+	require.NoError(t, err)
+
+	loctest.SetupDir(t, expected, target.Join("dst"), kustomization)
+	loctest.CheckFs(t, target.String(), expected, actual)
+
+	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
+`, target.String(), target.Join("dst"))
+	verifyMsg := "kustomize build"
+	require.NotContains(t, buffy.String(), verifyMsg)
+	require.Contains(t, buffy.String(), successMsg)
+}
+
 func TestOptionalArgs(t *testing.T) {
 	for name, args := range map[string][]string{
 		"no_target": {},
@@ -99,6 +129,8 @@ func TestOptionalArgs(t *testing.T) {
 			loctest.SetupDir(t, expected, dst, kust)
 			loctest.CheckFs(t, testDir.String(), expected, actual)
 
+			verifyMsg := "VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization."
+			require.Contains(t, buffy.String(), verifyMsg)
 			successMsg := fmt.Sprintf(`SUCCESS: localized "." to directory %s
 `, dst)
 			require.Contains(t, buffy.String(), successMsg)
@@ -128,6 +160,8 @@ func TestOutput(t *testing.T) {
 	loctest.SetupDir(t, expected, target.Join("dst"), kustomization)
 	loctest.CheckFs(t, target.String(), expected, actual)
 
+	verifyMsg := "VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization."
+	require.Contains(t, buffy.String(), verifyMsg)
 	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
 `, target.String(), target.Join("dst"))
 	require.Contains(t, buffy.String(), successMsg)
