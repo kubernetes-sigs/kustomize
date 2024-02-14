@@ -31,7 +31,7 @@ example, `file:///path/to/repo//someSubdir?ref=v3.3.1`, references the absolute
 path to the repo at `/path/to/repo`, and a kustomization directory
 at `someSubdir` within that repo. `//` to delimits the root of the repo.
 Kustomize will clone the repo to a temporary directory and do a clean checkout
-of the `ref`. This behavior is differs from a direct path reference
+of the `ref`. This behavior differs from a direct path reference
 like `/path/to/repo/someSubdir`, in which case Kustomize will not use Git at
 all, and process the files at the path directly.
 
