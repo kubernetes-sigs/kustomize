@@ -15,7 +15,7 @@ Add prefixes to the names of all resources.
 
 * **namePrefix** (string)
 
-    NamePrefix will add a prefix the names of all resources mentioned in the Kustomization file including generated resources such as ConfigMaps and Secrets.
+    NamePrefix will add a prefix to the names of all resources mentioned in the Kustomization file including generated resources such as ConfigMaps and Secrets.
 
 
 [Tasks section]: /docs/tasks/namespaces_and_names/

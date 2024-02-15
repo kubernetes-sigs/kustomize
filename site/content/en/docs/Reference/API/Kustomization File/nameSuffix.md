@@ -15,7 +15,7 @@ Add suffixes to the names of all resources.
 
 * **nameSuffix** (string)
 
-    NameSuffix will add a suffix the names of all resources mentioned in the Kustomization file including generated resources such as ConfigMaps and Secrets.
+    NameSuffix will add a suffix to the names of all resources mentioned in the Kustomization file including generated resources such as ConfigMaps and Secrets.
 
 
 [Tasks section]: /docs/tasks/namespaces_and_names/
