@@ -144,34 +144,16 @@ func (mgr *Manager) Release(
 
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
-	newVersionString := gr.GetCurrentVersionFromHead()
+	newVersionString := strings.Split(gr.GetCurrentVersionFromHead(), "/")
 
 	if len(newVersionString) == 0 {
 		return fmt.Errorf("error getting version from remote")
 	}
 
-	// TODO(antoooks): workaround to determine new version from release branch
-	// because Parse() function is buggy. Use Parse() after it's fixed
-	newVersionStringSplit := strings.Split(newVersionString[1:], ".")
-
-	major, err := strconv.Atoi(strings.TrimSpace(newVersionStringSplit[0]))
-
+	newVersion, err := semver.Parse(newVersionString[1])
 	if err != nil {
-		_ = fmt.Errorf("error parsing version string")
+		return fmt.Errorf("error parsing version string: \"%s\"", newVersionString)
 	}
-
-	minor, err := strconv.Atoi(strings.TrimSpace(newVersionStringSplit[1]))
-
-	if err != nil {
-		_ = fmt.Errorf("error parsing version string")
-	}
-
-	patch, err := strconv.Atoi(strings.TrimSpace(newVersionStringSplit[2]))
-
-	if err != nil {
-		_ = fmt.Errorf("error parsing version string")
-	}
-	newVersion := semver.New(major, minor, patch)
 
 	if newVersion.Equals(target.VersionRemote()) {
 		return fmt.Errorf(
