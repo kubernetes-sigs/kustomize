@@ -169,15 +169,16 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 		p.path, append([]string{f.Name()}, p.args...)...)
 	cmd.Env = p.getEnv()
 	cmd.Stdin = bytes.NewReader(input)
-	cmd.Stderr = os.Stderr
+	var stdErr bytes.Buffer
+	cmd.Stderr = &stdErr
 	if _, err := os.Stat(p.h.Loader().Root()); err == nil {
 		cmd.Dir = p.h.Loader().Root()
 	}
 	result, err := cmd.Output()
 	if err != nil {
 		return nil, errors.WrapPrefixf(
-			err, "failure in plugin configured via %s; %v",
-			f.Name(), err.Error())
+			fmt.Errorf("failure in plugin configured via %s; %w",
+				f.Name(), err), stdErr.String())
 	}
 	return result, os.Remove(f.Name())
 }
