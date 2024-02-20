@@ -786,3 +786,68 @@ spec:
         name: tester
 `)
 }
+
+func TestHttpRouteWithPrefix(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+  - resources.yaml
+
+namePrefix: prefix-
+`)
+	th.WriteF("resources.yaml", `
+kind: Service
+apiVersion: v1
+metadata:
+  name: svc
+spec:
+  ports:
+  - name: http
+    port: 5000
+  selector:
+    app: test
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: svc-route
+spec:
+  parentRefs:
+  - kind: Gateway
+    namespace: infra-gateway
+    name: external-http
+    sectionName: https
+  rules:
+  - backendRefs:
+    - name: svc
+      port: 5000
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: prefix-svc
+spec:
+  ports:
+  - name: http
+    port: 5000
+  selector:
+    app: test
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: prefix-svc-route
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: external-http
+    namespace: infra-gateway
+    sectionName: https
+  rules:
+  - backendRefs:
+    - name: prefix-svc
+      port: 5000
+`)
+}
