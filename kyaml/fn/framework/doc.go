@@ -24,7 +24,7 @@
 //		functionConfig := &Example{}
 //
 //		fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-//			for i := range rl.Items {
+//			for i := range items {
 //				// modify the items...
 //			}
 //			return items, nil
