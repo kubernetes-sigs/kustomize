@@ -313,19 +313,21 @@ configurations:
 	th.WriteF("/merge-config/name-prefix-rules.yaml", `
 namePrefix:
 - path: metadata/name
-  apiVersion: v1
+  group: apps
+  version: v1
   kind: Deployment
 - path: metadata/name
-  apiVersion: v1
+  version: v1
   kind: Secret
 `)
 	th.WriteF("/merge-config/name-suffix-rules.yaml", `
 nameSuffix:
 - path: metadata/name
-  apiVersion: v1
+  version: v1
   kind: ConfigMap
 - path: metadata/name
-  apiVersion: v1
+  group: apps
+  version: v1
   kind: Deployment
 `)
 	th.WriteF("/merge-config/deployment.yaml", `
