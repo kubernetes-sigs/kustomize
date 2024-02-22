@@ -31,9 +31,9 @@ Adds labels and optionally selectors to all resources.
 
         IncludeTemplates indicates whether the transformer should include the `spec/template/metadata` fieldSpec. Custom fieldSpecs specified by `fields` will be merged with the `spec/template/metadata` fieldSpec if this is true. If IncludeSelectors is true, IncludeTemplates is not needed. Defaults to false.
 
-    * **fieldSpecs** (\[\][FieldSpec]({{< relref "../Common%20Definitions/FieldSpec.md" >}})), optional
+    * **fields** (\[\][FieldSpec]({{< relref "../Common%20Definitions/FieldSpec.md" >}})), optional
 
-        FieldSpecs specifies the field on each resource that LabelTransformer should add the label to. It essentially allows the user to re-define the field path of the Kubernetes labels field from `metadata/labels` for different resources.
+        Fields specifies the field on each resource that LabelTransformer should add the label to. It essentially allows the user to re-define the field path of the Kubernetes labels field from `metadata/labels` for different resources.
 
 
 [Tasks section]: /docs/tasks/labels_and_annotations/
