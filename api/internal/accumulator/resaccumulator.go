@@ -14,9 +14,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
-// ResAccumulator accumulates resources and the rules
-// used to customize those resources.  It's a ResMap
-// plus stuff needed to modify the ResMap.
+// ResAccumulator accumulates resources and the rules used to customize those resources.
+// It's a ResMap plus stuff needed to modify the ResMap.
 type ResAccumulator struct {
 	resMap  resmap.ResMap
 	tConfig *builtinconfig.TransformerConfig

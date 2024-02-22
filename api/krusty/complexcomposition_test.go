@@ -81,7 +81,7 @@ apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: svcNameTran
-target: 
+target:
   group: apps
   version: v1
   kind: StatefulSet
@@ -153,7 +153,7 @@ apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: envFromConfigTrans
-target: 
+target:
   group: apps
   version: v1
   kind: StatefulSet
@@ -213,7 +213,7 @@ apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: tolTrans
-target: 
+target:
   group: apps
   version: v1
   kind: StatefulSet
@@ -264,7 +264,7 @@ apiVersion: builtin
 kind: PatchTransformer
 metadata:
   name: storageTrans
-target: 
+target:
   group: apps
   version: v1
   kind: StatefulSet
@@ -365,10 +365,10 @@ resources:
 `)
 	err := th.RunWithErr("dev", th.MakeDefaultOptions())
 	if err == nil {
-		t.Fatalf("Expected resource accumulation error")
+		t.Fatalf("Expected resource accumulation error:\n%s\n", th.Run("dev", th.MakeDefaultOptions()))
 	}
-	if !strings.Contains(
-		err.Error(), "already registered id: StatefulSet.v1.apps/my-sts.[noNs]") {
+	if !strings.Contains(err.Error(),
+		`resid.ResId{Gvk:resid.Gvk{Group:"apps", Version:"v1", Kind:"StatefulSet", isClusterScoped:false}, Name:"my-sts", Namespace:""} exists`) {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }
@@ -459,7 +459,7 @@ resources:
 		t.Fatalf("Expected resource accumulation error")
 	}
 	if !strings.Contains(
-		err.Error(), "already registered id: StatefulSet.v1.apps/my-sts.[noNs]") {
+		err.Error(), `id resid.ResId{Gvk:resid.Gvk{Group:"apps", Version:"v1", Kind:"StatefulSet", isClusterScoped:false}, Name:"my-sts", Namespace:""} exists`) {
 		t.Fatalf("Unexpected err: %v", err)
 	}
 }

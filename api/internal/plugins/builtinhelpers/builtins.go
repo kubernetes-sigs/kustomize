@@ -14,6 +14,7 @@ type BuiltinPluginType int
 const (
 	Unknown BuiltinPluginType = iota
 	AnnotationsTransformer
+	ResourceGenerator
 	ConfigMapGenerator
 	IAMPolicyGenerator
 	HashTransformer
@@ -59,6 +60,7 @@ func GetBuiltinPluginType(n string) BuiltinPluginType {
 }
 
 var GeneratorFactories = map[BuiltinPluginType]func() resmap.GeneratorPlugin{
+	ResourceGenerator:           builtins.NewResourceGeneratorPlugin,
 	ConfigMapGenerator:          builtins.NewConfigMapGeneratorPlugin,
 	IAMPolicyGenerator:          builtins.NewIAMPolicyGeneratorPlugin,
 	SecretGenerator:             builtins.NewSecretGeneratorPlugin,
