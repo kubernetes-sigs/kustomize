@@ -377,7 +377,8 @@ spec:
 	th.WriteF("base/config/knative.yaml", `
 images:
 - path: spec/runLatest/configuration/revisionTemplate/spec/container/image
-  apiVersion: serving.knative.dev/v1alpha1
+  group: serving.knative.dev
+  version: v1alpha1
   kind: Service
 `)
 }
