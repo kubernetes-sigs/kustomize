@@ -13,6 +13,13 @@
 //
 // Example function implementation using framework.SimpleProcessor with a struct input
 //
+//	import (
+//		"sigs.k8s.io/kustomize/kyaml/errors"
+//		"sigs.k8s.io/kustomize/kyaml/fn/framework"
+//		"sigs.k8s.io/kustomize/kyaml/kio"
+//		"sigs.k8s.io/kustomize/kyaml/yaml"
+//	)
+//
 //	type Spec struct {
 //		Value string `yaml:"value,omitempty"`
 //	}
