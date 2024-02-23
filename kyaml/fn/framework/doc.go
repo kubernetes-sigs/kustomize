@@ -63,7 +63,7 @@
 //
 // The functionConfig may be specified declaratively and run with
 //
-//  config run DIR/
+//  kustomize fn run DIR/
 //
 // Declarative function declaration:
 //
