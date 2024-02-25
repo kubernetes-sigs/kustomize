@@ -28,10 +28,6 @@ func (rmF *Factory) RF() *resource.Factory {
 	return rmF.resF
 }
 
-func New() ResMap {
-	return newOne()
-}
-
 // FromResource returns a ResMap with one entry.
 func (rmF *Factory) FromResource(res *resource.Resource) ResMap {
 	m, err := newResMapFromResourceSlice([]*resource.Resource{res})
@@ -123,8 +119,7 @@ func (rmF *Factory) FromSecretArgs(
 	return rmF.FromResource(res), nil
 }
 
-func newResMapFromResourceSlice(
-	resources []*resource.Resource) (ResMap, error) {
+func newResMapFromResourceSlice(resources []*resource.Resource) (ResMap, error) {
 	result := New()
 	for _, res := range resources {
 		err := result.Append(res)

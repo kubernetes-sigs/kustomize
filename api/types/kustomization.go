@@ -180,6 +180,8 @@ type Kustomization struct {
 	BuildMetadata []string `json:"buildMetadata,omitempty" yaml:"buildMetadata,omitempty"`
 }
 
+type FilePath string
+
 const (
 	deprecatedWarningToRunEditFix              = "Run 'kustomize edit fix' to update your Kustomization automatically."
 	deprecatedWarningToRunEditFixExperimential = "[EXPERIMENTAL] Run 'kustomize edit fix' to update your Kustomization automatically."
