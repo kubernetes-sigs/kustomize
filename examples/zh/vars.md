@@ -54,8 +54,8 @@ resources:
 - wordpress
 - mysql
 namePrefix: demo-
-patchesStrategicMerge:
-- patch.yaml
+patches:
+- path: patch.yaml
 EOF
 ```
 
