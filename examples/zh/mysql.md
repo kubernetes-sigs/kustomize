@@ -128,7 +128,7 @@ sed -i.bak 's/app: helloworld/app: prod/' \
 
 ### 存储定制
 
-现成的 MySQL 使用 `emptyDir` 类型的 volume，如果 MySQL Pod 被重新部署，则该类型的 volume 将会消失，这是不能应用于生产环境的，因此在生产环境中我们需要使用持久化磁盘。在 kustomize 中可以使用`patchesStrategicMerge` 来应用资源。
+现成的 MySQL 使用 `emptyDir` 类型的 volume，如果 MySQL Pod 被重新部署，则该类型的 volume 将会消失，这是不能应用于生产环境的，因此在生产环境中我们需要使用持久化磁盘。在 kustomize 中可以使用`patches` 来应用资源。
 
 <!-- @createPatchFile @testAgainstLatestRelease -->
 ```
@@ -153,15 +153,15 @@ EOF
 <!-- @specifyPatch @testAgainstLatestRelease -->
 ```
 cat <<'EOF' >> $DEMO_HOME/kustomization.yaml
-patchesStrategicMerge:
-- persistent-disk.yaml
+patches:
+- path: persistent-disk.yaml
 EOF
 ```
 
 `mysql-persistent-storage` 必须存在一个持久化磁盘才能使其成功运行，分为两步：
 
 1. 创建一个名为 `persistent-disk.yaml` 的 YAML 文件，用于修改 deployment.yaml 的定义。
-2. 在 `kustomization.yaml` 中添加 `persistent-disk.yaml` 到 `patchesStrategicMerge` 列表中。运行 `kustomize build` 将 patch 应用于 Deployment 资源。
+2. 在 `kustomization.yaml` 中添加 `persistent-disk.yaml` 到 `patches` 列表中。运行 `kustomize build` 将 patch 应用于 Deployment 资源。
 
 现在就可以将完整的配置输出并在集群中部署（将结果通过管道输出给 `kubectl apply`），在生产环境创建MySQL 应用。
 

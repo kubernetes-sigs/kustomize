@@ -72,8 +72,8 @@ commonAnnotations:
   note: Hello, I am staging!
 resources:
 - ../../base
-patchesStrategicMerge:
-- map.yaml
+patches:
+  - path: map.yaml
 EOF
 
 cat <<EOF >$OVERLAYS/staging/map.yaml
