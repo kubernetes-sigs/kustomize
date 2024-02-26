@@ -23,8 +23,8 @@ func newCmdAddReplacement(fSys filesys.FileSystem) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "replacement",
 		Short: "add an item to replacement field",
-		Long: `this command will add an item to  replacement field in the kustomization file.
-The item must be either a file, or an inline string.
+		Long: `this command will add an item to replacement field in the kustomization file.
+The item must be a file path.
 `,
 		Example: `
 	# Adds a replacement file to the kustomization file
