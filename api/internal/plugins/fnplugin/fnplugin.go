@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -51,14 +52,29 @@ func resourceToRNode(res *resource.Resource) (*yaml.RNode, error) {
 }
 
 // GetFunctionSpec return function spec is there is. Otherwise return nil
-func GetFunctionSpec(res *resource.Resource) (*runtimeutil.FunctionSpec, error) {
+func GetFunctionSpec(res *resource.Resource, catalogs []framework.Catalog) (*runtimeutil.FunctionSpec, error) {
+	var (
+		functionSpec *runtimeutil.FunctionSpec
+		err          error
+	)
+
 	rnode, err := resourceToRNode(res)
 	if err != nil {
 		return nil, fmt.Errorf("could not convert resource to RNode: %w", err)
 	}
-	functionSpec, err := runtimeutil.GetFunctionSpec(rnode)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
+
+	if len(catalogs) > 0 {
+		functionSpec, err = framework.FindMatchingFunctionSpec(rnode, catalogs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get FunctionSpec from catalogs: %w", err)
+		}
+	}
+
+	if functionSpec == nil {
+		functionSpec, err = runtimeutil.GetFunctionSpec(rnode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get FunctionSpec: %w", err)
+		}
 	}
 	return functionSpec, nil
 }
@@ -83,6 +99,7 @@ func NewFnPlugin(o *types.FnPluginLoadingOptions) *FnPlugin {
 			Env:            o.Env,
 			AsCurrentUser:  o.AsCurrentUser,
 			WorkingDir:     o.WorkingDir,
+			Catalogs:       o.Catalogs,
 		},
 	}
 }

@@ -24,7 +24,7 @@ func MapInputsE(inputs []*yaml.RNode, fn MapInputsEFn) error {
 
 type MapInputsFn func(*yaml.RNode, yaml.ResourceMeta) ([]*yaml.RNode, error)
 
-//  runs the function against each input Resource, providing the parsed metadata
+// runs the function against each input Resource, providing the parsed metadata
 func MapInputs(inputs []*yaml.RNode, fn MapInputsFn) ([]*yaml.RNode, error) {
 	var outputs []*yaml.RNode
 	for i := range inputs {
