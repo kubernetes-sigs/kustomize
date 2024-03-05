@@ -73,7 +73,8 @@
 //        # run the function by creating this container and providing this
 //        # Example as the functionConfig
 //        config.kubernetes.io/function: |
-//          image: image/containing/function:impl
+//          container:
+//            image: image/containing/function:impl
 //    spec:
 //      value: foo
 //
