@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/config/internal/commands/e2e/e2econtainerenvgenerator
 
-go 1.20
+go 1.21
 
 require sigs.k8s.io/kustomize/kyaml v0.14.2
 

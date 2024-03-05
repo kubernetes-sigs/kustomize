@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/depprobcheck
 
-go 1.20
+go 1.21
 
 require (
 	k8s.io/cli-runtime v0.20.4

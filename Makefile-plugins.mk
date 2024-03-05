@@ -96,7 +96,7 @@ generate-kustomize-builtin-plugins: $(builtplugins)
 		echo "generating $${plugin} ..."; \
 		set -e; \
 		cd $${plugin}; \
-		go generate pluginator .; \
+		go generate .; \
 	done
 
 # Check for diff by comparing current revision of generated plugins on HEAD and newly generated plugins on local branch, 

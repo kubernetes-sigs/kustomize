@@ -144,7 +144,7 @@ The script wraps itself using ` + "`" + `config run wrap -- $0` + "`" + ` which 
 
 ` + "`" + `Dockerfile` + "`" + ` installs ` + "`" + `kustomize fn` + "`" + ` and copies the script into the container image.
 
-	FROM golang:1.20-bullseye
+	FROM golang:1.21-bullseye
 	RUN go get sigs.k8s.io/kustomize/cmd/config
 	RUN mv /go/bin/config /usr/bin/config
 	COPY nginx-template.sh /usr/bin/nginx-template.sh
