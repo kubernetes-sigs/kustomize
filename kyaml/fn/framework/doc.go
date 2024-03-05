@@ -63,7 +63,7 @@
 //
 // The functionConfig may be specified declaratively and run with
 //
-//  kustomize fn run DIR/
+//	kustomize fn run DIR/
 //
 // Declarative function declaration:
 //
@@ -82,7 +82,7 @@
 // Generated ResourceList.functionConfig -- ConfigMaps
 // Functions may also be specified imperatively and run using:
 //
-//   kustomize fn run DIR/ --image image/containing/function:impl -- value=foo
+//	kustomize fn run DIR/ --image image/containing/function:impl -- value=foo
 //
 // When run imperatively, a ConfigMap is generated for the functionConfig, and the command
 // arguments are set as ConfigMap data entries.
