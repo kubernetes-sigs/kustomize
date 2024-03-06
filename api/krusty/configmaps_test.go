@@ -594,7 +594,7 @@ metadata:
 
 // Regression test for https://github.com/kubernetes-sigs/kustomize/issues/5047
 func TestPrefixSuffix(t *testing.T) {
-        th := kusttest_test.MakeHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteF("kustomization.yaml", `
 resources:
 - a
@@ -647,7 +647,6 @@ resources:
 nameSuffix: api
 `)
 
-
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: apps/v1
@@ -690,7 +689,7 @@ metadata:
 
 // Regression test for https://github.com/kubernetes-sigs/kustomize/issues/5047
 func TestPrefixSuffix2(t *testing.T) {
-        th := kusttest_test.MakeHarness(t)
+	th := kusttest_test.MakeHarness(t)
 	th.WriteF("kustomization.yaml", `
 resources:
 - a
@@ -733,7 +732,6 @@ resources:
 configMapGenerator:
 - name: "-example-configmap"
 `)
-
 
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
