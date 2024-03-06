@@ -101,12 +101,14 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "name"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "name"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "name"),
 		)
 	}
 	if r.images || (r.all && !c.Flag("image").Changed) {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "image"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "image"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "image"),
 		)
 	}
 
@@ -114,18 +116,21 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "command"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "command"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "command"),
 		)
 	}
 	if r.args || (r.all && !c.Flag("args").Changed) {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "args"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "args"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "args"),
 		)
 	}
 	if r.env || (r.all && !c.Flag("env").Changed) {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "env"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "env"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "env"),
 		)
 	}
 
@@ -138,12 +143,14 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "resources"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "resources"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "resources"),
 		)
 	}
 	if r.ports || (r.all && !c.Flag("ports").Changed) {
 		fields = append(fields,
 			newField("spec", "containers", "[name=.*]", "ports"),
 			newField("spec", "template", "spec", "containers", "[name=.*]", "ports"),
+			newField("spec", "jobTemplate", "spec", "template", "spec", "containers", "[name=.*]", "ports"),
 			newField("spec", "ports"),
 		)
 	}
@@ -171,6 +178,14 @@ func newField(val ...string) kio.TreeWriterField {
 	if strings.HasPrefix(strings.Join(val, "."), "spec.template.spec.containers") {
 		return kio.TreeWriterField{
 			Name:        "spec.template.spec.containers",
+			PathMatcher: yaml.PathMatcher{Path: val, StripComments: true},
+			SubName:     val[len(val)-1],
+		}
+	}
+
+	if strings.HasPrefix(strings.Join(val, "."), "spec.jobTemplate.spec.template.spec.containers") {
+		return kio.TreeWriterField{
+			Name:        "spec.jobTemplate.spec.template.spec.containers",
 			PathMatcher: yaml.PathMatcher{Path: val, StripComments: true},
 			SubName:     val[len(val)-1],
 		}
