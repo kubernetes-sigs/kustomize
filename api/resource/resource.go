@@ -302,7 +302,6 @@ func (r *Resource) PrefixesSuffixesEquals(o ResCtx, allowEmpty bool) bool {
 	} else {
 		return utils.SameEndingSubSlice(r.GetNamePrefixes(), o.GetNamePrefixes()) &&
 			utils.SameEndingSubSlice(r.GetNameSuffixes(), o.GetNameSuffixes())
-
 	}
 }
 
