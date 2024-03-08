@@ -3,18 +3,18 @@ module sigs.k8s.io/kustomize/api
 go 1.20
 
 require (
-	github.com/evanphx/json-patch v4.12.0+incompatible
+	github.com/blang/semver/v4 v4.0.0
 	github.com/go-errors/errors v1.4.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/goleak v1.3.0
+	gopkg.in/evanphx/json-patch.v4 v4.12.0
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961
 	sigs.k8s.io/kustomize/kyaml v0.16.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
-	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect

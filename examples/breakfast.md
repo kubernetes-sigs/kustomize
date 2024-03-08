@@ -73,8 +73,8 @@ commonLabels:
   who: alice
 resources:
 - ../../base
-patchesStrategicMerge:
-- temperature.yaml
+patches:
+- path: temperature.yaml
 EOF
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/alice/temperature.yaml
@@ -96,8 +96,8 @@ commonLabels:
   who: bob
 resources:
 - ../../base
-patchesStrategicMerge:
-- topping.yaml
+patches:
+- path: topping.yaml
 EOF
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/bob/topping.yaml

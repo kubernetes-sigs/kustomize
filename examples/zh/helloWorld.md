@@ -138,8 +138,8 @@ commonAnnotations:
   note: Hello, I am staging!
 resources:
 - ../../base
-patchesStrategicMerge:
-- map.yaml
+patches:
+- path: map.yaml
 EOF
 ```
 
@@ -177,8 +177,8 @@ commonAnnotations:
   note: Hello, I am production!
 resources:
 - ../../base
-patchesStrategicMerge:
-- deployment.yaml
+patches:
+- path: deployment.yaml
 EOF
 ```
 
