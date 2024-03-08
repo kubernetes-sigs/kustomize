@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	. "sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -454,4 +456,81 @@ func TestDuplicateExternalTransformersForbidden(t *testing.T) {
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ValueAnnotator.v1.transformers.example.co/notImportantHere")
+}
+
+func TestErrorMessageForMalformedYAML(t *testing.T) {
+	// These testcases verify behavior for the scenario described in
+	// https://github.com/kubernetes-sigs/kustomize/issues/5540 .
+
+	testcases := map[string]struct {
+		loaderNewReturnsError error
+		shouldShowLoadError   bool
+	}{
+		"shouldShowLoadError": {
+			loaderNewReturnsError: utils.NewErrTimeOut(time.Second, "git init"),
+			shouldShowLoadError:   true,
+		},
+		"shouldNotShowLoadError": {
+			loaderNewReturnsError: NewErrMissingKustomization("/should-fail/resources.yaml"),
+			shouldShowLoadError:   false,
+		},
+	}
+
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/should-fail/kustomization.yaml", `resources:
+- resources.yaml
+`)
+	th.WriteF("/should-fail/resources.yaml", `<!DOCTYPE html>
+<html class="html-devise-layout ui-light-gray" lang="en">
+<head prefix="og: http://ogp.me/ns#">
+<meta charset="utf-8">
+`)
+
+	for name, tc := range testcases {
+		t.Run(name, func(subT *testing.T) {
+			ldrWrapper := func(baseLoader ifc.Loader) ifc.Loader {
+				return loaderNewThrowsError{
+					baseLoader:      baseLoader,
+					newReturnsError: tc.loaderNewReturnsError,
+				}
+			}
+			_, err := makeAndLoadKustTargetWithLoaderOverride(t, th.GetFSys(), "/should-fail", ldrWrapper).AccumulateTarget()
+			require.Error(t, err)
+			errString := err.Error()
+			assert.Contains(t, errString, "accumulating resources from 'resources.yaml'")
+			assert.Contains(t, errString, "MalformedYAMLError: yaml: line 3: mapping values are not allowed in this context")
+			if tc.shouldShowLoadError {
+				assert.Regexp(t, `hit \w+ timeout running '`, errString)
+			} else {
+				assert.NotRegexp(t, `hit \w+ timeout running '`, errString)
+			}
+		})
+	}
+}
+
+// loaderNewReturnsError duplicates baseLoader's behavior except
+// that New() returns the specified error.
+type loaderNewThrowsError struct {
+	baseLoader      ifc.Loader
+	newReturnsError error
+}
+
+func (l loaderNewThrowsError) Repo() string {
+	return l.baseLoader.Repo()
+}
+
+func (l loaderNewThrowsError) Root() string {
+	return l.baseLoader.Root()
+}
+
+func (l loaderNewThrowsError) New(_ string) (ifc.Loader, error) {
+	return nil, l.newReturnsError
+}
+
+func (l loaderNewThrowsError) Load(location string) ([]byte, error) {
+	return l.baseLoader.Load(location)
+}
+
+func (l loaderNewThrowsError) Cleanup() error {
+	return l.baseLoader.Cleanup()
 }
