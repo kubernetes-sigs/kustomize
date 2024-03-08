@@ -17,12 +17,16 @@ commonLabels:
 vars:
 - name: APRIL_DIET
   objref:
+    group: foo
+    version: v1
     kind: Giraffe
     name: april
   fieldref:
     fieldpath: spec.diet
 - name: KOKO_DIET
   objref:
+    group: foo
+    version: v1
     kind: Gorilla
     name: koko
   fieldref:
@@ -36,6 +40,7 @@ configurations:
 - config/custom.yaml
 `)
 	th.WriteF("base/giraffes.yaml", `
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   name: april
@@ -43,6 +48,7 @@ spec:
   diet: mimosa
   location: NE
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   name: may
@@ -51,6 +57,7 @@ spec:
   location: SE
 `)
 	th.WriteF("base/gorilla.yaml", `
+apiVersion: foo/v1
 kind: Gorilla
 metadata:
   name: koko
@@ -59,7 +66,7 @@ spec:
   location: SW
 `)
 	th.WriteF("base/animalPark.yaml", `
-apiVersion: foo
+apiVersion: foo/v1
 kind: AnimalPark
 metadata:
   name: sandiego
@@ -94,7 +101,7 @@ varReference:
 `)
 	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: foo
+apiVersion: foo/v1
 kind: AnimalPark
 metadata:
   labels:
@@ -109,6 +116,7 @@ spec:
   gorillaRef:
     name: x-koko
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   labels:
@@ -118,6 +126,7 @@ spec:
   diet: mimosa
   location: NE
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   labels:
@@ -127,6 +136,7 @@ spec:
   diet: acacia
   location: SE
 ---
+apiVersion: foo/v1
 kind: Gorilla
 metadata:
   labels:
@@ -163,7 +173,7 @@ varReference:
 `)
 	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: foo
+apiVersion: foo/v1
 kind: AnimalPark
 metadata:
   labels:
@@ -178,6 +188,7 @@ spec:
   gorillaRef:
     name: x-koko
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   labels:
@@ -187,6 +198,7 @@ spec:
   diet: mimosa
   location: NE
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   labels:
@@ -196,6 +208,7 @@ spec:
   diet: acacia
   location: SE
 ---
+apiVersion: foo/v1
 kind: Gorilla
 metadata:
   labels:
@@ -215,17 +228,20 @@ func TestFixedBug605_BaseCustomizationAvailableInOverlay(t *testing.T) {
 nameReference:
 - kind: Gorilla
   fieldSpecs:
-  - apiVersion: foo
+  - group: foo
+    version: v1
     kind: AnimalPark
     path: spec/gorillaRef/name
 - kind: Giraffe
   fieldSpecs:
-  - apiVersion: foo
+  - group: foo
+    version: v1
     kind: AnimalPark
     path: spec/giraffeRef/name
 varReference:
 - path: spec/food
-  apiVersion: foo
+  group: foo
+  version: v1
   kind: AnimalPark
 `)
 	th.WriteK("overlay", `
@@ -239,6 +255,7 @@ resources:
 - ursus.yaml
 `)
 	th.WriteF("overlay/ursus.yaml", `
+apiVersion: foo/v1
 kind: Gorilla
 metadata:
   name: ursus
@@ -248,7 +265,7 @@ spec:
 `)
 	// The following replaces the gorillaRef in the AnimalPark.
 	th.WriteF("overlay/animalPark.yaml", `
-apiVersion: foo
+apiVersion: foo/v1
 kind: AnimalPark
 metadata:
   name: sandiego
@@ -258,7 +275,7 @@ spec:
 `)
 	m := th.Run("overlay", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
-apiVersion: foo
+apiVersion: foo/v1
 kind: AnimalPark
 metadata:
   labels:
@@ -274,6 +291,7 @@ spec:
   gorillaRef:
     name: o-ursus
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   labels:
@@ -284,6 +302,7 @@ spec:
   diet: mimosa
   location: NE
 ---
+apiVersion: foo/v1
 kind: Giraffe
 metadata:
   labels:
@@ -294,6 +313,7 @@ spec:
   diet: acacia
   location: SE
 ---
+apiVersion: foo/v1
 kind: Gorilla
 metadata:
   labels:
@@ -304,6 +324,7 @@ spec:
   diet: bambooshoots
   location: SW
 ---
+apiVersion: foo/v1
 kind: Gorilla
 metadata:
   labels:
