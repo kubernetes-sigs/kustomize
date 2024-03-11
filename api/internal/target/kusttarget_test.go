@@ -530,9 +530,9 @@ func (l loaderNewThrowsError) New(_ string) (ifc.Loader, error) {
 }
 
 func (l loaderNewThrowsError) Load(location string) ([]byte, error) {
-	return l.baseLoader.Load(location)
+	return l.baseLoader.Load(location) //nolint:wrapcheck // baseLoader's error is sufficient
 }
 
 func (l loaderNewThrowsError) Cleanup() error {
-	return l.baseLoader.Cleanup()
+	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
 }
