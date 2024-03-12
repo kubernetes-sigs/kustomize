@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/provider"
 	. "sigs.k8s.io/kustomize/api/resource"
@@ -279,6 +280,43 @@ metadata:
 spec:
   numReplicas: 999
 `, string(bytes))
+}
+
+// regression test for https://github.com/kubernetes-sigs/kustomize/issues/5031
+func TestApplySmPatch_Idempotency(t *testing.T) {
+	// an arbitrary number of times to apply the patch
+	patchApplyCount := 4
+	resourceYaml := `apiVersion: v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels: null
+  name: my-deployment
+`
+	resource, err := factory.FromBytes([]byte(resourceYaml))
+	require.NoError(t, err)
+
+	noOpPatch, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-deployment
+`))
+	require.NoError(t, err)
+
+	for i := 0; i < patchApplyCount; i++ {
+		require.NoError(t, resource.ApplySmPatch(noOpPatch))
+
+		bytes, err := resource.AsYAML()
+		require.NoError(t, err)
+
+		require.Equal(
+			t,
+			resourceYaml,
+			string(bytes),
+			"resource should be unchanged after re-application of patch",
+		)
+	}
 }
 
 func TestApplySmPatchShouldOutputListItemsInCorrectOrder(t *testing.T) {
