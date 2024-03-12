@@ -66,8 +66,7 @@ func (m Merger) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.R
 
 		// If Origin is missing, preserve explicitly set null in Dest ("null", "~", etc)
 		if nodes.Origin().IsNil() && !nodes.Dest().IsNil() && len(nodes.Dest().YNode().Value) > 0 {
-			// Return a new node so that it won't have a "!!null" tag and therefore won't be cleared.
-			return yaml.NewScalarRNode(nodes.Dest().YNode().Value), nil
+			return yaml.MakePersistentNullNode(nodes.Dest().YNode().Value), nil
 		}
 
 		return nodes.Origin(), nil
