@@ -9,6 +9,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/goleak v1.3.0
 	gopkg.in/evanphx/json-patch.v4 v4.12.0
+	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961
 	sigs.k8s.io/kustomize/kyaml v0.16.0
 	sigs.k8s.io/yaml v1.4.0
@@ -32,7 +33,7 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/sys v0.13.0 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
