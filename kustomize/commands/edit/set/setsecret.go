@@ -7,8 +7,9 @@ package set
 import (
 	"fmt"
 
+	"slices"
+
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resource"
