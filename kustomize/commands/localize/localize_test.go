@@ -96,6 +96,41 @@ func TestNoVerifyFlag(t *testing.T) {
 	require.Contains(t, buffy.String(), successMsg)
 }
 
+func TestFailingBuildCmd(t *testing.T) {
+	kustomization := map[string]string{
+		"kustomization.yaml": `resources:
+- deployment.yaml
+`,
+		"deployment.yaml": deployment,
+	}
+	kustomization2 := map[string]string{
+		"kustomization.yaml": `namePrefix: test-
+`,
+	}
+	expected, actual, target := loctest.PrepareFs(t, nil, kustomization)
+	log.Println(target.String())
+
+	buffy := new(bytes.Buffer)
+	log.SetOutput(buffy)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+	cmd := localize.NewCmdLocalize(actual)
+	err := cmd.RunE(cmd, []string{
+		target.String(),
+		target.Join("dst"),
+	})
+	require.NoError(t, err)
+
+	loctest.SetupDir(t, expected, target.Join("dst"), kustomization2)
+	loctest.CheckFs(t, target.String(), expected, actual)
+
+	// verifyMsg := "VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization."
+	// require.Contains(t, buffy.String(), verifyMsg)
+	// successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s`, target.String(), target.Join("dst"))
+	// require.Contains(t, buffy.String(), successMsg)
+}
+
 func TestOptionalArgs(t *testing.T) {
 	for name, args := range map[string][]string{
 		"no_target": {},

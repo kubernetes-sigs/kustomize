@@ -70,31 +70,25 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 			}
 
 			if !f.noVerify {
-				buildBuffer.Reset()
-				err := buildCmd.RunE(buildCmd, []string{args.target})
+				originalBuild, err := runBuildCmd(buildBuffer, buildCmd, args.target)
 				if err != nil {
 					return errors.Wrap(err)
 				}
-
-				originalBuild := buildBuffer.String()
 
 				buildDst := dst
 				if f.scope != "" && f.scope != args.target {
 					buildDst = filepath.Join(dst, filepath.Base(args.target))
 				}
 
-				buildBuffer.Reset()
-				err = buildCmd.RunE(buildCmd, []string{buildDst})
+				localizedBuild, err := runBuildCmd(buildBuffer, buildCmd, buildDst)
 				if err != nil {
 					return errors.Wrap(err)
 				}
 
-				localizedBuild := buildBuffer.String()
-
 				if localizedBuild == originalBuild {
 					log.Println("VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization.")
 				} else {
-					log.Println("VERFICATION FAILED: kustomize build for target and newDir are different after localization.")
+					log.Fatal("VERFICATION FAILED: kustomize build for target and newDir are different after localization.")
 				}
 			}
 
@@ -114,7 +108,7 @@ If not specified for local target, scope defaults to target.
 		"no-verify",
 		false,
 		`Does not verify that the outputs of kustomize build for target and newDir are the same after localization.
-		If not specified, noVerify defaults to false and will run kustomize build.
+		If not specified, this flag defaults to false and will run kustomize build.
 	`)
 	return cmd
 }
@@ -133,4 +127,14 @@ func matchArgs(rawArgs []string) arguments {
 		args.target = filesys.SelfDir
 	}
 	return args
+}
+
+func runBuildCmd(buffer bytes.Buffer, cmd *cobra.Command, folder string) (buildOutput string, err error) {
+	buffer.Reset()
+	buildErr := cmd.RunE(cmd, []string{folder})
+	if buildErr != nil {
+		return "", errors.Wrap(buildErr)
+	}
+
+	return buffer.String(), nil
 }
