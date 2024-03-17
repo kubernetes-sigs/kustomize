@@ -80,7 +80,7 @@ pull_unwanted_dependencies_json() {
 check_unwanted_dependencies(){
     for dep in $(jq -r '.spec.unwantedModules | keys[]' "${READ_PATH}"); do
         for file in $(find . \( -type f -and -path '*/kyaml/*' -or -path '*/api/*' -or -path '*/kustomize/*' \)| fgrep go.sum); do
-            if [[ -z $(cat $file | fgrep $dep) ]]; then
+            if [[ $(cat $file | fgrep $dep) ]]; then
                 rc=1
                 echo "Error: unwanted dependencies found. ($dep at $(realpath $file))"
             fi
@@ -89,7 +89,7 @@ check_unwanted_dependencies(){
 
     for upstream in $(jq -r '.status.unwantedReferences | keys[]' "${READ_PATH}"); do
         for ref in $(jq -r '.status.unwantedReferences.'\"${upstream}\"'[]' "${READ_PATH}"); do
-            if [[ ! -z $(go mod graph | fgrep $upstream | fgrep $ref) ]]; then
+            if [[ $(go mod graph | fgrep $upstream | fgrep $ref) ]]; then
                 rc=1
                 echo "Error: unwanted references found on one of the dependencies. ($upstream depends on $ref))"
             fi
