@@ -6,6 +6,7 @@ package replacement
 import (
 	"fmt"
 	"strings"
+	"regexp"
 
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -93,7 +94,24 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 	if rn.YNode().Kind != yaml.ScalarNode {
 		return nil, fmt.Errorf("delimiter option can only be used with scalar nodes")
 	}
-	value := strings.Split(yaml.GetValue(rn), options.Delimiter)
+	value := []string{}
+	if options.EndDelimiter == "" {
+		value = strings.Split(yaml.GetValue(rn), options.Delimiter)
+	} else {
+		mapper := func(s string) string {
+			s = strings.ReplaceAll(s, options.Delimiter, "")
+			s = strings.ReplaceAll(s, options.EndDelimiter, "")
+			return s
+		}
+		if options.Delimiter == "" {
+			return nil, fmt.Errorf("delimiter needs to be set if enddelimiter is set")
+		}
+		re := regexp.MustCompile(regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter))
+		dv := re.FindAllString(yaml.GetValue(rn), -1)
+		for _, s := range dv {
+			value = append(value, mapper(s))
+		}
+	}
 	if options.Index >= len(value) || options.Index < 0 {
 		return nil, fmt.Errorf("options.index %d is out of bounds for value %s", options.Index, yaml.GetValue(rn))
 	}
@@ -224,18 +242,34 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 		if targetField.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
 		}
-		tv := strings.Split(targetField.YNode().Value, options.Delimiter)
 		v := yaml.GetValue(value)
-		// TODO: Add a way to remove an element
-		switch {
-		case options.Index < 0: // prefix
-			tv = append([]string{v}, tv...)
-		case options.Index >= len(tv): // suffix
-			tv = append(tv, v)
-		default: // replace an element
-			tv[options.Index] = v
+		if options.EndDelimiter == "" {
+			tv := strings.Split(targetField.YNode().Value, options.Delimiter)
+			// TODO: Add a way to remove an element
+			switch {
+			case options.Index < 0: // prefix
+				tv = append([]string{v}, tv...)
+			case options.Index >= len(tv): // suffix
+				tv = append(tv, v)
+			default: // replace an element
+				tv[options.Index] = v
+			}
+			value.YNode().Value = strings.Join(tv, options.Delimiter)
+		} else {
+			if options.Delimiter == "" {
+				return fmt.Errorf("delimiter needs to be set if enddelimiter is set")
+			}
+			re := regexp.MustCompile(regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter))
+			counter := 0
+			value.YNode().Value = re.ReplaceAllStringFunc(targetField.YNode().Value, func(value string) string {
+				if counter != options.Index {
+					return value
+				}
+		
+				counter++
+				return re.ReplaceAllString(value, options.Delimiter + v + options.EndDelimiter)
+			})
 		}
-		value.YNode().Value = strings.Join(tv, options.Delimiter)
 	}
 
 	if targetField.YNode().Kind == yaml.ScalarNode {
