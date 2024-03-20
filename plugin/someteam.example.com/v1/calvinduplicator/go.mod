@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/someteam.example.com/v1/calvinduplicator
 
-go 1.20
+go 1.21
 
 require (
 	sigs.k8s.io/kustomize/api v0.16.0
