@@ -77,16 +77,12 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a_test.yaml'
 `,
@@ -98,24 +94,18 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'b_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'b_test.yaml'
 `,
 			`a: b #third
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'c_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'c_test.yaml'
 `,
 			`a: b #forth
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'd_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'd_test.yaml'
 `,
@@ -150,16 +140,12 @@ func TestLocalPackageReader_Read_pkgAndSkipFile(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a_test.yaml'
 `,
@@ -171,16 +157,12 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'b_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'b_test.yaml'
 `,
 			`a: b #third
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'c_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'c_test.yaml'
 `,
@@ -221,15 +203,11 @@ func TestLocalPackageReader_Read_JSON(t *testing.T) {
 		expected := []string{
 			`{"a": "b", ` +
 				`metadata: {annotations: {` +
-				`config.kubernetes.io/index: '0', ` +
-				`config.kubernetes.io/path: 'a_test.json', ` +
 				`internal.config.kubernetes.io/index: '0', ` +
 				`internal.config.kubernetes.io/path: 'a_test.json'}}}
 `,
 			`{"e": "f", "g": {"h": ["i", "j"]}, ` +
 				`metadata: {annotations: {` +
-				`config.kubernetes.io/index: '0', ` +
-				`config.kubernetes.io/path: 'b_test.json', ` +
 				`internal.config.kubernetes.io/index: '0', ` +
 				`internal.config.kubernetes.io/path: 'b_test.json'}}}
 `,
@@ -261,16 +239,12 @@ func TestLocalPackageReader_Read_file(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a_test.yaml'
 `,
@@ -340,8 +314,6 @@ func TestLocalPackageReader_Read_PreserveSeqIndent(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/seqindent: 'compact'
@@ -349,8 +321,6 @@ metadata:
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a_test.yaml'
     internal.config.kubernetes.io/seqindent: 'compact'
@@ -363,8 +333,6 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'b_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'b_test.yaml'
     internal.config.kubernetes.io/seqindent: 'compact'
@@ -397,16 +365,12 @@ func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
@@ -418,8 +382,6 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}b_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}b_test.yaml'
 `,
@@ -454,16 +416,12 @@ func TestLocalPackageReader_Read_matchRegex(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
@@ -500,16 +458,12 @@ func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
@@ -547,16 +501,12 @@ func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
 			`c: d # second
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'a${SEP}b${SEP}a_test.yaml'
 `,
@@ -568,8 +518,6 @@ g:
   - j
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'a${SEP}c${SEP}c_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'a${SEP}c${SEP}c_test.yaml'
 `,
@@ -651,8 +599,6 @@ func TestLocalPackageReader_ReadBareSeqNodes(t *testing.T) {
 			`a: b #first
 metadata:
   annotations:
-    config.kubernetes.io/index: '0'
-    config.kubernetes.io/path: 'e_test.yaml'
     internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/path: 'e_test.yaml'
 `,
@@ -661,8 +607,6 @@ metadata:
 - bar
 metadata:
   annotations:
-    config.kubernetes.io/index: '1'
-    config.kubernetes.io/path: 'e_test.yaml'
     internal.config.kubernetes.io/index: '1'
     internal.config.kubernetes.io/path: 'e_test.yaml'
 `,

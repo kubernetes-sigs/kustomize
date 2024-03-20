@@ -77,7 +77,6 @@ run(ctx.resource_list["items"])
 	//   annotations:
 	//     foo: bar
 	//     internal.config.kubernetes.io/path: 'deployment_deployment-1.yaml'
-	//     config.kubernetes.io/path: 'deployment_deployment-1.yaml'
 	// spec:
 	//   template:
 	//     spec:
@@ -92,7 +91,6 @@ run(ctx.resource_list["items"])
 	//   annotations:
 	//     foo: bar
 	//     internal.config.kubernetes.io/path: 'deployment_deployment-2.yaml'
-	//     config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	// spec:
 	//   template:
 	//     spec:
@@ -186,7 +184,6 @@ run(ctx.resource_list["items"], ctx.resource_list["functionConfig"]["spec"]["val
 	//   annotations:
 	//     foo: hello world
 	//     internal.config.kubernetes.io/path: 'deployment_deployment-2.yaml'
-	//     config.kubernetes.io/path: 'deployment_deployment-2.yaml'
 	// spec:
 	//   template:
 	//     spec:
@@ -264,7 +261,6 @@ run(ctx.resource_list["items"])
 			Writer: output,
 			ClearAnnotations: []string{
 				kioutil.PathAnnotation,
-				kioutil.LegacyPathAnnotation,
 			},
 		}}}.Execute()
 	if err != nil {

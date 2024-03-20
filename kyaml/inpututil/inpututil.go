@@ -53,12 +53,6 @@ func WrapErrorWithFile(err error, meta yaml.ResourceMeta) error {
 	}
 	path := meta.Annotations[kioutil.PathAnnotation]
 	index := meta.Annotations[kioutil.IndexAnnotation]
-	if path == "" {
-		path = meta.Annotations[kioutil.LegacyPathAnnotation]
-	}
-	if index == "" {
-		index = meta.Annotations[kioutil.LegacyPathAnnotation]
-	}
 	return errors.WrapPrefixf(err, "%s [%s]",
 		meta.Annotations[path],
 		meta.Annotations[index])

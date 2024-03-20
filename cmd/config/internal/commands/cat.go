@@ -183,7 +183,7 @@ func (r *CatRunner) out(w io.Writer) ([]kio.Writer, error) {
 
 	// remove this annotation explicitly, the ByteWriter won't clear it by
 	// default because it doesn't set it
-	clear := []string{kioutil.LegacyPathAnnotation, kioutil.PathAnnotation}
+	clear := []string{kioutil.PathAnnotation}
 	if r.KeepAnnotations {
 		clear = nil
 	}

@@ -43,10 +43,6 @@ var BuildAnnotations = []string{
 	kioutil.SeqIndentAnnotation,
 	kioutil.IdAnnotation,
 	kioutil.InternalAnnotationsMigrationResourceIDAnnotation,
-
-	kioutil.LegacyPathAnnotation,
-	kioutil.LegacyIndexAnnotation,
-	kioutil.LegacyIdAnnotation,
 }
 
 func (r *Resource) ResetRNode(incoming *Resource) {
