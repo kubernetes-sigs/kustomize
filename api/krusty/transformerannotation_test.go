@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -261,8 +262,8 @@ func TestAnnoOriginRemoteBuiltinTransformer(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 resources:
 - github.com/kubernetes-sigs/kustomize/examples/multibases/production/?ref=v1.0.6
 buildMetadata: [transformerAnnotations]
@@ -278,7 +279,7 @@ buildMetadata: [transformerAnnotations]
 		t.FailNow()
 	}
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Pod
 metadata:
@@ -298,7 +299,7 @@ spec:
   - image: nginx:1.7.9
     name: nginx
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestAnnoTransformerBuiltinInline(t *testing.T) {
@@ -356,7 +357,7 @@ func TestAnnoOriginCustomInlineTransformer(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	th.WriteK(tmpDir.String(), `
 transformers:
 - |-
@@ -375,7 +376,7 @@ buildMetadata: [transformerAnnotations]
 	// which will cause kustomize to record the plugin origin data as a transformation
 	th.WriteF(filepath.Join(tmpDir.String(), "generateDeployment.sh"), generateDeploymentWithOriginDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
 	th.WriteF(filepath.Join(tmpDir.String(), "gener.yaml"), `
 kind: executable
 metadata:
@@ -388,9 +389,9 @@ spec:
 `)
 
 	m := th.Run(tmpDir.String(), o)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -417,7 +418,7 @@ spec:
       - image: nginx
         name: nginx
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestAnnoOriginCustomExecTransformerWithOverlay(t *testing.T) {
@@ -428,11 +429,11 @@ func TestAnnoOriginCustomExecTransformerWithOverlay(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	base := filepath.Join(tmpDir.String(), "base")
 	prod := filepath.Join(tmpDir.String(), "prod")
-	assert.NoError(t, fSys.Mkdir(base))
-	assert.NoError(t, fSys.Mkdir(prod))
+	require.NoError(t, fSys.Mkdir(base))
+	require.NoError(t, fSys.Mkdir(prod))
 	th.WriteK(base, `
 transformers:
 - gener.yaml
@@ -455,12 +456,12 @@ spec:
 	// generateDeploymentWithOriginDotSh creates a resource that already has an origin annotation,
 	// which will cause kustomize to record the plugin origin data as a transformation
 	th.WriteF(filepath.Join(base, "generateDeployment.sh"), generateDeploymentWithOriginDotSh)
-	assert.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
 
 	m := th.Run(prod, o)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -487,5 +488,5 @@ spec:
       - image: nginx
         name: nginx
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }

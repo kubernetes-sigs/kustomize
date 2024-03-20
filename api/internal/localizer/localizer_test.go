@@ -144,7 +144,7 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 			actualContent, readErr := fSysActual.ReadFile(path)
 			require.NoError(t, readErr)
 			expectedContent, findErr := fSysExpected.ReadFile(path)
-			assert.NoErrorf(t, findErr, "unexpected file %q", path)
+			require.NoErrorf(t, findErr, "unexpected file %q", path)
 			if findErr == nil {
 				assert.Equal(t, string(expectedContent), string(actualContent))
 			}

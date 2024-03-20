@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -574,6 +575,6 @@ metadata:
 		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
 		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "owner 'Application myapp-staging/nginx' not found in input, but found as an owner of input objects", err.Error())
 }

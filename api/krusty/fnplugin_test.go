@@ -4,12 +4,14 @@
 package krusty_test
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -65,7 +67,7 @@ func TestFnExecGeneratorInBase(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	th.WriteK(tmpDir.String(), `
 resources:
 - short_secret.yaml
@@ -90,7 +92,7 @@ stringData:
 `)
 	th.WriteF(filepath.Join(tmpDir.String(), "generateDeployment.sh"), generateDeploymentDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(tmpDir.String(), "generateDeployment.sh"), 0777))
 	th.WriteF(filepath.Join(tmpDir.String(), "gener.yaml"), `
 kind: executable
 metadata:
@@ -104,7 +106,7 @@ spec:
 
 	m := th.Run(tmpDir.String(), o)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
@@ -138,7 +140,7 @@ spec:
       - image: nginx
         name: nginx
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestFnExecGeneratorInBaseWithOverlay(t *testing.T) {
@@ -149,11 +151,11 @@ func TestFnExecGeneratorInBaseWithOverlay(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	base := filepath.Join(tmpDir.String(), "base")
 	prod := filepath.Join(tmpDir.String(), "prod")
-	assert.NoError(t, fSys.Mkdir(base))
-	assert.NoError(t, fSys.Mkdir(prod))
+	require.NoError(t, fSys.Mkdir(base))
+	require.NoError(t, fSys.Mkdir(prod))
 	th.WriteK(base, `
 resources:
 - short_secret.yaml
@@ -180,7 +182,7 @@ stringData:
 `)
 	th.WriteF(filepath.Join(base, "generateDeployment.sh"), generateDeploymentDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(base, "generateDeployment.sh"), 0777))
 	th.WriteF(filepath.Join(base, "gener.yaml"), `
 kind: executable
 metadata:
@@ -193,9 +195,9 @@ spec:
 `)
 
 	m := th.Run(prod, o)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
@@ -229,7 +231,7 @@ spec:
       - image: nginx
         name: nginx
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestFnExecGeneratorInOverlay(t *testing.T) {
@@ -240,11 +242,11 @@ func TestFnExecGeneratorInOverlay(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	base := filepath.Join(tmpDir.String(), "base")
 	prod := filepath.Join(tmpDir.String(), "prod")
-	assert.NoError(t, fSys.Mkdir(base))
-	assert.NoError(t, fSys.Mkdir(prod))
+	require.NoError(t, fSys.Mkdir(base))
+	require.NoError(t, fSys.Mkdir(prod))
 	th.WriteK(base, `
 resources:
 - short_secret.yaml
@@ -271,7 +273,7 @@ stringData:
 `)
 	th.WriteF(filepath.Join(prod, "generateDeployment.sh"), generateDeploymentDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(prod, "generateDeployment.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(prod, "generateDeployment.sh"), 0777))
 	th.WriteF(filepath.Join(prod, "gener.yaml"), `
 kind: executable
 metadata:
@@ -284,9 +286,9 @@ spec:
 `)
 
 	m := th.Run(prod, o)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
@@ -320,7 +322,7 @@ spec:
       - image: nginx
         name: nginx
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestFnExecTransformerInBase(t *testing.T) {
@@ -331,9 +333,9 @@ func TestFnExecTransformerInBase(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	base := filepath.Join(tmpDir.String(), "base")
-	assert.NoError(t, fSys.Mkdir(base))
+	require.NoError(t, fSys.Mkdir(base))
 	th.WriteK(base, `
 resources:
 - secret.yaml
@@ -352,7 +354,7 @@ stringData:
 `)
 	th.WriteF(filepath.Join(base, "krmTransformer.sh"), krmTransformerDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(base, "krmTransformer.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(base, "krmTransformer.sh"), 0777))
 	th.WriteF(filepath.Join(base, "krm-transformer.yaml"), `
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: MyPlugin
@@ -366,7 +368,7 @@ metadata:
 
 	m := th.Run(base, o)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
@@ -375,7 +377,7 @@ stringData:
   foo: bar
 type: Opaque
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestFnExecTransformerInBaseWithOverlay(t *testing.T) {
@@ -386,11 +388,11 @@ func TestFnExecTransformerInBaseWithOverlay(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	base := filepath.Join(tmpDir.String(), "base")
 	prod := filepath.Join(tmpDir.String(), "prod")
-	assert.NoError(t, fSys.Mkdir(base))
-	assert.NoError(t, fSys.Mkdir(prod))
+	require.NoError(t, fSys.Mkdir(base))
+	require.NoError(t, fSys.Mkdir(prod))
 	th.WriteK(base, `
 resources:
 - secret.yaml
@@ -413,7 +415,7 @@ stringData:
 `)
 	th.WriteF(filepath.Join(base, "krmTransformer.sh"), krmTransformerDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(base, "krmTransformer.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(base, "krmTransformer.sh"), 0777))
 	th.WriteF(filepath.Join(base, "krm-transformer.yaml"), `
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: MyPlugin
@@ -427,7 +429,7 @@ metadata:
 
 	m := th.Run(prod, o)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
@@ -436,7 +438,7 @@ stringData:
   foo: bar
 type: Opaque
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func TestFnExecTransformerInOverlay(t *testing.T) {
@@ -447,11 +449,11 @@ func TestFnExecTransformerInOverlay(t *testing.T) {
 	o.PluginConfig.FnpLoadingOptions.EnableExec = true
 
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	base := filepath.Join(tmpDir.String(), "base")
 	prod := filepath.Join(tmpDir.String(), "prod")
-	assert.NoError(t, fSys.Mkdir(base))
-	assert.NoError(t, fSys.Mkdir(prod))
+	require.NoError(t, fSys.Mkdir(base))
+	require.NoError(t, fSys.Mkdir(prod))
 	th.WriteK(base, `
 resources:
 - secret.yaml
@@ -474,7 +476,7 @@ stringData:
 `)
 	th.WriteF(filepath.Join(prod, "krmTransformer.sh"), krmTransformerDotSh)
 
-	assert.NoError(t, os.Chmod(filepath.Join(prod, "krmTransformer.sh"), 0777))
+	require.NoError(t, os.Chmod(filepath.Join(prod, "krmTransformer.sh"), 0777))
 	th.WriteF(filepath.Join(prod, "krm-transformer.yaml"), `
 apiVersion: examples.config.kubernetes.io/v1beta1
 kind: MyPlugin
@@ -488,7 +490,7 @@ metadata:
 
 	m := th.Run(prod, o)
 	yml, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Secret
 metadata:
@@ -497,7 +499,7 @@ stringData:
   foo: bar
 type: Opaque
 `, string(yml))
-	assert.NoError(t, fSys.RemoveAll(tmpDir.String()))
+	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
 func skipIfNoDocker(t *testing.T) {
@@ -512,7 +514,7 @@ func TestFnContainerGenerator(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	th.WriteK(tmpDir.String(), `
 resources:
 - deployment.yaml
@@ -545,12 +547,12 @@ metadata:
 		"-t", "gcr.io/kustomize-functions/e2econtainersimplegenerator",
 	)
 	build.Dir = repoRootDir
-	assert.NoError(t, build.Run())
+	require.NoError(t, run(build))
 
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
-	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: apps/v1
+	require.NoError(t, err)
+	require.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: simplegenerator
@@ -577,7 +579,7 @@ func TestFnContainerTransformer(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	th.WriteK(tmpDir.String(), `
 resources:
 - deployment.yaml
@@ -605,10 +607,10 @@ metadata:
 		"-t", "gcr.io/kustomize-functions/e2econtainerconfig",
 	)
 	build.Dir = repoRootDir
-	assert.NoError(t, build.Run())
+	require.NoError(t, run(build))
 	m := th.Run(tmpDir.String(), o)
 	actual, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -627,33 +629,33 @@ func TestFnContainerTransformerWithConfig(t *testing.T) {
 		"-f", "build/label_namespace.Dockerfile",
 		"-t", "gcr.io/kpt-functions/label-namespace:go-sdk-v0.0.1",
 	)
-	assert.NoError(t, build.Run())
+	require.NoError(t, run(build))
 	th := kusttest_test.MakeHarness(t)
 	o := th.MakeOptionsPluginsEnabled()
 	fSys := filesys.MakeFsOnDisk()
 	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 resources:
 - data1.yaml
 - data2.yaml
 transformers:
 - label_namespace.yaml
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data1.yaml"), []byte(`
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data1.yaml"), []byte(`
 apiVersion: v1
 kind: Namespace
 metadata:
   name: my-namespace
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data2.yaml"), []byte(`
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "data2.yaml"), []byte(`
 apiVersion: v1
 kind: Namespace
 metadata:
   name: another-namespace
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "label_namespace.yaml"), []byte(`
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "label_namespace.yaml"), []byte(`
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -669,9 +671,9 @@ data:
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Namespace
 metadata:
@@ -695,12 +697,12 @@ func TestFnContainerEnvVars(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
 - gener.yaml
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
 apiVersion: kustomize.sigs.k8s.io/v1alpha1
 kind: EnvTemplateGenerator
 metadata:
@@ -724,14 +726,14 @@ template: |
 		"-t", "gcr.io/kustomize-functions/e2econtainerenvgenerator",
 	)
 	build.Dir = repoRootDir
-	assert.NoError(t, build.Run())
+	require.NoError(t, run(build))
 
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 data:
   value: value
@@ -748,12 +750,12 @@ func TestFnContainerFnMounts(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
 - gener.yaml
 `)))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "gener.yaml"), []byte(`
 apiVersion: kustomize.sigs.k8s.io/v1alpha1
 kind: RenderHelmChart
 metadata:
@@ -768,8 +770,8 @@ metadata:
           dst: "/tmp/yaml"
 path: /tmp/yaml/resources.yaml
 `)))
-	assert.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "yaml", "tmp")))
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "yaml", "resources.yaml"), []byte(`
+	require.NoError(t, fSys.MkdirAll(filepath.Join(tmpDir.String(), "yaml", "tmp")))
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "yaml", "resources.yaml"), []byte(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -782,14 +784,14 @@ spec:
 		"-t", "gcr.io/kustomize-functions/e2econtainermountbind",
 	)
 	build.Dir = repoRootDir
-	assert.NoError(t, build.Run())
+	require.NoError(t, run(build))
 
 	m, err := b.Run(
 		fSys,
 		tmpDir.String())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual, err := m.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -806,8 +808,8 @@ func TestFnContainerMountsLoadRestrictions_absolute(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
   - |-
     apiVersion: v1alpha1
@@ -826,7 +828,7 @@ generators:
 	_, err = b.Run(
 		fSys,
 		tmpDir.String())
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "loading generator plugins: failed to load generator: plugin RenderHelmChart."+
 		"v1alpha1.[noGrp]/demo.[noNs] with mount path '/tmp/dir' is not permitted; mount paths must"+
 		" be relative to the current kustomization directory")
@@ -839,8 +841,8 @@ func TestFnContainerMountsLoadRestrictions_outsideCurrentDir(t *testing.T) {
 	fSys := filesys.MakeFsOnDisk()
 	b := MakeKustomizer(&o)
 	tmpDir, err := filesys.NewTmpConfirmedDir()
-	assert.NoError(t, err)
-	assert.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
+	require.NoError(t, err)
+	require.NoError(t, fSys.WriteFile(filepath.Join(tmpDir.String(), "kustomization.yaml"), []byte(`
 generators:
   - |-
     apiVersion: v1alpha1
@@ -859,7 +861,7 @@ generators:
 	_, err = b.Run(
 		fSys,
 		tmpDir.String())
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "loading generator plugins: failed to load generator: plugin RenderHelmChart."+
 		"v1alpha1.[noGrp]/demo.[noNs] with mount path './tmp/../../dir' is not permitted; mount paths must "+
 		"be under the current kustomization directory")
@@ -887,6 +889,15 @@ spec:
   replicas: 3
 `)
 	err := th.RunWithErr(".", th.MakeOptionsPluginsEnabled())
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.EqualError(t, err, "couldn't execute function: root working directory '/' not allowed")
+}
+
+// run calls Cmd.Run and wraps the error to include the output to make debugging
+// easier. Not safe for real code, but fine for tests.
+func run(cmd *exec.Cmd) error {
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%w\n--- COMMAND OUTPUT ---\n%s", err, string(out))
+	}
+	return nil
 }

@@ -311,7 +311,7 @@ func TestIsNamespaceScoped_custom(t *testing.T) {
   }
 }
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	isNamespaceable, isFound := IsNamespaceScoped(yaml.TypeMeta{
 		APIVersion: "custom.io/v1",

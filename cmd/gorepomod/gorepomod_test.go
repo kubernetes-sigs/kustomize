@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestListCommand(t *testing.T) {
@@ -42,7 +43,7 @@ func TestListCommand(t *testing.T) {
 		}
 		out, err := exec.Command(bash, "-c", tc.cmd).Output()
 		if err != nil {
-			assert.Error(t, err, "exit status 1")
+			require.Error(t, err, "exit status 1")
 		}
 		assert.Greater(t, len(string(out)), 1)
 	}
@@ -79,7 +80,7 @@ func TestPinCommand(t *testing.T) {
 		}
 		out, err := exec.Command(bash, "-c", tc.cmd).Output()
 		if err != nil {
-			assert.Error(t, err, "exit status 1")
+			require.Error(t, err, "exit status 1")
 		}
 		assert.Greater(t, len(string(out)), 1)
 	}

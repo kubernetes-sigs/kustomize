@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -20,19 +21,19 @@ func TestDiff_identical(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Empty(t, diff.List())
 }
 
@@ -43,16 +44,16 @@ func TestDiff_additionalSourceFiles(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(s, "a2"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.ElementsMatch(t, diff.List(), []string{"a2"})
 }
 
@@ -63,16 +64,16 @@ func TestDiff_additionalDestFiles(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a2"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.ElementsMatch(t, diff.List(), []string{"a2"})
 }
 
@@ -84,19 +85,19 @@ func TestDiff_srcDestContentsDiffer(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`b`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.ElementsMatch(t, diff.List(), []string{
 		fmt.Sprintf("a1%sf.yaml", string(filepath.Separator)),
 	})
@@ -109,19 +110,19 @@ func TestDiff_srcDestContentsDifferInDirs(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "b1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(d, "b1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.ElementsMatch(t, diff.List(), []string{
 		"a1",
 		fmt.Sprintf("a1%sf.yaml", string(filepath.Separator)),
@@ -137,35 +138,35 @@ func TestDiff_skipGitSrc(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// files that just happen to start with .git should not be ignored.
 	err = os.WriteFile(
 		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.WriteFile(
 		filepath.Join(d, ".gitlab-ci.yml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Empty(t, diff.List())
 }
 
@@ -176,26 +177,26 @@ func TestDiff_skipGitDest(t *testing.T) {
 	d := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(d, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(d, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(d, ".git"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(d, ".git", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Empty(t, diff.List())
 }
 
@@ -206,14 +207,14 @@ func TestSyncFile(t *testing.T) {
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
 	err := os.WriteFile(f1Name, []byte("abc"), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(f2Name, []byte("def"), 0644)
 	expectedFileInfo, _ := os.Stat(f2Name)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual, err := os.ReadFile(f2Name)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
 	assert.Equal(t, expectedFileInfo.Mode().String(), dstFileInfo.Mode().String())
@@ -226,11 +227,11 @@ func TestSyncFileNoDestFile(t *testing.T) {
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
 	err := os.WriteFile(f1Name, []byte("abc"), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual, err := os.ReadFile(f2Name)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "abc", string(actual))
 	dstFileInfo, _ := os.Stat(f2Name)
 	srcFileInfo, _ := os.Stat(f1Name)
@@ -244,11 +245,11 @@ func TestSyncFileNoSrcFile(t *testing.T) {
 	f1Name := d1 + "/temp.txt"
 	f2Name := d2 + "/temp.txt"
 	err := os.WriteFile(f2Name, []byte("abc"), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = SyncFile(f1Name, f2Name)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.ReadFile(f2Name)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestPrettyFileDiff(t *testing.T) {
@@ -278,40 +279,40 @@ func TestCopyDir(t *testing.T) {
 	v := t.TempDir()
 
 	err := os.Mkdir(filepath.Join(s, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// files that just happen to start with .git should not be ignored.
 	err = os.WriteFile(
 		filepath.Join(s, ".gitlab-ci.yml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// git should be ignored
 	err = os.Mkdir(filepath.Join(s, ".git"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(s, ".git", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.Mkdir(filepath.Join(v, "a1"), 0700)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(
 		filepath.Join(v, "a1", "f.yaml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = os.WriteFile(
 		filepath.Join(v, ".gitlab-ci.yml"), []byte(`a`), 0600)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	d := t.TempDir()
 
 	err = CopyDir(filesys.MakeFsOnDisk(), s, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	diff, err := Diff(d, v)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Empty(t, diff.List())
 }
 

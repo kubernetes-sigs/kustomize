@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
 	"sigs.k8s.io/kustomize/api/filters/filtersutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -621,7 +622,7 @@ kind: Pod
 
 		t.Run(name, func(t *testing.T) {
 			err := yaml.Unmarshal([]byte(tc.fieldSpec), &filter.FieldSpec)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			rw := &kio.ByteReadWriter{
 				Reader:                bytes.NewBufferString(tc.input),
 				Writer:                &bytes.Buffer{},
@@ -635,7 +636,7 @@ kind: Pod
 				Outputs: []kio.Writer{rw},
 			}.Execute()
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expected, fieldPaths)
 		})
 	}

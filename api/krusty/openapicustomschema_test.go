@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
@@ -264,7 +265,7 @@ openapi:
 		writeCustomResource(th, "mycrd.yaml")
 		writeTestSchema(th, "./")
 		err := th.RunWithErr(".", th.MakeDefaultOptions())
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t,
 			"builtin version and custom schema provided, cannot use both",
 			err.Error())
@@ -284,7 +285,7 @@ openapi:
 `+customSchemaPatch)
 		writeCustomResource(th, "mycrd.yaml")
 		err := th.RunWithErr(".", th.MakeDefaultOptions())
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t,
 			"'/mycrd_schema.json' doesn't exist",
 			err.Error())

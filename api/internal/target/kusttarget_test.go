@@ -285,15 +285,15 @@ metadata:
 	}
 	expected.RemoveBuildAnnotations()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/whatever", pvd)
-	assert.NoError(t, kt.Load())
+	require.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, string(expYaml), string(actYaml))
 }
 
@@ -425,7 +425,7 @@ func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
     configPath: another_config.json
 `)
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/generator").AccumulateTarget()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ManifestGenerator.v1.generators.example/ManifestGenerator")
 }
 
@@ -454,6 +454,6 @@ func TestDuplicateExternalTransformersForbidden(t *testing.T) {
   value: 'fail'
 `)
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ValueAnnotator.v1.transformers.example.co/notImportantHere")
 }
