@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/resource"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -37,7 +38,7 @@ repo: https://github.com/kubernetes-sigs/kustomize
 	}
 	for _, test := range tests {
 		actual, err := test.in.Append(test.path).String()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, test.expected, actual)
 	}
 }
@@ -78,7 +79,7 @@ repo: github.com/kubernetes-sigs/kustomize/examples/multibases/dev/
 
 	for _, test := range tests {
 		actual, err := test.in.String()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, test.expected, actual)
 	}
 }
@@ -154,7 +155,7 @@ func TestTransformationsString(t *testing.T) {
 	}
 	for _, test := range tests {
 		actual, err := test.in.String()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, test.expected, actual)
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -862,7 +863,7 @@ items:
 			assert.Equal(t, len(tc.exp.sOut), len(rNodes))
 			for i, n := range rNodes {
 				json, err := n.String()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(
 					t, strings.TrimSpace(tc.exp.sOut[i]),
 					strings.TrimSpace(json), n)
@@ -886,7 +887,7 @@ data:
 			AnchorsAweigh:         false,
 			Reader:                bytes.NewBuffer([]byte(input)),
 		}).Read()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 1, len(rNodes))
 		rNode = rNodes[0]
 	}
@@ -937,7 +938,7 @@ data:
 	}
 
 	str, err := rNode.String()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// The string version matches the input (it still has anchors and aliases).
 	assert.Equal(t, strings.TrimSpace(input), strings.TrimSpace(str))
 
@@ -948,7 +949,7 @@ data:
 			AnchorsAweigh:         true,
 			Reader:                bytes.NewBuffer([]byte(input)),
 		}).Read()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 1, len(rNodes))
 		rNode = rNodes[0]
 	}
@@ -995,7 +996,7 @@ data:
 	}
 
 	str, err = rNode.String()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// This time, the alias has been replaced with the anchor definition.
 	assert.Equal(t, strings.TrimSpace(`
 data:
@@ -1092,11 +1093,11 @@ env:
 				Reader:                bytes.NewBuffer([]byte(tc.input)),
 			}).Read()
 			if tc.err != "" {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Equal(t, tc.err, err.Error())
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			actual := rNodes[0].GetAnnotations()[kioutil.SeqIndentAnnotation]
 			assert.Equal(t, tc.expectedAnnoValue, actual)
 		})

@@ -132,7 +132,7 @@ metadata:
 			instance := NewContainer(tt.containerSpec, tt.UIDGID)
 			instance.Exec.FunctionConfig = cfg
 			instance.Env = append(instance.Env, "KYAML_TEST=FOO")
-			assert.NoError(t, instance.setupExec())
+			require.NoError(t, instance.setupExec())
 
 			tt.expectedArgs = append(tt.expectedArgs,
 				runtimeutil.NewContainerEnvFromStringSlice(instance.Env).GetDockerFlags()...)

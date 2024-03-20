@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -97,8 +96,8 @@ func TestUpdateResourceOptions(t *testing.T) {
 		require.NoError(t, err)
 	}
 	actual, err := UpdateResourceOptions(in)
-	assert.NoError(t, err)
-	assert.NoError(t, expected.ErrorIfNotEqualLists(actual))
+	require.NoError(t, err)
+	require.NoError(t, expected.ErrorIfNotEqualLists(actual))
 }
 
 func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {

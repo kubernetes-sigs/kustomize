@@ -157,7 +157,7 @@ spec:
         ports:
         - containerPort: 80
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	patch, err := factory.FromBytes([]byte(`
 apiVersion: apps/v1
 kind: Deployment
@@ -172,11 +172,11 @@ spec:
         ports:
         - containerPort: 777
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.NoError(t, resource.ApplySmPatch(patch))
+	require.NoError(t, resource.ApplySmPatch(patch))
 	bytes, err := resource.AsYAML()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -219,7 +219,7 @@ spec:
     A: X
     B: Y
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	patch, err := factory.FromBytes([]byte(`
 apiVersion: example.com/v1
 kind: Foo
@@ -233,10 +233,10 @@ spec:
   baz:
     hello: world
 `))
-	assert.NoError(t, err)
-	assert.NoError(t, resource.ApplySmPatch(patch))
+	require.NoError(t, err)
+	require.NoError(t, resource.ApplySmPatch(patch))
 	bytes, err := resource.AsYAML()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: example.com/v1
 kind: Foo
 metadata:
@@ -260,7 +260,7 @@ metadata:
 spec:
   numReplicas: 1
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	patch, err := factory.FromBytes([]byte(`
 apiVersion: v1
 kind: Deployment
@@ -269,10 +269,10 @@ metadata:
 spec:
   numReplicas: 999
 `))
-	assert.NoError(t, err)
-	assert.NoError(t, resource.ApplySmPatch(patch))
+	require.NoError(t, err)
+	require.NoError(t, resource.ApplySmPatch(patch))
 	bytes, err := resource.AsYAML()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:
@@ -448,13 +448,13 @@ spec:
     - name: foo
     - name: bar
 `))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			patch, err := factory.FromBytes([]byte(tc.patch))
-			assert.NoError(t, err)
-			assert.NoError(t, resource.ApplySmPatch(patch))
+			require.NoError(t, err)
+			require.NoError(t, resource.ApplySmPatch(patch))
 			bytes, err := resource.AsYAML()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedOutput, string(bytes))
 		})
 	}
@@ -567,13 +567,13 @@ metadata:
   name: test
   finalizers: ["foo", "bar"]
 `))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			patch, err := factory.FromBytes([]byte(tc.patch))
-			assert.NoError(t, err)
-			assert.NoError(t, resource.ApplySmPatch(patch))
+			require.NoError(t, err)
+			require.NoError(t, resource.ApplySmPatch(patch))
 			bytes, err := resource.AsYAML()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expectedOutput, string(bytes))
 		})
 	}
@@ -604,7 +604,7 @@ data:
 	}
 	resource.MergeDataMapFrom(patch)
 	bytes, err := resource.AsYAML()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 data:
   fruit: pear
@@ -650,19 +650,19 @@ spec:
     hello: world
 `
 	r1, err := factory.FromBytes([]byte(s1))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	r2, err := factory.FromBytes([]byte(s2))
-	assert.NoError(t, err)
-	assert.NoError(t, r1.ApplySmPatch(r2))
+	require.NoError(t, err)
+	require.NoError(t, r1.ApplySmPatch(r2))
 	bytes, err := r1.AsYAML()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected, string(bytes))
 
 	r1, _ = factory.FromBytes([]byte(s1))
 	r2, _ = factory.FromBytes([]byte(s2))
-	assert.NoError(t, r2.ApplySmPatch(r1))
+	require.NoError(t, r2.ApplySmPatch(r1))
 	bytes, err = r2.AsYAML()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected, string(bytes))
 }
 
@@ -977,17 +977,17 @@ spec:
 
 	for name, test := range tests {
 		resource, err := factory.FromBytes([]byte(test.base))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		for _, p := range test.patch {
 			patch, err := factory.FromBytes([]byte(p))
-			assert.NoError(t, err, name)
-			assert.NoError(t, resource.ApplySmPatch(patch), name)
+			require.NoError(t, err, name)
+			require.NoError(t, resource.ApplySmPatch(patch), name)
 		}
 		bytes, err := resource.AsYAML()
 		if test.errorExpected {
-			assert.Error(t, err, name)
+			require.Error(t, err, name)
 		} else {
-			assert.NoError(t, err, name)
+			require.NoError(t, err, name)
 			assert.Equal(t, test.expected, string(bytes), name)
 		}
 	}
@@ -1387,7 +1387,7 @@ metadata:
 spec:
   numReplicas: 1
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	gvk := r.GetGvk()
 	expected := "apps"
@@ -1415,7 +1415,7 @@ metadata:
 spec:
   numReplicas: 1
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	r.SetGvk(resid.GvkFromString("knd.ver.grp"))
 	gvk := r.GetGvk()
 	if expected, actual := "grp", gvk.Group; expected != actual {
@@ -1438,7 +1438,7 @@ metadata:
 spec:
   numReplicas: 1
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	r.AppendRefBy(resid.FromString("knd1.ver1.gr1/name1.ns1"))
 	assert.Equal(t, `apiVersion: v1
 kind: Deployment
@@ -1476,13 +1476,13 @@ metadata:
 spec:
   numReplicas: 1
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	origin := &Origin{
 		Path: "deployment.yaml",
 		Repo: "github.com/myrepo",
 		Ref:  "master",
 	}
-	assert.NoError(t, r.SetOrigin(origin))
+	require.NoError(t, r.SetOrigin(origin))
 	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:
@@ -1496,7 +1496,7 @@ spec:
   numReplicas: 1
 `, r.MustString())
 	or, err := r.GetOrigin()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, origin, or)
 }
 
@@ -1509,7 +1509,7 @@ metadata:
 spec:
   numReplicas: 1
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	origin1 := &Origin{
 		Repo:         "github.com/myrepo",
 		Ref:          "master",
@@ -1538,7 +1538,7 @@ spec:
 			},
 		},
 	}
-	assert.NoError(t, r.AddTransformation(origin1))
+	require.NoError(t, r.AddTransformation(origin1))
 	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:
@@ -1556,7 +1556,7 @@ metadata:
 spec:
   numReplicas: 1
 `, r.MustString())
-	assert.NoError(t, r.AddTransformation(origin2))
+	require.NoError(t, r.AddTransformation(origin2))
 	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:
@@ -1581,9 +1581,9 @@ spec:
   numReplicas: 1
 `, r.MustString())
 	transformations, err := r.GetTransformations()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, Transformations{origin1, origin2}, transformations)
-	assert.NoError(t, r.ClearTransformations())
+	require.NoError(t, r.ClearTransformations())
 	assert.Equal(t, `apiVersion: v1
 kind: Deployment
 metadata:

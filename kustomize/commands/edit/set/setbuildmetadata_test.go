@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
@@ -56,20 +57,20 @@ buildMetadata: [originAnnotations, transformerAnnotations, managedByLabel]`,
 		cmd := newCmdSetBuildMetadata(fSys)
 		err := cmd.RunE(cmd, tc.args)
 		if tc.expectedErr != "" {
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Contains(t, err.Error(), tc.expectedErr)
 		} else {
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			content, err := testutils_test.ReadTestKustomization(fSys)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			args := strings.Split(tc.args[0], ",")
 			for _, opt := range args {
 				assert.Contains(t, string(content), opt)
 			}
 			mf, err := kustfile.NewKustomizationFile(fSys)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			m, err := mf.Read()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, len(m.BuildMetadata), len(args))
 		}
 	}
