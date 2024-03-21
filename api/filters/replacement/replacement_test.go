@@ -2972,6 +2972,499 @@ spec:
         name: postgresdb
 `,
 		},
+    "partial string replacement with fulltext in source - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fullText: 'hello'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+    options:
+      delimiter: ':'
+      enddelimiter: '.'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:hello.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+    "partial string replacement with fulltext in source and target - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fullText: 'hello'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+    options:
+      fullText: 'postgres'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: hello:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+    
+    "partial string replacement with fulltext in target - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fieldPath: spec.template.spec.containers.0.image
+    options:
+      delimiter: ':'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+    options:
+      fullText: 'postgres'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+    "partial string replacement with fullText and delimiter in source and target - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fullText: 'mssql'
+    fieldPath: spec.template.spec.containers.0.image
+    options:
+      delimiter: ':'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+    options:
+      fullText: 'postgres'
+      delimiter: ':'
+      enddelimiter: '.'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: mssql:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+    "partial string replacement with fullText in source and start end delimiter in target - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fullText: 'mssql'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+    options:
+      delimiter: ':'
+      enddelimiter: '.'
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:mssql.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+    "partial string replacement with multiple fullText occurences - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres.io/postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fullText: 'mssql'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+    options:
+      fullText: 'postgres'
+      index: -1
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: mssql.io/mssql:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+    "partial string replacement with multiple delimiter occurences - replace": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+        env:
+        - name: ENDPOINTS
+          value: 'srv1.mssql.ch:8080/metrics;srv2.mssql.ch:8080/metrics;srv3.mssql.ch:8080/metrics'
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    fullText: '80'
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy1
+    fieldPaths:
+    - spec.template.spec.containers.1.env.[name=ENDPOINTS].value
+    options:
+      delimiter: ':'
+      enddelimiter: '/'
+      index: -1
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+        env:
+        - name: ENDPOINTS
+          value: 'srv1.mssql.ch:80/metrics;srv2.mssql.ch:80/metrics;srv3.mssql.ch:80/metrics'
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
 	}
 
 	for tn, tc := range testCases {

@@ -40,6 +40,10 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, error) {
+	if r.Source.FullText != ""{
+		rn := yaml.NewScalarRNode(r.Source.FullText)
+		return rn, nil
+	}
 	source, err := selectSourceNode(nodes, r.Source)
 	if err != nil {
 		return nil, err
@@ -238,37 +242,19 @@ func fieldRetrievalError(fieldPath string, isCreate bool) string {
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
 	value = value.Copy()
-	if options != nil && options.Delimiter != "" {
+	if options != nil && (options.Delimiter != "" || options.FullText != "") {
 		if targetField.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
 		}
 		v := yaml.GetValue(value)
-		if options.EndDelimiter == "" {
-			tv := strings.Split(targetField.YNode().Value, options.Delimiter)
-			// TODO: Add a way to remove an element
-			switch {
-			case options.Index < 0: // prefix
-				tv = append([]string{v}, tv...)
-			case options.Index >= len(tv): // suffix
-				tv = append(tv, v)
-			default: // replace an element
-				tv[options.Index] = v
-			}
-			value.YNode().Value = strings.Join(tv, options.Delimiter)
+		if options.FullText != "" {
+			value.YNode().Value = getByRegex(options.FullText, targetField.YNode().Value, v, options.Index)
+		} else if options.Delimiter != "" && options.EndDelimiter != "" {
+			regex := regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter)
+			source := options.Delimiter + v + options.EndDelimiter
+			value.YNode().Value = getByRegex(regex, targetField.YNode().Value, source, options.Index)
 		} else {
-			if options.Delimiter == "" {
-				return fmt.Errorf("delimiter needs to be set if enddelimiter is set")
-			}
-			re := regexp.MustCompile(regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter))
-			counter := 0
-			value.YNode().Value = re.ReplaceAllStringFunc(targetField.YNode().Value, func(value string) string {
-				if counter != options.Index {
-					return value
-				}
-		
-				counter++
-				return re.ReplaceAllString(value, options.Delimiter + v + options.EndDelimiter)
-			})
+			value.YNode().Value = getByDelimiter(options.Delimiter, targetField.YNode().Value, v, options.Index)
 		}
 	}
 
@@ -281,3 +267,32 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 
 	return nil
 }
+
+func getByDelimiter(delimiter string, target string, source string, index int) string {
+	tv := strings.Split(target, delimiter)
+	// TODO: Add a way to remove an element
+	switch {
+	case index < 0: // prefix
+		tv = append([]string{source}, tv...)
+	case index >= len(tv): // suffix
+		tv = append(tv, source)
+	default: // replace an element
+		tv[index] = source
+	}
+	return strings.Join(tv, delimiter)
+}
+
+func getByRegex(regex string, target string, source string, index int) string {
+	re := regexp.MustCompile(regex)
+	counter := 0
+	res := re.ReplaceAllStringFunc(target, func(str string) string {
+		if counter != index && index >= 0 {
+			return str
+		}
+
+		counter++
+		return re.ReplaceAllString(str, source)
+	})
+	return res
+}
+
