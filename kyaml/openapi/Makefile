@@ -1,11 +1,9 @@
 # Copyright 2020 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-MYGOBIN = $(shell go env GOBIN)
-ifeq ($(MYGOBIN),)
-MYGOBIN = $(shell go env GOPATH)/bin
-endif
-KIND_VERSION := "v0.11.1"
+export KUSTOMIZE_ROOT ?= $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\1|')
+include $(KUSTOMIZE_ROOT)/Makefile-modules.mk
+
 API_VERSION ?= "v1.21.2"
 
 .PHONY: all
@@ -26,19 +24,6 @@ clean:
 .PHONY: nuke
 nuke: clean
 	rm -r kubernetesapi/*
-
-$(MYGOBIN)/go-bindata:
-	go install github.com/go-bindata/go-bindata/v3/go-bindata@latest
-
-$(MYGOBIN)/kind:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/$(KIND_VERSION)/kind-$(shell uname)-amd64; \
-		chmod +x ./kind; \
-		mv ./kind $(MYGOBIN); \
-		rm -rf $$d; \
-	)
 
 .PHONY: kubernetesapi/openapiinfo.go
 kubernetesapi/openapiinfo.go:
