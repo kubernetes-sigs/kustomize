@@ -903,11 +903,11 @@ releaseName: podinfo2
 `)
 
 	podinfo1Img, err := podinfo1.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.2.1", podinfo1Img)
 
 	podinfo2Img, err := podinfo2.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.1.8", podinfo2Img)
 
 	podinfo1ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.2.1/podinfo")
@@ -917,11 +917,11 @@ releaseName: podinfo2
 	assert.True(t, th.GetFSys().Exists(podinfo2ChartsDir))
 
 	podinfo1ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo1ChartsDir, "Chart.yaml"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(podinfo1ChartContents), "version: 6.2.1")
 
 	podinfo2ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo2ChartsDir, "Chart.yaml"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
 }
 
@@ -948,14 +948,14 @@ chartHome: ./charts
 `)
 
 	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "bar", cm)
 
 	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
 	assert.True(t, th.GetFSys().Exists(chartDir))
 
 	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(chartYamlContent), "name: test-chart")
 	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }
