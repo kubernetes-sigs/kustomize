@@ -116,6 +116,16 @@ commonLabels:
 				CommonLabels: map[string]string{"app": "nginx"},
 			},
 		},
+		"deprecated": {
+			content: `
+bases:
+ - ldap
+`,
+			k: types.Kustomization{
+				TypeMeta:  expectedTypeMeta,
+				Resources: []string{"ldap"},
+			},
+		},
 	}
 
 	kt := makeKustTargetWithRf(
