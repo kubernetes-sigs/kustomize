@@ -126,7 +126,7 @@ func TestTransformerConverter(t *testing.T) {
 		filepath.Join(dir, "Plugin.go"))
 
 	err = c.Convert()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	output := runKrmFunction(t, getTransformerInputResource(), filepath.Join(dir, "output"))
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
@@ -222,7 +222,7 @@ func TestGeneratorConverter(t *testing.T) {
 		filepath.Join(dir, "Plugin.go"))
 
 	err = c.Convert()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	output := runKrmFunction(t, getGeneratorInputResource(), filepath.Join(dir, "output"))
 	assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList

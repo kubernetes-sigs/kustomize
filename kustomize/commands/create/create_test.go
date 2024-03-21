@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
@@ -56,7 +57,7 @@ func TestCreateWithResources(t *testing.T) {
 
 func TestCreateWithResourcesWithFileNotFound(t *testing.T) {
 	fSys := filesys.MakeEmptyDirInMemory()
-	assert.NoError(t, fSys.WriteFile("foo.yaml", []byte("")))
+	require.NoError(t, fSys.WriteFile("foo.yaml", []byte("")))
 	opts := createFlags{resources: "foo.yaml,bar.yaml"}
 	err := runCreate(opts, fSys, factory)
 	assert.EqualError(t, err, "bar.yaml has no match: must build at directory: not a valid directory: 'bar.yaml' doesn't exist")

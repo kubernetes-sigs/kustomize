@@ -42,7 +42,7 @@ func TestResourceNode_SetValue(t *testing.T) {
 
 func TestAppend(t *testing.T) {
 	node, err := Parse(NodeSampleData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err := node.Pipe(Append(NewScalarRNode("").YNode()))
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "wrong node kind")
@@ -53,9 +53,9 @@ func TestAppend(t *testing.T) {
 - b
 `
 	node, err = Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(Append())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 }
 
@@ -65,18 +65,18 @@ func TestGetElementByIndex(t *testing.T) {
 - 1
 - 2
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	rn, err := node.Pipe(GetElementByIndex(0))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "0\n", assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(GetElementByIndex(2))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "2\n", assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(GetElementByIndex(-1))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "2\n", assertNoErrorString(t)(rn.String()))
 }
 
@@ -88,14 +88,14 @@ func TestGetElementByKey(t *testing.T) {
 - f: g
 - f: h
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	rn, err := node.Pipe(GetElementByKey("b"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "b: c\n", assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(GetElementByKey("f"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "f: g\n", assertNoErrorString(t)(rn.String()))
 }
 
@@ -112,7 +112,7 @@ func TestElementSetter(t *testing.T) {
 	node := orig.Copy()
 	// Remove an element, because ElementSetter.Element is left nil.
 	rn, err := node.Pipe(ElementSetter{Keys: []string{"a"}, Values: []string{"b"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- scalarValue
 - c: d
@@ -121,7 +121,7 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// Nothing happens because no element is matched
 	rn, err = node.Pipe(ElementSetter{Keys: []string{"a"}, Values: []string{"zebra"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a: b
 - scalarValue
@@ -131,12 +131,12 @@ func TestElementSetter(t *testing.T) {
 	node = orig.Copy()
 	// When the element is not found, return an empty ist
 	_, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `[]
 `, assertNoErrorString(t)(node.String()))
 
 	_, err = node.Pipe(ElementSetter{Values: []string{"b"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `[]
 `, assertNoErrorString(t)(node.String()))
 
@@ -147,7 +147,7 @@ func TestElementSetter(t *testing.T) {
 	// If given a key and no values, ElementSetter will
 	// change node to be an empty list
 	rn, err = node.Pipe(ElementSetter{Keys: []string{"a"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `[]
 `, assertNoErrorString(t)(node.String()))
@@ -170,7 +170,7 @@ a: b
 	// b is removed since ElementSetter use the value "b" to match the
 	// scalar values.
 	rn, err = node.Pipe(ElementSetter{Values: []string{"b"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a
 `, assertNoErrorString(t)(node.String()))
@@ -185,7 +185,7 @@ a: b
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- e: f
 - scalarValue
@@ -200,7 +200,7 @@ a: b
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- foo
 - scalarValue
@@ -218,7 +218,7 @@ a: b
 		Values:  []string{"y"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- a: b
 - scalarValue
@@ -245,7 +245,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Keys:   []string{"a"},
 		Values: []string{"b"},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- scalarValue
 - e: f
@@ -258,7 +258,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Keys:   []string{"a", "c"},
 		Values: []string{"b", "d"},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- scalarValue
 - e: f
@@ -272,7 +272,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Keys:   []string{"a", "c"},
 		Values: []string{"b", "wrong value"},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, `- a: b
   c: d
@@ -291,7 +291,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Values:  []string{"b"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- g: h
 - scalarValue
@@ -309,7 +309,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Values:  []string{"b", "d"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- g: h
 - scalarValue
@@ -325,7 +325,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Values:  []string{"b", "d"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- foo
 - scalarValue
@@ -344,7 +344,7 @@ func TestElementSetterMultipleKeys(t *testing.T) {
 		Values:  []string{"b", "wrong value"},
 		Element: newElement.YNode(),
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, rn, newElement)
 	assert.Equal(t, `- a: b
   c: d
@@ -359,22 +359,22 @@ func TestElementMatcherWithNoValue(t *testing.T) {
 - a: c
 - b: ""
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	rn, err := node.Pipe(ElementMatcher{Keys: []string{"b"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "b: \"\"\n", assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(ElementMatcher{Keys: []string{"a"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(ElementMatcher{Keys: []string{"a"}, MatchAnyValue: true})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "a: c\n", assertNoErrorString(t)(rn.String()))
 
 	_, err = node.Pipe(ElementMatcher{Keys: []string{"a"}, Values: []string{"c"}, MatchAnyValue: true})
-	assert.Errorf(t, err, "Values must be empty when MatchAnyValue is set to true")
+	require.Errorf(t, err, "Values must be empty when MatchAnyValue is set to true")
 }
 
 func TestElementMatcherMultipleKeys(t *testing.T) {
@@ -383,14 +383,14 @@ func TestElementMatcherMultipleKeys(t *testing.T) {
   c: d
 - e: f
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// matches all key-value pairs
 	rn, err := node.Pipe(MatchElementList(
 		[]string{"a", "c"}, // keys
 		[]string{"b", "d"}, // values
 	))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotEmpty(t, rn)
 
 	// matches one key value pair but not the other
@@ -398,7 +398,7 @@ func TestElementMatcherMultipleKeys(t *testing.T) {
 		[]string{"a", "c"}, // keys
 		[]string{"b", "f"}, // values
 	))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 
 	// matches single given key value pair
@@ -406,7 +406,7 @@ func TestElementMatcherMultipleKeys(t *testing.T) {
 		[]string{"e"}, // keys
 		[]string{"f"}, // values
 	))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotEmpty(t, rn)
 
 	// matching key, but value doesn't match
@@ -414,29 +414,29 @@ func TestElementMatcherMultipleKeys(t *testing.T) {
 		[]string{"e"}, // keys
 		[]string{"g"}, // values
 	))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 }
 
 func TestClearField_Fn(t *testing.T) {
 	node, err := Parse(NodeSampleData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err := node.Pipe(FieldClearer{Name: "a"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "n: o\nc: d\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "b\n", assertNoErrorString(t)(rn.String()))
 
 	node, err = Parse(NodeSampleData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "n"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "a: b\nc: d\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "o\n", assertNoErrorString(t)(rn.String()))
 
 	node, err = Parse(NodeSampleData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "c"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "n: o\na: b\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "d\n", assertNoErrorString(t)(rn.String()))
 
@@ -444,9 +444,9 @@ func TestClearField_Fn(t *testing.T) {
 a: b
 `
 	node, err = Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "o"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rn)
 	assert.Equal(t, "n: o\na: b\n", assertNoErrorString(t)(node.String()))
 
@@ -454,7 +454,7 @@ a: b
 - b
 `
 	node, err = Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "a"})
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "wrong node kind")
@@ -469,9 +469,9 @@ a: b
 c: d
 `
 	node, err = Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "n", IfEmpty: true})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "n:\n  k: v\na: b\nc: d\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "", assertNoErrorString(t)(rn.String()))
 
@@ -481,9 +481,9 @@ a: b
 c: d
 `
 	node, err = Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err = node.Pipe(FieldClearer{Name: "n", IfEmpty: true})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "a: b\nc: d\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "{}\n", assertNoErrorString(t)(rn.String()))
 }
@@ -501,12 +501,12 @@ r: s
 func TestLookup_Fn_create(t *testing.T) {
 	// primitive
 	node, err := Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err := node.Pipe(PathGetter{
 		Path:   []string{"a", "b", "[c=d]", "t", "f", "[=h]"},
 		Create: yaml.ScalarNode,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `n: o
 a:
   l: m
@@ -526,12 +526,12 @@ r: s
 
 func TestLookup_Fn_create2(t *testing.T) {
 	node, err := Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err := node.Pipe(PathGetter{
 		Path:   []string{"a", "b", "[c=d]", "t", "f"},
 		Create: yaml.SequenceNode,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `n: o
 a:
   l: m
@@ -550,9 +550,9 @@ r: s
 
 func TestLookup_Fn_create3(t *testing.T) {
 	node, err := Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err := node.Pipe(LookupCreate(yaml.MappingNode, "a", "b", "[c=d]", "t"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `n: o
 a:
   l: m
@@ -572,21 +572,21 @@ func TestLookupCreate_4(t *testing.T) {
 	node, err := Parse(`
 a: {}
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	rn, err := node.Pipe(
 		LookupCreate(yaml.MappingNode, "a", "b", "[c=d]", "t", "f", "[=h]"))
 
 	node.YNode().Style = yaml.FlowStyle
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "{a: {b: [{c: d, t: {f: [h]}}]}}\n", assertNoErrorString(t)(node.String()))
 	assert.Equal(t, "h\n", assertNoErrorString(t)(rn.String()))
 }
 
 func TestLookup_Fn_create_with_wildcard_error(t *testing.T) {
 	node, err := Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = node.Pipe(LookupCreate(yaml.MappingNode, "a", "b", "*", "t"))
-	assert.Error(t, err, "wildcard is not supported in PathGetter")
+	require.Error(t, err, "wildcard is not supported in PathGetter")
 }
 
 func TestLookup(t *testing.T) {
@@ -609,18 +609,18 @@ a:
 r: s
 `
 	node, err := Parse(s)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// primitive
 	rn, err := node.Pipe(Lookup("a", "b", "[c=d]", "t", "f", "[=h]"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `h
 `, assertNoErrorString(t)(rn.String()))
 
 	// seq
 	rn, err = node.Pipe(Lookup("a", "b", "[c=d]", "t", "f"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `- g
 - h
@@ -628,7 +628,7 @@ r: s
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("a", "b", "[c=d]", "t"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `u: v
 f:
@@ -638,7 +638,7 @@ f:
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("a", "b", "[c=d]"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `c: d
 t:
@@ -651,7 +651,7 @@ j: k
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("a", "b"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `- f: g
 - c: e
@@ -668,69 +668,69 @@ j: k
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("a", "b", "0"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `f: g
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("a", "b", "-", "h"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `i
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup("l"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("zzz"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("[a=b]"))
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "f"))
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "c=zzz"))
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup(" ", "a", "", "b", " ", "[c=d]", "\n", "t", "\t", "f", "  ", "[=h]", "  "))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `h
 `, assertNoErrorString(t)(rn.String()))
 
 	rn, err = node.Pipe(Lookup(" ", "a", "", "b", " ", "[]"))
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "[c=d]", "t", "f", "[=c]"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "[z=z]"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "-1"))
-	assert.Errorf(t, err, "array index -1 cannot be negative")
+	require.Errorf(t, err, "array index -1 cannot be negative")
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 
 	rn, err = node.Pipe(Lookup("a", "b", "99"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, s, assertNoErrorString(t)(node.String()))
 	assert.Nil(t, rn)
 }
@@ -865,10 +865,10 @@ func TestMapEntrySetter(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			node, err := Parse(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			k, err := tc.setter.Filter(node)
 			if tc.expectedErr == nil {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tc.expected, assertNoErrorString(t)(node.String()))
 				assert.Equal(t, tc.expected, assertNoErrorString(t)(k.String()))
 			} else {
@@ -884,13 +884,13 @@ func TestFieldSetter(t *testing.T) {
 	node, err := Parse(`
 foo: baz
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	instance := FieldSetter{
 		Name:  "foo",
 		Value: NewScalarRNode("bar"),
 	}
 	k, err := instance.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `foo: bar
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `bar
@@ -900,13 +900,13 @@ foo: baz
 	node, err = Parse(`
 foo: baz
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	instance = FieldSetter{
 		Name:  "bar",
 		Value: NewScalarRNode("buz"),
 	}
 	k, err = instance.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `foo: baz
 bar: buz
 `, assertNoErrorString(t)(node.String()))
@@ -918,12 +918,12 @@ bar: buz
 foo: baz
 bar: buz
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	instance = FieldSetter{
 		Name: "foo",
 	}
 	k, err = instance.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `bar: buz
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `baz
@@ -933,10 +933,10 @@ bar: buz
 	node, err = Parse(`
 foo
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	instance = FieldSetter{}
 	k, err = instance.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `foo
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `foo
@@ -947,7 +947,7 @@ foo
 -a
 -b
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	instance = FieldSetter{
 		Name:  "foo",
 		Value: NewScalarRNode("v"),
@@ -966,7 +966,7 @@ func TestFieldSetterNumberInKeyRegression(t *testing.T) {
 		Name:  "forty 2",
 		Value: NewScalarRNode("number key one"),
 	}.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `number key one
 `, assertNoErrorString(t)(k.String()))
 
@@ -974,7 +974,7 @@ func TestFieldSetterNumberInKeyRegression(t *testing.T) {
 		Name:  "fortytwo",
 		Value: NewScalarRNode("number key two"),
 	}.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `number key two
 `, assertNoErrorString(t)(k.String()))
 
@@ -982,7 +982,7 @@ func TestFieldSetterNumberInKeyRegression(t *testing.T) {
 		Name:  "42",
 		Value: NewScalarRNode("number key three"),
 	}.Filter(node)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `number key three
 `, assertNoErrorString(t)(k.String()))
 
@@ -997,9 +997,9 @@ func TestSet_Fn(t *testing.T) {
 	node, err := Parse(`
 foo: baz
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	k, err := node.Pipe(Get("foo"), Set(NewScalarRNode("bar")))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `foo: bar
 `, assertNoErrorString(t)(node.String()))
 	assert.Equal(t, `bar
@@ -1008,7 +1008,7 @@ foo: baz
 	node, err = Parse(`
 foo: baz
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = node.Pipe(Set(NewScalarRNode("bar")))
 	if !assert.Error(t, err) {
 		return
@@ -1021,7 +1021,7 @@ foo: baz
 func TestErrorIfInvalid(t *testing.T) {
 	err := ErrorIfInvalid(
 		NewRNode(&yaml.Node{Kind: yaml.SequenceNode}), yaml.SequenceNode)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// nil values should pass validation -- they were not specified
 	err = ErrorIfInvalid(&RNode{}, yaml.SequenceNode)
@@ -1048,7 +1048,7 @@ func TestErrorIfInvalid(t *testing.T) {
 		Kind:    yaml.MappingNode,
 		Content: []*yaml.Node{{}, {}},
 	}), yaml.MappingNode)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{}), yaml.SequenceNode)
 	if assert.Error(t, err) {
@@ -1073,22 +1073,22 @@ func TestSplitIndexNameValue(t *testing.T) {
 	assert.Equal(t, "", v)
 
 	k, v, err = SplitIndexNameValue("a=b")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "a", k)
 	assert.Equal(t, "b", v)
 
 	k, v, err = SplitIndexNameValue("=b")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "", k)
 	assert.Equal(t, "b", v)
 
 	k, v, err = SplitIndexNameValue("a=b=c")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "a", k)
 	assert.Equal(t, "b=c", v)
 
 	k, v, err = SplitIndexNameValue("=-jar")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "", k)
 	assert.Equal(t, "-jar", v)
 }
@@ -1107,7 +1107,7 @@ func TestResourceNode_Pipe(t *testing.T) {
 
 	// check the nil value case
 	_, err := r0.Pipe(FieldMatcher{Name: "foo"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	r0, r1, r2, r3 = &RNode{}, &RNode{}, &RNode{}, &RNode{}
 	// all filters successful
@@ -1292,7 +1292,7 @@ metadata:
 func assertNoError(t *testing.T) func(o *RNode, err error) *RNode {
 	t.Helper()
 	return func(o *RNode, err error) *RNode {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		return o
 	}
 }
@@ -1300,7 +1300,7 @@ func assertNoError(t *testing.T) func(o *RNode, err error) *RNode {
 func assertNoErrorString(t *testing.T) func(string, error) string {
 	t.Helper()
 	return func(s string, err error) string {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		return s
 	}
 }

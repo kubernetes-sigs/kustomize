@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/internal/loader"
 	. "sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -360,9 +361,9 @@ kind: List
 			assert.Equal(t, len(test.expectedOut), len(rs))
 			for i := range rs {
 				expYaml, err := test.expectedOut[i].AsYAML()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				actYaml, err := rs[i].AsYAML()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, expYaml, actYaml)
 			}
 		})
@@ -634,7 +635,7 @@ data:
 			assert.Equal(t, len(tc.exp.out), len(rs))
 			for i := range rs {
 				actual, err := rs[i].String()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(
 					t, strings.TrimSpace(tc.exp.out[i]), strings.TrimSpace(actual))
 			}
@@ -721,7 +722,7 @@ metadata:
 		t.Run(n, func(t *testing.T) {
 			nin, _ := kio.FromBytes(tc.input)
 			res, err := factory.DropLocalNodes(nin)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			if tc.expected == nil {
 				assert.Equal(t, 0, len(res))
 			} else {

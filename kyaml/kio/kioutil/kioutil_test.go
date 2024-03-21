@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -446,8 +447,8 @@ metadata:
 			OmitReaderAnnotations: true,
 		}
 		nodes, err := rw.Read()
-		assert.NoError(t, err)
-		assert.NoError(t, kioutil.CopyLegacyAnnotations(nodes[0]))
+		require.NoError(t, err)
+		require.NoError(t, kioutil.CopyLegacyAnnotations(nodes[0]))
 		assert.Equal(t, tc.expected, nodes[0].MustString())
 	}
 }
@@ -527,8 +528,8 @@ metadata:
 			OmitReaderAnnotations: true,
 		}
 		nodes, err := rw.Read()
-		assert.NoError(t, err)
-		assert.NoError(t, kioutil.CopyInternalAnnotations(nodes[0], nodes[1], tc.exclusions...))
+		require.NoError(t, err)
+		require.NoError(t, kioutil.CopyInternalAnnotations(nodes[0], nodes[1], tc.exclusions...))
 		assert.Equal(t, tc.expected, nodes[1].MustString())
 	}
 }
@@ -656,10 +657,10 @@ metadata:
 			OmitReaderAnnotations: true,
 		}
 		nodes, err := rw.Read()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = kioutil.ConfirmInternalAnnotationUnchanged(nodes[0], nodes[1], tc.exclusions...)
 		if tc.expectedErr == "" {
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		} else {
 			if err == nil {
 				t.Fatalf("expected error: %s\n", tc.expectedErr)
@@ -699,7 +700,7 @@ metadata:
 			OmitReaderAnnotations: true,
 		}
 		nodes, err := rw.Read()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, tc.expected, kioutil.GetInternalAnnotations(nodes[0]))
 	}
 }

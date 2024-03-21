@@ -31,9 +31,9 @@ func TestAddGeneratorHappyPath(t *testing.T) {
 
 	cmd := newCmdAddGenerator(fSys)
 	args := []string{generatorFileName + "*"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(content), generatorFileName)
 	assert.Contains(t, string(content), generatorFileName+"another")
 }
@@ -46,16 +46,16 @@ func TestAddGeneratorAlreadyThere(t *testing.T) {
 
 	cmd := newCmdAddGenerator(fSys)
 	args := []string{generatorFileName}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	// adding an existing generator shouldn't return an error
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	// There can be only one. May it be the...
 	mf, err := kustfile.NewKustomizationFile(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m, err := mf.Read()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 1, len(m.Generators))
 	assert.Equal(t, generatorFileName, m.Generators[0])
 }

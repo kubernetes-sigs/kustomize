@@ -45,9 +45,9 @@ func TestAddPatchWithFilePath(t *testing.T) {
 		"--label-selector", labelSelector,
 	}
 	cmd.SetArgs(args)
-	assert.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.Execute())
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	for i := 1; i < len(args); i += 2 {
 		assert.Contains(t, string(content), args[i])
 	}
@@ -71,9 +71,9 @@ func TestAddPatchWithPatchContent(t *testing.T) {
 		"--label-selector", labelSelector,
 	}
 	cmd.SetArgs(args)
-	assert.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.Execute())
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	for i := 1; i < len(args); i += 2 {
 		assert.Contains(t, string(content), strings.Trim(args[i], " \n"))
 	}
@@ -97,10 +97,10 @@ func TestAddPatchAlreadyThere(t *testing.T) {
 		"--label-selector", labelSelector,
 	}
 	cmd.SetArgs(args)
-	assert.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.Execute())
 
 	// adding an existing patch shouldn't return an error
-	assert.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.Execute())
 }
 
 func TestAddPatchNoArgs(t *testing.T) {
@@ -108,6 +108,6 @@ func TestAddPatchNoArgs(t *testing.T) {
 
 	cmd := newCmdAddPatch(fSys)
 	err := cmd.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "must provide either patch or path", err.Error())
 }

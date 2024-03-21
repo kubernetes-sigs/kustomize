@@ -404,7 +404,7 @@ resources:
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), test.err)
 				if test.errT != nil {
-					assert.ErrorIs(t, err, test.errT)
+					require.ErrorIs(t, err, test.errT)
 				}
 			} else {
 				require.NoError(t, err)
@@ -453,6 +453,6 @@ func checkYaml(t *testing.T, actual resmap.ResMap, expected string) {
 	t.Helper()
 
 	yml, err := actual.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected, string(yml))
 }

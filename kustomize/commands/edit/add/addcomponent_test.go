@@ -31,9 +31,9 @@ func TestAddComponentHappyPath(t *testing.T) {
 
 	cmd := newCmdAddComponent(fSys)
 	args := []string{componentFileName + "*"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(content), componentFileName)
 	assert.Contains(t, string(content), componentFileName+"another")
 }
@@ -46,10 +46,10 @@ func TestAddComponentAlreadyThere(t *testing.T) {
 
 	cmd := newCmdAddComponent(fSys)
 	args := []string{componentFileName}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	// adding an existing component doesn't return an error
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 }
 
 // Test for trying to add the kustomization.yaml file itself for resources.

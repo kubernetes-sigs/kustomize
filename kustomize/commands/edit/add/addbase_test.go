@@ -29,9 +29,9 @@ func TestAddBaseHappyPath(t *testing.T) {
 
 	cmd := newCmdAddBase(fSys)
 	args := []string{baseDirectoryPaths}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	for _, base := range bases {
 		assert.Contains(t, string(content), base)
@@ -50,9 +50,9 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 
 	cmd := newCmdAddBase(fSys)
 	args := []string{baseDirectoryPaths}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	// adding an existing base should return an error
-	assert.Error(t, cmd.RunE(cmd, args))
+	require.Error(t, cmd.RunE(cmd, args))
 	var expectedErrors []string
 	for _, base := range bases {
 		msg := "base " + base + " already in kustomization file"
@@ -66,6 +66,6 @@ func TestAddBaseNoArgs(t *testing.T) {
 
 	cmd := newCmdAddBase(fSys)
 	err := cmd.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "must specify a base directory", err.Error())
 }

@@ -31,9 +31,9 @@ func TestAddResourceHappyPath(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName + "*"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, string(content), `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: some-prefix
@@ -65,10 +65,10 @@ func TestAddResourceAlreadyThere(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	args := []string{resourceFileName}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	// adding an existing resource doesn't return an error
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 }
 
 // Test for trying to add the kustomization.yaml file itself for resources.
@@ -79,10 +79,10 @@ func TestAddKustomizationFileAsResource(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	args := []string{konfig.DefaultKustomizationFileName()}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.NotContains(t, string(content), konfig.DefaultKustomizationFileName())
 }
@@ -92,7 +92,7 @@ func TestAddResourceNoArgs(t *testing.T) {
 
 	cmd := newCmdAddResource(fSys)
 	err := cmd.Execute()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "must specify a resource file", err.Error())
 }
 

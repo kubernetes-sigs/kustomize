@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
@@ -18,7 +19,7 @@ import (
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
 	wd, err := os.Getwd()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	tests := []struct {
 		name           string
 		args           []string

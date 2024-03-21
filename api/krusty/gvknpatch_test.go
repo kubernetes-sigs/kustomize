@@ -6,7 +6,7 @@ package krusty_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -496,7 +496,7 @@ spec:
 	options := th.MakeDefaultOptions()
 	// depPatch cannot find target with kind `Deployment` and name `new-name`
 	// because the resource never had this GVKN
-	assert.Error(t, th.RunWithErr("overlay", options))
+	require.Error(t, th.RunWithErr("overlay", options))
 }
 
 // Here is a structure of a kustomization of two components, component1
