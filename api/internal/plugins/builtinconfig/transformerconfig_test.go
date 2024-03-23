@@ -130,11 +130,15 @@ func TestMerge(t *testing.T) {
 	cfga.AddNamereferenceFieldSpec(nameReference[0])
 	cfga.AddPrefixFieldSpec(fieldSpecs[0])
 	cfga.AddSuffixFieldSpec(fieldSpecs[0])
+	cfga.Labels, _ = cfga.Labels.MergeOne(fieldSpecs[0])
+	cfga.AddLabelFieldSpec(fieldSpecs[0])
 
 	cfgb := &TransformerConfig{}
 	cfgb.AddNamereferenceFieldSpec(nameReference[1])
 	cfgb.AddPrefixFieldSpec(fieldSpecs[1])
-	cfga.AddSuffixFieldSpec(fieldSpecs[1])
+	cfgb.AddSuffixFieldSpec(fieldSpecs[1])
+	cfgb.Labels, _ = cfgb.Labels.MergeOne(fieldSpecs[1])
+	cfgb.AddLabelFieldSpec(fieldSpecs[1])
 
 	actual, err := cfga.Merge(cfgb)
 	if err != nil {
@@ -149,6 +153,14 @@ func TestMerge(t *testing.T) {
 		t.Fatal("merge failed for nameSuffix FieldSpec")
 	}
 
+	if len(actual.Labels) != 2 {
+		t.Fatal("merge failed for labels FieldSpec")
+	}
+
+	if len(actual.CommonLabels) != 2 {
+		t.Fatal("merge failed for commonLabels FieldSpec")
+	}
+
 	if len(actual.NameReference) != 1 {
 		t.Fatal("merge failed for namereference FieldSpec")
 	}
@@ -160,6 +172,10 @@ func TestMerge(t *testing.T) {
 	expected.AddPrefixFieldSpec(fieldSpecs[1])
 	expected.AddSuffixFieldSpec(fieldSpecs[0])
 	expected.AddSuffixFieldSpec(fieldSpecs[1])
+	expected.Labels, _ = expected.Labels.MergeOne(fieldSpecs[0])
+	expected.Labels, _ = expected.Labels.MergeOne(fieldSpecs[1])
+	expected.AddLabelFieldSpec(fieldSpecs[0])
+	expected.AddLabelFieldSpec(fieldSpecs[1])
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("expected: %v\n but got: %v\n", expected, actual)

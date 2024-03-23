@@ -282,7 +282,12 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			}
 			c.Labels = label.Pairs
 			fss := types.FsSlice(label.FieldSpecs)
-			// merge the custom fieldSpecs with the default
+			// merge the custom fieldSpecs of Labels with the default
+			fss, err = fss.MergeAll(tc.Labels)
+			if err != nil {
+				return nil, err
+			}
+			// merge the custom fieldSpecs of commonLabels with the default
 			if label.IncludeSelectors {
 				fss, err = fss.MergeAll(tc.CommonLabels)
 			} else {
