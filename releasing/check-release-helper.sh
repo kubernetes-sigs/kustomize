@@ -7,7 +7,7 @@ declare rc=0
 
 git log $(git describe --tags --abbrev=0)..HEAD --oneline | tee /tmp/release-changelogs.txt
 
-if [[ $(cat /tmp/release-changelogs.txt | grep fix) || $(cat /tmp/release-changelogs.txt | grep patch) ]]; then
+if [[ $(cat /tmp/release-changelogs.txt | grep fix) || $(cat /tmp/release-changelogs.txt | grep patch) || $(cat /tmp/release-changelogs.txt | grep chore) ]]; then
     PATCH=true
 fi
 
@@ -32,9 +32,9 @@ echo -e "\n"
 echo -e "================================================================================="
 
 if [[ $MAJOR == false && $MINOR == false ]]; then
-    echo "Release type: patch"
+    echo "Recommended release type: patch"
 elif [[ $MAJOR == false && $MINOR == true ]]; then
-    echo "Release type: minor"
+    echo "Recommended release type: minor"
 else
-    echo "Release type: major"
+    echo "Recommended release type: major"
 fi
