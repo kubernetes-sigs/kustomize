@@ -21,14 +21,9 @@ for f in $(find api); do
     git diff --exit-code "${f}"
     if [ $? -eq 1 ]; then
         echo "Found changes on api dir at ${f}"
-        rc=1
-        exit 1
+        MAJOR=true
     fi
 done
-
-if [ $rc -eq 1 ]; then
-    MAJOR=true
-fi
 
 echo -e "\n"
 echo -e "================================================================================="
