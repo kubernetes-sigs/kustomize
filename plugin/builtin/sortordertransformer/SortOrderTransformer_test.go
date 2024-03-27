@@ -69,6 +69,12 @@ kind: Namespace
 metadata:
   name: apple
 ---
+apiVersion: servicebus.azure.com/v1api20210101preview
+kind: Namespace
+metadata:
+  name: aso-namespace
+  namespace: default
+---
 apiVersion: v1
 kind: Secret
 metadata:
@@ -107,6 +113,12 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: apple
+---
+apiVersion: servicebus.azure.com/v1api20210101preview
+kind: Namespace
+metadata:
+  name: aso-namespace
+  namespace: default
 ---
 apiVersion: v1
 kind: Role
@@ -228,6 +240,12 @@ kind: Namespace
 metadata:
   name: apple
 ---
+apiVersion: servicebus.azure.com/v1api20210101preview
+kind: Namespace
+metadata:
+  name: aso-namespace
+  namespace: default
+---
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -305,6 +323,12 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: apple
+---
+apiVersion: servicebus.azure.com/v1api20210101preview
+kind: Namespace
+metadata:
+  name: aso-namespace
+  namespace: default
 ---
 apiVersion: v1
 kind: Deployment
