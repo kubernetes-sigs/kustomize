@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filters/labels"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/provider"
 	. "sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -909,6 +910,16 @@ func TestAbsorbAll(t *testing.T) {
 	require.Error(t, err)
 	assert.True(
 		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
+
+	// Assure BuildAnnotationsGenAddHashSuffix is not deleted after AbsorbAll
+	w = makeMap1()
+	w.RemoveBuildAnnotations()
+	w2 = makeMap2(types.BehaviorReplace)
+	assert.NoError(t, w.AbsorbAll(w2))
+	expected = makeMap2(types.BehaviorUnspecified)
+	expected.RemoveBuildAnnotations()
+	assert.NoError(t, expected.AnnotateAll(utils.BuildAnnotationsGenAddHashSuffix, "enabled"))
+	assert.NoError(t, w.ErrorIfNotEqualLists(expected))
 }
 
 func TestToRNodeSlice(t *testing.T) {

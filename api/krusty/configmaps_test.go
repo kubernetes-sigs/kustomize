@@ -291,6 +291,8 @@ resources:
 configMapGenerator:
   - name: project
     behavior: merge
+    options:
+      disableNameSuffixHash: true
     literals:
     - ANOTHER_ENV_VARIABLE="bar"
 `)
