@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"k8s.io/utils/strings/slices"
 	"log"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -97,8 +99,9 @@ func determineFieldOrder() []string {
 // field has to be a recognized kustomization field
 // comment can be empty
 type commentedField struct {
-	field   string
-	comment []byte
+	field        string
+	comment      []byte
+	originalLine []byte
 }
 
 func (cf *commentedField) appendComment(comment []byte) {
@@ -113,6 +116,7 @@ type kustomizationFile struct {
 	path           string
 	fSys           filesys.FileSystem
 	originalFields []*commentedField
+	lastComments   []byte
 }
 
 // NewKustomizationFile returns a new instance.
@@ -210,7 +214,7 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 		} else {
 			matched, field := findMatchedField(line)
 			if matched {
-				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments)})
+				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments), originalLine: line})
 				comments = [][]byte{}
 			} else if len(comments) > 0 && len(mf.originalFields) > 0 {
 				mf.originalFields[len(mf.originalFields)-1].appendComment(squash(comments))
@@ -223,6 +227,8 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	if err != io.EOF {
 		return err
 	}
+
+	mf.lastComments = append(mf.lastComments, squash(comments)...)
 	return nil
 }
 
@@ -235,7 +241,23 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 		if err != nil {
 			return content, err
 		}
-		output = append(output, content...)
+
+		trimOriginalLine := bytes.TrimSpace(comment.originalLine)
+		trimContent := bytes.TrimSpace(content)
+
+		deprecatedFixes := []string{"vars:", "patchesJson6902:", "patchesStrategicMerge:", "commonLabels:"}
+
+		if !slices.Contains(deprecatedFixes, string(trimOriginalLine)) {
+			if comment.field == "ConfigMapGenerator" || comment.field == "SecretGenerator" {
+				continue
+			} else if strings.Contains(string(trimOriginalLine), string(trimContent)) {
+				output = append(output, comment.originalLine...)
+			} else {
+				output = append(output, content...)
+			}
+		} else {
+			output = append(output, content...)
+		}
 	}
 	for _, field := range fieldMarshallingOrder {
 		if mf.hasField(field) {
@@ -247,7 +269,8 @@ func (mf *kustomizationFile) marshal(kustomization *types.Kustomization) ([]byte
 		}
 		output = append(output, content...)
 	}
-	return output, nil
+
+	return append(output, mf.lastComments...), nil
 }
 
 func (mf *kustomizationFile) hasField(name string) bool {
