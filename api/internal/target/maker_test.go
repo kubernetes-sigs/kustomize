@@ -6,6 +6,7 @@ package target_test
 import (
 	"testing"
 
+	"sigs.k8s.io/kustomize/api/ifc"
 	fLdr "sigs.k8s.io/kustomize/api/internal/loader"
 	pLdr "sigs.k8s.io/kustomize/api/internal/plugins/loader"
 	"sigs.k8s.io/kustomize/api/internal/target"
@@ -21,11 +22,7 @@ func makeAndLoadKustTarget(
 	fSys filesys.FileSystem,
 	root string) *target.KustTarget {
 	t.Helper()
-	kt := makeKustTargetWithRf(t, fSys, root, provider.NewDefaultDepProvider())
-	if err := kt.Load(); err != nil {
-		t.Fatalf("Unexpected load error %v", err)
-	}
-	return kt
+	return makeAndLoadKustTargetWithLoaderOverride(t, fSys, root, nil)
 }
 
 func makeKustTargetWithRf(
@@ -34,9 +31,36 @@ func makeKustTargetWithRf(
 	root string,
 	pvd *provider.DepProvider) *target.KustTarget {
 	t.Helper()
-	ldr, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys)
+	return makeKustTargetWithRfAndLoaderOverride(t, fSys, root, pvd, nil)
+}
+
+func makeAndLoadKustTargetWithLoaderOverride(
+	t *testing.T,
+	fSys filesys.FileSystem,
+	root string,
+	ldrWrapperFn func(ifc.Loader) ifc.Loader) *target.KustTarget {
+	t.Helper()
+	kt := makeKustTargetWithRfAndLoaderOverride(t, fSys, root, provider.NewDefaultDepProvider(), ldrWrapperFn)
+	if err := kt.Load(); err != nil {
+		t.Fatalf("Unexpected load error %v", err)
+	}
+	return kt
+}
+
+func makeKustTargetWithRfAndLoaderOverride(
+	t *testing.T,
+	fSys filesys.FileSystem,
+	root string,
+	pvd *provider.DepProvider,
+	ldrWrapperFn func(ifc.Loader) ifc.Loader) *target.KustTarget {
+	t.Helper()
+	baseLoader, err := fLdr.NewLoader(fLdr.RestrictionRootOnly, root, fSys)
 	if err != nil {
 		t.Fatal(err)
+	}
+	ldr := baseLoader
+	if ldrWrapperFn != nil {
+		ldr = ldrWrapperFn(baseLoader)
 	}
 	rf := resmap.NewFactory(pvd.GetResourceFactory())
 	pc := types.DisabledPluginConfig()
