@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-app
+spec:
+  template:
+    spec:
+      containers:
+        - name: example-app
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+              readOnly: true
+            - name: secrets-volume
+              mountPath: /etc/secrets
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: example-app-configmap
+        - name: secrets-volume
+          secret:
+            secretName: example-app-secrets

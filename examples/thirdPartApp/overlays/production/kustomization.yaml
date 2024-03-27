@@ -1,0 +1,49 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+configMapGenerator:
+  - name: example-app-configmap
+    # behavior: merge
+    literals:
+      - DATABASE_URL=production_database_url
+      - API_KEY=production_api_key
+secretGenerator:
+  - name: example-app-secrets
+    # behavior: merge
+    literals:
+      - DB_PASSWORD=production_data_password
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: example-app
+      spec:
+        replicas: 5
+        template:
+          spec:
+            containers:
+              - name: example-app
+                env:
+                  - name: ENVIRONMENT
+                    value: "production"
+                volumeMounts:
+                  - name: config-volume
+                    mountPath: /etc/config
+                    readOnly: true
+                  - name: secrets-volume
+                    mountPath: /etc/secrets
+                    readOnly: true
+            volumes:
+              - name: config-volume
+                configMap:
+                  name: example-app-configmap
+              - name: secrets-volume
+                secret:
+                  secretName: example-app-secrets
+    target:
+      group: apps
+      kind: Deployment
+      name: example-app
+      version: v1
