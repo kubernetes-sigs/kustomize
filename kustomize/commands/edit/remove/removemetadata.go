@@ -40,7 +40,7 @@ type removeMetadataOptions struct {
 	kind           kindOfAdd
 }
 
-// newCmdRemoveLabel removes one or more commonAnnotations from the kustomization file.
+// newCmdRemoveAnnotation removes one or more commonAnnotations from the kustomization file.
 func newCmdRemoveAnnotation(fSys filesys.FileSystem, v func([]string) error) *cobra.Command {
 	var o removeMetadataOptions
 	o.kind = label
