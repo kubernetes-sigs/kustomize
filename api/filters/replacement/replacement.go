@@ -70,7 +70,18 @@ func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yam
 			return nil, fmt.Errorf("error getting node IDs: %w", err)
 		}
 		for _, id := range ids {
-			if id.IsSelectedBy(selector.ResId) {
+			if id.IsSelectedBy(selector.ResId) && !rejectId(selector.Reject, &id) {
+				if selector.Select != nil {
+					// filter source by label and annotation selector and rejects.
+					selectByAnnoAndLabel, err := selectByAnnoAndLabel(n, selector.Select, selector.Reject)
+					if err != nil {
+						return nil, fmt.Errorf("error matching annotation or label: %w", err)
+					}
+					if !selectByAnnoAndLabel {
+						continue
+					}
+				}
+
 				if len(matches) > 0 {
 					return nil, fmt.Errorf(
 						"multiple matches for selector %s", selector)
@@ -117,7 +128,7 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 			}
 
 			// filter targets by label and annotation selectors
-			selectByAnnoAndLabel, err := selectByAnnoAndLabel(possibleTarget, selector)
+			selectByAnnoAndLabel, err := selectByAnnoAndLabel(possibleTarget, selector.Select, selector.Reject)
 			if err != nil {
 				return nil, err
 			}
@@ -140,11 +151,11 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 	return nodes, nil
 }
 
-func selectByAnnoAndLabel(n *yaml.RNode, t *types.TargetSelector) (bool, error) {
-	if matchesSelect, err := matchesAnnoAndLabelSelector(n, t.Select); !matchesSelect || err != nil {
+func selectByAnnoAndLabel(n *yaml.RNode, selector *types.Selector, rejects []*types.Selector) (bool, error) {
+	if matchesSelect, err := matchesAnnoAndLabelSelector(n, selector); !matchesSelect || err != nil {
 		return false, err
 	}
-	for _, reject := range t.Reject {
+	for _, reject := range rejects {
 		if reject.AnnotationSelector == "" && reject.LabelSelector == "" {
 			continue
 		}

@@ -2830,6 +2830,368 @@ spec:
 `,
 			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
 		},
+		"select_only_label_selector": {
+			input: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  labels:
+    name: testSecret 
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  labels:
+    name: testSecret2
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: TO_BE_REPLACED
+`,
+			replacements: `replacements:
+- source:
+    select:
+      labelSelector: "name=testSecret,type=secret"
+    fieldPath: metadata.name
+  targets:
+    - select:
+        version: v1
+        kind: Pod
+        name: test
+      fieldPaths:
+        - spec.containers.0.envFrom.0.secretRef.name
+`,
+			expected: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  labels:
+    name: testSecret
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  labels:
+    name: testSecret2
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: test
+`,
+		},
+		"select_namespace_and_label_selector": {
+			input: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: test
+  labels:
+    name: testSecret 
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  namespace: test2
+  labels:
+    name: testSecret
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: TO_BE_REPLACED
+`,
+			replacements: `replacements:
+- source:
+    namespace: test2
+    select:
+      labelSelector: "name=testSecret,type=secret"
+    fieldPath: metadata.name
+  targets:
+    - select:
+        version: v1
+        kind: Pod
+        name: test
+      fieldPaths:
+        - spec.containers.0.envFrom.0.secretRef.name
+`,
+			expected: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: test
+  labels:
+    name: testSecret
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  namespace: test2
+  labels:
+    name: testSecret
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: test2
+`,
+		},
+		"select_label_selector_and_reject_resid": {
+			input: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: test
+  labels:
+    name: testSecret 
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  namespace: test2
+  labels:
+    name: testSecret
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: TO_BE_REPLACED
+`,
+			replacements: `replacements:
+- source:
+    select:
+      labelSelector: "name=testSecret,type=secret"
+    reject:
+    - namespace: test
+    fieldPath: metadata.name
+  targets:
+    - select:
+        version: v1
+        kind: Pod
+        name: test
+      fieldPaths:
+        - spec.containers.0.envFrom.0.secretRef.name
+`,
+			expected: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: test
+  labels:
+    name: testSecret
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  namespace: test2
+  labels:
+    name: testSecret
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: test2
+`,
+		},
+		"select_label_selector_and_reject_labelselector": {
+			input: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: test
+  labels:
+    name: testSecret
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  namespace: test2
+  labels:
+    name: testSecret2
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: TO_BE_REPLACED
+`,
+			replacements: `replacements:
+- source:
+    select:
+      labelSelector: "type=secret"
+    reject:
+    - labelSelector: "name=testSecret"
+    fieldPath: metadata.name
+  targets:
+    - select:
+        version: v1
+        kind: Pod
+        name: test
+      fieldPaths:
+        - spec.containers.0.envFrom.0.secretRef.name
+`,
+			expected: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  namespace: test
+  labels:
+    name: testSecret
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  namespace: test2
+  labels:
+    name: testSecret2
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: test2
+`,
+		},
+		"select_only_annotation_selector": {
+			input: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  annotations:
+    name: testSecret 
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  annotations:
+    name: testSecret2
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: TO_BE_REPLACED
+`,
+			replacements: `replacements:
+- source:
+    select:
+      annotationSelector: "name=testSecret,type=secret"
+    fieldPath: metadata.name
+  targets:
+    - select:
+        version: v1
+        kind: Pod
+        name: test
+      fieldPaths:
+        - spec.containers.0.envFrom.0.secretRef.name
+`,
+			expected: `apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+  annotations:
+    name: testSecret
+    type: secret
+---
+kind: Secret
+metadata:
+  name: test2
+  annotations:
+    name: testSecret2
+    type: secret
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    envFrom:
+    - secretRef:
+        name: test
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
