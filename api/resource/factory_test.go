@@ -274,7 +274,7 @@ kind: List
 			},
 		},
 	}
-	testDeploymentA := factory.FromMap(
+	testDeploymentA, _ := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -283,7 +283,7 @@ kind: List
 			},
 			"spec": testDeploymentSpec,
 		})
-	testDeploymentB := factory.FromMap(
+	testDeploymentB, _ := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -308,6 +308,16 @@ kind: List
 		t.Fatal(err)
 	}
 
+	td, err := createTestDeployment()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tc, err := createTestConfigMap()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	tests := map[string]struct {
 		input       []types.PatchStrategicMerge
 		expectedOut []*Resource
@@ -315,7 +325,7 @@ kind: List
 	}{
 		"happy": {
 			input:       []types.PatchStrategicMerge{patchGood1, patchGood2},
-			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedOut: []*Resource{td, tc},
 			expectedErr: false,
 		},
 		"badFileName": {
@@ -330,7 +340,7 @@ kind: List
 		},
 		"listOfPatches": {
 			input:       []types.PatchStrategicMerge{patchList},
-			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedOut: []*Resource{td, tc},
 			expectedErr: false,
 		},
 		"listWithAnchorReference": {

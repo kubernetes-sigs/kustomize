@@ -590,7 +590,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	rf := provider.NewDefaultDepProvider().GetResourceFactory()
 
-	v1 := rf.FromMapWithName(
+	v1, _ := rf.FromMapWithName(
 		"volume1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -599,7 +599,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 				"name": "someprefix-volume1",
 			},
 		})
-	c1 := rf.FromMapWithName(
+	c1, _ := rf.FromMapWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -614,7 +614,7 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 		})
 
 	v2 := v1.DeepCopy()
-	c2 := rf.FromMapWithName(
+	c2, _ := rf.FromMapWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
