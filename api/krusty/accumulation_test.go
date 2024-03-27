@@ -31,6 +31,20 @@ spec:
     - port: 7002
 `
 
+const invalidResource = `apiVersion: v1
+kind: Service
+metadata:
+  name: kapacitor
+  labels:
+    app.kubernetes.io/name: tick-kapacitor
+spec:
+  selector:
+    app.kubernetes.io/name: tick-kapacitor
+    - name: http
+      port: 9092
+      protocol: TCP
+  type: ClusterIP`
+
 func TestTargetMustHaveKustomizationFile(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("service.yaml", `
@@ -302,6 +316,14 @@ resources:
 			// know resource is file.
 			errDir: `new root '%s' cannot be absolute`,
 		},
+		{
+			name:     "malformed yaml yields an error",
+			resource: "service.yaml",
+			files: map[string]string{
+				"service.yaml": invalidResource,
+			},
+			errFile: "MalformedYAMLError",
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if test.resourceFunc != nil {
@@ -338,5 +360,4 @@ resources:
 	// TODO(annasong): add tests that check accumulateResources errors for
 	// - repos
 	// - local directories
-	// - files that yield malformed yaml errors
 }
