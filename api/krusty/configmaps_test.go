@@ -591,3 +591,184 @@ metadata:
   name: test-m8t7bmb6g2
 `)
 }
+
+// Regression test for https://github.com/kubernetes-sigs/kustomize/issues/5047
+func TestPrefixSuffix(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("kustomization.yaml", `
+resources:
+- a
+- b
+`)
+
+	th.WriteF("a/kustomization.yaml", `
+resources:
+- ../common
+
+namePrefix: a
+`)
+
+	th.WriteF("b/kustomization.yaml", `
+resources:
+- ../common
+
+namePrefix: b
+`)
+
+	th.WriteF("common/kustomization.yaml", `
+resources:
+- service
+
+configMapGenerator:
+- name: "-example-configmap"
+`)
+
+	th.WriteF("common/service/deployment.yaml", `
+kind: Deployment
+apiVersion: apps/v1
+
+metadata:
+  name: "-"
+
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        envFrom:
+        - configMapRef:
+            name: "-example-configmap"
+`)
+
+	th.WriteF("common/service/kustomization.yaml", `
+resources:
+- deployment.yaml
+
+nameSuffix: api
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a-api
+spec:
+  template:
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: a-example-configmap-6ct58987ht
+        name: app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: a-example-configmap-6ct58987ht
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b-api
+spec:
+  template:
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: b-example-configmap-6ct58987ht
+        name: app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: b-example-configmap-6ct58987ht
+`)
+}
+
+// Regression test for https://github.com/kubernetes-sigs/kustomize/issues/5047
+func TestPrefixSuffix2(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("kustomization.yaml", `
+resources:
+- a
+- b
+`)
+
+	th.WriteF("a/kustomization.yaml", `
+resources:
+- ../common
+
+namePrefix: a
+`)
+
+	th.WriteF("b/kustomization.yaml", `
+resources:
+- ../common
+
+namePrefix: b
+`)
+
+	th.WriteF("common/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "-example"
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        envFrom:
+        - configMapRef:
+            name: "-example-configmap"
+`)
+
+	th.WriteF("common/kustomization.yaml", `
+resources:
+- deployment.yaml
+
+configMapGenerator:
+- name: "-example-configmap"
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a-example
+spec:
+  template:
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: a-example-configmap-6ct58987ht
+        name: app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: a-example-configmap-6ct58987ht
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b-example
+spec:
+  template:
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: b-example-configmap-6ct58987ht
+        name: app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: b-example-configmap-6ct58987ht
+`)
+}
