@@ -1,5 +1,5 @@
 [kubernetes API 对象样式]: https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields
-[variant]: ../../docs/glossary.md#variant
+[variant]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#variant
 
 # 示例：早餐配置
 
