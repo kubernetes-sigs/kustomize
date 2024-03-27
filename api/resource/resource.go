@@ -23,7 +23,10 @@ import (
 // paired with metadata used by kustomize.
 type Resource struct {
 	kyaml.RNode
-	refVarNames []string
+	refVarNames     []string
+	curIdCache      *resid.ResId
+	prevIdsIsCached bool
+	prevIdsCache    []resid.ResId
 }
 
 var BuildAnnotations = []string{
@@ -311,7 +314,11 @@ func (r *Resource) RemoveBuildAnnotations() {
 	}
 }
 
+// setPreviousId adds the given namespace, name, and kind combination as a
+// previous ID for the resource. Since storing a previous ID likely means that
+// the current ID is about to change, setPreviousId also calls InvalidateIdCaches.
 func (r *Resource) setPreviousId(ns string, n string, k string) *Resource {
+	r.InvalidateIdCaches()
 	r.appendCsvAnnotation(utils.BuildAnnotationPreviousNames, n)
 	r.appendCsvAnnotation(utils.BuildAnnotationPreviousNamespaces, ns)
 	r.appendCsvAnnotation(utils.BuildAnnotationPreviousKinds, k)
@@ -427,26 +434,51 @@ func (r *Resource) OrgId() resid.ResId {
 // The returned array does not include the resource's current
 // ID. If there are no previous IDs, this will return nil.
 func (r *Resource) PrevIds() []resid.ResId {
-	prevIds, err := utils.PrevIds(&r.RNode)
-	if err != nil {
-		// this should never happen
-		panic(err)
+	if !r.prevIdsIsCached {
+		var err error
+		r.prevIdsCache, err = utils.PrevIds(&r.RNode)
+		if err != nil {
+			// this should never happen
+			panic(err)
+		}
+		r.prevIdsIsCached = true
 	}
-	return prevIds
+	if r.prevIdsCache == nil {
+		return nil
+	}
+	defensiveCopy := make([]resid.ResId, len(r.prevIdsCache))
+	copy(defensiveCopy, r.prevIdsCache)
+	return defensiveCopy
 }
 
 // StorePreviousId stores the resource's current ID via build annotations.
+// Storing the current ID as a previous ID implies the current ID is about to
+// change, so StorePreviousId calls InvalidateIdCaches.
 func (r *Resource) StorePreviousId() {
 	id := r.CurId()
 	r.setPreviousId(id.EffectiveNamespace(), id.Name, id.Kind)
 }
 
-// CurId returns a ResId for the resource using the
-// mutable parts of the resource.
-// This should be unique in any ResMap.
+// CurId returns a ResId for the resource using the mutable parts of the
+// resource. This should be unique in any ResMap.
+//
+// CurId is called heavily, so it caches its return value to speed up overall
+// execution. Call InvalidateIdCaches to invalidate the cache.
 func (r *Resource) CurId() resid.ResId {
-	return resid.NewResIdWithNamespace(
-		r.GetGvk(), r.GetName(), r.GetNamespace())
+	if r.curIdCache == nil {
+		newCurId := resid.NewResIdWithNamespace(
+			r.GetGvk(), r.GetName(), r.GetNamespace())
+		r.curIdCache = &newCurId
+	}
+	return *r.curIdCache
+}
+
+// InvalidateIdCaches invalidates the resource's caches for the current and
+// previous IDs.
+func (r *Resource) InvalidateIdCaches() {
+	r.curIdCache = nil
+	r.prevIdsCache = nil
+	r.prevIdsIsCached = false
 }
 
 // GetRefBy returns the ResIds that referred to current resource
