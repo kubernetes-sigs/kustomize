@@ -12,3 +12,11 @@ updates:
   open-pull-requests-limit: 10
   vulnerability-alerts:
     enabled: true
+  labels:
+    - "ok-to-test"
+    - "dependencies"
+  ignore:
+    # ignore major and minor versions for dependencies updates
+    # Allow patches and security update.
+    - dependency-name: k8s.io/*
+      update-types: ["version-update:semver-major", "version-update:semver-minor"]
