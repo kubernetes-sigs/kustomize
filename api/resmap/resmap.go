@@ -133,6 +133,8 @@ type ResMap interface {
 	// in the cluster with the same Id.
 	Append(*resource.Resource) error
 
+	AppendMany(res ...*resource.Resource) error
+
 	// AppendAll appends another ResMap to self,
 	// failing on any CurId collision.
 	AppendAll(ResMap) error
@@ -330,4 +332,6 @@ type ResMap interface {
 	// struct data members, i.e. the Resource struct is replaced by RNode
 	// and use of (slow) k8s metadata annotations inside the RNode.
 	ApplyFilter(f kio.Filter) error
+
+	Transform(func(r *resource.Resource) error) error
 }
