@@ -6,6 +6,7 @@ package replacement
 import (
 	"fmt"
 	"strings"
+	"regexp"
 
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -39,6 +40,10 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 }
 
 func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, error) {
+	if r.Source.FullText != ""{
+		rn := yaml.NewScalarRNode(r.Source.FullText)
+		return rn, nil
+	}
 	source, err := selectSourceNode(nodes, r.Source)
 	if err != nil {
 		return nil, err
@@ -93,7 +98,24 @@ func getRefinedValue(options *types.FieldOptions, rn *yaml.RNode) (*yaml.RNode, 
 	if rn.YNode().Kind != yaml.ScalarNode {
 		return nil, fmt.Errorf("delimiter option can only be used with scalar nodes")
 	}
-	value := strings.Split(yaml.GetValue(rn), options.Delimiter)
+	value := []string{}
+	if options.EndDelimiter == "" {
+		value = strings.Split(yaml.GetValue(rn), options.Delimiter)
+	} else {
+		mapper := func(s string) string {
+			s = strings.ReplaceAll(s, options.Delimiter, "")
+			s = strings.ReplaceAll(s, options.EndDelimiter, "")
+			return s
+		}
+		if options.Delimiter == "" {
+			return nil, fmt.Errorf("delimiter needs to be set if enddelimiter is set")
+		}
+		re := regexp.MustCompile(regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter))
+		dv := re.FindAllString(yaml.GetValue(rn), -1)
+		for _, s := range dv {
+			value = append(value, mapper(s))
+		}
+	}
 	if options.Index >= len(value) || options.Index < 0 {
 		return nil, fmt.Errorf("options.index %d is out of bounds for value %s", options.Index, yaml.GetValue(rn))
 	}
@@ -220,22 +242,20 @@ func fieldRetrievalError(fieldPath string, isCreate bool) string {
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
 	value = value.Copy()
-	if options != nil && options.Delimiter != "" {
+	if options != nil && (options.Delimiter != "" || options.FullText != "") {
 		if targetField.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
 		}
-		tv := strings.Split(targetField.YNode().Value, options.Delimiter)
 		v := yaml.GetValue(value)
-		// TODO: Add a way to remove an element
-		switch {
-		case options.Index < 0: // prefix
-			tv = append([]string{v}, tv...)
-		case options.Index >= len(tv): // suffix
-			tv = append(tv, v)
-		default: // replace an element
-			tv[options.Index] = v
+		if options.FullText != "" {
+			value.YNode().Value = getByRegex(options.FullText, targetField.YNode().Value, v, options.Index)
+		} else if options.Delimiter != "" && options.EndDelimiter != "" {
+			regex := regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter)
+			source := options.Delimiter + v + options.EndDelimiter
+			value.YNode().Value = getByRegex(regex, targetField.YNode().Value, source, options.Index)
+		} else {
+			value.YNode().Value = getByDelimiter(options.Delimiter, targetField.YNode().Value, v, options.Index)
 		}
-		value.YNode().Value = strings.Join(tv, options.Delimiter)
 	}
 
 	if targetField.YNode().Kind == yaml.ScalarNode {
@@ -247,3 +267,32 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 
 	return nil
 }
+
+func getByDelimiter(delimiter string, target string, source string, index int) string {
+	tv := strings.Split(target, delimiter)
+	// TODO: Add a way to remove an element
+	switch {
+	case index < 0: // prefix
+		tv = append([]string{source}, tv...)
+	case index >= len(tv): // suffix
+		tv = append(tv, source)
+	default: // replace an element
+		tv[index] = source
+	}
+	return strings.Join(tv, delimiter)
+}
+
+func getByRegex(regex string, target string, source string, index int) string {
+	re := regexp.MustCompile(regex)
+	counter := 0
+	res := re.ReplaceAllStringFunc(target, func(str string) string {
+		if counter != index && index >= 0 {
+			return str
+		}
+
+		counter++
+		return re.ReplaceAllString(str, source)
+	})
+	return res
+}
+
