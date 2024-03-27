@@ -279,6 +279,49 @@ generatorOptions:
 	}
 }
 
+func TestPreseveTrailingComments(t *testing.T) {
+	kustomizationContentWithComments := []byte(`
+# Leading comments
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ./deployment.yaml
+# Trailing comments
+# should preserve also.
+`)
+
+	expected := []byte(`
+# Leading comments
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ./deployment.yaml
+# Trailing comments
+# should preserve also.
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(
+		fSys, kustomizationContentWithComments)
+	mf, err := NewKustomizationFile(fSys)
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+
+	kustomization, err := mf.Read()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	if err = mf.Write(kustomization); err != nil {
+		t.Fatalf("Unexpected Error: %v", err)
+	}
+	bytes, _ := fSys.ReadFile(mf.path)
+
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
 func TestFixPatchesFieldForExtendedPatch(t *testing.T) {
 	kustomizationContentWithComments := []byte(`
 patches:
