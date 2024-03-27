@@ -143,16 +143,20 @@ func expectLog(t *testing.T, log bytes.Buffer, expect string) {
 func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 	ra := makeResAccumulator(t)
 	rm0 := resmap.New()
-	err := rm0.Append(
-		provider.NewDefaultDepProvider().GetResourceFactory().FromMap(
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name":      "backendOne",
-					"namespace": "fooNamespace",
-				},
-			}))
+
+	r, err := provider.NewDefaultDepProvider().GetResourceFactory().FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Service",
+			"metadata": map[string]interface{}{
+				"name":      "backendOne",
+				"namespace": "fooNamespace",
+			},
+		})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	err = rm0.Append(r)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
@@ -227,7 +231,8 @@ func TestResolveVarConflicts(t *testing.T) {
 	// create accumulators holding apparently conflicting vars that are not
 	// actually in conflict because they point to the same concrete value.
 	rm0 := resmap.New()
-	err := rm0.Append(rf.FromMap(fooAws))
+	r0, _ := rf.FromMap(fooAws)
+	err := rm0.Append(r0)
 	require.NoError(t, err)
 	ac0 := MakeEmptyAccumulator()
 	err = ac0.AppendAll(rm0)
@@ -236,7 +241,8 @@ func TestResolveVarConflicts(t *testing.T) {
 	require.NoError(t, err)
 
 	rm1 := resmap.New()
-	err = rm1.Append(rf.FromMap(barAws))
+	r1, _ := rf.FromMap(barAws)
+	err = rm1.Append(r1)
 	require.NoError(t, err)
 	ac1 := MakeEmptyAccumulator()
 	err = ac1.AppendAll(rm1)
@@ -255,7 +261,8 @@ func TestResolveVarConflicts(t *testing.T) {
 	// two above (because it contains a variable whose name is used in the other
 	// accumulators AND whose concrete values are different).
 	rm2 := resmap.New()
-	err = rm2.Append(rf.FromMap(barGcp))
+	r2, _ := rf.FromMap(barGcp)
+	err = rm2.Append(r2)
 	require.NoError(t, err)
 	ac2 := MakeEmptyAccumulator()
 	err = ac2.AppendAll(rm2)

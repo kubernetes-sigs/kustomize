@@ -32,11 +32,14 @@ func TestDeterminePluginSrcRoot(t *testing.T) {
 }
 
 func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *string) *resource.Resource {
-	r := rf.FromMap(map[string]interface{}{
+	r, err := rf.FromMap(map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
 		"metadata":   map[string]interface{}{"name": name},
 	})
+	if err != nil {
+		panic(err)
+	}
 	annotations := map[string]string{}
 	if behavior != "" {
 		annotations[BehaviorAnnotation] = behavior

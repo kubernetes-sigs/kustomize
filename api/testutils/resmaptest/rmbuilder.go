@@ -41,7 +41,11 @@ func NewSeededRmBuilderDefault(t *testing.T, m resmap.ResMap) *rmBuilder {
 }
 
 func (rm *rmBuilder) Add(m map[string]interface{}) *rmBuilder {
-	return rm.AddR(rm.rf.FromMap(m))
+	r, err := rm.rf.FromMap(m)
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	return rm.AddR(r)
 }
 
 func (rm *rmBuilder) AddR(r *resource.Resource) *rmBuilder {
@@ -53,7 +57,11 @@ func (rm *rmBuilder) AddR(r *resource.Resource) *rmBuilder {
 }
 
 func (rm *rmBuilder) AddWithName(n string, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMapWithNamespaceAndName(resid.DefaultNamespace, n, m))
+	r, err := rm.rf.FromMapWithNamespaceAndName(resid.DefaultNamespace, n, m)
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	err = rm.m.Append(r)
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}
@@ -61,7 +69,11 @@ func (rm *rmBuilder) AddWithName(n string, m map[string]interface{}) *rmBuilder 
 }
 
 func (rm *rmBuilder) AddWithNsAndName(ns string, n string, m map[string]interface{}) *rmBuilder {
-	err := rm.m.Append(rm.rf.FromMapWithNamespaceAndName(ns, n, m))
+	r, err := rm.rf.FromMapWithNamespaceAndName(ns, n, m)
+	if err != nil {
+		rm.t.Fatalf("test setup failure: %v", err)
+	}
+	err = rm.m.Append(r)
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
 	}
@@ -69,7 +81,7 @@ func (rm *rmBuilder) AddWithNsAndName(ns string, n string, m map[string]interfac
 }
 
 func (rm *rmBuilder) ReplaceResource(m map[string]interface{}) *rmBuilder {
-	r := rm.rf.FromMap(m)
+	r, _ := rm.rf.FromMap(m)
 	_, err := rm.m.Replace(r)
 	if err != nil {
 		rm.t.Fatalf("test setup failure: %v", err)
