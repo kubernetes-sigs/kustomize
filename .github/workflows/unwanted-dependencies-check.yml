@@ -54,8 +54,8 @@ jobs:
           # Only report failures of pushes (PRs have are visible through the Checks section) to the default branch
           if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/master'
           with:
-              title: 🐛 unwanted-dependencies-check failed for ${{ github.sha }}
+              title: 📦 unwanted-dependencies-check failed for ${{ github.sha }}
               token: ${{ secrets.GITHUB_TOKEN }}
-              labels: kind/bug
+              labels: kind/dependencies
               body: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
   

@@ -9,10 +9,18 @@ set +u
 declare -i rc=0
 declare -a POSTIONAL_ARGS=()
 
+# Whitelisted dependencies
+declare -a WHITELIST=(
+    "github.com/google/shlex"
+    "github.com/pkg/error"
+    "k8s.io/klog"
+    "github.com/json-iterator/go"
+)
+
 declare -x GO11MODULES=yes
 declare -x GOFLAGS=-mod=mod
 
-# Explicit path of the unwanted depedency list
+# Explicit path of the unwanted dependency list
 JSON_PATH_URL=""
 JSON_PATH_LOCAL=""
 READ_PATH=""
@@ -71,7 +79,7 @@ pull_unwanted_dependencies_json() {
         READ_PATH=$(realpath ${JSON_PATH_LOCAL})
     else
         # Default behavior: pull unwanted-dependencies.json from kubernetes/kubernetes upstream repo
-        JSON_PATH_URL='https://raw.githubusercontent.com/kubernetes/kubernetes/e51fe4a61cca7f4a0875630da433f280b52c138a/hack/unwanted-dependencies.json'
+        JSON_PATH_URL='https://raw.githubusercontent.com/kubernetes/kubernetes/master/hack/unwanted-dependencies.json'
         wget "${JSON_PATH_URL}" -O "${PWD}/hack/unwanted-dependencies.json"
         READ_PATH="${PWD}/hack/unwanted-dependencies.json"
     fi
@@ -80,7 +88,7 @@ pull_unwanted_dependencies_json() {
 check_unwanted_dependencies(){
     for dep in $(jq -r '.spec.unwantedModules | keys[]' "${READ_PATH}"); do
         for file in $(find . \( -type f -and -path '*/kyaml/*' -or -path '*/api/*' -or -path '*/kustomize/*' \)| fgrep go.sum); do
-            if [[ $(cat $file | fgrep $dep) ]]; then
+            if [[ $(cat $file | fgrep $dep) && ! ${WHITELIST[@]} =~ "$dep" ]]; then
                 rc=1
                 echo "Error: unwanted dependencies found. ($dep at $(realpath $file))"
             fi
@@ -89,12 +97,16 @@ check_unwanted_dependencies(){
 
     for upstream in $(jq -r '.status.unwantedReferences | keys[]' "${READ_PATH}"); do
         for ref in $(jq -r '.status.unwantedReferences.'\"${upstream}\"'[]' "${READ_PATH}"); do
-            if [[ $(go mod graph | fgrep $upstream | fgrep $ref) ]]; then
+            if [[ $(go mod graph | fgrep $upstream | fgrep $ref) && ! ${WHITELIST[@]} =~ "$upstream"  ]]; then
                 rc=1
                 echo "Error: unwanted references found on one of the dependencies. ($upstream depends on $ref))"
             fi
         done
     done
+
+    if [[ $rc == 0 ]]; then
+        echo "No unwanted dependency detected."
+    fi
 
     exit $rc
 }
