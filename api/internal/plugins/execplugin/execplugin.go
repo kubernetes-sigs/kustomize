@@ -6,13 +6,13 @@ package execplugin
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 
 	"github.com/google/shlex"
-	"k8s.io/klog"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -191,14 +191,14 @@ func (p *ExecPlugin) getEnv() []string {
 	if len(pluginConfigString) <= maxArgStringLength {
 		env = append(env, pluginConfigString)
 	} else {
-		klog.Warningf("KUSTOMIZE_PLUGIN_CONFIG_STRING exceeds hard limit of %d characters, the environment variable "+
+		log.Printf("KUSTOMIZE_PLUGIN_CONFIG_STRING exceeds hard limit of %d characters, the environment variable "+
 			"will be omitted", maxArgStringLength)
 	}
 	pluginConfigRoot := "KUSTOMIZE_PLUGIN_CONFIG_ROOT=" + p.h.Loader().Root()
 	if len(pluginConfigRoot) <= maxArgStringLength {
 		env = append(env, pluginConfigRoot)
 	} else {
-		klog.Warningf("KUSTOMIZE_PLUGIN_CONFIG_ROOT exceeds hard limit of %d characters, the environment variable "+
+		log.Printf("KUSTOMIZE_PLUGIN_CONFIG_ROOT exceeds hard limit of %d characters, the environment variable "+
 			"will be omitted", maxArgStringLength)
 	}
 	return env
