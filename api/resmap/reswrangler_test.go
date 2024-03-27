@@ -73,7 +73,7 @@ func doRemove(t *testing.T, w ResMap, id resid.ResId) {
 
 // Make a resource with a predictable name.
 func makeCm(i int) *resource.Resource {
-	return rf.FromMap(
+	r, err := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -81,6 +81,10 @@ func makeCm(i int) *resource.Resource {
 				"name": fmt.Sprintf("cm%03d", i),
 			},
 		})
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // Maintain the class invariant that no two
@@ -229,7 +233,7 @@ metadata:
 func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 	cmap := resid.NewGvk("", "v1", "ConfigMap")
 
-	r1 := rf.FromMap(
+	r1, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -237,7 +241,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"name": "alice",
 			},
 		})
-	r2 := rf.FromMap(
+	r2, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -245,7 +249,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"name": "bob",
 			},
 		})
-	r3 := rf.FromMap(
+	r3, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -254,7 +258,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r4 := rf.FromMap(
+	r4, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -263,7 +267,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r5 := rf.FromMap(
+	r5, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Deployment",
@@ -367,7 +371,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 }
 
 func TestGetMatchingResourcesByAnyId(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -380,7 +384,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r2 := rf.FromMap(
+	r2, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -393,7 +397,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r3 := rf.FromMap(
+	r3, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -407,7 +411,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r4 := rf.FromMap(
+	r4, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -421,7 +425,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r5 := rf.FromMap(
+	r5, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Deployment",
@@ -498,7 +502,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 }
 
 func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -506,7 +510,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "alice",
 			},
 		})
-	r2 := rf.FromMap(
+	r2, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -514,7 +518,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "bob",
 			},
 		})
-	r3 := rf.FromMap(
+	r3, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -523,7 +527,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r4 := rf.FromMap(
+	r4, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -532,7 +536,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r5 := rf.FromMap(
+	r5, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -542,7 +546,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 			},
 		})
 	r5.AddNamePrefix("little-")
-	r6 := rf.FromMap(
+	r6, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -552,7 +556,7 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 			},
 		})
 	r6.AddNamePrefix("little-")
-	r7 := rf.FromMap(
+	r7, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -639,7 +643,7 @@ func TestDeepCopy(t *testing.T) {
 }
 
 func TestErrorIfNotEqualSets(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -647,7 +651,7 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"name": "cm1",
 			},
 		})
-	r2 := rf.FromMap(
+	r2, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -655,7 +659,7 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"name": "cm2",
 			},
 		})
-	r3 := rf.FromMap(
+	r3, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -712,7 +716,7 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 }
 
 func TestErrorIfNotEqualLists(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -720,7 +724,7 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"name": "cm1",
 			},
 		})
-	r2 := rf.FromMap(
+	r2, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -728,7 +732,7 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"name": "cm2",
 			},
 		})
-	r3 := rf.FromMap(
+	r3, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -780,7 +784,7 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 }
 
 func TestAppendAll(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -789,7 +793,7 @@ func TestAppendAll(t *testing.T) {
 			},
 		})
 	input1 := rmF.FromResource(r1)
-	r2 := rf.FromMap(
+	r2, _ := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "StatefulSet",
