@@ -112,9 +112,13 @@ func hasRef(repoURL string) bool {
 	return repoSpec.Ref != ""
 }
 
-// cleanFilePath returns file cleaned, where file is a relative path to root on fSys
-func cleanFilePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file string) string {
-	abs := root.Join(file)
+// cleanedRelativePath returns a cleaned relative path of file to root on fSys
+func cleanedRelativePath(fSys filesys.FileSystem, root filesys.ConfirmedDir, file string) string {
+	abs := file
+	if !filepath.IsAbs(file) {
+		abs = root.Join(file)
+	}
+
 	dir, f, err := fSys.CleanedAbs(abs)
 	if err != nil {
 		log.Fatalf("cannot clean validated file path %q: %s", abs, err)

@@ -89,11 +89,8 @@ func (ll *Loader) Load(path string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "invalid file reference")
 	}
-	if filepath.IsAbs(path) {
-		return nil, errors.Errorf("absolute paths not yet supported in alpha: file path %q is absolute", path)
-	}
 	if !loader.IsRemoteFile(path) && ll.local {
-		cleanPath := cleanFilePath(ll.fSys, filesys.ConfirmedDir(ll.Root()), path)
+		cleanPath := cleanedRelativePath(ll.fSys, filesys.ConfirmedDir(ll.Root()), path)
 		cleanAbs := filepath.Join(ll.Root(), cleanPath)
 		dir := filesys.ConfirmedDir(filepath.Dir(cleanAbs))
 		// target cannot reference newDir, as this load would've failed prior to localize;

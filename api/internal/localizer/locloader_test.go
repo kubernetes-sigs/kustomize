@@ -276,11 +276,11 @@ func TestLoadFails(t *testing.T) {
 	checkNewLoader(req, ldr, &args, "/a", "/a", "/a/newDir", fSys)
 
 	cases := map[string]string{
-		"absolute path":     "/a/pod.yaml",
-		"directory":         "b",
-		"non-existent file": "kubectl.yaml",
-		"file outside root": "../alpha/beta/gamma/delta/deployment.yaml",
-		"inside dst":        "newDir/pod.yaml",
+		"directory":          "b",
+		"non-existent file":  "kubectl.yaml",
+		"file outside root":  "../alpha/beta/gamma/delta/deployment.yaml",
+		"inside dst":         "newDir/pod.yaml",
+		"winding inside dst": "/a/test/../newDir/pod.yaml",
 	}
 	for name, file := range cases {
 		file := file
@@ -290,8 +290,6 @@ func TestLoadFails(t *testing.T) {
 
 			ldr, _, err := NewLoader("./a/../a", "/a/../a", "/a/newDir", fSys)
 			req.NoError(err)
-
-			req.NoError(fSys.WriteFile("/a/newDir/pod.yaml", []byte(podConfiguration)))
 
 			_, err = ldr.Load(file)
 			req.Error(err)

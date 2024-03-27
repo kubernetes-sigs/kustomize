@@ -301,3 +301,26 @@ func TestLocRootPath_SymlinkPath(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)
 }
+
+func TestCleanedRelativePath(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	require.NoError(t, fSys.MkdirAll("/root/test"))
+	require.NoError(t, fSys.WriteFile("/root/test/file.yaml", []byte("")))
+	require.NoError(t, fSys.WriteFile("/root/filetwo.yaml", []byte("")))
+
+	// Absolute path is cleaned to relative path
+	cleanedPath := cleanedRelativePath(fSys, "/root/", "/root/test/file.yaml")
+	require.Equal(t, "test/file.yaml", cleanedPath)
+
+	// Winding absolute path is cleaned to relative path
+	cleanedPath = cleanedRelativePath(fSys, "/root/", "/root/test/../filetwo.yaml")
+	require.Equal(t, "filetwo.yaml", cleanedPath)
+
+	// Already clean relative path stays the same
+	cleanedPath = cleanedRelativePath(fSys, "/root/", "test/file.yaml")
+	require.Equal(t, "test/file.yaml", cleanedPath)
+
+	// Winding relative path is cleaned
+	cleanedPath = cleanedRelativePath(fSys, "/root/", "test/../filetwo.yaml")
+	require.Equal(t, "filetwo.yaml", cleanedPath)
+}
