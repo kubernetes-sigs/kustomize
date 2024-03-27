@@ -38,6 +38,7 @@ func (v Versions) Less(i, j int) bool { return v[j].LessThan(v[i]) }
 func (v Versions) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
 
 func Parse(raw string) (SemVer, error) {
+	raw = strings.Trim(raw, "\r\n")
 	if len(raw) < 6 {
 		// e.g. minimal length is 6, e.g. "v1.2.3"
 		return zero, fmt.Errorf("%q too short to be a version", raw)

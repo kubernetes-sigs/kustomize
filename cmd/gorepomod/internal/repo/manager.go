@@ -6,6 +6,7 @@ package repo
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/edit"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
@@ -83,8 +84,8 @@ func (mgr *Manager) List() error {
 	// Auto-update local tags
 	gr := git.NewQuiet(mgr.AbsPath(), false, false)
 	for _, module := range mgr.modules {
-		releaseBranch := fmt.Sprintf("release-%s", module.ShortName())
-		_, err := gr.GetLatestTag(releaseBranch)
+		releaseTag := string(module.ShortName())
+		_, err := gr.GetLatestTag(releaseTag)
 		if err != nil {
 			return fmt.Errorf("failed getting latest tags for %s", module)
 		}
@@ -141,7 +142,18 @@ func (mgr *Manager) Release(
 			target.ShortName(), reps)
 	}
 
-	newVersion := target.VersionLocal().Bump(bump)
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
+
+	newVersionString := strings.Split(gr.GetCurrentVersionFromHead(), "/")
+
+	if len(newVersionString) == 0 {
+		return fmt.Errorf("error getting version from remote")
+	}
+
+	newVersion, err := semver.Parse(newVersionString[1])
+	if err != nil {
+		return fmt.Errorf("error parsing version string: \"%s\"", newVersionString)
+	}
 
 	if newVersion.Equals(target.VersionRemote()) {
 		return fmt.Errorf(
@@ -153,13 +165,11 @@ func (mgr *Manager) Release(
 			newVersion, target.VersionRemote())
 	}
 
-	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
-
 	relBranch, relTag := determineBranchAndTag(target, newVersion)
 
 	fmt.Printf(
-		"Releasing %s, stepping from %s to %s\n",
-		target.ShortName(), target.VersionLocal(), newVersion)
+		"Releasing %s, with version %s\n",
+		target.ShortName(), newVersion)
 
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
@@ -174,15 +184,6 @@ func (mgr *Manager) Release(
 		return err
 	}
 	if err := gr.AssureCleanWorkspace(); err != nil {
-		return err
-	}
-	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
-		return err
-	}
-	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
-		return err
-	}
-	if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
 		return err
 	}
 	if err := gr.CreateLocalReleaseTag(relTag, relBranch); err != nil {
