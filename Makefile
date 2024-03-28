@@ -56,26 +56,22 @@ uninstall-local-tools:
 
 # Build from local source.
 $(MYGOBIN)/gorepomod:
-	cd cmd/gorepomod; \
-	go install .
+	cd cmd/gorepomod && go install .
 
 # Build from local source.
 $(MYGOBIN)/k8scopy:
-	cd cmd/k8scopy; \
-	go install .
+	cd cmd/k8scopy && go install .
 
 # Build from local source.
 $(MYGOBIN)/pluginator:
-	cd cmd/pluginator; \
-	go install .
+	cd cmd/pluginator && go install .
 
 
 # --- Build targets ---
 
 # Build from local source.
 $(MYGOBIN)/kustomize: build-kustomize-api
-	cd kustomize; \
-	go install -ldflags \
+	cd kustomize && go install -ldflags \
 	"-X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
 	 -X sigs.k8s.io/kustomize/api/provenance.version=$(shell git describe --tags --always --dirty)" \
 	.
@@ -86,11 +82,11 @@ kustomize: $(MYGOBIN)/kustomize
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
 build-kustomize-api: $(MYGOBIN)/goimports $(builtinplugins)
-	cd api; $(MAKE) build
+	cd api && $(MAKE) build
 
 .PHONY: generate-kustomize-api
 generate-kustomize-api:
-	cd api; $(MAKE) generate
+	cd api && $(MAKE) generate
 
 
 # --- Verification targets ---
@@ -132,12 +128,8 @@ lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
 .PHONY: apidiff
-apidiff: go-apidiff ## Run the go-apidiff to verify any API differences compared with origin/master
-	$(GOBIN)/go-apidiff master --compare-imports --print-compatible --repo-path=.
-
-.PHONY: go-apidiff
-go-apidiff:
-	go install github.com/joelanford/go-apidiff@v0.6.0
+apidiff: $(MYGOBIN)/go-apidiff ## Run the go-apidiff to verify any API differences compared with origin/master
+	go-apidiff master --compare-imports --print-compatible --repo-path=.
 
 .PHONY: test-unit-all
 test-unit-all: \
@@ -147,14 +139,14 @@ test-unit-all: \
 # This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
 test-unit-non-plugin:
-	./hack/for-each-module.sh "make test" "./plugin/*" 19
+	./hack/for-each-module.sh "make test" "./plugin/*" 20
 
 .PHONY: build-non-plugin-all
 build-non-plugin-all:
-	./hack/for-each-module.sh "make build" "./plugin/*" 19
+	./hack/for-each-module.sh "make build" "./plugin/*" 20
 
 .PHONY: test-unit-kustomize-plugins
-test-unit-kustomize-plugins:
+test-unit-kustomize-plugins: build-kustomize-external-go-plugin
 	./hack/testUnitKustomizePlugins.sh
 
 .PHONY: functions-examples-all
