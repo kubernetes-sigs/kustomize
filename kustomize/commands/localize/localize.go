@@ -6,7 +6,6 @@ package localize
 import (
 	"bytes"
 	"log"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 	lclzr "sigs.k8s.io/kustomize/api/krusty/localizer"
@@ -31,7 +30,6 @@ type flags struct {
 func NewCmdLocalize(fs filesys.FileSystem) *cobra.Command {
 	var f flags
 	var buildBuffer bytes.Buffer
-	buildCmd := build.NewCmdBuild(fs, &build.Help{}, &buildBuffer)
 	cmd := &cobra.Command{
 		Use:   "localize [target [destination]]",
 		Short: "[Alpha] Creates localized copy of target kustomization root at destination",
@@ -70,25 +68,25 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 			}
 
 			if !f.noVerify {
-				originalBuild, err := runBuildCmd(buildBuffer, buildCmd, args.target)
+				originalBuild, err := callBuildCmd(buildBuffer, cmd, fs, args.target)
 				if err != nil {
 					return errors.Wrap(err)
 				}
 
-				buildDst := dst
-				if f.scope != "" && f.scope != args.target {
-					buildDst = filepath.Join(dst, filepath.Base(args.target))
-				}
+				if f.scope == "" {
+					localizedBuild, err := callBuildCmd(buildBuffer, cmd, fs, dst)
+					if err != nil {
+						return errors.Wrap(err)
+					}
 
-				localizedBuild, err := runBuildCmd(buildBuffer, buildCmd, buildDst)
-				if err != nil {
-					return errors.Wrap(err)
-				}
-
-				if localizedBuild == originalBuild {
-					log.Println("VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization.")
+					if localizedBuild == originalBuild {
+						log.Println("VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization.")
+					} else {
+						log.Fatal("VERFICATION FAILED: kustomize build for target and newDir are different after localization.")
+					}
 				} else {
-					log.Fatal("VERFICATION FAILED: kustomize build for target and newDir are different after localization.")
+					log.Println("There is no build to compare this against.")
+
 				}
 			}
 
@@ -129,9 +127,9 @@ func matchArgs(rawArgs []string) arguments {
 	return args
 }
 
-func runBuildCmd(buffer bytes.Buffer, cmd *cobra.Command, folder string) (buildOutput string, err error) {
+func callBuildCmd(buffer bytes.Buffer, cmd *cobra.Command, fs filesys.FileSystem, folder string) (buildOutput string, err error) {
 	buffer.Reset()
-	buildErr := cmd.RunE(cmd, []string{folder})
+	buildErr := build.RunBuildCmd(cmd, []string{folder}, fs, &buffer)
 	if buildErr != nil {
 		return "", errors.Wrap(buildErr)
 	}

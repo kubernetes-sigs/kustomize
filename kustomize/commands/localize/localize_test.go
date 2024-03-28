@@ -108,7 +108,7 @@ func TestFailingBuildCmd(t *testing.T) {
 `,
 	}
 	expected, actual, target := loctest.PrepareFs(t, nil, kustomization)
-	log.Println(target.String())
+	_, _, target2 := loctest.PrepareFs(t, nil, kustomization2)
 
 	buffy := new(bytes.Buffer)
 	log.SetOutput(buffy)
@@ -118,17 +118,15 @@ func TestFailingBuildCmd(t *testing.T) {
 	cmd := localize.NewCmdLocalize(actual)
 	err := cmd.RunE(cmd, []string{
 		target.String(),
-		target.Join("dst"),
+		target2.Join("dst"),
 	})
 	require.NoError(t, err)
 
-	loctest.SetupDir(t, expected, target.Join("dst"), kustomization2)
+	loctest.SetupDir(t, expected, target2.Join("dst"), kustomization2)
 	loctest.CheckFs(t, target.String(), expected, actual)
 
-	// verifyMsg := "VERIFICATION SUCCESS: kustomize build for target and newDir are the same after localization."
+	// verifyMsg := "VERFICATION FAILED: kustomize build for target and newDir are different after localization."
 	// require.Contains(t, buffy.String(), verifyMsg)
-	// successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s`, target.String(), target.Join("dst"))
-	// require.Contains(t, buffy.String(), successMsg)
 }
 
 func TestOptionalArgs(t *testing.T) {
