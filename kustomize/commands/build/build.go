@@ -75,31 +75,7 @@ func NewCmdBuild(
 		Example:      help.Example,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Validate(args); err != nil {
-				return err
-			}
-			k := krusty.MakeKustomizer(
-				HonorKustomizeFlags(krusty.MakeDefaultOptions(), cmd.Flags()),
-			)
-			m, err := k.Run(fSys, theArgs.kustomizationPath)
-			if err != nil {
-				return err
-			}
-			if theFlags.outputPath != "" && fSys.IsDir(theFlags.outputPath) {
-				// Ignore writer; write to o.outputPath directly.
-				return MakeWriter(fSys).WriteIndividualFiles(
-					theFlags.outputPath, m)
-			}
-			yml, err := m.AsYaml()
-			if err != nil {
-				return err
-			}
-			if theFlags.outputPath != "" {
-				// Ignore writer; write to o.outputPath directly.
-				return fSys.WriteFile(theFlags.outputPath, yml)
-			}
-			_, err = writer.Write(yml)
-			return err
+			return RunBuildCmd(cmd, args, fSys, writer)
 		},
 	}
 
@@ -128,6 +104,35 @@ func NewCmdBuild(
 
 	AddFlagEnableHelm(cmd.Flags())
 	return cmd
+}
+
+// Extracts the RunE function out of the NewBuildCmd function to be exported for the localize command
+func RunBuildCmd(cmd *cobra.Command, args []string, fSys filesys.FileSystem, writer io.Writer) error {
+	if err := Validate(args); err != nil {
+		return err
+	}
+	k := krusty.MakeKustomizer(
+		HonorKustomizeFlags(krusty.MakeDefaultOptions(), cmd.Flags()),
+	)
+	m, err := k.Run(fSys, theArgs.kustomizationPath)
+	if err != nil {
+		return err
+	}
+	if theFlags.outputPath != "" && fSys.IsDir(theFlags.outputPath) {
+		// Ignore writer; write to o.outputPath directly.
+		return MakeWriter(fSys).WriteIndividualFiles(
+			theFlags.outputPath, m)
+	}
+	yml, err := m.AsYaml()
+	if err != nil {
+		return err
+	}
+	if theFlags.outputPath != "" {
+		// Ignore writer; write to o.outputPath directly.
+		return fSys.WriteFile(theFlags.outputPath, yml)
+	}
+	_, err = writer.Write(yml)
+	return err
 }
 
 // Validate validates build command args and flags.
