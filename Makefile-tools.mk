@@ -1,13 +1,15 @@
 # Copyright 2022 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-GOLANGCI_LINT_VERSION=v1.51.2
-
+GOOS = $(shell go env GOOS)
+GOARCH = $(shell go env GOARCH)
 MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
+
+REPO_ROOT=$(shell git rev-parse --show-toplevel)
 
 # determines whether to run tests that only behave locally; can be overridden by override variable
 export IS_LOCAL = false
@@ -18,8 +20,7 @@ install-out-of-tree-tools: \
 	$(MYGOBIN)/golangci-lint \
 	$(MYGOBIN)/helmV3 \
 	$(MYGOBIN)/mdrip \
-	$(MYGOBIN)/stringer \
-	$(MYGOBIN)/goimports
+	$(MYGOBIN)/stringer
 
 .PHONY: uninstall-out-of-tree-tools
 uninstall-out-of-tree-tools:
@@ -29,67 +30,61 @@ uninstall-out-of-tree-tools:
 	rm -f $(MYGOBIN)/mdrip
 	rm -f $(MYGOBIN)/stringer
 
+.PHONY: $(MYGOBIN)/golangci-lint
 $(MYGOBIN)/golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	cd $(REPO_ROOT)/hack && go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
+.PHONY: $(MYGOBIN)/mdrip
 $(MYGOBIN)/mdrip:
-	go install github.com/monopole/mdrip@v1.0.2
+	cd $(REPO_ROOT)/hack && go install github.com/monopole/mdrip
 
+.PHONY: $(MYGOBIN)/stringer
 $(MYGOBIN)/stringer:
-	go install golang.org/x/tools/cmd/stringer@latest
+	cd $(REPO_ROOT)/hack && go install golang.org/x/tools/cmd/stringer
 
+.PHONY: $(MYGOBIN)/goimports
 $(MYGOBIN)/goimports:
-	go install golang.org/x/tools/cmd/goimports@latest
+	cd $(REPO_ROOT)/hack && go install golang.org/x/tools/cmd/goimports
 
+.PHONY: $(MYGOBIN)/mdtogo
 $(MYGOBIN)/mdtogo:
-	go install sigs.k8s.io/kustomize/cmd/mdtogo@latest
+	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/kustomize/cmd/mdtogo
 
+.PHONY: $(MYGOBIN)/addlicense
 $(MYGOBIN)/addlicense:
-	go install github.com/google/addlicense@latest
+	cd $(REPO_ROOT)/hack && go install github.com/google/addlicense
 
-$(MYGOBIN)/goreleaser:
-	go install github.com/goreleaser/goreleaser@v0.179.0 # https://github.com/kubernetes-sigs/kustomize/issues/4542
-
+.PHONY: $(MYGOBIN)/kind
 $(MYGOBIN)/kind:
-	( \
-        set -e; \
-        d=$(shell mktemp -d); cd $$d; \
-        wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(GOOS)-$(GOARCH); \
-        chmod +x ./kind; \
-        mv ./kind $(MYGOBIN); \
-        rm -rf $$d; \
-	)
+	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/kind
 
-# linux only.
+.PHONY: $(MYGOBIN)/controller-gen
+$(MYGOBIN)/controller-gen:
+	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/controller-tools/cmd/controller-gen
+
+.PHONY: $(MYGOBIN)/embedmd
+$(MYGOBIN)/embedmd:
+	cd $(REPO_ROOT)/hack && go install github.com/campoy/embedmd
+
+.PHONY: $(MYGOBIN)/go-bindata
+$(MYGOBIN)/go-bindata:
+	cd $(REPO_ROOT)/hack && go install github.com/go-bindata/go-bindata/v3/go-bindata
+
+.PHONY: $(MYGOBIN)/go-apidiff
+$(MYGOBIN)/go-apidiff:
+	cd $(REPO_ROOT)/hack && go install github.com/joelanford/go-apidiff
+
+.PHONY: $(MYGOBIN)/gh
 $(MYGOBIN)/gh:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=gh_1.0.0_$(GOOS)_$(GOARCH).tar.gz; \
-		wget https://github.com/cli/cli/releases/download/v1.0.0/$$tgzFile; \
-		tar -xvzf $$tgzFile; \
-		mv gh_1.0.0_$(GOOS)_$(GOARCH)/bin/gh  $(MYGOBIN)/gh; \
-		rm -rf $$d \
-	)
+	cd $(REPO_ROOT)/hack && go install github.com/cli/cli/cmd/gh
 
-# linux only.
-# This is for testing an example plugin that
-# uses kubeval for validation.
-# Don't want to add a hard dependence in go.mod file
-# to github.com/instrumenta/kubeval.
-# Instead, download the binary.
+.PHONY: $(MYGOBIN)/kubeval
 $(MYGOBIN)/kubeval:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-$(GOOS)-$(GOARCH).tar.gz; \
-		tar xf kubeval-$(GOOS)-$(GOARCH).tar.gz; \
-		mv kubeval $(MYGOBIN); \
-		rm -rf $$d; \
-	)
+	cd $(REPO_ROOT)/hack && go install github.com/instrumenta/kubeval
 
 # Helm V3 differs from helm V2; downloading it to provide coverage for the
 # chart inflator plugin under helm v3.
+.PHONY: $(MYGOBIN)/helmV3
 $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
