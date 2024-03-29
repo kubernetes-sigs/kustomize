@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
+# Copyright 2024 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
 
 declare PATCH=false
 declare MINOR=false
 declare MAJOR=false
 declare rc=0
 
-git log $(git describe --tags --abbrev=0)..HEAD --oneline | tee /tmp/release-changelogs.txt
+ORIGIN_MASTER="origin/master"
+LATEST_TAG=$(git describe --tags --abbrev=0)
+
+git log "${LATEST_TAG}..HEAD" --oneline | tee /tmp/release-changelogs.txt
 
 count=$(cat /tmp/release-changelogs.txt | wc -l)
 
@@ -18,7 +24,7 @@ if [[ $(cat /tmp/release-changelogs.txt | grep feat) ]]; then
 fi
 
 for f in $(find api); do
-    git diff --exit-code "${f}"
+    git diff "${LATEST_TAG}...${ORIGIN_MASTER}" --exit-code -- "${f}" 
     if [ $? -eq 1 ]; then
         echo "Found changes on api dir at ${f}"
         MAJOR=true
