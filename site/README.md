@@ -60,6 +60,8 @@ If you see errors, it probably means that the hugo container did not have enough
 
 Open up your browser to <http://localhost:1313> to view the website. As you make changes to the source files, Hugo updates the website and forces a browser refresh.
 
+If you need to update the `HUGO_VERSION`, edit it in the [`netlify.toml`](netlify.toml#L7) file and then run `make tools` to update the pinned version of Hugo in [hack/go.mod](/hack/go.mod#L9).
+
 ## Running the website locally using Hugo
 
 Make sure to install the Hugo extended version specified by the `HUGO_VERSION` environment variable in the [`netlify.toml`](netlify.toml#L7) file.
