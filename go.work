@@ -18,6 +18,7 @@ use (
 	./functions/examples/template-go-nginx/image
 	./functions/examples/validator-kubeval/image
 	./functions/examples/validator-resource-requests/image
+	./hack
 	./kustomize
 	./kyaml
 	./plugin/builtin/annotationstransformer

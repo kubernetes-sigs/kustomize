@@ -12,9 +12,6 @@ import (
 
 // TODO: delete this when we find a better way to generate release notes.
 func main() {
-	fmt.Println(`
-This 'main' exists only to make goreleaser create release notes for the API.
-See https://github.com/goreleaser/goreleaser/issues/981
-and https://github.com/kubernetes-sigs/kustomize/tree/master/releasing`)
+	fmt.Println(`This 'main' exists only to create release notes for the API.`)
 	fmt.Println(provenance.GetProvenance())
 }
