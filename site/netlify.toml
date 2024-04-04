@@ -4,7 +4,7 @@ command = "git submodule update --init --recursive --depth 1 && hugo"
 publish = "publishedSite/"
 
 [build.environment]
-HUGO_VERSION = "0.120.3"
+HUGO_VERSION = "0.120.4"
 NODE_ENV = "development"
 NETLIFY_BUILD_DEBUG = "true"
 

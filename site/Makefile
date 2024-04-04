@@ -43,13 +43,23 @@ build-preview: module-check ## Build site with drafts and future posts enabled
 serve: module-check ## Boot the development server.
 	hugo server --buildFuture --environment development
 
+## Update the hugo version in ../hack/go.mod to match HUGO_VERSION in netlify.toml
+.PHONY: tools
+tools: netlify.toml
+	@echo "Hugo: v$(HUGO_VERSION)"
+	@set -euo pipefail && cd ../hack && \
+		sed -e "/github.com\/gohugoio\/hugo/ s/v[0-9]\+\.[0-9]\+\.[0-9]\+/v$(HUGO_VERSION)/" go.mod > go.mod.next && \
+		mv go.mod.next go.mod && \
+		echo "Updated ../hack/go.mod"
+	cd ../hack && go mod tidy
+
 ## Build a container image for the preview of the website
 .PHONY: container-image
-container-image: netlify.toml Dockerfile hugo.toml
-	$(CONTAINER_ENGINE) build . \
+container-image: tools Dockerfile hugo.toml
+	cd .. && $(CONTAINER_ENGINE) build . \
+		--file site/Dockerfile \
 		--network=host \
-		--tag $(CONTAINER_IMAGE) \
-		--build-arg HUGO_VERSION=$(HUGO_VERSION)
+		--tag $(CONTAINER_IMAGE)
 
 # no build lock to allow for read-only mounts
 ## Boot the development server using container.
