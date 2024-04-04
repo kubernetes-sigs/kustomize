@@ -13,13 +13,11 @@ RUN apk add --no-cache \
     build-base \
     libc6-compat
 
-ARG HUGO_VERSION
-
-RUN mkdir $HOME/src && \
-    cd $HOME/src && \
-    curl -L https://github.com/gohugoio/hugo/archive/refs/tags/v${HUGO_VERSION}.tar.gz | tar -xz && \
-    cd "hugo-${HUGO_VERSION}" && \
-    go install --tags extended
+RUN mkdir -p /go/src/sigs.k8s.io/kustomize/hack
+WORKDIR /go/src/sigs.k8s.io/kustomize/hack
+COPY hack/go.mod ./
+COPY hack/go.sum ./
+RUN go install --tags extended github.com/gohugoio/hugo
 
 FROM docker.io/library/golang:1.21-alpine
 
@@ -32,8 +30,8 @@ RUN apk add --no-cache \
 
 RUN mkdir -p /usr/local/node_packages
 WORKDIR /usr/local/node_packages
-COPY package.json ./
-COPY package-lock.json ./
+COPY site/package.json ./
+COPY site/package-lock.json ./
 RUN npm install -D autoprefixer postcss-cli
 ENV PATH="/usr/local/node_packages/node_modules/.bin:${PATH}"
 
