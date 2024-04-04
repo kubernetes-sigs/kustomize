@@ -67,14 +67,22 @@ func GetProvenance() Provenance {
 
 	for _, dep := range info.Deps {
 		if dep != nil && dep.Path == "sigs.k8s.io/kustomize/kustomize/v5" {
-			p.Version = GetMostRecentTag(*dep)
+			if dep.Version != "devel" {
+				continue
+			}
+			v, err := GetMostRecentTag(*dep)
+			if err != nil {
+				fmt.Printf("failed to get most recent tag for %s: %v\n", dep.Path, err)
+				continue
+			}
+			p.Version = v
 		}
 	}
 
 	return p
 }
 
-func GetMostRecentTag(m debug.Module) string {
+func GetMostRecentTag(m debug.Module) (string, error) {
 	for m.Replace != nil {
 		m = *m.Replace
 	}
@@ -83,13 +91,13 @@ func GetMostRecentTag(m debug.Module) string {
 	sv, err := semver.Parse(strings.TrimPrefix(split[0], "v"))
 
 	if err != nil {
-		return "unknown"
+		return "", fmt.Errorf("failed to parse version %s: %w", m.Version, err)
 	}
 
 	if len(split) > 1 && sv.Patch > 0 {
 		sv.Patch -= 1
 	}
-	return fmt.Sprintf("v%s", sv.FinalizeVersion())
+	return fmt.Sprintf("v%s", sv.FinalizeVersion()), nil
 }
 
 // Short returns the shortened provenance stamp.

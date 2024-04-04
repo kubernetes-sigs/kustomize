@@ -59,6 +59,7 @@ func TestGetMostRecentTag(t *testing.T) {
 	tests := []struct {
 		name        string
 		module      debug.Module
+		isError     bool
 		expectedTag string
 	}{
 		{
@@ -72,9 +73,9 @@ func TestGetMostRecentTag(t *testing.T) {
 			expectedTag: "v0.0.0",
 		},
 		{
-			name:        "Invalid semver string",
-			module:      mockModule("invalid-version"),
-			expectedTag: "unknown",
+			name:    "Invalid semver string",
+			module:  mockModule("invalid-version"),
+			isError: true,
 		},
 		{
 			name:        "Valid semver with patch increment and pre-release info",
@@ -90,8 +91,14 @@ func TestGetMostRecentTag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tag := provenance.GetMostRecentTag(tt.module)
-			assert.Equal(t, tt.expectedTag, tag)
+			tag, err := provenance.GetMostRecentTag(tt.module)
+			if err != nil {
+				if !tt.isError {
+					assert.NoError(t, err)
+				}
+			} else {
+				assert.Equal(t, tt.expectedTag, tag)
+			}
 		})
 	}
 }
