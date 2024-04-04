@@ -13,5 +13,5 @@ test: $(MYGOBIN)/gorepomod
 	go test -v ./...
 
 usage.go: README.md $(MYGOBIN)/goimports
-	go generate . \
+	go generate .
 	$(MYGOBIN)/goimports -w usage.go
