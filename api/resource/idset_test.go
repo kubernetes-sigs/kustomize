@@ -14,11 +14,11 @@ func TestIdSet_Empty(t *testing.T) {
 	s := MakeIdSet([]*Resource{})
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Failed to create test deployment: %v", err)
 	}
 	tc, err := createTestConfigMap()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Failed to create test config: %v", err)
 	}
 	assert.Equal(t, 0, s.Size())
 	assert.False(t, s.Contains(td.CurId()))
@@ -28,11 +28,11 @@ func TestIdSet_Empty(t *testing.T) {
 func TestIdSet_One(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test deployment: %v", err)
 	}
 	tc, err := createTestConfigMap()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test config: %v", err)
 	}
 	s := MakeIdSet([]*Resource{td})
 	assert.Equal(t, 1, s.Size())
@@ -43,11 +43,11 @@ func TestIdSet_One(t *testing.T) {
 func TestIdSet_Two(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test Deployment: %v", err)
 	}
 	tc, err := createTestConfigMap()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test Config: %v", err)
 	}
 	s := MakeIdSet([]*Resource{td, tc})
 	assert.Equal(t, 2, s.Size())

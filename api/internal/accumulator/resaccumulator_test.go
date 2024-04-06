@@ -64,7 +64,7 @@ func makeResAccumulator(t *testing.T) *ResAccumulator {
 					"name": "backendTwo",
 				}}).ResMap())
 	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
+		t.Fatalf("failed to append resources: %v", err)
 	}
 	return ra
 }
@@ -154,15 +154,15 @@ func TestResolveVarsVarNeedsDisambiguation(t *testing.T) {
 			},
 		})
 	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
+		t.Fatalf("failed to get instance of resources: %v", err)
 	}
 	err = rm0.Append(r)
 	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
+		t.Fatalf("failed to append a resource to ResMap: %v", err)
 	}
 	err = ra.AppendAll(rm0)
 	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
+		t.Fatalf("failed to append a resource to ResAccumulator: %v", err)
 	}
 
 	err = ra.MergeVars([]types.Var{
@@ -231,7 +231,10 @@ func TestResolveVarConflicts(t *testing.T) {
 	// create accumulators holding apparently conflicting vars that are not
 	// actually in conflict because they point to the same concrete value.
 	rm0 := resmap.New()
-	r0, _ := rf.FromMap(fooAws)
+	r0, err0 := rf.FromMap(fooAws)
+	if err0 != nil {
+		t.Fatalf("failed to get instance of resources: %v", err0)
+	}
 	err := rm0.Append(r0)
 	require.NoError(t, err)
 	ac0 := MakeEmptyAccumulator()
@@ -241,7 +244,10 @@ func TestResolveVarConflicts(t *testing.T) {
 	require.NoError(t, err)
 
 	rm1 := resmap.New()
-	r1, _ := rf.FromMap(barAws)
+	r1, err1 := rf.FromMap(barAws)
+	if err1 != nil {
+		t.Fatalf("failed to get instance of resources: %v", err1)
+	}
 	err = rm1.Append(r1)
 	require.NoError(t, err)
 	ac1 := MakeEmptyAccumulator()
@@ -261,7 +267,10 @@ func TestResolveVarConflicts(t *testing.T) {
 	// two above (because it contains a variable whose name is used in the other
 	// accumulators AND whose concrete values are different).
 	rm2 := resmap.New()
-	r2, _ := rf.FromMap(barGcp)
+	r2, err2 := rf.FromMap(barGcp)
+	if err2 != nil {
+		t.Fatalf("failed to get instance of resources: %v", err2)
+	}
 	err = rm2.Append(r2)
 	require.NoError(t, err)
 	ac2 := MakeEmptyAccumulator()

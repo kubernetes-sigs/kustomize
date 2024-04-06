@@ -189,8 +189,9 @@ metadata:
 
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
+	name0 := "dply1"
 
-	r0, _ := resFactory.FromMapWithName("dply1", map[string]interface{}{
+	r0, err := resFactory.FromMapWithName(name0, map[string]interface{}{
 		"apiVersion": "apps/v1",
 		"kind":       "Deployment",
 		"metadata": map[string]interface{}{
@@ -222,7 +223,11 @@ metadata:
 			},
 		},
 	})
-	r1, _ := resFactory.FromMapWithName("ns1", map[string]interface{}{
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name0, err)
+	}
+	name1 := "ns1"
+	r1, err := resFactory.FromMapWithName(name1, map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Namespace",
 		"metadata": map[string]interface{}{
@@ -235,6 +240,9 @@ metadata:
 			},
 		},
 	})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name1, err)
+	}
 
 	r2, _ := resFactory.FromMapWithName("literalConfigMap",
 		map[string]interface{}{
@@ -256,7 +264,8 @@ metadata:
 			},
 		})
 
-	r3, _ := resFactory.FromMapWithName("secret",
+	name2 := "secret"
+	r3, err := resFactory.FromMapWithName(name2,
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Secret",
@@ -276,13 +285,16 @@ metadata:
 				"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
 			},
 		})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name2, err)
+	}
 
 	resources := []*resource.Resource{r0, r1, r2, r3}
 
 	expected := resmap.New()
 	for _, r := range resources {
 		if err := expected.Append(r); err != nil {
-			t.Fatalf("unexpected error %v", err)
+			t.Fatalf("failed to append resource: %v", err)
 		}
 	}
 	expected.RemoveBuildAnnotations()
@@ -354,7 +366,8 @@ metadata:
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
 
-	r0, _ := resFactory.FromMapWithName("deployment1", map[string]interface{}{
+	name0 := "deployment1"
+	r0, err0 := resFactory.FromMapWithName(name0, map[string]interface{}{
 		"apiVersion": "apps/v1",
 		"kind":       "Deployment",
 		"metadata": map[string]interface{}{
@@ -362,7 +375,11 @@ metadata:
 			"namespace": "ns1",
 		},
 	})
-	r1, _ := resFactory.FromMapWithName("config", map[string]interface{}{
+	if err0 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name0, err0)
+	}
+	name1 := "config"
+	r1, err1 := resFactory.FromMapWithName(name1, map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
 		"metadata": map[string]interface{}{
@@ -370,7 +387,11 @@ metadata:
 			"namespace": "ns1",
 		},
 	})
-	r2, _ := resFactory.FromMapWithName("secret", map[string]interface{}{
+	if err1 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name1, err1)
+	}
+	name2 := "secret"
+	r2, err2 := resFactory.FromMapWithName(name2, map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Secret",
 		"metadata": map[string]interface{}{
@@ -378,6 +399,9 @@ metadata:
 			"namespace": "ns1",
 		},
 	})
+	if err2 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name2, err2)
+	}
 	var resources = []*resource.Resource{r0, r1, r2}
 	expected := resmap.New()
 	for _, r := range resources {

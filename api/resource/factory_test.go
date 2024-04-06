@@ -274,24 +274,32 @@ kind: List
 			},
 		},
 	}
-	testDeploymentA, _ := factory.FromMap(
+	deploymentA := "deployment-a"
+	testDeploymentA, errA := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "deployment-a",
+				"name": deploymentA,
 			},
 			"spec": testDeploymentSpec,
 		})
-	testDeploymentB, _ := factory.FromMap(
+	if errA != nil {
+		t.Fatalf("Failed to create new instance with %v: %v", deploymentA, errA)
+	}
+	deploymentB := "deployment-b"
+	testDeploymentB, errB := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "deployment-b",
+				"name": deploymentB,
 			},
 			"spec": testDeploymentSpec,
 		})
+	if errB != nil {
+		t.Fatalf("Failed to create new instance with %v: %v", deploymentB, errB)
+	}
 
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(string(patchGood1), []byte(patch1))

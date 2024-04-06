@@ -52,7 +52,7 @@ s/$BAR/bar baz/g
 			"argsFromFile": "sed-input.txt",
 		})
 	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
+		t.Fatalf("failed to writes the data to a file: %v", err)
 	}
 
 	pluginConfig.RemoveBuildAnnotations()

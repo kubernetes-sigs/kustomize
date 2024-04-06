@@ -64,11 +64,11 @@ metadata:
 `
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test deployment: %s", err)
 	}
 	yaml, err := td.AsYAML()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to get yaml: %s", err)
 	}
 	if string(yaml) != expected {
 		t.Fatalf("--- expected\n%s\n--- got\n%s\n", expected, string(yaml))
@@ -105,11 +105,11 @@ func TestResourceString(t *testing.T) {
 func TestResourceId(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test deployment: %v", err)
 	}
 	tc, err := createTestConfigMap()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test config: %v", err)
 	}
 	tests := []struct {
 		in *Resource
