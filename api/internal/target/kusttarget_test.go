@@ -295,9 +295,7 @@ metadata:
 
 	expected := resmap.New()
 	for _, r := range resources {
-		if err := expected.Append(r); err != nil {
-			t.Fatalf("failed to append resource: %v", err)
-		}
+		require.NoError(t, expected.Append(r), "failed to append resource: %v")
 	}
 	expected.RemoveBuildAnnotations()
 	expYaml, err := expected.AsYaml()

@@ -335,3 +335,228 @@ spec:
   location: Arizona
 `)
 }
+
+func TestLabelTransformerConfig(t *testing.T) {
+	testCases := []struct {
+		name              string
+		kustomization     string
+		transformerConfig string
+		expectedResult    string
+	}{
+		{
+			name: "includeSelectors=false, includeTemplates=false, include template via transformerConfig",
+			kustomization: `configurations:
+  - config/configurations.yaml
+
+labels:
+  - includeSelectors: false
+    includeTemplates: false
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/deployment.yaml
+`,
+			transformerConfig: `labels:
+  - path: spec/template/metadata/labels
+    create: true
+    kind: Deployment
+`,
+			expectedResult: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sample-deploy
+    environment: dev
+    location: planet-earth
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-deploy
+        environment: dev
+        location: planet-earth
+    spec:
+      containers:
+      - image: hello-world:latest
+        name: hello-world
+`,
+		},
+		{
+			name: "includeSelectors=true, includeTemplates=false, include template via transformerConfig",
+			kustomization: `configurations:
+  - config/configurations.yaml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: false
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/deployment.yaml
+`,
+			transformerConfig: `labels:
+  - path: spec/template/metadata/labels
+    create: true
+    kind: Deployment
+`,
+			expectedResult: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sample-deploy
+    environment: dev
+    location: planet-earth
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+      environment: dev
+      location: planet-earth
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-deploy
+        environment: dev
+        location: planet-earth
+    spec:
+      containers:
+      - image: hello-world:latest
+        name: hello-world
+`,
+		},
+		{
+			name: "includeSelectors=false, includeTemplates=true, no transfomerConfig",
+			kustomization: `labels:
+  - includeSelectors: false
+    includeTemplates: true
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/deployment.yaml
+`,
+			expectedResult: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sample-deploy
+    environment: dev
+    location: planet-earth
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-deploy
+        environment: dev
+        location: planet-earth
+    spec:
+      containers:
+      - image: hello-world:latest
+        name: hello-world
+`,
+		},
+		{
+			name: "includeSelectors=false, includeTemplates=false, no transfomerConfig",
+			kustomization: `labels:
+  - includeSelectors: false
+    includeTemplates: false
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/deployment.yaml
+`,
+			expectedResult: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sample-deploy
+    environment: dev
+    location: planet-earth
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: hello-world:latest
+        name: hello-world
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			th.WriteK(".", tc.kustomization)
+			th.WriteF("resources/deployment.yaml",
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sample-deploy
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-deploy
+    spec:
+      containers:
+      - image: hello-world:latest
+        name: hello-world
+`)
+			if tc.transformerConfig != "" {
+				th.WriteF("config/configurations.yaml", tc.transformerConfig)
+			}
+
+			output := th.Run(".", th.MakeDefaultOptions())
+
+			th.AssertActualEqualsExpected(output, tc.expectedResult)
+		})
+	}
+}
