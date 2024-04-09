@@ -20,9 +20,9 @@ lint: lint-api-static
 ## that would prevent the API module from being used
 ## when the go plugin support is disabled.
 lint-api-static:
+	$(MYGOBIN)/golangci-lint cache clean # Workaround for https://github.com/golangci/golangci-lint/issues/3228
 	$(MYGOBIN)/golangci-lint \
 	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
 	  --build-tags kustomize_disable_go_plugin_support \
-	  -D exhaustive \
 	  --path-prefix api \
 	  run ./...
