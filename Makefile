@@ -123,24 +123,8 @@ license: $(MYGOBIN)/addlicense
 check-license: $(MYGOBIN)/addlicense
 	./hack/add-license.sh check
 
-## lint-api-static runs the linter on the API module 
-## with build-tag kustomize_disable_go_plugin_support
-## this aims to catch any issues with the API module
-## that would prevent the API module from being used
-## when the go plugin support is disabled.
-export KUSTOMIZE_ROOT ?= $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\1|')
-.PHONY: lint-api-static
-lint-api-static: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
-	cd api && \
-	$(MYGOBIN)/golangci-lint \
-	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
-	  --build-tags kustomize_disable_go_plugin_support \
-	  -D exhaustive \
-	  --path-prefix api \
-	  run ./...
-
 .PHONY: lint
-lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins) lint-api-static
+lint: $(MYGOBIN)/golangci-lint $(MYGOBIN)/goimports $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
 .PHONY: apidiff

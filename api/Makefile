@@ -11,3 +11,18 @@ build:
 
 generate: $(MYGOBIN)/k8scopy $(MYGOBIN)/stringer
 	go generate ./...
+
+lint: lint-api-static
+
+## lint-api-static runs the linter on the API module
+## with build-tag kustomize_disable_go_plugin_support
+## this aims to catch any issues with the API module
+## that would prevent the API module from being used
+## when the go plugin support is disabled.
+lint-api-static:
+	$(MYGOBIN)/golangci-lint \
+	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
+	  --build-tags kustomize_disable_go_plugin_support \
+	  -D exhaustive \
+	  --path-prefix api \
+	  run ./...
