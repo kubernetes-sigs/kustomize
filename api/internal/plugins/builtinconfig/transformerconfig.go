@@ -126,7 +126,7 @@ func (t *TransformerConfig) AddCommonLabelFieldSpec(fs types.FieldSpec) (err err
 // AddLabelFieldSpec adds a FieldSpec to Labels
 func (t *TransformerConfig) AddLabelFieldSpec(fs types.FieldSpec) (err error) {
 	t.Labels, err = t.Labels.MergeOne(fs)
-	return err
+	return err //nolint:wrapcheck
 }
 
 // AddAnnotationFieldSpec adds a FieldSpec to CommonAnnotations
