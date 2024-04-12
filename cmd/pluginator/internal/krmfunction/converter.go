@@ -147,6 +147,10 @@ func (c *Converter) readDiskFile(path string) (string, error) {
 func (c *Converter) mkDstDir() error {
 	p := c.outputDir
 	f, err := os.Open(p)
+	if f != nil {
+		f.Close()
+    	}
+	
 	if err == nil || f != nil {
 		return fmt.Errorf("directory %s has already existed", p)
 	}
