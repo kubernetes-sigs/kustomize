@@ -73,9 +73,11 @@ labels transformer 将 labels 添加到所有资源的 `metadata/labels` 字段�
 示例：
 
 ```yaml
-commonLabels:
-- path: metadata/labels
-  create: true
+labels:
+- includeSelectors: true
+  pairs:
+    path: metadata/labels
+    create: true
 
 - path: spec/selector
   create: true
@@ -90,10 +92,12 @@ commonLabels:
 kustomization.yaml 示例:
 
 ```yaml
-commonLabels:
-  someName: someValue
-  owner: alice
-  app: bingo
+labels:
+- includeSelectors: true
+  pairs:
+    someName: someValue
+    owner: alice
+    app: bingo
 ```
 
 ## Annotations transformer

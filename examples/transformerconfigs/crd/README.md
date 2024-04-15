@@ -22,10 +22,12 @@ Add the following file to configure the transformers for the above fields
 mkdir $DEMO_HOME/kustomizeconfig
 cat > $DEMO_HOME/kustomizeconfig/mykind.yaml << EOF
 
-commonLabels:
-- path: spec/selectors
-  create: true
-  kind: MyKind
+labels:
+- includeSelectors: true
+  pairs:
+    path: spec/selectors
+    create: true
+    kind: MyKind
 
 nameReference:
 - kind: Bee
@@ -96,8 +98,10 @@ resources:
 
 namePrefix: test-
 
-commonLabels:
-  foo: bar
+labels:
+- includeSelectors: true
+  pairs:
+    foo: bar
 
 vars:
 - name: BEE_ACTION

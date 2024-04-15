@@ -80,9 +80,11 @@ The labels transformer adds labels to the `metadata/labels` field for all resour
 Example:
 
 ```yaml
-commonLabels:
-- path: metadata/labels
-  create: true
+labels:
+- includeSelectors: true
+  pairs:
+    path: metadata/labels
+    create: true
 
 - path: spec/selector
   create: true
@@ -97,10 +99,12 @@ commonLabels:
 Example kustomization.yaml:
 
 ```yaml
-commonLabels:
-  someName: someValue
-  owner: alice
-  app: bingo
+labels:
+- includeSelectors: true
+  pairs:
+    someName: someValue
+    owner: alice
+    app: bingo
 ```
 
 ## Annotations transformer
