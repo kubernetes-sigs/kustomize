@@ -5,11 +5,13 @@ package openapi
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -116,11 +118,11 @@ openAPI:
           name: image-name
           value: "nginx"
  `
-	f, err := ioutil.TempFile("", "openapi-")
+	f, err := os.CreateTemp("", "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+	if !assert.NoError(t, os.WriteFile(f.Name(), []byte(inputyaml), 0o600)) {
 		t.FailNow()
 	}
 
@@ -168,11 +170,11 @@ openAPI:
             ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `
 
-	f, err := ioutil.TempFile("", "openapi-")
+	f, err := os.CreateTemp("", "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+	if !assert.NoError(t, os.WriteFile(f.Name(), []byte(inputyaml), 0o600)) {
 		t.FailNow()
 	}
 
@@ -203,11 +205,11 @@ func TestAddSchemaFromFile_empty(t *testing.T) {
 kind: Example
  `
 
-	f, err := ioutil.TempFile("", "openapi-")
+	f, err := os.CreateTemp("", "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, ioutil.WriteFile(f.Name(), []byte(inputyaml), 0600)) {
+	if !assert.NoError(t, os.WriteFile(f.Name(), []byte(inputyaml), 0o600)) {
 		t.FailNow()
 	}
 
@@ -324,4 +326,70 @@ func TestIsNamespaceScoped_custom(t *testing.T) {
 	})
 	assert.True(t, isFound)
 	assert.True(t, isNamespaceable)
+}
+
+func TestCanSetAndResetSchemaConcurrently(t *testing.T) {
+	t.Run("SetSchema doesn't cause a data race when called concurrently", func(t *testing.T) {
+		set := func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			err := SetSchema(
+				map[string]string{
+					"/apis/custom.io/v1": "true",
+				},
+				[]byte(`
+				{
+				  "definitions": {},
+				  "paths": {
+					"/apis/custom.io/v1/namespaces/{namespace}/customs/{name}": {
+					  "get": {
+						"x-kubernetes-action": "get",
+						"x-kubernetes-group-version-kind": {
+						  "group": "custom.io",
+						  "kind": "Custom",
+						  "version": "v1"
+						}
+					  }
+					},
+					"/apis/custom.io/v1/clustercustoms": {
+					  "get": {
+						"x-kubernetes-action": "get",
+						"x-kubernetes-group-version-kind": {
+						  "group": "custom.io",
+						  "kind": "ClusterCustom",
+						  "version": "v1"
+						}
+					  }
+					}
+				  }
+				}
+			`),
+				true,
+			)
+			require.NoError(t, err)
+		}
+
+		var wg sync.WaitGroup
+		require.NotPanics(t, func() {
+			for i := 0; i < 100; i++ {
+				wg.Add(1)
+				go set(&wg)
+			}
+		})
+		wg.Wait()
+	})
+
+	t.Run("ResetOpenAPI doesn't cause a data race when called concurrently", func(t *testing.T) {
+		reset := func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			ResetOpenAPI()
+		}
+		var wg sync.WaitGroup
+		require.NotPanics(t, func() {
+			for i := 0; i < 100; i++ {
+				wg.Add(1)
+				go reset(&wg)
+			}
+		})
+		wg.Wait()
+	})
 }
