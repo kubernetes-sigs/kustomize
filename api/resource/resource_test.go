@@ -78,11 +78,11 @@ metadata:
 func TestResourceString(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test deployment: %v", err)
 	}
 	tc, err := createTestConfigMap()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test config: %v", err)
 	}
 	tests := []struct {
 		in *Resource
@@ -144,7 +144,7 @@ func TestDeepCopy(t *testing.T) {
 			},
 		})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test config: %v", err)
 	}
 	r.AppendRefBy(resid.NewResId(resid.Gvk{Group: "somegroup", Kind: "MyKind"}, "random"))
 

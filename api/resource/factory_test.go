@@ -285,7 +285,7 @@ kind: List
 			"spec": testDeploymentSpec,
 		})
 	if errA != nil {
-		t.Fatalf("Failed to create new instance with %v: %v", deploymentA, errA)
+		t.Fatalf("failed to create new instance with %v: %v", deploymentA, errA)
 	}
 	deploymentB := "deployment-b"
 	testDeploymentB, errB := factory.FromMap(
@@ -298,7 +298,7 @@ kind: List
 			"spec": testDeploymentSpec,
 		})
 	if errB != nil {
-		t.Fatalf("Failed to create new instance with %v: %v", deploymentB, errB)
+		t.Fatalf("failed to create new instance with %v: %v", deploymentB, errB)
 	}
 
 	fSys := filesys.MakeFsInMemory()
@@ -318,12 +318,12 @@ kind: List
 
 	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test deployment: %v", err)
 	}
 
 	tc, err := createTestConfigMap()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test config: %v", err)
 	}
 
 	tests := map[string]struct {
