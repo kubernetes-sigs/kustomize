@@ -41,7 +41,7 @@ s/$BAR/bar baz/g
 	}
 	pvd := provider.NewDefaultDepProvider()
 	rf := resmap.NewFactory(pvd.GetResourceFactory())
-	pluginConfig := rf.RF().FromMap(
+	pluginConfig, err := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",
 			"kind":       "SedTransformer",
@@ -51,6 +51,9 @@ s/$BAR/bar baz/g
 			"argsOneLiner": "one two 'foo bar'",
 			"argsFromFile": "sed-input.txt",
 		})
+	if err != nil {
+		t.Fatalf("failed to writes the data to a file: %v", err)
+	}
 
 	pluginConfig.RemoveBuildAnnotations()
 	pc := types.DisabledPluginConfig()

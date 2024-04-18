@@ -20,27 +20,39 @@ import (
 
 var factory = provider.NewDefaultDepProvider().GetResourceFactory()
 
-var testConfigMap = factory.FromMap(
-	map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "ConfigMap",
-		"metadata": map[string]interface{}{
-			"name":      "winnie",
-			"namespace": "hundred-acre-wood",
-		},
-	})
+func createTestConfigMap() (*Resource, error) {
+	res, err := factory.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
+			"metadata": map[string]interface{}{
+				"name":      "winnie",
+				"namespace": "hundred-acre-wood",
+			},
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create test config: %w", err)
+	}
+	return res, nil
+}
 
 //nolint:gosec
 const configMapAsString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
 
-var testDeployment = factory.FromMap(
-	map[string]interface{}{
-		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
-		"metadata": map[string]interface{}{
-			"name": "pooh",
-		},
-	})
+func createTestDeployment() (*Resource, error) {
+	res, err := factory.FromMap(
+		map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "pooh",
+			},
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Deployment: %w", err)
+	}
+	return res, nil
+}
 
 const deploymentAsString = `{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"pooh"}}`
 
@@ -50,9 +62,13 @@ kind: Deployment
 metadata:
   name: pooh
 `
-	yaml, err := testDeployment.AsYAML()
+	td, err := createTestDeployment()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create test deployment: %s", err)
+	}
+	yaml, err := td.AsYAML()
+	if err != nil {
+		t.Fatalf("failed to get yaml: %s", err)
 	}
 	if string(yaml) != expected {
 		t.Fatalf("--- expected\n%s\n--- got\n%s\n", expected, string(yaml))
@@ -60,16 +76,24 @@ metadata:
 }
 
 func TestResourceString(t *testing.T) {
+	td, err := createTestDeployment()
+	if err != nil {
+		t.Fatalf("failed to create test deployment: %v", err)
+	}
+	tc, err := createTestConfigMap()
+	if err != nil {
+		t.Fatalf("failed to create test config: %v", err)
+	}
 	tests := []struct {
 		in *Resource
 		s  string
 	}{
 		{
-			in: testConfigMap,
+			in: tc,
 			s:  configMapAsString,
 		},
 		{
-			in: testDeployment,
+			in: td,
 			s:  deploymentAsString,
 		},
 	}
@@ -79,18 +103,26 @@ func TestResourceString(t *testing.T) {
 }
 
 func TestResourceId(t *testing.T) {
+	td, err := createTestDeployment()
+	if err != nil {
+		t.Fatalf("failed to create test deployment: %v", err)
+	}
+	tc, err := createTestConfigMap()
+	if err != nil {
+		t.Fatalf("failed to create test config: %v", err)
+	}
 	tests := []struct {
 		in *Resource
 		id resid.ResId
 	}{
 		{
-			in: testConfigMap,
+			in: tc,
 			id: resid.NewResIdWithNamespace(
 				resid.NewGvk("", "v1", "ConfigMap"),
 				"winnie", "hundred-acre-wood"),
 		},
 		{
-			in: testDeployment,
+			in: td,
 			id: resid.NewResId(
 				resid.NewGvk("apps", "v1", "Deployment"), "pooh"),
 		},
@@ -103,7 +135,7 @@ func TestResourceId(t *testing.T) {
 }
 
 func TestDeepCopy(t *testing.T) {
-	r := factory.FromMap(
+	r, err := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -111,6 +143,9 @@ func TestDeepCopy(t *testing.T) {
 				"name": "pooh",
 			},
 		})
+	if err != nil {
+		t.Fatalf("failed to create test config: %v", err)
+	}
 	r.AppendRefBy(resid.NewResId(resid.Gvk{Group: "somegroup", Kind: "MyKind"}, "random"))
 
 	var1 := types.Var{
