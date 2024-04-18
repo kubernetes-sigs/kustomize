@@ -590,7 +590,7 @@ func TestNameReferenceUnhappyRun(t *testing.T) {
 func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 	rf := provider.NewDefaultDepProvider().GetResourceFactory()
 
-	v1 := rf.FromMapWithName(
+	v1, err := rf.FromMapWithName(
 		"volume1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -599,7 +599,10 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 				"name": "someprefix-volume1",
 			},
 		})
-	c1 := rf.FromMapWithName(
+	if err != nil {
+		t.Fatalf("failed to get new instance with given name: %v", err)
+	}
+	c1, err := rf.FromMapWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -612,9 +615,11 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 				"volumeName": "volume1",
 			},
 		})
-
+	if err != nil {
+		t.Fatalf("failed to get new instance with given name: %v", err)
+	}
 	v2 := v1.DeepCopy()
-	c2 := rf.FromMapWithName(
+	c2, err := rf.FromMapWithName(
 		"claim1",
 		map[string]interface{}{
 			"apiVersion": "v1",
@@ -627,6 +632,9 @@ func TestNameReferencePersistentVolumeHappyRun(t *testing.T) {
 				"volumeName": "someprefix-volume1",
 			},
 		})
+	if err != nil {
+		t.Fatalf("failed to get new instance with given name: %v", err)
+	}
 
 	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(v1).AddR(c1).ResMap()
 
