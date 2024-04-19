@@ -442,7 +442,7 @@ spec:
 `,
 		},
 		{
-			name: "includeSelectors=false, includeTemplates=true, no transfomerConfig",
+			name: "includeSelectors=false, includeTemplates=true, no transformerConfig",
 			kustomization: `labels:
   - includeSelectors: false
     includeTemplates: true
@@ -482,7 +482,7 @@ spec:
 `,
 		},
 		{
-			name: "includeSelectors=false, includeTemplates=false, no transfomerConfig",
+			name: "includeSelectors=false, includeTemplates=false, no transformerConfig",
 			kustomization: `labels:
   - includeSelectors: false
     includeTemplates: false
@@ -553,6 +553,178 @@ spec:
 			if tc.transformerConfig != "" {
 				th.WriteF("config/configurations.yaml", tc.transformerConfig)
 			}
+
+			output := th.Run(".", th.MakeDefaultOptions())
+
+			th.AssertActualEqualsExpected(output, tc.expectedResult)
+		})
+	}
+}
+
+func TestLabelTransformerConfigWithCustomResources(t *testing.T) {
+	testCases := []struct {
+		name              string
+		kustomization     string
+		transformerConfig string
+		expectedResult    string
+	}{
+		{
+			name: "include template via transformerConfig",
+			kustomization: `configurations:
+  - config/configurations.yaml
+
+labels:
+  - includeSelectors: false
+    includeTemplates: false
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/custom-resource.yaml
+`,
+			transformerConfig: `labels:
+  - path: spec/template/metadata/labels
+    create: true
+    kind: SampleResource
+`,
+			expectedResult: `apiVersion: custom.example.org/v1
+kind: SampleResource
+metadata:
+  labels:
+    environment: dev
+    location: planet-earth
+  name: sample-resource
+  namespace: sample-namespace
+spec:
+  template:
+    metadata:
+      labels:
+        environment: dev
+        location: planet-earth
+    spec:
+      containers:
+      - env:
+        - name: VARIABLE
+          value: value
+        image: index.docker.io/library/hello-world
+`,
+		},
+		{
+			name: "include selector via transformerConfig",
+			kustomization: `configurations:
+  - config/configurations.yaml
+
+labels:
+  - includeSelectors: false
+    includeTemplates: false
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/custom-resource.yaml
+`,
+			transformerConfig: `labels:
+  - path: spec/selectors/labels
+    create: true
+    kind: SampleResource
+`,
+			expectedResult: `apiVersion: custom.example.org/v1
+kind: SampleResource
+metadata:
+  labels:
+    environment: dev
+    location: planet-earth
+  name: sample-resource
+  namespace: sample-namespace
+spec:
+  selectors:
+    labels:
+      environment: dev
+      location: planet-earth
+  template:
+    spec:
+      containers:
+      - env:
+        - name: VARIABLE
+          value: value
+        image: index.docker.io/library/hello-world
+`,
+		},
+		{
+			name: "include selectors and labels via transformerConfig",
+			kustomization: `configurations:
+  - config/configurations.yaml
+
+labels:
+  - includeSelectors: false
+    includeTemplates: false
+    pairs:
+      location: planet-earth
+      environment: dev
+
+resources:
+  - resources/custom-resource.yaml
+`,
+			transformerConfig: `
+labels:
+  - path: spec/selectors/labels
+    create: true
+    kind: SampleResource
+  - path: spec/template/metadata/labels
+    create: true
+    kind: SampleResource
+`,
+			expectedResult: `apiVersion: custom.example.org/v1
+kind: SampleResource
+metadata:
+  labels:
+    environment: dev
+    location: planet-earth
+  name: sample-resource
+  namespace: sample-namespace
+spec:
+  selectors:
+    labels:
+      environment: dev
+      location: planet-earth
+  template:
+    metadata:
+      labels:
+        environment: dev
+        location: planet-earth
+    spec:
+      containers:
+      - env:
+        - name: VARIABLE
+          value: value
+        image: index.docker.io/library/hello-world
+`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			th.WriteK(".", tc.kustomization)
+			th.WriteF("resources/custom-resource.yaml",
+				`apiVersion: custom.example.org/v1
+kind: SampleResource
+metadata:
+  name: sample-resource
+  namespace: sample-namespace
+spec:
+  template:
+    spec:
+      containers:
+      - image: index.docker.io/library/hello-world
+        env:
+        - name: VARIABLE
+          value: value
+`)
+
+			th.WriteF("config/configurations.yaml", tc.transformerConfig)
 
 			output := th.Run(".", th.MakeDefaultOptions())
 

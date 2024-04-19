@@ -117,14 +117,14 @@ func (t *TransformerConfig) AddSuffixFieldSpec(fs types.FieldSpec) (err error) {
 	return err
 }
 
-// AddCommonLabelFieldSpec adds a FieldSpec to CommonLabels
-func (t *TransformerConfig) AddCommonLabelFieldSpec(fs types.FieldSpec) (err error) {
+// AddCommonLabelsFieldSpec adds a FieldSpec to CommonLabels
+func (t *TransformerConfig) AddCommonLabelsFieldSpec(fs types.FieldSpec) (err error) {
 	t.CommonLabels, err = t.CommonLabels.MergeOne(fs)
 	return err
 }
 
-// AddLabelFieldSpec adds a FieldSpec to Labels
-func (t *TransformerConfig) AddLabelFieldSpec(fs types.FieldSpec) (err error) {
+// AddLabelsFieldSpec adds a FieldSpec to Labels
+func (t *TransformerConfig) AddLabelsFieldSpec(fs types.FieldSpec) (err error) {
 	t.Labels, err = t.Labels.MergeOne(fs)
 	return err //nolint:wrapcheck
 }
