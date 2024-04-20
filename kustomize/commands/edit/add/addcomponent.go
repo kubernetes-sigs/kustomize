@@ -6,6 +6,7 @@ package add
 import (
 	"errors"
 	"log"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
@@ -69,7 +70,7 @@ func (o *addComponentOptions) RunAddComponent(fSys filesys.FileSystem) error {
 
 	for _, component := range components {
 		if mf.GetPath() != component {
-			if kustfile.StringInSlice(component, m.Components) {
+			if slices.Contains(m.Components, component) {
 				log.Printf("component %s already in kustomization file", component)
 				continue
 			}
