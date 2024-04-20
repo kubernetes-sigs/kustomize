@@ -5,6 +5,7 @@ package add
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
@@ -60,7 +61,7 @@ func (o *addBuildMetadataOptions) RunAddBuildMetadata(fSys filesys.FileSystem) e
 		return err
 	}
 	for _, opt := range o.buildMetadataOptions {
-		if kustfile.StringInSlice(opt, m.BuildMetadata) {
+		if slices.Contains(m.BuildMetadata, opt) {
 			return fmt.Errorf("buildMetadata option %s already in kustomization file", opt)
 		}
 		m.BuildMetadata = append(m.BuildMetadata, opt)

@@ -189,16 +189,6 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 	return mf.fSys.WriteFile(mf.path, data)
 }
 
-// StringInSlice returns true if the string is in the slice.
-func StringInSlice(str string, list []string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
 func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	buffer := bytes.NewBuffer(content)
 	var comments [][]byte

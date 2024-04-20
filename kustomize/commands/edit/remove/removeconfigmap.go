@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -88,7 +89,7 @@ func (o *removeConfigMapOptions) RunRemoveConfigMap(fSys filesys.FileSystem) err
 	remainingConfigMaps := make([]types.ConfigMapArgs, 0, len(m.ConfigMapGenerator))
 
 	for _, currentConfigMap := range m.ConfigMapGenerator {
-		if kustfile.StringInSlice(currentConfigMap.Name, o.configMapNamesToRemove) &&
+		if slices.Contains(o.configMapNamesToRemove, currentConfigMap.Name) &&
 			util.NamespaceEqual(currentConfigMap.Namespace, o.namespace) {
 			foundConfigMaps[currentConfigMap.Name] = struct{}{}
 			continue

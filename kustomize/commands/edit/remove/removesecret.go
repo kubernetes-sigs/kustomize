@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -89,7 +90,7 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 	remainingSecrets := make([]types.SecretArgs, 0, len(m.SecretGenerator))
 
 	for _, currentSecret := range m.SecretGenerator {
-		if kustfile.StringInSlice(currentSecret.Name, o.secretNamesToRemove) &&
+		if slices.Contains(o.secretNamesToRemove, currentSecret.Name) &&
 			util.NamespaceEqual(currentSecret.Namespace, o.namespace) {
 			foundSecrets[currentSecret.Name] = struct{}{}
 			continue
