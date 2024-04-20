@@ -9,6 +9,8 @@ import (
 	"log"
 	"strings"
 
+	"slices"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
