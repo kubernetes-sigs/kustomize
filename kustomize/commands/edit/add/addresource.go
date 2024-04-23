@@ -6,6 +6,7 @@ package add
 import (
 	"errors"
 	"log"
+	"slices"
 
 	"github.com/spf13/cobra"
 	ldrhelper "sigs.k8s.io/kustomize/api/pkg/loader"
@@ -73,7 +74,7 @@ func (o *addResourceOptions) RunAddResource(fSys filesys.FileSystem) error {
 
 	for _, resource := range resources {
 		if mf.GetPath() != resource {
-			if kustfile.StringInSlice(resource, m.Resources) {
+			if slices.Contains(m.Resources, resource) {
 				log.Printf("resource %s already in kustomization file", resource)
 				continue
 			}

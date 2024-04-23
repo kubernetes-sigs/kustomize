@@ -6,10 +6,10 @@ package util
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 )
 
 type BuildMetadataValidator struct{}
@@ -23,7 +23,7 @@ func (b *BuildMetadataValidator) Validate(args []string) ([]string, error) {
 	}
 	opts := strings.Split(args[0], ",")
 	for _, opt := range opts {
-		if !kustfile.StringInSlice(opt, types.BuildMetadataOptions) {
+		if !slices.Contains(types.BuildMetadataOptions, opt) {
 			return nil, fmt.Errorf("invalid buildMetadata option: %s", opt)
 		}
 	}
