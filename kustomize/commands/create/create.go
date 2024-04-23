@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -113,7 +114,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, rf *resource.Factory) 
 			return err
 		}
 		for _, resource := range detected {
-			if kustfile.StringInSlice(resource, resources) {
+			if slices.Contains(resources, resource) {
 				continue
 			}
 			resources = append(resources, resource)

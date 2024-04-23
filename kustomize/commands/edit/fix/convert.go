@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -55,11 +56,11 @@ func filesTouchedByKustomize(k *types.Kustomization, filepath string, fSys files
 		files, err := fSys.ReadDir(r)
 		if err == nil && len(files) > 0 {
 			for _, file := range files {
-				if !stringInSlice(file, []string{
+				if !slices.Contains([]string{
 					"kustomization.yaml",
 					"kustomization.yml",
 					"Kustomization",
-				}) {
+				}, file) {
 					continue
 				}
 

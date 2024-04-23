@@ -4,12 +4,12 @@
 package add
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -57,7 +57,7 @@ func TestAddBaseAlreadyThere(t *testing.T) {
 	for _, base := range bases {
 		msg := "base " + base + " already in kustomization file"
 		expectedErrors = append(expectedErrors, msg)
-		assert.True(t, kustfile.StringInSlice(msg, expectedErrors))
+		assert.True(t, slices.Contains(expectedErrors, msg))
 	}
 }
 
