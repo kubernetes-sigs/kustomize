@@ -76,8 +76,23 @@ func MakeDefaultConfig() *TransformerConfig {
 // MakeTransformerConfig returns a merger of custom config,
 // if any, with default config.
 func MakeTransformerConfig(
-	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+	ldr ifc.Loader, configurations []string) (*TransformerConfig, error) {
 	t1 := MakeDefaultConfig()
+	if len(configurations) == 0 {
+		return t1, nil
+	}
+	var paths []string
+	for _, configuration := range configurations {
+		config, err := makeTransformerConfigFromBytes([]byte(configuration))
+		if err != nil {
+			paths = append(paths, configuration)
+			continue
+		}
+		t1, err = t1.Merge(config)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if len(paths) == 0 {
 		return t1, nil
 	}
