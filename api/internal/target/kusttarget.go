@@ -423,7 +423,14 @@ func (kt *KustTarget) accumulateResources(
 			if errors.Is(errF, load.ErrHTTP) {
 				return nil, errF
 			}
-			ldr, err := kt.ldr.New(path)
+			var redErr *load.RedirectionError
+			var ldr ifc.Loader
+			var err error
+			if errors.As(errF, &redErr) {
+				ldr, err = kt.ldr.New(redErr.NewPath)
+			} else {
+				ldr, err = kt.ldr.New(path)
+			}
 			if err != nil {
 				// If accumulateFile found malformed YAML and there was a failure
 				// loading the resource as a base, then the resource is likely a

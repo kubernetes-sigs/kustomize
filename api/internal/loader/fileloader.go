@@ -318,11 +318,19 @@ func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
 	defer resp.Body.Close()
 	// response unsuccessful
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		_, err = git.NewRepoSpecFromURL(path)
-		if err == nil {
-			return nil, errors.Errorf("URL is a git repository")
+		if resp.StatusCode == 300 {
+			var newPath string = resp.Header.Get("Location")
+			return nil, &RedirectionError{
+				Msg:     "Response is redirect",
+				NewPath: newPath,
+			}
+		} else {
+			_, err = git.NewRepoSpecFromURL(path)
+			if err == nil {
+				return nil, errors.Errorf("URL is a git repository")
+			}
+			return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
-		return nil, fmt.Errorf("%w: status code %d (%s)", ErrHTTP, resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 	content, err := io.ReadAll(resp.Body)
 	return content, errors.Wrap(err)

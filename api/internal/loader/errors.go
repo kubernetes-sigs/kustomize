@@ -9,3 +9,12 @@ var (
 	ErrHTTP     = errors.Errorf("HTTP Error")
 	ErrRtNotDir = errors.Errorf("must build at directory")
 )
+
+type RedirectionError struct {
+	NewPath string
+	Msg     string
+}
+
+func (e *RedirectionError) Error() string {
+	return e.Msg
+}

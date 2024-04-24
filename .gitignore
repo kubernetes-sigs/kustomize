@@ -21,6 +21,8 @@
 *.DS_store
 
 .bin
+# VSCode
+.vscode/
 
 # Hugo site
 publishedSite/
