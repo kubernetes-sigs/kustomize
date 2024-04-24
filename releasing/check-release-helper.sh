@@ -15,13 +15,20 @@ git log "${LATEST_TAG}..HEAD" --oneline | tee /tmp/release-changelogs.txt
 
 count=$(cat /tmp/release-changelogs.txt | wc -l)
 
-if [[ $(cat /tmp/release-changelogs.txt | grep fix) || $(cat /tmp/release-changelogs.txt | grep patch) || $(cat /tmp/release-changelogs.txt | grep chore) ]]; then
+if [[ $(cat /tmp/release-changelogs.txt | grep fix) || $(cat /tmp/release-changelogs.txt | grep patch) || $(cat /tmp/release-changelogs.txt | grep chore) || $(cat /tmp/release-changelogs.txt | grep docs) ]]; then
     PATCH=true
 fi
 
 if [[ $(cat /tmp/release-changelogs.txt | grep feat) ]]; then
     MINOR=true
 fi
+
+for commit in $(cut -d' ' -f1 /tmp/release-changelogs.txt); do
+    git log --format=%B -n 1 $commit | grep "BREAKING CHANGE"
+    if [ $? -eq 0 ]; then
+        MAJOR=true
+    fi
+done
 
 for f in $(find api); do
     git diff "${LATEST_TAG}...${ORIGIN_MASTER}" --exit-code -- "${f}" 
