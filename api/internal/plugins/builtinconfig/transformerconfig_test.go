@@ -4,9 +4,10 @@
 package builtinconfig_test
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -35,13 +36,8 @@ func TestAddNamereferenceFieldSpec(t *testing.T) {
 		},
 	}
 
-	err := cfg.AddNamereferenceFieldSpec(nbrs)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if len(cfg.NameReference) != 1 {
-		t.Fatal("failed to add namereference FieldSpec")
-	}
+	require.NoError(t, cfg.AddNamereferenceFieldSpec(nbrs))
+	require.Len(t, cfg.NameReference, 1, "failed to add namereference FieldSpec")
 }
 
 func TestAddFieldSpecs(t *testing.T) {
@@ -53,34 +49,14 @@ func TestAddFieldSpecs(t *testing.T) {
 		CreateIfNotPresent: true,
 	}
 
-	err := cfg.AddPrefixFieldSpec(fieldSpec)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if len(cfg.NamePrefix) != 1 {
-		t.Fatalf("failed to add nameprefix FieldSpec")
-	}
-	err = cfg.AddSuffixFieldSpec(fieldSpec)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if len(cfg.NameSuffix) != 1 {
-		t.Fatalf("failed to add namesuffix FieldSpec")
-	}
-	err = cfg.AddLabelFieldSpec(fieldSpec)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if len(cfg.CommonLabels) != 1 {
-		t.Fatalf("failed to add nameprefix FieldSpec")
-	}
-	err = cfg.AddAnnotationFieldSpec(fieldSpec)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if len(cfg.CommonAnnotations) != 1 {
-		t.Fatalf("failed to add nameprefix FieldSpec")
-	}
+	require.NoError(t, cfg.AddPrefixFieldSpec(fieldSpec))
+	require.Len(t, cfg.NamePrefix, 1, "failed to add nameprefix FieldSpec")
+	require.NoError(t, cfg.AddSuffixFieldSpec(fieldSpec))
+	require.Len(t, cfg.NameSuffix, 1, "failed to add namesuffix FieldSpec")
+	require.NoError(t, cfg.AddCommonLabelsFieldSpec(fieldSpec))
+	require.Len(t, cfg.CommonLabels, 1, "failed to add labels FieldSpec")
+	require.NoError(t, cfg.AddAnnotationFieldSpec(fieldSpec))
+	require.Len(t, cfg.CommonAnnotations, 1, "failed to add nameprefix FieldSpec")
 }
 
 func TestMerge(t *testing.T) {
@@ -127,51 +103,43 @@ func TestMerge(t *testing.T) {
 		},
 	}
 	cfga := &TransformerConfig{}
-	cfga.AddNamereferenceFieldSpec(nameReference[0])
-	cfga.AddPrefixFieldSpec(fieldSpecs[0])
-	cfga.AddSuffixFieldSpec(fieldSpecs[0])
+	require.NoError(t, cfga.AddNamereferenceFieldSpec(nameReference[0]))
+	require.NoError(t, cfga.AddPrefixFieldSpec(fieldSpecs[0]))
+	require.NoError(t, cfga.AddSuffixFieldSpec(fieldSpecs[0]))
+	require.NoError(t, cfga.AddCommonLabelsFieldSpec(fieldSpecs[0]))
+	require.NoError(t, cfga.AddLabelsFieldSpec(fieldSpecs[0]))
 
 	cfgb := &TransformerConfig{}
-	cfgb.AddNamereferenceFieldSpec(nameReference[1])
-	cfgb.AddPrefixFieldSpec(fieldSpecs[1])
-	cfga.AddSuffixFieldSpec(fieldSpecs[1])
+	require.NoError(t, cfgb.AddNamereferenceFieldSpec(nameReference[1]))
+	require.NoError(t, cfgb.AddPrefixFieldSpec(fieldSpecs[1]))
+	require.NoError(t, cfgb.AddSuffixFieldSpec(fieldSpecs[1]))
+	require.NoError(t, cfgb.AddCommonLabelsFieldSpec(fieldSpecs[1]))
+	require.NoError(t, cfgb.AddLabelsFieldSpec(fieldSpecs[1]))
 
 	actual, err := cfga.Merge(cfgb)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-
-	if len(actual.NamePrefix) != 2 {
-		t.Fatal("merge failed for namePrefix FieldSpec")
-	}
-
-	if len(actual.NameSuffix) != 2 {
-		t.Fatal("merge failed for nameSuffix FieldSpec")
-	}
-
-	if len(actual.NameReference) != 1 {
-		t.Fatal("merge failed for namereference FieldSpec")
-	}
+	require.NoError(t, err)
+	require.Len(t, actual.NamePrefix, 2, "merge failed for namePrefix FieldSpec")
+	require.Len(t, actual.NameSuffix, 2, "merge failed for nameSuffix FieldSpec")
+	require.Len(t, actual.NameReference, 1, "merge failed for nameReference FieldSpec")
+	require.Len(t, actual.Labels, 2, "merge failed for labels FieldSpec")
+	require.Len(t, actual.CommonLabels, 2, "merge failed for commonLabels FieldSpec")
 
 	expected := &TransformerConfig{}
-	expected.AddNamereferenceFieldSpec(nameReference[0])
-	expected.AddNamereferenceFieldSpec(nameReference[1])
-	expected.AddPrefixFieldSpec(fieldSpecs[0])
-	expected.AddPrefixFieldSpec(fieldSpecs[1])
-	expected.AddSuffixFieldSpec(fieldSpecs[0])
-	expected.AddSuffixFieldSpec(fieldSpecs[1])
-
-	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("expected: %v\n but got: %v\n", expected, actual)
-	}
+	require.NoError(t, expected.AddNamereferenceFieldSpec(nameReference[0]))
+	require.NoError(t, expected.AddNamereferenceFieldSpec(nameReference[1]))
+	require.NoError(t, expected.AddPrefixFieldSpec(fieldSpecs[0]))
+	require.NoError(t, expected.AddPrefixFieldSpec(fieldSpecs[1]))
+	require.NoError(t, expected.AddSuffixFieldSpec(fieldSpecs[0]))
+	require.NoError(t, expected.AddSuffixFieldSpec(fieldSpecs[1]))
+	require.NoError(t, expected.AddCommonLabelsFieldSpec(fieldSpecs[0]))
+	require.NoError(t, expected.AddCommonLabelsFieldSpec(fieldSpecs[1]))
+	require.NoError(t, expected.AddLabelsFieldSpec(fieldSpecs[0]))
+	require.NoError(t, expected.AddLabelsFieldSpec(fieldSpecs[1]))
+	require.Equal(t, expected, actual)
 
 	actual, err = cfga.Merge(nil)
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if !reflect.DeepEqual(actual, cfga) {
-		t.Fatalf("expected: %v\n but got: %v\n", cfga, actual)
-	}
+	require.NoError(t, err)
+	require.Equal(t, cfga, actual)
 }
 
 func TestMakeDefaultConfig_mutation(t *testing.T) {
@@ -182,9 +150,7 @@ func TestMakeDefaultConfig_mutation(t *testing.T) {
 	a.NameReference = a.NameReference[:1]
 
 	clean := MakeDefaultConfig()
-	if clean.NameReference[0].Kind == "mutated" {
-		t.Errorf("MakeDefaultConfig() did not return a clean copy: %+v", clean.NameReference)
-	}
+	assert.NotEqualf(t, "mutated", clean.NameReference[0].Kind, "MakeDefaultConfig() did not return a clean copy: %+v", clean.NameReference)
 }
 
 func BenchmarkMakeDefaultConfig(b *testing.B) {
