@@ -21,6 +21,7 @@ type TransformerConfig struct {
 	NameSuffix        types.FsSlice `json:"nameSuffix,omitempty" yaml:"nameSuffix,omitempty"`
 	NameSpace         types.FsSlice `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	CommonLabels      types.FsSlice `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
+	Labels            types.FsSlice `json:"labels,omitempty" yaml:"labels,omitempty"`
 	TemplateLabels    types.FsSlice `json:"templateLabels,omitempty" yaml:"templateLabels,omitempty"`
 	CommonAnnotations types.FsSlice `json:"commonAnnotations,omitempty" yaml:"commonAnnotations,omitempty"`
 	NameReference     nbrSlice      `json:"nameReference,omitempty" yaml:"nameReference,omitempty"`
@@ -41,6 +42,7 @@ func (t *TransformerConfig) DeepCopy() *TransformerConfig {
 		NameSuffix:        t.NameSuffix.DeepCopy(),
 		NameSpace:         t.NameSpace.DeepCopy(),
 		CommonLabels:      t.CommonLabels.DeepCopy(),
+		Labels:            t.Labels.DeepCopy(),
 		TemplateLabels:    t.TemplateLabels.DeepCopy(),
 		CommonAnnotations: t.CommonAnnotations.DeepCopy(),
 		NameReference:     t.NameReference.DeepCopy(),
@@ -94,6 +96,7 @@ func (t *TransformerConfig) sortFields() {
 	sort.Sort(t.NameSuffix)
 	sort.Sort(t.NameSpace)
 	sort.Sort(t.CommonLabels)
+	sort.Sort(t.Labels)
 	sort.Sort(t.TemplateLabels)
 	sort.Sort(t.CommonAnnotations)
 	sort.Sort(t.NameReference)
@@ -114,10 +117,16 @@ func (t *TransformerConfig) AddSuffixFieldSpec(fs types.FieldSpec) (err error) {
 	return err
 }
 
-// AddLabelFieldSpec adds a FieldSpec to CommonLabels
-func (t *TransformerConfig) AddLabelFieldSpec(fs types.FieldSpec) (err error) {
+// AddCommonLabelsFieldSpec adds a FieldSpec to CommonLabels
+func (t *TransformerConfig) AddCommonLabelsFieldSpec(fs types.FieldSpec) (err error) {
 	t.CommonLabels, err = t.CommonLabels.MergeOne(fs)
 	return err
+}
+
+// AddLabelsFieldSpec adds a FieldSpec to Labels
+func (t *TransformerConfig) AddLabelsFieldSpec(fs types.FieldSpec) (err error) {
+	t.Labels, err = t.Labels.MergeOne(fs)
+	return err //nolint:wrapcheck
 }
 
 // AddAnnotationFieldSpec adds a FieldSpec to CommonAnnotations
@@ -161,6 +170,10 @@ func (t *TransformerConfig) Merge(input *TransformerConfig) (
 	merged.CommonLabels, err = t.CommonLabels.MergeAll(input.CommonLabels)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "failed to merge CommonLabels fieldSpec")
+	}
+	merged.Labels, err = t.Labels.MergeAll(input.Labels)
+	if err != nil {
+		return nil, errors.WrapPrefixf(err, "failed to merge Labels fieldSpec")
 	}
 	merged.TemplateLabels, err = t.TemplateLabels.MergeAll(input.TemplateLabels)
 	if err != nil {
