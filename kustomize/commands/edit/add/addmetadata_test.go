@@ -284,6 +284,16 @@ func TestAddLabelWithoutSelector(t *testing.T) {
 	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}})
 }
 
+func TestAddLabelWithoutSelectorIncludeTemplates(t *testing.T) {
+	var o addMetadataOptions
+	o.labelsWithoutSelector = true
+	m := makeKustomization(t)
+	o.metadata = map[string]string{"new": "label"}
+	o.includeTemplates = true
+	require.NoError(t, o.addLabels(m))
+	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}, IncludeTemplates: true})
+}
+
 func TestAddLabelWithoutSelectorAddLabel(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}

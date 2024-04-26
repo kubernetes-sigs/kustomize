@@ -39,6 +39,7 @@ type addMetadataOptions struct {
 	mapValidator          func(map[string]string) error
 	kind                  kindOfAdd
 	labelsWithoutSelector bool
+	includeTemplates      bool
 }
 
 // newCmdAddAnnotation adds one or more commonAnnotations to the kustomization file.
@@ -82,6 +83,9 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 	)
 	cmd.Flags().BoolVar(&o.labelsWithoutSelector, "without-selector", false,
 		"using add labels without selector option",
+	)
+	cmd.Flags().BoolVar(&o.includeTemplates, "include-templates", false,
+		"include labels in templates (requires --without-selector)",
 	)
 	return cmd
 }
@@ -132,7 +136,11 @@ func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
 
 func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
 	if o.labelsWithoutSelector {
-		m.Labels = append(m.Labels, types.Label{Pairs: make(map[string]string), IncludeSelectors: false})
+		m.Labels = append(m.Labels, types.Label{
+			Pairs:            make(map[string]string),
+			IncludeSelectors: false,
+			IncludeTemplates: o.includeTemplates,
+		})
 		return o.writeToMap(m.Labels[len(m.Labels)-1].Pairs, label)
 	}
 	if m.CommonLabels == nil {
