@@ -90,7 +90,7 @@ We are using [Conventional Commits v1.0.0](https://www.conventionalcommits.org/e
 | docs  | Changes related to documentation. | docs: add rules documentation for PR. |
 
 
-2. Add `BREAKING CHANGE:` on your commit message as footer to signify breaking changes. This will help maintainer to justify `MAJOR` releases.
+2. Add `BREAKING CHANGE:` on your commit message as footer to signify breaking changes. This will help maintainers identify `MAJOR` releases.
   
 Example:
 
