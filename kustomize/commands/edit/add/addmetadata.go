@@ -116,6 +116,9 @@ func (o *addMetadataOptions) validateAndParse(args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("must specify %s", o.kind)
 	}
+	if !o.labelsWithoutSelector && o.includeTemplates {
+		return fmt.Errorf("--without-selector flag must be specified for --include-templates to work")
+	}
 	m, err := util.ConvertSliceToMap(args, o.kind.String())
 	if err != nil {
 		return err
