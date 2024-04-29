@@ -329,15 +329,6 @@ func setPlaceholderValue(varName string, files []string, fSys filesys.FileSystem
 	return nil
 }
 
-func stringInSlice(elem string, slice []string) bool {
-	for i := range slice {
-		if slice[i] == elem {
-			return true
-		}
-	}
-	return false
-}
-
 func indexOf(varName string, slice []string) int {
 	for i := range slice {
 		if slice[i] == varName {
