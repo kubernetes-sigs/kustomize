@@ -224,7 +224,7 @@ func constructFieldOptions(value string, varString string) ([]*types.FieldOption
 			return nil, fmt.Errorf("cannot convert all vars to replacements; %s is not delimited", varString)
 		}
 		delimiter = pre
-		index = indexOf(varString, strings.Split(value, delimiter))
+		index = slices.Index(strings.Split(value, delimiter), varString)
 		if index == -1 {
 			// this should never happen
 			return nil, fmt.Errorf("internal error: could not get index of var %s", varString)
@@ -327,13 +327,4 @@ func setPlaceholderValue(varName string, files []string, fSys filesys.FileSystem
 		}
 	}
 	return nil
-}
-
-func indexOf(varName string, slice []string) int {
-	for i := range slice {
-		if slice[i] == varName {
-			return i
-		}
-	}
-	return -1
 }
