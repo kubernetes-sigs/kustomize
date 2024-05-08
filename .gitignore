@@ -31,3 +31,6 @@ site/.hugo_build.lock
 
 # goreleaser artifacts
 **/dist/
+
+# unwanted dependency list json
+hack/unwanted-dependencies.json

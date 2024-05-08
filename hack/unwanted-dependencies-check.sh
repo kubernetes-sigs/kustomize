@@ -10,12 +10,7 @@ declare -i rc=0
 declare -a POSTIONAL_ARGS=()
 
 # Whitelisted dependencies
-declare -a WHITELIST=(
-    "github.com/google/shlex"
-    "github.com/pkg/error"
-    "k8s.io/klog"
-    "github.com/json-iterator/go"
-)
+declare -a WHITELIST=()
 
 declare -x GO11MODULES=yes
 declare -x GOFLAGS=-mod=mod
@@ -85,6 +80,22 @@ pull_unwanted_dependencies_json() {
     fi
 }
 
+compile_whitelist() {
+    for dep in $(jq -r '.status.unwantedReferences | keys[]' "${READ_PATH}"); do
+         echo "checking $dep for whitelist..."
+         for downstream in $(jq -r '.status.unwantedReferences["'"$dep"'"]' "${READ_PATH}"); do
+            if [[ $downstream == *"kustomize"* ]]; then
+                if [[ "${WHITELIST[*]}" =~ "${dep}" ]]; then
+                    continue
+                else
+                    WHITELIST+=("$dep")
+                    break
+                fi
+            fi
+         done
+    done
+}
+
 check_unwanted_dependencies(){
     for dep in $(jq -r '.spec.unwantedModules | keys[]' "${READ_PATH}"); do
         for file in $(find . \( -type f -and -path '*/kyaml/*' -or -path '*/api/*' -or -path '*/kustomize/*' \)| fgrep go.sum); do
@@ -115,6 +126,7 @@ main() {
     parse_args $@
     check_requirements
     pull_unwanted_dependencies_json
+    compile_whitelist
     check_unwanted_dependencies
 }
 
