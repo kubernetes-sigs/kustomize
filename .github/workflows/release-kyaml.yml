@@ -26,7 +26,7 @@ jobs:
       - name: Fetch changes
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 10
           ref: ${{ inputs.release_branch }}
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
@@ -90,6 +90,7 @@ jobs:
           # Prepare git
           git config --global user.email "development@kustomize.io"
           git config --global user.name "Development"
+          git checkout ${{inputs.release_branch}}
 
           # Release kyaml
           make install-tools

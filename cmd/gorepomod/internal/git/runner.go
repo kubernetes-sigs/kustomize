@@ -391,8 +391,8 @@ func (gr *Runner) GetMainBranch() string {
 	return string(mainBranch)
 }
 
-func (gr *Runner) GetCurrentVersionFromHead() string {
-	currentBranchName, err := gr.run(noHarmDone, "rev-parse", "--abbrev-ref", "HEAD")
+func (gr *Runner) GetCurrentVersionFromBranchName() string {
+	currentBranchName, err := gr.run(noHarmDone, "branch", "--show-current")
 	if err != nil {
 		_ = fmt.Errorf("error getting current version")
 	}
