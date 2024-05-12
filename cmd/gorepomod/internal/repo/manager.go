@@ -6,7 +6,6 @@ package repo
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/edit"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
@@ -144,17 +143,18 @@ func (mgr *Manager) Release(
 
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
-	newVersionString := strings.Split(gr.GetCurrentVersionFromHead(), "/")
+	// e.g. get v0.17.1 from release-kyaml-v0.17.1
+	// guaranteed to be the newest version because bumping is done in ./releasing/create-release.sh
+	newVersionString := gr.GetCurrentVersionFromBranchName()
 
 	if len(newVersionString) == 0 {
 		return fmt.Errorf("error getting version from remote")
 	}
 
-	newVersion, err := semver.Parse(newVersionString[1])
+	newVersion, err := semver.Parse(string(newVersionString))
 	if err != nil {
 		return fmt.Errorf("error parsing version string: \"%s\"", newVersionString)
 	}
-
 	if newVersion.Equals(target.VersionRemote()) {
 		return fmt.Errorf(
 			"version %s already exists on remote - delete it first", newVersion)

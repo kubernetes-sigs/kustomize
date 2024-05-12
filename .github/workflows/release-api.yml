@@ -26,7 +26,7 @@ jobs:
       - name: Fetch changes
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 10
           ref: ${{ inputs.release_branch }}
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
@@ -76,8 +76,8 @@ jobs:
           git remote -v 
           
           # Pin dependencies: kyaml, cmd/config
-          gorepomod pin kyaml --local --doIt
-          gorepomod pin cmd/config --local --doIt
+          gorepomod pin kyaml v0.17.0 --local --doIt
+          gorepomod pin cmd/config v0.14.0 --local --doIt
       - name: Build api
         run: |
           make build-kustomize-api

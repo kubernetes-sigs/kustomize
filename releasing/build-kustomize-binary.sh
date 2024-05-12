@@ -6,12 +6,14 @@
 # It builds compressed artifacts on $release_dir.
 function build_kustomize_binary {
   echo "build kustomize binaries"
+  
   version=$1
-
   release_dir=$2
+
   echo "build release artifacts to $release_dir"
 
   mkdir -p "output"
+  
   # build date in ISO8601 format
   build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
   for os in linux darwin windows; do
@@ -61,18 +63,9 @@ main() {
       exit 1
   fi
 
-  release_artifact_dir=$(mktemp -d)
-
-  additional_release_artifacts_arg=("$release_artifact_dir"/*)
-
+  mkdir -p dist
+  release_artifact_dir=${PWD}/dist
   build_kustomize_binary "${version}" "${release_artifact_dir}"
-
-  # create github releases
-  gh release create "${currentTag}" \
-    --title "${currentTag}"\
-    --draft \
-    --notes-file "${changelog_file}"\
-    "${additional_release_artifacts_arg[@]}"
 }
 
 main $@
