@@ -201,7 +201,7 @@ func TestReadAndWriteDummy(t *testing.T) {
 		BuildMetadata:  []string{"buildMetadata"},
 	}
 
-	// this check is for forward compability: if this fails, add a dummy value to the Kustomization above
+	// this check is for forward compatibility: if this fails, add a dummy value to the Kustomization above
 	assertAllNonZeroExcept(t, kWrite, []string{"PatchesStrategicMerge", "PatchesJson6902", "ImageTags", "Vars", "Bases", "HelmChartInflationGenerator"})
 
 	fSys := filesys.MakeFsInMemory()
@@ -232,6 +232,7 @@ func assertAllNonZeroExcept(t *testing.T, val *types.Kustomization, except []str
 		key := fFor.Type().Field(i).Name
 		val := fFor.Field(i)
 		if val.IsZero() && !slices.Contains(except, key) {
+			t.Helper()
 			t.Fatalf("Key %s should not be empty", key)
 		}
 	}
