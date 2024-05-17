@@ -6,6 +6,8 @@ package target_test
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -559,4 +561,72 @@ func (l loaderNewThrowsError) Load(location string) ([]byte, error) {
 
 func (l loaderNewThrowsError) Cleanup() error {
 	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func TestErrorMessageForMalformedYAMLAndInvalidBase(t *testing.T) {
+	// These testcases verify behavior for the scenario described in
+	// https://github.com/kubernetes-sigs/kustomize/issues/5692 .
+
+	// Use a test server to fake the remote file response
+	handler := http.NewServeMux()
+	handler.HandleFunc("/", func(out http.ResponseWriter, req *http.Request) {
+		// Per issue #5692, the server should return a 200 status code with a response body that fails to parse as YAML
+		out.WriteHeader(http.StatusOK)
+		out.Write([]byte(`<!DOCTYPE html>
+<html class="html-devise-layout ui-light-gray" lang="en">
+<head prefix="og: http://ogp.me/ns#">`))
+	})
+	svr := httptest.NewServer(handler)
+	defer svr.Close()
+
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/should-fail/kustomization.yml", "resources:\n- "+svr.URL)
+	th.WriteF("/should-fail/remote-repo/kustomization.yml", "this: is not a kustomization file!")
+
+	ldrWrapper := func(baseLoader ifc.Loader) ifc.Loader {
+		return &loaderWithRenamedRoots{
+			baseLoader: baseLoader,
+			fakeRootMap: map[string]string{
+				// Use the "remote-repo" subdir instead of the remote git repo
+				svr.URL: "remote-repo",
+			},
+		}
+	}
+
+	_, err := makeAndLoadKustTargetWithLoaderOverride(t, th.GetFSys(), "/should-fail", ldrWrapper).AccumulateTarget()
+	require.Error(t, err)
+	errString := err.Error()
+	assert.Contains(t, errString, "accumulating resources from '"+svr.URL+"'")
+	assert.Contains(t, errString, "MalformedYAMLError: yaml: line 3: mapping values are not allowed in this context")
+	assert.Contains(t, errString, `invalid Kustomization: json: unknown field "this"`)
+}
+
+// loaderWithRenamedRoots is a loader that can map New() roots to some other name
+type loaderWithRenamedRoots struct {
+	baseLoader  ifc.Loader
+	fakeRootMap map[string]string
+}
+
+func (l loaderWithRenamedRoots) Repo() string {
+	return l.baseLoader.Repo()
+}
+
+func (l loaderWithRenamedRoots) Root() string {
+	return l.baseLoader.Root()
+}
+
+func (l loaderWithRenamedRoots) New(newRoot string) (ifc.Loader, error) {
+	if otherRoot, ok := l.fakeRootMap[newRoot]; ok {
+		return l.baseLoader.New(otherRoot)
+	}
+
+	return l.baseLoader.New(newRoot)
+}
+
+func (l loaderWithRenamedRoots) Load(path string) ([]byte, error) {
+	return l.baseLoader.Load(path)
+}
+
+func (l loaderWithRenamedRoots) Cleanup() error {
+	return l.baseLoader.Cleanup()
 }
