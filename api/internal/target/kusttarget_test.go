@@ -572,7 +572,7 @@ func TestErrorMessageForMalformedYAMLAndInvalidBase(t *testing.T) {
 	handler.HandleFunc("/", func(out http.ResponseWriter, req *http.Request) {
 		// Per issue #5692, the server should return a 200 status code with a response body that fails to parse as YAML
 		out.WriteHeader(http.StatusOK)
-		out.Write([]byte(`<!DOCTYPE html>
+		_, _ = out.Write([]byte(`<!DOCTYPE html>
 <html class="html-devise-layout ui-light-gray" lang="en">
 <head prefix="og: http://ogp.me/ns#">`))
 	})
@@ -617,16 +617,16 @@ func (l loaderWithRenamedRoots) Root() string {
 
 func (l loaderWithRenamedRoots) New(newRoot string) (ifc.Loader, error) {
 	if otherRoot, ok := l.fakeRootMap[newRoot]; ok {
-		return l.baseLoader.New(otherRoot)
+		return l.baseLoader.New(otherRoot) //nolint:wrapcheck // baseLoader's error is sufficient
 	}
 
-	return l.baseLoader.New(newRoot)
+	return l.baseLoader.New(newRoot) //nolint:wrapcheck // baseLoader's error is sufficient
 }
 
 func (l loaderWithRenamedRoots) Load(path string) ([]byte, error) {
-	return l.baseLoader.Load(path)
+	return l.baseLoader.Load(path) //nolint:wrapcheck // baseLoader's error is sufficient
 }
 
 func (l loaderWithRenamedRoots) Cleanup() error {
-	return l.baseLoader.Cleanup()
+	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
 }
