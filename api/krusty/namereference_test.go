@@ -786,3 +786,85 @@ spec:
         name: tester
 `)
 }
+
+func TestBackReferenceAdmissionPolicy(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- admission.yaml
+
+namePrefix: a-prefix-
+`)
+	th.WriteF("admission.yaml", `---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: sample-policy
+spec:
+  failurePolicy: Fail
+  paramKind:
+    apiVersion: apps/v1
+    kind: Deployment
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+  validations:
+    - expression: "!object.metadata.name.startsWith('test-')"
+      message: prefix 'test-' is not allowed
+      reason: Invalid
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: sample-policy-binding
+spec:
+  policyName: sample-policy
+  validationActions:
+  - Deny
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: a-prefix-sample-policy
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - apps
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - deployments
+  paramKind:
+    apiVersion: apps/v1
+    kind: Deployment
+  validations:
+  - expression: '!object.metadata.name.startsWith(''test-'')'
+    message: prefix 'test-' is not allowed
+    reason: Invalid
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: a-prefix-sample-policy-binding
+spec:
+  policyName: a-prefix-sample-policy
+  validationActions:
+  - Deny
+`)
+}
