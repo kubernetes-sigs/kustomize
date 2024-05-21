@@ -79,6 +79,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy1
+  labels:
+     old-label: old-value
 spec:
   template:
     metadata:
@@ -96,6 +98,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy2
+  labels:
+    key: value
 spec:
   template:
     metadata:
@@ -149,7 +153,7 @@ patches:
 EOF
 ```
 
-The expected result is:
+Two deployment will be patched, the expected result is:
 
 <!-- @definedExpectedOutput @testAgainstLatestRelease -->
 
@@ -214,5 +218,29 @@ Confirm expectations:
 diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
 ```
 
-To see how to do this with JSON patches,
-try the [JSON patch] demo.
+Let us do one more try.
+Redefine a kustomization file. This time only patch one deployment whose label is "key: value".
+
+```
+cat <<EOF >$DEMO_HOME/kustomization.yaml
+resources:
+- deployments.yaml
+
+patches:
+- path: patch.yaml
+  target:
+    kind: Deployment
+    labelSelector: key=value
+EOF
+```
+
+Run the build:
+```
+kustomize build $DEMO_HOME 
+```
+
+Confirm expectations:
+```
+Only deploy2 is patched. No change for deploy1.
+```
+ 
