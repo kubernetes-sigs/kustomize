@@ -245,6 +245,6 @@ kustomize build $DEMO_HOME
 
 Confirm expectations:
 ```
-Only deploy2 is patched since its label matches `labelSelector: key=value`. No change for deploy1.
+Only deploy2 is patched since its label matches "labelSelector: key=value". No change for deploy1.
 ```
  
