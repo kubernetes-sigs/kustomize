@@ -163,6 +163,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy1
+  labels:
+     old-label: old-value
 spec:
   template:
     metadata:
@@ -185,6 +187,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deploy2
+  labels:
+    key: value
 spec:
   template:
     metadata:
