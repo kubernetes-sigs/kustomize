@@ -80,7 +80,7 @@ kind: Deployment
 metadata:
   name: deploy1
   labels:
-     old-label: old-value
+    old-label: old-value
 spec:
   template:
     metadata:
