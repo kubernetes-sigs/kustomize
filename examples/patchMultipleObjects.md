@@ -78,9 +78,9 @@ cat <<EOF >$DEMO_HOME/deployments.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deploy1
   labels:
     old-label: old-value
+  name: deploy1
 spec:
   template:
     metadata:
@@ -97,9 +97,9 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deploy2
   labels:
     key: value
+  name: deploy2
 spec:
   template:
     metadata:
@@ -162,9 +162,9 @@ cat <<EOF >$DEMO_HOME/out_expected.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deploy1
   labels:
     old-label: old-value
+  name: deploy1
 spec:
   template:
     metadata:
@@ -186,9 +186,9 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deploy2
   labels:
     key: value
+  name: deploy2
 spec:
   template:
     metadata:
