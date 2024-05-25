@@ -449,9 +449,6 @@ func (kt *KustTarget) accumulateResources(
 				ra, err = kt.accumulateDirectory(ra, ldr, false)
 			}
 			if err != nil {
-				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
-					return nil, errF
-				}
 				return nil, errors.WrapPrefixf(
 					err, "accumulation err='%s'", errF.Error())
 			}
