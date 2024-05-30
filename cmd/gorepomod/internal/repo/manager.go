@@ -151,7 +151,7 @@ func (mgr *Manager) Release(
 		return fmt.Errorf("error getting version from remote")
 	}
 
-	newVersion, err := semver.Parse(string(newVersionString))
+	newVersion, err := semver.Parse(newVersionString)
 	if err != nil {
 		return fmt.Errorf("error parsing version string: \"%s\"", newVersionString)
 	}
