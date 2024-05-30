@@ -398,5 +398,5 @@ func (gr *Runner) GetCurrentVersionFromBranchName() string {
 	}
 	// Assuming release branch has this format: release-path/to/module-vX.Y.Z
 	splitBranchName := strings.Split(currentBranchName, "-")
-	return string(splitBranchName[len(splitBranchName)-1])
+	return splitBranchName[len(splitBranchName)-1]
 }
