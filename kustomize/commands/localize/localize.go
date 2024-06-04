@@ -134,7 +134,9 @@ func runBuildCmd(buffer bytes.Buffer, cmd *cobra.Command, folder string) (buildO
 	buffer.Reset()
 	buildErr := cmd.RunE(cmd, []string{folder})
 	if buildErr != nil {
-		log.Printf("If your target directory requires flags to build: \n 1. Add executable permissions for the downloaded exec binaries in '%s'. \n 2. Run kustomize build with the necessary flags and self-verify the outputs.", folder)
+		log.Printf("If your target directory requires flags to build: \n"+
+			"1. Add executable permissions for the downloaded exec binaries in '%s'. \n"+
+			"2. Run kustomize build with the necessary flags and self-verify the outputs.", folder)
 		return "", errors.Wrap(buildErr)
 	}
 
