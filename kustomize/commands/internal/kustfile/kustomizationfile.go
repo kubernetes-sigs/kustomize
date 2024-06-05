@@ -40,6 +40,7 @@ func determineFieldOrder() []string {
 
 	ordered := []string{
 		"MetaData",
+		"SortOptions",
 		"Resources",
 		"Bases",
 		"NamePrefix",
@@ -65,6 +66,7 @@ func determineFieldOrder() []string {
 		"Configurations",
 		"Generators",
 		"Transformers",
+		"Validators",
 		"Components",
 		"OpenAPI",
 		"BuildMetadata",
