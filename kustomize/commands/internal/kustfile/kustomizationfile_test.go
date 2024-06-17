@@ -226,6 +226,7 @@ func TestReadAndWriteDummy(t *testing.T) {
 }
 
 func assertAllNonZeroExcept(t *testing.T, val *types.Kustomization, except []string) {
+	t.Helper()
 	fFor := reflect.ValueOf(val).Elem()
 	n := fFor.NumField()
 	for i := 0; i < n; i++ {
