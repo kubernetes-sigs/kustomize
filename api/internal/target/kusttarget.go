@@ -457,7 +457,7 @@ func (kt *KustTarget) accumulateResources(
 	return ra, nil
 }
 
-// accumulateResources fills the given resourceAccumulator
+// accumulateComponents fills the given resourceAccumulator
 // with resources read from the given list of paths.
 func (kt *KustTarget) accumulateComponents(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {
