@@ -3710,7 +3710,7 @@ func TestGetByRegex(t *testing.T) {
   },
   }
   for _, tc := range testCases {
-    res := getByRegex(tc.regex, tc.target, tc.source, tc.index)
+    res, _ := getByRegex(tc.regex, tc.target, tc.source, tc.index)
     if !assert.Equal(t, tc.want, res) {
       t.FailNow()
     }

@@ -253,6 +253,7 @@ func fieldRetrievalError(fieldPath string, isCreate bool) string {
 }
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
+	var err error
 	value = value.Copy()
 	if options != nil && (options.Delimiter != "" || options.FullText != "") {
 		if targetField.YNode().Kind != yaml.ScalarNode {
@@ -260,14 +261,18 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 		}
 		v := yaml.GetValue(value)
 		if options.FullText != "" {
-			value.YNode().Value = getByRegex(options.FullText, targetField.YNode().Value, v, options.Index)
+			v, err = getByRegex(options.FullText, targetField.YNode().Value, v, options.Index)
 		} else if options.Delimiter != "" && options.EndDelimiter != "" {
 			regex := regexp.QuoteMeta(options.Delimiter) + `(.*?)` + regexp.QuoteMeta(options.EndDelimiter)
 			source := options.Delimiter + v + options.EndDelimiter
-			value.YNode().Value = getByRegex(regex, targetField.YNode().Value, source, options.Index)
+			v, err = getByRegex(regex, targetField.YNode().Value, source, options.Index)
 		} else {
-			value.YNode().Value = getByDelimiter(options.Delimiter, targetField.YNode().Value, v, options.Index)
+			v = getByDelimiter(options.Delimiter, targetField.YNode().Value, v, options.Index)
 		}
+		if err != nil {
+			return err
+		}
+		value.YNode().Value = v
 	}
 
 	if targetField.YNode().Kind == yaml.ScalarNode {
@@ -294,10 +299,10 @@ func getByDelimiter(delimiter string, target string, source string, index int) s
 	return strings.Join(tv, delimiter)
 }
 
-func getByRegex(regex string, target string, source string, index int) string {
-	_, err := regexp.Compile(pattern)
+func getByRegex(regex string, target string, source string, index int) (string, error) {
+	_, err := regexp.Compile(regex)
 	if err != nil {
-		return nil, fmt.Errorf("the regex: %s is not valid.", regex)
+		return "", fmt.Errorf("the regex: %s is not valid.", regex)
 	}
 	re := regexp.MustCompile(regex)
 	counter := 0
