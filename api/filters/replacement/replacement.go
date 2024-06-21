@@ -74,6 +74,13 @@ func selectSourceNode(nodes []*yaml.RNode, selector *types.SourceSelector) (*yam
 		if err != nil {
 			return nil, fmt.Errorf("error getting node IDs: %w", err)
 		}
+		selectByAnnoAndLabel, err := rejectByAnnoAndLabel(n, selector.Reject)
+		if err != nil {
+			return nil, err
+		}
+		if !selectByAnnoAndLabel {
+			continue
+		}
 		for _, id := range ids {
 			if id.IsSelectedBy(selector.ResId) {
 				if len(matches) > 0 {
@@ -139,7 +146,7 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 			}
 
 			// filter targets by label and annotation selectors
-			selectByAnnoAndLabel, err := selectByAnnoAndLabel(possibleTarget, selector)
+			selectByAnnoAndLabel, err := selectByAnnoAndLabel(possibleTarget, selector.Select, selector.Reject)
 			if err != nil {
 				return nil, err
 			}
@@ -162,11 +169,15 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 	return nodes, nil
 }
 
-func selectByAnnoAndLabel(n *yaml.RNode, t *types.TargetSelector) (bool, error) {
-	if matchesSelect, err := matchesAnnoAndLabelSelector(n, t.Select); !matchesSelect || err != nil {
+func selectByAnnoAndLabel(n *yaml.RNode, s *types.Selector, r []*types.Selector) (bool, error) {
+	if matchesSelect, err := matchesAnnoAndLabelSelector(n, s); !matchesSelect || err != nil {
 		return false, err
 	}
-	for _, reject := range t.Reject {
+	return rejectByAnnoAndLabel(n, r)
+}
+
+func rejectByAnnoAndLabel(n *yaml.RNode, r []*types.Selector) (bool, error) {
+	for _, reject := range r {
 		if reject.AnnotationSelector == "" && reject.LabelSelector == "" {
 			continue
 		}
@@ -176,6 +187,7 @@ func selectByAnnoAndLabel(n *yaml.RNode, t *types.TargetSelector) (bool, error) 
 	}
 	return true, nil
 }
+
 
 func matchesAnnoAndLabelSelector(n *yaml.RNode, selector *types.Selector) (bool, error) {
 	r := resource.Resource{RNode: *n}
@@ -283,6 +295,10 @@ func getByDelimiter(delimiter string, target string, source string, index int) s
 }
 
 func getByRegex(regex string, target string, source string, index int) string {
+	_, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("the regex: %s is not valid.", regex)
+	}
 	re := regexp.MustCompile(regex)
 	counter := 0
 	res := re.ReplaceAllStringFunc(target, func(str string) string {
@@ -293,6 +309,6 @@ func getByRegex(regex string, target string, source string, index int) string {
 		counter++
 		return re.ReplaceAllString(str, source)
 	})
-	return res
+	return res, nil
 }
 

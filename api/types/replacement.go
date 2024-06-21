@@ -32,6 +32,9 @@ type SourceSelector struct {
 
 	// Structured field path expected in the allowed object.
 	FieldPath string `json:"fieldPath,omitempty" yaml:"fieldPath,omitempty"`
+	
+	// From the allowed set, remove objects that match this.
+	Reject []*Selector `json:"reject,omitempty" yaml:"reject,omitempty"`
 
 	// Used to refine the interpretation of the field.
 	Options *FieldOptions `json:"options,omitempty" yaml:"options,omitempty"`

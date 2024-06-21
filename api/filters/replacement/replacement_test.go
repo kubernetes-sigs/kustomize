@@ -3465,6 +3465,155 @@ spec:
         name: postgresdb
 `,
 		},
+    "multiple matches for source select with reject": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+  labels:
+    foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+  labels:
+    foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    reject:
+      - labelSelector: foo=bar
+  targets:
+  - select:
+      kind: Deployment
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb`,
+		},
+    "multiple matches for source select with reject but still too many matches": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+  labels:
+    foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    reject:
+      - labelSelector: foo=bar
+  targets:
+  - select:
+      kind: Deployment
+`,
+			expectedErr: `multiple matches for selector Deployment.[noVer].[noGrp]/[noName].[noNs]`,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -3489,4 +3638,81 @@ spec:
 			}
 		})
 	}
+}
+
+func TestGetByRegex(t *testing.T) {
+  testCases := map[string]struct {
+		regex        string
+		target       string
+		source       string
+		index        int
+    want         string
+	}{ "simple": {
+    regex: `THIS`,
+    target: `replace THIS word`,
+    source: `REPLACED`,
+    index: 0,
+    want: `replace REPLACED word`,
+  },
+  "simple replace all": {
+    regex: `THIS`,
+    target: `replace THIS word THIS`,
+    source: `REPLACED`,
+    index: -1,
+    want: `replace REPLACED word REPLACED`,
+  },
+  "simple replace with index": {
+    regex: `THIS`,
+    target: `replace THIS word THIS`,
+    source: `REPLACED`,
+    index: 0,
+    want: `replace REPLACED word THIS`,
+  },
+  "simple replace target has no matching regex": {
+    regex: `foo`,
+    target: `this is a target`,
+    source: `bar`,
+    index: 0,
+    want: `this is a target`,
+  },
+  "simple replace source is empty": {
+    regex: `this`,
+    target: `this is a target`,
+    source: ``,
+    index: 0,
+    want: ` is a target`,
+  },
+  "simple replace source with point": {
+    regex: `.`,
+    target: `this is a target`,
+    source: `a`,
+    index: 0,
+    want: `ahis is a target`,
+  },"simple replace all alphanumeric character": {
+    regex: `\w`,
+    target: `this is a target`,
+    source: `a`,
+    index: -1,
+    want: `aaaa aa a aaaaaa`,
+  },"simple replace index out of bounds": {
+    regex: `this`,
+    target: `this is a target`,
+    source: `bar`,
+    index: 5,
+    want: `this is a target`,
+  },
+  "simple replace with star": {
+    regex: `this*`,
+    target: `this is a target`,
+    source: `bar`,
+    index: 5,
+    want: `this is a target`,
+  },
+  }
+  for _, tc := range testCases {
+    res := getByRegex(tc.regex, tc.target, tc.source, tc.index)
+    if !assert.Equal(t, tc.want, res) {
+      t.FailNow()
+    }
+  }
 }
