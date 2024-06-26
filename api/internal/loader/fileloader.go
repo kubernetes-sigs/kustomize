@@ -106,6 +106,9 @@ type FileLoader struct {
 	cleaner func() error
 }
 
+// This redirect code does not process automaticali by http client and we can process it manualy
+const MULTIPLE_CHOICES_REDIRECT_CODE = 300
+
 // Repo returns the absolute path to the repo that contains Root if this fileLoader was created from a url
 // or the empty string otherwise.
 func (fl *FileLoader) Repo() string {
@@ -318,7 +321,7 @@ func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
 	defer resp.Body.Close()
 	// response unsuccessful
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		if resp.StatusCode == 300 {
+		if resp.StatusCode == MULTIPLE_CHOICES_REDIRECT_CODE {
 			var newPath string = resp.Header.Get("Location")
 			return nil, &RedirectionError{
 				Msg:     "Response is redirect",
