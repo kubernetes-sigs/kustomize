@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
-	"sigs.k8s.io/kustomize/api/internal/loader"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -683,7 +682,7 @@ func TestLoaderHTTP(t *testing.T) {
 		l2.http = hc
 		_, err := l2.Load(x.path)
 		require.Error(err)
-		var redErr *loader.RedirectionError
+		var redErr *RedirectionError
 		var path string = ""
 		if errors.As(err, &redErr) {
 			path = redErr.NewPath
