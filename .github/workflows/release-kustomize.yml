@@ -1,0 +1,149 @@
+name: release-kustomize
+
+on: 
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        description: release type (major, minor, or patch).
+        options:
+          - major
+          - minor
+          - patch
+        required: true
+        default: 'patch'
+      release_branch:
+        type: string
+        description: release branch name "release-kustomize-v*"
+        required: true
+        default: 'master'
+
+jobs:
+  pre-build: 
+    name: Pre-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Unit test
+        id: unit_test
+        run: |
+
+          # Run unit test
+          echo "Executing unit test"
+          go install github.com/jstemmer/go-junit-report@latest
+          make test-unit-all | go-junit-report -set-exit-code > report.xml
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: |
+            ./report.xml
+        if: always()
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: pre-build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+      - name: Install local tools
+        run: |
+          make install-local-tools
+      - name: Pin kyaml, cmd/config, and api
+        run: |
+
+          # Prepare git
+          git config --global user.email "development@kustomize.io"
+          git config --global user.name "Development"
+          # TODO: change to kustomize token and url
+          git remote add upstream "https://x-access-token:${GITHUB_TOKEN}@github.com/antoooks/kustomize.git"
+          git remote -v 
+          
+          # Pin dependencies: kyaml, cmd/config, api
+          gorepomod pin kyaml --local --doIt
+          gorepomod pin cmd/config --local --doIt
+          gorepomod pin api --local --doIt
+      - name: Build test
+        run: |
+          make build-kustomize-api
+      - name: End-to-end test
+        run: |
+          export latestVersion=$(./releasing/determine-next-version.sh kustomize ${{ inputs.release_type }})
+          sed -i -e "s/LATEST_RELEASE=.*/LATEST_RELEASE=$latestVersion/g" Makefile
+      - name: Commit pinned dependencies
+        run: |
+
+          # Commit pinned dependencies and handle no commit          
+          git add --all
+          git commit -m "pin kyaml, cmd/config, api" || true
+          git push
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Release kustomize
+        run: |
+        
+          # Prepare git
+          git config --global user.email "development@kustomize.io"
+          git config --global user.name "Development"
+
+          # Release kustomize
+          make install-local-tools
+          gorepomod release kustomize ${{ inputs.release_type }} --local  --doIt
+      - name: Build kustomize binary and create release
+        run: |
+
+          # Build kustomize binary
+          ./releasing/build-kustomize-binary.sh
+
+          # Compile changelog
+          changelog_file=$(mktemp)
+          currentTag=$(git describe --tags)
+          ./releasing/compile-changelog.sh "kustomize" "${currentTag}" "${changelog_file}"
+
+          # Create github releases
+          export additional_release_artifacts_arg=("dist"/*)
+
+          gh release create "${currentTag}" \
+          --title "${currentTag}" \
+          --draft \
+          --notes-file "${changelog_file}" \
+          "${additional_release_artifacts_arg[@]}"
