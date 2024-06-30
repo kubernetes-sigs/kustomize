@@ -113,9 +113,7 @@ configuration is to
     the appropriate `configMapKeyRef` field.
 
 This latter change initiates rolling update to the pods
-in the deployment. The older ConfigMap, when no longer
-referenced by any other resource, is eventually [garbage
-collected](/../../issues/242).
+in the deployment.
 
 ### How this works with kustomize
 
