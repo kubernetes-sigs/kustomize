@@ -137,8 +137,15 @@ func (p *PathMatcher) visitEveryElem(elem *RNode) error {
 func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
 	// lookup the field
 	field, err := rn.Pipe(Get(p.Path[0]))
-	if err != nil || (!IsCreate(p.Create) && field == nil) {
+	if err != nil {
+		if errors.Is(err, &InvalidNodeKindError{}) {
+			fmt.Println(err)
+		}
 		return nil, err
+	}
+
+	if !IsCreate(p.Create) && field == nil {
+		return nil, nil
 	}
 
 	if IsCreate(p.Create) && field == nil {

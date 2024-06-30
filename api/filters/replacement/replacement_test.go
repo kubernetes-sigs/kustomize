@@ -1836,6 +1836,44 @@ spec:
     imagePullPolicy: OnFailure
 `,
 		},
+		"replacement contain jsonfield": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "REPLACE_TARGET_HOSTNAME"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: target-configmap
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.config\.json.config.hostname
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "target-configmap"
+      }
+    }`,
+		},
 		"multiple field paths in target": {
 			input: `apiVersion: v1
 kind: ConfigMap
@@ -2779,7 +2817,7 @@ spec:
           name: myingress
         fieldPaths:
           - spec.tls.0.hosts.0
-          - spec.tls.0.secretName          
+          - spec.tls.0.secretName
         options:
           create: true
 `,
