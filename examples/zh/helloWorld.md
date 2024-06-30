@@ -131,9 +131,11 @@ mkdir -p $OVERLAYS/production
 ```
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
-commonLabels:
-  variant: staging
-  org: acmeCorporation
+labels:
+- includeSelectors: true
+  pairs:
+    variant: staging
+    org: acmeCorporation
 commonAnnotations:
   note: Hello, I am staging!
 resources:
@@ -170,9 +172,11 @@ EOF
 ```
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
 namePrefix: production-
-commonLabels:
-  variant: production
-  org: acmeCorporation
+labels:
+- includeSelectors: true
+  pairs:
+    variant: production
+    org: acmeCorporation
 commonAnnotations:
   note: Hello, I am production!
 resources:
