@@ -78,6 +78,8 @@ cat <<EOF >$DEMO_HOME/deployments.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    old-label: old-value
   name: deploy1
 spec:
   template:
@@ -95,6 +97,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    key: value
   name: deploy2
 spec:
   template:
@@ -149,7 +153,7 @@ patches:
 EOF
 ```
 
-The expected result is:
+Two deployment will be patched, the expected result is:
 
 <!-- @definedExpectedOutput @testAgainstLatestRelease -->
 
@@ -158,6 +162,8 @@ cat <<EOF >$DEMO_HOME/out_expected.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    old-label: old-value
   name: deploy1
 spec:
   template:
@@ -180,6 +186,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    key: value
   name: deploy2
 spec:
   template:
@@ -214,5 +222,29 @@ Confirm expectations:
 diff $DEMO_HOME/out_actual.yaml $DEMO_HOME/out_expected.yaml
 ```
 
-To see how to do this with JSON patches,
-try the [JSON patch] demo.
+Let us do one more try.
+Redefine a kustomization file. This time only patch one deployment whose label is "key: value".
+
+```
+cat <<EOF >$DEMO_HOME/kustomization.yaml
+resources:
+- deployments.yaml
+
+patches:
+- path: patch.yaml
+  target:
+    kind: Deployment
+    labelSelector: key=value
+EOF
+```
+
+Run the build:
+```
+kustomize build $DEMO_HOME 
+```
+
+Confirm expectations:
+```
+Only deploy2 is patched since its label matches "labelSelector: key=value". No change for deploy1.
+```
+ 
