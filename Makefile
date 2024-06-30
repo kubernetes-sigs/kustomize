@@ -183,7 +183,13 @@ test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
 workspace-sync:
 	go work sync
 	./hack/doGoMod.sh tidy
-	
+
+# Run Go benchmarks
+# Also check out kustomize-benchmark-suite/Dockerfile for more benchmarks
+.PHONY: run-benchmarks
+run-benchmarks:
+	go test -run=x -bench=BenchmarkBuild ./kustomize/commands/build
+
 # --- Cleanup targets ---
 .PHONY: clean
 clean: clean-kustomize-external-go-plugin uninstall-tools
