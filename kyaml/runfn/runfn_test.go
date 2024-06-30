@@ -1371,3 +1371,55 @@ func TestRunFns_mergeContainerEnv(t *testing.T) {
 		})
 	}
 }
+
+func TestRunFns_mergeExecEnv(t *testing.T) {
+	testcases := []struct {
+		name      string
+		instance  RunFns
+		inputEnvs []string
+		expect    []string
+	}{
+		{
+			name:     "all empty",
+			instance: RunFns{},
+			expect:   []string{},
+		},
+		{
+			name:      "empty command line envs",
+			instance:  RunFns{},
+			inputEnvs: []string{"foo=bar"},
+			expect:    []string{"foo=bar"},
+		},
+		{
+			name: "empty declarative envs",
+			instance: RunFns{
+				Env: []string{"foo=bar"},
+			},
+			expect: []string{"foo=bar"},
+		},
+		{
+			name: "same key",
+			instance: RunFns{
+				Env: []string{"foo=bar"},
+			},
+			inputEnvs: []string{"foo=bar1"},
+			expect:    []string{"foo=bar"},
+		},
+		{
+			name: "same exported key",
+			instance: RunFns{
+				Env: []string{"foo=bar"},
+			},
+			inputEnvs: []string{"foo1=bar1"},
+			expect:    []string{"foo1=bar1", "foo=bar"},
+		},
+	}
+
+	for i := range testcases {
+		tc := testcases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			envs := tc.instance.mergeExecEnv(tc.inputEnvs)
+			assert.Equal(t, tc.expect, envs)
+		})
+	}
+}
