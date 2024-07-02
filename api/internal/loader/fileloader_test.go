@@ -668,10 +668,10 @@ func TestLoaderHTTP(t *testing.T) {
 		},
 	}
 	for _, x := range testCaseRedirect {
-		expectedLocation := "https://redirect.com/resource.yaml"
+		expectedLocation := "https://test.com/resource.yaml"
 		hc := makeFakeHTTPClient(func(req *http.Request) *http.Response {
 			response := &http.Response{
-				StatusCode: 300,
+				StatusCode: MultipleChoicesRedirectCode,
 				Body:       io.NopCloser(bytes.NewBufferString("")),
 				Header:     make(http.Header),
 			}
