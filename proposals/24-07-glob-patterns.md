@@ -11,11 +11,14 @@ To get started with this template:
   Ping `@kubernetes-sigs/kustomize-admins` and `@kubernetes-sigs/kustomize-maintainers`.
 -->
 
-# Your short, descriptive title
+# Add glob pattern support in the `resources` key of a user's `kustomization.yaml`
 
-**Authors**: <!-- Your github handle -->
+**Authors**:
+- BitForger
 
 **Reviewers**: <!-- List at least one Kustomize approver (https://github.com/kubernetes-sigs/kustomize/blob/master/OWNERS#L2) -->
+- natasha41575
+- KnVerey
 
 **Status**: implementable
 <!--
@@ -36,20 +39,24 @@ update the older one's status to "replaced by <link>".
 <!--
 In one short paragraph, summarize why this change is important to Kustomize users.
 -->
+File path globbing for the `resources` key enables users to maximize their use of Kustomize in their GitOps and CI/CD workflows. It simplifies their `kustomization.yaml` files by allowing them to pass a set of patterns that are equal to, or children of the `kustomization.yaml`'s working directory.
 
 ## Motivation
 
 <!--
 If this proposal is an expansion of an existing GitHub issue, link to it here.
 -->
+https://github.com/kubernetes-sigs/kustomize/issues/3205 is one of (at least two that I've seen) issues opened looking for this functionality.
+
+As operational tasks shift to a declarative approach, the need to apply a large set of manifests from a "source of truth" repository is increasingly common. Currently, Kustomize very tediously requires a user to define every individual path for each resource the user wishes to build and apply. When you have multiple sets of services you need to apply, this can very quickly spiral into `kustomization.yaml` files with a 100 or more lines of resources. File-path globbing was a feature in the past, but was removed, much to the communities chagrin. This proposal seeks to reverse that change.
 
 **Goals:**
 <!--
 List the specific goals of the proposal. What is it trying to achieve? How will we
 know that this has succeeded?
 -->
-1. A goal
-1. Another goal
+1. Resource resolution based on glob patterns
+2. Resource resolution should only happen at the same or below the main `kustomization.yaml` file
 
 
 **Non-goals:**
@@ -57,8 +64,7 @@ know that this has succeeded?
 What is out of scope for this proposal? Listing non-goals helps to focus discussion
 and make progress.
 -->
-1. A non-goal
-1. Another non-goal
+1. Resource globbing should not have exclusions
 
 ## Proposal
 
