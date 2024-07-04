@@ -64,7 +64,7 @@ know that this has succeeded?
 What is out of scope for this proposal? Listing non-goals helps to focus discussion
 and make progress.
 -->
-1. Resource globbing should not have exclusions
+1. Resource globbing should not accept exclude patterns
 
 ## Proposal
 
@@ -81,6 +81,8 @@ A proof of concept PR is NOT required but is preferable to including large amoun
 inline here, if you feel such implementation details are required to adequately explain your design.
 If you have a PR, link to it at the top of this section.
 -->
+
+
 
 ### User Stories
 <!--
