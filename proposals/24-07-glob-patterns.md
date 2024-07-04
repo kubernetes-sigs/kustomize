@@ -81,7 +81,7 @@ A proof of concept PR is NOT required but is preferable to including large amoun
 inline here, if you feel such implementation details are required to adequately explain your design.
 If you have a PR, link to it at the top of this section.
 -->
-
+This can be implemented by adding a flag to the `kustomization.yaml` called `enableGlobbing` or `enableGlobSupport` that accepts a boolean value. When this flag is enabled, a user can pass glob patterns to the `resources` array and kustomize will take the pattern and collect all sibling and child paths that match the provided pattern.
 
 
 ### User Stories
@@ -94,21 +94,68 @@ The goal here is to make this feel real for users without getting bogged down.
 
 #### Story 1
 
-Scenario summary: As a [end user, extension developer, ...], I want to [...]
+Scenario summary: As a end user, I want to use a pattern to apply a bunch of manifests
 <!--
 A walkthrough of what it will look like for a user to take advantage of the new feature.
 Include the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
+
+Take the below file structure
+
+```
+.
+└── k8s/
+    ├── pipelines/
+    │   ├── pipeline_1/
+    │   │   ├── pipeline.yaml
+    │   │   ├── task.yaml
+    │   │   └── nested/
+    │   │       └── task.yaml
+    │   └── pipeline_2/
+    │       └── pipeline.yaml
+    ├── tasks/
+    │   ├── shared_task_1.yaml
+    │   └── shared_task_2.yaml
+    └── kustomization.yaml
+```
+
+A user could pass the following to kustomize to apply all the matching files
+
+```yaml
+resources:
+  - pipelines/**/*.yaml
+  - tasks/*/*.yaml
+```
+
+Kustomize would build all the matching files (using the already defined rules of kustomize, no name collisions, etc).
 
 #### Story 2
 
-Scenario summary: As a [end user, extension developer, ...], I want to [...]
+Scenario summary: As a end user, I want to apply a bunch of kustomizations using a pattern
 <!--
 A walkthrough of what it will look like for a user to take advantage of the new feature.
 Include the steps the user will take and samples of the commands they'll run
 and config they'll use.
 -->
+
+```
+.
+└── k8s/
+    ├── bases/
+    │   ├── app_1/
+    │   │   ├── kustomization.yaml
+    │   │   ├── deployment.yaml
+    │   │   ├── service.yaml
+    │   │   └── ...
+    │   └── app_2/
+    │       ├── kustomization.yaml
+    │       ├── deployment.yaml
+    │       ├── cronjob.yaml
+    │       └── ...
+    └── kustomization.yaml
+```
+
 
 ### Risks and Mitigations
 <!--
