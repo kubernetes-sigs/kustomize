@@ -55,8 +55,8 @@ As operational tasks shift to a declarative approach, the need to apply a large 
 List the specific goals of the proposal. What is it trying to achieve? How will we
 know that this has succeeded?
 -->
-1. Resource resolution based on glob patterns
-2. Resource resolution should only happen at the same or below the main `kustomization.yaml` file
+1. Resource resolution based on glob patterns, at the sibling level and below the main `kustomization.yaml` file
+2. 
 
 
 **Non-goals:**
