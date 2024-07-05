@@ -125,7 +125,7 @@ A user could pass the following to kustomize to apply all the matching files
 ```yaml
 resources:
   - pipelines/**/*.yaml
-  - tasks/*/*.yaml
+  - tasks/*.yaml
 ```
 
 Kustomize would build all the matching files (using the already defined rules of kustomize, no name collisions, etc).
@@ -133,7 +133,7 @@ Kustomize would build all the matching files (using the already defined rules of
 Glob support should work on files names, so a pattern like this should work
 
 ```
-tasks/*/shared_task_*.yaml
+tasks/shared_task_*.yaml
 ```
 
 #### Story 2
