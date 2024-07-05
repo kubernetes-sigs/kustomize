@@ -186,7 +186,7 @@ Identify any new Go dependencies this proposal will require Kustomize to pull in
 If any of them are large, is there another option?
 -->
 
-Go has a built in filepath package that should support the described use cases.
+Go has a built in filepath package that should be able to support the described use cases.
 
 ### Scalability
 <!--
@@ -194,16 +194,22 @@ Is this feature expected to have a performance impact?
 Explain to what extent and under what conditions.
 -->
 
+There may be a performance impact by using glob searching over looking up each individually named resource. These may scale with the amount of globs to lookup. I would have to do some testing to see how that behaved.
+
 ## Drawbacks
 <!--
 Why should this proposal _not_ be implemented?
 -->
+
+
 
 ## Alternatives
 <!--
 What other approaches did you consider, and why did you rule them out? Be concise,
 but do include enough information to express the idea and why it was not acceptable.
 -->
+
+Currently, the only other approach is to use a script to re-generate the `kustomization.yaml` every time you go to apply a lot of manifests. This is unnecessary complexity for something many other ops tools support.
 
 ## Rollout Plan
 <!--
@@ -212,7 +218,9 @@ you may need to use a formal graduation process. If you don't think this is
 necessary, explain why here, and delete the alpha/beta/GA headings below.
 -->
 
-### Alpha
+I don't believe this will need a formal graduation process as the proposal adds the feature behind an option flag in the `kustomization.yaml`. The defualt behavior of the `resources` key would not change.
+
+<!-- ### Alpha -->
 <!--
 New Kinds should be introduced with an alpha group version.
 New major features should often be gated by an alpha flag at first.
@@ -223,13 +231,13 @@ before they get their own top-level field in Kustomization.
 - Will the feature be gated by an "alpha" flag? Which one?
 - Will the feature be available in `kubectl kustomize` during alpha? Why or why not?
 
-### Beta
+<!-- ### Beta -->
 <!--
 If the alpha was not available in `kubectl kustomize`, you need a beta phase where it is.
 Full parity with `kubectl kustomize` is required at this stage.
 -->
 
-### GA
+<!-- ### GA -->
 <!--
 You should generally wait at least two `kubectl` release cycles before promotion to GA,
 to ensure that the broader user base has time to try the feature and provide feedback.
