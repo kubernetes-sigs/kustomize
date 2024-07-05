@@ -81,7 +81,7 @@ A proof of concept PR is NOT required but is preferable to including large amoun
 inline here, if you feel such implementation details are required to adequately explain your design.
 If you have a PR, link to it at the top of this section.
 -->
-This can be implemented by adding a flag to the `kustomization.yaml` called `enableGlobbing` or `enableGlobSupport` that accepts a boolean value. When this flag is enabled, a user can pass glob patterns to the `resources` array and kustomize will take the pattern and collect all sibling and child paths that match the provided pattern.
+A feature flag will be added to the `kustomization.yaml` called `enableGlobbing` or `enableGlobSupport` that accepts a boolean value. When this flag is enabled, a user can pass glob patterns to the `resources` array and kustomize will take the pattern and collect all sibling and child paths that match the provided pattern.
 
 
 ### User Stories
@@ -130,6 +130,12 @@ resources:
 
 Kustomize would build all the matching files (using the already defined rules of kustomize, no name collisions, etc).
 
+Glob support should work on files names, so a pattern like this should work
+
+```
+tasks/*/shared_task_*.yaml
+```
+
 #### Story 2
 
 Scenario summary: As a end user, I want to apply a bunch of kustomizations using a pattern
@@ -156,6 +162,12 @@ and config they'll use.
     └── kustomization.yaml
 ```
 
+A user could pass the following in their `kustomization.yaml`
+
+```yaml
+resources:
+  - bases/**/
+```
 
 ### Risks and Mitigations
 <!--
@@ -164,6 +176,8 @@ For example, consider both security, end-user privacy, and how this will
 impact the larger Kubernetes ecosystem.
 -->
 
+There is the risk that a user could unintentionally include manifests if they choose to use the globbing support and they don't intentionally define their patterns to not be overly broad. For every other user, the file path globbing should be disabled by default so it shouldn't have an effect for them.
+
 ### Dependencies
 <!--
 Kustomize tightly controls its Go dependencies in order to remain approved for
@@ -171,6 +185,8 @@ integration into kubectl. It cannot depend directly on kubectl or apimachinery c
 Identify any new Go dependencies this proposal will require Kustomize to pull in.
 If any of them are large, is there another option?
 -->
+
+Go has a built in filepath package that should support the described use cases.
 
 ### Scalability
 <!--
