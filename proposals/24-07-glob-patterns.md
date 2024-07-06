@@ -200,7 +200,7 @@ There may be a performance impact by using glob searching over looking up each i
 <!--
 Why should this proposal _not_ be implemented?
 -->
-
+As discussed, this potentially reduces how explicit you are in defining the manifests you want to apply. However, the consensus seems to be that it's a worthwhile trade-off for the convenience added.
 
 
 ## Alternatives
