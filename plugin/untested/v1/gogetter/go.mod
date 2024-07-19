@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/untested/v1/gogetter
 
 go 1.21
 
-require sigs.k8s.io/kustomize/api v0.17.2
+require sigs.k8s.io/kustomize/api v0.17.3
 
 require github.com/josharian/intern v1.0.0 // indirect
 
@@ -31,5 +31,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.17.2 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../../api
