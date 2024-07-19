@@ -40,3 +40,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 )
+
+replace sigs.k8s.io/kustomize/api => ../api
+
+replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
+
+replace sigs.k8s.io/kustomize/kyaml => ../kyaml
