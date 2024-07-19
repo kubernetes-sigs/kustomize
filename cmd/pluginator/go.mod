@@ -6,7 +6,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	sigs.k8s.io/kustomize/api v0.17.2
-	sigs.k8s.io/kustomize/kyaml v0.17.1
+	sigs.k8s.io/kustomize/kyaml v0.17.2
 )
 
 require (
@@ -35,5 +35,3 @@ require (
 )
 
 replace sigs.k8s.io/kustomize/api => ../../api
-
-replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
