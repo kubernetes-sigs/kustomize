@@ -9,14 +9,25 @@ steps:
       - "PROJECT_ID=$PROJECT_ID"
       - "_GIT_TAG=$_GIT_TAG"
       - "_PULL_BASE_REF=$_PULL_BASE_REF"
-# We need to use bash to configure the build date and version properly.
+  # We need to use bash to configure the build date and version properly.
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - -c
+      - >
+        docker
+        buildx
+        create
+        --name=multi-builder
+        --use
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: /bin/bash
     args:
       - -c
       - >
         docker
-        build
+        buildx
+        --platform
+        linux/amd64,linux/arm64/v8
         -t
         gcr.io/$PROJECT_ID/kustomize:${_GIT_TAG}
         -t
