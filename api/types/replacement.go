@@ -24,11 +24,17 @@ type Replacement struct {
 
 // SourceSelector is the source of the replacement transformer.
 type SourceSelector struct {
+	//Higher prioratized than FieldPath, used to replace a full text (similar to var)
+	FullText string `json:"fullText,omitempty" yaml:"fullText,omitempty"`
+	
 	// A specific object to read it from.
 	resid.ResId `json:",inline,omitempty" yaml:",inline,omitempty"`
 
 	// Structured field path expected in the allowed object.
 	FieldPath string `json:"fieldPath,omitempty" yaml:"fieldPath,omitempty"`
+	
+	// From the allowed set, remove objects that match this.
+	Reject []*Selector `json:"reject,omitempty" yaml:"reject,omitempty"`
 
 	// Used to refine the interpretation of the field.
 	Options *FieldOptions `json:"options,omitempty" yaml:"options,omitempty"`
@@ -65,8 +71,14 @@ type TargetSelector struct {
 
 // FieldOptions refine the interpretation of FieldPaths.
 type FieldOptions struct {
+	//Higher prioratized than Delimiter, used to replace a full text (similar to var)
+	FullText string `json:"fullText,omitempty" yaml:"fullText,omitempty"` 
+	
 	// Used to split/join the field.
 	Delimiter string `json:"delimiter,omitempty" yaml:"delimiter,omitempty"`
+
+	// Used to split/join the fieldEnd.
+	EndDelimiter string `json:"enddelimiter,omitempty" yaml:"enddelimiter,omitempty"`
 
 	// Which position in the split to consider.
 	Index int `json:"index,omitempty" yaml:"index,omitempty"`
