@@ -52,6 +52,7 @@ func (rv *refVarTransformer) Transform(m resmap.ResMap) error {
 				return err
 			}
 		}
+		res.InvalidateIdCaches()
 	}
 	return nil
 }
