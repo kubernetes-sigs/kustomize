@@ -6,6 +6,7 @@ package set
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
@@ -151,4 +152,61 @@ func TestSetLabelExisting(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err.Error())
 	}
+}
+
+func TestSetLabelWithoutSelector(t *testing.T) {
+	var o setLabelOptions
+	o.metadata = map[string]string{"key1": "foo", "key2": "bar"}
+	o.labelsWithoutSelector = true
+
+	m := makeKustomization(t)
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo", "key2": "bar"}})
+}
+
+func TestSetLabelWithoutSelectorWithExistingLabels(t *testing.T) {
+	var o setLabelOptions
+	o.metadata = map[string]string{"key1": "foo", "key2": "bar"}
+	o.labelsWithoutSelector = true
+
+	m := makeKustomization(t)
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo", "key2": "bar"}})
+
+	o.metadata = map[string]string{"key3": "foobar"}
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo", "key2": "bar", "key3": "foobar"}})
+}
+
+func TestSetLabelWithoutSelectorWithDuplicateLabel(t *testing.T) {
+	var o setLabelOptions
+	o.metadata = map[string]string{"key1": "foo", "key2": "bar"}
+	o.labelsWithoutSelector = true
+	o.includeTemplates = true
+
+	m := makeKustomization(t)
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo", "key2": "bar"}, IncludeTemplates: true})
+
+	o.metadata = map[string]string{"key2": "bar"}
+	o.includeTemplates = false
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo"}, IncludeTemplates: true})
+	require.Equal(t, m.Labels[1], types.Label{Pairs: map[string]string{"key2": "bar"}})
+}
+
+func TestSetLabelWithoutSelectorWithCommonLabel(t *testing.T) {
+	var o setLabelOptions
+	o.metadata = map[string]string{"key1": "foo", "key2": "bar"}
+
+	m := makeKustomization(t)
+	require.NoError(t, o.setLabels(m))
+	require.Empty(t, m.Labels)
+	require.Equal(t, m.CommonLabels, map[string]string{"app": "helloworld", "key1": "foo", "key2": "bar"})
+
+	o.metadata = map[string]string{"key2": "bar"}
+	o.labelsWithoutSelector = true
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.CommonLabels, map[string]string{"app": "helloworld", "key1": "foo"})
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key2": "bar"}})
 }
