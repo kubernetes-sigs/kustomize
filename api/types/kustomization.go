@@ -55,6 +55,7 @@ type Kustomization struct {
 	// Namespace to add to all objects.
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
+	// Deprecated: Use the Labels field instead, which provides a superset of the functionality of CommonLabels.
 	// CommonLabels to add to all objects and selectors.
 	CommonLabels map[string]string `json:"commonLabels,omitempty" yaml:"commonLabels,omitempty"`
 

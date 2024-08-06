@@ -381,7 +381,7 @@ func (lc *localizer) localizeFileWithContent(path string, content []byte) (strin
 		// 2. avoid paths that temporarily traverse outside the current root,
 		//    i.e. ../../../scope/target/current-root. The localized file will be surrounded by
 		//    different directories than its source, and so an uncleaned path may no longer be valid.
-		locPath = cleanFilePath(lc.fSys, lc.root, path)
+		locPath = cleanedRelativePath(lc.fSys, lc.root, path)
 	}
 	absPath := filepath.Join(lc.dst, locPath)
 	if err := lc.fSys.MkdirAll(filepath.Dir(absPath)); err != nil {

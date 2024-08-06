@@ -13,14 +13,14 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xlab/treeprint v1.2.0
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
-	golang.org/x/sys v0.17.0
+	golang.org/x/sys v0.18.0
 	google.golang.org/protobuf v1.33.0
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00
 	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
-	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect

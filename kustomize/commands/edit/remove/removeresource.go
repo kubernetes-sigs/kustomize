@@ -6,6 +6,7 @@ package remove
 import (
 	"errors"
 	"path/filepath"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
@@ -73,7 +74,7 @@ func (o *removeResourceOptions) RunRemoveResource(fSys filesys.FileSystem) error
 
 	newResources := make([]string, 0, len(m.Resources))
 	for _, resource := range m.Resources {
-		if kustfile.StringInSlice(resource, resources) {
+		if slices.Contains(resources, resource) {
 			continue
 		}
 		newResources = append(newResources, resource)

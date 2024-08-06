@@ -6,6 +6,8 @@ package target_test
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -191,13 +193,67 @@ metadata:
 
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
+	name0 := "dply1"
 
-	resources := []*resource.Resource{
-		resFactory.FromMapWithName("dply1", map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
+	r0, err := resFactory.FromMapWithName(name0, map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "foo-dply1-bar",
+			"namespace": "ns1",
+			"labels": map[string]interface{}{
+				"app": "nginx",
+			},
+			"annotations": map[string]interface{}{
+				"note": "This is a test annotation",
+			},
+		},
+		"spec": map[string]interface{}{
+			"replica": "3",
+			"selector": map[string]interface{}{
+				"matchLabels": map[string]interface{}{
+					"app": "nginx",
+				},
+			},
+			"template": map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
+					},
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name0, err)
+	}
+	name1 := "ns1"
+	r1, err := resFactory.FromMapWithName(name1, map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Namespace",
+		"metadata": map[string]interface{}{
+			"name": "ns1",
+			"labels": map[string]interface{}{
+				"app": "nginx",
+			},
+			"annotations": map[string]interface{}{
+				"note": "This is a test annotation",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name1, err)
+	}
+
+	r2, _ := resFactory.FromMapWithName("literalConfigMap",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
-				"name":      "foo-dply1-bar",
+				"name":      "foo-literalConfigMap-bar-g5f6t456f5",
 				"namespace": "ns1",
 				"labels": map[string]interface{}{
 					"app": "nginx",
@@ -206,30 +262,20 @@ metadata:
 					"note": "This is a test annotation",
 				},
 			},
-			"spec": map[string]interface{}{
-				"replica": "3",
-				"selector": map[string]interface{}{
-					"matchLabels": map[string]interface{}{
-						"app": "nginx",
-					},
-				},
-				"template": map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"annotations": map[string]interface{}{
-							"note": "This is a test annotation",
-						},
-						"labels": map[string]interface{}{
-							"app": "nginx",
-						},
-					},
-				},
+			"data": map[string]interface{}{
+				"DB_USERNAME": "admin",
+				"DB_PASSWORD": "somepw",
 			},
-		}),
-		resFactory.FromMapWithName("ns1", map[string]interface{}{
+		})
+
+	name2 := "secret"
+	r3, err := resFactory.FromMapWithName(name2,
+		map[string]interface{}{
 			"apiVersion": "v1",
-			"kind":       "Namespace",
+			"kind":       "Secret",
 			"metadata": map[string]interface{}{
-				"name": "ns1",
+				"name":      "foo-secret-bar-82c2g5f8f6",
+				"namespace": "ns1",
 				"labels": map[string]interface{}{
 					"app": "nginx",
 				},
@@ -237,53 +283,21 @@ metadata:
 					"note": "This is a test annotation",
 				},
 			},
-		}),
-		resFactory.FromMapWithName("literalConfigMap",
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name":      "foo-literalConfigMap-bar-g5f6t456f5",
-					"namespace": "ns1",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
-				},
-				"data": map[string]interface{}{
-					"DB_USERNAME": "admin",
-					"DB_PASSWORD": "somepw",
-				},
-			}),
-		resFactory.FromMapWithName("secret",
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name":      "foo-secret-bar-82c2g5f8f6",
-					"namespace": "ns1",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
-				},
-				"type": ifc.SecretTypeOpaque,
-				"data": map[string]interface{}{
-					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-				},
-			}),
+			"type": ifc.SecretTypeOpaque,
+			"data": map[string]interface{}{
+				"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+				"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+			},
+		})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name2, err)
 	}
+
+	resources := []*resource.Resource{r0, r1, r2, r3}
 
 	expected := resmap.New()
 	for _, r := range resources {
-		if err := expected.Append(r); err != nil {
-			t.Fatalf("unexpected error %v", err)
-		}
+		require.NoError(t, expected.Append(r), "failed to append resource: %v")
 	}
 	expected.RemoveBuildAnnotations()
 	expYaml, err := expected.AsYaml()
@@ -354,31 +368,43 @@ metadata:
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
 
-	resources := []*resource.Resource{
-		resFactory.FromMapWithName("deployment1", map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name":      "foo-deployment1-bar",
-				"namespace": "ns1",
-			},
-		}), resFactory.FromMapWithName("config", map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"name":      "config-bar",
-				"namespace": "ns1",
-			},
-		}), resFactory.FromMapWithName("secret", map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "Secret",
-			"metadata": map[string]interface{}{
-				"name":      "foo-secret",
-				"namespace": "ns1",
-			},
-		}),
+	name0 := "deployment1"
+	r0, err0 := resFactory.FromMapWithName(name0, map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "foo-deployment1-bar",
+			"namespace": "ns1",
+		},
+	})
+	if err0 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name0, err0)
 	}
-
+	name1 := "config"
+	r1, err1 := resFactory.FromMapWithName(name1, map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      "config-bar",
+			"namespace": "ns1",
+		},
+	})
+	if err1 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name1, err1)
+	}
+	name2 := "secret"
+	r2, err2 := resFactory.FromMapWithName(name2, map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Secret",
+		"metadata": map[string]interface{}{
+			"name":      "foo-secret",
+			"namespace": "ns1",
+		},
+	})
+	if err2 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name2, err2)
+	}
+	var resources = []*resource.Resource{r0, r1, r2}
 	expected := resmap.New()
 	for _, r := range resources {
 		err := expected.Append(r)
@@ -534,5 +560,73 @@ func (l loaderNewThrowsError) Load(location string) ([]byte, error) {
 }
 
 func (l loaderNewThrowsError) Cleanup() error {
+	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func TestErrorMessageForMalformedYAMLAndInvalidBase(t *testing.T) {
+	// These testcases verify behavior for the scenario described in
+	// https://github.com/kubernetes-sigs/kustomize/issues/5692 .
+
+	// Use a test server to fake the remote file response
+	handler := http.NewServeMux()
+	handler.HandleFunc("/", func(out http.ResponseWriter, req *http.Request) {
+		// Per issue #5692, the server should return a 200 status code with a response body that fails to parse as YAML
+		out.WriteHeader(http.StatusOK)
+		_, _ = out.Write([]byte(`<!DOCTYPE html>
+<html class="html-devise-layout ui-light-gray" lang="en">
+<head prefix="og: http://ogp.me/ns#">`))
+	})
+	svr := httptest.NewServer(handler)
+	defer svr.Close()
+
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/should-fail/kustomization.yml", "resources:\n- "+svr.URL)
+	th.WriteF("/should-fail/remote-repo/kustomization.yml", "this: is not a kustomization file!")
+
+	ldrWrapper := func(baseLoader ifc.Loader) ifc.Loader {
+		return &loaderWithRenamedRoots{
+			baseLoader: baseLoader,
+			fakeRootMap: map[string]string{
+				// Use the "remote-repo" subdir instead of the remote git repo
+				svr.URL: "remote-repo",
+			},
+		}
+	}
+
+	_, err := makeAndLoadKustTargetWithLoaderOverride(t, th.GetFSys(), "/should-fail", ldrWrapper).AccumulateTarget()
+	require.Error(t, err)
+	errString := err.Error()
+	assert.Contains(t, errString, "accumulating resources from '"+svr.URL+"'")
+	assert.Contains(t, errString, "MalformedYAMLError: yaml: line 3: mapping values are not allowed in this context")
+	assert.Contains(t, errString, `invalid Kustomization: json: unknown field "this"`)
+}
+
+// loaderWithRenamedRoots is a loader that can map New() roots to some other name
+type loaderWithRenamedRoots struct {
+	baseLoader  ifc.Loader
+	fakeRootMap map[string]string
+}
+
+func (l loaderWithRenamedRoots) Repo() string {
+	return l.baseLoader.Repo()
+}
+
+func (l loaderWithRenamedRoots) Root() string {
+	return l.baseLoader.Root()
+}
+
+func (l loaderWithRenamedRoots) New(newRoot string) (ifc.Loader, error) {
+	if otherRoot, ok := l.fakeRootMap[newRoot]; ok {
+		return l.baseLoader.New(otherRoot) //nolint:wrapcheck // baseLoader's error is sufficient
+	}
+
+	return l.baseLoader.New(newRoot) //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func (l loaderWithRenamedRoots) Load(path string) ([]byte, error) {
+	return l.baseLoader.Load(path) //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func (l loaderWithRenamedRoots) Cleanup() error {
 	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
 }

@@ -73,7 +73,7 @@ func doRemove(t *testing.T, w ResMap, id resid.ResId) {
 
 // Make a resource with a predictable name.
 func makeCm(i int) *resource.Resource {
-	return rf.FromMap(
+	r, err := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -81,6 +81,10 @@ func makeCm(i int) *resource.Resource {
 				"name": fmt.Sprintf("cm%03d", i),
 			},
 		})
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // Maintain the class invariant that no two
@@ -229,7 +233,7 @@ metadata:
 func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 	cmap := resid.NewGvk("", "v1", "ConfigMap")
 
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -237,7 +241,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"name": "alice",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -245,7 +252,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"name": "bob",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -254,7 +264,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r4 := rf.FromMap(
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
+	r4, err4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -263,7 +276,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r5 := rf.FromMap(
+	if err4 != nil {
+		t.Fatalf("failed to get new instance: %v", err4)
+	}
+	r5, err5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Deployment",
@@ -272,6 +288,9 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err5 != nil {
+		t.Fatalf("failed to get new instance: %v", err5)
+	}
 
 	m := resmaptest_test.NewRmBuilder(t, rf).
 		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
@@ -367,7 +386,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 }
 
 func TestGetMatchingResourcesByAnyId(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -380,7 +399,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -393,7 +415,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -407,7 +432,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r4 := rf.FromMap(
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
+	r4, err4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -421,7 +449,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r5 := rf.FromMap(
+	if err4 != nil {
+		t.Fatalf("failed to get new instance: %v", err4)
+	}
+	r5, err5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Deployment",
@@ -430,6 +461,9 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err5 != nil {
+		t.Fatalf("failed to get new instance: %v", err5)
+	}
 
 	m := resmaptest_test.NewRmBuilder(t, rf).
 		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
@@ -498,7 +532,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 }
 
 func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -506,7 +540,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "alice",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -514,7 +551,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "bob",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -523,7 +563,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r4 := rf.FromMap(
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
+	r4, err4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -532,7 +575,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r5 := rf.FromMap(
+	if err4 != nil {
+		t.Fatalf("failed to get new instance: %v", err4)
+	}
+	r5, err5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -541,8 +587,11 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err5 != nil {
+		t.Fatalf("failed to get new instance: %v", err5)
+	}
 	r5.AddNamePrefix("little-")
-	r6 := rf.FromMap(
+	r6, err6 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -551,8 +600,11 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err6 != nil {
+		t.Fatalf("failed to get new instance: %v", err6)
+	}
 	r6.AddNamePrefix("little-")
-	r7 := rf.FromMap(
+	r7, err7 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -560,6 +612,9 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "meh",
 			},
 		})
+	if err7 != nil {
+		t.Fatalf("failed to get new instance: %v", err7)
+	}
 
 	tests := map[string]struct {
 		filter   *resource.Resource
@@ -639,7 +694,7 @@ func TestDeepCopy(t *testing.T) {
 }
 
 func TestErrorIfNotEqualSets(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -647,7 +702,10 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"name": "cm1",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -655,7 +713,10 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"name": "cm2",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -664,6 +725,9 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"namespace": "system",
 			},
 		})
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
 
 	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
 	if err := m1.ErrorIfNotEqualSets(m1); err != nil {
@@ -712,7 +776,7 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 }
 
 func TestErrorIfNotEqualLists(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -720,7 +784,10 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"name": "cm1",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -728,7 +795,10 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"name": "cm2",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -737,6 +807,9 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"namespace": "system",
 			},
 		})
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
 
 	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
 	if err := m1.ErrorIfNotEqualLists(m1); err != nil {
@@ -780,7 +853,7 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 }
 
 func TestAppendAll(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -788,8 +861,11 @@ func TestAppendAll(t *testing.T) {
 				"name": "foo-deploy1",
 			},
 		})
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
 	input1 := rmF.FromResource(r1)
-	r2 := rf.FromMap(
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "StatefulSet",
@@ -797,6 +873,9 @@ func TestAppendAll(t *testing.T) {
 				"name": "bar-stateful",
 			},
 		})
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
 	input2 := rmF.FromResource(r2)
 
 	expected := New()

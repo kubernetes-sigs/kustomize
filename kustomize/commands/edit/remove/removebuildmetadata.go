@@ -4,6 +4,8 @@
 package remove
 
 import (
+	"slices"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
@@ -59,7 +61,7 @@ func (o *removeBuildMetadataOptions) RunRemoveBuildMetadata(fSys filesys.FileSys
 	}
 	var newOptions []string
 	for _, opt := range m.BuildMetadata {
-		if !kustfile.StringInSlice(opt, o.buildMetadataOptions) {
+		if !slices.Contains(o.buildMetadataOptions, opt) {
 			newOptions = append(newOptions, opt)
 		}
 	}

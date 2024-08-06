@@ -70,30 +70,3 @@ namoPrefix:
 		t.Fatalf("expected error %s, but got %s", errMsg, err)
 	}
 }
-
-// please remove this failing test after implements the labels support
-func TestLoadDefaultConfigsFromFilesWithMissingFieldsLabels(t *testing.T) {
-	fSys := filesys.MakeFsInMemory()
-	filePathContainsTypo := "config_contains_typo.yaml"
-	if err := fSys.WriteFile(filePathContainsTypo, []byte(`
-labels:
-  - path: spec/podTemplate/metadata/labels
-    create: true
-    kind: FlinkDeployment
-`)); err != nil {
-		t.Fatal(err)
-	}
-	ldr, err := loader.NewLoader(
-		loader.RestrictionRootOnly, filesys.Separator, fSys)
-	if err != nil {
-		t.Fatal(err)
-	}
-	errMsg := "error unmarshaling JSON: while decoding JSON: json: unknown field"
-	_, err = loadDefaultConfig(ldr, []string{filePathContainsTypo})
-	if err == nil {
-		t.Fatalf("expected to fail unmarshal yaml, but got nil %s", filePathContainsTypo)
-	}
-	if !strings.Contains(err.Error(), errMsg) {
-		t.Fatalf("expected error %s, but got %s", errMsg, err)
-	}
-}

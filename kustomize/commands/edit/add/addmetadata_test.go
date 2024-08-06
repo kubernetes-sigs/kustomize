@@ -284,6 +284,29 @@ func TestAddLabelWithoutSelector(t *testing.T) {
 	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}})
 }
 
+func TestAddLabelWithoutSelectorIncludeTemplates(t *testing.T) {
+	var o addMetadataOptions
+	o.labelsWithoutSelector = true
+	m := makeKustomization(t)
+	o.metadata = map[string]string{"new": "label"}
+	o.includeTemplates = true
+	require.NoError(t, o.addLabels(m))
+	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}, IncludeTemplates: true})
+}
+
+func TestAddLabelIncludeTemplatesWithoutRequiredFlag(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fSys, v.Validator)
+	args := []string{"new:label"}
+	_ = cmd.Flag("include-templates").Value.Set("true")
+	_ = cmd.Flag("without-selector").Value.Set("false")
+	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
+	require.Error(t, err)
+	require.Containsf(t, err.Error(), "--without-selector flag must be specified for --include-templates to work", "incorrect error: %s", err.Error())
+}
+
 func TestAddLabelWithoutSelectorAddLabel(t *testing.T) {
 	var o addMetadataOptions
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}

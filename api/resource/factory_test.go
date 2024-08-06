@@ -274,24 +274,32 @@ kind: List
 			},
 		},
 	}
-	testDeploymentA := factory.FromMap(
+	deploymentA := "deployment-a"
+	testDeploymentA, errA := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "deployment-a",
+				"name": deploymentA,
 			},
 			"spec": testDeploymentSpec,
 		})
-	testDeploymentB := factory.FromMap(
+	if errA != nil {
+		t.Fatalf("failed to create new instance with %v: %v", deploymentA, errA)
+	}
+	deploymentB := "deployment-b"
+	testDeploymentB, errB := factory.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
 			"metadata": map[string]interface{}{
-				"name": "deployment-b",
+				"name": deploymentB,
 			},
 			"spec": testDeploymentSpec,
 		})
+	if errB != nil {
+		t.Fatalf("failed to create new instance with %v: %v", deploymentB, errB)
+	}
 
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(string(patchGood1), []byte(patch1))
@@ -308,6 +316,16 @@ kind: List
 		t.Fatal(err)
 	}
 
+	td, err := createTestDeployment()
+	if err != nil {
+		t.Fatalf("failed to create test deployment: %v", err)
+	}
+
+	tc, err := createTestConfigMap()
+	if err != nil {
+		t.Fatalf("failed to create test config: %v", err)
+	}
+
 	tests := map[string]struct {
 		input       []types.PatchStrategicMerge
 		expectedOut []*Resource
@@ -315,7 +333,7 @@ kind: List
 	}{
 		"happy": {
 			input:       []types.PatchStrategicMerge{patchGood1, patchGood2},
-			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedOut: []*Resource{td, tc},
 			expectedErr: false,
 		},
 		"badFileName": {
@@ -330,7 +348,7 @@ kind: List
 		},
 		"listOfPatches": {
 			input:       []types.PatchStrategicMerge{patchList},
-			expectedOut: []*Resource{testDeployment, testConfigMap},
+			expectedOut: []*Resource{td, tc},
 			expectedErr: false,
 		},
 		"listWithAnchorReference": {

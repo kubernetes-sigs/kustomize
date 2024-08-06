@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/untested/v1/gogetter
 
 go 1.21
 
-require sigs.k8s.io/kustomize/api v0.17.1
+require sigs.k8s.io/kustomize/api v0.17.3
 
 require github.com/josharian/intern v1.0.0 // indirect
 
@@ -23,12 +23,12 @@ require (
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.17.0 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.17.2 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 

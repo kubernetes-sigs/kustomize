@@ -14,11 +14,12 @@
 package loader
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 )
 
 func (l *Loader) loadGoPlugin(_ resid.ResId, _ string) (resmap.Configurable, error) {
-	return nil, errors.New("plugin load is disabled")
+	return nil, fmt.Errorf("plugin load is disabled")
 }

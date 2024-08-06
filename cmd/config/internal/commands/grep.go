@@ -54,6 +54,9 @@ type GrepRunner struct {
 }
 
 func (r *GrepRunner) preRunE(c *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("missing required argument: QUERY")
+	}
 	r.GrepFilter.Compare = func(a, b string) (int, error) {
 		qa, err := resource.ParseQuantity(a)
 		if err != nil {

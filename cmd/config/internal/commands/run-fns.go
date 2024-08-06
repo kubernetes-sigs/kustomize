@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 )
 
-// GetCatRunner returns a RunFnRunner.
+// GetRunFnRunner returns a RunFnRunner.
 func GetRunFnRunner(name string) *RunFnRunner {
 	r := &RunFnRunner{}
 	c := &cobra.Command{
