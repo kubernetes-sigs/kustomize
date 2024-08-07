@@ -258,7 +258,8 @@ func (gr *Runner) AssureOnMainBranch() error {
 // CheckoutMainBranch does that.
 func (gr *Runner) CheckoutMainBranch() error {
 	gr.comment("checking out main branch")
-	return gr.runNoOut(noHarmDone, "checkout", mainBranch)
+	fullBranchSpec := fmt.Sprintf("%s/%s", remoteOrigin, mainBranch)
+	return gr.runNoOut(noHarmDone, "checkout", fullBranchSpec)
 }
 
 // FetchRemote does that.
@@ -365,21 +366,22 @@ func (gr *Runner) DeleteTagFromRemote(
 	return gr.runNoOut(undoPainful, "push", string(remote), ":"+refsTags+tag)
 }
 
-func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
+func (gr *Runner) GetLatestTag(releaseTag string) (string, error) {
 	var latestTag string
-	// Assuming release branch has this format: release-path/to/module-vX.Y.Z
-	// and each release branch maintains tags, extract version from latest `releaseBranch`
-	gr.comment("extract version from latest release branch")
-	filteredBranchList, err := gr.run(noHarmDone, "branch", "-a", "--list", "*"+releaseBranch+"*", "--sort=-committerdate")
-	if len(filteredBranchList) < 1 {
-		_ = fmt.Errorf("latest tag not found for %s", releaseBranch)
+	// Assuming release branch has this format: module/vX.Y.Z
+	gr.comment("extract version from latest release tag")
+
+	// Using `creatordate` sort key as it is more accurate
+	filteredTagList, err := gr.run(noHarmDone, "tag", "-l", "--sort=-creatordate", releaseTag+"*")
+	if len(filteredTagList) < 1 {
+		_ = fmt.Errorf("latest tag not found for %s", releaseTag)
 		return "", err
 	}
-	newestBranch := strings.Split(strings.ReplaceAll(filteredBranchList, "\r\n", "\n"), "\n")
-	split := strings.Split(newestBranch[0], "-")
+	newestTag := strings.Split(strings.ReplaceAll(filteredTagList, "\r\n", "\n"), "\n")
+	split := strings.Split(newestTag[0], "/")
 	latestTag = split[len(split)-1]
 	if err != nil {
-		_ = fmt.Errorf("error getting latest tag for %s", releaseBranch)
+		_ = fmt.Errorf("error getting latest tag for %s", releaseTag)
 	}
 
 	return latestTag, nil
@@ -387,4 +389,14 @@ func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
 
 func (gr *Runner) GetMainBranch() string {
 	return string(mainBranch)
+}
+
+func (gr *Runner) GetCurrentVersionFromBranchName() string {
+	currentBranchName, err := gr.run(noHarmDone, "branch", "--show-current")
+	if err != nil {
+		_ = fmt.Errorf("error getting current version")
+	}
+	// Assuming release branch has this format: release-path/to/module-vX.Y.Z
+	splitBranchName := strings.Split(currentBranchName, "-")
+	return splitBranchName[len(splitBranchName)-1]
 }

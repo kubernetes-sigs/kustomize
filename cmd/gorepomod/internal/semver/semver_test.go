@@ -38,6 +38,11 @@ func TestParse(t *testing.T) {
 			v:      zero,
 			errMsg: "\"v1.222\" doesn't have the form v1.2.3",
 		},
+		"trailing CRLF": {
+			raw:    "v1.2.3\r\n",
+			v:      SemVer{major: 1, minor: 2, patch: 3},
+			errMsg: "",
+		},
 	}
 	for n, tc := range testCases {
 		v, err := Parse(tc.raw)
