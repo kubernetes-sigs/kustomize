@@ -31,9 +31,9 @@ func TestAddTransformerHappyPath(t *testing.T) {
 
 	cmd := newCmdAddTransformer(fSys)
 	args := []string{transformerFileName + "*"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(content), transformerFileName)
 	assert.Contains(t, string(content), transformerFileName+"another")
 }
@@ -46,16 +46,16 @@ func TestAddTransformerAlreadyThere(t *testing.T) {
 
 	cmd := newCmdAddTransformer(fSys)
 	args := []string{transformerFileName}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	// adding an existing transformer shouldn't return an error
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 
 	// There can be only one. May it be the...
 	mf, err := kustfile.NewKustomizationFile(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m, err := mf.Read()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 1, len(m.Transformers))
 	assert.Equal(t, transformerFileName, m.Transformers[0])
 }

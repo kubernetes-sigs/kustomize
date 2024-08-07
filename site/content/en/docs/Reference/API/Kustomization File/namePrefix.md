@@ -4,61 +4,18 @@ linkTitle: "namePrefix"
 type: docs
 weight: 11
 description: >
-    Prepends the value to the names of all resources and references.
+    Add prefixes to the names of all resources.
 ---
+`apiVersion: kustomize.config.k8s.io/v1beta1`
 
-As `namePrefix` is self explanatory, it helps adding prefix to names in the defined yaml files.
+See the [Tasks section] for examples of how to use `namePrefix`.
 
-## Example
+### namePrefix
+Add prefixes to the names of all resources.
 
-### File Input
+* **namePrefix** (string)
 
-```yaml
-# deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: the-deployment
-spec:
-  replicas: 5
-  template:
-    containers:
-      - name: the-container
-        image: registry/container:latest
-```
+    NamePrefix will add a prefix to the names of all resources mentioned in the Kustomization file including generated resources such as ConfigMaps and Secrets.
 
-```yaml
-# kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 
-namePrefix: custom-prefix-
-
-resources:
-- deployment.yaml
-
-```
-
-### Build Output
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: custom-prefix-the-deployment
-spec:
-  replicas: 5
-  template:
-    containers:
-    - image: registry/container:latest
-      name: the-container
-```
-
-{{< alert color="success" title="References" >}}
-Apply will propagate the `namePrefix` to any place Resources within the project are referenced by other Resources
-including:
-
-- Service references from StatefulSets
-- ConfigMap references from PodSpecs
-- Secret references from PodSpecs
-{{< /alert >}}
+[Tasks section]: /docs/tasks/namespaces_and_names/

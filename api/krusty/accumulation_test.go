@@ -5,6 +5,8 @@ package krusty_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -28,6 +30,20 @@ spec:
   ports:
     - port: 7002
 `
+
+const invalidResource = `apiVersion: v1
+kind: Service
+metadata:
+  name: kapacitor
+  labels:
+    app.kubernetes.io/name: tick-kapacitor
+spec:
+  selector:
+    app.kubernetes.io/name: tick-kapacitor
+    - name: http
+      port: 9092
+      protocol: TCP
+  type: ClusterIP`
 
 func TestTargetMustHaveKustomizationFile(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
@@ -169,10 +185,15 @@ spec:
 
 func TestAccumulateResourcesErrors(t *testing.T) {
 	type testcase struct {
-		name       string
-		resource   string
-		isAbsolute bool
-		files      map[string]string
+		name     string
+		resource string
+		// resourceFunc generates a resource string using the URL to the local
+		// test server (optional).
+		resourceFunc func(string) string
+		// resourceServerSetup configures the local test server (optional).
+		resourceServerSetup func(*http.ServeMux)
+		isAbsolute          bool
+		files               map[string]string
 		// errFile, errDir are regex for the expected error message output
 		// when kustomize tries to accumulate resource as file and dir,
 		// respectively. The test substitutes occurrences of "%s" in the
@@ -221,9 +242,14 @@ resources:
 	for _, test := range []testcase{
 		{
 			name: "remote file not considered repo",
-			// The example.com second-level domain is reserved and
-			// safe to access, see RFC 2606.
-			resource: "https://example.com/segments-too-few-to-be-repo",
+			resourceFunc: func(url string) string {
+				return fmt.Sprintf("%s/segments-too-few-to-be-repo", url)
+			},
+			resourceServerSetup: func(server *http.ServeMux) {
+				server.HandleFunc("/", func(out http.ResponseWriter, req *http.Request) {
+					out.WriteHeader(http.StatusNotFound)
+				})
+			},
 			// It's acceptable for the error output of a remote file-like
 			// resource to not indicate the resource's status as a
 			// local directory. Though it is possible for a remote file-like
@@ -231,8 +257,15 @@ resources:
 			errFile: `HTTP Error: status code 404 \(Not Found\)\z`,
 		},
 		{
-			name:     "remote file qualifies as repo",
-			resource: "https://example.com/long/enough/to/have/org/and/repo",
+			name: "remote file qualifies as repo",
+			resourceFunc: func(url string) string {
+				return fmt.Sprintf("%s/long/enough/to/have/org/and/repo", url)
+			},
+			resourceServerSetup: func(server *http.ServeMux) {
+				server.HandleFunc("/", func(out http.ResponseWriter, req *http.Request) {
+					out.WriteHeader(http.StatusInternalServerError)
+				})
+			},
 			// TODO(4788): This error message is technically wrong. Just
 			// because we fail to GET a resource does not mean the resource is
 			// not a remote file. We should return the GET status code as well.
@@ -283,8 +316,29 @@ resources:
 			// know resource is file.
 			errDir: `new root '%s' cannot be absolute`,
 		},
+		{
+			name:     "malformed yaml yields an error",
+			resource: "service.yaml",
+			files: map[string]string{
+				"service.yaml": invalidResource,
+			},
+			errFile: "MalformedYAMLError",
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			if test.resourceFunc != nil {
+				// Configure test server handler
+				handler := http.NewServeMux()
+				if test.resourceServerSetup != nil {
+					test.resourceServerSetup(handler)
+				}
+				// Start test server
+				svr := httptest.NewServer(handler)
+				defer svr.Close()
+				// Generate resource with test server address
+				test.resource = test.resourceFunc(svr.URL)
+			}
+
 			// Should use real file system to indicate that we are creating
 			// new temporary directories on disk when we attempt to fetch repos.
 			fs, tmpDir := kusttest_test.Setup(t)
@@ -306,5 +360,4 @@ resources:
 	// TODO(annasong): add tests that check accumulateResources errors for
 	// - repos
 	// - local directories
-	// - files that yield malformed yaml errors
 }

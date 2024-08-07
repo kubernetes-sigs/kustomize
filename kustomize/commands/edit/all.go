@@ -48,7 +48,8 @@ func NewCmdEdit(
 		set.NewCmdSet(
 			fSys,
 			kv.NewLoader(ldrhelper.NewFileLoaderAtCwd(fSys), v),
-			v),
+			v,
+			rf),
 		fix.NewCmdFix(fSys, w),
 		remove.NewCmdRemove(fSys, v),
 		listbuiltin.NewCmdListBuiltinPlugin(),

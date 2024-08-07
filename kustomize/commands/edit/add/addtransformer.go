@@ -6,6 +6,7 @@ package add
 import (
 	"errors"
 	"log"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
@@ -62,7 +63,7 @@ func (o *addTransformerOptions) RunAddTransformer(fSys filesys.FileSystem) error
 		return err
 	}
 	for _, t := range o.transformerFilePaths {
-		if kustfile.StringInSlice(t, m.Transformers) {
+		if slices.Contains(m.Transformers, t) {
 			log.Printf("transformer %s already in kustomization file", t)
 			continue
 		}

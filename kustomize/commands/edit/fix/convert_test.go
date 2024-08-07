@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -43,12 +44,12 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -72,7 +73,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -119,12 +120,12 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -150,7 +151,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -197,12 +198,12 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -229,7 +230,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -276,12 +277,12 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -308,7 +309,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -355,11 +356,11 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
 	err := cmd.RunE(cmd, nil)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "error with pod.yaml: cannot convert all vars to replacements; $(SOME_SECRET_NAME) is not delimited")
 }
 
@@ -412,13 +413,13 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	require.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -453,7 +454,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -468,7 +469,7 @@ spec:
 `, string(content))
 
 	content, err = fSys.ReadFile("patch.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -533,13 +534,13 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	require.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// the second replacement target is from the patch, and used the patch's target selector
 	// as the replacement's target selector. Note that the replacement target uses the pod
@@ -577,7 +578,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -592,7 +593,7 @@ spec:
 `, string(content))
 
 	content, err = fSys.ReadFile("patch.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -657,13 +658,13 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	require.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// The replacement target from the patch uses the patch's name because
 	// allowNameChange is set to true.
@@ -696,7 +697,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -709,7 +710,7 @@ spec:
 `, string(content))
 
 	content, err = fSys.ReadFile("patch.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -780,13 +781,13 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	require.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// The replacement target targets all resources of type `Pod` because the
 	// patch targets all resources of type `Pod`.
@@ -815,7 +816,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -837,7 +838,7 @@ spec:
 `, string(content))
 
 	content, err = fSys.ReadFile("patch.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -910,13 +911,13 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
-	fSys.WriteFile("patch.yaml", patch)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
+	require.NoError(t, fSys.WriteFile("patch.yaml", patch))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// The replacement target from the patch uses the patch's Kind because
 	// allowKindChange is set to true.
@@ -947,7 +948,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -969,7 +970,7 @@ spec:
 `, string(content))
 
 	content, err = fSys.ReadFile("patch.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Custom
@@ -1023,13 +1024,13 @@ spec:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationOverlay)
-	fSys.WriteFile("base/pod.yaml", pod)
-	fSys.WriteFile("base/kustomization.yaml", kustomizationBase)
+	require.NoError(t, fSys.WriteFile("base/pod.yaml", pod))
+	require.NoError(t, fSys.WriteFile("base/kustomization.yaml", kustomizationBase))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -1052,7 +1053,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("base/kustomization.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -1062,7 +1063,7 @@ resources:
 `, string(content))
 
 	content, err = fSys.ReadFile("base/pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -1104,12 +1105,12 @@ metadata:
 
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
-	fSys.WriteFile("pod.yaml", pod)
+	require.NoError(t, fSys.WriteFile("pod.yaml", pod))
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.Flags().Set("vars", "true"))
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, `
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -1133,7 +1134,7 @@ replacements:
 `, string(content))
 
 	content, err = fSys.ReadFile("pod.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `
 apiVersion: v1
 kind: Pod
@@ -1141,5 +1142,76 @@ metadata:
   name: my-pod
   annotations:
     a.b.c: SOME_SECRET_NAME_PLACEHOLDER
+`, string(content))
+}
+
+func TestFixVarsWithPatch(t *testing.T) {
+	kustomization := []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+patchesStrategicMerge:
+  - patch.yaml
+
+vars:
+  - name: CERTIFICATE_NAMESPACE
+    objref:
+      name: system
+    fieldref:
+      fieldpath: metadata.namespace
+`)
+	patch := []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: $(CERTIFICATE_NAMESPACE)
+`)
+
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomization)
+	require.NoError(t, fSys.WriteFile("patch.yaml", patch))
+	cmd := NewCmdFix(fSys, os.Stdout)
+	require.NoError(t, cmd.Flags().Set("vars", "true"))
+	require.NoError(t, cmd.RunE(cmd, nil))
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	require.NoError(t, err)
+
+	assert.Equal(t, `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+
+patches:
+- path: patch.yaml
+replacements:
+- source:
+    fieldPath: metadata.namespace
+    name: system
+  targets:
+  - fieldPaths:
+    - spec.template.spec.containers.0.name
+    select:
+      namespace: system
+`, string(content))
+
+	content, err = fSys.ReadFile("patch.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: CERTIFICATE_NAMESPACE_PLACEHOLDER
 `, string(content))
 }

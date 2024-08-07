@@ -7,39 +7,57 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type removeSecretOptions struct {
 	secretNamesToRemove []string
+	namespace           string
 }
 
 // newCmdRemoveSecret removes secretGenerator(s) with the specified name(s).
 func newCmdRemoveSecret(fSys filesys.FileSystem) *cobra.Command {
-	var o removeSecretOptions
+	var flags removeSecretOptions
 
 	cmd := &cobra.Command{
-		Use: "secret",
+		Use: "secret NAME [,NAME] [--namespace=namespace-name]",
 		Short: "Removes the specified secret(s) from " +
 			konfig.DefaultKustomizationFileName(),
-		Long: "",
+		Long: `Removes the specified secret(s) from the ` + konfig.DefaultKustomizationFileName() + ` file in the specified namespace.
+If multiple secret names are specified, the command will not fail on secret names that were not found in the file,
+but will issue a warning for each name that wasn't found.`,
 		Example: `
-		remove secret my-secret
-		`,
+    # Removes a single secret named 'my-secret' in the default namespace from the ` + konfig.DefaultKustomizationFileName() + ` file
+    kustomize edit remove secret my-secret
+
+    # Removes secrets named 'my-secret' and 'other-secret' in namespace 'test-namespace' from the ` + konfig.DefaultKustomizationFileName() + ` file
+    kustomize edit remove secret my-secret,other-secret --namespace=test-namespace
+`,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := flags.Validate(args)
 			if err != nil {
 				return err
 			}
-			return o.RunRemoveSecret(fSys)
+			return flags.RunRemoveSecret(fSys)
 		},
 	}
+
+	cmd.Flags().StringVar(
+		&flags.namespace,
+		util.NamespaceFlag,
+		"",
+		"Namespace to remove Secret(s) from",
+	)
+
 	return cmd
 }
 
@@ -69,14 +87,15 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 	}
 
 	foundSecrets := make(map[string]struct{})
+	remainingSecrets := make([]types.SecretArgs, 0, len(m.SecretGenerator))
 
-	newSecrets := make([]types.SecretArgs, 0, len(m.SecretGenerator))
 	for _, currentSecret := range m.SecretGenerator {
-		if kustfile.StringInSlice(currentSecret.Name, o.secretNamesToRemove) {
+		if slices.Contains(o.secretNamesToRemove, currentSecret.Name) &&
+			util.NamespaceEqual(currentSecret.Namespace, o.namespace) {
 			foundSecrets[currentSecret.Name] = struct{}{}
 			continue
 		}
-		newSecrets = append(newSecrets, currentSecret)
+		remainingSecrets = append(remainingSecrets, currentSecret)
 	}
 
 	if len(foundSecrets) == 0 {
@@ -89,8 +108,8 @@ func (o *removeSecretOptions) RunRemoveSecret(fSys filesys.FileSystem) error {
 			log.Printf("secret %s doesn't exist in kustomization file", name)
 		}
 	}
-	m.SecretGenerator = newSecrets
 
+	m.SecretGenerator = remainingSecrets
 	err = mf.Write(m)
 	if err != nil {
 		return fmt.Errorf("failed to write kustomization file: %w", err)

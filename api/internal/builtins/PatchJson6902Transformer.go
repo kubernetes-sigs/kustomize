@@ -6,7 +6,7 @@ package builtins
 import (
 	"fmt"
 
-	jsonpatch "gopkg.in/evanphx/json-patch.v5"
+	jsonpatch "gopkg.in/evanphx/json-patch.v4"
 	"sigs.k8s.io/kustomize/api/filters/patchjson6902"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resmap"

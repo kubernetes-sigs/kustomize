@@ -5,6 +5,7 @@ package builtinconfig
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/internal/loader"
@@ -42,5 +43,30 @@ namePrefix:
 	}
 	if !reflect.DeepEqual(tCfg, expected) {
 		t.Fatalf("expected %v\n but go6t %v\n", expected, tCfg)
+	}
+}
+
+func TestLoadDefaultConfigsFromFilesWithMissingFields(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	filePathContainsTypo := "config_contains_typo.yaml"
+	if err := fSys.WriteFile(filePathContainsTypo, []byte(`
+namoPrefix:
+- path: nameprefix/path
+  kind: SomeKind
+`)); err != nil {
+		t.Fatal(err)
+	}
+	ldr, err := loader.NewLoader(
+		loader.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	errMsg := "error unmarshaling JSON: while decoding JSON: json: unknown field"
+	_, err = loadDefaultConfig(ldr, []string{filePathContainsTypo})
+	if err == nil {
+		t.Fatalf("expected to fail unmarshal yaml, but got nil %s", filePathContainsTypo)
+	}
+	if !strings.Contains(err.Error(), errMsg) {
+		t.Fatalf("expected error %s, but got %s", errMsg, err)
 	}
 }

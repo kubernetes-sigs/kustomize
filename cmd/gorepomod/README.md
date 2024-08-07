@@ -26,6 +26,8 @@ do nothing but log commands
 unless you add the `--doIt` flag,
 allowing the change._
 
+_If you want to run `gorepomod` on your fork or outside of `$GOSRC` directory, add `--local`  flag to your command._
+
 #### `gorepomod list`
 
 Lists modules and intra-repo dependencies.

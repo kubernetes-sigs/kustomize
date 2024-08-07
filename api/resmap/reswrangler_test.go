@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/filters/labels"
 	"sigs.k8s.io/kustomize/api/provider"
 	. "sigs.k8s.io/kustomize/api/resmap"
@@ -72,7 +73,7 @@ func doRemove(t *testing.T, w ResMap, id resid.ResId) {
 
 // Make a resource with a predictable name.
 func makeCm(i int) *resource.Resource {
-	return rf.FromMap(
+	r, err := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -80,6 +81,10 @@ func makeCm(i int) *resource.Resource {
 				"name": fmt.Sprintf("cm%03d", i),
 			},
 		})
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // Maintain the class invariant that no two
@@ -228,7 +233,7 @@ metadata:
 func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 	cmap := resid.NewGvk("", "v1", "ConfigMap")
 
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -236,7 +241,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"name": "alice",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -244,7 +252,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"name": "bob",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -253,7 +264,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r4 := rf.FromMap(
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
+	r4, err4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -262,7 +276,10 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r5 := rf.FromMap(
+	if err4 != nil {
+		t.Fatalf("failed to get new instance: %v", err4)
+	}
+	r5, err5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Deployment",
@@ -271,6 +288,9 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err5 != nil {
+		t.Fatalf("failed to get new instance: %v", err5)
+	}
 
 	m := resmaptest_test.NewRmBuilder(t, rf).
 		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
@@ -366,7 +386,7 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 }
 
 func TestGetMatchingResourcesByAnyId(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -379,7 +399,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -392,7 +415,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -406,7 +432,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r4 := rf.FromMap(
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
+	r4, err4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -420,7 +449,10 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				},
 			},
 		})
-	r5 := rf.FromMap(
+	if err4 != nil {
+		t.Fatalf("failed to get new instance: %v", err4)
+	}
+	r5, err5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "Deployment",
@@ -429,6 +461,9 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err5 != nil {
+		t.Fatalf("failed to get new instance: %v", err5)
+	}
 
 	m := resmaptest_test.NewRmBuilder(t, rf).
 		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).ResMap()
@@ -497,7 +532,7 @@ func TestGetMatchingResourcesByAnyId(t *testing.T) {
 }
 
 func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -505,7 +540,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "alice",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -513,7 +551,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "bob",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -522,7 +563,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r4 := rf.FromMap(
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
+	r4, err4 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -531,7 +575,10 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
-	r5 := rf.FromMap(
+	if err4 != nil {
+		t.Fatalf("failed to get new instance: %v", err4)
+	}
+	r5, err5 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -540,8 +587,11 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err5 != nil {
+		t.Fatalf("failed to get new instance: %v", err5)
+	}
 	r5.AddNamePrefix("little-")
-	r6 := rf.FromMap(
+	r6, err6 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -550,8 +600,11 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"namespace": "happy",
 			},
 		})
+	if err6 != nil {
+		t.Fatalf("failed to get new instance: %v", err6)
+	}
 	r6.AddNamePrefix("little-")
-	r7 := rf.FromMap(
+	r7, err7 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "rbac.authorization.k8s.io/v1",
 			"kind":       "ClusterRoleBinding",
@@ -559,6 +612,9 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 				"name": "meh",
 			},
 		})
+	if err7 != nil {
+		t.Fatalf("failed to get new instance: %v", err7)
+	}
 
 	tests := map[string]struct {
 		filter   *resource.Resource
@@ -638,7 +694,7 @@ func TestDeepCopy(t *testing.T) {
 }
 
 func TestErrorIfNotEqualSets(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -646,7 +702,10 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"name": "cm1",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -654,7 +713,10 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"name": "cm2",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -663,6 +725,9 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 				"namespace": "system",
 			},
 		})
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
 
 	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
 	if err := m1.ErrorIfNotEqualSets(m1); err != nil {
@@ -711,7 +776,7 @@ func TestErrorIfNotEqualSets(t *testing.T) {
 }
 
 func TestErrorIfNotEqualLists(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -719,7 +784,10 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"name": "cm1",
 			},
 		})
-	r2 := rf.FromMap(
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -727,7 +795,10 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"name": "cm2",
 			},
 		})
-	r3 := rf.FromMap(
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
+	r3, err3 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "v1",
 			"kind":       "ConfigMap",
@@ -736,6 +807,9 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 				"namespace": "system",
 			},
 		})
+	if err3 != nil {
+		t.Fatalf("failed to get new instance: %v", err3)
+	}
 
 	m1 := resmaptest_test.NewRmBuilder(t, rf).AddR(r1).AddR(r2).AddR(r3).ResMap()
 	if err := m1.ErrorIfNotEqualLists(m1); err != nil {
@@ -779,7 +853,7 @@ func TestErrorIfNotEqualLists(t *testing.T) {
 }
 
 func TestAppendAll(t *testing.T) {
-	r1 := rf.FromMap(
+	r1, err1 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -787,8 +861,11 @@ func TestAppendAll(t *testing.T) {
 				"name": "foo-deploy1",
 			},
 		})
+	if err1 != nil {
+		t.Fatalf("failed to get new instance: %v", err1)
+	}
 	input1 := rmF.FromResource(r1)
-	r2 := rf.FromMap(
+	r2, err2 := rf.FromMap(
 		map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "StatefulSet",
@@ -796,6 +873,9 @@ func TestAppendAll(t *testing.T) {
 				"name": "bar-stateful",
 			},
 		})
+	if err2 != nil {
+		t.Fatalf("failed to get new instance: %v", err2)
+	}
 	input2 := rmF.FromResource(r2)
 
 	expected := New()
@@ -891,21 +971,21 @@ func TestAbsorbAll(t *testing.T) {
 	}
 	expected := rmF.FromResource(r)
 	w := makeMap1(t)
-	assert.NoError(t, w.AbsorbAll(makeMap2(t, types.BehaviorMerge)))
+	require.NoError(t, w.AbsorbAll(makeMap2(t, types.BehaviorMerge)))
 	expected.RemoveBuildAnnotations()
 	w.RemoveBuildAnnotations()
-	assert.NoError(t, expected.ErrorIfNotEqualLists(w))
+	require.NoError(t, expected.ErrorIfNotEqualLists(w))
 	w = makeMap1(t)
-	assert.NoError(t, w.AbsorbAll(nil))
-	assert.NoError(t, w.ErrorIfNotEqualLists(makeMap1(t)))
+	require.NoError(t, w.AbsorbAll(nil))
+	require.NoError(t, w.ErrorIfNotEqualLists(makeMap1(t)))
 
 	w = makeMap1(t)
 	w2 := makeMap2(t, types.BehaviorReplace)
-	assert.NoError(t, w.AbsorbAll(w2))
+	require.NoError(t, w.AbsorbAll(w2))
 	w2.RemoveBuildAnnotations()
-	assert.NoError(t, w2.ErrorIfNotEqualLists(w))
+	require.NoError(t, w2.ErrorIfNotEqualLists(w))
 	err = makeMap1(t).AbsorbAll(makeMap2(t, types.BehaviorUnspecified))
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.True(
 		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
 }
@@ -957,10 +1037,10 @@ data:
   feeling: *color-used
 `
 	rm, err := rmF.NewResMapFromBytes([]byte(input))
-	assert.NoError(t, err)
-	assert.NoError(t, rm.DeAnchor())
+	require.NoError(t, err)
+	require.NoError(t, rm.DeAnchor())
 	yaml, err := rm.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, strings.TrimSpace(`
 apiVersion: v1
 data:
@@ -991,10 +1071,10 @@ spec:
         <<: *probe
 `
 	rm, err := rmF.NewResMapFromBytes([]byte(input))
-	assert.NoError(t, err)
-	assert.NoError(t, rm.DeAnchor())
+	require.NoError(t, err)
+	require.NoError(t, rm.DeAnchor())
 	yaml, err := rm.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, strings.TrimSpace(`apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1038,7 +1118,7 @@ data:
   feeling: *color-used
 `
 	_, err := rmF.NewResMapFromBytes([]byte(input))
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unknown anchor 'color-used' referenced")
 }
 
@@ -1065,10 +1145,10 @@ items:
     feeling: *color-used
 `
 	rm, err := rmF.NewResMapFromBytes([]byte(input))
-	assert.NoError(t, err)
-	assert.NoError(t, rm.DeAnchor())
+	require.NoError(t, err)
+	require.NoError(t, rm.DeAnchor())
 	yaml, err := rm.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, strings.TrimSpace(`
 apiVersion: v1
 data:
@@ -1301,11 +1381,11 @@ spec:
 		tc := tests[n]
 		t.Run(n, func(t *testing.T) {
 			m, err := rmF.NewResMapFromBytes([]byte(strings.Join(tc.base, "\n---\n")))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			foundError := false
 			for _, patch := range tc.patches {
 				rp, err := rf.FromBytes([]byte(patch))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				idSet := resource.MakeIdSet([]*resource.Resource{rp})
 				if err = m.ApplySmPatch(idSet, rp); err != nil {
 					foundError = true
@@ -1320,7 +1400,7 @@ spec:
 			assert.False(t, tc.errorExpected)
 			m.RemoveBuildAnnotations()
 			yml, err := m.AsYaml()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, strings.Join(tc.expected, "---\n"), string(yml))
 		})
 	}
@@ -1509,8 +1589,8 @@ metadata:
 		tc := tests[name]
 		t.Run(name, func(t *testing.T) {
 			m, err := rmF.NewResMapFromBytes([]byte(tc.input))
-			assert.NoError(t, err)
-			assert.NoError(t, m.ApplyFilter(tc.f))
+			require.NoError(t, err)
+			require.NoError(t, m.ApplyFilter(tc.f))
 			kusttest_test.AssertActualEqualsExpectedWithTweak(
 				t, m, nil, tc.expected)
 		})
@@ -1604,16 +1684,16 @@ $patch: delete
 		tc := tests[name]
 		t.Run(name, func(t *testing.T) {
 			m, err := rmF.NewResMapFromBytes([]byte(target))
-			assert.NoError(t, err, name)
+			require.NoError(t, err, name)
 			idSet := resource.MakeIdSet(m.Resources())
 			assert.Equal(t, 1, idSet.Size(), name)
 			p, err := rf.FromBytes([]byte(tc.patch))
-			assert.NoError(t, err, name)
-			assert.NoError(t, m.ApplySmPatch(idSet, p), name)
+			require.NoError(t, err, name)
+			require.NoError(t, m.ApplySmPatch(idSet, p), name)
 			assert.Equal(t, tc.finalMapSize, m.Size(), name)
 			m.RemoveBuildAnnotations()
 			yml, err := m.AsYaml()
-			assert.NoError(t, err, name)
+			require.NoError(t, err, name)
 			assert.Equal(t, tc.expected, string(yml), name)
 		})
 	}
@@ -1622,28 +1702,28 @@ $patch: delete
 func TestOriginAnnotations(t *testing.T) {
 	w := New()
 	for i := 0; i < 3; i++ {
-		assert.NoError(t, w.Append(makeCm(i)))
+		require.NoError(t, w.Append(makeCm(i)))
 	}
 	// this should add an origin annotation to every resource
-	assert.NoError(t, w.AddOriginAnnotation(origin1))
+	require.NoError(t, w.AddOriginAnnotation(origin1))
 	resources := w.Resources()
 	for _, res := range resources {
 		or, err := res.GetOrigin()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, origin1, or)
 	}
 	// this should not overwrite the existing origin annotations
-	assert.NoError(t, w.AddOriginAnnotation(origin2))
+	require.NoError(t, w.AddOriginAnnotation(origin2))
 	for _, res := range resources {
 		or, err := res.GetOrigin()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, origin1, or)
 	}
 	// this should remove origin annotations from all resources
-	assert.NoError(t, w.RemoveOriginAnnotations())
+	require.NoError(t, w.RemoveOriginAnnotations())
 	for _, res := range resources {
 		or, err := res.GetOrigin()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, or)
 	}
 }
@@ -1651,31 +1731,31 @@ func TestOriginAnnotations(t *testing.T) {
 func TestTransformerAnnotations(t *testing.T) {
 	w := New()
 	for i := 0; i < 3; i++ {
-		assert.NoError(t, w.Append(makeCm(i)))
+		require.NoError(t, w.Append(makeCm(i)))
 	}
 	// this should add an origin annotation to every resource
-	assert.NoError(t, w.AddTransformerAnnotation(origin1))
+	require.NoError(t, w.AddTransformerAnnotation(origin1))
 	resources := w.Resources()
 	for _, res := range resources {
 		or, err := res.GetOrigin()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, origin1, or)
 	}
 	// this should add a transformer annotation to every resource
-	assert.NoError(t, w.AddTransformerAnnotation(origin2))
+	require.NoError(t, w.AddTransformerAnnotation(origin2))
 	for _, res := range resources {
 		or, err := res.GetOrigin()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, origin1, or)
 		tr, err := res.GetTransformations()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, resource.Transformations{origin2}, tr)
 	}
 	// remove transformer annotations from all resources
-	assert.NoError(t, w.RemoveTransformerAnnotations())
+	require.NoError(t, w.RemoveTransformerAnnotations())
 	for _, res := range resources {
 		tr, err := res.GetTransformations()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, tr)
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
@@ -33,11 +32,14 @@ func TestDeterminePluginSrcRoot(t *testing.T) {
 }
 
 func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *string) *resource.Resource {
-	r := rf.FromMap(map[string]interface{}{
+	r, err := rf.FromMap(map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
 		"metadata":   map[string]interface{}{"name": name},
 	})
+	if err != nil {
+		panic(err)
+	}
 	annotations := map[string]string{}
 	if behavior != "" {
 		annotations[BehaviorAnnotation] = behavior
@@ -97,8 +99,8 @@ func TestUpdateResourceOptions(t *testing.T) {
 		require.NoError(t, err)
 	}
 	actual, err := UpdateResourceOptions(in)
-	assert.NoError(t, err)
-	assert.NoError(t, expected.ErrorIfNotEqualLists(actual))
+	require.NoError(t, err)
+	require.NoError(t, expected.ErrorIfNotEqualLists(actual))
 }
 
 func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {

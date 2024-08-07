@@ -144,7 +144,7 @@ func reportFSysDiff(t *testing.T, fSysExpected filesys.FileSystem, fSysActual fi
 			actualContent, readErr := fSysActual.ReadFile(path)
 			require.NoError(t, readErr)
 			expectedContent, findErr := fSysExpected.ReadFile(path)
-			assert.NoErrorf(t, findErr, "unexpected file %q", path)
+			require.NoErrorf(t, findErr, "unexpected file %q", path)
 			if findErr == nil {
 				assert.Equal(t, string(expectedContent), string(actualContent))
 			}
@@ -296,8 +296,10 @@ func TestLocalizeFileCleaned(t *testing.T) {
 kind: Kustomization
 patches:
 - path: ../gamma/../../../alpha/beta/./gamma/patch.yaml
+- path: /alpha/beta/../beta/./gamma/patch2.yaml
 `,
-		"patch.yaml": podConfiguration,
+		"patch.yaml":  podConfiguration,
+		"patch2.yaml": podConfiguration,
 	}
 	expected, actual := makeFileSystems(t, "/alpha/beta/gamma", kustAndPatch)
 
@@ -307,8 +309,10 @@ patches:
 kind: Kustomization
 patches:
 - path: patch.yaml
+- path: patch2.yaml
 `,
-		"patch.yaml": podConfiguration,
+		"patch.yaml":  podConfiguration,
+		"patch2.yaml": podConfiguration,
 	})
 	checkFSys(t, expected, actual)
 }
@@ -1194,19 +1198,40 @@ func TestLocalizeResources(t *testing.T) {
 kind: Kustomization
 resources:
 - pod.yaml
+- /a/b/pod2.yaml
 - ../../alpha
 `,
-		"pod.yaml": podConfiguration,
+		"pod.yaml":  podConfiguration,
+		"pod2.yaml": podConfiguration,
 		"../../alpha/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: my-
 `,
 	}
-	expected, actual := makeFileSystems(t, "/a/b", kustAndResources)
 
-	checkRun(t, actual, "/a/b", "/", "/localized-b")
-	addFiles(t, expected, "/localized-b/a/b", kustAndResources)
-	checkFSys(t, expected, actual)
+	// Absolute path of `/a/b/pod2.yaml` is expected to be converted to a path
+	// relative to the kustomization root.
+	expectedKustAndResources := map[string]string{
+		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- pod.yaml
+- pod2.yaml
+- ../../alpha
+`,
+		"pod.yaml":  podConfiguration,
+		"pod2.yaml": podConfiguration,
+		"../../alpha/kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: my-
+`,
+	}
+
+	expectedFs, actualFs := makeFileSystems(t, "/a/b", kustAndResources)
+
+	checkRun(t, actualFs, "/a/b", "/", "/localized-b")
+	addFiles(t, expectedFs, "/localized-b/a/b", expectedKustAndResources)
+	checkFSys(t, expectedFs, actualFs)
 }
 
 func TestLocalizePathError(t *testing.T) {

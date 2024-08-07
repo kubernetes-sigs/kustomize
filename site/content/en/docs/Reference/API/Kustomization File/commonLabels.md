@@ -4,104 +4,19 @@ linkTitle: "commonLabels"
 type: docs
 weight: 4
 description: >
-    Add labels and selectors to add all resources.
+    Add Labels and Selectors to all resources.
 ---
+`apiVersion: kustomize.config.k8s.io/v1beta1`
 
-[labels]: /docs/reference/api/kustomization-file/labels/
+See the [Tasks section] for examples of how to use `commonLabels`.
 
-Add labels and selectors to all resources.  If the label key already is present on the resource,
-the value will be overridden.
+### commonLabels
+Adds [Labels and Selectors] to resources.
 
-An alternative to this field is the [labels] field, which allows adding labels without also automatically
-injecting corresponding selectors.
+* **commonLabels** (map[string]string)
 
-{{% pageinfo color="warning" %}}
-Selectors for resources such as Deployments and Services shouldn't be changed once the
-resource has been applied to a cluster.
+    Map of labels to add to all resources. Labels will be added to resource selector and template fields where applicable.
 
-Changing commonLabels to live resources could result in failures.
-{{% /pageinfo %}}
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-commonLabels:
-  someName: someValue
-  owner: alice
-  app: bingo
-```
-
-## Example
-
-### File Input
-
-```yaml
-# kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-commonLabels:
-  someName: someValue
-  owner: alice
-  app: bingo
-
-resources:
-- deploy.yaml
-- service.yaml
-```
-
-```yaml
-# deploy.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: example
-```
-
-```yaml
-# service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: example
-```
-
-### Build Output
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: bingo
-    owner: alice
-    someName: someValue
-  name: example
-spec:
-  selector:
-    app: bingo
-    owner: alice
-    someName: someValue
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: bingo
-    owner: alice
-    someName: someValue
-  name: example
-spec:
-  selector:
-    matchLabels:
-      app: bingo
-      owner: alice
-      someName: someValue
-  template:
-    metadata:
-      labels:
-        app: bingo
-        owner: alice
-        someName: someValue
-```
+[Tasks section]: /docs/tasks/labels_and_annotations/
+[Labels and Selectors]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/

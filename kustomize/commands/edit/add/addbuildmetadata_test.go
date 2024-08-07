@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/types"
 	testutils_test "sigs.k8s.io/kustomize/kustomize/v5/commands/internal/testutils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -49,12 +50,12 @@ buildMetadata: [originAnnotations]`,
 		cmd := newCmdAddBuildMetadata(fSys)
 		err := cmd.RunE(cmd, tc.args)
 		if tc.expectedErr != "" {
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Contains(t, err.Error(), tc.expectedErr)
 		} else {
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			content, err := testutils_test.ReadTestKustomization(fSys)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			for _, opt := range strings.Split(tc.args[0], ",") {
 				assert.Contains(t, string(content), opt)
 			}

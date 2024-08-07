@@ -3,7 +3,7 @@
 
 run:
   deadline: 5m
-  go: '1.20'
+  go: '1.21'
 
 linters:
   enable-all: true
@@ -34,6 +34,11 @@ linters:
     - golint
     - maintidx
     - nosnakecase
+    - testpackage # it's better to keep tests in the same package for now because kustomize does open box testing
+    - structcheck # abandoned by author
+    - varcheck # abandoned by author
+    - maligned # abandoned by author
+    - interfacer # archived by author
 
 linters-settings:
   dupl:

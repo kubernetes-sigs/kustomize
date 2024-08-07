@@ -1,7 +1,7 @@
 resources:
 - ../../base
-patchesStrategicMerge:
- - deployment.yaml
+patches:
+ - path: deployment.yaml
 namePrefix: staging-
 configMapGenerator:
 - name: env-config

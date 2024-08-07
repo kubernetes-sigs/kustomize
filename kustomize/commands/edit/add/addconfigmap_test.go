@@ -26,7 +26,7 @@ const (
 
 func TestNewAddConfigMapIsNotNil(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	assert.NotNil(t, newCmdAddConfigMap(
+	require.NotNil(t, newCmdAddConfigMap(
 		fSys,
 		kv.NewLoader(
 			loader.NewFileLoaderAtCwd(fSys),
@@ -41,15 +41,14 @@ func TestMakeConfigMapArgs(t *testing.T) {
 		NamePrefix: "test-name-prefix",
 	}
 
-	if len(kustomization.ConfigMapGenerator) != 0 {
-		t.Fatal("Initial kustomization should not have any configmaps")
-	}
+	require.Len(t, kustomization.ConfigMapGenerator, 0, "Initial kustomization should not have any configmaps")
+
 	args := findOrMakeConfigMapArgs(kustomization, cmName, configMapNamespace)
-	assert.NotNil(t, args)
-	assert.Equal(t, 1, len(kustomization.ConfigMapGenerator))
-	assert.Equal(t, &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1], args)
-	assert.Equal(t, args, findOrMakeConfigMapArgs(kustomization, cmName, configMapNamespace))
-	assert.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+	require.NotNil(t, args)
+	require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
+	require.Equal(t, &kustomization.ConfigMapGenerator[len(kustomization.ConfigMapGenerator)-1], args)
+	require.Equal(t, args, findOrMakeConfigMapArgs(kustomization, cmName, configMapNamespace))
+	require.Equal(t, 1, len(kustomization.ConfigMapGenerator))
 }
 
 func TestMergeFlagsIntoConfigMapArgs_LiteralSources(t *testing.T) {
@@ -349,6 +348,146 @@ func TestEditAddConfigMapWithFileSource(t *testing.T) {
 			require.Equal(t, tc.configMapName, newCmGenerator.Name)
 			require.Equal(t, tc.configMapNamespace, newCmGenerator.Namespace)
 			require.Contains(t, newCmGenerator.FileSources, tc.fileSource)
+		})
+	}
+}
+
+// TestEditAddConfigMapNamespaced tests situations regarding namespacing. For example, it
+// verifies that the empty namespace and the default namespace are treated the
+// same when adding a configmap to a kustomization file.
+func TestEditAddConfigMapNamespaced(t *testing.T) {
+	testCases := []struct {
+		name                string
+		configMapName       string
+		configMapNamespace  string
+		literalSources      []string
+		initialArgs         string
+		expectedResult      []types.ConfigMapArgs
+		expectedSliceLength int
+	}{
+		{
+			name:               "adds new key to configmap when default namespace matches empty",
+			configMapName:      "test-cm",
+			configMapNamespace: "default",
+			literalSources:     []string{"key1=value1"},
+			initialArgs: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - key=value
+  name: test-cm
+`,
+			expectedResult: []types.ConfigMapArgs{
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "",
+						Name:      "test-cm",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key=value", "key1=value1"},
+						},
+					},
+				},
+			},
+			expectedSliceLength: 1,
+		},
+		{
+			name:               "adds new key to configmap when empty namespace matches default",
+			configMapName:      "test-cm",
+			configMapNamespace: "",
+			literalSources:     []string{"key1=value1"},
+			initialArgs: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - key=value
+  name: test-cm
+  namespace: default
+`,
+			expectedResult: []types.ConfigMapArgs{
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "default",
+						Name:      "test-cm",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key=value", "key1=value1"},
+						},
+					},
+				},
+			},
+			expectedSliceLength: 1,
+		},
+		{
+			name:               "creates a new generator when namespaces don't match",
+			configMapName:      "test-cm",
+			configMapNamespace: "",
+			literalSources:     []string{"key1=value1"},
+			initialArgs: `---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+- literals:
+  - key=value
+  name: test-cm
+  namespace: ns1
+`,
+			expectedResult: []types.ConfigMapArgs{
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "ns1",
+						Name:      "test-cm",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key=value"},
+						},
+					},
+				},
+				{
+					GeneratorArgs: types.GeneratorArgs{
+						Namespace: "",
+						Name:      "test-cm",
+						KvPairSources: types.KvPairSources{
+							LiteralSources: []string{"key1=value1"},
+						},
+					},
+				},
+			},
+			expectedSliceLength: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fSys := filesys.MakeEmptyDirInMemory()
+			testutils_test.WriteTestKustomizationWith(fSys, []byte(tc.initialArgs))
+
+			pvd := provider.NewDefaultDepProvider()
+			ldr := kv.NewLoader(loader.NewFileLoaderAtCwd(fSys), pvd.GetFieldValidator())
+
+			args := []string{
+				tc.configMapName,
+				fmt.Sprintf(util.FlagFormat, util.NamespaceFlag, tc.configMapNamespace),
+			}
+
+			for _, source := range tc.literalSources {
+				args = append(args, fmt.Sprintf(util.FlagFormat, util.FromLiteralFlag, source))
+			}
+
+			cmd := newCmdAddConfigMap(fSys, ldr, pvd.GetResourceFactory())
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.Execute())
+
+			_, err := testutils_test.ReadTestKustomization(fSys)
+			require.NoError(t, err)
+
+			mf, err := kustfile.NewKustomizationFile(fSys)
+			require.NoError(t, err)
+
+			kustomization, err := mf.Read()
+			require.NoError(t, err)
+
+			require.Len(t, kustomization.ConfigMapGenerator, tc.expectedSliceLength)
+			require.ElementsMatch(t, tc.expectedResult, kustomization.ConfigMapGenerator)
 		})
 	}
 }

@@ -202,6 +202,22 @@ field: null
 			ListIncreaseDirection: yaml.MergeOptionsListAppend,
 		},
 	},
+	{description: `keep scalar -- missing in src, null in dest, preserves null marker`,
+		source: `
+kind: Deployment
+`,
+		dest: `
+kind: Deployment
+field: ~
+`,
+		expected: `
+kind: Deployment
+field: ~
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
 
 	//
 	// Test Case

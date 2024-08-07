@@ -20,6 +20,12 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const (
+	expectedLargeConfigMap = `{"apiVersion":"v1","data":{"password":"password","username":"user"},"kind":"ConfigMap",` +
+		`"metadata":{"annotations":{"internal.config.kubernetes.io/generatorBehavior":"unspecified",` +
+		`"internal.config.kubernetes.io/needsHashSuffix":"enabled"},"name":"example-configmap-test"}}`
+)
+
 func TestExecPluginConfig(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	err := fSys.WriteFile("sed-input.txt", []byte(`
@@ -35,7 +41,7 @@ s/$BAR/bar baz/g
 	}
 	pvd := provider.NewDefaultDepProvider()
 	rf := resmap.NewFactory(pvd.GetResourceFactory())
-	pluginConfig := rf.RF().FromMap(
+	pluginConfig, err := rf.RF().FromMap(
 		map[string]interface{}{
 			"apiVersion": "someteam.example.com/v1",
 			"kind":       "SedTransformer",
@@ -45,6 +51,9 @@ s/$BAR/bar baz/g
 			"argsOneLiner": "one two 'foo bar'",
 			"argsFromFile": "sed-input.txt",
 		})
+	if err != nil {
+		t.Fatalf("failed to writes the data to a file: %v", err)
+	}
 
 	pluginConfig.RemoveBuildAnnotations()
 	pc := types.DisabledPluginConfig()
@@ -124,4 +133,105 @@ func TestExecPlugin_ErrIfNotExecutable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
+}
+
+// TestExecPluginLarge loads PluginConfigs of various (large) sizes. It tests if the env variable is kept below the
+// maximum of 131072 bytes.
+func TestExecPluginLarge(t *testing.T) {
+	// Skip this test on windows.
+	if runtime.GOOS == "windows" {
+		t.Skipf("always returns nil on Windows")
+	}
+
+	// Add executable plugin.
+	srcRoot, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
+	if err != nil {
+		t.Error(err)
+	}
+	executablePlugin := filepath.Join(
+		srcRoot, "someteam.example.com", "v1", "bashedconfigmap", "BashedConfigMap")
+	p := NewExecPlugin(executablePlugin)
+	err = p.ErrIfNotExecutable()
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+
+	// Create a fake filesystem.
+	fSys := filesys.MakeFsInMemory()
+
+	// Load plugin config.
+	ldr, err := fLdr.NewLoader(
+		fLdr.RestrictionRootOnly, filesys.Separator, fSys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pvd := provider.NewDefaultDepProvider()
+	rf := resmap.NewFactory(pvd.GetResourceFactory())
+	pc := types.DisabledPluginConfig()
+
+	// Test for various lengths. 131071 is the max length that we can have for any given env var in Bytes.
+	tcs := []struct {
+		length int
+		char   rune
+	}{
+		{1000, 'a'},
+		{131071, 'a'},
+		{131072, 'a'},
+		{200000, 'a'},
+		{131071, '安'},
+		{131074, '安'},
+	}
+	for _, tc := range tcs {
+		t.Logf("Testing with an env var length of %d and character %c", tc.length, tc.char)
+		pluginConfig, err := rf.RF().FromBytes(buildLargePluginConfig(tc.length, tc.char))
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		yaml, err := pluginConfig.AsYAML()
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		err = p.Config(resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc), yaml)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		resMap, err := p.Generate()
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		rNodeSlices := resMap.ToRNodeSlice()
+		for _, rNodeSlice := range rNodeSlices {
+			json, err := rNodeSlice.MarshalJSON()
+			if err != nil {
+				t.Fatalf("unexpected err: %v", err)
+			}
+			if string(json) != expectedLargeConfigMap {
+				t.Fatalf("expected generated JSON to match %q, but got %q instead",
+					expectedLargeConfigMap, string(json))
+			}
+		}
+	}
+}
+
+// buildLargePluginConfig builds a plugin configuration of length: length - len("KUSTOMIZE_PLUGIN_CONFIG_STRING=")
+// This allows us to create an environment variable KUSTOMIZE_PLUGIN_CONFIG_STRING=<plugin content> with the exact
+// length that's provided in the length parameter. Used as a helper for TestExecPluginLarge.
+func buildLargePluginConfig(length int, char rune) []byte {
+	length -= len("KUSTOMIZE_PLUGIN_CONFIG_STRING=")
+
+	var sb strings.Builder
+	sb.WriteString("apiVersion: someteam.example.com/v1\n")
+	sb.WriteString("kind: BashedConfigMap\n")
+	sb.WriteString("metadata:\n")
+	sb.WriteString("  name: some-random-name\n")
+	sb.WriteString("argsOneLiner: \"user password\"\n")
+	sb.WriteString("customArg: ")
+
+	// Now, fill up parameter customArg: until we reach the desired length. Account for the fact that runes can be
+	// 1 to 4 Bytes each.
+	upperBound := length - sb.Len()
+	for i := 0; i < upperBound-len(string(char)); i += len(string(char)) {
+		sb.WriteRune(char)
+	}
+	return []byte(sb.String())
 }

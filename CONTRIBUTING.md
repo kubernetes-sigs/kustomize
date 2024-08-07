@@ -75,13 +75,38 @@ cd kustomize
 git push origin myfeature
 ```
 
+### Pull Request Rules
+
+We are using [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) as the main guideline of making PR. This guideline serves to help contributor and maintainer to classify their changes, thus providing better insight on type of release will be covered on each Kustomize release cycle.
+
+1. Please add these keywords on your PR titles accordingly
+
+| Keyword  | Description | Example |
+| ------------- | ------------- | ------------- |
+| fix  | Patching or fixing bugs or improvements introduction from previous release. This type of change will mark a `PATCH` release.  | fix: fix null value when generating yaml |
+| feat  | New features. This change will mark a `MINOR` release. | feat: new transformer and generator for ACME API CRD. |
+| chore  | Minor improvement outside main code base  | chore: add exclusion for transformer test. |
+| ci | CI/CD related changes (e.g. github workflow, scripts, CI steps). | ci: remove blocking tests |
+| docs  | Changes related to documentation. | docs: add rules documentation for PR. |
+
+
+2. Add `BREAKING CHANGE:` on your commit message as footer to signify breaking changes. This will help maintainers identify `MAJOR` releases.
+  
+Example:
+
+```
+feat: change YAML parser from `yaml/v1` to `yaml/v2`
+
+BREAKING CHANGE: parse() function now works with 2 arguments.
+```
+
 ### Create a Pull Request
+
 1. Visit your fork at `https://github.com/<user>/kustomize`
 2. Click the **Compare & Pull Request** button next to your `myfeature` branch.
 3. Check out the pull request [process](https://github.com/kubernetes/community/blob/master/contributors/guide/pull-requests.md) for more details and advice.
 
 If you ran `git push` in the previous step, GitHub will return a useful link to create a Pull Request.
-
 
 ### Build Kustomize
 The [Kustomize Architecture] document describes the respository organization and the kustomize build process.

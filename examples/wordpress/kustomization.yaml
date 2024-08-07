@@ -1,8 +1,8 @@
 resources:
 - wordpress
 - mysql
-patchesStrategicMerge:
-- patch.yaml
+patches:
+- path: patch.yaml
 namePrefix: demo-
 
 vars:

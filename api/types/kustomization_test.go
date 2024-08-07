@@ -30,6 +30,13 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 			want: &[]string{deprecatedBaseWarningMessage},
 		},
 		{
+			name: "using_CommonLabels",
+			k: Kustomization{
+				CommonLabels: map[string]string{},
+			},
+			want: &[]string{deprecatedCommonLabelsWarningMessage},
+		},
+		{
 			name: "using_ImageTags",
 			k: Kustomization{
 				ImageTags: []Image{},
@@ -61,6 +68,7 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 			name: "usingAll",
 			k: Kustomization{
 				Bases:                 []string{"base"},
+				CommonLabels:          map[string]string{},
 				ImageTags:             []Image{},
 				PatchesJson6902:       []Patch{},
 				PatchesStrategicMerge: []PatchStrategicMerge{},
@@ -68,6 +76,7 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 			},
 			want: &[]string{
 				deprecatedBaseWarningMessage,
+				deprecatedCommonLabelsWarningMessage,
 				deprecatedImageTagsWarningMessage,
 				deprecatedPatchesJson6902Message,
 				deprecatedPatchesStrategicMergeMessage,

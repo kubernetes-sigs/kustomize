@@ -1,12 +1,10 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM golang:1.20-bullseye
-ENV CGO_ENABLED=0
-RUN go get -v sigs.k8s.io/kustomize/kustomize
+ARG KUSTOMIZE_IMAGE_TAG
+ARG KUSTOMIZE_IMAGE_SHA
 
-FROM alpine:latest
+FROM registry.k8s.io/kustomize/kustomize:${KUSTOMIZE_IMAGE_TAG}@${KUSTOMIZE_IMAGE_SHA}
 RUN apk add --no-cache bash
-COPY --from=0 /go/bin/kustomize /usr/local/bin
 COPY cockroachdb-template.sh /usr/local/bin/config-function
 CMD ["config-function"]

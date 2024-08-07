@@ -6,53 +6,16 @@ weight: 12
 description: >
     Adds namespace to all resources.
 ---
+`apiVersion: kustomize.config.k8s.io/v1beta1`
 
-Will override the existing namespace if it is set on a resource, or add it
-if it is not set on a resource.
+See the [Tasks section] for examples of how to use `namespace`.
 
-## Example
+### namespace
+Adds namespace to all resources.
 
-### File Input
+* **namespace** (string)
 
-```yaml
-# deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: the-deployment
-  namespace: the-namespace
-spec:
-  replicas: 5
-  template:
-    containers:
-      - name: the-container
-        image: registry/container:latest
-```
+    Namespace to add to all resources. This will override Namespace values that already exist.
 
-```yaml
-# kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 
-namespace: kustomize-namespace
-
-resources:
-- deployment.yaml
-
-```
-
-### Build Output
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: the-deployment
-  namespace: kustomize-namespace
-spec:
-  replicas: 5
-  template:
-    containers:
-    - image: registry/container:latest
-      name: the-container
-```
+[Tasks section]: /docs/tasks/namespaces_and_names/

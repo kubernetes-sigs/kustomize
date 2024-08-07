@@ -6,13 +6,17 @@ package target_test
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	. "sigs.k8s.io/kustomize/api/internal/target"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -189,13 +193,67 @@ metadata:
 
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
+	name0 := "dply1"
 
-	resources := []*resource.Resource{
-		resFactory.FromMapWithName("dply1", map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
+	r0, err := resFactory.FromMapWithName(name0, map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "foo-dply1-bar",
+			"namespace": "ns1",
+			"labels": map[string]interface{}{
+				"app": "nginx",
+			},
+			"annotations": map[string]interface{}{
+				"note": "This is a test annotation",
+			},
+		},
+		"spec": map[string]interface{}{
+			"replica": "3",
+			"selector": map[string]interface{}{
+				"matchLabels": map[string]interface{}{
+					"app": "nginx",
+				},
+			},
+			"template": map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"annotations": map[string]interface{}{
+						"note": "This is a test annotation",
+					},
+					"labels": map[string]interface{}{
+						"app": "nginx",
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name0, err)
+	}
+	name1 := "ns1"
+	r1, err := resFactory.FromMapWithName(name1, map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Namespace",
+		"metadata": map[string]interface{}{
+			"name": "ns1",
+			"labels": map[string]interface{}{
+				"app": "nginx",
+			},
+			"annotations": map[string]interface{}{
+				"note": "This is a test annotation",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name1, err)
+	}
+
+	r2, _ := resFactory.FromMapWithName("literalConfigMap",
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
-				"name":      "foo-dply1-bar",
+				"name":      "foo-literalConfigMap-bar-g5f6t456f5",
 				"namespace": "ns1",
 				"labels": map[string]interface{}{
 					"app": "nginx",
@@ -204,30 +262,20 @@ metadata:
 					"note": "This is a test annotation",
 				},
 			},
-			"spec": map[string]interface{}{
-				"replica": "3",
-				"selector": map[string]interface{}{
-					"matchLabels": map[string]interface{}{
-						"app": "nginx",
-					},
-				},
-				"template": map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"annotations": map[string]interface{}{
-							"note": "This is a test annotation",
-						},
-						"labels": map[string]interface{}{
-							"app": "nginx",
-						},
-					},
-				},
+			"data": map[string]interface{}{
+				"DB_USERNAME": "admin",
+				"DB_PASSWORD": "somepw",
 			},
-		}),
-		resFactory.FromMapWithName("ns1", map[string]interface{}{
+		})
+
+	name2 := "secret"
+	r3, err := resFactory.FromMapWithName(name2,
+		map[string]interface{}{
 			"apiVersion": "v1",
-			"kind":       "Namespace",
+			"kind":       "Secret",
 			"metadata": map[string]interface{}{
-				"name": "ns1",
+				"name":      "foo-secret-bar-82c2g5f8f6",
+				"namespace": "ns1",
 				"labels": map[string]interface{}{
 					"app": "nginx",
 				},
@@ -235,65 +283,33 @@ metadata:
 					"note": "This is a test annotation",
 				},
 			},
-		}),
-		resFactory.FromMapWithName("literalConfigMap",
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "ConfigMap",
-				"metadata": map[string]interface{}{
-					"name":      "foo-literalConfigMap-bar-g5f6t456f5",
-					"namespace": "ns1",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
-				},
-				"data": map[string]interface{}{
-					"DB_USERNAME": "admin",
-					"DB_PASSWORD": "somepw",
-				},
-			}),
-		resFactory.FromMapWithName("secret",
-			map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Secret",
-				"metadata": map[string]interface{}{
-					"name":      "foo-secret-bar-82c2g5f8f6",
-					"namespace": "ns1",
-					"labels": map[string]interface{}{
-						"app": "nginx",
-					},
-					"annotations": map[string]interface{}{
-						"note": "This is a test annotation",
-					},
-				},
-				"type": ifc.SecretTypeOpaque,
-				"data": map[string]interface{}{
-					"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
-					"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
-				},
-			}),
+			"type": ifc.SecretTypeOpaque,
+			"data": map[string]interface{}{
+				"DB_USERNAME": base64.StdEncoding.EncodeToString([]byte("admin")),
+				"DB_PASSWORD": base64.StdEncoding.EncodeToString([]byte("somepw")),
+			},
+		})
+	if err != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name2, err)
 	}
+
+	resources := []*resource.Resource{r0, r1, r2, r3}
 
 	expected := resmap.New()
 	for _, r := range resources {
-		if err := expected.Append(r); err != nil {
-			t.Fatalf("unexpected error %v", err)
-		}
+		require.NoError(t, expected.Append(r), "failed to append resource: %v")
 	}
 	expected.RemoveBuildAnnotations()
 	expYaml, err := expected.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	kt := makeKustTargetWithRf(t, th.GetFSys(), "/whatever", pvd)
-	assert.NoError(t, kt.Load())
+	require.NoError(t, kt.Load())
 	actual, err := kt.MakeCustomizedResMap()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
 	actYaml, err := actual.AsYaml()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, string(expYaml), string(actYaml))
 }
 
@@ -313,19 +329,21 @@ configurations:
 	th.WriteF("/merge-config/name-prefix-rules.yaml", `
 namePrefix:
 - path: metadata/name
-  apiVersion: v1
+  group: apps
+  version: v1
   kind: Deployment
 - path: metadata/name
-  apiVersion: v1
+  version: v1
   kind: Secret
 `)
 	th.WriteF("/merge-config/name-suffix-rules.yaml", `
 nameSuffix:
 - path: metadata/name
-  apiVersion: v1
+  version: v1
   kind: ConfigMap
 - path: metadata/name
-  apiVersion: v1
+  group: apps
+  version: v1
   kind: Deployment
 `)
 	th.WriteF("/merge-config/deployment.yaml", `
@@ -350,31 +368,43 @@ metadata:
 	pvd := provider.NewDefaultDepProvider()
 	resFactory := pvd.GetResourceFactory()
 
-	resources := []*resource.Resource{
-		resFactory.FromMapWithName("deployment1", map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name":      "foo-deployment1-bar",
-				"namespace": "ns1",
-			},
-		}), resFactory.FromMapWithName("config", map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "ConfigMap",
-			"metadata": map[string]interface{}{
-				"name":      "config-bar",
-				"namespace": "ns1",
-			},
-		}), resFactory.FromMapWithName("secret", map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "Secret",
-			"metadata": map[string]interface{}{
-				"name":      "foo-secret",
-				"namespace": "ns1",
-			},
-		}),
+	name0 := "deployment1"
+	r0, err0 := resFactory.FromMapWithName(name0, map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      "foo-deployment1-bar",
+			"namespace": "ns1",
+		},
+	})
+	if err0 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name0, err0)
 	}
-
+	name1 := "config"
+	r1, err1 := resFactory.FromMapWithName(name1, map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      "config-bar",
+			"namespace": "ns1",
+		},
+	})
+	if err1 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name1, err1)
+	}
+	name2 := "secret"
+	r2, err2 := resFactory.FromMapWithName(name2, map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Secret",
+		"metadata": map[string]interface{}{
+			"name":      "foo-secret",
+			"namespace": "ns1",
+		},
+	})
+	if err2 != nil {
+		t.Fatalf("failed to get instance with given name %v: %v", name2, err2)
+	}
+	var resources = []*resource.Resource{r0, r1, r2}
 	expected := resmap.New()
 	for _, r := range resources {
 		err := expected.Append(r)
@@ -423,7 +453,7 @@ func TestDuplicateExternalGeneratorsForbidden(t *testing.T) {
     configPath: another_config.json
 `)
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/generator").AccumulateTarget()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ManifestGenerator.v1.generators.example/ManifestGenerator")
 }
 
@@ -452,6 +482,151 @@ func TestDuplicateExternalTransformersForbidden(t *testing.T) {
   value: 'fail'
 `)
 	_, err := makeAndLoadKustTarget(t, th.GetFSys(), "/transformer").AccumulateTarget()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "may not add resource with an already registered id: ValueAnnotator.v1.transformers.example.co/notImportantHere")
+}
+
+func TestErrorMessageForMalformedYAML(t *testing.T) {
+	// These testcases verify behavior for the scenario described in
+	// https://github.com/kubernetes-sigs/kustomize/issues/5540 .
+
+	testcases := map[string]struct {
+		loaderNewReturnsError error
+		shouldShowLoadError   bool
+	}{
+		"shouldShowLoadError": {
+			loaderNewReturnsError: utils.NewErrTimeOut(time.Second, "git init"),
+			shouldShowLoadError:   true,
+		},
+		"shouldNotShowLoadError": {
+			loaderNewReturnsError: NewErrMissingKustomization("/should-fail/resources.yaml"),
+			shouldShowLoadError:   false,
+		},
+	}
+
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/should-fail/kustomization.yaml", `resources:
+- resources.yaml
+`)
+	th.WriteF("/should-fail/resources.yaml", `<!DOCTYPE html>
+<html class="html-devise-layout ui-light-gray" lang="en">
+<head prefix="og: http://ogp.me/ns#">
+<meta charset="utf-8">
+`)
+
+	for name, tc := range testcases {
+		t.Run(name, func(subT *testing.T) {
+			ldrWrapper := func(baseLoader ifc.Loader) ifc.Loader {
+				return loaderNewThrowsError{
+					baseLoader:      baseLoader,
+					newReturnsError: tc.loaderNewReturnsError,
+				}
+			}
+			_, err := makeAndLoadKustTargetWithLoaderOverride(t, th.GetFSys(), "/should-fail", ldrWrapper).AccumulateTarget()
+			require.Error(t, err)
+			errString := err.Error()
+			assert.Contains(t, errString, "accumulating resources from 'resources.yaml'")
+			assert.Contains(t, errString, "MalformedYAMLError: yaml: line 3: mapping values are not allowed in this context")
+			if tc.shouldShowLoadError {
+				assert.Regexp(t, `hit \w+ timeout running '`, errString)
+			} else {
+				assert.NotRegexp(t, `hit \w+ timeout running '`, errString)
+			}
+		})
+	}
+}
+
+// loaderNewReturnsError duplicates baseLoader's behavior except
+// that New() returns the specified error.
+type loaderNewThrowsError struct {
+	baseLoader      ifc.Loader
+	newReturnsError error
+}
+
+func (l loaderNewThrowsError) Repo() string {
+	return l.baseLoader.Repo()
+}
+
+func (l loaderNewThrowsError) Root() string {
+	return l.baseLoader.Root()
+}
+
+func (l loaderNewThrowsError) New(_ string) (ifc.Loader, error) {
+	return nil, l.newReturnsError
+}
+
+func (l loaderNewThrowsError) Load(location string) ([]byte, error) {
+	return l.baseLoader.Load(location) //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func (l loaderNewThrowsError) Cleanup() error {
+	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func TestErrorMessageForMalformedYAMLAndInvalidBase(t *testing.T) {
+	// These testcases verify behavior for the scenario described in
+	// https://github.com/kubernetes-sigs/kustomize/issues/5692 .
+
+	// Use a test server to fake the remote file response
+	handler := http.NewServeMux()
+	handler.HandleFunc("/", func(out http.ResponseWriter, req *http.Request) {
+		// Per issue #5692, the server should return a 200 status code with a response body that fails to parse as YAML
+		out.WriteHeader(http.StatusOK)
+		_, _ = out.Write([]byte(`<!DOCTYPE html>
+<html class="html-devise-layout ui-light-gray" lang="en">
+<head prefix="og: http://ogp.me/ns#">`))
+	})
+	svr := httptest.NewServer(handler)
+	defer svr.Close()
+
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("/should-fail/kustomization.yml", "resources:\n- "+svr.URL)
+	th.WriteF("/should-fail/remote-repo/kustomization.yml", "this: is not a kustomization file!")
+
+	ldrWrapper := func(baseLoader ifc.Loader) ifc.Loader {
+		return &loaderWithRenamedRoots{
+			baseLoader: baseLoader,
+			fakeRootMap: map[string]string{
+				// Use the "remote-repo" subdir instead of the remote git repo
+				svr.URL: "remote-repo",
+			},
+		}
+	}
+
+	_, err := makeAndLoadKustTargetWithLoaderOverride(t, th.GetFSys(), "/should-fail", ldrWrapper).AccumulateTarget()
+	require.Error(t, err)
+	errString := err.Error()
+	assert.Contains(t, errString, "accumulating resources from '"+svr.URL+"'")
+	assert.Contains(t, errString, "MalformedYAMLError: yaml: line 3: mapping values are not allowed in this context")
+	assert.Contains(t, errString, `invalid Kustomization: json: unknown field "this"`)
+}
+
+// loaderWithRenamedRoots is a loader that can map New() roots to some other name
+type loaderWithRenamedRoots struct {
+	baseLoader  ifc.Loader
+	fakeRootMap map[string]string
+}
+
+func (l loaderWithRenamedRoots) Repo() string {
+	return l.baseLoader.Repo()
+}
+
+func (l loaderWithRenamedRoots) Root() string {
+	return l.baseLoader.Root()
+}
+
+func (l loaderWithRenamedRoots) New(newRoot string) (ifc.Loader, error) {
+	if otherRoot, ok := l.fakeRootMap[newRoot]; ok {
+		return l.baseLoader.New(otherRoot) //nolint:wrapcheck // baseLoader's error is sufficient
+	}
+
+	return l.baseLoader.New(newRoot) //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func (l loaderWithRenamedRoots) Load(path string) ([]byte, error) {
+	return l.baseLoader.Load(path) //nolint:wrapcheck // baseLoader's error is sufficient
+}
+
+func (l loaderWithRenamedRoots) Cleanup() error {
+	return l.baseLoader.Cleanup() //nolint:wrapcheck // baseLoader's error is sufficient
 }

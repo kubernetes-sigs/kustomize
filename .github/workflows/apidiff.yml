@@ -13,15 +13,15 @@ jobs:
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
     steps:
       - name: Clone the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.work
       - name: Execute go-apidiff
-        uses: joelanford/go-apidiff@v0.6.0
+        uses: joelanford/go-apidiff@v0.8.2
         with:
           compare-imports: true
           print-compatible: true

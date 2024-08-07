@@ -267,7 +267,7 @@ Now change the password in the local values file:
 
 <!-- @valueChange @testHelm -->
 ```
-values=$DEMO_HOME/base/charts/minecraft/values.yaml
+values=$DEMO_HOME/base/charts/minecraft-3.1.3/minecraft/values.yaml
 
 grep CHANGEME $values
 sed -i 's/CHANGEME/SOMETHING_ELSE/' $values

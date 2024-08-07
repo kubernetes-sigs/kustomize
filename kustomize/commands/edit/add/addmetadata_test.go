@@ -20,9 +20,9 @@ func makeKustomization(t *testing.T) *types.Kustomization {
 	fSys := filesys.MakeFsInMemory()
 	testutils_test.WriteTestKustomization(fSys)
 	kf, err := kustfile.NewKustomizationFile(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m, err := kf.Read()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	return m
 }
 
@@ -31,13 +31,13 @@ func TestRunAddAnnotation(t *testing.T) {
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
 
 	m := makeKustomization(t)
-	assert.NoError(t, o.addAnnotations(m))
+	require.NoError(t, o.addAnnotations(m))
 	// adding the same test input should not work
-	assert.Error(t, o.addAnnotations(m))
+	require.Error(t, o.addAnnotations(m))
 
 	// adding new annotations should work
 	o.metadata = map[string]string{"new": "annotation"}
-	assert.NoError(t, o.addAnnotations(m))
+	require.NoError(t, o.addAnnotations(m))
 }
 
 func TestAddAnnotationNoArgs(t *testing.T) {
@@ -46,7 +46,7 @@ func TestAddAnnotationNoArgs(t *testing.T) {
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	err := cmd.Execute()
 	v.VerifyNoCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "must specify annotation", err.Error())
 }
 
@@ -57,7 +57,7 @@ func TestAddAnnotationInvalidFormat(t *testing.T) {
 	args := []string{"whatever:whatever"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, valtest_test.SAD, err.Error())
 }
 
@@ -67,7 +67,7 @@ func TestAddAnnotationManyArgs(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"k1:v1,k2:v2,k3:v3,k4:v5"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -77,7 +77,7 @@ func TestAddAnnotationValueQuoted(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"k1:\"v1\""}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -87,7 +87,7 @@ func TestAddAnnotationValueWithColon(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"k1:\"v1:v2\""}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -98,10 +98,10 @@ func TestAddAnnotationValueWithComma(t *testing.T) {
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	value := "{\"k1\":\"v1\",\"k2\":\"v2\"}"
 	args := []string{"test:" + value}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 	b, err := fSys.ReadFile("/kustomization.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(b), value)
 }
 
@@ -112,7 +112,7 @@ func TestAddAnnotationNoKey(t *testing.T) {
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "invalid annotation: ':nokey' (need k:v pair where v may be quoted)", err.Error())
 }
 
@@ -122,7 +122,7 @@ func TestAddAnnotationTooManyColons(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"key:v1:v2"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -132,7 +132,7 @@ func TestAddAnnotationNoValue(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"no:,value"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -142,7 +142,7 @@ func TestAddAnnotationMultipleArgs(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"this:annotation", "has:spaces"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -152,7 +152,7 @@ func TestAddAnnotationForce(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddAnnotation(fSys, v.Validator)
 	args := []string{"key:foo"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 	// trying to add the same annotation again should not work
 	args = []string{"key:bar"}
@@ -160,7 +160,7 @@ func TestAddAnnotationForce(t *testing.T) {
 	cmd = newCmdAddAnnotation(fSys, v.Validator)
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "annotation key already in kustomization file", err.Error())
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
@@ -176,12 +176,12 @@ func TestRunAddLabel(t *testing.T) {
 	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
 
 	m := makeKustomization(t)
-	assert.NoError(t, o.addLabels(m))
+	require.NoError(t, o.addLabels(m))
 	// adding the same test input should not work
-	assert.Error(t, o.addLabels(m))
+	require.Error(t, o.addLabels(m))
 	// adding new labels should work
 	o.metadata = map[string]string{"new": "label"}
-	assert.NoError(t, o.addLabels(m))
+	require.NoError(t, o.addLabels(m))
 }
 
 func TestAddLabelNoArgs(t *testing.T) {
@@ -190,7 +190,7 @@ func TestAddLabelNoArgs(t *testing.T) {
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	err := cmd.Execute()
 	v.VerifyNoCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "must specify label", err.Error())
 }
 
@@ -201,7 +201,7 @@ func TestAddLabelInvalidFormat(t *testing.T) {
 	args := []string{"exclamation!:point"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	if err.Error() != valtest_test.SAD {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
@@ -214,7 +214,7 @@ func TestAddLabelNoKey(t *testing.T) {
 	args := []string{":nokey"}
 	err := cmd.RunE(cmd, args)
 	v.VerifyNoCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	if err.Error() != "invalid label: ':nokey' (need k:v pair where v may be quoted)" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
@@ -226,7 +226,7 @@ func TestAddLabelTooManyColons(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"key:v1:v2"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -236,7 +236,7 @@ func TestAddLabelNoValue(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"no,value:"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -246,7 +246,7 @@ func TestAddLabelMultipleArgs(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"this:input", "has:spaces"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -256,7 +256,7 @@ func TestAddLabelForce(t *testing.T) {
 	v := valtest_test.MakeHappyMapValidator(t)
 	cmd := newCmdAddLabel(fSys, v.Validator)
 	args := []string{"key:foo"}
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 	// trying to add the same label again should not work
 	args = []string{"key:bar"}
@@ -264,14 +264,14 @@ func TestAddLabelForce(t *testing.T) {
 	cmd = newCmdAddLabel(fSys, v.Validator)
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "label key already in kustomization file", err.Error())
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddLabel(fSys, v.Validator)
 	err = cmd.Flag("force").Value.Set("true")
 	require.NoError(t, err)
-	assert.NoError(t, cmd.RunE(cmd, args))
+	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
 }
 
@@ -280,8 +280,31 @@ func TestAddLabelWithoutSelector(t *testing.T) {
 	o.labelsWithoutSelector = true
 	m := makeKustomization(t)
 	o.metadata = map[string]string{"new": "label"}
-	assert.NoError(t, o.addLabels(m))
+	require.NoError(t, o.addLabels(m))
 	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}})
+}
+
+func TestAddLabelWithoutSelectorIncludeTemplates(t *testing.T) {
+	var o addMetadataOptions
+	o.labelsWithoutSelector = true
+	m := makeKustomization(t)
+	o.metadata = map[string]string{"new": "label"}
+	o.includeTemplates = true
+	require.NoError(t, o.addLabels(m))
+	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}, IncludeTemplates: true})
+}
+
+func TestAddLabelIncludeTemplatesWithoutRequiredFlag(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fSys, v.Validator)
+	args := []string{"new:label"}
+	_ = cmd.Flag("include-templates").Value.Set("true")
+	_ = cmd.Flag("without-selector").Value.Set("false")
+	err := cmd.RunE(cmd, args)
+	v.VerifyNoCall()
+	require.Error(t, err)
+	require.Containsf(t, err.Error(), "--without-selector flag must be specified for --include-templates to work", "incorrect error: %s", err.Error())
 }
 
 func TestAddLabelWithoutSelectorAddLabel(t *testing.T) {
@@ -290,10 +313,10 @@ func TestAddLabelWithoutSelectorAddLabel(t *testing.T) {
 	o.labelsWithoutSelector = true
 
 	m := makeKustomization(t)
-	assert.NoError(t, o.addLabels(m))
+	require.NoError(t, o.addLabels(m))
 	// adding new labels should work
 	o.metadata = map[string]string{"new": "label"}
-	assert.NoError(t, o.addLabels(m))
+	require.NoError(t, o.addLabels(m))
 
 	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"owls": "cute", "otters": "adorable"}})
 	assert.Equal(t, m.Labels[1], types.Label{Pairs: map[string]string{"new": "label"}})

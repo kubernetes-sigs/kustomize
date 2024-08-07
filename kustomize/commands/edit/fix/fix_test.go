@@ -19,10 +19,10 @@ func TestFix(t *testing.T) {
 	testutils_test.WriteTestKustomizationWith(fSys, []byte(`nameprefix: some-prefix-`))
 
 	cmd := NewCmdFix(fSys, os.Stdout)
-	assert.NoError(t, cmd.RunE(cmd, nil))
+	require.NoError(t, cmd.RunE(cmd, nil))
 
 	content, err := testutils_test.ReadTestKustomization(fSys)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Contains(t, string(content), "apiVersion: ")
 	assert.Contains(t, string(content), "kind: Kustomization")
@@ -402,6 +402,6 @@ labels:
 	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithOutdatedCommonLabels)
 	cmd := NewCmdFix(fSys, os.Stdout)
 	err := cmd.RunE(cmd, nil)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, err.Error(), "label name 'foo' exists in both commonLabels and labels")
 }

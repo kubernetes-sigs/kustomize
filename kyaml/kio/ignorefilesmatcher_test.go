@@ -258,7 +258,7 @@ a
 
 			for i, node := range nodes {
 				val, err := node.String()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				want := strings.ReplaceAll(test.expected[i], "${SEP}", string(filepath.Separator))
 				assert.Equal(t, strings.TrimSpace(want), strings.TrimSpace(val))
 			}

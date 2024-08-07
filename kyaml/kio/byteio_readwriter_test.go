@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -857,10 +858,10 @@ results:
 			}
 
 			rnodes, err := rw.Read()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			err = rw.Write(rnodes)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, tc.want, strings.TrimSpace(got.String()))
 		})

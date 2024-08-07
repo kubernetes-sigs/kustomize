@@ -66,13 +66,15 @@ func (v SemVer) Bump(b SvBump) SemVer {
 		return New(v.major+1, 0, 0)
 	case Minor:
 		return New(v.major, v.minor+1, 0)
+	case Patch:
+		return New(v.major, v.minor, v.patch+1)
 	default:
 		return New(v.major, v.minor, v.patch+1)
 	}
 }
 
 func (v SemVer) BranchLabel() string {
-	return fmt.Sprintf("v%d.%d", v.major, v.minor)
+	return fmt.Sprintf("v%d.%d.%d", v.major, v.minor, v.patch)
 }
 
 func (v SemVer) String() string {

@@ -425,7 +425,14 @@ func (kt *KustTarget) accumulateResources(
 			}
 			ldr, err := kt.ldr.New(path)
 			if err != nil {
-				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
+				// If accumulateFile found malformed YAML and there was a failure
+				// loading the resource as a base, then the resource is likely a
+				// file. The loader failure message is unnecessary, and could be
+				// confusing. Report only the file load error.
+				//
+				// However, a loader timeout implies there is a git repo at the
+				// path. In that case, both errors could be important.
+				if kusterr.IsMalformedYAMLError(errF) && !utils.IsErrTimeout(err) {
 					return nil, errF
 				}
 				return nil, errors.WrapPrefixf(
@@ -442,9 +449,6 @@ func (kt *KustTarget) accumulateResources(
 				ra, err = kt.accumulateDirectory(ra, ldr, false)
 			}
 			if err != nil {
-				if kusterr.IsMalformedYAMLError(errF) { // Some error occurred while tyring to decode YAML file
-					return nil, errF
-				}
 				return nil, errors.WrapPrefixf(
 					err, "accumulation err='%s'", errF.Error())
 			}
@@ -453,7 +457,7 @@ func (kt *KustTarget) accumulateResources(
 	return ra, nil
 }
 
-// accumulateResources fills the given resourceAccumulator
+// accumulateComponents fills the given resourceAccumulator
 // with resources read from the given list of paths.
 func (kt *KustTarget) accumulateComponents(
 	ra *accumulator.ResAccumulator, paths []string) (*accumulator.ResAccumulator, error) {

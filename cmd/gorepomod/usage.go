@@ -19,7 +19,7 @@ dependencies, then performs some operation.
 
 Install:
 '''
-go get github.com/monopole/gorepomod
+go get sigs.k8s.io/kustomize/cmd/gorepomod
 '''
 
 ## Usage
@@ -28,6 +28,8 @@ _Commands that change things (everything but 'list')
 do nothing but log commands
 unless you add the '--doIt' flag,
 allowing the change._
+
+_If you want to run 'gorepomod' on your fork or outside of '$GOSRC' directory, add '--local'  flag to your command._
 
 #### 'gorepomod list'
 
@@ -40,14 +42,19 @@ Use this to get module names for use in other commands.
 Creates a change with mechanical updates
 to 'go.mod' and 'go.sum' files.
 
-#### 'gorepomod unpin {module}'
+#### 'gorepomod unpin {module} [{conditionalmodule}]'
 
 Creates a change to 'go.mod' files.
 
 For each module _m_ in the repository,
-if _m_ depends on a _{module}_,
-then _m_'s dependency on it will be replaced by
-a relative path to the in-repo module.
+if _m_ depends on a _{module}_, then
+_m_'s dependency on _{module} will be
+replaced by a relative path to the in-repo
+version of _{module}_.
+
+If _conditionalModule_ is specified, then
+the replacement of _{module}_ will happen
+if _m_ depends on _{conditionalModule}_.
 
 #### 'gorepomod pin {module} [{version}]'
 

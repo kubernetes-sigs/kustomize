@@ -48,20 +48,22 @@ type Runner struct {
 	workDir string
 	// Run commands, or merely print commands.
 	doIt bool
+	// Indicate local execution to adapt with path.
+	localFlag bool
 	// Run commands, or merely print commands.
 	verbosity Verbosity
 }
 
-func NewLoud(wd string, doIt bool) *Runner {
-	return newRunner(wd, doIt, High)
+func NewLoud(wd string, doIt bool, localFlag bool) *Runner {
+	return newRunner(wd, doIt, High, localFlag)
 }
 
-func NewQuiet(wd string, doIt bool) *Runner {
-	return newRunner(wd, doIt, Low)
+func NewQuiet(wd string, doIt bool, localFlag bool) *Runner {
+	return newRunner(wd, doIt, Low, localFlag)
 }
 
-func newRunner(wd string, doIt bool, v Verbosity) *Runner {
-	return &Runner{workDir: wd, doIt: doIt, verbosity: v}
+func newRunner(wd string, doIt bool, v Verbosity, localFlag bool) *Runner {
+	return &Runner{workDir: wd, doIt: doIt, verbosity: v, localFlag: localFlag}
 }
 
 func (gr *Runner) comment(f string) {
@@ -165,8 +167,20 @@ func (gr *Runner) LoadLocalTags() (result misc.VersionMap, err error) {
 
 func (gr *Runner) LoadRemoteTags(
 	remote misc.TrackedRepo) (result misc.VersionMap, err error) {
-	gr.comment("loading remote tags")
 	var out string
+
+	// Update latest tags from upstream
+	gr.comment("updating tags from upstream")
+	_, err = gr.run(noHarmDone, "fetch", "-t", string(remoteUpstream), string(mainBranch))
+	if err != nil {
+		// Handle if repo is not a fork
+		_, err = gr.run(noHarmDone, "fetch", "-t", string(mainBranch))
+		if err != nil {
+			_ = fmt.Errorf("failed to fetch tags from %s", string(mainBranch))
+		}
+	}
+
+	gr.comment("loading remote tags")
 	out, err = gr.run(noHarmDone, "ls-remote", "--ref", string(remote))
 	if err != nil {
 		return nil, err
@@ -250,7 +264,15 @@ func (gr *Runner) CheckoutMainBranch() error {
 // FetchRemote does that.
 func (gr *Runner) FetchRemote(remote misc.TrackedRepo) error {
 	gr.comment("fetching remote")
-	return gr.runNoOut(noHarmDone, "fetch", string(remote))
+	err := gr.runNoOut(noHarmDone, "fetch", string(remote))
+	if err != nil {
+		// If current repo is fork
+		err = gr.runNoOut(noHarmDone, "fetch", string(remoteUpstream))
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	}
+	return nil
 }
 
 // MergeFromRemoteMain does a fast forward only merge with main branch.
@@ -341,4 +363,28 @@ func (gr *Runner) DeleteTagFromRemote(
 	remote misc.TrackedRepo, tag string) error {
 	gr.comment("deleting tags from remote")
 	return gr.runNoOut(undoPainful, "push", string(remote), ":"+refsTags+tag)
+}
+
+func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
+	var latestTag string
+	// Assuming release branch has this format: release-path/to/module-vX.Y.Z
+	// and each release branch maintains tags, extract version from latest `releaseBranch`
+	gr.comment("extract version from latest release branch")
+	filteredBranchList, err := gr.run(noHarmDone, "branch", "-a", "--list", "*"+releaseBranch+"*", "--sort=-committerdate")
+	if len(filteredBranchList) < 1 {
+		_ = fmt.Errorf("latest tag not found for %s", releaseBranch)
+		return "", err
+	}
+	newestBranch := strings.Split(strings.ReplaceAll(filteredBranchList, "\r\n", "\n"), "\n")
+	split := strings.Split(newestBranch[0], "-")
+	latestTag = split[len(split)-1]
+	if err != nil {
+		_ = fmt.Errorf("error getting latest tag for %s", releaseBranch)
+	}
+
+	return latestTag, nil
+}
+
+func (gr *Runner) GetMainBranch() string {
+	return string(mainBranch)
 }

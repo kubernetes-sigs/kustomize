@@ -44,9 +44,9 @@ EOF
 ```
 
 
-## Inline Patch for PatchesStrategicMerge
+## Inline Patch
 
-Create an overlay and add an inline patch in `patchesStrategicMerge` field to the kustomization file
+Create an overlay and add an inline patch in the `patches` field to the kustomization file
 to change the image from `nginx` to `nginx:latest`.
 
 <!-- @addSMPatch @test -->
@@ -57,18 +57,18 @@ cat <<EOF >$SMP_OVERLAY/kustomization.yaml
 resources:
 - ../base
 
-patchesStrategicMerge:
-- |-
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deploy
-  spec:
-    template:
-      spec:
-        containers:
-        - name: nginx
-          image: nginx:latest
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deploy
+    spec:
+      template:
+        spec:
+          containers:
+          - name: nginx
+            image: nginx:latest
           
 EOF
 ```
@@ -110,18 +110,18 @@ cat <<EOF >$SMP_OVERLAY/kustomization.yaml
 resources:
 - ../base
 
-patchesStrategicMerge:
-- |-
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: deploy
-  spec:
-    template:
-      spec:
-        containers:
-        - name: nginx
-          $patch: delete
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deploy
+    spec:
+      template:
+        spec:
+          containers:
+          - name: nginx
+            $patch: delete
           
 EOF
 ```

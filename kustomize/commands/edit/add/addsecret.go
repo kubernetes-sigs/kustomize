@@ -89,7 +89,7 @@ func runEditAddSecret(
 		return fmt.Errorf("failed to expand file source: %w", err)
 	}
 
-	err = flags.Validate(args)
+	err = flags.ValidateAdd(args)
 	if err != nil {
 		return fmt.Errorf("failed to validate flags: %w", err)
 	}
@@ -140,7 +140,7 @@ func addSecret(
 
 func findOrMakeSecretArgs(m *types.Kustomization, name, namespace, secretType string) *types.SecretArgs {
 	for i, v := range m.SecretGenerator {
-		if name == v.Name && namespace == v.Namespace {
+		if name == v.Name && util.NamespaceEqual(v.Namespace, namespace) {
 			return &m.SecretGenerator[i]
 		}
 	}
