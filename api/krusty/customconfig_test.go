@@ -373,6 +373,7 @@ spec:
   container:
     image: new-crd-image:new-v1-tag
 `)
+}
 
 func TestLabelTransformerConfig(t *testing.T) {
 	testCases := []struct {
