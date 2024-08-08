@@ -22,6 +22,7 @@ const (
 	MetadataNamespacePath       = "metadata/namespace"
 	MetadataNamespaceApiVersion = "v1"
 	MetadataNamePath            = "metadata/name"
+	NamespaceKind               = "Namespace"
 
 	OriginAnnotations      = "originAnnotations"
 	TransformerAnnotations = "transformerAnnotations"
