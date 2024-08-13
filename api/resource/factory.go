@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -190,16 +189,6 @@ func (rf *Factory) inlineAnyEmbeddedLists(
 	var n0 *yaml.RNode
 	for len(nodes) > 0 {
 		n0, nodes = nodes[0], nodes[1:]
-		annotations := n0.GetAnnotations()
-		convertToInlineList, err := strconv.ParseBool(annotations["kustomize.config.k8s.io/convertToInlineList"])
-		if err != nil {
-			convertToInlineList = true
-		}
-		if !convertToInlineList {
-			// if the annotation is set to true, then we should not convert the list to inline
-			result = append(result, n0)
-			continue
-		}
 		kind := n0.GetKind()
 		if !strings.HasSuffix(kind, "List") {
 			result = append(result, n0)
@@ -213,7 +202,10 @@ func (rf *Factory) inlineAnyEmbeddedLists(
 		}
 		items, ok := m["items"]
 		if !ok {
-			// treat as an empty list
+			// Items field is not present.
+			// This is not a collections resource.
+			// read more https://kubernetes.io/docs/reference/using-api/api-concepts/#collections
+			result = append(result, n0)
 			continue
 		}
 		slice, ok := items.([]interface{})
