@@ -212,3 +212,19 @@ spec:
     - containerPort: 80
 `)
 }
+
+// Empty list should result in no resources
+func TestEmptyList(t *testing.T) {
+  th := kusttest_test.MakeHarness(t)
+  th.WriteK(".", `
+resources:
+- emptyList.yaml
+`)
+  th.WriteF("emptyList.yaml", `
+apiVersion: v1
+kind: PodList
+items: []
+`)
+  m := th.Run(".", th.MakeDefaultOptions())
+  th.AssertActualEqualsExpected(m, "")
+}
