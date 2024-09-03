@@ -141,6 +141,10 @@ else
     releases=$(curl -s "$release_url" --header "Authorization: Bearer ${GITHUB_TOKEN}")
 fi
 
+if [[ $releases == *"Bad credentials"* ]]; then
+  echo "Authentication failed: Invalid GITHUB_TOKEN. Please check or remove your token."
+  exit 1
+fi  
 if [[ $releases == *"API rate limit exceeded"* ]]; then
   echo "Github rate-limiter failed the request. Either authenticate or wait a couple of minutes."
   exit 1
