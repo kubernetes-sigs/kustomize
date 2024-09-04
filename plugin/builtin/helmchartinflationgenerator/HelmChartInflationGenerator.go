@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -177,13 +178,17 @@ func (p *plugin) runHelmCommand(
 		fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
 	cmd.Env = append(os.Environ(), env...)
 	err := cmd.Run()
+	errorOutput := stderr.String()
+	if slices.Contains(args, "--debug") {
+		errorOutput = " Helm stack trace:\n" + errorOutput + "\nHelm template:\n" + stdout.String()+ "\n"
+	}
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
 				helm, strings.Join(args, " "), env, helm, err),
-			stderr.String()+stdout.String(),
+			errorOutput,
 		)
 	}
 	return stdout.Bytes(), err
