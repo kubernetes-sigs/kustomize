@@ -6,6 +6,8 @@
 package resmap
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -38,6 +40,21 @@ type Generator interface {
 type GeneratorWithProperties struct {
 	Generator
 	Origin *resource.Origin
+}
+
+type GeneratorAsTransformer struct {
+	Generator
+}
+
+func (g *GeneratorAsTransformer) Transform(m ResMap) error {
+	rm, err := g.Generate()
+	if err != nil {
+		return err
+	}
+	if err = m.AppendAll(rm); err != nil {
+		return fmt.Errorf("failed to add generated resources to resmap: %w", err)
+	}
+	return nil
 }
 
 // Something that's configurable accepts an
