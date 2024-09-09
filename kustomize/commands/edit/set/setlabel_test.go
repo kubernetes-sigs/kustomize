@@ -210,3 +210,20 @@ func TestSetLabelWithoutSelectorWithCommonLabel(t *testing.T) {
 	require.Equal(t, m.CommonLabels, map[string]string{"app": "helloworld", "key1": "foo"})
 	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key2": "bar"}})
 }
+
+func TestSetLabelCommonLabelWithWithoutSelector(t *testing.T) {
+	var o setLabelOptions
+	o.metadata = map[string]string{"key1": "foo", "key2": "bar"}
+
+	m := makeKustomization(t)
+	o.labelsWithoutSelector = true
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo", "key2": "bar"}})
+	require.Equal(t, m.CommonLabels, map[string]string{"app": "helloworld"})
+
+	o.metadata = map[string]string{"key2": "bar2"}
+	o.labelsWithoutSelector = false
+	require.NoError(t, o.setLabels(m))
+	require.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"key1": "foo"}})
+	require.Equal(t, m.CommonLabels, map[string]string{"app": "helloworld", "key2": "bar2"})
+}

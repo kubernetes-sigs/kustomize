@@ -85,9 +85,8 @@ func (o *setLabelOptions) validateAndParse(args []string) error {
 }
 
 func (o *setLabelOptions) setLabels(m *types.Kustomization) error {
+	o.removeDuplicateLabels(m)
 	if o.labelsWithoutSelector {
-		o.removeDuplicateLabels(m)
-
 		var labelPairs *types.Label
 		for _, label := range m.Labels {
 			if !label.IncludeSelectors && label.IncludeTemplates == o.includeTemplates {
@@ -131,12 +130,8 @@ func (o *setLabelOptions) removeDuplicateLabels(m *types.Kustomization) {
 		// delete duplicate label from deprecated common labels
 		delete(m.CommonLabels, k)
 		for idx, label := range m.Labels {
-			// delete label if it's already present in labels with mismatched includeTemplates value
-			if label.IncludeTemplates != o.includeTemplates {
-				m.Labels = deleteLabel(k, label, m.Labels, idx)
-			}
-			if label.IncludeSelectors {
-				// delete label if it's already present in labels and includes selectors
+			// delete label if it's already present in labels
+			if _, found := label.Pairs[k]; found {
 				m.Labels = deleteLabel(k, label, m.Labels, idx)
 			}
 		}
