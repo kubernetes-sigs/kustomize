@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"slices"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -174,7 +174,7 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	err := cmd.Run()
 	errorOutput := stderr.String()
 	if slices.Contains(args, "--debug") {
-		errorOutput = " Helm stack trace:\n" + errorOutput + "\nHelm template:\n" + stdout.String()+ "\n"
+		errorOutput = " Helm stack trace:\n" + errorOutput + "\nHelm template:\n" + stdout.String() + "\n"
 	}
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
@@ -182,7 +182,7 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
 				helm, strings.Join(args, " "), env, helm, err),
-				errorOutput,
+			errorOutput,
 		)
 	}
 	return stdout.Bytes(), err

@@ -180,7 +180,7 @@ func (p *plugin) runHelmCommand(
 	err := cmd.Run()
 	errorOutput := stderr.String()
 	if slices.Contains(args, "--debug") {
-		errorOutput = " Helm stack trace:\n" + errorOutput + "\nHelm template:\n" + stdout.String()+ "\n"
+		errorOutput = " Helm stack trace:\n" + errorOutput + "\nHelm template:\n" + stdout.String() + "\n"
 	}
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command

@@ -8,7 +8,7 @@ type HelmConfig struct {
 	Command     string
 	ApiVersions []string
 	KubeVersion string
-	Debug			 bool
+	Debug       bool
 }
 
 // PluginConfig holds plugin configuration.

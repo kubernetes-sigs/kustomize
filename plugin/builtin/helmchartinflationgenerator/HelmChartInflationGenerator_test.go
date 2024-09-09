@@ -960,7 +960,6 @@ chartHome: ./charts
 	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }
 
-
 func TestHelmChartInflationGeneratorWithDebug(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
@@ -981,17 +980,16 @@ releaseName: test
 chartHome: ./charts
 debug: true
 `)
-  
-  cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
-  require.NoError(t, err)
-  assert.Equal(t, "bar", cm)
 
-  chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
-  assert.True(t, th.GetFSys().Exists(chartDir))
+	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
+	require.NoError(t, err)
+	assert.Equal(t, "bar", cm)
 
-  chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
-  require.NoError(t, err)
-  assert.Contains(t, string(chartYamlContent), "name: test-chart")
-  assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
-  
+	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+	assert.True(t, th.GetFSys().Exists(chartDir))
+
+	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
+	require.NoError(t, err)
+	assert.Contains(t, string(chartYamlContent), "name: test-chart")
+	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }

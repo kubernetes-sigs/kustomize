@@ -63,18 +63,18 @@ func TestAsHelmArgs(t *testing.T) {
 
 	t.Run("use helm-debug", func(t *testing.T) {
 		p := types.HelmChart{
-			Name:                   "chart-name",
-			Version:                "1.0.0",
-			Repo:                   "https://helm.releases.hashicorp.com",
-			ValuesFile: 						"values",
-			AdditionalValuesFiles:  []string{"values1", "values2"},
-			Debug: 							 		true,
-	}
+			Name:                  "chart-name",
+			Version:               "1.0.0",
+			Repo:                  "https://helm.releases.hashicorp.com",
+			ValuesFile:            "values",
+			AdditionalValuesFiles: []string{"values1", "values2"},
+			Debug:                 true,
+		}
 		require.Equal(t, p.AsHelmArgs("/home/charts"),
-		[]string{"template", "--generate-name", "/home/charts/chart-name", 
-			"-f", "values", 
-			"-f", "values1", 
-			"-f", "values2", 
-			"--debug"})
+			[]string{"template", "--generate-name", "/home/charts/chart-name",
+				"-f", "values",
+				"-f", "values1",
+				"-f", "values2",
+				"--debug"})
 	})
 }

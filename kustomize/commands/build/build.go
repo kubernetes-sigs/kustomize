@@ -30,7 +30,7 @@ var theFlags struct {
 	helmCommand     string
 	helmApiVersions []string
 	helmKubeVersion string
-	helmDebug			  bool
+	helmDebug       bool
 	loadRestrictor  string
 	reorderOutput   string
 	fnOptions       types.FnPluginLoadingOptions
