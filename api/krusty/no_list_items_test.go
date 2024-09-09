@@ -4,20 +4,20 @@
 package krusty_test
 
 import (
-  "testing"
+	"testing"
 
-  kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
 // test for https://github.com/kubernetes-sigs/kustomize/issues/4240
 func TestSuffix5042(t *testing.T) {
-  th := kusttest_test.MakeHarness(t)
-  th.WriteK(".", `
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
 resources:
 - resource.yaml
 `)
 
-  th.WriteF("resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: example.com/v1alpha1
 kind: MyResource
 metadata:
@@ -29,9 +29,9 @@ metadata:
   name: test
 rules: []
 `)
-  m := th.Run(".", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 
-  th.AssertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: example.com/v1alpha1
 kind: MyResource
 metadata:
@@ -46,13 +46,13 @@ rules: []
 }
 
 func TestListSuffix5042(t *testing.T) {
-  th := kusttest_test.MakeHarness(t)
-  th.WriteK(".", `
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
 resources:
 - resource.yaml
 `)
 
-  th.WriteF("resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: example.com/v1alpha1
 kind: MyResource
 metadata:
@@ -64,9 +64,9 @@ metadata:
   name: test
 rules: []
 `)
-  m := th.Run(".", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 
-  th.AssertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: example.com/v1alpha1
 kind: MyResource
 metadata:
@@ -81,13 +81,13 @@ rules: []
 }
 
 func TestListSuffix5485(t *testing.T) {
-  th := kusttest_test.MakeHarness(t)
-  th.WriteK(".", `
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
 resources:
 - resource.yaml
   `)
 
-  th.WriteF("resource.yaml", `
+	th.WriteF("resource.yaml", `
 apiVersion: infra.protonbase.io/v1alpha1
 kind: AccessWhiteList
 metadata:
@@ -98,9 +98,9 @@ spec:
   - sourceIps: 0.0.0.0/16
 `)
 
-  m := th.Run(".", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 
-  th.AssertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: infra.protonbase.io/v1alpha1
 kind: AccessWhiteList
 metadata:
@@ -110,17 +110,16 @@ spec:
   rules:
   - sourceIps: 0.0.0.0/16
 `)
-  
 }
 
 func TestListToIndividualResources(t *testing.T) {
-  th := kusttest_test.MakeHarness(t)
-  th.WriteK(".", `
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
 resources:
 - list.yaml
 `)
 
-  th.WriteF("list.yaml", `
+	th.WriteF("list.yaml", `
 apiVersion: v1
 kind: PodList
 items:
@@ -165,10 +164,9 @@ items:
             - containerPort: 80
 `)
 
-  m := th.Run(".", th.MakeDefaultOptions())
+	m := th.Run(".", th.MakeDefaultOptions())
 
-
-  th.AssertActualEqualsExpected(m, `
+	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 kind: Pod
 metadata:
@@ -215,16 +213,16 @@ spec:
 
 // Empty list should result in no resources
 func TestEmptyList(t *testing.T) {
-  th := kusttest_test.MakeHarness(t)
-  th.WriteK(".", `
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
 resources:
 - emptyList.yaml
 `)
-  th.WriteF("emptyList.yaml", `
+	th.WriteF("emptyList.yaml", `
 apiVersion: v1
 kind: PodList
 items: []
 `)
-  m := th.Run(".", th.MakeDefaultOptions())
-  th.AssertActualEqualsExpected(m, "")
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, "")
 }
