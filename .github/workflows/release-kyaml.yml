@@ -1,0 +1,112 @@
+name: release-kyaml
+
+on: 
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        description: release type (major, minor, or patch).
+        options:
+          - major
+          - minor
+          - patch
+        required: true
+        default: 'patch'
+      release_branch:
+        type: string
+        description: release branch name "release-kyaml-v*"
+        required: true
+        default: 'master'
+
+jobs:
+  pre-build: 
+    name: Pre-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Unit test
+        id: unit_test
+        run: |
+
+          # Run unit test
+          echo "Executing unit test"
+          go install github.com/jstemmer/go-junit-report@latest
+          make test-unit-all | go-junit-report -set-exit-code > report.xml
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: |
+            ./report.xml
+        if: always()
+  build:
+    name: Build
+    needs: pre-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Build test
+        run: |
+          make build-kustomize-api
+  release:
+    name: Release
+    needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch changes
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/*.sum"
+      - name: Release kyaml
+        run: |
+
+          # Prepare git
+          git config --global user.email "development@kustomize.io"
+          git config --global user.name "Development"
+          git checkout ${{inputs.release_branch}}
+
+          # Release kyaml
+          make install-tools
+          gorepomod release kyaml ${{ inputs.release_type }} --local --doIt
+      - name: Create release changelog
+        run: |
+
+          # Create release draft
+          changelog_file=$(mktemp)
+          currentTag=$(git describe --tags)
+          ./releasing/compile-changelog.sh "kyaml" "${currentTag}" "${changelog_file}"
+
+          # Create github releases
+          gh release create "${currentTag}" \
+          --title "${currentTag}" \
+          --draft \
+          --notes-file "${changelog_file}"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
