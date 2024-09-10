@@ -14,7 +14,6 @@
 [kustomize repo release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [OpenAPI Readme]: ../kyaml/openapi/README.md
 [the build status for container image]: https://console.cloud.google.com/cloud-build/builds?project=k8s-staging-kustomize
-[build history of GitHub Actions job]: /../../actions
 
 This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
@@ -113,202 +112,116 @@ source releasing/helpers.sh
 gh auth login
 ```
 
-## Release `kyaml`
-
-#### Establish clean state
-
-```
-refreshMaster &&
-testKustomizeRepo
-```
-
-While you're waiting for the tests, review the commit log:
-
-```
-releasing/compile-changelog.sh kyaml HEAD
-```
+## Releasing `kyaml`
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
-kyaml has no intra-repo deps, so if the tests pass,
-it can just be released.
+To release `kyaml`, simply use command below.
 
-#### Release it
-
-The default increment is a new patch version.
-
-```
-gorepomod release kyaml [patch|minor|major] --doIt
+```shell
+./releasing/create-release kyaml [major|minor|patch]
 ```
 
-Note the version:
-```
-versionKyaml=v0.10.20   # EDIT THIS!
-```
-
-See the process of the [build history of GitHub Actions job].
+The release command will go through these steps:
+1. Create a release branch
+2. Pull changes from master
+3. Run Github Workflow for `kyaml`, which detailed into steps below.
+   1. Run unit test
+   2. Build library
+   3. Bump `kyaml` version and push release tag
+   4. Create a release draft
+4. Maintainer will validate the release draft and publish
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
 * Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
 * Make sure each commit left in the release notes includes a PR reference.
 
-
-## Release `cmd/config`
-
-#### Pin to the most recent kyaml
-
-```
-gorepomod pin kyaml --doIt
-```
-
-Create the PR:
-```
-createBranch pinToKyaml "Update kyaml to $versionKyaml"
-```
-```
-createPr
-```
-
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
-```
-refreshMaster &&
-testKustomizeRepo
-```
-
-While you're waiting for the tests, review the commit log:
-
-```
-releasing/compile-changelog.sh cmd/config HEAD
-```
+## Releasing `cmd/config`
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
-#### Release it
+To release `cmd/config`, simply use command below.
 
-```
-gorepomod release cmd/config [patch|minor|major] --doIt
-```
-
-Note the version:
-```
-versionCmdConfig=v0.9.12 # EDIT THIS!
+```shell
+./releasing/create-release cmd/config [major|minor|patch]
 ```
 
-See the process of the [build history of GitHub Actions job].
+The release command will go through these steps:
+1. Create a release branch in `release-cmd/config/vX.Y.Z` format
+2. Pull changes from master
+3. Run Github Workflow for `cmd/config`, which detailed into steps below.
+   1. Run unit test
+   2. Get latest tag from master branch and pin `kyaml` version
+   3. Build library
+   4. Bump `cmd/config` version and push release tag
+   5. Create a release draft
+4. Maintainer will validate the release draft and publish
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
 * Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
 * Make sure each commit left in the release notes includes a PR reference.
 
-
-## Release `api`
-
-This is the kustomize API, used by the kustomize CLI.
-
-
-#### Pin to the new cmd/config
-
-```
-gorepomod pin cmd/config --doIt
-```
-
-Create the PR:
-```
-createBranch pinToCmdConfig "Update cmd/config to $versionCmdConfig" &&
-createPr
-```
-
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
-```
-refreshMaster &&
-testKustomizeRepo
-```
-
-While you're waiting for the tests, review the commit log:
-
-```
-releasing/compile-changelog.sh api HEAD
-```
+## Releasing `api`
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
-#### Release it
+To release `api`, simply use command below.
 
-```
-gorepomod release api [patch|minor|major] --doIt
-```
-
-Note the version:
-```
-versionApi=v0.8.10 # EDIT THIS!
+```shell
+./releasing/create-release api [major|minor|patch]
 ```
 
-See the process of the [build history of GitHub Actions job].
+The release command will go through these steps:
+1. Create a release branch in `release-api/vX.Y.Z` format
+2. Pull changes from master
+3. Run Github Workflow for `api`, which detailed into steps below.
+   1. Run unit test
+   2. Get latest tag from master branch and pin `kyaml` version
+   3. Build library
+   4. Bump `api` version and push release tag
+   5. Create a release draft
+4. Maintainer will validate the release draft and publish
 
 Undraft the release on the [kustomize repo release page]:
 * Make sure the version number is what you expect.
 * Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
 * Make sure each commit left in the release notes includes a PR reference.
 
+## Releasing kustomize CLI
 
-## Release the kustomize CLI
+To release `kustomize`, simply use command below.
+
+```shell
+./releasing/create-release kustomize [major|minor|patch]
+```
+
+The release command will go through these steps:
+1. Create a release branch in `release-kustomize/vX.Y.Z` format
+2. Pull changes from master
+3. Run Github Workflow for `kustomize`, which detailed into steps below.
+   1. Run unit test
+   2. Get latest tag from master branch and pin `cmd/config`, and `api` version
+   3. Build library
+   4. Bump `kustomize` version and push release tag
+   5. Create a release draft
+4. Maintainer will validate the release draft and publish
+
+Undraft the release on the [kustomize repo release page]:
+* Make sure the version number is what you expect.
+* Remove references to commits that aren't relevant to end users of the CLI (e.g. test commits, refactors, changes that only surface in Go).
+* Make sure each commit left in the release notes includes a PR reference.
 
 #### For major releases: increment the module version
+
+`Note:` This operation must be done manually to avoid error.
 
 Update `module sigs.k8s.io/kustomize/kustomize/vX` in `kustomize/go.mod` to the version you're about to release, and then update all the `require` statements across the module to match.
 
 Search for uses of the version number across the codebase and update them as needed.
 
 Example: https://github.com/kubernetes-sigs/kustomize/pull/5021
-
-#### Pin to the new API
-
-```
-gorepomod pin api --doIt
-```
-
-Create the PR:
-```
-createBranch pinToApi "Update api to $versionApi" &&
-createPr
-```
-
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
-```
-refreshMaster &&
-testKustomizeRepo
-```
-
-While you're waiting for the tests, review the commit log:
-
-```
-releasing/compile-changelog.sh kustomize HEAD
-```
-
-Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
-
-#### Release it
-
-```
-gorepomod release kustomize [patch|minor|major] --doIt
-```
-
-See the process of the [build history of GitHub Actions job].
-
-And check the process of [the build status for container image].
-
-Undraft the release on the [kustomize repo release page]:
-* Make sure the version number is what you expect.
-* Remove references to commits that aren't relevant to end users of the CLI (e.g. test commits, refactors, changes that only surface in Go).
-* Make sure each commit left in the release notes includes a PR reference.
 
 ## Confirm the kustomize binary is correct
 
@@ -320,39 +233,6 @@ Undraft the release on the [kustomize repo release page]:
   If not, something is very wrong.
 
 * Visit the [release page] and edit the release notes as desired.
-
-## Return the repo to development mode
-
-Go back into development mode, where all modules depend on in-repo code:
-
-```
-gorepomod unpin api         --doIt &&
-gorepomod unpin cmd/config  --doIt &&
-gorepomod unpin kyaml       --doIt
-```
-
-[Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
-
-Edit the `prow-presubmit-target` in the [Makefile]
-to test examples against your new release. For example:
-
-```
-sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=v5.0.0/" Makefile
-```
-
-Create the PR:
-```
-createBranch unpinEverything "Back to development mode; unpin the modules" &&
-createPr
-```
-
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
-```
-refreshMaster &&
-testKustomizeRepo
-```
 
 ## Publish Official Docker Image
 
@@ -388,7 +268,6 @@ When prompted, review the list of suggested module versions and make sure it mat
 
 
 If code used by the kustomize attachment points has changed, kubectl will fail to compile and you will need to update them. The code you'll need to change is likely in the `staging/src/k8s.io/cli-runtime/pkg/resource` and/or `staging/src/k8s.io/kubectl/pkg/cmd/kustomize` packages.
-
 
 Here are some example PRs:
 
