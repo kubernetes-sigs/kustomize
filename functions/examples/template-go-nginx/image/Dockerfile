@@ -1,7 +1,7 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM golang:1.21-bullseye
+FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod .
