@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/patchtransformer
 
-go 1.21
+go 1.22.7
 
 require (
 	github.com/stretchr/testify v1.8.4

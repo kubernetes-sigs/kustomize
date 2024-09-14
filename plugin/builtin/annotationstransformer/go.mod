@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/annotationstransformer
 
-go 1.21
+go 1.22.7
 
 require (
 	sigs.k8s.io/kustomize/api v0.17.3

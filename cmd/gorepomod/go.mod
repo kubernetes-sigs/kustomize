@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/gorepomod
 
-go 1.21
+go 1.22.7
 
 require (
 	github.com/spf13/viper v1.17.0

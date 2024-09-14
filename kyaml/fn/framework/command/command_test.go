@@ -41,7 +41,7 @@ func TestCommand_dockerfile(t *testing.T) {
 		t.FailNow()
 	}
 
-	expected := `FROM golang:1.21-alpine as builder
+	expected := `FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye as builder
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod go.sum ./

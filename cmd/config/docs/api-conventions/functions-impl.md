@@ -1,29 +1,33 @@
 # Running Configuration Functions using kustomize CLI
 
-Configuration functions can be implemented using any toolchain and invoked using any
-container workflow orchestrator including Tekton, Cloud Build, or run directly using `docker run`.
+Configuration functions can be implemented using any toolchain and invoked using
+any container workflow orchestrator including Tekton, Cloud Build, or run
+directly using `docker run`.
 
 Run `config help docs-fn-spec` to see the Configuration Functions Specification.
 
-`kustomize fn run` is an example orchestrator for invoking Configuration Functions. This
-document describes how to implement and invoke an example function.
+`kustomize fn run` is an example orchestrator for invoking Configuration
+Functions. This document describes how to implement and invoke an example
+function.
 
 ## Example Function Implementation
 
-Following is an example for implementing an nginx abstraction using a configuration
-function.
+Following is an example for implementing an nginx abstraction using a
+configuration function.
 
 ### `nginx-template.sh`
 
-`nginx-template.sh` is a simple bash script which uses a _heredoc_ as a templating solution
-for generating Resources from the functionConfig input fields.
+`nginx-template.sh` is a simple bash script which uses a _heredoc_ as a
+templating solution for generating Resources from the functionConfig input
+fields.
 
 The script wraps itself using `config run wrap -- $0` which will:
 
-1. Parse the `ResourceList.functionConfig` (provided to the container stdin) into env vars
+1. Parse the `ResourceList.functionConfig` (provided to the container stdin)
+   into env vars
 2. Merge the stdout into the original list of Resources
-3. Defaults filenames for newly generated Resources (if they are not set as annotations)
-   to `config/NAME_KIND.yaml`
+3. Defaults filenames for newly generated Resources (if they are not set as
+   annotations) to `config/NAME_KIND.yaml`
 4. Format the output
 
 ```bash
@@ -82,10 +86,11 @@ End-of-message
 
 ### Dockerfile
 
-`Dockerfile` installs `kustomize fn` and copies the script into the container image.
+`Dockerfile` installs `kustomize fn` and copies the script into the container
+image.
 
 ```
-FROM golang:1.21-bullseye
+FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye
 RUN go get sigs.k8s.io/kustomize/cmd/config
 RUN mv /go/bin/config /usr/bin/config
 COPY nginx-template.sh /usr/bin/nginx-template.sh
@@ -94,7 +99,8 @@ CMD ["nginx-template.sh]
 
 ## Example Function Usage
 
-Following is an example of running the `kustomize fn run` using the preceding API.
+Following is an example of running the `kustomize fn run` using the preceding
+API.
 
 When run by `kustomize fn run`, functions are run in containers with the
 following environment:
@@ -102,12 +108,14 @@ following environment:
 - Network: `none`
 - User: `nobody`
 - Security Options: `no-new-privileges`
-- Volumes: the volume containing the `functionConfig` yaml is mounted under `/local` as `ro`
+- Volumes: the volume containing the `functionConfig` yaml is mounted under
+  `/local` as `ro`
 
 ### Input
 
-`dir/nginx.yaml` contains a reference to the Function. The contents of `nginx.yaml`
-are passed to the Function through the `ResourceList.functionConfig` field.
+`dir/nginx.yaml` contains a reference to the Function. The contents of
+`nginx.yaml` are passed to the Function through the
+`ResourceList.functionConfig` field.
 
 ```yaml
 apiVersion: example.com/v1beta1
@@ -123,9 +131,10 @@ spec:
   replicas: 5
 ```
 
-- `annotations[config.kubernetes.io/function].container.image`: the image to use for this API
-- `annotations[config.kubernetes.io/local-config]`: mark this as not a Resource that should
-  be applied
+- `annotations[config.kubernetes.io/function].container.image`: the image to use
+  for this API
+- `annotations[config.kubernetes.io/local-config]`: mark this as not a Resource
+  that should be applied
 
 ### Output
 
