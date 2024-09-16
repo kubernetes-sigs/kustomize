@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/functions/examples/validator-resource-requests
 
-go 1.21
+go 1.22.7
 
 require sigs.k8s.io/kustomize/kyaml v0.13.7
 
@@ -20,8 +20,8 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

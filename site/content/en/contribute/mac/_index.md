@@ -9,7 +9,7 @@ description: >
 
 First install the tools to build and run tests
 
-### Install go 1.21
+### Install go
 
 [Instructions](https://golang.org/doc/install)
 
