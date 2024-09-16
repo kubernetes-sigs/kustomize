@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/hack
 
-go 1.21
+go 1.22.7
 
 require (
 	github.com/campoy/embedmd v1.0.0
