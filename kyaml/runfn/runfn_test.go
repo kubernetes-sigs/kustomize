@@ -255,8 +255,6 @@ func TestRunFns_getFilters(t *testing.T) {
 		// value to set for NoFunctionsFromInput
 		noFunctionsFromInput *bool
 
-		enableStarlark bool
-
 		disableContainers bool
 	}{
 		// Test
@@ -589,92 +587,6 @@ metadata:
 			},
 			out: []string{"b", "a", "c"},
 		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			outFn: func(path string) []string {
-				return []string{
-					fmt.Sprintf("name:  path: %s/foo/a/b/c url:  program:", filepath.ToSlash(path))}
-			},
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function-absolute",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: /a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			error:          "absolute function path /a/b/c not allowed",
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function-escape-parent",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: ../a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			error:          "function path ../a/b/c not allowed to start with ../",
-		},
-
-		{name: "starlark-function-disabled",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: a/b/c
-`,
-				},
-			},
-		},
 	}
 
 	for i := range tests {
@@ -722,7 +634,6 @@ metadata:
 
 			// init the instance
 			r := &RunFns{
-				EnableStarlark:       tt.enableStarlark,
 				DisableContainers:    tt.disableContainers,
 				FunctionPaths:        fnPaths,
 				Functions:            parsedFns,
