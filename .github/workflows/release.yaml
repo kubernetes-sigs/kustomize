@@ -1,5 +1,8 @@
 name: release
 
+permissions:
+  contents: write # Allow actions to update dependabot PRs
+
 on:
   push:
     tags:
