@@ -73,7 +73,7 @@ func TestLoader(t *testing.T) {
 			t.Fatal("expect non-nil loader")
 		}
 		_, err = pLdr.LoadGenerators(
-			fLdr, valtest_test.MakeFakeValidator(), generatorConfigs)
+			fLdr, valtest_test.MakeFakeValidator(), generatorConfigs, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

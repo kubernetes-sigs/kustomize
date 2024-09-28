@@ -35,6 +35,7 @@ use (
 	./plugin/builtin/prefixtransformer
 	./plugin/builtin/replacementtransformer
 	./plugin/builtin/replicacounttransformer
+	./plugin/builtin/resourcegenerator
 	./plugin/builtin/secretgenerator
 	./plugin/builtin/sortordertransformer
 	./plugin/builtin/suffixtransformer

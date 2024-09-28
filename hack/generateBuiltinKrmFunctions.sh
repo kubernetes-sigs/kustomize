@@ -15,6 +15,7 @@ builtinPlugins=(AnnotationsTransformer \
 	PrefixSuffixTransformer \
 	PrefixTransformer \
 	SuffixTransformer \
+	ResourceGenerator \
 	ReplicaCountTransformer \
 	SecretGenerator \
 	ValueAddTransformer \
@@ -29,14 +30,14 @@ fi
 
 
 # Install pluginator
-pushd ../cmd/pluginator
+pushd ../cmd/pluginator || exit
 make install
-popd
+popd || exit
 
 
 for pluginName in ${builtinPlugins[@]}; do
-    dirName=$(echo $pluginName | tr '[:upper:]' '[:lower:]')
+    dirName=$(echo "$pluginName" | tr '[:upper:]' '[:lower:]')
     srcPath="$builtinPluginDir/$dirName/$pluginName.go"
     dstPath="$KRM_FUNCTION_DIR/$dirName"
-    pluginator krm -i $srcPath -o $dstPath
+    pluginator krm -i "$srcPath" -o "$dstPath"
 done

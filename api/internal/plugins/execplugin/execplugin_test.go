@@ -31,8 +31,7 @@ func TestExecPluginConfig(t *testing.T) {
 	err := fSys.WriteFile("sed-input.txt", []byte(`
 s/$FOO/foo/g
 s/$BAR/bar baz/g
- \ \ \ 
-`))
+ \ \ \ `))
 	require.NoError(t, err)
 	ldr, err := fLdr.NewLoader(
 		fLdr.RestrictionRootOnly, filesys.Separator, fSys)
@@ -74,8 +73,7 @@ s/$BAR/bar baz/g
 		t.Fatalf("unexpected err: %v", err)
 	}
 	err = p.Config(
-		resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc),
-		yaml)
+		resmap.NewPluginHelpers(ldr, pvd.GetFieldValidator(), rf, pc), yaml)
 	require.NoError(t, err)
 
 	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"

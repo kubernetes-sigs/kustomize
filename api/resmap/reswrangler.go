@@ -17,6 +17,16 @@ import (
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func New() ResMap {
+	return newOne()
+}
+
+func newOne() *resWrangler {
+	result := &resWrangler{}
+	result.Clear()
+	return result
+}
+
 // resWrangler implements ResMap.
 type resWrangler struct {
 	// Resource list maintained in load (append) order.
@@ -26,12 +36,15 @@ type resWrangler struct {
 	// specify in kustomizations to be maintained and
 	// available as an option for final YAML rendering.
 	rList []*resource.Resource
+	crds  []string
+	vars  []types.Var
 }
 
-func newOne() *resWrangler {
-	result := &resWrangler{}
-	result.Clear()
-	return result
+// Clear implements ResMap.
+func (m *resWrangler) WithProperties(crds []string, vars []types.Var) ResMap {
+	m.crds = crds
+	m.vars = vars
+	return m
 }
 
 // Clear implements ResMap.

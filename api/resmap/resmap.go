@@ -6,6 +6,8 @@
 package resmap
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -49,9 +51,16 @@ type Configurable interface {
 
 // NewPluginHelpers makes an instance of PluginHelpers.
 func NewPluginHelpers(
-	ldr ifc.Loader, v ifc.Validator, rf *Factory,
-	pc *types.PluginConfig) *PluginHelpers {
-	return &PluginHelpers{ldr: ldr, v: v, rf: rf, pc: pc}
+	ldr ifc.Loader, v ifc.Validator, rf *Factory, pc *types.PluginConfig,
+) *PluginHelpers {
+	return &PluginHelpers{ldr: ldr, v: v, rf: rf, pc: pc, kt: nil} // TODO(koba1t): check to influence of kt is null
+}
+
+// NewPluginHelpersWithKt makes an instance of PluginHelpers additional kt with args.
+func NewPluginHelpersWithKt(
+	ldr ifc.Loader, v ifc.Validator, rf *Factory, pc *types.PluginConfig, kt KustTargetInterface,
+) *PluginHelpers {
+	return &PluginHelpers{ldr: ldr, v: v, rf: rf, pc: pc, kt: kt}
 }
 
 // PluginHelpers holds things that any or all plugins might need.
@@ -62,6 +71,21 @@ type PluginHelpers struct {
 	v   ifc.Validator
 	rf  *Factory
 	pc  *types.PluginConfig
+	kt  KustTargetInterface
+}
+
+// KustTargetInterface is the interface for exec accumulate functions from external packages.
+type KustTargetInterface interface {
+	AccumulateResource(path string) (ResMap, error)
+}
+
+// AccumulateResources exec target.(*KustTarget).AccumulateResource()
+func (c *PluginHelpers) AccumulateResource(path string) (ResMap, error) {
+	resmap, err := c.kt.AccumulateResource(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to AccumulateResource in internal 'target' pkg: %w", err)
+	}
+	return resmap, nil
 }
 
 func (c *PluginHelpers) GeneralConfig() *types.PluginConfig {
