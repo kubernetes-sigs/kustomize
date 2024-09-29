@@ -205,9 +205,8 @@ For native k8s types, this all requires writing Go
 code in the kubernetes core repo, to provide
 defaulting and conversions.
 
-For CRDs, there's a [proposal] on how to manage
-versioning (e.g. a remote service can offer type
-defaulting and conversions).
+[CRDs versioning] gives an overview on
+how to manage versioning in CustomResourceDefinitions.
 
 ### Differences
 
@@ -258,6 +257,7 @@ If missing, the value of `apiVersion` defaults to
 [field change policy]: #field-change-policy
 [some range]: https://kubernetes.io/docs/reference/using-api/deprecation-policy
 [proposal]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/customresources-versioning.md
+[CRDs versioning]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#overview
 [beta-level rules]: https://github.com/kubernetes/community/blob/master/contributors/devel/api_changes.md#alpha-beta-and-stable-versions
 [changes]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md
 [special]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#resources
@@ -265,7 +265,7 @@ If missing, the value of `apiVersion` defaults to
 [conventions]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md
 [release page]: https://github.com/kubernetes-sigs/kustomize/releases
 [release process]: https://github.com/kubernetes-sigs/kustomize/tree/master/releasing/README.md
-[kustomization]: /references/kustomize/glossary#kustomization
+[kustomization]: /docs/reference/glossary#kustomization
 [`kind`]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 [`apiVersion`]: https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-versioning
 [semantic versioning]: https://semver.org
