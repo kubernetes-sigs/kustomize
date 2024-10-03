@@ -2830,6 +2830,145 @@ spec:
 `,
 			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
 		},
+		"replace target path and ignore missing fields": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clusterConfig
+data:
+  accountId: "123456789101"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-with-field
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::REPLACEME:role/super-admin
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: clusterConfig
+    fieldPath: data.accountId
+  targets:
+    - select:
+        kind: ServiceAccount
+      fieldPaths:
+        - metadata.annotations.[eks.amazonaws.com/role-arn]
+      options:
+        # not all Service Accounts have irsa annotations
+        ignoreMissingField: true
+        delimiter: ":"
+        index: 4
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clusterConfig
+data:
+  accountId: "123456789101"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-with-field
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789101:role/super-admin
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field`,
+		},
+		"no replacement or error with ignore missing fields when there is no matching field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clusterConfig
+data:
+  accountId: "123456789101"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field-again
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: clusterConfig
+    fieldPath: data.accountId
+  targets:
+    - select:
+        kind: ServiceAccount
+      fieldPaths:
+        - metadata.annotations.[eks.amazonaws.com/role-arn]
+      options:
+        # not all Service Accounts have irsa annotations
+        ignoreMissingField: true
+        delimiter: ":"
+        index: 4
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clusterConfig
+data:
+  accountId: "123456789101"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field-again`,
+		},
+		"non matching field with no options": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clusterConfig
+data:
+  accountId: "123456789101"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-with-field
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::REPLACEME:role/super-admin
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-account-without-field-again
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: clusterConfig
+    fieldPath: data.accountId
+  targets:
+    - select:
+        kind: ServiceAccount
+      fieldPaths:
+        - metadata.annotations.[eks.amazonaws.com/role-arn]
+`,
+			expectedErr: `unable to find field "metadata.annotations.[eks.amazonaws.com/role-arn]" in replacement target`,
+		},
 	}
 
 	for tn, tc := range testCases {
