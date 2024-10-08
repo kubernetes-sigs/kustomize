@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -17,6 +18,7 @@ type plugin struct {
 	loadedPatches []*resource.Resource
 	Paths         []types.PatchStrategicMerge `json:"paths,omitempty" yaml:"paths,omitempty"`
 	Patches       string                      `json:"patches,omitempty" yaml:"patches,omitempty"`
+	MergeOptions  *kyaml.MergeOptions         `json:"mergeOptions,omitempty" yaml:"mergeOptions,omitempty"`
 }
 
 var KustomizePlugin plugin //nolint:gochecknoglobals
@@ -47,6 +49,9 @@ func (p *plugin) Config(
 	if len(p.loadedPatches) == 0 {
 		return fmt.Errorf(
 			"patch appears to be empty; files=%v, Patch=%s", p.Paths, p.Patches)
+	}
+	for i := range p.loadedPatches {
+		p.loadedPatches[i].MergeOptions = p.MergeOptions
 	}
 	return nil
 }

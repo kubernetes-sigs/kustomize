@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestPatchesInOneFile(t *testing.T) {
@@ -799,6 +800,181 @@ metadata:
 `)
 }
 
+func TestSimpleMultiplePatchesMergeOptionsListAppend(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+namePrefix: b-
+commonLabels:
+  team: foo
+resources:
+- deployment.yaml
+- service.yaml
+configMapGenerator:
+- name: configmap-in-base
+  literals:
+  - foo=bar
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:
+        - name: nginx-persistent-storage
+          mountPath: /tmp/ps
+      - name: sidecar
+        image: sidecar:latest
+      volumes:
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+`)
+	th.WriteF("base/service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  ports:
+  - port: 80
+`)
+	th.WriteK("overlay", `
+namePrefix: a-
+commonLabels:
+  env: staging
+patchesStrategicMerge:
+- deployment-patch1.yaml
+- deployment-patch2.yaml
+resources:
+- ../base
+configMapGenerator:
+- name: configmap-in-overlay
+  literals:
+  - hello=world
+`)
+	th.WriteF("overlay/deployment-patch1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        env:
+        - name: ENVKEY
+          value: ENVVALUE
+      volumes:
+      - name: nginx-persistent-storage
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-overlay
+        name: configmap-in-overlay
+`)
+	th.WriteF("overlay/deployment-patch2.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ANOTHERENV
+          value: FOO
+`)
+	options := th.MakeDefaultOptions()
+	options.MergeOptions.ListIncreaseDirection = yaml.MergeOptionsListAppend
+	m := th.Run("overlay", options)
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-nginx
+spec:
+  selector:
+    matchLabels:
+      env: staging
+      team: foo
+  template:
+    metadata:
+      labels:
+        env: staging
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: ENVKEY
+          value: ENVVALUE
+        - name: ANOTHERENV
+          value: FOO
+        image: nginx:latest
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - configMap:
+          name: a-b-configmap-in-base-798k5k7g9f
+        name: configmap-in-base
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: a-configmap-in-overlay-dc6fm46dhm
+        name: configmap-in-overlay
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    env: staging
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-configmap-in-base-798k5k7g9f
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: a-configmap-in-overlay-dc6fm46dhm
+`)
+}
+
 func makeCommonFilesForMultiplePatchTests(th kusttest_test.Harness) {
 	th.WriteK("base", `
 namePrefix: team-foo-
@@ -963,6 +1139,146 @@ spec:
       - configMap:
           name: staging-team-foo-configmap-in-base-798k5k7g9f
         name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-configmap-in-base-798k5k7g9f
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: staging-configmap-in-overlay-dc6fm46dhm
+`)
+}
+
+func TestMultiplePatchesNoConflictMergeOptionsListAppend(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeCommonFilesForMultiplePatchTests(th)
+	th.WriteF("overlay/staging/deployment-patch1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        env:
+        - name: ENVKEY
+          value: ENVVALUE
+      volumes:
+      - name: nginx-persistent-storage
+        gcePersistentDisk:
+          pdName: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-overlay
+        name: configmap-in-overlay
+`)
+	th.WriteF("overlay/staging/deployment-patch2.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        env:
+        - name: ANOTHERENV
+          value: FOO
+`)
+	options := th.MakeDefaultOptions()
+	options.MergeOptions.ListIncreaseDirection = yaml.MergeOptionsListAppend
+	m := th.Run("overlay/staging", options)
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-nginx
+spec:
+  selector:
+    matchLabels:
+      app: mynginx
+      env: staging
+      org: example.com
+      team: foo
+  template:
+    metadata:
+      annotations:
+        note: This is a test annotation
+      labels:
+        app: mynginx
+        env: staging
+        org: example.com
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: ENVKEY
+          value: ENVVALUE
+        - name: ANOTHERENV
+          value: FOO
+        image: nginx:latest
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - configMap:
+          name: staging-team-foo-configmap-in-base-798k5k7g9f
+        name: configmap-in-base
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: staging-configmap-in-overlay-dc6fm46dhm
+        name: configmap-in-overlay
 ---
 apiVersion: v1
 kind: Service

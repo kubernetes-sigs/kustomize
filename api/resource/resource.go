@@ -23,7 +23,8 @@ import (
 // paired with metadata used by kustomize.
 type Resource struct {
 	kyaml.RNode
-	refVarNames []string
+	refVarNames  []string
+	MergeOptions *kyaml.MergeOptions
 }
 
 var BuildAnnotations = []string{
@@ -147,7 +148,8 @@ type ResCtxMatcher func(ResCtx) bool
 // DeepCopy returns a new copy of resource
 func (r *Resource) DeepCopy() *Resource {
 	rc := &Resource{
-		RNode: *r.Copy(),
+		RNode:        *r.Copy(),
+		MergeOptions: r.MergeOptions,
 	}
 	rc.copyKustomizeSpecificFields(r)
 	return rc
@@ -495,7 +497,8 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 		r.StorePreviousId()
 	}
 	if err := r.ApplyFilter(patchstrategicmerge.Filter{
-		Patch: &patch.RNode,
+		Patch:        &patch.RNode,
+		MergeOptions: patch.MergeOptions,
 	}); err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@
 package target_test
 
 import (
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"testing"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -68,5 +69,8 @@ func makeKustTargetWithRfAndLoaderOverride(
 		ldr,
 		valtest_test.MakeFakeValidator(),
 		rf,
-		pLdr.NewLoader(pc, rf, fSys))
+		pLdr.NewLoader(pc, rf, fSys),
+		&yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		})
 }

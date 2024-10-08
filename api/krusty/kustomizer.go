@@ -70,6 +70,7 @@ func (b *Kustomizer) Run(
 		resmapFactory,
 		// The plugin configs are always located on disk, regardless of the fSys passed in
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory, filesys.MakeFsOnDisk()),
+		b.options.MergeOptions,
 	)
 	err = kt.Load()
 	if err != nil {
