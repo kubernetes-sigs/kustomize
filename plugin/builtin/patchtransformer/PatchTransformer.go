@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -24,11 +25,12 @@ type plugin struct {
 	// patchText is pure patch text created by Path or Patch
 	patchText string
 	// patchSource is patch source message
-	patchSource string
-	Path        string          `json:"path,omitempty"    yaml:"path,omitempty"`
-	Patch       string          `json:"patch,omitempty"   yaml:"patch,omitempty"`
-	Target      *types.Selector `json:"target,omitempty"  yaml:"target,omitempty"`
-	Options     map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
+	patchSource  string
+	Path         string              `json:"path,omitempty"    yaml:"path,omitempty"`
+	Patch        string              `json:"patch,omitempty"   yaml:"patch,omitempty"`
+	Target       *types.Selector     `json:"target,omitempty"  yaml:"target,omitempty"`
+	Options      map[string]bool     `json:"options,omitempty" yaml:"options,omitempty"`
+	MergeOptions *kyaml.MergeOptions `json:"MergeOptions,omitempty" yaml:"MergeOptions,omitempty"`
 }
 
 var KustomizePlugin plugin //nolint:gochecknoglobals
@@ -78,6 +80,7 @@ func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 			if p.Options["allowKindChange"] {
 				loadedPatch.AllowKindChange()
 			}
+			loadedPatch.MergeOptions = p.MergeOptions
 		}
 	} else {
 		p.jsonPatches = patchesJson

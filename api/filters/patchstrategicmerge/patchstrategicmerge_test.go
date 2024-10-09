@@ -921,3 +921,150 @@ data:
 		})
 	}
 }
+
+func TestFilterMergeOptionsListAppend(t *testing.T) {
+	testCases := map[string]struct {
+		input    string
+		patch    *yaml.RNode
+		expected string
+	}{
+		"container patch": {
+			input: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo0
+`),
+			expected: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+      - name: foo0
+`,
+		},
+		"volumes patch": {
+			input: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo0
+`),
+			expected: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+      - name: foo0
+`,
+		},
+		"merge list - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test2
+        image: test2
+      - $patch: merge   
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+      - name: test2
+        image: test2
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			f := Filter{
+				Patch: tc.patch,
+				MergeOptions: &yaml.MergeOptions{
+					ListIncreaseDirection: yaml.MergeOptionsListAppend,
+				},
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(tc.expected),
+				strings.TrimSpace(
+					filtertest.RunFilter(t, tc.input, f))) {
+				t.FailNow()
+			}
+		})
+	}
+}
