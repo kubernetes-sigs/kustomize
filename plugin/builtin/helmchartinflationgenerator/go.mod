@@ -4,7 +4,7 @@ go 1.22.7
 
 require (
 	github.com/stretchr/testify v1.9.0
-	sigs.k8s.io/kustomize/api v0.17.3
+	sigs.k8s.io/kustomize/api v0.18.0
 	sigs.k8s.io/kustomize/kyaml v0.18.1
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -32,5 +32,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../api
