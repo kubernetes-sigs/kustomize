@@ -7,7 +7,6 @@ ARG VERSION
 ARG COMMIT
 ARG DATE
 RUN mkdir /build
-RUN apk add --no-cache git
 ADD . /build/
 WORKDIR /build/kustomize
 RUN CGO_ENABLED=0 GO111MODULE=on go build \
