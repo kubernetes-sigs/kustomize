@@ -111,7 +111,10 @@ func (l *Loader) LoadTransformer(
 	}
 	t, ok := c.(resmap.Transformer)
 	if !ok {
-		return nil, fmt.Errorf("plugin %s not a transformer", res.OrgId())
+		if g, ok := c.(resmap.Generator); ok {
+			return &resmap.TransformerWithProperties{Transformer: &resmap.GeneratorAsTransformer{Generator: g}}, nil
+		}
+		return nil, fmt.Errorf("plugin %s is neither a transformer nor generator", res.OrgId())
 	}
 	return &resmap.TransformerWithProperties{Transformer: t}, nil
 }
@@ -282,4 +285,3 @@ func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, err
 	}
 	return c, nil
 }
-
