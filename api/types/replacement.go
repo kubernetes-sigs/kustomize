@@ -77,6 +77,9 @@ type FieldOptions struct {
 
 	// If field missing, add it.
 	Create bool `json:"create,omitempty" yaml:"create,omitempty"`
+
+	// Allows to Find Field values using regex primitives.
+	RegexFindMode bool `json:"regexfindmode,omitempty" yaml:"regexfindmode,omitempty"`
 }
 
 func (fo *FieldOptions) String() string {
