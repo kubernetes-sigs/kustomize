@@ -536,7 +536,7 @@ func TestErrorMessageForMalformedYAML(t *testing.T) {
 	}
 }
 
-// loaderNewReturnsError duplicates baseLoader's behavior except
+// loaderNewThrowsError duplicates baseLoader's behavior except
 // that New() returns the specified error.
 type loaderNewThrowsError struct {
 	baseLoader      ifc.Loader
