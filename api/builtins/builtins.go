@@ -10,6 +10,7 @@ import (
 
 type (
 	AnnotationsTransformerPlugin         = internal.AnnotationsTransformerPlugin
+	ResourceGeneratorPlugin              = internal.ResourceGeneratorPlugin
 	ConfigMapGeneratorPlugin             = internal.ConfigMapGeneratorPlugin
 	HashTransformerPlugin                = internal.HashTransformerPlugin
 	HelmChartInflationGeneratorPlugin    = internal.HelmChartInflationGeneratorPlugin
@@ -28,8 +29,10 @@ type (
 	ValueAddTransformerPlugin            = internal.ValueAddTransformerPlugin
 )
 
+//nolint:gochecknoglobals
 var (
 	NewAnnotationsTransformerPlugin         = internal.NewAnnotationsTransformerPlugin
+	NewResourceGeneratorPlugin              = internal.NewResourceGeneratorPlugin
 	NewConfigMapGeneratorPlugin             = internal.NewConfigMapGeneratorPlugin
 	NewHashTransformerPlugin                = internal.NewHashTransformerPlugin
 	NewHelmChartInflationGeneratorPlugin    = internal.NewHelmChartInflationGeneratorPlugin

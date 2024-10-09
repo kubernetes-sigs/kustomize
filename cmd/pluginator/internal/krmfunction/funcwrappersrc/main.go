@@ -15,13 +15,12 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
-//nolint
 func main() {
 	var plugin resmap.Configurable
 	p := provider.NewDefaultDepProvider()
 	resmapFactory := resmap.NewFactory(p.GetResourceFactory())
 	pluginHelpers := resmap.NewPluginHelpers(
-		nil, p.GetFieldValidator(), resmapFactory, types.DisabledPluginConfig())
+		nil, p.GetFieldValidator(), resmapFactory, types.DisabledPluginConfig()) // TODO(koba1t): check to influence of kt is null
 
 	processor := framework.ResourceListProcessorFunc(func(resourceList *framework.ResourceList) error {
 		resMap, err := resmapFactory.NewResMapFromRNodeSlice(resourceList.Items)

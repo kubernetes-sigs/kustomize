@@ -80,11 +80,12 @@ func makeBaseEnhancedHarness(t *testing.T) *HarnessEnhanced {
 		pte: newPluginTestEnv(t).set(),
 		rf:  rf,
 		pl: pLdr.NewLoader(
-			types.EnabledPluginConfig(types.BploLoadFromFileSys),
-			rf,
+			types.EnabledPluginConfig(types.BploLoadFromFileSys), rf,
 			// Plugin configs are always located on disk,
 			// regardless of the test harness's FS
-			filesys.MakeFsOnDisk())}
+			filesys.MakeFsOnDisk(),
+		),
+	}
 }
 
 func (th *HarnessEnhanced) ErrIfNoHelm() error {
