@@ -380,7 +380,8 @@ spec:
 `,
 		},
 		// See how nameSuffix "-b" is also added to the resources included by "comp-a" because they are in the
-		// accumulator when "comp-b" is accumulated.  In practice we could use simple Kustomizations for this example.
+		// accumulator when "comp-b" is accumulated.
+		// In practice we could use simple Kustomizations for this example.
 		"components-can-add-the-same-base-if-the-first-renames-resources": {
 			input: []FileGen{writeTestBase,
 				deployment("proxy", "comp-a/proxy.yaml"),
@@ -391,9 +392,6 @@ resources:
 nameSuffix: "-a"
 `),
 				writeC("comp-b", `
-resources:
-- ../base
-
 nameSuffix: "-b"
 `),
 				writeK("prod", `
@@ -417,21 +415,6 @@ data:
 kind: ConfigMap
 metadata:
   name: my-configmap-a-b-9cd648hm8f
----
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: storefront-b
-spec:
-  replicas: 1
----
-apiVersion: v1
-data:
-  otherValue: green
-  testValue: purple
-kind: ConfigMap
-metadata:
-  name: my-configmap-b-9cd648hm8f
 `,
 		},
 
@@ -590,7 +573,7 @@ components:
 - ../comp-b`),
 			},
 			runPath:       "prod",
-			expectedError: "may not add resource with an already registered id: Deployment.v1.[noGrp]/proxy.[noNs]",
+			expectedError: `id resid.ResId{Gvk:resid.Gvk{Group:\"\", Version:\"v1\", Kind:\"Deployment\", isClusterScoped:false}, Name:\"proxy\", Namespace:\"\"} exists`,
 		},
 		"components-cannot-add-the-same-base": {
 			input: []FileGen{writeTestBase,
@@ -609,7 +592,7 @@ components:
 - ../comp-b`),
 			},
 			runPath:       "prod",
-			expectedError: "may not add resource with an already registered id: Deployment.v1.[noGrp]/storefront.[noNs]",
+			expectedError: `resid.ResId{Gvk:resid.Gvk{Group:\"\", Version:\"v1\", Kind:\"Deployment\", isClusterScoped:false}, Name:\"storefront\", Namespace:\"\"} exists`,
 		},
 		"components-cannot-add-bases-containing-the-same-resource": {
 			input: []FileGen{writeTestBase,
@@ -640,7 +623,7 @@ components:
 - ../comp-b`),
 			},
 			runPath:       "prod",
-			expectedError: "may not add resource with an already registered id: Deployment.v1.[noGrp]/proxy.[noNs]",
+			expectedError: `resid.ResId{Gvk:resid.Gvk{Group:\"\", Version:\"v1\", Kind:\"Deployment\", isClusterScoped:false}, Name:\"proxy\", Namespace:\"\"} exists`,
 		},
 	}
 

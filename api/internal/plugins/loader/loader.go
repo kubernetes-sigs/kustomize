@@ -57,10 +57,10 @@ func (l *Loader) Config() *types.PluginConfig {
 }
 
 func (l *Loader) LoadGenerators(
-	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) (
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap, kt resmap.KustTargetInterface) (
 	result []*resmap.GeneratorWithProperties, err error) {
 	for _, res := range rm.Resources() {
-		g, err := l.LoadGenerator(ldr, v, res)
+		g, err := l.LoadGenerator(ldr, v, res, kt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load generator: %w", err)
 		}
@@ -74,8 +74,8 @@ func (l *Loader) LoadGenerators(
 }
 
 func (l *Loader) LoadGenerator(
-	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (resmap.Generator, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, v, res)
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource, kt resmap.KustTargetInterface) (resmap.Generator, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, v, res, kt)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +87,10 @@ func (l *Loader) LoadGenerator(
 }
 
 func (l *Loader) LoadTransformers(
-	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap) ([]*resmap.TransformerWithProperties, error) {
+	ldr ifc.Loader, v ifc.Validator, rm resmap.ResMap, kt resmap.KustTargetInterface) ([]*resmap.TransformerWithProperties, error) {
 	var result []*resmap.TransformerWithProperties
 	for _, res := range rm.Resources() {
-		t, err := l.LoadTransformer(ldr, v, res)
+		t, err := l.LoadTransformer(ldr, v, res, kt)
 		if err != nil {
 			return nil, err
 		}
@@ -104,8 +104,8 @@ func (l *Loader) LoadTransformers(
 }
 
 func (l *Loader) LoadTransformer(
-	ldr ifc.Loader, v ifc.Validator, res *resource.Resource) (*resmap.TransformerWithProperties, error) {
-	c, err := l.loadAndConfigurePlugin(ldr, v, res)
+	ldr ifc.Loader, v ifc.Validator, res *resource.Resource, kt resmap.KustTargetInterface) (*resmap.TransformerWithProperties, error) {
+	c, err := l.loadAndConfigurePlugin(ldr, v, res, kt)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,9 @@ func isBuiltinPlugin(res *resource.Resource) bool {
 func (l *Loader) loadAndConfigurePlugin(
 	ldr ifc.Loader,
 	v ifc.Validator,
-	res *resource.Resource) (c resmap.Configurable, err error) {
+	res *resource.Resource,
+	kt resmap.KustTargetInterface,
+) (c resmap.Configurable, err error) {
 	if isBuiltinPlugin(res) {
 		switch l.pc.BpLoadingOptions {
 		case types.BploLoadFromFileSys:
@@ -214,7 +216,7 @@ func (l *Loader) loadAndConfigurePlugin(
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "marshalling yaml from res %s", res.OrgId())
 	}
-	err = c.Config(resmap.NewPluginHelpers(ldr, v, l.rf, l.pc), yaml)
+	err = c.Config(resmap.NewPluginHelpersWithKt(ldr, v, l.rf, l.pc, kt), yaml)
 	if err != nil {
 		return nil, errors.WrapPrefixf(
 			err, "plugin %s fails configuration", res.OrgId())
@@ -282,4 +284,3 @@ func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, err
 	}
 	return c, nil
 }
-

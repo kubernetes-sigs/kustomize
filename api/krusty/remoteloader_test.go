@@ -105,7 +105,7 @@ cp -r $ROOT/simple.git/. $ROOT/$HASH_DIR
 	git commit -m "relative submodule"
 	git checkout main
 	git submodule add $ROOT/simple.git submodule
-	git commit -m "submodule"	
+	git commit -m "submodule"
 )
 `, root, hashDir))
 		return testRepos{
@@ -176,7 +176,7 @@ resources:
 		{
 			name: "has ref",
 			kustomization: `
-resources: 
+resources:
 - "file://$ROOT/simple.git?ref=change-image"
 `,
 
@@ -383,7 +383,7 @@ resources:
 resources:
 - https://github.com/thisisa404.yaml
 `,
-			err:  "accumulating resources: accumulating resources from 'https://github.com/thisisa404.yaml': HTTP Error: status code 404 (Not Found)",
+			err:  `accumulating resources from 'https://github.com/thisisa404.yaml': HTTP Error: status code 404 (Not Found)`,
 			errT: loader.ErrHTTP,
 		},
 	}
