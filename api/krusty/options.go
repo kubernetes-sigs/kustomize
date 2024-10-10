@@ -6,6 +6,7 @@ package krusty
 import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 type ReorderOption string
@@ -34,6 +35,9 @@ type Options struct {
 	//   select the appropriate default.
 	Reorder ReorderOption
 
+	// MergeOptions is a struct which contains the options for merge
+	MergeOptions *yaml.MergeOptions
+
 	// When true, a label
 	//     app.kubernetes.io/managed-by: kustomize-<version>
 	// is added to all the resources in the build out.
@@ -52,8 +56,11 @@ func MakeDefaultOptions() *Options {
 	return &Options{
 		Reorder:           ReorderOptionNone,
 		AddManagedbyLabel: false,
-		LoadRestrictions:  types.LoadRestrictionsRootOnly,
-		PluginConfig:      types.DisabledPluginConfig(),
+		MergeOptions: &yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+		LoadRestrictions: types.LoadRestrictionsRootOnly,
+		PluginConfig:     types.DisabledPluginConfig(),
 	}
 }
 
