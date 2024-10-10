@@ -335,6 +335,11 @@ func (lc *localizer) localizeResource(path string) (string, error) {
 		}
 	}
 	if fileErr != nil {
+		var redErr *loader.RedirectionError
+		if errors.As(fileErr, &redErr) {
+			path = redErr.NewPath
+		}
+
 		var rootErr error
 		locPath, rootErr = lc.localizeRoot(path)
 		if rootErr != nil {
