@@ -5,7 +5,7 @@
 // is defined at: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 //
 // Functions are executables that generate, modify, delete or validate Kubernetes resources.
-// They are often used used to implement abstractions ("kind: JavaSpringBoot") and
+// They are often used to implement abstractions ("kind: JavaSpringBoot") and
 // cross-cutting logic ("kind: SidecarInjector").
 //
 // Functions may be run as standalone executables or invoked as part of an orchestrated
