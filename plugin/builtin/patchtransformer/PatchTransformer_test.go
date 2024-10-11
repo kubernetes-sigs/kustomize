@@ -1108,3 +1108,32 @@ spec:
         name: test-deployment
 `)
 }
+
+func TestPatchTransformerPatchEmpty(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckError(`
+`, someDeploymentResources, func(t *testing.T, err error) {
+		if err != nil {
+			t.Fatalf("unexpected error")
+		}
+	})
+}
+
+func TestPatchTransformerPatchEmptyOnlyComments(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.RunTransformerAndCheckError(`
+# File with only comments
+
+# Is a virtually empty yaml
+`, someDeploymentResources, func(t *testing.T, err error) {
+		if err != nil {
+			t.Fatalf("unexpected error")
+		}
+	})
+}
