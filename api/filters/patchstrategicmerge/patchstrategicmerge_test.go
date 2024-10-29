@@ -940,6 +940,8 @@ spec:
       containers:
       - name: foo1
       - name: foo2
+      - name: duplicate
+        image: duplicate:1.1.0
       - name: foo3
 `,
 			patch: yaml.MustParse(`
@@ -952,6 +954,8 @@ spec:
     spec:
       containers:
       - name: foo0
+      - name: duplicate
+        image: duplicate:2.1.0
 `),
 			expected: `
 apiVersion: apps/v1
@@ -964,6 +968,8 @@ spec:
       containers:
       - name: foo1
       - name: foo2
+      - name: duplicate
+        image: duplicate:2.1.0
       - name: foo3
       - name: foo0
 `,
@@ -1047,6 +1053,66 @@ spec:
         image: test
       - name: test2
         image: test2
+`,
+		},
+		"merge to empty list": {
+			input: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo0
+`),
+			expected: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo0
+`,
+		},
+		"merge with empty list": {
+			input: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo0
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+`),
+			expected: `
+apiVersion: apps/v1
+metadata:
+  name: myDeploy
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo0
 `,
 		},
 	}

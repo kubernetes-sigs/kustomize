@@ -56,6 +56,15 @@ spec:
           value: bar
         ports:
         - containerPort: 80
+      - name: tg-bot
+        image: python
+        env:
+        - name: first
+          value: first
+        - name: second
+          value: second
+      - name: web-server
+        image: alpine
 `)
 }
 
@@ -94,6 +103,15 @@ spec:
         name: nginx
         ports:
         - containerPort: 80
+      - env:
+        - name: first
+          value: first
+        - name: second
+          value: second
+        image: python
+        name: tg-bot
+      - image: alpine
+        name: web-server
 ---
 apiVersion: v1
 kind: Service
@@ -176,6 +194,17 @@ spec:
             configMapKeyRef:
               name: app-env
               key: somekey
+      - name: tg-bot
+        env:
+        - name: third
+          value: third
+        - name: first
+          value: fourth
+      - name: web-server
+        image: alpine
+        env:
+        - name: foo
+          value: bar
       - name: busybox
         image: busybox
         envFrom:
@@ -237,6 +266,20 @@ spec:
         name: nginx
         ports:
         - containerPort: 80
+      - env:
+        - name: third
+          value: third
+        - name: first
+          value: fourth
+        - name: second
+          value: second
+        image: python
+        name: tg-bot
+      - env:
+        - name: foo
+          value: bar
+        image: alpine
+        name: web-server
       - envFrom:
         - configMapRef:
             name: someConfigMap
@@ -370,6 +413,17 @@ spec:
             configMapKeyRef:
               name: app-env
               key: somekey
+      - name: tg-bot
+        env:
+        - name: third
+          value: third
+        - name: first
+          value: fourth
+      - name: web-server
+        image: alpine
+        env:
+        - name: foo
+          value: bar
       - name: busybox
         image: busybox
         envFrom:
@@ -433,6 +487,20 @@ spec:
         name: nginx
         ports:
         - containerPort: 80
+      - env:
+        - name: first
+          value: fourth
+        - name: second
+          value: second
+        - name: third
+          value: third
+        image: python
+        name: tg-bot
+      - env:
+        - name: foo
+          value: bar
+        image: alpine
+        name: web-server
       - envFrom:
         - configMapRef:
             name: someConfigMap
