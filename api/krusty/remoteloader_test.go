@@ -71,7 +71,8 @@ cp -r testdata/remoteload/simple $ROOT/simple.git
 (
 	cd $ROOT/simple.git
 	git config --global protocol.file.allow always
-	git init --initial-branch=main
+	git init
+	git checkout -b main
 	git add .
 	git commit -m "import"
 	git checkout -b change-image
@@ -89,7 +90,8 @@ cp -r $ROOT/simple.git $ROOT/nosuffix
 cp -r testdata/remoteload/multibase $ROOT/multibase.git
 (
 	cd $ROOT/multibase.git
-	git init --initial-branch=main
+	git init
+	git checkout -b main
 	git add .
 	git commit -m "import"
 )
@@ -97,7 +99,8 @@ cp -r testdata/remoteload/with-submodule $ROOT/with-submodule.git # see README
 cp -r $ROOT/simple.git/. $ROOT/$HASH_DIR
 (
 	cd $ROOT/with-submodule.git
-	git init --initial-branch=main
+	git init
+	git checkout -b main
 	git add .
 	git commit -m "import"
 	git checkout -b relative-submodule

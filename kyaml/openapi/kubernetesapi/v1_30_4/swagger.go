@@ -93,7 +93,7 @@ func kubernetesapiV1_30_4SwaggerPb() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "kubernetesapi/v1_30_4/swagger.pb", size: 2197499, mode: os.FileMode(436), modTime: time.Unix(1730186325, 0)}
+	info := bindataFileInfo{name: "kubernetesapi/v1_30_4/swagger.pb", size: 2197499, mode: os.FileMode(436), modTime: time.Unix(1730261586, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
