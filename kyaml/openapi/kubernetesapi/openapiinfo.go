@@ -6,13 +6,13 @@
 package kubernetesapi
 
 import (
-	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_21_2"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1_30_4"
 )
 
-const Info = "{title:Kubernetes,version:v1.21.2}"
+const Info = "{title:Kubernetes,version:v1.30.4}"
 
 var OpenAPIMustAsset = map[string]func(string) []byte{
-	"v1.21.2": v1_21_2.MustAsset,
+	"v1.30.4": v1_30_4.MustAsset,
 }
 
-const DefaultOpenAPI = "v1.21.2"
+const DefaultOpenAPI = "v1.30.4"
