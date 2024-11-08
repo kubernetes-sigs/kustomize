@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
@@ -132,6 +133,21 @@ func TestCreateWithNameSuffix(t *testing.T) {
 	if m.NameSuffix != "-foo" {
 		t.Errorf("want: -foo, got: %s", m.NameSuffix)
 	}
+}
+
+func TestCreateHasDefaultMetadata(t *testing.T) {
+	fSys := filesys.MakeEmptyDirInMemory()
+	fSys.WriteFile("foo.yaml", []byte(""))
+	fSys.WriteFile("bar.yaml", []byte(""))
+	opts := createFlags{resources: "foo.yaml,bar.yaml"}
+	err := runCreate(opts, fSys, factory)
+
+	require.NoErrorf(t, err, "unexpected cmd error: %v")
+
+	m := readKustomizationFS(t, fSys)
+	expected := konfig.DefaultKustomizationMetadata()
+
+	require.Truef(t, reflect.DeepEqual(m.MetaData, expected), "expected %v but got %v", expected, m.MetaData)
 }
 
 func writeDetectContent(fSys filesys.FileSystem) {

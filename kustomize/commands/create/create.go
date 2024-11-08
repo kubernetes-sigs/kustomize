@@ -133,6 +133,7 @@ func runCreate(opts createFlags, fSys filesys.FileSystem, rf *resource.Factory) 
 	if err != nil {
 		return err
 	}
+	m.MetaData = konfig.DefaultKustomizationMetadata()
 	m.Resources = resources
 	m.Namespace = opts.namespace
 	m.NamePrefix = opts.prefix

@@ -3,6 +3,10 @@
 
 package konfig
 
+import (
+	"sigs.k8s.io/kustomize/api/types"
+)
+
 // RecognizedKustomizationFileNames is a list of file names
 // that kustomize recognizes.
 // To avoid ambiguity, a kustomization directory may not
@@ -17,6 +21,18 @@ func RecognizedKustomizationFileNames() []string {
 
 func DefaultKustomizationFileName() string {
 	return RecognizedKustomizationFileNames()[0]
+}
+
+// DefaultKustomizationMetadata returns the default metadata
+// for a kustomization configuration.
+func DefaultKustomizationMetadata() *types.ObjectMeta {
+	defaultMetadata := &types.ObjectMeta{
+		Annotations: map[string]string{
+			IgnoredByKustomizeAnnotation: "true",
+		},
+	}
+
+	return defaultMetadata
 }
 
 const (
