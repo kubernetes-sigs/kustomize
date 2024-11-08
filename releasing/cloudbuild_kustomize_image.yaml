@@ -29,6 +29,8 @@ steps:
         COMMIT=$(git rev-parse HEAD)
         --build-arg
         DATE=$(date -u +%FT%TZ)
+        --platform
+        linux/amd64,linux/arm64
         .
 
 images:
