@@ -301,6 +301,17 @@ kind: List
 		t.Fatalf("failed to create new instance with %v: %v", deploymentB, errB)
 	}
 
+	deploymentNoItems := "deployment-no-items"
+	testDeploymentNoItems, errNoItems := factory.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "List",
+		},
+	)
+	if errNoItems != nil {
+		t.Fatalf("failed to create new instance with %v: %v", deploymentNoItems, testDeploymentNoItems)
+	}
+
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(string(patchGood1), []byte(patch1))
 	fSys.WriteFile(string(patchGood2), []byte(patch2))
@@ -363,7 +374,7 @@ kind: List
 		},
 		"listWithNoItems": {
 			input:       []types.PatchStrategicMerge{patchList4},
-			expectedOut: []*Resource{},
+			expectedOut: []*Resource{testDeploymentNoItems},
 			expectedErr: false,
 		},
 	}

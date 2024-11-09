@@ -959,3 +959,37 @@ chartHome: ./charts
 	assert.Contains(t, string(chartYamlContent), "name: test-chart")
 	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }
+
+func TestHelmChartInflationGeneratorWithDebug(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	copyTestChartsIntoHarness(t, th)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: test-chart
+name: test-chart
+version: 1.0.0
+releaseName: test
+chartHome: ./charts
+debug: true
+`)
+
+	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
+	require.NoError(t, err)
+	assert.Equal(t, "bar", cm)
+
+	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+	assert.True(t, th.GetFSys().Exists(chartDir))
+
+	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
+	require.NoError(t, err)
+	assert.Contains(t, string(chartYamlContent), "name: test-chart")
+	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
+}

@@ -28,7 +28,7 @@ jobs:
   lint:
     name: Lint
     needs: conditional-changes
-    if: needs.conditional-changes.outputs.doc == 'false'
+    # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
@@ -48,7 +48,7 @@ jobs:
   test-linux:
     name: Test Linux
     needs: conditional-changes
-    if: needs.conditional-changes.outputs.doc == 'false'
+    # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
@@ -66,7 +66,7 @@ jobs:
   test-macos:
     name: Test MacOS
     needs: conditional-changes
-    if: needs.conditional-changes.outputs.doc == 'false'
+    # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [macos-latest]
     steps:
     - name: Check out code into the Go module directory
@@ -84,7 +84,7 @@ jobs:
   test-windows:
     name: Test Windows
     needs: conditional-changes
-    if: needs.conditional-changes.outputs.doc == 'false'
+    # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [windows-latest]
     steps:
     - name: Check out code into the Go module directory

@@ -3,7 +3,7 @@
 # This Dockerfile is based on:
 # (https://github.com/kubernetes/website/blob/main/Dockerfile)
 
-FROM docker.io/library/golang:1.21-alpine
+FROM docker.io/library/golang:1.22-alpine
 
 RUN apk add --no-cache \
     curl \
@@ -19,7 +19,7 @@ COPY hack/go.mod ./
 COPY hack/go.sum ./
 RUN go install --tags extended github.com/gohugoio/hugo
 
-FROM docker.io/library/golang:1.21-alpine
+FROM docker.io/library/golang:1.22-alpine
 
 RUN apk add --no-cache \
     runuser \
