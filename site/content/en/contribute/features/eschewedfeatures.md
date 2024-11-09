@@ -145,7 +145,7 @@ Allowing globbing in a kustomization file would also introduce
 the same problems as allowing globbing in [java import]
 declarations or BUILD/Makefile dependency rules.
 
-`kustomize` will instead provide kustomization file editting
+`kustomize` will instead provide kustomization file editing
 commands that accept globbed arguments, expand them at _edit
 time_ relative to the local file system, and store the resulting
 explicit names into the kustomization file.
