@@ -151,7 +151,7 @@ time_ relative to the local file system, and store the resulting
 explicit names into the kustomization file.
 
 [DAM]: /docs/reference/glossary/#declarative-application-management
-[java import]: https://www.codebyamir.com/blog/pitfalls-java-import-wildcards
+[Java import]: https://www.codebyamir.com/blog/pitfalls-java-import-wildcards
 [JSON patches]: /docs/reference/glossary/#patchjson6902
 [kustomization]: /docs/reference/glossary/#kustomization
 [OTS workflow]: /docs/reference/glossary/#off-the-shelf-configuration
