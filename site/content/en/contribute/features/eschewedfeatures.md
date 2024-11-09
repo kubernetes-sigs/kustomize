@@ -142,7 +142,7 @@ declared in the [kustomization] file at `kustomize build` time
 would violate that goal.
 
 Allowing globbing in a kustomization file would also introduce
-the same problems as allowing globbing in [java import]
+the same problems as allowing globbing in [Java import]
 declarations or BUILD/Makefile dependency rules.
 
 `kustomize` will instead provide kustomization file editing
