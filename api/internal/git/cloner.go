@@ -36,7 +36,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		return err
 	}
 	repoSpec.Dir = r.dir
-
+	cloneCount[r.dir] = 1
 	if err = r.run("init"); err != nil {
 		return err
 	}
