@@ -14,7 +14,7 @@ type Cloner func(repoSpec *RepoSpec) error
 
 var (
 	clones     = make(map[string]filesys.ConfirmedDir)
-	cloneCount = make(map[filesys.ConfirmedDir]int)
+	cloneCount = make(map[filesys.ConfirmedDir]uint16)
 	cloneMutex sync.Mutex
 )
 
@@ -78,7 +78,7 @@ func DoNothingCloner(dir filesys.ConfirmedDir) Cloner {
 }
 
 // DecrementCloneCount decrements the count of repoSpecs using a directory clone.
-func DecrementCloneCount(dir filesys.ConfirmedDir) int {
+func DecrementCloneCount(dir filesys.ConfirmedDir) uint16 {
 	cloneMutex.Lock()
 	defer cloneMutex.Unlock()
 
