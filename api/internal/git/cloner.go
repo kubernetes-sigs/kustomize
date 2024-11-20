@@ -14,6 +14,7 @@ type Cloner func(repoSpec *RepoSpec) error
 
 var (
 	clones     = make(map[string]filesys.ConfirmedDir)
+	cloneCount = make(map[filesys.ConfirmedDir]int)
 	cloneMutex sync.Mutex
 )
 
@@ -23,6 +24,7 @@ var (
 func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	if dir, found := clones[repoSpec.Raw()]; found {
 		repoSpec.Dir = dir
+		cloneCount[dir] += 1
 		return nil
 	}
 
@@ -34,6 +36,7 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 		return err
 	}
 	repoSpec.Dir = r.dir
+
 	if err = r.run("init"); err != nil {
 		return err
 	}
@@ -72,4 +75,17 @@ func DoNothingCloner(dir filesys.ConfirmedDir) Cloner {
 		rs.Dir = dir
 		return nil
 	}
+}
+
+// DecrementCloneCount decrements the count of repoSpecs using a directory clone.
+func DecrementCloneCount(dir filesys.ConfirmedDir) int {
+	cloneMutex.Lock()
+	defer cloneMutex.Unlock()
+
+	if count, exists := cloneCount[dir]; exists && count > 0 {
+		cloneCount[dir] -= 1
+		return cloneCount[dir]
+	}
+
+	return 0
 }
