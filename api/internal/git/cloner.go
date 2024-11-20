@@ -4,16 +4,31 @@
 package git
 
 import (
+	"sync"
+
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // Cloner is a function that can clone a git repo.
 type Cloner func(repoSpec *RepoSpec) error
 
+var (
+	clones     = make(map[string]filesys.ConfirmedDir)
+	cloneMutex sync.Mutex
+)
+
 // ClonerUsingGitExec uses a local git install, as opposed
 // to say, some remote API, to obtain a local clone of
 // a remote repo.
 func ClonerUsingGitExec(repoSpec *RepoSpec) error {
+	if dir, found := clones[repoSpec.Raw()]; found {
+		repoSpec.Dir = dir
+		return nil
+	}
+
+	cloneMutex.Lock()
+	defer cloneMutex.Unlock()
+
 	r, err := newCmdRunner(repoSpec.Timeout)
 	if err != nil {
 		return err
@@ -41,6 +56,10 @@ func ClonerUsingGitExec(repoSpec *RepoSpec) error {
 	if repoSpec.Submodules {
 		return r.run("submodule", "update", "--init", "--recursive")
 	}
+
+	// save the location of the clone for later reuse
+	clones[repoSpec.Raw()] = r.dir
+
 	return nil
 }
 
