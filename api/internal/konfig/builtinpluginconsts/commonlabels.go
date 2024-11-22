@@ -56,6 +56,11 @@ commonLabels:
   group: apps
   kind: StatefulSet
 
+- path: spec/volumeClaimTemplates[]/metadata/labels
+  create: true
+  group: apps
+  kind: StatefulSet
+
 - path: spec/template/spec/affinity/podAffinity/preferredDuringSchedulingIgnoredDuringExecution/podAffinityTerm/labelSelector/matchLabels
   create: false
   group: apps
