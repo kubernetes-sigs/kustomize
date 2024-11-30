@@ -20,7 +20,7 @@ make nuke
 
 ### Choose the new version to use
 
-The compiled-in schema version should maximize API availability with respect to all actively supported Kubernetes versions. For example, while 1.20, 1.21 and 1.22 are the actively supported versions, 1.21 is the best choice. This is because 1.21 introduces at least one new API and does not remove any, while 1.22 removes a large set of long-deprecated APIs that are still supported in 1.20/1.21.
+The compiled-in schema version should maximize API availability across all actively supported Kubernetes versions. For this purpose, a version like v1.30.4 is ideal, as it maintains compatibility with older versions while also providing access to new features. In contrast, v1.31.0 introduces breaking changes, making v1.30.4 appear more stable and reliable for ensuring compatibility and API availability.
 
 ### Generating additional schema
 
