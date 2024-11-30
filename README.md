@@ -76,18 +76,18 @@ kustomization.yaml                                      deployment.yaml         
 +---------------------------------------------+         +-------------------------------------------------------+       +-----------------------------------+
 | apiVersion: kustomize.config.k8s.io/v1beta1 |         | apiVersion: apps/v1                                   |       | apiVersion: v1                    |
 | kind: Kustomization                         |         | kind: Deployment                                      |       | kind: Service                     |
-| commonLabels:                               |         | metadata:                                             |       | metadata:                         |
-|   app: myapp                                |         |   name: myapp                                         |       |   name: myapp                     |
-| resources:                                  |         | spec:                                                 |       | spec:                             |
-|   - deployment.yaml                         |         |   selector:                                           |       |   selector:                       |
-|   - service.yaml                            |         |     matchLabels:                                      |       |     app: myapp                    |
-| configMapGenerator:                         |         |       app: myapp                                      |       |   ports:                          |
-|   - name: myapp-map                         |         |   template:                                           |       |     - port: 6060                  |
-|     literals:                               |         |     metadata:                                         |       |       targetPort: 6060            |
-|       - KEY=value                           |         |       labels:                                         |       +-----------------------------------+
-+---------------------------------------------+         |         app: myapp                                    |
-                                                        |     spec:                                             |
-                                                        |       containers:                                     |
+| labels:                                     |         | metadata:                                             |       | metadata:                         |
+| - includeSelectors: true                    |         |   name: myapp                                         |       |   name: myapp                     |
+|   pairs:                                    |         | spec:                                                 |       | spec:                             |
+|     app: myapp                              |         |   selector:                                           |       |   selector:                       |
+| resources:                                  |         |     matchLabels:                                      |       |     app: myapp                    |
+|   - deployment.yaml                         |         |       app: myapp                                      |       |   ports:                          |
+|   - service.yaml                            |         |   template:                                           |       |     - port: 6060                  |
+| configMapGenerator:                         |         |     metadata:                                         |       |       targetPort: 6060            |
+|   - name: myapp-map                         |         |       labels:                                         |       +-----------------------------------+
+|     literals:                               |         |         app: myapp                                    |
+|       - KEY=value                           |         |     spec:                                             |
++---------------------------------------------+         |       containers:                                     |
                                                         |         - name: myapp                                 |
                                                         |           image: myapp                                |
                                                         |           resources:                                  |
@@ -142,16 +142,16 @@ kustomization.yaml                                      replica_count.yaml      
 +-----------------------------------------------+       +-------------------------------+       +------------------------------------------+
 | apiVersion: kustomize.config.k8s.io/v1beta1   |       | apiVersion: apps/v1           |       | apiVersion: apps/v1                      |
 | kind: Kustomization                           |       | kind: Deployment              |       | kind: Deployment                         |
-| commonLabels:                                 |       | metadata:                     |       | metadata:                                |  
-|   variant: prod                               |       |   name: myapp                 |       |   name: myapp                            |
-| resources:                                    |       | spec:                         |       | spec:                                    |
-|   - ../../base                                |       |   replicas: 80                |       |  template:                               |
-| patches:                                      |       +-------------------------------+       |     spec:                                |
-|   - path: replica_count.yaml                  |                                               |       containers:                        |
-|   - path: cpu_count.yaml                      |                                               |         - name: myapp                    |  
-+-----------------------------------------------+                                               |           resources:                     |
-                                                                                                |             limits:                      |
-                                                                                                |               memory: "128Mi"            |
+| labels:                                       |       | metadata:                     |       | metadata:                                |
+|  - includeSelectors: true                     |       |   name: myapp                 |       |   name: myapp                            |
+|    pairs:                                     |       | spec:                         |       | spec:                                    |
+|      variant: prod                            |       |   replicas: 80                |       |  template:                               |
+| resources:                                    |       +-------------------------------+       |     spec:                                |
+|   - ../../base                                |                                               |       containers:                        |
+| patches:                                      |                                               |         - name: myapp                    |
+|   - path: replica_count.yaml                  |                                               |           resources:                     |
+|   - path: cpu_count.yaml                      |                                               |             limits:                      |
++-----------------------------------------------+                                               |               memory: "128Mi"            |
                                                                                                 |               cpu: "7000m"               |
                                                                                                 +------------------------------------------+
 ```
