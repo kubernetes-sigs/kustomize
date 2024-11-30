@@ -11,6 +11,7 @@ require (
 	github.com/sergi/go-diff v1.2.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
+	github.com/tetratelabs/wazero v1.8.1
 	github.com/xlab/treeprint v1.2.0
 	golang.org/x/sys v0.21.0
 	google.golang.org/protobuf v1.33.0
