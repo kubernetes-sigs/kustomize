@@ -2830,6 +2830,303 @@ spec:
 `,
 			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
 		},
+
+"reject 1 with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deploy.*
+    reject:
+    - name: .*ploy2|deploy3
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"reject 2 with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v1
+    reject:
+    - kind: Deplo.*
+      name: my-name
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
+		// the only difference in the inputs between this and the previous test
+		// is the dash before `name: my-name`
+		"reject 3 with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v1
+    reject:
+    - kind: Deployment
+    - name: my.n.me
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"simple with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+kind: StatefulSet
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment|StatefulSet
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+kind: StatefulSet
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+
+`,
+		},
+
 	}
 
 	for tn, tc := range testCases {
