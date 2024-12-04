@@ -139,12 +139,7 @@ func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
 
 func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
 	if o.labelsWithoutSelector {
-		m.Labels = append(m.Labels, types.Label{
-			Pairs:            make(map[string]string),
-			IncludeSelectors: false,
-			IncludeTemplates: o.includeTemplates,
-		})
-		return o.writeToMap(m.Labels[len(m.Labels)-1].Pairs, label)
+		return o.writeToLabels(m, label)
 	}
 	if m.CommonLabels == nil {
 		m.CommonLabels = make(map[string]string)
@@ -154,10 +149,67 @@ func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
 
 func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) error {
 	for k, v := range o.metadata {
-		if _, ok := m[k]; ok && !o.force {
-			return fmt.Errorf("%s %s already in kustomization file", kind, k)
+		if err := o.writeToMapEntry(m, k, v, kind); err != nil {
+			return err
 		}
-		m[k] = v
 	}
 	return nil
+}
+
+func (o *addMetadataOptions) writeToMapEntry(m map[string]string, k, v string, kind kindOfAdd) error {
+	if _, ok := m[k]; ok && !o.force {
+		return fmt.Errorf("%s %s already in kustomization file. Use --force to override.", kind, k)
+	}
+	m[k] = v
+	return nil
+}
+
+func (o *addMetadataOptions) writeToLabels(m *types.Kustomization, kind kindOfAdd) error {
+	lbl := types.Label{
+		Pairs:            make(map[string]string),
+		IncludeSelectors: false,
+		IncludeTemplates: o.includeTemplates,
+	}
+	for k, v := range o.metadata {
+		if i, ok := o.findLabelKeyIndex(m, lbl, k); ok {
+			if err := o.writeToMapEntry(m.Labels[i].Pairs, k, v, kind); err != nil {
+				return err
+			}
+			continue
+		}
+		if i, ok := o.findLabelIndex(m, lbl); ok {
+			if err := o.writeToMapEntry(m.Labels[i].Pairs, k, v, kind); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := o.writeToMap(lbl.Pairs, kind); err != nil {
+			return err
+		}
+		m.Labels = append(m.Labels, lbl)
+	}
+	return nil
+}
+
+func (o *addMetadataOptions) matchLabelSettings(lbl1, lbl2 types.Label) bool {
+	return lbl1.IncludeSelectors == lbl2.IncludeSelectors &&
+		lbl1.IncludeTemplates == lbl2.IncludeTemplates
+}
+
+func (o *addMetadataOptions) findLabelIndex(m *types.Kustomization, lbl types.Label) (int, bool) {
+	for i, ml := range m.Labels {
+		if o.matchLabelSettings(ml, lbl) {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
+func (o *addMetadataOptions) findLabelKeyIndex(m *types.Kustomization, lbl types.Label, key string) (int, bool) {
+	if i, found := o.findLabelIndex(m, lbl); found {
+		if _, ok := m.Labels[i].Pairs[key]; ok {
+			return i, true
+		}
+	}
+	return 0, false
 }
