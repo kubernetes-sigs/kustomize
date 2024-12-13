@@ -126,13 +126,8 @@ func (rmF *Factory) FromSecretArgs(
 func newResMapFromResourceSlice(
 	resources []*resource.Resource) (ResMap, error) {
 	result := New()
-	for _, res := range resources {
-		err := result.Append(res)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return result, nil
+	err := result.AppendMany(resources...)
+	return result, err
 }
 
 // NewResMapFromRNodeSlice returns a ResMap from a slice of RNodes
