@@ -18,7 +18,7 @@ type App struct {
 		Name string `yaml:"name"`
 	} `yaml:"metadata"`
 	Spec struct {
-		Port int `yaml:"port" json:"port"`
+		Port int `yaml:"port" json:"port"` //nolint:tagalign
 	} `yaml:"spec" json:"spec"`
 }
 
