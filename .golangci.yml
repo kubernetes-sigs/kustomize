@@ -9,6 +9,7 @@ linters:
   enable-all: true
   disable:
     - cyclop
+    - depguard
     - exhaustivestruct
     - forbidigo
     - funlen
@@ -24,7 +25,9 @@ linters:
     - nlreturn
     - noctx
     - paralleltest
+    - perfsprint
     - stylecheck
+    - testifylint
     - varnamelen
     - wsl
     - exhaustruct
