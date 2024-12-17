@@ -577,6 +577,7 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 		}
 		switch res.Behavior() {
 		case types.BehaviorReplace:
+			res.InvalidateIdCaches()
 			res.CopyMergeMetaDataFieldsFrom(old)
 		case types.BehaviorMerge:
 			// ensure the origin annotation doesn't get overwritten
@@ -584,6 +585,7 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 			if err != nil {
 				return err
 			}
+			res.InvalidateIdCaches()
 			res.CopyMergeMetaDataFieldsFrom(old)
 			res.MergeDataMapFrom(old)
 			res.MergeBinaryDataMapFrom(old)
