@@ -134,8 +134,12 @@ type FunctionSpec struct {
 
 	// ExecSpec is the spec for running a function as an executable
 	Exec ExecSpec `json:"exec,omitempty" yaml:"exec,omitempty"`
+
+	// Wasip1Spec is the spec for running a function as an wasm with wasm preview 1
+	Wasip1 Wasip1Spec `json:"wasip1,omitempty" yaml:"exec,omitempty"`
 }
 
+// ExecSpec defines a spec for running a function as an executable
 type ExecSpec struct {
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 }
@@ -153,6 +157,13 @@ type ContainerSpec struct {
 
 	// Env is a slice of env string that will be exposed to container
 	Env []string `json:"envs,omitempty" yaml:"envs,omitempty"`
+}
+
+// Wasip1Spec defines a spec for running a function as a wasm with wasm preview 1
+type Wasip1Spec struct {
+	File string `json:"file,omitempty" yaml:"file,omitempty"`
+
+	Image string `json:"image,omitempty" yaml:"image,omitempty"`
 }
 
 // StorageMount represents a container's mounted storage option(s)
