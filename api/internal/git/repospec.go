@@ -72,7 +72,12 @@ func (x *RepoSpec) AbsPath() string {
 }
 
 func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
-	return func() error { return fSys.RemoveAll(x.Dir.String()) }
+	return func() error {
+		if DecrementCloneCount(x.Dir) == 0 {
+			return fSys.RemoveAll(x.Dir.String())
+		}
+		return nil
+	}
 }
 
 const (
