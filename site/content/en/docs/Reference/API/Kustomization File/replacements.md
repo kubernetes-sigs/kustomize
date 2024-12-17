@@ -63,6 +63,7 @@ replacements:
       delimiter: string
       index: int
       create: bool
+      ignoreMissingField: bool
   targets:
   - select:
       group: string
@@ -103,6 +104,7 @@ replacements:
 |`delimiter`|  | Used to split/join the field
 |`index`| | Which position in the split to consider | `0`
 |`create`|  | If target field is missing, add it | `false`
+|`ignoreMissingField`|  | If target field is missing, ignore it | `false`
 
 #### Source
 The source field is a selector that determines the source of the value by finding a

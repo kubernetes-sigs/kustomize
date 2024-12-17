@@ -77,11 +77,14 @@ type FieldOptions struct {
 
 	// If field missing, add it.
 	Create bool `json:"create,omitempty" yaml:"create,omitempty"`
+
+	// If field missing, ignore it.
+	IgnoreMissingField bool `json:"ignoreMissingField,omitempty" yaml:"ignoreMissingField,omitempty"`
 }
 
 func (fo *FieldOptions) String() string {
-	if fo == nil || (fo.Delimiter == "" && !fo.Create) {
+	if fo == nil || (fo.Delimiter == "" && !fo.Create && !fo.IgnoreMissingField) {
 		return ""
 	}
-	return fmt.Sprintf("%s(%d), create=%t", fo.Delimiter, fo.Index, fo.Create)
+	return fmt.Sprintf("%s(%d), create=%t, ignoreMissingField=%t", fo.Delimiter, fo.Index, fo.Create, fo.IgnoreMissingField)
 }
