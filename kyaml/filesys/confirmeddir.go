@@ -17,7 +17,8 @@ type ConfirmedDir string
 // The directory is cleaned, no symlinks, etc. so it's
 // returned as a ConfirmedDir.
 func NewTmpConfirmedDir() (ConfirmedDir, error) {
-	n, err := os.MkdirTemp("", "kustomize-")
+	currentDir, err := os.Getwd()
+	n, err := os.MkdirTemp(currentDir, ".kustomize-")
 	if err != nil {
 		return "", err
 	}
