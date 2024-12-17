@@ -5,8 +5,8 @@ MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
-KIND_VERSION := "v0.11.1"
-API_VERSION ?= "v1.21.2"
+KIND_VERSION := "v0.24.0"
+API_VERSION ?= "v1.30.4"
 
 .PHONY: all
 all: \
