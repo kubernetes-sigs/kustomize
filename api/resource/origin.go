@@ -4,7 +4,7 @@
 package resource
 
 import (
-	"path/filepath"
+	"path"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/git"
@@ -48,17 +48,17 @@ func (origin *Origin) Copy() Origin {
 }
 
 // Append returns a copy of origin with a path appended to it
-func (origin *Origin) Append(path string) *Origin {
+func (origin *Origin) Append(inputPath string) *Origin {
 	originCopy := origin.Copy()
-	repoSpec, err := git.NewRepoSpecFromURL(path)
+	repoSpec, err := git.NewRepoSpecFromURL(inputPath)
 	if err == nil {
 		originCopy.Repo = repoSpec.CloneSpec()
 		absPath := repoSpec.AbsPath()
-		path = absPath[strings.Index(absPath[1:], "/")+1:][1:]
+		inputPath = absPath[strings.Index(absPath[1:], "/")+1:][1:]
 		originCopy.Path = ""
 		originCopy.Ref = repoSpec.Ref
 	}
-	originCopy.Path = filepath.Join(originCopy.Path, path)
+	originCopy.Path = path.Join(originCopy.Path, inputPath)
 	return &originCopy
 }
 
