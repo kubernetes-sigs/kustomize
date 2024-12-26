@@ -1114,7 +1114,17 @@ func TestPatchTransformerPatchEmpty(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
+	th.WriteF("patch.yaml", `
+  `)
+
 	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.yaml
+target:
+  name: myDeploy
 `, someDeploymentResources, func(t *testing.T, err error) {
 		if err != nil {
 			t.Fatalf("unexpected error")
@@ -1127,10 +1137,20 @@ func TestPatchTransformerPatchEmptyOnlyComments(t *testing.T) {
 		PrepBuiltin("PatchTransformer")
 	defer th.Reset()
 
-	th.RunTransformerAndCheckError(`
+	th.WriteF("patch.yaml", `
 # File with only comments
 
 # Is a virtually empty yaml
+`)
+
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.yaml
+target:
+  name: myDeploy
 `, someDeploymentResources, func(t *testing.T, err error) {
 		if err != nil {
 			t.Fatalf("unexpected error")
