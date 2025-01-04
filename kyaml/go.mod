@@ -12,7 +12,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	github.com/xlab/treeprint v1.2.0
-	golang.org/x/sys v0.23.0
+	golang.org/x/sys v0.28.0
 	google.golang.org/protobuf v1.35.1
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7
 	sigs.k8s.io/yaml v1.4.0

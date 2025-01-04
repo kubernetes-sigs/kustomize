@@ -7,7 +7,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/text v0.17.0
+	golang.org/x/text v0.21.0
 	sigs.k8s.io/kustomize/api v0.18.0
 	sigs.k8s.io/kustomize/cmd/config v0.15.0
 	sigs.k8s.io/kustomize/kyaml v0.18.1
@@ -31,7 +31,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
