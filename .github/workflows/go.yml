@@ -25,6 +25,26 @@ jobs:
           doc:
             - 'site/**'
 
+  check-modules:
+    name: check-synced-go-modules
+    needs: conditional-changes
+    # if: needs.conditional-changes.outputs.doc == 'false'
+    runs-on: [ubuntu-latest]
+    steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.work
+      id: go
+    - name: sync go modules
+      run: make workspace-sync
+    - name: check for changes with 'make workspace-sync'
+      run: git diff --exit-code
+
   lint:
     name: Lint
     needs: conditional-changes
