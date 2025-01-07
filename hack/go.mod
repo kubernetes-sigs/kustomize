@@ -2,6 +2,18 @@ module sigs.k8s.io/kustomize/hack
 
 go 1.22.7
 
+exclude (
+	// These dependencies were updated to "master" in spf13/viper, but have no
+	// code-changes since the last release. While a fix was merged in viper,
+	// it's not released yet, and it may take time before other (indirect)
+	// dependencies also downgraded.
+	//
+	// Exclude these versions so that go modules picks their latest release
+	// before that. For additional details, see; https://github.com/kubernetes-sigs/kustomize/pull/5830
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
+)
+
 require (
 	github.com/campoy/embedmd v1.0.0
 	github.com/cli/cli v1.2.1
@@ -120,7 +132,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/daixiang0/gci v0.12.1 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
 	github.com/disintegration/gift v1.2.1 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
@@ -274,7 +286,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polyfloyd/go-errorlint v1.4.8 // indirect
 	github.com/prometheus/client_golang v1.16.0 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
