@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/sortordertransformer
 go 1.22.7
 
 require (
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	sigs.k8s.io/kustomize/api v0.19.0
 	sigs.k8s.io/kustomize/kyaml v0.19.0
 	sigs.k8s.io/yaml v1.4.0
