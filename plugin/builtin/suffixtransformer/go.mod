@@ -9,13 +9,13 @@ require (
 
 require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/carapace-sh/carapace-shlex v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
