@@ -1126,6 +1126,7 @@ path: patch.yaml
 target:
   name: myDeploy
 `, someDeploymentResources, func(t *testing.T, err error) {
+		t.Helper()
 		if err != nil {
 			t.Fatalf("unexpected error")
 		}
@@ -1152,6 +1153,7 @@ path: patch.yaml
 target:
   name: myDeploy
 `, someDeploymentResources, func(t *testing.T, err error) {
+		t.Helper()
 		if err != nil {
 			t.Fatalf("unexpected error")
 		}
