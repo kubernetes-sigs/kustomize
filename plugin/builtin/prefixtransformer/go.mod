@@ -22,6 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
+	github.com/tetratelabs/wazero v1.8.1 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect

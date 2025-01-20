@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/wasip1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -462,6 +463,21 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 			"results-%v.yaml", r.resultsCount))
 		atomic.AddUint32(&r.resultsCount, 1)
 	}
+
+	// if the function is a wasip1 function, run it as a wasip1 function
+	if spec.Wasip1.Image != "" || spec.Wasip1.File != "" {
+		wf := wasip1.NewWasmFilter(spec.Wasip1)
+
+		wf.WorkingDir = r.WorkingDir
+
+		wf.FunctionConfig = api
+		wf.GlobalScope = r.GlobalScope
+		wf.ResultsFile = resultsFile
+		wf.DeferFailure = spec.DeferFailure
+		return wf, nil
+	}
+
+	// if the function is a container, run it as a container
 	if !r.DisableContainers && spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -491,6 +507,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 		return cf, nil
 	}
 
+	// if the function is an exec function, run it as an exec function
 	if r.EnableExec && spec.Exec.Path != "" {
 		ef := &exec.Filter{
 			Path:       spec.Exec.Path,
