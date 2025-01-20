@@ -1,8 +1,8 @@
 # a transformer plugin performing validation
 
-[base]: ../../docs/glossary.md#base
+[base]: https://kubectl.docs.kubernetes.io/references/kustomize/glossary/#base
 [kubeval]: https://github.com/instrumenta/kubeval
-[plugin]: ../../docs/plugins
+[plugin]: ../../plugins
 
 kustomize doesn't validate either its input or
 output beyond the validation provided by the
