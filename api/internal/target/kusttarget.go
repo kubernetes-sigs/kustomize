@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -36,6 +37,7 @@ type KustTarget struct {
 	rFactory      *resmap.Factory
 	pLdr          *loader.Loader
 	origin        *resource.Origin
+	mergeOptions  *kyaml.MergeOptions
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -43,12 +45,14 @@ func NewKustTarget(
 	ldr ifc.Loader,
 	validator ifc.Validator,
 	rFactory *resmap.Factory,
-	pLdr *loader.Loader) *KustTarget {
+	pLdr *loader.Loader,
+	mOpts *kyaml.MergeOptions) *KustTarget {
 	return &KustTarget{
-		ldr:       ldr,
-		validator: validator,
-		rFactory:  rFactory,
-		pLdr:      pLdr.LoaderWithWorkingDir(ldr.Root()),
+		ldr:          ldr,
+		validator:    validator,
+		rFactory:     rFactory,
+		pLdr:         pLdr.LoaderWithWorkingDir(ldr.Root()),
+		mergeOptions: mOpts,
 	}
 }
 
@@ -488,7 +492,7 @@ func (kt *KustTarget) accumulateComponents(
 func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
-	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
+	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr, kt.mergeOptions)
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.WrapPrefixf(
