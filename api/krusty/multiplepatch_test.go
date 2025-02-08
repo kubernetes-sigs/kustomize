@@ -1282,6 +1282,72 @@ metadata:
 	}
 }
 
+func TestSinglePatchWithMultiplePatchDeleteDirectives(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeCommonFilesForMultiplePatchTests(th)
+	th.WriteF("overlay/staging/deployment-patch1.yaml", `
+$patch: delete
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+---
+$patch: delete
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+`)
+	th.WriteF("overlay/staging/deployment-patch2.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-in-base
+data:
+  foo2: bar2
+`)
+	th.WriteK("overlay/staging", `
+namePrefix: staging-
+commonLabels:
+  env: staging
+patches:
+  - path: deployment-patch1.yaml
+  - path: deployment-patch2.yaml
+resources:
+  - ../../base
+configMapGenerator:
+- name: configmap-in-overlay
+  literals:
+  - hello=world
+`)
+	m := th.Run("overlay/staging", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  foo: bar
+  foo2: bar2
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: foo
+  name: staging-team-foo-configmap-in-base-8cmgkm9f44
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: staging-configmap-in-overlay-dc6fm46dhm
+`)
+}
+
 func TestMultiplePatchesBothWithPatchDeleteDirective(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFilesForMultiplePatchTests(th)
