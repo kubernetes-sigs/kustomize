@@ -17,7 +17,7 @@ import (
 func TestFunctionFilter_Filter(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	var tests = []struct {
+	tests := []struct {
 		name           string
 		input          []string
 		functionConfig string
@@ -57,8 +57,9 @@ metadata:
 			},
 			expectedError: "",
 			instance: exec.Filter{
-				Path:       "sed",
-				Args:       []string{"s/Deployment/StatefulSet/g"},
+				Path:       "sh",
+				Env:        []string{"TARGET=StatefulSet"},
+				Args:       []string{"-c", `sed "s/Deployment/$TARGET/g"`},
 				WorkingDir: wd,
 			},
 		},
