@@ -328,7 +328,7 @@ func (p *plugin) pullCommand() []string {
 	switch {
 	case strings.HasPrefix(p.Repo, "oci://"):
 		args = append(args, strings.TrimSuffix(p.Repo, "/")+"/"+p.Name)
-	case strings.HasPrefix(p.Repo, "https://"):
+	case strings.HasPrefix(p.Repo, "https://") || strings.HasPrefix(p.Repo, "http://"):
 		args = append(args, "--repo", p.Repo, p.Name)
 	case p.Repo != "":
 		args = append(args, strings.TrimSuffix(p.Repo, "/")+"/"+p.Name)
