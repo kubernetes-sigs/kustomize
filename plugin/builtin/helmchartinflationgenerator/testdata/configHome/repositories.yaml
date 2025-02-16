@@ -1,0 +1,12 @@
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  insecure_skip_tls_verify: false
+  keyFile: ""
+  name: minecraft-server-charts
+  pass_credentials_all: false
+  password: ""
+  url: https://itzg.github.io/minecraft-server-charts/
+  username: ""

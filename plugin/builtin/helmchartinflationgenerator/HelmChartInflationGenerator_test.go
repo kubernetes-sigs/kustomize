@@ -993,3 +993,43 @@ debug: true
 	assert.Contains(t, string(chartYamlContent), "name: test-chart")
 	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
 }
+
+func TestHelmChartInflationGeneratorWithAddedRepo(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+  
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myMc
+configHome: ./testdata/configHome
+name: minecraft
+version: 3.1.3
+repo: minecraft-server-charts
+releaseName: moria
+valuesInline:
+  minecraftServer:
+    eula: true
+    difficulty: hard
+    rcon:
+      enabled: true
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+valuesMerge: replace
+`)
+	
+  th.AssertActualEqualsExpected(
+    rm, fmt.Sprintf(expectedInflationFmt,
+      "hard", // difficulty
+      500,    // cpu
+      512,    // memory
+    ))
+
+}

@@ -119,15 +119,6 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 	if err = p.errIfIllegalValuesMerge(); err != nil {
 		return err
 	}
-
-	// ConfigHome is not loaded by the plugin, and can be located anywhere.
-	if p.ConfigHome == "" {
-		if err = p.establishTmpDir(); err != nil {
-			return errors.WrapPrefixf(
-				err, "unable to create tmp dir for HELM_CONFIG_HOME")
-		}
-		p.ConfigHome = filepath.Join(p.tmpDir, "helm")
-	}
 	return nil
 }
 
@@ -159,6 +150,30 @@ func (p *HelmChartInflationGeneratorPlugin) absChartHome() string {
 	return chartHome
 }
 
+func (p *HelmChartInflationGeneratorPlugin) getHelmEnv() map[string]string {
+	stdout := new(bytes.Buffer)
+	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, "env")
+	cmd.Stdout = stdout
+	err := cmd.Run()
+	if err != nil {
+		panic(1)
+	}
+	envMap := make(map[string]string)
+	lines := strings.Split(stdout.String(), "\n")
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.Trim(strings.TrimSpace(parts[1]), `"`)
+			envMap[key] = value
+		}
+	}
+	return envMap
+}
+
 func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	args []string) ([]byte, error) {
 	stdout := new(bytes.Buffer)
@@ -166,10 +181,14 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	env := []string{
-		fmt.Sprintf("HELM_CONFIG_HOME=%s", p.ConfigHome),
-		fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.ConfigHome),
-		fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
+	env := []string{}
+	if p.ConfigHome != "" {
+		env = []string{
+			fmt.Sprintf("HELM_CONFIG_HOME=%s", p.ConfigHome),
+			fmt.Sprintf("HELM_CACHE_HOME=%s/.cache", p.ConfigHome),
+			fmt.Sprintf("HELM_DATA_HOME=%s/.data", p.ConfigHome)}
+		cmd.Env = append(os.Environ(), env...)
+	}
 	cmd.Env = append(os.Environ(), env...)
 	err := cmd.Run()
 	errorOutput := stderr.String()
@@ -327,11 +346,11 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 	switch {
 	case strings.HasPrefix(p.Repo, "oci://"):
 		args = append(args, strings.TrimSuffix(p.Repo, "/")+"/"+p.Name)
+	case strings.HasPrefix(p.Repo, "https://"):
+		args = append(args, "--repo", p.Repo, p.Name)
 	case p.Repo != "":
-		args = append(args, "--repo", p.Repo)
-		fallthrough
+		args = append(args, strings.TrimSuffix(p.Repo, "/")+"/"+p.Name)
 	default:
-		args = append(args, p.Name)
 	}
 
 	if p.Version != "" {
