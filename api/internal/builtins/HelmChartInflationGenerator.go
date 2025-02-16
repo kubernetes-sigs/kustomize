@@ -150,30 +150,6 @@ func (p *HelmChartInflationGeneratorPlugin) absChartHome() string {
 	return chartHome
 }
 
-func (p *HelmChartInflationGeneratorPlugin) getHelmEnv() map[string]string {
-	stdout := new(bytes.Buffer)
-	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, "env")
-	cmd.Stdout = stdout
-	err := cmd.Run()
-	if err != nil {
-		panic(1)
-	}
-	envMap := make(map[string]string)
-	lines := strings.Split(stdout.String(), "\n")
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.Trim(strings.TrimSpace(parts[1]), `"`)
-			envMap[key] = value
-		}
-	}
-	return envMap
-}
-
 func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	args []string) ([]byte, error) {
 	stdout := new(bytes.Buffer)
