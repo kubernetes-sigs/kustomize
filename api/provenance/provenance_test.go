@@ -49,9 +49,57 @@ func TestProvenance_Semver(t *testing.T) {
 
 func mockModule(version string) debug.Module {
 	return debug.Module{
-		Path:    "sigs.k8s.io/kustomize/kustomize/v5",
+		Path:    provenance.ModulePath,
 		Version: version,
 		Replace: nil,
+	}
+}
+
+func mockBuildInfo(mainVersion, depsVersion string) *debug.BuildInfo {
+	module := mockModule(depsVersion)
+
+	return &debug.BuildInfo{
+		Main: debug.Module{
+			Version: mainVersion,
+		},
+		Deps: []*debug.Module{
+			&module,
+		},
+	}
+}
+
+func TestFindVersion(t *testing.T) {
+	tests := []struct {
+		name            string
+		version         string
+		buildInfo       *debug.BuildInfo
+		expectedVersion string
+	}{
+		{
+			name:            "The version from LD_FLAGS is not overridden by main and dependencies versions",
+			version:         "v2.3.4",
+			buildInfo:       mockBuildInfo("v1.2.3", "(devel)"),
+			expectedVersion: "v2.3.4",
+		},
+		{
+			name:            "The version from LD_FLAGS is overridden by the main version",
+			version:         "(devel)",
+			buildInfo:       mockBuildInfo("v1.2.3", "(devel)"),
+			expectedVersion: "v1.2.3",
+		},
+		{
+			name:            "The version from LD_FLAGS is overridden by the version from dependencies",
+			version:         "(devel)",
+			buildInfo:       mockBuildInfo("v1.2.3", "v1.2.3-0.20210101010101-abcdefabcdef"),
+			expectedVersion: "v1.2.2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			version := provenance.FindVersion(tt.buildInfo, tt.version)
+			assert.Equal(t, tt.expectedVersion, version)
+		})
 	}
 }
 
