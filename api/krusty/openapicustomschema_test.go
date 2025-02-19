@@ -259,7 +259,7 @@ func TestCustomOpenApiFieldBothPathAndVersion(t *testing.T) {
 resources:
 - mycrd.yaml
 openapi:
-  version: v1.21.2
+  version: v1.30.4
   path: mycrd_schema.json
 `+customSchemaPatch)
 		writeCustomResource(th, "mycrd.yaml")
@@ -399,7 +399,7 @@ openapi:
 resources:
 - ../base
 openapi:
-  version: v1.21.2
+  version: v1.30.4
 `+customSchemaPatch)
 		writeCustomResource(th, "base/mycrd.yaml")
 		writeTestSchema(th, "base/")
@@ -416,7 +416,7 @@ spec:
       - image: nginx
         name: server
 `)
-		assert.Equal(t, "v1.21.2", openapi.GetSchemaVersion())
+		assert.Equal(t, "v1.30.4", openapi.GetSchemaVersion())
 	})
 }
 
@@ -547,7 +547,7 @@ func TestCustomOpenApiFieldVersion(t *testing.T) {
 		th := kusttest_test.MakeHarness(t)
 		th.WriteK(".", `
 openapi:
-  version: v1.21.2
+  version: v1.30.4
 resources:
 - deployment.yaml
 `)
@@ -575,7 +575,7 @@ spec:
       containers:
       - image: whatever
 `)
-		assert.Equal(t, "v1.21.2", openapi.GetSchemaVersion())
+		assert.Equal(t, "v1.30.4", openapi.GetSchemaVersion())
 	})
 }
 
