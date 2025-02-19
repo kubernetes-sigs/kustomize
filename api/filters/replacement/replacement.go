@@ -185,20 +185,24 @@ func containsRejectId(rejects []*types.Selector, ids []resid.ResId) bool {
 func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.TargetSelector) error {
 	for _, fp := range selector.FieldPaths {
 		createKind := yaml.Kind(0) // do not create
+		ignoreMissingField := false
+		if selector.Options != nil {
+			ignoreMissingField = selector.Options.IgnoreMissingField
+		}
 		if selector.Options != nil && selector.Options.Create {
 			createKind = value.YNode().Kind
 		}
 		targetFieldList, err := target.Pipe(&yaml.PathMatcher{
 			Path:   kyaml_utils.SmarterPathSplitter(fp, "."),
 			Create: createKind})
-		if err != nil {
+		if err != nil && !ignoreMissingField {
 			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0)) //nolint:govet
 		}
 		targetFields, err := targetFieldList.Elements()
-		if err != nil {
+		if err != nil && !ignoreMissingField {
 			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0)) //nolint:govet
 		}
-		if len(targetFields) == 0 {
+		if len(targetFields) == 0 && !ignoreMissingField {
 			return errors.Errorf(fieldRetrievalError(fp, createKind != 0)) //nolint:govet
 		}
 
