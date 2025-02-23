@@ -1007,22 +1007,23 @@ func TestHelmChartInflationGeneratorWithDevel(t *testing.T) {
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
-  name: test-chart
-name: test-chart
+  name: sm-operator
+name:  sm-operator
 version: 0.1.0-Beta
 repo: https://charts.bitwarden.com/
 releaseName: sm-operator
+chartHome: ./charts
 devel: true
 `)
 	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
 	require.NoError(t, err)
-	assert.Equal(t, "bar", cm)
+	assert.Equal(t, "sm-operator-controller-manager", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+	chartDir := filepath.Join(th.GetRoot(), "charts/sm-operator-0.1.0-Beta/sm-operator")
 	assert.True(t, th.GetFSys().Exists(chartDir))
 
 	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
 	require.NoError(t, err)
-	assert.Contains(t, string(chartYamlContent), "name: test-chart")
+	assert.Contains(t, string(chartYamlContent), "name: sm-operator")
 	assert.Contains(t, string(chartYamlContent), "version: 0.1.0-Beta")
 }
