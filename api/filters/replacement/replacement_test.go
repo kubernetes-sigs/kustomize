@@ -2779,7 +2779,7 @@ spec:
           name: myingress
         fieldPaths:
           - spec.tls.0.hosts.0
-          - spec.tls.0.secretName          
+          - spec.tls.0.secretName
         options:
           create: true
 `,
@@ -2829,6 +2829,77 @@ spec:
           create: true
 `,
 			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			f := Filter{}
+			err := yaml.Unmarshal([]byte(tc.replacements), &f)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual, err := filtertest.RunFilterE(t, tc.input, f)
+			if err != nil {
+				if tc.expectedErr == "" {
+					t.Errorf("unexpected error: %s\n", err.Error())
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.expectedErr) {
+					t.FailNow()
+				}
+			}
+			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestValueInlineStructuredData(t *testing.T) {
+	testCases := map[string]struct {
+		input        string
+		replacements string
+		expected     string
+		expectedErr  string
+	}{
+		"replacement contain jsonfield": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "REPLACE_TARGET_HOSTNAME"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: target-configmap
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.config\.json.config.hostname
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "target-configmap"
+      }
+    }`,
 		},
 	}
 
