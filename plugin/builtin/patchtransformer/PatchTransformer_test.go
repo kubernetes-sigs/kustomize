@@ -1108,3 +1108,54 @@ spec:
         name: test-deployment
 `)
 }
+
+func TestPatchTransformerPatchEmpty(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF("patch.yaml", `
+  `)
+
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.yaml
+target:
+  name: myDeploy
+`, someDeploymentResources, func(t *testing.T, err error) {
+		t.Helper()
+		if err != nil {
+			t.Fatalf("unexpected error")
+		}
+	})
+}
+
+func TestPatchTransformerPatchEmptyOnlyComments(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PatchTransformer")
+	defer th.Reset()
+
+	th.WriteF("patch.yaml", `
+# File with only comments
+
+# Is a virtually empty yaml
+`)
+
+	th.RunTransformerAndCheckError(`
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: notImportantHere
+path: patch.yaml
+target:
+  name: myDeploy
+`, someDeploymentResources, func(t *testing.T, err error) {
+		t.Helper()
+		if err != nil {
+			t.Fatalf("unexpected error")
+		}
+	})
+}
