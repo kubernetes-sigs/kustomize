@@ -41,7 +41,7 @@ function build_kustomize_binary {
   release_dir=$2
   echo "build release artifacts to $release_dir"
 
-  mkdir -p "output"
+  mkdir -p output
   # build date in ISO8601 format
   build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
   for os in linux darwin windows; do
