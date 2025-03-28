@@ -99,6 +99,9 @@ type HelmChart struct {
 
 	// debug enables debug output from the Helm chart inflator generator.
 	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
+
+	// SkipSchemaValidation disables JSON schema validation
+	SkipSchemaValidation bool `json:"skipSchemaValidation,omitempty" yaml:"skipSchemaValidation,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.
@@ -193,6 +196,9 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	}
 	if h.Debug {
 		args = append(args, "--debug")
+	}
+	if h.SkipSchemaValidation {
+		args = append(args, "--skip-schema-validation")
 	}
 	return args
 }
