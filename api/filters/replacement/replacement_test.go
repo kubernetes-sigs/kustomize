@@ -2829,6 +2829,70 @@ spec:
           create: true
 `,
 			expectedErr: "unable to find or create field \"spec.tls.5.hosts.5\" in replacement target: index 5 specified but only 0 elements found",
+		}, "replace with static value": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- sourceValue: custom/postgres:1.9.0
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.containers.[name=postgresdb].image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: custom/postgres:1.9.0
+        name: postgresdb
+`,
+		}, "source value and selector error": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy
+  sourceValue: 2
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths:
+    - spec.replicas
+`,
+			expectedErr: "value and resource selectors are mutually exclusive",
 		},
 	}
 
