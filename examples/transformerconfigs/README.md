@@ -204,7 +204,7 @@ namePrefix: sample-
 
 configurations:
   # Tie target Gorilla to AnimalPark's referrer spec.gorillaRef.
-  # Once Gorilla name is changed, the AnimalPark referrerd Gorilla name will be changed as well.
+  # Once Gorilla name is changed, the AnimalPark referred Gorilla name will be changed as well.
   - nameReference.yaml
 ```
 nameReference.yaml
