@@ -131,7 +131,7 @@ kind: Kustomization
 namespace: example
 
 resources:
-- resources.yaml
+  - resources.yaml
 
 configurations:
   - namespace.yaml
