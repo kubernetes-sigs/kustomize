@@ -614,3 +614,81 @@ metadata:
   name: app-config-dev-97544dk6t8
 `)
 }
+
+
+func TestReplacementTransformerWithSuffixTransformerAndRejectUsingRegex(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("base/app.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: original-name
+spec:
+  template:
+    spec:
+      containers:
+        - image: app1:1.0
+          name: app
+`)
+	th.WriteK("base", `
+resources:
+  - app.yaml
+`)
+	th.WriteK("overlay", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+nameSuffix: -dev
+namePrefix: pre-
+resources:
+  - ../base
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - name=something-else
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: app-config
+      fieldPath: data.name
+    targets:
+      - fieldPaths:
+          - spec.template.spec.containers.0.name
+        select:
+          kind: Deployment
+        reject:
+          - name: .*original.*
+      - fieldPaths:
+          - data.name-copy
+        select:
+          kind: ConfigMap
+          name: app-config
+        options:
+          create: true
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pre-original-name-dev
+spec:
+  template:
+    spec:
+      containers:
+      - image: app1:1.0
+        name: app
+---
+apiVersion: v1
+data:
+  name: something-else
+  name-copy: something-else
+kind: ConfigMap
+metadata:
+  name: pre-app-config-dev-7266b7f2m9
+`)
+}
