@@ -122,6 +122,177 @@ type: Opaque
 `)
 }
 
+func TestSecretGeneratorEmitStringDataFromProperties(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+secretGenerator:
+  - name: test-secret
+    behavior: create
+    envs:
+    - properties
+`)
+	th.WriteF("base/properties", `
+VAR1=100
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+secretGenerator:
+- name: test-secret
+  emitStringData: true
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+VAR2=200
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  VAR1: MTAw
+kind: Secret
+metadata:
+  name: test-secret-cbkdg78c5m
+stringData:
+  VAR2: "200"
+type: Opaque
+`)
+}
+
+// Generate Secrets similar to TestGeneratorBasics with emitStringData enabled and
+// disabled.
+func TestSecretGeneratorEmitStringData(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+namePrefix: blah-
+secretGenerator:
+- name: bob
+  literals:
+  - fruit=apple
+  - vegetable=broccoli
+  envs:
+  - foo.env
+  env: bar.env
+  files:
+  - passphrase=phrase.dat
+  - forces.txt
+- name: json
+  literals:
+  - 'v2=[{"path": "var/druid/segment-cache"}]'
+  - >-
+    druid_segmentCache_locations=[{"path":
+    "var/druid/segment-cache",
+    "maxSize": 32000000000,
+    "freeSpacePercent": 1.0}]
+- name: bob-string-data
+  emitStringData: true
+  literals:
+  - fruit=apple
+  - vegetable=broccoli
+  envs:
+  - foo.env
+  env: bar.env
+  files:
+  - passphrase=phrase.dat
+  - forces.txt
+- name: json-string-data
+  emitStringData: true
+  literals:
+  - 'v2=[{"path": "var/druid/segment-cache"}]'
+  - >-
+    druid_segmentCache_locations=[{"path":
+    "var/druid/segment-cache",
+    "maxSize": 32000000000,
+    "freeSpacePercent": 1.0}]
+`)
+	th.WriteF("foo.env", `
+MOUNTAIN=everest
+OCEAN=pacific
+`)
+	th.WriteF("bar.env", `
+BIRD=falcon
+`)
+	th.WriteF("phrase.dat", `
+Life is short.
+But the years are long.
+Not while the evil days come not.
+`)
+	th.WriteF("forces.txt", `
+gravitational
+electromagnetic
+strong nuclear
+weak nuclear
+`)
+	opts := th.MakeDefaultOptions()
+	m := th.Run(".", opts)
+	th.AssertActualEqualsExpected(
+		m, `
+apiVersion: v1
+data:
+  BIRD: ZmFsY29u
+  MOUNTAIN: ZXZlcmVzdA==
+  OCEAN: cGFjaWZpYw==
+  forces.txt: |
+    CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
+    VjbGVhcgo=
+  fruit: YXBwbGU=
+  passphrase: |
+    CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=
+  vegetable: YnJvY2NvbGk=
+kind: Secret
+metadata:
+  name: blah-bob-58g62h555c
+type: Opaque
+---
+apiVersion: v1
+data:
+  druid_segmentCache_locations: |
+    W3sicGF0aCI6ICJ2YXIvZHJ1aWQvc2VnbWVudC1jYWNoZSIsICJtYXhTaXplIjogMzIwMD
+    AwMDAwMDAsICJmcmVlU3BhY2VQZXJjZW50IjogMS4wfV0=
+  v2: W3sicGF0aCI6ICJ2YXIvZHJ1aWQvc2VnbWVudC1jYWNoZSJ9XQ==
+kind: Secret
+metadata:
+  name: blah-json-5cdg9f2644
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: blah-bob-string-data-5g7kgmf529
+stringData:
+  BIRD: falcon
+  MOUNTAIN: everest
+  OCEAN: pacific
+  forces.txt: |2
+
+    gravitational
+    electromagnetic
+    strong nuclear
+    weak nuclear
+  fruit: apple
+  passphrase: |2
+
+    Life is short.
+    But the years are long.
+    Not while the evil days come not.
+  vegetable: broccoli
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: blah-json-string-data-g7ktb2m7bm
+stringData:
+  druid_segmentCache_locations: '[{"path": "var/druid/segment-cache", "maxSize": 32000000000,
+    "freeSpacePercent": 1.0}]'
+  v2: '[{"path": "var/druid/segment-cache"}]'
+type: Opaque
+`)
+}
+
 // TODO: This should be an error instead. However, we can't strict unmarshal until we have a yaml
 // lib that support case-insensitive keys and anchors.
 // See https://github.com/kubernetes-sigs/kustomize/issues/5061
@@ -285,6 +456,92 @@ data:
 kind: Secret
 metadata:
   name: p1-com1-4k9fgt2gct
+type: Opaque
+`)
+}
+
+func TestSecretGeneratorOverlaysBinaryDataEmitStringDataFallback(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("base/data.bin", string(manyHunter2s(30)))
+	th.WriteK("base", `
+namePrefix: p1-
+secretGenerator:
+- name: com1
+  emitStringData: true
+  behavior: create
+  files:
+  - data.bin
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+secretGenerator:
+- name: com1
+  behavior: merge
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  data.bin: |
+    /2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bn
+    RlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/
+    aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudG
+    VyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9o
+    dW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy
+kind: Secret
+metadata:
+  name: p1-com1-4k9fgt2gct
+type: Opaque
+`)
+}
+
+func TestSecretGeneratorMixedEmitStringDataFallback(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("base/data.bin", string(manyHunter2s(30)))
+	th.WriteF("base/forces.txt", `
+gravitational
+electromagnetic
+strong nuclear
+weak nuclear
+`)
+	th.WriteK("base", `
+namePrefix: p1-
+secretGenerator:
+- name: com1
+  emitStringData: true
+  behavior: create
+  files:
+  - data.bin
+  - forces.txt
+  literals:
+  - fruit=Mango
+  - year=2025
+  - crisis=true
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  data.bin: |
+    /2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bn
+    RlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/
+    aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudG
+    VyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy/2h1bnRlcjL/aHVudGVyMv9o
+    dW50ZXIy/2h1bnRlcjL/aHVudGVyMv9odW50ZXIy
+kind: Secret
+metadata:
+  name: p1-com1-8k8d8b8g5b
+stringData:
+  crisis: "true"
+  forces.txt: |2
+
+    gravitational
+    electromagnetic
+    strong nuclear
+    weak nuclear
+  fruit: Mango
+  year: "2025"
 type: Opaque
 `)
 }
