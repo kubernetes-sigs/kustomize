@@ -236,18 +236,18 @@ type: Opaque
 `)
 }
 
-var binaryHunter2 = []byte{
-	0xff, // non-utf8
-	0x68, // h
-	0x75, // u
-	0x6e, // n
-	0x74, // t
-	0x65, // e
-	0x72, // r
-	0x32, // 2
-}
-
 func manyHunter2s(count int) (result []byte) {
+	binaryHunter2 := []byte{
+		0xff, // non-utf8
+		0x68, // h
+		0x75, // u
+		0x6e, // n
+		0x74, // t
+		0x65, // e
+		0x72, // r
+		0x32, // 2
+	}
+
 	for i := 0; i < count; i++ {
 		result = append(result, binaryHunter2...)
 	}
@@ -354,100 +354,6 @@ data:
 kind: Secret
 metadata:
   name: p2-com2-b4g8g6529g
-type: Opaque
-`)
-}
-
-func secretGeneratorMergeNamePrefix(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("base", `
-secretGenerator:
-- name: cm
-  behavior: create
-  literals:
-  - foo=bar
-`)
-	th.WriteK("o1", `
-resources:
-- ../base
-namePrefix: o1-
-`)
-	th.WriteK("o2", `
-resources:
-- ../base
-nameSuffix: -o2
-`)
-	th.WriteK(".", `
-resources:
-- o1
-- o2
-secretGenerator:
-- name: o1-cm
-  behavior: merge
-  literals:
-  - big=bang
-- name: cm-o2
-  behavior: merge
-  literals:
-  - big=crunch
-`)
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  big: bang
-  foo: bar
-kind: Secret
-metadata:
-  name: o1-cm-ft9mmdc8c6
-type: Opaque
----
-apiVersion: v1
-data:
-  big: crunch
-  foo: bar
-kind: Secret
-metadata:
-  name: cm-o2-5k95kd76ft
-type: Opaque
-`)
-}
-
-func secretGeneratorLiteralNewline(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
-generators:
-- secrets.yaml
-`)
-	th.WriteF("secrets.yaml", `
-apiVersion: builtin
-kind: SecretGenerator
-metadata:
-  name: testing
-type: Opaque
-literals:
-  - |
-    initial.txt=greetings
-    everyone
-  - |
-    final.txt=different
-    behavior
----
-`)
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(
-		m, `
-apiVersion: v1
-data:
-  final.txt: |
-    different
-    behavior
-  initial.txt: |
-    greetings
-    everyone
-kind: Secret
-metadata:
-  name: testing-tt4769fb52
 type: Opaque
 `)
 }
