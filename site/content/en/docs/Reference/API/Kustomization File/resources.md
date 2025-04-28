@@ -20,7 +20,7 @@ resources:
 - ../../commonbase
 - github.com/kubernetes-sigs/kustomize/examples/multibases?ref=v1.0.6
 - deployment.yaml
-- github.com/kubernets-sigs/kustomize/examples/helloWorld?ref=test-branch
+- github.com/kubernetes-sigs/kustomize/examples/helloWorld?ref=test-branch
 ```
 
 Resources will be read and processed in depth-first order.
