@@ -615,7 +615,6 @@ metadata:
 `)
 }
 
-
 func TestReplacementTransformerWithSuffixTransformerAndRejectUsingRegex(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t)
 	defer th.Reset()

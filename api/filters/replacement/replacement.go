@@ -111,7 +111,7 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 		}
 		tsr, err := types.NewTargetSelectorRegex(selector)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error creating target selector: %w", err)
 		}
 		for _, possibleTarget := range nodes {
 			ids, err := utils.MakeResIds(possibleTarget)
@@ -128,9 +128,13 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 				continue
 			}
 
+			if tsr.RejectsAny(ids) {
+				continue
+			}
+
 			// filter targets by matching resource IDs
 			for _, id := range ids {
-				if tsr.Selects(id) && !tsr.RejectsAny(ids) {
+				if tsr.Selects(id) {
 					err := copyValueToTarget(possibleTarget, value, selector)
 					if err != nil {
 						return nil, err

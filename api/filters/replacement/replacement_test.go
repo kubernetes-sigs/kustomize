@@ -3609,7 +3609,7 @@ metadata:
     fieldPath: data.HOST
   targets:
   - select:
-      # shoudl match deploy1
+      # should match deploy1
       name: .*depl.*
       labelSelector:
         target=selectme
@@ -3791,7 +3791,7 @@ metadata:
     fieldPath: data.HOST
   targets:
   - select:
-      # shoudl match deploy1 and deploy2
+      # should match deploy1 and deploy2
       name: .*depl.*
       group: g[13]
     fieldPaths:
