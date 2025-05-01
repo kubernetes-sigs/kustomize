@@ -97,6 +97,9 @@ type HelmChart struct {
 	// SkipTests skips tests from templated output.
 	SkipTests bool `json:"skipTests,omitempty" yaml:"skipTests,omitempty"`
 
+	// SkipSchemaValidation skips schema validation for chart.
+	SkipSchemaValidation bool `json:"skipSchemaValidation,omitempty" yaml:"skipSchemaValidation,omitempty"`
+
 	// debug enables debug output from the Helm chart inflator generator.
 	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
 }
@@ -187,6 +190,9 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	}
 	if h.SkipTests {
 		args = append(args, "--skip-tests")
+	}
+	if h.SkipSchemaValidation {
+		args = append(args, "--skip-schema-validation")
 	}
 	if h.SkipHooks {
 		args = append(args, "--no-hooks")
