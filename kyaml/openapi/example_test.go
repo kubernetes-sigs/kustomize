@@ -28,12 +28,12 @@ func Example_arrayMerge() {
 	f := s.Lookup("spec", "template", "spec", "containers")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
-	fmt.Println(f.PatchStrategyAndKey()) // merge patch strategy on name
+	fmt.Println(f.PatchStrategyAndKeyList()) // merge patch strategy on name
 
 	// Output:
 	// List of containers belonging to the pod. Containers cannot currently b...
 	// [array]
-	// merge name
+	// merge [name]
 }
 
 func Example_arrayReplace() {
@@ -42,11 +42,12 @@ func Example_arrayReplace() {
 	f := s.Lookup("spec", "template", "spec", "containers", openapi.Elements, "args")
 	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
-	fmt.Println(f.PatchStrategyAndKey()) // no patch strategy or merge key
+	fmt.Println(f.PatchStrategyAndKeyList()) // no patch strategy or merge keys; empty string + empty list
 
 	// Output:
 	// Arguments to the entrypoint. The docker image's CMD is used if this is...
 	// [array]
+        //  []
 }
 
 func Example_arrayElement() {

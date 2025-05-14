@@ -742,7 +742,7 @@ spec:
 	// Test Case
 	//
 	{
-		description: `no infer merge keys merge using explicit schema as line comment'`,
+		description: `no infer merge keys merge using explicit schema with builtin extension as line comment'`,
 		origin: `
 apiVersion: custom
 kind: Deployment
@@ -779,6 +779,54 @@ spec:
   template:
     spec:
       containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-patch-merge-key":"name","x-kubernetes-patch-strategy": "merge"}
+      - name: foo # hell ow
+        image: foo:bar
+        command: ['run2.sh']
+`,
+		infer: false,
+	},
+
+	//
+	// Test Case
+	//
+	{
+		description: `no infer merge keys merge using explicit schema with crd extension as line comment'`,
+		origin: `
+apiVersion: custom
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+`,
+		update: `
+apiVersion: custom
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+        command: ['run2.sh']
+`,
+		local: `
+apiVersion: custom
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-list-map-keys":["name"],"x-kubernetes-list-type": "map"}
+      - name: foo # hell ow
+        image: foo:bar
+`,
+		expected: `
+apiVersion: custom
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-list-map-keys":["name"],"x-kubernetes-list-type": "map"}
       - name: foo # hell ow
         image: foo:bar
         command: ['run2.sh']
