@@ -560,7 +560,7 @@ spec:
 	//
 	// Test Case
 	//
-	{description: `no infer merge keys merge using explicit schema as line comment'`,
+	{description: `no infer merge keys merge using explicit schema with builtin extension as line comment'`,
 		source: `
 apiVersion: custom
 kind: Deployment
@@ -588,6 +588,37 @@ containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"t
 			ListIncreaseDirection: yaml.MergeOptionsListAppend,
 		},
 	},
+	//
+	// Test Case
+	//
+	{description: `no infer merge keys merge using explicit schema with crd extension as line comment'`,
+		source: `
+apiVersion: custom
+kind: Deployment
+containers:
+- name: foo
+  command: ['run2.sh']
+`,
+		dest: `
+apiVersion: custom
+kind: Deployment
+containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-list-map-keys":["name"],"x-kubernetes-list-type": "map"}
+- name: foo # hell ow
+  image: foo:bar
+`,
+		expected: `
+apiVersion: custom
+kind: Deployment
+containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"type":"array","x-kubernetes-list-map-keys":["name"],"x-kubernetes-list-type": "map"}
+- name: foo
+  image: foo:bar
+  command: ['run2.sh']
+`,
+		infer: false,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
 
 	{description: `merge_primitive_finalizers`,
 		source: `
@@ -596,7 +627,7 @@ kind: Deployment
 metadata:
   finalizers:
   - a
-  - b 
+  - b
 `,
 		dest: `
 apiVersion: apps/v1

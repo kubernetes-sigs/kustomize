@@ -25,7 +25,7 @@ func makeSchema() *spec.Schema {
 	}
 }
 
-func TestIsAssociativeSimpleStrategy(t *testing.T) {
+func TestIsAssociativeBuiltinSimpleStrategy(t *testing.T) {
 	s := makeSchema()
 	s.Extensions["x-kubernetes-patch-merge-key"] = "name"
 	s.Extensions["x-kubernetes-patch-strategy"] = "merge"
@@ -36,10 +36,24 @@ func TestIsAssociativeSimpleStrategy(t *testing.T) {
 			[]*yaml.RNode{}, false))
 }
 
-func TestIsAssociativeMultipleStrategy(t *testing.T) {
+func TestIsAssociativeBuiltinMultipleStrategy(t *testing.T) {
 	s := makeSchema()
 	s.Extensions["x-kubernetes-patch-merge-key"] = "name"
 	s.Extensions["x-kubernetes-patch-strategy"] = "retainKeys,merge"
+	assert.True(
+		t,
+		IsAssociative(
+			&openapi.ResourceSchema{Schema: s},
+			[]*yaml.RNode{}, false))
+}
+
+func TestIsAssociativeCrdList(t *testing.T) {
+	s := makeSchema()
+        // The value should be []interface{}, not []string
+        keys := make([]interface{}, 1)
+        keys[0] = "name"
+	s.Extensions["x-kubernetes-list-map-keys"] = keys
+	s.Extensions["x-kubernetes-list-type"] = "map"
 	assert.True(
 		t,
 		IsAssociative(

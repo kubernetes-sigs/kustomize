@@ -37,13 +37,13 @@ spec:
 EOF
 ```
 
-This resource has an image field. Let's change its value from server 
-to nginx with a patch. 
+This resource has an image field. Let's change its value from server
+to nginx with a patch.
 
 Kustomize gets its merge key information from the OpenAPI data
 provided by the kubernetes API server. It doesn't have information
-about custom resources, so we will have to provide our own 
-schema file. 
+about custom resources, so we will have to provide our own
+schema file.
 
 Note: CRDs support declarative validation using an OpenAPI v3 schema.
 See https://book.kubebuilder.io/reference/generating-crd.html#validation.
@@ -51,10 +51,10 @@ See https://book.kubebuilder.io/reference/generating-crd.html#validation.
 You can get an OpenAPI document like this by fetching the OpenAPI
 document from your locally favored cluster with the command
 `kustomize openapi fetch`. Kustomize will use the OpenAPI extensions
-`x-kubernetes-patch-merge-key` and `x-kubernetes-patch-strategy` to
-perform a strategic merge. `x-kubernetes-patch-strategy` should be set
-to "merge", and you can set your merge key to whatever you like. Below,
-our custom resource inherits merge keys from `PodTemplateSpec`. 
+`x-kubernetes-list-map-keys` and `x-kubernetes-list-type` to
+perform a strategic merge. `x-kubernetes-list-type` should be set
+to "map", and you can set your merge keys to whatever you like. Below,
+our custom resource inherits merge keys from `PodTemplateSpec`.
 
 <!-- @addCustomSchema @testAgainstLatestRelease -->
 ```
@@ -124,6 +124,10 @@ cat <<EOF >>$DEMO_HOME/mycr_schema.json
             "\$ref": "#/definitions/io.k8s.api.core.v1.Container"
           },
           "type": "array",
+          "x-kubernetes-list-map-keys": [
+              "name"
+          ],
+          "x-kubernetes-list-type": "map",
           "x-kubernetes-patch-merge-key": "name",
           "x-kubernetes-patch-strategy": "merge"
         }
