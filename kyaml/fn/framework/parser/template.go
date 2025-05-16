@@ -42,12 +42,9 @@ func TemplateStrings(data ...string) framework.TemplateParser {
 // TemplateFuncStrings is similar to TemplateStrings but allows you to specify custom template functions.
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
-//    func ToUpper(s string) string {
-//      return strings.ToUpper(s)
-//    }
 //    funcMap := template.FuncMap{
-//      "toUpper": ToUpper,
-//    } 
+//      "toUpper": strings.ToUpper,
+//    }
 //	 processor := framework.TemplateProcessor{
 //		ResourceTemplates: []framework.ResourceTemplate{{
 //			Templates: parser.TemplateFuncStrings(funcMap, `apiVersion: apps/v1
@@ -93,12 +90,9 @@ func TemplateFiles(paths ...string) TemplateParser {
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
 
-//   func ToUpper(s string) string {
-//     return strings.ToUpper(s)
-//   }
 //   funcMap := template.FuncMap{
-//     "toUpper": ToUpper,
-//   } 
+//     "toUpper": strings.ToUpper,
+//   }
 // 	 processor := framework.TemplateProcessor{
 //		ResourceTemplates: []framework.ResourceTemplate{{
 //			Templates: parser.TemplateFuncFiles(funcMap, "path/to/templates", "path/to/special.template.yaml")
