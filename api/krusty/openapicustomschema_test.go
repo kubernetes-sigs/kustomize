@@ -643,3 +643,58 @@ spec:
 		assert.Equal(t, kubernetesapi.DefaultOpenAPI, openapi.GetSchemaVersion())
 	})
 }
+
+// Tett for issue #5878
+func TestCustomOpenApiFieldWithoutMergePatchExtension(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		writeTestSchema(th, "./")
+                th.WriteF("yetanothercrd_base.yaml", `
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  custom:
+    objects:
+    - name: foo
+      value: foo
+    - name: bar
+      value: bar
+`)
+                th.WriteF("yetanothercrd_patch.yaml", `
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  custom:
+    objects:
+    - name: bar
+      value: patched
+`)
+                th.WriteK(".", `
+resources:
+- yetanothercrd_base.yaml
+openapi:
+  path: mycrd_schema.json
+patches:
+- path: yetanothercrd_patch.yaml
+`)
+                m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  custom:
+    objects:
+    - name: foo
+      value: foo
+    - name: bar
+      value: patched
+`)
+        })
+}
