@@ -644,7 +644,7 @@ spec:
 	})
 }
 
-// Tett for issue #5878
+// Test for issue #5878
 func TestCustomOpenApiFieldWithoutMergePatchExtension(t *testing.T) {
 	runOpenApiTest(t, func(t *testing.T) {
 		t.Helper()
