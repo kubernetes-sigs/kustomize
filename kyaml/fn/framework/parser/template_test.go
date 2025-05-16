@@ -24,6 +24,12 @@ var cm1String string
 //go:embed testdata/cm2.template.yaml
 var cm2String string
 
+//go:embed func_testdata/cm3.template.yaml
+var cm3String string
+
+//go:embed func_testdata/cm4.template.yaml
+var cm4String string
+
 var templateFunc = template.FuncMap{
 	"toUpper": strings.ToUpper,
 }
@@ -238,6 +244,7 @@ func TestTemplateStrings(t *testing.T) {
 		name     string
 		data     []string
 		expected []string
+		wantErr  string
 	}{
 		{
 			name:     "parses templates from strings",
@@ -249,10 +256,64 @@ func TestTemplateStrings(t *testing.T) {
 			data:     []string{cm1String, cm2String},
 			expected: []string{cm1Success, cm2Success},
 		},
+		{
+			name:    "rejects multiple inputs with or without templateFunc",
+			data:    []string{cm1String, cm3String},
+			wantErr: "template: inline1:11: function \"toUpper\" not defined",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := parser.TemplateStrings(tt.data...)
+			templates, err := p.Parse()
+			if tt.wantErr != "" {
+				require.EqualError(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+
+			result := []string{}
+			for _, template := range templates {
+				w := bytes.NewBuffer([]byte{})
+				err := template.Execute(w, templateData)
+				require.NoError(t, err)
+				result = append(result, strings.TrimSpace(w.String()))
+			}
+			sort.Strings(tt.expected)
+			sort.Strings(result)
+			assert.Equal(t, len(result), len(tt.expected))
+			for i := range tt.expected {
+				assert.YAMLEq(t, tt.expected[i], result[i])
+			}
+		})
+	}
+}
+
+func TestTemplateFuncStrings(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     []string
+		expected []string
+	}{
+		{
+			name:     "parses templates from strings",
+			data:     []string{cm3String},
+			expected: []string{cm3Success},
+		},
+		{
+			name:     "accepts multiple inputs",
+			data:     []string{cm3String, cm4String},
+			expected: []string{cm3Success, cm4Success},
+		},
+		{
+			name:     "accepts multiple inputs with or without templateFunc",
+			data:     []string{cm1String, cm4String},
+			expected: []string{cm1Success, cm4Success},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := parser.TemplateFuncStrings(templateFunc, tt.data...)
 			templates, err := p.Parse()
 			require.NoError(t, err)
 
