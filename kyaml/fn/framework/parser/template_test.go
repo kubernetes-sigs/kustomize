@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,6 +23,10 @@ var cm1String string
 
 //go:embed testdata/cm2.template.yaml
 var cm2String string
+
+var templateFunc = template.FuncMap{
+	"toUpper": strings.ToUpper,
+}
 
 var templateData = struct {
 	Name string `yaml:"name"`
@@ -45,6 +50,28 @@ metadata:
   name: env
   labels:
     app: tester
+data:
+  env: production
+`)
+
+var cm3Success = strings.TrimSpace(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appconfig
+  labels:
+    app: tester
+data:
+  app: TESTER
+`)
+
+var cm4Success = strings.TrimSpace(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env
+  labels:
+    app: TESTER
 data:
   env: production
 `)
@@ -83,10 +110,85 @@ func TestTemplateFiles(t *testing.T) {
 			paths:   []string{"testdata/ignore.yaml"},
 			wantErr: "file testdata/ignore.yaml does not have any of permitted extensions [.template.yaml]",
 		},
+		{
+			name:    "reject templateFunc files",
+			paths:   []string{"func_testdata/cm3.template.yaml"},
+			wantErr: "template: cm3.template.yaml:11: function \"toUpper\" not defined",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := parser.TemplateFiles(tt.paths...)
+			if tt.fs != nil {
+				p = p.FromFS(tt.fs)
+			}
+			templates, err := p.Parse()
+			if tt.wantErr != "" {
+				require.EqualError(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+
+			result := []string{}
+			for _, template := range templates {
+				w := bytes.NewBuffer([]byte{})
+				err := template.Execute(w, templateData)
+				require.NoError(t, err)
+				result = append(result, strings.TrimSpace(w.String()))
+			}
+			sort.Strings(tt.expected)
+			sort.Strings(result)
+			assert.Equal(t, len(result), len(tt.expected))
+			for i := range tt.expected {
+				assert.YAMLEq(t, tt.expected[i], result[i])
+			}
+		})
+	}
+}
+
+func TestTemplateFuncFiles(t *testing.T) {
+	tests := []struct {
+		name     string
+		paths    []string
+		fs       iofs.FS
+		expected []string
+		wantErr  string
+	}{
+		{
+			name:     "parses templates from file",
+			paths:    []string{"func_testdata/cm3.template.yaml"},
+			expected: []string{cm3Success},
+		},
+		{
+			name:     "accepts multiple inputs",
+			paths:    []string{"func_testdata/cm3.template.yaml", "func_testdata/cm4.template.yaml"},
+			expected: []string{cm3Success, cm4Success},
+		},
+		{
+			name:     "parse templates with and without templateFunc",
+			paths:    []string{"testdata/cm1.template.yaml", "func_testdata/cm3.template.yaml"},
+			expected: []string{cm1Success, cm3Success},
+		},
+		{
+			name:     "parses templates from directory",
+			paths:    []string{"func_testdata"},
+			expected: []string{cm3Success, cm4Success},
+		},
+		{
+			name:     "can be configured with an alternative FS",
+			fs:       os.DirFS("func_testdata"), // changes the root of the input paths
+			paths:    []string{"cm3.template.yaml"},
+			expected: []string{cm3Success},
+		},
+		{
+			name:    "rejects non-.template.yaml files",
+			paths:   []string{"func_testdata/ignore.yaml"},
+			wantErr: "file func_testdata/ignore.yaml does not have any of permitted extensions [.template.yaml]",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := parser.TemplateFuncFiles(templateFunc, tt.paths...)
 			if tt.fs != nil {
 				p = p.FromFS(tt.fs)
 			}
