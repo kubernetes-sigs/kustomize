@@ -25,7 +25,7 @@ func makeSchema() *spec.Schema {
 	}
 }
 
-func TestIsAssociativeBuiltinSimpleStrategy(t *testing.T) {
+func TestIsAssociativeSimpleStrategy(t *testing.T) {
 	s := makeSchema()
 	s.Extensions["x-kubernetes-patch-merge-key"] = "name"
 	s.Extensions["x-kubernetes-patch-strategy"] = "merge"
@@ -36,7 +36,7 @@ func TestIsAssociativeBuiltinSimpleStrategy(t *testing.T) {
 			[]*yaml.RNode{}, false))
 }
 
-func TestIsAssociativeBuiltinMultipleStrategy(t *testing.T) {
+func TestIsAssociativeMultipleStrategy(t *testing.T) {
 	s := makeSchema()
 	s.Extensions["x-kubernetes-patch-merge-key"] = "name"
 	s.Extensions["x-kubernetes-patch-strategy"] = "retainKeys,merge"
