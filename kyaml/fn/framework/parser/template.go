@@ -22,19 +22,19 @@ const (
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
 //
-//	 processor := framework.TemplateProcessor{
+//	processor := framework.TemplateProcessor{
 //		ResourceTemplates: []framework.ResourceTemplate{{
 //			Templates: parser.TemplateStrings(`
 //				apiVersion: apps/v1
 //				kind: Deployment
 //				metadata:
-//				 name: foo
-//				 namespace: default
-//				 annotations:
-//				   {{ .Key }}: {{ .Value }}
+//					name: foo
+//					namespace: default
+//					annotations:
+//						{{ .Key }}: {{ .Value }}
 //				`)
 //		}},
-//	 }
+//	}
 func TemplateStrings(data ...string) framework.TemplateParser {
 	return TemplateFuncStrings(nil, data...)
 }
@@ -42,33 +42,34 @@ func TemplateStrings(data ...string) framework.TemplateParser {
 // TemplateFuncStrings is similar to TemplateStrings but allows you to specify custom template functions.
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
-//    funcMap := template.FuncMap{
-//      "toUpper": strings.ToUpper,
-//    }
-//	 processor := framework.TemplateProcessor{
-//		ResourceTemplates: []framework.ResourceTemplate{{
-//			Templates: parser.TemplateFuncStrings(funcMap, `apiVersion: apps/v1
-//				kind: Deployment
-//				metadata:
-//				 name: foo
-//				 namespace: default
-//				 annotations:
-//				   {{ .Key }}: {{ .Value | toUpper }}
-//				`)
-//		}},
-//	 }
+//
+//	funcMap := template.FuncMap{
+//		"toUpper": strings.ToUpper,
+//	}
+//	processor := framework.TemplateProcessor{
+//			ResourceTemplates: []framework.ResourceTemplate{{
+//				Templates: parser.TemplateFuncStrings(funcMap, `apiVersion: apps/v1
+//						kind: Deployment
+//						metadata:
+//							name: foo
+//							namespace: default
+//							annotations:
+//								{{ .Key }}: {{ .Value | toUpper }}
+//						`)
+//				}},
+//	}
 func TemplateFuncStrings(funcs template.FuncMap, data ...string) framework.TemplateParser {
-    return framework.TemplateParserFunc(func() ([]*template.Template, error) {
-        var templates []*template.Template
-        for i := range data {
-            t, err := template.New(fmt.Sprintf("inline%d", i)).Funcs(funcs).Parse(data[i])
-            if err != nil {
-                return nil, err
-            }
-            templates = append(templates, t)
-        }
-        return templates, nil
-    })
+	return framework.TemplateParserFunc(func() ([]*template.Template, error) {
+		var templates []*template.Template
+		for i := range data {
+			t, err := template.New(fmt.Sprintf("inline%d", i)).Funcs(funcs).Parse(data[i])
+			if err != nil {
+				return nil, err
+			}
+			templates = append(templates, t)
+		}
+		return templates, nil
+	})
 }
 
 // TemplateFiles returns a TemplateParser that will parse the templates from the given files or directories.
@@ -77,11 +78,11 @@ func TemplateFuncStrings(funcs template.FuncMap, data ...string) framework.Templ
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
 //
-// 	 processor := framework.TemplateProcessor{
-//		ResourceTemplates: []framework.ResourceTemplate{{
+//	processor := framework.TemplateProcessor{
+//			ResourceTemplates: []framework.ResourceTemplate{{
 //			Templates: parser.TemplateFiles("path/to/templates", "path/to/special.template.yaml")
 //		}},
-//   }
+//	}
 func TemplateFiles(paths ...string) TemplateParser {
 	return TemplateFuncFiles(nil, paths...)
 }
@@ -89,15 +90,16 @@ func TemplateFiles(paths ...string) TemplateParser {
 // TemplateFuncFiles is similar to TemplateFiles but allows you to specify custom template functions.
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
-
-//   funcMap := template.FuncMap{
-//     "toUpper": strings.ToUpper,
-//   }
-// 	 processor := framework.TemplateProcessor{
+//
+//	funcMap := template.FuncMap{
+//		"toUpper": strings.ToUpper,
+//	}
+//
+//	processor := framework.TemplateProcessor{
 //		ResourceTemplates: []framework.ResourceTemplate{{
 //			Templates: parser.TemplateFuncFiles(funcMap, "path/to/templates", "path/to/special.template.yaml")
 //		}},
-//   }
+//	}
 func TemplateFuncFiles(funcs template.FuncMap, paths ...string) TemplateParser {
 	return TemplateParser{parser{paths: paths, extensions: []string{TemplateExtension}}, funcs}
 }
