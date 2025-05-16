@@ -86,12 +86,32 @@ func TemplateFuncStrings(funcs template.FuncMap, data ...string) framework.Templ
 //		}},
 //   }
 func TemplateFiles(paths ...string) TemplateParser {
-	return TemplateParser{parser{paths: paths, extensions: []string{TemplateExtension}}}
+	return TemplateFuncFiles(nil, paths...)
+}
+
+// TemplateFuncFiles is similar to TemplateFiles but allows you to specify custom template functions.
+//
+// This is a helper for use with framework.TemplateProcessor's template subfields. Example:
+
+//   func ToUpper(s string) string {
+//     return strings.ToUpper(s)
+//   }
+//   funcMap := template.FuncMap{
+//     "toUpper": ToUpper,
+//   } 
+// 	 processor := framework.TemplateProcessor{
+//		ResourceTemplates: []framework.ResourceTemplate{{
+//			Templates: parser.TemplateFuncFiles(funcMap, "path/to/templates", "path/to/special.template.yaml")
+//		}},
+//   }
+func TemplateFuncFiles(funcs template.FuncMap, paths ...string) TemplateParser {
+	return TemplateParser{parser{paths: paths, extensions: []string{TemplateExtension}}, funcs}
 }
 
 // TemplateParser is a framework.TemplateParser that can parse files or directories containing Go templated YAML.
 type TemplateParser struct {
 	parser
+	funcs template.FuncMap
 }
 
 // Parse implements framework.TemplateParser
@@ -102,7 +122,7 @@ func (l TemplateParser) Parse() ([]*template.Template, error) {
 
 	var templates []*template.Template
 	err := l.parse(func(content []byte, file string) error {
-		t, err := template.New(filepath.Base(file)).Parse(string(content))
+		t, err := template.New(filepath.Base(file)).Funcs(l.funcs).Parse(string(content))
 		if err == nil {
 			templates = append(templates, t)
 		}
