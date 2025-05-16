@@ -36,17 +36,42 @@ const (
 //		}},
 //	 }
 func TemplateStrings(data ...string) framework.TemplateParser {
-	return framework.TemplateParserFunc(func() ([]*template.Template, error) {
-		var templates []*template.Template
-		for i := range data {
-			t, err := template.New(fmt.Sprintf("inline%d", i)).Parse(data[i])
-			if err != nil {
-				return nil, err
-			}
-			templates = append(templates, t)
-		}
-		return templates, nil
-	})
+	return TemplateFuncStrings(nil, data...)
+}
+
+// TemplateFuncStrings is similar to TemplateStrings but allows you to specify custom template functions.
+//
+// This is a helper for use with framework.TemplateProcessor's template subfields. Example:
+//    func ToUpper(s string) string {
+//      return strings.ToUpper(s)
+//    }
+//    funcMap := template.FuncMap{
+//      "toUpper": ToUpper,
+//    } 
+//	 processor := framework.TemplateProcessor{
+//		ResourceTemplates: []framework.ResourceTemplate{{
+//			Templates: parser.TemplateFuncStrings(funcMap, `apiVersion: apps/v1
+//				kind: Deployment
+//				metadata:
+//				 name: foo
+//				 namespace: default
+//				 annotations:
+//				   {{ .Key }}: {{ .Value | toUpper }}
+//				`)
+//		}},
+//	 }
+func TemplateFuncStrings(funcs template.FuncMap, data ...string) framework.TemplateParser {
+    return framework.TemplateParserFunc(func() ([]*template.Template, error) {
+        var templates []*template.Template
+        for i := range data {
+            t, err := template.New(fmt.Sprintf("inline%d", i)).Funcs(funcs).Parse(data[i])
+            if err != nil {
+                return nil, err
+            }
+            templates = append(templates, t)
+        }
+        return templates, nil
+    })
 }
 
 // TemplateFiles returns a TemplateParser that will parse the templates from the given files or directories.
