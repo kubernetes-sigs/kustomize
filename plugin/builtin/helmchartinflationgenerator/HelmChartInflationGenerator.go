@@ -343,6 +343,9 @@ func (p *plugin) pullCommand() []string {
 	if p.Version != "" {
 		args = append(args, "--version", p.Version)
 	}
+	if p.Devel {
+		args = append(args, "--devel")
+	}
 	return args
 }
 
