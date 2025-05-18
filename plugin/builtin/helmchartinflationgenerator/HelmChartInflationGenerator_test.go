@@ -849,7 +849,7 @@ releaseName: %s
 			assert.True(t, len(rm.Resources()) > 0)
 
 			var chartDir string
-			if tt.version != "" && tt.repo != "" {
+			if tt.version != "" {
 				chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
 			} else {
 				chartDir = fmt.Sprintf("charts/%s", tt.chartName)
