@@ -140,7 +140,7 @@ func BenchmarkApiVersion(b *testing.B) {
 		{Group: "bitnami.com", Version: "v1alpha1", Kind: "SealedSecret"},
 	} {
 		b.Run(fmt.Sprintf("%d", i), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for i := 0; i < b.N; i++ { //nolint:intrange
 				_ = bench.ApiVersion()
 			}
 		})

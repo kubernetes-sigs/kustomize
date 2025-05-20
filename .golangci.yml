@@ -1,91 +1,93 @@
-# Copyright 2019 The Kubernetes Authors.
-# SPDX-License-Identifier: Apache-2.0
-
+version: "2"
 run:
-  deadline: 5m
-  go: '1.22'
-
+  go: "1.22"
 linters:
-  enable-all: true
+  default: all
   disable:
     - cyclop
     - depguard
-    - exhaustivestruct
+    - err113
+    - exhaustruct
     - forbidigo
     - funlen
-    - gci
     - gocognit
     - godot
     - godox
-    - goerr113
-    - gofumpt
-    - ifshort # too many false positives
     - ireturn
+    - maintidx
     - nilnil
     - nlreturn
     - noctx
+    - nonamedreturns
     - paralleltest
     - perfsprint
-    - stylecheck
     - testifylint
+    - testpackage
     - varnamelen
     - wsl
-    - exhaustruct
-    - deadcode
-    - scopelint
-    - nonamedreturns
-    - golint
-    - maintidx
-    - nosnakecase
-    - testpackage # it's better to keep tests in the same package for now because kustomize does open box testing
-    - structcheck # abandoned by author
-    - varcheck # abandoned by author
-    - maligned # abandoned by author
-    - interfacer # archived by author
-
-linters-settings:
-  dupl:
-    threshold: 400
-  lll:
-    line-length: 170
-  gocyclo:
-    min-complexity: 30
-  revive:
+  settings:
+    dupl:
+      threshold: 400
+    gocyclo:
+      min-complexity: 30
+    gomoddirectives:
+      replace-local: true
+    gosec:
+      config:
+        G306: "0644"
+    lll:
+      line-length: 170
+    mnd:
+      ignored-functions:
+        - os.WriteFile
+        - make
+    revive:
+      rules:
+        - name: var-naming
+          arguments:
+            - - ID
+              - API
+              - JSON
+            - []
+    wrapcheck:
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+        - .Wrap(
+        - .Wrapf(
+        - .WithMessage(
+        - .WithMessagef(
+        - .WithStack(
+        - .WrapPrefixf(
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-    - name: var-naming
-      arguments:
-      - [ "ID", "API", "JSON" ] # AllowList
-      - [ ] # DenyList
-  gomnd:
-    ignored-functions:
-    - os.WriteFile
-    - make
-  gomoddirectives:
-    replace-local: true
-  gosec:
-    config:
-      G306: "0644"
-  wrapcheck:
-    ignoreSigs:
-      # defaults
-      - .Errorf(
-      - errors.New(
-      - errors.Unwrap(
-      - .Wrap(
-      - .Wrapf(
-      - .WithMessage(
-      - .WithMessagef(
-      - .WithStack(
-      # from kyaml's errors package
-      - .WrapPrefixf(
-
+      - linters:
+          - revive
+        text: don't use leading
+      - linters:
+          - staticcheck
+        text: 'SA1019: kioutil.Legacy'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  new-from-rev: c94b5d8f2 # enables us to enforce a larger set of linters for new code than pass on existing code
   max-same-issues: 0
-  exclude-rules:
-    - linters:
-        - revive
-      text: "don't use leading"
-    - linters:
-        - staticcheck
-      text: "SA1019: kioutil.Legacy"
+  new-from-rev: c94b5d8f2
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

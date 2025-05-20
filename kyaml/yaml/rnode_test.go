@@ -2326,7 +2326,7 @@ func BenchmarkGetAnnotations(b *testing.B) {
 		}
 		require.NoError(b, rn.SetAnnotations(appliedAnnotations))
 		b.Run(fmt.Sprintf("%02d", count), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for i := 0; i < b.N; i++ { //nolint:intrange
 				_ = rn.GetAnnotations()
 			}
 		})

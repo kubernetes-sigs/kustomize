@@ -55,11 +55,11 @@ func TemplateStrings(data ...string) framework.TemplateParser {
 //
 // This is a helper for use with framework.TemplateProcessor's template subfields. Example:
 //
-// 	 processor := framework.TemplateProcessor{
-//		ResourceTemplates: []framework.ResourceTemplate{{
-//			Templates: parser.TemplateFiles("path/to/templates", "path/to/special.template.yaml")
-//		}},
-//   }
+//		 processor := framework.TemplateProcessor{
+//			ResourceTemplates: []framework.ResourceTemplate{{
+//				Templates: parser.TemplateFiles("path/to/templates", "path/to/special.template.yaml")
+//			}},
+//	  }
 func TemplateFiles(paths ...string) TemplateParser {
 	return TemplateParser{parser{paths: paths, extensions: []string{TemplateExtension}}}
 }
@@ -98,6 +98,6 @@ func (l TemplateParser) FromFS(fs iofs.FS) TemplateParser {
 
 // WithExtensions allows you to replace the extension the parser accept on the input files.
 func (l TemplateParser) WithExtensions(ext ...string) TemplateParser {
-	l.parser.extensions = ext
+	l.extensions = ext
 	return l
 }

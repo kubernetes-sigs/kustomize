@@ -1039,7 +1039,7 @@ metadata:
 			// results file setup
 			if len(tt.expectedResults) > 0 && !tt.noMakeResultsFile {
 				// expect result files to be written -- create a directory for them
-				f, err := os.CreateTemp("", "test-kyaml-*.yaml")
+				f, err := os.CreateTemp(t.TempDir(), "test-kyaml-*.yaml")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
