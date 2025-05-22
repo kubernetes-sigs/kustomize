@@ -250,9 +250,9 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			return
 		}
 		var c struct {
-			Path    string           `json:"path,omitempty" yaml:"path,omitempty"`
-			Patch   string           `json:"patch,omitempty" yaml:"patch,omitempty"`
-			Target  *types.Selector  `json:"target,omitempty" yaml:"target,omitempty"`
+			Path    string           `json:"path,omitempty"    yaml:"path,omitempty"`
+			Patch   string           `json:"patch,omitempty"   yaml:"patch,omitempty"`
+			Target  *types.Selector  `json:"target,omitempty"  yaml:"target,omitempty"`
 			Options *types.PatchArgs `json:"options,omitempty" yaml:"options,omitempty"`
 		}
 		for _, pc := range kt.kustomization.Patches {
