@@ -30,8 +30,6 @@ type PatchTransformerPlugin struct {
 	Options     map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
-// noinspection GoUnusedGlobalVariable
-
 func (p *PatchTransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	if err := yaml.Unmarshal(c, p); err != nil {
 		return err
