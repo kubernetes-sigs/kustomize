@@ -16,4 +16,10 @@ type SecretArgs struct {
 	// If type is "kubernetes.io/tls", then "literals" or "files" must have exactly two
 	// keys: "tls.key" and "tls.crt"
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+
+	// StringData if true generates a v1/Secret with plain-text stringData fields
+	// instead of base64-encoded data fields. If any fields are not UTF-8, they
+	// are still base64-encoded and stored as data as a fallback behavior. This
+	// is similar to the default behavior of a ConfigMap.
+	StringData bool `json:"stringData,omitempty" yaml:"stringData,omitempty"`
 }

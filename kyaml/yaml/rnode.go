@@ -632,6 +632,19 @@ func (rn *RNode) GetBinaryDataMap() map[string]string {
 	return result
 }
 
+func (rn *RNode) GetStringDataMap() map[string]string {
+	n, err := rn.Pipe(Lookup(StringDataField))
+	if err != nil {
+		return nil
+	}
+	result := map[string]string{}
+	_ = n.VisitFields(func(node *MapNode) error {
+		result[GetValue(node.Key)] = GetValue(node.Value)
+		return nil
+	})
+	return result
+}
+
 // GetValidatedDataMap retrieves the data map and returns an error if the data
 // map contains entries which are not included in the expectedKeys set.
 func (rn *RNode) GetValidatedDataMap(expectedKeys []string) (map[string]string, error) {
@@ -684,6 +697,21 @@ func (rn *RNode) SetBinaryDataMap(m map[string]string) {
 		return
 	}
 	if err := rn.LoadMapIntoConfigMapBinaryData(m); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (rn *RNode) SetStringDataMap(m map[string]string) {
+	if rn == nil {
+		log.Fatal("cannot set stringData map on nil Rnode")
+	}
+	if err := rn.PipeE(Clear(StringDataField)); err != nil {
+		log.Fatal(err)
+	}
+	if len(m) == 0 {
+		return
+	}
+	if err := rn.LoadMapIntoSecretStringData(m); err != nil {
 		log.Fatal(err)
 	}
 }
