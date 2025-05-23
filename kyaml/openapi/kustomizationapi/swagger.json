@@ -70,6 +70,10 @@
             "$ref": "#/definitions/io.k8s.api.apps.v1.ConfigMapArgs"
           },
           "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map",
           "x-kubernetes-patch-merge-key": "name",
           "x-kubernetes-patch-strategy": "merge"
         },
@@ -78,6 +82,10 @@
             "$ref": "#/definitions/io.k8s.api.apps.v1.SecretArgs"
           },
           "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map",
           "x-kubernetes-patch-merge-key": "name",
           "x-kubernetes-patch-strategy": "merge"
         }
@@ -98,7 +106,8 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-type": "atomic"
         },
         "files": {
           "items": {
@@ -110,7 +119,8 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-type": "atomic"
         },
         "env": {
           "type": "string"

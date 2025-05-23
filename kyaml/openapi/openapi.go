@@ -536,19 +536,28 @@ func (rs *ResourceSchema) Field(field string) *ResourceSchema {
 
 // PatchStrategyAndKeyList returns the patch strategy and complete merge key list
 func (rs *ResourceSchema) PatchStrategyAndKeyList() (string, []string) {
-	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
-	if !found {
-		// empty patch strategy
-		return "", []string{}
-	}
-	mkList, found := rs.Schema.Extensions[kubernetesMergeKeyMapList]
+	// Try CRD extension first
+	lt, found := rs.Schema.Extensions[kubernetesListTypeExtensionKey]
 	if found {
+		mkList, foundKeys := rs.Schema.Extensions[kubernetesMergeKeyMapList]
+		if !foundKeys {
+			// no mergeKey -- may be "atomic" or "set" list
+			return lt.(string), []string{}
+		}
+
 		// mkList is []interface, convert to []string
 		mkListStr := make([]string, len(mkList.([]interface{})))
 		for i, v := range mkList.([]interface{}) {
 			mkListStr[i] = v.(string)
 		}
-		return ps.(string), mkListStr
+		return lt.(string), mkListStr
+	}
+
+	// Fall back to k8s builtin extension
+	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
+	if !found {
+		// empty patch strategy
+		return "", []string{}
 	}
 	mk, found := rs.Schema.Extensions[kubernetesMergeKeyExtensionKey]
 	if !found {
@@ -556,22 +565,6 @@ func (rs *ResourceSchema) PatchStrategyAndKeyList() (string, []string) {
 		return ps.(string), []string{}
 	}
 	return ps.(string), []string{mk.(string)}
-}
-
-// PatchStrategyAndKey returns the patch strategy and merge key extensions
-func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
-	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]
-	if !found {
-		// empty patch strategy
-		return "", ""
-	}
-
-	mk, found := rs.Schema.Extensions[kubernetesMergeKeyExtensionKey]
-	if !found {
-		// no mergeKey -- may be a primitive associative list (e.g. finalizers)
-		mk = ""
-	}
-	return ps.(string), mk.(string)
 }
 
 const (
@@ -598,6 +591,10 @@ const (
 	// kubernetesMergeKeyMapList is the list of merge keys when there needs to be multiple
 	// -- the extension is an array of strings
 	kubernetesMergeKeyMapList = "x-kubernetes-list-map-keys"
+
+	// kubernetesListTypeExtensionKey is the key to lookup the kubernetes list
+	// type in CRD -- the extension is a strings
+	kubernetesListTypeExtensionKey = "x-kubernetes-list-type"
 
 	// groupKey is the key to lookup the group from the GVK extension
 	groupKey = "group"

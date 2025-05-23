@@ -15,12 +15,15 @@
           "properties": {
             "template": {
               "$ref": "#/definitions/io.k8s.api.core.v1.PodTemplateSpec"
+            },
+            "custom": {
+              "$ref": "#/definitions/com.example.v1alpha1.CustomSpec"
             }
           },
           "type": "object"
         },
         "status": {
-           "properties": {
+          "properties": {
             "success": {
               "type": "boolean"
             }
@@ -89,7 +92,7 @@
           "type": "string"
         },
         "ports": {
-         "items": {
+          "items": {
             "$ref": "#/definitions/io.k8s.api.core.v1.ContainerPort"
           },
           "type": "array",
@@ -105,7 +108,7 @@
       "type": "object"
     },
     "io.k8s.api.core.v1.ContainerPort": {
-     "properties": {
+      "properties": {
         "containerPort": {
           "format": "int32",
           "type": "integer"
@@ -118,6 +121,27 @@
         }
       },
       "type": "object"
+    },
+    "com.example.v1alpha1.CustomSpec": {
+      "properties": {
+        "objects": {
+          "items": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
+        }
+      }
     }
   }
 }
