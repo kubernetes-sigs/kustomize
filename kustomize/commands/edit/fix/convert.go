@@ -299,11 +299,13 @@ func writePatchTargets(patch types.Patch, node *kyaml.RNode, fieldPaths []string
 		if options[i].String() != "" {
 			target.Options = options[i]
 		}
-		if patch.Options.AllowNameChange {
-			target.Select.ResId.Name = node.GetName()
-		}
-		if patch.Options.AllowKindChange {
-			target.Select.ResId.Kind = node.GetKind()
+		if patch.Options != nil {
+			if patch.Options.AllowNameChange {
+				target.Select.ResId.Name = node.GetName()
+			}
+			if patch.Options.AllowKindChange {
+				target.Select.ResId.Kind = node.GetKind()
+			}
 		}
 		if node.GetNamespace() != "" {
 			target.Select.ResId.Namespace = node.GetNamespace()
