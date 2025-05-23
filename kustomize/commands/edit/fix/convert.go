@@ -241,7 +241,7 @@ func constructTargets(file string, node *kyaml.RNode, fieldPaths []string,
 	}
 
 	if patch, ok := patchTarget[file]; ok {
-		if !patch.Options["allowNameChange"] || !patch.Options["allowKindChange"] {
+		if patch.Options == nil || (!patch.Options.AllowNameChange || !patch.Options.AllowKindChange) {
 			return writePatchTargets(patch, node, fieldPaths, options)
 		}
 	}
@@ -299,10 +299,10 @@ func writePatchTargets(patch types.Patch, node *kyaml.RNode, fieldPaths []string
 		if options[i].String() != "" {
 			target.Options = options[i]
 		}
-		if patch.Options["allowNameChange"] {
+		if patch.Options.AllowNameChange {
 			target.Select.ResId.Name = node.GetName()
 		}
-		if patch.Options["allowKindChange"] {
+		if patch.Options.AllowKindChange {
 			target.Select.ResId.Kind = node.GetKind()
 		}
 		if node.GetNamespace() != "" {
