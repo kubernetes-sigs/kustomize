@@ -102,6 +102,28 @@ func TestPatchEquals(t *testing.T) {
 			expect: true,
 		},
 		{
+			name: "same options",
+			patch1: Patch{
+				Path:   "foo",
+				Patch:  "bar",
+				Target: &selector,
+				Options: &PatchArgs{
+					AllowNameChange: true,
+					AllowKindChange: true,
+				},
+			},
+			patch2: Patch{
+				Path:   "foo",
+				Patch:  "bar",
+				Target: &selector,
+				Options: &PatchArgs{
+					AllowNameChange: true,
+					AllowKindChange: true,
+				},
+			},
+			expect: true,
+		},
+		{
 			name: "one nil target",
 			patch1: Patch{
 				Path:   "foo",
@@ -121,6 +143,28 @@ func TestPatchEquals(t *testing.T) {
 			},
 			patch2: Patch{
 				Path: "bar",
+			},
+			expect: false,
+		},
+		{
+			name: "different options",
+			patch1: Patch{
+				Path:   "foo",
+				Patch:  "bar",
+				Target: &selector,
+				Options: &PatchArgs{
+					AllowNameChange: false,
+					AllowKindChange: true,
+				},
+			},
+			patch2: Patch{
+				Path:   "foo",
+				Patch:  "bar",
+				Target: &selector,
+				Options: &PatchArgs{
+					AllowNameChange: true,
+					AllowKindChange: true,
+				},
 			},
 			expect: false,
 		},
