@@ -173,6 +173,7 @@ metadata:
     app: mungebot
     foo: bar
   name: bingo
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -198,6 +199,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: baseprefix-mungebot
+  namespace: patched
 spec:
   template:
     spec:
@@ -221,6 +223,7 @@ metadata:
     app: mungebot
     foo: bar
   name: bingo
+  namespace: patched
 spec:
   replicas: 1
   selector:

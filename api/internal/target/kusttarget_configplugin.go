@@ -71,12 +71,12 @@ func (kt *KustTarget) configureBuiltinTransformers(
 	result []*resmap.TransformerWithProperties, err error) {
 	for _, bpt := range []builtinhelpers.BuiltinPluginType{
 		builtinhelpers.PatchStrategicMergeTransformer,
-		builtinhelpers.PatchTransformer,
 		builtinhelpers.NamespaceTransformer,
 		builtinhelpers.PrefixTransformer,
 		builtinhelpers.SuffixTransformer,
 		builtinhelpers.LabelTransformer,
 		builtinhelpers.AnnotationsTransformer,
+		builtinhelpers.PatchTransformer,
 		builtinhelpers.PatchJson6902Transformer,
 		builtinhelpers.ReplicaCountTransformer,
 		builtinhelpers.ImageTagTransformer,

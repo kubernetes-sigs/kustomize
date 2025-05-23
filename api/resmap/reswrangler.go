@@ -30,7 +30,6 @@ type resWrangler struct {
 
 func newOne() *resWrangler {
 	result := &resWrangler{}
-	result.Clear()
 	return result
 }
 
