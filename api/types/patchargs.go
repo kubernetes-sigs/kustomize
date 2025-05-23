@@ -3,10 +3,7 @@
 
 package types
 
-// Patch represent either a Strategic Merge Patch or a JSON patch
-// and its targets.
-// The content of the patch can either be from a file
-// or from an inline string.
+// PatchArgs represent set of options on resources of a patch.
 type PatchArgs struct {
 	// AllowNameChange allows name changes to the resource.
 	AllowNameChange bool `json:"allowNameChange,omitempty" yaml:"allowNameChange,omitempty"`
