@@ -650,7 +650,7 @@ func TestCustomOpenApiFieldWithoutMergePatchExtension(t *testing.T) {
 		t.Helper()
 		th := kusttest_test.MakeHarness(t)
 		writeTestSchema(th, "./")
-                th.WriteF("yetanothercrd_base.yaml", `
+		th.WriteF("yetanothercrd_base.yaml", `
 apiVersion: example.com/v1alpha1
 kind: MyCRD
 metadata:
@@ -663,7 +663,7 @@ spec:
     - name: bar
       value: bar
 `)
-                th.WriteF("yetanothercrd_patch.yaml", `
+		th.WriteF("yetanothercrd_patch.yaml", `
 apiVersion: example.com/v1alpha1
 kind: MyCRD
 metadata:
@@ -674,7 +674,7 @@ spec:
     - name: bar
       value: patched
 `)
-                th.WriteK(".", `
+		th.WriteK(".", `
 resources:
 - yetanothercrd_base.yaml
 openapi:
@@ -682,7 +682,7 @@ openapi:
 patches:
 - path: yetanothercrd_patch.yaml
 `)
-                m := th.Run(".", th.MakeDefaultOptions())
+		m := th.Run(".", th.MakeDefaultOptions())
 		th.AssertActualEqualsExpected(m, `
 apiVersion: example.com/v1alpha1
 kind: MyCRD
@@ -696,5 +696,5 @@ spec:
     - name: bar
       value: patched
 `)
-        })
+	})
 }
