@@ -282,6 +282,8 @@ resources:
 		},
 	}
 
+	t.Setenv("LC_ALL", "C")
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if test.skip {
