@@ -161,7 +161,7 @@ func TestAddAnnotationForce(t *testing.T) {
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
 	require.Error(t, err)
-	assert.Equal(t, "annotation key already in kustomization file. Use --force to override.", err.Error())
+	assert.Equal(t, "annotation key already in kustomization file. Use --force to override", err.Error())
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddAnnotation(fSys, v.Validator)
@@ -265,7 +265,7 @@ func TestAddLabelForce(t *testing.T) {
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
 	require.Error(t, err)
-	assert.Equal(t, "label key already in kustomization file. Use --force to override.", err.Error())
+	assert.Equal(t, "label key already in kustomization file. Use --force to override", err.Error())
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddLabel(fSys, v.Validator)

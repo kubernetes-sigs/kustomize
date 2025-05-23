@@ -78,7 +78,6 @@ func ConfirmDir(fSys FileSystem, path string) (ConfirmedDir, error) {
 		return "", errors.WrapPrefixf(err, "not a valid directory")
 	}
 	if f != "" {
-		//nolint:govet
 		return "", errors.WrapPrefixf(errors.Errorf("file is not directory"), fmt.Sprintf("'%s'", path))
 	}
 	return d, nil

@@ -461,26 +461,6 @@ func (rn *RNode) getMetaStringField(fName string) string {
 	return result
 }
 
-// getMetaData returns the *yaml.Node of the metadata field.
-// Return nil if field not found (no error).
-func (rn *RNode) getMetaData() *yaml.Node {
-	if IsMissingOrNull(rn) {
-		return nil
-	}
-	content := rn.Content()
-	if rn.YNode().Kind == DocumentNode {
-		// get the content if this is the document node
-		content = content[0].Content
-	}
-	var mf *yaml.Node
-	visitMappingNodeFields(content, func(key, value *yaml.Node) {
-		if !IsYNodeNilOrEmpty(value) {
-			mf = value
-		}
-	}, MetadataField)
-	return mf
-}
-
 // SetName sets the metadata name field.
 func (rn *RNode) SetName(name string) error {
 	return rn.SetMapField(NewScalarRNode(name), MetadataField, NameField)
@@ -534,39 +514,6 @@ func (rn *RNode) SetAnnotations(m map[string]string) error {
 // provided, then the map will contain all entries.
 func (rn *RNode) GetLabels(labels ...string) map[string]string {
 	return rn.getMapFromMeta(LabelsField, labels...)
-}
-
-// getMapFromMeta returns a map, sometimes empty, from the fName
-// field in the node's metadata field.
-// If specific fields are provided, then the map is
-// restricted to only those entries with keys that match
-// one of the specific fields. If no fields are
-// provided, then the map will contain all entries.
-func (rn *RNode) getMapFromMeta(fName string, fields ...string) map[string]string {
-	meta := rn.getMetaData()
-	if meta == nil {
-		return make(map[string]string)
-	}
-
-	var result map[string]string
-
-	visitMappingNodeFields(meta.Content, func(_, fNameValue *yaml.Node) {
-		// fName is found in metadata; create the map from its content
-		expectedSize := len(fields)
-		if expectedSize == 0 {
-			expectedSize = len(fNameValue.Content) / 2 //nolint: gomnd
-		}
-		result = make(map[string]string, expectedSize)
-
-		visitMappingNodeFields(fNameValue.Content, func(key, value *yaml.Node) {
-			result[key.Value] = value.Value
-		}, fields...)
-	}, fName)
-
-	if result == nil {
-		return make(map[string]string)
-	}
-	return result
 }
 
 // SetLabels sets the metadata labels field.
@@ -1348,6 +1295,59 @@ func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
 		// Possibly this should be an error or log.
 		return yn.Value, nil
 	}
+}
+
+// getMetaData returns the *yaml.Node of the metadata field.
+// Return nil if field not found (no error).
+func (rn *RNode) getMetaData() *yaml.Node {
+	if IsMissingOrNull(rn) {
+		return nil
+	}
+	content := rn.Content()
+	if rn.YNode().Kind == DocumentNode {
+		// get the content if this is the document node
+		content = content[0].Content
+	}
+	var mf *yaml.Node
+	visitMappingNodeFields(content, func(key, value *yaml.Node) {
+		if !IsYNodeNilOrEmpty(value) {
+			mf = value
+		}
+	}, MetadataField)
+	return mf
+}
+
+// getMapFromMeta returns a map, sometimes empty, from the fName
+// field in the node's metadata field.
+// If specific fields are provided, then the map is
+// restricted to only those entries with keys that match
+// one of the specific fields. If no fields are
+// provided, then the map will contain all entries.
+func (rn *RNode) getMapFromMeta(fName string, fields ...string) map[string]string {
+	meta := rn.getMetaData()
+	if meta == nil {
+		return make(map[string]string)
+	}
+
+	var result map[string]string
+
+	visitMappingNodeFields(meta.Content, func(_, fNameValue *yaml.Node) {
+		// fName is found in metadata; create the map from its content
+		expectedSize := len(fields)
+		if expectedSize == 0 {
+			expectedSize = len(fNameValue.Content) / 2 //nolint:mnd
+		}
+		result = make(map[string]string, expectedSize)
+
+		visitMappingNodeFields(fNameValue.Content, func(key, value *yaml.Node) {
+			result[key.Value] = value.Value
+		}, fields...)
+	}, fName)
+
+	if result == nil {
+		return make(map[string]string)
+	}
+	return result
 }
 
 // convertSliceIndex traverses the items in `fields` and find

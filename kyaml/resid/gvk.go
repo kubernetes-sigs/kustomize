@@ -97,29 +97,6 @@ func (x Gvk) String() string {
 	return strings.Join([]string{k, v, g}, fieldSep)
 }
 
-// stableSortString returns a GVK representation that ensures determinism and
-// backwards-compatibility in testing, logging, ...
-func (x Gvk) stableSortString() string {
-	stableNoGroup := "~G"
-	stableNoVersion := "~V"
-	stableNoKind := "~K"
-	stableFieldSeparator := "_"
-
-	g := x.Group
-	if g == "" {
-		g = stableNoGroup
-	}
-	v := x.Version
-	if v == "" {
-		v = stableNoVersion
-	}
-	k := x.Kind
-	if k == "" {
-		k = stableNoKind
-	}
-	return strings.Join([]string{g, v, k}, stableFieldSeparator)
-}
-
 // ApiVersion returns the combination of Group and Version
 func (x Gvk) ApiVersion() string {
 	if x.Group != "" {
@@ -210,14 +187,16 @@ func (x Gvk) IsLessThan(o Gvk) bool {
 // anything in the corresponding fields, e.g.
 //
 // this item:
-//       <Group: "extensions", Version: "v1beta1", Kind: "Deployment">
+//
+//	<Group: "extensions", Version: "v1beta1", Kind: "Deployment">
 //
 // is selected by
-//       <Group: "",           Version: "",        Kind: "Deployment">
+//
+//	<Group: "",           Version: "",        Kind: "Deployment">
 //
 // but rejected by
-//       <Group: "apps",       Version: "",        Kind: "Deployment">
 //
+//	<Group: "apps",       Version: "",        Kind: "Deployment">
 func (x Gvk) IsSelected(selector *Gvk) bool {
 	if selector == nil {
 		return true
@@ -252,4 +231,27 @@ func (x Gvk) AsTypeMeta() yaml.TypeMeta {
 // with respect to the available openapi data.
 func (x Gvk) IsClusterScoped() bool {
 	return x.isClusterScoped
+}
+
+// stableSortString returns a GVK representation that ensures determinism and
+// backwards-compatibility in testing, logging, ...
+func (x Gvk) stableSortString() string {
+	stableNoGroup := "~G"
+	stableNoVersion := "~V"
+	stableNoKind := "~K"
+	stableFieldSeparator := "_"
+
+	g := x.Group
+	if g == "" {
+		g = stableNoGroup
+	}
+	v := x.Version
+	if v == "" {
+		v = stableNoVersion
+	}
+	k := x.Kind
+	if k == "" {
+		k = stableNoKind
+	}
+	return strings.Join([]string{g, v, k}, stableFieldSeparator)
 }

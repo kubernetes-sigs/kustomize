@@ -118,7 +118,7 @@ openAPI:
           name: image-name
           value: "nginx"
  `
-	f, err := os.CreateTemp("", "openapi-")
+	f, err := os.CreateTemp(t.TempDir(), "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -170,7 +170,7 @@ openAPI:
             ref: "#/definitions/io.k8s.cli.setters.image-tag"
  `
 
-	f, err := os.CreateTemp("", "openapi-")
+	f, err := os.CreateTemp(t.TempDir(), "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -205,7 +205,7 @@ func TestAddSchemaFromFile_empty(t *testing.T) {
 kind: Example
  `
 
-	f, err := os.CreateTemp("", "openapi-")
+	f, err := os.CreateTemp(t.TempDir(), "openapi-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -370,7 +370,7 @@ func TestCanSetAndResetSchemaConcurrently(t *testing.T) {
 
 		var wg sync.WaitGroup
 		require.NotPanics(t, func() {
-			for i := 0; i < 100; i++ {
+			for i := 0; i < 100; i++ { //nolint:intrange
 				wg.Add(1)
 				go set(&wg)
 			}
@@ -385,7 +385,7 @@ func TestCanSetAndResetSchemaConcurrently(t *testing.T) {
 		}
 		var wg sync.WaitGroup
 		require.NotPanics(t, func() {
-			for i := 0; i < 100; i++ {
+			for i := 0; i < 100; i++ { //nolint:intrange
 				wg.Add(1)
 				go reset(&wg)
 			}

@@ -969,7 +969,7 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	dir := setupTest(t)
 
 	// write a test filter to a separate directory
-	tmpF, err := os.CreateTemp("", "filter*.yaml")
+	tmpF, err := os.CreateTemp(t.TempDir(), "filter*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/pflag"
-	flag "github.com/spf13/pflag"
 	"sigs.k8s.io/kustomize/api/krusty"
 )
 
@@ -34,7 +33,7 @@ func validateFlagReorderOutput() error {
 	}
 }
 
-func getFlagReorderOutput(flags *flag.FlagSet) krusty.ReorderOption {
+func getFlagReorderOutput(flags *pflag.FlagSet) krusty.ReorderOption {
 	isReorderSet := flags.Changed(flagReorderOutputName)
 	if !isReorderSet {
 		return krusty.ReorderOptionUnspecified

@@ -158,7 +158,7 @@ func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) err
 
 func (o *addMetadataOptions) writeToMapEntry(m map[string]string, k, v string, kind kindOfAdd) error {
 	if _, ok := m[k]; ok && !o.force {
-		return fmt.Errorf("%s %s already in kustomization file. Use --force to override.", kind, k)
+		return fmt.Errorf("%s %s already in kustomization file. Use --force to override", kind, k)
 	}
 	m[k] = v
 	return nil

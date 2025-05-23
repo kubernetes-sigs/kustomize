@@ -719,8 +719,8 @@ func parseBuiltinSchema(version string) {
 // parse parses and indexes a single json or proto schema
 func parse(b []byte, format format) error {
 	var swagger spec.Swagger
-	switch {
-	case format == Proto:
+	switch format {
+	case Proto:
 		doc := &openapi_v2.Document{}
 		// We parse protobuf and get an openapi_v2.Document here.
 		if err := proto.Unmarshal(b, doc); err != nil {
@@ -732,7 +732,7 @@ func parse(b []byte, format format) error {
 			return errors.Wrap(err)
 		}
 
-	case format == JsonOrYaml:
+	case JsonOrYaml:
 		if len(b) > 0 && b[0] != byte('{') {
 			var err error
 			b, err = k8syaml.YAMLToJSON(b)

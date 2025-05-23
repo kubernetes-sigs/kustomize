@@ -229,7 +229,7 @@ func assertAllNonZeroExcept(t *testing.T, val *types.Kustomization, except []str
 	t.Helper()
 	fFor := reflect.ValueOf(val).Elem()
 	n := fFor.NumField()
-	for i := 0; i < n; i++ {
+	for i := range n {
 		key := fFor.Type().Field(i).Name
 		val := fFor.Field(i)
 		if val.IsZero() && !slices.Contains(except, key) {

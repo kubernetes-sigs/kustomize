@@ -20,9 +20,8 @@ type Setup struct {
 // SetupDirectories creates directories for reading test configuration from
 func SetupDirectories(t *testing.T, dirs ...string) Setup {
 	t.Helper()
-	d, err := os.MkdirTemp("", "kyaml-test")
-	require.NoError(t, err)
-	err = os.Chdir(d)
+	d := t.TempDir()
+	err := os.Chdir(d)
 	require.NoError(t, err)
 	for _, s := range dirs {
 		err = os.MkdirAll(s, 0700)

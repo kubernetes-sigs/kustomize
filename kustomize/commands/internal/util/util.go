@@ -117,11 +117,11 @@ func trimQuotes(s string) string {
 // be the same. As such, when one namespace is the empty string ('""') and the other namespace is "default", this function
 // will return true.
 func NamespaceEqual(namespace string, otherNamespace string) bool {
-	if "" == namespace {
+	if namespace == "" {
 		namespace = DefaultNamespace
 	}
 
-	if "" == otherNamespace {
+	if otherNamespace == "" {
 		otherNamespace = DefaultNamespace
 	}
 
