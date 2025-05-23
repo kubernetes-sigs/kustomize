@@ -691,10 +691,10 @@ metadata:
 spec:
   custom:
     objects:
-    - name: foo
-      value: foo
     - name: bar
       value: patched
+    - name: foo
+      value: foo
 `)
 	})
 }
