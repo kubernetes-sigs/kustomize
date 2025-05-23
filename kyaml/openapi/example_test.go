@@ -47,7 +47,7 @@ func Example_arrayReplace() {
 	// Output:
 	// Arguments to the entrypoint. The docker image's CMD is used if this is...
 	// [array]
-        //  []
+	//  []
 }
 
 func Example_arrayElement() {
