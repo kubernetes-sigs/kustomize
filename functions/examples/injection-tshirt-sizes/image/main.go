@@ -6,6 +6,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -76,7 +77,7 @@ func size(r *yaml.RNode) error {
 		memorySize = memorySizes[size]
 		cpuSize = cpuSizes[size]
 		if memorySize == "" || cpuSize == "" {
-			return fmt.Errorf("unsupported tshirt-size: " + size)
+			return errors.New("unsupported tshirt-size: " + size)
 		}
 	}
 

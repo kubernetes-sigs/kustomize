@@ -134,9 +134,7 @@ func NewCmdBuild(
 // Validate validates build command args and flags.
 func Validate(args []string) error {
 	if len(args) > 1 {
-		return fmt.Errorf(
-			"specify one path to " +
-				konfig.DefaultKustomizationFileName())
+		return fmt.Errorf("specify one path to %s", konfig.DefaultKustomizationFileName())
 	}
 	if len(args) == 0 {
 		theArgs.kustomizationPath = filesys.SelfDir

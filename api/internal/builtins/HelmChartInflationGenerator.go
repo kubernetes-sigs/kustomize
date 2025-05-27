@@ -182,7 +182,7 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
-				helm, strings.Join(args, " "), env, helm, err),
+				helm, strings.Join(args, " "), env, helm, err), "%s",
 			errorOutput,
 		)
 	}
