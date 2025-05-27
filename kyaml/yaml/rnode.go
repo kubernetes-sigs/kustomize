@@ -80,7 +80,7 @@ func WriteFile(node *RNode, path string) error {
 	if err != nil {
 		return err
 	}
-	return errors.WrapPrefixf(os.WriteFile(path, []byte(out), 0600), "writing RNode to file")
+	return errors.WrapPrefixf(os.WriteFile(path, []byte(out), 0600), "writing RNode to file") //nolint:mnd
 }
 
 // UpdateFile reads the file at path, applies the filter to it, and write the result back.
@@ -554,7 +554,7 @@ func (rn *RNode) getMapFromMeta(fName string, fields ...string) map[string]strin
 		// fName is found in metadata; create the map from its content
 		expectedSize := len(fields)
 		if expectedSize == 0 {
-			expectedSize = len(fNameValue.Content) / 2 //nolint: gomnd
+			expectedSize = len(fNameValue.Content) / 2 //nolint: mnd
 		}
 		result = make(map[string]string, expectedSize)
 

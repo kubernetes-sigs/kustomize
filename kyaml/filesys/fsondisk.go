@@ -132,7 +132,7 @@ func (fsOnDisk) ReadFile(name string) ([]byte, error) {
 
 // WriteFile delegates to os.WriteFile with read/write permissions.
 func (fsOnDisk) WriteFile(name string, c []byte) error {
-	return errors.Wrap(os.WriteFile(name, c, 0666)) //nolint:gosec
+	return errors.Wrap(os.WriteFile(name, c, 0666)) //nolint:mnd,gosec
 }
 
 // Walk delegates to filepath.Walk.

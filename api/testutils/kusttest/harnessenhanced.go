@@ -57,13 +57,11 @@ func MakeEnhancedHarness(t *testing.T) *HarnessEnhanced {
 
 func MakeEnhancedHarnessWithTmpRoot(t *testing.T) *HarnessEnhanced {
 	t.Helper()
+	var err error
 	r := makeBaseEnhancedHarness(t)
 	fSys := filesys.MakeFsOnDisk()
 	r.Harness = MakeHarnessWithFs(t, fSys)
-	tmpDir, err := os.MkdirTemp("", "kust-testing-")
-	if err != nil {
-		panic("test harness cannot make tmp dir: " + err.Error())
-	}
+	tmpDir := t.TempDir()
 	r.ldr, err = fLdr.NewLoader(fLdr.RestrictionRootOnly, tmpDir, fSys)
 	if err != nil {
 		panic("test harness cannot make ldr at tmp dir: " + err.Error())

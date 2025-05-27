@@ -200,16 +200,16 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 			Create: createKind})
 		if err != nil {
 			msg := fieldRetrievalError(fp, createKind != 0)
-			return errors.WrapPrefixf(err, "%s", msg) //nolint:govet
+			return errors.WrapPrefixf(err, "%s", msg)
 		}
 		targetFields, err := targetFieldList.Elements()
 		if err != nil {
 			msg := fieldRetrievalError(fp, createKind != 0)
-			return errors.WrapPrefixf(err, "%s", msg) //nolint:govet
+			return errors.WrapPrefixf(err, "%s", msg)
 		}
 		if len(targetFields) == 0 {
 			msg := fieldRetrievalError(fp, createKind != 0)
-			return errors.Errorf("%s", msg) //nolint:govet
+			return errors.Errorf("%s", msg)
 		}
 
 		for _, t := range targetFields {

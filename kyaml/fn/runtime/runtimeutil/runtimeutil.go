@@ -268,7 +268,7 @@ func (c *FunctionFilter) doResults(r *kio.ByteReader) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(c.ResultsFile, []byte(results), 0600)
+		err = os.WriteFile(c.ResultsFile, []byte(results), 0600) //nolint:mnd
 		if err != nil {
 			return err
 		}

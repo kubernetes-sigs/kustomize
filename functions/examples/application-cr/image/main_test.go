@@ -218,7 +218,7 @@ func Test(t *testing.T) {
 		outC <- buf.String()
 	}()
 
-	tmpfile, err := os.CreateTemp("", "test-input")
+	tmpfile, err := os.CreateTemp(t.TempDir(), "test-input")
 	if err != nil {
 		t.Fatal(err)
 	}

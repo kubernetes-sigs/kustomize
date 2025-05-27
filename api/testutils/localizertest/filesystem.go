@@ -58,10 +58,10 @@ func SetWorkingDir(t *testing.T, workingDir string) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		require.NoError(t, os.Chdir(wd))
+		require.NoError(t, os.Chdir(wd)) //nolint:usetesting
 	})
 
-	err = os.Chdir(workingDir)
+	err = os.Chdir(workingDir) //nolint:usetesting
 	require.NoError(t, err)
 }
 

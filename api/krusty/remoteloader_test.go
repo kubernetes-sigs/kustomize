@@ -53,8 +53,7 @@ func TestRemoteLoad_LocalProtocol(t *testing.T) {
 		}
 		root := t.TempDir()
 
-		hashPath, err := os.MkdirTemp(root, "hash-")
-		require.NoError(t, err)
+		hashPath := t.TempDir()
 		hashDir := filepath.Base(hashPath)
 
 		bash(fmt.Sprintf(`
@@ -437,7 +436,7 @@ func configureGitSSHCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	// Write the key to a temp file and use it in SSH
-	f, err := os.CreateTemp("", "kustomize_ssh")
+	f, err := os.CreateTemp(t.TempDir(), "kustomize_ssh")
 	require.NoError(t, err)
 	_, err = io.Copy(f, bytes.NewReader(key))
 	require.NoError(t, err)

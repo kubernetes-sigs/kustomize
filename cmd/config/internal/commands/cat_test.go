@@ -354,7 +354,7 @@ spec:
 		return
 	}
 
-	f, err := os.CreateTemp("", "kustomize-cat-test-dest")
+	f, err := os.CreateTemp(t.TempDir(), "kustomize-cat-test-dest")
 	if !assert.NoError(t, err) {
 		return
 	}

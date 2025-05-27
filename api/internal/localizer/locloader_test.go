@@ -84,7 +84,6 @@ func TestNewLocLoaderDefaultForRootTarget(t *testing.T) {
 		},
 	}
 	for name, params := range cases {
-		params := params
 		t.Run(name, func(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)
@@ -172,7 +171,6 @@ func TestNewLocLoaderCwdNotRoot(t *testing.T) {
 	}
 
 	for name, test := range cases {
-		test := test
 		t.Run(name, func(t *testing.T) {
 			req := require.New(t)
 			fSys := makeWdFs(t)[test.wd]
@@ -223,7 +221,6 @@ func TestNewLocLoaderFails(t *testing.T) {
 		},
 	}
 	for name, params := range cases {
-		params := params
 		t.Run(name, func(t *testing.T) {
 			var buf bytes.Buffer
 			log.SetOutput(&buf)
@@ -254,7 +251,6 @@ func TestNewFails(t *testing.T) {
 		"file":              "delta/deployment.yaml",
 	}
 	for name, root := range cases {
-		root := root
 		t.Run(name, func(t *testing.T) {
 			fSys := makeMemoryFs(t)
 
@@ -283,7 +279,6 @@ func TestLoadFails(t *testing.T) {
 		"winding inside dst": "/a/test/../newDir/pod.yaml",
 	}
 	for name, file := range cases {
-		file := file
 		t.Run(name, func(t *testing.T) {
 			req := require.New(t)
 			fSys := makeMemoryFs(t)

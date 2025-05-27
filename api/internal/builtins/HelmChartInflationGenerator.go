@@ -178,7 +178,6 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	}
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
-		//nolint:govet
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
@@ -257,7 +256,7 @@ func (p *HelmChartInflationGeneratorPlugin) writeValuesBytes(
 		return "", fmt.Errorf("cannot create tmp dir to write helm values")
 	}
 	path := filepath.Join(p.tmpDir, p.Name+"-kustomize-values.yaml")
-	return path, errors.WrapPrefixf(os.WriteFile(path, b, 0644), "failed to write values file")
+	return path, errors.WrapPrefixf(os.WriteFile(path, b, 0644), "failed to write values file") //nolint: mnd
 }
 
 func (p *HelmChartInflationGeneratorPlugin) cleanup() {

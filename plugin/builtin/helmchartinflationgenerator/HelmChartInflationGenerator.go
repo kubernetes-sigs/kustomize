@@ -262,7 +262,7 @@ func (p *plugin) writeValuesBytes(
 		return "", fmt.Errorf("cannot create tmp dir to write helm values")
 	}
 	path := filepath.Join(p.tmpDir, p.Name+"-kustomize-values.yaml")
-	return path, errors.WrapPrefixf(os.WriteFile(path, b, 0644), "failed to write values file")
+	return path, errors.WrapPrefixf(os.WriteFile(path, b, 0644), "failed to write values file") //nolint: mnd
 }
 
 func (p *plugin) cleanup() {

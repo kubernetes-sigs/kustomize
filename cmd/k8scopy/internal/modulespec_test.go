@@ -50,7 +50,7 @@ func TestReadSpec(t *testing.T) {
 
 // Write content to temp file, returning file name.
 func writeFile(t *testing.T, content []byte) string {
-	f, err := os.CreateTemp("", "testjunk")
+	f, err := os.CreateTemp(t.TempDir(), "testjunk")
 	if err != nil {
 		t.Fatal(err)
 	}
