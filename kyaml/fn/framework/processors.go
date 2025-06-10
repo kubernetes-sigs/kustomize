@@ -32,13 +32,15 @@ type SimpleProcessor struct {
 	// Config must be a struct capable of receiving the data from ResourceList.functionConfig.
 	// Filter functions may close over this struct to access its data.
 	Config interface{}
+	// Strict indicates whether the processor should use strict unmarshalling when loading the Config.
+	Strict bool
 }
 
 // Process makes SimpleProcessor implement the ResourceListProcessor interface.
 // It loads the ResourceList.functionConfig into the provided Config type, applying
 // defaulting and validation if supported by Config. It then executes the processor's filter.
 func (p SimpleProcessor) Process(rl *ResourceList) error {
-	if err := LoadFunctionConfig(rl.FunctionConfig, p.Config); err != nil {
+	if err := LoadFunctionConfig(rl.FunctionConfig, p.Config, p.Strict); err != nil {
 		return errors.WrapPrefixf(err, "loading function config")
 	}
 	return errors.WrapPrefixf(rl.Filter(p.Filter), "processing filter")
@@ -111,7 +113,7 @@ func (p *VersionedAPIProcessor) Process(rl *ResourceList) error {
 	if err != nil {
 		return errors.WrapPrefixf(err, "unable to identify provider for resource")
 	}
-	if err := LoadFunctionConfig(rl.FunctionConfig, api); err != nil {
+	if err := LoadFunctionConfig(rl.FunctionConfig, api, false); err != nil {
 		return errors.Wrap(err)
 	}
 	return errors.Wrap(rl.Filter(api))
@@ -139,7 +141,7 @@ func extractGVK(src *yaml.RNode) (apiVersion, kind string) {
 // LoadFunctionConfig reads a configuration resource from YAML into the provided data structure
 // and then prepares it for use by running defaulting and validation on it, if supported.
 // ResourceListProcessors should use this function to load ResourceList.functionConfig.
-func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
+func LoadFunctionConfig(src *yaml.RNode, api interface{}, strict bool) error {
 	if api == nil {
 		return nil
 	}
@@ -156,7 +158,14 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 
 	// using sigs.k8s.io/yaml here lets the custom types embed core types
 	// that only have json tags, notably types from k8s.io/apimachinery/pkg/apis/meta/v1
-	if err := k8syaml.Unmarshal([]byte(src.MustString()), api); err != nil {
+
+	var err error
+	if strict {
+		err = k8syaml.UnmarshalStrict([]byte(src.MustString()), api)
+	} else {
+		err = k8syaml.Unmarshal([]byte(src.MustString()), api)
+	}
+	if err != nil {
 		if schemaValidationError != nil {
 			// if we got a validation error, report it instead as it is likely a nicer version of the same message
 			return schemaValidationError
@@ -295,7 +304,7 @@ func (tp TemplateProcessor) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
 // directly as a processor. As a Processor, it loads the ResourceList.functionConfig into the
 // TemplateData field, exposing it to all templates by default.
 func (tp TemplateProcessor) Process(rl *ResourceList) error {
-	if err := LoadFunctionConfig(rl.FunctionConfig, tp.TemplateData); err != nil {
+	if err := LoadFunctionConfig(rl.FunctionConfig, tp.TemplateData, false); err != nil {
 		return errors.Wrap(err)
 	}
 	return errors.Wrap(rl.Filter(tp))
