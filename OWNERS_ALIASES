@@ -20,8 +20,7 @@ aliases:
   docs-reviewers:
     - ncapps
 
-  commands-approvers:
-    - stormqueen1990
+  commands-approvers: []
   commands-reviewers:
     - stormqueen1990
 

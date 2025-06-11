@@ -255,8 +255,6 @@ func TestRunFns_getFilters(t *testing.T) {
 		// value to set for NoFunctionsFromInput
 		noFunctionsFromInput *bool
 
-		enableStarlark bool
-
 		disableContainers bool
 	}{
 		// Test
@@ -589,92 +587,6 @@ metadata:
 			},
 			out: []string{"b", "a", "c"},
 		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			outFn: func(path string) []string {
-				return []string{
-					fmt.Sprintf("name:  path: %s/foo/a/b/c url:  program:", filepath.ToSlash(path))}
-			},
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function-absolute",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: /a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			error:          "absolute function path /a/b/c not allowed",
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function-escape-parent",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: ../a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			error:          "function path ../a/b/c not allowed to start with ../",
-		},
-
-		{name: "starlark-function-disabled",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: a/b/c
-`,
-				},
-			},
-		},
 	}
 
 	for i := range tests {
@@ -722,7 +634,6 @@ metadata:
 
 			// init the instance
 			r := &RunFns{
-				EnableStarlark:       tt.enableStarlark,
 				DisableContainers:    tt.disableContainers,
 				FunctionPaths:        fnPaths,
 				Functions:            parsedFns,
@@ -1368,6 +1279,58 @@ func TestRunFns_mergeContainerEnv(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			envs := tc.instance.mergeContainerEnv(tc.inputEnvs)
 			assert.Equal(t, tc.expect.GetDockerFlags(), runtimeutil.NewContainerEnvFromStringSlice(envs).GetDockerFlags())
+		})
+	}
+}
+
+func TestRunFns_mergeExecEnv(t *testing.T) {
+	testcases := []struct {
+		name      string
+		instance  RunFns
+		inputEnvs []string
+		expect    []string
+	}{
+		{
+			name:     "all empty",
+			instance: RunFns{},
+			expect:   []string{},
+		},
+		{
+			name:      "empty command line envs",
+			instance:  RunFns{},
+			inputEnvs: []string{"foo=bar"},
+			expect:    []string{"foo=bar"},
+		},
+		{
+			name: "empty declarative envs",
+			instance: RunFns{
+				Env: []string{"foo=bar"},
+			},
+			expect: []string{"foo=bar"},
+		},
+		{
+			name: "same key",
+			instance: RunFns{
+				Env: []string{"foo=bar"},
+			},
+			inputEnvs: []string{"foo=bar1"},
+			expect:    []string{"foo=bar"},
+		},
+		{
+			name: "same exported key",
+			instance: RunFns{
+				Env: []string{"foo=bar"},
+			},
+			inputEnvs: []string{"foo1=bar1"},
+			expect:    []string{"foo1=bar1", "foo=bar"},
+		},
+	}
+
+	for i := range testcases {
+		tc := testcases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			envs := tc.instance.mergeExecEnv(tc.inputEnvs)
+			assert.Equal(t, tc.expect, envs)
 		})
 	}
 }

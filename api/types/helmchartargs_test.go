@@ -77,4 +77,28 @@ func TestAsHelmArgs(t *testing.T) {
 				"-f", "values2",
 				"--debug"})
 	})
+
+	t.Run("use helm-devel", func(t *testing.T) {
+		// We first test that the devel flag is only appended when specified
+		p := types.HelmChart{
+			Name:                  "chart-name",
+			Version:               "1.0.0",
+			Repo:                  "https://helm.releases.hashicorp.com",
+			ValuesFile:            "values",
+			AdditionalValuesFiles: []string{"values1", "values2"},
+		}
+		require.Equal(t, p.AsHelmArgs("/home/charts"),
+			[]string{"template", "--generate-name", "/home/charts/chart-name",
+				"-f", "values",
+				"-f", "values1",
+				"-f", "values2"})
+
+		p.Devel = true
+		require.Equal(t, p.AsHelmArgs("/home/charts"),
+			[]string{"template", "--generate-name", "/home/charts/chart-name",
+				"-f", "values",
+				"-f", "values1",
+				"-f", "values2",
+				"--devel"})
+	})
 }
