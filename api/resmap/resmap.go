@@ -101,7 +101,7 @@ type TransformerPlugin interface {
 // transformations to a common base.  When looking for a
 // resource to transform, try the OrgId first, and if this
 // fails or finds too many, it might make sense to then try
-// the CurrId.  Depends on the situation.
+// the CurId.  Depends on the situation.
 //
 // TODO: get rid of this interface (use bare resWrangler).
 // There aren't multiple implementations any more.

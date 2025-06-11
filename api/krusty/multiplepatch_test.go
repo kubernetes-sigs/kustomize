@@ -799,6 +799,73 @@ metadata:
 `)
 }
 
+func TestNamespaceTransformerAndPatchTransformer(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+namespace: base
+resources:
+- deployment.yaml
+- service.yaml
+`)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`)
+	th.WriteF("base/service.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  ports:
+  - port: 80
+`)
+	th.WriteK("overlay", `
+namespace: overlay
+patches:
+- target:
+    kind: Deployment
+    name: nginx
+  patch: |
+    - op: replace
+      path: /metadata/namespace
+      value: not-overlay
+resources:
+- ../base
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: not-overlay
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: overlay
+spec:
+  ports:
+  - port: 80
+`)
+}
+
 func makeCommonFilesForMultiplePatchTests(th kusttest_test.Harness) {
 	th.WriteK("base", `
 namePrefix: team-foo-
