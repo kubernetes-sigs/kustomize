@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/functions/examples/application-cr
 
-go 1.22.7
+go 1.24.3
 
 require (
 	k8s.io/apimachinery v0.29.0

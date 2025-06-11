@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/kustomize/v5
 
-go 1.22.7
+go 1.24.3
 
 require (
 	github.com/google/go-cmp v0.6.0

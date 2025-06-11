@@ -86,7 +86,7 @@ func (c *Converter) Convert() error {
 }
 
 func (c *Converter) getDockerfile() string {
-	return `FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye
+	return `FROM public.ecr.aws/docker/library/golang:1.24.3-bullseye
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY . .
@@ -157,7 +157,7 @@ func (c *Converter) mkDstDir() error {
 func (c *Converter) write(m map[string]string) error {
 	for k, v := range m {
 		p := filepath.Join(c.outputDir, k)
-		err := os.WriteFile(p, []byte(v), 0644)
+		err := os.WriteFile(p, []byte(v), 0644) //nolint:mnd
 		if err != nil {
 			return err
 		}

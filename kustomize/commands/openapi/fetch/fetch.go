@@ -6,6 +6,7 @@ package fetch
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -54,7 +55,7 @@ Installation and setup instructions: https://kubernetes.io/docs/tasks/tools/inst
 	if err != nil {
 		return fmt.Errorf("%w\n%s", err, stderr.String()+errMsg)
 	} else if stdout.String() == "" {
-		return fmt.Errorf(stderr.String() + errMsg)
+		return errors.New(stderr.String() + errMsg)
 	}
 
 	// format and output

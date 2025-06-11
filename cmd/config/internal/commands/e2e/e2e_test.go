@@ -507,10 +507,7 @@ metadata:
 				t.Skip()
 			}
 
-			dir, err := os.MkdirTemp("", "kustomize-test-data-")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			dir := t.TempDir()
 			defer os.RemoveAll(dir)
 			os.Chdir(dir)
 
@@ -528,7 +525,7 @@ metadata:
 			cmd.Stderr = &stdErr
 			cmd.Env = os.Environ()
 
-			err = cmd.Run()
+			err := cmd.Run()
 			if tt.expectedErr != "" {
 				if !assert.Contains(t, stdErr.String(), tt.expectedErr, stdErr.String()) {
 					t.FailNow()

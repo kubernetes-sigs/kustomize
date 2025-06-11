@@ -230,7 +230,7 @@ func (r RunFns) runFunctions(
 		}
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n---\n"))
+		return fmt.Errorf("%s", strings.Join(errs, "\n---\n"))
 	}
 	return nil
 }
@@ -305,7 +305,7 @@ func (r RunFns) mergeExecEnv(envs []string) []string {
 	for _, env := range append(envs, r.Env...) {
 		res := strings.Split(env, "=")
 		//nolint:gomnd
-		if len(res) == 2 {
+		if len(res) == 2 { //nolint: mnd
 			envMap[res[0]] = res[1]
 		}
 	}

@@ -969,7 +969,7 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	dir := setupTest(t)
 
 	// write a test filter to a separate directory
-	tmpF, err := os.CreateTemp("", "filter*.yaml")
+	tmpF, err := os.CreateTemp(t.TempDir(), "filter*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -1198,7 +1198,7 @@ func setupTest(t *testing.T) string {
 
 	// Change back the current working directory when the test finishes
 	t.Cleanup(func() {
-		if !assert.NoError(t, os.Chdir(cwd)) {
+		if !assert.NoError(t, os.Chdir(cwd)) { //nolint:usetesting
 			t.FailNow()
 		}
 	})

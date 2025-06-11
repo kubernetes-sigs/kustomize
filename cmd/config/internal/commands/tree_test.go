@@ -21,12 +21,12 @@ func TestTreeCommandDefaultCurDir_files(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, os.Chdir(d)) {
+	if !assert.NoError(t, os.Chdir(d)) { //nolint: usetesting
 		return
 	}
 
 	t.Cleanup(func() {
-		if !assert.NoError(t, os.Chdir(cwd)) {
+		if !assert.NoError(t, os.Chdir(cwd)) { //nolint: usetesting
 			t.FailNow()
 		}
 	})
@@ -566,12 +566,12 @@ func TestTreeCommand_images(t *testing.T) {
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, os.Chdir(d)) {
+	if !assert.NoError(t, os.Chdir(d)) { //nolint: usetesting
 		return
 	}
 
 	t.Cleanup(func() {
-		if !assert.NoError(t, os.Chdir(cwd)) {
+		if !assert.NoError(t, os.Chdir(cwd)) { //nolint: usetesting
 			t.FailNow()
 		}
 	})

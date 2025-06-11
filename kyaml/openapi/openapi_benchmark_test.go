@@ -41,7 +41,7 @@ func BenchmarkPrecomputedIsNamespaceScoped(b *testing.B) {
 	}
 	for name, testcase := range testcases {
 		b.Run(name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for i := 0; i < b.N; i++ { //nolint:intrange
 				ResetOpenAPI()
 				_, _ = IsNamespaceScoped(testcase)
 			}
