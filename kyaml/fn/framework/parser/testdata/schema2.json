@@ -23,10 +23,8 @@
           "properties": {
             "targets": {
               "type": "array",
-              "x-kubernetes-list-map-keys": [
-                "app"
-              ],
-              "x-kubernetes-list-type": "map",
+              "x-kubernetes-patch-merge-key": "app",
+              "x-kubernetes-patch-strategy": "merge",
               "items": {
                 "type": "object",
                 "required": [

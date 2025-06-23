@@ -33,10 +33,10 @@ func IsAssociative(schema *openapi.ResourceSchema, nodes []*yaml.RNode, infer bo
 }
 
 func schemaHasMergeStrategy(schema *openapi.ResourceSchema) bool {
-	tmp, _ := schema.PatchStrategyAndKeyList()
+	tmp, _ := schema.PatchStrategyAndKey()
 	strategies := strings.Split(tmp, ",")
 	for _, s := range strategies {
-		if s == "merge" || s == "map" {
+		if s == "merge" {
 			return true
 		}
 	}

@@ -46,17 +46,3 @@ func TestIsAssociativeMultipleStrategy(t *testing.T) {
 			&openapi.ResourceSchema{Schema: s},
 			[]*yaml.RNode{}, false))
 }
-
-func TestIsAssociativeCrdList(t *testing.T) {
-	s := makeSchema()
-	// The value should be []interface{}, not []string
-	keys := make([]interface{}, 1)
-	keys[0] = "name"
-	s.Extensions["x-kubernetes-list-map-keys"] = keys
-	s.Extensions["x-kubernetes-list-type"] = "map"
-	assert.True(
-		t,
-		IsAssociative(
-			&openapi.ResourceSchema{Schema: s},
-			[]*yaml.RNode{}, false))
-}
