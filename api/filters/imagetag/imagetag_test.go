@@ -879,6 +879,84 @@ spec:
 				},
 			},
 		},
+		"update image volume in pod template": {
+			input: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: imagevolume
+spec:
+  template:
+    spec:
+      volumes:
+      - name: volume
+        image:
+          reference: nginx
+`,
+			expectedOutput: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: imagevolume
+spec:
+  template:
+    spec:
+      volumes:
+      - name: volume
+        image:
+          reference: apache@12345
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					Digest:  "12345",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/template/spec/volumes[]/image/reference",
+				},
+			},
+		},
+		"update image volume in pod spec": {
+			input: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: imagevolume
+spec:
+  volumes:
+  - name: volume
+    image:
+      reference: nginx
+`,
+			expectedOutput: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: imagevolume
+spec:
+  volumes:
+  - name: volume
+    image:
+      reference: apache@12345
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					Digest:  "12345",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/volumes[]/image/reference",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
