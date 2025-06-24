@@ -73,7 +73,6 @@ func setupFileSys(t *testing.T, name string) (FileSystem, string, string) {
 
 func TestConfirmDir(t *testing.T) {
 	for name := range filesysBuilders {
-		name := name
 		t.Run(name, func(t *testing.T) {
 			fSys, prefixPath, wd := setupFileSys(t, name)
 
@@ -101,7 +100,6 @@ func TestConfirmDir(t *testing.T) {
 				},
 			}
 			for subName, test := range tests {
-				test := test
 				t.Run(subName, func(t *testing.T) {
 					cleanDir, err := ConfirmDir(fSys, test.dir)
 					require.NoError(t, err)
@@ -129,7 +127,6 @@ func TestConfirmDirErr(t *testing.T) {
 				"Non-existent": filepath.Join(prefixPath, "bar"),
 			}
 			for subName, invalidPath := range tests {
-				invalidPath := invalidPath
 				t.Run(subName, func(t *testing.T) {
 					_, err := ConfirmDir(fSys, invalidPath)
 					require.Error(t, err)

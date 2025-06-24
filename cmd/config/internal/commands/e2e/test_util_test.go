@@ -42,10 +42,7 @@ func runTests(t *testing.T, tests []test) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			dataDir, err := os.MkdirTemp("", "kustomize-test-data-")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			dataDir := t.TempDir()
 			defer os.RemoveAll(dataDir)
 			os.Chdir(dataDir)
 
@@ -62,7 +59,7 @@ func runTests(t *testing.T, tests []test) {
 			cmd.Stderr = &stdErr
 			cmd.Env = os.Environ()
 
-			err = cmd.Run()
+			err := cmd.Run()
 			if tt.expectedErr != "" {
 				if !assert.Contains(t, stdErr.String(), tt.expectedErr, stdErr.String()) {
 					t.FailNow()

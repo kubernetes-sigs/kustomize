@@ -6,35 +6,36 @@
 //
 // The command will create a docs.go file under DEST_GO_DIR/ containing string variables to be
 // used by cobra commands for documentation.The variable names are generated from the SOURCE_MD_DIR/
-// file names, replacing '-' with '', title casing the filename, and dropping the extension.
+// file names, replacing '-' with ”, title casing the filename, and dropping the extension.
 // All *.md will be read from DEST_GO_DIR/, and a single DEST_GO_DIR/docs.go file is generated.
 //
 // Each .md document will be parsed as follows if no flags are provided:
 //
-//   ## cmd
+//	## cmd
 //
-//   This section will be parsed into a string variable for `Short`
+//	This section will be parsed into a string variable for `Short`
 //
-//   ### Synopsis
+//	### Synopsis
 //
-//   This section will be parsed into a string variable for `Long`
+//	This section will be parsed into a string variable for `Long`
 //
-//   ### Examples
+//	### Examples
 //
-//   This section will be parsed into a string variable for `Example`
+//	This section will be parsed into a string variable for `Example`
 //
 // If --full=true is provided, the document will be parsed as follows:
 //
-//   ## cmd
+//	## cmd
 //
-//   All sections will be parsed into a Long string.
+//	All sections will be parsed into a Long string.
 //
 // Flags:
-//   --full=true
-//     Create a Long variable from the full .md files, rather than separate sections.
-//   --license
-//     Controls the license header added to the files.  Specify a path to a license file,
-//     or "none" to skip adding a license.
+//
+//	--full=true
+//	  Create a Long variable from the full .md files, rather than separate sections.
+//	--license
+//	  Controls the license header added to the files.  Specify a path to a license file,
+//	  or "none" to skip adding a license.
 package main
 
 import (
@@ -116,7 +117,7 @@ package ` + filepath.Base(dest) + "\n"}
 	}
 
 	o := strings.Join(out, "\n")
-	err = os.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600)
+	err = os.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600) //nolint:mnd
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

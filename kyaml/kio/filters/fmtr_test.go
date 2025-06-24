@@ -679,7 +679,7 @@ apiVersion: example.com/v1beta1
 // with a .yaml extension.
 func TestFormatFileOrDirectory_yamlExtFile(t *testing.T) {
 	// write the unformatted file
-	f, err := os.CreateTemp("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -705,7 +705,7 @@ func TestFormatFileOrDirectory_yamlExtFile(t *testing.T) {
 
 func TestFormatFileOrDirectory_multipleYamlEntries(t *testing.T) {
 	// write the unformatted file
-	f, err := os.CreateTemp("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(),
@@ -726,7 +726,7 @@ func TestFormatFileOrDirectory_multipleYamlEntries(t *testing.T) {
 // with a .yml extension.
 func TestFormatFileOrDirectory_ymlExtFile(t *testing.T) {
 	// write the unformatted file
-	f, err := os.CreateTemp("", "yamlfmt*.yml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
@@ -746,7 +746,7 @@ func TestFormatFileOrDirectory_ymlExtFile(t *testing.T) {
 // YAML content is formatted as such.
 func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 	// write the unformatted JSON file contents
-	f, err := os.CreateTemp("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
@@ -766,7 +766,7 @@ func TestFormatFileOrDirectory_YamlExtFileWithJson(t *testing.T) {
 // and JSON contents won't be modified.
 func TestFormatFileOrDirectory_JsonExtFileWithNotModified(t *testing.T) {
 	// write the unformatted JSON file contents
-	f, err := os.CreateTemp("", "yamlfmt*.json")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.json")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), testyaml.UnformattedJSON1, 0600)
@@ -786,7 +786,7 @@ func TestFormatFileOrDirectory_JsonExtFileWithNotModified(t *testing.T) {
 // Kubernetes and non-Kubernetes documents, it will only format the Kubernetes documents
 func TestFormatFileOrDirectory_partialKubernetesYamlFile(t *testing.T) {
 	// write the unformatted file
-	f, err := os.CreateTemp("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), []byte(string(testyaml.UnformattedYaml1)+`---
@@ -822,7 +822,7 @@ spec: a
 // kubernetes
 func TestFormatFileOrDirectory_skipNonKubernetesYamlFile(t *testing.T) {
 	// write the unformatted JSON file contents
-	f, err := os.CreateTemp("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), []byte(`
@@ -853,7 +853,7 @@ spec: a
 
 // TestFormatFileOrDirectory_jsonFile should not fmt the file even though it contains yaml.
 func TestFormatFileOrDirectory_skipJsonExtFile(t *testing.T) {
-	f, err := os.CreateTemp("", "yamlfmt*.json")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.json")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), testyaml.UnformattedYaml1, 0600)
@@ -916,7 +916,7 @@ func TestFormatFileOrDirectory_directory(t *testing.T) {
 // TestFormatFileOrDirectory_trimWhiteSpace verifies that trailling and leading whitespace is
 // trimmed
 func TestFormatFileOrDirectory_trimWhiteSpace(t *testing.T) {
-	f, err := os.CreateTemp("", "yamlfmt*.yaml")
+	f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	err = os.WriteFile(f.Name(), []byte("\n\n"+string(testyaml.UnformattedYaml1)+"\n\n"), 0600)
@@ -1023,7 +1023,7 @@ metadata:
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			f, err := os.CreateTemp("", "yamlfmt*.yaml")
+			f, err := os.CreateTemp(t.TempDir(), "yamlfmt*.yaml")
 			require.NoError(t, err)
 			defer os.Remove(f.Name())
 

@@ -337,10 +337,10 @@ func (rc *checkerCore) shouldUpdateFixtures() bool {
 func (rc *checkerCore) updateFixtures(t *testing.T, actualOutput string, actualError string) {
 	t.Helper()
 	if actualError != "" {
-		require.NoError(t, os.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600))
+		require.NoError(t, os.WriteFile(rc.expectedErrorFilename, []byte(actualError), 0600)) //nolint:mnd
 	}
 	if len(actualOutput) > 0 {
-		require.NoError(t, os.WriteFile(rc.expectedOutputFilename, []byte(actualOutput), 0600))
+		require.NoError(t, os.WriteFile(rc.expectedOutputFilename, []byte(actualOutput), 0600)) //nolint:mnd
 	}
 	t.Skip("Updated fixtures for test case")
 }

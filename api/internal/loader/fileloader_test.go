@@ -54,7 +54,6 @@ func TestIsRemoteFile(t *testing.T) {
 		},
 	}
 	for name, test := range cases {
-		test := test
 		t.Run(name, func(t *testing.T) {
 			require.Equal(t, test.valid, IsRemoteFile(test.url))
 		})

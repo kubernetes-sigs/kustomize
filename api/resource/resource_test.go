@@ -339,7 +339,7 @@ metadata:
 `))
 	require.NoError(t, err)
 
-	for i := 0; i < patchApplyCount; i++ {
+	for i := 0; i < patchApplyCount; i++ { //nolint: intrange
 		require.NoError(t, resource.ApplySmPatch(noOpPatch))
 
 		bytes, err := resource.AsYAML()

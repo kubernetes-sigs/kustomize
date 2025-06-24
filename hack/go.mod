@@ -1,13 +1,13 @@
 module sigs.k8s.io/kustomize/hack
 
-go 1.22.7
+go 1.24.3
 
 require (
 	github.com/campoy/embedmd v1.0.0
 	github.com/cli/cli v1.2.1
 	github.com/go-bindata/go-bindata/v3 v3.1.3
 	github.com/gohugoio/hugo v0.120.4
-	github.com/golangci/golangci-lint v1.56.2
+	github.com/golangci/golangci-lint v1.64.8
 	github.com/google/addlicense v1.1.1
 	github.com/instrumenta/kubeval v0.16.1
 	github.com/joelanford/go-apidiff v0.6.0
