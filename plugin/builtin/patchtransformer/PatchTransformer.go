@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
@@ -25,10 +26,10 @@ type plugin struct {
 	patchText string
 	// patchSource is patch source message
 	patchSource string
-	Path        string          `json:"path,omitempty"    yaml:"path,omitempty"`
-	Patch       string          `json:"patch,omitempty"   yaml:"patch,omitempty"`
-	Target      *types.Selector `json:"target,omitempty"  yaml:"target,omitempty"`
-	Options     map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
+	Path        string           `json:"path,omitempty"    yaml:"path,omitempty"`
+	Patch       string           `json:"patch,omitempty"   yaml:"patch,omitempty"`
+	Target      *types.Selector  `json:"target,omitempty"  yaml:"target,omitempty"`
+	Options     *types.PatchArgs `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 var KustomizePlugin plugin //nolint:gochecknoglobals
@@ -72,14 +73,7 @@ func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	}
 	if errSM == nil {
 		p.smPatches = patchesSM
-		for _, loadedPatch := range p.smPatches {
-			if p.Options["allowNameChange"] {
-				loadedPatch.AllowNameChange()
-			}
-			if p.Options["allowKindChange"] {
-				loadedPatch.AllowKindChange()
-			}
-		}
+		p.loadPatches(p.smPatches)
 	} else {
 		p.jsonPatches = patchesJson
 	}
@@ -109,6 +103,9 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap) error {
 		if err != nil {
 			return fmt.Errorf("unable to find patch target %q in `resources`: %w", p.Target, err)
 		}
+		if err := p.allowNoTargetMatch(selected); err != nil {
+			return err
+		}
 		return errors.Wrap(m.ApplySmPatch(resource.MakeIdSet(selected), patch))
 	}
 
@@ -133,6 +130,11 @@ func (p *plugin) transformJson6902(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
+
+	if err := p.allowNoTargetMatch(resources); err != nil {
+		return err
+	}
+
 	for _, res := range resources {
 		res.StorePreviousId()
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
@@ -170,4 +172,39 @@ func jsonPatchFromBytes(in []byte) (jsonpatch.Patch, error) {
 		ops = string(jsonOps)
 	}
 	return jsonpatch.DecodePatch([]byte(ops))
+}
+
+// allowNoTargetMatch checks whether no target match is allowed and return an error in case the patch violates that.
+func (p *plugin) allowNoTargetMatch(resources []*resource.Resource) error {
+	if len(resources) > 0 {
+		return nil
+	}
+
+	if p.Options == nil || !p.Options.AllowNoTargetMatch {
+		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	}
+
+	fmt.Fprintf(os.Stderr, "%v\n", "Warning: patches target not found for Target")
+	return nil
+}
+
+// loadPatchOptions, if allowed, enables the available patch options for a resource.
+func (p *plugin) loadPatchOptions(patch *resource.Resource) {
+	if p.Options.AllowNameChange {
+		patch.AllowNameChange()
+	}
+	if p.Options.AllowKindChange {
+		patch.AllowKindChange()
+	}
+}
+
+// loadPatches, given a list of resources, enables the available patch options for each resource.
+func (p *plugin) loadPatches(patches []*resource.Resource) {
+	if p.Options == nil {
+		return
+	}
+
+	for _, patch := range patches {
+		p.loadPatchOptions(patch)
+	}
 }
