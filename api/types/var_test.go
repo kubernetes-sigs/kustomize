@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	yaml "go.yaml.in/yaml/v2"
 	"sigs.k8s.io/kustomize/kyaml/resid"
-	yaml "sigs.k8s.io/yaml/goyaml.v2"
 )
 
 func TestGVK(t *testing.T) {
