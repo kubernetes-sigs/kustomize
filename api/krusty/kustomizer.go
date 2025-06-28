@@ -76,15 +76,18 @@ func (b *Kustomizer) Run(
 		return nil, err
 	}
 	var bytes []byte
-	if openApiPath, exists := kt.Kustomization().OpenAPI["path"]; exists {
+	kustomization := kt.Kustomization()
+	if openApiPath, exists := kustomization.OpenAPI["path"]; exists {
 		bytes, err = ldr.Load(openApiPath)
 		if err != nil {
 			return nil, err
 		}
 	}
-	err = openapi.SetSchema(kt.Kustomization().OpenAPI, bytes, true)
-	if err != nil {
-		return nil, err
+	if _, skip := kustomization.OpenAPI["skip"]; !skip {
+		err = openapi.SetSchema(kustomization.OpenAPI, bytes, true)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var m resmap.ResMap
 	m, err = kt.MakeCustomizedResMap()
