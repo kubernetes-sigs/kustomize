@@ -5,7 +5,7 @@ go 1.22.7
 require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0
 	sigs.k8s.io/kustomize/api v0.19.0
-	sigs.k8s.io/kustomize/kyaml v0.19.0
+	sigs.k8s.io/kustomize/kyaml v0.20.0
 	sigs.k8s.io/yaml v1.5.0
 )
 
@@ -34,5 +34,3 @@ require (
 )
 
 replace sigs.k8s.io/kustomize/api => ../../../api
-
-replace sigs.k8s.io/kustomize/kyaml => ../../../kyaml
