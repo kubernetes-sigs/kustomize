@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/api
 
-go 1.22.7
+go 1.23.10
 
 require (
 	github.com/blang/semver/v4 v4.0.0
