@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/suffixtransformer
 
-go 1.22.7
+go 1.23.10
 
 require (
 	sigs.k8s.io/kustomize/api v0.20.0
