@@ -161,7 +161,7 @@ func TestAddAnnotationForce(t *testing.T) {
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
 	require.Error(t, err)
-	assert.Equal(t, "annotation key already in kustomization file", err.Error())
+	assert.Equal(t, "annotation key already in kustomization file. Use --force to override.", err.Error())
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddAnnotation(fSys, v.Validator)
@@ -265,7 +265,7 @@ func TestAddLabelForce(t *testing.T) {
 	err := cmd.RunE(cmd, args)
 	v.VerifyCall()
 	require.Error(t, err)
-	assert.Equal(t, "label key already in kustomization file", err.Error())
+	assert.Equal(t, "label key already in kustomization file. Use --force to override.", err.Error())
 	// but trying to add it with --force should
 	v = valtest_test.MakeHappyMapValidator(t)
 	cmd = newCmdAddLabel(fSys, v.Validator)
@@ -273,25 +273,6 @@ func TestAddLabelForce(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, cmd.RunE(cmd, args))
 	v.VerifyCall()
-}
-
-func TestAddLabelWithoutSelector(t *testing.T) {
-	var o addMetadataOptions
-	o.labelsWithoutSelector = true
-	m := makeKustomization(t)
-	o.metadata = map[string]string{"new": "label"}
-	require.NoError(t, o.addLabels(m))
-	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}})
-}
-
-func TestAddLabelWithoutSelectorIncludeTemplates(t *testing.T) {
-	var o addMetadataOptions
-	o.labelsWithoutSelector = true
-	m := makeKustomization(t)
-	o.metadata = map[string]string{"new": "label"}
-	o.includeTemplates = true
-	require.NoError(t, o.addLabels(m))
-	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"new": "label"}, IncludeTemplates: true})
 }
 
 func TestAddLabelIncludeTemplatesWithoutRequiredFlag(t *testing.T) {
@@ -307,17 +288,133 @@ func TestAddLabelIncludeTemplatesWithoutRequiredFlag(t *testing.T) {
 	require.Containsf(t, err.Error(), "--without-selector flag must be specified for --include-templates to work", "incorrect error: %s", err.Error())
 }
 
-func TestAddLabelWithoutSelectorAddLabel(t *testing.T) {
-	var o addMetadataOptions
-	o.metadata = map[string]string{"owls": "cute", "otters": "adorable"}
-	o.labelsWithoutSelector = true
-
-	m := makeKustomization(t)
-	require.NoError(t, o.addLabels(m))
-	// adding new labels should work
-	o.metadata = map[string]string{"new": "label"}
-	require.NoError(t, o.addLabels(m))
-
-	assert.Equal(t, m.Labels[0], types.Label{Pairs: map[string]string{"owls": "cute", "otters": "adorable"}})
-	assert.Equal(t, m.Labels[1], types.Label{Pairs: map[string]string{"new": "label"}})
+func TestAddLabelWithoutSelector(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseLabels  []types.Label      // original labels
+		options     addMetadataOptions // add labels
+		metadata    map[string]string  // added labels
+		expected    []types.Label      // expected labels
+		expectedErr string
+	}{
+		{
+			name:       "add to empty labels",
+			baseLabels: []types.Label{},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				metadata:              map[string]string{"new": "label"},
+			},
+			expected: []types.Label{
+				{
+					Pairs: map[string]string{"new": "label"},
+				},
+			},
+		},
+		{
+			name:       "add to empty labels with IncludeTemplates",
+			baseLabels: []types.Label{},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				includeTemplates:      true,
+				metadata:              map[string]string{"new": "label"},
+			},
+			expected: []types.Label{
+				{
+					Pairs:            map[string]string{"new": "label"},
+					IncludeTemplates: true,
+				},
+			},
+		},
+		{
+			name: "overwrite label requires force",
+			baseLabels: []types.Label{
+				{
+					Pairs: map[string]string{"key1": "old-value1"},
+				},
+			},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				force:                 false,
+				metadata:              map[string]string{"key1": "new-value1"},
+			},
+			expectedErr: "label key1 already in kustomization file",
+		},
+		{
+			name: "overwrite label",
+			baseLabels: []types.Label{
+				{
+					Pairs: map[string]string{"key1": "old-value1"},
+				},
+			},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				force:                 true,
+				metadata:              map[string]string{"key1": "new-value1"},
+			},
+			expected: []types.Label{
+				{
+					Pairs: map[string]string{"key1": "new-value1"},
+				},
+			},
+		},
+		{
+			name: "overwrite and add label",
+			baseLabels: []types.Label{
+				{
+					Pairs: map[string]string{"key1": "old-value1"},
+				},
+			},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				force:                 true,
+				metadata:              map[string]string{"key1": "new-value1", "key2": "value2"},
+			},
+			expected: []types.Label{
+				{
+					Pairs: map[string]string{"key1": "new-value1", "key2": "value2"},
+				},
+			},
+		},
+		{
+			name: "overwrite label with same settings",
+			baseLabels: []types.Label{
+				{
+					Pairs: map[string]string{"key": "old-value"},
+				},
+				{
+					IncludeTemplates: true,
+					Pairs:            map[string]string{"key": "old-value"},
+				},
+			},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				force:                 true,
+				metadata:              map[string]string{"key": "new-value"},
+				includeTemplates:      true,
+			},
+			expected: []types.Label{
+				{
+					Pairs: map[string]string{"key": "old-value"},
+				},
+				{
+					IncludeTemplates: true,
+					Pairs:            map[string]string{"key": "new-value"},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := makeKustomization(t)
+			m.Labels = tt.baseLabels
+			err := tt.options.addLabels(m)
+			if tt.expectedErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, m.Labels)
+			}
+		})
+	}
 }

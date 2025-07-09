@@ -39,8 +39,6 @@ steps:
         --build-arg
         VERSION=${_PULL_BASE_REF}
         --build-arg
-        COMMIT=$(git rev-parse HEAD)
-        --build-arg
         DATE=$(date -u +%FT%TZ)
         --platform
         linux/amd64,linux/arm64

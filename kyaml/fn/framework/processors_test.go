@@ -713,8 +713,8 @@ func (a schemaProviderOnlyTest) Schema() (*spec.Schema, error) {
 }
 
 type schemaProviderOnlyTest struct {
-	Metadata Metadata                   `yaml:"metadata" json:"metadata"`
-	Spec     v1alpha1JavaSpringBootSpec `yaml:"spec" json:"spec"`
+	Metadata Metadata                   `yaml:"metadata" json:"metadata"` //nolint:tagalign
+	Spec     v1alpha1JavaSpringBootSpec `yaml:"spec" json:"spec"`         //nolint:tagalign
 }
 
 func TestLoadFunctionConfig(t *testing.T) {

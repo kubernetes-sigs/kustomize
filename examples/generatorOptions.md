@@ -29,11 +29,11 @@ Add following generatorOptions
 ```
 cat >> $DEMO_HOME/kustomization.yaml << EOF
 generatorOptions:
- disableNameSuffixHash: true
- labels:
-   kustomize.generated.resource: somevalue
- annotations:
-   annotations.only.for.generated: othervalue
+  disableNameSuffixHash: true
+  labels:
+    kustomize.generated.resource: somevalue
+  annotations:
+    annotations.only.for.generated: othervalue
 EOF
 ```
 Run `kustomize build` and make sure that the generated ConfigMap
