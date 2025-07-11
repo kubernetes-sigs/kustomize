@@ -103,13 +103,13 @@ func TestShlexSplit(t *testing.T) {
 		{
 			name:     "empty string",
 			input:    ``,
-			expected: []string{""},
+			expected: []string{},
 			wantErr:  false,
 		},
 		{
 			name:     "multiple spaces",
-			input:    `   multiple   spaces   `,
-			expected: []string{"multiple", "spaces", ""},
+			input:    `   multiple	spaces   `,
+			expected: []string{"multiple", "spaces"},
 			wantErr:  false,
 		},
 		{
@@ -118,36 +118,42 @@ func TestShlexSplit(t *testing.T) {
 			expected: []string{"echo", "Hello, W#orld!", "${USER}"},
 			wantErr:  false,
 		},
+		{
+			name:     "comment only",
+			input:    `# this line is just a comment`,
+			expected: []string{},
+			wantErr:  false,
+		},
 		// may cause an error in shlex at python3
 		{
 			name:     "unclosed double quote",
 			input:    `"unclosed quote`,
-			expected: []string{"unclosed quote"},
-			wantErr:  false,
+			expected: nil,
+			wantErr:  true,
 		},
 		{
 			name:     "unclosed single quote",
 			input:    `'unclosed quote`,
-			expected: []string{"unclosed quote"},
-			wantErr:  false,
+			expected: nil,
+			wantErr:  true,
 		},
 		{
 			name:     "mixed unclosed quotes",
 			input:    `"mixed 'quotes`,
-			expected: []string{"mixed 'quotes"},
-			wantErr:  false,
+			expected: nil,
+			wantErr:  true,
 		},
 		{
 			name:     "single quote closed with double quote",
 			input:    `"hello world'`,
-			expected: []string{"hello world'"},
-			wantErr:  false,
+			expected: nil,
+			wantErr:  true,
 		},
 		{
 			name:     "double quote closed with single quote",
 			input:    `'hello world"`,
-			expected: []string{"hello world\""},
-			wantErr:  false,
+			expected: nil,
+			wantErr:  true,
 		},
 	}
 
@@ -165,7 +171,7 @@ func TestShlexSplit(t *testing.T) {
 				return
 			}
 
-			if assert.NoError(t, err, "FAIL: Unexpected error for input %q", tc.input) {
+			if assert.NoError(t, err, "FAIL: Unexpected error %q for input %q", err, tc.input) {
 				// check if the result matches the expected output
 				assert.Equal(t, tc.expected, result,
 					"FAIL: Result mismatch,Input %q, Expected %q, Got: %q\n",
