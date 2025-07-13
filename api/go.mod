@@ -4,7 +4,6 @@ go 1.22.7
 
 require (
 	github.com/blang/semver/v4 v4.0.0
-	github.com/carapace-sh/carapace-shlex v1.0.1
 	github.com/go-errors/errors v1.4.2
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/goleak v1.3.0
