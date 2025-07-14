@@ -18,8 +18,11 @@ func ShlexSplit(s string) ([]string, error) {
 func shlexSplit(s string) ([]string, error) {
 	result := []string{}
 
+	// noQuote is used to track if we are not in a quoted
+	const noQuote = 0
+
 	var current strings.Builder
-	var quote rune
+	var quote rune = noQuote
 	var escaped bool
 
 	for _, r := range s {
@@ -29,17 +32,17 @@ func shlexSplit(s string) ([]string, error) {
 			escaped = false
 		case r == '\\' && quote != '\'':
 			escaped = true
-		case (r == '\'' || r == '"') && quote == 0:
+		case (r == '\'' || r == '"') && quote == noQuote:
 			quote = r
 		case r == quote:
-			quote = 0
-		case r == '#' && quote == 0:
+			quote = noQuote
+		case r == '#' && quote == noQuote:
 			// Comment starts, ignore the rest of the line
 			if current.Len() > 0 {
 				result = append(result, current.String())
 			}
 			return result, nil
-		case quote == 0 && unicode.IsSpace(r):
+		case unicode.IsSpace(r) && quote == noQuote:
 			if current.Len() > 0 {
 				result = append(result, current.String())
 				current.Reset()
@@ -49,7 +52,7 @@ func shlexSplit(s string) ([]string, error) {
 		}
 	}
 
-	if quote != 0 {
+	if quote != noQuote {
 		return nil, fmt.Errorf("unclosed quote in string")
 	}
 	if current.Len() > 0 {
