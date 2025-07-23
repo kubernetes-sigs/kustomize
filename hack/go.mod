@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/hack
 
-go 1.22.7
+go 1.23.0
 
 require (
 	github.com/campoy/embedmd v1.0.0
@@ -379,7 +379,7 @@ require (
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/oauth2 v0.25.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
