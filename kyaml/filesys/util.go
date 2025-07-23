@@ -49,7 +49,7 @@ func PathSplit(incoming string) []string {
 		return []string{"", path}
 	}
 	dir = strings.TrimSuffix(dir, string(os.PathSeparator))
-	if dir == "" {
+	if dir == "" || path == "" {
 		return []string{path}
 	}
 	return append(PathSplit(dir), path)
