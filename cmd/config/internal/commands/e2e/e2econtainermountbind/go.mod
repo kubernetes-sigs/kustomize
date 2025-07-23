@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/config/internal/commands/e2e/e2econtainer-render-helm-chart
 
-go 1.22.7
+go 1.23.10
 
 require sigs.k8s.io/kustomize/kyaml v0.14.2
 
