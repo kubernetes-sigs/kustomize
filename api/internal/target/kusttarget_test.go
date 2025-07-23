@@ -300,6 +300,8 @@ metadata:
 		require.NoError(t, expected.Append(r), "failed to append resource: %v")
 	}
 	expected.RemoveBuildAnnotations()
+	require.NoError(t, expected.RemoveTransformerAnnotations())
+	require.NoError(t, expected.RemoveOriginAnnotations())
 	expYaml, err := expected.AsYaml()
 	require.NoError(t, err)
 
@@ -308,6 +310,8 @@ metadata:
 	actual, err := kt.MakeCustomizedResMap()
 	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
+	require.NoError(t, actual.RemoveTransformerAnnotations())
+	require.NoError(t, actual.RemoveOriginAnnotations())
 	actYaml, err := actual.AsYaml()
 	require.NoError(t, err)
 	assert.Equal(t, string(expYaml), string(actYaml))
@@ -411,6 +415,8 @@ metadata:
 		require.NoError(t, err)
 	}
 	expected.RemoveBuildAnnotations()
+	require.NoError(t, expected.RemoveTransformerAnnotations())
+	require.NoError(t, expected.RemoveOriginAnnotations())
 	expYaml, err := expected.AsYaml()
 	require.NoError(t, err)
 
@@ -419,6 +425,8 @@ metadata:
 	actual, err := kt.MakeCustomizedResMap()
 	require.NoError(t, err)
 	actual.RemoveBuildAnnotations()
+	require.NoError(t, actual.RemoveTransformerAnnotations())
+	require.NoError(t, actual.RemoveOriginAnnotations())
 	actYaml, err := actual.AsYaml()
 	require.NoError(t, err)
 	require.Equal(t, string(expYaml), string(actYaml))

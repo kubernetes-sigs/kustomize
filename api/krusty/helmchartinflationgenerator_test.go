@@ -158,6 +158,54 @@ helmChartInflationGenerator:
 	th.AssertActualEqualsExpected(m, expectedHelm)
 }
 
+func TestHelmChartNamespacePropagation(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: the-bug
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    this-service-is-deployed-in-namespace: {{ .Release.Namespace }}
+`)
+	th.WriteF(filepath.Join(th.GetRoot(), "values.yaml"), ``)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: the-actual-namespace
+helmCharts:
+  - name: service
+    releaseName: service
+    valuesFile: values.yaml
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    this-service-is-deployed-in-namespace: the-actual-namespace
+  name: the-bug
+  namespace: the-actual-namespace
+`)
+}
+
 func TestHelmChartInflationGenerator(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()
