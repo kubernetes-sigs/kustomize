@@ -89,10 +89,10 @@ func TestSecretGeneratorFromProperties(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
 secretGenerator:
-  - name: test-secret
-    behavior: create
-    envs:
-    - properties
+- name: test-secret
+  behavior: create
+  envs:
+  - properties
 `)
 	th.WriteF("base/properties", `
 VAR1=100
@@ -126,10 +126,10 @@ func TestSecretGeneratorEmitStringDataFromProperties(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
 secretGenerator:
-  - name: test-secret
-    behavior: create
-    envs:
-    - properties
+- name: test-secret
+  behavior: create
+  envs:
+  - properties
 `)
 	th.WriteF("base/properties", `
 VAR1=100
@@ -162,6 +162,138 @@ type: Opaque
 }
 
 // Generate Secrets similar to TestGeneratorBasics with emitStringData enabled and
+func TestSecretGeneratorDoesNotTouchStringData(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+secretGenerator:
+- name: test-secret
+  emitStringData: true
+  behavior: create
+  envs:
+  - properties
+`)
+	th.WriteF("base/properties", `
+VAR1=100
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+secretGenerator:
+- name: test-secret
+  emitStringData: false
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+VAR2=200
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  VAR2: MjAw
+kind: Secret
+metadata:
+  name: test-secret-962dt6476k
+stringData:
+  VAR1: "100"
+type: Opaque
+`)
+}
+
+func TestSecretGeneratorOverrideDataWithStringDataWorksAtKubeAPI(t *testing.T) {
+	// The resulting Secret will have a duplicate key in both data and stringData
+	// The stringData override will work, because the kube API considers stringData authoritative and write-only
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+secretGenerator:
+- name: test-secret
+  behavior: create
+  envs:
+  - properties
+`)
+	th.WriteF("base/properties", `
+CHANGING=data-before
+BASE=red
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+secretGenerator:
+- name: test-secret
+  emitStringData: true
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+CHANGING=stringData-after
+OVERLAY=blue
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  BASE: cmVk
+  CHANGING: ZGF0YS1iZWZvcmU=
+kind: Secret
+metadata:
+  name: test-secret-c4g4kdc558
+stringData:
+  CHANGING: stringData-after
+  OVERLAY: blue
+type: Opaque
+`)
+}
+
+func TestSecretGeneratorOverrideStringDataWithDataSilentlyFailsAtKubeAPI(t *testing.T) {
+	// The resulting Secret will have a duplicate key in both data and stringData
+	// The data override will fail, because the kube API considers the older value in stringData authoritative and write-only
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+secretGenerator:
+- name: test-secret
+  emitStringData: true
+  behavior: create
+  envs:
+  - properties
+`)
+	th.WriteF("base/properties", `
+CHANGING=stringData-before
+BASE=red
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+secretGenerator:
+- name: test-secret
+  emitStringData: false
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+CHANGING=data-after
+OVERLAY=blue
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  CHANGING: ZGF0YS1hZnRlcg==
+  OVERLAY: Ymx1ZQ==
+kind: Secret
+metadata:
+  name: test-secret-b65ktgckfh
+stringData:
+  BASE: red
+  CHANGING: stringData-before
+type: Opaque
+`)
+}
+
+// Generate Secrets similar to TestGeneratorBasics with stringData enabled and
 // disabled.
 func TestSecretGeneratorEmitStringData(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
