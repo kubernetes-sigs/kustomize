@@ -1027,3 +1027,43 @@ devel: true
 	assert.Contains(t, string(chartYamlContent), "name: sm-operator")
 	assert.Contains(t, string(chartYamlContent), "version: 0.1.0-Beta")
 }
+
+func TestHelmChartInflationGeneratorWithSkipSchemaValidation(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+	copyTestChartsIntoHarness(t, th)
+
+  // minecraftServer.eula must be one of the following: "true", "TRUE", "false", "FALSE"
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myMc
+name: minecraft
+version: 4.23.7
+repo: https://itzg.github.io/minecraft-server-charts
+releaseName: isarns
+valuesInline:
+  minecraftServer:
+    eula: not-in-schema 
+    difficulty: hard
+    rcon:
+      enabled: true
+  resources:
+    requests:
+      cpu: 555m
+      memory: 111Mi
+skipSchemaValidation: true
+`)
+
+	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
+	require.NoError(t, err)
+	assert.Equal(t, "isarns-minecraft-rcon", cm)
+  cm, err =rm.Resources()[4].GetFieldValue("spec.template.spec.containers[0].env[0].value")
+  require.NoError(t, err)
+  assert.Equal(t, "not-in-schema", cm)
+}
