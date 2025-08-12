@@ -614,3 +614,391 @@ metadata:
   name: app-config-dev-97544dk6t8
 `)
 }
+
+// regex selector: append in annotation by visitor name
+func TestReplacementTransformerAppendToAnnotationUsingRegex(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("base/app1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d1
+spec:
+  template:
+    spec:
+      containers:
+        - image: app1:1.0
+          name: app
+`)
+	th.WriteF("base/app2.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d2
+spec:
+  template:
+    spec:
+      containers:
+        - image: app2:1.0
+          name: app
+`)
+	th.WriteF("base/cm1.yaml", `
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  name: cm1
+`)
+	th.WriteF("base/cm2.yaml", `
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  name: cm2
+`)
+	th.WriteF("base/pg1.yaml", `
+apiVersion: apps/v1
+kind: postgresql
+metadata:
+  name: pg1
+`)
+	th.WriteK("base", `
+resources:
+- app1.yaml
+- app2.yaml
+- cm1.yaml
+- cm2.yaml
+- pg1.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: cm1
+    targets:
+      - reject:
+          - kind: ConfigMap
+            name: c.1
+        select:
+          kind: Deployment|ConfigMap|postgresql
+        fieldPaths:
+          - metadata.annotations.visitedby
+        options:
+          index: -1
+          delimiter: ","
+          create: true
+  - source:
+      kind: ConfigMap
+      name: cm2
+    targets:
+      - reject:
+          - kind: ConfigMap
+            name: .*2
+        select:
+          kind: Deployment|ConfigMap|postgresql
+        fieldPaths:
+          - metadata.annotations.visitedby
+        options:
+          index: -1
+          delimiter: ","
+          create: true
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    visitedby: cm2,cm1,
+  name: d1
+spec:
+  template:
+    spec:
+      containers:
+      - image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    visitedby: cm2,cm1,
+  name: d2
+spec:
+  template:
+    spec:
+      containers:
+      - image: app2:1.0
+        name: app
+---
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  annotations:
+    visitedby: cm2,
+  name: cm1
+---
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  annotations:
+    visitedby: cm1,
+  name: cm2
+---
+apiVersion: apps/v1
+kind: postgresql
+metadata:
+  annotations:
+    visitedby: cm2,cm1,
+  name: pg1
+`)
+}
+
+// selector regex: construct service url
+func TestReplacementTransformerServiceNamespaceUrlUsingRegex(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("base/d1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d1
+spec:
+  template:
+    spec:
+      containers:
+        - image: app1:1.0
+          name: app
+          env:
+            - name: APP1_SERVICE
+              value: "d1.app1"
+`)
+	th.WriteF("base/d2.yaml", `
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: d2
+spec:
+  template:
+    spec:
+      containers:
+        - image: app1:1.0
+          name: app
+          env:
+            - name: APP1_SERVICE
+              value: "d2.app1"
+`)
+	th.WriteF("base/sts1.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sts1
+spec:
+  template:
+    spec:
+      containers:
+        - image: app1:1.0
+          name: app
+          env:
+            - name: APP1_SERVICE
+              value: "app1"
+`)
+	th.WriteF("base/cm1.yaml", `
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  name: cm1
+data:
+  APP1_SERVICE_PORT: "8080"
+`)
+	th.WriteF("base/svc1.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+  namespace: svc1-namespace
+spec:
+  selector:
+    app.kubernetes.io/name: app1
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+
+`)
+	th.WriteK("base", `
+resources:
+- d1.yaml
+- d2.yaml
+- sts1.yaml
+- cm1.yaml
+- svc1.yaml
+
+replacements:
+  - source:
+      kind: Service
+      name: svc1
+      fieldPath: metadata.namespace
+    targets:
+      - select:
+          kind: Deployment|.*Set
+        fieldPaths:
+          - spec.template.spec.containers.*.env.[name=APP1_SERVICE].value
+        options:
+          index: 99
+          delimiter: "."
+  - source:
+      kind: ConfigMap
+      name: cm1
+      fieldPath: data.APP1_SERVICE_PORT
+    targets:
+      - select:
+          kind: Deployment|.*Set
+        fieldPaths:
+          - spec.template.spec.containers.*.env.[name=APP1_SERVICE].value
+        options:
+          index: 99
+          delimiter: ":"
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d1
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: APP1_SERVICE
+          value: d1.app1.svc1-namespace:8080
+        image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: d2
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: APP1_SERVICE
+          value: d2.app1.svc1-namespace:8080
+        image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sts1
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: APP1_SERVICE
+          value: app1.svc1-namespace:8080
+        image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+data:
+  APP1_SERVICE_PORT: "8080"
+kind: ConfigMap
+metadata:
+  name: cm1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+  namespace: svc1-namespace
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 9376
+  selector:
+    app.kubernetes.io/name: app1
+`)
+}
+
+func TestReplacementTransformerWithSuffixTransformerAndRejectUsingRegex(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("base/app.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: original-name
+spec:
+  template:
+    spec:
+      containers:
+        - image: app1:1.0
+          name: app
+`)
+	th.WriteK("base", `
+resources:
+  - app.yaml
+`)
+	th.WriteK("overlay", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+nameSuffix: -dev
+namePrefix: pre-
+resources:
+  - ../base
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - name=something-else
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: app-config
+    fieldPath: data.name
+  targets:
+    - reject:
+        - name: .*original.*
+      select:
+        kind: Deployment
+      fieldPaths:
+        - spec.template.spec.containers.0.name
+    - select:
+        kind: ConfigMap
+        name: app-config
+      fieldPaths:
+        - data.name-copy
+      options:
+        create: true
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pre-original-name-dev
+spec:
+  template:
+    spec:
+      containers:
+      - image: app1:1.0
+        name: app
+---
+apiVersion: v1
+data:
+  name: something-else
+  name-copy: something-else
+kind: ConfigMap
+metadata:
+  name: pre-app-config-dev-7266b7f2m9
+`)
+}
