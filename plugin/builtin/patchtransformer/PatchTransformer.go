@@ -6,7 +6,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"strings"
 
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
@@ -73,18 +73,7 @@ func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	}
 	if errSM == nil {
 		p.smPatches = patchesSM
-		for _, loadedPatch := range p.smPatches {
-			if p.Options == nil {
-				continue
-			}
-
-			if p.Options.AllowNameChange {
-				loadedPatch.AllowNameChange()
-			}
-			if p.Options.AllowKindChange {
-				loadedPatch.AllowKindChange()
-			}
-		}
+		p.loadPatchOptions(p.smPatches)
 	} else {
 		p.jsonPatches = patchesJson
 	}
@@ -114,6 +103,9 @@ func (p *plugin) transformStrategicMerge(m resmap.ResMap) error {
 		if err != nil {
 			return fmt.Errorf("unable to find patch target %q in `resources`: %w", p.Target, err)
 		}
+		if err := p.allowNoTargetMatch(selected); err != nil {
+			return err
+		}
 		return errors.Wrap(m.ApplySmPatch(resource.MakeIdSet(selected), patch))
 	}
 
@@ -139,8 +131,8 @@ func (p *plugin) transformJson6902(m resmap.ResMap) error {
 		return err
 	}
 
-	if p.Options["allowNoTargetMatch"] {
-		log.Println("Warning: patches target not found for Target")
+	if err := p.allowNoTargetMatch(resources); err != nil {
+		return err
 	}
 
 	for _, res := range resources {
@@ -180,4 +172,34 @@ func jsonPatchFromBytes(in []byte) (jsonpatch.Patch, error) {
 		ops = string(jsonOps)
 	}
 	return jsonpatch.DecodePatch([]byte(ops))
+}
+
+// allowNoTargetMatch checks whether no target match is allowed and return an error in case the patch violates that.
+func (p *plugin) allowNoTargetMatch(resources []*resource.Resource) error {
+	if len(resources) > 0 {
+		return nil
+	}
+
+	if p.Options == nil || !p.Options.AllowNoTargetMatch {
+		return fmt.Errorf("patches target not found for %s", p.Target.ResId)
+	}
+
+	fmt.Fprintf(os.Stderr, "# %v %s\n", "Warning: patches target not found for Target", p.Target.ResId)
+	return nil
+}
+
+// loadPatchOptions, given a list of resources, enables the available patch options for each resource.
+func (p *plugin) loadPatchOptions(patches []*resource.Resource) {
+	if p.Options == nil {
+		return
+	}
+
+	for _, patch := range patches {
+		if p.Options.AllowNameChange {
+			patch.AllowNameChange()
+		}
+		if p.Options.AllowKindChange {
+			patch.AllowKindChange()
+		}
+	}
 }

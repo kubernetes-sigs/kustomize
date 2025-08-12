@@ -10,4 +10,7 @@ type PatchArgs struct {
 
 	// AllowKindChange allows kind changes to the resource.
 	AllowKindChange bool `json:"allowKindChange,omitempty" yaml:"allowKindChange,omitempty"`
+
+	// AllowNoTargetMatch allows files rendering in case of no target (`api/types/selector`) match.
+	AllowNoTargetMatch bool `json:"allowNoTargetMatch,omitempty" yaml:"allowNoTargetMatch,omitempty"`
 }

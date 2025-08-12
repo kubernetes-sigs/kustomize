@@ -108,8 +108,9 @@ func TestPatchEquals(t *testing.T) {
 				Patch:  "bar",
 				Target: &selector,
 				Options: &PatchArgs{
-					AllowNameChange: true,
-					AllowKindChange: true,
+					AllowNameChange:    true,
+					AllowKindChange:    true,
+					AllowNoTargetMatch: false,
 				},
 			},
 			patch2: Patch{
@@ -117,8 +118,9 @@ func TestPatchEquals(t *testing.T) {
 				Patch:  "bar",
 				Target: &selector,
 				Options: &PatchArgs{
-					AllowNameChange: true,
-					AllowKindChange: true,
+					AllowNameChange:    true,
+					AllowKindChange:    true,
+					AllowNoTargetMatch: false,
 				},
 			},
 			expect: true,
@@ -153,7 +155,6 @@ func TestPatchEquals(t *testing.T) {
 				Patch:  "bar",
 				Target: &selector,
 				Options: &PatchArgs{
-					AllowNameChange: false,
 					AllowKindChange: true,
 				},
 			},
@@ -162,8 +163,8 @@ func TestPatchEquals(t *testing.T) {
 				Patch:  "bar",
 				Target: &selector,
 				Options: &PatchArgs{
-					AllowNameChange: true,
-					AllowKindChange: true,
+					AllowKindChange:    true,
+					AllowNoTargetMatch: true,
 				},
 			},
 			expect: false,

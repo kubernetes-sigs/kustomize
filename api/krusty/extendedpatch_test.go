@@ -826,6 +826,106 @@ metadata:
 	assert.Contains(t, err.Error(), "patches target not found for [noKind].[noVer].[noGrp]/no-match.[noNs]")
 }
 
+func TestExtendedPatchAllowNoMatch(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeCommonFileForExtendedPatchTest(th)
+	th.WriteK("base", `
+resources:
+- deployment.yaml
+- service.yaml
+patches:
+- path: patch.yaml
+  target:
+    name: no-match
+  options:
+    allowNoTargetMatch: true     
+`)
+	th.WriteF("base/patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+  annotations:
+    new-key: new-value
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: busybox
+        name: busybox
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: busybox-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: busybox-persistent-storage
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: busybox
+`)
+}
+
 func TestExtendedPatchWithoutTarget(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
@@ -952,6 +1052,112 @@ metadata:
 	assert.Contains(t, err.Error(), "patches target not found for [noKind].[noVer].[noGrp]/no-match.[noNs]")
 }
 
+func TestExtendedPatchAllowNoMatchMultiplePatch(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeCommonFileForExtendedPatchTest(th)
+	th.WriteK("base", `
+resources:
+- deployment.yaml
+- service.yaml
+patches:
+- path: patch.yaml
+  target:
+    name: no-match
+  options:
+    allowNoTargetMatch: true
+- path: patch.yaml
+  target:
+    name: busybox
+    kind: Job
+  options:
+    allowNoTargetMatch: true
+`)
+	th.WriteF("base/patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox
+  annotations:
+    new-key: new-value
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: busybox
+        name: busybox
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: busybox-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: busybox-persistent-storage
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: busybox
+`)
+}
+
 func TestExtendedPatchMultiplePatchOverlapping(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	makeCommonFileForExtendedPatchTest(th)
@@ -1072,38 +1278,89 @@ func TestTargetMissingPatchJson6902Error(t *testing.T) {
 	makeCommonFileForExtendedPatchTest(th)
 	th.WriteK("base", `
 resources:
-- servicemonitor.yaml
+- service.yaml
 patchesJson6902:
 - target:
-    group: monitoring.coreos.com
-    kind: ServiceMonitor
-    name: starboard-exporter
-    namespace: starboard
+    kind: Service
+    name: busybox
     version: v2
-  path: patch.0.yaml
+  path: patch.yaml
 `)
-	th.WriteF("base/servicemonitor.yaml", `
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    app: starboard-exporter
-  name: starboard-exporter
-  namespace: starboard
-spec:
-  endpoints:
-  - path: /metrics
-    port: metrics
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: starboard-exporter
-      app.kubernetes.io/name: starboard-exporter
-`)
-	th.WriteF("base/patch.0.yaml", `
+	th.WriteF("base/patch.yaml", `
 - op: add
   path: /metadata/labels/release
-  value: kube-prometheus-stack
+  value: this-label-will-not-go-through
 `)
 	err := th.RunWithErr("base", th.MakeDefaultOptions())
-	assert.Contains(t, err.Error(), "patchesJson6902 target not found for ServiceMonitor.v2.monitoring.coreos.com/starboard-exporter.starboard")
+	assert.Contains(t, err.Error(), "patchesJson6902 target not found for Service.v2.[noGrp]/busybox.[noNs]")
+}
+
+func TestTargetMissingJsonPatchError(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeCommonFileForExtendedPatchTest(th)
+	th.WriteK("base", `
+resources:
+- service.yaml
+patches:
+- target:
+    kind: Service
+    name: busybox
+    version: v2
+  path: patch.yaml
+`)
+	th.WriteF("base/patch.yaml", `
+- op: add
+  path: /metadata/labels/release
+  value: this-label-will-not-go-through
+`)
+	err := th.RunWithErr("base", th.MakeDefaultOptions())
+	assert.Contains(t, err.Error(), "patches target not found for Service.v2.[noGrp]/busybox.[noNs]")
+}
+
+func TestAllowNoTargetMatchPatchTransformerOptions(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	makeCommonFileForExtendedPatchTest(th)
+	th.WriteK("base", `
+resources:
+- service.yaml
+patches:
+- target:
+    kind: Service
+    name: busybox
+    version: v2
+  path: patch.yaml
+  options:
+    allowNoTargetMatch: true
+`)
+	th.WriteF("base/patch.yaml", `
+- op: add
+  path: /metadata/labels/release
+  value: this-label-will-not-go-through
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: busybox
+`)
 }
