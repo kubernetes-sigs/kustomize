@@ -86,7 +86,7 @@ func MakeTransformerConfig(
 	}
 	var paths []string
 	for _, configuration := range configurations {
-		if (!strings.Contains(configuration, "\n") && !strings.Contains(configuration, "\r")) {
+		if !strings.Contains(configuration, "\n") && !strings.Contains(configuration, "\r") {
 			paths = append(paths, configuration)
 			continue
 		}
