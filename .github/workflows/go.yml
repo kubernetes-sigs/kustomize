@@ -38,6 +38,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
+        go-version: '1.24.4'
         go-version-file: go.work
       id: go
     - name: sync go modules
@@ -58,6 +59,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
+        go-version: '1.24.4'
         go-version-file: go.work
       id: go
     - name: Lint
@@ -76,6 +78,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
+        go-version: '1.24.4'
         go-version-file: go.work
       id: go
     - name: Test all modules
@@ -94,6 +97,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
+        go-version: '1.24.4'
         go-version-file: go.work
       id: go
     - name: Test all modules
@@ -112,6 +116,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
+        go-version: '1.24.4'
         go-version-file: go.work
       id: go
     - name: Test kyaml

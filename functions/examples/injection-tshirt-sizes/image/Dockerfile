@@ -1,15 +1,12 @@
 # Copyright 2019 The Kubernetes Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye
+FROM public.ecr.aws/docker/library/golang:1.24.4-bullseye
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
-COPY main.go .
-RUN go build -v -o /usr/local/bin/config-function ./
+COPY . .
+RUN go build -v -o /usr/local/bin/function ./
 
 FROM alpine:latest
-COPY --from=0 /usr/local/bin/config-function /usr/local/bin/config-function
-CMD ["config-function"]
+COPY --from=0 /usr/local/bin/function /usr/local/bin/function
+CMD ["function"]
