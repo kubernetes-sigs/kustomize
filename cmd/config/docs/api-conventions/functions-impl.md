@@ -6,28 +6,21 @@ directly using `docker run`.
 
 Run `config help docs-fn-spec` to see the Configuration Functions Specification.
 
-`kustomize fn run` is an example orchestrator for invoking Configuration
-Functions. This document describes how to implement and invoke an example
-function.
+`kustomize fn run` is an example orchestrator for invoking Configuration Functions. This document describes how to implement and invoke an example function.
 
 ## Example Function Implementation
 
-Following is an example for implementing an nginx abstraction using a
-configuration function.
+Following is an example for implementing an nginx abstraction using a configuration function.
 
 ### `nginx-template.sh`
 
-`nginx-template.sh` is a simple bash script which uses a _heredoc_ as a
-templating solution for generating Resources from the functionConfig input
-fields.
+`nginx-template.sh` is a simple bash script which uses a _heredoc_ as a templating solution for generating Resources from the functionConfig input fields.
 
 The script wraps itself using `config run wrap -- $0` which will:
 
-1. Parse the `ResourceList.functionConfig` (provided to the container stdin)
-   into env vars
+1. Parse the `ResourceList.functionConfig` (provided to the container stdin) into env vars
 2. Merge the stdout into the original list of Resources
-3. Defaults filenames for newly generated Resources (if they are not set as
-   annotations) to `config/NAME_KIND.yaml`
+3. Defaults filenames for newly generated Resources (if they are not set as annotations) to `config/NAME_KIND.yaml`
 4. Format the output
 
 ```bash
@@ -86,11 +79,10 @@ End-of-message
 
 ### Dockerfile
 
-`Dockerfile` installs `kustomize fn` and copies the script into the container
-image.
+`Dockerfile` installs `kustomize fn` and copies the script into the container image.
 
 ```
-FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye
+FROM public.ecr.aws/docker/library/golang:1.24.4-bullseye
 RUN go get sigs.k8s.io/kustomize/cmd/config
 RUN mv /go/bin/config /usr/bin/config
 COPY nginx-template.sh /usr/bin/nginx-template.sh

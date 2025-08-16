@@ -19,6 +19,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
+          go-version: '1.24.4'
           go-version-file: go.work
       - name: Execute go-apidiff
         uses: joelanford/go-apidiff@v0.8.3
