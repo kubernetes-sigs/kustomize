@@ -3,7 +3,7 @@
 
 run:
   deadline: 5m
-  go: '1.22'
+  go: "1.24"
 
 linters:
   enable-all: true
@@ -52,14 +52,14 @@ linters-settings:
     min-complexity: 30
   revive:
     rules:
-    - name: var-naming
-      arguments:
-      - [ "ID", "API", "JSON" ] # AllowList
-      - [ ] # DenyList
+      - name: var-naming
+        arguments:
+          - ["ID", "API", "JSON"] # AllowList
+          - [] # DenyList
   gomnd:
     ignored-functions:
-    - os.WriteFile
-    - make
+      - os.WriteFile
+      - make
   gomoddirectives:
     replace-local: true
   gosec:

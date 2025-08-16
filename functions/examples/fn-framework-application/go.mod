@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/functions/examples/fn-framework-application
 
-go 1.22.7
+go 1.24.0
 
 require (
 	github.com/spf13/cobra v1.8.0
