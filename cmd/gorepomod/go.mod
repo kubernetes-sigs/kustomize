@@ -2,6 +2,8 @@ module sigs.k8s.io/kustomize/cmd/gorepomod
 
 go 1.24.0
 
+tool sigs.k8s.io/kustomize/cmd/gorepomod
+
 require (
 	github.com/spf13/viper v1.20.0
 	github.com/stretchr/testify v1.10.0
