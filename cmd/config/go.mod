@@ -1,10 +1,10 @@
 module sigs.k8s.io/kustomize/cmd/config
 
-go 1.22.7
+go 1.24.0
 
 require (
 	github.com/go-errors/errors v1.4.2
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/inf.v0 v0.9.1
 	sigs.k8s.io/kustomize/kyaml v0.20.1
@@ -26,8 +26,8 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.3 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect

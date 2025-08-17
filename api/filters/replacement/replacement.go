@@ -192,14 +192,14 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 			Path:   kyaml_utils.SmarterPathSplitter(fp, "."),
 			Create: createKind})
 		if err != nil {
-			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0)) //nolint:govet
+			return errors.WrapPrefixf(err, "%s", fieldRetrievalError(fp, createKind != 0))
 		}
 		targetFields, err := targetFieldList.Elements()
 		if err != nil {
-			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0)) //nolint:govet
+			return errors.WrapPrefixf(err, "%s", fieldRetrievalError(fp, createKind != 0))
 		}
 		if len(targetFields) == 0 {
-			return errors.Errorf(fieldRetrievalError(fp, createKind != 0)) //nolint:govet
+			return errors.Errorf("%s", fieldRetrievalError(fp, createKind != 0))
 		}
 
 		for _, t := range targetFields {

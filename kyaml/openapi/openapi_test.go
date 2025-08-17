@@ -278,7 +278,7 @@ func TestIsNamespaceScoped_builtin(t *testing.T) {
 func TestIsNamespaceScopedPrecompute(t *testing.T) {
 	initSchema()
 	if diff := cmp.Diff(globalSchema.namespaceabilityByResourceType, precomputedIsNamespaceScoped); diff != "" {
-		t.Fatalf(diff)
+		t.Fatalf("%s", diff)
 	}
 }
 

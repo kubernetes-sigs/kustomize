@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # build
-FROM public.ecr.aws/docker/library/golang:1.22.7-bullseye AS builder
+FROM public.ecr.aws/docker/library/golang:1.24.6-bullseye AS builder
 ARG VERSION
 ARG DATE
 RUN mkdir /build

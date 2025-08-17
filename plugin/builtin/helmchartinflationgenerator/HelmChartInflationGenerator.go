@@ -184,12 +184,11 @@ func (p *plugin) runHelmCommand(
 	}
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
-		//nolint:govet
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
 				helm, strings.Join(args, " "), env, helm, err),
-			errorOutput,
+			"%s", errorOutput,
 		)
 	}
 	return stdout.Bytes(), err
