@@ -2,20 +2,35 @@ module sigs.k8s.io/kustomize/hack
 
 go 1.24.0
 
-require (
-	github.com/campoy/embedmd v1.0.0
-	github.com/cli/cli v1.2.1
-	github.com/go-bindata/go-bindata/v3 v3.1.3
-	github.com/gohugoio/hugo v0.120.4
-	github.com/golangci/golangci-lint v1.64.8
-	github.com/google/addlicense v1.1.1
-	github.com/instrumenta/kubeval v0.16.1
-	github.com/joelanford/go-apidiff v0.6.0
-	github.com/monopole/mdrip v1.0.3
-	golang.org/x/tools v0.36.0
-	sigs.k8s.io/controller-tools v0.14.0
-	sigs.k8s.io/kind v0.21.0
-	sigs.k8s.io/kustomize/cmd/mdtogo v0.0.0-20240208073625-b154361c0042
+tool (
+	// for embeding code and manifest into markdown docs
+	github.com/campoy/embedmd
+	// for creating GitHub PRs & releases
+	github.com/cli/cli/cmd/gh
+	// for bundling non-go files into go binaries
+	github.com/go-bindata/go-bindata/v3/go-bindata
+	// for site serving
+	github.com/gohugoio/hugo
+	// for code linting
+	github.com/golangci/golangci-lint/cmd/golangci-lint
+	// for license file header injection
+	github.com/google/addlicense
+	// for validating k8s manifests
+	github.com/instrumenta/kubeval
+	// for checking Go API compatibility
+	github.com/joelanford/go-apidiff
+	// for testable markdown examples
+	github.com/monopole/mdrip
+	// for code formatting
+	golang.org/x/tools/cmd/goimports
+	// for code generation
+	golang.org/x/tools/cmd/stringer
+	// for generating CRDs
+	sigs.k8s.io/controller-tools/cmd/controller-gen
+	// for local testing
+	sigs.k8s.io/kind
+	// for cobra command help text generation from markdown
+	sigs.k8s.io/kustomize/cmd/mdtogo
 )
 
 require (
@@ -114,6 +129,7 @@ require (
 	github.com/briandowns/spinner v1.11.1 // indirect
 	github.com/butuzov/ireturn v0.3.1 // indirect
 	github.com/butuzov/mirror v1.3.0 // indirect
+	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/catenacyber/perfsprint v0.8.2 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
@@ -123,6 +139,7 @@ require (
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.3.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
+	github.com/cli/cli v1.2.1 // indirect
 	github.com/cli/safeexec v1.0.1 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cncf/xds/go v0.0.0-20240905190251-b4127c9b8d78 // indirect
@@ -153,6 +170,7 @@ require (
 	github.com/getkin/kin-openapi v0.131.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/ghostiam/protogetter v0.3.9 // indirect
+	github.com/go-bindata/go-bindata/v3 v3.1.3 // indirect
 	github.com/go-critic/go-critic v0.12.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.0 // indirect
@@ -175,6 +193,7 @@ require (
 	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gohugoio/go-i18n/v2 v2.1.3-0.20230805085216-e63c13218d0e // indirect
+	github.com/gohugoio/hugo v0.120.4 // indirect
 	github.com/gohugoio/locales v0.14.0 // indirect
 	github.com/gohugoio/localescompressed v1.0.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
@@ -184,10 +203,12 @@ require (
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.0 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
+	github.com/golangci/golangci-lint v1.64.8 // indirect
 	github.com/golangci/misspell v0.6.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed // indirect
+	github.com/google/addlicense v1.1.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
@@ -216,12 +237,14 @@ require (
 	github.com/henvic/httpretty v0.0.6 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/instrumenta/kubeval v0.16.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
 	github.com/jgautheron/goconst v1.7.1 // indirect
 	github.com/jingyugao/rowserrcheck v1.1.1 // indirect
 	github.com/jjti/go-spancheck v0.6.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/joelanford/go-apidiff v0.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/julz/importas v0.2.0 // indirect
@@ -265,6 +288,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
+	github.com/monopole/mdrip v1.0.3 // indirect
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/muesli/reflow v0.1.0 // indirect
 	github.com/muesli/smartcrop v0.3.0 // indirect
@@ -385,6 +409,7 @@ require (
 	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
@@ -407,7 +432,10 @@ require (
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
 	mvdan.cc/gofumpt v0.7.0 // indirect
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
+	sigs.k8s.io/controller-tools v0.14.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
+	sigs.k8s.io/kind v0.21.0 // indirect
+	sigs.k8s.io/kustomize/cmd/mdtogo v0.0.0-20240208073625-b154361c0042 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect

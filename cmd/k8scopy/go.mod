@@ -2,6 +2,8 @@ module sigs.k8s.io/kustomize/cmd/k8scopy
 
 go 1.24.0
 
+tool sigs.k8s.io/kustomize/cmd/k8scopy
+
 require (
 	github.com/stretchr/testify v1.10.0
 	sigs.k8s.io/yaml v1.5.0
