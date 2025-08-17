@@ -168,7 +168,6 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 		return nil, errors.WrapPrefixf(
 			err, "%s", "closing plugin config file "+f.Name())
 	}
-	//nolint:gosec
 	cmd := exec.Command(
 		p.path, append([]string{f.Name()}, p.args...)...)
 	cmd.Env = p.getEnv()

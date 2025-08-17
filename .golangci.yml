@@ -42,6 +42,11 @@ linters:
     - varcheck # abandoned by author
     - maligned # abandoned by author
     - interfacer # archived by author
+    # TODO(koba1t): temporarily disabled, will be addressed after upgrading to Go 1.24
+    - usetesting
+    - mnd
+    - copyloopvar
+    - intrange
 
 linters-settings:
   dupl:
