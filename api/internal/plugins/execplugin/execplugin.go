@@ -161,12 +161,12 @@ func (p *ExecPlugin) invokePlugin(input []byte) ([]byte, error) {
 	_, err = f.Write(p.cfg)
 	if err != nil {
 		return nil, errors.WrapPrefixf(
-			err, "%s", "writing plugin config to "+f.Name())
+			err, "writing plugin config to %s", f.Name())
 	}
 	err = f.Close()
 	if err != nil {
 		return nil, errors.WrapPrefixf(
-			err, "%s", "closing plugin config file "+f.Name())
+			err, "closing plugin config file %s", f.Name())
 	}
 	cmd := exec.Command(
 		p.path, append([]string{f.Name()}, p.args...)...)
