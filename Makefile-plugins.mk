@@ -99,7 +99,7 @@ generate-kustomize-builtin-plugins: $(builtplugins)
 		go generate .; \
 	done
 
-# Check for diff by comparing current revision of generated plugins on HEAD and newly generated plugins on local branch, 
+# Check for diff by comparing current revision of generated plugins on HEAD and newly generated plugins on local branch,
 # If diff is found, throw error code 1
 .PHONY: builtin-plugins-diff
 builtin-plugins-diff: $(builtplugins)
@@ -107,7 +107,9 @@ builtin-plugins-diff: $(builtplugins)
 		echo "Checking for diff... $${file}" ; \
 		set -e ; \
 		if [ "`git diff $${file} | wc -c`" -gt 0 ]; then\
-			echo "Error(1): diff found on $${file}"; exit 1; \
+			echo "Error(1): diff found on $${file}"; \
+			git diff $${file};\
+			exit 1;\
 		fi \
 	done
 
