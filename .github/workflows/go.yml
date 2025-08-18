@@ -17,7 +17,7 @@ jobs:
     outputs:
       doc: ${{ steps.filter.outputs.doc }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: dorny/paths-filter@v3
       id: filter
       with:
@@ -32,7 +32,7 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
     - name: Set up Go 1.x
@@ -52,7 +52,7 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
     - name: Set up Go 1.x
@@ -72,7 +72,7 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
@@ -90,7 +90,7 @@ jobs:
     runs-on: [macos-latest]
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
@@ -108,7 +108,7 @@ jobs:
     runs-on: [windows-latest]
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Set up Go 1.x
       uses: actions/setup-go@v5
       with:
