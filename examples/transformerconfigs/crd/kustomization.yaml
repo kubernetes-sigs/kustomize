@@ -3,8 +3,10 @@ resources:
 
 namePrefix: test-
 
-commonLabels:
-  foo: bar
+labels:
+- includeSelectors: true
+  pairs:
+    foo: bar
 
 vars:
 - name: BEE_ACTION
