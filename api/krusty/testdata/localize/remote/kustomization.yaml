@@ -5,5 +5,7 @@ resources:
   - https://github.com/kubernetes-sigs/kustomize//api/krusty/testdata/localize/simple?submodules=0&ref=kustomize/v4.5.7&timeout=300
   - hpa.yaml
 
-commonLabels:
-  purpose: remoteReference
+labels:
+- includeSelectors: true
+  pairs:
+    purpose: remoteReference

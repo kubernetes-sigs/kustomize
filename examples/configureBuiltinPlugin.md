@@ -100,8 +100,10 @@ to be read and transformed:
 ```
 cat <<'EOF' >$DEMO_HOME/kustomization.yaml
 namePrefix: hello-
-commonLabels:
-  app: hello
+labels:
+- includeSelectors: true
+  pairs:
+    app: hello
 commonAnnotations:
   area: "51"
   greeting: Take me to your leader
