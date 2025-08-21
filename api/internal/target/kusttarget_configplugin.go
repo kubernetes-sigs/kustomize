@@ -166,6 +166,11 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		for _, chart := range kt.kustomization.HelmCharts {
 			c.HelmGlobals = globals
 			c.HelmChart = chart
+			// Pass kustomize namespace to helm
+			// Fixes https://github.com/kubernetes-sigs/kustomize/issues/5566
+			if c.HelmChart.Namespace == "" && kt.kustomization.Namespace != "" {
+				c.HelmChart.Namespace = kt.kustomization.Namespace
+			}
 			p := f()
 			if err = kt.configureBuiltinPlugin(p, c, bpt); err != nil {
 				return nil, err
