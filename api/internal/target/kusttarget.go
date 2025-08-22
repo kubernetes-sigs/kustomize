@@ -29,13 +29,14 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	kustFileName  string
-	ldr           ifc.Loader
-	validator     ifc.Validator
-	rFactory      *resmap.Factory
-	pLdr          *loader.Loader
-	origin        *resource.Origin
+	kustomization   *types.Kustomization
+	kustFileName    string
+	ldr             ifc.Loader
+	validator       ifc.Validator
+	rFactory        *resmap.Factory
+	pLdr            *loader.Loader
+	origin          *resource.Origin
+	parentNamespace string // Namespace inherited from parent for Helm charts only
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -496,10 +497,15 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 	subKt.kustomization.BuildMetadata = kt.kustomization.BuildMetadata
 	subKt.origin = kt.origin
-	// Propagate namespace to child kustomization if child doesn't have one
-	// This ensures Helm charts in base kustomizations inherit namespace from overlays
+	// Store parent namespace for Helm chart processing without setting it on the kustomization
+	// This avoids redundant namespace transformations at every nested level
 	if subKt.kustomization.Namespace == "" && kt.kustomization.Namespace != "" {
-		subKt.kustomization.Namespace = kt.kustomization.Namespace
+		// Instead of directly setting the namespace, we'll pass it through a different mechanism
+		// to avoid triggering namespace transformations at every level
+		subKt.parentNamespace = kt.kustomization.Namespace
+		if subKt.parentNamespace == "" {
+			subKt.parentNamespace = kt.parentNamespace
+		}
 	}
 	var bytes []byte
 	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {

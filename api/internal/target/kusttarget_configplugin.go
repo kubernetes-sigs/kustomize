@@ -168,8 +168,14 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			c.HelmChart = chart
 			// Pass kustomize namespace to helm
 			// Fixes https://github.com/kubernetes-sigs/kustomize/issues/5566
-			if c.HelmChart.Namespace == "" && kt.kustomization.Namespace != "" {
-				c.HelmChart.Namespace = kt.kustomization.Namespace
+			if c.HelmChart.Namespace == "" {
+				// First check if there's a namespace on the current kustomization
+				if kt.kustomization.Namespace != "" {
+					c.HelmChart.Namespace = kt.kustomization.Namespace
+				} else if kt.parentNamespace != "" {
+					// Otherwise use the parent namespace if available
+					c.HelmChart.Namespace = kt.parentNamespace
+				}
 			}
 			p := f()
 			if err = kt.configureBuiltinPlugin(p, c, bpt); err != nil {
