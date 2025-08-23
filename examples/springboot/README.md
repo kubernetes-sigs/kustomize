@@ -184,8 +184,7 @@ add a label, but one can always edit
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
 labels:
-- includeSelectors: true
-  pairs:
+- pairs:
     env: prod
 EOF
 ```
