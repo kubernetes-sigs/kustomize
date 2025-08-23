@@ -6,6 +6,5 @@ resources:
   - hpa.yaml
 
 labels:
-- includeSelectors: true
-  pairs:
+- pairs:
     purpose: remoteReference
