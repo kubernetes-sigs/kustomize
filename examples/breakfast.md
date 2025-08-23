@@ -70,8 +70,7 @@ mkdir -p $DEMO_HOME/breakfast/overlays/alice
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/alice/kustomization.yaml
 labels:
-- includeSelectors: true
-  pairs:
+- pairs:
     who: alice
 resources:
 - ../../base
@@ -95,8 +94,7 @@ mkdir -p $DEMO_HOME/breakfast/overlays/bob
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/bob/kustomization.yaml
 labels:
-- includeSelectors: true
-  pairs:
+- pairs:
     who: bob
 resources:
 - ../../base
