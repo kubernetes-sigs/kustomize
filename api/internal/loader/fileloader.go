@@ -311,7 +311,11 @@ func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
 	} else {
 		hc = &http.Client{}
 	}
-	resp, err := hc.Get(path)
+	parsedURL, err := url.ParseRequestURI(path)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	resp, err := hc.Get(parsedURL.String())
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
