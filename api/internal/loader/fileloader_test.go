@@ -676,3 +676,15 @@ func setupOnDisk(t *testing.T) (filesys.FileSystem, filesys.ConfirmedDir) {
 	})
 	return fSys, dir
 }
+
+// TestLoaderHTTPMalformedURL tests that malformed URLs are properly handled
+// to prevent infinite loops in http.Client.Get
+func TestLoaderHTTPMalformedURL(t *testing.T) {
+	require := require.New(t)
+	malformedURL := "https://example.com/example?ref=main - ../../example/example.yaml"
+	l1 := NewLoaderOrDie(
+		RestrictionRootOnly, MakeFakeFs([]testData{}), filesys.Separator)
+	_, err := l1.Load(malformedURL)
+	require.Error(err)
+	require.Equal("HTTP Error: status code 500 (Internal Server Error)", err.Error())
+}
