@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         deployment: hello
+        paramountcommerce.com/domain: platform
     spec:
       containers:
       - name: the-container
