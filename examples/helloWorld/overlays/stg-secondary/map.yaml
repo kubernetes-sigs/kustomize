@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stg-secondary
+data:
+  altGreeting: "Welcome to stg-secondary!"
+  enableRisky: "true"

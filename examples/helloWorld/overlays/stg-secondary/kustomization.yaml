@@ -1,0 +1,9 @@
+namePrefix: stg-secondary-
+commonLabels:
+  variant: stg-secondary
+commonAnnotations:
+  note: Hello, I am stg-secondary!
+resources:
+- ../../base
+patches:
+- path: map.yaml
