@@ -29,13 +29,14 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	kustFileName  string
-	ldr           ifc.Loader
-	validator     ifc.Validator
-	rFactory      *resmap.Factory
-	pLdr          *loader.Loader
-	origin        *resource.Origin
+	kustomization      *types.Kustomization
+	kustFileName       string
+	ldr                ifc.Loader
+	validator          ifc.Validator
+	rFactory           *resmap.Factory
+	pLdr               *loader.Loader
+	origin             *resource.Origin
+	inheritedNamespace string // For helm chart namespace inheritance without general propagation
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -127,11 +128,11 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 }
 
 func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
-	// Track origin for all resources so builtins can make decisions
-	// based on where resources originated from.
-	// Origin annotations will be stripped from the output if not
-	// requested via build metadata options.
-	kt.origin = &resource.Origin{}
+	var origin *resource.Origin
+	if len(kt.kustomization.BuildMetadata) != 0 {
+		origin = &resource.Origin{}
+	}
+	kt.origin = origin
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err
@@ -496,10 +497,13 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 	subKt.kustomization.BuildMetadata = kt.kustomization.BuildMetadata
 	subKt.origin = kt.origin
-	// Propagate namespace to child kustomization if child doesn't have one
-	// This ensures Helm charts in base kustomizations inherit namespace from overlays
-	if subKt.kustomization.Namespace == "" && kt.kustomization.Namespace != "" {
-		subKt.kustomization.Namespace = kt.kustomization.Namespace
+	// Pass down namespace context for helm chart inheritance, but don't set it on the kustomization
+	// This avoids the performance penalty of general namespace propagation while still supporting
+	// helm chart namespace inheritance from parent overlays
+	if kt.kustomization.Namespace != "" {
+		subKt.inheritedNamespace = kt.kustomization.Namespace
+	} else if kt.inheritedNamespace != "" {
+		subKt.inheritedNamespace = kt.inheritedNamespace
 	}
 	var bytes []byte
 	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
