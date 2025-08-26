@@ -1,0 +1,11 @@
+configVersion: v1alpha1
+branchConfigs:
+- name: env/dev
+  prs:
+    enabled: true
+- name: env/stg-secondary
+  prs:
+    enabled: true
+- name: env/stg
+  prs:
+    enabled: true
