@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: the-map-universe
+data:
+  altGreeting: "Welcome to dev!"
+  enableRisky: "true"

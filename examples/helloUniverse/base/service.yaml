@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: the-service-universe
+spec:
+  selector:
+    deployment: hello-universe
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 8666
+    targetPort: 8080
