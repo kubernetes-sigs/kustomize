@@ -51,11 +51,9 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
-		if origin, err := r.GetOrigin(); err == nil && origin != nil {
-			if origin.ConfiguredBy.Kind == "HelmChartInflationGenerator" {
-				// Don't apply namespace on Helm generated manifest. Helm should take care of it.
-				continue
-			}
+		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
+			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
+			continue
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{

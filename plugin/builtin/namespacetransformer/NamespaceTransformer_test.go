@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/api/resmap"
-	"sigs.k8s.io/kustomize/api/resource"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -782,12 +782,7 @@ metadata:
 `))
 	require.NoError(t, err)
 	r := rm.Resources()[0]
-	origin := &resource.Origin{
-		ConfiguredBy: kyaml.ResourceIdentifier{
-			TypeMeta: kyaml.TypeMeta{APIVersion: "builtin", Kind: "HelmChartInflationGenerator"},
-		},
-	}
-	require.NoError(t, r.SetOrigin(origin))
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
 
 	rm, err = th.RunTransformerFromResMap(`
 apiVersion: builtin
@@ -801,6 +796,8 @@ metadata:
 	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    internal.config.kubernetes.io/helm-generated: "true"
   name: svc
   namespace: helm-ns
 `)

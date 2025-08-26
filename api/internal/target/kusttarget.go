@@ -127,11 +127,11 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 }
 
 func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
-	// Track origin for all resources so builtins can make decisions
-	// based on where resources originated from.
-	// Origin annotations will be stripped from the output if not
-	// requested via build metadata options.
-	kt.origin = &resource.Origin{}
+	var origin *resource.Origin
+	if len(kt.kustomization.BuildMetadata) != 0 {
+		origin = &resource.Origin{}
+	}
+	kt.origin = origin
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err

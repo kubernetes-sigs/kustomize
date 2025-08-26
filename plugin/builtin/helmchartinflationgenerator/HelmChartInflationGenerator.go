@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -302,6 +303,12 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 
 	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
 	if resMapErr == nil {
+		// Mark all Helm-generated resources to skip namespace transformation
+		for _, r := range rm.Resources() {
+			if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
+				return nil, fmt.Errorf("failed to set helm annotation: %w", err)
+			}
+		}
 		return rm, nil
 	}
 	// try to remove the contents before first "---" because
@@ -316,6 +323,12 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
+		}
+		// Mark all Helm-generated resources to skip namespace transformation
+		for _, r := range rm.Resources() {
+			if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
+				return nil, fmt.Errorf("failed to set helm annotation: %w", err)
+			}
 		}
 		return rm, nil
 	}
