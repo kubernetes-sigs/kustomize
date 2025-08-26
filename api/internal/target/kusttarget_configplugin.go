@@ -168,14 +168,8 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			c.HelmChart = chart
 			// Pass kustomize namespace to helm
 			// Fixes https://github.com/kubernetes-sigs/kustomize/issues/5566
-			// Also check for inherited namespace context for nested kustomizations
-			if c.HelmChart.Namespace == "" {
-				if kt.kustomization.Namespace != "" {
-					c.HelmChart.Namespace = kt.kustomization.Namespace
-				} else if kt.inheritedNamespace != "" {
-					// For nested kustomizations, use inherited namespace from parent
-					c.HelmChart.Namespace = kt.inheritedNamespace
-				}
+			if c.HelmChart.Namespace == "" && kt.kustomization.Namespace != "" {
+				c.HelmChart.Namespace = kt.kustomization.Namespace
 			}
 			p := f()
 			if err = kt.configureBuiltinPlugin(p, c, bpt); err != nil {
@@ -466,4 +460,3 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 		return nil, fmt.Errorf("valueadd keyword not yet defined")
 	},
 }
-

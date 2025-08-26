@@ -29,14 +29,13 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization      *types.Kustomization
-	kustFileName       string
-	ldr                ifc.Loader
-	validator          ifc.Validator
-	rFactory           *resmap.Factory
-	pLdr               *loader.Loader
-	origin             *resource.Origin
-	inheritedNamespace string // For helm chart namespace inheritance without general propagation
+	kustomization *types.Kustomization
+	kustFileName  string
+	ldr           ifc.Loader
+	validator     ifc.Validator
+	rFactory      *resmap.Factory
+	pLdr          *loader.Loader
+	origin        *resource.Origin
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -128,8 +127,10 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 }
 
 func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
+	// Only track origin if we have Helm charts or build metadata is requested
+	// This optimization avoids unnecessary overhead when origins aren't needed
 	var origin *resource.Origin
-	if len(kt.kustomization.BuildMetadata) != 0 {
+	if len(kt.kustomization.BuildMetadata) != 0 || len(kt.kustomization.HelmCharts) > 0 {
 		origin = &resource.Origin{}
 	}
 	kt.origin = origin
@@ -497,13 +498,10 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 	subKt.kustomization.BuildMetadata = kt.kustomization.BuildMetadata
 	subKt.origin = kt.origin
-	// Pass down namespace context for helm chart inheritance, but don't set it on the kustomization
-	// This avoids the performance penalty of general namespace propagation while still supporting
-	// helm chart namespace inheritance from parent overlays
-	if kt.kustomization.Namespace != "" {
-		subKt.inheritedNamespace = kt.kustomization.Namespace
-	} else if kt.inheritedNamespace != "" {
-		subKt.inheritedNamespace = kt.inheritedNamespace
+	// Propagate namespace to child kustomization if child doesn't have one
+	// This ensures Helm charts in base kustomizations inherit namespace from overlays
+	if subKt.kustomization.Namespace == "" && kt.kustomization.Namespace != "" {
+		subKt.kustomization.Namespace = kt.kustomization.Namespace
 	}
 	var bytes []byte
 	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
