@@ -1,11 +1,10 @@
 configVersion: v1alpha1
 branchConfigs:
-- name: env/dev
-  prs:
-    enabled: true
-- name: env/stg-secondary
-  prs:
-    enabled: true
-- name: env/stg
-  prs:
-    enabled: true
+- name: helloUniverse/dev
+  appConfigs:
+    dev:
+      configManagement:
+        path: examples/helloUniverse/overlays/dev
+      outputPath: dev
+  # prs:
+  #   enabled: true
