@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: the-deployment
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       deployment: hello
