@@ -303,11 +303,8 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 
 	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
 	if resMapErr == nil {
-		// Mark all Helm-generated resources to skip namespace transformation
-		for _, r := range rm.Resources() {
-			if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
-				return nil, fmt.Errorf("failed to set helm annotation: %w", err)
-			}
+		if err := p.markHelmGeneratedResources(rm); err != nil {
+			return nil, err
 		}
 		return rm, nil
 	}
@@ -324,11 +321,8 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
 		}
-		// Mark all Helm-generated resources to skip namespace transformation
-		for _, r := range rm.Resources() {
-			if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
-				return nil, fmt.Errorf("failed to set helm annotation: %w", err)
-			}
+		if err := p.markHelmGeneratedResources(rm); err != nil {
+			return nil, err
 		}
 		return rm, nil
 	}
@@ -373,6 +367,15 @@ func (p *plugin) chartExistsLocally() (string, bool) {
 }
 
 // checkHelmVersion will return an error if the helm version is not V3
+func (p *plugin) markHelmGeneratedResources(rm resmap.ResMap) error {
+	for _, r := range rm.Resources() {
+		if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
+			return fmt.Errorf("failed to set helm annotation: %w", err)
+		}
+	}
+	return nil
+}
+
 func (p *plugin) checkHelmVersion() error {
 	stdout, err := p.runHelmCommand([]string{"version", "-c", "--short"})
 	if err != nil {
