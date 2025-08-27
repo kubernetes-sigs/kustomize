@@ -20,6 +20,8 @@ jobs:
         - stg-secondary
         - stg
     steps:
+    - name: Output GITHUB_SHA
+      run: echo "GITHUB_SHA=${GITHUB_SHA}"
     - name: Render and Commit Manifests
       uses: akuity/kargo-render-action@v0.1.0-rc.35
       with:
