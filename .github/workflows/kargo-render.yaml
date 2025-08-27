@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         targetBranch:
-        - env/dev
-        - env/stg-secondary
-        - env/stg
+        - dev
+        - stg-secondary
+        - stg
     steps:
     - name: Render and Commit Manifests
       uses: akuity/kargo-render-action@v0.1.0-rc.40
