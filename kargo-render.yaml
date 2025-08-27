@@ -5,6 +5,6 @@ branchConfigs:
     dev:
       configManagement:
         path: examples/helloUniverse/overlays/dev
-      outputPath: dev
-  # prs:
-  #   enabled: true
+      outputPath: helloUniverse/dev
+  prs:
+    enabled: true
