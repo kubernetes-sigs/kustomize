@@ -32,6 +32,7 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git fetch origin ${GITHUB_BASE_REF}
         git rebase origin/${GITHUB_BASE_REF}
+        git merge ${GITHUB_BASE_REF} ${GITHUB_HEAD_REF}
         echo "SHA after rebase: $(git rev-parse HEAD)"
 
     # - name: Output GITHUB_SHA
