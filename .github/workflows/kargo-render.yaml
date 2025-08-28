@@ -29,6 +29,11 @@ jobs:
         echo "GITHUB_REF_PROTECTED=${GITHUB_REF_PROTECTED}"
         echo "GITHUB_REF_TYPE=${GITHUB_REF_TYPE}"
         echo "GITHUB_WORKFLOW_SHA=${GITHUB_WORKFLOW_SHA}"
+
+        echo "github.event.pull_request.head.sha=${github.event.pull_request.head.sha}"
+        echo "github.sha=${github.sha}"
+        echo "from GITHUB_EVENT_PATH: $(cat $GITHUB_EVENT_PATH | jq -r .pull_request.head.sha)"
+
     - name: Render and Commit Manifests
       uses: akuity/kargo-render-action@v0.1.0-rc.40
       with:
