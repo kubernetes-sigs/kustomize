@@ -12,7 +12,7 @@ spec:
       labels:
         deployment: hello-universe
         paramountcommerce.com/domain: platform
-        test: "11"
+        test: "12"
     spec:
       containers:
       - name: the-container
