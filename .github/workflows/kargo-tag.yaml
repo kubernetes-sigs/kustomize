@@ -5,6 +5,9 @@ on:
     types: [closed]
     branches: [master]
 
+permissions:
+  contents: write
+
 jobs:
   tag-master:
     if: github.event.pull_request.merged == true
