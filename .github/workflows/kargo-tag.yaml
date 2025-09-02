@@ -1,0 +1,36 @@
+name: Tag Master on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+jobs:
+  tag-master:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create tag
+        run: |
+          # Get PR title and clean it for tag format
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          # Remove special characters and replace spaces with hyphens
+          CLEAN_TITLE=$(echo "$PR_TITLE" | sed 's/[^a-zA-Z0-9 ]//g' | tr ' ' '-')
+          # Limit length and ensure it starts with a letter
+          TAG_NAME="pr-${CLEAN_TITLE,,}"
+          TAG_NAME=$(echo "$TAG_NAME" | cut -c1-50)
+
+          echo "Creating tag: $TAG_NAME"
+
+          # Create and push the tag
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+
+          echo "Tag $TAG_NAME created successfully"
