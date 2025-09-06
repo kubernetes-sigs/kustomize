@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
