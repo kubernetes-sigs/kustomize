@@ -1174,6 +1174,7 @@ kind: Service
 metadata:
   annotations:
     helm-namespace: helm-ns
+    internal.config.kubernetes.io/helm-generated: "true"
   name: test-service
   namespace: helm-ns
 `)

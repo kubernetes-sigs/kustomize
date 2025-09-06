@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -294,6 +295,9 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 
 	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
 	if resMapErr == nil {
+		if err := p.markHelmGeneratedResources(rm); err != nil {
+			return nil, err
+		}
 		return rm, nil
 	}
 	// try to remove the contents before first "---" because
@@ -308,6 +312,9 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
+		}
+		if err := p.markHelmGeneratedResources(rm); err != nil {
+			return nil, err
 		}
 		return rm, nil
 	}
@@ -352,6 +359,15 @@ func (p *HelmChartInflationGeneratorPlugin) chartExistsLocally() (string, bool) 
 }
 
 // checkHelmVersion will return an error if the helm version is not V3
+func (p *HelmChartInflationGeneratorPlugin) markHelmGeneratedResources(rm resmap.ResMap) error {
+	for _, r := range rm.Resources() {
+		if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
+			return fmt.Errorf("failed to set helm annotation: %w", err)
+		}
+	}
+	return nil
+}
+
 func (p *HelmChartInflationGeneratorPlugin) checkHelmVersion() error {
 	stdout, err := p.runHelmCommand([]string{"version", "-c", "--short"})
 	if err != nil {
