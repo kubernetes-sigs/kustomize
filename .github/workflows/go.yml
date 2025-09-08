@@ -36,7 +36,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set up Go 1.x
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
@@ -56,7 +56,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set up Go 1.x
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
@@ -74,7 +74,7 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v5
     - name: Set up Go 1.x
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
@@ -92,7 +92,7 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v5
     - name: Set up Go 1.x
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
@@ -110,7 +110,7 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v5
     - name: Set up Go 1.x
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
