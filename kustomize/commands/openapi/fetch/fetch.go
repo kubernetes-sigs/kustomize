@@ -20,7 +20,7 @@ var format string
 func NewCmdFetch(w io.Writer) *cobra.Command {
 	fetchCmd := cobra.Command{
 		Use: "fetch",
-		Short: `Fetches the OpenAPI specification from the current kubernetes cluster specified 
+		Short: `Fetches the OpenAPI specification from the current kubernetes cluster specified
 in the user's kubeconfig`,
 		Example: `kustomize openapi fetch`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -52,9 +52,9 @@ Installation and setup instructions: https://kubernetes.io/docs/tasks/tools/inst
 	command.Stderr = &stderr
 	err := command.Run()
 	if err != nil {
-		return fmt.Errorf("%w\n%s", err, stderr.String()+errMsg)
+		return fmt.Errorf("%w\n%s%s", err, stderr.String(), errMsg)
 	} else if stdout.String() == "" {
-		return fmt.Errorf(stderr.String() + errMsg)
+		return fmt.Errorf("%s%s", stderr.String(), errMsg)
 	}
 
 	// format and output

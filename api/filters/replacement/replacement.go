@@ -11,7 +11,6 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml_utils "sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -117,6 +116,10 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 		if len(selector.FieldPaths) == 0 {
 			selector.FieldPaths = []string{types.DefaultReplacementFieldPath}
 		}
+		tsr, err := types.NewTargetSelectorRegex(selector)
+		if err != nil {
+			return nil, fmt.Errorf("error creating target selector: %w", err)
+		}
 		for _, possibleTarget := range nodes {
 			ids, err := utils.MakeResIds(possibleTarget)
 			if err != nil {
@@ -132,9 +135,13 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 				continue
 			}
 
+			if tsr.RejectsAny(ids) {
+				continue
+			}
+
 			// filter targets by matching resource IDs
 			for _, id := range ids {
-				if id.IsSelectedBy(selector.Select.ResId) && !containsRejectId(selector.Reject, ids) {
+				if tsr.Selects(id) {
 					err := copyValueToTarget(possibleTarget, value, selector)
 					if err != nil {
 						return nil, err
@@ -175,20 +182,6 @@ func matchesAnnoAndLabelSelector(n *yaml.RNode, selector *types.Selector) (bool,
 	return annoMatch && labelMatch, nil
 }
 
-func containsRejectId(rejects []*types.Selector, ids []resid.ResId) bool {
-	for _, r := range rejects {
-		if r.ResId.IsEmpty() {
-			continue
-		}
-		for _, id := range ids {
-			if id.IsSelectedBy(r.ResId) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.TargetSelector) error {
 	for _, fp := range selector.FieldPaths {
 		createKind := yaml.Kind(0) // do not create
@@ -199,14 +192,14 @@ func copyValueToTarget(target *yaml.RNode, value *yaml.RNode, selector *types.Ta
 			Path:   kyaml_utils.SmarterPathSplitter(fp, "."),
 			Create: createKind})
 		if err != nil {
-			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0)) //nolint:govet
+			return errors.WrapPrefixf(err, "%s", fieldRetrievalError(fp, createKind != 0))
 		}
 		targetFields, err := targetFieldList.Elements()
 		if err != nil {
-			return errors.WrapPrefixf(err, fieldRetrievalError(fp, createKind != 0)) //nolint:govet
+			return errors.WrapPrefixf(err, "%s", fieldRetrievalError(fp, createKind != 0))
 		}
 		if len(targetFields) == 0 {
-			return errors.Errorf(fieldRetrievalError(fp, createKind != 0)) //nolint:govet
+			return errors.Errorf("%s", fieldRetrievalError(fp, createKind != 0))
 		}
 
 		for _, t := range targetFields {

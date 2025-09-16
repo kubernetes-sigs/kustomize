@@ -127,11 +127,11 @@ func (kt *KustTarget) MakeCustomizedResMap() (resmap.ResMap, error) {
 }
 
 func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
-	var origin *resource.Origin
-	if len(kt.kustomization.BuildMetadata) != 0 {
-		origin = &resource.Origin{}
-	}
-	kt.origin = origin
+	// Track origin for all resources so builtins can make decisions
+	// based on where resources originated from.
+	// Origin annotations will be stripped from the output if not
+	// requested via build metadata options.
+	kt.origin = &resource.Origin{}
 	ra, err := kt.AccumulateTarget()
 	if err != nil {
 		return nil, err
@@ -496,6 +496,11 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 	subKt.kustomization.BuildMetadata = kt.kustomization.BuildMetadata
 	subKt.origin = kt.origin
+	// Propagate namespace to child kustomization if child doesn't have one
+	// This ensures Helm charts in base kustomizations inherit namespace from overlays
+	if subKt.kustomization.Namespace == "" && kt.kustomization.Namespace != "" {
+		subKt.kustomization.Namespace = kt.kustomization.Namespace
+	}
 	var bytes []byte
 	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
 		bytes, err = ldr.Load(openApiPath)
