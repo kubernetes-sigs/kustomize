@@ -215,7 +215,7 @@ func (k *Kustomization) CheckDeprecatedFields() *[]string {
 	if k.Vars != nil {
 		warningMessages = append(warningMessages, deprecatedVarsMessage)
 	}
-	if k.APIVersion != "" && k.Kind != "" {
+	if k.APIVersion == "" || k.Kind == "" {
 		warningMessages = append(warningMessages, deprecationWarningAPIVersionandKind)
 	}
 	return &warningMessages
