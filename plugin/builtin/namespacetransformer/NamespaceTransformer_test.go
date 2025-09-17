@@ -779,6 +779,8 @@ kind: Service
 metadata:
   name: svc
   namespace: helm-ns
+  annotations:
+    this-should-be-keept: "true"
 `))
 	require.NoError(t, err)
 	r := rm.Resources()[0]
@@ -797,7 +799,7 @@ metadata:
 kind: Service
 metadata:
   annotations:
-    internal.config.kubernetes.io/helm-generated: "true"
+    this-should-be-keept: "true"
   name: svc
   namespace: helm-ns
 `)
