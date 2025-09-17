@@ -2364,7 +2364,7 @@ func TestRNode_nilSafety(t *testing.T) {
 		rn   *RNode
 	}{
 		{"nil *RNode receiver", nil},
-		{"RNode with nil internal node", nil},
+		{"RNode with nil internal node", &RNode{value: nil}},
 	}
 
 	t.Run("Content", func(t *testing.T) {
