@@ -718,10 +718,10 @@ func (rn *RNode) MustString() string {
 
 // Content returns Node Content field.
 func (rn *RNode) Content() []*yaml.Node {
-	if rn == nil {
-		return nil
+	if yNode := rn.YNode(); yNode != nil {
+		return yNode.Content
 	}
-	return rn.YNode().Content
+	return nil
 }
 
 // Fields returns the list of field names for a MappingNode.
@@ -756,14 +756,17 @@ func (rn *RNode) FieldRNodes() ([]*RNode, error) {
 // Field returns a fieldName, fieldValue pair for MappingNodes.
 // Returns nil for non-MappingNodes.
 func (rn *RNode) Field(field string) *MapNode {
-	if rn.YNode().Kind != yaml.MappingNode {
-		return nil
+	if yNode := rn.YNode(); yNode != nil {
+		if yNode.Kind != yaml.MappingNode {
+			return nil
+		}
+		var result *MapNode
+		visitMappingNodeFields(rn.Content(), func(key, value *yaml.Node) {
+			result = &MapNode{Key: NewRNode(key), Value: NewRNode(value)}
+		}, field)
+		return result
 	}
-	var result *MapNode
-	visitMappingNodeFields(rn.Content(), func(key, value *yaml.Node) {
-		result = &MapNode{Key: NewRNode(key), Value: NewRNode(value)}
-	}, field)
-	return result
+	return nil
 }
 
 // VisitFields calls fn for each field in the RNode.
@@ -892,28 +895,34 @@ func (rn *RNode) ElementValuesList(keys []string) ([][]string, error) {
 // Element returns the element in the list which contains the field matching the value.
 // Returns nil for non-SequenceNodes or if no Element matches.
 func (rn *RNode) Element(key, value string) *RNode {
-	if rn.YNode().Kind != yaml.SequenceNode {
-		return nil
+	if yNode := rn.YNode(); yNode != nil {
+		if yNode.Kind != yaml.SequenceNode {
+			return nil
+		}
+		elem, err := rn.Pipe(MatchElement(key, value))
+		if err != nil {
+			return nil
+		}
+		return elem
 	}
-	elem, err := rn.Pipe(MatchElement(key, value))
-	if err != nil {
-		return nil
-	}
-	return elem
+	return nil
 }
 
 // ElementList returns the element in the list in which all fields keys[i] matches all
 // corresponding values[i].
 // Returns nil for non-SequenceNodes or if no Element matches.
 func (rn *RNode) ElementList(keys []string, values []string) *RNode {
-	if rn.YNode().Kind != yaml.SequenceNode {
-		return nil
+	if yNode := rn.YNode(); yNode != nil {
+		if yNode.Kind != yaml.SequenceNode {
+			return nil
+		}
+		elem, err := rn.Pipe(MatchElementList(keys, values))
+		if err != nil {
+			return nil
+		}
+		return elem
 	}
-	elem, err := rn.Pipe(MatchElementList(keys, values))
-	if err != nil {
-		return nil
-	}
-	return elem
+	return nil
 }
 
 // VisitElements calls fn for each element in a SequenceNode.
@@ -960,24 +969,27 @@ func (rn *RNode) GetAssociativeKey() string {
 
 // MarshalJSON creates a byte slice from the RNode.
 func (rn *RNode) MarshalJSON() ([]byte, error) {
-	s, err := rn.String()
-	if err != nil {
-		return nil, err
-	}
-
-	if rn.YNode().Kind == SequenceNode {
-		var a []interface{}
-		if err := Unmarshal([]byte(s), &a); err != nil {
+	if yNode := rn.YNode(); yNode != nil {
+		s, err := rn.String()
+		if err != nil {
 			return nil, err
 		}
-		return json.Marshal(a)
-	}
 
-	m := map[string]interface{}{}
-	if err := Unmarshal([]byte(s), &m); err != nil {
-		return nil, err
+		if yNode.Kind == SequenceNode {
+			var a []interface{}
+			if err := Unmarshal([]byte(s), &a); err != nil {
+				return nil, err
+			}
+			return json.Marshal(a)
+		}
+
+		m := map[string]interface{}{}
+		if err := Unmarshal([]byte(s), &m); err != nil {
+			return nil, err
+		}
+		return json.Marshal(m)
 	}
-	return json.Marshal(m)
+	return json.Marshal(nil)
 }
 
 // UnmarshalJSON overwrites this RNode with data from []byte.
