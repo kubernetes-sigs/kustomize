@@ -366,7 +366,6 @@ func (p *plugin) chartExistsLocally() (string, bool) {
 	return path, s.IsDir()
 }
 
-// checkHelmVersion will return an error if the helm version is not V3
 func (p *plugin) markHelmGeneratedResources(rm resmap.ResMap) error {
 	for _, r := range rm.Resources() {
 		if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
@@ -376,6 +375,7 @@ func (p *plugin) markHelmGeneratedResources(rm resmap.ResMap) error {
 	return nil
 }
 
+// checkHelmVersion will return an error if the helm version is not V3
 func (p *plugin) checkHelmVersion() error {
 	stdout, err := p.runHelmCommand([]string{"version", "-c", "--short"})
 	if err != nil {
