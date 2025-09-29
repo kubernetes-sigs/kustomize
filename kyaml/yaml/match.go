@@ -14,7 +14,7 @@ import (
 )
 
 // PathMatcher returns all RNodes matching the path wrapped in a SequenceNode.
-// Lists may have multiple elements matching the path, and each matching element
+// Lists may have multiple elements matching the pafunc cleanPath(path []string) []string {g element
 // is added to the return result.
 // If Path points to a SequenceNode, the SequenceNode is wrapped in another SequenceNode
 // If Path does not contain any lists, the result is still wrapped in a SequenceNode of len == 1
@@ -138,12 +138,6 @@ func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
 	// lookup the field
 	field, err := rn.Pipe(Get(p.Path[0]))
 	if err != nil {
-		// check error is an invalid kind error
-		invalidKindErr := &InvalidNodeKindError{}
-		if errors.As(err, &invalidKindErr) {
-			// if the field is valid json or yaml, continue to lookup the next part of the path
-			fmt.Print("-----------------------------\nOUTPUT: ", err)
-		}
 		return nil, err
 	}
 
@@ -347,25 +341,6 @@ func cleanPath(path []string) []string {
 	return p
 }
 
-// structuredDataNode is a wrapper around RNode that handles serialization back to scalar fields
-// when the underlying structured data is modified
-type structuredDataNode struct {
-	RNode
-	structuredRoot *RNode // The root of the structured data
-	scalarField    *RNode // The original scalar field containing the structured data
-}
-
-// Override SetYNode to handle structured data serialization
-func (s *structuredDataNode) SetYNode(node *yaml.Node) {
-	// Call the original SetYNode
-	s.RNode.SetYNode(node)
-
-	// Serialize the modified structured data back to the scalar field
-	if modifiedData, err := s.structuredRoot.String(); err == nil {
-		s.scalarField.YNode().Value = strings.TrimSpace(modifiedData)
-	}
-}
-
 // handleStructuredDataInScalar processes a scalar field that contains structured data (JSON/YAML)
 // and allows path navigation within that structured data
 func (p *PathMatcher) handleStructuredDataInScalar(scalarField *RNode) (*RNode, error) {
@@ -386,29 +361,5 @@ func (p *PathMatcher) handleStructuredDataInScalar(scalarField *RNode) (*RNode, 
 	}
 	p.Matches = pm.Matches
 
-	// For structured data, we need to create a special result node that knows how to
-	// serialize back to the original scalar when modified
-	if result != nil && len(result.YNode().Content) > 0 {
-		// Wrap the result with structured data context
-		for _, node := range result.YNode().Content {
-			wrappedNode := NewRNode(node)
-			// Add a custom method to handle setting values back to structured data
-			wrappedNode = p.wrapWithStructuredDataHandler(wrappedNode, structuredField, scalarField)
-			result.YNode().Content[0] = wrappedNode.YNode()
-		}
-	}
-
 	return result, nil
-}
-
-// wrapWithStructuredDataHandler creates a wrapper that will serialize structured data back
-// to the scalar field when the node is modified
-func (p *PathMatcher) wrapWithStructuredDataHandler(targetNode, structuredRoot, scalarField *RNode) *RNode {
-	// Create a custom node that overrides SetYNode to handle structured data serialization
-	wrapper := &structuredDataNode{
-		RNode:          *targetNode,
-		structuredRoot: structuredRoot,
-		scalarField:    scalarField,
-	}
-	return &wrapper.RNode
 }
