@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -51,11 +52,9 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
-		if origin, err := r.GetOrigin(); err == nil && origin != nil {
-			if origin.ConfiguredBy.Kind == "HelmChartInflationGenerator" {
-				// Don't apply namespace on Helm generated manifest. Helm should take care of it.
-				continue
-			}
+		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
+			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
+			continue
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
