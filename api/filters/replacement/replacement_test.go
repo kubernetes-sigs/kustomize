@@ -4511,6 +4511,8 @@ func TestValueInlineStructuredData(t *testing.T) {
 kind: ConfigMap
 metadata:
   name: target-configmap
+  annotations:
+    hostname: www.example.com
 data:
   config.json: |-
     {
@@ -4524,7 +4526,7 @@ data:
 - source:
     kind: ConfigMap
     name: target-configmap
-    fieldPath: metadata.name
+    fieldPath: metadata.annotations.hostname
   targets:
   - select:
       kind: ConfigMap
@@ -4535,11 +4537,13 @@ data:
 kind: ConfigMap
 metadata:
   name: target-configmap
+  annotations:
+    hostname: www.example.com
 data:
   config.json: |-
     {
       "config": {
-        "hostname": "target-configmap",
+        "hostname": "www.example.com",
         "id": "42"
       }
     }`,
