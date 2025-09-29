@@ -2779,7 +2779,7 @@ spec:
           name: myingress
         fieldPaths:
           - spec.tls.0.hosts.0
-          - spec.tls.0.secretName          
+          - spec.tls.0.secretName
         options:
           create: true
 `,
@@ -4493,6 +4493,539 @@ metadata:
 				}
 			}
 			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestValueInlineStructuredData(t *testing.T) {
+	testCases := map[string]struct {
+		input        string
+		replacements string
+		expected     string
+		expectedErr  string
+	}{
+		"replacement contain jsonfield": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+  annotations:
+    hostname: www.example.com
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "REPLACE_TARGET_HOSTNAME"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: target-configmap
+    fieldPath: metadata.annotations.hostname
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.config\.json.config.hostname
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+  annotations:
+    hostname: www.example.com
+data:
+  config.json: |-
+    {
+      "config": {
+        "hostname": "www.example.com",
+        "id": "42"
+      }
+    }`,
+		},
+		"replacement json field with source from separate configmap": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-configmap
+data:
+  HOSTNAME: www.example.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "REPLACE_TARGET_HOSTNAME"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-configmap
+    fieldPath: data.HOSTNAME
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-configmap
+    fieldPaths:
+    - data.config\.json.config.hostname
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-configmap
+data:
+  HOSTNAME: www.example.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "hostname": "www.example.com",
+        "id": "42"
+      }
+    }
+`,
+		},
+		"replacement yaml field in configmap": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+data:
+  env: dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: TARGET_ENVIRONMENT
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.env
+  targets:
+  - select:
+      kind: ConfigMap
+      name: prometheus-config
+    fieldPaths:
+    - data.prometheus\.yml.global.external_labels.prometheus_env
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+data:
+  env: dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: dev
+    scrape_configs:
+    - job_name: "prometheus"
+      static_configs:
+      - targets: ["localhost:9090"]`,
+		},
+		"replacement json field in annotations": {
+			input: `apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: debug-backend-config
+spec:
+  securityPolicy:
+    name: "debug-security-policy"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appA-svc
+  annotations:
+    cloud.google.com/backend-config: '{"ports": {"appA":"gke-default-backend-config"}}'
+spec:
+  ports:
+  - name: appA
+    port: 1234
+    protocol: TCP
+    targetPort: 8080
+`,
+			replacements: `replacements:
+- source:
+    kind: BackendConfig
+    name: debug-backend-config
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Service
+      name: appA-svc
+    fieldPaths:
+    - metadata.annotations.cloud\.google\.com/backend-config.ports.appA
+`,
+			expected: `apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: debug-backend-config
+spec:
+  securityPolicy:
+    name: "debug-security-policy"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appA-svc
+  annotations:
+    cloud.google.com/backend-config: '{"ports":{"appA":"debug-backend-config"}}'
+spec:
+  ports:
+  - name: appA
+    port: 1234
+    protocol: TCP
+    targetPort: 8080`,
+		},
+		"replacement yaml nested value": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  replicas: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-template
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: my-app
+      template:
+        metadata:
+          labels:
+            app: my-app
+        spec:
+          containers:
+          - name: app
+            image: nginx:latest
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: app-config
+    fieldPath: data.replicas
+  targets:
+  - select:
+      kind: ConfigMap
+      name: deployment-template
+    fieldPaths:
+    - data.deployment\.yaml.spec.replicas
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  replicas: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-template
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: my-app
+      template:
+        metadata:
+          labels:
+            app: my-app
+        spec:
+          containers:
+          - name: app
+            image: nginx:latest`,
+		},
+		"replacement json complex nested structure": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-config
+data:
+  database_host: prod-db.example.com
+  database_port: "5432"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "connections": {
+          "primary": {
+            "host": "localhost",
+            "port": 3306,
+            "ssl": true
+          },
+          "secondary": {
+            "host": "backup-host",
+            "port": 3307
+          }
+        },
+        "pool": {
+          "min": 5,
+          "max": 10
+        }
+      },
+      "logging": {
+        "level": "info"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-config
+    fieldPath: data.database_host
+  targets:
+  - select:
+      kind: ConfigMap
+      name: app-config
+    fieldPaths:
+    - data.config\.json.database.connections.primary.host
+- source:
+    kind: ConfigMap
+    name: source-config
+    fieldPath: data.database_port
+  targets:
+  - select:
+      kind: ConfigMap
+      name: app-config
+    fieldPaths:
+    - data.config\.json.database.connections.primary.port
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-config
+data:
+  database_host: prod-db.example.com
+  database_port: "5432"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "connections": {
+          "primary": {
+            "host": "prod-db.example.com",
+            "port": 5432,
+            "ssl": true
+          },
+          "secondary": {
+            "host": "backup-host",
+            "port": 3307
+          }
+        },
+        "pool": {
+          "max": 10,
+          "min": 5
+        }
+      },
+      "logging": {
+        "level": "info"
+      }
+    }`,
+		},
+		"replacement yaml array element": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-config
+data:
+  new_image: nginx:1.20
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-manifest
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: web
+            image: nginx:1.18
+          - name: sidecar
+            image: busybox:latest
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: image-config
+    fieldPath: data.new_image
+  targets:
+  - select:
+      kind: ConfigMap
+      name: k8s-manifest
+    fieldPaths:
+    - data.deployment\.yaml.spec.template.spec.containers.[name=web].image
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-config
+data:
+  new_image: nginx:1.20
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-manifest
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: web
+            image: nginx:1.20
+          - name: sidecar
+            image: busybox:latest`,
+		},
+		"replacement yaml flow style (kyaml) field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-values
+data:
+  app_name: "my-awesome-app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-config
+data:
+  config.yaml: |-
+    labels: {
+      app: "REPLACE_APP_NAME",
+      version: "1.0.0",
+      env: "production",
+    }
+    spec: {
+      replicas: 3,
+      selector: {
+        matchLabels: {
+          app: "REPLACE_APP_NAME"
+        }
+      }
+    }`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-values
+    fieldPath: data.app_name
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-config
+    fieldPaths:
+    - data.config\.yaml.labels.app
+    - data.config\.yaml.spec.selector.matchLabels.app
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-values
+data:
+  app_name: "my-awesome-app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-config
+data:
+  config.yaml: |-
+    labels: {app: "my-awesome-app", version: "1.0.0", env: "production"}
+    spec: {replicas: 3, selector: {matchLabels: {app: "my-awesome-app"}}}`,
+		},
+	}
+
+	for tn := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Test one case to see if structured data replacement works
+			f := Filter{}
+			err := yaml.Unmarshal([]byte(testCases[tn].replacements), &f)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual, err := filtertest.RunFilterE(t, testCases[tn].input, f)
+			if err != nil {
+				if testCases[tn].expectedErr == "" {
+					t.Errorf("unexpected error: %s\n", err.Error())
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), testCases[tn].expectedErr) {
+					t.FailNow()
+				}
+			}
+			if !assert.Equal(t, strings.TrimSpace(testCases[tn].expected), strings.TrimSpace(actual)) {
 				t.FailNow()
 			}
 		})
