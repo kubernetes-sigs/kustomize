@@ -63,6 +63,7 @@ replacements:
       delimiter: string
       index: int
       create: bool
+  sourceValue: string
   targets:
   - select:
       group: string
@@ -88,7 +89,8 @@ replacements:
 
 | Field       | Required| Description | Default |
 | -----------: | :----: | ----------- | ---- |
-| `source`| ✔️ | The source of the value |
+| `source`| | The source of the value |
+| `sourceValue`| | The litteral value to use as source |
 | `target`| ✔️ | The N fields to write the value to |
 | `group` | | The group of the referent |
 | `version`|  | The version of the referent
@@ -108,6 +110,7 @@ replacements:
 The source field is a selector that determines the source of the value by finding a
 match to the specified GVKNN. All the subfields of `source` are optional,
 but the source selection must resolve to a single resource.
+The source can also be specified directly as a string using `sourceValue`.
 
 #### Targets
 Replacements will be applied to all targets that are matched by the `select` field and
