@@ -95,3 +95,43 @@ func TestLoaderWithWorkingDir(t *testing.T) {
 		npLdr.Config().FnpLoadingOptions.WorkingDir,
 		"the plugin working dir is not updated")
 }
+
+func TestLoaderWithStorageMounts(t *testing.T) {
+	const storageMountTransformer = `
+apiVersion: com.example.kustomize/v1
+kind: Test
+metadata:
+  name: test-transformer
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: test
+        mounts:
+          - type: bind
+            src: ../
+            dst: /mount
+`
+	p := provider.NewDefaultDepProvider()
+	rmF := resmap.NewFactory(p.GetResourceFactory())
+	fsys := filesys.MakeFsInMemory()
+	fLdr, err := loader.NewLoader(
+		loader.RestrictionRootOnly,
+		filesys.Separator, fsys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configs, err := rmF.NewResMapFromBytes([]byte(storageMountTransformer))
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := types.EnabledPluginConfig(types.BploLoadFromFileSys)
+	pLdr := NewLoader(c, rmF, fsys)
+	if pLdr == nil {
+		t.Fatal("expect non-nil loader")
+	}
+	_, err = pLdr.LoadTransformers(
+		fLdr, valtest_test.MakeFakeValidator(), configs)
+	if err == nil { // should fail because src specified is outside root
+		t.Fatal("the loader allowed a mount outside root")
+	}
+}
