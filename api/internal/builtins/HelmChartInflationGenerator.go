@@ -358,7 +358,6 @@ func (p *HelmChartInflationGeneratorPlugin) chartExistsLocally() (string, bool) 
 	return path, s.IsDir()
 }
 
-// checkHelmVersion will return an error if the helm version is not V3
 func (p *HelmChartInflationGeneratorPlugin) markHelmGeneratedResources(rm resmap.ResMap) error {
 	for _, r := range rm.Resources() {
 		if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
@@ -368,6 +367,7 @@ func (p *HelmChartInflationGeneratorPlugin) markHelmGeneratedResources(rm resmap
 	return nil
 }
 
+// checkHelmVersion will return an error if the helm version is not V3
 func (p *HelmChartInflationGeneratorPlugin) checkHelmVersion() error {
 	stdout, err := p.runHelmCommand([]string{"version", "-c", "--short"})
 	if err != nil {
