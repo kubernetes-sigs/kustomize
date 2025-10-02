@@ -94,7 +94,10 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	if p.smPatches != nil {
 		return p.transformStrategicMerge(m)
 	}
-	return p.transformJson6902(m)
+	if p.jsonPatches != nil {
+		return p.transformJson6902(m)
+	}
+	return nil
 }
 
 // transformStrategicMerge applies each loaded strategic merge patch
