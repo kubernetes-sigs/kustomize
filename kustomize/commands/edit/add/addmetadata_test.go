@@ -376,7 +376,7 @@ func TestAddLabelWithoutSelector(t *testing.T) {
 			},
 		},
 		{
-			name:       "add multiple labels without selector",
+			name: "add multiple labels without selector",
 			baseLabels: []types.Label{},
 			options: addMetadataOptions{
 				labelsWithoutSelector: true,
