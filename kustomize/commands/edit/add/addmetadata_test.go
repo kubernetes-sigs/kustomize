@@ -376,6 +376,19 @@ func TestAddLabelWithoutSelector(t *testing.T) {
 			},
 		},
 		{
+			name:       "add multiple labels without selector",
+			baseLabels: []types.Label{},
+			options: addMetadataOptions{
+				labelsWithoutSelector: true,
+				metadata:              map[string]string{"test1": "a", "test2": "b"},
+			},
+			expected: []types.Label{
+				{
+					Pairs: map[string]string{"test1": "a", "test2": "b"},
+				},
+			},
+		},
+		{
 			name: "overwrite label with same settings",
 			baseLabels: []types.Label{
 				{
