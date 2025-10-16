@@ -13,15 +13,17 @@ import (
 )
 
 const (
-	doItFlag     = "--doIt"
-	localFlag    = "--local"
-	cmdPin       = "pin"
-	cmdUnPin     = "unpin"
-	cmdTidy      = "tidy"
-	cmdList      = "list"
-	cmdRelease   = "release"
-	cmdUnRelease = "unrelease"
-	cmdDebug     = "debug"
+	doItFlag      = "--doIt"
+	localFlag     = "--local"
+	cmdPin        = "pin"
+	cmdUnPin      = "unpin"
+	cmdTidy       = "tidy"
+	cmdList       = "list"
+	cmdPreRelease = "pre-release"
+	cmdRelease    = "release"
+	cmdUnRelease  = "unrelease"
+	cmdDebug      = "debug"
+	cmdNext       = "next"
 )
 
 var (
@@ -53,19 +55,21 @@ const (
 	UnPin
 	Pin
 	List
+	PreRelease
 	Release
 	UnRelease
 	Debug
+	Next
 )
 
 type Args struct {
-	cmd               Command
-	moduleName        misc.ModuleShortName
-	conditionalModule misc.ModuleShortName
-	version           semver.SemVer
-	bump              semver.SvBump
-	doIt              bool
-	localFlag         bool
+	cmd                Command
+	moduleName         misc.ModuleShortName
+	conditionalModules []misc.ModuleShortName
+	version            semver.SemVer
+	bump               semver.SvBump
+	doIt               bool
+	localFlag          bool
 }
 
 func (a *Args) GetCommand() Command {
@@ -92,8 +96,8 @@ func (a *Args) ModuleName() misc.ModuleShortName {
 	return a.moduleName
 }
 
-func (a *Args) ConditionalModule() misc.ModuleShortName {
-	return a.conditionalModule
+func (a *Args) ConditionalModules() []misc.ModuleShortName {
+	return a.conditionalModules
 }
 
 func (a *Args) Exclusions() (result []string) {
@@ -152,7 +156,6 @@ func Parse() (result *Args, err error) {
 	result.localFlag = clArgs.localFlag
 
 	result.moduleName = misc.ModuleUnknown
-	result.conditionalModule = misc.ModuleUnknown
 	if !clArgs.more() {
 		return nil, fmt.Errorf("command needs at least one arg")
 	}
@@ -178,22 +181,47 @@ func Parse() (result *Args, err error) {
 		}
 		result.moduleName = misc.ModuleShortName(clArgs.next())
 		if clArgs.more() {
-			result.conditionalModule = misc.ModuleShortName(clArgs.next())
+			result.conditionalModules = []misc.ModuleShortName{misc.ModuleShortName(clArgs.next())}
 		}
 		result.cmd = UnPin
 	case cmdTidy:
 		result.cmd = Tidy
 	case cmdList:
 		result.cmd = List
+	case cmdPreRelease:
+		if !clArgs.more() {
+			return nil, fmt.Errorf("specify version")
+		}
+		result.version, err = semver.Parse(clArgs.next())
+		if err != nil {
+			return nil, err
+		}
+		result.cmd = PreRelease
 	case cmdRelease:
 		if !clArgs.more() {
 			return nil, fmt.Errorf("specify {module} to release")
 		}
 		result.moduleName = misc.ModuleShortName(clArgs.next())
-		bump := "patch"
-		if clArgs.more() {
-			bump = clArgs.next()
+		if !clArgs.more() {
+			return nil, fmt.Errorf("specify version")
 		}
+		result.version, err = semver.Parse(clArgs.next())
+		if err != nil {
+			return nil, err
+		}
+		result.cmd = Release
+	case cmdUnRelease:
+		if !clArgs.more() {
+			return nil, fmt.Errorf("specify {module} to unrelease")
+		}
+		result.moduleName = misc.ModuleShortName(clArgs.next())
+		result.cmd = UnRelease
+	case cmdNext:
+		if !clArgs.more() {
+			return nil, fmt.Errorf("specify one of 'major', 'minor' or 'patch'")
+		}
+
+		bump := clArgs.next()
 		switch bump {
 		case "major":
 			result.bump = semver.Major
@@ -205,13 +233,17 @@ func Parse() (result *Args, err error) {
 			return nil, fmt.Errorf(
 				"unknown bump %s; specify one of 'major', 'minor' or 'patch'", bump)
 		}
-		result.cmd = Release
-	case cmdUnRelease:
+
 		if !clArgs.more() {
-			return nil, fmt.Errorf("specify {module} to unrelease")
+			return nil, fmt.Errorf("specify at least one {module} to release")
 		}
 		result.moduleName = misc.ModuleShortName(clArgs.next())
-		result.cmd = UnRelease
+
+		for clArgs.more() {
+			result.conditionalModules = append(result.conditionalModules, misc.ModuleShortName(clArgs.next()))
+		}
+
+		result.cmd = Next
 	case cmdDebug:
 		if !clArgs.more() {
 			return nil, fmt.Errorf("specify {module} to debug")
