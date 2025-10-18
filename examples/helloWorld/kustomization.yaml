@@ -5,10 +5,12 @@ metadata:
 
 # Example configuration for the webserver
 # at https://github.com/monopole/hello
-commonLabels:
-  app: hello
 
 resources:
 - deployment.yaml
 - service.yaml
 - configMap.yaml
+labels:
+- includeSelectors: true
+  pairs:
+    app: hello
