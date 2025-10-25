@@ -386,7 +386,7 @@ replacements:
       kind: ConfigMap
       name: prometheus-config
     fieldPaths:
-    - data.prometheus\.yml.global.external_labels?prometheus_env
+    - data.prometheus\.yml.global.external_labels.prometheus_env
 ```
 
 ```yaml
