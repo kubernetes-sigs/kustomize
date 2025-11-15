@@ -394,7 +394,7 @@ func (p *plugin) checkHelmVersion() error {
 	}
 	majorVersion := strings.Split(v, ".")[0]
 	if majorVersion != "3" && majorVersion != "4" {
-		return fmt.Errorf("this plugin requires helm V4 but got v%s", v)
+		return fmt.Errorf("this plugin requires helm V3 or V4 but got v%s", v)
 	}
 	return nil
 }
