@@ -53,6 +53,10 @@ func (m *Module) ShortName() misc.ModuleShortName {
 	return m.shortName
 }
 
+func (m *Module) ModulePath() string {
+	return m.mf.Module.Mod.Path
+}
+
 func (m *Module) ImportPath() string {
 	return filepath.Join(m.repo.RepoPath(), string(m.ShortName()))
 }

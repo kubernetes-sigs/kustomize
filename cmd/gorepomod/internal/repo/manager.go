@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/edit"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
@@ -144,6 +145,10 @@ func (mgr *Manager) DetermineNextVersion(
 	for _, target := range targets {
 		newVersion := target.VersionLocal().Bump(bump)
 
+		if err := mgr.verifyMajorVersion(target.ModulePath(), newVersion); err != nil {
+			return semver.Zero(), err
+		}
+
 		fmt.Fprintf(
 			os.Stderr,
 			"Releasing %s, stepping from %s to %s\n",
@@ -155,6 +160,23 @@ func (mgr *Manager) DetermineNextVersion(
 	}
 
 	return latestVer, nil
+}
+
+func (mgr *Manager) verifyMajorVersion(modulePath string, nextVersion semver.SemVer) error {
+	nextMajor := nextVersion.Major()
+
+	// For v0 and v1, /vN suffix isn't necessary.
+	if nextMajor == 0 || nextMajor == 1 {
+		return nil
+	}
+
+	suffix := fmt.Sprintf("/v%d", nextMajor)
+
+	if !strings.HasSuffix(modulePath, suffix) {
+		return fmt.Errorf("module %s should end with %s", modulePath, suffix)
+	}
+
+	return nil
 }
 
 // DetermineNextVersion calculates the next version to use

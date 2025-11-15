@@ -32,6 +32,10 @@ type LaModule interface {
 	// ShortName is the module's name without the repo.
 	ShortName() ModuleShortName
 
+	// ModulePath is the absolute module path
+	// which is written at the module directive in go.mod file.
+	ModulePath() string
+
 	// ImportPath is the relative path below the Go src root,
 	// which is the same path as would be used to
 	// import the module.

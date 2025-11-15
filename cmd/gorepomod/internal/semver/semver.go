@@ -101,3 +101,7 @@ func (v SemVer) LessThan(o SemVer) bool {
 func (v SemVer) IsZero() bool {
 	return v.Equals(zero)
 }
+
+func (v SemVer) Major() int {
+	return v.major
+}
