@@ -19,6 +19,7 @@ install-out-of-tree-tools: \
 	$(MYGOBIN)/goimports \
 	$(MYGOBIN)/golangci-lint \
 	$(MYGOBIN)/helmV3 \
+	$(MYGOBIN)/helmV4 \
 	$(MYGOBIN)/mdrip \
 	$(MYGOBIN)/stringer
 
@@ -27,6 +28,7 @@ uninstall-out-of-tree-tools:
 	rm -f $(MYGOBIN)/goimports
 	rm -f $(MYGOBIN)/golangci-lint
 	rm -f $(MYGOBIN)/helmV3
+	rm -f $(MYGOBIN)/helmV4
 	rm -f $(MYGOBIN)/mdrip
 	rm -f $(MYGOBIN)/stringer
 
@@ -82,16 +84,30 @@ $(MYGOBIN)/gh:
 $(MYGOBIN)/kubeval:
 	cd $(REPO_ROOT)/hack && go install github.com/instrumenta/kubeval
 
-# Helm V3 differs from helm V2; downloading it to provide coverage for the
-# chart inflator plugin under helm v3.
+# Helm V3; downloading it to provide coverage for the
+# chart inflator plugin under helm v3
 .PHONY: $(MYGOBIN)/helmV3
 $(MYGOBIN)/helmV3:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v3.10.2-$(GOOS)-$(GOARCH).tar.gz; \
+		tgzFile=helm-v3.19.2-$(GOOS)-$(GOARCH).tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
 		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV3; \
+		rm -rf $$d \
+	)
+
+# Helm V4; downloading it to provide coverage for the
+# chart inflator plugin under helm v4.
+.PHONY: $(MYGOBIN)/helmV4
+$(MYGOBIN)/helmV4:
+	( \
+		set -e; \
+		d=$(shell mktemp -d); cd $$d; \
+		tgzFile=helm-v4.0.0-$(GOOS)-$(GOARCH).tar.gz; \
+		wget https://get.helm.sh/$$tgzFile; \
+		tar -xvzf $$tgzFile; \
+		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV4; \
 		rm -rf $$d \
 	)
