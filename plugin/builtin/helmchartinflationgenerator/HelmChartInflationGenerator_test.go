@@ -46,6 +46,7 @@ func runHelmVersionTests(t *testing.T, testBody func(t *testing.T, th *kusttest_
 
 func TestHelmChartInflationGenerator(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		t.Helper()
 		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
@@ -386,6 +387,7 @@ spec:
 
 func TestHelmChartInflationGeneratorWithValuesInlineOverride(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		t.Helper()
 		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
@@ -413,6 +415,7 @@ valuesInline:
 
 func TestHelmChartInflationGeneratorWithLocalValuesFile(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		t.Helper()
 		th.WriteF(filepath.Join(th.GetRoot(), "myValues.yaml"), `
 minecraftServer:
   eula: true
@@ -446,6 +449,7 @@ valuesFile: myValues.yaml
 
 func TestHelmChartInflationGeneratorWithInLineReplace(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		t.Helper()
 		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
@@ -478,7 +482,7 @@ valuesMerge: replace
 
 func TestHelmChartInflationGeneratorWithIncludeCRDs(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		// we store this data outside of the _test.go file as its sort of huge
 		// and has backticks, which makes string literals wonky
 		testData, err := os.ReadFile("include_crds_testdata.txt")
@@ -508,7 +512,7 @@ valuesInline:
 
 func TestHelmChartInflationGeneratorWithExcludeCRDs(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		// we choose this helm chart as it has the ability to turn
 		// everything off, except CRDs.
 		rm := th.LoadAndRunGenerator(`
@@ -533,7 +537,7 @@ valuesInline:
 
 func TestHelmChartInflationGeneratorWithSkipHooks(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		// we choose this helm chart as it has the ability to turn
 		// everything off, except CRDs.
 		rm := th.LoadAndRunGenerator(`
@@ -557,7 +561,7 @@ valuesInline:
 
 func TestHelmChartInflationGeneratorWithIncludeCRDsNotSpecified(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
@@ -579,7 +583,7 @@ valuesInline:
 
 func TestHelmChartInflationGeneratorIssue4905(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		rm := th.LoadAndRunGenerator(`
@@ -611,7 +615,7 @@ metadata:
 
 func TestHelmChartInflationGeneratorValuesOverride(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		rm := th.LoadAndRunGenerator(`
@@ -653,7 +657,7 @@ obj:
 
 func TestHelmChartInflationGeneratorValuesReplace(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		th.WriteF(filepath.Join(th.GetRoot(), "replacedValues.yaml"), `
@@ -710,7 +714,7 @@ obj:
 
 func TestHelmChartInflationGeneratorValuesMerge(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		rm := th.LoadAndRunGenerator(`
@@ -762,7 +766,7 @@ func copyTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) 
 
 func TestHelmChartInflationGeneratorWithSameChartMultipleVersions(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		tests := []struct {
 			name        string
 			chartName   string
@@ -849,7 +853,7 @@ releaseName: %s
 // https://github.com/kubernetes-sigs/kustomize/issues/4813
 func TestHelmChartInflationGeneratorWithMultipleInstancesSameChartDifferentVersions(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		podinfo1 := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
@@ -899,7 +903,7 @@ releaseName: podinfo2
 // Reference: https://github.com/kubernetes-sigs/kustomize/issues/5163
 func TestHelmChartInflationGeneratorUsingVersionWithoutRepo(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
-
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		rm := th.LoadAndRunGenerator(`
@@ -929,6 +933,7 @@ chartHome: ./charts
 
 func TestHelmChartInflationGeneratorWithDebug(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		rm := th.LoadAndRunGenerator(`
@@ -959,6 +964,7 @@ debug: true
 
 func TestHelmChartInflationGeneratorWithDevel(t *testing.T) {
 	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		t.Helper()
 		copyTestChartsIntoHarness(t, th)
 
 		rm := th.LoadAndRunGenerator(`
