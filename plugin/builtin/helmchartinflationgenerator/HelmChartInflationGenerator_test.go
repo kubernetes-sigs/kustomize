@@ -15,15 +15,38 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-func TestHelmChartInflationGenerator(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
+// runHelmVersionTests handles the boilerplate of iterating over Helm versions,
+// creating subtests, and setting up the test harness.
+func runHelmVersionTests(t *testing.T, testBody func(t *testing.T, th *kusttest_test.HarnessEnhanced)) {
+	t.Helper()
+	helmTestCases := []struct {
+		name    string
+		helmCmd string
+	}{
+		{name: "HelmV3", helmCmd: "helmV3"},
+		{name: "HelmV4", helmCmd: "helmV4"},
 	}
 
-	rm := th.LoadAndRunGenerator(`
+	for _, tc := range helmTestCases {
+		// Create an isolated subtest for each Helm version
+		t.Run(tc.name, func(t *testing.T) {
+			th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+				PrepBuiltin("HelmChartInflationGenerator")
+			defer th.Reset()
+
+			if err := th.ErrIfNoHelm(); err != nil {
+				t.Log("skipping: " + err.Error())
+				return
+			}
+
+			testBody(t, th)
+		})
+	}
+}
+
+func TestHelmChartInflationGenerator(t *testing.T) {
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -43,7 +66,7 @@ valuesInline:
         resouces: ["*"]
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+		th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
 data:
   config: eyJleGFtcGxlIjoidmFsdWUifQ==
@@ -172,6 +195,7 @@ spec:
 status:
   lastVersion: 0
 `)
+	})
 }
 
 const expectedInflationFmt = `
@@ -361,13 +385,8 @@ spec:
 `
 
 func TestHelmChartInflationGeneratorWithValuesInlineOverride(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
-	rm := th.LoadAndRunGenerator(`
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -383,22 +402,18 @@ valuesInline:
     rcon:
       enabled: true
 `)
-	th.AssertActualEqualsExpected(
-		rm, fmt.Sprintf(expectedInflationFmt,
-			"hard", // difficulty
-			500,    // cpu
-			512,    // memory
-		))
+		th.AssertActualEqualsExpected(
+			rm, fmt.Sprintf(expectedInflationFmt,
+				"hard", // difficulty
+				500,    // cpu
+				512,    // memory
+			))
+	})
 }
 
 func TestHelmChartInflationGeneratorWithLocalValuesFile(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
-	th.WriteF(filepath.Join(th.GetRoot(), "myValues.yaml"), `
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		th.WriteF(filepath.Join(th.GetRoot(), "myValues.yaml"), `
 minecraftServer:
   eula: true
   difficulty: peaceful
@@ -409,7 +424,7 @@ resources:
     cpu: 888m
     memory: 666Mi
 `)
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -420,22 +435,18 @@ repo: https://itzg.github.io/minecraft-server-charts
 releaseName: moria
 valuesFile: myValues.yaml
 `)
-	th.AssertActualEqualsExpected(
-		rm, fmt.Sprintf(expectedInflationFmt,
-			"peaceful", // difficulty
-			888,        // cpu
-			666,        // memory
-		))
+		th.AssertActualEqualsExpected(
+			rm, fmt.Sprintf(expectedInflationFmt,
+				"peaceful", // difficulty
+				888,        // cpu
+				666,        // memory
+			))
+	})
 }
 
 func TestHelmChartInflationGeneratorWithInLineReplace(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
-	rm := th.LoadAndRunGenerator(`
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -456,30 +467,26 @@ valuesInline:
       memory: 111Mi
 valuesMerge: replace
 `)
-	th.AssertActualEqualsExpected(
-		rm, fmt.Sprintf(expectedInflationFmt,
-			"OMG_PLEASE_NO", // difficulty
-			555,             // cpu
-			111,             // memory
-		))
+		th.AssertActualEqualsExpected(
+			rm, fmt.Sprintf(expectedInflationFmt,
+				"OMG_PLEASE_NO", // difficulty
+				555,             // cpu
+				111,             // memory
+			))
+	})
 }
 
 func TestHelmChartInflationGeneratorWithIncludeCRDs(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	// we store this data outside of the _test.go file as its sort of huge
-	// and has backticks, which makes string literals wonky
-	testData, err := os.ReadFile("include_crds_testdata.txt")
-	if err != nil {
-		t.Error(fmt.Errorf("unable to read test data for includeCRDs: %w", err))
-	}
+		// we store this data outside of the _test.go file as its sort of huge
+		// and has backticks, which makes string literals wonky
+		testData, err := os.ReadFile("include_crds_testdata.txt")
+		if err != nil {
+			t.Error(fmt.Errorf("unable to read test data for includeCRDs: %w", err))
+		}
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -495,20 +502,16 @@ valuesInline:
   tests:
     enabled: false
 `)
-	th.AssertActualEqualsExpected(rm, string(testData))
+		th.AssertActualEqualsExpected(rm, string(testData))
+	})
 }
 
 func TestHelmChartInflationGeneratorWithExcludeCRDs(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	// we choose this helm chart as it has the ability to turn
-	// everything off, except CRDs.
-	rm := th.LoadAndRunGenerator(`
+		// we choose this helm chart as it has the ability to turn
+		// everything off, except CRDs.
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -524,20 +527,16 @@ valuesInline:
   tests:
     enabled: false
 `)
-	th.AssertActualEqualsExpected(rm, "")
+		th.AssertActualEqualsExpected(rm, "")
+	})
 }
 
 func TestHelmChartInflationGeneratorWithSkipHooks(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	// we choose this helm chart as it has the ability to turn
-	// everything off, except CRDs.
-	rm := th.LoadAndRunGenerator(`
+		// we choose this helm chart as it has the ability to turn
+		// everything off, except CRDs.
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -552,18 +551,14 @@ valuesInline:
   global:
     enabled: false
 `)
-	th.AssertActualEqualsExpected(rm, "")
+		th.AssertActualEqualsExpected(rm, "")
+	})
 }
 
 func TestHelmChartInflationGeneratorWithIncludeCRDsNotSpecified(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -578,20 +573,16 @@ valuesInline:
   tests:
     enabled: false
 `)
-	th.AssertActualEqualsExpected(rm, "")
+		th.AssertActualEqualsExpected(rm, "")
+	})
 }
 
 func TestHelmChartInflationGeneratorIssue4905(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	copyTestChartsIntoHarness(t, th)
+		copyTestChartsIntoHarness(t, th)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -605,7 +596,7 @@ valuesInline:
     item2: 2
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+		th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
 data:
   config.yaml: |-
@@ -615,19 +606,15 @@ kind: ConfigMap
 metadata:
   name: issue4905
 `)
+	})
 }
 
 func TestHelmChartInflationGeneratorValuesOverride(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	copyTestChartsIntoHarness(t, th)
+		copyTestChartsIntoHarness(t, th)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -645,7 +632,7 @@ valuesInline:
     c: 6
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+		th.AssertActualEqualsExpected(rm, `
 apiVersion: test.kustomize.io/v1
 kind: ValuesMergeTest
 metadata:
@@ -661,19 +648,15 @@ obj:
     b: 5
     c: 6
 `)
+	})
 }
 
 func TestHelmChartInflationGeneratorValuesReplace(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	copyTestChartsIntoHarness(t, th)
+		copyTestChartsIntoHarness(t, th)
 
-	th.WriteF(filepath.Join(th.GetRoot(), "replacedValues.yaml"), `
+		th.WriteF(filepath.Join(th.GetRoot(), "replacedValues.yaml"), `
   a: 7
   b: 7
   c: 7
@@ -685,7 +668,7 @@ func TestHelmChartInflationGeneratorValuesReplace(t *testing.T) {
     c: 7
   `)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -704,9 +687,9 @@ valuesInline:
     b: 5
 `)
 
-	// replace option does not ignore values file from the chart
-	// it only replaces the values files specified in the kustomization
-	th.AssertActualEqualsExpected(rm, `
+		// replace option does not ignore values file from the chart
+		// it only replaces the values files specified in the kustomization
+		th.AssertActualEqualsExpected(rm, `
 apiVersion: test.kustomize.io/v1
 kind: ValuesMergeTest
 metadata:
@@ -722,19 +705,15 @@ obj:
     b: 5
     c: null
 `)
+	})
 }
 
 func TestHelmChartInflationGeneratorValuesMerge(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	copyTestChartsIntoHarness(t, th)
+		copyTestChartsIntoHarness(t, th)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -752,7 +731,7 @@ valuesInline:
     c: 6
 `)
 
-	th.AssertActualEqualsExpected(rm, `
+		th.AssertActualEqualsExpected(rm, `
 apiVersion: test.kustomize.io/v1
 kind: ValuesMergeTest
 metadata:
@@ -769,6 +748,7 @@ obj:
     b: 5
     c: 6
 `)
+	})
 }
 
 func copyTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
@@ -781,58 +761,54 @@ func copyTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) 
 }
 
 func TestHelmChartInflationGeneratorWithSameChartMultipleVersions(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
-	tests := []struct {
-		name        string
-		chartName   string
-		repo        string
-		version     string
-		releaseName string
-	}{
-		{
-			name:        "terraform chart with no version grabs latest",
-			chartName:   "terraform",
-			repo:        "https://helm.releases.hashicorp.com",
-			version:     "",
-			releaseName: "terraform-latest",
-		},
-		{
-			name:        "terraform chart with version 1.1.1",
-			chartName:   "terraform",
-			repo:        "https://helm.releases.hashicorp.com",
-			version:     "1.1.1",
-			releaseName: "terraform-1.1.1",
-		},
-		{
-			name:        "terraform chart with version 1.1.1 again",
-			chartName:   "terraform",
-			repo:        "https://helm.releases.hashicorp.com",
-			version:     "1.1.1",
-			releaseName: "terraform-1.1.1-1",
-		},
-		{
-			name:        "terraform chart with version 1.1.2",
-			chartName:   "terraform",
-			repo:        "https://helm.releases.hashicorp.com",
-			version:     "1.1.2",
-			releaseName: "terraform-1.1.2",
-		},
-		{
-			name:        "terraform chart with version 1.1.2 but without repo",
-			chartName:   "terraform",
-			version:     "1.1.2",
-			releaseName: "terraform-1.1.2",
-		},
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := fmt.Sprintf(`
+		tests := []struct {
+			name        string
+			chartName   string
+			repo        string
+			version     string
+			releaseName string
+		}{
+			{
+				name:        "terraform chart with no version grabs latest",
+				chartName:   "terraform",
+				repo:        "https://helm.releases.hashicorp.com",
+				version:     "",
+				releaseName: "terraform-latest",
+			},
+			{
+				name:        "terraform chart with version 1.1.1",
+				chartName:   "terraform",
+				repo:        "https://helm.releases.hashicorp.com",
+				version:     "1.1.1",
+				releaseName: "terraform-1.1.1",
+			},
+			{
+				name:        "terraform chart with version 1.1.1 again",
+				chartName:   "terraform",
+				repo:        "https://helm.releases.hashicorp.com",
+				version:     "1.1.1",
+				releaseName: "terraform-1.1.1-1",
+			},
+			{
+				name:        "terraform chart with version 1.1.2",
+				chartName:   "terraform",
+				repo:        "https://helm.releases.hashicorp.com",
+				version:     "1.1.2",
+				releaseName: "terraform-1.1.2",
+			},
+			{
+				name:        "terraform chart with version 1.1.2 but without repo",
+				chartName:   "terraform",
+				version:     "1.1.2",
+				releaseName: "terraform-1.1.2",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				config := fmt.Sprintf(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -843,42 +819,38 @@ repo: %s
 releaseName: %s
 `, tt.chartName, tt.chartName, tt.version, tt.repo, tt.releaseName)
 
-			rm := th.LoadAndRunGenerator(config)
-			assert.True(t, len(rm.Resources()) > 0)
+				rm := th.LoadAndRunGenerator(config)
+				assert.True(t, len(rm.Resources()) > 0)
 
-			var chartDir string
-			if tt.version != "" && tt.repo != "" {
-				chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
-			} else {
-				chartDir = fmt.Sprintf("charts/%s", tt.chartName)
-			}
+				var chartDir string
+				if tt.version != "" && tt.repo != "" {
+					chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
+				} else {
+					chartDir = fmt.Sprintf("charts/%s", tt.chartName)
+				}
 
-			fmt.Printf("%s: %s\n", tt.name, chartDir)
+				fmt.Printf("%s: %s\n", tt.name, chartDir)
 
-			d, err := th.GetFSys().ReadFile(filepath.Join(th.GetRoot(), chartDir, "Chart.yaml"))
-			if err != nil {
-				t.Fatal(err)
-			}
+				d, err := th.GetFSys().ReadFile(filepath.Join(th.GetRoot(), chartDir, "Chart.yaml"))
+				if err != nil {
+					t.Fatal(err)
+				}
 
-			assert.Contains(t, string(d), fmt.Sprintf("name: %s", tt.chartName))
-			if tt.version != "" {
-				assert.Contains(t, string(d), fmt.Sprintf("version: %s", tt.version))
-			}
-		})
-	}
+				assert.Contains(t, string(d), fmt.Sprintf("name: %s", tt.chartName))
+				if tt.version != "" {
+					assert.Contains(t, string(d), fmt.Sprintf("version: %s", tt.version))
+				}
+			})
+		}
+	})
 }
 
 // Test that verifies +1 instances of same chart with different versions
 // https://github.com/kubernetes-sigs/kustomize/issues/4813
 func TestHelmChartInflationGeneratorWithMultipleInstancesSameChartDifferentVersions(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	podinfo1 := th.LoadAndRunGenerator(`
+		podinfo1 := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -889,7 +861,7 @@ repo: https://stefanprodan.github.io/podinfo
 releaseName: podinfo1
 `)
 
-	podinfo2 := th.LoadAndRunGenerator(`
+		podinfo2 := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -900,41 +872,37 @@ repo: https://stefanprodan.github.io/podinfo
 releaseName: podinfo2
 `)
 
-	podinfo1Img, err := podinfo1.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
-	require.NoError(t, err)
-	assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.2.1", podinfo1Img)
+		podinfo1Img, err := podinfo1.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
+		require.NoError(t, err)
+		assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.2.1", podinfo1Img)
 
-	podinfo2Img, err := podinfo2.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
-	require.NoError(t, err)
-	assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.1.8", podinfo2Img)
+		podinfo2Img, err := podinfo2.Resources()[1].GetFieldValue("spec.template.spec.containers.0.image")
+		require.NoError(t, err)
+		assert.Equal(t, "ghcr.io/stefanprodan/podinfo:6.1.8", podinfo2Img)
 
-	podinfo1ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.2.1/podinfo")
-	assert.True(t, th.GetFSys().Exists(podinfo1ChartsDir))
+		podinfo1ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.2.1/podinfo")
+		assert.True(t, th.GetFSys().Exists(podinfo1ChartsDir))
 
-	podinfo2ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.1.8/podinfo")
-	assert.True(t, th.GetFSys().Exists(podinfo2ChartsDir))
+		podinfo2ChartsDir := filepath.Join(th.GetRoot(), "charts/podinfo-6.1.8/podinfo")
+		assert.True(t, th.GetFSys().Exists(podinfo2ChartsDir))
 
-	podinfo1ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo1ChartsDir, "Chart.yaml"))
-	require.NoError(t, err)
-	assert.Contains(t, string(podinfo1ChartContents), "version: 6.2.1")
+		podinfo1ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo1ChartsDir, "Chart.yaml"))
+		require.NoError(t, err)
+		assert.Contains(t, string(podinfo1ChartContents), "version: 6.2.1")
 
-	podinfo2ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo2ChartsDir, "Chart.yaml"))
-	require.NoError(t, err)
-	assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
+		podinfo2ChartContents, err := th.GetFSys().ReadFile(filepath.Join(podinfo2ChartsDir, "Chart.yaml"))
+		require.NoError(t, err)
+		assert.Contains(t, string(podinfo2ChartContents), "version: 6.1.8")
+	})
 }
 
 // Reference: https://github.com/kubernetes-sigs/kustomize/issues/5163
 func TestHelmChartInflationGeneratorUsingVersionWithoutRepo(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 
-	copyTestChartsIntoHarness(t, th)
+		copyTestChartsIntoHarness(t, th)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -945,29 +913,25 @@ releaseName: test
 chartHome: ./charts
 `)
 
-	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
-	require.NoError(t, err)
-	assert.Equal(t, "bar", cm)
+		cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
+		require.NoError(t, err)
+		assert.Equal(t, "bar", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
-	assert.True(t, th.GetFSys().Exists(chartDir))
+		chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+		assert.True(t, th.GetFSys().Exists(chartDir))
 
-	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
-	require.NoError(t, err)
-	assert.Contains(t, string(chartYamlContent), "name: test-chart")
-	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
+		chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
+		require.NoError(t, err)
+		assert.Contains(t, string(chartYamlContent), "name: test-chart")
+		assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
+	})
 }
 
 func TestHelmChartInflationGeneratorWithDebug(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
-	copyTestChartsIntoHarness(t, th)
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		copyTestChartsIntoHarness(t, th)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -979,29 +943,25 @@ chartHome: ./charts
 debug: true
 `)
 
-	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
-	require.NoError(t, err)
-	assert.Equal(t, "bar", cm)
+		cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
+		require.NoError(t, err)
+		assert.Equal(t, "bar", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
-	assert.True(t, th.GetFSys().Exists(chartDir))
+		chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+		assert.True(t, th.GetFSys().Exists(chartDir))
 
-	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
-	require.NoError(t, err)
-	assert.Contains(t, string(chartYamlContent), "name: test-chart")
-	assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
+		chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
+		require.NoError(t, err)
+		assert.Contains(t, string(chartYamlContent), "name: test-chart")
+		assert.Contains(t, string(chartYamlContent), "version: 1.0.0")
+	})
 }
 
 func TestHelmChartInflationGeneratorWithDevel(t *testing.T) {
-	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
-		PrepBuiltin("HelmChartInflationGenerator")
-	defer th.Reset()
-	if err := th.ErrIfNoHelm(); err != nil {
-		t.Skip("skipping: " + err.Error())
-	}
-	copyTestChartsIntoHarness(t, th)
+	runHelmVersionTests(t, func(t *testing.T, th *kusttest_test.HarnessEnhanced) {
+		copyTestChartsIntoHarness(t, th)
 
-	rm := th.LoadAndRunGenerator(`
+		rm := th.LoadAndRunGenerator(`
 apiVersion: builtin
 kind: HelmChartInflationGenerator
 metadata:
@@ -1013,15 +973,16 @@ releaseName: sm-operator
 chartHome: ./charts
 devel: true
 `)
-	cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
-	require.NoError(t, err)
-	assert.Equal(t, "sm-operator-controller-manager", cm)
+		cm, err := rm.Resources()[0].GetFieldValue("metadata.name")
+		require.NoError(t, err)
+		assert.Equal(t, "sm-operator-controller-manager", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/sm-operator-0.1.0-Beta/sm-operator")
-	assert.True(t, th.GetFSys().Exists(chartDir))
+		chartDir := filepath.Join(th.GetRoot(), "charts/sm-operator-0.1.0-Beta/sm-operator")
+		assert.True(t, th.GetFSys().Exists(chartDir))
 
-	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
-	require.NoError(t, err)
-	assert.Contains(t, string(chartYamlContent), "name: sm-operator")
-	assert.Contains(t, string(chartYamlContent), "version: 0.1.0-Beta")
+		chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
+		require.NoError(t, err)
+		assert.Contains(t, string(chartYamlContent), "name: sm-operator")
+		assert.Contains(t, string(chartYamlContent), "version: 0.1.0-Beta")
+	})
 }
