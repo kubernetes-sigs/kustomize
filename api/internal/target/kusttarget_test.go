@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -35,12 +36,11 @@ func TestLoadKustFile(t *testing.T) {
 	}{
 		"missing": {
 			fileNames: []string{"kustomization"},
-			errMsg:    `unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/'`,
+			errMsg:    fmt.Sprintf("unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '%s'", filepath.FromSlash("/")),
 		},
 		"multiple": {
 			fileNames: []string{"kustomization.yaml", "Kustomization"},
-			errMsg: `Found multiple kustomization files under: /
-`,
+			errMsg:    fmt.Sprintf("Found multiple kustomization files under: %c\n", filepath.Separator),
 		},
 		"valid": {
 			fileNames:    []string{"kustomization.yml", "kust"},
