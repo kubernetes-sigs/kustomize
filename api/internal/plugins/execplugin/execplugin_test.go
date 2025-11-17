@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 const (
@@ -27,6 +28,8 @@ const (
 )
 
 func TestExecPluginConfig(t *testing.T) {
+	// Skip this test on Windows.
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsInMemory()
 	err := fSys.WriteFile("sed-input.txt", []byte(`
 s/$FOO/foo/g
