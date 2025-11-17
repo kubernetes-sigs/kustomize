@@ -211,8 +211,9 @@ func newLoaderAtGitClone(
 	// check for this after cloning repo.
 	if !root.HasPrefix(repoSpec.CloneDir()) {
 		_ = cleaner()
-		return nil, fmt.Errorf("%q refers to directory outside of repo %q", repoSpec.AbsPath(),
-			repoSpec.CloneDir())
+		return nil, fmt.Errorf("%q refers to directory outside of repo %q",
+			filepath.ToSlash(repoSpec.AbsPath()),
+			filepath.ToSlash(repoSpec.CloneDir().String()))
 	}
 	return &FileLoader{
 		// Clones never allowed to escape root.

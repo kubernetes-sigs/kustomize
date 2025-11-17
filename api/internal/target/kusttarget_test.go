@@ -122,11 +122,13 @@ commonLabels:
 		},
 	}
 
+	// Use platform-appropriate root directory
+	rootDir := string(filepath.Separator)
 	kt := makeKustTargetWithRf(
-		t, th.GetFSys(), "/", provider.NewDefaultDepProvider())
+		t, th.GetFSys(), rootDir, provider.NewDefaultDepProvider())
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			th.WriteK("/", tc.content)
+			th.WriteK(rootDir, tc.content)
 			err := kt.Load()
 			if tc.errContains != "" {
 				require.NotNilf(t, err, "expected error containing: `%s`", tc.errContains)
