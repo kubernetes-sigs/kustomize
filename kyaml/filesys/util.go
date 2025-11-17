@@ -69,14 +69,15 @@ func PathSplit(incoming string) []string {
 // If the first entry is an empty string, then the returned
 // path is absolute (it has a leading slash).
 // Desired:  path == PathJoin(PathSplit(path))
+// Always returns forward slashes for cross-platform consistency.
 func PathJoin(incoming []string) string {
 	if len(incoming) == 0 {
 		return ""
 	}
 	if incoming[0] == "" {
-		return string(os.PathSeparator) + filepath.Join(incoming[1:]...)
+		return "/" + filepath.ToSlash(filepath.Join(incoming[1:]...))
 	}
-	return filepath.Join(incoming...)
+	return filepath.ToSlash(filepath.Join(incoming...))
 }
 
 // InsertPathPart inserts 'part' at position 'pos' in the given filepath.
