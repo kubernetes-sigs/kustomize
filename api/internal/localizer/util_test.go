@@ -228,7 +228,7 @@ func TestLocRootPath_URLComponents(t *testing.T) {
 		},
 		"IPv6": {
 			urlf: "https://[2001:4860:4860::8888]/org/repo//%s?ref=value",
-			path: simpleJoin(t, "2001:4860:4860::8888", "org", "repo", "value"),
+			path: simpleJoin(t, "2001-4860-4860--8888", "org", "repo", "value"),
 		},
 		"port": {
 			urlf: "https://localhost.com:8080/org/repo//%s?ref=value",
