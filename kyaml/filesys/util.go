@@ -41,6 +41,10 @@ func PathSplit(incoming string) []string {
 	if incoming == "" {
 		return []string{}
 	}
+
+	// Clean the path to normalize separators (converts / to \ on Windows)
+	incoming = filepath.Clean(incoming)
+
 	dir, path := filepath.Split(incoming)
 	if dir == string(os.PathSeparator) {
 		if path == "" {
@@ -50,6 +54,12 @@ func PathSplit(incoming string) []string {
 	}
 	dir = strings.TrimSuffix(dir, string(os.PathSeparator))
 	if dir == "" {
+		return []string{path}
+	}
+	// Prevent infinite recursion: if dir is the same as incoming after trimming,
+	// it means filepath.Split didn't split anything meaningful.
+	// This can happen on Windows with volume names (e.g., "C:") or mixed separators.
+	if dir == incoming {
 		return []string{path}
 	}
 	return append(PathSplit(dir), path)
