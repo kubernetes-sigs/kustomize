@@ -1,6 +1,10 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// all tests are only for posix-OS
+//go:build !windows
+// +build !windows
+
 package krusty_test
 
 import (
