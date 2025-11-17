@@ -5,7 +5,7 @@ package generators
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -110,7 +110,7 @@ func ParseFileSource(source string) (keyName, filePath string, err error) {
 	numSeparators := strings.Count(source, "=")
 	switch {
 	case numSeparators == 0:
-		return path.Base(source), source, nil
+		return filepath.Base(source), source, nil
 	case numSeparators == 1 && strings.HasPrefix(source, "="):
 		return "", "", errors.Errorf("missing key name for file path %q in source %q", strings.TrimPrefix(source, "="), source)
 	case numSeparators == 1 && strings.HasSuffix(source, "="):
