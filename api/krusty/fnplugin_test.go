@@ -504,6 +504,13 @@ type: Opaque
 
 func skipIfNoDocker(t *testing.T) {
 	t.Helper()
+
+	// Skip if KUSTOMIZE_DOCKER_E2E is set to false
+	if os.Getenv("KUSTOMIZE_DOCKER_E2E") == "false" {
+		t.Skip("skipping because KUSTOMIZE_DOCKER_E2E is set to false")
+	}
+
+	// Skip if docker binary is not found
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("skipping because docker binary wasn't found in PATH")
 	}
