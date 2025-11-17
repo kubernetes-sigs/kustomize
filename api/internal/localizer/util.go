@@ -218,5 +218,10 @@ func parseHost(repoSpec *git.RepoSpec) (string, error) {
 		return "", errors.Wrap(err)
 	}
 	// strip scheme, userinfo, port, and any trailing slashes.
-	return u.Hostname(), nil
+	hostname := u.Hostname()
+	// On Windows, colons are invalid in file paths. Replace them with hyphens
+	// to make IPv6 addresses filesystem-safe.
+	// This affects IPv6 addresses like [2001:4860:4860::8888].
+	hostname = strings.ReplaceAll(hostname, ":", "-")
+	return hostname, nil
 }
