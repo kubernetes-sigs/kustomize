@@ -54,6 +54,8 @@ func (origin *Origin) Append(inputPath string) *Origin {
 	if err == nil {
 		originCopy.Repo = repoSpec.CloneSpec()
 		absPath := repoSpec.AbsPath()
+		// Normalize to forward slashes for cross-platform compatibility
+		absPath = strings.ReplaceAll(absPath, "\\", "/")
 		inputPath = absPath[strings.Index(absPath[1:], "/")+1:][1:]
 		originCopy.Path = ""
 		originCopy.Ref = repoSpec.Ref

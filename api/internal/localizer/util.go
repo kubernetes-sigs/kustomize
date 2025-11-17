@@ -152,7 +152,11 @@ func locFilePath(fileURL string) string {
 	// Raw github urls are the only type of file urls kustomize officially accepts.
 	// In this case, the path already consists of org, repo, version, and path in repo, in order,
 	// so we can use it as is.
-	return filepath.Join(LocalizeDir, u.Hostname(), path)
+	hostname := u.Hostname()
+	// On Windows, colons are invalid in file paths. Replace them with hyphens
+	// to make IPv6 addresses filesystem-safe.
+	hostname = strings.ReplaceAll(hostname, ":", "-")
+	return filepath.Join(LocalizeDir, hostname, path)
 }
 
 // locRootPath returns the relative localized path of the validated root url rootURL, where the local copy of its repo

@@ -208,7 +208,7 @@ func TestLoaderLocalScheme(t *testing.T) {
 	t.Run("file", func(t *testing.T) {
 		fSys, dir := setupOnDisk(t)
 		parts := []string{
-			"ssh:",
+			"ssh-scheme",
 			"resource.yaml",
 		}
 		require.NoError(t, fSys.Mkdir(dir.Join(parts[0])))
@@ -226,8 +226,9 @@ func TestLoaderLocalScheme(t *testing.T) {
 	})
 	t.Run("directory", func(t *testing.T) {
 		fSys, dir := setupOnDisk(t)
+		// Use scheme-like name without colon for Windows compatibility
 		parts := []string{
-			"https:",
+			"https-scheme",
 			"root",
 		}
 		require.NoError(t, fSys.MkdirAll(dir.Join(filepath.Join(parts...))))
@@ -379,6 +380,7 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	rootURL := "github.com/someOrg/someRepo"
 	pathInRepo := "foo/base"
 	url := rootURL + "/" + pathInRepo
+	// Use absolute path starting with / for in-memory filesystem
 	coRoot := "/tmp"
 	fSys := filesys.MakeFsInMemory()
 	fSys.MkdirAll(coRoot)
@@ -422,6 +424,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	require := require.New(t)
 
 	// Define an overlay-base structure in the file system.
+	// Use absolute paths for in-memory filesystem
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
@@ -494,12 +497,14 @@ func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
 
 	_, err = newLoaderAtGitClone(repoSpec, fSys, nil, git.DoNothingCloner(filesys.ConfirmedDir(repo)))
 	require.Error(t, err)
-	require.Contains(t, err.Error(), fmt.Sprintf("%q refers to directory outside of repo %q", base, repo))
+	// Use filepath.ToSlash to normalize paths for cross-platform comparison
+	require.Contains(t, err.Error(), fmt.Sprintf("%q refers to directory outside of repo %q", filepath.ToSlash(base), filepath.ToSlash(repo)))
 }
 
 func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	require := require.New(t)
 
+	// Use absolute paths for in-memory filesystem
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
@@ -521,6 +526,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 func TestRepoDirectCycleDetection(t *testing.T) {
 	require := require.New(t)
 
+	// Use absolute paths for in-memory filesystem
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
@@ -543,6 +549,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 func TestRepoIndirectCycleDetection(t *testing.T) {
 	require := require.New(t)
 
+	// Use absolute paths for in-memory filesystem
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()

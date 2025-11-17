@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 func TestDefaultNewDirRepo(t *testing.T) {
@@ -120,7 +121,8 @@ func TestLocFilePathColon(t *testing.T) {
 
 	// The colon is special because it was once used as the unix file separator.
 	const url = "https://[2001:4860:4860::8888]/file.yaml"
-	const host = "2001:4860:4860::8888"
+	// On Windows, colons are replaced with hyphens in IPv6 addresses
+	const host = "2001-4860-4860--8888"
 	const file = "file.yaml"
 	req.Equal(simpleJoin(t, LocalizeDir, host, file), locFilePath(url))
 
@@ -129,8 +131,10 @@ func TestLocFilePathColon(t *testing.T) {
 
 	// We check that we can create single directory, meaning ':' not used as file separator.
 	req.NoError(fSys.Mkdir(targetDir))
-	_, err := fSys.Create(simpleJoin(t, targetDir, file))
+	f, err := fSys.Create(simpleJoin(t, targetDir, file))
 	req.NoError(err)
+	// Close the file immediately to avoid file locking issues on Windows
+	req.NoError(f.Close())
 
 	// We check that the directory with such name is readable.
 	files, err := fSys.ReadDir(targetDir)
@@ -139,6 +143,9 @@ func TestLocFilePathColon(t *testing.T) {
 }
 
 func TestLocFilePath_SpecialChar(t *testing.T) {
+	// Skip on Windows as asterisk is invalid in Windows paths
+	testutil.SkipWindows(t)
+
 	req := require.New(t)
 
 	// The wild card character is one of the legal uri characters with more meaning
@@ -163,6 +170,7 @@ func TestLocFilePath_SpecialFiles(t *testing.T) {
 	for name, tFSys := range map[string]struct {
 		urlPath           string
 		pathDir, pathFile string
+		skipWindows       bool // Skip this test case on Windows
 	}{
 		"windows_reserved_name": {
 			urlPath:  "/aux/file",
@@ -170,12 +178,18 @@ func TestLocFilePath_SpecialFiles(t *testing.T) {
 			pathFile: "file",
 		},
 		"hidden_files": {
-			urlPath:  "/.../.file",
-			pathDir:  "...",
-			pathFile: ".file",
+			urlPath:     "/.../.file",
+			pathDir:     "...",
+			pathFile:    ".file",
+			skipWindows: true, // Windows treats "..." specially
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			// Skip Windows-incompatible tests
+			if tFSys.skipWindows {
+				testutil.SkipWindows(t)
+			}
+
 			req := require.New(t)
 
 			expectedPath := simpleJoin(t, LocalizeDir, "host", tFSys.pathDir, tFSys.pathFile)
@@ -304,23 +318,41 @@ func TestLocRootPath_SymlinkPath(t *testing.T) {
 
 func TestCleanedRelativePath(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
-	require.NoError(t, fSys.MkdirAll("/root/test"))
-	require.NoError(t, fSys.WriteFile("/root/test/file.yaml", []byte("")))
-	require.NoError(t, fSys.WriteFile("/root/filetwo.yaml", []byte("")))
+	// Use platform-appropriate root path
+	rootPath := string(filepath.Separator) + "root"
+	testPath := filepath.Join(rootPath, "test")
+
+	require.NoError(t, fSys.MkdirAll(testPath))
+	require.NoError(t, fSys.WriteFile(filepath.Join(testPath, "file.yaml"), []byte("")))
+	require.NoError(t, fSys.WriteFile(filepath.Join(rootPath, "filetwo.yaml"), []byte("")))
 
 	// Absolute path is cleaned to relative path
-	cleanedPath := cleanedRelativePath(fSys, "/root/", "/root/test/file.yaml")
-	require.Equal(t, "test/file.yaml", cleanedPath)
+	cleanedPath := cleanedRelativePath(
+		fSys,
+		filesys.ConfirmedDir(rootPath+string(filepath.Separator)),
+		filepath.Join(testPath, "file.yaml"))
+	require.Equal(t, filepath.Join("test", "file.yaml"), cleanedPath)
 
 	// Winding absolute path is cleaned to relative path
-	cleanedPath = cleanedRelativePath(fSys, "/root/", "/root/test/../filetwo.yaml")
+	windingPath := filepath.Join(rootPath, "test", "..", "filetwo.yaml")
+	cleanedPath = cleanedRelativePath(
+		fSys,
+		filesys.ConfirmedDir(rootPath+string(filepath.Separator)),
+		windingPath)
 	require.Equal(t, "filetwo.yaml", cleanedPath)
 
 	// Already clean relative path stays the same
-	cleanedPath = cleanedRelativePath(fSys, "/root/", "test/file.yaml")
-	require.Equal(t, "test/file.yaml", cleanedPath)
+	cleanedPath = cleanedRelativePath(
+		fSys,
+		filesys.ConfirmedDir(rootPath+string(filepath.Separator)),
+		filepath.Join("test", "file.yaml"))
+	require.Equal(t, filepath.Join("test", "file.yaml"), cleanedPath)
 
 	// Winding relative path is cleaned
-	cleanedPath = cleanedRelativePath(fSys, "/root/", "test/../filetwo.yaml")
+	windingRelPath := filepath.Join("test", "..", "filetwo.yaml")
+	cleanedPath = cleanedRelativePath(
+		fSys,
+		filesys.ConfirmedDir(rootPath+string(filepath.Separator)),
+		windingRelPath)
 	require.Equal(t, "filetwo.yaml", cleanedPath)
 }

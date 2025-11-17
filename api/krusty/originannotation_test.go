@@ -16,6 +16,32 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+const generateDeploymentDotSh = `#!/bin/sh
+
+cat <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+  annotations:
+    tshirt-size: small # this injects the resource reservations
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+EOF
+`
+
 func TestAnnoOriginLocalFiles(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("service.yaml", `

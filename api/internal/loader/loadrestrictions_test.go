@@ -4,6 +4,7 @@
 package loader
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -59,9 +60,11 @@ func TestRestrictionRootOnly(t *testing.T) {
 	if err == nil {
 		t.Fatal("should have an error")
 	}
-	if !strings.Contains(
-		err.Error(),
-		"file '/tmp/illegal' is not in or below '/tmp/foo'") {
+	// Normalize paths to forward slashes for cross-platform comparison
+	expectedErr := fmt.Sprintf("file '%s' is not in or below '%s'",
+		filepath.ToSlash(filepath.Join(filesys.Separator+"tmp", "illegal")),
+		filepath.ToSlash(filepath.Join(filesys.Separator+"tmp", "foo")))
+	if !strings.Contains(err.Error(), expectedErr) {
 		t.Fatalf("unexpected err: %s", err)
 	}
 }
