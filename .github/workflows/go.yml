@@ -114,17 +114,7 @@ jobs:
       with:
         go-version-file: go.work
       id: go
-    - name: Test kyaml
-      run: go test -cover ./...
-      working-directory: ./kyaml
-    - name: Test cmd/config
-      run: go test -cover ./...
-      working-directory: ./cmd/config
+    - name: Test all modules
+      run: make test-unit-non-plugin
       env:
         KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
-
-    # TODO (#4001): replace specific modules above with this once Windows tests are passing.
-    #- name: Test all modules
-    #  run: make test-unit-non-plugin
-    #  env:
-    #    KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
