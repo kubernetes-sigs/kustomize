@@ -63,13 +63,13 @@ func NewTmpConfirmedDir() (ConfirmedDir, error) {
 //	https://github.com/golang/dep/blob/master/internal/fs/fs.go#L33
 //	https://codereview.appspot.com/5712045
 func (d ConfirmedDir) HasPrefix(path ConfirmedDir) bool {
-	if path.String() == string(filepath.Separator) || path == d {
-		return true
-	}
 	// Normalize both paths to use forward slashes for comparison
 	// to handle cross-platform differences (Windows uses backslashes)
 	normalizedD := filepath.ToSlash(string(d))
 	normalizedPath := filepath.ToSlash(string(path))
+	if normalizedPath == "/" || normalizedD == normalizedPath {
+		return true
+	}
 	return strings.HasPrefix(
 		normalizedD,
 		normalizedPath+"/")

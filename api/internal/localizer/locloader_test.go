@@ -1,6 +1,10 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// TODO: Skip on Windows due to this test depends onposix-OS specific filepath.
+//go:build !windows
+// +build !windows
+
 package localizer_test
 
 import (

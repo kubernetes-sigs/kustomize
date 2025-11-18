@@ -238,7 +238,7 @@ func (fl *FileLoader) errIfGitContainmentViolation(
 			"security; bases in kustomizations found in "+
 				"cloned git repos must be within the repo, "+
 				"but base '%s' is outside '%s'",
-			base, containingRepo.CloneDir())
+			filepath.ToSlash(base.String()), filepath.ToSlash(containingRepo.CloneDir().String()))
 	}
 	return nil
 }

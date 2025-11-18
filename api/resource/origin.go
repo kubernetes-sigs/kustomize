@@ -5,6 +5,7 @@ package resource
 
 import (
 	"path"
+	"path/filepath"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/git"
@@ -60,7 +61,7 @@ func (origin *Origin) Append(inputPath string) *Origin {
 		originCopy.Path = ""
 		originCopy.Ref = repoSpec.Ref
 	}
-	originCopy.Path = path.Join(originCopy.Path, inputPath)
+	originCopy.Path = filepath.ToSlash(path.Join(originCopy.Path, inputPath))
 	return &originCopy
 }
 
@@ -91,7 +92,7 @@ func OriginFromCustomPlugin(res *Resource) (*Origin, error) {
 		result = &Origin{
 			Repo:         origin.Repo,
 			Ref:          origin.Ref,
-			ConfiguredIn: origin.Path,
+			ConfiguredIn: filepath.ToSlash(origin.Path),
 			ConfiguredBy: kyaml.ResourceIdentifier{
 				TypeMeta: kyaml.TypeMeta{
 					APIVersion: res.GetApiVersion(),

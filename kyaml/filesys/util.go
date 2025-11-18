@@ -41,10 +41,6 @@ func PathSplit(incoming string) []string {
 	if incoming == "" {
 		return []string{}
 	}
-
-	// Clean the path to normalize separators (converts / to \ on Windows)
-	incoming = filepath.Clean(incoming)
-
 	dir, path := filepath.Split(incoming)
 	if dir == string(os.PathSeparator) {
 		if path == "" {
@@ -56,12 +52,6 @@ func PathSplit(incoming string) []string {
 	if dir == "" {
 		return []string{path}
 	}
-	// Prevent infinite recursion: if dir is the same as incoming after trimming,
-	// it means filepath.Split didn't split anything meaningful.
-	// This can happen on Windows with volume names (e.g., "C:") or mixed separators.
-	if dir == incoming {
-		return []string{path}
-	}
 	return append(PathSplit(dir), path)
 }
 
@@ -69,15 +59,14 @@ func PathSplit(incoming string) []string {
 // If the first entry is an empty string, then the returned
 // path is absolute (it has a leading slash).
 // Desired:  path == PathJoin(PathSplit(path))
-// Always returns forward slashes for cross-platform consistency.
 func PathJoin(incoming []string) string {
 	if len(incoming) == 0 {
 		return ""
 	}
 	if incoming[0] == "" {
-		return "/" + filepath.ToSlash(filepath.Join(incoming[1:]...))
+		return string(os.PathSeparator) + filepath.Join(incoming[1:]...)
 	}
-	return filepath.ToSlash(filepath.Join(incoming...))
+	return filepath.Join(incoming...)
 }
 
 // InsertPathPart inserts 'part' at position 'pos' in the given filepath.
