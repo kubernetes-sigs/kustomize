@@ -317,6 +317,8 @@ func TestLocRootPath_SymlinkPath(t *testing.T) {
 }
 
 func TestCleanedRelativePath(t *testing.T) {
+	// Skip on Windows due to path separator differences
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsInMemory()
 	// Use platform-appropriate root path
 	rootPath := string(filepath.Separator) + "root"

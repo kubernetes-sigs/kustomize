@@ -401,7 +401,7 @@ whatever
 	require.NoError(err)
 	repo := l.Repo()
 	require.Equal(coRoot, repo)
-	require.Equal(coRoot+"/"+pathInRepo, l.Root())
+	require.Equal(coRoot+"/"+pathInRepo, filepath.ToSlash(l.Root()))
 
 	_, err = l.New(url)
 	require.Error(err)

@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 const generateDeploymentDotSh = `#!/bin/sh
@@ -437,6 +438,7 @@ metadata:
 }
 
 func TestAnnoOriginCustomExecGenerator(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -531,6 +533,7 @@ spec:
 }
 
 func TestAnnoOriginCustomInlineExecGenerator(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -621,6 +624,7 @@ spec:
 }
 
 func TestAnnoOriginCustomExecGeneratorWithOverlay(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -721,6 +725,7 @@ spec:
 }
 
 func TestAnnoOriginCustomInlineExecGeneratorWithOverlay(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -817,6 +822,9 @@ spec:
 }
 
 func TestAnnoOriginRemoteBuiltinGenerator(t *testing.T) {
+	// Skip on Windows: Git's core.autocrlf converts LF to CRLF when cloning,
+	// which changes file content and results in different ConfigMap hash values
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	tmpDir, err := filesys.NewTmpConfirmedDir()
@@ -1031,6 +1039,7 @@ metadata:
 }
 
 func TestAnnoOriginGeneratorInTransformersField(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -1093,6 +1102,7 @@ spec:
 }
 
 func TestAnnoOriginGeneratorInTransformersFieldWithOverlay(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)

@@ -279,7 +279,7 @@ spec:
 resources:
 - file:///not/a/real/repo
 `,
-			err: "fatal: '/not/a/real/repo' does not appear to be a git repository",
+			err: `fatal: '.*not/a/real/repo' does not appear to be a git repository`,
 		},
 	}
 
@@ -291,7 +291,7 @@ resources:
 				t.SkipNow()
 			}
 
-			kust := strings.ReplaceAll(test.kustomization, "$ROOT", repos.root)
+			kust := strings.ReplaceAll(test.kustomization, "$ROOT", filepath.ToSlash(repos.root))
 			fSys, tmpDir := kusttest_test.CreateKustDir(t, kust)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
@@ -304,7 +304,7 @@ resources:
 				require.Regexp(t, test.err, err.Error())
 			} else {
 				require.NoError(t, err)
-				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", repos.root))
+				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", filepath.ToSlash(repos.root)))
 			}
 		})
 	}

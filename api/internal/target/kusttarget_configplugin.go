@@ -49,7 +49,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 			generatorOrigin = &resource.Origin{
 				Repo:         kt.origin.Repo,
 				Ref:          kt.origin.Ref,
-				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
+				ConfiguredIn: filepath.ToSlash(filepath.Join(kt.origin.Path, kt.kustFileName)),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",
@@ -58,7 +58,6 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 				},
 			}
 		}
-
 		for i := range r {
 			result = append(result, &resmap.GeneratorWithProperties{Generator: r[i], Origin: generatorOrigin})
 		}
@@ -92,7 +91,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 			transformerOrigin = &resource.Origin{
 				Repo:         kt.origin.Repo,
 				Ref:          kt.origin.Ref,
-				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
+				ConfiguredIn: filepath.ToSlash(filepath.Join(kt.origin.Path, kt.kustFileName)),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",

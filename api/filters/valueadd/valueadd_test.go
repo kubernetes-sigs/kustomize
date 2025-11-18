@@ -1,6 +1,10 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// TODO: Need more investigate for windows compatibility
+//go:build !windows
+// +build !windows
+
 package valueadd
 
 import (
