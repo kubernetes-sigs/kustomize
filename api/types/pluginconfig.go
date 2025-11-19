@@ -30,7 +30,7 @@ func EnabledPluginConfig(b BuiltinPluginLoadingOptions) (pc *PluginConfig) {
 	pc = MakePluginConfig(PluginRestrictionsNone, b)
 	pc.HelmConfig.Enabled = true
 	// If this command is not on PATH, tests needing it should skip.
-	pc.HelmConfig.Command = "helmV3"
+	pc.HelmConfig.Command = "helmV4"
 	return
 }
 
