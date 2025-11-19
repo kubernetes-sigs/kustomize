@@ -85,7 +85,7 @@ $(MYGOBIN)/kubeval:
 	cd $(REPO_ROOT)/hack && go install github.com/instrumenta/kubeval
 
 # Helm V3; downloading it to provide coverage for the
-# chart inflator plugin under helm v43
+# chart inflator plugin under helm v3
 .PHONY: $(MYGOBIN)/helmV3
 $(MYGOBIN)/helmV3:
 	( \
