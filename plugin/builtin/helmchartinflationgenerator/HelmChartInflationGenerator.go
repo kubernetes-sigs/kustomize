@@ -160,7 +160,7 @@ func (p *plugin) absChartHome() string {
 		chartHome = filepath.Join(p.h.Loader().Root(), p.ChartHome)
 	}
 
-	if p.Version != "" && p.Repo != "" {
+	if p.Version != "" {
 		return filepath.Join(chartHome, fmt.Sprintf("%s-%s", p.Name, p.Version))
 	}
 	return chartHome
