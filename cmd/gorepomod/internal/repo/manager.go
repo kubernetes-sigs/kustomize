@@ -5,6 +5,7 @@ package repo
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/edit"
@@ -113,14 +114,16 @@ func (mgr *Manager) List() error {
 	})
 }
 
-func determineBranchAndTag(
-	m misc.LaModule, v semver.SemVer) (string, string) {
+func determineReleaseWorkBranch(v semver.SemVer) string {
+	return fmt.Sprintf("release-%s", v.BranchLabel())
+}
+
+func determineTag(
+	m misc.LaModule, v semver.SemVer) string {
 	if m.ShortName() == misc.ModuleAtTop {
-		return fmt.Sprintf("release-%s", v.BranchLabel()), v.String()
+		return v.String()
 	}
-	return fmt.Sprintf(
-			"release-%s-%s", m.ShortName(), v.BranchLabel()),
-		string(m.ShortName()) + "/" + v.String()
+	return string(m.ShortName()) + "/" + v.String()
 }
 
 func (mgr *Manager) Debug(_ misc.LaModule, doIt bool, localFlag bool) error {
@@ -128,38 +131,44 @@ func (mgr *Manager) Debug(_ misc.LaModule, doIt bool, localFlag bool) error {
 	return gr.Debug(mgr.remoteName)
 }
 
-// Release supports a gitlab flow style release process.
-//
-// * All development happens in the branch named "master".
-// * Each minor release gets its own branch.
-func (mgr *Manager) Release(
-	target misc.LaModule, bump semver.SvBump, doIt bool, localFlag bool) error {
-	if reps := target.GetDisallowedReplacements(
-		mgr.allowedReplacements); len(reps) > 0 {
-		return fmt.Errorf(
-			"to release %q, first pin these replacements: %v",
-			target.ShortName(), reps)
+// DetermineNextVersion calculates the next version to use
+// when releasing multiple modules at once.
+// It returns the highest version among the targets.
+func (mgr *Manager) DetermineNextVersion(
+	targets []misc.LaModule, bump semver.SvBump) (semver.SemVer, error) {
+	if len(targets) == 0 {
+		return semver.Zero(), fmt.Errorf("no targets specified")
 	}
 
-	newVersion := target.VersionLocal().Bump(bump)
+	latestVer := semver.Zero()
+	for _, target := range targets {
+		newVersion := target.VersionLocal().Bump(bump)
 
-	if newVersion.Equals(target.VersionRemote()) {
-		return fmt.Errorf(
-			"version %s already exists on remote - delete it first", newVersion)
+		fmt.Fprintf(
+			os.Stderr,
+			"Releasing %s, stepping from %s to %s\n",
+			target.ShortName(), target.VersionLocal(), newVersion)
+
+		if latestVer.LessThan(newVersion) {
+			latestVer = newVersion
+		}
 	}
-	if newVersion.LessThan(target.VersionRemote()) {
-		fmt.Printf(
-			"version %s is less than the most recent remote version (%s)",
-			newVersion, target.VersionRemote())
-	}
 
-	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
+	return latestVer, nil
+}
 
-	relBranch, relTag := determineBranchAndTag(target, newVersion)
+// DetermineNextVersion calculates the next version to use
+// when releasing multiple modules at once.
+// It returns the highest version among the targets.
+func (mgr *Manager) PushToReleaseWorkBranch(
+	version semver.SemVer, doIt bool, localFlag bool) error {
+	branch := determineReleaseWorkBranch(version)
 
 	fmt.Printf(
-		"Releasing %s, stepping from %s to %s\n",
-		target.ShortName(), target.VersionLocal(), newVersion)
+		"Pushing to release work branch %q for version %s\n",
+		branch, version)
+
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
@@ -176,22 +185,78 @@ func (mgr *Manager) Release(
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
 	}
-	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
+	if err := gr.CheckoutReleaseBranch(mgr.remoteName, branch); err != nil {
 		return err
 	}
 	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
 		return err
 	}
-	if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
+	if err := gr.PushBranchToRemote(mgr.remoteName, branch); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Release supports a gitlab flow style release process.
+//
+// * All development happens in the branch named "master".
+// * Each minor release gets its own branch.
+func (mgr *Manager) Release(
+	target misc.LaModule, newVersion semver.SemVer, doIt bool, localFlag bool) error {
+	if reps := target.GetDisallowedReplacements(
+		mgr.allowedReplacements); len(reps) > 0 {
+		return fmt.Errorf(
+			"to release %q, first pin these replacements: %v",
+			target.ShortName(), reps)
+	}
+
+	if newVersion.Equals(target.VersionRemote()) {
+		return fmt.Errorf(
+			"version %s already exists on remote - delete it first", newVersion)
+	}
+	if newVersion.LessThan(target.VersionRemote()) {
+		fmt.Printf(
+			"version %s is less than the most recent remote version (%s)",
+			newVersion, target.VersionRemote())
+	}
+
+	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
+
+	relBranch, err := gr.GetCurrentBranch()
+	if err != nil {
+		return err
+	}
+
+	expectedBranch := determineReleaseWorkBranch(newVersion)
+	if relBranch != expectedBranch {
+		return fmt.Errorf(
+			"current branch is %q, want %q",
+			relBranch, expectedBranch)
+	}
+
+	relTag := determineTag(target, newVersion)
+
+	fmt.Printf(
+		"Releasing %s, stepping from %s to %s\n",
+		target.ShortName(), target.VersionLocal(), newVersion)
+
+	if err := gr.AssureCleanWorkspace(); err != nil {
+		return err
+	}
+	if err := gr.FetchRemote(mgr.remoteName); err != nil {
+		return err
+	}
+	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
+		return err
+	}
+	if err := gr.MergeFromRemoteBranch(mgr.remoteName, relBranch); err != nil {
 		return err
 	}
 	if err := gr.CreateLocalReleaseTag(relTag, relBranch); err != nil {
 		return err
 	}
 	if err := gr.PushTagToRemote(mgr.remoteName, relTag); err != nil {
-		return err
-	}
-	if err := gr.CheckoutMainBranch(); err != nil {
 		return err
 	}
 	return nil
@@ -202,7 +267,7 @@ func (mgr *Manager) UnRelease(target misc.LaModule, doIt bool, localFlag bool) e
 		"Unreleasing %s/%s\n",
 		target.ShortName(), target.VersionRemote())
 
-	_, tag := determineBranchAndTag(target, target.VersionRemote())
+	tag := determineTag(target, target.VersionRemote())
 
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 

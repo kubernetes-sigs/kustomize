@@ -62,9 +62,13 @@ func actualMain() error {
 	if err != nil {
 		return err
 	}
-	conditionalModule, err := findModule(args.ConditionalModule(), mgr)
-	if err != nil {
-		return err
+	conditionalModules := make([]misc.LaModule, 0, len(args.ConditionalModules()))
+	for _, cm := range args.ConditionalModules() {
+		m, err := findModule(cm, mgr)
+		if err != nil {
+			return err
+		}
+		conditionalModules = append(conditionalModules, m)
 	}
 
 	switch args.GetCommand() {
@@ -117,13 +121,23 @@ func actualMain() error {
 		}
 		return nil
 	case arguments.UnPin:
+		var conditionalModule misc.LaModule
+		if len(conditionalModules) > 0 {
+			conditionalModule = conditionalModules[0]
+		}
 		err = mgr.UnPin(args.DoIt(), targetModule, conditionalModule)
 		if err != nil {
 			return fmt.Errorf("error: %w", err)
 		}
 		return nil
+	case arguments.PreRelease:
+		err = mgr.PushToReleaseWorkBranch(args.Version(), args.DoIt(), args.LocalFlag())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		return nil
 	case arguments.Release:
-		err = mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		err = mgr.Release(targetModule, args.Version(), args.DoIt(), args.LocalFlag())
 		if err != nil {
 			return fmt.Errorf("error: %w", err)
 		}
@@ -139,6 +153,17 @@ func actualMain() error {
 		if err != nil {
 			return fmt.Errorf("error: %w", err)
 		}
+		return nil
+	case arguments.Next:
+		nextVersion, err := mgr.DetermineNextVersion(append(
+			[]misc.LaModule{targetModule},
+			conditionalModules...,
+		), args.Bump())
+		if err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+		fmt.Println(nextVersion)
+
 		return nil
 	default:
 		return fmt.Errorf("cannot handle cmd %v", args.GetCommand())

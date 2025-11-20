@@ -277,8 +277,13 @@ func (gr *Runner) FetchRemote(remote misc.TrackedRepo) error {
 
 // MergeFromRemoteMain does a fast forward only merge with main branch.
 func (gr *Runner) MergeFromRemoteMain(remote misc.TrackedRepo) error {
+	return gr.MergeFromRemoteBranch(remote, mainBranch)
+}
+
+// MergeFromRemoteMain does a fast forward only merge with the branch.
+func (gr *Runner) MergeFromRemoteBranch(remote misc.TrackedRepo, branch string) error {
 	remo := strings.Join(
-		[]string{string(remote), mainBranch}, pathSep)
+		[]string{string(remote), branch}, pathSep)
 	gr.comment("merging from remote")
 	return gr.runNoOut(undoPainful, "merge", "--ff-only", remo)
 }
@@ -387,4 +392,12 @@ func (gr *Runner) GetLatestTag(releaseBranch string) (string, error) {
 
 func (gr *Runner) GetMainBranch() string {
 	return string(mainBranch)
+}
+
+func (gr *Runner) GetCurrentBranch() (string, error) {
+	out, err := gr.run(noHarmDone, "branch", "--show-current")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(out), nil
 }
