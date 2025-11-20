@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -428,6 +429,51 @@ whatever
 	require.Equal(coRoot+"/"+pathInRepo, l2.Root())
 }
 
+func TestNewLoaderAtOciPull(t *testing.T) {
+	require := require.New(t)
+
+	rootURL := "github.com/someOrg/someRepo"
+	pathInRepo := "foo/base"
+	url := rootURL + "//" + pathInRepo
+	coRoot := "/tmp"
+	fSys := filesys.MakeFsInMemory()
+	fSys.MkdirAll(coRoot)
+	fSys.MkdirAll(coRoot + "/" + pathInRepo)
+	fSys.WriteFile(
+		coRoot+"/"+pathInRepo+"/"+
+			konfig.DefaultKustomizationFileName(),
+		[]byte(`
+whatever
+`))
+
+	repoSpec, err := oci.NewRepoSpecFromURL("oci://" + url)
+	require.NoError(err)
+
+	l, err := newLoaderAtOciPull(
+		repoSpec, fSys, nil,
+		oci.DoNothingPuller(filesys.ConfirmedDir(coRoot)))
+	require.NoError(err)
+	repo := l.Repo()
+	require.Equal(coRoot, repo)
+	require.Equal(coRoot+"/"+pathInRepo, l.Root())
+
+	_, err = l.New("oci://" + url)
+	require.Error(err)
+
+	_, err = l.New("oci://" + rootURL + "//" + "foo")
+	require.Error(err)
+
+	pathInRepo = "foo/overlay"
+	fSys.MkdirAll(coRoot + "/" + pathInRepo)
+	url = rootURL + "//" + pathInRepo
+	l2, err := l.New("oci://" + url)
+	require.NoError(err)
+
+	repo = l2.Repo()
+	require.Equal(coRoot, repo)
+	require.Equal(coRoot+"/"+pathInRepo, l2.Root())
+}
+
 func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	require := require.New(t)
 
@@ -490,6 +536,68 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 		"base '/whatever/highBase' is outside '/whatever/someClone'")
 }
 
+func TestLoaderDisallowsLocalBaseFromOciRemoteOverlay(t *testing.T) {
+	require := require.New(t)
+
+	// Define an overlay-base structure in the file system.
+	topDir := "/whatever"
+	pullRoot := topDir + "/somePull"
+	fSys := filesys.MakeFsInMemory()
+	fSys.MkdirAll(topDir + "/highBase")
+	fSys.MkdirAll(pullRoot + "/foo/base")
+	fSys.MkdirAll(pullRoot + "/foo/overlay")
+
+	var l1 ifc.Loader
+
+	// Establish that a local overlay can navigate
+	// to the local bases.
+	l1 = NewLoaderOrDie(
+		RestrictionRootOnly, fSys, pullRoot+"/foo/overlay")
+	require.Equal(pullRoot+"/foo/overlay", l1.Root())
+
+	l2, err := l1.New("../base")
+	require.NoError(nil)
+	require.Equal(pullRoot+"/foo/base", l2.Root())
+
+	l3, err := l2.New("../../../highBase")
+	require.NoError(err)
+	require.Equal(topDir+"/highBase", l3.Root())
+
+	// Establish that a Kustomization found in pulled oci
+	// repo can reach (non-remote) bases inside the pull
+	// but cannot reach a (non-remote) base outside the
+	// pull but legitimately on the local file system.
+	// This is to avoid a surprising interaction between
+	// a remote K and local files.  The remote K would be
+	// non-functional on its own since by definition it
+	// would refer to a non-remote base file that didn't
+	// exist in its own repository, so presumably the
+	// remote K would be deliberately designed to phish
+	// for local K's.
+	repoSpec, err := oci.NewRepoSpecFromURL(
+		"oci://github.com/someOrg/someRepo//foo/overlay")
+	require.NoError(err)
+
+	l1, err = newLoaderAtOciPull(
+		repoSpec, fSys, nil,
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+	require.NoError(err)
+	require.Equal(pullRoot+"/foo/overlay", l1.Root())
+
+	// This is okay.
+	l2, err = l1.New("../base")
+	require.NoError(err)
+	repo := l2.Repo()
+	require.Empty(repo)
+	require.Equal(pullRoot+"/foo/base", l2.Root())
+
+	// This is not okay.
+	_, err = l2.New("../../../highBase")
+	require.Error(err)
+	require.Contains(err.Error(),
+		"base '/whatever/highBase' is outside '/whatever/somePull'")
+}
+
 func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
 	fSys, dir := setupOnDisk(t)
 
@@ -507,6 +615,23 @@ func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
 	require.Contains(t, err.Error(), fmt.Sprintf("%q refers to directory outside of repo %q", base, repo))
 }
 
+func TestLoaderDisallowsRemoteBaseExitOciRepo(t *testing.T) {
+	fSys, dir := setupOnDisk(t)
+
+	repo := dir.Join("repo")
+	require.NoError(t, fSys.Mkdir(repo))
+
+	base := filepath.Join(repo, "base")
+	require.NoError(t, os.Symlink(dir.String(), base))
+
+	repoSpec, err := oci.NewRepoSpecFromURL("oci://github.com/org/repo//base")
+	require.NoError(t, err)
+
+	_, err = newLoaderAtOciPull(repoSpec, fSys, nil, oci.DoNothingPuller(filesys.ConfirmedDir(repo)))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf("%q refers to directory outside of repo %q", base, repo))
+}
+
 func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	require := require.New(t)
 
@@ -518,7 +643,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
 	require.Equal(topDir, l1.Root())
 
 	l2, err := l1.New("github.com/someOrg/someRepo/foo/base")
@@ -526,6 +651,27 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	repo := l2.Repo()
 	require.Equal(cloneRoot, repo)
 	require.Equal(cloneRoot+"/foo/base", l2.Root())
+}
+
+func TestLocalLoaderReferencingOciBase(t *testing.T) {
+	require := require.New(t)
+
+	topDir := "/whatever"
+	pullRoot := topDir + "/somePull"
+	fSys := filesys.MakeFsInMemory()
+	fSys.MkdirAll(topDir)
+	fSys.MkdirAll(pullRoot + "/foo/base")
+
+	l1 := newLoaderAtConfirmedDir(
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
+		nil, oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+	require.Equal(topDir, l1.Root())
+
+	l2, err := l1.New("oci://github.com/someOrg/someRepo//foo/base")
+	require.NoError(err)
+	repo := l2.Repo()
+	require.Equal(pullRoot, repo)
+	require.Equal(pullRoot+"/foo/base", l2.Root())
 }
 
 func TestRepoDirectCycleDetection(t *testing.T) {
@@ -539,12 +685,34 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromURL(p1)
 	require.NoError(err)
 
 	l1.repoSpec = rs1
+	_, err = l1.New(p1)
+	require.Error(err)
+	require.Contains(err.Error(), "cycle detected")
+}
+
+func TestOciRepoDirectCycleDetection(t *testing.T) {
+	require := require.New(t)
+
+	topDir := "/cycles"
+	cloneRoot := topDir + "/someClone"
+	fSys := filesys.MakeFsInMemory()
+	fSys.MkdirAll(topDir)
+	fSys.MkdirAll(cloneRoot)
+
+	l1 := newLoaderAtConfirmedDir(
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
+		nil, oci.DoNothingPuller(filesys.ConfirmedDir(cloneRoot)))
+	p1 := "oci://github.com/someOrg/someRepo/foo"
+	rs1, err := oci.NewRepoSpecFromURL(p1)
+	require.NoError(err)
+
+	l1.ociSpec = rs1
 	_, err = l1.New(p1)
 	require.Error(err)
 	require.Contains(err.Error(), "cycle detected")
@@ -561,10 +729,37 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
 
 	p1 := "github.com/someOrg/someRepo1"
 	p2 := "github.com/someOrg/someRepo2"
+
+	l1, err := l0.New(p1)
+	require.NoError(err)
+
+	l2, err := l1.New(p2)
+	require.NoError(err)
+
+	_, err = l2.New(p1)
+	require.Error(err)
+	require.Contains(err.Error(), "cycle detected")
+}
+
+func TestOciRepoIndirectCycleDetection(t *testing.T) {
+	require := require.New(t)
+
+	topDir := "/cycles"
+	pullRoot := topDir + "/someClone"
+	fSys := filesys.MakeFsInMemory()
+	fSys.MkdirAll(topDir)
+	fSys.MkdirAll(pullRoot)
+
+	l0 := newLoaderAtConfirmedDir(
+		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
+		nil, oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+
+	p1 := "oci://github.com/someOrg/someRepo1"
+	p2 := "oci://github.com/someOrg/someRepo2"
 
 	l1, err := l0.New(p1)
 	require.NoError(err)

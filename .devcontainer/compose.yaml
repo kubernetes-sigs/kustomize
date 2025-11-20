@@ -1,0 +1,11 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/go:1-1.24-bookworm
+    depends_on:
+      - registry
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+    network_mode: service:registry
+
+  registry:
+    image: docker.io/registry:latest
