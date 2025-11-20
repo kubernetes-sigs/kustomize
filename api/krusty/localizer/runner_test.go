@@ -1,6 +1,10 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// skip all tests on Windows
+//go:build !windows
+// +build !windows
+
 package localizer_test
 
 import (
