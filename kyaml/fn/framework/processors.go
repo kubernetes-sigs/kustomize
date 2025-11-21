@@ -156,10 +156,7 @@ func LoadFunctionConfig(src *yaml.RNode, api interface{}) error {
 
 	// using sigs.k8s.io/yaml here lets the custom types embed core types
 	// that only have json tags, notably types from k8s.io/apimachinery/pkg/apis/meta/v1
-
-	err := k8syaml.UnmarshalStrict([]byte(src.MustString()), api)
-
-	if err != nil {
+	if err := k8syaml.UnmarshalStrict([]byte(src.MustString()), api); err != nil {
 		if schemaValidationError != nil {
 			// if we got a validation error, report it instead as it is likely a nicer version of the same message
 			return schemaValidationError
