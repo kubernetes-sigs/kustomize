@@ -36,25 +36,38 @@ kind: %s
 	return rn, nil
 }
 
+type orderedMap struct {
+	keys   []string
+	values map[string]string
+}
+
 func makeValidatedDataMap(
-	ldr ifc.KvLoader, name string, sources types.KvPairSources) (map[string]string, error) {
+	ldr ifc.KvLoader, name string, sources types.KvPairSources,
+) (orderedMap, error) {
+
 	pairs, err := ldr.Load(sources)
 	if err != nil {
-		return nil, errors.WrapPrefix(err, "loading KV pairs", 0)
+		return orderedMap{}, errors.WrapPrefix(err, "loading KV pairs", 0)
 	}
-	knownKeys := make(map[string]string)
+
+	seen := make(map[string]struct{})
+	values := make(map[string]string, len(pairs))
+	var keys []string
+
 	for _, p := range pairs {
-		// legal key: alphanumeric characters, '-', '_' or '.'
 		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
-			return nil, err
+			return orderedMap{}, err
 		}
-		if _, ok := knownKeys[p.Key]; ok {
-			return nil, errors.Errorf(
+		if _, dup := seen[p.Key]; dup {
+			return orderedMap{}, errors.Errorf(
 				"configmap %s illegally repeats the key `%s`", name, p.Key)
 		}
-		knownKeys[p.Key] = p.Value
+		seen[p.Key] = struct{}{}
+		keys = append(keys, p.Key)
+		values[p.Key] = p.Value
 	}
-	return knownKeys, nil
+
+	return orderedMap{keys: keys, values: values}, nil
 }
 
 // copyLabelsAndAnnotations copies labels and annotations from
