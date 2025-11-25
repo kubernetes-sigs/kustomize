@@ -1,15 +1,17 @@
 name: release
 
-permissions:
-  contents: write # Allow actions to update dependabot PRs
-
 on:
-  push:
-    tags:
-      - kyaml/v*
-      - cmd/config/v*
-      - api/v*
-      - kustomize/v*
+  workflow_dispatch:
+    inputs:
+      kustomize_tag:
+        description: 'Tag to release'
+        required: true
+      libs_tag:
+        description: 'Tag to release'
+        required: true
+
+permissions:
+  contents: write # Allow actions to push changes
 
 jobs:
   release:
@@ -19,12 +21,45 @@ jobs:
       uses: actions/checkout@v6
       with:
         fetch-depth: 0
+        ref: ${{ github.event.inputs.mize_tag }}
     - name: Set up Go 1.x
       uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
-    - run: ./releasing/create-release.sh "${tag}"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref_name }}
+    - name: Release kyaml
+      run: |
+        make IS_LOCAL=true verify-kustomize-repo
+        go tool gorepomod release kyaml ${{ github.event.inputs.libs_tag }} --doIt
+        ./releasing/create-release.sh kyaml/${{ github.event.inputs.libs_tag }}
+        go tool gorepomod pin kyaml --doIt
+
+    - name: Release cmd/config
+      run: |
+        make IS_LOCAL=true verify-kustomize-repo
+        go tool gorepomod release cmd/config ${{ github.event.inputs.libs_tag }} --doIt
+        ./releasing/create-release.sh cmd/config/${{ github.event.inputs.libs_tag }}
+        go tool gorepomod pin cmd/config --doIt
+
+    - name: Release api
+      run: |
+        make IS_LOCAL=true verify-kustomize-repo
+        go tool gorepomod release api ${{ github.event.inputs.libs_tag }} --doIt
+        ./releasing/create-release.sh api/${{ github.event.inputs.libs_tag }}
+        go tool gorepomod pin api --doIt
+
+    - name: Release kustomize
+      run: |
+        make IS_LOCAL=true verify-kustomize-repo
+        go tool gorepomod release kustomize ${{ github.event.inputs.kustomize_tag }} --doIt
+        ./releasing/create-release.sh kustomize/${{ github.event.inputs.kustomize_tag }}
+
+    - name: Push changes
+      run: |
+        git switch master
+        git pull origin master
+        git config --global user.name 'github-actions'
+        git config --global user.email 'actions@github.com'
+        sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=${{ github.event.inputs.kustomize_tag }}/" Makefile
+        source ./releasing/helpers.sh
+        createBranch bumpMakefile "Update LATEST_RELEASE to ${{ github.event.inputs.kustomize_tag }}"
