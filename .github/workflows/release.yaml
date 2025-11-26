@@ -19,20 +19,28 @@ jobs:
     steps:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-        ref: ${{ github.event.inputs.mize_tag }}
+    - name: Create a branch for the release
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'actions@github.com'
+        git config --global push.default current
+
+        go tool gorepomod prerelease "${{ github.events.inputs.kustomize_tag }}"
+
     - name: Set up Go 1.x
       uses: actions/setup-go@v6
       with:
         go-version-file: go.work
       id: go
+
     - name: Release kyaml
       run: |
         make IS_LOCAL=true verify-kustomize-repo
         go tool gorepomod release kyaml ${{ github.event.inputs.libs_tag }} --doIt
         ./releasing/create-release.sh kyaml/${{ github.event.inputs.libs_tag }}
         go tool gorepomod pin kyaml --doIt
+        git commit -m "Update kyaml to ${{ github.events.inputs.libs_tag }}"
+        git push --force
 
     - name: Release cmd/config
       run: |
@@ -40,6 +48,8 @@ jobs:
         go tool gorepomod release cmd/config ${{ github.event.inputs.libs_tag }} --doIt
         ./releasing/create-release.sh cmd/config/${{ github.event.inputs.libs_tag }}
         go tool gorepomod pin cmd/config --doIt
+        git commit -m "Update cmd/config to ${{ github.events.inputs.libs_tag }}"
+        git push --force
 
     - name: Release api
       run: |
@@ -47,6 +57,8 @@ jobs:
         go tool gorepomod release api ${{ github.event.inputs.libs_tag }} --doIt
         ./releasing/create-release.sh api/${{ github.event.inputs.libs_tag }}
         go tool gorepomod pin api --doIt
+        git commit -m "Update api to ${{ github.events.inputs.libs_tag }}"
+        git push --force
 
     - name: Release kustomize
       run: |
@@ -58,8 +70,6 @@ jobs:
       run: |
         git switch master
         git pull origin master
-        git config --global user.name 'github-actions'
-        git config --global user.email 'actions@github.com'
         sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=${{ github.event.inputs.kustomize_tag }}/" Makefile
         source ./releasing/helpers.sh
         createBranch bumpMakefile "Update LATEST_RELEASE to ${{ github.event.inputs.kustomize_tag }}"

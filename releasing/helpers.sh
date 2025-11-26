@@ -33,3 +33,18 @@ function testKustomizeRepo {
     echo "LGTM"
   fi
 }
+
+function nextVersion() {
+  local release="$1";
+  local libs_release="$2";
+
+  # Even if the major is bumped for kustomize, libs are bumped for minor.
+  if [ "$release" = "major"]; then
+    libs_release="minor";
+  fi
+
+  kustomize_version=$(go tool gorepomod next "$release" kustomize)
+  libs_version=$(go tool gorepomod next "$libs_release" kyaml cmd/config api)
+
+  gh workflow run release.yaml -f kustomize_tag="$kustomize_version" -f libs_version="$libs_version"
+}

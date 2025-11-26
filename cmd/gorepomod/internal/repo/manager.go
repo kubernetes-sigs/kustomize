@@ -269,9 +269,6 @@ func (mgr *Manager) Release(
 	if err := gr.FetchRemote(mgr.remoteName); err != nil {
 		return err
 	}
-	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
-		return err
-	}
 	if err := gr.MergeFromRemoteBranch(mgr.remoteName, relBranch); err != nil {
 		return err
 	}
