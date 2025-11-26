@@ -14,6 +14,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -93,6 +94,10 @@ type FileLoader struct {
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
 
+	// If this is non-nil, the files were
+	// obtained from the given oci repository.
+	ociSpec *oci.RepoSpec
+
 	// File system utilities.
 	fSys filesys.FileSystem
 
@@ -101,6 +106,9 @@ type FileLoader struct {
 
 	// Used to clone repositories.
 	cloner git.Cloner
+
+	// Used to pull registry images
+	puller oci.Puller
 
 	// Used to clean up, as needed.
 	cleaner func() error
@@ -111,6 +119,9 @@ type FileLoader struct {
 func (fl *FileLoader) Repo() string {
 	if fl.repoSpec != nil {
 		return fl.repoSpec.Dir.String()
+	}
+	if fl.ociSpec != nil {
+		return fl.ociSpec.Dir.String()
 	}
 	return ""
 }
@@ -129,20 +140,21 @@ func NewLoaderOrDie(
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec)
+		lr, root, fSys, nil, git.ClonerUsingGitExec, nil)
 }
 
 // newLoaderAtConfirmedDir returns a new FileLoader with given root.
 func newLoaderAtConfirmedDir(
 	lr LoadRestrictorFunc,
 	root filesys.ConfirmedDir, fSys filesys.FileSystem,
-	referrer *FileLoader, cloner git.Cloner) *FileLoader {
+	referrer *FileLoader, cloner git.Cloner, puller oci.Puller) *FileLoader {
 	return &FileLoader{
 		loadRestrictor: lr,
 		root:           root,
 		referrer:       referrer,
 		fSys:           fSys,
 		cloner:         cloner,
+		puller:         puller,
 		cleaner:        func() error { return nil },
 	}
 }
@@ -164,6 +176,16 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 			repoSpec, fl.fSys, fl, fl.cloner)
 	}
 
+	ociSpec, err := oci.NewRepoSpecFromURL(path)
+	if err == nil {
+		// Treat this as git repo clone request.
+		if err = fl.errIfOciRepoCycle(ociSpec); err != nil {
+			return nil, err
+		}
+		return newLoaderAtOciPull(
+			ociSpec, fl.fSys, fl, fl.puller)
+	}
+
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
@@ -174,11 +196,14 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 	if err = fl.errIfGitContainmentViolation(root); err != nil {
 		return nil, err
 	}
+	if err = fl.errIfOciContainmentViolation(root); err != nil {
+		return nil, err
+	}
 	if err = fl.errIfArgEqualOrHigher(root); err != nil {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner), nil
+		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner, fl.puller), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
@@ -226,6 +251,51 @@ func newLoaderAtGitClone(
 	}, nil
 }
 
+// newLoaderAtOciPull returns a new Loader pinned to a temporary
+// directory holding a pulled oci artifact.
+func newLoaderAtOciPull(
+	repoSpec *oci.RepoSpec, fSys filesys.FileSystem,
+	referrer *FileLoader, puller oci.Puller) (ifc.Loader, error) {
+	cleaner := repoSpec.Cleaner(fSys)
+	err := puller(repoSpec)
+	if err != nil {
+		cleaner()
+		return nil, err
+	}
+	root, f, err := fSys.CleanedAbs(repoSpec.AbsPath())
+	if err != nil {
+		cleaner()
+		return nil, err
+	}
+	// We don't know that the path requested in repoSpec
+	// is a directory until we actually clone it and look
+	// inside.  That just happened, hence the error check
+	// is here.
+	if f != "" {
+		cleaner()
+		return nil, fmt.Errorf(
+			"'%s' refers to file '%s'; expecting directory",
+			repoSpec.AbsPath(), f)
+	}
+	// Path in repo can contain symlinks that exit repo. We can only
+	// check for this after cloning repo.
+	if !root.HasPrefix(repoSpec.PullDir()) {
+		_ = cleaner()
+		return nil, fmt.Errorf("%q refers to directory outside of repo %q", repoSpec.AbsPath(),
+			repoSpec.PullDir())
+	}
+	return &FileLoader{
+		// Pulls never allowed to escape root.
+		loadRestrictor: RestrictionRootOnly,
+		root:           root,
+		referrer:       referrer,
+		ociSpec:        repoSpec,
+		fSys:           fSys,
+		puller:         puller,
+		cleaner:        cleaner,
+	}, nil
+}
+
 func (fl *FileLoader) errIfGitContainmentViolation(
 	base filesys.ConfirmedDir) error {
 	containingRepo := fl.containingRepo()
@@ -242,6 +312,22 @@ func (fl *FileLoader) errIfGitContainmentViolation(
 	return nil
 }
 
+func (fl *FileLoader) errIfOciContainmentViolation(
+	base filesys.ConfirmedDir) error {
+	containingRepo := fl.containingOciRepo()
+	if containingRepo == nil {
+		return nil
+	}
+	if !base.HasPrefix(containingRepo.PullDir()) {
+		return fmt.Errorf(
+			"security; bases in kustomizations found in "+
+				"pulled oci repos must be within the repo, "+
+				"but base '%s' is outside '%s'",
+			base, containingRepo.PullDir())
+	}
+	return nil
+}
+
 // Looks back through referrers for a git repo, returning nil
 // if none found.
 func (fl *FileLoader) containingRepo() *git.RepoSpec {
@@ -252,6 +338,18 @@ func (fl *FileLoader) containingRepo() *git.RepoSpec {
 		return nil
 	}
 	return fl.referrer.containingRepo()
+}
+
+// Looks back through referrers for an oci repo, returning nil
+// if none found.
+func (fl *FileLoader) containingOciRepo() *oci.RepoSpec {
+	if fl.ociSpec != nil {
+		return fl.ociSpec
+	}
+	if fl.referrer == nil {
+		return nil
+	}
+	return fl.referrer.containingOciRepo()
 }
 
 // errIfArgEqualOrHigher tests whether the argument,
@@ -285,6 +383,24 @@ func (fl *FileLoader) errIfRepoCycle(newRepoSpec *git.RepoSpec) error {
 		return nil
 	}
 	return fl.referrer.errIfRepoCycle(newRepoSpec)
+}
+
+// TODO(monopole): Distinguish tags/digests?
+// I.e. Allow a distinction between oci artifacts with
+// path foo and tag bar and a URI with the same
+// path but a different tag/digest?
+func (fl *FileLoader) errIfOciRepoCycle(newRepoSpec *oci.RepoSpec) error {
+	// TODO(monopole): Use parsed data instead of Raw().
+	if fl.ociSpec != nil &&
+		strings.HasPrefix(fl.ociSpec.Raw(), newRepoSpec.Raw()) {
+		return fmt.Errorf(
+			"cycle detected: URI '%s' referenced by previous URI '%s'",
+			newRepoSpec.Raw(), fl.ociSpec.Raw())
+	}
+	if fl.referrer == nil {
+		return nil
+	}
+	return fl.referrer.errIfOciRepoCycle(newRepoSpec)
 }
 
 // Load returns the content of file at the given path,
