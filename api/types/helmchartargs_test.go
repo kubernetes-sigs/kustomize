@@ -8,9 +8,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 func TestAsHelmArgs(t *testing.T) {
+	// Skip test on Windows due to all scenarios using Unix-style paths
+	testutil.SkipWindows(t)
 	t.Run("use generate-name", func(t *testing.T) {
 		p := types.HelmChart{
 			Name:                  "chart-name",

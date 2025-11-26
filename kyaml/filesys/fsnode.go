@@ -101,7 +101,18 @@ func (n *fsNode) Path() string {
 // result of filepath.Split.
 func mySplit(s string) (string, string) {
 	dName, fName := filepath.Split(s)
-	return StripTrailingSeps(dName), fName
+	dName = StripTrailingSeps(dName)
+
+	// Prevent infinite recursion on Windows when dealing with volume names
+	// or paths that don't split properly. If after stripping separators,
+	// dName is the same as the input s, it means filepath.Split didn't
+	// actually split anything meaningful (e.g., "C:" on Windows).
+	// In this case, treat the entire string as the filename.
+	if dName == s {
+		return "", s
+	}
+
+	return dName, fName
 }
 
 func (n *fsNode) addFile(name string, c []byte) (result *fsNode, err error) {

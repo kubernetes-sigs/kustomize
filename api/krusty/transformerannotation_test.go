@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 const generateDeploymentWithOriginDotSh = `#!/bin/sh
@@ -350,6 +351,7 @@ metadata:
 }
 
 func TestAnnoOriginCustomInlineTransformer(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -422,6 +424,7 @@ spec:
 }
 
 func TestAnnoOriginCustomExecTransformerWithOverlay(t *testing.T) {
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)

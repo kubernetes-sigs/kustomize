@@ -8,6 +8,7 @@ import (
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 func writeStringPrefixer(th *kusttest_test.HarnessEnhanced, path, name string) {
@@ -20,6 +21,7 @@ metadata:
 }
 
 func TestPluginsNotEnabled(t *testing.T) {
+	testutil.SkipWindows(t)
 	th := kusttest_test.MakeEnhancedHarness(t).
 		BuildGoPlugin("someteam.example.com", "v1", "StringPrefixer")
 	defer th.Reset()
@@ -39,6 +41,7 @@ transformers:
 }
 
 func TestSedTransformer(t *testing.T) {
+	testutil.SkipWindows(t)
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
 	defer th.Reset()
