@@ -2,14 +2,15 @@ name: Go
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 permissions:
   contents: read
 
 jobs:
+  ## TODO: conditional-changes checker is not working
   conditional-changes:
     runs-on: ubuntu-latest
     permissions:
@@ -27,7 +28,7 @@ jobs:
 
   check-modules:
     name: check-synced-go-modules
-    needs: conditional-changes
+    # needs: conditional-changes
     # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
@@ -39,6 +40,9 @@ jobs:
       uses: actions/setup-go@v6
       with:
         go-version-file: go.work
+        cache: true
+        cache-dependency-path: |
+          **/go.sum
       id: go
     - name: sync go modules
       run: make workspace-sync
@@ -47,7 +51,7 @@ jobs:
 
   lint:
     name: Lint
-    needs: conditional-changes
+    # needs: conditional-changes
     # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
@@ -59,15 +63,19 @@ jobs:
       uses: actions/setup-go@v6
       with:
         go-version-file: go.work
+        cache: true
+        cache-dependency-path: |
+          **/go.sum
       id: go
     - name: Lint
       run: make lint
     - name: Verify boilerplate
       run: make check-license
 
-  test-linux:
+  ## Test all modules without plugins and released modules
+  test-non-released-modules:
     name: Test Linux
-    needs: conditional-changes
+    # needs: conditional-changes
     # if: needs.conditional-changes.outputs.doc == 'false'
     runs-on: [ubuntu-latest]
     steps:
@@ -77,17 +85,46 @@ jobs:
       uses: actions/setup-go@v6
       with:
         go-version-file: go.work
+        cache: true
+        cache-dependency-path: |
+          **/go.sum
       id: go
-    - name: Test all modules
-      run: make test-unit-non-plugin
+    - name: Test all modules without plugins and released modules
+      run: make test-unit-non-plugin-and-non-released
       env:
         KUSTOMIZE_DOCKER_E2E: true
 
-  test-macos:
-    name: Test MacOS
-    needs: conditional-changes
+  test-modules:
+    name: Test ${{ matrix.os }} - ${{ matrix.module }}
+    # needs: conditional-changes
     # if: needs.conditional-changes.outputs.doc == 'false'
-    runs-on: [macos-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        module:
+        - kyaml
+        - cmd/config
+        - api
+        - kustomize
+        include:
+        - module: kyaml
+          test-cmd: go test -race -v -cover ./...
+        - module: cmd/config
+          test-cmd: go test -v -cover ./...
+        - module: api
+          test-cmd: go test -v -cover ./... -ldflags "-X sigs.k8s.io/kustomize/api/provenance.buildDate=2023-01-31T23:38:41Z -X sigs.k8s.io/kustomize/api/provenance.version=(test)"
+        - module: kustomize
+          test-cmd: go test -v -cover ./...
+        - os: ubuntu-latest
+          docker-e2e: true
+        - os: macos-latest
+          docker-e2e: false
+        - os: windows-latest
+          docker-e2e: false
+    env:
+      KUSTOMIZE_DOCKER_E2E: ${{ matrix.docker-e2e }}
     steps:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v6
@@ -95,36 +132,27 @@ jobs:
       uses: actions/setup-go@v6
       with:
         go-version-file: go.work
+        cache: true
+        cache-dependency-path: |
+          **/go.sum
       id: go
-    - name: Test all modules
-      run: make test-unit-non-plugin
-      env:
-        KUSTOMIZE_DOCKER_E2E: false # docker not installed on mac
+    - name: Test ${{ matrix.module }}
+      run: ${{ matrix.test-cmd }}
+      # TODO (#4001): replace specific modules above with this once Windows tests are passing.
+      if: ${{ !(matrix.os == 'windows-latest' && (matrix.module == 'api' || matrix.module == 'kustomize')) }}
+      working-directory: ./${{ matrix.module }}
 
-  test-windows:
-    name: Test Windows
-    needs: conditional-changes
-    # if: needs.conditional-changes.outputs.doc == 'false'
-    runs-on: [windows-latest]
+  # Aggregation matrix tests from test-modules for branch protection rules
+  test-modules-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: test-modules
+    if: always()
     steps:
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v6
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v6
-      with:
-        go-version-file: go.work
-      id: go
-    - name: Test kyaml
-      run: go test -cover ./...
-      working-directory: ./kyaml
-    - name: Test cmd/config
-      run: go test -cover ./...
-      working-directory: ./cmd/config
-      env:
-        KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
-
-    # TODO (#4001): replace specific modules above with this once Windows tests are passing.
-    #- name: Test all modules
-    #  run: make test-unit-non-plugin
-    #  env:
-    #    KUSTOMIZE_DOCKER_E2E: false # docker on windows not working well yet
+    - name: Check test results
+      run: |
+        if [[ "${{ needs.test-modules.result }}" != "success" ]]; then
+          echo "Some tests failed or were cancelled"
+          exit 1
+        fi
+        echo "All tests passed successfully"
