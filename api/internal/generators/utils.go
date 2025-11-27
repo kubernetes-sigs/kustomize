@@ -44,7 +44,6 @@ type orderedMap struct {
 func makeValidatedDataMap(
 	ldr ifc.KvLoader, name string, sources types.KvPairSources,
 ) (orderedMap, error) {
-
 	pairs, err := ldr.Load(sources)
 	if err != nil {
 		return orderedMap{}, errors.WrapPrefix(err, "loading KV pairs", 0)
@@ -52,11 +51,11 @@ func makeValidatedDataMap(
 
 	seen := make(map[string]struct{})
 	values := make(map[string]string, len(pairs))
-	var keys []string
+	keys := make([]string, len(pairs))
 
 	for _, p := range pairs {
 		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
-			return orderedMap{}, err
+			return orderedMap{}, errors.Wrap(err, 1)
 		}
 		if _, dup := seen[p.Key]; dup {
 			return orderedMap{}, errors.Errorf(
