@@ -226,15 +226,20 @@ func (p *plugin) replaceValuesInline() error {
 		return errors.WrapPrefixf(err, "could not parse values inline into rnode")
 	}
 	var outValues *kyaml.RNode
+	// Enable AllowKindChange to handle cases where the chart's values.yaml has
+	// a different type (e.g., empty map {}) than what the user provides in valuesInline
+	// (e.g., a list []). This allows the user's inline values to override the type.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/5766
+	mergeOpts := kyaml.MergeOptions{AllowKindChange: true}
 	switch p.ValuesMerge {
 	// Function `merge2.Merge` overrides values in dest with values from src.
 	// To achieve override or merge behavior, we pass parameters in different order.
 	// Object passed as dest will be modified, so we copy it just in case someone
 	// decides to use it after this is called.
 	case valuesMergeOptionOverride:
-		outValues, err = merge2.Merge(inlineValues, chValues.Copy(), kyaml.MergeOptions{})
+		outValues, err = merge2.Merge(inlineValues, chValues.Copy(), mergeOpts)
 	case valuesMergeOptionMerge:
-		outValues, err = merge2.Merge(chValues, inlineValues.Copy(), kyaml.MergeOptions{})
+		outValues, err = merge2.Merge(chValues, inlineValues.Copy(), mergeOpts)
 	}
 	if err != nil {
 		return errors.WrapPrefixf(err, "could not merge values")
