@@ -60,11 +60,25 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 	switch l.Kind() {
 	case yaml.MappingNode:
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.MappingNode, l.Sources...); err != nil {
+			// If AllowKindChange is set and there's a type mismatch, allow the
+			// origin (source) to replace dest entirely instead of erroring.
+			if l.MergeOptions.AllowKindChange {
+				if replaced := l.replaceOnKindMismatch(); replaced != nil {
+					return replaced, nil
+				}
+			}
 			return nil, err
 		}
 		return l.walkMap()
 	case yaml.SequenceNode:
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.SequenceNode, l.Sources...); err != nil {
+			// If AllowKindChange is set and there's a type mismatch, allow the
+			// origin (source) to replace dest entirely instead of erroring.
+			if l.MergeOptions.AllowKindChange {
+				if replaced := l.replaceOnKindMismatch(); replaced != nil {
+					return replaced, nil
+				}
+			}
 			return nil, err
 		}
 		// AssociativeSequence means the items in the sequence are associative. They can be merged
@@ -76,6 +90,13 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 
 	case yaml.ScalarNode:
 		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.ScalarNode, l.Sources...); err != nil {
+			// If AllowKindChange is set and there's a type mismatch, allow the
+			// origin (source) to replace dest entirely instead of erroring.
+			if l.MergeOptions.AllowKindChange {
+				if replaced := l.replaceOnKindMismatch(); replaced != nil {
+					return replaced, nil
+				}
+			}
 			return nil, err
 		}
 		return l.walkScalar()
@@ -85,6 +106,32 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 	default:
 		return nil, nil
 	}
+}
+
+// replaceOnKindMismatch returns the origin node when there's a kind mismatch
+// between dest and origin. This allows the origin to completely replace the
+// dest when they have different types (e.g., map vs list, map vs scalar).
+// Returns nil if no replacement should occur.
+func (l Walker) replaceOnKindMismatch() *yaml.RNode {
+	dest := l.Sources.Dest()
+	origin := l.Sources.Origin()
+
+	// If origin is nil or null, we can't do a replacement
+	if yaml.IsMissingOrNull(origin) {
+		return nil
+	}
+
+	// If dest is nil or null, origin should be used directly
+	if yaml.IsMissingOrNull(dest) {
+		return origin
+	}
+
+	// Check if origin has a different kind than dest - if so, origin replaces dest
+	if origin.YNode().Kind != dest.YNode().Kind {
+		return origin
+	}
+
+	return nil
 }
 
 func (l Walker) GetSchema() *openapi.ResourceSchema {
