@@ -5005,6 +5005,56 @@ data:
     labels: {app: "my-awesome-app", version: "1.0.0", env: "production"}
     spec: {replicas: 3, selector: {matchLabels: {app: "my-awesome-app"}}}`,
 		},
+		"replacement yaml substring options": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-values
+data:
+  app_name: "my-awesome-app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-config
+data:
+  config.yaml: |-
+    target:
+      url: https://example.com/appname/api/endpoint
+`,
+
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-values
+    fieldPath: data.app_name
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-config
+    fieldPaths:
+    - data.config\.yaml.target.url
+    options:
+      delimiter: /
+      index: 3
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-values
+data:
+  app_name: "my-awesome-app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-config
+data:
+  config.yaml: |-
+    target:
+      url: https://example.com/my-awesome-app/api/endpoint
+`,
+		},
 	}
 
 	for tn := range testCases {
