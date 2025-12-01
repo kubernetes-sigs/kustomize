@@ -46,7 +46,7 @@ func makeValidatedDataMap(
 ) (orderedMap, error) {
 	pairs, err := ldr.Load(sources)
 	if err != nil {
-		return orderedMap{}, errors.WrapPrefix(err, "loading KV pairs", 0)
+		return orderedMap{}, errors.WrapPrefix(err, fmt.Sprintf("loading KV pairs, name: %s", name), 0)
 	}
 
 	seen := make(map[string]struct{})
@@ -55,11 +55,7 @@ func makeValidatedDataMap(
 
 	for _, p := range pairs {
 		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
-			return orderedMap{}, errors.Wrap(err, 1)
-		}
-		if _, dup := seen[p.Key]; dup {
-			return orderedMap{}, errors.Errorf(
-				"configmap %s illegally repeats the key `%s`", name, p.Key)
+			return orderedMap{}, errors.WrapPrefix(err, fmt.Sprintf("invalid key %s, name %s", p.Key, name), 0)
 		}
 		seen[p.Key] = struct{}{}
 		keys = append(keys, p.Key)
