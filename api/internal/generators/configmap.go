@@ -37,7 +37,7 @@ func MakeConfigMap(
 	if err != nil {
 		return nil, err
 	}
-	if err = rn.LoadMapIntoConfigMapData(m); err != nil {
+	if err = rn.LoadMapIntoConfigMapData(m.values); err != nil {
 		return nil, err
 	}
 	err = copyLabelsAndAnnotations(rn, args.Options)
