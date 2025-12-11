@@ -160,6 +160,9 @@ type ByteReader struct {
 	// AnchorsAweigh set to true attempts to replace all YAML anchor aliases
 	// with their definitions (anchor values) immediately after the read.
 	AnchorsAweigh bool
+
+	// PreserveInitialDocSep if true adds the kioutil.PreserveInitialDocSep annotation to the first resource
+	PreserveInitialDocSep bool
 }
 
 var _ Reader = &ByteReader{}
@@ -332,6 +335,10 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 			if seqIndentStyle != "" {
 				r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
 			}
+		}
+
+		if index == 0 && r.PreserveInitialDocSep && node.Kind == yaml.DocumentNode {
+			r.SetAnnotations[kioutil.InitialDocSepAnnotation] = "true"
 		}
 	}
 	var keys []string
