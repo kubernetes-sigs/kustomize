@@ -356,7 +356,7 @@ It's irresponsible to depend on a remote configuration
 that's _not under your control_.  Annoying enablement flags
 like `'--enable-helm'` are intended to _remind_ one of a
 risk, but offer zero protection from risk.  Further, they
-are useless are reminders, since __annoying things are
+are useless as reminders, since __annoying things are
 immediately scripted away and forgotten__, as was done above
 in the `kustomizeIt` shell function.
 
