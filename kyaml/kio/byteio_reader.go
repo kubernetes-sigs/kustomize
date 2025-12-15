@@ -322,23 +322,9 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 		r.SetAnnotations = map[string]string{}
 	}
 	if !r.OmitReaderAnnotations {
-		err := kioutil.CopyLegacyAnnotations(n)
+		err := r.setResourceAnnotations(n, index, originalYAML)
 		if err != nil {
 			return nil, err
-		}
-		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
-		r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
-
-		if r.PreserveSeqIndent {
-			// derive and add the seqindent annotation
-			seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
-			if seqIndentStyle != "" {
-				r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
-			}
-		}
-
-		if index == 0 && r.PreserveInitialDocSep && node.Kind == yaml.DocumentNode {
-			r.SetAnnotations[kioutil.InitialDocSepAnnotation] = "true"
 		}
 	}
 	var keys []string
@@ -353,4 +339,22 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 		}
 	}
 	return n, nil
+}
+
+func (r *ByteReader) setResourceAnnotations(n *yaml.RNode, index int, originalYAML string) error {
+	err := kioutil.CopyLegacyAnnotations(n)
+	if err != nil {
+		return err
+	}
+	r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
+	r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
+
+	if r.PreserveSeqIndent {
+		// derive and add the seqindent annotation
+		seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
+		if seqIndentStyle != "" {
+			r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
+		}
+	}
+	return nil
 }
