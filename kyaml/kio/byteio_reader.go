@@ -199,8 +199,8 @@ func splitDocuments(s string) ([]string, error) {
 }
 
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
-	if r.PreserveSeqIndent && r.OmitReaderAnnotations {
-		return nil, errors.Errorf(`"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
+	if (r.PreserveSeqIndent || r.PreserveInitialDocSep) && r.OmitReaderAnnotations {
+		return nil, errors.Errorf(`"PreserveSeqIndent" and "PreserveInitialDocSep" options add a reader annotation, please set "OmitReaderAnnotations" to false`)
 	}
 
 	output := ResourceNodeSlice{}
@@ -356,6 +356,7 @@ func (r *ByteReader) setResourceAnnotations(n *yaml.RNode, index int, originalYA
 			r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
 		}
 	}
+	//
 	if index == 0 && r.PreserveInitialDocSep &&
 		strings.HasPrefix(originalYAML, "---") {
 		r.SetAnnotations[kioutil.InitialDocSepAnnotation] = "true"
