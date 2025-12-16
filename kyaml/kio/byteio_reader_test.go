@@ -1080,7 +1080,7 @@ env:
   - bar
 `,
 			OmitReaderAnnotations: true,
-			err:                   `"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`,
+			err:                   `"PreserveSeqIndent" and "PreserveInitialDocSep" options add a reader annotation, please set "OmitReaderAnnotations" to false`,
 		},
 	}
 
@@ -1152,6 +1152,21 @@ spec:
   - baz
 `,
 			expectedAnnoValue: "",
+		},
+		{
+			name: "error if conflicting options",
+			input: `apiVersion: apps/v1
+		kind: Deployment
+		spec:
+		- foo
+		- bar
+		- baz
+		env:
+		  - foo
+		  - bar
+		`,
+			OmitReaderAnnotations: true,
+			err:                   `"PreserveSeqIndent" and "PreserveInitialDocSep" options add a reader annotation, please set "OmitReaderAnnotations" to false`,
 		},
 	}
 
