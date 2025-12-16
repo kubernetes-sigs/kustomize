@@ -1103,3 +1103,74 @@ env:
 		})
 	}
 }
+
+// TestByteReader_AddPreserveInitialDocSepAnnotation tests if the internal.config.kubernetes.io/initial-doc-sep
+// annotation is added to resources appropriately
+func TestByteReader_AddPreserveInitialDocSepAnnotation(t *testing.T) {
+	type testCase struct {
+		name                  string
+		err                   string
+		input                 string
+		expectedAnnoValue     string
+		OmitReaderAnnotations bool
+	}
+
+	testCases := []testCase{
+		{
+			name: "read with initial document separator",
+			input: `---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+`,
+			expectedAnnoValue: "true",
+		},
+		{
+			name: "read with initial document separator after commments",
+			input: `#a comment
+---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+`,
+			expectedAnnoValue: "",
+		},
+		{
+			name: "read without initial document separator",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  - foo
+  - bar
+  - baz
+`,
+			expectedAnnoValue: "",
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			rNodes, err := (&ByteReader{
+				OmitReaderAnnotations: tc.OmitReaderAnnotations,
+				PreserveInitialDocSep: true,
+				Reader:                bytes.NewBuffer([]byte(tc.input)),
+			}).Read()
+			if tc.err != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+				return
+			}
+			require.NoError(t, err)
+			actual := rNodes[0].GetAnnotations()[kioutil.InitialDocSepAnnotation]
+			assert.Equal(t, tc.expectedAnnoValue, actual)
+		})
+	}
+}
