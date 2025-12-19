@@ -144,8 +144,7 @@ defining a new name prefix, and some different labels.
 cat <<'EOF' >$OVERLAYS/staging/kustomization.yaml
 namePrefix: staging-
 labels:
-- includeSelectors: true
-  pairs:
+- pairs:
     variant: staging
     org: acmeCorporation
 commonAnnotations:
@@ -187,8 +186,7 @@ with a different name prefix and labels.
 cat <<EOF >$OVERLAYS/production/kustomization.yaml
 namePrefix: production-
 labels:
-- includeSelectors: true
-  pairs:
+- pairs:
     variant: production
     org: acmeCorporation
 commonAnnotations:
