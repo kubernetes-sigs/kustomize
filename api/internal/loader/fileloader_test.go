@@ -686,5 +686,5 @@ func TestLoaderHTTPMalformedURL(t *testing.T) {
 		RestrictionRootOnly, MakeFakeFs([]testData{}), filesys.Separator)
 	_, err := l1.Load(malformedURL)
 	require.Error(err)
-	require.Equal("HTTP Error: status code 500 (Internal Server Error)", err.Error())
+	require.Equal("HTTP Error: status code 400 (Bad Request)", err.Error())
 }
