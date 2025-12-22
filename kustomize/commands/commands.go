@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provider"
 	"sigs.k8s.io/kustomize/cmd/config/completion"
@@ -56,7 +57,7 @@ See https://sigs.k8s.io/kustomize
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
 		localize.NewCmdLocalize(fSys),
-		publish.NewCmdPublish(fSys, pvd.GetFieldValidator(), pvd.GetResourceFactory()),
+		publish.NewCmdPublish(fSys, new(clock.RealClock)),
 	)
 	configcobra.AddCommands(c, konfig.ProgramName)
 
