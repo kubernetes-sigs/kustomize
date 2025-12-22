@@ -6,14 +6,14 @@ package publish
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
-	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/api/ifc"
-	"sigs.k8s.io/kustomize/api/konfig"
-	"sigs.k8s.io/kustomize/api/resource"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
@@ -24,13 +24,15 @@ import (
 )
 
 type publishOptions struct {
-	registry string
-	noVerify bool
+	registry  string
+	createdAt time.Time
+	noVerify  bool
 }
 
 // NewCmdEdit returns an instance of 'edit' subcommand.
 func NewCmdPublish(
-	fSys filesys.FileSystem, v ifc.Validator, rf *resource.Factory,
+	fSys filesys.FileSystem,
+	clock clock.PassiveClock,
 ) *cobra.Command {
 	var o publishOptions
 
@@ -42,7 +44,7 @@ func NewCmdPublish(
 		publish <registry>
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := o.Validate(args)
+			err := o.Validate(clock, args)
 			if err != nil {
 				return err
 			}
@@ -51,18 +53,40 @@ func NewCmdPublish(
 
 		Args: cobra.MinimumNArgs(1),
 	}
-	cmd.Flags().BoolVar(&o.noVerify, "no-verify", false,
+
+	// cmd.Flags().StringVar(
+	// 	&o.createdAt,
+	// 	"created-at",
+	// 	"",
+	// 	"The timestamp of the published artifact.  It must be supplied for reproducible builds.  Defaults to the current timestamp.",
+	// )
+	cmd.Flags().BoolVar(
+		&o.noVerify,
+		"no-verify",
+		false,
 		"skip validation for resources",
 	)
 	return cmd
 }
 
 // Validate validates addResource command.
-func (o *publishOptions) Validate(args []string) error {
+func (o *publishOptions) Validate(clock clock.PassiveClock, args []string) error {
 	if len(args) == 0 {
 		return errors.New("must specify a registry")
 	}
 	o.registry = args[0]
+
+	o.createdAt = clock.Now()
+
+	// if o.createdAt == "" {
+	// 	o.createdAt = time.Now().Format(time.RFC3339)
+	// } else {
+	// 	parsed, err := time.Parse("", o.createdAt)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	o.createdAt = parsed.Format(time.RFC3339)
+	// }
 	return nil
 }
 
@@ -73,54 +97,35 @@ func (o *publishOptions) RunPublish(fSys filesys.FileSystem) error {
 		return err
 	}
 
-	if _, err = mf.Read(); err != nil {
+	kustomization, err := mf.Read()
+	if err != nil {
 		return err
 	}
 
 	var dir string = filepath.Dir(mf.GetPath())
 
-	fs, err := file.New(dir)
+	fs, err := file.New("")
 	if err != nil {
 		return err
 	}
 	defer fs.Close()
 
 	ctx := context.Background()
-	fileDescriptors := make([]v1.Descriptor, 0)
-
-	if err = fSys.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		var mediaType string = "application/vnd.kustomize.unknown.v1beta1"
-		var b string = filepath.Base(path)
-		for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
-			if b == kfilename {
-				mediaType = "application/vnd.kustomize.config.k8s.io.v1beta1+yaml"
-				break
-			}
-		}
-
-		fileDescriptor, err := fs.Add(ctx, path, mediaType, "")
-		if err != nil {
-			return err
-		}
-		fileDescriptors = append(fileDescriptors, fileDescriptor)
-
-		return nil
-	}); err != nil {
+	fileDescriptor, err := fs.Add(ctx, ".", "", dir)
+	if err != nil {
 		return err
 	}
 
-	artifactType := "application/vnd.kustomize.artifact"
 	opts := oras.PackManifestOptions{
-		Layers: fileDescriptors,
+		Layers: []v1.Descriptor{
+			fileDescriptor,
+		},
+		ManifestAnnotations: map[string]string{
+			"org.opencontainers.image.created": o.createdAt.Format(time.RFC3339),
+		},
 	}
+
+	artifactType := fmt.Sprintf("application/vnd.%s+%s", strings.ToLower(strings.ReplaceAll(kustomization.APIVersion, "/", ".")), strings.ToLower(kustomization.Kind))
 	manifestDescriptor, err := oras.PackManifest(ctx, fs, oras.PackManifestVersion1_1, artifactType, opts)
 	if err != nil {
 		return err
@@ -136,12 +141,21 @@ func (o *publishOptions) RunPublish(fSys filesys.FileSystem) error {
 		return err
 	}
 
+	// }
+	// reg, err := remote.NewRegistry(o.registry)
+	// reg.PlainHTTP = true
+
+	// dst, err := reg.Repository(ctx, "destination")
+	// if err != nil {
+	// 	panic(err) // Handle error
+	// }
+
 	desc, err := oras.Copy(ctx, fs, tag, dst, tag, oras.DefaultCopyOptions)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("SUCCESS: copied %s desc %q\n", dir, desc)
+	log.Printf(`SUCCESS: published %s:%s@%s\n`, o.registry, tag, desc.Digest)
 
 	return nil
 }
