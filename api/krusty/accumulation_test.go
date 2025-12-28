@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/krusty"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 const validResource = `
@@ -184,6 +185,8 @@ spec:
 }
 
 func TestAccumulateResourcesErrors(t *testing.T) {
+	// Skip on Windows due to posix-OS specific error messages.
+	testutil.SkipWindows(t)
 	type testcase struct {
 		name     string
 		resource string
