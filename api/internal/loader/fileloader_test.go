@@ -207,6 +207,27 @@ func TestNewEmptyLoader(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestNewLoaderMalformedPath(t *testing.T) {
+	require := require.New(t)
+	l1, err := makeLoader().New("foo/project")
+	require.NoError(err)
+
+	// Test malformed path that would previously resolve to an ancestor directory
+	// This simulates the bug where malformed YAML like:
+	// resources:
+	// - ../../base
+	//  - ../../shared/prod
+	// becomes: "../../base - ../../shared/prod"
+	_, err = l1.New("../../base - ../../shared/prod")
+	require.Error(err)
+	require.Contains(err.Error(), "does not exist")
+
+	// Also test other malformed patterns that should fail
+	_, err = l1.New("nonexistent/path")
+	require.Error(err)
+	require.Contains(err.Error(), "does not exist")
+}
+
 func TestNewRemoteLoaderDoesNotExist(t *testing.T) {
 	_, err := makeLoader().New("https://example.com/org/repo")
 	require.ErrorContains(t, err, "fetch")
