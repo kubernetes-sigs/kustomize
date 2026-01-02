@@ -1228,6 +1228,76 @@ metadata:
 `)
 }
 
+// Regression test: verify that HelmCharts in base kustomizations
+// still receive namespace from overlay after fixing namespace propagation issues.
+// This test ensures the fix for https://github.com/kubernetes-sigs/kustomize/issues/6031
+// and https://github.com/kubernetes-sigs/kustomize/issues/6027
+// does not break the HelmChart namespace propagation feature from
+// https://github.com/kubernetes-sigs/kustomize/issues/5566
+func TestHelmChartNamespacePropagationViaResourcesThreeLevels(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	// Create base directory with helm chart (Level 1)
+	baseDir := th.MkDir("base")
+	chartDir := filepath.Join(baseDir, "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm-namespace: {{ .Release.Namespace }}
+`)
+
+	// Base kustomization with helmCharts (no namespace)
+	th.WriteK(baseDir, `
+helmGlobals:
+  chartHome: ./charts
+helmCharts:
+  - name: service
+    releaseName: service
+`)
+
+	// Mid-layer that references base via resources (no namespace) (Level 2)
+	midDir := th.MkDir("mid")
+	th.WriteK(midDir, `
+namePrefix: mid-
+resources:
+  - ../base
+`)
+
+	// Top overlay that references mid-layer and sets namespace (Level 3)
+	overlayDir := th.MkDir("overlay")
+	th.WriteK(overlayDir, `
+namespace: production
+resources:
+  - ../mid
+`)
+
+	m := th.Run(overlayDir, th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    helm-namespace: production
+  name: mid-test-service
+  namespace: production
+`)
+}
+
 func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.HarnessEnhanced) {
 	t.Helper()
 
