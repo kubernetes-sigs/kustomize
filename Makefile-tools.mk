@@ -105,7 +105,7 @@ $(MYGOBIN)/helmV4:
 	( \
 		set -e; \
 		d=$(shell mktemp -d); cd $$d; \
-		tgzFile=helm-v4.0.0-$(GOOS)-$(GOARCH).tar.gz; \
+		tgzFile=helm-v4.0.4-$(GOOS)-$(GOARCH).tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
 		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV4; \
