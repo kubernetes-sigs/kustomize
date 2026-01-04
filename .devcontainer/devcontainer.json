@@ -4,7 +4,10 @@
 	"name": "Kustomize",
 	"dockerComposeFile": "compose.yaml",
 	"service": "app",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"remoteEnv": {
+		"REGISTRY_USERNAME": "docker",
+		"REGISTRY_PASSWORD": "Oak38YhEZOggz7q_xVyeVJoQJXl7YQSW4nDs1mBRTTA",
+	},
 
 	"features": {
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1.6.5": {},
