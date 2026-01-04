@@ -1,0 +1,25 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet-mssql
+{
+	"name": "Kustomize",
+	"dockerComposeFile": "compose.yaml",
+	"service": "app",
+	"remoteEnv": {
+		"REGISTRY_USERNAME": "docker",
+		"REGISTRY_PASSWORD": "Oak38YhEZOggz7q_xVyeVJoQJXl7YQSW4nDs1mBRTTA",
+	},
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1.6.5": {},
+		"ghcr.io/dhoeric/features/oras:1": {}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"redhat.vscode-yaml",
+			]
+		}
+	},
+
+}
