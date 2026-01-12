@@ -149,7 +149,6 @@ OVERLAY_ENV=overlay
 apiVersion: v1
 data:
   BASE_LAYER_ENV: base
-  COMMON_ENV: common
   OVERLAY_ENV: overlay
 kind: ConfigMap
 metadata:
