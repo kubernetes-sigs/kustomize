@@ -172,8 +172,8 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 			if c.HelmChart.Namespace == "" {
 				if kt.kustomization.Namespace != "" {
 					c.HelmChart.Namespace = kt.kustomization.Namespace
-				} else if kt.parentNamespace != "" {
-					c.HelmChart.Namespace = kt.parentNamespace
+				} else if kt.helmRootNamespace != "" {
+					c.HelmChart.Namespace = kt.helmRootNamespace
 				}
 			}
 			p := f()
