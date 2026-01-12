@@ -170,7 +170,13 @@ func (p *plugin) runHelmCommand(
 	args []string) ([]byte, error) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, args...)
+	helmCommand := p.h.GeneralConfig().HelmConfig.Command
+	cmdParts := strings.Fields(helmCommand)
+	if len(cmdParts) == 0 {
+		return nil, fmt.Errorf("helm command is empty")
+	}
+	allArgs := append(cmdParts[1:], args...)
+	cmd := exec.Command(cmdParts[0], allArgs...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	env := []string{

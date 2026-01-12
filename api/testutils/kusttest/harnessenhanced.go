@@ -5,7 +5,6 @@ package kusttest_test
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -87,9 +86,13 @@ func makeBaseEnhancedHarness(t *testing.T) *HarnessEnhanced {
 			filesys.MakeFsOnDisk())}
 }
 
+// ErrIfNoHelm checks if helm binary is available in PATH.
+// temporary disable to check helm binary presence
+// TODO(koba1t): remove this function when helm binary is always available via 'go tool'.
 func (th *HarnessEnhanced) ErrIfNoHelm() error {
-	_, err := exec.LookPath(th.GetPluginConfig().HelmConfig.Command)
-	return err
+	// _, err := exec.LookPath(th.GetPluginConfig().HelmConfig.Command)
+	// return err
+	return nil
 }
 
 func (th *HarnessEnhanced) GetRoot() string {
