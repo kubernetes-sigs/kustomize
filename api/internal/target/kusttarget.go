@@ -29,13 +29,14 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization *types.Kustomization
-	kustFileName  string
-	ldr           ifc.Loader
-	validator     ifc.Validator
-	rFactory      *resmap.Factory
-	pLdr          *loader.Loader
-	origin        *resource.Origin
+	kustomization       *types.Kustomization
+	kustFileName        string
+	ldr                 ifc.Loader
+	validator           ifc.Validator
+	rFactory            *resmap.Factory
+	pLdr                *loader.Loader
+	origin              *resource.Origin
+	propagatedNamespace string
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -86,6 +87,9 @@ func (kt *KustTarget) Load() error {
 	}
 	kt.kustomization = &k
 	kt.kustFileName = kustFileName
+	if kt.kustomization.Namespace != "" {
+		kt.propagatedNamespace = kt.kustomization.Namespace
+	}
 	return nil
 }
 
@@ -489,6 +493,7 @@ func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
 	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
+	subKt.propagatedNamespace = kt.propagatedNamespace
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.WrapPrefixf(
@@ -496,11 +501,6 @@ func (kt *KustTarget) accumulateDirectory(
 	}
 	subKt.kustomization.BuildMetadata = kt.kustomization.BuildMetadata
 	subKt.origin = kt.origin
-	// Propagate namespace to child kustomization if child doesn't have one
-	// This ensures Helm charts in base kustomizations inherit namespace from overlays
-	if subKt.kustomization.Namespace == "" && kt.kustomization.Namespace != "" {
-		subKt.kustomization.Namespace = kt.kustomization.Namespace
-	}
 	var bytes []byte
 	if openApiPath, exists := subKt.Kustomization().OpenAPI["path"]; exists {
 		bytes, err = ldr.Load(openApiPath)
