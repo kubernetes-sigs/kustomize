@@ -68,48 +68,48 @@ metadata:
 const expectedContent = `apiVersion: v1
 kind: Namespace
 metadata:
-  annotations:
-    note: This is a test annotation
+  name: ns1
   labels:
     app: nginx
-  name: ns1
+  annotations:
+    note: This is a test annotation
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foo-literalConfigMap-bar-g5f6t456f5
+  namespace: ns1
+  labels:
+    app: nginx
+  annotations:
+    note: This is a test annotation
 data:
   DB_PASSWORD: somepw
   DB_USERNAME: admin
-kind: ConfigMap
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: nginx
-  name: foo-literalConfigMap-bar-g5f6t456f5
-  namespace: ns1
 ---
 apiVersion: v1
+kind: Secret
+metadata:
+  name: foo-secret-bar-82c2g5f8f6
+  namespace: ns1
+  labels:
+    app: nginx
+  annotations:
+    note: This is a test annotation
+type: Opaque
 data:
   DB_PASSWORD: c29tZXB3
   DB_USERNAME: YWRtaW4=
-kind: Secret
-metadata:
-  annotations:
-    note: This is a test annotation
-  labels:
-    app: nginx
-  name: foo-secret-bar-82c2g5f8f6
-  namespace: ns1
-type: Opaque
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    note: This is a test annotation
   labels:
     app: nginx
   name: foo-dply1-bar
   namespace: ns1
+  annotations:
+    note: This is a test annotation
 spec:
   replica: "3"
   selector:

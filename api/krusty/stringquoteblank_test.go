@@ -9,11 +9,8 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-// This test is for output string style.
-// Currently all quotes will be removed if the string is valid as plain (unquoted) style.
-// If a string cannot be unquoted, it will be put into a pair of single quotes.
-// See https://yaml.org/spec/1.2/spec.html#id2788859 for more details about what kind of string
-// is invalid as plain style.
+// This test verifies that long lines are NOT wrapped in YAML output.
+// See https://github.com/kubernetes-sigs/kustomize/issues/947
 func TestLongLineBreaks(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("deployment.yaml", `
@@ -59,27 +56,24 @@ spec:
   template:
     spec:
       containers:
-      - env:
+      - name: mariadb
+        image: test
+        env:
         - name: SHORT_STRING
           value: short_string
         - name: SHORT_STRING_WITH_SINGLE_QUOTE
-          value: short_string
+          value: 'short_string'
         - name: SHORT_STRING_WITH_DOUBLE_QUOTE
-          value: short_string
+          value: "short_string"
         - name: SHORT_STRING_BLANK
           value: short string
         - name: LONG_STRING_BLANK
-          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
-            suscipit ex non molestie varius.
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas suscipit ex non molestie varius.
         - name: LONG_STRING_BLANK_WITH_SINGLE_QUOTE
-          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
-            suscipit ex non molestie varius.
+          value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas suscipit ex non molestie varius.'
         - name: LONG_STRING_BLANK_WITH_DOUBLE_QUOTE
-          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
-            suscipit ex non molestie varius.
+          value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas suscipit ex non molestie varius."
         - name: INVALID_PLAIN_STYLE_STRING
           value: ': test'
-        image: test
-        name: mariadb
 `)
 }
