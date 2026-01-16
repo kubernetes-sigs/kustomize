@@ -380,11 +380,10 @@ func (r *Resource) String() string {
 // AsYAML returns the resource in Yaml form.
 // Easier to read than JSON.
 func (r *Resource) AsYAML() ([]byte, error) {
-	json, err := r.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	return yaml.JSONToYAML(json)
+	// Use kyaml's encoder directly to preserve original formatting
+	// and avoid line wrapping issues with sigs.k8s.io/yaml.JSONToYAML.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/947
+	return []byte(r.MustString()), nil
 }
 
 // MustYaml returns YAML or panics.
