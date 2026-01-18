@@ -356,7 +356,6 @@ func (r *ByteReader) setResourceAnnotations(n *yaml.RNode, index int, originalYA
 			r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
 		}
 	}
-	//
 	if index == 0 && r.PreserveInitialDocSep &&
 		strings.HasPrefix(originalYAML, "---") {
 		r.SetAnnotations[kioutil.InitialDocSepAnnotation] = "true"
