@@ -37,6 +37,9 @@ type ByteReadWriter struct {
 	// the Resources, otherwise they will be cleared.
 	KeepReaderAnnotations bool
 
+	// PreserveInitialDocSep if true adds kioutil.InitialDocSepAnnotation to the first resource
+	PreserveInitialDocSep bool
+
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
 
@@ -63,6 +66,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
 		Reader:                rw.Reader,
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+		PreserveInitialDocSep: rw.PreserveInitialDocSep,
 		PreserveSeqIndent:     rw.PreserveSeqIndent,
 		WrapBareSeqNode:       rw.WrapBareSeqNode,
 	}
