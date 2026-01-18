@@ -424,7 +424,7 @@ metadata:
   annotations:
     internal.config.kubernetes.io/index: 0
     internal.config.kubernetes.io/path: "a/b/b_test.yaml"
-    internal.config.kubernetes.io/inital-doc-sep: "true"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
 `,
 			},
 
