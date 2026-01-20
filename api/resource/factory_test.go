@@ -761,3 +761,60 @@ metadata:
 		})
 	}
 }
+
+func TestFromMapAndOption_FileMergeMode(t *testing.T) {
+	tests := []struct {
+		name         string
+		options      *types.GeneratorOptions
+		expectedMode types.FileMergeMode
+	}{
+		{
+			name: "with FileMerge content mode",
+			options: &types.GeneratorOptions{
+				FileMerge: &types.FileMergeOptions{
+					Mode: types.FileMergeModeFileContent,
+				},
+			},
+			expectedMode: types.FileMergeModeFileContent,
+		},
+		{
+			name: "with FileMerge files mode",
+			options: &types.GeneratorOptions{
+				FileMerge: &types.FileMergeOptions{
+					Mode: types.FileMergeModeFiles,
+				},
+			},
+			expectedMode: types.FileMergeModeFiles,
+		},
+		{
+			name:         "with nil FileMerge",
+			options:      &types.GeneratorOptions{},
+			expectedMode: types.FileMergeModeUnspecified,
+		},
+		{
+			name:         "with nil options",
+			options:      nil,
+			expectedMode: types.FileMergeModeUnspecified,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			resource, err := factory.FromMapAndOption(
+				map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata":   map[string]interface{}{"name": "test"},
+				},
+				&types.GeneratorArgs{
+					Options: tc.options,
+				},
+			)
+			require.NoError(t, err)
+			require.NotNil(t, resource)
+
+			actualMode := resource.FileMergeMode()
+			require.Equal(t, tc.expectedMode, actualMode)
+		})
+	}
+}

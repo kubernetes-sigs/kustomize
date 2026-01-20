@@ -24,6 +24,7 @@ type Validator interface {
 type KvLoader interface {
 	Validator() Validator
 	Load(args types.KvPairSources) (all []types.Pair, err error)
+	LoadLines(lines string) (all []types.Pair, err error)
 }
 
 // Loader interface exposes methods to read bytes.

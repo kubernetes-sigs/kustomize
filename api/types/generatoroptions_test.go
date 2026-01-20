@@ -4,9 +4,11 @@
 package types_test
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/types"
 )
 
@@ -28,6 +30,9 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 			local: &GeneratorOptions{
 				Labels:      map[string]string{"pet": "dog"},
 				Annotations: map[string]string{"fruit": "apple"},
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
 			},
 			global: nil,
 			expected: &GeneratorOptions{
@@ -35,6 +40,9 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				Annotations:           map[string]string{"fruit": "apple"},
 				DisableNameSuffixHash: false,
 				Immutable:             false,
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
 			},
 		},
 		{
@@ -43,12 +51,18 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 			global: &GeneratorOptions{
 				Labels:      map[string]string{"pet": "dog"},
 				Annotations: map[string]string{"fruit": "apple"},
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
 			},
 			expected: &GeneratorOptions{
 				Labels:                map[string]string{"pet": "dog"},
 				Annotations:           map[string]string{"fruit": "apple"},
 				DisableNameSuffixHash: false,
 				Immutable:             false,
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
 			},
 		},
 		{
@@ -57,6 +71,9 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				Labels: map[string]string{"pet": "dog"},
 				Annotations: map[string]string{
 					"fruit": "apple"},
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
 			},
 			global: &GeneratorOptions{
 				Labels: map[string]string{
@@ -66,6 +83,9 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				Annotations: map[string]string{
 					"fruit": "peach",
 					"tesla": "Y",
+				},
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFiles,
 				},
 			},
 			expected: &GeneratorOptions{
@@ -79,6 +99,9 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				},
 				DisableNameSuffixHash: false,
 				Immutable:             false,
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
 			},
 		},
 		{
@@ -126,6 +149,24 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 				Immutable:             true,
 			},
 		},
+		{
+			name: "local FileMerge with unspecified mode takes global mode",
+			local: &GeneratorOptions{
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeUnspecified,
+				},
+			},
+			global: &GeneratorOptions{
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
+			},
+			expected: &GeneratorOptions{
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
+			},
+		},
 	}
 	for _, tc := range tests {
 		actual := MergeGlobalOptionsIntoLocal(tc.local, tc.global)
@@ -133,5 +174,61 @@ func TestMergeGlobalOptionsIntoLocal(t *testing.T) {
 			t.Fatalf("%s annotations: Expected '%v', got '%v'",
 				tc.name, tc.expected, *actual)
 		}
+	}
+}
+
+func TestGeneratorOptions_FileMerge_JSON(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		expected    *GeneratorOptions
+		expectError bool
+	}{
+		{
+			name:  "with fileMerge content mode",
+			input: `{"fileMerge":{"mode":"content"}}`,
+			expected: &GeneratorOptions{
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFileContent,
+				},
+			},
+			expectError: false,
+		},
+		{
+			name:  "with fileMerge files mode",
+			input: `{"fileMerge":{"mode":"files"}}`,
+			expected: &GeneratorOptions{
+				FileMerge: &FileMergeOptions{
+					Mode: FileMergeModeFiles,
+				},
+			},
+			expectError: false,
+		},
+		{
+			name:  "without fileMerge",
+			input: `{}`,
+			expected: &GeneratorOptions{
+				FileMerge: nil,
+			},
+			expectError: false,
+		},
+		{
+			name:        "with invalid mode",
+			input:       `{"fileMerge":{"mode":"invalid"}}`,
+			expected:    nil,
+			expectError: true,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var opts GeneratorOptions
+			err := json.Unmarshal([]byte(tc.input), &opts)
+			if tc.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, &opts)
+			}
+		})
 	}
 }

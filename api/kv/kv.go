@@ -36,6 +36,10 @@ func (kvl *loader) Validator() ifc.Validator {
 	return kvl.validator
 }
 
+func (kvl *loader) LoadLines(lines string) (all []types.Pair, err error) {
+	return kvl.keyValuesFromLines([]byte(lines))
+}
+
 func (kvl *loader) Load(
 	args types.KvPairSources) (all []types.Pair, err error) {
 	pairs, err := kvl.keyValuesFromEnvFiles(args.EnvSources)

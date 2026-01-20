@@ -621,32 +621,171 @@ metadata:
   name: clown
 data:
   fruit: pear
+  override: new value
 `))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	patch, err := factory.FromBytes([]byte(`
+	old, err := factory.FromBytes([]byte(`
 apiVersion: v1
 kind: Whatever
 metadata:
   name: spaceship
 data:
   spaceship: enterprise
+  override: og value
 `))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	resource.MergeDataMapFrom(patch)
+	resource.MergeDataMapFrom(old)
 	bytes, err := resource.AsYAML()
 	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 data:
   fruit: pear
+  override: new value
   spaceship: enterprise
 kind: BlahBlah
 metadata:
   name: clown
 `, string(bytes))
+}
+
+func TestMergeDataContentMapFrom(t *testing.T) {
+	resource, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Agnes
+metadata:
+  name: varda
+  annotations:
+    internal.config.kubernetes.io/fileMergeMode: content
+data:
+  config.yaml: |
+    override: new value
+    patch: patch only value
+    list:
+    - new1
+    - new2
+    map:
+      map-key-patch: new value
+    associative-list: # {"type":"array", "x-kubernetes-patch-strategy": "merge", "x-kubernetes-patch-merge-key":"name"}
+      - name: named
+        value1: new value
+
+  config.properties: |
+    patch=patch only value
+    override=new value`))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	old, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: Agnes
+metadata:
+  name: varda
+  annotations:
+    internal.config.kubernetes.io/fileMergeMode: content
+data:
+  config.yaml: |
+    base: base only value
+    override: og value
+    map:
+      map-key-og: og value
+    list:
+    - og1
+    associative-list:
+      - name: named
+        value1: og value
+        key-only-in-old: value-only-in-old
+
+  config.properties: |
+    base=base only value
+    override=og value`))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	resource.MergeDataMapFrom(old)
+	bytes, err := resource.AsYAML()
+	require.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+data:
+  config.properties: |
+    base=base only value
+    override=new value
+    patch=patch only value
+  config.yaml: |
+    base: base only value
+    override: new value
+    map:
+      map-key-og: og value
+      map-key-patch: new value
+    list:
+    - new1
+    - new2
+    associative-list:
+    - name: named
+      value1: new value
+      key-only-in-old: value-only-in-old
+    patch: patch only value
+kind: Agnes
+metadata:
+  annotations:
+    internal.config.kubernetes.io/fileMergeMode: content
+  name: varda
+`, string(bytes))
+}
+
+func TestMergeDataContentMapFrom_InvalidFileContent(t *testing.T) {
+	validYaml := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  annotations:
+    internal.config.kubernetes.io/fileMergeMode: content
+data:
+  config.yaml: |
+    new: value
+`
+	invalidYaml := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  annotations:
+    internal.config.kubernetes.io/fileMergeMode: content
+data:
+  config.yaml: |
+    invalid: yaml: content:
+`
+	tests := []struct {
+		name         string
+		resourceYAML string
+		oldYAML      string
+	}{
+		{
+			name:         "invalid YAML content in new resource",
+			resourceYAML: invalidYaml,
+			oldYAML:      validYaml,
+		},
+		{
+			name:         "invalid YAML content in old resource",
+			resourceYAML: validYaml,
+			oldYAML:      invalidYaml,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			resource, err := factory.FromBytes([]byte(tc.resourceYAML))
+			require.NoError(t, err)
+
+			old, err := factory.FromBytes([]byte(tc.oldYAML))
+			require.NoError(t, err)
+
+			err = resource.MergeDataMapFrom(old)
+			assert.Contains(t, err.Error(), "cannot merge file")
+		})
+	}
 }
 
 func TestApplySmPatch_SwapOrder(t *testing.T) {
