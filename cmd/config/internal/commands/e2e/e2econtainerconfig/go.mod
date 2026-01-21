@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/config/internal/commands/e2e/e2econtainerconfig
 
-go 1.24.0
+go 1.25.6
 
 require sigs.k8s.io/kustomize/kyaml v0.14.2
 

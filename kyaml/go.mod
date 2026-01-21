@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/kyaml
 
-go 1.24.0
+go 1.25.6
 
 require (
 	github.com/davecgh/go-spew v1.1.1

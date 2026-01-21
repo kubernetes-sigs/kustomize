@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/cmd/k8scopy
 
-go 1.24.0
+go 1.25.6
 
 tool sigs.k8s.io/kustomize/cmd/k8scopy
 

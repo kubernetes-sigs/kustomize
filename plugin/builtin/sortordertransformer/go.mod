@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/sortordertransformer
 
-go 1.24.0
+go 1.25.6
 
 require (
 	github.com/stretchr/testify v1.10.0

@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/patchjson6902transformer
 
-go 1.24.0
+go 1.25.6
 
 require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0
