@@ -722,6 +722,7 @@ func TestLoadFunctionConfig(t *testing.T) {
 		name        string
 		src         *yaml.RNode
 		api         interface{}
+		strict      bool
 		want        interface{}
 		wantErrMsgs []string
 	}{
@@ -826,6 +827,16 @@ test: true
 			want: &jsonTagTest{Name: "tester", Test: true},
 		},
 		{
+			name: "successfully loads types that include fields only tagged with json markers, strict mode",
+			src: yaml.MustParse(`
+name: tester
+test: true
+`),
+			api:    &jsonTagTest{},
+			strict: true,
+			want:   &jsonTagTest{Name: "tester", Test: true},
+		},
+		{
 			name: "successfully loads types that include fields only tagged with yaml markers",
 			src: yaml.MustParse(`
 name: tester
@@ -835,30 +846,42 @@ test: true
 			want: &yamlTagTest{Name: "tester", Test: true},
 		},
 		{
-			name: "fails on unknown fields on types with yaml tags",
+			name: "successfully loads types that include fields only tagged with yaml markers, strict mode",
+			src: yaml.MustParse(`
+name: tester
+test: true
+`),
+			api:    &yamlTagTest{},
+			strict: true,
+			want:   &yamlTagTest{Name: "tester", Test: true},
+		},
+		{
+			name: "strict mode fails on unknown fields on types with yaml tags",
 			src: yaml.MustParse(`
 name: tester
 test: true
 unknown: field
 `),
 			api:         &yamlTagTest{},
+			strict:      true,
 			wantErrMsgs: []string{`error unmarshaling JSON: while decoding JSON: json: unknown field "unknown"`},
 		},
 		{
-			name: "fails on unknown fields on types with json tags",
+			name: "strict mode fails on unknown fields on types with json tags",
 			src: yaml.MustParse(`
 name: tester
 test: true
 unknown: field
 `),
 			api:         &jsonTagTest{},
+			strict:      true,
 			wantErrMsgs: []string{`error unmarshaling JSON: while decoding JSON: json: unknown field "unknown"`},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := framework.LoadFunctionConfig(tt.src, tt.api)
+			err := framework.LoadFunctionConfig(tt.src, tt.api, tt.strict)
 			if len(tt.wantErrMsgs) == 0 {
 				require.NoError(t, err)
 				require.Equal(t, tt.want, tt.api)
