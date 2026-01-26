@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/dhoeric/features/oras:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/dhoeric/features/oras@sha256:d08787b42a60d49b001260e00967fd2206326f552e5f7f09ce2535de2f351d8d",
+      "integrity": "sha256:d08787b42a60d49b001260e00967fd2206326f552e5f7f09ce2535de2f351d8d"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+    "id": "podman-outside",
+    "version": "1.6.5",
+    "name": "Docker (docker-outside-of-docker)",
+    "documentationURL": "https://github.com/devcontainers/features/tree/main/src/docker-outside-of-docker",
+    "description": "Re-use the host docker socket, adding the Docker CLI to a container. Feature invokes a script to enable using a forwarded Docker socket within a container to run Docker commands.",
+    "options": {
+        "version": {
+            "type": "string",
+            "proposals": [
+                "latest",
+                "none",
+                "20.10"
+            ],
+            "default": "latest",
+            "description": "Select or enter a Docker/Moby CLI version. (Availability can vary by OS version.)"
+        },
+        "moby": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install OSS Moby build instead of Docker CE"
+        },
+        "mobyBuildxVersion": {
+            "type": "string",
+            "default": "latest",
+            "description": "Install a specific version of moby-buildx when using Moby"
+        },
+        "dockerDashComposeVersion": {
+            "type": "string",
+            "enum": [
+                "none",
+                "v1",
+                "v2"
+            ],
+            "default": "v2",
+            "description": "Compose version to use for docker-compose (v1 or v2 or none)"
+        },
+        "installDockerBuildx": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install Docker Buildx"
+        },
+        "installDockerComposeSwitch": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install Compose Switch (provided docker compose is available) which is a replacement to the Compose V1 docker-compose (python) executable. It translates the command line into Compose V2 docker compose then runs the latter."
+        }
+    },
+    "entrypoint": "/usr/local/share/docker-init.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-containers"
+            ],
+            "settings": {
+                "github.copilot.chat.codeGeneration.instructions": [
+                    {
+                        "text": "This dev container includes the Docker CLI (`docker`) pre-installed and available on the `PATH` for running and managing containers using the Docker daemon on the host machine."
+                    }
+                ]
+            }
+        }
+    },
+    "mounts": [
+        {
+            "source": "/var/run/user/1000/podman/podman.sock",
+            "target": "/var/run/docker-host.sock",
+            "type": "bind"
+        }
+    ],
+    "securityOpt": [
+        "label=disable"
+    ],
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/common-utils"
+    ],
+    "legacyIds": [
+        "docker-from-docker"
+    ]
+}
