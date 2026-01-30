@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaml "sigs.k8s.io/yaml/goyaml.v3"
+	yaml "go.yaml.in/yaml/v3"
 )
 
 func TestPathMatcher_Filter(t *testing.T) {
@@ -284,6 +284,239 @@ spec:
 				assert.Equal(t, expected, matches[i].MustString())
 				assert.Contains(t, modifiedNode, tc.modifiedNodeMustContain)
 			}
+		})
+	}
+}
+
+func TestPathMatcher_StructuredDataInScalar(t *testing.T) {
+	testCases := map[string]struct {
+		input       string
+		path        []string
+		expected    string
+		expectError bool
+	}{
+		"json field access": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "host": "localhost",
+        "port": 5432
+      },
+      "app": {
+        "name": "myapp",
+        "version": "1.0.0"
+      }
+    }`,
+			path:     []string{"data", "config.json", "database", "host"},
+			expected: "- \"localhost\"\n",
+		},
+		"json nested field access": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "host": "localhost",
+        "port": 5432
+      },
+      "app": {
+        "name": "myapp",
+        "version": "1.0.0"
+      }
+    }`,
+			path:     []string{"data", "config.json", "app", "name"},
+			expected: "- \"myapp\"\n",
+		},
+		"yaml field access": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: dev
+        cluster: local
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]`,
+			path:     []string{"data", "prometheus.yml", "global", "external_labels", "prometheus_env"},
+			expected: "- dev\n",
+		},
+		"yaml array access": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-config
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 3
+      template:
+        spec:
+          containers:
+          - name: web
+            image: nginx:1.18
+          - name: sidecar
+            image: busybox:latest`,
+			path:     []string{"data", "deployment.yaml", "spec", "replicas"},
+			expected: "- 3\n",
+		},
+		"yaml container array with selector": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-config
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: web
+            image: nginx:1.18
+          - name: sidecar
+            image: busybox:latest`,
+			path:     []string{"data", "deployment.yaml", "spec", "template", "spec", "containers", "[name=web]", "image"},
+			expected: "- nginx:1.18\n",
+		},
+		"json complex nested structure": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: complex-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "connections": {
+          "primary": {
+            "host": "primary-db.example.com",
+            "port": 5432,
+            "ssl": true
+          },
+          "secondary": {
+            "host": "secondary-db.example.com",
+            "port": 5433
+          }
+        }
+      }
+    }`,
+			path:     []string{"data", "config.json", "database", "connections", "primary", "host"},
+			expected: "- \"primary-db.example.com\"\n",
+		},
+		"yaml flow style (kyaml) field access": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  config.yaml: |-
+    labels: {
+      app: "foobar",
+      foo: "bar",
+      something: "12345",
+    }
+    spec: {
+      replicas: 3,
+      selector: {
+        matchLabels: {
+          app: "foobar"
+        }
+      }
+    }`,
+			path:     []string{"data", "config.yaml", "labels", "app"},
+			expected: "- \"foobar\"\n",
+		},
+		"yaml flow style nested field access": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  config.yaml: |-
+    labels: {
+      app: "foobar",
+      foo: "bar",
+      something: "12345",
+    }
+    spec: {
+      replicas: 3,
+      selector: {
+        matchLabels: {
+          app: "foobar"
+        }
+      }
+    }`,
+			path:     []string{"data", "config.yaml", "spec", "selector", "matchLabels", "app"},
+			expected: "- \"foobar\"\n",
+		},
+		"invalid json returns field value as-is": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bad-config
+data:
+  config.json: |-
+    {
+      "invalid": json
+    }`,
+			path:     []string{"data", "config.json"},
+			expected: "- |-\n  {\n    \"invalid\": json\n  }\n",
+		},
+		"access non-existent field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  config.json: |-
+    {
+      "existing": "value"
+    }`,
+			path:     []string{"data", "config.json", "nonexistent"},
+			expected: "",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			node := MustParse(tc.input)
+			result, err := node.Pipe(&PathMatcher{Path: tc.path})
+
+			if tc.expectError {
+				assert.Error(t, err)
+				return
+			}
+
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			if tc.expected == "" {
+				assert.True(t, result == nil || result.IsNil() || result.MustString() == "")
+				return
+			}
+
+			assert.Equal(t, tc.expected, result.MustString())
 		})
 	}
 }

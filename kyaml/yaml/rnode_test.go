@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaml "sigs.k8s.io/yaml/goyaml.v3"
+	yaml "go.yaml.in/yaml/v3"
 )
 
 func TestRNodeHasNilEntryInList(t *testing.T) {
@@ -2355,4 +2355,71 @@ metadata:
 	fooAppName, err := labelRNode.GetFieldValue(`foo\.appname`)
 	require.NoError(t, err)
 	require.Equal(t, "hello-world-foo", fooAppName) // no field named 'foo.appname'
+}
+
+func TestRNode_nilSafety(t *testing.T) {
+	// Both of these scenarios should cause rn.YNode() to return nil.
+	nodesToTest := [...]struct {
+		name string
+		rn   *RNode
+	}{
+		{"nil *RNode receiver", nil},
+		{"RNode with nil internal node", &RNode{value: nil}},
+	}
+
+	t.Run("Content", func(t *testing.T) {
+		for _, tc := range nodesToTest {
+			t.Run(tc.name, func(t *testing.T) {
+				assert.NotPanics(t, func() {
+					assert.Nil(t, tc.rn.Content())
+				})
+			})
+		}
+	})
+
+	t.Run("Field", func(t *testing.T) {
+		for _, tc := range nodesToTest {
+			t.Run(tc.name, func(t *testing.T) {
+				assert.NotPanics(t, func() {
+					assert.Nil(t, tc.rn.Field("any-field"))
+				})
+			})
+		}
+	})
+
+	t.Run("Element", func(t *testing.T) {
+		for _, tc := range nodesToTest {
+			t.Run(tc.name, func(t *testing.T) {
+				assert.NotPanics(t, func() {
+					assert.Nil(t, tc.rn.Element("any-key", "any-value"))
+				})
+			})
+		}
+	})
+
+	t.Run("ElementList", func(t *testing.T) {
+		for _, tc := range nodesToTest {
+			t.Run(tc.name, func(t *testing.T) {
+				assert.NotPanics(t, func() {
+					assert.Nil(t, tc.rn.ElementList([]string{"any-key"}, []string{"any-value"}))
+				})
+			})
+		}
+	})
+
+	t.Run("MarshalJSON", func(t *testing.T) {
+		for _, tc := range nodesToTest {
+			t.Run(tc.name, func(t *testing.T) {
+				var (
+					jsonData []byte
+					err      error
+				)
+				assert.NotPanics(t, func() {
+					jsonData, err = tc.rn.MarshalJSON()
+				})
+				require.NoError(t, err)
+				assert.Equal(t, []byte("null"), jsonData)
+			})
+		}
+	})
 }

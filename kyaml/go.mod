@@ -1,21 +1,23 @@
 module sigs.k8s.io/kustomize/kyaml
 
-go 1.22.7
+go 1.24.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gnostic-models v0.6.9
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
-	github.com/sergi/go-diff v1.2.0
-	github.com/spf13/cobra v1.8.0
+	github.com/sergi/go-diff v1.4.0
+	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/xlab/treeprint v1.2.0
-	golang.org/x/sys v0.29.0
-	google.golang.org/protobuf v1.36.1
+	go.yaml.in/yaml/v2 v2.4.2
+	go.yaml.in/yaml/v3 v3.0.3
+	golang.org/x/sys v0.35.0
+	google.golang.org/protobuf v1.36.5
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7
-	sigs.k8s.io/yaml v1.4.0
+	sigs.k8s.io/yaml v1.5.0
 )
 
 require (
@@ -26,6 +28,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

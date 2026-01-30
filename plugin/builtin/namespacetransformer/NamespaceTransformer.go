@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/namespace"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -54,6 +55,10 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	for _, r := range m.Resources() {
 		if r.IsNilOrEmpty() {
 			// Don't mutate empty objects?
+			continue
+		}
+		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
+			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
 			continue
 		}
 		r.StorePreviousId()

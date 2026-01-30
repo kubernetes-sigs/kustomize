@@ -21,10 +21,31 @@ kind: Secret
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
-  name: test-minecraft
+  name: test-minecraft-rcon
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
+    heritage: Helm
+    release: test
+  name: test-minecraft-curseforge
+  namespace: default
 type: Opaque
 ---
 apiVersion: v1
@@ -32,10 +53,14 @@ kind: Service
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft
+  namespace: default
 spec:
   ports:
   - name: minecraft
@@ -150,12 +175,60 @@ func TestHelmChartInflationGeneratorOld(t *testing.T) {
 helmChartInflationGenerator:
 - chartName: minecraft
   chartRepoUrl: https://itzg.github.io/minecraft-server-charts
-  chartVersion: 3.1.3
+  chartVersion: 4.26.4
   releaseName: test
 `)
 
 	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpected(m, expectedHelm)
+}
+
+func TestHelmChartNamespacePropagation(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: the-bug
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    this-service-is-deployed-in-namespace: {{ .Release.Namespace }}
+`)
+	th.WriteF(filepath.Join(th.GetRoot(), "values.yaml"), ``)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: the-actual-namespace
+helmCharts:
+  - name: service
+    releaseName: service
+    valuesFile: values.yaml
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    this-service-is-deployed-in-namespace: the-actual-namespace
+  name: the-bug
+  namespace: the-actual-namespace
+`)
 }
 
 func TestHelmChartInflationGenerator(t *testing.T) {
@@ -169,7 +242,7 @@ func TestHelmChartInflationGenerator(t *testing.T) {
 helmCharts:
 - name: minecraft
   repo: https://itzg.github.io/minecraft-server-charts
-  version: 3.1.3
+  version: 4.26.4
   releaseName: test
 `)
 
@@ -252,7 +325,7 @@ func TestHelmChartProdVsDev(t *testing.T) {
 helmCharts:
 - name: minecraft
   repo: https://itzg.github.io/minecraft-server-charts
-  version: 3.1.3
+  version: 4.26.4
   releaseName: test
 `)
 	th.WriteK(dirProd, `
@@ -287,10 +360,30 @@ kind: Secret
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
-  name: myProd-test-minecraft
+  name: myProd-test-minecraft-rcon
+  namespace: prod
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
+    heritage: Helm
+    release: test
+  name: myProd-test-minecraft-curseforge
   namespace: prod
 type: Opaque
 ---
@@ -299,7 +392,10 @@ kind: Service
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: myProd-test-minecraft
@@ -325,10 +421,30 @@ kind: Secret
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
-  name: myDev-test-minecraft
+  name: myDev-test-minecraft-rcon
+  namespace: dev
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
+    heritage: Helm
+    release: test
+  name: myDev-test-minecraft-curseforge
   namespace: dev
 type: Opaque
 ---
@@ -337,7 +453,10 @@ kind: Service
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: myDev-test-minecraft
@@ -359,10 +478,30 @@ kind: Secret
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
-  name: myProd-test-minecraft
+  name: myProd-test-minecraft-rcon
+  namespace: prod
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-minecraft
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
+    heritage: Helm
+    release: test
+  name: myProd-test-minecraft-curseforge
   namespace: prod
 type: Opaque
 ---
@@ -371,7 +510,10 @@ kind: Service
 metadata:
   labels:
     app: test-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: myProd-test-minecraft
@@ -586,11 +728,11 @@ helmCharts:
     skipTests: true
   - name: minecraft
     repo: https://itzg.github.io/minecraft-server-charts
-    version: 3.1.3
+    version: 4.26.4
     releaseName: test-1
   - name: minecraft
     repo: https://itzg.github.io/minecraft-server-charts
-    version: 3.1.4
+    version: 4.26.4
     releaseName: test-2
 `)
 
@@ -621,10 +763,30 @@ kind: Secret
 metadata:
   labels:
     app: test-1-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-1-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test-1
-  name: test-1-minecraft
+  name: test-1-minecraft-rcon
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-1-minecraft
+    app.kubernetes.io/instance: test-1-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
+    heritage: Helm
+    release: test-1
+  name: test-1-minecraft-curseforge
   namespace: default
 type: Opaque
 ---
@@ -633,7 +795,10 @@ kind: Service
 metadata:
   labels:
     app: test-1-minecraft
-    chart: minecraft-3.1.3
+    app.kubernetes.io/instance: test-1-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test-1
   name: test-1-minecraft
@@ -655,10 +820,30 @@ kind: Secret
 metadata:
   labels:
     app: test-2-minecraft
-    chart: minecraft-3.1.4
+    app.kubernetes.io/instance: test-2-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test-2
-  name: test-2-minecraft
+  name: test-2-minecraft-rcon
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+data:
+  cf-api-key: Q0hBTkdFTUUh
+kind: Secret
+metadata:
+  labels:
+    app: test-2-minecraft
+    app.kubernetes.io/instance: test-2-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
+    heritage: Helm
+    release: test-2
+  name: test-2-minecraft-curseforge
   namespace: default
 type: Opaque
 ---
@@ -667,7 +852,10 @@ kind: Service
 metadata:
   labels:
     app: test-2-minecraft
-    chart: minecraft-3.1.4
+    app.kubernetes.io/instance: test-2-minecraft
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test-2
   name: test-2-minecraft
@@ -698,7 +886,7 @@ namespace: default
 helmCharts:
   - name: minecraft
     repo: https://itzg.github.io/minecraft-server-charts
-    version: 4.11.0
+    version: 4.26.4
     releaseName: test
     kubeVersion: "1.16"
     valuesInline:
@@ -724,8 +912,8 @@ metadata:
     app: test-minecraft
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft-rcon
@@ -741,8 +929,8 @@ metadata:
     app: test-minecraft
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft-curseforge
@@ -756,8 +944,8 @@ metadata:
     app: test-minecraft
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft
@@ -779,8 +967,8 @@ metadata:
     app: test-minecraft-map
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft-map
@@ -794,7 +982,7 @@ namespace: default
 helmCharts:
   - name: minecraft
     repo: https://itzg.github.io/minecraft-server-charts
-    version: 4.11.0
+    version: 4.26.4
     releaseName: test
     kubeVersion: "1.27"
     valuesInline:
@@ -820,8 +1008,8 @@ metadata:
     app: test-minecraft
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft-rcon
@@ -837,8 +1025,8 @@ metadata:
     app: test-minecraft
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft-curseforge
@@ -852,8 +1040,8 @@ metadata:
     app: test-minecraft
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft
@@ -875,14 +1063,168 @@ metadata:
     app: test-minecraft-map
     app.kubernetes.io/instance: test-minecraft
     app.kubernetes.io/name: minecraft
-    app.kubernetes.io/version: 4.11.0
-    chart: minecraft-4.11.0
+    app.kubernetes.io/version: 4.26.4
+    chart: minecraft-4.26.4
     heritage: Helm
     release: test
   name: test-minecraft-map
   namespace: default
 spec:
   rules: null
+`)
+}
+
+func TestHelmChartNamespacePropagationViaResources(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	// Create base directory with helm chart
+	baseDir := th.MkDir("base")
+	chartDir := filepath.Join(baseDir, "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    deployed-in-namespace: {{ .Release.Namespace }}
+`)
+
+	// Base kustomization with helmCharts
+	th.WriteK(baseDir, `
+helmGlobals:
+  chartHome: ./charts
+helmCharts:
+  - name: service
+    releaseName: service
+`)
+
+	// Overlay that references base via resources and sets namespace
+	overlayDir := th.MkDir("overlay")
+	th.WriteK(overlayDir, `
+namespace: production
+resources:
+  - ../base
+`)
+
+	m := th.Run(overlayDir, th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    deployed-in-namespace: production
+  name: test-service
+  namespace: production
+`)
+}
+
+func TestHelmChartDifferentNamespaces(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm-namespace: {{ .Release.Namespace }}
+`)
+
+	// Test with different namespaces in transformer vs helmCharts.namespace
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: transformer-ns
+helmCharts:
+  - name: service
+    releaseName: service
+    namespace: helm-ns
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	// helmCharts.namespace should take precedence
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    helm-namespace: helm-ns
+    internal.config.kubernetes.io/helm-generated: "true"
+  name: test-service
+  namespace: helm-ns
+`)
+}
+
+func TestHelmChartSameNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    deployed-namespace: {{ .Release.Namespace }}
+`)
+
+	// Test with same namespace in both places
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: shared-namespace
+helmCharts:
+  - name: service
+    releaseName: service
+    namespace: shared-namespace
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    deployed-namespace: shared-namespace
+  name: test-service
+  namespace: shared-namespace
 `)
 }
 

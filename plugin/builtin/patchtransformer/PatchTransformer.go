@@ -25,10 +25,10 @@ type plugin struct {
 	patchText string
 	// patchSource is patch source message
 	patchSource string
-	Path        string          `json:"path,omitempty"    yaml:"path,omitempty"`
-	Patch       string          `json:"patch,omitempty"   yaml:"patch,omitempty"`
-	Target      *types.Selector `json:"target,omitempty"  yaml:"target,omitempty"`
-	Options     map[string]bool `json:"options,omitempty" yaml:"options,omitempty"`
+	Path        string           `json:"path,omitempty"    yaml:"path,omitempty"`
+	Patch       string           `json:"patch,omitempty"   yaml:"patch,omitempty"`
+	Target      *types.Selector  `json:"target,omitempty"  yaml:"target,omitempty"`
+	Options     *types.PatchArgs `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 var KustomizePlugin plugin //nolint:gochecknoglobals
@@ -73,10 +73,14 @@ func (p *plugin) Config(h *resmap.PluginHelpers, c []byte) error {
 	if errSM == nil {
 		p.smPatches = patchesSM
 		for _, loadedPatch := range p.smPatches {
-			if p.Options["allowNameChange"] {
+			if p.Options == nil {
+				continue
+			}
+
+			if p.Options.AllowNameChange {
 				loadedPatch.AllowNameChange()
 			}
-			if p.Options["allowKindChange"] {
+			if p.Options.AllowKindChange {
 				loadedPatch.AllowKindChange()
 			}
 		}
@@ -90,7 +94,10 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	if p.smPatches != nil {
 		return p.transformStrategicMerge(m)
 	}
-	return p.transformJson6902(m)
+	if p.jsonPatches != nil {
+		return p.transformJson6902(m)
+	}
+	return nil
 }
 
 // transformStrategicMerge applies each loaded strategic merge patch

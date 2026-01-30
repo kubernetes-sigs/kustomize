@@ -2779,7 +2779,7 @@ spec:
           name: myingress
         fieldPaths:
           - spec.tls.0.hosts.0
-          - spec.tls.0.secretName          
+          - spec.tls.0.secretName
         options:
           create: true
 `,
@@ -2894,6 +2894,1585 @@ spec:
 `,
 			expectedErr: "value and resource selectors are mutually exclusive",
 		},
+
+		// -- regex --
+		"select 1 from many using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  PORT: 8080
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+        args:
+        - PORT
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - PORT
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+        args:
+        - PORT
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.PORT
+  targets:
+  - select:
+      name: d.*2
+    fieldPaths:
+    - spec.template.spec.containers.0.args.0
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  PORT: 8080
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+        args:
+        - PORT
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - "8080"
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+        args:
+        - PORT
+`,
+		},
+
+		"select 2 among 3 using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  PORT: 8080
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+        args:
+        - PORT
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - PORT
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+        args:
+        - PORT
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.PORT
+  targets:
+  - select:
+      name: d.*[1-2]
+    fieldPaths:
+    - spec.template.spec.containers.0.args.0
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  PORT: 8080
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+        args:
+        - "8080"
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - "8080"
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+        args:
+        - PORT
+`,
+		},
+
+		"select 2 among 3 and create one field using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "server.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+        args:
+        - HOST
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - HOST
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      name: d.*[2-3]
+    fieldPaths:
+    - spec.template.spec.containers.0.args.0
+    options:
+      create: true
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "server.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+        args:
+        - HOST
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - server.svc
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+        args:
+        - server.svc
+`,
+		},
+
+		"select 2 of 3 and create all the fields using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "server.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      name: d.*[2-3]
+    fieldPaths:
+    - spec.template.spec.containers.0.args.0
+    options:
+      create: true
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "server.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1
+        name: nginx1
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:2
+        name: nginx1
+        args:
+        - server.svc
+---
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:3
+        name: nginx1
+        args:
+        - server.svc
+`,
+		},
+
+		"select multiple targets and create multiple fields using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "server.svc"
+  OPT: "--debug=true"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: tomcat:1
+        name: tomcat1
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: tomcat:2
+        name: tomcat2
+        args:
+        - tomcat.svc
+---
+kind: StatefulSet
+metadata:
+  name: statefulset1
+spec:
+  template:
+    spec:
+      containers:
+      - image: pg:1
+        name: pg1
+---
+kind: State
+metadata:
+  name: state2
+spec:
+  template:
+    spec:
+      containers:
+      - image: pg:2
+        name: pg2
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  # create multiple fields, multiple targets, in multiple places
+  - select:
+      # should match deploy1 deploy2
+      name: d.*[1-9]
+      kind: Deployment|State
+    fieldPaths:
+    - spec.template.spec.containers.0.args.0
+    - spec.template.spec.containers.1.name
+    options:
+      create: true
+  - select:
+      # should match state2, should not match statefulset1
+      name: s.*[1-9]
+      kind: Deployment|State
+    fieldPaths:
+    - metadata.annotations.service
+    - spec.template.spec.containers.0.args.0
+    options:
+      create: true
+
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.OPT
+  targets:
+  - select:
+      # should match State/state2, should not match other kinds
+      name: s.*[0-9]
+      kind: State|fulSet|Set|ful|Dep.*
+    fieldPaths:
+    - spec.template.spec.containers.*.args.1
+    options:
+      create: true
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "server.svc"
+  OPT: "--debug=true"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: tomcat:1
+        name: tomcat1
+        args:
+        - server.svc
+      - name: server.svc
+---
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: tomcat:2
+        name: tomcat2
+        args:
+        - server.svc
+      - name: server.svc
+---
+kind: StatefulSet
+metadata:
+  name: statefulset1
+spec:
+  template:
+    spec:
+      containers:
+      - image: pg:1
+        name: pg1
+---
+kind: State
+metadata:
+  name: state2
+  annotations:
+    service: server.svc
+spec:
+  template:
+    spec:
+      containers:
+      - image: pg:2
+        name: pg2
+        args:
+        - server.svc
+        - --debug=true
+`,
+		},
+
+		"name not matching suffixed and prefixed names using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: prefix-deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: deploy1-suffix
+  annotations:
+    service: SERVICE
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      # should match deploy1-suffix
+      name: dep.*[1-9]-suffix
+      kind: Deployment|State
+    fieldPaths:
+    - metadata.annotations.service
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+    options:
+      delimiter: '.'
+  targets:
+  - select:
+      # should match prefix-deploy1
+      name: pref.*-dep.*
+    fieldPaths:
+    - metadata.annotations.service
+    options:
+      delimiter: '.'
+      index: -1
+      create: true
+`,
+			expected: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: prefix-deploy1
+  annotations:
+    service: tomcat.SERVICE
+---
+kind: Deployment
+metadata:
+  name: deploy1-suffix
+  annotations:
+    service: tomcat.svc
+`,
+		},
+
+		"not matching source error using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: prefix-deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: deploy1-suffix
+  annotations:
+    service: SERVICE
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm.*
+    fieldPath: data.HOST
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - metadata.annotations.service
+`,
+			expectedErr: `nothing selected by ConfigMap.[noVer].[noGrp]/cm.*.[noNs]:data.HOST`,
+		},
+
+		"not matching target no error using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: prefix-deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: deploy1-suffix
+  annotations:
+    service: SERVICE
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      name: .*z.*
+      kind: Deployment|State
+    fieldPaths:
+    - metadata.annotations.service
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: prefix-deploy1
+  annotations:
+    service: SERVICE
+---
+kind: Deployment
+metadata:
+  name: deploy1-suffix
+  annotations:
+    service: SERVICE
+`,
+		},
+
+		"reduce selection with matching label using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    target: selectme
+---
+kind: Deployment
+metadata:
+  name: deploy2
+---
+kind: Deployment
+metadata:
+  name: deploy3
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      # should match deploy1
+      name: .*depl.*
+      labelSelector:
+        target=selectme
+    fieldPaths:
+    - metadata.annotations.service
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    target: selectme
+  annotations:
+    service: tomcat.svc
+---
+kind: Deployment
+metadata:
+  name: deploy2
+---
+kind: Deployment
+metadata:
+  name: deploy3
+`,
+		},
+
+		"select label not matching name using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    target: selectme
+---
+kind: Deployment
+metadata:
+  name: deploy2
+---
+kind: Deployment
+metadata:
+  name: deploy3
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      name: .*notmatching.*
+      labelSelector:
+        target=selectme
+    fieldPaths:
+    - metadata.annotations.service
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    target: selectme
+---
+kind: Deployment
+metadata:
+  name: deploy2
+---
+kind: Deployment
+metadata:
+  name: deploy3
+`,
+		},
+
+		"not matching substring using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+---
+kind: Deployment
+metadata:
+  name: deploy2
+---
+kind: Deployment
+metadata:
+  name: mydeploy3
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      # should not match deploy1 deploy2 mydeploy3
+      name: deploy
+    fieldPaths:
+    - metadata.annotations.service
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+kind: Deployment
+metadata:
+  name: deploy1
+---
+kind: Deployment
+metadata:
+  name: deploy2
+---
+kind: Deployment
+metadata:
+  name: mydeploy3
+`,
+		},
+
+		"select by group using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+apiVersion: g1/v1
+kind: Deployment
+metadata:
+  name: deploy1
+---
+apiVersion: g2/v1
+kind: Deployment
+metadata:
+  name: deploy2
+---
+apiVersion: g3/v1
+kind: Deployment
+metadata:
+  name: deploy3
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      # should match deploy1 and deploy2
+      name: .*depl.*
+      group: g[13]
+    fieldPaths:
+    - metadata.annotations.service
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+apiVersion: g1/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: tomcat.svc
+---
+apiVersion: g2/v1
+kind: Deployment
+metadata:
+  name: deploy2
+---
+apiVersion: g3/v1
+kind: Deployment
+metadata:
+  name: deploy3
+  annotations:
+    service: tomcat.svc
+`,
+		},
+
+		"select by version using regex": {
+			input: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+apiVersion: g1/v1
+kind: Deployment
+metadata:
+  name: deploy1
+---
+apiVersion: g1/v2
+kind: Deployment
+metadata:
+  name: deploy2
+---
+apiVersion: g1/v3
+kind: Deployment
+metadata:
+  name: deploy3
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: cm
+    fieldPath: data.HOST
+  targets:
+  - select:
+      # should match deploy1 and deploy2
+      name: .*depl.*
+      version: v[13]
+    fieldPaths:
+    - metadata.annotations.service
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data:
+  HOST: "tomcat.svc"
+---
+apiVersion: g1/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  annotations:
+    service: tomcat.svc
+---
+apiVersion: g1/v2
+kind: Deployment
+metadata:
+  name: deploy2
+---
+apiVersion: g1/v3
+kind: Deployment
+metadata:
+  name: deploy3
+  annotations:
+    service: tomcat.svc
+`,
+		},
+
+		"reject 1 with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy2
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deploy.*
+    reject:
+    - name: .*ploy2|deploy3
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy3
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"reject 2 with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v1
+    reject:
+    - kind: Deplo.*
+      name: my-name
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+`,
+		},
+		// the only difference in the inputs between this and the previous test
+		// is the dash before `name: my-name`
+		"reject 3 with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      version: v1
+    reject:
+    - kind: Deployment
+    - name: my.n.me
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: my-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+		},
+		"simple with regex": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+---
+kind: StatefulSet
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: postgres:1.8.0
+        name: postgresdb
+
+`,
+			replacements: `replacements:
+- source:
+    kind: Deployment
+    name: deploy
+    fieldPath: spec.template.spec.containers.0.image
+  targets:
+  - select:
+      kind: Deployment|StatefulSet
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.containers.1.image
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+---
+kind: StatefulSet
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx-tagged
+      - image: nginx:1.7.9
+        name: postgresdb
+
+`,
+		},
+		"create using regex": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+---
+apiVersion: apps/v1
+kind: NotDeployment
+metadata:
+  name: notdeploy
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+  targets:
+  - select:
+      name: depl.*
+    fieldPaths:
+    - spec.template.spec.containers
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+---
+apiVersion: apps/v1
+kind: NotDeployment
+metadata:
+  name: notdeploy
+
+`,
+		},
+		"create in source using regex": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+---
+apiVersion: apps/v1
+kind: NotDeployment
+metadata:
+  name: notdeploy
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: spec.containers
+  targets:
+  - select:
+      name: depl.*
+    fieldPaths:
+    - spec.template.spec.containers
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - image: busybox
+    name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: myapp-container
+---
+apiVersion: apps/v1
+kind: NotDeployment
+metadata:
+  name: notdeploy
+
+`,
+		},
+		"delimiter using regex": {
+			input: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+  labels:
+    number: zero-one
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+  labels:
+    number: one
+---
+apiVersion: apps/v1
+kind: NotDeployment
+metadata:
+  name: notdeploy
+`,
+			replacements: `replacements:
+- source:
+    kind: Pod
+    name: pod
+    fieldPath: metadata.labels.number
+    options:
+      delimiter: "-"
+      index: 1
+  targets:
+  - select:
+      name: depl.*
+    fieldPaths:
+    - metadata.labels.number
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+  labels:
+    number: zero-one
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  labels:
+    number: one
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy2
+  labels:
+    number: one
+---
+apiVersion: apps/v1
+kind: NotDeployment
+metadata:
+  name: notdeploy
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -2914,6 +4493,539 @@ spec:
 				}
 			}
 			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(actual)) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestValueInlineStructuredData(t *testing.T) {
+	testCases := map[string]struct {
+		input        string
+		replacements string
+		expected     string
+		expectedErr  string
+	}{
+		"replacement contain jsonfield": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+  annotations:
+    hostname: www.example.com
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "REPLACE_TARGET_HOSTNAME"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: target-configmap
+    fieldPath: metadata.annotations.hostname
+  targets:
+  - select:
+      kind: ConfigMap
+    fieldPaths:
+    - data.config\.json.config.hostname
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+  annotations:
+    hostname: www.example.com
+data:
+  config.json: |-
+    {
+      "config": {
+        "hostname": "www.example.com",
+        "id": "42"
+      }
+    }`,
+		},
+		"replacement json field with source from separate configmap": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-configmap
+data:
+  HOSTNAME: www.example.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "id": "42",
+        "hostname": "REPLACE_TARGET_HOSTNAME"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-configmap
+    fieldPath: data.HOSTNAME
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-configmap
+    fieldPaths:
+    - data.config\.json.config.hostname
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-configmap
+data:
+  HOSTNAME: www.example.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-configmap
+data:
+  config.json: |-
+    {
+      "config": {
+        "hostname": "www.example.com",
+        "id": "42"
+      }
+    }
+`,
+		},
+		"replacement yaml field in configmap": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+data:
+  env: dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: TARGET_ENVIRONMENT
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: environment-config
+    fieldPath: data.env
+  targets:
+  - select:
+      kind: ConfigMap
+      name: prometheus-config
+    fieldPaths:
+    - data.prometheus\.yml.global.external_labels.prometheus_env
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+data:
+  env: dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |-
+    global:
+      external_labels:
+        prometheus_env: dev
+    scrape_configs:
+    - job_name: "prometheus"
+      static_configs:
+      - targets: ["localhost:9090"]`,
+		},
+		"replacement json field in annotations": {
+			input: `apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: debug-backend-config
+spec:
+  securityPolicy:
+    name: "debug-security-policy"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appA-svc
+  annotations:
+    cloud.google.com/backend-config: '{"ports": {"appA":"gke-default-backend-config"}}'
+spec:
+  ports:
+  - name: appA
+    port: 1234
+    protocol: TCP
+    targetPort: 8080
+`,
+			replacements: `replacements:
+- source:
+    kind: BackendConfig
+    name: debug-backend-config
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Service
+      name: appA-svc
+    fieldPaths:
+    - metadata.annotations.cloud\.google\.com/backend-config.ports.appA
+`,
+			expected: `apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: debug-backend-config
+spec:
+  securityPolicy:
+    name: "debug-security-policy"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appA-svc
+  annotations:
+    cloud.google.com/backend-config: '{"ports":{"appA":"debug-backend-config"}}'
+spec:
+  ports:
+  - name: appA
+    port: 1234
+    protocol: TCP
+    targetPort: 8080`,
+		},
+		"replacement yaml nested value": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  replicas: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-template
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: my-app
+      template:
+        metadata:
+          labels:
+            app: my-app
+        spec:
+          containers:
+          - name: app
+            image: nginx:latest
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: app-config
+    fieldPath: data.replicas
+  targets:
+  - select:
+      kind: ConfigMap
+      name: deployment-template
+    fieldPaths:
+    - data.deployment\.yaml.spec.replicas
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  replicas: "3"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-template
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: my-app
+      template:
+        metadata:
+          labels:
+            app: my-app
+        spec:
+          containers:
+          - name: app
+            image: nginx:latest`,
+		},
+		"replacement json complex nested structure": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-config
+data:
+  database_host: prod-db.example.com
+  database_port: "5432"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "connections": {
+          "primary": {
+            "host": "localhost",
+            "port": 3306,
+            "ssl": true
+          },
+          "secondary": {
+            "host": "backup-host",
+            "port": 3307
+          }
+        },
+        "pool": {
+          "min": 5,
+          "max": 10
+        }
+      },
+      "logging": {
+        "level": "info"
+      }
+    }
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-config
+    fieldPath: data.database_host
+  targets:
+  - select:
+      kind: ConfigMap
+      name: app-config
+    fieldPaths:
+    - data.config\.json.database.connections.primary.host
+- source:
+    kind: ConfigMap
+    name: source-config
+    fieldPath: data.database_port
+  targets:
+  - select:
+      kind: ConfigMap
+      name: app-config
+    fieldPaths:
+    - data.config\.json.database.connections.primary.port
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-config
+data:
+  database_host: prod-db.example.com
+  database_port: "5432"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  config.json: |-
+    {
+      "database": {
+        "connections": {
+          "primary": {
+            "host": "prod-db.example.com",
+            "port": 5432,
+            "ssl": true
+          },
+          "secondary": {
+            "host": "backup-host",
+            "port": 3307
+          }
+        },
+        "pool": {
+          "max": 10,
+          "min": 5
+        }
+      },
+      "logging": {
+        "level": "info"
+      }
+    }`,
+		},
+		"replacement yaml array element": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-config
+data:
+  new_image: nginx:1.20
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-manifest
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: web
+            image: nginx:1.18
+          - name: sidecar
+            image: busybox:latest
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: image-config
+    fieldPath: data.new_image
+  targets:
+  - select:
+      kind: ConfigMap
+      name: k8s-manifest
+    fieldPaths:
+    - data.deployment\.yaml.spec.template.spec.containers.[name=web].image
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-config
+data:
+  new_image: nginx:1.20
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-manifest
+data:
+  deployment.yaml: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: web
+            image: nginx:1.20
+          - name: sidecar
+            image: busybox:latest`,
+		},
+		"replacement yaml flow style (kyaml) field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-values
+data:
+  app_name: "my-awesome-app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-config
+data:
+  config.yaml: |-
+    labels: {
+      app: "REPLACE_APP_NAME",
+      version: "1.0.0",
+      env: "production",
+    }
+    spec: {
+      replicas: 3,
+      selector: {
+        matchLabels: {
+          app: "REPLACE_APP_NAME"
+        }
+      }
+    }`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source-values
+    fieldPath: data.app_name
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target-config
+    fieldPaths:
+    - data.config\.yaml.labels.app
+    - data.config\.yaml.spec.selector.matchLabels.app
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source-values
+data:
+  app_name: "my-awesome-app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target-config
+data:
+  config.yaml: |-
+    labels: {app: "my-awesome-app", version: "1.0.0", env: "production"}
+    spec: {replicas: 3, selector: {matchLabels: {app: "my-awesome-app"}}}`,
+		},
+	}
+
+	for tn := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Test one case to see if structured data replacement works
+			f := Filter{}
+			err := yaml.Unmarshal([]byte(testCases[tn].replacements), &f)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual, err := filtertest.RunFilterE(t, testCases[tn].input, f)
+			if err != nil {
+				if testCases[tn].expectedErr == "" {
+					t.Errorf("unexpected error: %s\n", err.Error())
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), testCases[tn].expectedErr) {
+					t.FailNow()
+				}
+			}
+			if !assert.Equal(t, strings.TrimSpace(testCases[tn].expected), strings.TrimSpace(actual)) {
 				t.FailNow()
 			}
 		})

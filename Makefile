@@ -3,7 +3,7 @@
 #
 # Makefile for kustomize CLI and API.
 
-LATEST_RELEASE=v5.6.0
+LATEST_RELEASE=v5.8.0
 
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
@@ -136,10 +136,14 @@ test-unit-all: \
 	test-unit-non-plugin \
 	test-unit-kustomize-plugins
 
-# This target is used by our Github Actions CI to run unit tests for all non-plugin modules in multiple GOOS environments.
 .PHONY: test-unit-non-plugin
 test-unit-non-plugin:
 	./hack/for-each-module.sh "make test" "./plugin/*" 20
+
+# This target is used by our Github Actions CI to run unit tests for all non-plugin and non-released modules in multiple GOOS environments.
+.PHONY: test-unit-non-plugin-and-non-released
+test-unit-non-plugin-and-non-released:
+	./hack/for-each-module.sh "make test" "./plugin/*|./kyaml/go.mod|./cmd/config/go.mod|./api/go.mod|./kustomize/go.mod" 16
 
 .PHONY: build-non-plugin-all
 build-non-plugin-all:
@@ -183,7 +187,7 @@ test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
 workspace-sync:
 	go work sync
 	./hack/doGoMod.sh tidy
-	
+
 # --- Cleanup targets ---
 .PHONY: clean
 clean: clean-kustomize-external-go-plugin uninstall-tools
