@@ -164,3 +164,80 @@ metadata:
   name: cm
 `)
 }
+
+func TestPrefixTransformerWithExcludeLabelSelector(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("PrefixTransformer")
+	defer th.Reset()
+
+	rm := th.LoadAndRunTransformer(`
+apiVersion: builtin
+kind: PrefixTransformer
+metadata:
+  name: notImportantHere
+prefix: test-
+excludeLabelSelector: "kustomize.config.k8s.io/skip-prefix=true"
+fieldSpecs:
+  - path: metadata/name
+`, `
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: global-service
+  labels:
+    kustomize.config.k8s.io/skip-prefix: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: global-deployment
+  labels:
+    kustomize.config.k8s.io/skip-prefix: "true"
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    internal.config.kubernetes.io/prefixes: test-
+    internal.config.kubernetes.io/previousKinds: Service
+    internal.config.kubernetes.io/previousNames: my-service
+    internal.config.kubernetes.io/previousNamespaces: default
+  name: test-my-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kustomize.config.k8s.io/skip-prefix: "true"
+  name: global-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    internal.config.kubernetes.io/prefixes: test-
+    internal.config.kubernetes.io/previousKinds: Deployment
+    internal.config.kubernetes.io/previousNames: my-deployment
+    internal.config.kubernetes.io/previousNamespaces: default
+  name: test-my-deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kustomize.config.k8s.io/skip-prefix: "true"
+  name: global-deployment
+`)
+}

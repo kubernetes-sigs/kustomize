@@ -3,9 +3,11 @@ package builtins
 
 import (
 	"errors"
+	"fmt"
 
 	"sigs.k8s.io/kustomize/api/filters/suffix"
 	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -13,8 +15,9 @@ import (
 
 // Add the given suffix to the field
 type SuffixTransformerPlugin struct {
-	Suffix     string        `json:"suffix,omitempty" yaml:"suffix,omitempty"`
-	FieldSpecs types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Suffix               string        `json:"suffix,omitempty" yaml:"suffix,omitempty"`
+	FieldSpecs           types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	ExcludeLabelSelector string        `json:"excludeLabelSelector,omitempty" yaml:"excludeLabelSelector,omitempty"`
 }
 
 // TODO: Make this gvk skip list part of the config.
@@ -28,6 +31,7 @@ func (p *SuffixTransformerPlugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Suffix = ""
 	p.FieldSpecs = nil
+	p.ExcludeLabelSelector = ""
 	err = yaml.Unmarshal(c, p)
 	if err != nil {
 		return
@@ -47,6 +51,16 @@ func (p *SuffixTransformerPlugin) Transform(m resmap.ResMap) error {
 		if p.shouldSkip(r.OrgId()) {
 			continue
 		}
+
+		// Skip resources matching the exclude label selector
+		excluded, err := p.shouldExcludeByLabel(r)
+		if err != nil {
+			return fmt.Errorf("error checking excludeLabelSelector: %w", err)
+		}
+		if excluded {
+			continue
+		}
+
 		id := r.OrgId()
 		// current default configuration contains
 		// only one entry: "metadata/name" with no GVK
@@ -87,6 +101,13 @@ func (p *SuffixTransformerPlugin) shouldSkip(id resid.ResId) bool {
 		}
 	}
 	return false
+}
+
+func (p *SuffixTransformerPlugin) shouldExcludeByLabel(r *resource.Resource) (bool, error) {
+	if p.ExcludeLabelSelector == "" {
+		return false, nil
+	}
+	return r.MatchesLabelSelector(p.ExcludeLabelSelector)
 }
 
 func NewSuffixTransformerPlugin() resmap.TransformerPlugin {
