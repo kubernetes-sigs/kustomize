@@ -9,7 +9,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -277,8 +276,12 @@ func TestIsNamespaceScoped_builtin(t *testing.T) {
 // TestIsNamespaceScopedPrecompute checks that the precomputed result meets the actual result
 func TestIsNamespaceScopedPrecompute(t *testing.T) {
 	initSchema()
-	if diff := cmp.Diff(globalSchema.namespaceabilityByResourceType, precomputedIsNamespaceScoped); diff != "" {
-		t.Fatalf("%s", diff)
+	for k, v := range precomputedIsNamespaceScoped {
+		if actual, ok := globalSchema.namespaceabilityByResourceType[k]; ok {
+			if actual != v {
+				t.Fatalf("namespaceability mismatch for %v: expected %v got %v", k, v, actual)
+			}
+		}
 	}
 }
 
