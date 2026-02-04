@@ -57,8 +57,16 @@ func (o *Options) Validate(_ []string) error {
 		if o.Output != "" {
 			return fmt.Errorf("--short and --output are mutually exclusive")
 		}
+		return nil
 	}
-	return nil
+
+	switch o.Output {
+	case "", "yaml", "json":
+		return nil
+	default:
+		// Match kubectl's error phrasing for familiarity.
+		return fmt.Errorf("--output must be 'yaml' or 'json'")
+	}
 }
 
 func (o *Options) Run() error {
