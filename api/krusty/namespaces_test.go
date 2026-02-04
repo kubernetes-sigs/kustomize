@@ -454,6 +454,48 @@ metadata:
 `)
 }
 
+func TestNamespaceNotAddedToValidatingAdmissionPolicies(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+
+	th.WriteK(".", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: my-namespace
+resources:
+- resources.yaml
+`)
+
+	th.WriteF("resources.yaml", `
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: example-vap
+spec: {}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: example-vapb
+spec: {}
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+
+	th.AssertActualEqualsExpected(m, `
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: example-vap
+spec: {}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: example-vapb
+spec: {}
+`)
+}
+
 // This series of constants is used to prove the need of
 // the namespace field in the objref field of the var declaration.
 // The following tests demonstrate that it creates umbiguous variable
