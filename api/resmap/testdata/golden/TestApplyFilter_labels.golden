@@ -1,0 +1,12 @@
+apiVersion: example.com/v1
+kind: Beans
+metadata:
+  labels:
+    a: foo
+    b: bar
+  name: myBeans
+---
+apiVersion: example.com/v1
+kind: Franks
+metadata:
+  name: myFranks
