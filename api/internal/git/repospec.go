@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -208,7 +209,19 @@ func kustRootPathExitsRepo(kustRootPath string) bool {
 const defaultSubmodules = true
 
 // Arbitrary, but non-infinite, timeout for running commands.
-const defaultTimeout = 27 * time.Second
+// One may specify custom KUSTOMIZE_DEFAULT_REPO_TIMEOUT overwrite
+var defaultTimeout = 27 * time.Second
+
+func init() {
+	customTimeout := os.Getenv("KUSTOMIZE_DEFAULT_REPO_TIMEOUT")
+	var err error
+	if customTimeout != "" {
+		defaultTimeout, err = time.ParseDuration(customTimeout)
+	}
+	if err != nil {
+		panic(err)
+	}
+}
 
 func parseQuery(query string) (string, time.Duration, bool) {
 	values, err := url.ParseQuery(query)
