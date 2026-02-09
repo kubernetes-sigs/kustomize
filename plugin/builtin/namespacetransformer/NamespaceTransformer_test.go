@@ -4,6 +4,8 @@
 package main_test
 
 import (
+  "fmt"
+
 	"strings"
 	"testing"
 
@@ -803,4 +805,92 @@ metadata:
   name: svc
   namespace: helm-ns
 `)
+}
+
+
+
+func TestNamespaceTransformer_SkipHelmGeneratedFlag(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	// Resource annotated as Helm generated
+	rmF := resmap.NewFactory(provider.NewDefaultDepProvider().GetResourceFactory())
+	rm, err := rmF.NewResMapFromBytes([]byte(`
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+  namespace: helm-ns
+  annotations:
+    some-annotation: "true"
+`))
+	require.NoError(t, err)
+
+	r := rm.Resources()[0]
+	// Set Helm annotation
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
+
+	// Scenario table
+	tests := []struct {
+		name           string
+		skipHelm       bool
+		expectedYAML   string
+		expectedNs     string
+		transformNs    string
+	}{
+		{
+			name:         "SkipHelmGenerated = true",
+			skipHelm:     true,
+			transformNs:  "new-ns",
+			expectedNs:   "helm-ns",
+			expectedYAML: `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    some-annotation: "true"
+  name: svc
+  namespace: helm-ns
+`,
+		},
+		{
+			name:         "SkipHelmGenerated = false",
+			skipHelm:     false,
+			transformNs:  "new-ns",
+			expectedNs:   "new-ns",
+			expectedYAML: `
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    some-annotation: "true"
+  name: svc
+  namespace: new-ns
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rmCopy := rm.DeepCopy()
+			configYAML := fmt.Sprintf(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: test
+  namespace: %s
+skipHelmGenerated: %v
+fieldSpecs:
+- path: metadata/namespace
+  create: true
+`, tt.transformNs, tt.skipHelm)
+
+			rmCopy, err = th.RunTransformerFromResMap(configYAML, rmCopy)
+			require.NoError(t, err)
+			require.NoError(t, rmCopy.RemoveOriginAnnotations())
+
+			th.AssertActualEqualsExpectedNoIdAnnotations(rmCopy, tt.expectedYAML)
+		})
+	}
 }
