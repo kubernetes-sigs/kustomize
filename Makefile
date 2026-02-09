@@ -3,7 +3,7 @@
 #
 # Makefile for kustomize CLI and API.
 
-LATEST_RELEASE=v5.8.0
+LATEST_RELEASE=v5.8.1
 
 SHELL := /usr/bin/env bash
 GOOS = $(shell go env GOOS)
