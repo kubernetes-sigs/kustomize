@@ -7,7 +7,7 @@ tool sigs.k8s.io/kustomize/cmd/pluginator/v2
 require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	sigs.k8s.io/kustomize/api v0.21.0
+	sigs.k8s.io/kustomize/api v0.21.1
 	sigs.k8s.io/kustomize/kyaml v0.21.1
 )
 
@@ -35,5 +35,3 @@ require (
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../api
