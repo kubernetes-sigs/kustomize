@@ -4,7 +4,10 @@
 package oci
 
 import (
+	"archive/tar"
 	"bufio"
+	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -12,38 +15,50 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
-	"net"
-	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 
 	loctest "sigs.k8s.io/kustomize/api/testutils/localizertest"
 )
 
-func skipIfNoDocker(t *testing.T) {
-	t.Helper()
-	if _, err := exec.LookPath("docker"); err != nil {
-		t.Skip("skipping because docker binary wasn't found in PATH")
+func copyFileIntoContainer(ctx context.Context, cli *client.Client, containerID, containerPath string, data []byte) error {
+	// Create tar archive in memory
+	buffer := new(bytes.Buffer)
+	writer := tar.NewWriter(buffer)
+	header := &tar.Header{
+		Name: containerPath,
+		Mode: 0644,
+		Size: int64(len(data)),
 	}
-}
 
-// run calls Cmd.Run and wraps the error to include the output to make debugging
-// easier. Not safe for real code, but fine for tests.
-func run(cmd *exec.Cmd) error {
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("%w\n--- COMMAND OUTPUT ---\n%s", err, string(out))
+	if err := writer.WriteHeader(header); err != nil {
+		return err
 	}
-	return nil
+
+	if _, err := writer.Write(data); err != nil {
+		return err
+	}
+
+	writer.Close()
+
+	_, err := cli.CopyToContainer(ctx, containerID, client.CopyToContainerOptions{
+		DestinationPath: "/",
+		Content:         buffer,
+	})
+
+	return err
 }
 
 // Set up the registry.
-func registry(t *testing.T, certificate_path string, key_path string) (*exec.Cmd, int, error) {
-	skipIfNoDocker(t)
+
+func registry(t *testing.T, certificate []byte, key []byte) (containerId string, port int, err error) {
 	t.Helper()
 
 	const container_cert_path = "/certs/cert.pem"
@@ -52,38 +67,67 @@ func registry(t *testing.T, certificate_path string, key_path string) (*exec.Cmd
 	container_name := t.Name()
 	internal_port := 5000
 
-	create := exec.Command("docker", "create",
-		"--rm",
-		"--name", container_name,
-		"--publish", fmt.Sprintf("0:%d", internal_port),
-		"--env", "REGISTRY_HTTP_TLS_CERTIFICATE="+container_cert_path,
-		"--env", "REGISTRY_HTTP_TLS_KEY="+container_key_path,
-		"docker.io/library/registry:3.0.0",
-	)
-	require.NoError(t, run(create))
+	apiClient, err := client.New(client.FromEnv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { apiClient.Close() })
 
-	cert_upload := exec.Command("docker", "cp", certificate_path, container_name+":"+container_cert_path)
-	require.NoError(t, run(cert_upload))
-	key_upload := exec.Command("docker", "cp", key_path, container_name+":"+container_key_path)
-	require.NoError(t, run(key_upload))
+	portMap := network.MustParsePort(fmt.Sprintf("%d/tcp", internal_port))
 
-	start := exec.Command("docker", "start",
-		"--attach", "--interactive",
-		container_name,
-	)
-
-	stdout, err := start.StderrPipe()
+	container, err := apiClient.ContainerCreate(t.Context(), client.ContainerCreateOptions{
+		Name: container_name,
+		Config: &container.Config{
+			Image:        "docker.io/library/registry:3.0.0",
+			AttachStdin:  true,
+			AttachStdout: true,
+			AttachStderr: true,
+			Tty:          true,
+			OpenStdin:    true,
+			Env: []string{
+				"REGISTRY_HTTP_TLS_CERTIFICATE=" + container_cert_path,
+				"REGISTRY_HTTP_TLS_KEY=" + container_key_path,
+			},
+		},
+		HostConfig: &container.HostConfig{
+			AutoRemove: true,
+			PortBindings: network.PortMap{
+				portMap: []network.PortBinding{
+					{
+						HostPort: "",
+					},
+				},
+			},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := start.Start(); err != nil {
+	t.Cleanup(func() { apiClient.ContainerStop(context.Background(), container.ID, client.ContainerStopOptions{}) })
+
+	if err = copyFileIntoContainer(t.Context(), apiClient, container.ID, container_cert_path, []byte(certificate)); err != nil {
+		t.Fatal(err)
+	}
+	if err = copyFileIntoContainer(t.Context(), apiClient, container.ID, container_key_path, []byte(key)); err != nil {
 		t.Fatal(err)
 	}
 
-	t.Cleanup(func() { start.Process.Signal(syscall.SIGTERM) })
+	if _, err = apiClient.ContainerStart(t.Context(), container.ID, client.ContainerStartOptions{}); err != nil {
+		t.Fatal(err)
+	}
 
-	scanner := bufio.NewScanner(stdout)
+	reader, err := apiClient.ContainerLogs(t.Context(), container.ID, client.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close()
+
+	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, fmt.Sprintf("listening on [::]:%d", internal_port)) {
@@ -95,25 +139,25 @@ func registry(t *testing.T, certificate_path string, key_path string) (*exec.Cmd
 		t.Fatal(err)
 	}
 
-	retrieve_registry_port := exec.Command("docker", "port", container_name, fmt.Sprintf("%d", internal_port))
-	out, err := retrieve_registry_port.Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, portString, err := net.SplitHostPort(strings.TrimSpace(string(out)))
+	inspect, err := apiClient.ContainerInspect(t.Context(), container.ID, client.ContainerInspectOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	port, err := strconv.Atoi(portString)
+	bindings := inspect.Container.NetworkSettings.Ports[portMap]
+	if len(bindings) == 0 {
+		t.Fatal("No ports bound")
+	}
+
+	port, err = strconv.Atoi(bindings[0].HostPort)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return start, port, nil
+	return container.ID, port, nil
 }
 
-func generateSelfSignedCert(t *testing.T) (certificate string, key string) {
+func generateSelfSignedCert(t *testing.T) (certificate []byte, key []byte) {
 	t.Helper()
 
 	// Generate private key
@@ -142,33 +186,29 @@ func generateSelfSignedCert(t *testing.T) (certificate string, key string) {
 		t.Fatalf("failed to create certificate: %v", err)
 	}
 
-	return string(pem.EncodeToMemory(&pem.Block{
+	return pem.EncodeToMemory(&pem.Block{
 			Type:  "CERTIFICATE",
 			Bytes: derBytes,
-		})),
-		string(pem.EncodeToMemory(&pem.Block{
+		}),
+		pem.EncodeToMemory(&pem.Block{
 			Type:  "RSA PRIVATE KEY",
 			Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-		}))
+		})
 }
 
 func TestFnContainerTransformerWithConfig(t *testing.T) {
 	certificate, key := generateSelfSignedCert(t)
-	cert_path := "certs/cert.pem"
-	key_path := "certs/key.pem"
 
 	kustomization := map[string]string{
 		"src/README.md": `# NO VALID FILE
 `,
-		cert_path: certificate,
-		key_path:  key,
 	}
 	// clock := NewFakePassiveClock(time.Date(int(2025), time.July, int(28), int(20), int(56), int(0), int(0), time.UTC))
 
-	_, _, target := loctest.PrepareFs(t, []string{"src", "certs"}, kustomization)
+	_, _, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
 	loctest.SetWorkingDir(t, target.Join("src"))
 
-	registry, port, err := registry(t, target.Join(cert_path), target.Join(key_path))
+	registry, port, err := registry(t, certificate, key)
 	require.NoError(t, err)
 
 	// t.Cleanup(func() {registry.})
@@ -176,5 +216,4 @@ func TestFnContainerTransformerWithConfig(t *testing.T) {
 	t.Setenv("asdfsd", "asdfadsf")
 
 	require.Equal(t, port, 7)
-
 }
