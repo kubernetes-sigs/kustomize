@@ -121,7 +121,7 @@ func AddGenerateDockerfile(cmd *cobra.Command) {
 		Use:  "gen [DIR]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := os.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM public.ecr.aws/docker/library/golang:1.24.6-bullseye as builder
+			if err := os.WriteFile(filepath.Join(args[0], "Dockerfile"), []byte(`FROM public.ecr.aws/docker/library/golang:1.25 as builder
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY go.mod go.sum ./

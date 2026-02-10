@@ -86,7 +86,7 @@ func (c *Converter) Convert() error {
 }
 
 func (c *Converter) getDockerfile() string {
-	return `FROM public.ecr.aws/docker/library/golang:1.24.6-bullseye
+	return `FROM public.ecr.aws/docker/library/golang:1.25
 ENV CGO_ENABLED=0
 WORKDIR /go/src/
 COPY . .
