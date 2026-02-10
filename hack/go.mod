@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/hack
 
-go 1.24.0
+go 1.25.0
 
 tool (
 	// for embeding code and manifest into markdown docs
