@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/builtin/patchstrategicmergetransformer
 
-go 1.25.6
+go 1.25.7
 
 require (
 	github.com/stretchr/testify v1.10.0
