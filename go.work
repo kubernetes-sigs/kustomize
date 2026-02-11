@@ -1,4 +1,5 @@
-go 1.24.0
+// Omit the patch version to avoid an extra bump in downstream projects.
+go 1.25
 
 use (
 	./api
