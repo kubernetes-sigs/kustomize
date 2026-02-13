@@ -189,7 +189,7 @@ func (c *Filter) getCommand() (string, []string) {
 
 	for _, storageMount := range c.StorageMounts {
 		// convert declarative relative paths to absolute (otherwise docker will throw an error)
-		if !filepath.IsAbs(storageMount.Src) {
+		if storageMount.MountType != "volume" && !filepath.IsAbs(storageMount.Src) {
 			storageMount.Src = filepath.Join(c.Exec.WorkingDir, storageMount.Src)
 		}
 		args = append(args, "--mount", storageMount.String())
