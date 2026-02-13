@@ -23,6 +23,9 @@ type plugin struct {
 	FieldSpecs             []types.FieldSpec                `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 	UnsetOnly              bool                             `json:"unsetOnly" yaml:"unsetOnly"`
 	SetRoleBindingSubjects namespace.RoleBindingSubjectMode `json:"setRoleBindingSubjects" yaml:"setRoleBindingSubjects"`
+
+
+	SkipHelmGenerated bool `json:"skipHelmGenerated,omitempty" yaml:"skipHelmGenerated,omitempty"`
 }
 
 var KustomizePlugin plugin //nolint:gochecknoglobals
@@ -31,6 +34,8 @@ func (p *plugin) Config(
 	_ *resmap.PluginHelpers, c []byte) (err error) {
 	p.Namespace = ""
 	p.FieldSpecs = nil
+
+	p.SkipHelmGenerated = true
 	if err := yaml.Unmarshal(c, p); err != nil {
 		return errors.WrapPrefixf(err, "unmarshalling NamespaceTransformer config")
 	}
@@ -57,10 +62,13 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
+		if p.SkipHelmGenerated {
+
 		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
 			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
 			continue
-		}
+		} 
+		} 
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
 			Namespace:              p.Namespace,
