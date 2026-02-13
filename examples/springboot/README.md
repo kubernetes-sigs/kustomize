@@ -183,8 +183,9 @@ add a label, but one can always edit
 <!-- @customizeLabels @testAgainstLatestRelease -->
 ```
 cat <<EOF >>$DEMO_HOME/kustomization.yaml
-commonLabels:
-  env: prod
+labels:
+- pairs:
+    env: prod
 EOF
 ```
 
