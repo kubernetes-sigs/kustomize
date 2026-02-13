@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/resmap"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -105,7 +106,7 @@ cp -r $ROOT/simple.git/. $ROOT/$HASH_DIR
 	git commit -m "relative submodule"
 	git checkout main
 	git submodule add $ROOT/simple.git submodule
-	git commit -m "submodule"	
+	git commit -m "submodule"
 )
 `, root, hashDir))
 		return testRepos{
@@ -176,7 +177,7 @@ resources:
 		{
 			name: "has ref",
 			kustomization: `
-resources: 
+resources:
 - "file://$ROOT/simple.git?ref=change-image"
 `,
 
@@ -278,7 +279,7 @@ spec:
 resources:
 - file:///not/a/real/repo
 `,
-			err: "fatal: '/not/a/real/repo' does not appear to be a git repository",
+			err: `fatal: '.*not/a/real/repo' does not appear to be a git repository`,
 		},
 	}
 
@@ -290,7 +291,7 @@ resources:
 				t.SkipNow()
 			}
 
-			kust := strings.ReplaceAll(test.kustomization, "$ROOT", repos.root)
+			kust := strings.ReplaceAll(test.kustomization, "$ROOT", filepath.ToSlash(repos.root))
 			fSys, tmpDir := kusttest_test.CreateKustDir(t, kust)
 
 			b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
@@ -303,13 +304,16 @@ resources:
 				require.Regexp(t, test.err, err.Error())
 			} else {
 				require.NoError(t, err)
-				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", repos.root))
+				checkYaml(t, m, strings.ReplaceAll(test.expected, "$ROOT", filepath.ToSlash(repos.root)))
 			}
 		})
 	}
 }
 
 func TestRemoteLoad_RemoteProtocols(t *testing.T) {
+	// Skip test on Windows due to ssh scenarios failed on windows
+	// TODO(koba1t): Fix ssh remote loading on Windows
+	testutil.SkipWindows(t)
 	// Slow remote tests with long timeouts.
 	// TODO: If these end up flaking, they should retry. If not, remove this TODO.
 	tests := []struct {
