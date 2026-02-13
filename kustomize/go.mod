@@ -1,6 +1,7 @@
 module sigs.k8s.io/kustomize/kustomize/v5
 
-go 1.24.0
+// Omit the patch version to avoid an extra bump in downstream projects.
+go 1.25
 
 require (
 	github.com/google/go-cmp v0.7.0

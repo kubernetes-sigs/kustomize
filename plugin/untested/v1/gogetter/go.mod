@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/plugin/untested/v1/gogetter
 
-go 1.24.0
+go 1.25
 
 require sigs.k8s.io/kustomize/api v0.21.1
 
