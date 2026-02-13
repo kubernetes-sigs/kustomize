@@ -14,7 +14,7 @@ require (
 	github.com/xlab/treeprint v1.2.0
 	go.yaml.in/yaml/v2 v2.4.2
 	go.yaml.in/yaml/v3 v3.0.3
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.38.0
 	google.golang.org/protobuf v1.36.5
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7
 	sigs.k8s.io/yaml v1.5.0
