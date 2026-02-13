@@ -83,6 +83,11 @@ func (rf *Factory) makeOne(rn *yaml.RNode, o *types.GeneratorArgs) *Resource {
 		if o.Options == nil || !o.Options.DisableNameSuffixHash {
 			resource.EnableHashSuffix()
 		}
+		var fileMergeMode = types.FileMergeModeUnspecified
+		if o.Options != nil && o.Options.FileMerge != nil {
+			fileMergeMode = o.Options.FileMerge.Mode
+		}
+		resource.SetFileMergeMode(fileMergeMode)
 		resource.SetBehavior(types.NewGenerationBehavior(o.Behavior))
 	}
 

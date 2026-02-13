@@ -31,7 +31,7 @@ func TestDeterminePluginSrcRoot(t *testing.T) {
 	}
 }
 
-func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *string) *resource.Resource {
+func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *string, fileMergeMode string) *resource.Resource {
 	r, err := rf.FromMap(map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
@@ -47,6 +47,9 @@ func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *strin
 	if hashValue != nil {
 		annotations[HashAnnotation] = *hashValue
 	}
+	if fileMergeMode != "" {
+		annotations[FileMergeModeAnnotation] = fileMergeMode
+	}
 	if len(annotations) > 0 {
 		if err := r.SetAnnotations(annotations); err != nil {
 			panic(err)
@@ -55,14 +58,20 @@ func makeConfigMap(rf *resource.Factory, name, behavior string, hashValue *strin
 	return r
 }
 
-func makeConfigMapOptions(rf *resource.Factory, name, behavior string, disableHash bool) (*resource.Resource, error) {
+func makeConfigMapOptions(rf *resource.Factory, name, behavior string, disableHash bool, fileMergeMode string) (*resource.Resource, error) {
+	opts := &types.GeneratorOptions{DisableNameSuffixHash: disableHash}
+	if fileMergeMode != "" {
+		opts.FileMerge = &types.FileMergeOptions{
+			Mode: types.NewFileMergeMode(fileMergeMode),
+		}
+	}
 	return rf.FromMapAndOption(map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
 		"metadata":   map[string]interface{}{"name": name},
 	}, &types.GeneratorArgs{
 		Behavior: behavior,
-		Options:  &types.GeneratorOptions{DisableNameSuffixHash: disableHash}})
+		Options:  opts})
 }
 
 func strptr(s string) *string {
@@ -74,9 +83,10 @@ func TestUpdateResourceOptions(t *testing.T) {
 	in := resmap.New()
 	expected := resmap.New()
 	cases := []struct {
-		behavior  string
-		needsHash bool
-		hashValue *string
+		behavior      string
+		needsHash     bool
+		hashValue     *string
+		fileMergeMode string
 	}{
 		{hashValue: strptr("false")},
 		{hashValue: strptr("true"), needsHash: true},
@@ -86,12 +96,17 @@ func TestUpdateResourceOptions(t *testing.T) {
 		{behavior: "nonsense"},
 		{behavior: "merge", hashValue: strptr("false")},
 		{behavior: "merge", hashValue: strptr("true"), needsHash: true},
+		{fileMergeMode: "files"},
+		{fileMergeMode: "nonsense"},
+		{behavior: "merge", fileMergeMode: "content"},
+		{behavior: "merge", fileMergeMode: "nonsense"},
+		{behavior: "merge", hashValue: strptr("true"), needsHash: true, fileMergeMode: "content"},
 	}
 	for i, c := range cases {
 		name := fmt.Sprintf("test%d", i)
-		err := in.Append(makeConfigMap(rf, name, c.behavior, c.hashValue))
+		err := in.Append(makeConfigMap(rf, name, c.behavior, c.hashValue, c.fileMergeMode))
 		require.NoError(t, err)
-		config, err := makeConfigMapOptions(rf, name, c.behavior, !c.needsHash)
+		config, err := makeConfigMapOptions(rf, name, c.behavior, !c.needsHash, c.fileMergeMode)
 		if err != nil {
 			t.Errorf("expected new instance with an options but got error: %v", err)
 		}
@@ -114,7 +129,7 @@ func TestUpdateResourceOptionsWithInvalidHashAnnotationValues(t *testing.T) {
 	for i := range cases {
 		name := fmt.Sprintf("test%d", i)
 		in := resmap.New()
-		err := in.Append(makeConfigMap(rf, name, "", &cases[i]))
+		err := in.Append(makeConfigMap(rf, name, "", &cases[i], ""))
 		require.NoError(t, err)
 		_, err = UpdateResourceOptions(in)
 		require.Error(t, err)
