@@ -4,9 +4,6 @@
 package oci
 
 import (
-	"archive/tar"
-	"bufio"
-	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -15,155 +12,93 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/moby/moby/api/types/container"
-	"github.com/moby/moby/api/types/network"
-	"github.com/moby/moby/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/require"
-
-	loctest "sigs.k8s.io/kustomize/api/testutils/localizertest"
+	"github.com/stretchr/testify/suite"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func copyFileIntoContainer(ctx context.Context, cli *client.Client, containerID, containerPath string, data []byte) error {
-	// Create tar archive in memory
-	buffer := new(bytes.Buffer)
-	writer := tar.NewWriter(buffer)
-	header := &tar.Header{
-		Name: containerPath,
-		Mode: 0644,
-		Size: int64(len(data)),
+type PusherTestSuite struct {
+	suite.Suite
+	registry              *testcontainers.DockerContainer
+	address               string
+	certificate_directory string
+	ctx                   context.Context
+}
+
+func (suite *PusherTestSuite) SetupSuite() {
+	certificate, key := generateSelfSignedCert(suite)
+
+	const container_cert_path = "/certs/registry.pem"
+	const container_key_path = "/certs/registry.key"
+	registry_port := nat.Port("5000/tcp")
+
+	suite.ctx = context.Background()
+	container, err := testcontainers.Run(suite.ctx, "docker.io/library/registry:3.0.0",
+		testcontainers.WithFiles(
+			testcontainers.ContainerFile{
+				HostFilePath:      certificate,
+				ContainerFilePath: container_cert_path,
+				FileMode:          0o644,
+			},
+			testcontainers.ContainerFile{
+				HostFilePath:      key,
+				ContainerFilePath: container_key_path,
+				FileMode:          0o644,
+			},
+		),
+		testcontainers.WithEnv(map[string]string{
+			"REGISTRY_HTTP_TLS_CERTIFICATE": container_cert_path,
+			"REGISTRY_HTTP_TLS_KEY":         container_key_path,
+		}),
+		testcontainers.WithExposedPorts(registry_port.Port()),
+		testcontainers.WithWaitStrategy(
+			wait.ForMappedPort(registry_port),
+			wait.ForLog(fmt.Sprintf("listening on [::]:%s", registry_port.Port())),
+		),
+	)
+	if err != nil {
+		suite.T().Fatal(err)
 	}
 
-	if err := writer.WriteHeader(header); err != nil {
-		return err
+	ip, _ := container.Host(suite.ctx)
+	port, _ := container.MappedPort(suite.ctx, registry_port)
+	suite.address = fmt.Sprintf("https://%s:%s", ip, port.Port())
+	suite.registry = container
+}
+
+func (suite *PusherTestSuite) TearDownSuite() {
+	if suite.registry != nil {
+		if err := suite.registry.Terminate(suite.ctx); err != nil {
+			suite.FailNow("error terminating postgres container: %s", err)
+		}
 	}
-
-	if _, err := writer.Write(data); err != nil {
-		return err
+	if suite.certificate_directory != "" {
+		if err := os.RemoveAll(suite.certificate_directory); err != nil {
+			suite.FailNow("error removing temp certificate directory: %s", err)
+		}
 	}
-
-	writer.Close()
-
-	_, err := cli.CopyToContainer(ctx, containerID, client.CopyToContainerOptions{
-		DestinationPath: "/",
-		Content:         buffer,
-	})
-
-	return err
 }
 
 // Set up the registry.
 
-func registry(t *testing.T, certificate []byte, key []byte) (containerId string, port int, err error) {
-	t.Helper()
-
-	const container_cert_path = "/certs/cert.pem"
-	const container_key_path = "/certs/key.pem"
-
-	container_name := t.Name()
-	internal_port := 5000
-
-	apiClient, err := client.New(client.FromEnv)
+func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key string) {
+	directory, err := os.MkdirTemp("", "certs")
 	if err != nil {
-		t.Fatal(err)
+		suite.FailNow("failed to create temp directory: %s", err)
 	}
-	t.Cleanup(func() { apiClient.Close() })
-
-	portMap := network.MustParsePort(fmt.Sprintf("%d/tcp", internal_port))
-
-	container, err := apiClient.ContainerCreate(t.Context(), client.ContainerCreateOptions{
-		Name: container_name,
-		Config: &container.Config{
-			Image:        "docker.io/library/registry:3.0.0",
-			AttachStdin:  true,
-			AttachStdout: true,
-			AttachStderr: true,
-			Tty:          true,
-			OpenStdin:    true,
-			Env: []string{
-				"REGISTRY_HTTP_TLS_CERTIFICATE=" + container_cert_path,
-				"REGISTRY_HTTP_TLS_KEY=" + container_key_path,
-			},
-		},
-		HostConfig: &container.HostConfig{
-			AutoRemove: true,
-			PortBindings: network.PortMap{
-				portMap: []network.PortBinding{
-					{
-						HostPort: "",
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Cleanup(func() { apiClient.ContainerStop(context.Background(), container.ID, client.ContainerStopOptions{}) })
-
-	if err = copyFileIntoContainer(t.Context(), apiClient, container.ID, container_cert_path, []byte(certificate)); err != nil {
-		t.Fatal(err)
-	}
-	if err = copyFileIntoContainer(t.Context(), apiClient, container.ID, container_key_path, []byte(key)); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err = apiClient.ContainerStart(t.Context(), container.ID, client.ContainerStartOptions{}); err != nil {
-		t.Fatal(err)
-	}
-
-	reader, err := apiClient.ContainerLogs(t.Context(), container.ID, client.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer reader.Close()
-
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, fmt.Sprintf("listening on [::]:%d", internal_port)) {
-			break
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		t.Fatal(err)
-	}
-
-	inspect, err := apiClient.ContainerInspect(t.Context(), container.ID, client.ContainerInspectOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	bindings := inspect.Container.NetworkSettings.Ports[portMap]
-	if len(bindings) == 0 {
-		t.Fatal("No ports bound")
-	}
-
-	port, err = strconv.Atoi(bindings[0].HostPort)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return container.ID, port, nil
-}
-
-func generateSelfSignedCert(t *testing.T) (certificate []byte, key []byte) {
-	t.Helper()
+	suite.certificate_directory = directory
 
 	// Generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
-		t.Fatalf("failed to generate private key: %v", err)
+		suite.FailNow("failed to generate private key: %v", err)
 	}
 
 	// Certificate template
@@ -183,37 +118,58 @@ func generateSelfSignedCert(t *testing.T) (certificate []byte, key []byte) {
 	// Self-sign the certificate
 	derBytes, err := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &privateKey.PublicKey, privateKey)
 	if err != nil {
-		t.Fatalf("failed to create certificate: %v", err)
+		suite.FailNow("failed to create certificate: %v", err)
 	}
 
-	return pem.EncodeToMemory(&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: derBytes,
-		}),
-		pem.EncodeToMemory(&pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-		})
+	certificate_bytes := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: derBytes,
+	})
+
+	certificate_path := filepath.Join(directory, "registry.pem")
+	os.WriteFile(certificate_path, certificate_bytes, 0o0640)
+
+	key_bytes := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+
+	key_path := filepath.Join(directory, "registry.key")
+	os.WriteFile(key_path, key_bytes, 0o0640)
+
+	return certificate_path, key_path
 }
 
-func TestFnContainerTransformerWithConfig(t *testing.T) {
-	certificate, key := generateSelfSignedCert(t)
+func (suite *PusherTestSuite) TestPushSetup() {
+	t := suite.T()
 
-	kustomization := map[string]string{
-		"src/README.md": `# NO VALID FILE
-`,
-	}
-	// clock := NewFakePassiveClock(time.Date(int(2025), time.July, int(28), int(20), int(56), int(0), int(0), time.UTC))
-
-	_, _, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
-	loctest.SetWorkingDir(t, target.Join("src"))
-
-	registry, port, err := registry(t, certificate, key)
-	require.NoError(t, err)
-
-	// t.Cleanup(func() {registry.})
-	require.NotNil(t, registry)
 	t.Setenv("asdfsd", "asdfadsf")
 
-	require.Equal(t, port, 7)
+	require.Equal(t, suite.address, "something")
 }
+
+func TestPusherSuite(t *testing.T) {
+	os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
+	suite.Run(t, new(PusherTestSuite))
+}
+
+// func TestFnContainerTransformerWithConfig(t *testing.T) {
+
+// 	kustomization := map[string]string{
+// 		"src/README.md": `# NO VALID FILE
+// `,
+// 	}
+// 	// clock := NewFakePassiveClock(time.Date(int(2025), time.July, int(28), int(20), int(56), int(0), int(0), time.UTC))
+
+// 	_, _, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+// 	loctest.SetWorkingDir(t, target.Join("src"))
+
+// 	registry, port, err := registry(t, certificate, key)
+// 	require.NoError(t, err)
+
+// 	// t.Cleanup(func() {registry.})
+// 	require.NotNil(t, registry)
+// 	t.Setenv("asdfsd", "asdfadsf")
+
+// 	require.Equal(t, port, 7)
+// }
