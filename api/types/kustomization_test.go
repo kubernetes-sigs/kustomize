@@ -89,7 +89,7 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 			want: &[]string{deprecatedVarsMessage},
 		},
 		{
-			name: "usingAPIVersionandKind",
+			name: "missingAPIVersionandKind",
 			k: Kustomization{
 				TypeMeta: TypeMeta{},
 			},
