@@ -81,6 +81,11 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
+
+	if len(resources) == 0 {
+		return fmt.Errorf("patchesJson6902 target not found for %s", p.Target.ResId)
+	}
+
 	for _, res := range resources {
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)
 
