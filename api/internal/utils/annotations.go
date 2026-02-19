@@ -15,6 +15,7 @@ const (
 	BuildAnnotationsRefBy             = konfig.ConfigAnnoDomain + "/refBy"
 	BuildAnnotationsGenBehavior       = konfig.ConfigAnnoDomain + "/generatorBehavior"
 	BuildAnnotationsGenAddHashSuffix  = konfig.ConfigAnnoDomain + "/needsHashSuffix"
+	BuildAnnotationsGenFileMergeMode  = konfig.ConfigAnnoDomain + "/fileMergeMode"
 
 	// the following are only for patches, to specify whether they can change names
 	// and kinds of their targets

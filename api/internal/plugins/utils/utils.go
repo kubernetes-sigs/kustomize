@@ -21,9 +21,10 @@ import (
 )
 
 const (
-	idAnnotation       = "kustomize.config.k8s.io/id"
-	HashAnnotation     = "kustomize.config.k8s.io/needs-hash"
-	BehaviorAnnotation = "kustomize.config.k8s.io/behavior"
+	idAnnotation            = "kustomize.config.k8s.io/id"
+	HashAnnotation          = "kustomize.config.k8s.io/needs-hash"
+	BehaviorAnnotation      = "kustomize.config.k8s.io/behavior"
+	FileMergeModeAnnotation = "kustomize.config.k8s.io/file-merge-mode"
 )
 
 func GoBin() string {
@@ -216,6 +217,7 @@ func UpdateResourceOptions(rm resmap.ResMap) (resmap.ResMap, error) {
 		// request it for each resource.
 		annotations := r.GetAnnotations()
 		behavior := annotations[BehaviorAnnotation]
+		fileMergeMode := annotations[FileMergeModeAnnotation]
 		var needsHash bool
 		if val, ok := annotations[HashAnnotation]; ok {
 			b, err := strconv.ParseBool(val)
@@ -228,6 +230,7 @@ func UpdateResourceOptions(rm resmap.ResMap) (resmap.ResMap, error) {
 		}
 		delete(annotations, HashAnnotation)
 		delete(annotations, BehaviorAnnotation)
+		delete(annotations, FileMergeModeAnnotation)
 		if err := r.SetAnnotations(annotations); err != nil {
 			return nil, err
 		}
@@ -235,6 +238,7 @@ func UpdateResourceOptions(rm resmap.ResMap) (resmap.ResMap, error) {
 			r.EnableHashSuffix()
 		}
 		r.SetBehavior(types.NewGenerationBehavior(behavior))
+		r.SetFileMergeMode(types.NewFileMergeMode(fileMergeMode))
 	}
 	return rm, nil
 }
