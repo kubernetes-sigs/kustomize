@@ -167,7 +167,15 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	root, err := filesys.ConfirmDir(fl.fSys, fl.root.Join(path))
+
+	// Check if the intended directory exists before allowing normalization
+	// to prevent silent resolution to ancestor directories from malformed paths
+	intendedPath := fl.root.Join(path)
+	if !fl.fSys.Exists(intendedPath) || !fl.fSys.IsDir(intendedPath) {
+		return nil, fmt.Errorf("directory '%s' does not exist", path)
+	}
+
+	root, err := filesys.ConfirmDir(fl.fSys, intendedPath)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "%s", ErrRtNotDir.Error())
 	}
