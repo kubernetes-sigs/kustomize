@@ -153,6 +153,12 @@ func TestPusherSuite(t *testing.T) {
 	suite.Run(t, new(PusherTestSuite))
 }
 
+func TestPusherNeedsTargets(t *testing.T) {
+	err := PushToOciRegistries(&PushOptions{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "At least one target is required.")
+}
+
 // func TestFnContainerTransformerWithConfig(t *testing.T) {
 
 // 	kustomization := map[string]string{
