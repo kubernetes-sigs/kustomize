@@ -81,6 +81,8 @@ func (o *Options) Run() error {
 			return errors.WrapPrefixf(err, "marshalling provenance to json")
 		}
 		fmt.Fprintln(o.Writer, string(marshalled))
+	default:
+		return fmt.Errorf("--output must be 'yaml' or 'json'")
 	}
 	return nil
 }
