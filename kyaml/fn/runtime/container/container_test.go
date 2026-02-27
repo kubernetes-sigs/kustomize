@@ -100,6 +100,32 @@ metadata:
 			UIDGID: "nobody",
 		},
 		{
+			name: "volume_mount_relative_path_not_converted",
+			functionConfig: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+`,
+			expectedArgs: []string{
+				"run",
+				"--rm",
+				"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+				"--network", "none",
+				"--user", "nobody",
+				"--security-opt=no-new-privileges",
+				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "volume", "myvol", "/local/"),
+				"--mount", fmt.Sprintf("type=%s,source=%s,target=%s,readonly", "bind", getAbsFilePath("relative", "bind", "path"), "/bind/"),
+			},
+			containerSpec: runtimeutil.ContainerSpec{
+				Image: "example.com:version",
+				StorageMounts: []runtimeutil.StorageMount{
+					{MountType: "volume", Src: "myvol", DstPath: "/local/"},
+					{MountType: "bind", Src: filepath.Join("relative", "bind", "path"), DstPath: "/bind/"},
+				},
+			},
+			UIDGID: "nobody",
+		},
+		{
 			name: "as current user",
 			functionConfig: `apiVersion: apps/v1
 kind: Deployment
