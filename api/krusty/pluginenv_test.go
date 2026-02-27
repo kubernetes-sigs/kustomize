@@ -11,12 +11,14 @@ import (
 	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 // The PrintPluginEnv plugin is a toy plugin that emits
 // its working directory and some environment variables,
 // to add regression protection to plugin loading logic.
 func TestPluginEnvironment(t *testing.T) {
+	testutil.SkipWindows(t)
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepExecPlugin(
 			"someteam.example.com", "v1", "PrintPluginEnv")

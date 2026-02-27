@@ -211,8 +211,9 @@ func newLoaderAtGitClone(
 	// check for this after cloning repo.
 	if !root.HasPrefix(repoSpec.CloneDir()) {
 		_ = cleaner()
-		return nil, fmt.Errorf("%q refers to directory outside of repo %q", repoSpec.AbsPath(),
-			repoSpec.CloneDir())
+		return nil, fmt.Errorf("%q refers to directory outside of repo %q",
+			filepath.ToSlash(repoSpec.AbsPath()),
+			filepath.ToSlash(repoSpec.CloneDir().String()))
 	}
 	return &FileLoader{
 		// Clones never allowed to escape root.
@@ -237,7 +238,7 @@ func (fl *FileLoader) errIfGitContainmentViolation(
 			"security; bases in kustomizations found in "+
 				"cloned git repos must be within the repo, "+
 				"but base '%s' is outside '%s'",
-			base, containingRepo.CloneDir())
+			filepath.ToSlash(base.String()), filepath.ToSlash(containingRepo.CloneDir().String()))
 	}
 	return nil
 }

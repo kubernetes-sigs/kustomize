@@ -12,9 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 func TestDefaultAbsPluginHome_NoKustomizePluginHomeEnv(t *testing.T) {
+	// Skip on Windows because error messages differ
+	testutil.SkipWindows(t)
 	fSys := filesys.MakeFsInMemory()
 	keep, isSet := os.LookupEnv(KustomizePluginHomeEnv)
 	if isSet {

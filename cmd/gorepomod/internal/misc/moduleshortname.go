@@ -4,7 +4,6 @@
 package misc
 
 import (
-	"path/filepath"
 	"strings"
 )
 
@@ -22,5 +21,6 @@ func (m ModuleShortName) Depth() int {
 	if m == ModuleAtTop || m == ModuleUnknown {
 		return 0
 	}
-	return strings.Count(string(m), string(filepath.Separator)) + 1
+	// Module paths always use forward slashes, regardless of OS
+	return strings.Count(string(m), "/") + 1
 }

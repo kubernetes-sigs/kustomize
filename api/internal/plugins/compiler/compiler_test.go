@@ -10,10 +10,13 @@ import (
 	. "sigs.k8s.io/kustomize/api/internal/plugins/compiler"
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 // Regression coverage over compiler behavior.
 func TestCompiler(t *testing.T) {
+	// Skip due to no compiler toolchain on Windows
+	testutil.SkipWindows(t)
 	srcRoot, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)

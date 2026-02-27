@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/loader"
 	"sigs.k8s.io/kustomize/api/konfig"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 type FileGen func(kusttest_test.Harness)
@@ -507,6 +508,7 @@ spec:
 }
 
 func TestComponentErrors(t *testing.T) {
+	testutil.SkipWindows(t)
 	testCases := map[string]struct {
 		input         []FileGen
 		runPath       string

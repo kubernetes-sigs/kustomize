@@ -1,6 +1,10 @@
 // Copyright 2022 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// all tests are only for posix-OS
+//go:build !windows
+// +build !windows
+
 package krusty_test
 
 import (
@@ -20,32 +24,6 @@ import (
 const (
 	repoRootDir = "../../"
 )
-
-const generateDeploymentDotSh = `#!/bin/sh
-
-cat <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-  labels:
-    app: nginx
-  annotations:
-    tshirt-size: small # this injects the resource reservations
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-EOF
-`
 
 const krmTransformerDotSh = `#!/bin/bash
 cat << EOF
@@ -504,6 +482,13 @@ type: Opaque
 
 func skipIfNoDocker(t *testing.T) {
 	t.Helper()
+
+	// Skip if KUSTOMIZE_DOCKER_E2E is set to false
+	if os.Getenv("KUSTOMIZE_DOCKER_E2E") == "false" {
+		t.Skip("skipping because KUSTOMIZE_DOCKER_E2E is set to false")
+	}
+
+	// Skip if docker binary is not found
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("skipping because docker binary wasn't found in PATH")
 	}
