@@ -70,7 +70,7 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use: "label",
-		Short: "Adds one or more commonLabels to " +
+		Short: "Adds one or more commonLabels or labels to " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
 		add label {labelKey1:labelValue1} {labelKey2:labelValue2}`,
