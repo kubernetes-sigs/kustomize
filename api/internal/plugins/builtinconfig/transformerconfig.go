@@ -6,6 +6,7 @@ package builtinconfig
 import (
 	"log"
 	"sort"
+	"strings"
 	"sync"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -80,8 +81,26 @@ func MakeDefaultConfig() *TransformerConfig {
 // MakeTransformerConfig returns a merger of custom config,
 // if any, with default config.
 func MakeTransformerConfig(
-	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {
+	ldr ifc.Loader, configurations []string) (*TransformerConfig, error) {
 	t1 := MakeDefaultConfig()
+	if len(configurations) == 0 {
+		return t1, nil
+	}
+	var paths []string
+	for _, configuration := range configurations {
+		if !strings.Contains(configuration, "\n") && !strings.Contains(configuration, "\r") {
+			paths = append(paths, configuration)
+			continue
+		}
+		config, err := makeTransformerConfigFromBytes([]byte(configuration))
+		if err != nil {
+			return nil, err
+		}
+		t1, err = t1.Merge(config)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if len(paths) == 0 {
 		return t1, nil
 	}
