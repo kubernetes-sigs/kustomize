@@ -4,8 +4,12 @@
 package resource
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
+	"sigs.k8s.io/kustomize/api/internal/validate"
+	"sigs.k8s.io/kustomize/api/kv"
+	"sigs.k8s.io/kustomize/kyaml/yaml/merge2"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
@@ -38,6 +42,7 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationsRefBy,
 	utils.BuildAnnotationsGenBehavior,
 	utils.BuildAnnotationsGenAddHashSuffix,
+	utils.BuildAnnotationsGenFileMergeMode,
 
 	kioutil.PathAnnotation,
 	kioutil.IndexAnnotation,
@@ -192,8 +197,28 @@ func (r *Resource) copyKustomizeSpecificFields(other *Resource) {
 	r.refVarNames = copyStringSlice(other.refVarNames)
 }
 
-func (r *Resource) MergeDataMapFrom(o *Resource) {
-	r.SetDataMap(mergeStringMaps(o.GetDataMap(), r.GetDataMap()))
+func (r *Resource) MergeDataMapFrom(o *Resource) error {
+	if r.FileMergeMode() != types.FileMergeModeFileContent {
+		r.SetDataMap(mergeStringMaps(o.GetDataMap(), r.GetDataMap()))
+		return nil
+	}
+	if r.GetKind() == "Secret" {
+		merged, err := decodeAndMergeSecretMaps(o.GetDataMap(), r.GetDataMap())
+		if err != nil {
+			return err
+		}
+		if err = r.PipeE(kyaml.Clear(kyaml.DataField)); err != nil {
+			return err
+		}
+		return r.LoadMapIntoSecretData(merged)
+	} else {
+		merged, err := mergeStringMapsContent(o.GetDataMap(), r.GetDataMap())
+		if err != nil {
+			return err
+		}
+		r.SetDataMap(merged)
+		return nil
+	}
 }
 
 func (r *Resource) MergeBinaryDataMapFrom(o *Resource) {
@@ -414,6 +439,18 @@ func (r *Resource) SetBehavior(behavior types.GenerationBehavior) {
 	}
 }
 
+func (r *Resource) FileMergeMode() types.FileMergeMode {
+	return types.NewFileMergeMode(r.GetAnnotations()[utils.BuildAnnotationsGenFileMergeMode])
+}
+
+func (r *Resource) SetFileMergeMode(mode types.FileMergeMode) {
+	annotations := r.GetAnnotations()
+	annotations[utils.BuildAnnotationsGenFileMergeMode] = mode.String()
+	if err := r.SetAnnotations(annotations); err != nil {
+		panic(err)
+	}
+}
+
 // NeedHashSuffix returns true if a resource content
 // hash should be appended to the name of the resource.
 func (r *Resource) NeedHashSuffix() bool {
@@ -533,6 +570,100 @@ func mergeStringMaps(maps ...map[string]string) map[string]string {
 		}
 	}
 	return result
+}
+
+func mergeStringMapsContent(maps ...map[string]string) (map[string]string, error) {
+	result := make(map[string]string)
+
+	for _, m := range maps {
+		for key, patch := range m {
+			old, ok := result[key]
+			if !ok {
+				result[key] = patch
+				continue
+			}
+
+			mergeContent := mergeKVContent
+
+			if strings.HasSuffix(key, ".yaml") || strings.HasSuffix(key, ".yml") {
+				mergeContent = mergeYamlContent
+			}
+
+			merged, err := mergeContent(old, patch)
+			if err != nil {
+				return nil, fmt.Errorf("cannot merge file: %q error: %w", key, err)
+			}
+
+			result[key] = merged
+		}
+	}
+
+	return result, nil
+}
+
+func decodeAndMergeSecretMaps(maps ...map[string]string) (map[string]string, error) {
+	decodedMaps := make([]map[string]string, len(maps))
+	for i, m := range maps {
+		decoded := make(map[string]string)
+		for key, base64Value := range m {
+			decodedBytes, err := base64.StdEncoding.DecodeString(base64Value)
+			if err != nil {
+				return nil, fmt.Errorf("cannot decode base64 for key %q: %w", key, err)
+			}
+			decoded[key] = string(decodedBytes)
+		}
+		decodedMaps[i] = decoded
+	}
+
+	return mergeStringMapsContent(decodedMaps...)
+}
+
+func mergeYamlContent(dst string, src string) (string, error) {
+	return merge2.MergeStrings(src, dst, false, kyaml.MergeOptions{
+		ListIncreaseDirection: kyaml.MergeOptionsListPrepend,
+	})
+}
+
+func mergeKVContent(dst string, src string) (string, error) {
+	loader := kv.NewLoader(nil, validate.NewFieldValidator())
+	dstPairs, err := loader.LoadLines(dst)
+	if err != nil {
+		return "", err
+	}
+	srcPairs, err := loader.LoadLines(src)
+	if err != nil {
+		return "", err
+	}
+	mergedPairs := mergePairs(dstPairs, srcPairs)
+
+	var merged strings.Builder
+	for _, p := range mergedPairs {
+		merged.WriteString(fmt.Sprintf("%s=%s\n", p.Key, p.Value))
+	}
+
+	return merged.String(), nil
+}
+
+// merging on slices instead of maps preserves order, which is especially important in
+// the context of config maps due to hashing
+func mergePairs(dst, src []types.Pair) []types.Pair {
+	seen := make(map[string]int)
+	for i, p := range dst {
+		seen[p.Key] = i
+	}
+
+	merged := make([]types.Pair, len(dst))
+	copy(merged, dst)
+
+	for _, p := range src {
+		if idx, exists := seen[p.Key]; exists {
+			merged[idx] = p
+		} else {
+			merged = append(merged, p)
+		}
+	}
+
+	return merged
 }
 
 func mergeStringMapsWithBuildAnnotations(maps ...map[string]string) map[string]string {

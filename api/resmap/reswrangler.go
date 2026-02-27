@@ -589,7 +589,9 @@ func (m *resWrangler) appendReplaceOrMerge(res *resource.Resource) error {
 				return err
 			}
 			res.CopyMergeMetaDataFieldsFrom(old)
-			res.MergeDataMapFrom(old)
+			if err := res.MergeDataMapFrom(old); err != nil {
+				return err
+			}
 			res.MergeBinaryDataMapFrom(old)
 			if orig != nil {
 				res.SetOrigin(orig)

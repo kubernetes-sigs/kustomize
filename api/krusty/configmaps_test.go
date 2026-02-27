@@ -688,6 +688,72 @@ metadata:
 }
 
 // Regression test for https://github.com/kubernetes-sigs/kustomize/issues/5047
+func TestConfigMapFileMergeContent(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+generatorOptions:
+  fileMerge:
+    mode: content
+configMapGenerator:
+- name: app-config
+  files:
+  - config.properties
+  - config.yaml
+`)
+	th.WriteF("base/config.properties", `
+base.key=base-value
+override.key=base-override
+`)
+	th.WriteF("base/config.yaml", `
+database:
+  host: localhost
+  port: 5432
+features:
+  auth: true
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: app-config
+  behavior: merge
+  files:
+  - config.properties
+  - config.yaml
+`)
+	th.WriteF("overlay/config.properties", `
+overlay.key=overlay-value
+override.key=overlay-override
+`)
+	th.WriteF("overlay/config.yaml", `
+database:
+  host: prod.example.com
+  timeout: 30
+features:
+  logging: true
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  config.properties: |
+    base.key=base-value
+    override.key=overlay-override
+    overlay.key=overlay-value
+  config.yaml: |
+    database:
+      host: prod.example.com
+      port: 5432
+      timeout: 30
+    features:
+      auth: true
+      logging: true
+kind: ConfigMap
+metadata:
+  name: app-config-29b5b26k97
+`)
+}
+
 func TestPrefixSuffix2(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("kustomization.yaml", `

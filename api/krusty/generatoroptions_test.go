@@ -45,6 +45,49 @@ type: Opaque
 `)
 }
 
+func TestSecretFileMergeContent(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+generatorOptions:
+  fileMerge:
+    mode: content
+secretGenerator:
+- name: app-secret
+  files:
+  - credentials.properties
+`)
+	th.WriteF("base/credentials.properties", `
+db.user=baseuser
+db.password=basepass
+api.key=basekey
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+secretGenerator:
+- name: app-secret
+  behavior: merge
+  files:
+  - credentials.properties
+`)
+	th.WriteF("overlay/credentials.properties", `
+db.password=overlaypass
+api.url=https://api.example.com
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  credentials.properties: |
+    ZGIudXNlcj1iYXNldXNlcgpkYi5wYXNzd29yZD1vdmVybGF5cGFzcwphcGkua2V5PWJhc2
+    VrZXkKYXBpLnVybD1odHRwczovL2FwaS5leGFtcGxlLmNvbQo=
+kind: Secret
+metadata:
+  name: app-secret-c2798hm7fg
+type: Opaque
+`)
+}
+
 func TestGeneratorOptionsWithBases(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `

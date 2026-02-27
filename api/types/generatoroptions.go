@@ -3,6 +3,11 @@
 
 package types
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // GeneratorOptions modify behavior of all ConfigMap and Secret generators.
 type GeneratorOptions struct {
 	// Labels to add to all generated resources.
@@ -18,6 +23,50 @@ type GeneratorOptions struct {
 
 	// Immutable if true add to all generated resources.
 	Immutable bool `json:"immutable,omitempty" yaml:"immutable,omitempty"`
+
+	FileMerge *FileMergeOptions `json:"fileMerge,omitempty" yaml:"fileMerge,omitempty"`
+}
+
+type FileMergeOptions struct {
+	Mode FileMergeMode `json:"mode,omitempty" yaml:"mode,omitempty"`
+}
+
+type FileMergeMode string
+
+const (
+	FileMergeModeUnspecified FileMergeMode = "unspecified"
+	FileMergeModeFiles       FileMergeMode = "files"
+	FileMergeModeFileContent FileMergeMode = "content"
+)
+
+func NewFileMergeMode(s string) FileMergeMode {
+	switch s {
+	case "files":
+		return FileMergeModeFiles
+	case "content":
+		return FileMergeModeFileContent
+	default:
+		return FileMergeModeUnspecified
+	}
+}
+
+func (m *FileMergeMode) String() string {
+	return string(*m)
+}
+
+func (m *FileMergeMode) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	switch s {
+	case "files", "content", "":
+		*m = NewFileMergeMode(s)
+		return nil
+	default:
+		return fmt.Errorf("invalid file merge mode: %s", s)
+	}
 }
 
 // MergeGlobalOptionsIntoLocal merges two instances of GeneratorOptions.
@@ -48,6 +97,15 @@ func MergeGlobalOptionsIntoLocal(
 	if globalOpts.Immutable {
 		localOpts.Immutable = true
 	}
+
+	if localOpts.FileMerge == nil {
+		localOpts.FileMerge = globalOpts.FileMerge
+	} else if globalOpts.FileMerge != nil {
+		if localOpts.FileMerge.Mode == FileMergeModeUnspecified {
+			localOpts.FileMerge.Mode = globalOpts.FileMerge.Mode
+		}
+	}
+
 	return localOpts
 }
 
