@@ -246,6 +246,14 @@ type MergeOptions struct {
 	// ListIncreaseDirection indicates should merge function prepend the items from
 	// source list to destination or append.
 	ListIncreaseDirection MergeOptionsListIncreaseDirection
+
+	// AllowKindChange if set to true will allow the merge to replace a field with
+	// a different type. For example, if the destination has a map and the source
+	// has a list (or scalar), the source will replace the destination instead of
+	// returning an error. This is useful for merging Helm values where the chart's
+	// values.yaml may have a placeholder type that needs to be overridden.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/5766
+	AllowKindChange bool
 }
 
 // Since ObjectMeta and TypeMeta are stable, we manually create DeepCopy funcs for ResourceMeta and ObjectMeta.
