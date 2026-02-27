@@ -37,6 +37,9 @@ type ByteReadWriter struct {
 	// the Resources, otherwise they will be cleared.
 	KeepReaderAnnotations bool
 
+	// PreserveInitialDocSep if true adds kioutil.InitialDocSepAnnotation to the first resource
+	PreserveInitialDocSep bool
+
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
 
@@ -63,6 +66,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
 		Reader:                rw.Reader,
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+		PreserveInitialDocSep: rw.PreserveInitialDocSep,
 		PreserveSeqIndent:     rw.PreserveSeqIndent,
 		WrapBareSeqNode:       rw.WrapBareSeqNode,
 	}
@@ -160,6 +164,9 @@ type ByteReader struct {
 	// AnchorsAweigh set to true attempts to replace all YAML anchor aliases
 	// with their definitions (anchor values) immediately after the read.
 	AnchorsAweigh bool
+
+	// PreserveInitialDocSep if true adds the kioutil.PreserveInitialDocSep annotation to the first resource
+	PreserveInitialDocSep bool
 }
 
 var _ Reader = &ByteReader{}
@@ -196,8 +203,8 @@ func splitDocuments(s string) ([]string, error) {
 }
 
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
-	if r.PreserveSeqIndent && r.OmitReaderAnnotations {
-		return nil, errors.Errorf(`"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
+	if (r.PreserveSeqIndent || r.PreserveInitialDocSep) && r.OmitReaderAnnotations {
+		return nil, errors.Errorf(`"PreserveSeqIndent" and "PreserveInitialDocSep" options add a reader annotation, please set "OmitReaderAnnotations" to false`)
 	}
 
 	output := ResourceNodeSlice{}
@@ -319,19 +326,9 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 		r.SetAnnotations = map[string]string{}
 	}
 	if !r.OmitReaderAnnotations {
-		err := kioutil.CopyLegacyAnnotations(n)
+		err := r.setResourceAnnotations(n, index, originalYAML)
 		if err != nil {
 			return nil, err
-		}
-		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
-		r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
-
-		if r.PreserveSeqIndent {
-			// derive and add the seqindent annotation
-			seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
-			if seqIndentStyle != "" {
-				r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
-			}
 		}
 	}
 	var keys []string
@@ -346,4 +343,28 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 		}
 	}
 	return n, nil
+}
+
+func (r *ByteReader) setResourceAnnotations(n *yaml.RNode, index int, originalYAML string) error {
+	err := kioutil.CopyLegacyAnnotations(n)
+	if err != nil {
+		return err
+	}
+	r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
+	r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
+
+	if r.PreserveSeqIndent {
+		// derive and add the seqindent annotation
+		seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
+		if seqIndentStyle != "" {
+			r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
+		}
+	}
+	if index == 0 && r.PreserveInitialDocSep &&
+		strings.HasPrefix(originalYAML, "---") {
+		r.SetAnnotations[kioutil.InitialDocSepAnnotation] = "true"
+	} else {
+		delete(r.SetAnnotations, kioutil.InitialDocSepAnnotation)
+	}
+	return nil
 }
