@@ -25,6 +25,10 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 		{
 			name: "using_bases",
 			k: Kustomization{
+				TypeMeta: TypeMeta{
+					APIVersion: "kustomize.config.k8s.io/v1beta1",
+					Kind:       "Kustomization",
+				},
 				Bases: []string{"base"},
 			},
 			want: &[]string{deprecatedBaseWarningMessage},
@@ -32,6 +36,10 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 		{
 			name: "using_CommonLabels",
 			k: Kustomization{
+				TypeMeta: TypeMeta{
+					APIVersion: "kustomize.config.k8s.io/v1beta1",
+					Kind:       "Kustomization",
+				},
 				CommonLabels: map[string]string{},
 			},
 			want: &[]string{deprecatedCommonLabelsWarningMessage},
@@ -39,6 +47,10 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 		{
 			name: "using_ImageTags",
 			k: Kustomization{
+				TypeMeta: TypeMeta{
+					APIVersion: "kustomize.config.k8s.io/v1beta1",
+					Kind:       "Kustomization",
+				},
 				ImageTags: []Image{},
 			},
 			want: &[]string{deprecatedImageTagsWarningMessage},
@@ -46,6 +58,10 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 		{
 			name: "usingPatchesJson6902",
 			k: Kustomization{
+				TypeMeta: TypeMeta{
+					APIVersion: "kustomize.config.k8s.io/v1beta1",
+					Kind:       "Kustomization",
+				},
 				PatchesJson6902: []Patch{},
 			},
 			want: &[]string{deprecatedPatchesJson6902Message},
@@ -53,6 +69,10 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 		{
 			name: "usingPatchesStrategicMerge",
 			k: Kustomization{
+				TypeMeta: TypeMeta{
+					APIVersion: "kustomize.config.k8s.io/v1beta1",
+					Kind:       "Kustomization",
+				},
 				PatchesStrategicMerge: []PatchStrategicMerge{},
 			},
 			want: &[]string{deprecatedPatchesStrategicMergeMessage},
@@ -60,9 +80,20 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 		{
 			name: "usingVar",
 			k: Kustomization{
+				TypeMeta: TypeMeta{
+					APIVersion: "kustomize.config.k8s.io/v1beta1",
+					Kind:       "Kustomization",
+				},
 				Vars: []Var{},
 			},
 			want: &[]string{deprecatedVarsMessage},
+		},
+		{
+			name: "missingAPIVersionandKind",
+			k: Kustomization{
+				TypeMeta: TypeMeta{},
+			},
+			want: &[]string{deprecationWarningAPIVersionandKind},
 		},
 		{
 			name: "usingAll",
@@ -73,6 +104,7 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 				PatchesJson6902:       []Patch{},
 				PatchesStrategicMerge: []PatchStrategicMerge{},
 				Vars:                  []Var{},
+				TypeMeta:              TypeMeta{},
 			},
 			want: &[]string{
 				deprecatedBaseWarningMessage,
@@ -81,6 +113,7 @@ func TestKustomization_CheckDeprecatedFields(t *testing.T) {
 				deprecatedPatchesJson6902Message,
 				deprecatedPatchesStrategicMergeMessage,
 				deprecatedVarsMessage,
+				deprecationWarningAPIVersionandKind,
 			},
 		},
 	}

@@ -191,6 +191,7 @@ const (
 	deprecatedPatchesStrategicMergeMessage     = "# Warning: 'patchesStrategicMerge' is deprecated. Please use 'patches' instead." + " " + deprecatedWarningToRunEditFix
 	deprecatedVarsMessage                      = "# Warning: 'vars' is deprecated. Please use 'replacements' instead." + " " + deprecatedWarningToRunEditFixExperimential
 	deprecatedCommonLabelsWarningMessage       = "# Warning: 'commonLabels' is deprecated. Please use 'labels' instead." + " " + deprecatedWarningToRunEditFix
+	deprecationWarningAPIVersionandKind        = "# Warning: 'apiVersion' and 'kind' fields are required in future releases. Please set it explicitly."
 )
 
 // CheckDeprecatedFields check deprecated field is used or not.
@@ -213,6 +214,9 @@ func (k *Kustomization) CheckDeprecatedFields() *[]string {
 	}
 	if k.Vars != nil {
 		warningMessages = append(warningMessages, deprecatedVarsMessage)
+	}
+	if k.APIVersion == "" || k.Kind == "" {
+		warningMessages = append(warningMessages, deprecationWarningAPIVersionandKind)
 	}
 	return &warningMessages
 }
