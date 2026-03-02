@@ -1129,7 +1129,7 @@ spec:
 			expectedAnnoValue: "true",
 		},
 		{
-			name: "read with initial document separator after commments",
+			name: "read with initial document separator after comments",
 			input: `#a comment
 ---
 apiVersion: apps/v1
