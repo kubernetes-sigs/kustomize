@@ -4,7 +4,6 @@
 package kio_test
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
@@ -443,7 +442,7 @@ c: d
 		tc := testCases[i]
 		t.Run(tc.name, func(t *testing.T) {
 			r := tc.instance
-			r.Reader = bytes.NewBufferString(tc.input)
+			r.Reader = strings.NewReader(tc.input)
 			nodes, err := r.Read()
 			if tc.err != "" {
 				if !assert.EqualError(t, err, tc.err) {
@@ -885,7 +884,7 @@ data:
 		rNodes, err := (&ByteReader{
 			OmitReaderAnnotations: true,
 			AnchorsAweigh:         false,
-			Reader:                bytes.NewBuffer([]byte(input)),
+			Reader:                strings.NewReader(input),
 		}).Read()
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(rNodes))
@@ -947,7 +946,7 @@ data:
 		rNodes, err := (&ByteReader{
 			OmitReaderAnnotations: true,
 			AnchorsAweigh:         true,
-			Reader:                bytes.NewBuffer([]byte(input)),
+			Reader:                strings.NewReader(input),
 		}).Read()
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(rNodes))
@@ -1090,7 +1089,7 @@ env:
 			rNodes, err := (&ByteReader{
 				OmitReaderAnnotations: tc.OmitReaderAnnotations,
 				PreserveSeqIndent:     true,
-				Reader:                bytes.NewBuffer([]byte(tc.input)),
+				Reader:                strings.NewReader(tc.input),
 			}).Read()
 			if tc.err != "" {
 				require.Error(t, err)
@@ -1176,7 +1175,7 @@ spec:
 			rNodes, err := (&ByteReader{
 				OmitReaderAnnotations: tc.OmitReaderAnnotations,
 				PreserveInitialDocSep: true,
-				Reader:                bytes.NewBuffer([]byte(tc.input)),
+				Reader:                strings.NewReader(tc.input),
 			}).Read()
 			if tc.err != "" {
 				require.Error(t, err)
