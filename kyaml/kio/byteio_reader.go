@@ -348,7 +348,7 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 func (r *ByteReader) setResourceAnnotations(n *yaml.RNode, index int, originalYAML string) error {
 	err := kioutil.CopyLegacyAnnotations(n)
 	if err != nil {
-		return err
+		return fmt.Errorf("copying legacy annotations failed: %w", err)
 	}
 	r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
 	r.SetAnnotations[kioutil.LegacyIndexAnnotation] = fmt.Sprintf("%d", index)
