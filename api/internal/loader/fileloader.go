@@ -147,6 +147,26 @@ func newLoaderAtConfirmedDir(
 	}
 }
 
+// hasInnerDotDot reports whether path contains a ".." after a non-".."
+// component, which causes filepath.Clean to silently absorb preceding
+// segments (e.g. "../../base - ../../shared/prod" becomes "../../shared/prod").
+func hasInnerDotDot(path string) bool {
+	pastPrefix := false
+	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
+		if part == "" || part == "." {
+			continue
+		}
+		if part == ".." {
+			if pastPrefix {
+				return true
+			}
+			continue
+		}
+		pastPrefix = true
+	}
+	return false
+}
+
 // New returns a new Loader, rooted relative to current loader,
 // or rooted in a temp directory holding a git repo clone.
 func (fl *FileLoader) New(path string) (ifc.Loader, error) {
@@ -166,6 +186,13 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
+	}
+	if hasInnerDotDot(path) {
+		return nil, fmt.Errorf(
+			"path %q is ambiguous: resolves to %q after normalization, "+
+				"which is likely not the intended target; check for YAML "+
+				"indentation errors in your kustomization file",
+			path, filepath.Clean(path))
 	}
 	root, err := filesys.ConfirmDir(fl.fSys, fl.root.Join(path))
 	if err != nil {
