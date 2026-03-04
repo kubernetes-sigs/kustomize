@@ -5,7 +5,7 @@ go 1.25
 tool sigs.k8s.io/kustomize/cmd/k8scopy
 
 require (
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	sigs.k8s.io/yaml v1.5.0
 )
 
