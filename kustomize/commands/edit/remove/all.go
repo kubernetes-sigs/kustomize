@@ -28,6 +28,10 @@ func NewCmdRemove(
 	# Removes one or more secret from the kustomization file
 	kustomize edit remove secret {name1},{name2}
 
+	# Removes one or more components from the kustomization file
+	kustomize edit remove component {filepath} {filepath}
+	kustomize edit remove component {pattern}
+
 	# Removes one or more patches from the kustomization file
 	kustomize edit remove patch --path {filepath} --group {target group name} --version {target version}
 
@@ -46,6 +50,7 @@ func NewCmdRemove(
 		newCmdRemoveConfigMap(fSys),
 		newCmdRemoveSecret(fSys),
 		newCmdRemoveResource(fSys),
+		newCmdRemoveComponent(fSys),
 		newCmdRemoveLabel(fSys, v.MakeLabelNameValidator()),
 		newCmdRemoveAnnotation(fSys, v.MakeAnnotationNameValidator()),
 		newCmdRemovePatch(fSys),
