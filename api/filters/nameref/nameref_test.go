@@ -225,6 +225,290 @@ map:
 				},
 			},
 		},
+		"no name in mapping is skipped": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  notName: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  notName: oldName
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"no name in mapping is skipped with multiple candidates": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  notName: oldName
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+---
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName2
+`,
+			originalNames: []string{"oldName", "oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  notName: oldName
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		// Regression test: a scalar value that doesn't match any candidate's
+		// previous name is left unchanged by selectReferral (returns nil, nil).
+		// This verifies existing behavior is preserved after the skip changes.
+		"scalar value not matching any candidate is unchanged": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+spec:
+  config: true
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+spec:
+  config: true
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "spec/config"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"yaml anchor alias via anchor field": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: &anchor oldName
+  alias: *anchor
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: newName
+  alias: *anchor
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"yaml anchor alias via alias field": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: &anchor oldName
+  alias: *anchor
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			// Resolving the alias dereferences to the anchor node,
+			// so updating through the alias also updates the anchor.
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+ref:
+  name: newName
+  alias: *anchor
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/alias"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"sequence element mapping without name field is skipped": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+seq:
+- nested:
+    deep: value
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+seq:
+- nested:
+    deep: value
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "seq"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"sequence with nested sequence element is skipped": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+seq:
+- - nestedItem1
+  - nestedItem2
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+seq:
+- - nestedItem1
+  - nestedItem2
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "seq"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"sequence with alias element resolves through anchor": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+seq:
+- &anchor oldName
+- *anchor
+`,
+			candidates: `
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+seq:
+- newName
+- *anchor
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "seq"},
+				ReferralTarget: resid.Gvk{
+					Group:   "apps",
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -288,37 +572,6 @@ metadata:
 			referrerFinal: "",
 			filter: Filter{
 				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
-				ReferralTarget: resid.Gvk{
-					Group:   "apps",
-					Version: "v1",
-					Kind:    "Secret",
-				},
-			},
-		},
-		"no name": {
-			referrerOriginal: `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dep
-ref:
-  notName: oldName
-`,
-			candidates: `
-apiVersion: apps/v1
-kind: Secret
-metadata:
-  name: newName
----
-apiVersion: apps/v1
-kind: Secret
-metadata:
-  name: newName2
-`,
-			originalNames: []string{"oldName", "oldName"},
-			referrerFinal: "",
-			filter: Filter{
-				NameFieldToUpdate: types.FieldSpec{Path: "ref"},
 				ReferralTarget: resid.Gvk{
 					Group:   "apps",
 					Version: "v1",

@@ -5,6 +5,7 @@ package nameref
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
@@ -87,8 +88,22 @@ func (f Filter) set(node *yaml.RNode) error {
 			setScalarFn:  f.setScalar,
 			setMappingFn: f.setMapping,
 		}, node)
+	case yaml.AliasNode:
+		// YAML spec forbids circular aliases; go-yaml parser guarantees
+		// that Alias chains are acyclic, so recursion always terminates.
+		if node.YNode().Alias == nil {
+			return nil
+		}
+		return f.set(yaml.NewRNode(node.YNode().Alias))
 	default:
-		return fmt.Errorf("node must be a scalar, sequence or map")
+		// Skip nodes of unexpected kinds rather than failing.
+		// This can happen when different resources share the same
+		// key path but with different YAML structures.
+		log.Printf(
+			"nameReference: skipping unexpected node kind %d at path '%s' in %s"+
+				" (if this is unexpected, check your nameReference fieldSpecs)",
+			node.YNode().Kind, f.NameFieldToUpdate.Path, f.Referrer.CurId().String())
+		return nil
 	}
 }
 
@@ -107,11 +122,17 @@ func (f Filter) setMapping(node *yaml.RNode) error {
 		return errors.WrapPrefixf(err, "trying to match 'name' field")
 	}
 	if nameNode == nil {
-		// This is a _configuration_ error; the field path
-		// specified in NameFieldToUpdate.Path doesn't resolve
-		// to a map with a 'name' field, so we have no idea what
-		// field to update with a new name.
-		return fmt.Errorf("path config error; no 'name' field in node")
+		// The field path doesn't resolve to a map with a 'name'
+		// field, so we can't update a name reference here.
+		// This is expected when different resources share the same
+		// key path but with different structures (e.g. overlapping
+		// keys from different Helm charts or CRDs).
+		// Log for debugging — could also indicate a misconfigured fieldSpec.
+		log.Printf(
+			"nameReference: skipping mapping without 'name' field at path '%s' in %s"+
+				" (if this is unexpected, check your nameReference fieldSpecs)",
+			f.NameFieldToUpdate.Path, f.Referrer.CurId().String())
+		return nil
 	}
 	candidates, err := f.filterMapCandidatesByNamespace(node)
 	if err != nil {

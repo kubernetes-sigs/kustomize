@@ -5,6 +5,7 @@ package nameref
 
 import (
 	"fmt"
+	"log"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -36,9 +37,19 @@ func (sf seqFilter) Filter(node *yaml.RNode) (*yaml.RNode, error) {
 		// string field containing the name
 		err := sf.setMappingFn(node)
 		return node, err
+	case yaml.AliasNode:
+		// YAML spec forbids circular aliases; go-yaml parser guarantees
+		// that Alias chains are acyclic, so recursion always terminates.
+		if node.YNode().Alias == nil {
+			return node, nil
+		}
+		return sf.Filter(yaml.NewRNode(node.YNode().Alias))
 	default:
-		return node, fmt.Errorf(
-			"%#v is expected to be either a string or a map of string", node)
+		// Skip nodes of unexpected kinds rather than failing.
+		log.Printf("nameReference: skipping unexpected node kind %d in sequence element"+
+			" (if this is unexpected, check your nameReference fieldSpecs)",
+			node.YNode().Kind)
+		return node, nil
 	}
 }
 

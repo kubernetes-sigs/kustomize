@@ -477,54 +477,67 @@ func TestNameReferenceHappyRun(t *testing.T) {
 	}
 }
 
+// TestNameReferenceUnexpectedStructureIsSkipped verifies that resources with
+// unexpected YAML structures (e.g. a nested sequence or a mapping without a
+// 'name' field) in a nameReference path are gracefully skipped rather than
+// causing errors.
+func TestNameReferenceUnexpectedStructureIsSkipped(t *testing.T) {
+	tests := []resmap.ResMap{
+		// resourceNames contains a nested empty list — the sequence
+		// element is a SequenceNode, which is skipped.
+		resmaptest_test.NewRmBuilderDefault(t).Add(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRole",
+				"metadata": map[string]interface{}{
+					"name": "cr",
+				},
+				"rules": []interface{}{
+					map[string]interface{}{
+						"resources": []interface{}{
+							"secrets",
+						},
+						"resourceNames": []interface{}{
+							[]interface{}{},
+						},
+					},
+				},
+			}).ResMap(),
+		// resourceNames is a mapping without a 'name' field — skipped.
+		resmaptest_test.NewRmBuilderDefault(t).Add(
+			map[string]interface{}{
+				"apiVersion": "rbac.authorization.k8s.io/v1",
+				"kind":       "ClusterRole",
+				"metadata": map[string]interface{}{
+					"name": "cr",
+				},
+				"rules": []interface{}{
+					map[string]interface{}{
+						"resources": []interface{}{
+							"secrets",
+						},
+						"resourceNames": map[string]interface{}{
+							"foo": "bar",
+						},
+					},
+				},
+			}).ResMap(),
+	}
+
+	nrt := newNameReferenceTransformer(builtinconfig.MakeDefaultConfig().NameReference)
+	for i, resMap := range tests {
+		err := nrt.Transform(resMap)
+		if err != nil {
+			t.Fatalf("test %d: unexpected error: %v", i, err)
+		}
+	}
+}
+
 func TestNameReferenceUnhappyRun(t *testing.T) {
 	tests := []struct {
 		resMap      resmap.ResMap
 		expectedErr string
 	}{
-		{
-			resMap: resmaptest_test.NewRmBuilderDefault(t).Add(
-				map[string]interface{}{
-					"apiVersion": "rbac.authorization.k8s.io/v1",
-					"kind":       "ClusterRole",
-					"metadata": map[string]interface{}{
-						"name": "cr",
-					},
-					"rules": []interface{}{
-						map[string]interface{}{
-							"resources": []interface{}{
-								"secrets",
-							},
-							"resourceNames": []interface{}{
-								[]interface{}{},
-							},
-						},
-					},
-				}).ResMap(),
-			expectedErr: "is expected to be"},
-		{
-			resMap: resmaptest_test.NewRmBuilderDefault(t).Add(
-				map[string]interface{}{
-					"apiVersion": "rbac.authorization.k8s.io/v1",
-					"kind":       "ClusterRole",
-					"metadata": map[string]interface{}{
-						"name": "cr",
-					},
-					"rules": []interface{}{
-						map[string]interface{}{
-							"resources": []interface{}{
-								"secrets",
-							},
-							"resourceNames": map[string]interface{}{
-								"foo": "bar",
-							},
-						},
-					},
-				}).ResMap(),
-			expectedErr: `updating name reference in 'rules/resourceNames' field of 'ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]': ` +
-				`considering field 'rules/resourceNames' of object ClusterRole.v1.rbac.authorization.k8s.io/cr.[noNs]: visit traversal on ` +
-				`path: [resourceNames]: path config error; no 'name' field in node`,
-		},
 		{
 			// When targeting a map reference, we need to update both name and namespace, so multiple
 			// possible referral targets with different namespaces should not be considered identical.

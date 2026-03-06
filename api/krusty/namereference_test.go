@@ -787,6 +787,102 @@ spec:
 `)
 }
 
+// Overlapping keys from different resources should not cause errors
+// when nameReference path resolves to a different YAML node kind
+// than expected. This reproduces the scenario where Helm charts
+// share key names but with different value structures.
+// The Deployment's scalar spec/config should be updated to the
+// prefixed ConfigMap name, while the CRD's mapping spec/config
+// should be left unchanged.
+func TestNameReferenceOverlappingKeysDifferentStructure(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- deployment.yaml
+- configmap.yaml
+- crd.yaml
+namePrefix: test-
+configurations:
+- nameref.yaml
+`)
+	// Custom nameReference config without kind restriction -
+	// applies globally to all resources
+	th.WriteF("nameref.yaml", `
+nameReference:
+- kind: ConfigMap
+  fieldSpecs:
+  - path: spec/config
+`)
+	// Standard Deployment where spec/config is a scalar (name of ConfigMap)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  config: my-configmap
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+`)
+	// ConfigMap that is the referral target
+	th.WriteF("configmap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-configmap
+data:
+  key: value
+`)
+	// CRD where spec/config is a mapping, not a scalar.
+	// Without the fix, this would fail with
+	// "path config error; no 'name' field in node"
+	// because the nameReference filter expects a mapping with
+	// a 'name' field but finds {retries, timeout} instead.
+	th.WriteF("crd.yaml", `
+apiVersion: custom.io/v1
+kind: MyCustomResource
+metadata:
+  name: myresource
+spec:
+  config:
+    retries: 3
+    timeout: 30s
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-myapp
+spec:
+  config: test-my-configmap
+  template:
+    spec:
+      containers:
+      - image: myapp:latest
+        name: app
+---
+apiVersion: v1
+data:
+  key: value
+kind: ConfigMap
+metadata:
+  name: test-my-configmap
+---
+apiVersion: custom.io/v1
+kind: MyCustomResource
+metadata:
+  name: test-myresource
+spec:
+  config:
+    retries: 3
+    timeout: 30s
+`)
+}
+
 func TestBackReferenceAdmissionPolicy(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
