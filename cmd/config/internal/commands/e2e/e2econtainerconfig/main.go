@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -16,6 +17,9 @@ import (
 
 // Config defines the ResourceList.functionConfig schema.
 type Config struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
 	// Data contains configuration data for the Example
 	// Nest values under Data so that the function can accept a ConfigMap as its
 	// functionConfig (`run` generates a ConfigMap for the functionConfig when run with --)
