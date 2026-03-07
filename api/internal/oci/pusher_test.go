@@ -4,6 +4,7 @@
 package oci
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -11,6 +12,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -220,6 +222,29 @@ func TestPusherNeedsValidMetaIfSet(t *testing.T) {
 			require.Contains(t, err.Error(), "kustomization has field errors")
 		})
 	}
+}
+
+func TestLogsDeprecatedFields(t *testing.T) {
+
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+
+	pushOptions := PushOptions{
+		kustomization: &types.Kustomization{
+			Namespace:    "somethingnonempty",
+			CommonLabels: map[string]string{"sdfsd": "sdfsf"},
+			Vars:         []types.Var{{Name: "sdf"}},
+		},
+		targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.NoError(t, err)
+	require.Contains(t, buf.String(), "Warning: 'commonLabels' is deprecated.")
+	require.Contains(t, buf.String(), "Warning: 'vars' is deprecated.")
 }
 
 // func TestFnContainerTransformerWithConfig(t *testing.T) {
