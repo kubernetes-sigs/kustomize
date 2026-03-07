@@ -230,33 +230,34 @@ func TestLoaderRejectsMalformedPath(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "ambiguous")
 
-	// Same structural problem without the YAML artifact.
-	_, err = l1.New("a/b/../../other")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "ambiguous")
 }
 
-func TestHasInnerDotDot(t *testing.T) {
+func TestHasAmbiguousPathSegment(t *testing.T) {
 	cases := map[string]bool{
-		// Safe: leading ".." only
+		// Safe: ".." only as standalone segments
 		"../base":           false,
 		"../../shared/prod": false,
 		"..":                false,
-		// Safe: no ".." at all
-		"foo/bar":      false,
-		"foo/bar/":     false,
-		"foo//bar":     false,
-		"./foo/bar":    false,
-		"https://root": false,
-		// Dangerous: inner ".." absorbs preceding components
-		"../../base - ../../shared/prod": true,
-		"a/b/../../c":                    true,
-		"foo/../bar":                     true,
-		"a/..":                           true,
+		"foo/bar":           false,
+		"foo/bar/":          false,
+		"foo//bar":          false,
+		"./foo/bar":         false,
+		"https://root":      false,
+		"foo/../bar":        false,
+		"a/b/../../c":       false,
+		"a/..":              false,
+		// Winding paths are legitimate (used by localizer)
+		"delta/../../../../a/b/../../alpha/beta/sibling": false,
+		// Dangerous: segment contains embedded ".." from YAML merge errors
+		"../../base - ../../shared/prod":     true,
+		"../../base ../../shared/prod":       true,
+		"foo/bar..baz/qux":                   true,
+		"a/b/c..d/e":                         true,
+		"../../base\t- ../../shared/prod":    true,
 	}
 	for path, want := range cases {
 		t.Run(path, func(t *testing.T) {
-			require.Equal(t, want, hasInnerDotDot(path), "hasInnerDotDot(%q)", path)
+			require.Equal(t, want, hasAmbiguousPathSegment(path), "hasAmbiguousPathSegment(%q)", path)
 		})
 	}
 }
