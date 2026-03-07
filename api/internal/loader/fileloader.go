@@ -151,18 +151,17 @@ func newLoaderAtConfirmedDir(
 // component, which causes filepath.Clean to silently absorb preceding
 // segments (e.g. "../../base - ../../shared/prod" becomes "../../shared/prod").
 func hasInnerDotDot(path string) bool {
-	pastPrefix := false
-	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
-		if part == "" || part == "." {
-			continue
-		}
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	// Skip the leading ".." prefix (and empty/current-dir segments).
+	i := 0
+	for i < len(parts) && (parts[i] == "" || parts[i] == "." || parts[i] == "..") {
+		i++
+	}
+	// Any ".." after a real component is inner.
+	for _, part := range parts[i:] {
 		if part == ".." {
-			if pastPrefix {
-				return true
-			}
-			continue
+			return true
 		}
-		pastPrefix = true
 	}
 	return false
 }
