@@ -127,11 +127,21 @@ type FieldOptions struct {
 
 	// If field missing, add it.
 	Create bool `json:"create,omitempty" yaml:"create,omitempty"`
+
+	// Prefix is used to select elements in a list that start with this prefix.
+	// When set, only elements starting with this prefix will be modified.
+	// The prefix is preserved in the resulting value.
+	Prefix string `json:"prefix,omitempty" yaml:"prefix,omitempty"`
+
+	// Suffix is used to select elements in a list that end with this suffix.
+	// When set, only elements ending with this suffix will be modified.
+	// The suffix is preserved in the resulting value.
+	Suffix string `json:"suffix,omitempty" yaml:"suffix,omitempty"`
 }
 
 func (fo *FieldOptions) String() string {
-	if fo == nil || (fo.Delimiter == "" && !fo.Create) {
+	if fo == nil || (fo.Delimiter == "" && !fo.Create && fo.Prefix == "" && fo.Suffix == "") {
 		return ""
 	}
-	return fmt.Sprintf("%s(%d), create=%t", fo.Delimiter, fo.Index, fo.Create)
+	return fmt.Sprintf("%s(%d), create=%t, prefix=%q, suffix=%q", fo.Delimiter, fo.Index, fo.Create, fo.Prefix, fo.Suffix)
 }

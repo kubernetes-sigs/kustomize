@@ -5005,6 +5005,289 @@ data:
     labels: {app: "my-awesome-app", version: "1.0.0", env: "production"}
     spec: {replicas: 3, selector: {matchLabels: {app: "my-awesome-app"}}}`,
 		},
+		"prefix option on scalar field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+  namespace: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  config: "--namespace=default"
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target
+    fieldPaths:
+    - data.config
+    options:
+      prefix: "--namespace="
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+  namespace: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  config: "--namespace=production"
+`,
+		},
+		"prefix option on sequence field (container args)": {
+			input: `apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager
+spec:
+  template:
+    spec:
+      containers:
+      - name: cert-manager
+        image: quay.io/jetstack/cert-manager-controller:v1.2.0
+        args:
+        - --v=2
+        - --default-issuer-kind=ClusterIssuer
+        - --leader-election-namespace=kube-system
+`,
+			replacements: `replacements:
+- source:
+    kind: Namespace
+    name: my-namespace
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.[name=cert-manager].args
+    options:
+      prefix: "--leader-election-namespace="
+`,
+			expected: `apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager
+spec:
+  template:
+    spec:
+      containers:
+      - name: cert-manager
+        image: quay.io/jetstack/cert-manager-controller:v1.2.0
+        args:
+        - --v=2
+        - --default-issuer-kind=ClusterIssuer
+        - --leader-election-namespace=my-namespace
+`,
+		},
+		"prefix option on sequence field with multiple matches": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+  namespace: staging
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        args:
+        - --namespace=default
+        - --other-namespace=default
+        - --namespace=other
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.[name=app].args
+    options:
+      prefix: "--namespace="
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+  namespace: staging
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        args:
+        - --namespace=staging
+        - --other-namespace=default
+        - --namespace=staging
+`,
+		},
+		"suffix option on scalar field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+data:
+  port: "8080"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  url: "3000/api"
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source
+    fieldPath: data.port
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target
+    fieldPaths:
+    - data.url
+    options:
+      suffix: "/api"
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+data:
+  port: "8080"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  url: "8080/api"
+`,
+		},
+		"prefix and suffix options combined": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+data:
+  value: "myvalue"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  config: "prefix_oldvalue_suffix"
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source
+    fieldPath: data.value
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target
+    fieldPaths:
+    - data.config
+    options:
+      prefix: "prefix_"
+      suffix: "_suffix"
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+data:
+  value: "myvalue"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  config: "prefix_myvalue_suffix"
+`,
+		},
+		"prefix option no match on scalar field": {
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+  namespace: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  config: "--other=value"
+`,
+			replacements: `replacements:
+- source:
+    kind: ConfigMap
+    name: source
+    fieldPath: metadata.namespace
+  targets:
+  - select:
+      kind: ConfigMap
+      name: target
+    fieldPaths:
+    - data.config
+    options:
+      prefix: "--namespace="
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: source
+  namespace: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: target
+data:
+  config: "--other=value"
+`,
+		},
 	}
 
 	for tn := range testCases {
