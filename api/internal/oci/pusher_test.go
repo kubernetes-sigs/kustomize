@@ -187,6 +187,41 @@ func TestPusherNeedsNonEmptyKustomization(t *testing.T) {
 	require.Contains(t, err.Error(), "kustomization.yaml is empty")
 }
 
+func TestPusherNeedsValidMetaIfSet(t *testing.T) {
+	badData := map[string]types.TypeMeta{
+		"nonempty_version": {
+			APIVersion: "NonemptyVersion",
+		},
+		"invalid_kind": {
+			Kind: "InvalidKind",
+		},
+		"invalid_version_for_kustomization_kind": {
+			Kind:       types.KustomizationKind,
+			APIVersion: "NonemptyVersion",
+		},
+		"invalid_version_for_compomenent_kind": {
+			Kind:       types.ComponentKind,
+			APIVersion: "NonemptyVersion",
+		},
+	}
+
+	for name, testCase := range badData {
+		t.Run(name, func(t *testing.T) {
+			pushOptions := PushOptions{
+				kustomization: &types.Kustomization{
+					TypeMeta:  testCase,
+					Namespace: "somethingnonempty",
+				},
+				targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+			}
+
+			err := PushToOciRegistries(&pushOptions)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "kustomization has field errors")
+		})
+	}
+}
+
 // func TestFnContainerTransformerWithConfig(t *testing.T) {
 
 // 	kustomization := map[string]string{

@@ -33,6 +33,10 @@ func PushToOciRegistries(options *PushOptions) error {
 		return err
 	}
 
+	if err := options.kustomization.EnforceFields(); err != nil || len(err) > 0 {
+		return errors.Errorf("kustomization has field errors: %v", err)
+	}
+
 	options.kustomization.FixKustomization()
 
 	// var dir string = filepath.Dir(mf.GetPath())
