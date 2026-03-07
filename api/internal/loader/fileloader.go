@@ -147,19 +147,20 @@ func newLoaderAtConfirmedDir(
 	}
 }
 
-// hasInnerDotDot reports whether path contains a ".." after a non-".."
-// component, which causes filepath.Clean to silently absorb preceding
-// segments (e.g. "../../base - ../../shared/prod" becomes "../../shared/prod").
-func hasInnerDotDot(path string) bool {
-	parts := strings.Split(filepath.ToSlash(path), "/")
-	// Skip the leading ".." prefix (and empty/current-dir segments).
-	i := 0
-	for i < len(parts) && (parts[i] == "" || parts[i] == "." || parts[i] == "..") {
-		i++
-	}
-	// Any ".." after a real component is inner.
-	for _, part := range parts[i:] {
-		if part == ".." {
+// hasAmbiguousPathSegment reports whether path contains a segment with ".."
+// embedded in it (not ".." itself). This pattern results from YAML indentation
+// errors where two list entries merge into one scalar, e.g.:
+//
+//	resources:
+//	- ../../base
+//	 - ../../shared/prod
+//
+// YAML parses this as "../../base - ../../shared/prod", producing segment
+// "base - .." which filepath.Clean absorbs, silently resolving to an
+// unintended directory.
+func hasAmbiguousPathSegment(path string) bool {
+	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
+		if part != "" && part != "." && part != ".." && strings.Contains(part, "..") {
 			return true
 		}
 	}
@@ -186,7 +187,7 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
-	if hasInnerDotDot(path) {
+	if hasAmbiguousPathSegment(path) {
 		return nil, fmt.Errorf(
 			"path %q is ambiguous: resolves to %q after normalization, "+
 				"which is likely not the intended target; check for YAML "+
