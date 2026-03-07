@@ -17,11 +17,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/distribution/reference"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 type PusherTestSuite struct {
@@ -140,6 +142,12 @@ func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key str
 	return certificate_path, key_path
 }
 
+func AsNamedTagged(name string, tag string) reference.NamedTagged {
+	named, _ := reference.WithName(name)
+	tagged, _ := reference.WithTag(named, tag)
+	return tagged
+}
+
 func (suite *PusherTestSuite) TestPushSetup() {
 	t := suite.T()
 
@@ -157,6 +165,26 @@ func TestPusherNeedsTargets(t *testing.T) {
 	err := PushToOciRegistries(&PushOptions{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "At least one target is required.")
+}
+
+func TestPusherNeedsNonNullKustomization(t *testing.T) {
+	pushOptions := PushOptions{targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")}}
+
+	err := PushToOciRegistries(&pushOptions)
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "kustomization cannot be null")
+}
+
+func TestPusherNeedsNonEmptyKustomization(t *testing.T) {
+	pushOptions := PushOptions{
+		kustomization: &types.Kustomization{},
+		targets:       []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "kustomization.yaml is empty")
 }
 
 // func TestFnContainerTransformerWithConfig(t *testing.T) {

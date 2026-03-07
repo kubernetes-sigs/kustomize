@@ -11,8 +11,9 @@ import (
 )
 
 type PushOptions struct {
-	fSys          *filesys.FileSystem
+	fSys          filesys.FileSystem
 	kustomization *types.Kustomization
+	kustFileName  string
 	targets       []reference.NamedTagged
 	annotations   map[string]string
 }
@@ -22,6 +23,14 @@ func PushToOciRegistries(options *PushOptions) error {
 
 	if len(options.targets) == 0 {
 		return errors.Errorf("At least one target is required.")
+	}
+
+	if options.kustomization == nil {
+		return errors.Errorf("kustomization cannot be null")
+	}
+
+	if err := options.kustomization.CheckEmpty(); err != nil {
+		return err
 	}
 
 	options.kustomization.FixKustomization()
