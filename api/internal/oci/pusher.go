@@ -4,6 +4,8 @@
 package oci
 
 import (
+	"log"
+
 	"github.com/distribution/reference"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -37,6 +39,12 @@ func PushToOciRegistries(options *PushOptions) error {
 		return errors.Errorf("kustomization has field errors: %v", err)
 	}
 
+	if deprecated := options.kustomization.CheckDeprecatedFields(); deprecated != nil && len(*deprecated) > 0 {
+		for _, field := range *deprecated {
+			log.Println(field)
+		}
+	}
+
 	options.kustomization.FixKustomization()
 
 	// var dir string = filepath.Dir(mf.GetPath())
@@ -53,6 +61,56 @@ func PushToOciRegistries(options *PushOptions) error {
 	// }
 
 	// d := memory.New()
+
+	// mediaTypes := make(map[string]string)
+
+	// if err := options.fSys.Walk(string(options.root), func(path string, info os.FileInfo, err error) error {
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	if info.IsDir() {
+	// 		return nil
+	// 	}
+
+	// 	var b string = filepath.Base(path)
+	// 	for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
+	// 		if b == kfilename {
+	// 			mediaTypes[path] = "application/vnd.kustomize.config.k8s.io.v1beta1+yaml"
+	// 			return nil
+	// 		}
+	// 	}
+
+	// 	mediaTypes[path] = "application/vnd.kustomize.unknown.v1beta1"
+
+	// 	return nil
+	// }); err != nil {
+	// 	return err
+	// }
+
+	// ms := memory.New()
+
+	// st, err := oci.New("")
+	// vs, err := file.New("")
+
+	// descriptors := make([]v1.Descriptor, len(mediaTypes))
+
+	// for path, mediaType := range mediaTypes {
+	// 	bt, err := options.fSys.ReadFile(path)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	descriptor := v1.Descriptor{
+	// 		MediaType: mediaType,
+	// 		Digest:    digest.FromBytes(bt),
+	// 		Size:      int64(len(bt)),
+	// 	}
+
+	// 	descriptors = append(descriptors, descriptor)
+
+	// 	ms.Push(ctx, descriptor, bytes.NewReader(bt))
+
+	// }
 
 	// oras.PackManifest(ctx, d, oras.PackManifestVersion1_1, "sdfsdf", oras.PackManifestOptions{})
 
