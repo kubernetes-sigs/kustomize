@@ -47,6 +47,14 @@ func PushToOciRegistries(options *PushOptions) error {
 
 	options.kustomization.FixKustomization()
 
+	_, kustFileName, err := options.fSys.CleanedAbs(options.kustFileName)
+	if err != nil {
+		return err
+	}
+	if kustFileName == "" {
+		return errors.Errorf("kustFileName %s was a directory", options.kustFileName)
+	}
+
 	// var dir string = filepath.Dir(mf.GetPath())
 
 	// fs, err := file.New("")

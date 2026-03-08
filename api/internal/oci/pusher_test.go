@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	loctest "sigs.k8s.io/kustomize/api/testutils/localizertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
@@ -165,8 +166,7 @@ func TestPusherSuite(t *testing.T) {
 
 func TestPusherNeedsTargets(t *testing.T) {
 	err := PushToOciRegistries(&PushOptions{})
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "At least one target is required.")
+	require.ErrorContains(t, err, "At least one target is required.")
 }
 
 func TestPusherNeedsNonNullKustomization(t *testing.T) {
@@ -174,8 +174,7 @@ func TestPusherNeedsNonNullKustomization(t *testing.T) {
 
 	err := PushToOciRegistries(&pushOptions)
 
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "kustomization cannot be null")
+	require.ErrorContains(t, err, "kustomization cannot be null")
 }
 
 func TestPusherNeedsNonEmptyKustomization(t *testing.T) {
@@ -185,8 +184,7 @@ func TestPusherNeedsNonEmptyKustomization(t *testing.T) {
 	}
 
 	err := PushToOciRegistries(&pushOptions)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "kustomization.yaml is empty")
+	require.ErrorContains(t, err, "kustomization.yaml is empty")
 }
 
 func TestPusherNeedsValidMetaIfSet(t *testing.T) {
@@ -218,13 +216,13 @@ func TestPusherNeedsValidMetaIfSet(t *testing.T) {
 			}
 
 			err := PushToOciRegistries(&pushOptions)
-			require.Error(t, err)
-			require.Contains(t, err.Error(), "kustomization has field errors")
+			require.ErrorContains(t, err, "kustomization has field errors")
 		})
 	}
 }
 
 func TestLogsDeprecatedFields(t *testing.T) {
+	dummy, _, _ := loctest.PrepareFs(t, []string{}, map[string]string{})
 
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
@@ -233,6 +231,7 @@ func TestLogsDeprecatedFields(t *testing.T) {
 	}()
 
 	pushOptions := PushOptions{
+		fSys: dummy,
 		kustomization: &types.Kustomization{
 			Namespace:    "somethingnonempty",
 			CommonLabels: map[string]string{"sdfsd": "sdfsf"},
@@ -242,9 +241,58 @@ func TestLogsDeprecatedFields(t *testing.T) {
 	}
 
 	err := PushToOciRegistries(&pushOptions)
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Contains(t, buf.String(), "Warning: 'commonLabels' is deprecated.")
 	require.Contains(t, buf.String(), "Warning: 'vars' is deprecated.")
+}
+
+func TestKustomizationFileMustExist(t *testing.T) {
+	badData := map[string]string{
+		"empty_path":       "",
+		"nonexistant_path": "kustomization.yaml",
+	}
+
+	for name, testCase := range badData {
+		t.Run(name, func(t *testing.T) {
+
+			dummy, _, _ := loctest.PrepareFs(t, []string{}, map[string]string{})
+
+			pushOptions := PushOptions{
+				fSys:         dummy,
+				kustFileName: testCase,
+				kustomization: &types.Kustomization{
+					Namespace: "somethingnonempty",
+				},
+				targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+			}
+
+			err := PushToOciRegistries(&pushOptions)
+			require.EqualError(t, err, fmt.Sprintf("'%s' doesn't exist", testCase))
+		})
+	}
+}
+
+func TestKustomizationFileMustNotBeDirectory(t *testing.T) {
+	kustname := "kustomization.yaml"
+	files := map[string]string{
+		kustname + "/somefile": `# To ensure directory exists
+`,
+	}
+
+	dummy, _, target := loctest.PrepareFs(t, []string{kustname}, files)
+	absPath := target.Join(kustname)
+
+	pushOptions := PushOptions{
+		fSys:         dummy,
+		kustFileName: absPath,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.EqualError(t, err, fmt.Sprintf("kustFileName %s was a directory", absPath))
 }
 
 // func TestFnContainerTransformerWithConfig(t *testing.T) {
