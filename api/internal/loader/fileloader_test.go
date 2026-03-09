@@ -229,7 +229,6 @@ func TestLoaderRejectsMalformedPath(t *testing.T) {
 	_, err := l1.New("../../base - ../../shared/prod")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "ambiguous")
-
 }
 
 func TestHasAmbiguousPathSegment(t *testing.T) {
@@ -249,11 +248,11 @@ func TestHasAmbiguousPathSegment(t *testing.T) {
 		// Winding paths are legitimate (used by localizer)
 		"delta/../../../../a/b/../../alpha/beta/sibling": false,
 		// Dangerous: segment contains embedded ".." from YAML merge errors
-		"../../base - ../../shared/prod":     true,
-		"../../base ../../shared/prod":       true,
-		"foo/bar..baz/qux":                   true,
-		"a/b/c..d/e":                         true,
-		"../../base\t- ../../shared/prod":    true,
+		"../../base - ../../shared/prod":  true,
+		"../../base ../../shared/prod":    true,
+		"foo/bar..baz/qux":                true,
+		"a/b/c..d/e":                      true,
+		"../../base\t- ../../shared/prod": true,
 	}
 	for path, want := range cases {
 		t.Run(path, func(t *testing.T) {
