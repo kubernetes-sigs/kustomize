@@ -207,6 +207,60 @@ func TestNewEmptyLoader(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestLoaderRejectsMalformedPath(t *testing.T) {
+	// A YAML indentation error can collapse two resource entries into one:
+	//   resources:
+	//   - ../../base
+	//    - ../../shared/prod
+	// becomes the single string: "../../base - ../../shared/prod"
+	//
+	// filepath.Clean normalizes this to "../../shared/prod", silently
+	// dropping the "../../base" reference. The loader must reject paths
+	// with inner ".." components that cause this silent absorption.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/5979
+	fSys := filesys.MakeFsInMemory()
+	require.NoError(t, fSys.MkdirAll("/base"))
+	require.NoError(t, fSys.MkdirAll("/shared/prod"))
+	require.NoError(t, fSys.MkdirAll("/overlays/prod1"))
+
+	l1 := NewLoaderOrDie(RestrictionNone, fSys, "/overlays/prod1")
+
+	// The exact bug from issue #5979.
+	_, err := l1.New("../../base - ../../shared/prod")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "ambiguous")
+}
+
+func TestHasAmbiguousPathSegment(t *testing.T) {
+	cases := map[string]bool{
+		// Safe: ".." only as standalone segments
+		"../base":           false,
+		"../../shared/prod": false,
+		"..":                false,
+		"foo/bar":           false,
+		"foo/bar/":          false,
+		"foo//bar":          false,
+		"./foo/bar":         false,
+		"https://root":      false,
+		"foo/../bar":        false,
+		"a/b/../../c":       false,
+		"a/..":              false,
+		// Winding paths are legitimate (used by localizer)
+		"delta/../../../../a/b/../../alpha/beta/sibling": false,
+		// Dangerous: segment contains embedded ".." from YAML merge errors
+		"../../base - ../../shared/prod":  true,
+		"../../base ../../shared/prod":    true,
+		"foo/bar..baz/qux":                true,
+		"a/b/c..d/e":                      true,
+		"../../base\t- ../../shared/prod": true,
+	}
+	for path, want := range cases {
+		t.Run(path, func(t *testing.T) {
+			require.Equal(t, want, hasAmbiguousPathSegment(path), "hasAmbiguousPathSegment(%q)", path)
+		})
+	}
+}
+
 func TestNewRemoteLoaderDoesNotExist(t *testing.T) {
 	_, err := makeLoader().New("https://example.com/org/repo")
 	require.ErrorContains(t, err, "fetch")
