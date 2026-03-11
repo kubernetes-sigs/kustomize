@@ -21,20 +21,22 @@ import (
 func CopyDir(fSys filesys.FileSystem, src string, dst string) error {
 	return errors.Wrap(fSys.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
 		// don't copy the .git dir
-		if path != src {
-			rel := strings.TrimPrefix(path, src)
-			if IsDotGitFolder(rel) {
-				return nil
-			}
+		if IsDotGitFolder(rel) {
+			return nil
 		}
 
 		// path is an absolute path, rather than a path relative to src.
 		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
 		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
-		copyTo := strings.TrimPrefix(path, src)
+		copyTo := rel
 
 		// make directories that don't exist
 		if info.IsDir() {
@@ -42,7 +44,7 @@ func CopyDir(fSys filesys.FileSystem, src string, dst string) error {
 		}
 
 		// copy file by reading and writing it
-		b, err := fSys.ReadFile(filepath.Join(src, copyTo))
+		b, err := fSys.ReadFile(path)
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -72,18 +74,22 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return nil
 		}
 
-		upstreamFiles.Insert(strings.TrimPrefix(strings.TrimPrefix(path, sourceDir), string(filepath.Separator)))
+		rel, err := filepath.Rel(sourceDir, path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		upstreamFiles.Insert(rel)
 		return nil
 	})
 	if err != nil {
-		return sets.String{}, err
+		return sets.String{}, errors.Wrap(err)
 	}
 
 	// get set of filenames in the cloned package
 	localFiles := sets.String{}
 	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
 		// skip git repo if it exists
@@ -91,7 +97,11 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return nil
 		}
 
-		localFiles.Insert(strings.TrimPrefix(strings.TrimPrefix(path, destDir), string(filepath.Separator)))
+		rel, err := filepath.Rel(destDir, path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		localFiles.Insert(rel)
 		return nil
 	})
 	if err != nil {
