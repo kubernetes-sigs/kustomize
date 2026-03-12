@@ -42,6 +42,94 @@ func TestMakeConfigMap(t *testing.T) {
 		args types.ConfigMapArgs
 		exp  expected
 	}{
+		// Regression tests for https://github.com/kubernetes-sigs/kustomize/issues/4292
+		// ConfigMap data keys must be emitted in sorted (deterministic) order regardless
+		// of the order they are defined in the source.
+		"literal sources in non-alphabetical order produce sorted output": {
+			args: types.ConfigMapArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "sortedLiterals",
+					KvPairSources: types.KvPairSources{
+						LiteralSources: []string{
+							"zebra=z",
+							"mango=m",
+							"apple=a",
+							"banana=b",
+							"kiwi=k",
+						},
+					},
+				},
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sortedLiterals
+data:
+  apple: a
+  banana: b
+  kiwi: k
+  mango: m
+  zebra: z
+`,
+			},
+		},
+		"env file with non-alphabetical keys produces sorted output": {
+			args: types.ConfigMapArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "sortedEnv",
+					KvPairSources: types.KvPairSources{
+						EnvSources: []string{
+							filepath.Join("configmap", "unsorted.env"),
+						},
+					},
+				},
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sortedEnv
+data:
+  APPLE: a
+  BANANA: b
+  KIWI: k
+  MANGO: m
+  ZEBRA: z
+`,
+			},
+		},
+		"mixed literal and env sources produce sorted output": {
+			args: types.ConfigMapArgs{
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "sortedMixed",
+					KvPairSources: types.KvPairSources{
+						LiteralSources: []string{
+							"zebra=z",
+							"apple=a",
+						},
+						EnvSources: []string{
+							filepath.Join("configmap", "unsorted.env"),
+						},
+					},
+				},
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sortedMixed
+data:
+  APPLE: a
+  BANANA: b
+  KIWI: k
+  MANGO: m
+  ZEBRA: z
+  apple: a
+  zebra: z
+`,
+			},
+		},
 		"construct config map from env": {
 			args: types.ConfigMapArgs{
 				GeneratorArgs: types.GeneratorArgs{
@@ -199,6 +287,10 @@ immutable: true
 	fSys.WriteFile(
 		filesys.RootedPath("configmap", "app.bin"),
 		manyHellos(30))
+	// unsorted.env is used by regression tests for issue #4292 (non-deterministic ordering)
+	fSys.WriteFile(
+		filesys.RootedPath("configmap", "unsorted.env"),
+		[]byte("ZEBRA=z\nMANGO=m\nAPPLE=a\nBANANA=b\nKIWI=k\n"))
 	kvLdr := kv.NewLoader(
 		loader.NewFileLoaderAtRoot(fSys),
 		valtest_test.MakeFakeValidator())
