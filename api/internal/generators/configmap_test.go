@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	. "sigs.k8s.io/kustomize/api/internal/generators"
 	"sigs.k8s.io/kustomize/api/kv"
 	"sigs.k8s.io/kustomize/api/pkg/loader"
@@ -278,19 +279,19 @@ immutable: true
 		},
 	}
 	fSys := filesys.MakeFsInMemory()
-	fSys.WriteFile(
+	require.NoError(t, fSys.WriteFile(
 		filesys.RootedPath("configmap", "app.env"),
-		[]byte("DB_USERNAME=admin\nDB_PASSWORD=qwerty\n"))
-	fSys.WriteFile(
+		[]byte("DB_USERNAME=admin\nDB_PASSWORD=qwerty\n")))
+	require.NoError(t, fSys.WriteFile(
 		filesys.RootedPath("configmap", "app-init.ini"),
-		[]byte("FOO=bar\nBAR=baz\n"))
-	fSys.WriteFile(
+		[]byte("FOO=bar\nBAR=baz\n")))
+	require.NoError(t, fSys.WriteFile(
 		filesys.RootedPath("configmap", "app.bin"),
-		manyHellos(30))
+		manyHellos(30)))
 	// unsorted.env is used by regression tests for issue #4292 (non-deterministic ordering)
-	fSys.WriteFile(
+	require.NoError(t, fSys.WriteFile(
 		filesys.RootedPath("configmap", "unsorted.env"),
-		[]byte("ZEBRA=z\nMANGO=m\nAPPLE=a\nBANANA=b\nKIWI=k\n"))
+		[]byte("ZEBRA=z\nMANGO=m\nAPPLE=a\nBANANA=b\nKIWI=k\n")))
 	kvLdr := kv.NewLoader(
 		loader.NewFileLoaderAtRoot(fSys),
 		valtest_test.MakeFakeValidator())
