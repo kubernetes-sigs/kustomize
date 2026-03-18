@@ -229,6 +229,15 @@ func fieldRetrievalError(fieldPath string, isCreate bool) string {
 
 func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
 	value = value.Copy()
+
+	// Handle prefix/suffix matching for sequence nodes (e.g., container args)
+	// Only apply prefix/suffix matching if the target field is a sequence and
+	// prefix/suffix options are specified
+	if targetField.YNode().Kind == yaml.SequenceNode && options != nil && (options.Prefix != "" || options.Suffix != "") {
+		return setFieldValueInSequence(options, targetField, value)
+	}
+
+	// Handle delimiter option for scalar nodes
 	if options != nil && options.Delimiter != "" {
 		if targetField.YNode().Kind != yaml.ScalarNode {
 			return fmt.Errorf("delimiter option can only be used with scalar nodes")
@@ -247,6 +256,24 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 		value.YNode().Value = strings.Join(tv, options.Delimiter)
 	}
 
+	// Handle prefix/suffix matching for scalar nodes
+	if options != nil && (options.Prefix != "" || options.Suffix != "") {
+		if targetField.YNode().Kind != yaml.ScalarNode {
+			return fmt.Errorf("prefix/suffix options can only be used with scalar or sequence nodes")
+		}
+		targetValue := targetField.YNode().Value
+		newValue := yaml.GetValue(value)
+
+		// Only modify if the target matches both prefix and suffix
+		if !matchesPrefixAndSuffix(targetValue, options.Prefix, options.Suffix) {
+			return nil
+		}
+
+		// Preserve prefix and suffix in the result
+		result := options.Prefix + newValue + options.Suffix
+		value.YNode().Value = result
+	}
+
 	if targetField.YNode().Kind == yaml.ScalarNode {
 		// For scalar, only copy the value (leave any type intact to auto-convert int->string or string->int)
 		targetField.YNode().Value = value.YNode().Value
@@ -255,6 +282,43 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 	}
 
 	return nil
+}
+
+// setFieldValueInSequence handles setting values in sequence nodes (string arrays)
+// when prefix and/or suffix options are specified
+func setFieldValueInSequence(options *types.FieldOptions, targetField *yaml.RNode, value *yaml.RNode) error {
+	elements, err := targetField.Elements()
+	if err != nil {
+		return err
+	}
+
+	newValue := yaml.GetValue(value)
+
+	for _, elem := range elements {
+		if elem.YNode().Kind != yaml.ScalarNode {
+			continue
+		}
+
+		elemValue := elem.YNode().Value
+		if matchesPrefixAndSuffix(elemValue, options.Prefix, options.Suffix) {
+			// Replace the value portion while preserving prefix and suffix
+			result := options.Prefix + newValue + options.Suffix
+			elem.YNode().Value = result
+		}
+	}
+
+	return nil
+}
+
+// matchesPrefixAndSuffix checks if a string has the specified prefix and suffix
+func matchesPrefixAndSuffix(s, prefix, suffix string) bool {
+	if prefix != "" && !strings.HasPrefix(s, prefix) {
+		return false
+	}
+	if suffix != "" && !strings.HasSuffix(s, suffix) {
+		return false
+	}
+	return true
 }
 
 // setValueInStructuredData handles setting values within structured data (JSON/YAML) in scalar fields
