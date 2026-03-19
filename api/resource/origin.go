@@ -4,6 +4,7 @@
 package resource
 
 import (
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -48,17 +49,19 @@ func (origin *Origin) Copy() Origin {
 }
 
 // Append returns a copy of origin with a path appended to it
-func (origin *Origin) Append(path string) *Origin {
+func (origin *Origin) Append(inputPath string) *Origin {
 	originCopy := origin.Copy()
-	repoSpec, err := git.NewRepoSpecFromURL(path)
+	repoSpec, err := git.NewRepoSpecFromURL(inputPath)
 	if err == nil {
 		originCopy.Repo = repoSpec.CloneSpec()
 		absPath := repoSpec.AbsPath()
-		path = absPath[strings.Index(absPath[1:], "/")+1:][1:]
+		// Normalize to forward slashes for cross-platform compatibility
+		absPath = strings.ReplaceAll(absPath, "\\", "/")
+		inputPath = absPath[strings.Index(absPath[1:], "/")+1:][1:]
 		originCopy.Path = ""
 		originCopy.Ref = repoSpec.Ref
 	}
-	originCopy.Path = filepath.Join(originCopy.Path, path)
+	originCopy.Path = filepath.ToSlash(path.Join(originCopy.Path, inputPath))
 	return &originCopy
 }
 
@@ -89,7 +92,7 @@ func OriginFromCustomPlugin(res *Resource) (*Origin, error) {
 		result = &Origin{
 			Repo:         origin.Repo,
 			Ref:          origin.Ref,
-			ConfiguredIn: origin.Path,
+			ConfiguredIn: filepath.ToSlash(origin.Path),
 			ConfiguredBy: kyaml.ResourceIdentifier{
 				TypeMeta: kyaml.TypeMeta{
 					APIVersion: res.GetApiVersion(),

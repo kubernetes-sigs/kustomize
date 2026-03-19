@@ -5,6 +5,7 @@ package loader
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -24,7 +25,7 @@ func RestrictionRootOnly(
 	if !d.HasPrefix(root) {
 		return "", fmt.Errorf(
 			"security; file '%s' is not in or below '%s'",
-			path, root)
+			filepath.ToSlash(path), filepath.ToSlash(root.String()))
 	}
 	return d.Join(f), nil
 }

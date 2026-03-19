@@ -11,6 +11,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/plugins/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 // pluginTestEnv manages compiling plugins for tests.
@@ -56,6 +57,7 @@ func (x *pluginTestEnv) reset() {
 // prepareGoPlugin compiles a Go plugin, leaving the newly
 // created object code alongside the src code.
 func (x *pluginTestEnv) prepareGoPlugin(g, v, k string) {
+	testutil.SkipWindows(x.t)
 	x.compiler.SetGVK(g, v, k)
 	err := x.compiler.Compile()
 	if err != nil {
