@@ -66,7 +66,7 @@ type testData struct {
 	expectedContent string
 }
 
-var testCases = []testData{
+var testCases = []testData{ //nolint:gochecknoglobals
 	{
 		path:            "foo/project/fileA.yaml",
 		expectedContent: "fileA content",
@@ -88,7 +88,7 @@ var testCases = []testData{
 func MakeFakeFs(td []testData) filesys.FileSystem {
 	fSys := filesys.MakeFsInMemory()
 	for _, x := range td {
-		fSys.WriteFile(x.path, []byte(x.expectedContent))
+		_ = fSys.WriteFile(x.path, []byte(x.expectedContent))
 	}
 	return fSys
 }
@@ -161,31 +161,31 @@ func TestLoaderBadRelative(t *testing.T) {
 	require.Equal("/foo/project/subdir1", l1.Root())
 
 	// Cannot cd into a file.
-	l2, err := l1.New("fileB.yaml")
+	_, err = l1.New("fileB.yaml")
 	require.Error(err)
 
 	// It's not okay to stay at the same place.
-	l2, err = l1.New(filesys.SelfDir)
+	_, err = l1.New(filesys.SelfDir)
 	require.Error(err)
 
 	// It's not okay to go up and back down into same place.
-	l2, err = l1.New("../subdir1")
+	_, err = l1.New("../subdir1")
 	require.Error(err)
 
 	// It's not okay to go up via a relative path.
-	l2, err = l1.New("..")
+	_, err = l1.New("..")
 	require.Error(err)
 
 	// It's not okay to go up via an absolute path.
-	l2, err = l1.New("/foo/project")
+	_, err = l1.New("/foo/project")
 	require.Error(err)
 
 	// It's not okay to go to the root.
-	l2, err = l1.New("/")
+	_, err = l1.New("/")
 	require.Error(err)
 
 	// It's okay to go up and down to a sibling.
-	l2, err = l1.New("../subdir2")
+	l2, err := l1.New("../subdir2")
 	require.NoError(err)
 	require.Equal("/foo/project/subdir2", l2.Root())
 
@@ -198,7 +198,7 @@ func TestLoaderBadRelative(t *testing.T) {
 
 	// It's not OK to go over to a previously visited directory.
 	// Must disallow going back and forth in a cycle.
-	l1, err = l2.New("../subdir1")
+	_, err = l2.New("../subdir1")
 	require.Error(err)
 }
 
@@ -319,23 +319,24 @@ const (
 //	└── exteriorData
 func commonSetupForLoaderRestrictionTest(t *testing.T) (string, filesys.FileSystem) {
 	t.Helper()
+	require := require.New(t)
 	fSys, tmpDir := setupOnDisk(t)
 	dir := tmpDir.String()
 
-	fSys.Mkdir(filepath.Join(dir, "base"))
+	require.NoError(fSys.Mkdir(filepath.Join(dir, "base")))
 
-	fSys.WriteFile(
-		filepath.Join(dir, "base", "okayData"), []byte(contentOk))
+	require.NoError(fSys.WriteFile(
+		filepath.Join(dir, "base", "okayData"), []byte(contentOk)))
 
-	fSys.WriteFile(
-		filepath.Join(dir, "exteriorData"), []byte(contentExteriorData))
+	require.NoError(fSys.WriteFile(
+		filepath.Join(dir, "exteriorData"), []byte(contentExteriorData)))
 
-	os.Symlink(
+	require.NoError(os.Symlink(
 		filepath.Join(dir, "base", "okayData"),
-		filepath.Join(dir, "base", "symLinkToOkayData"))
-	os.Symlink(
+		filepath.Join(dir, "base", "symLinkToOkayData")))
+	require.NoError(os.Symlink(
 		filepath.Join(dir, "exteriorData"),
-		filepath.Join(dir, "base", "symLinkToExteriorData"))
+		filepath.Join(dir, "base", "symLinkToExteriorData")))
 	return dir, fSys
 }
 
@@ -445,14 +446,14 @@ func TestNewLoaderAtGitClone(t *testing.T) {
 	url := rootURL + "/" + pathInRepo
 	coRoot := "/tmp"
 	fSys := filesys.MakeFsInMemory()
-	fSys.MkdirAll(coRoot)
-	fSys.MkdirAll(coRoot + "/" + pathInRepo)
-	fSys.WriteFile(
+	require.NoError(fSys.MkdirAll(coRoot))
+	require.NoError(fSys.MkdirAll(coRoot + "/" + pathInRepo))
+	require.NoError(fSys.WriteFile(
 		coRoot+"/"+pathInRepo+"/"+
 			konfig.DefaultKustomizationFileName(),
 		[]byte(`
 whatever
-`))
+`)))
 
 	repoSpec, err := git.NewRepoSpecFromURL(url)
 	require.NoError(err)
@@ -472,7 +473,7 @@ whatever
 	require.Error(err)
 
 	pathInRepo = "foo/overlay"
-	fSys.MkdirAll(coRoot + "/" + pathInRepo)
+	require.NoError(fSys.MkdirAll(coRoot + "/" + pathInRepo))
 	url = rootURL + "/" + pathInRepo
 	l2, err := l.New(url)
 	require.NoError(err)
@@ -489,9 +490,9 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
-	fSys.MkdirAll(topDir + "/highBase")
-	fSys.MkdirAll(cloneRoot + "/foo/base")
-	fSys.MkdirAll(cloneRoot + "/foo/overlay")
+	require.NoError(fSys.MkdirAll(topDir + "/highBase"))
+	require.NoError(fSys.MkdirAll(cloneRoot + "/foo/base"))
+	require.NoError(fSys.MkdirAll(cloneRoot + "/foo/overlay"))
 
 	var l1 ifc.Loader
 
@@ -502,7 +503,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
 
 	l2, err := l1.New("../base")
-	require.NoError(nil)
+	require.NoError(err)
 	require.Equal(cloneRoot+"/foo/base", l2.Root())
 
 	l3, err := l2.New("../../../highBase")
@@ -567,8 +568,8 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	topDir := "/whatever"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
-	fSys.MkdirAll(topDir)
-	fSys.MkdirAll(cloneRoot + "/foo/base")
+	require.NoError(fSys.MkdirAll(topDir))
+	require.NoError(fSys.MkdirAll(cloneRoot + "/foo/base"))
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
@@ -588,8 +589,8 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
-	fSys.MkdirAll(topDir)
-	fSys.MkdirAll(cloneRoot)
+	require.NoError(fSys.MkdirAll(topDir))
+	require.NoError(fSys.MkdirAll(cloneRoot))
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
@@ -610,8 +611,8 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 	topDir := "/cycles"
 	cloneRoot := topDir + "/someClone"
 	fSys := filesys.MakeFsInMemory()
-	fSys.MkdirAll(topDir)
-	fSys.MkdirAll(cloneRoot)
+	require.NoError(fSys.MkdirAll(topDir))
+	require.NoError(fSys.MkdirAll(cloneRoot))
 
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
@@ -683,7 +684,7 @@ func TestLoaderHTTP(t *testing.T) {
 			u := req.URL.String()
 			require.Equal(x.path, u)
 			return &http.Response{
-				StatusCode: 200,
+				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(bytes.NewBufferString(x.expectedContent)),
 				Header:     make(http.Header),
 			}
