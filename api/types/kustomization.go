@@ -180,6 +180,11 @@ type Kustomization struct {
 
 	// BuildMetadata is a list of strings used to toggle different build options
 	BuildMetadata []string `json:"buildMetadata,omitempty" yaml:"buildMetadata,omitempty"`
+
+	// MergeKeys is a list of custom merge key declarations for list fields in
+	// CRD resources that lack registered OpenAPI schemas. Without this,
+	// strategic merge patches replace those lists entirely instead of merging.
+	MergeKeys []MergeKeySpec `json:"mergeKeys,omitempty" yaml:"mergeKeys,omitempty"`
 }
 
 const (

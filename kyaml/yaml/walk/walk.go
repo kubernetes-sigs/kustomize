@@ -55,6 +55,9 @@ func (l Walker) Kind() yaml.Kind {
 // actions on them
 func (l Walker) Walk() (*yaml.RNode, error) {
 	l.Schema = l.GetSchema()
+	if synth := l.schemaFromMergeKeySpecs(); synth != nil {
+		l.Schema = synth
+	}
 
 	// invoke the handler for the corresponding node type
 	switch l.Kind() {
@@ -128,6 +131,30 @@ func (l Walker) GetSchema() *openapi.ResourceSchema {
 		}
 	}
 	return nil
+}
+
+// schemaFromMergeKeySpecs returns a synthetic ResourceSchema if l.Path matches
+// any entry in l.MergeOptions.MergeKeySpecs, or nil otherwise.
+func (l Walker) schemaFromMergeKeySpecs() *openapi.ResourceSchema {
+	for _, spec := range l.MergeOptions.MergeKeySpecs {
+		if pathsEqual(spec.Path, l.Path) {
+			return openapi.SyntheticMergeSchema(spec.Key)
+		}
+	}
+	return nil
+}
+
+// pathsEqual returns true when a and b have the same length and identical elements.
+func pathsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 const (

@@ -11,6 +11,11 @@ import (
 
 type Filter struct {
 	Patch *yaml.RNode
+
+	// MergeKeySpecs declares custom merge keys for list fields in CRD resources
+	// that lack registered OpenAPI schemas. When set, the walker uses these
+	// specs to merge lists by key instead of replacing them.
+	MergeKeySpecs []yaml.MergeKeySpec
 }
 
 var _ kio.Filter = Filter{}
@@ -23,6 +28,7 @@ func (pf Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 			pf.Patch, nodes[i],
 			yaml.MergeOptions{
 				ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+				MergeKeySpecs:         pf.MergeKeySpecs,
 			},
 		)
 		if err != nil {

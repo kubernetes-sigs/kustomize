@@ -558,6 +558,18 @@ func (rs *ResourceSchema) PatchStrategyAndKeyList() (string, []string) {
 	return ps.(string), []string{mk.(string)}
 }
 
+// SyntheticMergeSchema returns a ResourceSchema that declares
+// x-kubernetes-patch-strategy: merge and x-kubernetes-patch-merge-key: key.
+// It is used to provide ad-hoc merge semantics for CRD list fields that have
+// no registered OpenAPI schema.
+func SyntheticMergeSchema(key string) *ResourceSchema {
+	s := spec.Schema{}
+	s.Extensions = spec.Extensions{}
+	s.Extensions[kubernetesPatchStrategyExtensionKey] = "merge"
+	s.Extensions[kubernetesMergeKeyExtensionKey] = key
+	return &ResourceSchema{Schema: &s}
+}
+
 // PatchStrategyAndKey returns the patch strategy and merge key extensions
 func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 	ps, found := rs.Schema.Extensions[kubernetesPatchStrategyExtensionKey]

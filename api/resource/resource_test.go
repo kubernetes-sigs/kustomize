@@ -1626,3 +1626,38 @@ spec:
   numReplicas: 1
 `, r.MustString())
 }
+
+func TestApplySmPatchWithMergeKeySpecs(t *testing.T) {
+	r, err := factory.FromBytes([]byte(`apiVersion: example.com/v1
+kind: MyApp
+metadata:
+  name: app
+spec:
+  env:
+  - name: BASE
+    value: base
+`))
+	require.NoError(t, err)
+
+	r.SetMergeKeySpecs([]kyaml.MergeKeySpec{
+		{Path: []string{"spec", "env"}, Key: "name"},
+	})
+
+	patch, err := factory.FromBytes([]byte(`apiVersion: example.com/v1
+kind: MyApp
+metadata:
+  name: app
+spec:
+  env:
+  - name: PATCH
+    value: patch
+`))
+	require.NoError(t, err)
+
+	require.NoError(t, r.ApplySmPatch(patch))
+
+	out, err := r.AsYAML()
+	require.NoError(t, err)
+	assert.Contains(t, string(out), "BASE")
+	assert.Contains(t, string(out), "PATCH")
+}

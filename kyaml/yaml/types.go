@@ -241,11 +241,25 @@ const (
 	MergeOptionsListPrepend
 )
 
+// MergeKeySpec declares that a particular list field (identified by its path)
+// should be merged by the named key. Used to support CRD list fields that lack
+// OpenAPI schema definitions.
+type MergeKeySpec struct {
+	// Path is the field path segments leading to the list (e.g. ["spec","env"]).
+	Path []string
+	// Key is the field name used as the merge key for items in the list.
+	Key string
+}
+
 // MergeOptions is a struct which contains the options for merge
 type MergeOptions struct {
 	// ListIncreaseDirection indicates should merge function prepend the items from
 	// source list to destination or append.
 	ListIncreaseDirection MergeOptionsListIncreaseDirection
+
+	// MergeKeySpecs declares custom merge keys for list fields that lack
+	// OpenAPI schema definitions (e.g. CRD fields).
+	MergeKeySpecs []MergeKeySpec
 }
 
 // Since ObjectMeta and TypeMeta are stable, we manually create DeepCopy funcs for ResourceMeta and ObjectMeta.
