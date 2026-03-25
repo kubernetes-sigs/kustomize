@@ -29,6 +29,7 @@
 			},
 			"extensions": [
 				"redhat.vscode-yaml",
+				"ms-vscode.makefile-tools",
 			]
 		}
 	},
