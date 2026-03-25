@@ -295,6 +295,165 @@ func TestKustomizationFileMustNotBeDirectory(t *testing.T) {
 	require.EqualError(t, err, fmt.Sprintf("kustFileName %s was a directory", absPath))
 }
 
+func TestKustomizationFilePathsMustBeLocalToDirectory(t *testing.T) {
+	fields := map[string]struct {
+		fieldName string
+		factory   func(string) types.Kustomization
+	}{
+		"components": {
+			"Components",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Components: []string{p},
+				}
+			},
+		},
+		"resources": {
+			"Resources",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Resources: []string{p},
+				}
+			},
+		},
+		"crds": {
+			"Crds",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Crds: []string{p},
+				}
+			},
+		},
+		"configurations": {
+			"Configurations",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Configurations: []string{p},
+				}
+			},
+		},
+		"generators": {
+			"Generators",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Generators: []string{p},
+				}
+			},
+		},
+		"transformers": {
+			"Transformers",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Transformers: []string{p},
+				}
+			},
+		},
+		"validators": {
+			"Validators",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Validators: []string{p},
+				}
+			},
+		},
+		"patches": {
+			"Patches",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Patches: []types.Patch{{Path: p}},
+				}
+			},
+		},
+		"replacements": {
+			"Replacements",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					Replacements: []types.ReplacementField{{Path: p}},
+				}
+			},
+		},
+		"configMapGenerator files": {
+			"ConfigMapGenerator",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					ConfigMapGenerator: []types.ConfigMapArgs{{GeneratorArgs: types.GeneratorArgs{KvPairSources: types.KvPairSources{FileSources: []string{p}}}}},
+				}
+			},
+		},
+		"configMapGenerator envs": {
+			"ConfigMapGenerator",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					ConfigMapGenerator: []types.ConfigMapArgs{{GeneratorArgs: types.GeneratorArgs{KvPairSources: types.KvPairSources{EnvSources: []string{p}}}}},
+				}
+			},
+		},
+		"secretGenerator files": {
+			"SecretGenerator",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					SecretGenerator: []types.SecretArgs{{GeneratorArgs: types.GeneratorArgs{KvPairSources: types.KvPairSources{FileSources: []string{p}}}}},
+				}
+			},
+		},
+		"SecretGenerator envs": {
+			"SecretGenerator",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					SecretGenerator: []types.SecretArgs{{GeneratorArgs: types.GeneratorArgs{KvPairSources: types.KvPairSources{EnvSources: []string{p}}}}},
+				}
+			},
+		},
+		"helmCharts valuesFile": {
+			"HelmCharts",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					HelmCharts: []types.HelmChart{{ValuesFile: p}},
+				}
+			},
+		},
+		"helmCharts additionalValuesFile": {
+			"HelmCharts",
+			func(p string) types.Kustomization {
+				return types.Kustomization{
+					HelmCharts: []types.HelmChart{{AdditionalValuesFiles: []string{p}}},
+				}
+			},
+		},
+	}
+	paths := map[string]string{
+		// "invalid fileurl": "file://asdfsd/something.txt",
+		"parent directory": "..",
+	}
+
+	for fieldName, generator := range fields {
+
+		for pathName, path := range paths {
+			t.Run(fieldName+"|"+pathName, func(t *testing.T) {
+				kustname := "kustomization.yaml"
+				files := map[string]string{
+					filepath.Join("src", kustname): `namePrefix: test-
+`,
+				}
+
+				dummy, _, dir := loctest.PrepareFs(t, []string{"src"}, files)
+				kustomization := generator.factory(path)
+
+				pushOptions := PushOptions{
+					fSys:          dummy,
+					kustFileName:  filepath.Join(dir.String(), "src", kustname),
+					kustomization: &kustomization,
+					targets:       []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+				}
+
+				err := PushToOciRegistries(&pushOptions)
+				require.ErrorContains(t, err, "kustomization includes non-local file paths")
+				require.ErrorContains(t, err, fmt.Sprintf("Path '%s' in element %s is not local", path, generator.fieldName))
+			})
+		}
+	}
+}
+
 // func TestFnContainerTransformerWithConfig(t *testing.T) {
 
 // 	kustomization := map[string]string{
