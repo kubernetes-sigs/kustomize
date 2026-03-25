@@ -5,6 +5,8 @@ package oci
 
 import (
 	"log"
+	"net/url"
+	"path/filepath"
 
 	"github.com/distribution/reference"
 	"sigs.k8s.io/kustomize/api/types"
@@ -18,6 +20,77 @@ type PushOptions struct {
 	kustFileName  string
 	targets       []reference.NamedTagged
 	annotations   map[string]string
+}
+
+func validatePath(path string, elementType string) error {
+	if path == "" {
+		return nil
+	}
+
+	u, err := url.Parse(path)
+	if err != nil {
+		return err
+	}
+	if u.Scheme == "file" && u.Host == "" {
+		return errors.Errorf("Path %s in element %s is a file url relative to localhost", path, elementType)
+	} else if u.IsAbs() || u.Host != "" {
+		// Other schemes or host-rooted URLs are assumed to be valid....
+		return nil
+	}
+
+	path = u.Path
+
+	if !filepath.IsLocal(path) {
+		return errors.Errorf("Path '%s' in element %s is not local", path, elementType)
+	}
+
+	return nil
+}
+
+func iteratePathElementsSimple(elements []string, elementType string, errors []error) []error {
+	return iteratePathElements(elements, func(x string) string { return x }, elementType, errors)
+}
+
+func iteratePathElements[T any](elements []T, fn func(T) string, elementType string, errors []error) []error {
+	for _, element := range elements {
+		path := fn(element)
+
+		if err := validatePath(path, elementType); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	return errors
+}
+
+func validateFilePaths(k *types.Kustomization) *[]error {
+	errors := []error{}
+
+	errors = iteratePathElementsSimple(k.Components, "Components", errors)
+	errors = iteratePathElements(k.Patches, func(x types.Patch) string { return x.Path }, "Patches", errors)
+	errors = iteratePathElements(k.Replacements, func(x types.ReplacementField) string { return x.Path }, "Replacements", errors)
+	errors = iteratePathElementsSimple(k.Resources, "Resources", errors)
+	errors = iteratePathElementsSimple(k.Crds, "Crds", errors)
+
+	for _, generator := range k.ConfigMapGenerator {
+		errors = iteratePathElementsSimple(generator.EnvSources, "ConfigMapGenerator", errors)
+		errors = iteratePathElementsSimple(generator.FileSources, "ConfigMapGenerator", errors)
+	}
+	for _, generator := range k.SecretGenerator {
+		errors = iteratePathElementsSimple(generator.EnvSources, "SecretGenerator", errors)
+		errors = iteratePathElementsSimple(generator.FileSources, "SecretGenerator", errors)
+	}
+
+	for _, charts := range k.HelmCharts {
+		errors = iteratePathElementsSimple(append(charts.AdditionalValuesFiles, charts.ValuesFile), "HelmCharts", errors)
+	}
+
+	errors = iteratePathElementsSimple(k.Configurations, "Configurations", errors)
+	errors = iteratePathElementsSimple(k.Generators, "Generators", errors)
+	errors = iteratePathElementsSimple(k.Transformers, "Transformers", errors)
+	errors = iteratePathElementsSimple(k.Validators, "Validators", errors)
+
+	return &errors
 }
 
 func PushToOciRegistries(options *PushOptions) error {
@@ -53,6 +126,16 @@ func PushToOciRegistries(options *PushOptions) error {
 	}
 	if kustFileName == "" {
 		return errors.Errorf("kustFileName %s was a directory", options.kustFileName)
+	}
+
+	// We attempt to perform validation that the paths are either remote URLs or in the root of the kustomization file.
+	// There are limitations:
+	//  - This doesn't prevent someone manually creating an invalid artifact, so the reader still has to perform its own validations
+	//  - We can only examine the root kustomization.  If there are nested kustomization definitions, we (currently) have to skip those.
+	//  - We can only examine the kustomization elements.  If there are resource definitions that reference an invalid file path, we will never see it.
+	//  - The paths discovered here are only for validation - the actual list of files added to the artifact will be gathered by walking the directory
+	if pathErrors := validateFilePaths(options.kustomization); pathErrors != nil && len(*pathErrors) > 0 {
+		return errors.Errorf("kustomization includes non-local file paths: %v", pathErrors)
 	}
 
 	// var dir string = filepath.Dir(mf.GetPath())
