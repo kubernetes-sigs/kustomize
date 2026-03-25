@@ -52,6 +52,7 @@ func TestFieldOrder(t *testing.T) {
 		"Components",
 		"OpenAPI",
 		"BuildMetadata",
+		"MergeKeys",
 	}
 	actual := determineFieldOrder()
 	if len(expected) != len(actual) {
@@ -199,6 +200,10 @@ func TestReadAndWriteDummy(t *testing.T) {
 		Transformers:   []string{"transformer"},
 		Validators:     []string{"validator"},
 		BuildMetadata:  []string{"buildMetadata"},
+		MergeKeys: []types.MergeKeySpec{{
+			Path: "path",
+			Key:  "key",
+		}},
 	}
 
 	// this check is for forward compatibility: if this fails, add a dummy value to the Kustomization above
@@ -614,4 +619,7 @@ transformers:
 - transformer
 buildMetadata:
 - buildMetadata
+mergeKeys:
+- key: key
+  path: path
 `
