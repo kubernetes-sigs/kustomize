@@ -4,6 +4,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,7 @@ import (
 
 func DirExists(name string) bool {
 	info, err := os.Stat(name)
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		return false
 	}
 	return info.IsDir()

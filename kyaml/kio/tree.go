@@ -4,6 +4,7 @@
 package kio
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -103,7 +104,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 func branchName(root, dirRelPath, openAPIFileName string) string {
 	name := filepath.Base(dirRelPath)
 	_, err := os.Stat(filepath.Join(root, dirRelPath, openAPIFileName))
-	if !os.IsNotExist(err) {
+	if !errors.Is(err, os.ErrNotExist) {
 		// add Pkg: prefix indicating that it is a separate package as it has
 		// openAPIFile
 		return fmt.Sprintf("Pkg: %s", name)

@@ -4,6 +4,7 @@
 package pathutil
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 )
@@ -17,7 +18,7 @@ func DirsWithFile(root, fileName string, recurse bool) ([]string, error) {
 		// check if the file with fileName is present in root and return it
 		// else return empty list
 		_, err := os.Stat(filepath.Join(root, fileName))
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, os.ErrNotExist) {
 			res = append(res, filepath.Clean(root))
 		}
 		return res, nil

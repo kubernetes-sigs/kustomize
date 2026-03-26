@@ -5,6 +5,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -99,7 +100,7 @@ func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
 func FileYoungerThan(path string, d time.Duration) bool {
 	fi, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return false
 		}
 	}
@@ -111,7 +112,7 @@ func FileYoungerThan(path string, d time.Duration) bool {
 func FileModifiedAfter(path string, t time.Time) bool {
 	fi, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return false
 		}
 	}
@@ -120,7 +121,7 @@ func FileModifiedAfter(path string, t time.Time) bool {
 
 func FileExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return false
 		}
 	}

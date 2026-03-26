@@ -6,6 +6,7 @@ package frameworktestutil
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -111,7 +112,7 @@ func (rc *CommandResultsChecker) isTestDir(path string) bool {
 func (rc *CommandResultsChecker) runInCurrentDir(t *testing.T) (string, string) {
 	t.Helper()
 	_, err := os.Stat(rc.ConfigInputFilename)
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		t.Errorf("Test case is missing FunctionConfig input file (default: %s)", DefaultConfigInputFilename)
 	}
 	require.NoError(t, err)
@@ -209,7 +210,7 @@ func (rc *ProcessorResultsChecker) isTestDir(path string) bool {
 func (rc *ProcessorResultsChecker) runInCurrentDir(t *testing.T) (string, string) {
 	t.Helper()
 	_, err := os.Stat(rc.InputFilename)
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		t.Errorf("Test case is missing input file (default: %s)", DefaultInputFilename)
 	}
 	require.NoError(t, err)
@@ -361,7 +362,7 @@ func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
 	var expectedOutput, expectedError string
 	if rc.expectedOutputFilename != "" {
 		_, err := os.Stat(rc.expectedOutputFilename)
-		if !os.IsNotExist(err) && err != nil {
+		if !errors.Is(err, os.ErrNotExist) && err != nil {
 			t.FailNow()
 		}
 		if err == nil {
@@ -375,7 +376,7 @@ func (rc *checkerCore) readAssertionFiles(t *testing.T) (string, string) {
 	}
 	if rc.expectedErrorFilename != "" {
 		_, err := os.Stat(rc.expectedErrorFilename)
-		if !os.IsNotExist(err) && err != nil {
+		if !errors.Is(err, os.ErrNotExist) && err != nil {
 			t.FailNow()
 		}
 		if err == nil {
