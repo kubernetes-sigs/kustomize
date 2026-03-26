@@ -294,7 +294,7 @@ func (gr *Runner) CheckoutReleaseBranch(
 	if yes {
 		gr.comment("checking out branch")
 		if out, err := gr.run(noHarmDone, "checkout", branch); err != nil {
-			fmt.Printf("error with checkout: %q", err.Error())
+			fmt.Printf("error with checkout: %q", err)
 			fmt.Printf("out: %q", out)
 			return fmt.Errorf(
 				"branch %q exists on remote %q, but isn't present locally",

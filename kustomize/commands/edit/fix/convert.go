@@ -116,7 +116,7 @@ func addTargets(repl *types.Replacement, varName string, files []string, fSys fi
 		for _, n := range nodes {
 			fieldPaths, options, err := findVarName(n, varName, []string{})
 			if err != nil {
-				return fmt.Errorf("error with %s: %s", file, err.Error())
+				return fmt.Errorf("error with %s: %s", file, err)
 			}
 			targets, err := constructTargets(file, n, fieldPaths, options)
 			if err != nil {

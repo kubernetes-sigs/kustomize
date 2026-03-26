@@ -159,7 +159,7 @@ func (r *GrepRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 			return err
 		}
 		// print error message and continue if there are multiple packages to annotate
-		fmt.Fprintf(w, "%s\n", err.Error())
+		fmt.Fprintf(w, "%s\n", err)
 	}
 	fmt.Fprint(w, out.String())
 	if out.String() != "" {

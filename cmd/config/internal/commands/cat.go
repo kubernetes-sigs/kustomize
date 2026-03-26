@@ -141,7 +141,7 @@ func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 			return err
 		}
 		// print error message and continue if there are multiple packages to annotate
-		fmt.Fprintf(w, "%s in package %q\n", err.Error(), pkgPath)
+		fmt.Fprintf(w, "%s in package %q\n", err, pkgPath)
 	}
 	fmt.Fprint(w, out.String())
 	if out.String() != "" {

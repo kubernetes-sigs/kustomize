@@ -83,7 +83,7 @@ func (r *CountRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 			return err
 		}
 		// print error message and continue if there are multiple packages to annotate
-		fmt.Fprintf(w, "%s\n", err.Error())
+		fmt.Fprintf(w, "%s\n", err)
 	}
 	return nil
 }
