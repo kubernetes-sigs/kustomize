@@ -70,6 +70,7 @@ func determineFieldOrder() []string {
 		"Components",
 		"OpenAPI",
 		"BuildMetadata",
+		"MergeKeys",
 	}
 
 	// Add deprecated fields here.

@@ -138,3 +138,7 @@ description: >
 * **buildMetadata** ([]string)
 
 	[BuildMetadata]({{< ref "buildMetadata.md" >}}) is a list of strings used to toggle different build options
+
+* **mergeKeys** ([][MergeKeySpec]({{< ref "mergeKeys.md" >}}))
+
+	[MergeKeys]({{< ref "mergeKeys.md" >}}) declares custom merge keys for list fields in CRD resources that lack registered OpenAPI schemas, preventing strategic merge patches from replacing those lists entirely.

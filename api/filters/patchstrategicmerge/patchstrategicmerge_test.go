@@ -14,9 +14,10 @@ import (
 
 func TestFilter(t *testing.T) {
 	testCases := map[string]struct {
-		input    string
-		patch    *yaml.RNode
-		expected string
+		input         string
+		patch         *yaml.RNode
+		mergeKeySpecs []yaml.MergeKeySpec
+		expected      string
 	}{
 		"simple": {
 			input: `apiVersion: v1
@@ -905,12 +906,47 @@ data:
   "6443": "key-int"
 `,
 		},
+		"customMergeKey": {
+			input: `apiVersion: example.com/v1
+kind: MyApp
+metadata:
+  name: app
+spec:
+  env:
+  - name: BASE
+    value: base
+`,
+			patch: yaml.MustParse(`apiVersion: example.com/v1
+kind: MyApp
+metadata:
+  name: app
+spec:
+  env:
+  - name: PATCH
+    value: patch
+`),
+			mergeKeySpecs: []yaml.MergeKeySpec{
+				{Path: []string{"spec", "env"}, Key: "name"},
+			},
+			expected: `apiVersion: example.com/v1
+kind: MyApp
+metadata:
+  name: app
+spec:
+  env:
+  - name: PATCH
+    value: patch
+  - name: BASE
+    value: base
+`,
+		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			f := Filter{
-				Patch: tc.patch,
+				Patch:         tc.patch,
+				MergeKeySpecs: tc.mergeKeySpecs,
 			}
 			if !assert.Equal(t,
 				strings.TrimSpace(tc.expected),

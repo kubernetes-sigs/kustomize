@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/resid"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -235,6 +237,7 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 		return nil, errors.WrapPrefixf(err, "accumulating components")
 	}
 
+	kt.setMergeKeySpecsOnResources(ra)
 	err = kt.runTransformers(ra)
 	if err != nil {
 		return nil, err
@@ -262,6 +265,44 @@ func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
 		return err
 	}
 	return ra.Intersection(kt.rFactory.FromResourceSlice(remainRes))
+}
+
+// setMergeKeySpecsOnResources propagates any mergeKeys declared in the
+// kustomization to the matching resources so that ApplySmPatch can merge
+// CRD list fields by key instead of replacing them.
+func (kt *KustTarget) setMergeKeySpecsOnResources(ra *accumulator.ResAccumulator) {
+	if len(kt.kustomization.MergeKeys) == 0 {
+		return
+	}
+	for _, r := range ra.ResMap().Resources() {
+		gvk := r.GetGvk()
+		specs := toYamlMergeKeySpecs(kt.kustomization.MergeKeys, gvk)
+		if len(specs) > 0 {
+			r.SetMergeKeySpecs(specs)
+		}
+	}
+}
+
+// toYamlMergeKeySpecs converts api-layer MergeKeySpec entries to the
+// kyaml-layer equivalent, filtering to only those matching gvk.
+func toYamlMergeKeySpecs(apiSpecs []types.MergeKeySpec, gvk resid.Gvk) []kyaml.MergeKeySpec {
+	result := make([]kyaml.MergeKeySpec, 0)
+	for _, s := range apiSpecs {
+		if s.Kind != "" && s.Kind != gvk.Kind {
+			continue
+		}
+		if s.Group != "" && s.Group != gvk.Group {
+			continue
+		}
+		if s.Version != "" && s.Version != gvk.Version {
+			continue
+		}
+		result = append(result, kyaml.MergeKeySpec{
+			Path: strings.Split(s.Path, "/"),
+			Key:  s.Key,
+		})
+	}
+	return result
 }
 
 func (kt *KustTarget) runGenerators(

@@ -24,7 +24,8 @@ import (
 // paired with metadata used by kustomize.
 type Resource struct {
 	kyaml.RNode
-	refVarNames []string
+	refVarNames   []string
+	mergeKeySpecs []kyaml.MergeKeySpec
 }
 
 var BuildAnnotations = []string{
@@ -491,6 +492,13 @@ func (r *Resource) AppendRefVarName(variable types.Var) {
 	r.refVarNames = append(r.refVarNames, variable.Name)
 }
 
+// SetMergeKeySpecs sets the custom merge key specs for this resource.
+// These are used by ApplySmPatch to merge list fields in CRD resources
+// that lack registered OpenAPI schemas.
+func (r *Resource) SetMergeKeySpecs(specs []kyaml.MergeKeySpec) {
+	r.mergeKeySpecs = specs
+}
+
 // ApplySmPatch applies the provided strategic merge patch.
 func (r *Resource) ApplySmPatch(patch *Resource) error {
 	n, ns, k := r.GetName(), r.GetNamespace(), r.GetKind()
@@ -498,7 +506,8 @@ func (r *Resource) ApplySmPatch(patch *Resource) error {
 		r.StorePreviousId()
 	}
 	if err := r.ApplyFilter(patchstrategicmerge.Filter{
-		Patch: &patch.RNode,
+		Patch:         &patch.RNode,
+		MergeKeySpecs: r.mergeKeySpecs,
 	}); err != nil {
 		return err
 	}
