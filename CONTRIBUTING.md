@@ -155,7 +155,7 @@ Kustomize follows the [Kubernetes Community Membership] contributor ladder. Role
 
 1. Contributor: Anyone who actively contributes code, issues or reviews to the project. All contributors must sign the [Contributor License Agreement].
 1. Reviewer: Contributors with a history of review and authorship on Kustomize. Has LGTM rights on the Kustomize repo (as do all kubernetes-sigs org members). Active contributors are encouraged to join the reviewers list to be automatically pinged on PRs.
-1. Approver: Highly experienced active reviewer and contributor to Kustomize. Has both LTGM and approval rights on the Kustomize repo, as well as "maintain" [Github permissions].
+1. Approver: Highly experienced active reviewer and contributor to Kustomize. Has both LGTM and approval rights on the Kustomize repo, as well as "maintain" [Github permissions].
 1. Owner: Approver who sets technical direction and makes or approves design decisions for the project. Has LGTM and approval rights on the Kustomize repo as well as "admin" [Github permissions].
 
 The kyaml module within the Kustomize repo has additional owners following the same ladder.
