@@ -7,5 +7,10 @@ helmGlobals:
   chartHome: charts
 
 helmCharts:
+# test a contains a namespace
 - name: namespace-fill
+  releaseName: test-a
   namespace: chart-ns
+# test b inherits the namespace from top level
+- name: namespace-fill
+  releaseName: test-b

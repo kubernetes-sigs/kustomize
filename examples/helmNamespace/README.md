@@ -31,23 +31,48 @@ output=$(kustomize build \
 printf '%s\n' "$output"
 ```
 
+## Helm Chart with Namespace in `helmChart.namespace`
+
 The Service is emitted by the chart without a namespace, so the example namespace should be applied:
 
 <!-- @checkMissingNamespaceFilled @testHelm -->
 ```sh
-printf '%s\n' "$output" | grep -A4 'name: chart-service' | grep 'namespace: top-level-ns'
+printf '%s\n' "$output" | grep -A4 'name: test-a-service' | grep 'namespace: chart-ns'
 ```
 
 The ConfigMap is emitted by the chart with an explicit namespace, so that value should be preserved:
 
 <!-- @checkExistingNamespacePreserved @testHelm -->
 ```sh
-printf '%s\n' "$output" | grep -A4 'name: chart-config' | grep 'namespace: chart-owned-ns'
+printf '%s\n' "$output" | grep -A4 'name: test-a-config' | grep 'namespace: chart-owned-ns'
 ```
 
 The Secret is emitted by the chart with an release namespace, so that value should be preserved:
 
 <!-- @checkExistingNamespacePreserved @testHelm -->
 ```sh
-printf '%s\n' "$output" | grep -A4 'name: chart-secret' | grep 'namespace: chart-ns'
+printf '%s\n' "$output" | grep -A4 'name: test-a-secret' | grep 'namespace: chart-ns'
+```
+
+## Helm Chart without Namespace in `helmChart.namespace`
+
+The Service is emitted by the chart without a namespace, so the example namespace should be applied:
+
+<!-- @checkMissingNamespaceFilled @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A4 'name: test-b-service' | grep 'namespace: top-level-ns'
+```
+
+The ConfigMap is emitted by the chart with an explicit namespace, so that value should be preserved:
+
+<!-- @checkExistingNamespacePreserved @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A4 'name: test-b-config' | grep 'namespace: chart-owned-ns'
+```
+
+The Secret is emitted by the chart with an release namespace, so that value should be preserved:
+
+<!-- @checkExistingNamespacePreserved @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A4 'name: test-b-secret' | grep 'namespace: top-level-ns'
 ```
