@@ -1179,6 +1179,52 @@ metadata:
 `)
 }
 
+func TestHelmChartDifferentNamespacesMissingResourceNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  annotations:
+    release-namespace: {{ .Release.Namespace }}
+`)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: transformer-ns
+helmCharts:
+  - name: service
+    releaseName: service
+    namespace: helm-ns
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    release-namespace: helm-ns
+  name: test-service
+  namespace: helm-ns
+`)
+}
+
 func TestHelmChartSameNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()
