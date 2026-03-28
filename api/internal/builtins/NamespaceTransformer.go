@@ -52,16 +52,17 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
+		helmGenerated := false
 		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
-			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
-			continue
+			// Preserve namespaces emitted by Helm, but still fill any missing namespace fields.
+			helmGenerated = true
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
 			Namespace:              p.Namespace,
 			FsSlice:                p.FieldSpecs,
 			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
-			UnsetOnly:              p.UnsetOnly,
+			UnsetOnly:              p.UnsetOnly || helmGenerated,
 		}); err != nil {
 			return err
 		}
