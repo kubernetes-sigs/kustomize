@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: chart-service
+spec:
+  selector:
+    app: chart-service
+  ports:
+  - port: 80
+    targetPort: 8080
