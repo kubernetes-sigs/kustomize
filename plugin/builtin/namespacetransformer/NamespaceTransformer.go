@@ -57,17 +57,21 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			// Don't mutate empty objects?
 			continue
 		}
-		helmGenerated := false
-		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
+		transformedNamespace := p.Namespace
+		unsetOnly := p.UnsetOnly
+		if annotations := r.GetAnnotations(); annotations[konfig.HelmGeneratedAnnotation] == "true" {
 			// Preserve namespaces emitted by Helm, but still fill any missing namespace fields.
-			helmGenerated = true
+			unsetOnly = true
+			if helmNamespace := annotations[konfig.HelmChartNamespaceAnnotation]; helmNamespace != "" {
+				transformedNamespace = helmNamespace
+			}
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
-			Namespace:              p.Namespace,
+			Namespace:              transformedNamespace,
 			FsSlice:                p.FieldSpecs,
 			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
-			UnsetOnly:              p.UnsetOnly || helmGenerated,
+			UnsetOnly:              unsetOnly,
 		}); err != nil {
 			return err
 		}
