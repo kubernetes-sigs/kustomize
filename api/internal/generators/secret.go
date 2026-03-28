@@ -50,7 +50,7 @@ func MakeSecret(
 	if err != nil {
 		return nil, err
 	}
-	if err = rn.LoadMapIntoSecretData(m); err != nil {
+	if err = rn.LoadMapIntoSecretData(m.values); err != nil {
 		return nil, err
 	}
 	copyLabelsAndAnnotations(rn, args.Options)
