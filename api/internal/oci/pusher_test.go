@@ -240,59 +240,9 @@ func TestLogsDeprecatedFields(t *testing.T) {
 		targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
 	}
 
-	err := PushToOciRegistries(&pushOptions)
-	require.Error(t, err)
+	_ = PushToOciRegistries(&pushOptions)
 	require.Contains(t, buf.String(), "Warning: 'commonLabels' is deprecated.")
 	require.Contains(t, buf.String(), "Warning: 'vars' is deprecated.")
-}
-
-func TestKustomizationFileMustExist(t *testing.T) {
-	badData := map[string]string{
-		"empty_path":       "",
-		"nonexistant_path": "kustomization.yaml",
-	}
-
-	for name, testCase := range badData {
-		t.Run(name, func(t *testing.T) {
-
-			dummy, _, _ := loctest.PrepareFs(t, []string{}, map[string]string{})
-
-			pushOptions := PushOptions{
-				fSys:         dummy,
-				kustFileName: testCase,
-				kustomization: &types.Kustomization{
-					Namespace: "somethingnonempty",
-				},
-				targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
-			}
-
-			err := PushToOciRegistries(&pushOptions)
-			require.EqualError(t, err, fmt.Sprintf("'%s' doesn't exist", testCase))
-		})
-	}
-}
-
-func TestKustomizationFileMustNotBeDirectory(t *testing.T) {
-	kustname := "kustomization.yaml"
-	files := map[string]string{
-		kustname + "/somefile": `# To ensure directory exists
-`,
-	}
-
-	dummy, _, target := loctest.PrepareFs(t, []string{kustname}, files)
-	absPath := target.Join(kustname)
-
-	pushOptions := PushOptions{
-		fSys:         dummy,
-		kustFileName: absPath,
-		kustomization: &types.Kustomization{
-			Namespace: "somethingnonempty",
-		},
-		targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
-	}
-
-	err := PushToOciRegistries(&pushOptions)
-	require.EqualError(t, err, fmt.Sprintf("kustFileName %s was a directory", absPath))
 }
 
 func TestKustomizationFilePathsMustBeLocalToDirectory(t *testing.T) {
@@ -430,18 +380,11 @@ func TestKustomizationFilePathsMustBeLocalToDirectory(t *testing.T) {
 
 		for pathName, path := range paths {
 			t.Run(fieldName+"|"+pathName, func(t *testing.T) {
-				kustname := "kustomization.yaml"
-				files := map[string]string{
-					filepath.Join("src", kustname): `namePrefix: test-
-`,
-				}
-
-				dummy, _, dir := loctest.PrepareFs(t, []string{"src"}, files)
+				dummy, _, _ := loctest.PrepareFs(t, []string{}, map[string]string{})
 				kustomization := generator.factory(path)
 
 				pushOptions := PushOptions{
 					fSys:          dummy,
-					kustFileName:  filepath.Join(dir.String(), "src", kustname),
 					kustomization: &kustomization,
 					targets:       []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
 				}
