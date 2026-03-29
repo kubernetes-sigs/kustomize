@@ -29,14 +29,15 @@ import (
 
 // KustTarget encapsulates the entirety of a kustomization build.
 type KustTarget struct {
-	kustomization     *types.Kustomization
-	kustFileName      string
-	ldr               ifc.Loader
-	validator         ifc.Validator
-	rFactory          *resmap.Factory
-	pLdr              *loader.Loader
-	origin            *resource.Origin
-	helmRootNamespace string // namespace inherited from parent kustomization for HelmCharts
+	kustomization                *types.Kustomization
+	kustFileName                 string
+	ldr                          ifc.Loader
+	validator                    ifc.Validator
+	rFactory                     *resmap.Factory
+	pLdr                         *loader.Loader
+	origin                       *resource.Origin
+	helmRootNamespace            string // namespace inherited from parent kustomization for HelmCharts
+	suppressDeprecationWarnings  bool   // when true, suppresses warnings about deprecated fields
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -53,6 +54,12 @@ func NewKustTarget(
 	}
 }
 
+// SetSuppressDeprecationWarnings controls whether deprecation warnings
+// are printed to stderr when loading kustomization files.
+func (kt *KustTarget) SetSuppressDeprecationWarnings(suppress bool) {
+	kt.suppressDeprecationWarnings = suppress
+}
+
 // Load attempts to load the target's kustomization file.
 func (kt *KustTarget) Load() error {
 	content, kustFileName, err := LoadKustFile(kt.ldr)
@@ -66,9 +73,11 @@ func (kt *KustTarget) Load() error {
 	}
 
 	// show warning message when using deprecated fields.
-	if warningMessages := k.CheckDeprecatedFields(); warningMessages != nil {
-		for _, msg := range *warningMessages {
-			fmt.Fprintf(os.Stderr, "%v\n", msg)
+	if !kt.suppressDeprecationWarnings {
+		if warningMessages := k.CheckDeprecatedFields(); warningMessages != nil {
+			for _, msg := range *warningMessages {
+				fmt.Fprintf(os.Stderr, "%v\n", msg)
+			}
 		}
 	}
 
@@ -490,6 +499,7 @@ func (kt *KustTarget) accumulateDirectory(
 	ra *accumulator.ResAccumulator, ldr ifc.Loader, isComponent bool) (*accumulator.ResAccumulator, error) {
 	defer ldr.Cleanup()
 	subKt := NewKustTarget(ldr, kt.validator, kt.rFactory, kt.pLdr)
+	subKt.suppressDeprecationWarnings = kt.suppressDeprecationWarnings
 	err := subKt.Load()
 	if err != nil {
 		return nil, errors.WrapPrefixf(

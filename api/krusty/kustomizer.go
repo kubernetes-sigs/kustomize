@@ -71,6 +71,7 @@ func (b *Kustomizer) Run(
 		// The plugin configs are always located on disk, regardless of the fSys passed in
 		pLdr.NewLoader(b.options.PluginConfig, resmapFactory, filesys.MakeFsOnDisk()),
 	)
+	kt.SetSuppressDeprecationWarnings(b.options.SuppressDeprecationWarnings)
 	err = kt.Load()
 	if err != nil {
 		return nil, err
