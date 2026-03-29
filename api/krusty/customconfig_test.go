@@ -336,6 +336,45 @@ spec:
 `)
 }
 
+func TestInlineConfig(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteF("/app/resource.yaml", `
+apiVersion: config/v1
+kind: MyKind
+metadata:
+  name: testSvc
+spec:
+  container:
+    image: crd-image
+`)
+	th.WriteK("/app", `
+resources:
+- resource.yaml
+images:
+- name: crd-image
+  newName: new-crd-image
+  newTag: new-v1-tag
+configurations:
+- |-
+  images:
+  - kind: MyKind
+    path: spec/container/image
+`)
+
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: config/v1
+kind: MyKind
+metadata:
+  name: testSvc
+spec:
+  container:
+    image: new-crd-image:new-v1-tag
+`)
+}
+
 func TestLabelTransformerConfig(t *testing.T) {
 	testCases := []struct {
 		name              string
