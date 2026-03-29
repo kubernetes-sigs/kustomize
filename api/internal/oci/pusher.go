@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/distribution/reference"
+	"oras.land/oras-go/v2/registry/remote/credentials"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -16,8 +17,8 @@ import (
 
 type PushOptions struct {
 	fSys          filesys.FileSystem
+	root          filesys.ConfirmedDir
 	kustomization *types.Kustomization
-	kustFileName  string
 	targets       []reference.NamedTagged
 	annotations   map[string]string
 }
@@ -119,14 +120,6 @@ func PushToOciRegistries(options *PushOptions) error {
 	}
 
 	options.kustomization.FixKustomization()
-
-	_, kustFileName, err := options.fSys.CleanedAbs(options.kustFileName)
-	if err != nil {
-		return err
-	}
-	if kustFileName == "" {
-		return errors.Errorf("kustFileName %s was a directory", options.kustFileName)
-	}
 
 	// We attempt to perform validation that the paths are either remote URLs or in the root of the kustomization file.
 	// There are limitations:
