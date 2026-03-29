@@ -45,6 +45,10 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// SuppressDeprecationWarnings suppresses warnings about deprecated fields
+	// in kustomization files (e.g., bases, commonLabels, vars).
+	SuppressDeprecationWarnings bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.

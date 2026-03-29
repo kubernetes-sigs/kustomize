@@ -27,13 +27,14 @@ var theFlags struct {
 		managedByLabel bool
 		helm           bool
 	}
-	helmCommand     string
-	helmApiVersions []string
-	helmKubeVersion string
-	helmDebug       bool
-	loadRestrictor  string
-	reorderOutput   string
-	fnOptions       types.FnPluginLoadingOptions
+	helmCommand                 string
+	helmApiVersions             []string
+	helmKubeVersion             string
+	helmDebug                   bool
+	loadRestrictor              string
+	reorderOutput               string
+	fnOptions                   types.FnPluginLoadingOptions
+	suppressDeprecationWarnings bool
 }
 
 type Help struct {
@@ -128,6 +129,7 @@ func NewCmdBuild(
 	}
 
 	AddFlagEnableHelm(cmd.Flags())
+	AddFlagSuppressDeprecationWarnings(cmd.Flags())
 	return cmd
 }
 
@@ -166,5 +168,6 @@ func HonorKustomizeFlags(kOpts *krusty.Options, flags *flag.FlagSet) *krusty.Opt
 	kOpts.PluginConfig.HelmConfig.KubeVersion = theFlags.helmKubeVersion
 	kOpts.PluginConfig.HelmConfig.Debug = theFlags.helmDebug
 	kOpts.AddManagedbyLabel = isManagedByLabelEnabled()
+	kOpts.SuppressDeprecationWarnings = theFlags.suppressDeprecationWarnings
 	return kOpts
 }
