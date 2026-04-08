@@ -53,12 +53,12 @@ func TestOptions_Validate(t *testing.T) {
 		{
 			name:    "invalid output yml",
 			opts:    newOptionsWithOutput("yml"),
-			wantErr: "--output must be 'yaml' or 'json'",
+			wantErr: errInvalidOutput.Error(),
 		},
 		{
 			name:    "invalid output xml",
 			opts:    newOptionsWithOutput("xml"),
-			wantErr: "--output must be 'yaml' or 'json'",
+			wantErr: errInvalidOutput.Error(),
 		},
 		{
 			name:    "short and output mutually exclusive",
@@ -131,7 +131,7 @@ func TestOptions_Run_ValidOutputs(t *testing.T) {
 func TestOptions_Run_InvalidOutputReturnsError(t *testing.T) {
 	o := newOptionsWithOutput("yml")
 	err := o.Run()
-	require.EqualError(t, err, "--output must be 'yaml' or 'json'")
+	require.EqualError(t, err, errInvalidOutput.Error())
 }
 
 func TestNewCmdVersion_InvalidOutputFlag(t *testing.T) {
@@ -141,5 +141,5 @@ func TestNewCmdVersion_InvalidOutputFlag(t *testing.T) {
 	cmd.SilenceUsage = true  // prevent cobra from printing usage to os.Stderr
 	cmd.SetArgs([]string{"--output=yml"})
 	err := cmd.Execute()
-	require.EqualError(t, err, "--output must be 'yaml' or 'json'")
+	require.EqualError(t, err, errInvalidOutput.Error())
 }
