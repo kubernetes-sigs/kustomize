@@ -187,6 +187,29 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 	return stdout.Bytes(), err
 }
 
+// runHelmCommandWithSystemEnv runs helm without overriding the HELM env vars,
+// so commands that need the user's real helm configuration (e.g. repo indexes
+// for dependency resolution) can find them.
+func (p *HelmChartInflationGeneratorPlugin) runHelmCommandWithSystemEnv(args []string) ([]byte, error) {
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	cmd := exec.Command(p.h.GeneralConfig().HelmConfig.Command, args...)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	cmd.Env = os.Environ()
+	err := cmd.Run()
+	if err != nil {
+		helm := p.h.GeneralConfig().HelmConfig.Command
+		err = errors.WrapPrefixf(
+			fmt.Errorf(
+				"unable to run: '%s %s' (is '%s' installed?): %w",
+				helm, strings.Join(args, " "), helm, err),
+			"%s", stderr.String(),
+		)
+	}
+	return stdout.Bytes(), err
+}
+
 // createNewMergedValuesFile replaces/merges original values file with ValuesInline.
 func (p *HelmChartInflationGeneratorPlugin) createNewMergedValuesFile() (
 	path string, err error) {
@@ -278,6 +301,10 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 		if _, err := p.runHelmCommand(p.pullCommand()); err != nil {
 			return nil, err
 		}
+	} else if p.h.GeneralConfig().HelmConfig.DependencyUpdate {
+		if _, err := p.runHelmCommandWithSystemEnv(p.dependencyUpdateCommand(path)); err != nil {
+			return nil, err
+		}
 	}
 	if len(p.ValuesInline) > 0 {
 		p.ValuesFile, err = p.createNewMergedValuesFile()
@@ -345,6 +372,10 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 		args = append(args, "--devel")
 	}
 	return args
+}
+
+func (p *HelmChartInflationGeneratorPlugin) dependencyUpdateCommand(chartPath string) []string {
+	return []string{"dependency", "update", chartPath}
 }
 
 // chartExistsLocally will return true if the chart does exist in

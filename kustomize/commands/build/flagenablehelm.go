@@ -36,4 +36,9 @@ func AddFlagEnableHelm(set *pflag.FlagSet) {
 		"helm-debug",
 		false,
 		"Enable debug output from the Helm chart inflator generator.")
+	set.BoolVar(
+		&theFlags.helmDependencyUpdate,
+		"helm-dependency-update",
+		false,
+		"Run 'helm dependency update' on local charts before rendering. Requires --enable-helm.")
 }
