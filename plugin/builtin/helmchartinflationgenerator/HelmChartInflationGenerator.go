@@ -278,12 +278,25 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 	if err = p.checkHelmVersion(); err != nil {
 		return nil, err
 	}
-	if path, exists := p.chartExistsLocally(); !exists {
+	chartPath, exists := p.chartExistsLocally()
+	if !exists {
 		if p.Repo == "" {
 			return nil, fmt.Errorf(
-				"no repo specified for pull, no chart found at '%s'", path)
+				"no repo specified for pull, no chart found at '%s'",
+				filepath.Join(p.absChartHome(), p.Name))
 		}
 		if _, err := p.runHelmCommand(p.pullCommand()); err != nil {
+			return nil, err
+		}
+		chartPath, exists = p.chartExistsLocally()
+		if !exists {
+			return nil, fmt.Errorf(
+				"chart not found at %q after helm pull",
+				filepath.Join(p.absChartHome(), p.Name))
+		}
+	}
+	if p.h.GeneralConfig().HelmConfig.DependencyUpdate {
+		if _, err := p.runHelmCommand([]string{"dependency", "update", chartPath}); err != nil {
 			return nil, err
 		}
 	}

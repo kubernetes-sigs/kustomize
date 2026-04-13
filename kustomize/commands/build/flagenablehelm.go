@@ -4,6 +4,8 @@
 package build
 
 import (
+	"fmt"
+
 	"github.com/spf13/pflag"
 )
 
@@ -36,4 +38,17 @@ func AddFlagEnableHelm(set *pflag.FlagSet) {
 		"helm-debug",
 		false,
 		"Enable debug output from the Helm chart inflator generator.")
+	set.BoolVar(
+		&theFlags.helmDependencyUpdate,
+		"helm-dependency-update",
+		false,
+		"Run 'helm dependency update' on each chart before rendering. Requires --enable-helm or --enable-alpha-plugins.")
+}
+
+func validateFlagHelmDependencyUpdate() error {
+	if theFlags.helmDependencyUpdate && !theFlags.enable.helm && !theFlags.enable.plugins {
+		return fmt.Errorf(
+			"--helm-dependency-update requires --enable-helm or --enable-alpha-plugins")
+	}
+	return nil
 }

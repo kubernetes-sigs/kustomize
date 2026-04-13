@@ -5,6 +5,7 @@ package krusty_test
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -1306,4 +1307,71 @@ func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.Harnes
 	fs := th.GetFSys()
 	require.NoError(t, fs.MkdirAll(filepath.Join(thDir, "templates")))
 	require.NoError(t, copyutil.CopyDir(th.GetFSys(), chartDir, thDir))
+}
+
+// TestHelmDependencyUpdate verifies HelmConfig.DependencyUpdate runs
+// `helm dependency update` so local charts with dependencies can render
+// (https://github.com/kubernetes-sigs/kustomize/issues/6119).
+func TestHelmDependencyUpdate(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartBase := filepath.Join(th.GetRoot(), "charts")
+	wrapperDir := filepath.Join(chartBase, "wrapper")
+	subchartDir := filepath.Join(chartBase, "subchart")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(wrapperDir, "templates")))
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(subchartDir, "templates")))
+
+	th.WriteF(filepath.Join(wrapperDir, "Chart.yaml"), `
+apiVersion: v2
+name: wrapper
+type: application
+version: 0.1.0
+dependencies:
+  - name: subchart
+    version: 0.1.0
+    repository: "file://../subchart"
+`)
+	th.WriteF(filepath.Join(wrapperDir, "values.yaml"), ``)
+
+	th.WriteF(filepath.Join(subchartDir, "Chart.yaml"), `
+apiVersion: v2
+name: subchart
+type: application
+version: 0.1.0
+`)
+	th.WriteF(filepath.Join(subchartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(subchartDir, "templates", "cm.yaml"), `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-from-sub
+data:
+  k: v
+`)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+helmCharts:
+  - name: wrapper
+    releaseName: wr
+`)
+
+	o := th.MakeOptionsPluginsEnabled()
+	err := th.RunWithErr(th.GetRoot(), o)
+	require.Error(t, err)
+	require.True(t,
+		strings.Contains(err.Error(), "dependency") || strings.Contains(err.Error(), "charts/"),
+		"expected dependency error, got: %v", err)
+
+	o.PluginConfig.HelmConfig.DependencyUpdate = true
+	m := th.Run(th.GetRoot(), o)
+	yml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Contains(t, string(yml), "kind: ConfigMap")
+	require.Contains(t, string(yml), "from-sub")
 }

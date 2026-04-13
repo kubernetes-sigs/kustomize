@@ -9,6 +9,10 @@ type HelmConfig struct {
 	ApiVersions []string
 	KubeVersion string
 	Debug       bool
+	// DependencyUpdate, when true, runs "helm dependency update" on the chart
+	// directory before "helm template". Opt-in because it can be slow and uses
+	// the network for remote chart dependencies.
+	DependencyUpdate bool
 }
 
 // PluginConfig holds plugin configuration.
