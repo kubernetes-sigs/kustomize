@@ -33,3 +33,24 @@ func RestrictionNone(
 	_ filesys.FileSystem, _ filesys.ConfirmedDir, path string) (string, error) {
 	return path, nil
 }
+
+// RestrictionRootAndAncestors allows loading files from the root and its ancestor directories.
+func RestrictionRootAndAncestors(
+	fSys filesys.FileSystem, root filesys.ConfirmedDir, path string) (string, error) {
+	d, f, err := fSys.CleanedAbs(path)
+	if err != nil {
+		return "", err
+	}
+	if f == "" {
+		return "", fmt.Errorf("'%s' must resolve to a file", path)
+	}
+	if d.HasPrefix(root) {
+		return d.Join(f), nil
+	}
+	if root.HasPrefix(d) {
+		return d.Join(f), nil
+	}
+	return "", fmt.Errorf(
+		"security; file '%s' is not in or below '%s' and is not in an ancestor directory",
+		path, root)
+}
