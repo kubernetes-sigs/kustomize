@@ -187,6 +187,121 @@ map:
 				},
 			},
 		},
+		"structured yaml in scalar": {
+			referrerOriginal: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  config.yaml: |
+    auth:
+      secretName: app-credentials
+`,
+			candidates: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-credentials-hashed
+`,
+			originalNames: []string{"app-credentials"},
+			referrerFinal: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  config.yaml: |-
+    auth:
+      secretName: app-credentials-hashed
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{
+					Path: "data/config.yaml//auth.secretName",
+				},
+				ReferralTarget: resid.Gvk{
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"structured json in scalar": {
+			referrerOriginal: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  cfg.json: '{"auth":{"secretName":"app-credentials"}}'
+`,
+			candidates: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-credentials-hashed
+`,
+			originalNames: []string{"app-credentials"},
+			referrerFinal: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  cfg.json: '{"auth":{"secretName":"app-credentials-hashed"}}'
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{
+					Path: "data/cfg.json//auth.secretName",
+				},
+				ReferralTarget: resid.Gvk{
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		"structured mapping ref": {
+			referrerOriginal: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  cfg.yaml: |
+    spec:
+      secretRef:
+        name: app-credentials
+        namespace: default
+`,
+			candidates: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-credentials-hashed
+  namespace: default
+`,
+			originalNames: []string{"app-credentials"},
+			referrerFinal: `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  cfg.yaml: |-
+    spec:
+      secretRef:
+        name: app-credentials-hashed
+        namespace: default
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{
+					Path: "data/cfg.yaml//spec.secretRef",
+				},
+				ReferralTarget: resid.Gvk{
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
 		"null value": {
 			referrerOriginal: `
 apiVersion: apps/v1
