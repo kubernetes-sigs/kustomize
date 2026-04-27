@@ -5,7 +5,6 @@ go 1.25
 require sigs.k8s.io/kustomize/kyaml v0.14.2
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
