@@ -20,6 +20,7 @@ import (
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	oras "oras.land/oras-go/v2"
 	"oras.land/oras-go/v2/content/file"
+	"oras.land/oras-go/v2/content/memory"
 	"oras.land/oras-go/v2/content/oci"
 )
 
@@ -115,6 +116,13 @@ func (o *publishOptions) RunPublish(fSys filesys.FileSystem) error {
 	if err != nil {
 		return err
 	}
+
+	d := memory.New()
+
+	f, err := fSys.Open("")
+	defer f.Close()
+
+	d.Push(ctx, fileDescriptor, f)
 
 	opts := oras.PackManifestOptions{
 		Layers: []v1.Descriptor{

@@ -4,12 +4,22 @@
 package oci
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/distribution/reference"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+	oras "oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content/file"
+	"oras.land/oras-go/v2/registry/remote"
+	"oras.land/oras-go/v2/registry/remote/auth"
 	"oras.land/oras-go/v2/registry/remote/credentials"
+	"oras.land/oras-go/v2/registry/remote/retry"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -95,7 +105,7 @@ func validateFilePaths(k *types.Kustomization) *[]error {
 }
 
 func PushToOciRegistries(options *PushOptions) error {
-	// ctx := context.Background()
+	ctx := context.Background()
 
 	if len(options.targets) == 0 {
 		return errors.Errorf("At least one target is required.")
@@ -131,151 +141,69 @@ func PushToOciRegistries(options *PushOptions) error {
 		return errors.Errorf("kustomization includes non-local file paths: %v", pathErrors)
 	}
 
-	// var dir string = filepath.Dir(mf.GetPath())
+	dir := options.root.String()
+	local, err := file.New(dir)
+	if err != nil {
+		return err
+	}
+	defer local.Close()
 
-	// fs, err := file.New("")
-	// if err != nil {
-	// 	return err
-	// }
-	// defer fs.Close()
+	descriptor, err := local.Add(ctx, ".", "mediaType", dir)
+	if err != nil {
+		return err
+	}
 
-	// fileDescriptor, err := fs.Add(ctx, ".", "", dir)
-	// if err != nil {
-	// 	return err
-	// }
+	manifestOptions := oras.PackManifestOptions{
+		Layers: []v1.Descriptor{
+			descriptor,
+		},
 
-	// d := memory.New()
+		// ManifestAnnotations: map[string]string{
+		// 	"org.opencontainers.image.created": o.createdAt.Format(time.RFC3339),
+		// },
+	}
+	artifactType := fmt.Sprintf("application/vnd.%s+%s", strings.ToLower(strings.ReplaceAll(options.kustomization.APIVersion, "/", ".")), strings.ToLower(options.kustomization.Kind))
+	manifestDescriptor, err := oras.PackManifest(ctx, local, oras.PackManifestVersion1_1, artifactType, manifestOptions)
+	if err != nil {
+		return err
+	}
 
-	// mediaTypes := make(map[string]string)
+	tag := descriptor.Digest.Encoded()
+	if err = local.Tag(ctx, manifestDescriptor, tag); err != nil {
+		return err
+	}
 
-	// if err := options.fSys.Walk(string(options.root), func(path string, info os.FileInfo, err error) error {
-	// 	if err != nil {
-	// 		return err
-	// 	}
+	credentialStore, err := credentials.NewStoreFromDocker(credentials.StoreOptions{DetectDefaultNativeStore: true})
+	if err != nil {
+		return err
+	}
 
-	// 	if info.IsDir() {
-	// 		return nil
-	// 	}
+	log.Printf("Authorization configured: %t", credentialStore.IsAuthConfigured())
+	val := os.Getenv("DOCKER_CONFIG")
 
-	// 	var b string = filepath.Base(path)
-	// 	for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
-	// 		if b == kfilename {
-	// 			mediaTypes[path] = "application/vnd.kustomize.config.k8s.io.v1beta1+yaml"
-	// 			return nil
-	// 		}
-	// 	}
+	log.Printf("docker config: %s", val)
 
-	// 	mediaTypes[path] = "application/vnd.kustomize.unknown.v1beta1"
+	log.Println("after cred store")
 
-	// 	return nil
-	// }); err != nil {
-	// 	return err
-	// }
+	for _, remoteReference := range options.targets {
+		repo, err := remote.NewRepository(remoteReference.Name())
+		if err != nil {
+			return err
+		}
 
-	// ms := memory.New()
+		log.Println("after repo creation")
 
-	// st, err := oci.New("")
-	// vs, err := file.New("")
+		repo.Client = &auth.Client{
+			Client:     retry.DefaultClient,
+			Cache:      auth.NewCache(),
+			Credential: credentials.Credential(credentialStore),
+		}
 
-	// descriptors := make([]v1.Descriptor, len(mediaTypes))
-
-	// for path, mediaType := range mediaTypes {
-	// 	bt, err := options.fSys.ReadFile(path)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	descriptor := v1.Descriptor{
-	// 		MediaType: mediaType,
-	// 		Digest:    digest.FromBytes(bt),
-	// 		Size:      int64(len(bt)),
-	// 	}
-
-	// 	descriptors = append(descriptors, descriptor)
-
-	// 	ms.Push(ctx, descriptor, bytes.NewReader(bt))
-
-	// }
-
-	// oras.PackManifest(ctx, d, oras.PackManifestVersion1_1, "sdfsdf", oras.PackManifestOptions{})
-
-	// f, err := fSys.Open("")
-	// defer f.Close()
-
-	// d.Push(ctx, fileDescriptor, f)
-
-	// opts := oras.PackManifestOptions{
-	// 	Layers: []v1.Descriptor{
-	// 		fileDescriptor,
-	// 	},
-	// 	ManifestAnnotations: map[string]string{
-	// 		"org.opencontainers.image.created": o.createdAt.Format(time.RFC3339),
-	// 	},
-	// }
-
-	// artifactType := fmt.Sprintf("application/vnd.%s+%s", strings.ToLower(strings.ReplaceAll(kustomization.APIVersion, "/", ".")), strings.ToLower(kustomization.Kind))
-	// manifestDescriptor, err := oras.PackManifest(ctx, fs, oras.PackManifestVersion1_1, artifactType, opts)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// tag := "latest"
-	// if err = fs.Tag(ctx, manifestDescriptor, tag); err != nil {
-	// 	return err
-	// }
-
-	// dst, err := oci.New(o.registry)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // }
-	// // reg, err := remote.NewRegistry(o.registry)
-	// // reg.PlainHTTP = true
-
-	// // dst, err := reg.Repository(ctx, "destination")
-	// // if err != nil {
-	// // 	panic(err) // Handle error
-	// // }
-
-	// desc, err := oras.Copy(ctx, fs, tag, dst, tag, oras.DefaultCopyOptions)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// log.Printf(`SUCCESS: published %s:%s@%s\n`, o.registry, tag, desc.Digest)
-
-	// return nil
-
-	// src, err := oci.New(repoSpec.RepoPath)
-	// if err != nil {
-	// 	return err
-	// }
-	// dir, err := filesys.NewTmpConfirmedDir()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// repoSpec.Dir = dir
-
-	// fs, err := file.New(dir.String())
-	// if err != nil {
-	// 	return err
-	// }
-	// defer fs.Close()
-
-	// reference := "latest"
-	// if repoSpec.Tag != "" {
-	// 	reference = repoSpec.Tag
-	// } else if repoSpec.Digest != "" {
-	// 	reference = repoSpec.Digest
-	// }
-
-	// desc, err := oras.Copy(ctx, src, reference, fs, "", oras.DefaultCopyOptions)
-	// if err != nil {
-	// 	return err
-	// } else if repoSpec.Digest != "" && repoSpec.Digest != desc.Digest.String() {
-	// 	return errors.Errorf("expected digest %s, but pulled artifact with digest %s", repoSpec.Digest, desc.Digest)
-	// }
+		_, err = oras.Copy(ctx, local, tag, repo, remoteReference.Tag(), oras.DefaultCopyOptions)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

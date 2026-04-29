@@ -10,6 +10,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -19,11 +20,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cpuguy83/dockercfg"
 	"github.com/distribution/reference"
-	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/registry"
 	"github.com/testcontainers/testcontainers-go/wait"
 	loctest "sigs.k8s.io/kustomize/api/testutils/localizertest"
 	"sigs.k8s.io/kustomize/api/types"
@@ -31,21 +33,36 @@ import (
 
 type PusherTestSuite struct {
 	suite.Suite
-	registry              *testcontainers.DockerContainer
-	address               string
-	certificate_directory string
-	ctx                   context.Context
+	registry       *registry.RegistryContainer
+	user           string
+	password       string
+	address        string
+	root_directory string
+	ca_directory   string
+	valid_auth     string
+	ctx            context.Context
 }
 
 func (suite *PusherTestSuite) SetupSuite() {
+	root_directory := suite.T().TempDir()
+	// root_directory, err := os.MkdirTemp("", "kustomize-pusher-*")
+	// suite.T().TempDir()
+	// if err != nil {
+	// 	suite.FailNow("failed to create temp directory: %s", err)
+	// }
+	suite.root_directory = root_directory
 	certificate, key := generateSelfSignedCert(suite)
 
 	const container_cert_path = "/certs/registry.pem"
 	const container_key_path = "/certs/registry.key"
-	registry_port := nat.Port("5000/tcp")
+
+	suite.user = "testuser"
+	suite.password = "password"
 
 	suite.ctx = context.Background()
-	container, err := testcontainers.Run(suite.ctx, "docker.io/library/registry:3.0.0",
+	registryContainer, err := registry.Run(suite.ctx, "registry:3.0.0",
+		// password is "password"
+		registry.WithHtpasswd(fmt.Sprintf("%s:$2a$10$vR5ZBV/DGA/qXAU9rlGYD./Jx786wR7i9yge2.UAnfkb/1u.WjJNK", suite.user)),
 		testcontainers.WithFiles(
 			testcontainers.ContainerFile{
 				HostFilePath:      certificate,
@@ -62,44 +79,64 @@ func (suite *PusherTestSuite) SetupSuite() {
 			"REGISTRY_HTTP_TLS_CERTIFICATE": container_cert_path,
 			"REGISTRY_HTTP_TLS_KEY":         container_key_path,
 		}),
-		testcontainers.WithExposedPorts(registry_port.Port()),
 		testcontainers.WithWaitStrategy(
-			wait.ForMappedPort(registry_port),
-			wait.ForLog(fmt.Sprintf("listening on [::]:%s", registry_port.Port())),
+			wait.ForMappedPort("5000/tcp"),
 		),
 	)
+	testcontainers.CleanupContainer(suite.T(), registryContainer)
+
+	log.Printf("Address: %p", suite.T())
 	if err != nil {
 		suite.T().Fatal(err)
 	}
 
-	ip, _ := container.Host(suite.ctx)
-	port, _ := container.MappedPort(suite.ctx, registry_port)
-	suite.address = fmt.Sprintf("https://%s:%s", ip, port.Port())
-	suite.registry = container
+	address, err := registryContainer.HostAddress(suite.ctx)
+	if err != nil {
+		suite.T().Fatal(err)
+	}
+
+	suite.address = address
+
+	suite.valid_auth = filepath.Join(root_directory, "valid_config")
+	if err := createConfig(address, suite.user, suite.password, suite.valid_auth); err != nil {
+		suite.T().Fatal(err)
+	}
 }
 
-func (suite *PusherTestSuite) TearDownSuite() {
-	if suite.registry != nil {
-		if err := suite.registry.Terminate(suite.ctx); err != nil {
-			suite.FailNow("error terminating postgres container: %s", err)
-		}
+func createConfig(address string, user string, password string, directory string) error {
+	auth_config, err := registry.DockerAuthConfig(address, user, password)
+	if err != nil {
+		return err
 	}
-	if suite.certificate_directory != "" {
-		if err := os.RemoveAll(suite.certificate_directory); err != nil {
-			suite.FailNow("error removing temp certificate directory: %s", err)
-		}
+
+	if err := os.Mkdir(directory, 0750); err != nil {
+		return err
 	}
+
+	config_path := filepath.Join(directory, "config.json")
+	valid_auth_file, err := os.Create(config_path)
+	if err != nil {
+		return err
+	}
+
+	encoder := json.NewEncoder(valid_auth_file)
+	if err := encoder.Encode(dockercfg.Config{AuthConfigs: auth_config}); err != nil {
+		return err
+	}
+
+	return nil
 }
+
+// func (suite *PusherTestSuite) TearDownSuite() {
+// 	if suite.root_directory != "" {
+// 		if err := os.RemoveAll(suite.root_directory); err != nil {
+// 			suite.FailNow("error removing temp certificate directory: %s", err)
+// 		}
+// 	}
+// }
 
 // Set up the registry.
-
 func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key string) {
-	directory, err := os.MkdirTemp("", "certs")
-	if err != nil {
-		suite.FailNow("failed to create temp directory: %s", err)
-	}
-	suite.certificate_directory = directory
-
 	// Generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
@@ -115,8 +152,12 @@ func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key str
 		NotBefore: time.Now(),
 		NotAfter:  time.Now().Add(24 * time.Hour),
 
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		DNSNames: []string{
+			"localhost",
+			"hub.docker.internal",
+		},
 		BasicConstraintsValid: true,
 	}
 
@@ -131,15 +172,23 @@ func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key str
 		Bytes: derBytes,
 	})
 
-	certificate_path := filepath.Join(directory, "registry.pem")
+	cert_directory := filepath.Join(suite.root_directory, "cert")
+	if err := os.Mkdir(cert_directory, 0o0750); err != nil {
+		suite.FailNow("failed to create certificate directory: %s", err)
+	}
+	suite.ca_directory = cert_directory
+	certificate_path := filepath.Join(cert_directory, "registry.crt")
 	os.WriteFile(certificate_path, certificate_bytes, 0o0640)
 
 	key_bytes := pem.EncodeToMemory(&pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	})
-
-	key_path := filepath.Join(directory, "registry.key")
+	key_directory := filepath.Join(suite.root_directory, "key")
+	if err := os.Mkdir(key_directory, 0o0750); err != nil {
+		suite.FailNow("failed to create certificate directory: %s", err)
+	}
+	key_path := filepath.Join(key_directory, "registry.key")
 	os.WriteFile(key_path, key_bytes, 0o0640)
 
 	return certificate_path, key_path
@@ -153,14 +202,71 @@ func AsNamedTagged(name string, tag string) reference.NamedTagged {
 
 func (suite *PusherTestSuite) TestPushSetup() {
 	t := suite.T()
+	log.Println("test temp dir: " + suite.root_directory)
+	log.Printf("Address: %p", &t)
 
-	t.Setenv("asdfsd", "asdfadsf")
+	t.Setenv("SSL_CERT_DIR", suite.ca_directory)
+
+	// registry.SetDockerAuthConfig("https://"+suite.address, suite.user, suite.password)
+
+	t.Setenv("DOCKER_CONFIG", suite.valid_auth)
+
+	kustomization := map[string]string{
+		"src/kustomization.yaml": `namePrefix: test-
+`,
+	}
+
+	_, actual, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+	loctest.SetWorkingDir(t, target.Join("src"))
+
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged(suite.address+"/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.EqualError(t, err, fmt.Sprintf("kustFileName %s was a directory", ""))
+
+	require.Equal(t, suite.address, "something")
+}
+
+func (suite *PusherTestSuite) TestPushSetup2() {
+	t := suite.T()
+	log.Println("test temp dir: " + suite.root_directory)
+	log.Printf("Address: %p", &t)
+
+	t.Setenv("SSL_CERT_DIR", suite.ca_directory)
+
+	// registry.SetDockerAuthConfig("https://"+suite.address, suite.user, suite.password)
+
+	t.Setenv("DOCKER_CONFIG", suite.valid_auth)
+
+	kustomization := map[string]string{
+		"src/kustomization.yaml": `namePrefix: test-
+`,
+	}
+
+	_, actual, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+	loctest.SetWorkingDir(t, target.Join("src"))
+
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged(suite.address+"/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.EqualError(t, err, fmt.Sprintf("kustFileName %s was a directory", ""))
 
 	require.Equal(t, suite.address, "something")
 }
 
 func TestPusherSuite(t *testing.T) {
-	os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
 	suite.Run(t, new(PusherTestSuite))
 }
 
@@ -396,6 +502,31 @@ func TestKustomizationFilePathsMustBeLocalToDirectory(t *testing.T) {
 		}
 	}
 }
+
+func TestMissingCredentialFile(t *testing.T) {
+	_, actual, dir := loctest.PrepareFs(t, []string{}, map[string]string{})
+
+	t.Setenv("DOCKER_CONFIG", dir.Join("config.json"))
+
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged("registry.domain/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.EqualError(t, err, fmt.Sprintf("kustFileName %s was a directory", ""))
+}
+
+// 	files := map[string]string{
+// 		filepath.Join("config", "something"): `# To ensure directory exists
+// `,
+// 	}
+
+// 	_, actual, _ := loctest.PrepareFs(t, []string{"config"}, files)
+// 	absPath := actual.Join()
 
 // func TestFnContainerTransformerWithConfig(t *testing.T) {
 

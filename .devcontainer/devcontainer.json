@@ -3,14 +3,28 @@
 {
 	"name": "Kustomize",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/go:2-1.25-trixie",
+	"image": "mcr.microsoft.com/devcontainers/go:2.1.1-1.25-trixie",
 	"workspaceFolder": "/workspaces/kustomize",
+	"containerEnv": {
+		// "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
+		"TESTCONTAINERS_RYUK_DISABLED": "true",
+	},
+	"mounts": [
+		{
+		"source": "/var/run/user/1000/podman/podman.sock",
+		"target": "/var/run/docker-host.sock",
+		"type": "bind"
+		}
+	],
 
 	"features": {
-		"ghcr.io/dhoeric/features/oras:1": {},
-		"./podman-outside": {
-			"moby": false,
+		"ghcr.io/dhoeric/features/oras:1.0.0": {
+			"version":
 		},
+		// "ghcr.io/devcontainers/features/docker-outside-of-docker:1.9.1": {
+		// 	"installDockerBuildx": false,
+		// 	"moby": false,
+		// },
 	},
 
 	"customizations": {
@@ -20,11 +34,11 @@
 					"editor.formatOnSave": true,
 					"editor.renderWhitespace": "all",
 					"editor.trimWhitespaceOnDelete": true,
-					
+
 					"files.insertFinalNewline": true,
 					"files.trimTrailingWhitespace": true,
 					"files.trimFinalNewlines": true,
-					
+
 					"git.blame.ignoreWhitespace": true,
 			},
 			"extensions": [
