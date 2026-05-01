@@ -112,23 +112,6 @@ spec:
     - app.kubernetes.io/name
 ```
 
-## How kustomize processes local-config resources
-
-Internally, kustomize uses the `IsLocalConfig` filter from
-[`kyaml/kio/filters/local.go`][local-go] (and the related
-`DropLocalNodes` helper in `api/resource/factory.go`) to skip
-local-config resources when assembling the build output. A resource
-is dropped when the annotation is present with any value other than
-`"false"`.
-
-[local-go]: https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/kio/filters/local.go
-
-The companion `kustomize cfg cat` command exposes two flags for
-inspecting these resources directly:
-
-- `--include-local` includes local-config resources in the output.
-- `--exclude-non-local` keeps only local-config resources.
-
 ## See also
 
 - [Kubernetes well-known annotations][well-known annotations]
