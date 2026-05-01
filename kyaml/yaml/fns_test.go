@@ -1057,10 +1057,12 @@ func TestErrorIfInvalid(t *testing.T) {
 
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{
 		Kind:    yaml.MappingNode,
-		Content: []*yaml.Node{{}},
+		Content: []*yaml.Node{{Kind: yaml.ScalarNode, Tag: NodeTagString, Value: "orphan"}},
 	}), yaml.MappingNode)
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "even length")
+		assert.Contains(t, err.Error(), "content length 1")
+		assert.Contains(t, err.Error(), `0:{kind:ScalarNode tag:"!!str" value:"orphan"}`)
 	}
 }
 

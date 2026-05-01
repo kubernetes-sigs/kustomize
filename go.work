@@ -1,5 +1,5 @@
-// Omit the patch version to avoid an extra bump in downstream projects.
-go 1.25
+// Use the minimum patch version to avoid an extra bump in downstream projects.
+go 1.25.0
 
 use (
 	./api
