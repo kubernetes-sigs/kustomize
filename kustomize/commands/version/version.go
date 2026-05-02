@@ -15,6 +15,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// errInvalidOutput is returned when --output is set to an unrecognized value.
+var errInvalidOutput = fmt.Errorf("--output must be 'yaml' or 'json'")
+
 type Options struct {
 	Short  bool
 	Output string
@@ -58,6 +61,9 @@ func (o *Options) Validate(_ []string) error {
 			return fmt.Errorf("--short and --output are mutually exclusive")
 		}
 	}
+	if o.Output != "" && o.Output != "yaml" && o.Output != "json" {
+		return errInvalidOutput
+	}
 	return nil
 }
 
@@ -81,6 +87,8 @@ func (o *Options) Run() error {
 			return errors.WrapPrefixf(err, "marshalling provenance to json")
 		}
 		fmt.Fprintln(o.Writer, string(marshalled))
+	default:
+		return errInvalidOutput
 	}
 	return nil
 }
