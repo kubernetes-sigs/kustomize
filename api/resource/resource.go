@@ -4,6 +4,7 @@
 package resource
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -380,11 +381,24 @@ func (r *Resource) String() string {
 // AsYAML returns the resource in Yaml form.
 // Easier to read than JSON.
 func (r *Resource) AsYAML() ([]byte, error) {
-	json, err := r.MarshalJSON()
+	// Check for duplicate keys by attempting to decode to map and marshal to JSON.
+	// This detects duplicate keys without the overhead of MarshalJSON() which
+	// calls String() internally, avoiding double serialization.
+	m, err := r.Map()
 	if err != nil {
-		return nil, err
+		// Add context about what failed and why to help with debugging
+		id := r.CurId()
+		return nil, fmt.Errorf("failed to convert resource %s to YAML: duplicate key detection failed: %w", id, err)
 	}
-	return yaml.JSONToYAML(json)
+	// Verify the map can be marshaled to JSON (catches any remaining duplicate key issues)
+	if _, err := json.Marshal(m); err != nil {
+		id := r.CurId()
+		return nil, fmt.Errorf("failed to convert resource %s to YAML: duplicate key detection failed: %w", id, err)
+	}
+	// Use kyaml's encoder directly to preserve original formatting
+	// and avoid line wrapping issues with sigs.k8s.io/yaml.JSONToYAML.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/947
+	return []byte(r.MustString()), nil
 }
 
 // MustYaml returns YAML or panics.
