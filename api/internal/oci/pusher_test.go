@@ -10,6 +10,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -19,91 +20,143 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cpuguy83/dockercfg"
 	"github.com/distribution/reference"
-	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/registry"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"golang.org/x/crypto/bcrypt"
 	loctest "sigs.k8s.io/kustomize/api/testutils/localizertest"
 	"sigs.k8s.io/kustomize/api/types"
 )
 
 type PusherTestSuite struct {
 	suite.Suite
-	registry              *testcontainers.DockerContainer
-	address               string
-	certificate_directory string
-	ctx                   context.Context
+	registry       *registry.RegistryContainer
+	user           string
+	password       string
+	address        string
+	root_directory string
+	ca_directory   string
+	valid_auth     string
+	ctx            context.Context
 }
 
-func (suite *PusherTestSuite) SetupSuite() {
-	certificate, key := generateSelfSignedCert(suite)
+func withOptionalRegistryCertificate(key_path string, certificate_path string) testcontainers.CustomizeRequestOption {
+	if key_path != "" && certificate_path != "" {
+		return func(req *testcontainers.GenericContainerRequest) error {
+			const container_cert_path = "/certs/registry.pem"
+			const container_key_path = "/certs/registry.key"
+			req.Files = append(req.Files,
+				testcontainers.ContainerFile{
+					HostFilePath:      certificate_path,
+					ContainerFilePath: container_cert_path,
+					FileMode:          0o644,
+				},
+				testcontainers.ContainerFile{
+					HostFilePath:      key_path,
+					ContainerFilePath: container_key_path,
+					FileMode:          0o644,
+				})
+			req.Env["REGISTRY_HTTP_TLS_CERTIFICATE"] = container_cert_path
+			req.Env["REGISTRY_HTTP_TLS_KEY"] = container_key_path
+			return nil
+		}
+	} else {
+		return func(req *testcontainers.GenericContainerRequest) error { return nil }
+	}
+}
 
-	const container_cert_path = "/certs/registry.pem"
-	const container_key_path = "/certs/registry.key"
-	registry_port := nat.Port("5000/tcp")
+func withOptionalHtpasswd(username string, password string) testcontainers.CustomizeRequestOption {
+	if username != "" && password != "" {
+		return func(req *testcontainers.GenericContainerRequest) error {
+			if hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err != nil {
+				return err
+			} else {
+				entry := fmt.Sprintf("%s:%s", username, string(hash))
+				return registry.WithHtpasswd(entry)(req)
+			}
+		}
+	} else {
+		return func(req *testcontainers.GenericContainerRequest) error { return nil }
+	}
+}
 
-	suite.ctx = context.Background()
-	container, err := testcontainers.Run(suite.ctx, "docker.io/library/registry:3.0.0",
-		testcontainers.WithFiles(
-			testcontainers.ContainerFile{
-				HostFilePath:      certificate,
-				ContainerFilePath: container_cert_path,
-				FileMode:          0o644,
-			},
-			testcontainers.ContainerFile{
-				HostFilePath:      key,
-				ContainerFilePath: container_key_path,
-				FileMode:          0o644,
-			},
-		),
-		testcontainers.WithEnv(map[string]string{
-			"REGISTRY_HTTP_TLS_CERTIFICATE": container_cert_path,
-			"REGISTRY_HTTP_TLS_KEY":         container_key_path,
-		}),
-		testcontainers.WithExposedPorts(registry_port.Port()),
+func createRegistry(t *testing.T, key_path string, cert_path string, username string, password string) string {
+	ctx := context.Background()
+	registryContainer, err := registry.Run(ctx, "registry:3.0.0",
+		withOptionalRegistryCertificate(key_path, cert_path),
+		withOptionalHtpasswd(username, password),
+		// Necessary to work on podman/containerized podman
 		testcontainers.WithWaitStrategy(
-			wait.ForMappedPort(registry_port),
-			wait.ForLog(fmt.Sprintf("listening on [::]:%s", registry_port.Port())),
+			wait.ForMappedPort("5000/tcp"),
 		),
 	)
+	testcontainers.CleanupContainer(t, registryContainer)
 	if err != nil {
-		suite.T().Fatal(err)
+		t.Fatal(err)
 	}
 
-	ip, _ := container.Host(suite.ctx)
-	port, _ := container.MappedPort(suite.ctx, registry_port)
-	suite.address = fmt.Sprintf("https://%s:%s", ip, port.Port())
-	suite.registry = container
+	address, err := registryContainer.HostAddress(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return address
 }
 
-func (suite *PusherTestSuite) TearDownSuite() {
-	if suite.registry != nil {
-		if err := suite.registry.Terminate(suite.ctx); err != nil {
-			suite.FailNow("error terminating postgres container: %s", err)
-		}
+func createFileWithDirs(path string) (*os.File, error) {
+	dir := filepath.Dir(path)
+
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return nil, err
 	}
-	if suite.certificate_directory != "" {
-		if err := os.RemoveAll(suite.certificate_directory); err != nil {
-			suite.FailNow("error removing temp certificate directory: %s", err)
-		}
-	}
+
+	return os.Create(path)
 }
 
-// Set up the registry.
-
-func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key string) {
-	directory, err := os.MkdirTemp("", "certs")
+func createDockerConfig(t *testing.T, address string, user string, password string) {
+	auth_directory := t.TempDir()
+	auth_file, err := createFileWithDirs(filepath.Join(auth_directory, "config.json"))
 	if err != nil {
-		suite.FailNow("failed to create temp directory: %s", err)
+		t.Fatal(err)
 	}
-	suite.certificate_directory = directory
 
+	auth_config, err := registry.DockerAuthConfig(address, user, password)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	encoder := json.NewEncoder(auth_file)
+	if err := encoder.Encode(dockercfg.Config{AuthConfigs: auth_config}); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("DOCKER_CONFIG", auth_directory)
+}
+
+// Create a public/private key pair
+func generateSelfSignedCert(t *testing.T) (certificate string, key string) {
+	directory := t.TempDir()
 	// Generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
-		suite.FailNow("failed to generate private key: %v", err)
+		t.Fatal(err)
+	}
+
+	key_path := filepath.Join(directory, "key", "registry.key")
+	key_file, err := createFileWithDirs(key_path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := pem.Encode(key_file, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	}); err != nil {
+		t.Fatal(err)
 	}
 
 	// Certificate template
@@ -115,32 +168,34 @@ func generateSelfSignedCert(suite *PusherTestSuite) (certificate string, key str
 		NotBefore: time.Now(),
 		NotAfter:  time.Now().Add(24 * time.Hour),
 
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		KeyUsage:    x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		DNSNames: []string{
+			"localhost",
+			// So that the certificate can be used when the test process is running inside a container
+			"hub.docker.internal",
+		},
 		BasicConstraintsValid: true,
 	}
 
 	// Self-sign the certificate
 	derBytes, err := x509.CreateCertificate(rand.Reader, &tmpl, &tmpl, &privateKey.PublicKey, privateKey)
 	if err != nil {
-		suite.FailNow("failed to create certificate: %v", err)
+		t.Fatal(err)
 	}
 
-	certificate_bytes := pem.EncodeToMemory(&pem.Block{
+	certificate_path := filepath.Join(directory, "cert", "registry.crt")
+	certificate_file, err := createFileWithDirs(certificate_path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := pem.Encode(certificate_file, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: derBytes,
-	})
-
-	certificate_path := filepath.Join(directory, "registry.pem")
-	os.WriteFile(certificate_path, certificate_bytes, 0o0640)
-
-	key_bytes := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-	})
-
-	key_path := filepath.Join(directory, "registry.key")
-	os.WriteFile(key_path, key_bytes, 0o0640)
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	return certificate_path, key_path
 }
@@ -149,19 +204,6 @@ func AsNamedTagged(name string, tag string) reference.NamedTagged {
 	named, _ := reference.WithName(name)
 	tagged, _ := reference.WithTag(named, tag)
 	return tagged
-}
-
-func (suite *PusherTestSuite) TestPushSetup() {
-	t := suite.T()
-
-	t.Setenv("asdfsd", "asdfadsf")
-
-	require.Equal(t, suite.address, "something")
-}
-
-func TestPusherSuite(t *testing.T) {
-	os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
-	suite.Run(t, new(PusherTestSuite))
 }
 
 func TestPusherNeedsTargets(t *testing.T) {
@@ -397,23 +439,116 @@ func TestKustomizationFilePathsMustBeLocalToDirectory(t *testing.T) {
 	}
 }
 
-// func TestFnContainerTransformerWithConfig(t *testing.T) {
+func TestUntrustedCertificate(t *testing.T) {
+	username := "username"
+	password := "password"
 
-// 	kustomization := map[string]string{
-// 		"src/README.md": `# NO VALID FILE
-// `,
-// 	}
-// 	// clock := NewFakePassiveClock(time.Date(int(2025), time.July, int(28), int(20), int(56), int(0), int(0), time.UTC))
+	certificate, key := generateSelfSignedCert(t)
+	// Explicitly _NOT_ setting the certificate directory
+	address := createRegistry(t, key, certificate, username, password)
 
-// 	_, _, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
-// 	loctest.SetWorkingDir(t, target.Join("src"))
+	kustomization := map[string]string{
+		"src/kustomization.yaml": `namePrefix: test-
+`,
+	}
 
-// 	registry, port, err := registry(t, certificate, key)
-// 	require.NoError(t, err)
+	_, actual, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+	loctest.SetWorkingDir(t, target.Join("src"))
 
-// 	// t.Cleanup(func() {registry.})
-// 	require.NotNil(t, registry)
-// 	t.Setenv("asdfsd", "asdfadsf")
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged(address+"/something", "sometag")},
+	}
 
-// 	require.Equal(t, port, 7)
-// }
+	err := PushToOciRegistries(&pushOptions)
+	require.ErrorContains(t, err, "tls: failed to verify certificate: x509: certificate signed by unknown authority")
+}
+
+func TestNoCredentialFile(t *testing.T) {
+	username := "username"
+	password := "password"
+
+	certificate, key := generateSelfSignedCert(t)
+	t.Setenv("SSL_CERT_DIR", filepath.Dir(certificate))
+
+	address := createRegistry(t, key, certificate, username, password)
+
+	kustomization := map[string]string{
+		"src/kustomization.yaml": `namePrefix: test-
+`,
+	}
+
+	_, actual, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+	loctest.SetWorkingDir(t, target.Join("src"))
+
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged(address+"/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.ErrorContains(t, err, "basic credential not found")
+}
+
+func TestInvalidCredentials(t *testing.T) {
+	certificate, key := generateSelfSignedCert(t)
+	t.Setenv("SSL_CERT_DIR", filepath.Dir(certificate))
+
+	address := createRegistry(t, key, certificate, "expectedusername", "expectedpassword")
+	createDockerConfig(t, address, "actualusername", "actualpassword")
+
+	kustomization := map[string]string{
+		"src/kustomization.yaml": `namePrefix: test-
+`,
+	}
+
+	_, actual, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+	loctest.SetWorkingDir(t, target.Join("src"))
+
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged(address+"/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.ErrorContains(t, err, "response status code 401: Unauthorized")
+}
+
+func TestPush(t *testing.T) {
+	username := "username"
+	password := "password"
+
+	certificate, key := generateSelfSignedCert(t)
+	t.Setenv("SSL_CERT_DIR", filepath.Dir(certificate))
+
+	address := createRegistry(t, key, certificate, username, password)
+	createDockerConfig(t, address, username, password)
+
+	kustomization := map[string]string{
+		"src/kustomization.yaml": `namePrefix: test-
+`,
+	}
+
+	_, actual, target := loctest.PrepareFs(t, []string{"src"}, kustomization)
+	loctest.SetWorkingDir(t, target.Join("src"))
+
+	pushOptions := PushOptions{
+		fSys: actual,
+		kustomization: &types.Kustomization{
+			Namespace: "somethingnonempty",
+		},
+		targets: []reference.NamedTagged{AsNamedTagged(address+"/something", "sometag")},
+	}
+
+	err := PushToOciRegistries(&pushOptions)
+	require.NoError(t, err)
+}
