@@ -32,6 +32,29 @@ each in its own sub-directory.
    may soon be deleted, or they might be WIP plugins that will
    someday become examples or builtins.
 
+### Plugin home
+
+Kustomize looks up Exec and Go plugins relative to a plugin home
+directory. When resolving it, kustomize tries the following paths in
+order and uses the first one that exists:
+
+1. `$KUSTOMIZE_PLUGIN_HOME` — set this to override the default search
+   paths below (useful when plugins live outside `$HOME`).
+2. `$XDG_CONFIG_HOME/kustomize/plugin`.
+3. `$HOME/.config/kustomize/plugin` — used when `$XDG_CONFIG_HOME` is
+   unset.
+4. `$HOME/kustomize/plugin`.
+
+If none of the above exist, plugin resolution fails. On Windows,
+`$HOME` falls back to `$USERPROFILE`. See
+[`api/konfig/plugins.go`](../api/konfig/plugins.go) for the resolution
+code.
+
+Within the plugin home, an individual plugin is loaded from
+`<apiVersion group>/<apiVersion version>/<lowercase kind>/<Kind>`,
+matching the `apiVersion` and `kind` fields of the generator or
+transformer entry in `kustomization.yaml`.
+
 #### Testing
 
 Regardless of the [style](#plugin-styles) used to write a plugin,
