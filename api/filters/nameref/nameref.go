@@ -8,14 +8,25 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
+	"sigs.k8s.io/kustomize/api/internal/structuredscalar"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
+	kyaml_utils "sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// structuredPathSep separates the manifest field path (slash-separated, as for
+// FieldSpec.Path) from a path inside embedded JSON/YAML in that field's string
+// value. The inner path uses dot-separated segments with the same escaping
+// rules as replacement targets (see kyaml/utils.SmarterPathSplitter).
+//
+// Example: data/config.yaml//auth.secretName selects the scalar at auth.secretName
+// inside the YAML document stored in data["config.yaml"].
+const structuredPathSep = "//"
 
 // Filter updates a name references.
 type Filter struct {
@@ -60,15 +71,79 @@ func (f Filter) run(node *yaml.RNode) (*yaml.RNode, error) {
 		return nil, err
 	}
 	f.NameFieldToUpdate.Gvk = f.Referrer.GetGvk()
+	manifestPath, innerPath, structured := splitStructuredNameRefPath(f.NameFieldToUpdate.Path)
+	fieldSpec := f.NameFieldToUpdate
+	if structured {
+		fieldSpec.Path = manifestPath
+	}
+	setFn := f.set
+	if structured {
+		setFn = func(n *yaml.RNode) error {
+			return f.setStructuredEmbeddedScalar(n, innerPath)
+		}
+	}
 	if err := node.PipeE(fieldspec.Filter{
-		FieldSpec: f.NameFieldToUpdate,
-		SetValue:  f.set,
+		FieldSpec: fieldSpec,
+		SetValue:  setFn,
 	}); err != nil {
 		return nil, errors.WrapPrefixf(
 			err, "updating name reference in '%s' field of '%s'",
 			f.NameFieldToUpdate.Path, f.Referrer.CurId().String())
 	}
 	return node, nil
+}
+
+func splitStructuredNameRefPath(path string) (manifestPath, innerPath string, ok bool) {
+	idx := strings.Index(path, structuredPathSep)
+	if idx < 0 {
+		return path, "", false
+	}
+	manifestPath = strings.TrimSpace(path[:idx])
+	innerPath = strings.TrimSpace(path[idx+len(structuredPathSep):])
+	if manifestPath == "" || innerPath == "" {
+		return "", "", false
+	}
+	return manifestPath, innerPath, true
+}
+
+func (f Filter) setStructuredEmbeddedScalar(node *yaml.RNode, innerPath string) error {
+	if yaml.IsMissingOrNull(node) {
+		return nil
+	}
+	if node.YNode().Kind != yaml.ScalarNode {
+		return fmt.Errorf(
+			"structured nameReference path requires a scalar string field at %q",
+			structuredPathSep)
+	}
+	scalarValue := node.YNode().Value
+	var parsedNode yaml.Node
+	if err := yaml.Unmarshal([]byte(scalarValue), &parsedNode); err != nil {
+		return fmt.Errorf("parse embedded structured data: %w", err)
+	}
+	structuredData := yaml.NewRNode(&parsedNode)
+	pathParts := kyaml_utils.SmarterPathSplitter(innerPath, ".")
+	matched, err := structuredData.Pipe(&yaml.PathMatcher{Path: pathParts})
+	if err != nil {
+		return err
+	}
+	targetFields, err := matched.Elements()
+	if err != nil {
+		return err
+	}
+	if len(targetFields) == 0 {
+		return nil
+	}
+	for _, t := range targetFields {
+		if err := f.set(t); err != nil {
+			return err
+		}
+	}
+	serialized, err := structuredscalar.Serialize(structuredData, scalarValue)
+	if err != nil {
+		return err
+	}
+	node.YNode().Value = serialized
+	return nil
 }
 
 // This function is called on the node found at FieldSpec.Path.
@@ -272,7 +347,11 @@ func previousIdSelectedByGvk(gvk *resid.Gvk) sieveFunc {
 // with some exceptions (e.g. RoleBinding and ServiceAccount are both
 // namespaceable, but the former can refer to accounts in other namespaces).
 func (f Filter) roleRefFilter() sieveFunc {
-	if !strings.HasSuffix(f.NameFieldToUpdate.Path, "roleRef/name") {
+	path := f.NameFieldToUpdate.Path
+	if mp, _, ok := splitStructuredNameRefPath(path); ok {
+		path = mp
+	}
+	if !strings.HasSuffix(path, "roleRef/name") {
 		return acceptAll
 	}
 	roleRefGvk, err := getRoleRefGvk(f.Referrer)
