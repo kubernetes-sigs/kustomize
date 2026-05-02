@@ -768,7 +768,7 @@ subjects:
 		})
 }
 
-func TestNamespaceTransformer_SkipHelmOrigin(t *testing.T) {
+func TestNamespaceTransformer_HelmOriginPreservesExistingNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("NamespaceTransformer")
 	defer th.Reset()
@@ -792,6 +792,79 @@ kind: NamespaceTransformer
 metadata:
   name: notImportantHere
   namespace: test
+`+defaultFieldSpecs, rm)
+	require.NoError(t, err)
+	require.NoError(t, rm.RemoveOriginAnnotations())
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    this-should-be-keept: "true"
+  name: svc
+  namespace: helm-ns
+`)
+}
+
+func TestNamespaceTransformer_HelmOriginSetsMissingNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	rmF := resmap.NewFactory(provider.NewDefaultDepProvider().GetResourceFactory())
+	rm, err := rmF.NewResMapFromBytes([]byte(`apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+  annotations:
+    this-should-be-keept: "true"
+`))
+	require.NoError(t, err)
+	r := rm.Resources()[0]
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
+
+	rm, err = th.RunTransformerFromResMap(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+`+defaultFieldSpecs, rm)
+	require.NoError(t, err)
+	require.NoError(t, rm.RemoveOriginAnnotations())
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    this-should-be-keept: "true"
+  name: svc
+  namespace: test
+`)
+}
+
+func TestNamespaceTransformer_HelmChartNamespaceTakesPriorityForMissingNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	rmF := resmap.NewFactory(provider.NewDefaultDepProvider().GetResourceFactory())
+	rm, err := rmF.NewResMapFromBytes([]byte(`apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+  annotations:
+    this-should-be-keept: "true"
+`))
+	require.NoError(t, err)
+	r := rm.Resources()[0]
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmChartNamespaceAnnotation, "helm-ns")))
+
+	rm, err = th.RunTransformerFromResMap(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: top-level-ns
 `+defaultFieldSpecs, rm)
 	require.NoError(t, err)
 	require.NoError(t, rm.RemoveOriginAnnotations())
