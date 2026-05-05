@@ -26,6 +26,7 @@ var theFlags struct {
 		plugins        bool
 		managedByLabel bool
 		helm           bool
+		strictWarnings bool
 	}
 	helmCommand     string
 	helmApiVersions []string
@@ -110,6 +111,7 @@ func NewCmdBuild(
 	AddFlagEnablePlugins(cmd.Flags())
 	AddFlagReorderOutput(cmd.Flags())
 	AddFlagEnableManagedbyLabel(cmd.Flags())
+	AddFlagStrictWarningsFlag(cmd.Flags())
 
 	if err := AddFlagLoadRestrictorCompletion(cmd); err != nil {
 		log.Fatalf("Error adding completion for flag '--%s': %v", flagLoadRestrictorName, err)
@@ -160,6 +162,9 @@ func HonorKustomizeFlags(kOpts *krusty.Options, flags *flag.FlagSet) *krusty.Opt
 		kOpts.PluginConfig = c
 	} else {
 		kOpts.PluginConfig.HelmConfig.Enabled = theFlags.enable.helm
+	}
+	if theFlags.enable.strictWarnings {
+		kOpts.StrictWarnings = true
 	}
 	kOpts.PluginConfig.HelmConfig.Command = theFlags.helmCommand
 	kOpts.PluginConfig.HelmConfig.ApiVersions = theFlags.helmApiVersions
