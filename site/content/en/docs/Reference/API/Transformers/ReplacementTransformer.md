@@ -10,7 +10,7 @@ description: >
 See [Transformers]({{< relref "../Transformers" >}}) for common required fields.
 
 `ReplacementTransformer` uses the same replacement schema as the
-[`replacements` field]({{< relref "../Kustomization File/replacements.md" >}}) in a
+[`replacements` field]({{< relref "../Kustomization%20File/replacements.md" >}}) in a
 Kustomization file. It can be invoked explicitly through the `transformers` field
 when the replacement configuration should live in a separate transformer file.
 
@@ -20,13 +20,14 @@ when the replacement configuration should live in a separate transformer file.
 
   Standard object's metadata.
 
-* **replacements** ([]Replacement)
+* **replacements** ([]ReplacementField)
 
-  List of replacements to apply. Each replacement copies a value from `source` or
-  `sourceValue` into one or more `targets`.
+  List of replacements to apply. Each item is either an inline replacement or a
+  `path` to a file containing a single replacement or a list of replacements.
 
-  Each item may also be specified as a `path` to a file containing a single
-  replacement or a list of replacements.
+  Each inline replacement copies a value from `source` or `sourceValue` into one
+  or more `targets`. It must specify exactly one of `source` or `sourceValue`,
+  and at least one target.
 
 Example transformer file:
 
@@ -63,4 +64,4 @@ transformers:
 ```
 
 For the full replacement schema, field descriptions, selector behavior, and
-field path syntax, see the [`replacements` field documentation]({{< relref "../Kustomization File/replacements.md" >}}).
+field path syntax, see the [`replacements` field documentation]({{< relref "../Kustomization%20File/replacements.md" >}}).
