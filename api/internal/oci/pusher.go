@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -18,7 +19,6 @@ import (
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
 	"oras.land/oras-go/v2/registry/remote/credentials"
-	"oras.land/oras-go/v2/registry/remote/retry"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -30,6 +30,7 @@ type PushOptions struct {
 	kustomization *types.Kustomization
 	targets       []reference.NamedTagged
 	annotations   map[string]string
+	http          *http.Client
 }
 
 func validatePath(path string, elementType string) error {
@@ -177,23 +178,24 @@ func PushToOciRegistries(options *PushOptions) error {
 		return err
 	}
 
+	client := &auth.Client{
+		Client:     options.http,
+		Cache:      auth.NewCache(),
+		Credential: credentials.Credential(credentialStore),
+	}
+
 	for _, remoteReference := range options.targets {
 		repo, err := remote.NewRepository(remoteReference.Name())
 		if err != nil {
 			return err
 		}
 
-		repo.Client = &auth.Client{
-			Client:     retry.DefaultClient,
-			Cache:      auth.NewCache(),
-			Credential: credentials.Credential(credentialStore),
-		}
+		repo.Client = client
 
 		_, err = oras.Copy(ctx, local, tag, repo, remoteReference.Tag(), oras.DefaultCopyOptions)
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil
