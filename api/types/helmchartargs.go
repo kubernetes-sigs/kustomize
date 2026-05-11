@@ -151,7 +151,7 @@ func makeHelmChartFromHca(old *HelmChartArgs) (c HelmChart) {
 	// ReleaseNamespace maps onto Namespace in the (non-deprecated)
 	// HelmChart type. Forgetting this mapping is why releaseNamespace
 	// set under the deprecated helmChartInflationGenerator field is
-	// silently ignored — see kubernetes-sigs/kustomize#4593.
+	// silently ignored, see kubernetes-sigs/kustomize#4593.
 	c.Namespace = old.ReleaseNamespace
 	return
 }
