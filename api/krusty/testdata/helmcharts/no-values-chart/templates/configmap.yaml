@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  name: {{ .Release.Name }}
+data:
+  chart: {{ .Chart.Name }}
+  message: {{ .Values.message | default "empty" }}
+  release: {{ .Release.Name }}
