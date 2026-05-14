@@ -310,7 +310,7 @@ func (l Walker) elementKey() (string, error) {
 // Return value slice is ordered using the original ordering from the elements, where
 // elements missing from earlier sources appear later.
 func (l Walker) elementValues(keys []string) [][]string {
-	// use slice to to keep elements in the original order
+	// use slice to keep elements in the original order
 	var returnValues [][]string
 	var seen sets.StringList
 
@@ -342,7 +342,7 @@ func (l Walker) elementValues(keys []string) [][]string {
 
 // elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
 func (l Walker) elementPrimitiveValues() [][]string {
-	// use slice to to keep elements in the original order
+	// use slice to keep elements in the original order
 	var returnValues [][]string
 	seen := sets.String{}
 	// if we are doing append, dest node should be the first.
