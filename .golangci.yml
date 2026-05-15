@@ -3,7 +3,6 @@
 
 run:
   deadline: 5m
-  go: "1.25"
 
 linters:
   enable-all: true
