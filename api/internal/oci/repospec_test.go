@@ -5,8 +5,10 @@ package oci
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,17 +21,21 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 	var schemeAuthority = []struct {
 		raw        string
 		normalized string
+		remote     bool
 	}{
-		{"oci://ghcr.io/", "ghcr.io/"},
-		{"oci://ghcr.io:7999/", "ghcr.io:7999/"},
-		{"oci-layout://", "oci-layout://"},
+		{"oci://ghcr.io/", "ghcr.io", true},
+		{"oci://ghcr.io:7999/", "ghcr.io:7999", true},
 	}
 	var repoPaths = []string{
-		"someOrg/someRepo",
+		"someorg/somerepo",
 		"kubernetes/website",
 		"somepath",
 	}
-	var pathNames = []string{"README.md", "foo/krusty.txt", ""}
+	var pathNames = []string{
+		"README.md",
+		"foo/krusty.txt",
+		"",
+	}
 	var tagArgs = []string{
 		"some_tag",
 		"someTag",
@@ -51,32 +57,43 @@ func TestNewRepoSpecFromUrl_Permute(t *testing.T) {
 		if digest != "" {
 			url += digestSeparator + digest
 		}
-		if len(path) > 0 {
+		if path != "" {
 			url += rootSeparator + path
 		}
 
 		return url
 	}
 
-	var i int
 	for _, v := range schemeAuthority {
 		hostRaw := v.raw
-		hostSpec := v.normalized
+		hostNormalized := v.normalized
 		for _, repoPath := range repoPaths {
 			for _, pathName := range pathNames {
 				for _, tag := range tagArgs {
 					for _, digest := range digestArgs {
-						t.Run(fmt.Sprintf("t%d", i), func(t *testing.T) {
+						identifier := tag
+						if digest != "" {
+							identifier = digest
+						}
+						if identifier == "" {
+							identifier = name.DefaultTag
+						}
+
+						t.Run(fmt.Sprintf("%s/%s/%s|%s|%s", url.PathEscape(hostRaw), url.PathEscape(repoPath), url.PathEscape(pathName), tag, digest), func(t *testing.T) {
 							uri := makeURL(hostRaw, repoPath, pathName, tag, digest)
 							rs, err := NewRepoSpecFromURL(uri)
+
 							require.NoErrorf(t, err, "unexpected error creating RepoSpec for uri %s", uri)
-							assert.Equal(t, hostSpec, rs.Host, "unexpected host for uri %s", uri)
-							assert.Equal(t, repoPath, rs.RepoPath, "unexpected RepoPath for uri %s", uri)
+							if v.remote {
+								assert.Equal(t, hostNormalized, rs.Reference.Context().RegistryStr())
+								assert.Equal(t, repoPath, rs.Reference.Context().RepositoryStr())
+							} else {
+								assert.Empty(t, rs.Reference.Context().RegistryStr())
+								assert.Equal(t, hostNormalized+repoPath, rs.Reference.Context().RepositoryStr())
+							}
+							assert.Equal(t, identifier, rs.Reference.Identifier(), "unexpected identifier for uri %s", uri)
 							assert.Equal(t, pathName, rs.KustRootPath, "unexpected KustRootPath for uri %s", uri)
-							assert.Equal(t, tag, rs.Tag, "unexpected tag for uri %s", uri)
-							assert.Equal(t, digest, rs.Digest, "unexpected digest for uri %s", uri)
 						})
-						i++
 					}
 				}
 			}
@@ -90,7 +107,7 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 	}{
 		"absolute_path": {
 			"/tmp",
-			"uri looks like abs path",
+			"unsupported scheme",
 		},
 		"relative path": {
 			"../../tmp",
@@ -106,31 +123,39 @@ func TestNewRepoSpecFromUrlErrors(t *testing.T) {
 		},
 		"no_image_repo": {
 			"oci://ghcr.io",
-			"failed to parse repo path segment",
+			"invalid reference: missing registry or repository",
 		},
 		"tag_after_host": {
 			"oci://host:tag",
-			"failed to parse repo path segment",
+			"invalid reference: missing registry or repository",
 		},
 		"zero_length_tag": {
-			"oci://host/repo:@asdfsdfsdf",
-			"failed to parse tag segment",
+			"oci://host/repo:@sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a",
+			"could not parse reference: host/repo:@sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a",
 		},
 		"zero_length_digest": {
 			"oci://host/repo:tag@",
-			"failed to parse digest",
+			"could not parse reference: ",
+		},
+		"zero_length_tag_and_digest": {
+			"oci://host/repo:@",
+			"could not parse reference: ",
 		},
 		"path_exits_repo": {
 			"oci://ghcr.io/org/repo//path/../../exits/repo",
 			"root path exits repo",
 		},
 		"protocol with excessive slashes": {
-			"oci-layout:////tmp/path/to/whatever",
-			"failed to parse repo path segment",
+			"oci:////tmp/path/to/whatever",
+			"could not parse reference: ",
 		},
 		"no_root_path": {
 			"oci://ghcr.io/repo//",
 			"failed to parse root path segment",
+		},
+		"invalid_url": {
+			"oci://authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
+			"could not parse reference: authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
 		},
 	}
 
@@ -160,8 +185,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			pullSpec: "ghcr.io/someorg/somerepo",
 			absPath:  notPulled.Join("somedir"),
 			repoSpec: RepoSpec{
-				Host:         "ghcr.io/",
-				RepoPath:     "someorg/somerepo",
+				Reference:    name.MustParseReference("ghcr.io/someorg/somerepo"),
 				KustRootPath: "somedir",
 			},
 		},
@@ -171,10 +195,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			pullSpec: "ghcr.io/someorg/somerepo:someTag",
 			absPath:  notPulled.Join("somedir"),
 			repoSpec: RepoSpec{
-				Host:         "ghcr.io/",
-				RepoPath:     "someorg/somerepo",
+				Reference:    name.MustParseReference("ghcr.io/someorg/somerepo:someTag"),
 				KustRootPath: "somedir",
-				Tag:          "someTag",
 			},
 		},
 		{
@@ -183,9 +205,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			pullSpec: "ghcr.io/someorg/somerepo:someTag",
 			absPath:  notPulled.String(),
 			repoSpec: RepoSpec{
-				Host:     "ghcr.io/",
-				RepoPath: "someorg/somerepo",
-				Tag:      "someTag",
+				Reference: name.MustParseReference("ghcr.io/someorg/somerepo:someTag"),
 			},
 		},
 		{
@@ -194,10 +214,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			pullSpec: "ghcr.io/someorg/somerepo@sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a",
 			absPath:  notPulled.String(),
 			repoSpec: RepoSpec{
-				Host:     "ghcr.io/",
-				RepoPath: "someorg/somerepo",
-				Digest:   "sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a",
-				Tag:      "",
+				Reference: name.MustParseReference("ghcr.io/someorg/somerepo@sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a"),
 			},
 		},
 		{
@@ -206,76 +223,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			pullSpec: "ghcr.io/someorg/somerepo:someTag@sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a",
 			absPath:  notPulled.String(),
 			repoSpec: RepoSpec{
-				Host:     "ghcr.io/",
-				RepoPath: "someorg/somerepo",
-				Tag:      "someTag",
-				Digest:   "sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a",
-			},
-		},
-		{
-			name:     "oci layout with path and tag",
-			input:    "oci-layout://a/b/c/someRepo:v2.5.4//somepath",
-			pullSpec: "oci-layout://a/b/c/someRepo:v2.5.4",
-			absPath:  notPulled.Join("somepath"),
-			repoSpec: RepoSpec{
-				Host:         "oci-layout://",
-				RepoPath:     "a/b/c/someRepo",
-				KustRootPath: "somepath",
-				Tag:          "v2.5.4",
-			},
-		},
-		{
-			name:     "oci layout with two slashes, with kust root path and tag",
-			input:    "oci-layout://a/b/c/someRepo:sometag//somepath",
-			pullSpec: "oci-layout://a/b/c/someRepo:sometag",
-			absPath:  notPulled.Join("somepath"),
-			repoSpec: RepoSpec{
-				Host:         "oci-layout://",
-				RepoPath:     "a/b/c/someRepo",
-				KustRootPath: "somepath",
-				Tag:          "sometag",
-			},
-		},
-		{
-			name:     "oci layout with two slashes, with tag and no kust root path",
-			input:    "oci-layout://a/b/c/someRepo:sometag",
-			pullSpec: "oci-layout://a/b/c/someRepo:sometag",
-			absPath:  notPulled.String(),
-			repoSpec: RepoSpec{
-				Host:     "oci-layout://",
-				RepoPath: "a/b/c/someRepo",
-				Tag:      "sometag",
-			},
-		},
-		{
-			name:     "oci layout with three slashes, with tag and no kust root path",
-			input:    "oci-layout:///a/b/c/someRepo:tag",
-			pullSpec: "oci-layout:///a/b/c/someRepo:tag",
-			absPath:  notPulled.String(),
-			repoSpec: RepoSpec{
-				Host:     "oci-layout://",
-				RepoPath: "/a/b/c/someRepo",
-				Tag:      "tag",
-			},
-		},
-		{
-			name:     "oci layout with three slashes, no kust root path ortag",
-			input:    "oci-layout:///a/b/c/someRepo",
-			pullSpec: "oci-layout:///a/b/c/someRepo",
-			absPath:  notPulled.String(),
-			repoSpec: RepoSpec{
-				Host:     "oci-layout://",
-				RepoPath: "/a/b/c/someRepo",
-			},
-		},
-		{
-			name:     "oci layout with three slashes, no repo or kust root path or tag",
-			input:    "oci-layout:///",
-			pullSpec: "oci-layout:///",
-			absPath:  notPulled.String(),
-			repoSpec: RepoSpec{
-				Host:     "oci-layout://",
-				RepoPath: "/",
+				Reference: name.MustParseReference("ghcr.io/someorg/somerepo:someTag@sha256:94a00394bc5a8ef503fb59db0a7d0ae9e1110866e8aee8ba40cd864cea69ea1a"),
 			},
 		},
 		{
@@ -284,19 +232,8 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			pullSpec: "example.org/path/to/repo",
 			absPath:  notPulled.Join("/examples/multibases/dev"),
 			repoSpec: RepoSpec{
-				Host:         "example.org/",
-				RepoPath:     "path/to/repo",
+				Reference:    name.MustParseReference("example.org/path/to/repo"),
 				KustRootPath: "examples/multibases/dev",
-			},
-		},
-		{
-			name:     "non_parsable_path",
-			input:    "oci://authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
-			pullSpec: "authority/org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
-			absPath:  notPulled.String(),
-			repoSpec: RepoSpec{
-				Host:     "authority/",
-				RepoPath: "org/repo/%-invalid-uri-so-not-parsable-by-net/url.Parse",
 			},
 		},
 	}
@@ -318,7 +255,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 }
 
 func TestNewRepoSpecFromURL_DefaultQueryParams(t *testing.T) {
-	repoSpec, err := NewRepoSpecFromURL("oci://ghcr.com/org")
+	repoSpec, err := NewRepoSpecFromURL("oci://ghcr.com/org:latest")
 	require.NoError(t, err)
 	require.Equal(t, defaultTimeout, repoSpec.Timeout)
 }

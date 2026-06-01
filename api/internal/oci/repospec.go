@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -27,25 +28,19 @@ type RepoSpec struct {
 	// TODO(monopole): Drop raw, use processed fields instead.
 	raw string
 
-	// Host, e.g. ghcr.io/
-	Host string
+	tag string
 
-	// RepoPath name (Remote repository),
-	// e.g. kubernetes-sigs/kustomize
-	RepoPath string
+	digest string
 
 	// Dir is where the manifest is pulled to.
 	Dir filesys.ConfirmedDir
 
+	// If a remote artifact, the reference to the remote artifact
+	Reference name.Reference
+
 	// Relative path in the repository, and in the pullDir,
 	// to a Kustomization.
 	KustRootPath string
-
-	// Tag reference.
-	Tag string
-
-	// Digest
-	Digest string
 
 	// Timeout is the maximum duration allowed for execing git commands.
 	Timeout time.Duration
@@ -54,17 +49,7 @@ type RepoSpec struct {
 // RepoSpec returns a string suitable for pulling with tools like oras.land, eg "oras pull {spec}".
 // Note that this doesn't work with oci-layout hosts, as it requires a separate cli flag.
 func (x *RepoSpec) PullSpec() string {
-	pullSpec := x.Host + x.RepoPath
-
-	if x.Tag != "" {
-		pullSpec += tagSeparator + x.Tag
-	}
-
-	if x.Digest != "" {
-		pullSpec += digestSeparator + x.Digest
-	}
-
-	return pullSpec
+	return x.Reference.String()
 }
 
 func (x *RepoSpec) PullDir() filesys.ConfirmedDir {
@@ -102,14 +87,8 @@ const (
 // the path to the kustomization root within the repo).
 func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 	repoSpec := &RepoSpec{raw: n, Dir: notPulled, Timeout: defaultTimeout}
-	if filepath.IsAbs(n) {
-		return nil, fmt.Errorf("uri looks like abs path: %s", n)
-	}
 
-	var err error
-
-	// Parse the host (e.g. scheme, domain) segment.
-	repoSpec.Host, n, err = extractHost(n)
+	n, err := trimScheme(n)
 	if err != nil {
 		return nil, err
 	}
@@ -119,18 +98,15 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		return nil, err
 	}
 
-	repoSpec.Digest, n, err = extractDigest(n)
+	repoSpec.Reference, err = name.ParseReference(n,
+		name.WithDefaultRegistry(""),
+		name.WithDefaultTag("latest"),
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	repoSpec.Tag, repoSpec.RepoPath, err = extractTag(n)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(repoSpec.RepoPath) == 0 {
-		return nil, errors.Errorf("failed to parse repo path segment")
+	if repoSpec.Reference.Context().Registry.Name() == "" || repoSpec.Reference.Context().RepositoryStr() == "" {
+		return nil, fmt.Errorf("invalid reference: missing registry or repository")
 	}
 
 	return repoSpec, nil
@@ -140,7 +116,7 @@ func extractRoot(n string) (string, string, error) {
 	if rootIndex := strings.LastIndex(n, rootSeparator); rootIndex >= 0 {
 		root := n[rootIndex+len(rootSeparator):]
 
-		if len(root) == 0 {
+		if root == "" {
 			return "", "", errors.Errorf("failed to parse root path segment")
 		}
 		if kustRootPathExitsRepo(root) {
@@ -163,84 +139,11 @@ func kustRootPathExitsRepo(kustRootPath string) bool {
 // Arbitrary, but non-infinite, timeout for running commands.
 const defaultTimeout = 27 * time.Second
 
-func extractDigest(n string) (string, string, error) {
-	if digestIndex := strings.LastIndex(n, digestSeparator); digestIndex >= 0 {
-		digest := n[digestIndex+len(digestSeparator):]
-		// Digest is at least 8 characters, but we don't validate the entire schema here
-		if len(digest) < 8 {
-			return "", "", errors.Errorf("failed to parse digest")
-		}
-
-		return digest, n[:digestIndex], nil
-	}
-
-	// No digest
-	return "", n, nil
-}
-
-func extractTag(n string) (string, string, error) {
-	if tagIndex := strings.LastIndex(n, tagSeparator); tagIndex >= 0 {
-		tag := n[tagIndex+len(tagSeparator):]
-
-		if len(tag) == 0 {
-			return "", "", errors.Errorf("failed to parse tag segment")
-		}
-
-		return tag, n[:tagIndex], nil
-	}
-
-	return "", n, nil
-}
-
-func extractHost(n string) (string, string, error) {
-	scheme, n, err := extractScheme(n)
-
-	if err != nil {
-		return "", "", err
-	}
-
-	// Now that we have extracted a valid scheme, we can parse host itself.
-
-	// The oci layout specifies a path to a local oci layout directory or archive.
-	// Everything after the scheme is actually part of that path.
-	if scheme == ociLayoutScheme {
-		return ociLayoutScheme, n, nil
-	}
-
-	var host, rest = n, ""
-	if sepIndex := findPathSeparator(n); sepIndex >= 0 {
-		host, rest = n[:sepIndex+1], n[sepIndex+1:]
-	}
-
-	// Host is required, so do not concat the scheme and username if we didn't find one.
-	if host == "" {
-		return "", "", errors.Errorf("failed to parse host segment")
-	}
-	return host, rest, nil
-}
-
 const ociScheme = "oci://"
-const ociLayoutScheme = "oci-layout://"
 
-func extractScheme(s string) (string, string, error) {
-	for _, prefix := range []string{ociScheme, ociLayoutScheme} {
-		if rest, found := trimPrefixIgnoreCase(s, prefix); found {
-			return prefix, rest, nil
-		}
+func trimScheme(s string) (string, error) {
+	if len(ociScheme) <= len(s) && strings.ToLower(s[:len(ociScheme)]) == ociScheme {
+		return s[len(ociScheme):], nil
 	}
-	return "", "", fmt.Errorf("unsupported scheme")
-}
-
-// trimPrefixIgnoreCase returns the rest of s and true if prefix, ignoring case, prefixes s.
-// Otherwise, trimPrefixIgnoreCase returns s and false.
-func trimPrefixIgnoreCase(s, prefix string) (string, bool) {
-	if len(prefix) <= len(s) && strings.ToLower(s[:len(prefix)]) == prefix {
-		return s[len(prefix):], true
-	}
-	return s, false
-}
-
-func findPathSeparator(hostPath string) int {
-	sepIndex := strings.Index(hostPath, pathSeparator)
-	return sepIndex
+	return "", fmt.Errorf("unsupported scheme")
 }
