@@ -284,7 +284,7 @@ func newLoaderAtOciPull(
 	repoSpec *oci.RepoSpec, fSys filesys.FileSystem,
 	referrer *FileLoader, puller oci.Puller) (ifc.Loader, error) {
 	cleaner := repoSpec.Cleaner(fSys)
-	err := puller(repoSpec)
+	err := puller(repoSpec, fSys, referrer.http)
 	if err != nil {
 		cleaner()
 		return nil, err

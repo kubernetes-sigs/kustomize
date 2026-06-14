@@ -5,11 +5,11 @@ package oci
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,12 +18,25 @@ import (
 	"time"
 
 	"github.com/cpuguy83/dockercfg"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/mdelapenya/tlscert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/registry"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"golang.org/x/crypto/bcrypt"
+	"sigs.k8s.io/kustomize/api/filesys"
 )
+
+func toReference(t *testing.T, reference string, opts ...name.Option) name.Reference {
+	t.Helper()
+
+	if ref, err := name.ParseReference(reference, opts...); err != nil {
+		t.Fatal(err)
+		return nil
+	} else {
+		return ref
+	}
+}
 
 func withOptionalRegistryCertificate(useTls bool, cert *tlscert.Certificate) testcontainers.CustomizeRequestOption {
 	if useTls {
@@ -83,7 +96,7 @@ func toClient(cert *tlscert.Certificate) *http.Client {
 }
 
 func createRegistry(t *testing.T, username string, password string, useTLS bool) (address string, cert *tlscert.Certificate) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	caCert, err := tlscert.SelfSignedE(strings.Join([]string{
 		"hub.docker.internal", // So that the certificate can be used when the test process is running inside a container
@@ -150,4 +163,71 @@ func createDockerConfig(t *testing.T, address string, user string, password stri
 	}
 
 	t.Setenv("DOCKER_CONFIG", auth_directory)
+}
+
+func pushArtifact(t *testing.T, fSys filesys.FileSystem, folder string, reference name.Reference, username string, password string, cert *tlscert.Certificate) {
+	ctx := t.Context()
+
+	certPath := "/cert.pem"
+
+	args := []string{
+		"push",
+	}
+
+	files := make([]testcontainers.ContainerFile, 0)
+	fSys.Walk(folder, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		} else if info.IsDir() {
+			return nil
+		}
+
+		b, err := fSys.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		files = append(files,
+			testcontainers.ContainerFile{
+				ContainerFilePath: filepath.Join("/workspace", path),
+				Reader:            bytes.NewReader(b),
+				FileMode:          0o644,
+			},
+		)
+		return nil
+	})
+
+	if cert != nil {
+		files = append(files,
+			testcontainers.ContainerFile{
+				Reader:            bytes.NewReader(cert.Bytes),
+				ContainerFilePath: certPath,
+				FileMode:          0o644,
+			},
+		)
+		args = append(args, "--ca-file", certPath)
+	}
+	if username != "" {
+		args = append(args, "--username", username)
+	}
+	if password != "" {
+		args = append(args, "--password", password)
+	}
+
+	args = append(args, reference.Name())
+
+	args = append(args, ".")
+
+	_, err := testcontainers.Run(
+		ctx, "ghcr.io/oras-project/oras:v1.3.2",
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("Pushed"),
+		),
+		testcontainers.WithFiles(files...),
+		testcontainers.WithCmdArgs(args...),
+	)
+	// testcontainers.CleanupContainer(t, oras)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

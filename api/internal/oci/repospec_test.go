@@ -236,6 +236,62 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 				KustRootPath: "examples/multibases/dev",
 			},
 		},
+		// {
+		// 	name:     "oci layout with path and tag",
+		// 	input:    "oci://a/b/c/someRepo:v2.5.4//somepath",
+		// 	pullSpec: "oci://a/b/c/someRepo:v2.5.4",
+		// 	absPath:  notPulled.Join("somepath"),
+		// 	repoSpec: RepoSpec{
+		// 		Reference:    name.MustParseReference("a/b/c/someRepo:v2.5.4"),
+		// 		KustRootPath: "somepath",
+		// 	},
+		// },
+		// {
+		// 	name:     "oci layout with two slashes, with kust root path and tag",
+		// 	input:    "oci://a/b/c/someRepo:sometag//somepath",
+		// 	pullSpec: "oci://a/b/c/someRepo:sometag",
+		// 	absPath:  notPulled.Join("somepath"),
+		// 	repoSpec: RepoSpec{
+		// 		Reference:    name.MustParseReference("a/b/c/someRepo:sometag"),
+		// 		KustRootPath: "somepath",
+		// 	},
+		// },
+		// {
+		// 	name:     "oci layout with two slashes, with tag and no kust root path",
+		// 	input:    "oci://a/b/c/someRepo:sometag",
+		// 	pullSpec: "oci://a/b/c/someRepo:sometag",
+		// 	absPath:  notPulled.String(),
+		// 	repoSpec: RepoSpec{
+		// 		Reference: name.MustParseReference("a/b/c/someRepo:sometag"),
+		// 	},
+		// },
+		// {
+		// 	name:     "oci layout with three slashes, with tag and no kust root path",
+		// 	input:    "oci:///a/b/c/someRepo:tag",
+		// 	pullSpec: "oci:///a/b/c/someRepo:tag",
+		// 	absPath:  notPulled.String(),
+		// 	repoSpec: RepoSpec{
+		// 		Reference: name.MustParseReference("/a/b/c/someRepo:sometag"),
+		// 	},
+		// },
+		// {
+		// 	name:     "oci layout with three slashes, no kust root path ortag",
+		// 	input:    "oci:///a/b/c/someRepo",
+		// 	pullSpec: "oci:///a/b/c/someRepo",
+		// 	absPath:  notPulled.String(),
+		// 	repoSpec: RepoSpec{
+		// 		Reference: name.MustParseReference("/a/b/c/someRepo"),
+		// 	},
+		// },
+		// {
+		// 	name:     "oci layout with three slashes, no repo or kust root path or tag",
+		// 	input:    "oci:///",
+		// 	pullSpec: "oci:///",
+		// 	absPath:  notPulled.String(),
+		// 	repoSpec: RepoSpec{
+		// 		Reference: name.MustParseReference("/"),
+		// 	},
+		// },
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
