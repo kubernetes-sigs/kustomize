@@ -273,6 +273,9 @@ nameReference:
     kind: Ingress
   - path: spec/tls/secretName
     kind: Ingress
+  - path: spec/listeners/tls/certificateRefs/name
+    kind: Gateway
+    group: gateway.networking.k8s.io
   - path: imagePullSecrets/name
     kind: ServiceAccount
   - path: parameters/secretName
