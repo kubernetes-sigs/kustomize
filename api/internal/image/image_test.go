@@ -42,6 +42,18 @@ func TestIsImageMatched(t *testing.T) {
 			isMatched: true,
 		},
 		{
+			testName:  "name is match with non-sha256 digest",
+			value:     "nginx@sha512:xyz",
+			name:      "nginx",
+			isMatched: true,
+		},
+		{
+			testName:  "name is match with tag and non-sha256 digest",
+			value:     "nginx:12345@sha512:xyz",
+			name:      "nginx",
+			isMatched: true,
+		},
+		{
 			testName:  "name is not a match",
 			value:     "apache:12345",
 			name:      "nginx",
