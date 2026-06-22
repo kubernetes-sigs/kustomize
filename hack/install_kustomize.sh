@@ -79,7 +79,7 @@ function find_release_url() {
   local arch=$3
 
   echo "${releases}" |\
-    grep "browser_download.*${opsys}_${arch}" |\
+    grep -Eo "\"browser_download_url\"[[:space:]]*:[[:space:]]*\"[^\"]*${opsys}_${arch}[^\"]*\"" |\
     cut -d '"' -f 4 |\
     sort -V | tail -n 1
 }
