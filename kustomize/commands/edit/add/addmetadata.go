@@ -183,7 +183,7 @@ func (o *addMetadataOptions) writeToLabels(m *types.Kustomization, kind kindOfAd
 			}
 			continue
 		}
-		if err := o.writeToMap(lbl.Pairs, kind); err != nil {
+		if err := o.writeToMapEntry(lbl.Pairs, k, v, kind); err != nil {
 			return err
 		}
 		m.Labels = append(m.Labels, lbl)

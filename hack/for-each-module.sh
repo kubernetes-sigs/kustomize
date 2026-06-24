@@ -22,8 +22,18 @@ seen=()
 KUSTOMIZE_ROOT=$(pwd)
 export KUSTOMIZE_ROOT
 
+# Build find command with multiple -not -path options
+find_cmd="find . -name go.mod -not -path \"./site/*\""
+if [[ -n "$skip_pattern" ]]; then
+  # Split skip_pattern by | and add -not -path for each
+  IFS='|' read -ra PATTERNS <<< "$skip_pattern"
+  for pattern in "${PATTERNS[@]}"; do
+    find_cmd+=" -not -path \"$pattern\""
+  done
+fi
+
 # verify all modules pass validation
-for i in $(find . -name go.mod -not -path "./site/*" -not -path "$skip_pattern"); do
+for i in $(eval "$find_cmd"); do
   pushd .
   cd $(dirname "$i");
 

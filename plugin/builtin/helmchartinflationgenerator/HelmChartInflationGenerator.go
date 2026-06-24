@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Helm chart inflation generator.
-// Uses helm V3 to generate k8s YAML from a helm chart.
+// Uses helm V3 or V4 to generate k8s YAML from a helm chart.
 
 //go:generate pluginator
 package main
@@ -17,6 +17,7 @@ import (
 	"slices"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -184,12 +185,11 @@ func (p *plugin) runHelmCommand(
 	}
 	if err != nil {
 		helm := p.h.GeneralConfig().HelmConfig.Command
-		//nolint:govet
 		err = errors.WrapPrefixf(
 			fmt.Errorf(
 				"unable to run: '%s %s' with env=%s (is '%s' installed?): %w",
 				helm, strings.Join(args, " "), env, helm, err),
-			errorOutput,
+			"%s", errorOutput,
 		)
 	}
 	return stdout.Bytes(), err
@@ -303,6 +303,9 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 
 	rm, resMapErr := p.h.ResmapFactory().NewResMapFromBytes(stdout)
 	if resMapErr == nil {
+		if err := p.markHelmGeneratedResources(rm); err != nil {
+			return nil, err
+		}
 		return rm, nil
 	}
 	// try to remove the contents before first "---" because
@@ -317,6 +320,9 @@ func (p *plugin) Generate() (rm resmap.ResMap, err error) {
 		rm, err = p.h.ResmapFactory().NewResMapFromRNodeSlice(nodes)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse rnode slice into resource map: %w", err)
+		}
+		if err := p.markHelmGeneratedResources(rm); err != nil {
+			return nil, err
 		}
 		return rm, nil
 	}
@@ -360,9 +366,18 @@ func (p *plugin) chartExistsLocally() (string, bool) {
 	return path, s.IsDir()
 }
 
-// checkHelmVersion will return an error if the helm version is not V3
+func (p *plugin) markHelmGeneratedResources(rm resmap.ResMap) error {
+	for _, r := range rm.Resources() {
+		if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
+			return fmt.Errorf("failed to set helm annotation: %w", err)
+		}
+	}
+	return nil
+}
+
+// checkHelmVersion will return an error if the helm version is not V3 or V4
 func (p *plugin) checkHelmVersion() error {
-	stdout, err := p.runHelmCommand([]string{"version", "-c", "--short"})
+	stdout, err := p.runHelmCommand([]string{"version", "--short"})
 	if err != nil {
 		return err
 	}
@@ -378,8 +393,8 @@ func (p *plugin) checkHelmVersion() error {
 		v = v[1:]
 	}
 	majorVersion := strings.Split(v, ".")[0]
-	if majorVersion != "3" {
-		return fmt.Errorf("this plugin requires helm V3 but got v%s", v)
+	if majorVersion != "3" && majorVersion != "4" {
+		return fmt.Errorf("this plugin requires helm V3 or V4 but got v%s", v)
 	}
 	return nil
 }

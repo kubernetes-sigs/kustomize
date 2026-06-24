@@ -20,13 +20,12 @@ This document describes how to perform a [semver release]
 of one of the several [Go modules] in this repository.
 
 In this repo, releasing a module is accomplished by applying
-a tag to the repo and pushing it upstream.  A minor release
+a tag to the repo and pushing it upstream. A minor release
 branch is also created as necessary to track patch releases.
 
-A properly formatted tag (described below) contains
-the module name and version.
+A properly formatted tag (described below) contains the module name and version.
 
-Pushing the tag upstream will trigger [GitHub Actions] to build a release and make it available on the  [release page].
+Pushing the tag upstream will trigger [GitHub Actions] to build a release and make it available on the [release page].
 [GitHub Actions] reads its instructions from the [`release.yaml`] file in `.github/workflows` directory.
 
 And, container image contains `kustomize` binary will build [Google Cloud Build] that instructions from [`cloudbuild_kustomize_image.yaml`] file triggered by tags contain `kustomize` and release versions.
@@ -41,22 +40,21 @@ for an explanation of the path-like portion of these tags.
 
 Go's [semver]-compatible version tags take the form `v{major}.{minor}.{patch}`:
 
-| major | minor | patch |
-| :---:   | :---:  | :---: |
-| API change | enhancements | bug fixes |
+|     major     |       minor       |         patch          |
+| :-----------: | :---------------: | :--------------------: |
+|  API change   |   enhancements    |       bug fixes        |
 | manual update | maybe auto-update | auto-update encouraged |
 
- - If there are only bug fixes or refactors, increment `patch` from whatever it is now.
- - If there are new features, increment  `minor`.
- - If there's an API change (either the Go API or the CLI behavior
-   with respect to CLI arguments and flags), increment `major`.
+- If there are only bug fixes or refactors, increment `patch` from whatever it is now.
+- If there are new features, increment `minor`.
+- If there's an API change (either the Go API or the CLI behavior with respect to CLI arguments and flags), increment `major`.
 
 ## Release sequence
 
 The dependencies determine the release order:
 
-| module | depends on |
-| ---    | ---        |
+| module                             | depends on            |
+| ---------------------------------- | --------------------- |
 | `sigs.k8s.io/kustomize/kyaml`      | no local dependencies |
 | `sigs.k8s.io/kustomize/cmd/config` | `kyaml`,              |
 | `sigs.k8s.io/kustomize/api`        | `kyaml`               |
@@ -101,12 +99,6 @@ The release scripts expect Kustomize code to be cloned at a path ending in `sigs
 source releasing/helpers.sh
 ```
 
-#### Install the release tool
-
-```
-( cd cmd/gorepomod; go install . )
-```
-
 #### Authenticate to github using [gh](https://github.com/cli/cli) (version [1.8.1](https://github.com/cli/cli/releases/tag/v1.8.1) or higher).
 
 ```
@@ -118,8 +110,7 @@ gh auth login
 #### Establish clean state
 
 ```
-refreshMaster &&
-testKustomizeRepo
+refreshMaster && testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -130,18 +121,18 @@ releasing/compile-changelog.sh kyaml HEAD
 
 Based on the changes to be included in this release, decide whether a patch, minor or major version bump is needed: [semver review].
 
-kyaml has no intra-repo deps, so if the tests pass,
-it can just be released.
+kyaml has no intra-repo deps, so if the tests pass, it can just be released.
 
 #### Release it
 
 The default increment is a new patch version.
 
 ```
-gorepomod release kyaml [patch|minor|major] --doIt
+go tool gorepomod release kyaml [patch|minor|major] --doIt
 ```
 
 Note the version:
+
 ```
 versionKyaml=v0.10.20   # EDIT THIS!
 ```
@@ -149,23 +140,25 @@ versionKyaml=v0.10.20   # EDIT THIS!
 See the process of the [build history of GitHub Actions job].
 
 Undraft the release on the [kustomize repo release page]:
-* Make sure the version number is what you expect.
-* Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
-* Make sure each commit left in the release notes includes a PR reference.
 
+- Make sure the version number is what you expect.
+- Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
+- Make sure each commit left in the release notes includes a PR reference.
 
 ## Release `cmd/config`
 
 #### Pin to the most recent kyaml
 
 ```
-gorepomod pin kyaml --doIt
+go tool gorepomod pin kyaml --doIt
 ```
 
 Create the PR:
+
 ```
 createBranch pinToKyaml "Update kyaml to $versionKyaml"
 ```
+
 ```
 createPr
 ```
@@ -173,9 +166,9 @@ createPr
 Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
 Once the PR merges, get back on master and do paranoia test:
+
 ```
-refreshMaster &&
-testKustomizeRepo
+refreshMaster && testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -189,10 +182,11 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-gorepomod release cmd/config [patch|minor|major] --doIt
+go tool gorepomod release cmd/config [patch|minor|major] --doIt
 ```
 
 Note the version:
+
 ```
 versionCmdConfig=v0.9.12 # EDIT THIS!
 ```
@@ -200,34 +194,33 @@ versionCmdConfig=v0.9.12 # EDIT THIS!
 See the process of the [build history of GitHub Actions job].
 
 Undraft the release on the [kustomize repo release page]:
-* Make sure the version number is what you expect.
-* Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
-* Make sure each commit left in the release notes includes a PR reference.
 
+- Make sure the version number is what you expect.
+- Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
+- Make sure each commit left in the release notes includes a PR reference.
 
 ## Release `api`
 
 This is the kustomize API, used by the kustomize CLI.
 
-
 #### Pin to the new cmd/config
 
 ```
-gorepomod pin cmd/config --doIt
+go tool gorepomod pin cmd/config --doIt
 ```
 
 Create the PR:
+
 ```
-createBranch pinToCmdConfig "Update cmd/config to $versionCmdConfig" &&
-createPr
+createBranch pinToCmdConfig "Update cmd/config to $versionCmdConfig" && createPr
 ```
 
 Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
 Once the PR merges, get back on master and do paranoia test:
+
 ```
-refreshMaster &&
-testKustomizeRepo
+refreshMaster && testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -241,10 +234,11 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-gorepomod release api [patch|minor|major] --doIt
+go tool gorepomod release api [patch|minor|major] --doIt
 ```
 
 Note the version:
+
 ```
 versionApi=v0.8.10 # EDIT THIS!
 ```
@@ -252,10 +246,10 @@ versionApi=v0.8.10 # EDIT THIS!
 See the process of the [build history of GitHub Actions job].
 
 Undraft the release on the [kustomize repo release page]:
-* Make sure the version number is what you expect.
-* Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
-* Make sure each commit left in the release notes includes a PR reference.
 
+- Make sure the version number is what you expect.
+- Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
+- Make sure each commit left in the release notes includes a PR reference.
 
 ## Release the kustomize CLI
 
@@ -270,21 +264,21 @@ Example: https://github.com/kubernetes-sigs/kustomize/pull/5021
 #### Pin to the new API
 
 ```
-gorepomod pin api --doIt
+go tool gorepomod pin api --doIt
 ```
 
 Create the PR:
+
 ```
-createBranch pinToApi "Update api to $versionApi" &&
-createPr
+createBranch pinToApi "Update api to $versionApi" && createPr
 ```
 
 Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
 Once the PR merges, get back on master and do paranoia test:
+
 ```
-refreshMaster &&
-testKustomizeRepo
+refreshMaster && testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -298,7 +292,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-gorepomod release kustomize [patch|minor|major] --doIt
+go tool gorepomod release kustomize [patch|minor|major] --doIt
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -306,29 +300,27 @@ See the process of the [build history of GitHub Actions job].
 And check the process of [the build status for container image].
 
 Undraft the release on the [kustomize repo release page]:
-* Make sure the version number is what you expect.
-* Remove references to commits that aren't relevant to end users of the CLI (e.g. test commits, refactors, changes that only surface in Go).
-* Make sure each commit left in the release notes includes a PR reference.
+
+- Make sure the version number is what you expect.
+- Remove references to commits that aren't relevant to end users of the CLI (e.g. test commits, refactors, changes that only surface in Go).
+- Make sure each commit left in the release notes includes a PR reference.
 
 ## Confirm the kustomize binary is correct
 
 [installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
 
-* Follow the [installation instructions] to install your new
-  release and make sure it reports the expected version number.
+- Follow the [installation instructions] to install your new release and make sure it reports the expected version number.
 
   If not, something is very wrong.
 
-* Visit the [release page] and edit the release notes as desired.
+- Visit the [release page] and edit the release notes as desired.
 
 ## Return the repo to development mode
 
 Go back into development mode, where all modules depend on in-repo code:
 
 ```
-gorepomod unpin api         --doIt &&
-gorepomod unpin cmd/config  --doIt &&
-gorepomod unpin kyaml       --doIt
+go tool gorepomod unpin api --doIt && go tool gorepomod unpin cmd/config --doIt && go tool gorepomod unpin kyaml --doIt
 ```
 
 [Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile
@@ -341,17 +333,17 @@ sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=v5.0.0/" Makefile
 ```
 
 Create the PR:
+
 ```
-createBranch unpinEverything "Back to development mode; unpin the modules" &&
-createPr
+createBranch unpinEverything "Back to development mode; unpin the modules" && createPr
 ```
 
 Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
 
 Once the PR merges, get back on master and do paranoia test:
+
 ```
-refreshMaster &&
-testKustomizeRepo
+refreshMaster && testKustomizeRepo
 ```
 
 ## Publish Official Docker Image
@@ -380,6 +372,7 @@ To update the version of kustomize shipped with kubectl, first
 fork and clone the [kubernetes/kubernetes] repo.
 
 In the root of the [kubernetes/kubernetes] repo, run the following command:
+
 ```bash
 ./hack/update-kustomize.sh
 ```
@@ -395,7 +388,6 @@ Here are some example PRs:
 https://github.com/kubernetes/kubernetes/pull/103419
 
 https://github.com/kubernetes/kubernetes/pull/106389
-
 
 # Testing changes to the release pipeline
 

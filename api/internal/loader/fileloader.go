@@ -147,6 +147,26 @@ func newLoaderAtConfirmedDir(
 	}
 }
 
+// hasAmbiguousPathSegment reports whether path contains a segment with ".."
+// embedded in it (not ".." itself). This pattern results from YAML indentation
+// errors where two list entries merge into one scalar, e.g.:
+//
+//	resources:
+//	- ../../base
+//	 - ../../shared/prod
+//
+// YAML parses this as "../../base - ../../shared/prod", producing segment
+// "base - .." which filepath.Clean absorbs, silently resolving to an
+// unintended directory.
+func hasAmbiguousPathSegment(path string) bool {
+	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
+		if part != "" && part != "." && part != ".." && strings.Contains(part, "..") {
+			return true
+		}
+	}
+	return false
+}
+
 // New returns a new Loader, rooted relative to current loader,
 // or rooted in a temp directory holding a git repo clone.
 func (fl *FileLoader) New(path string) (ifc.Loader, error) {
@@ -167,9 +187,16 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 	if filepath.IsAbs(path) {
 		return nil, fmt.Errorf("new root '%s' cannot be absolute", path)
 	}
+	if hasAmbiguousPathSegment(path) {
+		return nil, fmt.Errorf(
+			"path %q is ambiguous: resolves to %q after normalization, "+
+				"which is likely not the intended target; check for YAML "+
+				"indentation errors in your kustomization file",
+			path, filepath.Clean(path))
+	}
 	root, err := filesys.ConfirmDir(fl.fSys, fl.root.Join(path))
 	if err != nil {
-		return nil, errors.WrapPrefixf(err, ErrRtNotDir.Error()) //nolint:govet
+		return nil, errors.WrapPrefixf(err, "%s", ErrRtNotDir.Error())
 	}
 	if err = fl.errIfGitContainmentViolation(root); err != nil {
 		return nil, err
@@ -311,7 +338,11 @@ func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
 	} else {
 		hc = &http.Client{}
 	}
-	resp, err := hc.Get(path)
+	parsedURL, err := url.ParseRequestURI(path)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	resp, err := hc.Get(parsedURL.String())
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}

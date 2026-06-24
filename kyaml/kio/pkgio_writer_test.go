@@ -335,7 +335,7 @@ metadata:
 
 	// These two lines are similar to calling os.MkdirTemp, but we don't actually create any directory.
 	rand.Seed(time.Now().Unix())
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("kyaml-test%d", rand.Int31())) //nolint:gosec
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("kyaml-test%d", rand.Int31()))
 	require.NoError(t, mockFS.MkdirAll(filepath.Join(path, "a")))
 	return path, node1, node2, node3, func() { require.NoError(t, mockFS.RemoveAll(path)) }
 }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build !windows
-// +build !windows
 
 package filesys
 
@@ -903,7 +902,7 @@ func TestFileOps(t *testing.T) {
 	defer f.Close()
 
 	for {
-		buf := make([]byte, rand.Intn(10)) //nolint:gosec
+		buf := make([]byte, rand.Intn(10))
 		n, err := f.Read(buf)
 		if err != nil && err != io.EOF {
 			t.Fatalf("unexpected error: %v", err)

@@ -191,7 +191,6 @@ type: Opaque
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: {}
   labels:
     app: moria-minecraft
     chart: minecraft-3.1.3
@@ -211,7 +210,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: {}
   labels:
     app: moria-minecraft
     chart: minecraft-3.1.3

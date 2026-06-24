@@ -11,9 +11,9 @@ aliases:
   kustomize-reviewers:
     - knverey
     - koba1t
-    - stormqueen1990
     - varshaprasad96
     - ncapps
+    - sarab97
 
   docs-approvers:
     - ncapps
@@ -21,8 +21,7 @@ aliases:
     - ncapps
 
   commands-approvers: []
-  commands-reviewers:
-    - stormqueen1990
+  commands-reviewers: []
 
   #  emeritus:
   #    - liujingfang1

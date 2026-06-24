@@ -76,7 +76,7 @@ func size(r *yaml.RNode) error {
 		memorySize = memorySizes[size]
 		cpuSize = cpuSizes[size]
 		if memorySize == "" || cpuSize == "" {
-			return fmt.Errorf("unsupported tshirt-size: " + size)
+			return fmt.Errorf("unsupported tshirt-size: %s", size)
 		}
 	}
 

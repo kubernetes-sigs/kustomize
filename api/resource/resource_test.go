@@ -36,7 +36,6 @@ func createTestConfigMap() (*Resource, error) {
 	return res, nil
 }
 
-//nolint:gosec
 const configMapAsString = `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"winnie","namespace":"hundred-acre-wood"}}`
 
 func createTestDeployment() (*Resource, error) {

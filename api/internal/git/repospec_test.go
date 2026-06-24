@@ -693,7 +693,7 @@ func TestNewRepoSpecFromUrl_Smoke(t *testing.T) {
 			rs.Dir = ""
 			rs.Submodules = false
 			rs.Timeout = 0
-			assert.Equal(t, &tc.repoSpec, rs) //nolint:gosec
+			assert.Equal(t, &tc.repoSpec, rs)
 		})
 	}
 }
