@@ -10,6 +10,7 @@ endif
 export PATH := $(MYGOBIN):$(PATH)
 
 REPO_ROOT=$(shell git rev-parse --show-toplevel)
+GOLANGCI_LINT_VERSION ?= $(shell cd $(REPO_ROOT)/hack && go list -m -f '{{.Version}}' github.com/golangci/golangci-lint)
 
 # determines whether to run tests that only behave locally; can be overridden by override variable
 export IS_LOCAL = false
@@ -30,9 +31,11 @@ uninstall-out-of-tree-tools:
 	rm -f $(MYGOBIN)/mdrip
 	rm -f $(MYGOBIN)/stringer
 
+# golangci-lint is not guaranteed to use from tool directive, so we install it directly.
+# https://golangci-lint.run/docs/welcome/install/local/#install-from-sources
 .PHONY: $(MYGOBIN)/golangci-lint
 $(MYGOBIN)/golangci-lint:
-	cd $(REPO_ROOT)/hack && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 .PHONY: $(MYGOBIN)/mdrip
 $(MYGOBIN)/mdrip:

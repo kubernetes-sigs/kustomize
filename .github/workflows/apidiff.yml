@@ -13,20 +13,20 @@ jobs:
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
     steps:
       - name: Clone the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version-file: go.work
       - name: Execute go-apidiff
-        uses: joelanford/go-apidiff@v0.8.3
+        uses: joelanford/go-apidiff@60c4206be8f84348ebda2a3e0c3ac9cb54b8f685
         with:
           compare-imports: true
           print-compatible: true
       - name: Report failure
-        uses: nashmaniac/create-issue-action@v1.2
+        uses: nashmaniac/create-issue-action@6814b79f58a9e25070c226b0c847e67b0c06efdd
         # Only report failures of pushes (PRs have are visible through the Checks section) to the default branch
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
