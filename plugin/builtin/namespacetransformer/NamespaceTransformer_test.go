@@ -877,3 +877,51 @@ metadata:
   namespace: helm-ns
 `)
 }
+
+func TestNamespaceTransformer_HelmOriginDoesNotSetRoleBindingSubjects(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	rmF := resmap.NewFactory(provider.NewDefaultDepProvider().GetResourceFactory())
+	rm, err := rmF.NewResMapFromBytes([]byte(`apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb
+subjects:
+- kind: ServiceAccount
+  name: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+`))
+	require.NoError(t, err)
+	r := rm.Resources()[0]
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
+
+	rm, err = th.RunTransformerFromResMap(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+`+defaultFieldSpecs, rm)
+	require.NoError(t, err)
+	require.NoError(t, rm.RemoveOriginAnnotations())
+	// metadata.namespace is filled, but the "default" subject namespace is left
+	// untouched because Helm charts own their (cluster)role binding subjects.
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role
+subjects:
+- kind: ServiceAccount
+  name: default
+`)
+}
