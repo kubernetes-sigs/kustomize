@@ -58,6 +58,11 @@ func (o *Options) Validate(_ []string) error {
 			return fmt.Errorf("--short and --output are mutually exclusive")
 		}
 	}
+	switch o.Output {
+	case "", "yaml", "json":
+	default:
+		return fmt.Errorf("--output must be 'yaml' or 'json'")
+	}
 	return nil
 }
 
