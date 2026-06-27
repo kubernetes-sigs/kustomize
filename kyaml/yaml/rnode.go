@@ -883,11 +883,14 @@ func (rn *RNode) ElementValuesList(keys []string) ([][]string, error) {
 
 	for i := 0; i < len(rn.Content()); i++ {
 		for _, key := range keys {
-			field := NewRNode(rn.Content()[i]).Field(key)
+			field, err := NewRNode(rn.Content()[i]).fieldByKeyPath(key)
+			if err != nil {
+				return nil, err
+			}
 			if field.IsNilOrEmpty() {
 				elements[i] = append(elements[i], "")
 			} else {
-				elements[i] = append(elements[i], field.Value.YNode().Value)
+				elements[i] = append(elements[i], field.YNode().Value)
 			}
 		}
 	}

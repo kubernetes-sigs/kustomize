@@ -9,8 +9,20 @@ import (
 	"github.com/go-errors/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/sets"
+	"sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func lookupElementValue(elem *yaml.Node, key string) (*yaml.RNode, error) {
+	return yaml.NewRNode(elem).Pipe(yaml.Lookup(keyPath(key)...))
+}
+
+func keyPath(key string) []string {
+	if strings.Contains(key, "/") {
+		return utils.PathSplitter(key, "/")
+	}
+	return []string{key}
+}
 
 // appendListNode will append the nodes from src to dst and return dst.
 // src and dst should be both sequence node. key is used to call ElementSetter.
@@ -37,8 +49,7 @@ func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 		// in sequence.
 		v := []string{}
 		for _, key := range keys {
-			tmpNode := yaml.NewRNode(elem)
-			valueNode, err := tmpNode.Pipe(yaml.Get(key))
+			valueNode, err := lookupElementValue(elem, key)
 			if err != nil {
 				return nil, err
 			}
@@ -203,12 +214,16 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 					return nil, err
 				}
 				exit = true
-			} else if val.Field(key) == nil && validValues[i] != "" {
+			} else if keyNode, lookupErr := val.Pipe(yaml.Lookup(keyPath(key)...)); lookupErr != nil {
+				return nil, lookupErr
+			} else if keyNode == nil && validValues[i] != "" {
 				// make sure the key is set on the field
-				_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(validValues[i])))
+				keyNode, err = val.Pipe(yaml.LookupCreate(yaml.ScalarNode, keyPath(key)...))
 				if err != nil {
 					return nil, err
 				}
+				keyNode.YNode().Value = validValues[i]
+				keyNode.YNode().Tag = yaml.NodeTagString
 			}
 		}
 		if exit {

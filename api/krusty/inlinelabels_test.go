@@ -656,6 +656,136 @@ spec:
 `)
 }
 
+func TestKustomizationLabelsInNestedStatefulSetVolumeClaimTemplateWithPatch(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("app/source", `
+resources:
+- sts.yaml
+labels:
+- pairs:
+    app.kubernetes.io/name: vmcluster
+    app.kubernetes.io/stack: victoriametrics
+  includeSelectors: true
+  includeTemplates: true
+  includeVolumeClaimTemplates: true
+`)
+	th.WriteF("app/source/sts.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: vmstorage
+  name: vmstorage
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: vmstorage
+    spec:
+      containers:
+      - name: vmstorage
+        image: quay.io/victoriametrics/vmstorage:v1.128.0-cluster
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      labels:
+        app.kubernetes.io/component: vmstorage
+      name: vmstorage-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: gp3
+      volumeMode: Filesystem
+`)
+	th.WriteK("app", `
+resources:
+- source
+labels:
+- pairs:
+    app.kubernetes.io/instance: vmcluster-internal
+  includeSelectors: true
+  includeTemplates: true
+  includeVolumeClaimTemplates: true
+patches:
+- path: patch.yaml
+`)
+	th.WriteF("app/patch.yaml", `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: vmstorage
+  name: vmstorage
+spec:
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      labels:
+        app.kubernetes.io/component: vmstorage
+      name: vmstorage-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 600Gi
+      storageClassName: gp3
+      volumeMode: Filesystem
+`)
+	m := th.Run("app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: vmstorage
+    app.kubernetes.io/instance: vmcluster-internal
+    app.kubernetes.io/name: vmcluster
+    app.kubernetes.io/stack: victoriametrics
+  name: vmstorage
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: vmcluster-internal
+      app.kubernetes.io/name: vmcluster
+      app.kubernetes.io/stack: victoriametrics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: vmstorage
+        app.kubernetes.io/instance: vmcluster-internal
+        app.kubernetes.io/name: vmcluster
+        app.kubernetes.io/stack: victoriametrics
+    spec:
+      containers:
+      - image: quay.io/victoriametrics/vmstorage:v1.128.0-cluster
+        name: vmstorage
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      labels:
+        app.kubernetes.io/component: vmstorage
+        app.kubernetes.io/instance: vmcluster-internal
+        app.kubernetes.io/name: vmcluster
+        app.kubernetes.io/stack: victoriametrics
+      name: vmstorage-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 600Gi
+      storageClassName: gp3
+      volumeMode: Filesystem
+`)
+}
+
 func TestKustomizationLabelsInStatefulSetTemplateWithIncludeSelectorsTrue(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteF("app/sts.yaml", `

@@ -11,6 +11,7 @@ import (
 
 	yaml "go.yaml.in/yaml/v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/utils"
 )
 
 // Append creates an ElementAppender
@@ -106,7 +107,7 @@ func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
 		found := true
 		for j := range e.Keys {
 			if j < len(e.Values) {
-				val, err = newNode.Pipe(FieldMatcher{Name: e.Keys[j], StringValue: e.Values[j]})
+				val, err = newNode.matchFieldValue(e.Keys[j], e.Values[j])
 			}
 			if err != nil {
 				return nil, err
@@ -311,9 +312,9 @@ func (e ElementMatcher) Filter(rn *RNode) (*RNode, error) {
 		matchesElement := true
 		for i := range e.Keys {
 			if e.MatchAnyValue {
-				field, err = elem.Pipe(Get(e.Keys[i]))
+				field, err = elem.fieldByKeyPath(e.Keys[i])
 			} else {
-				field, err = elem.Pipe(MatchField(e.Keys[i], e.Values[i]))
+				field, err = elem.matchFieldValue(e.Keys[i], e.Values[i])
 			}
 			if !IsFoundOrError(field, err) {
 				// this is not the element we are looking for
@@ -344,6 +345,35 @@ func MatchField(name, value string) FieldMatcher {
 
 func Match(value string) FieldMatcher {
 	return FieldMatcher{Value: NewScalarRNode(value)}
+}
+
+func splitKeyPath(key string) []string {
+	if strings.Contains(key, "/") {
+		return utils.PathSplitter(key, "/")
+	}
+	return []string{key}
+}
+
+func (rn *RNode) fieldByKeyPath(key string) (*RNode, error) {
+	path := splitKeyPath(key)
+	if len(path) == 1 {
+		return rn.Pipe(Get(path[0]))
+	}
+	return rn.Pipe(Lookup(path...))
+}
+
+func (rn *RNode) matchFieldValue(key, value string) (*RNode, error) {
+	if key == "" {
+		return rn.Pipe(Match(value))
+	}
+	field, err := rn.fieldByKeyPath(key)
+	if err != nil || IsMissingOrNull(field) {
+		return field, err
+	}
+	if field.YNode().Value != value {
+		return nil, nil
+	}
+	return field, nil
 }
 
 // FieldMatcher returns the value of a named field or map entry.

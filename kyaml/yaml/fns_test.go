@@ -418,6 +418,61 @@ func TestElementMatcherMultipleKeys(t *testing.T) {
 	assert.Nil(t, rn)
 }
 
+func TestElementMatcherNestedKeyPath(t *testing.T) {
+	node, err := Parse(`
+- metadata:
+    name: data
+  value: base
+- metadata:
+    name: cache
+  value: patch
+`)
+	require.NoError(t, err)
+
+	rn, err := node.Pipe(MatchElementList(
+		[]string{"metadata/name"},
+		[]string{"cache"},
+	))
+	require.NoError(t, err)
+	require.NotNil(t, rn)
+	assert.Equal(t, "patch", rn.Field("value").Value.YNode().Value)
+
+	rn, err = node.Pipe(GetElementByKey("metadata/name"))
+	require.NoError(t, err)
+	require.NotNil(t, rn)
+	assert.Equal(t, "base", rn.Field("value").Value.YNode().Value)
+}
+
+func TestElementSetterNestedKeyPath(t *testing.T) {
+	node, err := Parse(`
+- metadata:
+    name: data
+  value: base
+- metadata:
+    name: cache
+  value: patch
+`)
+	require.NoError(t, err)
+
+	_, err = node.Pipe(ElementSetter{
+		Element: MustParse(`
+metadata:
+  name: cache
+value: updated
+`).YNode(),
+		Keys:   []string{"metadata/name"},
+		Values: []string{"cache"},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, `- metadata:
+    name: data
+  value: base
+- metadata:
+    name: cache
+  value: updated
+`, assertNoErrorString(t)(node.String()))
+}
+
 func TestClearField_Fn(t *testing.T) {
 	node, err := Parse(NodeSampleData)
 	require.NoError(t, err)

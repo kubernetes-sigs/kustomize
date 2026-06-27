@@ -107,6 +107,22 @@ func TestSchemaForResourceType(t *testing.T) {
 	}
 }
 
+func TestStatefulSetVolumeClaimTemplatesPatchStrategy(t *testing.T) {
+	// reset package vars
+	globalSchema = openapiData{}
+
+	s := SchemaForResourceType(
+		yaml.TypeMeta{APIVersion: "apps/v1", Kind: "StatefulSet"})
+	require.NotNil(t, s)
+
+	volumeClaimTemplates := s.Lookup("spec", "volumeClaimTemplates")
+	require.NotNil(t, volumeClaimTemplates)
+
+	strategy, keys := volumeClaimTemplates.PatchStrategyAndKeyList()
+	assert.Equal(t, "merge", strategy)
+	assert.Equal(t, []string{"metadata/name"}, keys)
+}
+
 func TestSchemaFromFile(t *testing.T) {
 	ResetOpenAPI()
 	inputyaml := `

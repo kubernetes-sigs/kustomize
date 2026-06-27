@@ -714,6 +714,7 @@ func parseBuiltinSchema(version string) {
 		// this should never happen
 		panic(err)
 	}
+	fixKubernetesBuiltInSchema()
 }
 
 // parse parses and indexes a single json or proto schema
@@ -748,6 +749,49 @@ func parse(b []byte, format format) error {
 	AddDefinitions(swagger.Definitions)
 	findNamespaceability(swagger.Paths)
 	return nil
+}
+
+func fixKubernetesBuiltInSchema() {
+	statefulSetSchema := globalSchema.schemaByResourceType[yaml.TypeMeta{
+		APIVersion: "apps/v1",
+		Kind:       "StatefulSet",
+	}]
+	if statefulSetSchema == nil {
+		return
+	}
+	addFieldExtensions(statefulSetSchema, []string{"spec", "volumeClaimTemplates"}, spec.Extensions{
+		kubernetesPatchStrategyExtensionKey: "merge",
+		kubernetesMergeKeyExtensionKey:      "metadata/name",
+	})
+}
+
+func addFieldExtensions(schema *spec.Schema, path []string, extensions spec.Extensions) bool {
+	if len(path) == 0 {
+		if schema.Extensions == nil {
+			schema.Extensions = spec.Extensions{}
+		}
+		for key, value := range extensions {
+			schema.Extensions[key] = value
+		}
+		return true
+	}
+
+	field, found := schema.Properties[path[0]]
+	if !found {
+		return false
+	}
+	for field.Ref.String() != "" {
+		referredSchema, err := Resolve(&field.Ref, &globalSchema.schema)
+		if err != nil {
+			return false
+		}
+		return addFieldExtensions(referredSchema, path[1:], extensions)
+	}
+	if !addFieldExtensions(&field, path[1:], extensions) {
+		return false
+	}
+	schema.Properties[path[0]] = field
+	return true
 }
 
 // findNamespaceability looks at the api paths for the resource to determine
