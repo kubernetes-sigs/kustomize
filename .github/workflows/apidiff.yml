@@ -13,7 +13,7 @@ jobs:
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
     steps:
       - name: Clone the code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
       - name: Setup Go
