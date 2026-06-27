@@ -76,3 +76,32 @@ The Secret is emitted by the chart with an release namespace, so that value shou
 ```sh
 printf '%s\n' "$output" | grep -A4 'name: test-b-secret' | grep 'namespace: top-level-ns'
 ```
+
+## Generated ConfigMap and Secret references in a Helm Deployment
+
+The chart also emits a Deployment that mounts the kustomize-generated `mounted-config` ConfigMap and `mounted-secret` Secret as volumes. The generators add a name-suffix hash, so the Deployment's volume references must keep that hash. This guards against [issue #6077](https://github.com/kubernetes-sigs/kustomize/issues/6077), where setting a namespace dropped the hash from references in Helm-generated workloads.
+
+The namespace is applied to the Helm-generated Deployment, just like the other resources:
+
+<!-- @checkDeploymentNamespaceFilled @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A2 'name: test-a-deployment' | grep 'namespace: chart-ns'
+```
+
+<!-- @checkDeploymentNamespaceFilled @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A2 'name: test-b-deployment' | grep 'namespace: top-level-ns'
+```
+
+The `test-b` Deployment shares the `top-level-ns` namespace with the generated ConfigMap and Secret, so its volume references resolve to the full hashed names:
+
+<!-- @checkHashedConfigMapReference @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A40 'name: test-b-deployment' | grep -A1 'configMap:' | grep 'name: mounted-config-g46hh6k8tf'
+```
+
+<!-- @checkHashedSecretReference @testHelm -->
+```sh
+printf '%s\n' "$output" | grep -A40 'name: test-b-deployment' | grep 'secretName: mounted-secret-gh24bh7t8g'
+```
+

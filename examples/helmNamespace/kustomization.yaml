@@ -14,3 +14,17 @@ helmCharts:
 # test b inherits the namespace from top level
 - name: namespace-fill
   releaseName: test-b
+
+# These generators are referenced as volumes by the Helm-generated Deployment.
+# Their name-suffix hash must survive in the Deployment's volume references when
+# the workload and the generated resource share a namespace.
+# See https://github.com/kubernetes-sigs/kustomize/issues/6077
+configMapGenerator:
+- name: mounted-config
+  literals:
+  - config=foo
+
+secretGenerator:
+- name: mounted-secret
+  literals:
+  - secret=foo
