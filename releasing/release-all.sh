@@ -158,8 +158,15 @@ gorepomod_unpin() {
   run go tool gorepomod unpin "${module}" --doIt --local
 }
 
+restore_go_work_sum_if_touched() {
+  if ! git diff --quiet -- go.work.sum; then
+    run git restore --worktree go.work.sum
+  fi
+}
+
 commit_if_needed() {
   local message=$1
+  restore_go_work_sum_if_touched
   if git diff --quiet --exit-code; then
     log "no changes to commit for: ${message}"
     return
@@ -333,6 +340,7 @@ local_kyaml_version="$(module_local_version kyaml)"
 local_cmd_config_version="$(module_local_version cmd/config)"
 local_api_version="$(module_local_version api)"
 local_kustomize_version="$(module_local_version kustomize)"
+restore_go_work_sum_if_touched
 
 target_kyaml_version="$(bump_version "${local_kyaml_version}" "${module_bump}")"
 target_cmd_config_version="$(bump_version "${local_cmd_config_version}" "${module_bump}")"
