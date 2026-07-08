@@ -148,8 +148,6 @@ func newArgs() *myArgs {
 			result.localFlag = true
 		} else if strings.HasPrefix(a, releaseBranchFlag+"=") {
 			result.releaseBranch = strings.TrimPrefix(a, releaseBranchFlag+"=")
-		} else if a == releaseBranchFlag {
-			result.args = append(result.args, a)
 		} else {
 			result.args = append(result.args, a)
 		}
