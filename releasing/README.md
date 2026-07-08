@@ -171,7 +171,7 @@ Undraft the release on the [kustomize repo release page]:
 #### Pin to the most recent kyaml
 
 ```
-go tool gorepomod pin kyaml --doIt
+go tool gorepomod pin kyaml "$versionModule" --doIt
 ```
 
 Commit the pin update on the release branch:
@@ -216,7 +216,7 @@ This is the kustomize API, used by the kustomize CLI.
 #### Pin to the new cmd/config
 
 ```
-go tool gorepomod pin cmd/config --doIt
+go tool gorepomod pin cmd/config "$versionModule" --doIt
 ```
 
 Commit the pin update on the release branch:
@@ -267,7 +267,7 @@ Example: https://github.com/kubernetes-sigs/kustomize/pull/5021
 #### Pin to the new API
 
 ```
-go tool gorepomod pin api --doIt
+go tool gorepomod pin api "$versionModule" --doIt
 ```
 
 Commit the pin update on the release branch:

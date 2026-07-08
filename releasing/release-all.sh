@@ -144,18 +144,18 @@ ensure_branch_absent_on_remote() {
 gorepomod_release() {
   local module=$1
   local bump=$2
-  run go tool gorepomod release "${module}" "${bump}" --release-branch "${release_branch}" --doIt --local
+  run go tool gorepomod release "${module}" "${bump}" --release-branch "${release_branch}" --doIt
 }
 
 gorepomod_pin() {
   local module=$1
   local version=$2
-  run go tool gorepomod pin "${module}" "${version}" --doIt --local
+  run go tool gorepomod pin "${module}" "${version}" --doIt
 }
 
 gorepomod_unpin() {
   local module=$1
-  run go tool gorepomod unpin "${module}" --doIt --local
+  run go tool gorepomod unpin "${module}" --doIt
 }
 
 commit_if_needed() {
@@ -364,16 +364,23 @@ maybe_run_tests
 gorepomod_release kyaml "${module_bump}"
 
 gorepomod_pin kyaml "${module_version}"
-commit_if_needed "Pin kyaml to ${module_version} for ${kustomize_version}"
+commit_if_needed "Update kyaml to ${module_version}"
 run git push "${remote}" "${release_branch}"
+maybe_run_tests
 
 gorepomod_release cmd/config "${module_bump}"
-gorepomod_release api "${module_bump}"
 
 gorepomod_pin cmd/config "${module_version}"
-gorepomod_pin api "${module_version}"
-commit_if_needed "Pin cmd/config and api to ${module_version} for ${kustomize_version}"
+commit_if_needed "Update cmd/config to ${module_version}"
 run git push "${remote}" "${release_branch}"
+maybe_run_tests
+
+gorepomod_release api "${module_bump}"
+
+gorepomod_pin api "${module_version}"
+commit_if_needed "Update api to ${module_version}"
+run git push "${remote}" "${release_branch}"
+maybe_run_tests
 
 gorepomod_release kustomize "${kustomize_bump}"
 
