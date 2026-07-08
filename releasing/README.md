@@ -340,7 +340,7 @@ Create the final PR:
 sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=$versionKustomize/" Makefile
 git commit -am "Back to development mode after $versionKustomize"
 git push upstream "$releaseBranch"
-gh pr create --base master --head "$releaseBranch" --title "Back to development mode after $versionKustomize"
+gh pr create --base master --head "$releaseBranch" --title "Release $versionKustomize"
 ```
 
 Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.

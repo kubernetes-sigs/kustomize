@@ -184,12 +184,15 @@ update_latest_release() {
 }
 
 create_final_pr() {
-  local title="Back to development mode after ${kustomize_version}"
+  local title="Release ${kustomize_version}"
   local body
   body=$(cat <<EOF
-Restore in-repo module replacements after releasing \`${kustomize_version}\`.
+Merge the release branch for \`${kustomize_version}\` back to \`${base_branch}\`.
 
-Also update \`LATEST_RELEASE\` to \`${kustomize_version}\`.
+- Tags kyaml, cmd/config, and api at \`${module_version}\` and kustomize at \`${kustomize_version}\`.
+- Contains the pin commits used during the release.
+- Restores in-repo module replacements (unpin).
+- Bumps \`LATEST_RELEASE\` to \`${kustomize_version}\`.
 EOF
 )
   if [[ "${do_it}" -eq 1 ]]; then
