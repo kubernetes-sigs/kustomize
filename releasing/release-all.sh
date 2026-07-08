@@ -72,11 +72,6 @@ github_repo_from_remote() {
   gh repo view "${remote_url}" --json nameWithOwner --jq .nameWithOwner
 }
 
-tag_url_path() {
-  local tag=$1
-  printf '%s' "${tag//\//%2F}"
-}
-
 pick_default_remote() {
   if git remote get-url upstream >/dev/null 2>&1; then
     printf 'upstream'
@@ -267,11 +262,9 @@ Next steps:
     ${api_tag}: $(release_action_url "${api_tag}")
     ${kustomize_tag}: $(release_action_url "${kustomize_tag}")
 
-  Review and undraft GitHub Releases after the workflows finish:
-    ${kyaml_tag}: ${repo_url}/releases/tag/$(tag_url_path "${kyaml_tag}")
-    ${cmd_config_tag}: ${repo_url}/releases/tag/$(tag_url_path "${cmd_config_tag}")
-    ${api_tag}: ${repo_url}/releases/tag/$(tag_url_path "${api_tag}")
-    ${kustomize_tag}: ${repo_url}/releases/tag/$(tag_url_path "${kustomize_tag}")
+  After the workflows finish, open the releases page and undraft the
+  4 drafts (${kyaml_tag}, ${cmd_config_tag}, ${api_tag}, ${kustomize_tag}):
+    ${repo_url}/releases
 EOF
 }
 
