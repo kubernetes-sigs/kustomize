@@ -8,7 +8,6 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/.." && pwd)"
 
 do_it=0
-run_tests=1
 base_branch="master"
 remote=""
 release_branch=""
@@ -28,7 +27,6 @@ Usage:
     [--branch release-vX.Y.Z] \
     [--base master] \
     [--remote upstream|origin] \
-    [--no-test] \
     [--do-it]
 
 This script automates the multi-module release flow.
@@ -153,15 +151,8 @@ gorepomod_unpin() {
   run go tool gorepomod unpin "${module}" --doIt --local
 }
 
-assert_go_work_sum_clean() {
-  if ! git diff --quiet -- go.work.sum; then
-    fail "go.work.sum has uncommitted changes; commit the module graph update before releasing (or run 'git restore go.work.sum' if the change is spurious)"
-  fi
-}
-
 commit_if_needed() {
   local message=$1
-  assert_go_work_sum_clean
   if git diff --quiet --exit-code; then
     log "no changes to commit for: ${message}"
     return
@@ -169,12 +160,8 @@ commit_if_needed() {
   run git commit -am "${message}"
 }
 
-maybe_run_tests() {
-  if [[ "${run_tests}" -eq 1 ]]; then
-    run make IS_LOCAL=true verify-kustomize-repo
-  else
-    log "skipping repository verification"
-  fi
+run_verify() {
+  run make IS_LOCAL=true verify-kustomize-repo
 }
 
 update_latest_release() {
@@ -290,10 +277,6 @@ while [[ $# -gt 0 ]]; do
       remote="${2:-}"
       shift 2
       ;;
-    --no-test)
-      run_tests=0
-      shift
-      ;;
     --do-it)
       do_it=1
       shift
@@ -333,7 +316,6 @@ local_kyaml_version="$(module_local_version kyaml)"
 local_cmd_config_version="$(module_local_version cmd/config)"
 local_api_version="$(module_local_version api)"
 local_kustomize_version="$(module_local_version kustomize)"
-assert_go_work_sum_clean
 
 target_kyaml_version="$(bump_version "${local_kyaml_version}" "${module_bump}")"
 target_cmd_config_version="$(bump_version "${local_cmd_config_version}" "${module_bump}")"
@@ -363,28 +345,28 @@ run git checkout "${base_branch}"
 run git fetch "${remote}" "${base_branch}"
 run git merge --ff-only "${remote}/${base_branch}"
 
-maybe_run_tests
+run_verify
 
 gorepomod_release kyaml "${module_bump}"
 
 gorepomod_pin kyaml "${module_version}"
 commit_if_needed "Update kyaml to ${module_version}"
 run git push "${remote}" "${release_branch}"
-maybe_run_tests
+run_verify
 
 gorepomod_release cmd/config "${module_bump}"
 
 gorepomod_pin cmd/config "${module_version}"
 commit_if_needed "Update cmd/config to ${module_version}"
 run git push "${remote}" "${release_branch}"
-maybe_run_tests
+run_verify
 
 gorepomod_release api "${module_bump}"
 
 gorepomod_pin api "${module_version}"
 commit_if_needed "Update api to ${module_version}"
 run git push "${remote}" "${release_branch}"
-maybe_run_tests
+run_verify
 
 gorepomod_release kustomize "${kustomize_bump}"
 
