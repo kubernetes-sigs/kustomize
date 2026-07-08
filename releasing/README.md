@@ -155,7 +155,7 @@ kyaml has no intra-repo deps, so if the tests pass, it can just be released.
 #### Release it
 
 ```
-go tool gorepomod release kyaml "$moduleBump" --release-branch "$releaseBranch" --doIt
+go tool gorepomod release kyaml "$moduleBump" --release-branch "$releaseBranch" --doIt --local
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -171,7 +171,7 @@ Undraft the release on the [kustomize repo release page]:
 #### Pin to the most recent kyaml
 
 ```
-go tool gorepomod pin kyaml "$versionModule" --doIt
+go tool gorepomod pin kyaml "$versionModule" --doIt --local
 ```
 
 Commit the pin update on the release branch:
@@ -198,7 +198,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release cmd/config "$moduleBump" --release-branch "$releaseBranch" --doIt
+go tool gorepomod release cmd/config "$moduleBump" --release-branch "$releaseBranch" --doIt --local
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -216,7 +216,7 @@ This is the kustomize API, used by the kustomize CLI.
 #### Pin to the new cmd/config
 
 ```
-go tool gorepomod pin cmd/config "$versionModule" --doIt
+go tool gorepomod pin cmd/config "$versionModule" --doIt --local
 ```
 
 Commit the pin update on the release branch:
@@ -243,7 +243,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release api "$moduleBump" --release-branch "$releaseBranch" --doIt
+go tool gorepomod release api "$moduleBump" --release-branch "$releaseBranch" --doIt --local
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -267,7 +267,7 @@ Example: https://github.com/kubernetes-sigs/kustomize/pull/5021
 #### Pin to the new API
 
 ```
-go tool gorepomod pin api "$versionModule" --doIt
+go tool gorepomod pin api "$versionModule" --doIt --local
 ```
 
 Commit the pin update on the release branch:
@@ -294,7 +294,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release kustomize "$kustomizeBump" --release-branch "$releaseBranch" --doIt
+go tool gorepomod release kustomize "$kustomizeBump" --release-branch "$releaseBranch" --doIt --local
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -322,7 +322,7 @@ Undraft the release on the [kustomize repo release page]:
 Go back into development mode, where all modules depend on in-repo code:
 
 ```
-go tool gorepomod unpin api --doIt && go tool gorepomod unpin cmd/config --doIt && go tool gorepomod unpin kyaml --doIt
+go tool gorepomod unpin api --doIt --local && go tool gorepomod unpin cmd/config --doIt --local && go tool gorepomod unpin kyaml --doIt --local
 ```
 
 [Makefile]: https://github.com/kubernetes-sigs/kustomize/blob/master/Makefile

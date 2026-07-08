@@ -144,18 +144,18 @@ ensure_branch_absent_on_remote() {
 gorepomod_release() {
   local module=$1
   local bump=$2
-  run go tool gorepomod release "${module}" "${bump}" --release-branch "${release_branch}" --doIt
+  run go tool gorepomod release "${module}" "${bump}" --release-branch "${release_branch}" --doIt --local
 }
 
 gorepomod_pin() {
   local module=$1
   local version=$2
-  run go tool gorepomod pin "${module}" "${version}" --doIt
+  run go tool gorepomod pin "${module}" "${version}" --doIt --local
 }
 
 gorepomod_unpin() {
   local module=$1
-  run go tool gorepomod unpin "${module}" --doIt
+  run go tool gorepomod unpin "${module}" --doIt --local
 }
 
 commit_if_needed() {
