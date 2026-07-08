@@ -93,19 +93,48 @@ Instructions on how to get a new OpenAPI sample can be found in the
 
 The release scripts expect Kustomize code to be cloned at a path ending in `sigs.k8s.io/kustomize`. Run all commands from that directory unless otherwise specified.
 
-#### Load some helper functions
-
-```
-source releasing/helpers.sh
-```
-
 #### Authenticate to github using [gh](https://github.com/cli/cli) (version [1.8.1](https://github.com/cli/cli/releases/tag/v1.8.1) or higher).
 
 ```
 gh auth login
 ```
 
-## Release `kyaml`
+## Release
+
+The recommended release path is to automate the process from `Release kyaml` through `Return the repo to development mode` with [`release-all.sh`](./release-all.sh).
+
+```bash
+releasing/release-all.sh \
+  --module-bump patch \
+  --kustomize-bump patch
+```
+
+Without `--do-it`, the script runs in dry-run mode and prints the commands it would run. Add `--do-it` to create the release branch, push tags, push the final branch, and open the PR.
+
+The script does not decide the semver bumps for you, review changelogs, or undraft GitHub releases. Major releases are not supported by the script; use the manual flow below.
+
+<details>
+<summary>Manual release flow</summary>
+
+For a manual release, pass `--release-branch release-vX.Y.Z` to each `gorepomod release ...` command. The PR is created only after the final `unpin + LATEST_RELEASE` step.
+
+### Load helper functions
+
+```
+source releasing/helpers.sh
+```
+
+### Set release variables
+
+```
+moduleBump=patch               # EDIT THIS! patch, minor, or major
+kustomizeBump=patch            # EDIT THIS! patch, minor, or major
+versionModule=v0.10.20         # EDIT THIS! kyaml, cmd/config, and api release version
+versionKustomize=v5.8.2        # EDIT THIS!
+releaseBranch=release-$versionKustomize
+```
+
+### Release `kyaml`
 
 #### Establish clean state
 
@@ -125,16 +154,8 @@ kyaml has no intra-repo deps, so if the tests pass, it can just be released.
 
 #### Release it
 
-The default increment is a new patch version.
-
 ```
-go tool gorepomod release kyaml [patch|minor|major] --doIt
-```
-
-Note the version:
-
-```
-versionKyaml=v0.10.20   # EDIT THIS!
+go tool gorepomod release kyaml "$moduleBump" --release-branch "$releaseBranch" --doIt
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -145,7 +166,7 @@ Undraft the release on the [kustomize repo release page]:
 - Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
 - Make sure each commit left in the release notes includes a PR reference.
 
-## Release `cmd/config`
+### Release `cmd/config`
 
 #### Pin to the most recent kyaml
 
@@ -153,22 +174,17 @@ Undraft the release on the [kustomize repo release page]:
 go tool gorepomod pin kyaml --doIt
 ```
 
-Create the PR:
+Commit the pin update on the release branch:
 
 ```
-createBranch pinToKyaml "Update kyaml to $versionKyaml"
+git commit -am "Update kyaml to $versionModule"
+git push upstream "$releaseBranch"
 ```
 
-```
-createPr
-```
-
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
+Run paranoia test again:
 
 ```
-refreshMaster && testKustomizeRepo
+testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -182,13 +198,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release cmd/config [patch|minor|major] --doIt
-```
-
-Note the version:
-
-```
-versionCmdConfig=v0.9.12 # EDIT THIS!
+go tool gorepomod release cmd/config "$moduleBump" --release-branch "$releaseBranch" --doIt
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -199,7 +209,7 @@ Undraft the release on the [kustomize repo release page]:
 - Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
 - Make sure each commit left in the release notes includes a PR reference.
 
-## Release `api`
+### Release `api`
 
 This is the kustomize API, used by the kustomize CLI.
 
@@ -209,18 +219,17 @@ This is the kustomize API, used by the kustomize CLI.
 go tool gorepomod pin cmd/config --doIt
 ```
 
-Create the PR:
+Commit the pin update on the release branch:
 
 ```
-createBranch pinToCmdConfig "Update cmd/config to $versionCmdConfig" && createPr
+git commit -am "Update cmd/config to $versionModule"
+git push upstream "$releaseBranch"
 ```
 
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
+Run paranoia test again:
 
 ```
-refreshMaster && testKustomizeRepo
+testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -234,13 +243,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release api [patch|minor|major] --doIt
-```
-
-Note the version:
-
-```
-versionApi=v0.8.10 # EDIT THIS!
+go tool gorepomod release api "$moduleBump" --release-branch "$releaseBranch" --doIt
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -251,7 +254,7 @@ Undraft the release on the [kustomize repo release page]:
 - Remove references to commits that aren't relevant to end users of this module (e.g. test commits, refactors).
 - Make sure each commit left in the release notes includes a PR reference.
 
-## Release the kustomize CLI
+### Release the kustomize CLI
 
 #### For major releases: increment the module version
 
@@ -267,18 +270,17 @@ Example: https://github.com/kubernetes-sigs/kustomize/pull/5021
 go tool gorepomod pin api --doIt
 ```
 
-Create the PR:
+Commit the pin update on the release branch:
 
 ```
-createBranch pinToApi "Update api to $versionApi" && createPr
+git commit -am "Update api to $versionModule"
+git push upstream "$releaseBranch"
 ```
 
-Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
-
-Once the PR merges, get back on master and do paranoia test:
+Run paranoia test again:
 
 ```
-refreshMaster && testKustomizeRepo
+testKustomizeRepo
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -292,7 +294,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release kustomize [patch|minor|major] --doIt
+go tool gorepomod release kustomize "$kustomizeBump" --release-branch "$releaseBranch" --doIt
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -305,7 +307,7 @@ Undraft the release on the [kustomize repo release page]:
 - Remove references to commits that aren't relevant to end users of the CLI (e.g. test commits, refactors, changes that only surface in Go).
 - Make sure each commit left in the release notes includes a PR reference.
 
-## Confirm the kustomize binary is correct
+### Confirm the kustomize binary is correct
 
 [installation instructions]: https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
 
@@ -315,7 +317,7 @@ Undraft the release on the [kustomize repo release page]:
 
 - Visit the [release page] and edit the release notes as desired.
 
-## Return the repo to development mode
+### Return the repo to development mode
 
 Go back into development mode, where all modules depend on in-repo code:
 
@@ -332,10 +334,13 @@ to test examples against your new release. For example:
 sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=v5.0.0/" Makefile
 ```
 
-Create the PR:
+Create the final PR:
 
 ```
-createBranch unpinEverything "Back to development mode; unpin the modules" && createPr
+sed -i "" "s/LATEST_RELEASE=.*/LATEST_RELEASE=$versionKustomize/" Makefile
+git commit -am "Back to development mode after $versionKustomize"
+git push upstream "$releaseBranch"
+gh pr create --base master --head "$releaseBranch" --title "Back to development mode after $versionKustomize"
 ```
 
 Review the resulting PR and get a collaborator to LGTM. Wait for CI to pass.
@@ -345,6 +350,8 @@ Once the PR merges, get back on master and do paranoia test:
 ```
 refreshMaster && testKustomizeRepo
 ```
+
+</details>
 
 ## Publish Official Docker Image
 
