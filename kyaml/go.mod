@@ -1,6 +1,6 @@
 module sigs.k8s.io/kustomize/kyaml
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/go-errors/errors v1.4.2
