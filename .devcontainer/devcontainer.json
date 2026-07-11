@@ -1,0 +1,56 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go .
+{
+	"name": "Kustomize",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/go:2.1.3-1.25-trixie",
+	"workspaceFolder": "/workspaces/kustomize",
+	"mounts": [
+		{
+			"source": "/var/run/user/1000/podman/podman.sock",
+			"target": "/var/run/docker.sock",
+			"type": "bind"
+		},
+	],
+	"containerEnv": {
+		"TESTCONTAINERS_RYUK_DISABLED": "true",
+		"TESTCONTAINERS_HOST_OVERRIDE": "host.containers.internal",
+	},
+
+	"features": {
+		// "ghcr.io/dhoeric/features/oras:1": {},
+		// "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+		// 	"version": "latest",
+		// 	"installDockerBuildx": false,
+		// 	"installDockerComposeSwitch": false,
+		// 	"dockerDashComposeVersion": "none",
+		// 	"moby": false,
+		// 	"mobyBuildxVersion": ""
+		// },
+	},
+
+	"onCreateCommand": {
+		"install_oras": "/bin/bash .devcontainer/install_oras.sh",
+	},
+
+	"customizations": {
+		"vscode": {
+			"settings": {
+					"editor.formatOnPaste": true,
+					"editor.formatOnSave": true,
+					"editor.renderWhitespace": "all",
+					"editor.trimWhitespaceOnDelete": true,
+					
+					"files.insertFinalNewline": true,
+					"files.trimTrailingWhitespace": true,
+					"files.trimFinalNewlines": true,
+					
+					"git.blame.ignoreWhitespace": true,
+			},
+			"extensions": [
+				"redhat.vscode-yaml",
+				"ms-azuretools.vscode-containers",
+			]
+		}
+	},
+}

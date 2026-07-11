@@ -19,6 +19,8 @@ import (
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/edit"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/localize"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/openapi"
+
+	// "sigs.k8s.io/kustomize/kustomize/v5/commands/publish"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/version"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -55,6 +57,7 @@ See https://sigs.k8s.io/kustomize
 		version.NewCmdVersion(stdOut),
 		openapi.NewCmdOpenAPI(stdOut),
 		localize.NewCmdLocalize(fSys),
+		// publish.NewCmdPublish(fSys, new(clock.RealClock)),
 	)
 	configcobra.AddCommands(c, konfig.ProgramName)
 
