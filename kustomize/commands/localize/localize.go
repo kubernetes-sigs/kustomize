@@ -111,6 +111,7 @@ If not specified for local target, scope defaults to target.
 		`Does not verify that the outputs of kustomize build for target and newDir are the same after localization.
 		If not specified, this flag defaults to false and will run kustomize build.
 	`)
+	build.AddFlagEnableHelm(cmd.Flags())
 	return cmd
 }
 
