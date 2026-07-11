@@ -37,6 +37,7 @@ type KustTarget struct {
 	pLdr              *loader.Loader
 	origin            *resource.Origin
 	helmRootNamespace string // namespace inherited from parent kustomization for HelmCharts
+	strictWarnings    bool   // warnings as errors, (esp. deprecations) should be enforceable as policy failures
 }
 
 // NewKustTarget returns a new instance of KustTarget.
@@ -53,6 +54,10 @@ func NewKustTarget(
 	}
 }
 
+func (kt *KustTarget) WithStrictWarnings() {
+	kt.strictWarnings = true
+}
+
 // Load attempts to load the target's kustomization file.
 func (kt *KustTarget) Load() error {
 	content, kustFileName, err := LoadKustFile(kt.ldr)
@@ -65,13 +70,14 @@ func (kt *KustTarget) Load() error {
 		return err
 	}
 
-	// show warning message when using deprecated fields.
 	if warningMessages := k.CheckDeprecatedFields(); warningMessages != nil {
 		for _, msg := range *warningMessages {
 			fmt.Fprintf(os.Stderr, "%v\n", msg)
 		}
+		if kt.strictWarnings && len(*warningMessages) > 0 {
+			return fmt.Errorf("%s", strings.Join(*warningMessages, "\n"))
+		}
 	}
-
 	k.FixKustomization()
 
 	// check that Kustomization is empty
