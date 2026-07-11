@@ -1,0 +1,50 @@
+name: Test Install Kustomize
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'hack/install_kustomize.sh'
+      - 'hack/test-files/*-release.json'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'hack/install_kustomize.sh'
+      - 'hack/test-files/*-release.json'
+
+permissions:
+  contents: read
+
+env:
+  expected_kustomize_version: v5.8.1
+
+jobs:
+  test-install-kustomize:
+    name: Test install_kustomize.sh (${{ matrix.release-file }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        release-file:
+          - hack/test-files/minimized-release.json
+          - hack/test-files/unminimized-release.json
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+
+      - name: Run install script with mocked releases payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp_dir="$(mktemp -d)"
+
+          ./hack/install_kustomize.sh "$tmp_dir"
+
+          actual_kustomize_version=$("$tmp_dir/kustomize" version --short)
+
+          echo "Kustomize version: ${actual_kustomize_version}"
+          [ "${actual_kustomize_version}" = "${expected_kustomize_version}" ] || (echo "Unexpected Kustomize version: Expected ${expected_kustomize_version}, got ${actual_kustomize_version}" && exit 1)
+        env:
+          expected_kustomize_version: ${{ env.expected_kustomize_version }}
+          releases_file: ${{ github.workspace }}/${{ matrix.release-file }}

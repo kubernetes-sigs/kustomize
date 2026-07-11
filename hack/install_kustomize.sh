@@ -136,11 +136,15 @@ s390x)
     ;;
 esac
 
-# You can authenticate by exporting the GITHUB_TOKEN in the environment
-if [[ -z "${GITHUB_TOKEN}" ]]; then
-    releases=$(curl -s "$release_url")
+if [[ -n "$releases_file" ]]; then
+  releases=$(cat "$releases_file")
 else
-    releases=$(curl -s "$release_url" --header "Authorization: Bearer ${GITHUB_TOKEN}")
+  # You can authenticate by exporting the GITHUB_TOKEN in the environment
+  if [[ -z "${GITHUB_TOKEN}" ]]; then
+      releases=$(curl -s "$release_url")
+  else
+      releases=$(curl -s "$release_url" --header "Authorization: Bearer ${GITHUB_TOKEN}")
+  fi
 fi
 
 if [[ $releases == *"Bad credentials"* ]]; then
