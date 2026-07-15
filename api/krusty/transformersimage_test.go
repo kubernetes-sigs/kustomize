@@ -401,3 +401,42 @@ spec:
             image: solsa-echo:foo
 `)
 }
+
+// An images[].name value that is not a valid regexp (here "[") used to crash
+// the build with a nil-pointer panic. It should be treated as matching no
+// container image, so the resource passes through untouched.
+func TestTransfomersImageInvalidNameRegexp(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- deploy.yaml
+images:
+- name: "["
+  newTag: v2
+`)
+	th.WriteF("deploy.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.7.9
+        name: nginx
+`)
+}
