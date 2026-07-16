@@ -81,6 +81,58 @@ func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 	return dst, nil
 }
 
+// appendMissingListNode appends nodes from src to dst only if they do not
+// already exist in dst (matched by merge key). Unlike appendListNode it never
+// overwrites an element that is already present in dst.
+func appendMissingListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
+	for _, elem := range src.Content() {
+		if keys[0] == "" {
+			found := false
+			for _, existing := range dst.Content() {
+				if existing.Value == elem.Value {
+					found = true
+					break
+				}
+			}
+			if found {
+				continue
+			}
+			_, err := dst.Pipe(yaml.ElementSetter{
+				Element: elem,
+				Keys:    []string{""},
+				Values:  []string{elem.Value},
+			})
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		v := []string{}
+		for _, key := range keys {
+			tmpNode := yaml.NewRNode(elem)
+			valueNode, err := tmpNode.Pipe(yaml.Get(key))
+			if err != nil {
+				return nil, err
+			}
+			if valueNode.IsNil() {
+				break
+			}
+			v = append(v, valueNode.YNode().Value)
+		}
+
+		if len(v) == len(keys) && dst.ElementList(keys, v) != nil {
+			continue
+		}
+
+		err := dst.PipeE(yaml.Append(elem))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return dst, nil
+}
+
 // validateKeys returns a list of valid key-value pairs
 // if secondary merge key values are missing, use only the available merge keys
 func validateKeys(valuesList [][]string, values []string, keys []string) ([]string, []string) {
@@ -232,8 +284,9 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 	if len(valuesList) > 0 {
 		if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
 			// items from patches are needed to be prepended. so we append the
-			// dest to itemsToBeAdded
-			dest, err = appendListNode(itemsToBeAdded, dest, validKeys)
+			// dest to itemsToBeAdded, skipping items already present to avoid
+			// overwriting merged results (e.g. $patch: replace).
+			dest, err = appendMissingListNode(itemsToBeAdded, dest, validKeys)
 		} else {
 			// append the items
 			dest, err = appendListNode(dest, itemsToBeAdded, validKeys)
