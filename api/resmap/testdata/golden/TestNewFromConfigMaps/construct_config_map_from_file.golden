@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  app-init.ini: |
+    FOO=bar
+    BAR=baz
+kind: ConfigMap
+metadata:
+  name: fileConfigMap

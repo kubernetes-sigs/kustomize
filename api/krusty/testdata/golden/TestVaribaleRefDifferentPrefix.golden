@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: base-dev-elasticsearch
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: DISCOVERY_SERVICE
+          value: base-dev-elasticsearch.monitoring.svc.cluster.local
+        name: elasticsearch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-dev-elasticsearch
+spec:
+  clusterIP: None
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: base-test-elasticsearch
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: DISCOVERY_SERVICE
+          value: base-test-elasticsearch.monitoring.svc.cluster.local
+        name: elasticsearch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-test-elasticsearch
+spec:
+  clusterIP: None
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP

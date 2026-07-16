@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: ANOTHERVALUE
+        - name: SOMEENV
+          value: SOMEVALUE
+        image: nginx:latest
+        name: nginx
+      - image: anotherimage
+        name: anothercontainer

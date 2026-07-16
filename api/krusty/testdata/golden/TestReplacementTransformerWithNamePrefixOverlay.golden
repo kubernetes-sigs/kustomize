@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: overlay-blue
+---
+apiVersion: v1
+data:
+  blue-name: blue
+kind: ConfigMap
+metadata:
+  name: overlay-red

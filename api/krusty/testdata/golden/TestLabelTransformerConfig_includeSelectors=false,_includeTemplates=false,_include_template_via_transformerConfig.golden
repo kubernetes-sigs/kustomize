@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: sample-deploy
+    environment: dev
+    location: planet-earth
+  name: sample-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-deploy
+        environment: dev
+        location: planet-earth
+    spec:
+      containers:
+      - image: hello-world:latest
+        name: hello-world

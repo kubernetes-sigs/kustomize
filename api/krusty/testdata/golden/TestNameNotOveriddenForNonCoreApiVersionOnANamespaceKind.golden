@@ -1,0 +1,5 @@
+apiVersion: servicebus.azure.com/v1beta20210101preview
+kind: Namespace
+metadata:
+  name: core-sb-99
+  namespace: podinfo

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-6ct58987ht
+---
+apiVersion: v1
+data:
+  blue-name: blue
+kind: ConfigMap
+metadata:
+  name: red-dc6gc5btkc
