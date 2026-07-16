@@ -30,6 +30,9 @@ const (
 	// SeqIndentAnnotation records the sequence nodes indentation of the input resource
 	SeqIndentAnnotation AnnotationKey = internalPrefix + "seqindent"
 
+	// InitialDocSepAnnotation indicates that the initial document separator should be kept
+	InitialDocSepAnnotation AnnotationKey = internalPrefix + "initial-doc-sep"
+
 	// IdAnnotation records the id of the resource to map inputs to outputs
 	IdAnnotation AnnotationKey = internalPrefix + "id"
 

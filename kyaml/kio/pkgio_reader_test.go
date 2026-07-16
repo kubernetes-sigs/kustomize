@@ -674,3 +674,59 @@ metadata:
 		}
 	})
 }
+
+func TestLocalPackageReader_Read_PreserveInitialDocSep(t *testing.T) {
+	testOnDiskAndOnMem(t, []mockFile{
+		{path: "a/b"},
+		{path: "a/c"},
+		{path: "a_test.yaml", content: readFileA},
+		{path: "b_test.yaml", content: readFileB},
+	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
+		rfr := LocalPackageReader{
+			PackagePath:           path,
+			PreserveInitialDocSep: true,
+			FileSystem:            filesys.FileSystemOrOnDisk{FileSystem: mockFS},
+		}
+		nodes, err := rfr.Read()
+		require.NoError(t, err)
+		require.Len(t, nodes, 3)
+		expected := []string{
+			`a: b #first
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'a_test.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/initial-doc-sep: 'true'
+    internal.config.kubernetes.io/path: 'a_test.yaml'
+`,
+			`c: d # second
+metadata:
+  annotations:
+    config.kubernetes.io/index: '1'
+    config.kubernetes.io/path: 'a_test.yaml'
+    internal.config.kubernetes.io/index: '1'
+    internal.config.kubernetes.io/path: 'a_test.yaml'
+`,
+			`# second thing
+e: f
+g:
+  h:
+  - i # has a list
+  - j
+metadata:
+  annotations:
+    config.kubernetes.io/index: '0'
+    config.kubernetes.io/path: 'b_test.yaml'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/path: 'b_test.yaml'
+`,
+		}
+		for i := range nodes {
+			val, err := nodes[i].String()
+			require.NoError(t, err)
+			require.Equal(t, expected[i], val)
+		}
+	})
+}
