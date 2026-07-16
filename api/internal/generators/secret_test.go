@@ -196,6 +196,82 @@ immutable: true
 `,
 			},
 		},
+		"construct secret from text file as stringData": {
+			args: types.SecretArgs{
+				EmitStringData: true,
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileSecret1",
+					KvPairSources: types.KvPairSources{
+						FileSources: []string{
+							filepath.Join("secret", "app-init.ini"),
+						},
+					},
+				},
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: Secret
+metadata:
+  name: fileSecret1
+type: Opaque
+stringData:
+  app-init.ini: |
+    FOO=bar
+    BAR=baz
+`,
+			},
+		},
+		"construct secret from text and binary file with stringData and data": {
+			args: types.SecretArgs{
+				EmitStringData: true,
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileSecret2",
+					KvPairSources: types.KvPairSources{
+						FileSources: []string{
+							filepath.Join("secret", "app-init.ini"),
+							filepath.Join("secret", "app.bin"),
+						},
+					},
+				},
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: Secret
+metadata:
+  name: fileSecret2
+type: Opaque
+stringData:
+  app-init.ini: |
+    FOO=bar
+    BAR=baz
+data:
+  app.bin: //0=
+`,
+			},
+		},
+		"construct secret from a binary file and fallback to data from stringData": {
+			args: types.SecretArgs{
+				EmitStringData: true,
+				GeneratorArgs: types.GeneratorArgs{
+					Name: "fileSecret2",
+					KvPairSources: types.KvPairSources{
+						FileSources: []string{
+							filepath.Join("secret", "app.bin"),
+						},
+					},
+				},
+			},
+			exp: expected{
+				out: `apiVersion: v1
+kind: Secret
+metadata:
+  name: fileSecret2
+type: Opaque
+data:
+  app.bin: //0=
+`,
+			},
+		},
 	}
 	fSys := filesys.MakeFsInMemory()
 	fSys.WriteFile(
