@@ -578,6 +578,91 @@ metadata:
 `)
 }
 
+func TestHelmChartInflationGeneratorWithoutValuesFile(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: no-values-chart
+    releaseName: no-values-chart
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	asYaml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(asYaml), `apiVersion: v1
+data:
+  chart: test
+  message: empty
+  release: no-values-chart
+kind: ConfigMap
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: no-values-chart
+`)
+}
+
+func TestHelmChartInflationGeneratorWithoutValuesFileWithInlineValues(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: no-values-chart
+    releaseName: no-values-chart
+    valuesInline:
+      message: inline
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	asYaml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, string(asYaml), `apiVersion: v1
+data:
+  chart: test
+  message: inline
+  release: no-values-chart
+kind: ConfigMap
+metadata:
+  labels:
+    chart: test-1.0.0
+  name: no-values-chart
+`)
+}
+
+func TestHelmChartInflationGeneratorExplicitMissingValuesFile(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	copyValuesFilesTestChartsIntoHarness(t, th)
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+  - name: no-values-chart
+    releaseName: no-values-chart
+    valuesFile: missing-values.yaml
+`)
+
+	err := th.RunWithErr(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	require.Error(t, err)
+	require.ErrorContains(t, err, "missing-values.yaml")
+}
+
 func TestHelmChartInflationGeneratorApiVersions(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()
