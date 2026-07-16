@@ -52,6 +52,12 @@ func PathSplit(incoming string) []string {
 	if dir == "" {
 		return []string{path}
 	}
+	if dir == incoming {
+		// No progress can be made in the recursion. This happens on Windows
+		// with volume names (e.g. "C:") where filepath.Split returns the
+		// volume as dir with no trailing separator to trim.
+		return []string{dir}
+	}
 	return append(PathSplit(dir), path)
 }
 
