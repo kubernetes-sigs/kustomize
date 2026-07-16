@@ -41,7 +41,7 @@ jobs:
 
           ./hack/install_kustomize.sh "$tmp_dir"
 
-          actual_kustomize_version=$("$tmp_dir/kustomize" version --short)
+          actual_kustomize_version=$("$tmp_dir/kustomize" version)
 
           echo "Kustomize version: ${actual_kustomize_version}"
           [ "${actual_kustomize_version}" = "${expected_kustomize_version}" ] || (echo "Unexpected Kustomize version: Expected ${expected_kustomize_version}, got ${actual_kustomize_version}" && exit 1)
