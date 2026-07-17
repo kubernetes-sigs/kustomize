@@ -4,6 +4,8 @@
 package krusty_test
 
 import (
+	"regexp"
+	"strings"
 	"testing"
 
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
@@ -867,4 +869,53 @@ spec:
   validationActions:
   - Deny
 `)
+}
+
+// Regression for https://github.com/kubernetes-sigs/kustomize/issues/6101 :
+// nameReference updates names inside YAML/JSON embedded in ConfigMap string data.
+func TestIssue6101StructuredNameReference(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- app-configmap.yaml
+secretGenerator:
+- name: app-credentials
+  literals:
+  - username=demo
+  - password=demo
+configurations:
+- nameReference.yaml
+`)
+	th.WriteF("nameReference.yaml", `
+nameReference:
+- kind: Secret
+  fieldSpecs:
+  - kind: ConfigMap
+    path: data/config.yaml//auth.secretName
+`)
+	th.WriteF("app-configmap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+data:
+  config.yaml: |
+    auth:
+      secretName: app-credentials
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	yb, err := m.AsYaml()
+	if err != nil {
+		t.Fatal(err)
+	}
+	y := strings.TrimSpace(string(yb))
+	re := regexp.MustCompile(`secretName: (app-credentials-[a-z0-9]+)`)
+	sm := re.FindStringSubmatch(y)
+	if len(sm) != 2 {
+		t.Fatalf("expected hashed secretName in embedded config, got:\n%s", y)
+	}
+	hashed := sm[1]
+	if strings.Count(y, hashed) < 2 {
+		t.Fatalf("expected generated name %q in both ConfigMap data and Secret metadata, got:\n%s", hashed, y)
+	}
 }
