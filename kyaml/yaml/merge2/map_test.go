@@ -546,6 +546,100 @@ spec:
 	//
 	// Test Case
 	//
+	{description: `partial-key patch when base has two elements sharing the port (ambiguous)`,
+		source: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 8080
+      targetPort: 9999
+`,
+		dest: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - port: 8080
+      protocol: UDP
+      targetPort: 8080
+`,
+		expected: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 9999
+    - port: 8080
+      protocol: UDP
+      targetPort: 8080
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
+
+	//
+	// Test Case
+	//
+	{description: `partial-key patch missing the primary key (protocol, no port) does not clobber`,
+		source: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - protocol: TCP
+      targetPort: 9999
+`,
+		dest: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    - port: 443
+      protocol: TCP
+      targetPort: 443
+`,
+		expected: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    - port: 443
+      protocol: TCP
+      targetPort: 443
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
+
+	//
+	// Test Case
+	//
 	{description: `Verify key style behavior`,
 		source: `
 kind: Deployment
