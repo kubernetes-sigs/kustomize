@@ -81,74 +81,25 @@ func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 	return dst, nil
 }
 
-// validateKeys returns a list of valid key-value pairs
-// if secondary merge key values are missing, use only the available merge keys
-func validateKeys(valuesList [][]string, values []string, keys []string) ([]string, []string) {
-	validKeys := make([]string, 0)
-	validValues := make([]string, 0)
-	validKeySet := sets.String{}
-	for _, values := range valuesList {
-		for i, v := range values {
-			if v != "" {
-				validKeySet.Insert(keys[i])
-			}
-		}
-	}
-	if validKeySet.Len() == 0 { // if values missing, fall back to primary keys
-		return keys, values
-	}
-	for _, k := range keys {
-		if validKeySet.Has(k) {
-			validKeys = append(validKeys, k)
-		}
-	}
+// validateKeys returns the subset of keys (and their values) that this element
+// actually populates -- i.e. those whose value is non-empty. When an element
+// specifies only part of a compound merge key (for example a container port
+// that sets containerPort but omits protocol), it is matched on the keys it
+// populates rather than on the full key, so its fields are not lost. If every
+// value is empty, the original keys and values are returned.
+func validateKeys(values []string, keys []string) ([]string, []string) {
+	validKeys := make([]string, 0, len(keys))
+	validValues := make([]string, 0, len(values))
 	for i, v := range values {
-		if v != "" || validKeySet.Has(keys[i]) {
+		if i < len(keys) && v != "" {
+			validKeys = append(validKeys, keys[i])
 			validValues = append(validValues, v)
 		}
 	}
+	if len(validKeys) == 0 { // if values missing, fall back to primary keys
+		return keys, values
+	}
 	return validKeys, validValues
-}
-
-// mergeValues merges values together - e.g. if two containerPorts
-// have the same port and targetPort but one has an empty protocol
-// and the other doesn't, they are treated as the same containerPort
-func mergeValues(valuesList [][]string) [][]string {
-	for i, values1 := range valuesList {
-		for j, values2 := range valuesList {
-			if matched, values := match(values1, values2); matched {
-				valuesList[i] = values
-				valuesList[j] = values
-			}
-		}
-	}
-	return valuesList
-}
-
-// two values match if they have at least one common element and
-// corresponding elements only differ if one is an empty string
-func match(values1 []string, values2 []string) (bool, []string) {
-	if len(values1) != len(values2) {
-		return false, nil
-	}
-	var commonElement bool
-	var res []string
-	for i := range values1 {
-		if values1[i] == values2[i] {
-			commonElement = true
-			res = append(res, values1[i])
-			continue
-		}
-		if values1[i] != "" && values2[i] != "" {
-			return false, nil
-		}
-		if values1[i] != "" {
-			res = append(res, values1[i])
-		} else {
-			res = append(res, values2[i])
-		}
-	}
-	return commonElement, res
 }
 
 // setAssociativeSequenceElements recursively set the elements in the list
@@ -158,9 +109,6 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 	var schema *openapi.ResourceSchema
 	if l.Schema != nil {
 		schema = l.Schema.Elements()
-	}
-	if len(keys) > 1 {
-		valuesList = mergeValues(valuesList)
 	}
 
 	// each element in valuesList is a list of values corresponding to the keys
@@ -178,7 +126,7 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 			continue
 		}
 
-		validKeys, validValues = validateKeys(valuesList, values, keys)
+		validKeys, validValues = validateKeys(values, keys)
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
@@ -370,9 +318,13 @@ func (l Walker) elementPrimitiveValues() [][]string {
 	return returnValues
 }
 
-// fieldValue returns a slice containing each source's value for fieldName
+// elementValueList returns one entry per source: the element in that source's
+// list matching the compound merge key (keys/values), or nil if the source is
+// absent or has no match. keys/values are first narrowed to the subset the
+// element populates, so an element specifying only part of a compound key is
+// still matched.
 func (l Walker) elementValueList(keys []string, values []string) []*yaml.RNode {
-	keys, values = validateKeys([][]string{values}, values, keys)
+	keys, values = validateKeys(values, keys)
 	var fields []*yaml.RNode
 	for i := range l.Sources {
 		if l.Sources[i] == nil {
