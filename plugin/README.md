@@ -50,10 +50,27 @@ If none of the above exist, plugin resolution fails. On Windows,
 [`api/konfig/plugins.go`](../api/konfig/plugins.go) for the resolution
 code.
 
-Within the plugin home, an individual plugin is loaded from
-`<apiVersion group>/<apiVersion version>/<lowercase kind>/<Kind>`,
-matching the `apiVersion` and `kind` fields of the generator or
-transformer entry in `kustomization.yaml`.
+The `generators` and `transformers` fields in `kustomization.yaml` are lists
+of file paths, each pointing to a plugin configuration file. The `apiVersion`
+and `kind` are read from that referenced configuration file, not from the list
+entry itself.
+
+From those fields kustomize derives the plugin directory
+`<plugin-home>/<apiVersion group>/<apiVersion version>/<lowercase kind>/` and
+looks for the plugin there in two forms: first an executable file named
+`<Kind>` (an Exec plugin), then `<Kind>.so` (a Go plugin).
+
+For example, given a configuration file referenced from `transformers`:
+
+```yaml
+apiVersion: someteam.example.com/v1
+kind: SedTransformer
+```
+
+kustomize looks for the executable
+`<plugin-home>/someteam.example.com/v1/sedtransformer/SedTransformer`, and
+failing that, the Go plugin
+`<plugin-home>/someteam.example.com/v1/sedtransformer/SedTransformer.so`.
 
 #### Testing
 
