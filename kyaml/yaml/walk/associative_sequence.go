@@ -81,25 +81,75 @@ func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 	return dst, nil
 }
 
-// validateKeys returns the subset of keys (and their values) that this element
-// actually populates -- i.e. those whose value is non-empty. When an element
-// specifies only part of a compound merge key (for example a container port
-// that sets containerPort but omits protocol), it is matched on the keys it
-// populates rather than on the full key, so its fields are not lost. If every
-// value is empty, the original keys and values are returned.
+// validateKeys returns the longest prefix of keys/values whose values are all
+// non-empty. A compound merge key lists the primary (required) key first, so an
+// element may drop a trailing key component (e.g. a port omitting protocol) and
+// still be matched on what it populates. Matching stops at the first empty
+// component: a later one cannot identify an element alone. If the primary key
+// itself is unset, the original keys/values are returned so the element matches
+// nothing and is appended rather than merged onto a sibling.
 func validateKeys(values []string, keys []string) ([]string, []string) {
 	validKeys := make([]string, 0, len(keys))
 	validValues := make([]string, 0, len(values))
 	for i, v := range values {
-		if i < len(keys) && v != "" {
-			validKeys = append(validKeys, keys[i])
-			validValues = append(validValues, v)
+		if i >= len(keys) || v == "" {
+			break
 		}
+		validKeys = append(validKeys, keys[i])
+		validValues = append(validValues, v)
 	}
-	if len(validKeys) == 0 { // if values missing, fall back to primary keys
+	if len(validKeys) == 0 { // primary key unset -- match nothing, append as-is
 		return keys, values
 	}
 	return validKeys, validValues
+}
+
+// elementKeyValues returns the merge-key components val populates, so a merged
+// element is keyed on its full key, not the patch's partial key. E.g. a patch
+// {port: 8080, targetPort: 9999} that matched and merged the TCP element:
+//
+//	elementKeyValues(
+//	  val            = {port: 8080, protocol: TCP, targetPort: 9999},
+//	  keys           = [port, protocol],
+//	  fallbackKeys   = [port],
+//	  fallbackValues = [8080]
+//	) => [port, protocol], [8080, TCP]
+//
+// so it replaces only that element and not a sibling {port: 8080, protocol: UDP}.
+//
+// Falls back to fallbackKeys/fallbackValues when val populates no key, e.g. a
+// scalar list like finalizers, where keys is [""] and val is a bare string:
+//
+//	elementKeyValues(
+//	  val            = "example.com/finalizer"   (a scalar, not a map),
+//	  keys           = [""],
+//	  fallbackKeys   = [""],
+//	  fallbackValues = ["example.com/finalizer"]
+//	) => [""], ["example.com/finalizer"]
+//
+// so the scalar is still matched by value instead of being keyed on nothing.
+func elementKeyValues(val *yaml.RNode, keys, fallbackKeys, fallbackValues []string) ([]string, []string) {
+	if val == nil || len(keys) == 0 || keys[0] == "" {
+		return fallbackKeys, fallbackValues
+	}
+	setKeys := make([]string, 0, len(keys))
+	setValues := make([]string, 0, len(keys))
+	for _, key := range keys {
+		field := val.Field(key)
+		if field == nil || field.Value == nil || field.Value.YNode() == nil {
+			continue
+		}
+		value := field.Value.YNode().Value
+		if value == "" {
+			continue
+		}
+		setKeys = append(setKeys, key)
+		setValues = append(setValues, value)
+	}
+	if len(setKeys) == 0 {
+		return fallbackKeys, fallbackValues
+	}
+	return setKeys, setValues
 }
 
 // setAssociativeSequenceElements recursively set the elements in the list
@@ -119,14 +169,12 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 	//          protocol: TCP
 	// `keys` would be [containerPort, protocol]
 	// and `valuesList` would be [ [8080, UDP], [8080, TCP] ]
-	var validKeys []string
-	var validValues []string
 	for _, values := range valuesList {
 		if len(values) == 0 {
 			continue
 		}
 
-		validKeys, validValues = validateKeys(values, keys)
+		validKeys, validValues := validateKeys(values, keys)
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
@@ -163,13 +211,15 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 			continue
 		}
 
-		// Add the val to the sequence. val will replace the item in the sequence if
-		// there is an item that matches all key-value pairs. Otherwise val will be appended
-		// the sequence.
+		// Add val to the sequence, replacing a matching item or appending. Key it
+		// on the full key val now populates (not the patch's partial key), so a
+		// patch matched on port alone replaces exactly its element instead of
+		// clobbering a sibling that differs only by protocol and duplicating it.
+		addKeys, addValues := elementKeyValues(val, keys, validKeys, validValues)
 		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{
 			Element: val.YNode(),
-			Keys:    validKeys,
-			Values:  validValues,
+			Keys:    addKeys,
+			Values:  addValues,
 		})
 		if err != nil {
 			return nil, err
@@ -178,13 +228,17 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 
 	var err error
 	if len(valuesList) > 0 {
+		// Use the full compound key, not the last element's narrowed key, so merged
+		// elements set on their exact key; still-partial elements append via the
+		// missing-key path in appendListNode.
+		appendKeys := keys
 		if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
 			// items from patches are needed to be prepended. so we append the
 			// dest to itemsToBeAdded
-			dest, err = appendListNode(itemsToBeAdded, dest, validKeys)
+			dest, err = appendListNode(itemsToBeAdded, dest, appendKeys)
 		} else {
 			// append the items
-			dest, err = appendListNode(dest, itemsToBeAdded, validKeys)
+			dest, err = appendListNode(dest, itemsToBeAdded, appendKeys)
 		}
 	}
 
