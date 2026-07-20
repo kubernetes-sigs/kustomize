@@ -21,28 +21,33 @@ type pmField struct {
 	IsMap      bool
 }
 
-// canUsePrecomputedPatchMeta reports whether lookups may be served from the
-// precomputed table: only in the pristine default state, i.e. no custom
-// schema, no explicit builtin version, builtin schema not suppressed, and no
-// definitions added or parsed into the global schema. Any customization
-// falls back to the full-schema path so existing behavior is preserved
-// exactly.
+// canUsePrecomputedPatchMeta reports whether builtin-type lookups may be
+// served from the precomputed table: no custom schema document, no explicit
+// non-default builtin version, and the builtin schema not suppressed.
+// Per-type overrides supplied via AddSchema/AddDefinitions are honored by
+// precomputedSchemaForResourceType.
 func canUsePrecomputedPatchMeta() bool {
 	schemaLock.RLock()
 	defer schemaLock.RUnlock()
 	return customSchema == nil &&
-		kubernetesOpenAPIVersion == "" &&
-		!globalSchema.noUseBuiltInSchema &&
-		!globalSchema.schemaInit &&
-		len(globalSchema.schema.Definitions) == 0
+		(kubernetesOpenAPIVersion == "" || kubernetesOpenAPIVersion == kubernetesOpenAPIDefaultVersion) &&
+		!globalSchema.noUseBuiltInSchema
 }
 
 // precomputedSchemaForResourceType returns a table-backed ResourceSchema for
 // t. The second return is false when t is not a builtin type known to the
-// table, in which case the caller must fall back to the full-schema path.
+// table, or when a parsed schema (AddSchema/AddDefinitions, or the
+// Kustomization asset) explicitly provides t — parsed definitions win so
+// user-supplied schemas keep overriding builtin behavior.
 func precomputedSchemaForResourceType(t yaml.TypeMeta) (*ResourceSchema, bool) {
 	def, known := precomputedGVKToDef[t]
 	if !known {
+		return nil, false
+	}
+	schemaLock.RLock()
+	_, overridden := globalSchema.schemaByResourceType[t]
+	schemaLock.RUnlock()
+	if overridden {
 		return nil, false
 	}
 	return pmDefNode(def), true

@@ -16,10 +16,76 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	. "sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters/testyaml"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// yaml11CompatDefinitions supplies the schema type information the
+// FixYaml1_1Compatibility test relies on. The builtin Kubernetes schema
+// document is no longer embedded, so schema-driven formatting of builtin
+// types requires a supplied schema document.
+const yaml11CompatDefinitions = `{
+  "definitions": {
+    "io.k8s.api.apps.v1.Deployment": {
+      "x-kubernetes-group-version-kind": [{"group": "apps", "kind": "Deployment", "version": "v1"}],
+      "properties": {
+        "metadata": {"$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"},
+        "spec": {"$ref": "#/definitions/io.k8s.api.apps.v1.DeploymentSpec"}
+      }
+    },
+    "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
+      "properties": {
+        "name": {"type": "string"},
+        "labels": {"type": "object", "additionalProperties": {"type": "string"}},
+        "annotations": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "io.k8s.api.apps.v1.DeploymentSpec": {
+      "properties": {
+        "template": {"$ref": "#/definitions/io.k8s.api.core.v1.PodTemplateSpec"}
+      }
+    },
+    "io.k8s.api.core.v1.PodTemplateSpec": {
+      "properties": {
+        "spec": {"$ref": "#/definitions/io.k8s.api.core.v1.PodSpec"}
+      }
+    },
+    "io.k8s.api.core.v1.PodSpec": {
+      "properties": {
+        "containers": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/io.k8s.api.core.v1.Container"},
+          "x-kubernetes-patch-merge-key": "name",
+          "x-kubernetes-patch-strategy": "merge"
+        }
+      }
+    },
+    "io.k8s.api.core.v1.Container": {
+      "properties": {
+        "name": {"type": "string"},
+        "image": {"type": "string"},
+        "args": {"type": "array", "items": {"type": "string"}},
+        "ports": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/io.k8s.api.core.v1.ContainerPort"},
+          "x-kubernetes-patch-merge-key": "containerPort",
+          "x-kubernetes-patch-strategy": "merge"
+        }
+      }
+    },
+    "io.k8s.api.core.v1.ContainerPort": {
+      "properties": {
+        "name": {"type": "string"},
+        "containerPort": {"type": "integer"},
+        "targetPort": {"type": "integer"}
+      }
+    }
+  }
+}`
+
 func TestFormatInput_FixYaml1_1Compatibility(t *testing.T) {
+	require.NoError(t, openapi.AddSchema([]byte(yaml11CompatDefinitions)))
+	defer openapi.ResetOpenAPI()
 	y := `
 apiVersion: apps/v1
 kind: Deployment

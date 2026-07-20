@@ -8,12 +8,43 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	. "sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
 var testCases = [][]testCase{scalarTestCases, listTestCases, mapTestCases, elementTestCases, kustomizationTestCases}
 
+// refTestDefinitions provides the definitions the explicit-schema test cases
+// reference through $ref field comments. The builtin Kubernetes schema
+// document is no longer embedded, so tests exercising the $ref mechanism
+// supply the definitions themselves.
+const refTestDefinitions = `{
+  "definitions": {
+    "io.k8s.api.core.v1.PodSpec": {
+      "properties": {
+        "containers": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/io.k8s.api.core.v1.Container"},
+          "x-kubernetes-patch-merge-key": "name",
+          "x-kubernetes-patch-strategy": "merge"
+        }
+      }
+    },
+    "io.k8s.api.core.v1.Container": {
+      "properties": {
+        "name": {"type": "string"},
+        "image": {"type": "string"},
+        "command": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}`
+
 func TestMerge(t *testing.T) {
+	if err := openapi.AddSchema([]byte(refTestDefinitions)); err != nil {
+		t.Fatal(err)
+	}
+	defer openapi.ResetOpenAPI()
 	for i := range testCases {
 		for j := range testCases[i] {
 			tc := testCases[i][j]

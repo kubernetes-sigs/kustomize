@@ -184,7 +184,7 @@ func (cpt ContainerPatchTemplate) apply(matches []*yaml.RNode) error {
 					Sources:      []*yaml.RNode{node, patches[j]}, // dest, src
 					Visitor:      merge2.Merger{},
 					MergeOptions: yaml.MergeOptions{},
-					Schema: openapi.SchemaForResourceType(yaml.TypeMeta{
+					Schema: openapi.PatchMetaSchemaForResourceType(yaml.TypeMeta{
 						APIVersion: "v1",
 						Kind:       "Pod",
 					}).Lookup("spec", "containers").Elements(),

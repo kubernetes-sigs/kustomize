@@ -4,6 +4,7 @@
 package openapi
 
 import (
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,15 +16,32 @@ import (
 const equivalenceMaxDepth = 12
 
 // TestPrecomputedPatchMetaEquivalence proves the precomputed table is
-// merge-equivalent to the full parsed schema: at every path reachable from
-// every builtin resource root, both sides report the same patch strategy and
-// merge keys, and wherever the table prunes a subtree the full schema carries
-// no patch strategy anywhere below it.
+// merge-equivalent to the schema document it was generated from: at every
+// path reachable from every builtin resource root, both sides report the
+// same patch strategy and merge keys, and wherever the table prunes a
+// subtree the schema carries no patch strategy anywhere below it.
+//
+// The builtin schema document is not embedded, so this test needs the source
+// swagger.json on disk: run `make verify-patchmeta` in kyaml/openapi, which
+// downloads the document for the pinned kubernetes/kubernetes tag and sets
+// PATCHMETA_SWAGGER.
 func TestPrecomputedPatchMetaEquivalence(t *testing.T) {
+	swaggerPath := os.Getenv("PATCHMETA_SWAGGER")
+	if swaggerPath == "" {
+		t.Skip("PATCHMETA_SWAGGER not set; run `make verify-patchmeta` in kyaml/openapi")
+	}
+
 	ResetOpenAPI()
 	defer ResetOpenAPI()
+	b, err := os.ReadFile(swaggerPath)
+	if err != nil {
+		t.Fatalf("reading %s: %v", swaggerPath, err)
+	}
+	if err := AddSchema(b); err != nil {
+		t.Fatalf("parsing %s: %v", swaggerPath, err)
+	}
 
-	// index completeness: every GVK in the full schema is in the table
+	// index completeness: every GVK in the source schema is in the table
 	// (kustomization types come from a separate asset and are intentionally
 	// not in the table; they fall through to the full-schema path)
 	initSchema()

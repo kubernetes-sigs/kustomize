@@ -5,58 +5,48 @@ MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
-KIND_VERSION := "v0.11.1"
-API_VERSION ?= "v1.21.2"
+
+# The kubernetes/kubernetes tag whose published OpenAPI document is the
+# source of the precomputed strategic-merge patch metadata
+# (zz_generated_patchmeta.go). The document itself is downloaded at
+# generation time and is NOT embedded or committed.
+API_VERSION ?= v1.21.2
+
+SWAGGER_JSON = .cache/swagger-$(API_VERSION).json
+SWAGGER_URL = https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/$(API_VERSION)/api/openapi-spec/swagger.json
 
 .PHONY: all
 all: \
 	kustomizationapi/swagger.go \
-	kubernetesapi/swagger.go \
-	kubernetesapi/openapiinfo.go
+	zz_generated_patchmeta.go
 
 .PHONY: clean
 clean:
-	rm kustomizationapi/swagger.go
-	rm kubernetesapi/openapiinfo.go
+	rm -f kustomizationapi/swagger.go
+	rm -rf .cache
 
-# This will remove all currently built-in schema,
-# so think twice before deleting.
-# To replace what this will delete typically requires the ability
-# to contact a live kubernetes API server.
-.PHONY: nuke
-nuke: clean
-	rm -r kubernetesapi/*
+$(SWAGGER_JSON):
+	mkdir -p .cache
+	curl -sSfL $(SWAGGER_URL) -o $@
+
+# Regenerate the precomputed patch-metadata table from the pinned
+# kubernetes/kubernetes tag.
+.PHONY: zz_generated_patchmeta.go
+zz_generated_patchmeta.go: $(SWAGGER_JSON)
+	go run ./internal/patchmetagen -k8s-version $(API_VERSION) $(SWAGGER_JSON) > $@
+
+# Verify the committed table is equivalent to the source schema document at
+# the pinned tag (runs TestPrecomputedPatchMetaEquivalence, which skips when
+# the document is not available).
+.PHONY: verify-patchmeta
+verify-patchmeta: $(SWAGGER_JSON)
+	PATCHMETA_SWAGGER=$(CURDIR)/$(SWAGGER_JSON) go test . -run TestPrecomputedPatchMetaEquivalence -count=1 -v
 
 $(MYGOBIN)/go-bindata:
 	go install github.com/go-bindata/go-bindata/v3/go-bindata@latest
-
-$(MYGOBIN)/kind:
-	( \
-		set -e; \
-		d=$(shell mktemp -d); cd $$d; \
-		wget -O ./kind https://github.com/kubernetes-sigs/kind/releases/download/$(KIND_VERSION)/kind-$(shell uname)-amd64; \
-		chmod +x ./kind; \
-		mv ./kind $(MYGOBIN); \
-		rm -rf $$d; \
-	)
-
-.PHONY: kubernetesapi/openapiinfo.go
-kubernetesapi/openapiinfo.go:
-	./scripts/makeOpenApiInfoDotGo.sh
 
 kustomizationapi/swagger.go: $(MYGOBIN)/go-bindata kustomizationapi/swagger.json
 	$(MYGOBIN)/go-bindata \
 		--pkg kustomizationapi \
 		-o kustomizationapi/swagger.go \
 		kustomizationapi/swagger.json
-
-.PHONY: kubernetesapi/swagger.pb
-kubernetesapi/swagger.pb: $(MYGOBIN)/kind $(MYGOBIN)/kustomize
-	./scripts/fetchSchemaFromCluster.sh $(API_VERSION)
-
-.PHONY: kubernetesapi/swagger.go
-kubernetesapi/swagger.go: $(MYGOBIN)/go-bindata kubernetesapi/swagger.pb
-	./scripts/generateSwaggerDotGo.sh $(API_VERSION)
-
-$(MYGOBIN)/kustomize:
-	$(shell cd ../.. && MYGOBIN=$(MYGOBIN) make $(MYGOBIN)/kustomize)

@@ -10,66 +10,82 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// The strategic-merge patch metadata for builtin Kubernetes types is served
+// from a small precomputed table; no full schema document is embedded.
 func Example() {
-	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
-
-	f := s.Lookup("spec", "replicas")
-	fmt.Println(f.Schema.Description[:70] + "...")
-	fmt.Println(f.Schema.Type)
-
-	// Output:
-	// Number of desired pods. This is a pointer to distinguish between expli...
-	// [integer]
-}
-
-func Example_arrayMerge() {
-	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
+	s := openapi.PatchMetaSchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
 	f := s.Lookup("spec", "template", "spec", "containers")
-	fmt.Println(f.Schema.Description[:70] + "...")
 	fmt.Println(f.Schema.Type)
 	fmt.Println(f.PatchStrategyAndKey()) // merge patch strategy on name
 
 	// Output:
-	// List of containers belonging to the pod. Containers cannot currently b...
 	// [array]
 	// merge name
 }
 
+// Multi-key merges are expressed through the merge key list.
+func Example_arrayMergeKeyList() {
+	s := openapi.PatchMetaSchemaForResourceType(yaml.TypeMeta{APIVersion: "v1", Kind: "Service"})
+
+	f := s.Lookup("spec", "ports")
+	strategy, keys := f.PatchStrategyAndKeyList()
+	fmt.Println(strategy)
+	fmt.Println(keys)
+
+	// Output:
+	// merge
+	// [port protocol]
+}
+
+// Fields that carry no strategic-merge metadata anywhere below them are not
+// in the table; the merge walker treats a missing schema and a schema
+// without patch extensions identically.
 func Example_arrayReplace() {
-	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
+	s := openapi.PatchMetaSchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
 	f := s.Lookup("spec", "template", "spec", "containers", openapi.Elements, "args")
-	fmt.Println(f.Schema.Description[:70] + "...")
-	fmt.Println(f.Schema.Type)
-	fmt.Println(f.PatchStrategyAndKey()) // no patch strategy or merge key
+	fmt.Println(f == nil)
 
 	// Output:
-	// Arguments to the entrypoint. The docker image's CMD is used if this is...
-	// [array]
+	// true
 }
 
-func Example_arrayElement() {
-	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
+// Primitive lists can carry a merge strategy without a merge key.
+func Example_primitiveMerge() {
+	s := openapi.PatchMetaSchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
 
-	f := s.Lookup("spec", "template", "spec", "containers",
-		openapi.Elements, "ports", openapi.Elements, "containerPort")
-	fmt.Println(f.Schema.Description[:70] + "...")
-	fmt.Println(f.Schema.Type)
+	f := s.Lookup("metadata", "finalizers")
+	strategy, key := f.PatchStrategyAndKey()
+	fmt.Printf("%q %q\n", strategy, key)
 
 	// Output:
-	// Number of port to expose on the pod's IP address. This must be a valid...
-	// [integer]
+	// "merge" ""
 }
 
-func Example_map() {
-	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
+// Supplying a schema document (the openapi field in kustomization.yaml, or
+// AddSchema) restores full-fidelity lookups, descriptions included.
+func Example_suppliedSchema() {
+	err := openapi.AddSchema([]byte(`{
+  "definitions": {
+    "io.k8s.api.apps.v1.Deployment": {
+      "x-kubernetes-group-version-kind": [{"group": "apps", "kind": "Deployment", "version": "v1"}],
+      "properties": {
+        "spec": {"description": "The desired behavior of the Deployment.", "type": "object"}
+      }
+    }
+  }
+}`))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer openapi.ResetOpenAPI()
 
-	f := s.Lookup("metadata", "labels")
-	fmt.Println(f.Schema.Description[:70] + "...")
-	fmt.Println(f.Schema.Type)
+	s := openapi.SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
+	f := s.Lookup("spec")
+	fmt.Println(f.Schema.Description)
 
 	// Output:
-	// Map of string keys and values that can be used to organize and categor...
-	// [object]
+	// The desired behavior of the Deployment.
 }
