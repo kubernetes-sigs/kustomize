@@ -1,10 +1,6 @@
 {
   "definitions": {
     "com.github.openshift.api.apps.v1.DeploymentConfig": {
-      "type": "object",
-      "required": [
-        "spec"
-      ],
       "properties": {
         "apiVersion": {
           "type": "string"
@@ -19,6 +15,10 @@
           "$ref": "#/definitions/com.github.openshift.api.apps.v1.DeploymentConfigSpec"
         }
       },
+      "required": [
+        "spec"
+      ],
+      "type": "object",
       "x-kubernetes-group-version-kind": [
         {
           "group": "apps.openshift.io",
@@ -28,18 +28,100 @@
       ]
     },
     "com.github.openshift.api.apps.v1.DeploymentConfigSpec": {
-      "type": "object",
       "properties": {
         "template": {
           "$ref": "#/definitions/io.k8s.api.core.v1.PodTemplateSpec"
         }
-      }
+      },
+      "type": "object"
     },
-    "io.k8s.api.core.v1.Volume": {
-      "type": "object",
+    "io.k8s.api.core.v1.ConfigMapVolumeSource": {
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "io.k8s.api.core.v1.Container": {
+      "properties": {
+        "env": {
+          "items": {
+            "$ref": "#/definitions/io.k8s.api.core.v1.EnvVar"
+          },
+          "type": "array",
+          "x-kubernetes-patch-merge-key": "name",
+          "x-kubernetes-patch-strategy": "merge"
+        },
+        "name": {
+          "type": "string"
+        },
+        "volumeMounts": {
+          "items": {
+            "$ref": "#/definitions/io.k8s.api.core.v1.VolumeMount"
+          },
+          "type": "array",
+          "x-kubernetes-patch-merge-key": "mountPath",
+          "x-kubernetes-patch-strategy": "merge"
+        }
+      },
       "required": [
         "name"
       ],
+      "type": "object"
+    },
+    "io.k8s.api.core.v1.EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "io.k8s.api.core.v1.PodSpec": {
+      "properties": {
+        "containers": {
+          "items": {
+            "$ref": "#/definitions/io.k8s.api.core.v1.Container"
+          },
+          "type": "array",
+          "x-kubernetes-patch-merge-key": "name",
+          "x-kubernetes-patch-strategy": "merge"
+        },
+        "initContainers": {
+          "items": {
+            "$ref": "#/definitions/io.k8s.api.core.v1.Container"
+          },
+          "type": "array",
+          "x-kubernetes-patch-merge-key": "name",
+          "x-kubernetes-patch-strategy": "merge"
+        },
+        "volumes": {
+          "items": {
+            "$ref": "#/definitions/io.k8s.api.core.v1.Volume"
+          },
+          "type": "array",
+          "x-kubernetes-patch-merge-key": "name",
+          "x-kubernetes-patch-strategy": "merge"
+        }
+      },
+      "type": "object"
+    },
+    "io.k8s.api.core.v1.PodTemplateSpec": {
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/io.k8s.api.core.v1.PodSpec"
+        }
+      },
+      "type": "object"
+    },
+    "io.k8s.api.core.v1.Volume": {
       "properties": {
         "configMap": {
           "$ref": "#/definitions/io.k8s.api.core.v1.ConfigMapVolumeSource"
@@ -47,14 +129,13 @@
         "name": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
     },
     "io.k8s.api.core.v1.VolumeMount": {
-      "type": "object",
-      "required": [
-        "name",
-        "mountPath"
-      ],
       "properties": {
         "mountPath": {
           "type": "string"
@@ -62,15 +143,20 @@
         "name": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "name",
+        "mountPath"
+      ],
+      "type": "object"
     },
     "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
-      "type": "object",
       "properties": {
         "name": {
           "type": "string"
         }
-      }
+      },
+      "type": "object"
     }
   }
 }

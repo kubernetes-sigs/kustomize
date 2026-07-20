@@ -8,17 +8,17 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 // NewCmdInfo makes a new info command.
 func NewCmdInfo(w io.Writer) *cobra.Command {
 	infoCmd := cobra.Command{
 		Use:     "info",
-		Short:   "Prints the `info` field from the kubernetes OpenAPI data",
+		Short:   "Prints the version of the builtin kubernetes OpenAPI data",
 		Example: `kustomize openapi info`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintln(w, kubernetesapi.Info)
+			fmt.Fprintf(w, "{title:Kubernetes,version:%s}\n", openapi.GetSchemaVersion())
 		},
 	}
 	return &infoCmd
