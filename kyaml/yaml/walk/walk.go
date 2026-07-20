@@ -122,7 +122,7 @@ func (l Walker) GetSchema() *openapi.ResourceSchema {
 			continue
 		}
 
-		s := openapi.SchemaForResourceType(yaml.TypeMeta{Kind: m.Kind, APIVersion: m.APIVersion})
+		s := openapi.PatchMetaSchemaForResourceType(yaml.TypeMeta{Kind: m.Kind, APIVersion: m.APIVersion})
 		if s != nil {
 			return s
 		}

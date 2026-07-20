@@ -182,6 +182,13 @@ var precomputedIsNamespaceScoped = map[yaml.TypeMeta]bool{
 type ResourceSchema struct {
 	// Schema is the OpenAPI schema for a Resource or field
 	Schema *spec.Schema
+
+	// pmKnown marks nodes served from the precomputed patch-metadata table
+	// instead of the parsed OpenAPI schema (see patchmeta.go). pmDef names
+	// the backing definition; pmField carries structure for field nodes.
+	pmKnown bool
+	pmDef   string
+	pmField *pmField
 }
 
 // IsMissingOrNull returns true if the ResourceSchema is missing or null
@@ -197,6 +204,30 @@ func (rs *ResourceSchema) IsMissingOrNull() bool {
 // which can be used for duck-typed Resources -- e.g. contains common fields such
 // as metadata, replicas and spec.template.spec
 func SchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
+	return schemaForResourceTypeFull(t)
+}
+
+// PatchMetaSchemaForResourceType returns a schema for t sufficient for
+// strategic-merge-patch decisions (patch strategies and merge keys). For
+// builtin Kubernetes types in the default configuration it is served from a
+// small precomputed table instead of parsing the multi-megabyte embedded
+// OpenAPI document, and is merge-equivalent to SchemaForResourceType (see
+// TestPrecomputedPatchMetaEquivalence). Unknown types and any customized
+// schema state (custom schema, explicit builtin version, added definitions)
+// fall through to SchemaForResourceType. The returned schema carries no
+// descriptions or validation data — callers needing the complete document
+// should use SchemaForResourceType.
+func PatchMetaSchemaForResourceType(t yaml.TypeMeta) *ResourceSchema {
+	if canUsePrecomputedPatchMeta() {
+		if rs, ok := precomputedSchemaForResourceType(t); ok {
+			return rs
+		}
+	}
+	return schemaForResourceTypeFull(t)
+}
+
+// schemaForResourceTypeFull is the full-schema (parsed swagger) lookup path.
+func schemaForResourceTypeFull(t yaml.TypeMeta) *ResourceSchema {
 	initSchema()
 	rs, found := globalSchema.schemaByResourceType[t]
 	if !found {
@@ -460,6 +491,9 @@ func SuppressBuiltInSchemaUse() {
 
 // Elements returns the Schema for the elements of an array.
 func (rs *ResourceSchema) Elements() *ResourceSchema {
+	if rs.pmBacked() {
+		return rs.pmElements()
+	}
 	// load the schema from swagger files
 	initSchema()
 
@@ -506,6 +540,9 @@ func (rs *ResourceSchema) Lookup(path ...string) *ResourceSchema {
 
 // Field returns the Schema for a field.
 func (rs *ResourceSchema) Field(field string) *ResourceSchema {
+	if rs.pmBacked() {
+		return rs.pmFieldLookup(field)
+	}
 	// load the schema from swagger files
 	initSchema()
 
