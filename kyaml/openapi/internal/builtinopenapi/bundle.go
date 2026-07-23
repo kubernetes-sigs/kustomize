@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sort"
+	"strings"
 
 	"k8s.io/kube-openapi/pkg/validation/spec"
 )
@@ -17,8 +18,11 @@ const (
 	// FormatVersion is the version of the bundle's JSON representation.
 	FormatVersion = 1
 
-	// SelectionPolicy identifies how schemas from Kubernetes releases are
-	// selected. A single-release bundle is the degenerate case of this policy.
+	// SelectionPolicy means sources are processed newest-first. Each definition's
+	// schema fields are selected as a whole from its newest source, while its GVK
+	// extension is synthesized from the union resource inventory. Older sources
+	// fill missing definition names and GVKs. Known scopes must agree across
+	// sources. A single-release bundle is the degenerate case of this policy.
 	SelectionPolicy = "latest-wins-fill-missing"
 
 	gvkExtension = "x-kubernetes-group-version-kind"
@@ -41,9 +45,11 @@ type Coverage struct {
 	Ceiling string `json:"ceiling"`
 }
 
-// Source identifies one OpenAPI input used to compile a bundle.
+// Source identifies one OpenAPI input used to compile a bundle. Sources are
+// stored newest-first.
 type Source struct {
 	KubernetesVersion string `json:"kubernetesVersion"`
+	GitCommit         string `json:"gitCommit,omitempty"`
 	SHA256            string `json:"sha256"`
 }
 
@@ -58,6 +64,8 @@ type Resource struct {
 }
 
 // Bundle is the compiled representation consumed by kyaml at runtime.
+// Resources is the authoritative GVK inventory; every definition-backed entry
+// is also normalized into the corresponding definition's GVK extension.
 type Bundle struct {
 	FormatVersion   int              `json:"formatVersion"`
 	Coverage        Coverage         `json:"coverage"`
@@ -81,9 +89,25 @@ func (b *Bundle) Validate() error {
 	if len(b.Sources) == 0 {
 		return fmt.Errorf("built-in OpenAPI bundle has no sources")
 	}
+	if b.Coverage.Ceiling != b.Sources[0].KubernetesVersion ||
+		b.Coverage.Floor != b.Sources[len(b.Sources)-1].KubernetesVersion {
+		return fmt.Errorf("built-in OpenAPI bundle coverage does not match its sources")
+	}
+	seenSources := make(map[string]struct{}, len(b.Sources))
 	for _, source := range b.Sources {
 		if source.KubernetesVersion == "" {
 			return fmt.Errorf("built-in OpenAPI bundle has a source without a Kubernetes version")
+		}
+		if source.GitCommit != "" {
+			if len(source.GitCommit) != 40 {
+				return fmt.Errorf("built-in OpenAPI source %q has an invalid Git commit", source.KubernetesVersion)
+			}
+			if _, err := hex.DecodeString(source.GitCommit); err != nil {
+				return fmt.Errorf("built-in OpenAPI source %q has an invalid Git commit", source.KubernetesVersion)
+			}
+			if source.GitCommit != strings.ToLower(source.GitCommit) {
+				return fmt.Errorf("built-in OpenAPI source %q has an invalid Git commit", source.KubernetesVersion)
+			}
 		}
 		if len(source.SHA256) != 64 {
 			return fmt.Errorf("built-in OpenAPI source %q has an invalid SHA-256", source.KubernetesVersion)
@@ -91,6 +115,13 @@ func (b *Bundle) Validate() error {
 		if _, err := hex.DecodeString(source.SHA256); err != nil {
 			return fmt.Errorf("built-in OpenAPI source %q has an invalid SHA-256", source.KubernetesVersion)
 		}
+		if source.SHA256 != strings.ToLower(source.SHA256) {
+			return fmt.Errorf("built-in OpenAPI source %q has an invalid SHA-256", source.KubernetesVersion)
+		}
+		if _, found := seenSources[source.KubernetesVersion]; found {
+			return fmt.Errorf("built-in OpenAPI source %q is duplicated", source.KubernetesVersion)
+		}
+		seenSources[source.KubernetesVersion] = struct{}{}
 	}
 	if len(b.Definitions) == 0 {
 		return fmt.Errorf("built-in OpenAPI bundle has no definitions")
@@ -148,7 +179,11 @@ func validateDefinitionResources(definitions spec.Definitions, resourcesByGVK ma
 					definitionName, gvkExtension, i, err)
 			}
 			key := resourceKey(apiVersion, kind)
-			if previousDefinition, found := definitionsByGVK[key]; found && previousDefinition != definitionName {
+			if previousDefinition, found := definitionsByGVK[key]; found {
+				if previousDefinition == definitionName {
+					return fmt.Errorf("built-in OpenAPI definition %q advertises GVK %s/%s more than once",
+						definitionName, apiVersion, kind)
+				}
 				return fmt.Errorf("built-in OpenAPI GVK %s/%s is advertised by definitions %q and %q",
 					apiVersion, kind, previousDefinition, definitionName)
 			}
