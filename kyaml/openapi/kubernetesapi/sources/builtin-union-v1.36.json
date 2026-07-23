@@ -1,0 +1,102 @@
+{
+  "repository": "https://github.com/kubernetes/kubernetes",
+  "openApiPath": "api/openapi-spec/swagger.json",
+  "sources": [
+    {
+      "kubernetesVersion": "v1.36.2",
+      "gitCommit": "24e2b02af5543d7910c2bb074c7264df5a8f0467",
+      "file": "kubernetes-openapi-v1.36.2.json.gz",
+      "sha256": "dcede2063da1d7ad62ecb5af8adb6d7fabd0b52385a7fa0048afb491dac90450"
+    },
+    {
+      "kubernetesVersion": "v1.35.6",
+      "gitCommit": "fc0e7a6ca50f7ce368f9a5516e1716b473ed3a26",
+      "file": "kubernetes-openapi-v1.35.6.json.gz",
+      "sha256": "483500149ee52ce5753d75f5639101d985bb4f5e902cc05b1ba7627465d62446"
+    },
+    {
+      "kubernetesVersion": "v1.34.9",
+      "gitCommit": "ad7c7374b74c04d07ea041d367ecb1a526bdf758",
+      "file": "kubernetes-openapi-v1.34.9.json.gz",
+      "sha256": "d3b0cdc2fda15c753206d25ab459dc7c12df64e2fd652b6809687471ea751c37"
+    },
+    {
+      "kubernetesVersion": "v1.33.13",
+      "gitCommit": "c029d48d28322ad0369aabdcf8b656fd3195cd30",
+      "file": "kubernetes-openapi-v1.33.13.json.gz",
+      "sha256": "2af5abf98554af1599e516f31f7f1698085e6faa12b816401f569c097b9f7ef6"
+    },
+    {
+      "kubernetesVersion": "v1.32.13",
+      "gitCommit": "6172d7357c6287643350a4fc7e048f24098f2a1b",
+      "file": "kubernetes-openapi-v1.32.13.json.gz",
+      "sha256": "2335b4e7f79df85b20066164b14d8f02dd077dee7cd8c7b7fb425009c9837e85"
+    },
+    {
+      "kubernetesVersion": "v1.31.14",
+      "gitCommit": "5e00b99bac504844579ec74886b6cc5c9611ca19",
+      "file": "kubernetes-openapi-v1.31.14.json.gz",
+      "sha256": "ddcb3d5c3d85849f1fadb56387d3a7bf44712da291e5bd08b34df4e8a4247f8d"
+    },
+    {
+      "kubernetesVersion": "v1.30.14",
+      "gitCommit": "9e18483918821121abdf9aa82bc14d66df5d68cd",
+      "file": "kubernetes-openapi-v1.30.14.json.gz",
+      "sha256": "137f22097f146caa3150deda2eccceec1ecd0b628054d1887bf55f93e715c7cb"
+    },
+    {
+      "kubernetesVersion": "v1.29.14",
+      "gitCommit": "4f359b2e16764ab5e175195ee6992dfb53b36acf",
+      "file": "kubernetes-openapi-v1.29.14.json.gz",
+      "sha256": "86672d934e8b8b4c494aa06e665373cd13fa2a8d39ce36abd7588b2c77c92caa"
+    },
+    {
+      "kubernetesVersion": "v1.28.15",
+      "gitCommit": "841856557ef0f6a399096c42635d114d6f2cf7f4",
+      "file": "kubernetes-openapi-v1.28.15.json.gz",
+      "sha256": "44ff3c98bb011964585019e1765b0c09ee65d503e4c35cbda355df6a02486c86"
+    },
+    {
+      "kubernetesVersion": "v1.27.16",
+      "gitCommit": "cbb86e0d7f4a049666fac0551e8b02ef3d6c3d9a",
+      "file": "kubernetes-openapi-v1.27.16.json.gz",
+      "sha256": "2ff17583954f409b1c1ed316144aa6666a2a75f9de0742df05bb66723b0d1b91"
+    },
+    {
+      "kubernetesVersion": "v1.26.15",
+      "gitCommit": "1649f592f1909b97aa3c2a0a8f968a3fd05a7b8b",
+      "file": "kubernetes-openapi-v1.26.15.json.gz",
+      "sha256": "90ad850630542abe8ced2000669ed5472bbcb7e16d4c8cf803a922453b24565f"
+    },
+    {
+      "kubernetesVersion": "v1.25.16",
+      "gitCommit": "c5f43560a4f98f2af3743a59299fb79f07924373",
+      "file": "kubernetes-openapi-v1.25.16.json.gz",
+      "sha256": "d4450a999e2fde133faa3bae137c3090bec4dc9fbaadacfa385b0307bf551b72"
+    },
+    {
+      "kubernetesVersion": "v1.24.17",
+      "gitCommit": "22a9682c8fe855c321be75c5faacde343f909b04",
+      "file": "kubernetes-openapi-v1.24.17.json.gz",
+      "sha256": "389079bbbe9242f725d2bf7f3e685c340e870d973438fa3e7ce86e890054a3d6"
+    },
+    {
+      "kubernetesVersion": "v1.23.17",
+      "gitCommit": "953be8927218ec8067e1af2641e540238ffd7576",
+      "file": "kubernetes-openapi-v1.23.17.json.gz",
+      "sha256": "8231e8a1a219f8edfa05845f8f0b82d9ada886e1f38170adcfd91cc2632597e1"
+    },
+    {
+      "kubernetesVersion": "v1.22.17",
+      "gitCommit": "a7736eaf34d823d7652415337ac0ad06db9167fc",
+      "file": "kubernetes-openapi-v1.22.17.json.gz",
+      "sha256": "dcc9e2ef682e3d2461b79852fa880fb54abeac110adaade3b086d1339bb63921"
+    },
+    {
+      "kubernetesVersion": "v1.21.2",
+      "gitCommit": "092fbfbf53427de67cac1e9fa54aaa09a28371d7",
+      "file": "kubernetes-openapi-v1.21.2.json.gz",
+      "sha256": "128a984dbb5a4e5ceceef9dea0db575267678d333f53ed606300a2132d2539cc"
+    }
+  ]
+}

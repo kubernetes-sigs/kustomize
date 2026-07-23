@@ -1,8 +1,8 @@
 // Copyright 2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// openapi-bundle compiles a Kubernetes OpenAPI v2 protobuf document into the
-// compact, deterministic bundle embedded by kyaml.
+// openapi-bundle compiles Kubernetes OpenAPI v2 documents into the compact,
+// deterministic bundle embedded by kyaml.
 package main
 
 import (
@@ -14,9 +14,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go/format"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,16 +33,39 @@ const gvkExtension = "x-kubernetes-group-version-kind"
 const maxInputSize = 64 << 20
 
 type options struct {
+	manifest          string
 	input             string
 	output            string
+	scopeOutput       string
 	legacyProtoOutput string
 	kubernetesVersion string
 }
 
+type sourceManifest struct {
+	Repository  string                `json:"repository"`
+	OpenAPIPath string                `json:"openApiPath"`
+	Sources     []sourceManifestEntry `json:"sources"`
+}
+
+type sourceManifestEntry struct {
+	KubernetesVersion string `json:"kubernetesVersion"`
+	GitCommit         string `json:"gitCommit"`
+	File              string `json:"file"`
+	SHA256            string `json:"sha256"`
+}
+
+type sourceDocument struct {
+	kubernetesVersion string
+	input             []byte
+	expectedSHA256    string
+}
+
 func main() {
 	var opts options
-	flag.StringVar(&opts.input, "input", "", "path to a Kubernetes OpenAPI v2 protobuf document (optionally gzip-compressed)")
+	flag.StringVar(&opts.manifest, "manifest", "", "path to a newest-first Kubernetes OpenAPI source manifest")
+	flag.StringVar(&opts.input, "input", "", "path to a Kubernetes OpenAPI v2 JSON or protobuf document (optionally gzip-compressed)")
 	flag.StringVar(&opts.output, "output", "", "path to the generated .json.gz bundle")
+	flag.StringVar(&opts.scopeOutput, "scope-output", "", "optional path to the generated Go resource-scope index")
 	flag.StringVar(&opts.legacyProtoOutput, "legacy-proto-output", "", "optional path to a deterministic gzip archive of the input protobuf")
 	flag.StringVar(&opts.kubernetesVersion, "kubernetes-version", "", "Kubernetes version represented by the input")
 	flag.Parse()
@@ -52,13 +77,45 @@ func main() {
 }
 
 func run(opts options) error {
-	if opts.input == "" || opts.output == "" || opts.kubernetesVersion == "" {
-		return errors.New("-input, -output, and -kubernetes-version are required")
+	if opts.output == "" {
+		return errors.New("-output is required")
+	}
+	if opts.manifest != "" {
+		return runManifest(opts)
+	}
+	return runSingleSource(opts)
+}
+
+func runManifest(opts options) error {
+	if opts.input != "" || opts.kubernetesVersion != "" || opts.legacyProtoOutput != "" {
+		return errors.New("-manifest cannot be combined with -input, -kubernetes-version, or -legacy-proto-output")
+	}
+	bundle, err := compileManifest(opts.manifest)
+	if err != nil {
+		return fmt.Errorf("compile source manifest: %w", err)
+	}
+	if err := writeBundle(opts.output, bundle); err != nil {
+		return fmt.Errorf("write bundle: %w", err)
+	}
+	if opts.scopeOutput != "" {
+		if err := writeScopeFile(opts.scopeOutput, bundle); err != nil {
+			return fmt.Errorf("write resource-scope index: %w", err)
+		}
+	}
+	return nil
+}
+
+func runSingleSource(opts options) error {
+	if opts.input == "" || opts.kubernetesVersion == "" {
+		return errors.New("either -manifest or both -input and -kubernetes-version are required")
 	}
 
 	input, err := readInput(opts.input)
 	if err != nil {
 		return fmt.Errorf("read input: %w", err)
+	}
+	if opts.legacyProtoOutput != "" && isJSONOpenAPI(input) {
+		return errors.New("-legacy-proto-output requires a protobuf -input")
 	}
 	bundle, err := compile(input, opts.kubernetesVersion)
 	if err != nil {
@@ -66,6 +123,11 @@ func run(opts options) error {
 	}
 	if err := writeBundle(opts.output, bundle); err != nil {
 		return fmt.Errorf("write bundle: %w", err)
+	}
+	if opts.scopeOutput != "" {
+		if err := writeScopeFile(opts.scopeOutput, bundle); err != nil {
+			return fmt.Errorf("write resource-scope index: %w", err)
+		}
 	}
 	if opts.legacyProtoOutput != "" {
 		if err := writeGzip(opts.legacyProtoOutput, input); err != nil {
@@ -102,6 +164,223 @@ func readInput(path string) ([]byte, error) {
 }
 
 func compile(input []byte, kubernetesVersion string) (*builtinopenapi.Bundle, error) {
+	return compileSources([]sourceDocument{{
+		kubernetesVersion: kubernetesVersion,
+		input:             input,
+	}}, builtinopenapi.Coverage{Floor: kubernetesVersion, Ceiling: kubernetesVersion})
+}
+
+func compileManifest(path string) (*builtinopenapi.Bundle, error) {
+	manifestBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read manifest %q: %w", path, err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(manifestBytes))
+	decoder.DisallowUnknownFields()
+	var manifest sourceManifest
+	if err := decoder.Decode(&manifest); err != nil {
+		return nil, fmt.Errorf("decode manifest %q: %w", path, err)
+	}
+	var trailing interface{}
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("decode manifest %q: expected one JSON value", path)
+	}
+	if err := validateManifest(&manifest); err != nil {
+		return nil, fmt.Errorf("validate manifest %q: %w", path, err)
+	}
+
+	documents := make([]sourceDocument, 0, len(manifest.Sources))
+	manifestDir := filepath.Dir(path)
+	for _, source := range manifest.Sources {
+		input, err := readInput(filepath.Join(manifestDir, source.File))
+		if err != nil {
+			return nil, fmt.Errorf("read Kubernetes %s source: %w", source.KubernetesVersion, err)
+		}
+		documents = append(documents, sourceDocument{
+			kubernetesVersion: source.KubernetesVersion,
+			input:             input,
+			expectedSHA256:    source.SHA256,
+		})
+	}
+	return compileSources(documents, builtinopenapi.Coverage{
+		Floor:   manifest.Sources[len(manifest.Sources)-1].KubernetesVersion,
+		Ceiling: manifest.Sources[0].KubernetesVersion,
+	})
+}
+
+func validateManifest(manifest *sourceManifest) error {
+	if manifest.Repository == "" || manifest.OpenAPIPath == "" {
+		return errors.New("repository and openApiPath are required")
+	}
+	if len(manifest.Sources) == 0 {
+		return errors.New("at least one source is required")
+	}
+	var previous [3]int
+	for i, source := range manifest.Sources {
+		if source.KubernetesVersion == "" || source.GitCommit == "" || source.File == "" || source.SHA256 == "" {
+			return fmt.Errorf("source %d is incomplete", i)
+		}
+		version, err := parseKubernetesVersion(source.KubernetesVersion)
+		if err != nil {
+			return fmt.Errorf("source %d: %w", i, err)
+		}
+		if i > 0 && compareVersions(previous, version) <= 0 {
+			return fmt.Errorf("sources must be ordered newest-first: %s is not older than %s",
+				source.KubernetesVersion, manifest.Sources[i-1].KubernetesVersion)
+		}
+		if i > 0 && (previous[0] != version[0] || previous[1]-version[1] != 1) {
+			return fmt.Errorf("sources must contain exactly one snapshot for every Kubernetes minor between %s and %s",
+				manifest.Sources[i-1].KubernetesVersion, source.KubernetesVersion)
+		}
+		previous = version
+		if err := validateHexDigest(source.GitCommit, 40); err != nil {
+			return fmt.Errorf("source %s has invalid gitCommit: %w", source.KubernetesVersion, err)
+		}
+		if err := validateHexDigest(source.SHA256, 64); err != nil {
+			return fmt.Errorf("source %s has invalid sha256: %w", source.KubernetesVersion, err)
+		}
+	}
+	return nil
+}
+
+func parseKubernetesVersion(version string) ([3]int, error) {
+	var result [3]int
+	parts := strings.Split(strings.TrimPrefix(version, "v"), ".")
+	if !strings.HasPrefix(version, "v") || len(parts) != len(result) {
+		return result, fmt.Errorf("invalid Kubernetes version %q", version)
+	}
+	for i, part := range parts {
+		value, err := strconv.Atoi(part)
+		if err != nil || value < 0 {
+			return result, fmt.Errorf("invalid Kubernetes version %q", version)
+		}
+		result[i] = value
+	}
+	return result, nil
+}
+
+func compareVersions(left, right [3]int) int {
+	for i := range left {
+		if left[i] < right[i] {
+			return -1
+		}
+		if left[i] > right[i] {
+			return 1
+		}
+	}
+	return 0
+}
+
+func validateHexDigest(value string, length int) error {
+	if len(value) != length {
+		return fmt.Errorf("must contain %d hexadecimal characters", length)
+	}
+	if _, err := hex.DecodeString(value); err != nil {
+		return errors.New("must contain only hexadecimal characters")
+	}
+	if value != strings.ToLower(value) {
+		return errors.New("must use lowercase hexadecimal characters")
+	}
+	return nil
+}
+
+func compileSources(sources []sourceDocument, coverage builtinopenapi.Coverage) (*builtinopenapi.Bundle, error) {
+	if len(sources) == 0 {
+		return nil, errors.New("no OpenAPI sources provided")
+	}
+	definitions := spec.Definitions{}
+	resources := map[string]builtinopenapi.Resource{}
+	bundleSources := make([]builtinopenapi.Source, 0, len(sources))
+
+	for _, source := range sources {
+		digest := sha256.Sum256(source.input)
+		digestString := hex.EncodeToString(digest[:])
+		if source.expectedSHA256 != "" && source.expectedSHA256 != digestString {
+			return nil, fmt.Errorf("Kubernetes %s source SHA-256 is %s, want %s",
+				source.kubernetesVersion, digestString, source.expectedSHA256)
+		}
+		swagger, err := decodeSwagger(source.input)
+		if err != nil {
+			return nil, fmt.Errorf("decode Kubernetes %s source: %w", source.kubernetesVersion, err)
+		}
+		if err := validateDefinitionReferences(swagger.Definitions); err != nil {
+			return nil, fmt.Errorf("validate Kubernetes %s definitions: %w", source.kubernetesVersion, err)
+		}
+		sourceResources, err := collectResources(swagger)
+		if err != nil {
+			return nil, fmt.Errorf("collect Kubernetes %s resources: %w", source.kubernetesVersion, err)
+		}
+		for name, definition := range swagger.Definitions {
+			if _, found := definitions[name]; !found {
+				definitions[name] = definition
+			}
+		}
+		for _, resource := range sourceResources {
+			key := resourceKey(resource.APIVersion, resource.Kind)
+			existing, found := resources[key]
+			if !found {
+				resources[key] = resource
+				continue
+			}
+			if existing.Definition == "" {
+				existing.Definition = resource.Definition
+			} else if resource.Definition != "" && existing.Definition != resource.Definition {
+				return nil, fmt.Errorf("GVK %s/%s maps to definitions %q and %q",
+					resource.APIVersion, resource.Kind, existing.Definition, resource.Definition)
+			}
+			if existing.Scope == builtinopenapi.ScopeUnknown {
+				existing.Scope = resource.Scope
+			} else if resource.Scope != builtinopenapi.ScopeUnknown && existing.Scope != resource.Scope {
+				return nil, fmt.Errorf("GVK %s/%s has scopes %q and %q",
+					resource.APIVersion, resource.Kind, existing.Scope, resource.Scope)
+			}
+			resources[key] = existing
+		}
+		bundleSources = append(bundleSources, builtinopenapi.Source{
+			KubernetesVersion: source.kubernetesVersion,
+			SHA256:            digestString,
+		})
+	}
+
+	if err := validateDefinitionReferences(definitions); err != nil {
+		return nil, err
+	}
+	resourceList := make([]builtinopenapi.Resource, 0, len(resources))
+	for _, resource := range resources {
+		resourceList = append(resourceList, resource)
+	}
+	builtinopenapi.SortResources(resourceList)
+	bundle := &builtinopenapi.Bundle{
+		FormatVersion:   builtinopenapi.FormatVersion,
+		Coverage:        coverage,
+		SelectionPolicy: builtinopenapi.SelectionPolicy,
+		Sources:         bundleSources,
+		Definitions:     definitions,
+		Resources:       resourceList,
+	}
+	if err := bundle.Validate(); err != nil {
+		return nil, fmt.Errorf("validate compiled bundle: %w", err)
+	}
+	return bundle, nil
+}
+
+func decodeSwagger(input []byte) (*spec.Swagger, error) {
+	if len(bytes.TrimSpace(input)) == 0 {
+		return nil, errors.New("OpenAPI source is empty")
+	}
+	if isJSONOpenAPI(input) {
+		var swagger spec.Swagger
+		decoder := json.NewDecoder(bytes.NewReader(input))
+		if err := decoder.Decode(&swagger); err != nil {
+			return nil, fmt.Errorf("unmarshal OpenAPI JSON: %w", err)
+		}
+		var trailing interface{}
+		if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
+			return nil, errors.New("OpenAPI JSON must contain exactly one value")
+		}
+		return &swagger, nil
+	}
+
 	document := &openapi_v2.Document{}
 	if err := proto.Unmarshal(input, document); err != nil {
 		return nil, fmt.Errorf("unmarshal OpenAPI protobuf: %w", err)
@@ -115,34 +394,41 @@ func compile(input []byte, kubernetesVersion string) (*builtinopenapi.Bundle, er
 	if !ok {
 		return nil, errors.New("gnostic document cannot be converted without data loss")
 	}
+	return &swagger, nil
+}
 
-	resources, err := collectResources(&swagger)
+func isJSONOpenAPI(input []byte) bool {
+	return bytes.HasPrefix(bytes.TrimSpace(input), []byte("{"))
+}
+
+func writeScopeFile(path string, bundle *builtinopenapi.Bundle) error {
+	var source bytes.Buffer
+	source.WriteString(`// Copyright 2026 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+// Code generated by openapi-bundle. DO NOT EDIT.
+
+package openapi
+
+import "sigs.k8s.io/kustomize/kyaml/yaml"
+
+// precomputedIsNamespaceScoped avoids loading the full built-in schema when
+// only the scope of a known Kubernetes resource is needed.
+var precomputedIsNamespaceScoped = map[yaml.TypeMeta]bool{ //nolint:gochecknoglobals
+`)
+	for _, resource := range bundle.Resources {
+		if resource.Scope == builtinopenapi.ScopeUnknown {
+			continue
+		}
+		fmt.Fprintf(&source, "\t{APIVersion: %q, Kind: %q}: %t,\n",
+			resource.APIVersion, resource.Kind, resource.Scope == builtinopenapi.ScopeNamespaced)
+	}
+	source.WriteString("}\n")
+	formatted, err := format.Source(source.Bytes())
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("format generated Go: %w", err)
 	}
-	if err := validateDefinitionReferences(swagger.Definitions); err != nil {
-		return nil, err
-	}
-
-	digest := sha256.Sum256(input)
-	bundle := &builtinopenapi.Bundle{
-		FormatVersion: builtinopenapi.FormatVersion,
-		Coverage: builtinopenapi.Coverage{
-			Floor:   kubernetesVersion,
-			Ceiling: kubernetesVersion,
-		},
-		SelectionPolicy: builtinopenapi.SelectionPolicy,
-		Sources: []builtinopenapi.Source{{
-			KubernetesVersion: kubernetesVersion,
-			SHA256:            hex.EncodeToString(digest[:]),
-		}},
-		Definitions: swagger.Definitions,
-		Resources:   resources,
-	}
-	if err := bundle.Validate(); err != nil {
-		return nil, fmt.Errorf("validate compiled bundle: %w", err)
-	}
-	return bundle, nil
+	return writeFile(path, formatted)
 }
 
 func collectResources(swagger *spec.Swagger) ([]builtinopenapi.Resource, error) {
@@ -298,6 +584,43 @@ func writeBundle(path string, bundle *builtinopenapi.Bundle) error {
 		return fmt.Errorf("marshal bundle: %w", err)
 	}
 	return writeGzip(path, jsonBytes)
+}
+
+func writeFile(path string, contents []byte) (resultErr error) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("create output directory %q: %w", dir, err)
+	}
+	tmp, err := os.CreateTemp(dir, ".openapi-bundle-*")
+	if err != nil {
+		return fmt.Errorf("create temporary output: %w", err)
+	}
+	tmpName := tmp.Name()
+	tmpClosed := false
+	defer func() {
+		if !tmpClosed {
+			if err := tmp.Close(); err != nil {
+				resultErr = errors.Join(resultErr, fmt.Errorf("close temporary output: %w", err))
+			}
+		}
+		if err := os.Remove(tmpName); err != nil && !errors.Is(err, os.ErrNotExist) {
+			resultErr = errors.Join(resultErr, fmt.Errorf("remove temporary output: %w", err))
+		}
+	}()
+	if _, err := tmp.Write(contents); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	if err := tmp.Chmod(0o644); err != nil {
+		return fmt.Errorf("set output permissions: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("close temporary output: %w", err)
+	}
+	tmpClosed = true
+	if err := os.Rename(tmpName, path); err != nil {
+		return fmt.Errorf("replace output %q: %w", path, err)
+	}
+	return nil
 }
 
 func writeGzip(path string, contents []byte) (resultErr error) {

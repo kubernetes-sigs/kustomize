@@ -21,9 +21,10 @@ func TestBuiltinOpenAPIBundle(t *testing.T) {
 	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
 	require.NoError(t, err)
 	require.Equal(t, builtinopenapi.FormatVersion, bundle.FormatVersion)
-	require.Equal(t, builtinopenapi.Coverage{Floor: "v1.21.2", Ceiling: "v1.21.2"}, bundle.Coverage)
-	require.Len(t, bundle.Definitions, 618)
-	require.Len(t, bundle.Resources, 275)
+	require.Equal(t, builtinopenapi.Coverage{Floor: "v1.21.2", Ceiling: "v1.36.2"}, bundle.Coverage)
+	require.Len(t, bundle.Sources, 16)
+	require.Len(t, bundle.Definitions, 1226)
+	require.Len(t, bundle.Resources, 484)
 
 	ResetOpenAPI()
 	t.Cleanup(ResetOpenAPI)
@@ -48,7 +49,7 @@ func TestBuiltinOpenAPIBundle(t *testing.T) {
 	require.Len(t, globalSchema.namespaceabilityByResourceType, scopes)
 }
 
-func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
+func TestBuiltinOpenAPIBundlePreservesLegacyGVKs(t *testing.T) {
 	document := &openapi_v2.Document{}
 	require.NoError(t, proto.Unmarshal(v1_21_2.MustAsset(
 		"kubernetesapi/v1_21_2/swagger.pb"), document))
@@ -56,10 +57,6 @@ func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
 	ok, err := swagger.FromGnostic(document)
 	require.NoError(t, err)
 	require.True(t, ok)
-
-	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
-	require.NoError(t, err)
-	require.Equal(t, swagger.Definitions, bundle.Definitions)
 
 	ResetOpenAPI()
 	t.Cleanup(ResetOpenAPI)
@@ -76,11 +73,52 @@ func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
 
 	ResetOpenAPI()
 	require.NoError(t, parseBuiltinBundle(builtinKubernetesOpenAPIBundle))
-	require.Len(t, globalSchema.schemaByResourceType, len(legacySchemas))
-	for typeMeta, schema := range legacySchemas {
-		require.Equal(t, schema, *globalSchema.schemaByResourceType[typeMeta], "%v", typeMeta)
+	for typeMeta := range legacySchemas {
+		require.Contains(t, globalSchema.schemaByResourceType, typeMeta)
 	}
-	require.Equal(t, legacyScopes, globalSchema.namespaceabilityByResourceType)
+	for typeMeta, namespaced := range legacyScopes {
+		require.Equal(t, namespaced, globalSchema.namespaceabilityByResourceType[typeMeta], "%v", typeMeta)
+	}
+}
+
+func TestBuiltinOpenAPIBundleContainsOldIntermediateAndCurrentGVKs(t *testing.T) {
+	ResetOpenAPI()
+	t.Cleanup(ResetOpenAPI)
+
+	legacy := SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "extensions/v1beta1",
+		Kind:       "Ingress",
+	})
+	require.NotNil(t, legacy)
+	intermediate := SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "flowcontrol.apiserver.k8s.io/v1beta2",
+		Kind:       "FlowSchema",
+	})
+	require.NotNil(t, intermediate)
+	current := SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "resource.k8s.io/v1",
+		Kind:       "ResourceClaim",
+	})
+	require.NotNil(t, current)
+}
+
+func TestBuiltinOpenAPIVersionAliases(t *testing.T) {
+	require.Equal(t, "v1.36", DefaultOpenAPI)
+	require.Equal(t, "{title:Kubernetes,version:v1.36}", BuiltinSchemaInfo)
+	require.True(t, hasBuiltinOpenAPIVersion(DefaultOpenAPI))
+	require.True(t, hasBuiltinOpenAPIVersion(legacyOpenAPI))
+	require.False(t, hasBuiltinOpenAPIVersion("v1.35"))
+}
+
+func TestLegacyBuiltinOpenAPIVersionLoadsUnion(t *testing.T) {
+	ResetOpenAPI()
+	t.Cleanup(ResetOpenAPI)
+	require.NoError(t, SetSchema(map[string]string{"version": legacyOpenAPI}, nil, false))
+	require.Equal(t, legacyOpenAPI, GetSchemaVersion())
+	require.NotNil(t, SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "admissionregistration.k8s.io/v1",
+		Kind:       "MutatingAdmissionPolicy",
+	}))
 }
 
 func TestDecodeBuiltinOpenAPIBundleRejectsInvalidData(t *testing.T) {

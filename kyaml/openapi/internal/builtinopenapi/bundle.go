@@ -18,8 +18,10 @@ const (
 	// FormatVersion is the version of the bundle's JSON representation.
 	FormatVersion = 1
 
-	// SelectionPolicy identifies how schemas from Kubernetes releases are
-	// selected. A single-release bundle is the degenerate case of this policy.
+	// SelectionPolicy means sources are processed newest-first, each definition
+	// is selected as a whole from its newest source, and older sources only fill
+	// missing definition names and GVKs. Known scopes must agree across sources.
+	// A single-release bundle is the degenerate case of this policy.
 	SelectionPolicy = "latest-wins-fill-missing"
 )
 
@@ -40,7 +42,8 @@ type Coverage struct {
 	Ceiling string `json:"ceiling"`
 }
 
-// Source identifies one OpenAPI input used to compile a bundle.
+// Source identifies one OpenAPI input used to compile a bundle. Sources are
+// stored newest-first.
 type Source struct {
 	KubernetesVersion string `json:"kubernetesVersion"`
 	SHA256            string `json:"sha256"`
@@ -80,6 +83,11 @@ func (b *Bundle) Validate() error {
 	if len(b.Sources) == 0 {
 		return fmt.Errorf("built-in OpenAPI bundle has no sources")
 	}
+	if b.Coverage.Ceiling != b.Sources[0].KubernetesVersion ||
+		b.Coverage.Floor != b.Sources[len(b.Sources)-1].KubernetesVersion {
+		return fmt.Errorf("built-in OpenAPI bundle coverage does not match its sources")
+	}
+	seenSources := make(map[string]struct{}, len(b.Sources))
 	for _, source := range b.Sources {
 		if source.KubernetesVersion == "" {
 			return fmt.Errorf("built-in OpenAPI bundle has a source without a Kubernetes version")
@@ -90,6 +98,10 @@ func (b *Bundle) Validate() error {
 		if _, err := hex.DecodeString(source.SHA256); err != nil {
 			return fmt.Errorf("built-in OpenAPI source %q has an invalid SHA-256", source.KubernetesVersion)
 		}
+		if _, found := seenSources[source.KubernetesVersion]; found {
+			return fmt.Errorf("built-in OpenAPI source %q is duplicated", source.KubernetesVersion)
+		}
+		seenSources[source.KubernetesVersion] = struct{}{}
 	}
 	if len(b.Definitions) == 0 {
 		return fmt.Errorf("built-in OpenAPI bundle has no definitions")

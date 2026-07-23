@@ -38,6 +38,13 @@ func TestBundleValidate(t *testing.T) {
 		"source hex": func(bundle *Bundle) {
 			bundle.Sources[0].SHA256 = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 		},
+		"source coverage": func(bundle *Bundle) {
+			bundle.Coverage.Ceiling = "v1.22.0"
+		},
+		"duplicate source": func(bundle *Bundle) {
+			bundle.Sources = append(bundle.Sources, bundle.Sources[0])
+			bundle.Coverage.Floor = bundle.Sources[1].KubernetesVersion
+		},
 		"definition": func(bundle *Bundle) { bundle.Resources[0].Definition = "missing" },
 		"no definitions": func(bundle *Bundle) {
 			bundle.Definitions = nil
