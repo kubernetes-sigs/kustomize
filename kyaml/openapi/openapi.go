@@ -4,20 +4,19 @@
 package openapi
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 
-	openapi_v2 "github.com/google/gnostic-models/openapiv2"
-	"google.golang.org/protobuf/proto"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
-	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
+	"sigs.k8s.io/kustomize/kyaml/openapi/internal/builtinopenapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	k8syaml "sigs.k8s.io/yaml"
 )
@@ -80,103 +79,17 @@ type openapiData struct {
 	defaultBuiltInSchemaParseStatus schemaParseStatus
 }
 
+// format is retained for compatibility with the exported JsonOrYaml and Proto
+// constants. Built-in schemas are now loaded from compiled bundles instead of
+// selecting a parser with this type.
 type format string
 
 const (
+	// JsonOrYaml identifies the legacy JSON-or-YAML OpenAPI input format.
 	JsonOrYaml format = "jsonOrYaml"
-	Proto      format = "proto"
+	// Proto identifies the legacy protobuf OpenAPI input format.
+	Proto format = "proto"
 )
-
-// precomputedIsNamespaceScoped precomputes IsNamespaceScoped for known types. This avoids Schema creation,
-// which is expensive
-// The test output from TestIsNamespaceScopedPrecompute shows the expected map in go syntax,and can be copy and pasted
-// from the failure if it changes.
-var precomputedIsNamespaceScoped = map[yaml.TypeMeta]bool{
-	{APIVersion: "admissionregistration.k8s.io/v1", Kind: "MutatingWebhookConfiguration"}:        false,
-	{APIVersion: "admissionregistration.k8s.io/v1", Kind: "ValidatingWebhookConfiguration"}:      false,
-	{APIVersion: "admissionregistration.k8s.io/v1beta1", Kind: "MutatingWebhookConfiguration"}:   false,
-	{APIVersion: "admissionregistration.k8s.io/v1beta1", Kind: "ValidatingWebhookConfiguration"}: false,
-	{APIVersion: "admissionregistration.k8s.io/v1", Kind: "ValidatingAdmissionPolicy"}:           false,
-	{APIVersion: "admissionregistration.k8s.io/v1", Kind: "ValidatingAdmissionPolicyBinding"}:    false,
-	{APIVersion: "apiextensions.k8s.io/v1", Kind: "CustomResourceDefinition"}:                    false,
-	{APIVersion: "apiextensions.k8s.io/v1beta1", Kind: "CustomResourceDefinition"}:               false,
-	{APIVersion: "apiregistration.k8s.io/v1", Kind: "APIService"}:                                false,
-	{APIVersion: "apiregistration.k8s.io/v1beta1", Kind: "APIService"}:                           false,
-	{APIVersion: "apps/v1", Kind: "ControllerRevision"}:                                          true,
-	{APIVersion: "apps/v1", Kind: "DaemonSet"}:                                                   true,
-	{APIVersion: "apps/v1", Kind: "Deployment"}:                                                  true,
-	{APIVersion: "apps/v1", Kind: "ReplicaSet"}:                                                  true,
-	{APIVersion: "apps/v1", Kind: "StatefulSet"}:                                                 true,
-	{APIVersion: "autoscaling/v1", Kind: "HorizontalPodAutoscaler"}:                              true,
-	{APIVersion: "autoscaling/v1", Kind: "Scale"}:                                                true,
-	{APIVersion: "autoscaling/v2beta1", Kind: "HorizontalPodAutoscaler"}:                         true,
-	{APIVersion: "autoscaling/v2beta2", Kind: "HorizontalPodAutoscaler"}:                         true,
-	{APIVersion: "batch/v1", Kind: "CronJob"}:                                                    true,
-	{APIVersion: "batch/v1", Kind: "Job"}:                                                        true,
-	{APIVersion: "batch/v1beta1", Kind: "CronJob"}:                                               true,
-	{APIVersion: "certificates.k8s.io/v1", Kind: "CertificateSigningRequest"}:                    false,
-	{APIVersion: "certificates.k8s.io/v1beta1", Kind: "CertificateSigningRequest"}:               false,
-	{APIVersion: "coordination.k8s.io/v1", Kind: "Lease"}:                                        true,
-	{APIVersion: "coordination.k8s.io/v1beta1", Kind: "Lease"}:                                   true,
-	{APIVersion: "discovery.k8s.io/v1", Kind: "EndpointSlice"}:                                   true,
-	{APIVersion: "discovery.k8s.io/v1beta1", Kind: "EndpointSlice"}:                              true,
-	{APIVersion: "events.k8s.io/v1", Kind: "Event"}:                                              true,
-	{APIVersion: "events.k8s.io/v1beta1", Kind: "Event"}:                                         true,
-	{APIVersion: "extensions/v1beta1", Kind: "Ingress"}:                                          true,
-	{APIVersion: "flowcontrol.apiserver.k8s.io/v1beta1", Kind: "FlowSchema"}:                     false,
-	{APIVersion: "flowcontrol.apiserver.k8s.io/v1beta1", Kind: "PriorityLevelConfiguration"}:     false,
-	{APIVersion: "networking.k8s.io/v1", Kind: "Ingress"}:                                        true,
-	{APIVersion: "networking.k8s.io/v1", Kind: "IngressClass"}:                                   false,
-	{APIVersion: "networking.k8s.io/v1", Kind: "NetworkPolicy"}:                                  true,
-	{APIVersion: "networking.k8s.io/v1beta1", Kind: "Ingress"}:                                   true,
-	{APIVersion: "networking.k8s.io/v1beta1", Kind: "IngressClass"}:                              false,
-	{APIVersion: "node.k8s.io/v1", Kind: "RuntimeClass"}:                                         false,
-	{APIVersion: "node.k8s.io/v1beta1", Kind: "RuntimeClass"}:                                    false,
-	{APIVersion: "policy/v1", Kind: "PodDisruptionBudget"}:                                       true,
-	{APIVersion: "policy/v1beta1", Kind: "PodDisruptionBudget"}:                                  true,
-	{APIVersion: "policy/v1beta1", Kind: "PodSecurityPolicy"}:                                    false, // remove after openapi upgrades to v1.25.
-	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole"}:                            false,
-	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRoleBinding"}:                     false,
-	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "Role"}:                                   true,
-	{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "RoleBinding"}:                            true,
-	{APIVersion: "rbac.authorization.k8s.io/v1beta1", Kind: "ClusterRole"}:                       false,
-	{APIVersion: "rbac.authorization.k8s.io/v1beta1", Kind: "ClusterRoleBinding"}:                false,
-	{APIVersion: "rbac.authorization.k8s.io/v1beta1", Kind: "Role"}:                              true,
-	{APIVersion: "rbac.authorization.k8s.io/v1beta1", Kind: "RoleBinding"}:                       true,
-	{APIVersion: "scheduling.k8s.io/v1", Kind: "PriorityClass"}:                                  false,
-	{APIVersion: "scheduling.k8s.io/v1beta1", Kind: "PriorityClass"}:                             false,
-	{APIVersion: "storage.k8s.io/v1", Kind: "CSIDriver"}:                                         false,
-	{APIVersion: "storage.k8s.io/v1", Kind: "CSINode"}:                                           false,
-	{APIVersion: "storage.k8s.io/v1", Kind: "StorageClass"}:                                      false,
-	{APIVersion: "storage.k8s.io/v1", Kind: "VolumeAttachment"}:                                  false,
-	{APIVersion: "storage.k8s.io/v1beta1", Kind: "CSIDriver"}:                                    false,
-	{APIVersion: "storage.k8s.io/v1beta1", Kind: "CSINode"}:                                      false,
-	{APIVersion: "storage.k8s.io/v1beta1", Kind: "CSIStorageCapacity"}:                           true,
-	{APIVersion: "storage.k8s.io/v1beta1", Kind: "StorageClass"}:                                 false,
-	{APIVersion: "storage.k8s.io/v1beta1", Kind: "VolumeAttachment"}:                             false,
-	{APIVersion: "v1", Kind: "ComponentStatus"}:                                                  false,
-	{APIVersion: "v1", Kind: "ConfigMap"}:                                                        true,
-	{APIVersion: "v1", Kind: "Endpoints"}:                                                        true,
-	{APIVersion: "v1", Kind: "Event"}:                                                            true,
-	{APIVersion: "v1", Kind: "LimitRange"}:                                                       true,
-	{APIVersion: "v1", Kind: "Namespace"}:                                                        false,
-	{APIVersion: "v1", Kind: "Node"}:                                                             false,
-	{APIVersion: "v1", Kind: "NodeProxyOptions"}:                                                 false,
-	{APIVersion: "v1", Kind: "PersistentVolume"}:                                                 false,
-	{APIVersion: "v1", Kind: "PersistentVolumeClaim"}:                                            true,
-	{APIVersion: "v1", Kind: "Pod"}:                                                              true,
-	{APIVersion: "v1", Kind: "PodAttachOptions"}:                                                 true,
-	{APIVersion: "v1", Kind: "PodExecOptions"}:                                                   true,
-	{APIVersion: "v1", Kind: "PodPortForwardOptions"}:                                            true,
-	{APIVersion: "v1", Kind: "PodProxyOptions"}:                                                  true,
-	{APIVersion: "v1", Kind: "PodTemplate"}:                                                      true,
-	{APIVersion: "v1", Kind: "ReplicationController"}:                                            true,
-	{APIVersion: "v1", Kind: "ResourceQuota"}:                                                    true,
-	{APIVersion: "v1", Kind: "Secret"}:                                                           true,
-	{APIVersion: "v1", Kind: "Service"}:                                                          true,
-	{APIVersion: "v1", Kind: "ServiceAccount"}:                                                   true,
-	{APIVersion: "v1", Kind: "ServiceProxyOptions"}:                                              true,
-}
 
 // ResourceSchema wraps the OpenAPI Schema.
 type ResourceSchema struct {
@@ -303,7 +216,7 @@ func schemaUsingField(object *yaml.RNode, field string) (*spec.Schema, error) {
 
 // AddSchema parses s, and adds definitions from s to the global schema.
 func AddSchema(s []byte) error {
-	return parse(s, JsonOrYaml)
+	return parse(s)
 }
 
 // ResetOpenAPI resets the openapi data to empty
@@ -579,11 +492,7 @@ func (rs *ResourceSchema) PatchStrategyAndKey() (string, string) {
 const (
 	// kubernetesOpenAPIDefaultVersion is the latest version number of the statically compiled in
 	// OpenAPI schema for kubernetes built-in types
-	kubernetesOpenAPIDefaultVersion = kubernetesapi.DefaultOpenAPI
-
-	// kustomizationAPIAssetName is the name of the asset containing the statically compiled in
-	// OpenAPI definitions for Kustomization built-in types
-	kustomizationAPIAssetName = "kustomizationapi/swagger.json"
+	kubernetesOpenAPIDefaultVersion = DefaultOpenAPI
 
 	// kubernetesGVKExtensionKey is the key to lookup the kubernetes group version kind extension
 	// -- the extension is an array of objects containing a gvk
@@ -639,7 +548,7 @@ func SetSchema(openAPIField map[string]string, schema []byte, reset bool) error 
 	if kubernetesOpenAPIVersion == "" {
 		return nil
 	}
-	if _, ok := kubernetesapi.OpenAPIMustAsset[kubernetesOpenAPIVersion]; !ok {
+	if !hasBuiltinOpenAPIVersion(kubernetesOpenAPIVersion) {
 		return fmt.Errorf("the specified OpenAPI version is not built in")
 	}
 
@@ -676,7 +585,7 @@ func initSchema() {
 
 	// TODO(natasha41575): Accept proto-formatted schema files
 	if customSchema != nil {
-		err := parse(customSchema, JsonOrYaml)
+		err := parse(customSchema)
 		if err != nil {
 			panic(fmt.Errorf("invalid schema file: %w", err))
 		}
@@ -694,57 +603,104 @@ func initSchema() {
 		globalSchema.defaultBuiltInSchemaParseStatus = schemaParsed
 	}
 
-	if err := parse(kustomizationapi.MustAsset(kustomizationAPIAssetName), JsonOrYaml); err != nil {
+	if err := parse(builtinKustomizationOpenAPI); err != nil {
 		// this should never happen
 		panic(err)
 	}
 }
 
-// parseBuiltinSchema calls parse to parse the json or proto schemas
+// parseBuiltinSchema decodes and indexes the compiled built-in schema bundle.
 func parseBuiltinSchema(version string) {
 	if globalSchema.noUseBuiltInSchema {
 		// don't parse the built in schema
 		return
 	}
-	// parse the swagger, this should never fail
-	assetName := filepath.Join(
-		"kubernetesapi",
-		strings.ReplaceAll(version, ".", "_"),
-		"swagger.pb")
-
-	if err := parse(kubernetesapi.OpenAPIMustAsset[version](assetName), Proto); err != nil {
+	if !hasBuiltinOpenAPIVersion(version) {
+		panic(fmt.Errorf("the specified OpenAPI version is not built in"))
+	}
+	if err := parseBuiltinBundle(builtinKubernetesOpenAPIBundle); err != nil {
 		// this should never happen
 		panic(err)
 	}
 }
 
-// parse parses and indexes a single json or proto schema
-func parse(b []byte, format format) error {
-	var swagger spec.Swagger
-	switch {
-	case format == Proto:
-		doc := &openapi_v2.Document{}
-		// We parse protobuf and get an openapi_v2.Document here.
-		if err := proto.Unmarshal(b, doc); err != nil {
-			return fmt.Errorf("openapi proto unmarshalling failed: %w", err)
+// parseBuiltinBundle parses and indexes the compiled built-in schema bundle.
+func parseBuiltinBundle(compressed []byte) error {
+	bundle, err := decodeBuiltinBundle(compressed)
+	if err != nil {
+		return err
+	}
+
+	AddDefinitions(bundle.Definitions)
+	if globalSchema.namespaceabilityByResourceType == nil {
+		globalSchema.namespaceabilityByResourceType = make(map[yaml.TypeMeta]bool)
+	}
+	for _, resource := range bundle.Resources {
+		typeMeta := yaml.TypeMeta{APIVersion: resource.APIVersion, Kind: resource.Kind}
+		if resource.Definition != "" {
+			definition := globalSchema.schema.Definitions[resource.Definition]
+			globalSchema.schemaByResourceType[typeMeta] = &definition
 		}
-		// convert the openapi_v2.Document back to Swagger
-		_, err := swagger.FromGnostic(doc)
+		switch resource.Scope {
+		case builtinopenapi.ScopeUnknown:
+		case builtinopenapi.ScopeNamespaced:
+			globalSchema.namespaceabilityByResourceType[typeMeta] = true
+		case builtinopenapi.ScopeCluster:
+			globalSchema.namespaceabilityByResourceType[typeMeta] = false
+		}
+	}
+	return nil
+}
+
+func decodeBuiltinBundle(compressed []byte) (*builtinopenapi.Bundle, error) {
+	reader, err := gzip.NewReader(bytes.NewReader(compressed))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	decoder := json.NewDecoder(reader)
+	var bundle builtinopenapi.Bundle
+	if err := decoder.Decode(&bundle); err != nil {
+		if closeErr := reader.Close(); closeErr != nil {
+			return nil, fmt.Errorf("decode built-in OpenAPI bundle: %w (close gzip reader: %w)", err, closeErr)
+		}
+		return nil, errors.Wrap(err)
+	}
+	// Force the gzip reader to EOF so its checksum is verified, and reject any
+	// second JSON value in the artifact.
+	var trailing interface{}
+	if err := decoder.Decode(&trailing); err == nil {
+		if closeErr := reader.Close(); closeErr != nil {
+			return nil, fmt.Errorf("close gzip reader after trailing built-in OpenAPI bundle data: %w", closeErr)
+		}
+		return nil, fmt.Errorf("built-in OpenAPI bundle contains multiple JSON values")
+	} else if err != io.EOF {
+		if closeErr := reader.Close(); closeErr != nil {
+			return nil, fmt.Errorf("decode trailing built-in OpenAPI bundle data: %w (close gzip reader: %w)",
+				err, closeErr)
+		}
+		return nil, errors.Wrap(err)
+	}
+	if err := reader.Close(); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if err := bundle.Validate(); err != nil {
+		return nil, fmt.Errorf("validate built-in OpenAPI bundle: %w", err)
+	}
+	return &bundle, nil
+}
+
+// parse parses and indexes a single JSON or YAML OpenAPI schema.
+func parse(b []byte) error {
+	var swagger spec.Swagger
+	if len(b) > 0 && b[0] != byte('{') {
+		var err error
+		b, err = k8syaml.YAMLToJSON(b)
 		if err != nil {
 			return errors.Wrap(err)
 		}
-
-	case format == JsonOrYaml:
-		if len(b) > 0 && b[0] != byte('{') {
-			var err error
-			b, err = k8syaml.YAMLToJSON(b)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-		}
-		if err := swagger.UnmarshalJSON(b); err != nil {
-			return errors.Wrap(err)
-		}
+	}
+	if err := swagger.UnmarshalJSON(b); err != nil {
+		return errors.Wrap(err)
 	}
 
 	AddDefinitions(swagger.Definitions)

@@ -72,9 +72,13 @@ We use the `release-blocker` tag to track issues that need to be solved before t
 
 It is also a good idea to scan any [untriaged issues](https://github.com/kubernetes-sigs/kustomize/issues?q=is%3Aissue+is%3Aopen+label%3Aneeds-triage) for potential blockers we haven't labelled yet before proceeding.
 
-### Consider fetching new OpenAPI data
+### Consider updating the built-in OpenAPI union
 
-Ideally, Kustomize's embedded openapi data would cover a wide range of Kubernetes releases. But today, we only embed a specific version. This means updating that version can be disruptive to people who still use older Kubernetes versions and depend on API versions that were removed in later releases. However, by remaining out of date, we will not support GVKs introduced in more recent releases. So far, we have leaned in favour of the older versions, because some removed GVs are for very popular APIs. This should be constantly reevaluated until a better solution is in place. See issue https://github.com/kubernetes-sigs/kustomize/issues/5016.
+Kustomize embeds an OpenAPI union with one pinned source for every Kubernetes
+minor in its supported range. When advancing the newest minor, add its source
+without removing older sources; removed API versions must remain available to
+Kustomize users. Follow the acquisition, provenance, generation, and
+verification instructions in the [OpenAPI Readme].
 
 The Kubernetes OpenAPI data changes no more frequently than once per quarter.
 You can check the current builtin versions that kustomize is using with the

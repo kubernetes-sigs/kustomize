@@ -33,11 +33,15 @@ resources:
 - my_resource.yaml
 
 openapi:
-  version: v1.20.4
+  version: v1.36
 ```
 
-You can see what builtin kubernetes OpenAPI schemas are available with the command
-`kustomize openapi info`. 
+`v1.36` identifies the builtin union artifact whose newest Kubernetes minor is
+v1.36. The artifact contains definitions from Kubernetes v1.21.2 through
+v1.36.2 so that APIs removed from newer releases remain supported. The former
+`v1.21.2` value remains accepted as a compatibility alias for the same union
+artifact. You can see the builtin artifact available with the command
+`kustomize openapi info`.
 
 Here is an example of a custom resource we might want to edit with a custom OpenAPI schema
 file. It looks like this: 
@@ -214,4 +218,3 @@ patchesStrategicMerge:
         - name: server
           image: nginx
 ```
-

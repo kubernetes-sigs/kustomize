@@ -69,10 +69,6 @@ $(MYGOBIN)/controller-gen:
 $(MYGOBIN)/embedmd:
 	cd $(REPO_ROOT)/hack && go install github.com/campoy/embedmd
 
-.PHONY: $(MYGOBIN)/go-bindata
-$(MYGOBIN)/go-bindata:
-	cd $(REPO_ROOT)/hack && go install github.com/go-bindata/go-bindata/v3/go-bindata
-
 .PHONY: $(MYGOBIN)/go-apidiff
 $(MYGOBIN)/go-apidiff:
 	cd $(REPO_ROOT)/hack && go install github.com/joelanford/go-apidiff
