@@ -407,6 +407,8 @@ A chunk of code used by kustomize, but not necessarily
 compiled into kustomize, to generate and/or transform a
 kubernetes resource as part of a kustomization.
 
+External plugins are discovered by searching in the location specified by the `KUSTOMIZE_PLUGIN_HOME` environment variable, defaulting to `$XDG_CONFIG_HOME/kustomize/plugin` or `~/.config/kustomize/plugin`.
+
 Details [here](/docs/extending_kustomize).
 
 ## resource
