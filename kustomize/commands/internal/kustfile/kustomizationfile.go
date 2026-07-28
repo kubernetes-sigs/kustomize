@@ -16,7 +16,10 @@ import (
 	"golang.org/x/text/language"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/order"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -115,6 +118,7 @@ type kustomizationFile struct {
 	path           string
 	fSys           filesys.FileSystem
 	originalFields []*commentedField
+	original       *kyaml.RNode
 }
 
 // NewKustomizationFile returns a new instance.
@@ -172,6 +176,12 @@ func (mf *kustomizationFile) Read() (*types.Kustomization, error) {
 		return nil, err
 	}
 
+	original, err := kyaml.Parse(string(data))
+	if err != nil {
+		return nil, err
+	}
+	mf.original = original
+
 	k.FixKustomization()
 
 	if err := mf.parseCommentedFields(data); err != nil {
@@ -187,6 +197,22 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 	data, err := mf.marshal(kustomization)
 	if err != nil {
 		return err
+	}
+	if mf.original != nil {
+		updated, err := kyaml.Parse(string(data))
+		if err != nil {
+			return err
+		}
+		if err := comments.CopyComments(mf.original, updated); err != nil {
+			return err
+		}
+		if err := order.SyncOrder(mf.original, updated); err != nil {
+			return err
+		}
+		data, err = updated.String()
+		if err != nil {
+			return err
+		}
 	}
 	return mf.fSys.WriteFile(mf.path, data)
 }
