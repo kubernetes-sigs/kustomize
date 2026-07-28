@@ -468,3 +468,33 @@ func TestSetImage(t *testing.T) {
 		})
 	}
 }
+
+func TestSetImagePreservesResourceComments(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Keep this comment attached to the resource.
+  - https://example.com/resource.yaml
+  -
+images:
+- name: example
+  newName: example
+  newTag: "123"
+`))
+
+	cmd := newCmdSetImage(fSys)
+	if err := cmd.RunE(cmd, []string{"example=example:234"}); err != nil {
+		t.Fatalf("unexpected error from set image command: %v", err)
+	}
+
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	if err != nil {
+		t.Fatalf("unexpected read error: %v", err)
+	}
+
+	const expectedResourceComment = "resources:\n  # Keep this comment attached to the resource.\n  - https://example.com/resource.yaml"
+	if !strings.Contains(string(content), expectedResourceComment) {
+		t.Fatalf("resource comment was not preserved in place:\n%s", content)
+	}
+}
