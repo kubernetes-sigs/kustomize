@@ -54,7 +54,7 @@ func LoadConfigFromCRDs(
 }
 
 func makeNameToApiMap(content []byte) (result nameToApiMap, err error) {
-	if content[0] == '{' {
+	if len(content) > 0 && content[0] == '{' {
 		err = json.Unmarshal(content, &result)
 	} else {
 		err = yaml.Unmarshal(content, &result)
