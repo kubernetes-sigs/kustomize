@@ -7,8 +7,6 @@ tool (
 	github.com/campoy/embedmd
 	// for creating GitHub PRs & releases
 	github.com/cli/cli/cmd/gh
-	// for bundling non-go files into go binaries
-	github.com/go-bindata/go-bindata/v3/go-bindata
 	// for site serving
 	github.com/gohugoio/hugo
 	// for code linting
@@ -174,7 +172,6 @@ require (
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/getkin/kin-openapi v0.139.0 // indirect
 	github.com/ghostiam/protogetter v0.3.9 // indirect
-	github.com/go-bindata/go-bindata/v3 v3.1.3 // indirect
 	github.com/go-critic/go-critic v0.12.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
@@ -425,7 +422,6 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/image v0.42.0 // indirect
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
