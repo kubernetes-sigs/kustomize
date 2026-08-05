@@ -32,6 +32,46 @@ each in its own sub-directory.
    may soon be deleted, or they might be WIP plugins that will
    someday become examples or builtins.
 
+### Plugin home
+
+Kustomize looks up Exec and Go plugins relative to a plugin home
+directory. When resolving it, kustomize tries the following paths in
+order and uses the first one that exists:
+
+1. `$KUSTOMIZE_PLUGIN_HOME` — set this to override the default search
+   paths below (useful when plugins live outside `$HOME`).
+2. `$XDG_CONFIG_HOME/kustomize/plugin`.
+3. `$HOME/.config/kustomize/plugin` — used when `$XDG_CONFIG_HOME` is
+   unset.
+4. `$HOME/kustomize/plugin`.
+
+If none of the above exist, plugin resolution fails. On Windows,
+`$HOME` falls back to `$USERPROFILE`. See
+[`api/konfig/plugins.go`](../api/konfig/plugins.go) for the resolution
+code.
+
+The `generators` and `transformers` fields in `kustomization.yaml` are lists
+of file paths, each pointing to a plugin configuration file. The `apiVersion`
+and `kind` are read from that referenced configuration file, not from the list
+entry itself.
+
+From those fields kustomize derives the plugin directory
+`<plugin-home>/<apiVersion group>/<apiVersion version>/<lowercase kind>/` and
+looks for the plugin there in two forms: first an executable file named
+`<Kind>` (an Exec plugin), then `<Kind>.so` (a Go plugin).
+
+For example, given a configuration file referenced from `transformers`:
+
+```yaml
+apiVersion: someteam.example.com/v1
+kind: SedTransformer
+```
+
+kustomize looks for the executable
+`<plugin-home>/someteam.example.com/v1/sedtransformer/SedTransformer`, and
+failing that, the Go plugin
+`<plugin-home>/someteam.example.com/v1/sedtransformer/SedTransformer.so`.
+
 #### Testing
 
 Regardless of the [style](#plugin-styles) used to write a plugin,
