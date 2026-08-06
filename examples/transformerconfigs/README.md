@@ -517,6 +517,9 @@ nameReference:
       version: v1
     - path: spec/azureFile/secretName
       kind: PersistentVolume
+    - path: spec/listeners/tls/certificateRefs/name
+      kind: Gateway
+      group: gateway.networking.k8s.io
 
 - kind: Service
   version: v1
