@@ -9,12 +9,14 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 // Add the given prefix to the field
 type PrefixTransformerPlugin struct {
-	Prefix     string        `json:"prefix,omitempty" yaml:"prefix,omitempty"`
-	FieldSpecs types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
+	Prefix               string        `json:"prefix,omitempty" yaml:"prefix,omitempty"`
+	ExcludeLabelSelector string        `json:"excludeLabelSelector,omitempty" yaml:"excludeLabelSelector,omitempty"`
+	FieldSpecs           types.FsSlice `json:"fieldSpecs,omitempty" yaml:"fieldSpecs,omitempty"`
 }
 
 // TODO: Make this gvk skip list part of the config.
@@ -39,12 +41,23 @@ func (p *PrefixTransformerPlugin) Config(
 }
 
 func (p *PrefixTransformerPlugin) Transform(m resmap.ResMap) error {
+	var selector labels.Selector
+	if p.ExcludeLabelSelector != "" {
+		var err error
+		selector, err = labels.Parse(p.ExcludeLabelSelector)
+		if err != nil {
+			return err
+		}
+	}
 	// Even if the Prefix is empty we want to proceed with the
 	// transformation. This allows to add contextual information
 	// to the resources (AddNamePrefix).
 	for _, r := range m.Resources() {
 		// TODO: move this test into the filter (i.e. make a better filter)
 		if p.shouldSkip(r.OrgId()) {
+			continue
+		}
+		if selector != nil && selector.Matches(labels.Set(r.GetLabels())) {
 			continue
 		}
 		id := r.OrgId()
