@@ -49,9 +49,6 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	if len(p.Namespace) == 0 {
-		return nil
-	}
 	for _, r := range m.Resources() {
 		if r.IsNilOrEmpty() {
 			// Don't mutate empty objects?
@@ -59,21 +56,24 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 		}
 		transformedNamespace := p.Namespace
 		unsetOnly := p.UnsetOnly
-		setRoleBindingSubjects := p.SetRoleBindingSubjects
 		if annotations := r.GetAnnotations(); annotations[konfig.HelmGeneratedAnnotation] == "true" {
-			// Preserve namespaces emitted by Helm, but still fill any missing namespace fields.
+			// Preserve namespaces emitted by Helm, but still fill any missing
+			// namespace fields, including (cluster)role binding subjects.
 			unsetOnly = true
-			// Helm charts own their (cluster)role binding subject namespaces, so don't touch them.
-			setRoleBindingSubjects = namespace.NoSubjects
 			if helmNamespace := annotations[konfig.HelmChartNamespaceAnnotation]; helmNamespace != "" {
 				transformedNamespace = helmNamespace
 			}
+		}
+		if len(transformedNamespace) == 0 {
+			// No namespace to apply to this resource, e.g. the kustomization
+			// sets no namespace and only helmCharts[].namespace is given.
+			continue
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
 			Namespace:              transformedNamespace,
 			FsSlice:                p.FieldSpecs,
-			SetRoleBindingSubjects: setRoleBindingSubjects,
+			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
 			UnsetOnly:              unsetOnly,
 		}); err != nil {
 			return err

@@ -3,8 +3,10 @@ kind: Kustomization
 
 namespace: top-level-ns
 
+# The chart is shared with the sibling chartOnly example, so building requires
+# --load-restrictor LoadRestrictionsNone to reach above this kustomization root.
 helmGlobals:
-  chartHome: charts
+  chartHome: ../charts
 
 helmCharts:
 # test a contains a namespace
@@ -15,10 +17,8 @@ helmCharts:
 - name: namespace-fill
   releaseName: test-b
 
-# These generators are referenced as volumes by the Helm-generated Deployment.
-# Their name-suffix hash must survive in the Deployment's volume references when
-# the workload and the generated resource share a namespace.
-# See https://github.com/kubernetes-sigs/kustomize/issues/6077
+# Referenced as volumes by the Helm-generated Deployment; their name-suffix
+# hash must survive in its volume references (issue #6077).
 configMapGenerator:
 - name: mounted-config
   literals:

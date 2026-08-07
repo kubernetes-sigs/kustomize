@@ -878,7 +878,51 @@ metadata:
 `)
 }
 
-func TestNamespaceTransformer_HelmOriginDoesNotSetRoleBindingSubjects(t *testing.T) {
+func TestNamespaceTransformer_HelmChartNamespaceWithoutTopLevelNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	rmF := resmap.NewFactory(provider.NewDefaultDepProvider().GetResourceFactory())
+	rm, err := rmF.NewResMapFromBytes([]byte(`apiVersion: v1
+kind: Service
+metadata:
+  name: helm-svc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plain-svc
+`))
+	require.NoError(t, err)
+	r := rm.Resources()[0]
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmChartNamespaceAnnotation, "helm-ns")))
+
+	// The transformer itself has no namespace; the Helm-generated resource must
+	// still get its chart namespace while other resources are left untouched.
+	rm, err = th.RunTransformerFromResMap(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+`+defaultFieldSpecs, rm)
+	require.NoError(t, err)
+	require.NoError(t, rm.RemoveOriginAnnotations())
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: v1
+kind: Service
+metadata:
+  name: helm-svc
+  namespace: helm-ns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plain-svc
+`)
+}
+
+func TestNamespaceTransformer_HelmOriginFillsUnsetRoleBindingSubjects(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("NamespaceTransformer")
 	defer th.Reset()
@@ -891,6 +935,9 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: default
+- kind: ServiceAccount
+  name: default
+  namespace: helm-owned-ns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -909,8 +956,8 @@ metadata:
 `+defaultFieldSpecs, rm)
 	require.NoError(t, err)
 	require.NoError(t, rm.RemoveOriginAnnotations())
-	// metadata.namespace is filled, but the "default" subject namespace is left
-	// untouched because Helm charts own their (cluster)role binding subjects.
+	// The unset "default" subject namespace is filled like any other missing
+	// namespace field, while the one Helm rendered is preserved.
 	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -923,5 +970,9 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
+  namespace: test
+- kind: ServiceAccount
+  name: default
+  namespace: helm-owned-ns
 `)
 }
