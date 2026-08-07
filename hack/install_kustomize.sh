@@ -79,9 +79,11 @@ function find_release_url() {
   local arch=$3
 
   echo "${releases}" |\
-    grep "browser_download.*${opsys}_${arch}" |\
-    cut -d '"' -f 4 |\
-    sort -V | tail -n 1
+    grep -oE '"browser_download_url"[[:space:]]*:[[:space:]]*"[^"]*"' |\
+    cut -d '"' -f4 |\
+    grep "${opsys}_${arch}" |\
+    sort -V |\
+    tail -n 1
 }
 
 where="$(readlink_f "$where")/"
@@ -134,11 +136,15 @@ s390x)
     ;;
 esac
 
-# You can authenticate by exporting the GITHUB_TOKEN in the environment
-if [[ -z "${GITHUB_TOKEN}" ]]; then
-    releases=$(curl -s "$release_url")
+if [[ -n "$releases_file" ]]; then
+  releases=$(cat "$releases_file")
 else
-    releases=$(curl -s "$release_url" --header "Authorization: Bearer ${GITHUB_TOKEN}")
+  # You can authenticate by exporting the GITHUB_TOKEN in the environment
+  if [[ -z "${GITHUB_TOKEN}" ]]; then
+      releases=$(curl -s "$release_url")
+  else
+      releases=$(curl -s "$release_url" --header "Authorization: Bearer ${GITHUB_TOKEN}")
+  fi
 fi
 
 if [[ $releases == *"Bad credentials"* ]]; then

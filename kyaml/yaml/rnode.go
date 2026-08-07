@@ -1065,7 +1065,7 @@ func deAnchor(yn *yaml.Node) (res *yaml.Node, err error) {
 		}
 		return yn, nil
 	default:
-		return nil, fmt.Errorf("cannot deAnchor kind %q", yn.Kind)
+		return nil, fmt.Errorf("cannot deAnchor kind %d", yn.Kind)
 	}
 }
 

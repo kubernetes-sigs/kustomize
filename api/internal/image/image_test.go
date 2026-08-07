@@ -75,6 +75,14 @@ func TestIsImageMatched(t *testing.T) {
 			name:      "nginx",
 			isMatched: false,
 		},
+		{
+			// A name that is not a valid regexp must not panic. It can't
+			// compile, so it should simply match nothing.
+			testName:  "name is an invalid regexp",
+			value:     "nginx",
+			name:      "[",
+			isMatched: false,
+		},
 	}
 
 	for _, tc := range testCases {

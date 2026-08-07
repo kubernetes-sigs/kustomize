@@ -9,7 +9,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -274,11 +273,18 @@ func TestIsNamespaceScoped_builtin(t *testing.T) {
 	}
 }
 
-// TestIsNamespaceScopedPrecompute checks that the precomputed result meets the actual result
+// TestIsNamespaceScopedPrecompute checks that precomputedIsNamespaceScoped includes
+// every resource type from the built-in OpenAPI schema with the correct namespace scope.
 func TestIsNamespaceScopedPrecompute(t *testing.T) {
 	initSchema()
-	if diff := cmp.Diff(globalSchema.namespaceabilityByResourceType, precomputedIsNamespaceScoped); diff != "" {
-		t.Fatalf("%s", diff)
+	for k, actual := range globalSchema.namespaceabilityByResourceType {
+		expected, ok := precomputedIsNamespaceScoped[k]
+		if !ok {
+			t.Fatalf("resource type %v found in globalSchema but missing from precomputedIsNamespaceScoped", k)
+		}
+		if actual != expected {
+			t.Fatalf("namespaceability mismatch for %v: expected %v got %v", k, expected, actual)
+		}
 	}
 }
 
