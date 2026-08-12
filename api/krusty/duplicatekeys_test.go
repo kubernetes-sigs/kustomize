@@ -43,5 +43,5 @@ spec:
 	m := th.Run(".", th.MakeDefaultOptions())
 	_, err := m.AsYaml()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "mapping key \"env\" already defined")
+	assert.Contains(t, err.Error(), "key \"env\" already set in map")
 }
