@@ -1002,3 +1002,80 @@ metadata:
   name: pre-app-config-dev-7266b7f2m9
 `)
 }
+
+func TestReplacementTransformerWithRejectLabelSelector(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("/app", `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deploy1.yaml
+  - deploy2.yaml
+
+configMapGenerator:
+- name: config
+  literals:
+  - PAUSED=true
+
+replacements:
+- source:
+    kind: ConfigMap
+    name: config
+    fieldPath: data.PAUSED
+  targets:
+  - select:
+      kind: Deployment
+    reject:
+      - kind: Deployment
+        labelSelector: "app=test2"
+    fieldPaths:
+      - spec.paused
+`)
+	th.WriteF("/app/deploy1.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test1
+  name: test1
+spec:
+  paused: false
+`)
+	th.WriteF("/app/deploy2.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test2
+  name: test2
+spec:
+  paused: false
+`)
+	m := th.Run("/app", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  PAUSED: "true"
+kind: ConfigMap
+metadata:
+  name: config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test1
+  name: test1
+spec:
+  paused: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test2
+  name: test2
+spec:
+  paused: false
+`)
+}

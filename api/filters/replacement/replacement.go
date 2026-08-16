@@ -127,47 +127,56 @@ func applyReplacement(nodes []*yaml.RNode, value *yaml.RNode, targetSelectors []
 				return nil, err
 			}
 
-			// filter targets by label and annotation selectors
-			selectByAnnoAndLabel, err := selectByAnnoAndLabel(possibleTarget, selector)
+			matchSelectId := false
+			for _, id := range ids {
+				if tsr.Selects(id) {
+					matchSelectId = true
+					break
+				}
+			}
+			if !matchSelectId {
+				continue
+			}
+
+			matchSelectLabels, err := matchesAnnoAndLabelSelector(possibleTarget, selector.Select)
 			if err != nil {
 				return nil, err
 			}
-			if !selectByAnnoAndLabel {
+			if !matchSelectLabels {
 				continue
 			}
 
-			if tsr.RejectsAny(ids) {
-				continue
-			}
-
-			// filter targets by matching resource IDs
-			for _, id := range ids {
-				if tsr.Selects(id) {
-					err := copyValueToTarget(possibleTarget, value, selector)
+			rejected := false
+			for i, rejectRule := range selector.Reject {
+				matchRejectId := false
+				for _, id := range ids {
+					if tsr.MatchRejectId(i, id) {
+						matchRejectId = true
+						break
+					}
+				}
+				if matchRejectId {
+					matchRejectLabels, err := matchesAnnoAndLabelSelector(possibleTarget, rejectRule)
 					if err != nil {
 						return nil, err
 					}
-					break
+					if matchRejectLabels {
+						rejected = true
+						break
+					}
 				}
+			}
+			if rejected {
+				continue
+			}
+
+			err = copyValueToTarget(possibleTarget, value, selector)
+			if err != nil {
+				return nil, err
 			}
 		}
 	}
 	return nodes, nil
-}
-
-func selectByAnnoAndLabel(n *yaml.RNode, t *types.TargetSelector) (bool, error) {
-	if matchesSelect, err := matchesAnnoAndLabelSelector(n, t.Select); !matchesSelect || err != nil {
-		return false, err
-	}
-	for _, reject := range t.Reject {
-		if reject.AnnotationSelector == "" && reject.LabelSelector == "" {
-			continue
-		}
-		if m, err := matchesAnnoAndLabelSelector(n, reject); m || err != nil {
-			return false, err
-		}
-	}
-	return true, nil
 }
 
 func matchesAnnoAndLabelSelector(n *yaml.RNode, selector *types.Selector) (bool, error) {
