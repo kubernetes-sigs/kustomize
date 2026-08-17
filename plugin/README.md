@@ -2,7 +2,21 @@
 
 This directory holds [kustomize plugins][extending kustomize],
 each in its own sub-directory.
- 
+
+### Plugin Discovery & Environment Variables
+
+When executing external plugins, Kustomize locates plugin scripts and binaries by searching for a plugin root directory in the following order of precedence:
+
+1. **`$KUSTOMIZE_PLUGIN_HOME`**: If the `KUSTOMIZE_PLUGIN_HOME` environment variable is defined, Kustomize searches for plugins directly within this directory.
+2. **`$XDG_CONFIG_HOME/kustomize/plugin`**: If `XDG_CONFIG_HOME` is defined, Kustomize searches in the `kustomize/plugin` subdirectory.
+3. **`~/.config/kustomize/plugin`**: The default XDG configuration directory within the user's home directory.
+4. **`~/kustomize/plugin`**: Fallback location in the user's home directory.
+
+To override the default discovery path and point Kustomize to a custom plugin location:
+```bash
+export KUSTOMIZE_PLUGIN_HOME=$HOME/custom-kustomize-plugins
+```
+
 ### Directories
  
  * `builtin`
