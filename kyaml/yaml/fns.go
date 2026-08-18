@@ -742,8 +742,10 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		// only apply the style if there is not an existing style
 		// or we want to override it
 		if !s.OverrideStyle || field.YNode().Style == 0 {
-			// keep the original style if it exists
-			s.Value.YNode().Style = field.YNode().Style
+			// keep the original style if it exists, unless tags differ for scalars
+			if s.Value.YNode().Kind != yaml.ScalarNode || field.YNode().Kind != yaml.ScalarNode || s.Value.YNode().Tag == field.YNode().Tag {
+				s.Value.YNode().Style = field.YNode().Style
+			}
 		}
 		// need to def ref the Node since field is ephemeral
 		field.SetYNode(s.Value.YNode())
