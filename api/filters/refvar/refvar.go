@@ -80,7 +80,7 @@ func (f Filter) setScalar(node *yaml.RNode) error {
 		return nil
 	}
 	v := DoReplacements(node.YNode().Value, f.MappingFunc)
-	updateNodeValue(node.YNode(), v)
+	setReplacedValue(node.YNode(), v)
 	return nil
 }
 
@@ -96,7 +96,7 @@ func (f Filter) setMap(node *yaml.RNode) error {
 			continue
 		}
 		newValue := DoReplacements(contents[i+1].Value, f.MappingFunc)
-		updateNodeValue(contents[i+1], newValue)
+		setReplacedValue(contents[i+1], newValue)
 	}
 	return nil
 }
@@ -107,7 +107,19 @@ func (f Filter) setSeq(node *yaml.RNode) error {
 			return fmt.Errorf("invalid value type expect a string")
 		}
 		newValue := DoReplacements(item.Value, f.MappingFunc)
-		updateNodeValue(item, newValue)
+		setReplacedValue(item, newValue)
 	}
 	return nil
+}
+
+// setReplacedValue updates the node with the result of a variable
+// replacement, unless no replacement actually happened (i.e. the value
+// contained no $(VAR) reference and was returned unchanged). In that case
+// the node is left untouched so its original style/tag (e.g. quoting that
+// disambiguates strings like "yes" or "no" from YAML 1.1 booleans) survives.
+func setReplacedValue(node *yaml.Node, newValue interface{}) {
+	if s, ok := newValue.(string); ok && s == node.Value {
+		return
+	}
+	updateNodeValue(node, newValue)
 }
