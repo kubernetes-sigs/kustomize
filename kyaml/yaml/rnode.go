@@ -17,7 +17,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/sliceutil"
 	"sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml/internal/k8sgen/pkg/labels"
-	k8syaml "sigs.k8s.io/yaml"
 )
 
 // MakeNullNode returns an RNode that represents an empty document.
@@ -984,11 +983,20 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	b, err := k8syaml.YAMLToJSONStrict([]byte(s))
-	if err != nil {
-		return nil, errors.Wrap(err)
+	if yNode.Kind == SequenceNode {
+		var a []interface{}
+		if err := Unmarshal([]byte(s), &a); err != nil {
+			return nil, err
+		}
+		return json.Marshal(a)
 	}
-	return b, nil
+
+	m := map[string]interface{}{}
+	if err := Unmarshal([]byte(s), &m); err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(m)
 }
 
 // UnmarshalJSON overwrites this RNode with data from []byte.
