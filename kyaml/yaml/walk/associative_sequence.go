@@ -231,8 +231,12 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 	var err error
 	if len(valuesList) > 0 {
 		if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-			// items from patches are needed to be prepended. so we append the
-			// dest to itemsToBeAdded
+			// First update dest with the patched items so that patches are not overwritten
+			dest, err = appendListNode(dest, itemsToBeAdded, validKeys)
+			if err != nil {
+				return nil, err
+			}
+			// Then use itemsToBeAdded to establish the prepended order
 			dest, err = appendListNode(itemsToBeAdded, dest, validKeys)
 		} else {
 			// append the items
