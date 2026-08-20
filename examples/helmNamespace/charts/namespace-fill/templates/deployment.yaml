@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+        - name: secret
+          mountPath: /etc/secret
+      volumes:
+      - name: config
+        configMap:
+          name: mounted-config
+      - name: secret
+        secret:
+          secretName: mounted-secret
