@@ -58,6 +58,9 @@ func (o *Options) Validate(_ []string) error {
 			return fmt.Errorf("--short and --output are mutually exclusive")
 		}
 	}
+	if o.Output != "" && o.Output != "yaml" && o.Output != "json" {
+		return fmt.Errorf("--output must be 'yaml' or 'json'")
+	}
 	return nil
 }
 
