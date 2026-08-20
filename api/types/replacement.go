@@ -99,18 +99,15 @@ func (tsr *TargetSelectorRegex) Selects(id resid.ResId) bool {
 	return tsr.selectRegex.MatchGvk(id.Gvk) && tsr.selectRegex.MatchName(id.Name) && tsr.selectRegex.MatchNamespace(id.Namespace)
 }
 
-func (tsr *TargetSelectorRegex) RejectsAny(ids []resid.ResId) bool {
-	for _, r := range tsr.rejectRegex {
-		if r.selector.ResId.IsEmpty() {
-			continue
-		}
-		for _, id := range ids {
-			if r.MatchGvk(id.Gvk) && r.MatchName(id.Name) && r.MatchNamespace(id.Namespace) {
-				return true
-			}
-		}
+func (tsr *TargetSelectorRegex) MatchRejectId(index int, id resid.ResId) bool {
+	if index < 0 || index >= len(tsr.rejectRegex) {
+		return false
 	}
-	return false
+	r := tsr.rejectRegex[index]
+	if r.selector.ResId.IsEmpty() {
+		return true // Empty ResId matches any ResId.
+	}
+	return r.MatchGvk(id.Gvk) && r.MatchName(id.Name) && r.MatchNamespace(id.Namespace)
 }
 
 // FieldOptions refine the interpretation of FieldPaths.
