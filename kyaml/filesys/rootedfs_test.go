@@ -4,9 +4,11 @@
 package filesys
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"testing/fstest"
 
@@ -31,6 +33,9 @@ func TestRootedFS(t *testing.T) {
 			fSys, root := setup(t)
 			require.NoError(t, fSys.MkdirAll(filepath.Join(root, "nested")))
 			require.NoError(t, fSys.WriteFile(filepath.Join(root, "nested", "file.yaml"), []byte("content")))
+			if isOnDiskFileSystem(fSys) {
+				forceMetadataUpdateOnWindows(t, root)
+			}
 
 			rooted, err := NewRootedFS(fSys, root)
 			require.NoError(t, err)
@@ -64,6 +69,37 @@ func TestRootedFS(t *testing.T) {
 			require.NoError(t, rooted.Close())
 		})
 	}
+}
+
+func forceMetadataUpdateOnWindows(t *testing.T, root string) {
+	t.Helper()
+	if runtime.GOOS != "windows" {
+		return
+	}
+
+	// Directory enumeration and Stat can temporarily observe different MFT metadata.
+	// Rewriting the current timestamp synchronizes them before fstest.TestFS compares them.
+	// See https://go.dev/issue/42637.
+	require.NoError(t, filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to walk %q: %w", path, err)
+		}
+		entryInfo, err := entry.Info()
+		if err != nil {
+			return fmt.Errorf("failed to get directory entry info for %q: %w", path, err)
+		}
+		statInfo, err := os.Stat(path)
+		if err != nil {
+			return fmt.Errorf("failed to stat %q: %w", path, err)
+		}
+		if entryInfo.ModTime() == statInfo.ModTime() {
+			return nil
+		}
+		if err := os.Chtimes(path, statInfo.ModTime(), statInfo.ModTime()); err != nil {
+			return fmt.Errorf("failed to synchronize metadata for %q: %w", path, err)
+		}
+		return nil
+	}))
 }
 
 func TestRootedFSOnDiskRejectsSymlinkEscape(t *testing.T) {
