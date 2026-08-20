@@ -65,3 +65,64 @@ func TestRestrictionRootOnly(t *testing.T) {
 		t.Fatalf("unexpected err: %s", err)
 	}
 }
+
+func TestRestrictionRootAndAncestors(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	root := filesys.ConfirmedDir(
+		filesys.Separator + filepath.Join("tmp", "foo", "bar"))
+
+	// Legal: file in root directory.
+	path := filepath.Join(string(root), "config.yaml")
+	fSys.Create(path)
+	p, err := RestrictionRootAndAncestors(fSys, root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p != path {
+		t.Fatalf("expected '%s', got '%s'", path, p)
+	}
+
+	// Legal: file in subdirectory of root.
+	path = filepath.Join(string(root), "sub", "config.yaml")
+	fSys.Create(path)
+	p, err = RestrictionRootAndAncestors(fSys, root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p != path {
+		t.Fatalf("expected '%s', got '%s'", path, p)
+	}
+
+	// Legal: file in parent directory (ancestor).
+	path = filepath.Join(filesys.Separator+"tmp", "foo", "config.yaml")
+	fSys.Create(path)
+	p, err = RestrictionRootAndAncestors(fSys, root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p != path {
+		t.Fatalf("expected '%s', got '%s'", path, p)
+	}
+
+	// Legal: file in grandparent directory (ancestor).
+	path = filepath.Join(filesys.Separator+"tmp", "config.yaml")
+	fSys.Create(path)
+	p, err = RestrictionRootAndAncestors(fSys, root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p != path {
+		t.Fatalf("expected '%s', got '%s'", path, p)
+	}
+
+	// Illegal: file in sibling directory (not ancestor or descendant).
+	path = filepath.Join(filesys.Separator+"tmp", "other", "config.yaml")
+	fSys.Create(path)
+	_, err = RestrictionRootAndAncestors(fSys, root, path)
+	if err == nil {
+		t.Fatal("should have an error for sibling directory")
+	}
+	if !strings.Contains(err.Error(), "is not in or below") {
+		t.Fatalf("unexpected err: %s", err)
+	}
+}
