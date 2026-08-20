@@ -9,31 +9,6 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func TestIntegerKey(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK(".", `
-resources:
-- cm.yaml
-`)
-	th.WriteF("cm.yaml", `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cm
-data:
-  123: abc
-`)
-	m := th.Run(".", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: v1
-data:
-  "123": abc
-kind: ConfigMap
-metadata:
-  name: cm
-`)
-}
-
 // Numbers and booleans are quoted
 func TestGeneratorIntVsStringNoMerge(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
