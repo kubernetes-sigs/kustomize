@@ -1002,3 +1002,193 @@ metadata:
   name: pre-app-config-dev-7266b7f2m9
 `)
 }
+
+func TestReplacementsCreateBoolFieldSurvivesUnrelatedStrategicMergePatch(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK(".", `
+resources:
+- deployment.yaml
+components:
+- components/add-volume
+patches:
+- path: patch.yaml
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+      - name: myapp
+        image: myimage
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    metadata:
+      annotations:
+        foo: bar
+`)
+	th.WriteC("components/add-volume", `
+configMapGenerator:
+- name: volume-config
+  literals:
+  - readOnly=true
+  - mountPath=/mnt/myvolume
+replacements:
+- source:
+    name: volume-config
+    kind: ConfigMap
+    fieldPath: data.readOnly
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.0.volumeMounts.[name=myvolume].readOnly
+    options:
+      create: true
+- source:
+    name: volume-config
+    kind: ConfigMap
+    fieldPath: data.mountPath
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.0.volumeMounts.[name=myvolume].mountPath
+    options:
+      create: true
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    metadata:
+      annotations:
+        foo: bar
+    spec:
+      containers:
+      - image: myimage
+        name: myapp
+        volumeMounts:
+        - mountPath: /mnt/myvolume
+          name: myvolume
+          readOnly: true
+---
+apiVersion: v1
+data:
+  mountPath: /mnt/myvolume
+  readOnly: "true"
+kind: ConfigMap
+metadata:
+  name: volume-config-kbkmhkchcd
+`)
+}
+
+func TestReplacementsCreateBoolFieldFromLocalConfigSurvivesUnrelatedStrategicMergePatch(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t)
+	defer th.Reset()
+
+	th.WriteK(".", `
+resources:
+- deployment.yaml
+components:
+- components/add-volume
+patches:
+- path: patch.yaml
+`)
+	th.WriteF("deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+      - name: myapp
+        image: myimage
+`)
+	th.WriteF("patch.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    metadata:
+      annotations:
+        foo: bar
+`)
+	th.WriteC("components/add-volume", `
+resources:
+- local-config.yaml
+replacements:
+- source:
+    kind: VolumeConfig
+    name: volume-config
+    fieldPath: spec.readOnly
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.0.volumeMounts.[name=myvolume].readOnly
+    options:
+      create: true
+- source:
+    kind: VolumeConfig
+    name: volume-config
+    fieldPath: spec.mountPath
+  targets:
+  - select:
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.0.volumeMounts.[name=myvolume].mountPath
+    options:
+      create: true
+`)
+	th.WriteF("components/add-volume/local-config.yaml", `
+apiVersion: example.com/v1
+kind: VolumeConfig
+metadata:
+  name: volume-config
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  readOnly: true
+  mountPath: /mnt/myvolume
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    metadata:
+      annotations:
+        foo: bar
+    spec:
+      containers:
+      - image: myimage
+        name: myapp
+        volumeMounts:
+        - mountPath: /mnt/myvolume
+          name: myvolume
+          readOnly: true
+`)
+}
