@@ -174,3 +174,17 @@ func TestLoadCRDs(t *testing.T) {
 		t.Fatalf("expected\n %v\n but got\n %v\n", expectedTc, actualTc)
 	}
 }
+
+func TestLoadCRDsEmptyFile(t *testing.T) {
+	// A crds entry pointing at a zero-byte file should contribute nothing
+	// rather than crashing the build.
+	fSys := filesys.MakeFsInMemory()
+	err := fSys.WriteFile("/testpath/empty.json", []byte(""))
+	require.NoError(t, err)
+	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, "/testpath", fSys)
+	require.NoError(t, err)
+
+	actualTc, err := LoadConfigFromCRDs(ldr, []string{"empty.json"})
+	require.NoError(t, err)
+	require.Equal(t, &builtinconfig.TransformerConfig{}, actualTc)
+}
