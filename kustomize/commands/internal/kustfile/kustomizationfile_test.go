@@ -4,6 +4,7 @@
 package kustfile
 
 import (
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
@@ -334,6 +335,57 @@ patchesStrategicMerge:
 
 	if diff := cmp.Diff(kustomizationContentWithComments, bytes); diff != "" {
 		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
+// TestPreserveBlockScalarCommentLikeContent guards against
+// https://github.com/kubernetes-sigs/kustomize/issues/6225: lines beginning
+// with '#' inside a literal block scalar are scalar content, not YAML
+// comments, and must not be duplicated into the following field on write.
+func TestPreserveBlockScalarCommentLikeContent(t *testing.T) {
+	kustomizationContentWithBlockScalar := []byte(
+		`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+transformers:
+- |-
+  apiVersion: widgets.example.com/v1
+  kind: ExampleTransformer
+  metadata:
+    name: example-transformer
+  # this looks like a comment but is literal block scalar content
+  # and must not be duplicated when other fields are rewritten
+
+images:
+- name: example-service
+  newTag: example-old
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContentWithBlockScalar)
+
+	// Simulate repeated `kustomize edit set image` invocations: each one
+	// opens and re-parses the file from scratch, like RunSetImage does.
+	var mf *kustomizationFile
+	for i := 0; i < 3; i++ {
+		var err error
+		mf, err = NewKustomizationFile(fSys)
+		if err != nil {
+			t.Fatalf("Unexpected Error: %v", err)
+		}
+		kustomization, err := mf.Read()
+		if err != nil {
+			t.Fatalf("Unexpected Error: %v", err)
+		}
+		kustomization.Images[0].NewTag = fmt.Sprintf("example-new-%d", i)
+		if err = mf.Write(kustomization); err != nil {
+			t.Fatalf("Unexpected Error: %v", err)
+		}
+	}
+
+	bytes, _ := fSys.ReadFile(mf.path)
+	got := strings.Count(string(bytes), "this looks like a comment")
+	if got != 1 {
+		t.Errorf("expected block scalar comment-like line to appear exactly once, got %d\ncontent:\n%s", got, string(bytes))
 	}
 }
 
