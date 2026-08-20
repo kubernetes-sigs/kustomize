@@ -129,8 +129,10 @@ Now, create `kustomization.yaml` add all your resources.
 <!-- @createKustomizationYaml @testE2EAgainstLatestRelease-->
 ```
 cat <<EOF >$BASE/kustomization.yaml
-commonLabels:
-  app: hello
+labels:
+- includeSelectors: true
+  pairs:
+    app: hello
 
 resources:
 - deployment.yaml
