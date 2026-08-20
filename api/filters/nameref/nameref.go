@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -309,6 +310,15 @@ func (f Filter) sameCurrentNamespaceAsReferrer() sieveFunc {
 	}
 }
 
+// scopeUnknown returns true if the openapi data does not know whether the
+// resource's kind is namespace-scoped or cluster-scoped.  Kustomize assumes
+// such kinds are namespace-scoped, but they may in fact be cluster-scoped
+// (e.g. a cluster-scoped custom resource).
+func scopeUnknown(r *resource.Resource) bool {
+	_, found := openapi.IsNamespaceScoped(r.GetGvk().AsTypeMeta())
+	return !found
+}
+
 // selectReferral picks the best referral from a list of candidates.
 func (f Filter) selectReferral(
 	// The name referral that may need to be updated.
@@ -319,7 +329,18 @@ func (f Filter) selectReferral(
 	candidates = doSieve(candidates, previousNameMatches(oldName))
 	candidates = doSieve(candidates, previousIdSelectedByGvk(&f.ReferralTarget))
 	candidates = doSieve(candidates, f.roleRefFilter())
-	candidates = doSieve(candidates, f.sameCurrentNamespaceAsReferrer())
+	if sameNsCandidates := doSieve(
+		candidates, f.sameCurrentNamespaceAsReferrer()); len(sameNsCandidates) > 0 {
+		candidates = sameNsCandidates
+	} else {
+		// No candidate appears to share the referrer's namespace, but the
+		// namespace comparison above is meaningless for candidates whose
+		// scope had to be guessed at: they may actually be cluster-scoped,
+		// or a namespace transformation may have moved them.  Suppressing
+		// the update in that case would leave a dangling name reference.
+		// See issue #5696.
+		candidates = doSieve(candidates, scopeUnknown)
+	}
 	if len(candidates) == 1 {
 		return candidates[0], nil
 	}
