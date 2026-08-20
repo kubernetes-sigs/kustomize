@@ -194,6 +194,38 @@ data:
 				FieldSpec: types.FieldSpec{Path: "data/slice2"},
 			},
 		},
+		"quoted string with no var reference is left untouched": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: SHOULD_BE_NO
+          value: "no"`,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: SHOULD_BE_NO
+          value: "no"`,
+			filter: Filter{
+				MappingFunc: makeMf(map[string]interface{}{
+					"VAR": int64(5),
+				}),
+				FieldSpec: types.FieldSpec{Path: "spec/template/spec/containers/env/value"},
+			},
+		},
 		"null value": {
 			input: `
 apiVersion: apps/v1

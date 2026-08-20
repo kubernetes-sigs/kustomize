@@ -2274,3 +2274,72 @@ metadata:
   name: theConfigMap-hdd8h8cgdt
 `)
 }
+
+// TestVariableRefDoesNotClobberUnrelatedQuotedStrings ensures that declaring
+// vars, and running the var-reference filter over fields that don't actually
+// contain a $(VAR) reference, does not strip the quoting off of other
+// scalars in those same fields (e.g. env values "yes"/"no" that YAML 1.1
+// would otherwise interpret as booleans).
+func TestVariableRefDoesNotClobberUnrelatedQuotedStrings(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- resources.yaml
+generators:
+- configmaps.yaml
+vars:
+- name: VARIABLE
+  objref:
+    kind: ConfigMap
+    name: var-source
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.VARIABLE
+`)
+	th.WriteF("resources.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-value-conversion
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx:1.25
+      env:
+      - name: SHOULD_BE_NO
+        value: "no"
+      - name: SHOULD_BE_YES
+        value: "yes"
+`)
+	th.WriteF("configmaps.yaml", `
+apiVersion: builtin
+kind: ConfigMapGenerator
+metadata:
+  name: var-source
+literals:
+- VARIABLE=value
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-value-conversion
+spec:
+  containers:
+  - env:
+    - name: SHOULD_BE_NO
+      value: "no"
+    - name: SHOULD_BE_YES
+      value: "yes"
+    image: nginx:1.25
+    name: nginx-container
+---
+apiVersion: v1
+data:
+  VARIABLE: value
+kind: ConfigMap
+metadata:
+  name: var-source-mcc7828fcc
+`)
+}
