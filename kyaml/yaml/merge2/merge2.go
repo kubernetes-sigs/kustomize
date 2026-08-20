@@ -100,6 +100,10 @@ func (m Merger) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yam
 	}
 	// Override value
 	if nodes.Origin() != nil {
+		if nodes.Dest() != nil && nodes.Dest().YNode() != nil {
+			nodes.Dest().SetYNode(nodes.Origin().YNode())
+			return nodes.Dest(), nil
+		}
 		return nodes.Origin(), nil
 	}
 	// Keep
