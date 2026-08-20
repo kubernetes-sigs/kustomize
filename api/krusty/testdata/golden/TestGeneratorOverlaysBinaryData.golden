@@ -1,0 +1,10 @@
+apiVersion: v1
+binaryData:
+  data.bin: |
+    /2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbG
+    xv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hl
+    bGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2
+    hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv
+kind: ConfigMap
+metadata:
+  name: p1-com1-96gmmt6gt5

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: circus
+spec:
+  containers:
+  - command:
+    - echo
+    - base1-kelley
+    - base2-grimaldi
+    env:
+    - name: P1
+      value: base1-kelley
+    - name: P2
+      value: base2-grimaldi
+    image: ring
+    name: ring
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: base1-kelley
+spec:
+  containers:
+  - command:
+    - echo
+    - base1-kelley
+    env:
+    - name: FOO
+      value: base1-kelley
+    image: smile
+    name: smile
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: base2-grimaldi
+spec:
+  containers:
+  - command:
+    - echo
+    - base2-grimaldi
+    env:
+    - name: FOO
+      value: base2-grimaldi
+    image: dance
+    name: dance

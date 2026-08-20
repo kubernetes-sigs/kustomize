@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resourceNames:
+  - cluster-autoscaler-h8mmcct52k
+  resources:
+  - leases
+  verbs:
+  - get
+  - update
+---
+apiVersion: v1
+data:
+  AWS_REGION: us-east-1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-h8mmcct52k
+  namespace: kube-system

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    my-annotation: my-namespace
+  labels:
+    my-label: my-namespace
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: busybox
+        name: app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace

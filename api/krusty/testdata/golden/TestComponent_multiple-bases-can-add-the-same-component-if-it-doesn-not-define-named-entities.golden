@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxy-prod
+spec:
+  type: Logical
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxy-a
+  namespace: prod
+spec:
+  type: Logical
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxy-b
+  namespace: prod
+spec:
+  type: Logical

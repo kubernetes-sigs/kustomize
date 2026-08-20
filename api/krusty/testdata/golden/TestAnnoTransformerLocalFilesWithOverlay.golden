@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: ../base/kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+  name: myNs
+---
+apiVersion: v1
+kind: Role
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: ../base/kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+  name: p-b-myRole
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: ../base/kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+  name: p-b-myService
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: ../base/kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+  name: p-b-myDep
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+  name: p-myService2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+  name: myNs2

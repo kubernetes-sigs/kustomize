@@ -211,35 +211,7 @@ spec:
 	require.NoError(t, resource.ApplySmPatch(patch))
 	bytes, err := resource.AsYAML()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    baseAnno: This is a base annotation
-  labels:
-    app: mungebot
-    foo: bar
-  name: bingo
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      foo: bar
-  template:
-    metadata:
-      labels:
-        app: mungebot
-    spec:
-      containers:
-      - env:
-        - name: foo
-          value: bar
-        image: nginx
-        name: nginx
-        ports:
-        - containerPort: 777
-        - containerPort: 80
-`, string(bytes))
+	assertGoldenYAML(t, bytes)
 }
 
 func TestApplySmPatch_2(t *testing.T) {
@@ -271,18 +243,7 @@ spec:
 	require.NoError(t, resource.ApplySmPatch(patch))
 	bytes, err := resource.AsYAML()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    A: X
-    C: Z
-    D: W
-  baz:
-    hello: world
-`, string(bytes))
+	assertGoldenYAML(t, bytes)
 }
 
 func TestApplySmPatch_3(t *testing.T) {
@@ -307,13 +268,7 @@ spec:
 	require.NoError(t, resource.ApplySmPatch(patch))
 	bytes, err := resource.AsYAML()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: v1
-kind: Deployment
-metadata:
-  name: clown
-spec:
-  numReplicas: 999
-`, string(bytes))
+	assertGoldenYAML(t, bytes)
 }
 
 // regression test for https://github.com/kubernetes-sigs/kustomize/issues/5031
@@ -489,7 +444,7 @@ spec:
 			require.NoError(t, resource.ApplySmPatch(patch))
 			bytes, err := resource.AsYAML()
 			require.NoError(t, err)
-			assert.Equal(t, tc.expectedOutput, string(bytes))
+			assertGoldenYAML(t, bytes)
 		})
 	}
 }
@@ -608,7 +563,7 @@ metadata:
 			require.NoError(t, resource.ApplySmPatch(patch))
 			bytes, err := resource.AsYAML()
 			require.NoError(t, err)
-			assert.Equal(t, tc.expectedOutput, string(bytes))
+			assertGoldenYAML(t, bytes)
 		})
 	}
 }
@@ -639,14 +594,7 @@ data:
 	resource.MergeDataMapFrom(patch)
 	bytes, err := resource.AsYAML()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: v1
-data:
-  fruit: pear
-  spaceship: enterprise
-kind: BlahBlah
-metadata:
-  name: clown
-`, string(bytes))
+	assertGolden(t, "TestMergeDataMapFrom", bytes)
 }
 
 func TestApplySmPatch_SwapOrder(t *testing.T) {
@@ -672,17 +620,6 @@ spec:
   baz:
     hello: world
 `
-	expected := `apiVersion: example.com/v1
-kind: Foo
-metadata:
-  name: my-foo
-spec:
-  bar:
-    C: Z
-    D: W
-  baz:
-    hello: world
-`
 	r1, err := factory.FromBytes([]byte(s1))
 	require.NoError(t, err)
 	r2, err := factory.FromBytes([]byte(s2))
@@ -690,14 +627,14 @@ spec:
 	require.NoError(t, r1.ApplySmPatch(r2))
 	bytes, err := r1.AsYAML()
 	require.NoError(t, err)
-	assert.Equal(t, expected, string(bytes))
+	assertGoldenYAML(t, bytes)
 
 	r1, _ = factory.FromBytes([]byte(s1))
 	r2, _ = factory.FromBytes([]byte(s2))
 	require.NoError(t, r2.ApplySmPatch(r1))
 	bytes, err = r2.AsYAML()
 	require.NoError(t, err)
-	assert.Equal(t, expected, string(bytes))
+	assertGoldenYAML(t, bytes)
 }
 
 func TestApplySmPatch(t *testing.T) {
@@ -1010,20 +947,22 @@ spec:
 	}
 
 	for name, test := range tests {
-		resource, err := factory.FromBytes([]byte(test.base))
-		require.NoError(t, err)
-		for _, p := range test.patch {
-			patch, err := factory.FromBytes([]byte(p))
-			require.NoError(t, err, name)
-			require.NoError(t, resource.ApplySmPatch(patch), name)
-		}
-		bytes, err := resource.AsYAML()
-		if test.errorExpected {
-			require.Error(t, err, name)
-		} else {
-			require.NoError(t, err, name)
-			assert.Equal(t, test.expected, string(bytes), name)
-		}
+		t.Run(name, func(t *testing.T) {
+			resource, err := factory.FromBytes([]byte(test.base))
+			require.NoError(t, err)
+			for _, p := range test.patch {
+				patch, err := factory.FromBytes([]byte(p))
+				require.NoError(t, err, name)
+				require.NoError(t, resource.ApplySmPatch(patch), name)
+			}
+			bytes, err := resource.AsYAML()
+			if test.errorExpected {
+				require.Error(t, err, name)
+			} else {
+				require.NoError(t, err)
+				assertGoldenYAML(t, bytes)
+			}
+		})
 	}
 }
 
@@ -1119,7 +1058,7 @@ metadata:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			assert.Equal(t, test.expected, string(bytes))
+			assertGoldenYAML(t, bytes)
 		})
 	}
 }
