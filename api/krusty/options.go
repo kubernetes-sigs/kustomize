@@ -45,6 +45,11 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// When true, suppress deprecation warnings written to stderr during Build.
+	// Useful when calling kustomize as a library from tooling that manages its
+	// own output and does not want kustomize's warnings interleaved.
+	SuppressDeprecationWarnings bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
