@@ -102,3 +102,23 @@ func TestAsHelmArgs(t *testing.T) {
 				"--devel"})
 	})
 }
+
+// Regression test for https://github.com/kubernetes-sigs/kustomize/issues/4593.
+// HelmChartArgs.ReleaseNamespace was not copied into HelmChart.Namespace by
+// makeHelmChartFromHca, so kustomizations that used the deprecated
+// helmChartInflationGenerator with releaseNamespace silently rendered resources
+// into the "default" namespace.
+func TestSplitHelmParametersPropagatesReleaseNamespace(t *testing.T) {
+	args := []types.HelmChartArgs{{
+		ChartName:        "nats",
+		ChartVersion:     "v0.13.1",
+		ReleaseName:      "nats",
+		ReleaseNamespace: "custom-ns",
+	}}
+
+	charts, _ := types.SplitHelmParameters(args)
+
+	require.Len(t, charts, 1)
+	require.Equal(t, "custom-ns", charts[0].Namespace,
+		"ReleaseNamespace from the deprecated HelmChartArgs must map onto HelmChart.Namespace")
+}
