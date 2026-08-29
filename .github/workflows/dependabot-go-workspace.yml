@@ -109,7 +109,7 @@ jobs:
         git config user.name "dependabot[bot]"
         git config user.email "49699333+dependabot[bot]@users.noreply.github.com"
         git add -- go.work.sum ':(glob)**/go.mod' ':(glob)**/go.sum'
-        git commit -m "build(deps): sync Go workspace"
+        git commit -m "build(deps): sync Go workspace [dependabot skip]"
         git push origin "HEAD:${GITHUB_REF_NAME}"
     - name: Run Go CI for the synchronized commit
       env:
