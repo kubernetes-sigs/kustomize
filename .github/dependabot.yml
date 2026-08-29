@@ -6,7 +6,10 @@ updates:
       interval: "weekly"
 
 - package-ecosystem: gomod
-  directory: "/"
+  directories:
+  - "**/*"
   schedule:
     interval: "weekly"
   open-pull-requests-limit: 10
+  vulnerability-alerts:
+    enabled: true
