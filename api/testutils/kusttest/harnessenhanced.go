@@ -4,6 +4,7 @@
 package kusttest_test
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -172,6 +173,24 @@ func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
 		th.t.Fatalf("generate err: %v", err)
 	}
 	return rm
+}
+
+func (th *HarnessEnhanced) ErrorFromLoadAndRunGenerator(
+	config string) error {
+	res, err := th.rf.RF().FromBytes([]byte(config))
+	if err != nil {
+		th.t.Fatalf("Err: %v", err)
+	}
+	g, err := th.pl.LoadGenerator(
+		th.ldr, valtest_test.MakeFakeValidator(), res)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+	_, err = g.Generate()
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+	return nil
 }
 
 func (th *HarnessEnhanced) LoadAndRunTransformer(
