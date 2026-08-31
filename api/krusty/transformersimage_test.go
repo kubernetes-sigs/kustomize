@@ -440,3 +440,97 @@ spec:
         name: nginx
 `)
 }
+
+// Image Volume (KEP-4639, spec.volumes[].image) references should be
+// rewritten by the default images config wherever kustomize also rewrites
+// container images: bare Pods, PodTemplate-based workloads, and CronJob,
+// whose containers live one level deeper under spec.jobTemplate.
+func TestTransfomersImageVolumeDefaultConfig(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- pod.yaml
+- deploy.yaml
+- cronjob.yaml
+images:
+- name: nginx
+  newTag: v2
+`)
+	th.WriteF("pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  volumes:
+  - name: volume
+    image:
+      reference: nginx
+`)
+	th.WriteF("deploy.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      volumes:
+      - name: volume
+        image:
+          reference: nginx
+`)
+	th.WriteF("cronjob.yaml", `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: volume
+            image:
+              reference: nginx
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  volumes:
+  - image:
+      reference: nginx:v2
+    name: volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      volumes:
+      - image:
+          reference: nginx:v2
+        name: volume
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - image:
+              reference: nginx:v2
+            name: volume
+`)
+}
