@@ -109,7 +109,7 @@ BREAKING CHANGE: parse() function now works with 2 arguments.
 If you ran `git push` in the previous step, GitHub will return a useful link to create a Pull Request.
 
 ### Build Kustomize
-The [Kustomize Architecture] document describes the respository organization and the kustomize build process.
+The [Kustomize Architecture] document describes the repository organization and the kustomize build process.
 ```bash
 # For go version >= 1.13
 unset GOPATH
