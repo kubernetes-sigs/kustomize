@@ -7,7 +7,7 @@ require (
 	github.com/go-errors/errors v1.5.1
 	github.com/stretchr/testify v1.12.1
 	go.uber.org/goleak v1.3.0
-	go.yaml.in/yaml/v2 v2.4.2
+	go.yaml.in/yaml/v2 v2.4.4
 	gopkg.in/evanphx/json-patch.v4 v4.13.0
 	k8s.io/kube-openapi v0.0.0-20260502001324-b7f5293f4787
 	sigs.k8s.io/kustomize/kyaml v0.21.1
