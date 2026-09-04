@@ -25,6 +25,23 @@ field: value1
 			ListIncreaseDirection: yaml.MergeOptionsListAppend,
 		},
 	},
+	{description: `replace scalar -- preserve source tag`,
+		source: `
+kind: Deployment
+field: 3
+`,
+		dest: `
+kind: Deployment
+field: '6%'
+`,
+		expected: `
+kind: Deployment
+field: 3
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
 
 	{description: `replace scalar -- missing from dest`,
 		source: `
