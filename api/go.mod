@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/blang/semver/v4 v4.0.0
-	github.com/go-errors/errors v1.4.2
+	github.com/go-errors/errors v1.5.1
 	github.com/stretchr/testify v1.12.1
 	go.uber.org/goleak v1.3.0
 	go.yaml.in/yaml/v2 v2.4.2

@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/kyaml
 go 1.26.0
 
 require (
-	github.com/go-errors/errors v1.4.2
+	github.com/go-errors/errors v1.5.1
 	github.com/google/gnostic-models v0.7.0
 	github.com/google/go-cmp v0.7.0
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
