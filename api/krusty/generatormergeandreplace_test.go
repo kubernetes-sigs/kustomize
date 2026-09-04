@@ -453,6 +453,42 @@ metadata:
 `)
 }
 
+// Regression test for https://github.com/kubernetes-sigs/kustomize/issues/5955
+func TestSecretGeneratorMergeStringData(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- secret.yaml
+secretGenerator:
+- name: test
+  behavior: merge
+  literals:
+  - property2=value2
+  options:
+    disableNameSuffixHash: false
+`)
+	th.WriteF("secret.yaml", `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+type: Opaque
+stringData:
+  property1: value1
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  property1: dmFsdWUx
+  property2: dmFsdWUy
+kind: Secret
+metadata:
+  name: test
+type: Opaque
+`)
+}
+
 func TestMergeAndReplaceDisableNameSuffixHashGenerators(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("app", `
