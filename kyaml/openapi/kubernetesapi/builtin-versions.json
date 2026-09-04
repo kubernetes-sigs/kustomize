@@ -1,0 +1,29 @@
+{
+  "versions": [
+    "v1.21.2",
+    "v1.22.0",
+    "v1.23.0",
+    "v1.24.0",
+    "v1.25.0",
+    "v1.26.2",
+    "v1.27.0",
+    "v1.28.0",
+    "v1.29.0",
+    "v1.30.0",
+    "v1.31.0",
+    "v1.32.0",
+    "v1.33.0",
+    "v1.34.0",
+    "v1.35.0",
+    "v1.36.0"
+  ],
+  "patchVersionExceptions": {
+    "v1.21.2": {
+      "reason": "legacy-baseline"
+    },
+    "v1.26.2": {
+      "reason": "openapi-correction",
+      "upstreamPullRequest": "https://github.com/kubernetes/kubernetes/pull/115400"
+    }
+  }
+}

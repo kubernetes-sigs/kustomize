@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 )
 
 func writeTestSchema(th kusttest_test.Harness, filepath string) {
@@ -640,6 +639,6 @@ spec:
       containers:
       - image: whatever
 `)
-		assert.Equal(t, kubernetesapi.DefaultOpenAPI, openapi.GetSchemaVersion())
+		assert.Equal(t, openapi.DefaultOpenAPI, openapi.GetSchemaVersion())
 	})
 }
