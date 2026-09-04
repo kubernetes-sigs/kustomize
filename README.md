@@ -11,6 +11,8 @@ and it's like [`sed`], in that it emits edited text.
 
 This tool is sponsored by [sig-cli] ([KEP]).
 
+Project site: https://kustomize.io/
+
  - [Installation instructions](https://kubectl.docs.kubernetes.io/installation/kustomize/)
  - [General documentation](https://kubectl.docs.kubernetes.io/references/kustomize/)
  - [Examples](examples)
