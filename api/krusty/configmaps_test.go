@@ -87,10 +87,10 @@ func TestGeneratorFromProperties(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
 configMapGenerator:
-  - name: test-configmap
-    behavior: create
-    envs:
-    - properties
+- name: test-configmap
+  behavior: create
+  envs:
+  - properties
 `)
 	th.WriteF("base/properties", `
 VAR1=100
@@ -115,6 +115,104 @@ data:
 kind: ConfigMap
 metadata:
   name: test-configmap-hdghb5ddkg
+`)
+}
+
+func TestGeneratorOverrideDataWithBinaryDataInvalidAtKubeAPI(t *testing.T) {
+	// the resulting ConfigMap will fail Kubernetes API validation:
+	//   The ConfigMap "test-configmap-b6h9d5bfmt" is invalid: data[CHANGING]: Invalid value: "CHANGING": duplicate of key present in binaryData
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+- name: test-configmap
+  behavior: create
+  envs:
+  - properties
+`)
+	th.WriteF("base/properties", `
+CHANGING=data-before
+BASE=red
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: test-configmap
+  behavior: "merge"
+  envs:
+  - properties
+  files:
+  - CHANGING
+`)
+	th.WriteF("overlay/CHANGING", string(manyHellos(30)))
+	th.WriteF("overlay/properties", `
+OVERLAY=blue
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+binaryData:
+  CHANGING: |
+    /2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbG
+    xv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hl
+    bGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2
+    hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv
+data:
+  BASE: red
+  CHANGING: data-before
+  OVERLAY: blue
+kind: ConfigMap
+metadata:
+  name: test-configmap-b6h9d5bfmt
+`)
+}
+
+func TestGeneratorOverrideBinaryDataWithDataInvalidAtKubeAPI(t *testing.T) {
+	// the resulting ConfigMap will fail Kubernetes API validation:
+	//   The ConfigMap "test-configmap-kt6d6mk694" is invalid: data[CHANGING]: Invalid value: "CHANGING": duplicate of key present in binaryData
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+configMapGenerator:
+- name: test-configmap
+  behavior: create
+  envs:
+  - properties
+  files:
+  - CHANGING
+`)
+	th.WriteF("base/CHANGING", string(manyHellos(30)))
+	th.WriteF("base/properties", `
+BASE=red
+`)
+	th.WriteK("overlay", `
+resources:
+- ../base
+configMapGenerator:
+- name: test-configmap
+  behavior: "merge"
+  envs:
+  - properties
+`)
+	th.WriteF("overlay/properties", `
+CHANGING=data-after
+OVERLAY=blue
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+binaryData:
+  CHANGING: |
+    /2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbG
+    xv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hl
+    bGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv/2
+    hlbGxv/2hlbGxv/2hlbGxv/2hlbGxv
+data:
+  BASE: red
+  CHANGING: data-after
+  OVERLAY: blue
+kind: ConfigMap
+metadata:
+  name: test-configmap-kt6d6mk694
 `)
 }
 
