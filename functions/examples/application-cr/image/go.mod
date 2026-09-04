@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	k8s.io/apimachinery v0.29.0
-	sigs.k8s.io/application v0.8.2
+	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.5.0
 )
