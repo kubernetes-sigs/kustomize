@@ -7,7 +7,7 @@ tool sigs.k8s.io/kustomize/cmd/gorepomod
 require (
 	github.com/spf13/viper v1.20.0
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/mod v0.38.0
+	golang.org/x/mod v0.40.0
 )
 
 require (
