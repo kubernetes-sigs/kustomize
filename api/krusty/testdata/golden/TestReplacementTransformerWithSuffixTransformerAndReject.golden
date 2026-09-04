@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: original-name-dev
+spec:
+  template:
+    spec:
+      containers:
+      - image: app1:1.0
+        name: app
+---
+apiVersion: v1
+data:
+  name: something-else
+kind: ConfigMap
+metadata:
+  name: app-config-dev-97544dk6t8

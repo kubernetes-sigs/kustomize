@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  A_FIRST_ENV_VARIABLE: foo
+  ANOTHER_ENV_VARIABLE: bar
+kind: ConfigMap
+metadata:
+  name: project

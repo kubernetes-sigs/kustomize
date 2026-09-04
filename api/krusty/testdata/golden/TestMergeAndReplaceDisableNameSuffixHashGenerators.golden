@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-nginx
+spec:
+  selector:
+    matchLabels:
+      app: mynginx
+      env: staging
+      org: example.com
+      team: override-foo
+  template:
+    metadata:
+      annotations:
+        note: This is a test annotation
+      labels:
+        app: mynginx
+        env: staging
+        org: example.com
+        team: override-foo
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: staging-configmap-in-overlay
+        name: configmap-in-overlay
+      - configMap:
+          name: staging-team-foo-configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: v1
+data:
+  foo: override-bar
+kind: ConfigMap
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-configmap-in-base
+---
+apiVersion: v1
+data:
+  password: c29tZXB3
+  proxy: aGFwcm94eQ==
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  annotations:
+    note: This is a test annotation
+  labels:
+    app: mynginx
+    env: staging
+    org: example.com
+    team: override-foo
+  name: staging-team-foo-secret-in-base
+type: Opaque
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: override-foo
+  name: staging-configmap-in-overlay

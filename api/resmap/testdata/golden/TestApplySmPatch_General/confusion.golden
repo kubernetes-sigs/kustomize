@@ -1,0 +1,11 @@
+apiVersion: example.com/v1
+kind: Foo
+metadata:
+  name: my-foo
+spec:
+  bar:
+    A: X
+    C: Z
+    D: W
+  baz:
+    hello: world

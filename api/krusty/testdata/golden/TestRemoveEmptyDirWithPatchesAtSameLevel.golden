@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: FOO
+        image: nginx
+        name: nginx
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage

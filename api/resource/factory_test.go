@@ -389,11 +389,12 @@ kind: List
 			assert.False(t, test.expectedErr, "expected no error in "+n)
 			assert.Equal(t, len(test.expectedOut), len(rs))
 			for i := range rs {
-				expYaml, err := test.expectedOut[i].AsYAML()
-				require.NoError(t, err)
 				actYaml, err := rs[i].AsYAML()
 				require.NoError(t, err)
-				assert.Equal(t, expYaml, actYaml)
+				// Use subtests to create separate golden files for each resource
+				t.Run(fmt.Sprintf("resource_%d", i), func(t *testing.T) {
+					assertGoldenYAML(t, actYaml)
+				})
 			}
 		})
 	}
@@ -755,8 +756,9 @@ metadata:
 			if tc.expected == nil {
 				assert.Equal(t, 0, len(res))
 			} else {
-				actual, _ := res[0].AsYAML()
-				assert.Equal(t, tc.expected, actual)
+				actual, err := res[0].AsYAML()
+				require.NoError(t, err)
+				assertGoldenYAML(t, actual)
 			}
 		})
 	}
