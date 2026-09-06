@@ -32,6 +32,27 @@ each in its own sub-directory.
    may soon be deleted, or they might be WIP plugins that will
    someday become examples or builtins.
 
+#### Testing
+
+Regardless of the [style](#plugin-styles) used to write a plugin,
+it should be accompanied by a Go unit test, written using the framework
+maintained by the kustomize maintainers for just that purpose.
+
+To see how this works, run any plugin test, e.g.
+this plugin written in bash:
+```
+pushd plugin/someteam.example.com/v1/bashedconfigmap
+go test -v .
+popd
+```
+
+For plugins with many tests, it's possible to target just one test:
+```
+pushd plugin/builtin/patchstrategicmergetransformer
+go test -v -run TestBadPatchStrategicMergeTransformer PatchStrategicMergeTransformer_test.go
+popd
+```
+
 ### Plugin home
 
 Kustomize looks up Exec and Go plugins relative to a plugin home
@@ -41,12 +62,13 @@ order and uses the first one that exists:
 1. `$KUSTOMIZE_PLUGIN_HOME` — set this to override the default search
    paths below (useful when plugins live outside `$HOME`).
 2. `$XDG_CONFIG_HOME/kustomize/plugin`.
-3. `$HOME/.config/kustomize/plugin` — used when `$XDG_CONFIG_HOME` is
-   unset.
+3. `$HOME/.config/kustomize/plugin`, the default XDG location. This is
+   also tried when `$XDG_CONFIG_HOME` is set but the path in step 2
+   does not exist.
 4. `$HOME/kustomize/plugin`.
 
 If none of the above exist, plugin resolution fails. On Windows,
-`$HOME` falls back to `$USERPROFILE`. See
+`$USERPROFILE` is used in place of `$HOME`. See
 [`api/konfig/plugins.go`](../api/konfig/plugins.go) for the resolution
 code.
 
@@ -71,27 +93,6 @@ kustomize looks for the executable
 `<plugin-home>/someteam.example.com/v1/sedtransformer/SedTransformer`, and
 failing that, the Go plugin
 `<plugin-home>/someteam.example.com/v1/sedtransformer/SedTransformer.so`.
-
-#### Testing
-
-Regardless of the [style](#plugin-styles) used to write a plugin,
-it should be accompanied by a Go unit test, written using the framework
-maintained by the kustomize maintainers for just that purpose.
-
-To see how this works, run any plugin test, e.g.
-this plugin written in bash:
-```
-pushd plugin/someteam.example.com/v1/bashedconfigmap
-go test -v .
-popd
-```
-
-For plugins with many tests, it's possible to target just one test:
-```
-pushd plugin/builtin/patchstrategicmergetransformer
-go test -v -run TestBadPatchStrategicMergeTransformer PatchStrategicMergeTransformer_test.go
-popd
-```
 
 ### Plugin styles
 
