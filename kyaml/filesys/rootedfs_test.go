@@ -5,6 +5,7 @@ package filesys
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -67,6 +68,26 @@ func TestRootedFS(t *testing.T) {
 			_, err = rooted.Open("../file.yaml")
 			require.ErrorIs(t, err, fs.ErrInvalid)
 			require.NoError(t, rooted.Close())
+		})
+	}
+}
+
+func TestRootedFSMemoryFilesDoNotExposeWriter(t *testing.T) {
+	fSys := MakeFsInMemory()
+	root := filepath.Join(Separator, "root")
+	require.NoError(t, fSys.MkdirAll(root))
+	require.NoError(t, fSys.WriteFile(filepath.Join(root, "file.yaml"), []byte("content")))
+	rooted, err := NewRootedFS(fSys, root)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, rooted.Close()) })
+
+	for _, name := range []string{"file.yaml", "."} {
+		t.Run(name, func(t *testing.T) {
+			file, err := rooted.Open(name)
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, file.Close()) })
+			_, writable := file.(io.Writer)
+			require.False(t, writable, "adapter must not expose io.Writer")
 		})
 	}
 }

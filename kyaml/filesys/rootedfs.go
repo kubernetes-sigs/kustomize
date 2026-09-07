@@ -140,7 +140,7 @@ func (f *fileSystemFS) Open(name string) (fs.File, error) {
 		}, nil
 	}
 	return &fileSystemFile{
-		File: file,
+		file: file,
 		fsys: f,
 		name: name,
 	}, nil
@@ -218,7 +218,7 @@ func newPathError(op, name string, err error) error {
 }
 
 type fileSystemFile struct {
-	File
+	file fs.File
 	fsys *fileSystemFS
 	name string
 	info fs.FileInfo
@@ -234,8 +234,8 @@ type fileSystemFile struct {
 var _ fs.ReadDirFile = (*fileSystemFile)(nil)
 
 func (f *fileSystemFile) Read(p []byte) (int, error) {
-	if f.File != nil {
-		return f.File.Read(p) //nolint:wrapcheck // Preserve io.Reader errors, including io.EOF.
+	if f.file != nil {
+		return f.file.Read(p) //nolint:wrapcheck // Preserve io.Reader errors, including io.EOF.
 	}
 	if f.closed {
 		return 0, newPathError("read", f.name, os.ErrClosed)
@@ -244,8 +244,8 @@ func (f *fileSystemFile) Read(p []byte) (int, error) {
 }
 
 func (f *fileSystemFile) Close() error {
-	if f.File != nil {
-		return f.File.Close() //nolint:wrapcheck // Preserve the adapted file's close error.
+	if f.file != nil {
+		return f.file.Close() //nolint:wrapcheck // Preserve the adapted file's close error.
 	}
 	f.closed = true
 	return nil
@@ -255,7 +255,7 @@ func (f *fileSystemFile) Stat() (fs.FileInfo, error) {
 	if f.info != nil {
 		return f.info, nil
 	}
-	info, err := f.File.Stat()
+	info, err := f.file.Stat()
 	if err != nil {
 		return nil, newPathError("stat", f.name, err)
 	}
