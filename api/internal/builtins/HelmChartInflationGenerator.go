@@ -275,7 +275,7 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 			return nil, fmt.Errorf(
 				"no repo specified for pull, no chart found at '%s'", path)
 		}
-		if _, err := p.runHelmCommand(p.pullCommand()); err != nil {
+		if err := p.pullChart(); err != nil {
 			return nil, err
 		}
 	}
@@ -321,11 +321,40 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 	return nil, fmt.Errorf("could not parse bytes into resource map: %w", resMapErr)
 }
 
-func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
+// pullChart downloads the chart into a temporary directory inside the
+// chart home and then moves it into place. Concurrent kustomize processes
+// sharing a chart home may all try to pull the same chart, and helm refuses
+// to untar over an existing directory; pulling into a private directory
+// and renaming lets the first process win while the others keep the chart
+// it placed.
+func (p *HelmChartInflationGeneratorPlugin) pullChart() error {
+	chartHome := p.absChartHome()
+	if err := os.MkdirAll(chartHome, 0o755); err != nil {
+		return errors.WrapPrefixf(err, "unable to create chart home %s", chartHome)
+	}
+	tmpDir, err := os.MkdirTemp(chartHome, ".kustomize-pull-")
+	if err != nil {
+		return errors.WrapPrefixf(err, "unable to create temp dir in chart home %s", chartHome)
+	}
+	defer os.RemoveAll(tmpDir)
+	if _, err := p.runHelmCommand(p.pullCommand(tmpDir)); err != nil {
+		return err
+	}
+	chartDir := filepath.Join(chartHome, p.Name)
+	if err := os.Rename(filepath.Join(tmpDir, p.Name), chartDir); err != nil {
+		if _, exists := p.chartExistsLocally(); exists {
+			return nil
+		}
+		return errors.WrapPrefixf(err, "unable to move chart to %s", chartDir)
+	}
+	return nil
+}
+
+func (p *HelmChartInflationGeneratorPlugin) pullCommand(untarDir string) []string {
 	args := []string{
 		"pull",
 		"--untar",
-		"--untardir", p.absChartHome(),
+		"--untardir", untarDir,
 	}
 
 	switch {

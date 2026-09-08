@@ -158,6 +158,16 @@ func (th *HarnessEnhanced) LoadAndRunGenerator(
 
 func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
 	config string) resmap.ResMap {
+	rm, err := th.LoadGenerator(config).Generate()
+	if err != nil {
+		th.t.Fatalf("generate err: %v", err)
+	}
+	return rm
+}
+
+// LoadGenerator loads and configures a generator from config
+// without running it.
+func (th *HarnessEnhanced) LoadGenerator(config string) resmap.Generator {
 	res, err := th.rf.RF().FromBytes([]byte(config))
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
@@ -167,11 +177,7 @@ func (th *HarnessEnhanced) LoadAndRunGeneratorWithBuildAnnotations(
 	if err != nil {
 		th.t.Fatalf("Err: %v", err)
 	}
-	rm, err := g.Generate()
-	if err != nil {
-		th.t.Fatalf("generate err: %v", err)
-	}
-	return rm
+	return g
 }
 
 func (th *HarnessEnhanced) LoadAndRunTransformer(
