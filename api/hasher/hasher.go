@@ -92,9 +92,15 @@ func getNodeValues(
 			if err != nil {
 				return map[string]interface{}{}, err
 			}
-			// data, binaryData and stringData are all maps
-			var v map[string]interface{}
-			json.Unmarshal(vs, &v)
+			// data, binaryData and stringData are normally maps, but a
+			// patch can replace them with any other JSON value, so decode
+			// into interface{} to make sure the hash always reflects the
+			// actual content.
+			var v interface{}
+			if err := json.Unmarshal(vs, &v); err != nil {
+				return map[string]interface{}{}, fmt.Errorf(
+					"unable to decode field %q: %w", p, err)
+			}
 			values[p] = v
 		} else {
 			values[p] = vn.YNode().Value

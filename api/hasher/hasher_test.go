@@ -355,3 +355,31 @@ func SkipRest(t *testing.T, desc string, err error, contains string) bool {
 	}
 	return false
 }
+
+// TestHashNonMapData verifies that the hash reflects the content of data even
+// when a patch has replaced it with something that is not a map. Before, the
+// json.Unmarshal error was dropped and every such ConfigMap hashed as if data
+// were null, so two ConfigMaps with different content collided.
+func TestHashNonMapData(t *testing.T) {
+	h := &Hasher{}
+	mk := func(data string) string {
+		t.Helper()
+		n, err := yaml.Parse(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+data: ` + data + "\n")
+		if err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+		got, err := h.Hash(n)
+		if err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+		return got
+	}
+	a, b := mk(`["A"]`), mk(`["B"]`)
+	if a == b {
+		t.Errorf("different data hashed identically: %q", a)
+	}
+}
