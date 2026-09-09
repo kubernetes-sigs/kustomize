@@ -49,24 +49,32 @@ func (p *plugin) Config(
 }
 
 func (p *plugin) Transform(m resmap.ResMap) error {
-	if len(p.Namespace) == 0 {
-		return nil
-	}
 	for _, r := range m.Resources() {
 		if r.IsNilOrEmpty() {
 			// Don't mutate empty objects?
 			continue
 		}
-		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
-			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
+		transformedNamespace := p.Namespace
+		unsetOnly := p.UnsetOnly
+		if annotations := r.GetAnnotations(); annotations[konfig.HelmGeneratedAnnotation] == "true" {
+			// Preserve namespaces emitted by Helm, but still fill any missing
+			// namespace fields, including (cluster)role binding subjects.
+			unsetOnly = true
+			if helmNamespace := annotations[konfig.HelmChartNamespaceAnnotation]; helmNamespace != "" {
+				transformedNamespace = helmNamespace
+			}
+		}
+		if len(transformedNamespace) == 0 {
+			// No namespace to apply to this resource, e.g. the kustomization
+			// sets no namespace and only helmCharts[].namespace is given.
 			continue
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
-			Namespace:              p.Namespace,
+			Namespace:              transformedNamespace,
 			FsSlice:                p.FieldSpecs,
 			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
-			UnsetOnly:              p.UnsetOnly,
+			UnsetOnly:              unsetOnly,
 		}); err != nil {
 			return err
 		}

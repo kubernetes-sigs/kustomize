@@ -371,6 +371,11 @@ func (p *plugin) markHelmGeneratedResources(rm resmap.ResMap) error {
 		if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")); err != nil {
 			return fmt.Errorf("failed to set helm annotation: %w", err)
 		}
+		if p.Namespace != "" {
+			if err := r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmChartNamespaceAnnotation, p.Namespace)); err != nil {
+				return fmt.Errorf("failed to set helm namespace annotation: %w", err)
+			}
+		}
 	}
 	return nil
 }
