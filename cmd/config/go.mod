@@ -36,7 +36,7 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	k8s.io/kube-openapi v0.0.0-20260502001324-b7f5293f4787 // indirect
-	sigs.k8s.io/yaml v1.5.0 // indirect
+	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
 replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
