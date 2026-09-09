@@ -5,12 +5,17 @@ package main_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/api/resmap"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -1024,4 +1029,85 @@ devel: true
 	require.NoError(t, err)
 	assert.Contains(t, string(chartYamlContent), "name: sm-operator")
 	assert.Contains(t, string(chartYamlContent), "version: 0.1.0-Beta")
+}
+
+// serveTestChartRepo packages a chart from testdata/charts and serves it
+// as a helm repository over HTTP, returning the repository URL.
+func serveTestChartRepo(t *testing.T, th *kusttest_test.HarnessEnhanced, chart string) string {
+	t.Helper()
+
+	repoDir := t.TempDir()
+	srv := httptest.NewServer(http.FileServer(http.Dir(repoDir)))
+	t.Cleanup(srv.Close)
+
+	helm := th.GetPluginConfig().HelmConfig.Command
+	for _, args := range [][]string{
+		{"package", filepath.Join("testdata", "charts", chart), "--destination", repoDir},
+		{"repo", "index", repoDir, "--url", srv.URL},
+	} {
+		out, err := exec.Command(helm, args...).CombinedOutput()
+		require.NoError(t, err, string(out))
+	}
+	return srv.URL
+}
+
+func TestHelmChartInflationGeneratorConcurrentPull(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	repo := serveTestChartRepo(t, th, "test-chart")
+
+	// Several generators share one chartHome and none of them finds the
+	// chart there, so all of them pull it at the same time.
+	const n = 8
+	generators := make([]resmap.Generator, n)
+	for i := range generators {
+		generators[i] = th.LoadGenerator(fmt.Sprintf(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: test-chart
+name: test-chart
+version: 1.0.0
+repo: %s
+releaseName: test-chart
+chartHome: ./charts
+`, repo))
+	}
+
+	results := make([]resmap.ResMap, n)
+	errs := make([]error, n)
+	var wg sync.WaitGroup
+	for i, g := range generators {
+		wg.Add(1)
+		go func(i int, g resmap.Generator) {
+			defer wg.Done()
+			results[i], errs[i] = g.Generate()
+		}(i, g)
+	}
+	wg.Wait()
+
+	for i := range generators {
+		require.NoError(t, errs[i], "generator %d", i)
+		results[i].RemoveBuildAnnotations()
+		th.AssertActualEqualsExpected(results[i], `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bar
+`)
+	}
+
+	// Only the chart itself is left behind in the chart home.
+	entries, err := os.ReadDir(filepath.Join(th.GetRoot(), "charts", "test-chart-1.0.0"))
+	require.NoError(t, err)
+	names := make([]string, 0, len(entries))
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	assert.Equal(t, []string{"test-chart"}, names)
 }
