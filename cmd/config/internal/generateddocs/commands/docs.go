@@ -422,7 +422,7 @@ Args:
 
 Resource fields may be printed as part of the Resources by specifying the fields as flags.
 
-kustomize cfg tree has build-in support for printing common fields, such as replicas, container images,
+kustomize cfg tree has built-in support for printing common fields, such as replicas, container images,
 container names, etc.
 
 kustomize cfg tree supports printing arbitrary fields using the '--field' flag.
