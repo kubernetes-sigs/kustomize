@@ -7,6 +7,7 @@ package loader
 import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -20,6 +21,10 @@ import (
 func NewLoader(
 	lr LoadRestrictorFunc,
 	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
+	if oci.IsOciURL(target) {
+		// The target qualifies as a remote OCI artifact.
+		return newLoaderAtOciURL(target, fSys)
+	}
 	repoSpec, err := git.NewRepoSpecFromURL(target)
 	if err == nil {
 		// The target qualifies as a remote git target.
