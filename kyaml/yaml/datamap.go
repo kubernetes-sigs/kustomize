@@ -95,6 +95,35 @@ func makeSecretValueRNode(s string) *RNode {
 	return NewRNode(yN)
 }
 
+func (rn *RNode) LoadMapIntoSecretStringData(m map[string]string) error {
+	for _, k := range SortedMapKeys(m) {
+		fldName, vrN := makeSecretStringValueRNode(m[k])
+		if _, err := rn.Pipe(
+			LookupCreate(MappingNode, fldName),
+			SetField(k, vrN)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// valid UTF-8 strings can be stringData, but fallback to Base64 for non UTF-8
+func makeSecretStringValueRNode(s string) (field string, rN *RNode) {
+	yN := &Node{Kind: ScalarNode}
+	yN.Tag = NodeTagString
+	if utf8.ValidString(s) {
+		field = StringDataField
+		yN.Value = s
+	} else {
+		field = DataField
+		yN.Value = encodeBase64(s)
+	}
+	if strings.Contains(yN.Value, "\n") {
+		yN.Style = LiteralStyle
+	}
+	return field, NewRNode(yN)
+}
+
 // encodeBase64 encodes s as base64 that is broken up into multiple lines
 // as appropriate for the resulting length.
 func encodeBase64(s string) string {
