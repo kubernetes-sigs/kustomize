@@ -384,6 +384,71 @@ metadata:
 		// Test Case
 		//
 		{
+			name:     "add_initial_doc_sep",
+			instance: ByteWriter{KeepReaderAnnotations: true},
+			items: []string{
+				`a: b
+metadata:
+  annotations:
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
+`,
+			},
+
+			expectedOutput: `---
+a: b
+metadata:
+  annotations:
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
+`,
+		},
+		//
+		// Test Case
+		//
+		{
+			name:     "multiple_nodes_with_initial_doc_sep_annotations",
+			instance: ByteWriter{KeepReaderAnnotations: true},
+			items: []string{
+				`a: b
+metadata:
+  annotations:
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
+`,
+				`c: d
+metadata:
+  annotations:
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
+`,
+			},
+
+			expectedOutput: `---
+a: b
+metadata:
+  annotations:
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/a_test.yaml"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
+---
+c: d
+metadata:
+  annotations:
+    internal.config.kubernetes.io/index: 0
+    internal.config.kubernetes.io/path: "a/b/b_test.yaml"
+    internal.config.kubernetes.io/initial-doc-sep: "true"
+`,
+		},
+
+		//
+		// Test Case
+		//
+		{
 			name: "encode_valid_json",
 			items: []string{
 				`{
