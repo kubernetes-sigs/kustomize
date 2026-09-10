@@ -12,7 +12,8 @@ MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
-export PATH := $(MYGOBIN):$(PATH)
+OUTPUT_DIR := $(CURDIR)/_output
+export PATH := $(OUTPUT_DIR):$(MYGOBIN):$(PATH)
 
 # Provide defaults for REPO_OWNER and REPO_NAME if not present.
 # Typically these values would be provided by Prow.
@@ -69,14 +70,15 @@ $(MYGOBIN)/pluginator:
 
 # --- Build targets ---
 
-# Build from local source.
-$(MYGOBIN)/kustomize: build-kustomize-api
-	cd kustomize && go install -ldflags \
+# Build from local source into _output/.
+$(OUTPUT_DIR)/kustomize: build-kustomize-api
+	mkdir -p $(OUTPUT_DIR)
+	cd kustomize && go build -o $(OUTPUT_DIR)/kustomize -ldflags \
 	"-X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
 	 -X sigs.k8s.io/kustomize/api/provenance.version=$(shell git describe --tags --always --dirty)" \
 	.
 
-kustomize: $(MYGOBIN)/kustomize
+kustomize: $(OUTPUT_DIR)/kustomize
 
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
@@ -168,14 +170,15 @@ test-go-mod:
 verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	( \
 		set -e; \
-		/bin/rm -f $(MYGOBIN)/kustomize; \
-		echo "Installing kustomize from ."; \
-		cd kustomize; go install .; cd ..; \
+		/bin/rm -f $(OUTPUT_DIR)/kustomize; \
+		echo "Building kustomize from ."; \
+		mkdir -p $(OUTPUT_DIR); \
+		cd kustomize; go build -o $(OUTPUT_DIR)/kustomize .; cd ..; \
 		./hack/testExamplesE2EAgainstKustomize.sh .; \
 	)
 
 .PHONY:
-test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
+test-examples-kustomize-against-HEAD: $(OUTPUT_DIR)/kustomize $(MYGOBIN)/mdrip
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
@@ -193,7 +196,7 @@ workspace-sync:
 clean: clean-kustomize-external-go-plugin uninstall-tools
 	go clean --cache
 	rm -f $(builtinplugins)
-	rm -f $(MYGOBIN)/kustomize
+	rm -rf $(OUTPUT_DIR)
 
 # Nuke the site from orbit.  It's the only way to be sure.
 .PHONY: nuke
