@@ -26,7 +26,8 @@ type HelmChartInflationGeneratorPlugin struct {
 	h *resmap.PluginHelpers
 	types.HelmGlobals
 	types.HelmChart
-	tmpDir string
+	tmpDir        string
+	valuesFileSet bool
 }
 
 const (
@@ -67,6 +68,13 @@ func (p *HelmChartInflationGeneratorPlugin) Config(
 	}
 
 	p.h = h
+	var valuesFile struct {
+		ValuesFile *string `json:"valuesFile,omitempty" yaml:"valuesFile,omitempty"`
+	}
+	if err = yaml.Unmarshal(config, &valuesFile); err != nil {
+		return
+	}
+	p.valuesFileSet = valuesFile.ValuesFile != nil
 	if err = yaml.Unmarshal(config, p); err != nil {
 		return
 	}
@@ -103,6 +111,9 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 	// The ValuesFile(s) may be consulted by the plugin, so it must
 	// be under the loader root (unless root restrictions are
 	// disabled).
+	if p.ValuesFile == "" && p.valuesFileSet {
+		return fmt.Errorf("valuesFile cannot be empty")
+	}
 	if p.ValuesFile == "" {
 		p.ValuesFile = filepath.Join(p.absChartHome(), p.Name, "values.yaml")
 	}
@@ -128,6 +139,17 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 		p.ConfigHome = filepath.Join(p.tmpDir, "helm")
 	}
 	return nil
+}
+
+func (p *HelmChartInflationGeneratorPlugin) useDefaultValuesFileIfPresent() {
+	if p.valuesFileSet {
+		return
+	}
+	s, err := os.Stat(p.ValuesFile)
+	if err == nil && !s.IsDir() {
+		return
+	}
+	p.ValuesFile = ""
 }
 
 func (p *HelmChartInflationGeneratorPlugin) errIfIllegalValuesMerge() error {
@@ -190,8 +212,8 @@ func (p *HelmChartInflationGeneratorPlugin) runHelmCommand(
 // createNewMergedValuesFile replaces/merges original values file with ValuesInline.
 func (p *HelmChartInflationGeneratorPlugin) createNewMergedValuesFile() (
 	path string, err error) {
-	if p.ValuesMerge == valuesMergeOptionMerge ||
-		p.ValuesMerge == valuesMergeOptionOverride {
+	if p.ValuesFile != "" && (p.ValuesMerge == valuesMergeOptionMerge ||
+		p.ValuesMerge == valuesMergeOptionOverride) {
 		if err = p.replaceValuesInline(); err != nil {
 			return "", err
 		}
@@ -279,9 +301,10 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 			return nil, err
 		}
 	}
+	p.useDefaultValuesFileIfPresent()
 	if len(p.ValuesInline) > 0 {
 		p.ValuesFile, err = p.createNewMergedValuesFile()
-	} else {
+	} else if p.ValuesFile != "" {
 		p.ValuesFile, err = p.copyValuesFile()
 	}
 	if err != nil {
