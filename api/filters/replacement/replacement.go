@@ -248,8 +248,23 @@ func setFieldValue(options *types.FieldOptions, targetField *yaml.RNode, value *
 	}
 
 	if targetField.YNode().Kind == yaml.ScalarNode {
-		// For scalar, only copy the value (leave any type intact to auto-convert int->string or string->int)
+		// For an existing scalar, only copy the value and leave its tag intact,
+		// so it auto-converts to the target's pre-existing type (int->string or
+		// string->int).
 		targetField.YNode().Value = value.YNode().Value
+		if targetField.YNode().Tag == "" {
+			// Unless the field has no resolved type, meaning it was just created
+			// (e.g. via `options.create: true`) rather than copied from source
+			// YAML. Resolve and set its implicit YAML 1.2 tag now, matching what
+			// would be inferred if this value were serialized directly. Without
+			// this, the field would keep rendering correctly until some later step
+			// (e.g. a strategic merge patch) walks the document: FieldSetter's
+			// YAML-1.1-compatibility check treats an untagged scalar as a string
+			// and force-quotes it if its value looks like a bool/int/null keyword,
+			// silently turning e.g. a replacement-sourced "true" into the string
+			// "true" instead of the boolean true.
+			targetField.YNode().Tag = resolveImplicitTag(targetField.YNode().Value)
+		}
 	} else {
 		targetField.SetYNode(value.YNode())
 	}
@@ -402,4 +417,21 @@ func serializeAsYAML(structuredData *yaml.RNode) (string, error) {
 	}
 
 	return strings.TrimSpace(modifiedData), nil
+}
+
+// resolveImplicitTag returns the YAML 1.2 tag that value would resolve to if
+// written out as a plain (unquoted, untagged) scalar, e.g. "true" -> !!bool,
+// "3" -> !!int, "hello" -> !!str.
+func resolveImplicitTag(value string) string {
+	if value == "" {
+		return yaml.NodeTagString
+	}
+	var n yaml.Node
+	if err := yaml.Unmarshal([]byte(value), &n); err != nil || len(n.Content) != 1 {
+		return yaml.NodeTagString
+	}
+	if c := n.Content[0]; c.Kind == yaml.ScalarNode {
+		return c.Tag
+	}
+	return yaml.NodeTagString
 }
