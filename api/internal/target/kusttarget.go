@@ -203,8 +203,13 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "accumulating resources")
 	}
+	// Allow configurations to reference files in parent directories.
+	configLdr := kt.ldr
+	if fl, ok := configLdr.(*load.FileLoader); ok {
+		configLdr = fl.WithLoadRestrictor(load.RestrictionRootAndAncestors)
+	}
 	tConfig, err := builtinconfig.MakeTransformerConfig(
-		kt.ldr, kt.kustomization.Configurations)
+		configLdr, kt.kustomization.Configurations)
 	if err != nil {
 		return nil, err
 	}
