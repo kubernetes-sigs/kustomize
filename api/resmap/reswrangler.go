@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -420,6 +421,17 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 		// are in different namespaces.
 		// There's still a chance they can refer to each other.
 		if roleBindingNamespaces[possibleTarget.GetNamespace()] {
+			result.append(possibleTarget)
+			continue
+		}
+		// If the scope of the possible target's kind is not known from
+		// the openapi data, it was only assumed to be namespace-scoped
+		// and may in fact be cluster-scoped (e.g. a cluster-scoped custom
+		// resource), so the namespace comparison above is meaningless.
+		// Include it, and let the nameref filter decide (it prefers
+		// candidates in the referrer's namespace).  See issue #5696.
+		if _, found := openapi.IsNamespaceScoped(
+			id.Gvk.AsTypeMeta()); !found {
 			result.append(possibleTarget)
 		}
 	}
