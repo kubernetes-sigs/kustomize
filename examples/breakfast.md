@@ -69,8 +69,10 @@ likes her coffee hot:
 mkdir -p $DEMO_HOME/breakfast/overlays/alice
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/alice/kustomization.yaml
-commonLabels:
-  who: alice
+labels:
+- includeSelectors: true
+  pairs:
+    who: alice
 resources:
 - ../../base
 patches:
@@ -92,8 +94,10 @@ And likewise a [variant] for Bob, who wants _five_ pancakes, with strawberries:
 mkdir -p $DEMO_HOME/breakfast/overlays/bob
 
 cat <<EOF >$DEMO_HOME/breakfast/overlays/bob/kustomization.yaml
-commonLabels:
-  who: bob
+labels:
+- includeSelectors: true
+  pairs:
+    who: bob
 resources:
 - ../../base
 patches:
