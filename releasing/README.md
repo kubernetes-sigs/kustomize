@@ -72,20 +72,34 @@ We use the `release-blocker` tag to track issues that need to be solved before t
 
 It is also a good idea to scan any [untriaged issues](https://github.com/kubernetes-sigs/kustomize/issues?q=is%3Aissue+is%3Aopen+label%3Aneeds-triage) for potential blockers we haven't labelled yet before proceeding.
 
-### Consider fetching new OpenAPI data
+### Consider updating the built-in OpenAPI union
 
-Ideally, Kustomize's embedded openapi data would cover a wide range of Kubernetes releases. But today, we only embed a specific version. This means updating that version can be disruptive to people who still use older Kubernetes versions and depend on API versions that were removed in later releases. However, by remaining out of date, we will not support GVKs introduced in more recent releases. So far, we have leaned in favour of the older versions, because some removed GVs are for very popular APIs. This should be constantly reevaluated until a better solution is in place. See issue https://github.com/kubernetes-sigs/kustomize/issues/5016.
+Kustomize embeds an OpenAPI union with one pinned source for every Kubernetes
+minor in its covered range. When advancing the newest minor, append one
+`v1.N.0` entry to `kyaml/openapi/kubernetesapi/builtin-versions.json`, then run
+`make -C kyaml/openapi generate`. Do not remove older entries; removed API
+versions must remain available to Kustomize users. The generator resolves and
+peels a tag only for the new version, and downloads source documents as needed.
+Existing sources remain locked by the Git commit and SHA-256 recorded in the
+checked-in bundle, and raw Kubernetes OpenAPI documents are not committed to
+this repository.
 
-The Kubernetes OpenAPI data changes no more frequently than once per quarter.
-You can check the current builtin versions that kustomize is using with the
-following command.
+Do not update a source merely because a new patch release exists. A non-zero
+patch is used only for a documented compatibility baseline or a confirmed
+upstream correction to OpenAPI information consumed by Kustomize. Follow the
+selection, download cache, provenance, generation, and offline verification
+instructions in the [OpenAPI Readme].
+
+Under the normal policy, the Kubernetes OpenAPI data changes once per
+Kubernetes minor release, roughly three times per year. A confirmed OpenAPI
+correction is the exceptional case. You can check the current builtin version
+that kustomize is using with the following command.
 
 ```
 kustomize openapi info
 ```
 
-Instructions on how to get a new OpenAPI sample can be found in the
-[OpenAPI Readme].
+Generation and cache instructions can be found in the [OpenAPI Readme].
 
 ### Set up the release tools
 
