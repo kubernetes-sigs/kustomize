@@ -336,6 +336,93 @@ spec:
 `,
 	},
 
+	{description: `strategic merge patch replace element -- with ListPrepend`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - $patch: replace
+          name: foo-volume
+          persistentVolumeClaim:
+            claimName: my-pvc
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+          name: foo-volume
+        - name: other-volume
+          emptyDir: {}
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      volumes:
+      - name: foo-volume
+        persistentVolumeClaim:
+          claimName: my-pvc
+      - name: other-volume
+        emptyDir: {}
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+	},
+	{description: `strategic merge patch delete element -- with ListPrepend`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+        $patch: delete
+      - name: foo2
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo1
+      - name: foo2
+      - name: foo3
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo2
+      - name: foo3
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+	},
+
 	{description: `replace List -- different value in dest`,
 		source: `
 kind: Deployment
