@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  big: bang
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: o1-cm-ft9mmdc8c6
+---
+apiVersion: v1
+data:
+  big: crunch
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: cm-o2-5k95kd76ft

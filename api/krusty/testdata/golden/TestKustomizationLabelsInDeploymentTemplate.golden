@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: a
+    app.kubernetes.io/instance: b
+    app.kubernetes.io/name: c
+    app.kubernetes.io/part-of: d
+    foo: bar
+  name: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: a
+      app.kubernetes.io/instance: b
+      app.kubernetes.io/name: c
+      app.kubernetes.io/part-of: d
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: a
+        app.kubernetes.io/instance: b
+        app.kubernetes.io/name: c
+        app.kubernetes.io/part-of: d
+        foo: bar

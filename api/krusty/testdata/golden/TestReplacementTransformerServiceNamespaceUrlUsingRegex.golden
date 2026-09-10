@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d1
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: APP1_SERVICE
+          value: d1.app1.svc1-namespace:8080
+        image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: d2
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: APP1_SERVICE
+          value: d2.app1.svc1-namespace:8080
+        image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sts1
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: APP1_SERVICE
+          value: app1.svc1-namespace:8080
+        image: app1:1.0
+        name: app
+---
+apiVersion: apps/v1
+data:
+  APP1_SERVICE_PORT: "8080"
+kind: ConfigMap
+metadata:
+  name: cm1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc1
+  namespace: svc1-namespace
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 9376
+  selector:
+    app.kubernetes.io/name: app1

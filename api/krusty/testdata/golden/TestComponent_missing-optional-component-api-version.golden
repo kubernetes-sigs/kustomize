@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: storefront
+spec:
+  replicas: 1
+---
+apiVersion: v1
+data:
+  otherValue: orange
+  testValue: purple
+kind: ConfigMap
+metadata:
+  name: my-configmap-6hhdg8gkdg
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  type: Logical

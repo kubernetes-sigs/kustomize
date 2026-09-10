@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  initContainers:
+  - name: baz
+  - name: foo
+  - name: bar

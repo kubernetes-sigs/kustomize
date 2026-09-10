@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: another-config
+        image: image1
+        name: nginx
