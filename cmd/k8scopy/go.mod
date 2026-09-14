@@ -6,7 +6,7 @@ tool sigs.k8s.io/kustomize/cmd/k8scopy
 
 require (
 	github.com/stretchr/testify v1.12.1
-	sigs.k8s.io/yaml v1.5.0
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
