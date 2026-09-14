@@ -5,11 +5,13 @@ on:
     branches: [master]
     paths:
       - 'hack/install_kustomize.sh'
+      - 'hack/install_kustomize_release_tag_test.sh'
       - 'hack/test-files/*-release.json'
   pull_request:
     branches: [master]
     paths:
       - 'hack/install_kustomize.sh'
+      - 'hack/install_kustomize_release_tag_test.sh'
       - 'hack/test-files/*-release.json'
 
 permissions:
@@ -48,3 +50,15 @@ jobs:
         env:
           expected_kustomize_version: ${{ env.expected_kustomize_version }}
           releases_file: ${{ github.workspace }}/${{ matrix.release-file }}
+
+  test-install-kustomize-release-tag:
+    name: Test install_kustomize.sh release tag selection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 #v7.0.1
+
+      - name: Run release tag unit test
+        shell: bash
+        run: ./hack/install_kustomize_release_tag_test.sh

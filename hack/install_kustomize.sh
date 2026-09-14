@@ -20,6 +20,13 @@
 #
 # Fails if the file already exists.
 
+function release_tag_for_version {
+  local requested=$1
+  echo "kustomize/v$requested"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+
 set -e
 
 # Unset CDPATH to restore default cd behavior. An exported CDPATH can
@@ -32,7 +39,8 @@ release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 if [ -n "$1" ]; then
   if [[ "$1" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
     version=v$1
-    release_url=${release_url}/tags/kustomize%2F$version
+    release_tag=$(release_tag_for_version "$1")
+    release_url=${release_url}/tags/${release_tag//\//%2F}
   elif [ -n "$2" ]; then
     echo "The first argument should be the requested version."
     exit 1
@@ -182,3 +190,5 @@ popd >& /dev/null
 "${where}kustomize" version
 
 echo "kustomize installed to ${where}kustomize"
+
+fi
