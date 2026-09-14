@@ -4,10 +4,10 @@
 package replacement
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
+	"sigs.k8s.io/kustomize/api/internal/structuredscalar"
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -340,9 +340,7 @@ func setValueInStructuredData(target *yaml.RNode, value *yaml.RNode, fieldPath s
 		}
 	}
 
-	// Serialize the modified structured data back to the scalar field
-	// Try to detect if original was JSON or YAML and preserve formatting
-	serializedData, err := serializeStructuredData(structuredData, scalarValue)
+	serializedData, err := structuredscalar.Serialize(structuredData, scalarValue)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -351,55 +349,4 @@ func setValueInStructuredData(target *yaml.RNode, value *yaml.RNode, fieldPath s
 	scalarField.YNode().Value = serializedData
 
 	return nil
-}
-
-// serializeStructuredData handles the serialization of structured data back to string format
-// preserving the original format (JSON vs YAML) and style (pretty vs compact)
-func serializeStructuredData(structuredData *yaml.RNode, originalValue string) (string, error) {
-	firstChar := rune(strings.TrimSpace(originalValue)[0])
-	if firstChar == '{' || firstChar == '[' {
-		return serializeAsJSON(structuredData, originalValue)
-	}
-
-	// Fallback to YAML format
-	return serializeAsYAML(structuredData)
-}
-
-// serializeAsJSON converts structured data back to JSON format
-func serializeAsJSON(structuredData *yaml.RNode, originalValue string) (string, error) {
-	modifiedData, err := structuredData.String()
-	if err != nil {
-		return "", fmt.Errorf("failed to serialize structured data: %w", err)
-	}
-
-	// Parse the YAML output as JSON
-	var jsonData interface{}
-	if err := yaml.Unmarshal([]byte(modifiedData), &jsonData); err != nil {
-		return "", fmt.Errorf("failed to unmarshal YAML data: %w", err)
-	}
-
-	// Check if original was pretty-printed by looking for newlines and indentation
-	if strings.Contains(originalValue, "\n") && strings.Contains(originalValue, "  ") {
-		// Pretty-print the JSON to match original formatting
-		if prettyJSON, err := json.MarshalIndent(jsonData, "", "  "); err == nil {
-			return string(prettyJSON), nil
-		}
-	}
-
-	// Compact JSON
-	if compactJSON, err := json.Marshal(jsonData); err == nil {
-		return string(compactJSON), nil
-	}
-
-	return "", fmt.Errorf("failed to marshal JSON data")
-}
-
-// serializeAsYAML converts structured data back to YAML format
-func serializeAsYAML(structuredData *yaml.RNode) (string, error) {
-	modifiedData, err := structuredData.String()
-	if err != nil {
-		return "", fmt.Errorf("failed to serialize YAML data: %w", err)
-	}
-
-	return strings.TrimSpace(modifiedData), nil
 }
