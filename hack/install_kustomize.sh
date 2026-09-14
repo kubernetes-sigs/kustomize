@@ -22,7 +22,15 @@
 
 function release_tag_for_version {
   local requested=$1
-  echo "kustomize/v$requested"
+  local IFS=.
+  local -a parts
+  read -r -a parts <<< "$requested"
+  local major=${parts[0]} minor=${parts[1]} patch=${parts[2]}
+  if ((major > 3 || (major == 3 && minor > 2) || (major == 3 && minor == 2 && patch >= 1))); then
+    echo "kustomize/v$requested"
+  else
+    echo "v$requested"
+  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
