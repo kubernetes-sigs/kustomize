@@ -13,9 +13,8 @@ include $(KUSTOMIZE_ROOT)/Makefile-tools.mk
 
 .PHONY: lint test fix fmt tidy vet build
 
-lint: $(MYGOBIN)/golangci-lint
-	$(MYGOBIN)/golangci-lint cache clean # Workaround for https://github.com/golangci/golangci-lint/issues/3228
-	$(MYGOBIN)/golangci-lint \
+lint: $(GOLANGCI_LINT_PREREQUISITE)
+	"$(GOLANGCI_LINT)" \
 	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
 	  --path-prefix $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\2|') \
 	  run ./...

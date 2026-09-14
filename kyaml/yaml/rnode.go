@@ -554,7 +554,7 @@ func (rn *RNode) getMapFromMeta(fName string, fields ...string) map[string]strin
 		// fName is found in metadata; create the map from its content
 		expectedSize := len(fields)
 		if expectedSize == 0 {
-			expectedSize = len(fNameValue.Content) / 2 //nolint: gomnd
+			expectedSize = len(fNameValue.Content) / 2
 		}
 		result = make(map[string]string, expectedSize)
 

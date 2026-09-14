@@ -29,8 +29,8 @@ generate: $(MYGOBIN)/mdtogo
 tidy:
 	(cd image && go mod tidy)
 
-lint: $(MYGOBIN)/golangci-lint
-	(cd image && $(MYGOBIN)/golangci-lint \
+lint: $(GOLANGCI_LINT_PREREQUISITE)
+	(cd image && "$(GOLANGCI_LINT)" \
 	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
 	  --path-prefix $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\2|') \
 	  run ./...)

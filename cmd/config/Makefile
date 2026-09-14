@@ -27,9 +27,8 @@ generate: $(MYGOBIN)/mdtogo $(MYGOBIN)/k8scopy
 clean:
 	rm -rf $(k8sGenDir)
 
-lint: $(MYGOBIN)/golangci-lint
-	$(MYGOBIN)/golangci-lint \
-	  --skip-dirs $(k8sGenDir) \
+lint: $(GOLANGCI_LINT_PREREQUISITE)
+	"$(GOLANGCI_LINT)" \
 	  run ./... \
 	  --path-prefix=cmd/config \
 	  -c ../../.golangci.yml

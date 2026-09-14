@@ -321,7 +321,6 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
-	//nolint:goconst
 	tests := []struct {
 		name    string
 		matcher IdMatcher
