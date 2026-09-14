@@ -14,6 +14,7 @@ import (
 
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -93,6 +94,10 @@ type FileLoader struct {
 	// obtained from the given repository.
 	repoSpec *git.RepoSpec
 
+	// If this is non-nil, the files were
+	// obtained from the given OCI artifact.
+	ociSpec *oci.RepoSpec
+
 	// File system utilities.
 	fSys filesys.FileSystem
 
@@ -101,6 +106,9 @@ type FileLoader struct {
 
 	// Used to clone repositories.
 	cloner git.Cloner
+
+	// Used to pull OCI artifacts.
+	puller oci.Puller
 
 	// Used to clean up, as needed.
 	cleaner func() error
@@ -111,6 +119,9 @@ type FileLoader struct {
 func (fl *FileLoader) Repo() string {
 	if fl.repoSpec != nil {
 		return fl.repoSpec.Dir.String()
+	}
+	if fl.ociSpec != nil {
+		return fl.ociSpec.Dir.String()
 	}
 	return ""
 }
@@ -143,6 +154,7 @@ func newLoaderAtConfirmedDir(
 		referrer:       referrer,
 		fSys:           fSys,
 		cloner:         cloner,
+		puller:         pullerFor(referrer),
 		cleaner:        func() error { return nil },
 	}
 }
@@ -174,6 +186,9 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 		return nil, errors.Errorf("new root cannot be empty")
 	}
 
+	if oci.IsOciURL(path) {
+		return fl.newAtOciPull(path)
+	}
 	repoSpec, err := git.NewRepoSpecFromURL(path)
 	if err == nil {
 		// Treat this as git repo clone request.
@@ -199,6 +214,9 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 		return nil, errors.WrapPrefixf(err, "%s", ErrRtNotDir.Error())
 	}
 	if err = fl.errIfGitContainmentViolation(root); err != nil {
+		return nil, err
+	}
+	if err = fl.errIfOciContainmentViolation(root); err != nil {
 		return nil, err
 	}
 	if err = fl.errIfArgEqualOrHigher(root); err != nil {
@@ -249,6 +267,7 @@ func newLoaderAtGitClone(
 		repoSpec:       repoSpec,
 		fSys:           fSys,
 		cloner:         cloner,
+		puller:         pullerFor(referrer),
 		cleaner:        cleaner,
 	}, nil
 }
@@ -275,7 +294,7 @@ func (fl *FileLoader) containingRepo() *git.RepoSpec {
 	if fl.repoSpec != nil {
 		return fl.repoSpec
 	}
-	if fl.referrer == nil {
+	if fl.ociSpec != nil || fl.referrer == nil {
 		return nil
 	}
 	return fl.referrer.containingRepo()
