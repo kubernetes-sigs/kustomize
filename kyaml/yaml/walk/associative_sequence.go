@@ -16,12 +16,20 @@ import (
 // src and dst should be both sequence node. key is used to call ElementSetter.
 // ElementSetter will use key-value pair to find and set the element in sequence
 // node.
-func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
+// When overwrite is false, dst's own copy of an element is kept instead of
+// src's, so src only contributes the elements dst is missing and the ordering
+// of the ones it already has.
+func appendListNode(dst, src *yaml.RNode, keys []string, overwrite bool) (*yaml.RNode, error) {
 	var err error
 	for _, elem := range src.Content() {
 		// If key is empty, we know this is a scalar value and we can directly set the
 		// node
 		if keys[0] == "" {
+			if !overwrite {
+				if existing := dst.ElementList(keys, []string{elem.Value}); existing != nil {
+					elem = existing.YNode()
+				}
+			}
 			_, err = dst.Pipe(yaml.ElementSetter{
 				Element: elem,
 				Keys:    []string{""},
@@ -51,6 +59,14 @@ func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 				continue
 			}
 			v = append(v, valueNode.YNode().Value)
+		}
+
+		// dst already holds this element and its copy is the merged one, so
+		// setting src's pre-merge copy below would undo the merge.
+		if !overwrite {
+			if existing := dst.ElementList(keys, v); existing != nil {
+				elem = existing.YNode()
+			}
 		}
 
 		// When there are multiple keys, ElementSetter appends the node to dst
@@ -232,11 +248,13 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 	if len(valuesList) > 0 {
 		if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
 			// items from patches are needed to be prepended. so we append the
-			// dest to itemsToBeAdded
-			dest, err = appendListNode(itemsToBeAdded, dest, validKeys)
+			// dest to itemsToBeAdded. itemsToBeAdded already holds the merged
+			// result for every element walked above, so dest only supplies the
+			// elements that were not walked at all.
+			dest, err = appendListNode(itemsToBeAdded, dest, validKeys, false)
 		} else {
 			// append the items
-			dest, err = appendListNode(dest, itemsToBeAdded, validKeys)
+			dest, err = appendListNode(dest, itemsToBeAdded, validKeys, true)
 		}
 	}
 
