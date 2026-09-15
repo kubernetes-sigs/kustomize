@@ -615,6 +615,20 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	if err7 != nil {
 		t.Fatalf("failed to get new instance: %v", err7)
 	}
+	// The scope of this kind is unknown to the openapi data, so it
+	// could be cluster-scoped and thus referenced from any namespace.
+	r8, err8 := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "example.com/v1",
+			"kind":       "CustomKind",
+			"metadata": map[string]interface{}{
+				"name":      "zoe",
+				"namespace": "other",
+			},
+		})
+	if err8 != nil {
+		t.Fatalf("failed to get new instance: %v", err8)
+	}
 
 	tests := map[string]struct {
 		filter   *resource.Resource
@@ -623,31 +637,31 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 		"default namespace 1": {
 			filter: r2,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r1).AddR(r2).AddR(r7).ResMap(),
+				AddR(r1).AddR(r2).AddR(r7).AddR(r8).ResMap(),
 		},
 		"default namespace 2": {
 			filter: r1,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r1).AddR(r2).AddR(r7).ResMap(),
+				AddR(r1).AddR(r2).AddR(r7).AddR(r8).ResMap(),
 		},
 		"happy namespace no prefix": {
 			filter: r3,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap(),
+				AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).AddR(r8).ResMap(),
 		},
 		"happy namespace with prefix": {
 			filter: r5,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap(),
+				AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).AddR(r8).ResMap(),
 		},
 		"cluster level": {
 			filter: r7,
 			expected: resmaptest_test.NewRmBuilder(t, rf).
-				AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap(),
+				AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).AddR(r8).ResMap(),
 		},
 	}
 	m := resmaptest_test.NewRmBuilder(t, rf).
-		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).ResMap()
+		AddR(r1).AddR(r2).AddR(r3).AddR(r4).AddR(r5).AddR(r6).AddR(r7).AddR(r8).ResMap()
 	for name, test := range tests {
 		test := test
 		t.Run(name, func(t *testing.T) {
