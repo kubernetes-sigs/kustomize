@@ -303,8 +303,10 @@ func (gr *Runner) CheckoutReleaseBranch(
 		return nil
 	}
 	gr.comment("creating branch")
-	// The branch doesn't exist remotely.  Create or reset it locally.
-	out, err := gr.run(noHarmDone, "checkout", "-B", branch)
+	// The branch doesn't exist remotely. Create it from remote main without
+	// switching the working tree to main first.
+	base := strings.Join([]string{string(remote), mainBranch}, pathSep)
+	out, err := gr.run(noHarmDone, "checkout", "-B", branch, base)
 	if err != nil {
 		return err
 	}
