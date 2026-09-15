@@ -32,6 +32,38 @@ each in its own sub-directory.
    may soon be deleted, or they might be WIP plugins that will
    someday become examples or builtins.
 
+### Plugin home directory
+
+Exec and Go plugins are loaded from a plugin home directory, found by
+checking these locations in order and using the first one that exists:
+
+1. `$KUSTOMIZE_PLUGIN_HOME`, if that environment variable is set.
+2. `$XDG_CONFIG_HOME/kustomize/plugin`, if `XDG_CONFIG_HOME` is set.
+3. `$HOME/.config/kustomize/plugin`, the default `XDG_CONFIG_HOME` location.
+4. `$HOME/kustomize/plugin`.
+
+Setting `KUSTOMIZE_PLUGIN_HOME` only has an effect if the directory it
+points to already exists; kustomize does not create it, and an
+unset-but-existing lower-priority location will be used instead.
+
+Within the plugin home, each plugin lives at
+
+```
+${pluginHome}/${apiVersion}/${lowercase kind}/${Kind}
+```
+
+where `apiVersion` and `kind` are taken from the plugin's own
+configuration file, the one referenced in the `generators:` or
+`transformers:` field of a kustomization file. For example, a plugin
+configured with
+
+```yaml
+apiVersion: someteam.example.com/v1
+kind: SedTransformer
+```
+
+is loaded from `${pluginHome}/someteam.example.com/v1/sedtransformer/SedTransformer`.
+
 #### Testing
 
 Regardless of the [style](#plugin-styles) used to write a plugin,
