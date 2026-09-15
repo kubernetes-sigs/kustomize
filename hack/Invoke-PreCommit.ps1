@@ -25,7 +25,7 @@ try{
   $rc = $false
 
   function Test-GoLangCILint {
-    golangci-lint -v run ./...
+    make lint
   }
 
   function Test-GoTest {
@@ -81,7 +81,7 @@ try{
   #$rc = $lint -AND $tests -AND $examples
   
   #calc final return code - omit mdrip testing
-  $rc = $lint -AND $tests
+  $rc = $lint -bor $tests
 
   Pop-Location
 

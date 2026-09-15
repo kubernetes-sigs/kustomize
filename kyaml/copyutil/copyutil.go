@@ -179,7 +179,7 @@ func SyncFile(src, dst string) error {
 		filePerm = dstFileInfo.Mode().Perm()
 	}
 
-	err = os.WriteFile(dst, input, filePerm)
+	err = os.WriteFile(dst, input, filePerm) //nolint:gosec // G703: callers choose the destination path.
 	if err != nil {
 		return err
 	}

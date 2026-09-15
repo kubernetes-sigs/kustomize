@@ -23,7 +23,7 @@ func (mf *ManagerFactory) NewRepoManager(allowedReplacements []string) *Manager 
 		dg:         mf.dg,
 		remoteName: mf.remoteName,
 	}
-	var modules misc.LesModules
+	modules := make(misc.LesModules, 0, len(mf.modules))
 	for _, pm := range mf.modules {
 		shortName := pm.ShortName(mf.dg.RepoPath())
 		modules = append(
@@ -43,7 +43,7 @@ func (mf *ManagerFactory) NewRepoManagerWithLocalFlag(allowedReplacements []stri
 		dg:         mf.dg,
 		remoteName: mf.remoteName,
 	}
-	var modules misc.LesModules
+	modules := make(misc.LesModules, 0, len(mf.modules))
 	for _, pm := range mf.modules {
 		shortName := pm.ShortNameWithLocalFlag(mf.dg.RepoPath())
 		modules = append(
