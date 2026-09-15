@@ -732,3 +732,63 @@ spec:
 		})
 	}
 }
+
+// TestConfigurationsFromParentDirectory verifies that the configurations
+// field can reference files in parent directories.
+// See https://github.com/kubernetes-sigs/kustomize/issues/6124
+func TestConfigurationsFromParentDirectory(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+
+	// Shared configuration in the parent directory.
+	th.WriteF("kustomizeconfig.yaml", `
+nameReference:
+- kind: Gorilla
+  fieldSpecs:
+  - kind: AnimalPark
+    path: spec/gorillaRef/name
+`)
+
+	// Kustomization in a subdirectory referencing parent config.
+	th.WriteK("overlay", `
+resources:
+- gorilla.yaml
+- animalPark.yaml
+configurations:
+- ../kustomizeconfig.yaml
+namePrefix: x-
+`)
+	th.WriteF("overlay/gorilla.yaml", `
+apiVersion: foo/v1
+kind: Gorilla
+metadata:
+  name: koko
+spec:
+  diet: bambooshoots
+`)
+	th.WriteF("overlay/animalPark.yaml", `
+apiVersion: foo/v1
+kind: AnimalPark
+metadata:
+  name: sandiego
+spec:
+  gorillaRef:
+    name: koko
+`)
+	m := th.Run("overlay", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: foo/v1
+kind: Gorilla
+metadata:
+  name: x-koko
+spec:
+  diet: bambooshoots
+---
+apiVersion: foo/v1
+kind: AnimalPark
+metadata:
+  name: x-sandiego
+spec:
+  gorillaRef:
+    name: x-koko
+`)
+}
