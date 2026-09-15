@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: myCRD
+metadata:
+  name: deploy1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: ANOTHERVALUE
+        name: nginx
+      - image: anotherimage
+        name: anothercontainer

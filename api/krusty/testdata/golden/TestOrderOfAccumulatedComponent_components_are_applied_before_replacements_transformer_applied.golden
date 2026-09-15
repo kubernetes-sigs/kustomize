@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  namespace: kustomize-namespace
+spec:
+  containers:
+  - env:
+    - name: CURRENT_POD_NAMESPACE
+      value: kustomize-namespace
+    image: busybox
+    name: myapp-container

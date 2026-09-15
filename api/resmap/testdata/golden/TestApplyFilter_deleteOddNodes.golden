@@ -1,0 +1,9 @@
+apiVersion: example.com/v1
+kind: Zero
+metadata:
+  name: r0
+---
+apiVersion: example.com/v1
+kind: Two
+metadata:
+  name: r2

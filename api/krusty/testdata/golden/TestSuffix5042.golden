@@ -1,0 +1,10 @@
+apiVersion: example.com/v1alpha1
+kind: MyResource
+metadata:
+  name: service
+---
+apiVersion: example.com/v1alpha1
+kind: MyResourceTwo
+metadata:
+  name: test
+rules: []

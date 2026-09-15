@@ -1,0 +1,17 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    faceit-pdb: default
+  name: championships-api
+spec:
+  maxUnavailable: 1
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    faceit-pdb: default
+  name: championships-api-2
+spec:
+  maxUnavailable: 1

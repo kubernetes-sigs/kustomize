@@ -1,0 +1,19 @@
+apiVersion: example.com/v1
+kind: One
+metadata:
+  name: r1
+---
+apiVersion: example.com/v1
+kind: One
+metadata:
+  name: r1Clone
+---
+apiVersion: example.com/v1
+kind: Three
+metadata:
+  name: r3
+---
+apiVersion: example.com/v1
+kind: Three
+metadata:
+  name: r3Clone

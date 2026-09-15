@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-nginx
+spec:
+  selector:
+    matchLabels:
+      env: staging
+      team: foo
+  template:
+    metadata:
+      labels:
+        env: staging
+        team: foo
+    spec:
+      containers:
+      - env:
+        - name: ANOTHERENV
+          value: FOO
+        - name: ENVKEY
+          value: ENVVALUE
+        image: nginx:latest
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      - image: sidecar:latest
+        name: sidecar
+      volumes:
+      - gcePersistentDisk:
+          pdName: nginx-persistent-storage
+        name: nginx-persistent-storage
+      - configMap:
+          name: a-configmap-in-overlay-dc6fm46dhm
+        name: configmap-in-overlay
+      - configMap:
+          name: a-b-configmap-in-base-798k5k7g9f
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    env: staging
+    team: foo
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+    team: foo
+  name: a-b-configmap-in-base-798k5k7g9f
+---
+apiVersion: v1
+data:
+  hello: world
+kind: ConfigMap
+metadata:
+  labels:
+    env: staging
+  name: a-configmap-in-overlay-dc6fm46dhm

@@ -1,0 +1,44 @@
+apiVersion: foo/v1
+kind: AnimalPark
+metadata:
+  labels:
+    app: myApp
+  name: x-sandiego
+spec:
+  food:
+  - mimosa
+  - bambooshoots
+  giraffeRef:
+    name: x-april
+  gorillaRef:
+    name: x-koko
+---
+apiVersion: foo/v1
+kind: Giraffe
+metadata:
+  labels:
+    app: myApp
+  name: x-april
+spec:
+  diet: mimosa
+  location: NE
+---
+apiVersion: foo/v1
+kind: Giraffe
+metadata:
+  labels:
+    app: myApp
+  name: x-may
+spec:
+  diet: acacia
+  location: SE
+---
+apiVersion: foo/v1
+kind: Gorilla
+metadata:
+  labels:
+    app: myApp
+  name: x-koko
+spec:
+  diet: bambooshoots
+  location: SW

@@ -1,0 +1,8 @@
+apiVersion: infra.protonbase.io/v1alpha1
+kind: AccessWhiteList
+metadata:
+  name: wlmls5769f
+  namespace: dc7i4hyxzw
+spec:
+  rules:
+  - sourceIps: 0.0.0.0/16
