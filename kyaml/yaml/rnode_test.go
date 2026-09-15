@@ -61,8 +61,8 @@ func TestRNodeHasNilEntryInList(t *testing.T) {
 				},
 			},
 			rsExp: resultExpected{
-				hasNil: false, // TODO: This should be true.
-				path:   "this/should/be/non-empty",
+				hasNil: true,
+				path:   "items/[1]",
 			},
 		},
 	}

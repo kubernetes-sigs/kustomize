@@ -1207,27 +1207,41 @@ func (rn *RNode) MatchesLabelSelector(selector string) (bool, error) {
 
 // HasNilEntryInList returns true if the RNode contains a list which has
 // a nil item, along with the path to the missing item.
-// TODO(broken): This doesn't do what it claims to do.
-// (see TODO in unit test and pr 1513).
 func (rn *RNode) HasNilEntryInList() (bool, string) {
-	return hasNilEntryInList(rn.value)
+	return hasNilEntryInList(rn.Document())
 }
 
-func hasNilEntryInList(in interface{}) (bool, string) {
-	switch v := in.(type) {
-	case map[string]interface{}:
-		for key, s := range v {
-			if result, path := hasNilEntryInList(s); result {
-				return result, key + "/" + path
+func hasNilEntryInList(n *yaml.Node) (bool, string) {
+	if n == nil {
+		return false, ""
+	}
+	switch n.Kind {
+	case yaml.DocumentNode:
+		if len(n.Content) == 0 {
+			return false, ""
+		}
+		return hasNilEntryInList(n.Content[0])
+	case yaml.MappingNode:
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			if result, path := hasNilEntryInList(n.Content[i+1]); result {
+				key := n.Content[i].Value
+				if path == "" {
+					return true, key
+				}
+				return true, key + "/" + path
 			}
 		}
-	case []interface{}:
-		for index, s := range v {
-			if s == nil {
-				return true, ""
+	case yaml.SequenceNode:
+		for index, item := range n.Content {
+			indexPath := "[" + strconv.Itoa(index) + "]"
+			if item == nil || IsYNodeTaggedNull(item) {
+				return true, indexPath
 			}
-			if result, path := hasNilEntryInList(s); result {
-				return result, "[" + strconv.Itoa(index) + "]/" + path
+			if result, path := hasNilEntryInList(item); result {
+				if path == "" {
+					return true, indexPath
+				}
+				return true, indexPath + "/" + path
 			}
 		}
 	}
