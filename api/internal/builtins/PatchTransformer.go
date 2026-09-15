@@ -63,7 +63,10 @@ func (p *PatchTransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) error
 	}
 	if errSM != nil && errJson != nil {
 		return fmt.Errorf(
-			"unable to parse SM or JSON patch from %s", p.patchSource)
+			"unable to parse SM or JSON patch from %s; SM error: %s, JSON6902 error: %s",
+			p.patchSource,
+			errSM.Error(),
+			errJson.Error())
 	}
 	if errSM == nil {
 		p.smPatches = patchesSM
