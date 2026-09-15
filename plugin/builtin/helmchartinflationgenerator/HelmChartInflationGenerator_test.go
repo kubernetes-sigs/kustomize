@@ -884,7 +884,7 @@ releaseName: %s
 			assert.True(t, len(rm.Resources()) > 0)
 
 			var chartDir string
-			if tt.version != "" && tt.repo != "" {
+			if tt.version != "" {
 				chartDir = fmt.Sprintf("charts/%s-%s/%s", tt.chartName, tt.version, tt.chartName)
 			} else {
 				chartDir = fmt.Sprintf("charts/%s", tt.chartName)
@@ -986,7 +986,7 @@ chartHome: ./charts
 	require.NoError(t, err)
 	assert.Equal(t, "bar", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart-1.0.0/test-chart")
 	assert.True(t, th.GetFSys().Exists(chartDir))
 
 	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
@@ -1020,7 +1020,7 @@ debug: true
 	require.NoError(t, err)
 	assert.Equal(t, "bar", cm)
 
-	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart")
+	chartDir := filepath.Join(th.GetRoot(), "charts/test-chart-1.0.0/test-chart")
 	assert.True(t, th.GetFSys().Exists(chartDir))
 
 	chartYamlContent, err := th.GetFSys().ReadFile(filepath.Join(chartDir, "Chart.yaml"))
