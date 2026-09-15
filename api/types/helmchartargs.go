@@ -102,6 +102,9 @@ type HelmChart struct {
 
 	// allow for devel release to be used.
 	Devel bool `json:"devel,omitempty" yaml:"devel,omitempty"`
+
+	// SkipSchemaValidation disables JSON schema validation
+	SkipSchemaValidation bool `json:"skipSchemaValidation,omitempty" yaml:"skipSchemaValidation,omitempty"`
 }
 
 // HelmChartArgs contains arguments to helm.
@@ -199,6 +202,10 @@ func (h HelmChart) AsHelmArgs(absChartHome string) []string {
 	}
 	if h.Devel {
 		args = append(args, "--devel")
+	}
+	
+	if h.SkipSchemaValidation {
+		args = append(args, "--skip-schema-validation")
 	}
 	return args
 }
