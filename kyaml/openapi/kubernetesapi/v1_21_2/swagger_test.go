@@ -1,7 +1,7 @@
 // Copyright 2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package v1_21_2 //nolint:revive // The package name is part of the public API.
+package v1_21_2
 
 import (
 	"crypto/sha256"
