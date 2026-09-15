@@ -194,9 +194,22 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	buffer := bytes.NewBuffer(content)
 	var comments [][]byte
+	inBlockScalar := false
+	blockScalarIndent := 0
 
 	line, err := buffer.ReadBytes('\n')
 	for err == nil {
+		if inBlockScalar && !isBlankLine(line) {
+			if lineIndent(line) > blockScalarIndent {
+				// This line is literal content of the block scalar (e.g. a line
+				// beginning with '#' that is not actually a YAML comment), so it
+				// must not be mistaken for a comment or a field declaration.
+				line, err = buffer.ReadBytes('\n')
+				continue
+			}
+			inBlockScalar = false
+		}
+
 		if isCommentOrBlankLine(line) {
 			comments = append(comments, line)
 		} else {
@@ -208,6 +221,10 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 				mf.originalFields[len(mf.originalFields)-1].appendComment(squash(comments))
 				comments = [][]byte{}
 			}
+			if isBlockScalarStart(line) {
+				inBlockScalar = true
+				blockScalarIndent = lineIndent(line)
+			}
 		}
 		line, err = buffer.ReadBytes('\n')
 	}
@@ -216,6 +233,30 @@ func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 		return err
 	}
 	return nil
+}
+
+// lineIndent returns the number of leading space characters in line.
+func lineIndent(line []byte) int {
+	return len(line) - len(bytes.TrimLeft(line, " "))
+}
+
+// isBlankLine mirrors the blank-line half of isCommentOrBlankLine, so the two
+// stay consistent about what counts as blank.
+func isBlankLine(line []byte) bool {
+	return len(bytes.TrimRight(bytes.TrimLeft(line, " "), "\n")) == 0
+}
+
+// blockScalarHeader matches a YAML block scalar header at the end of a line,
+// e.g. "|", "|-", ">+", "|2", ">-2" or "|2-" (the chomping and explicit
+// indentation indicators may appear in either order).
+var blockScalarHeader = regexp.MustCompile(`[|>][+-]?[1-9]?[+-]?$`)
+
+// isBlockScalarStart returns true if line ends with a YAML block scalar
+// header, meaning the following more-indented lines are literal scalar
+// content rather than kustomization fields or comments.
+func isBlockScalarStart(line []byte) bool {
+	trimmed := bytes.TrimRight(line, " \t\r\n")
+	return blockScalarHeader.Match(trimmed)
 }
 
 // marshal converts a kustomization to a byte stream.
