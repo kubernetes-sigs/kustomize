@@ -360,6 +360,43 @@ spec:
         name: datadir
 `
 
+func TestHelmChartInflationGeneratorRejectsFlagLikeReleaseName(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+
+	err := th.ErrorFromLoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myPipeline
+name: ocp-pipeline
+version: 0.1.16
+repo: https://bcgov.github.io/helm-charts
+releaseName: --post-renderer=./post-renderer.sh
+`)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "releaseName must not start with '-'")
+}
+
+func TestHelmChartInflationGeneratorRejectsFlagLikeChartName(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+
+	err := th.ErrorFromLoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: myPipeline
+name: --post-renderer=./post-renderer.sh
+version: 0.1.16
+repo: https://bcgov.github.io/helm-charts
+`)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "chart name must not start with '-'")
+}
+
 func TestHelmChartInflationGeneratorWithValuesInlineOverride(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
 		PrepBuiltin("HelmChartInflationGenerator")
