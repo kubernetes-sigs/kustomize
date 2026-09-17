@@ -63,6 +63,14 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 	// Even though we use the this value further down we must check this before removing annotations
 	jsonEncodeSingleBareNode := w.shouldJSONEncodeSingleBareNode(nodes)
 
+	// Check for InitialDocSepAnnotation on a node
+	var retainInitialDocSep bool
+	for i := range nodes {
+		if len(nodes[i].GetAnnotations(kioutil.InitialDocSepAnnotation)) > 0 {
+			retainInitialDocSep = true
+			break
+		}
+	}
 	// store seqindent annotation value for each node in order to set the encoder indentation
 	var seqIndentsForNodes []string
 	for i := range nodes {
@@ -82,6 +90,11 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 			}
 
 			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.SeqIndentAnnotation))
+			if err != nil {
+				return errors.Wrap(err)
+			}
+
+			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.InitialDocSepAnnotation))
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -108,7 +121,13 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 		return errors.Wrap(encoder.Encode(nodes[0]))
 	}
 
+	if retainInitialDocSep {
+		if _, err := w.Writer.Write([]byte("---\n")); err != nil {
+			return errors.Wrap(err)
+		}
+	}
 	encoder := yaml.NewEncoder(w.Writer)
+
 	defer encoder.Close()
 	// don't wrap the elements
 	if w.WrappingKind == "" {
