@@ -5,11 +5,9 @@ package add
 
 import (
 	"errors"
-	"log"
-	"slices"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -51,23 +49,7 @@ func (o *addGeneratorOptions) Validate(fSys filesys.FileSystem, args []string) e
 
 // RunAddGenerator runs add generator command (do real work).
 func (o *addGeneratorOptions) RunAddGenerator(fSys filesys.FileSystem) error {
-	if len(o.generatorFilePaths) == 0 {
-		return nil
-	}
-	mf, err := kustfile.NewKustomizationFile(fSys)
-	if err != nil {
-		return err
-	}
-	m, err := mf.Read()
-	if err != nil {
-		return err
-	}
-	for _, t := range o.generatorFilePaths {
-		if slices.Contains(m.Generators, t) {
-			log.Printf("generator %s already in kustomization file", t)
-			continue
-		}
-		m.Generators = append(m.Generators, t)
-	}
-	return mf.Write(m)
+	return addPluginPaths(fSys, o.generatorFilePaths, "generator", func(m *types.Kustomization) *[]string {
+		return &m.Generators
+	})
 }
