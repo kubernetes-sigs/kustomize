@@ -868,3 +868,262 @@ spec:
   - Deny
 `)
 }
+
+// TestIssue5504_NameReferenceForClusterScopedCRDs verifies that nameReference
+// updates references involving custom resources that are cluster-scoped (no
+// metadata.namespace) even though those kinds are not in the built-in OpenAPI
+// schema. See https://github.com/kubernetes-sigs/kustomize/issues/5504
+func TestIssue5504_NameReferenceForClusterScopedCRDs(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- resources.yaml
+
+secretGenerator:
+- name: test
+  files:
+  - test.pem
+  namespace: cert-manager
+
+configurations:
+- kustomizeconfig.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+nameSuffix: -FOOBAR
+`)
+	th.WriteF("resources.yaml", `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-test-sa
+  namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: secret-store
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: eu-west-1
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: my-test-sa
+            namespace: external-secrets
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: vault
+  namespace: cert-manager
+spec:
+  vault:
+    caBundleSecretRef:
+      name: test
+      key: test.pem
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: cert-manager-vault-approle
+  namespace: cert-manager
+spec:
+  secretStoreRef:
+    name: secret-store
+    kind: ClusterSecretStore
+`)
+	th.WriteF("kustomizeconfig.yaml", `
+nameReference:
+- kind: Secret
+  fieldSpecs:
+  - kind: ClusterIssuer
+    group: cert-manager.io
+    path: spec/vault/caBundleSecretRef/name
+- kind: ServiceAccount
+  fieldSpecs:
+  - kind: ClusterSecretStore
+    group: external-secrets.io
+    path: spec/provider/aws/auth/jwt/serviceAccountRef/name
+- kind: ClusterSecretStore
+  group: external-secrets.io
+  fieldSpecs:
+  - kind: ExternalSecret
+    group: external-secrets.io
+    path: spec/secretStoreRef/name
+`)
+	th.WriteF("test.pem", `Cg==
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-test-sa-FOOBAR
+  namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: secret-store-FOOBAR
+spec:
+  provider:
+    aws:
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: my-test-sa-FOOBAR
+            namespace: external-secrets
+      region: eu-west-1
+      service: SecretsManager
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: vault-FOOBAR
+  namespace: cert-manager
+spec:
+  vault:
+    caBundleSecretRef:
+      key: test.pem
+      name: test-FOOBAR
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: cert-manager-vault-approle-FOOBAR
+  namespace: cert-manager
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: secret-store-FOOBAR
+---
+apiVersion: v1
+data:
+  test.pem: Q2c9PQo=
+kind: Secret
+metadata:
+  name: test-FOOBAR
+  namespace: cert-manager
+type: Opaque
+`)
+}
+
+// TestNamespacedResourcesDoNotFollowCrossNamespaceNameRefs verifies that the
+// cluster-scoped CRD heuristic does not let built-in namespaced types refer to
+// resources in other namespaces.
+func TestNamespacedResourcesDoNotFollowCrossNamespaceNameRefs(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- resources.yaml
+nameSuffix: -sfx
+`)
+	th.WriteF("resources.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-map
+  namespace: other
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-dep
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        env:
+        - name: CFG
+          valueFrom:
+            configMapKeyRef:
+              name: my-map
+              key: k
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-map-sfx
+  namespace: other
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-dep-sfx
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: CFG
+          valueFrom:
+            configMapKeyRef:
+              key: k
+              name: my-map
+        name: app
+`)
+}
+
+// TestNamespacedCRDDoesNotFollowCrossNamespaceNameRefs verifies that a custom
+// resource with metadata.namespace is still treated as namespaced, so it does
+// not pick up a nameReference target in a different namespace.
+func TestNamespacedCRDDoesNotFollowCrossNamespaceNameRefs(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- resources.yaml
+nameSuffix: -sfx
+configurations:
+- kustomizeconfig.yaml
+`)
+	th.WriteF("kustomizeconfig.yaml", `
+nameReference:
+- kind: Secret
+  fieldSpecs:
+  - kind: MyKind
+    group: example.com
+    path: spec/secretRef/name
+`)
+	th.WriteF("resources.yaml", `
+apiVersion: example.com/v1
+kind: MyKind
+metadata:
+  name: mykind
+  namespace: ns1
+spec:
+  secretRef:
+    name: s
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s
+  namespace: ns2
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: example.com/v1
+kind: MyKind
+metadata:
+  name: mykind-sfx
+  namespace: ns1
+spec:
+  secretRef:
+    name: s
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s-sfx
+  namespace: ns2
+`)
+}
