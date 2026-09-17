@@ -2,39 +2,42 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package main generates cobra.Command go variables containing documentation read from .md files.
-// Usage: mdtogo SOURCE_MD_DIR/ DEST_GO_DIR/ [--full=true] [--license=license.txt|none]
+// Usage: mdtogo SOURCE_MD_DIR/ DEST_GO_DIR/ [--full=true] [--license=license.txt|none] [--files=one.md,two.md]
 //
 // The command will create a docs.go file under DEST_GO_DIR/ containing string variables to be
 // used by cobra commands for documentation.The variable names are generated from the SOURCE_MD_DIR/
-// file names, replacing '-' with '', title casing the filename, and dropping the extension.
+// file names, removing '-', title casing the filename, and dropping the extension.
 // All *.md will be read from DEST_GO_DIR/, and a single DEST_GO_DIR/docs.go file is generated.
 //
 // Each .md document will be parsed as follows if no flags are provided:
 //
-//   ## cmd
+//	## cmd
 //
-//   This section will be parsed into a string variable for `Short`
+//	This section will be parsed into a string variable for `Short`
 //
-//   ### Synopsis
+//	### Synopsis
 //
-//   This section will be parsed into a string variable for `Long`
+//	This section will be parsed into a string variable for `Long`
 //
-//   ### Examples
+//	### Examples
 //
-//   This section will be parsed into a string variable for `Example`
+//	This section will be parsed into a string variable for `Example`
 //
 // If --full=true is provided, the document will be parsed as follows:
 //
-//   ## cmd
+//	## cmd
 //
-//   All sections will be parsed into a Long string.
+//	All sections will be parsed into a Long string.
 //
 // Flags:
-//   --full=true
-//     Create a Long variable from the full .md files, rather than separate sections.
-//   --license
-//     Controls the license header added to the files.  Specify a path to a license file,
-//     or "none" to skip adding a license.
+//
+//	--full=true
+//	  Create a Long variable from the full .md files, rather than separate sections.
+//	--license
+//	  Controls the license header added to the files.  Specify a path to a license file,
+//	  or "none" to skip adding a license.
+//	--files
+//	  Read only the comma-separated Markdown filenames from the source directory.
 package main
 
 import (
@@ -44,6 +47,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -51,12 +55,16 @@ var full bool
 var licenseFile string
 
 func main() {
+	var selectedFiles []string
 	for _, a := range os.Args {
 		if a == "--full=true" {
 			full = true
 		}
 		if strings.HasPrefix(a, "--license=") {
 			licenseFile = strings.ReplaceAll(a, "--license=", "")
+		}
+		if filenames, ok := strings.CutPrefix(a, "--files="); ok {
+			selectedFiles = strings.Split(filenames, ",")
 		}
 	}
 
@@ -76,6 +84,9 @@ func main() {
 	var docs []doc
 	for _, f := range files {
 		if filepath.Ext(f.Name()) != ".md" {
+			continue
+		}
+		if selectedFiles != nil && !slices.Contains(selectedFiles, f.Name()) {
 			continue
 		}
 		b, err := os.ReadFile(filepath.Join(source, f.Name())) //nolint:gosec // G703: this tool intentionally reads the requested directory.
