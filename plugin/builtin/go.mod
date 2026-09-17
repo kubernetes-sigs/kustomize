@@ -1,8 +1,9 @@
-module sigs.k8s.io/kustomize/plugin/builtin/patchjson6902transformer
+module sigs.k8s.io/kustomize/plugin/builtin
 
 go 1.26.0
 
 require (
+	github.com/stretchr/testify v1.12.1
 	gopkg.in/evanphx/json-patch.v4 v4.13.0
 	sigs.k8s.io/kustomize/api v0.21.1
 	sigs.k8s.io/kustomize/kyaml v0.21.1
@@ -28,7 +29,7 @@ require (
 	github.com/go-openapi/swag/yamlutils v0.27.1 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
-	github.com/stretchr/testify v1.12.1 // indirect
+	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
@@ -37,6 +38,6 @@ require (
 	k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad // indirect
 )
 
-replace sigs.k8s.io/kustomize/api => ../../../api
+replace sigs.k8s.io/kustomize/api => ../../api
 
-replace sigs.k8s.io/kustomize/kyaml => ../../../kyaml
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml
