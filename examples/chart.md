@@ -257,7 +257,7 @@ inflation:
 
 <!-- @checkPassword @testHelm -->
 ```
-test 1 == $(kustomizeIt prod | grep -c "rcon-password: Q0hBTkdFTUUh")
+test 1 == $(kustomizeIt prod | grep -cE 'rcon-password: "?Q0hBTkdFTUUh"?')
 ```
 
 The above command succeeds if the value of the generated
@@ -282,7 +282,7 @@ downloaded from the internet:
 
 <!-- @checkPassword2 @testHelm -->
 ```
-test 1 == $(kustomizeIt prod | grep -c "rcon-password: U09NRVRISU5HX0VMU0Uh")
+test 1 == $(kustomizeIt prod | grep -cE 'rcon-password: "?U09NRVRISU5HX0VMU0Uh"?')
 ```
 
 Finally, clean up:

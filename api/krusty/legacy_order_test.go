@@ -22,21 +22,21 @@ kind: ConfigMap
 metadata:
   name: testing
 data:
-  key: value
+  key: "value"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: testing-one
 data:
-  key: value
+  key: "value"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: testing-two
 data:
-  key: value
+  key: "value"
 `)
 	opts := th.MakeDefaultOptions()
 	opts.Reorder = krusty.ReorderOptionLegacy
@@ -44,21 +44,21 @@ data:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: testing
 ---
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: testing-one
 ---
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: testing-two

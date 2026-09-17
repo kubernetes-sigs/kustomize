@@ -272,7 +272,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -285,8 +285,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  password: c29tZXB3
-  username: YWRtaW4=
+  password: "c29tZXB3"
+  username: "YWRtaW4="
 kind: Secret
 metadata:
   annotations:
@@ -412,7 +412,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: override-bar
+  foo: "override-bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -426,9 +426,9 @@ metadata:
 ---
 apiVersion: v1
 data:
-  password: c29tZXB3
-  proxy: aGFwcm94eQ==
-  username: YWRtaW4=
+  password: "c29tZXB3"
+  proxy: "aGFwcm94eQ=="
+  username: "YWRtaW4="
 kind: Secret
 metadata:
   annotations:
@@ -443,7 +443,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -474,14 +474,14 @@ metadata:
   name: test
 type: Opaque
 stringData:
-  property1: value1
+  property1: "value1"
 `)
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  property1: dmFsdWUx
-  property2: dmFsdWUy
+  property1: "dmFsdWUx"
+  property2: "dmFsdWUy"
 kind: Secret
 metadata:
   name: test
@@ -632,7 +632,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: override-bar
+  foo: "override-bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -646,9 +646,9 @@ metadata:
 ---
 apiVersion: v1
 data:
-  password: c29tZXB3
-  proxy: aGFwcm94eQ==
-  username: YWRtaW4=
+  password: "c29tZXB3"
+  proxy: "aGFwcm94eQ=="
+  username: "YWRtaW4="
 kind: Secret
 metadata:
   annotations:
@@ -663,7 +663,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -701,7 +701,7 @@ secretGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: test-t757gk2bmf
@@ -709,7 +709,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: test-t757gk2bmf
@@ -717,8 +717,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  password: c29tZXB3
-  username: YWRtaW4=
+  password: "c29tZXB3"
+  username: "YWRtaW4="
 kind: Secret
 metadata:
   name: test-bgd6bkgdm2
@@ -727,8 +727,8 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  password: c29tZXB3
-  username: YWRtaW4=
+  password: "c29tZXB3"
+  username: "YWRtaW4="
 kind: Secret
 metadata:
   name: test-bgd6bkgdm2

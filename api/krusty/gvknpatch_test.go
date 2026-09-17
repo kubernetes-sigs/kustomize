@@ -691,7 +691,7 @@ func TestNameReferenceAfterJsonPatch(t *testing.T) {
 	th.WriteF("resources.yaml", `
 apiVersion: v1
 data:
-  bar: bar
+  bar: "bar"
 kind: ConfigMap
 metadata:
   name: cm
@@ -737,7 +737,7 @@ patches:
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `apiVersion: v1
 data:
-  bar: bar
+  bar: "bar"
 kind: ConfigMap
 metadata:
   name: foo-cm
@@ -839,7 +839,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  bar: bar
+  bar: "bar"
 kind: ConfigMap
 metadata:
   name: cm-8hm8224gfd

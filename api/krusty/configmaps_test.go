@@ -9,6 +9,92 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
+// ConfigMap data is map[string]string. JSONToYAML drops quotes from values
+// that are valid plain YAML, which breaks later envsubst of ${VAR} with
+// booleans or integers. See https://github.com/kubernetes-sigs/kustomize/issues/5558
+func TestConfigMapDataValuesStayQuotedStrings(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- configmap.yaml
+`)
+	th.WriteF("configmap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-object
+data:
+  flag: "true"
+  name: "test4"
+  pci: '${TEST}'
+  structured: '{TEMPLATE_VAR2}'
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  flag: "true"
+  name: "test4"
+  pci: "${TEST}"
+  structured: '{TEMPLATE_VAR2}'
+kind: ConfigMap
+metadata:
+  name: test-object
+`)
+}
+
+func TestConfigMapCommentExampleAllValuesQuoted(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- configmap.yaml
+`)
+	th.WriteF("configmap.yaml", `
+apiVersion: v1
+kind: ConfigMap
+data:
+  test1: "${TEMPLATE_VAR1}"
+  test2: "{TEMPLATE_VAR2}"
+  test3: "true"
+  test4: "test4"
+metadata:
+  name: config
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  test1: "${TEMPLATE_VAR1}"
+  test2: '{TEMPLATE_VAR2}'
+  test3: "true"
+  test4: "test4"
+kind: ConfigMap
+metadata:
+  name: config
+`)
+}
+
+func TestConfigMapGeneratorPlaceholderStaysQuoted(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: test-object
+  literals:
+  - pci=${TEST}
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  pci: "${TEST}"
+kind: ConfigMap
+metadata:
+  name: test-object
+`)
+}
+
 // Numbers and booleans are quoted
 func TestGeneratorIntVsStringNoMerge(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
@@ -43,7 +129,7 @@ spec:
 apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   year: "2020"
 kind: ConfigMap
 metadata:
@@ -74,7 +160,7 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   month: "12"
   year: "2020"
 kind: ConfigMap
@@ -179,22 +265,22 @@ weak nuclear
 		m, `
 apiVersion: v1
 data:
-  BIRD: falcon
-  MOUNTAIN: everest
-  OCEAN: pacific
+  BIRD: "falcon"
+  MOUNTAIN: "everest"
+  OCEAN: "pacific"
   forces.txt: |2
 
     gravitational
     electromagnetic
     strong nuclear
     weak nuclear
-  fruit: apple
+  fruit: "apple"
   passphrase: |2
 
     Life is short.
     But the years are long.
     Not while the evil days come not.
-  vegetable: broccoli
+  vegetable: "broccoli"
 kind: ConfigMap
 metadata:
   name: blah-bob-g9df72cd5b
@@ -210,17 +296,17 @@ metadata:
 ---
 apiVersion: v1
 data:
-  BIRD: ZmFsY29u
-  MOUNTAIN: ZXZlcmVzdA==
-  OCEAN: cGFjaWZpYw==
+  BIRD: "ZmFsY29u"
+  MOUNTAIN: "ZXZlcmVzdA=="
+  OCEAN: "cGFjaWZpYw=="
   forces.txt: |
     CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
     VjbGVhcgo=
-  fruit: YXBwbGU=
+  fruit: "YXBwbGU="
   passphrase: |
     CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
     UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=
-  vegetable: YnJvY2NvbGk=
+  vegetable: "YnJvY2NvbGk="
 kind: Secret
 metadata:
   name: blah-bob-58g62h555c
@@ -267,7 +353,7 @@ radon
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  fruit: apple
+  fruit: "apple"
   nobles: |2
 
     helium
@@ -276,7 +362,7 @@ data:
     krypton
     xenon
     radon
-  vegetable: broccoli
+  vegetable: "broccoli"
 kind: ConfigMap
 metadata:
   name: blah-bob-db529cg5bk
@@ -306,8 +392,8 @@ data:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  A_FIRST_ENV_VARIABLE: foo
-  ANOTHER_ENV_VARIABLE: bar
+  A_FIRST_ENV_VARIABLE: "foo"
+  ANOTHER_ENV_VARIABLE: "bar"
 kind: ConfigMap
 metadata:
   name: project
@@ -337,8 +423,8 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  fruit: apple
-  veggie: broccoli
+  fruit: "apple"
+  veggie: "broccoli"
 kind: ConfigMap
 metadata:
   name: p-cm-877mt5hc89
@@ -445,16 +531,16 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  baz: qux
-  foo: bar
-  from: overlay
+  baz: "qux"
+  foo: "bar"
+  from: "overlay"
 kind: ConfigMap
 metadata:
   name: p1-com1-8tc62428t2
 ---
 apiVersion: v1
 data:
-  from: overlay
+  from: "overlay"
 kind: ConfigMap
 metadata:
   name: p2-com2-87mcggf7d7
@@ -498,16 +584,16 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  big: bang
-  foo: bar
+  big: "bang"
+  foo: "bar"
 kind: ConfigMap
 metadata:
   name: o1-cm-ft9mmdc8c6
 ---
 apiVersion: v1
 data:
-  big: crunch
-  foo: bar
+  big: "crunch"
+  foo: "bar"
 kind: ConfigMap
 metadata:
   name: cm-o2-5k95kd76ft
@@ -565,7 +651,7 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(
 		m, `apiVersion: v1
 data:
-  TEST: this is a 'test'
+  TEST: "this is a 'test'"
 kind: ConfigMap
 metadata:
   name: test-k9cc55dfm5

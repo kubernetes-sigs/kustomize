@@ -448,7 +448,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  blue-name: blue
+  blue-name: "blue"
 kind: ConfigMap
 metadata:
   name: overlay-red
@@ -498,7 +498,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  blue-namespace: base-namespace
+  blue-namespace: "base-namespace"
 kind: ConfigMap
 metadata:
   name: red
@@ -540,7 +540,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  blue-name: blue
+  blue-name: "blue"
 kind: ConfigMap
 metadata:
   name: red-dc6gc5btkc
@@ -608,7 +608,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  name: something-else
+  name: "something-else"
 kind: ConfigMap
 metadata:
   name: app-config-dev-97544dk6t8
@@ -995,8 +995,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  name: something-else
-  name-copy: something-else
+  name: "something-else"
+  name-copy: "something-else"
 kind: ConfigMap
 metadata:
   name: pre-app-config-dev-7266b7f2m9
