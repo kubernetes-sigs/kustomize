@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: myApp
+  name: a-myDeployment
+spec:
+  selector:
+    matchLabels:
+      app: myApp
+  template:
+    metadata:
+      labels:
+        app: myApp
+        backend: awesome
+    spec:
+      containers:
+      - image: whatever
+        name: whatever
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: myApp
+  name: a-myService
+spec:
+  ports:
+  - port: 7002
+  selector:
+    app: myApp
+    backend: bungie

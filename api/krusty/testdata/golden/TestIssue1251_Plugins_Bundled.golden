@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: my-image
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+        name: my-deployment
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ben
+spec:
+  replica: "3"
+  template:
+    spec:
+      containers:
+      - image: costello:v8
+      dnsPolicy: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alice
+spec:
+  template:
+    spec:
+      containers:
+      - image: abbott:v2
+        name: tomato

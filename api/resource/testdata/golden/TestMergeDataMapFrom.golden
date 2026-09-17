@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  fruit: pear
+  spaceship: enterprise
+kind: BlahBlah
+metadata:
+  name: clown

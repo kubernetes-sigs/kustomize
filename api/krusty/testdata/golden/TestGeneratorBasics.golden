@@ -1,0 +1,48 @@
+apiVersion: v1
+data:
+  BIRD: falcon
+  MOUNTAIN: everest
+  OCEAN: pacific
+  forces.txt: |2
+
+    gravitational
+    electromagnetic
+    strong nuclear
+    weak nuclear
+  fruit: apple
+  passphrase: |2
+
+    Life is short.
+    But the years are long.
+    Not while the evil days come not.
+  vegetable: broccoli
+kind: ConfigMap
+metadata:
+  name: blah-bob-g9df72cd5b
+---
+apiVersion: v1
+data:
+  druid_segmentCache_locations: '[{"path": "var/druid/segment-cache", "maxSize": 32000000000,
+    "freeSpacePercent": 1.0}]'
+  v2: '[{"path": "var/druid/segment-cache"}]'
+kind: ConfigMap
+metadata:
+  name: blah-json-m8529t979f
+---
+apiVersion: v1
+data:
+  BIRD: ZmFsY29u
+  MOUNTAIN: ZXZlcmVzdA==
+  OCEAN: cGFjaWZpYw==
+  forces.txt: |
+    CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
+    VjbGVhcgo=
+  fruit: YXBwbGU=
+  passphrase: |
+    CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
+    UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=
+  vegetable: YnJvY2NvbGk=
+kind: Secret
+metadata:
+  name: blah-bob-58g62h555c
+type: Opaque

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: gsa-name-1@project-id-1.iam.gserviceaccount.com
+  name: k8s-sa-name-1
+  namespace: k8s-namespace-1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: gsa-name-2@project-id-2.iam.gserviceaccount.com
+  name: k8s-sa-name-2

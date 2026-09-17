@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  DB_PASSWORD: somepw
+  DB_USERNAME: admin
+kind: ConfigMap
+metadata:
+  name: envConfigMap

@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whatever
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: EXISTING
+          value: EXISTING_VALUE
+        image: helloworld
+        name: whatever

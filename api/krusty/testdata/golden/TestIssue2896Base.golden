@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-test-api
+spec:
+  template:
+    spec:
+      containers:
+      - image: example:1.0
+        name: example
+        volumeMounts:
+        - mountPath: /etc/config
+          name: conf
+      volumes:
+      - configMap:
+          name: conf
+        name: conf
