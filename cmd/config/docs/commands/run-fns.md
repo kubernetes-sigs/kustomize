@@ -1,6 +1,9 @@
+<!-- Keep the historical short description and docs command spelling below in
+sync with the CLI help; correcting them would change command output. -->
+
 ## run
 
-[Alpha] Reconcile config functions to Resources.
+[Alpha] Reoncile config functions to Resources.
 
 ### Synopsis
 
@@ -46,7 +49,7 @@ order they appear in the file).
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
-  See `kustomize docs-fn` for more details on writing functions.
+  See `kustomize help cfg docs-fn` for more details on writing functions.
 
 ### Examples
 
