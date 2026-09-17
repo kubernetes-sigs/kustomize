@@ -101,4 +101,14 @@ func TestAsHelmArgs(t *testing.T) {
 				"-f", "values2",
 				"--devel"})
 	})
+
+	t.Run("without values file", func(t *testing.T) {
+		p := types.HelmChart{
+			Name:        "chart-name",
+			Version:     "1.0.0",
+			ReleaseName: "my-release",
+		}
+		require.Equal(t, p.AsHelmArgs("/home/charts"),
+			[]string{"template", "my-release", "/home/charts/chart-name"})
+	})
 }

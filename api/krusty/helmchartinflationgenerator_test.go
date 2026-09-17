@@ -1307,3 +1307,44 @@ func copyValuesFilesTestChartsIntoHarness(t *testing.T, th *kusttest_test.Harnes
 	require.NoError(t, fs.MkdirAll(filepath.Join(thDir, "templates")))
 	require.NoError(t, copyutil.CopyDir(th.GetFSys(), chartDir, thDir))
 }
+
+func TestHelmChartInflationGeneratorWithoutValuesYaml(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "no-values-chart")
+	fs := th.GetFSys()
+	require.NoError(t, fs.MkdirAll(filepath.Join(chartDir, "templates")))
+
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `apiVersion: v2
+name: no-values-chart
+version: 0.1.0
+`)
+	th.WriteF(filepath.Join(chartDir, "templates", "configmap.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-cm
+data:
+  status: ready
+`)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+helmCharts:
+- name: no-values-chart
+  releaseName: test-release
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  status: ready
+kind: ConfigMap
+metadata:
+  name: test-cm
+`)
+}

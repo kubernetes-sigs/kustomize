@@ -112,12 +112,9 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 		p.ChartHome = types.HelmDefaultHome
 	}
 
-	// The ValuesFile(s) may be consulted by the plugin, so it must
+	// AdditionalValuesFiles may be consulted by the plugin, so they must
 	// be under the loader root (unless root restrictions are
 	// disabled).
-	if p.ValuesFile == "" {
-		p.ValuesFile = filepath.Join(p.absChartHome(), p.Name, "values.yaml")
-	}
 	for i, file := range p.AdditionalValuesFiles {
 		// use Load() to enforce root restrictions
 		if _, err := p.h.Loader().Load(file); err != nil {
@@ -217,7 +214,18 @@ func (p *HelmChartInflationGeneratorPlugin) createNewMergedValuesFile() (
 }
 
 func (p *HelmChartInflationGeneratorPlugin) replaceValuesInline() error {
-	pValues, err := p.h.Loader().Load(p.ValuesFile)
+	valuesFile := p.ValuesFile
+	if valuesFile == "" {
+		chartValuesFile := filepath.Join(p.absChartHome(), p.Name, "values.yaml")
+		if _, err := os.Stat(chartValuesFile); err == nil {
+			valuesFile = chartValuesFile
+		} else {
+			// Chart has no values.yaml and user specified no valuesFile;
+			// valuesInline are the only values to use.
+			return nil
+		}
+	}
+	pValues, err := p.h.Loader().Load(valuesFile)
 	if err != nil {
 		return err
 	}
@@ -251,7 +259,7 @@ func (p *HelmChartInflationGeneratorPlugin) replaceValuesInline() error {
 	return err
 }
 
-// copyValuesFile to avoid branching.  TODO: get rid of this.
+// copyValuesFile copies the values file to the tmp file system.
 func (p *HelmChartInflationGeneratorPlugin) copyValuesFile() (string, error) {
 	b, err := p.h.Loader().Load(p.ValuesFile)
 	if err != nil {
@@ -293,7 +301,7 @@ func (p *HelmChartInflationGeneratorPlugin) Generate() (rm resmap.ResMap, err er
 	}
 	if len(p.ValuesInline) > 0 {
 		p.ValuesFile, err = p.createNewMergedValuesFile()
-	} else {
+	} else if p.ValuesFile != "" {
 		p.ValuesFile, err = p.copyValuesFile()
 	}
 	if err != nil {

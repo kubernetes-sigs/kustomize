@@ -1062,3 +1062,93 @@ devel: true
 	assert.Contains(t, string(chartYamlContent), "name: sm-operator")
 	assert.Contains(t, string(chartYamlContent), "version: 0.1.0-Beta")
 }
+
+func TestHelmChartInflationGeneratorWithoutValuesYaml(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.MkDir("charts")
+	chartDir := th.MkDir("charts/no-values-chart")
+	th.MkDir("charts/no-values-chart/templates")
+
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `apiVersion: v2
+name: no-values-chart
+version: 0.1.0
+`)
+	th.WriteF(filepath.Join(chartDir, "templates", "configmap.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-cm
+data:
+  status: ready
+`)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: no-values-chart
+name: no-values-chart
+releaseName: test-release
+chartHome: ./charts
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+data:
+  status: ready
+kind: ConfigMap
+metadata:
+  name: test-cm
+`)
+}
+
+func TestHelmChartInflationGeneratorWithoutValuesYamlWithValuesInline(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t).
+		PrepBuiltin("HelmChartInflationGenerator")
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.MkDir("charts")
+	chartDir := th.MkDir("charts/no-values-chart-inline")
+	th.MkDir("charts/no-values-chart-inline/templates")
+
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `apiVersion: v2
+name: no-values-chart-inline
+version: 0.1.0
+`)
+	th.WriteF(filepath.Join(chartDir, "templates", "configmap.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-cm
+data:
+  status: {{ .Values.status }}
+`)
+
+	rm := th.LoadAndRunGenerator(`
+apiVersion: builtin
+kind: HelmChartInflationGenerator
+metadata:
+  name: no-values-chart-inline
+name: no-values-chart-inline
+releaseName: test-release
+chartHome: ./charts
+valuesInline:
+  status: operational
+`)
+
+	th.AssertActualEqualsExpected(rm, `
+apiVersion: v1
+data:
+  status: operational
+kind: ConfigMap
+metadata:
+  name: test-cm
+`)
+}
