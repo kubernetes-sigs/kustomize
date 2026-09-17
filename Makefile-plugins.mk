@@ -6,15 +6,14 @@
 # The rules to deal with builtin plugins are a bit
 # complicated because
 #
-# - Every builtin plugin is a Go plugin -
-#   meaning it gets its own module directory
-#   (outside of the api module) with Go
-#   code in a 'main' package per Go plugin rules.
+# - Every builtin plugin is a Go plugin, with its own
+#   'main' package in the shared plugin/builtin module
+#   (outside of the api module).
 # - kustomize locates plugins using the
 #   'apiVersion' and 'kind' fields from the
 #   plugin config file.
 # - k8s wants CamelCase in 'kind' fields.
-# - The module name (the last name in the path)
+# - The package directory name (the last name in the path)
 #   must be the lowercased 'kind' of the
 #   plugin because Go and related tools
 #   demand lowercase in import paths, but
@@ -24,7 +23,7 @@
 
 # Where all generated builtin plugin code should go.
 pGen=api/internal/builtins
-# Where the builtin Go plugin modules live.
+# Where the builtin Go plugin packages live.
 pSrc=plugin/builtin
 
 _builtinplugins = \
@@ -92,7 +91,7 @@ $(pGen)/%.go: $(MYGOBIN)/pluginator $(MYGOBIN)/goimports
 # Generate builtin plugins
 .PHONY: generate-kustomize-builtin-plugins
 generate-kustomize-builtin-plugins: $(builtplugins)
-	for plugin in $(abspath $(wildcard $(pSrc)/*)); do \
+	for plugin in $(abspath $(pSrc))/*/; do \
 		echo "generating $${plugin} ..."; \
 		set -e; \
 		cd $${plugin}; \
