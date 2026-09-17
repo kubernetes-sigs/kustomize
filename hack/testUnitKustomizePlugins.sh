@@ -45,7 +45,10 @@ function scanDir {
   pushd $1 >& /dev/null
   echo "Testing $1"
   for t in $(find . -name '*_test.go'); do
-    runTest $t
+    # Fixtures and plugin compilation use paths relative to each package.
+    pushd "$(dirname "$t")" >& /dev/null
+    runTest "$(basename "$t")"
+    popd >& /dev/null
   done
   popd >& /dev/null
 }
