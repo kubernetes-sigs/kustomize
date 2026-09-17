@@ -30,13 +30,13 @@ metadata:
     foo: bar
   name: some-cm
 data:
-  foo: bar
+  foo: "bar"
 `)
 
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   annotations:

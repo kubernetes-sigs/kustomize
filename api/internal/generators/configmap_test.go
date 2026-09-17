@@ -59,8 +59,8 @@ kind: ConfigMap
 metadata:
   name: envConfigMap
 data:
-  DB_PASSWORD: qwerty
-  DB_USERNAME: admin
+  DB_PASSWORD: "qwerty"
+  DB_USERNAME: "admin"
 `,
 			},
 		},
@@ -139,9 +139,9 @@ metadata:
   labels:
     foo: 'bar'
 data:
-  a: x
+  a: "x"
   b: "y"
-  c: Hello World
+  c: "Hello World"
   d: "true"
 `,
 			},
@@ -180,9 +180,9 @@ metadata:
     city: 'Iowa City'
     river: 'Missouri'
 data:
-  a: x
+  a: "x"
   b: "y"
-  c: Hello World
+  c: "Hello World"
   d: "true"
 immutable: true
 `,

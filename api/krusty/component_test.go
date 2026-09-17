@@ -126,9 +126,9 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: red
-  otherValue: green
-  testValue: blue
+  compValue: "red"
+  otherValue: "green"
+  testValue: "blue"
 kind: ConfigMap
 metadata:
   name: comp-my-configmap-97647ckcmg
@@ -178,9 +178,9 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: red
-  otherValue: orange
-  testValue: blue
+  compValue: "red"
+  otherValue: "orange"
+  testValue: "blue"
 kind: ConfigMap
 metadata:
   name: comp-my-configmap-g486mb229k
@@ -231,9 +231,9 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: red
-  otherValue: orange
-  testValue: blue
+  compValue: "red"
+  otherValue: "orange"
+  testValue: "blue"
 kind: ConfigMap
 metadata:
   name: comp-my-configmap-g486mb229k
@@ -274,8 +274,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: green
-  testValue: purple
+  otherValue: "green"
+  testValue: "purple"
 kind: ConfigMap
 metadata:
   name: my-configmap-9cd648hm8f
@@ -289,9 +289,9 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: red
-  otherValue: green
-  testValue: blue
+  compValue: "red"
+  otherValue: "green"
+  testValue: "blue"
 kind: ConfigMap
 metadata:
   name: comp-my-configmap-97647ckcmg
@@ -335,9 +335,9 @@ spec:
 ---
 apiVersion: v1
 data:
-  compValue: red
-  otherValue: green
-  testValue: blue
+  compValue: "red"
+  otherValue: "green"
+  testValue: "blue"
 kind: ConfigMap
 metadata:
   name: my-configmap-97647ckcmg
@@ -365,8 +365,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: orange
-  testValue: purple
+  otherValue: "orange"
+  testValue: "purple"
 kind: ConfigMap
 metadata:
   name: my-configmap-6hhdg8gkdg
@@ -412,8 +412,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: green
-  testValue: purple
+  otherValue: "green"
+  testValue: "purple"
 kind: ConfigMap
 metadata:
   name: my-configmap-a-b-9cd648hm8f
@@ -427,8 +427,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  otherValue: green
-  testValue: purple
+  otherValue: "green"
+  testValue: "purple"
 kind: ConfigMap
 metadata:
   name: my-configmap-b-9cd648hm8f
@@ -682,7 +682,8 @@ kind: ConfigMap
 metadata:
   name: config-from-resources
 data:
-  foo: bar`),
+  foo: "bar"
+`),
 				writeC("/components", `
 apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
@@ -692,14 +693,14 @@ nameSuffix: -suffix
 			expectedOutput: `
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   name: config-from-resources-suffix
 ---
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: generated-resource-suffix

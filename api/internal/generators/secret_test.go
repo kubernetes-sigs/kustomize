@@ -44,8 +44,8 @@ metadata:
   name: envSecret
 type: Opaque
 data:
-  DB_PASSWORD: cXdlcnR5
-  DB_USERNAME: YWRtaW4=
+  DB_PASSWORD: "cXdlcnR5"
+  DB_USERNAME: "YWRtaW4="
 `,
 			},
 		},
@@ -67,7 +67,7 @@ metadata:
   name: fileSecret1
 type: Opaque
 data:
-  app-init.ini: Rk9PPWJhcgpCQVI9YmF6Cg==
+  app-init.ini: "Rk9PPWJhcgpCQVI9YmF6Cg=="
 `,
 			},
 		},
@@ -90,8 +90,8 @@ metadata:
   name: fileSecret2
 type: Opaque
 data:
-  app-init.ini: Rk9PPWJhcgpCQVI9YmF6Cg==
-  app.bin: //0=
+  app-init.ini: "Rk9PPWJhcgpCQVI9YmF6Cg=="
+  app.bin: "//0="
 `,
 			},
 		},
@@ -118,10 +118,10 @@ metadata:
     foo: 'bar'
 type: Opaque
 data:
-  a: eA==
-  b: eQ==
-  c: SGVsbG8gV29ybGQ=
-  d: dHJ1ZQ==
+  a: "eA=="
+  b: "eQ=="
+  c: "SGVsbG8gV29ybGQ="
+  d: "dHJ1ZQ=="
 `,
 			},
 		},
@@ -149,7 +149,7 @@ metadata:
     foo: 'bar'
 type: foobar
 data:
-  a: eA==
+  a: "eA=="
 `,
 			},
 		},
@@ -188,10 +188,10 @@ metadata:
     river: 'Missouri'
 type: Opaque
 data:
-  a: eA==
-  b: eQ==
-  c: SGVsbG8gV29ybGQ=
-  d: dHJ1ZQ==
+  a: "eA=="
+  b: "eQ=="
+  c: "SGVsbG8gV29ybGQ="
+  d: "dHJ1ZQ=="
 immutable: true
 `,
 			},

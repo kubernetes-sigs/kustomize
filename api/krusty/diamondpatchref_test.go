@@ -187,7 +187,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  KEY: value
+  KEY: "value"
 kind: ConfigMap
 metadata:
   name: left-bottom-9f2t6f5h6d
@@ -219,7 +219,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  KEY: value
+  KEY: "value"
 kind: ConfigMap
 metadata:
   name: right-bottom-9f2t6f5h6d

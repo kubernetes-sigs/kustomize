@@ -37,10 +37,10 @@ literals:
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
 data:
-  COLOR: red
-  FRUIT: apple
+  COLOR: "red"
+  FRUIT: "apple"
   SERVICE_PORT: "32"
-  VEGETABLE: carrot
+  VEGETABLE: "carrot"
 kind: ConfigMap
 metadata:
   name: myMap

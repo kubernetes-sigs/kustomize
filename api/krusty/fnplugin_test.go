@@ -54,7 +54,7 @@ kind: Secret
 metadata:
   name: dummyTransformed
 stringData:
-  foo: bar
+  foo: "bar"
 type: Opaque
 EOF
 `
@@ -350,7 +350,7 @@ metadata:
   name: dummy
 type: Opaque
 stringData:
-  foo: bar
+  foo: "bar"
 `)
 	th.WriteF(filepath.Join(base, "krmTransformer.sh"), krmTransformerDotSh)
 
@@ -374,7 +374,7 @@ kind: Secret
 metadata:
   name: dummyTransformed
 stringData:
-  foo: bar
+  foo: "bar"
 type: Opaque
 `, string(yml))
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
@@ -411,7 +411,7 @@ metadata:
   name: dummy
 type: Opaque
 stringData:
-  foo: bar
+  foo: "bar"
 `)
 	th.WriteF(filepath.Join(base, "krmTransformer.sh"), krmTransformerDotSh)
 
@@ -435,7 +435,7 @@ kind: Secret
 metadata:
   name: dummyTransformed
 stringData:
-  foo: bar
+  foo: "bar"
 type: Opaque
 `, string(yml))
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
@@ -472,7 +472,7 @@ metadata:
   name: dummy
 type: Opaque
 stringData:
-  foo: bar
+  foo: "bar"
 `)
 	th.WriteF(filepath.Join(prod, "krmTransformer.sh"), krmTransformerDotSh)
 
@@ -496,7 +496,7 @@ kind: Secret
 metadata:
   name: dummyTransformed
 stringData:
-  foo: bar
+  foo: "bar"
 type: Opaque
 `, string(yml))
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
@@ -665,8 +665,8 @@ metadata:
       container:
         image: gcr.io/kpt-functions/label-namespace:go-sdk-v0.0.1
 data:
-  label_name: my-ns-name
-  label_value: function-test
+  label_name: "my-ns-name"
+  label_value: "function-test"
 `)))
 	m, err := b.Run(
 		fSys,
@@ -736,7 +736,7 @@ template: |
 	require.NoError(t, err)
 	assert.Equal(t, `apiVersion: v1
 data:
-  value: value
+  value: "value"
 kind: ConfigMap
 metadata:
   name: env

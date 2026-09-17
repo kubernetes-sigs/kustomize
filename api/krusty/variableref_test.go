@@ -535,7 +535,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  DBT_TARGET: development
+  DBT_TARGET: "development"
   SUSPENDED: "True"
 kind: ConfigMap
 metadata:
@@ -1101,8 +1101,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  baz: qux
-  foo: bar
+  baz: "qux"
+  foo: "bar"
 kind: ConfigMap
 metadata:
   name: dev-base-test-config-map-6b85g79g7g
@@ -2266,7 +2266,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  waterway: mississippi
+  waterway: "mississippi"
 kind: ConfigMap
 metadata:
   annotations:

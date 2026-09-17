@@ -67,8 +67,8 @@ generators:
 	expected := `
 apiVersion: v1
 data:
-  FRUIT: apple
-  VEGETABLE: carrot
+  FRUIT: "apple"
+  VEGETABLE: "carrot"
 kind: ConfigMap
 metadata:
   name: mymap-kfd8tf729k
