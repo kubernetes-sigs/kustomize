@@ -834,6 +834,26 @@ test: true
 			api:  &yamlTagTest{},
 			want: &yamlTagTest{Name: "tester", Test: true},
 		},
+		{
+			name: "fails on unknown fields on types with yaml tags",
+			src: yaml.MustParse(`
+name: tester
+test: true
+unknown: field
+`),
+			api:         &yamlTagTest{},
+			wantErrMsgs: []string{`error unmarshaling JSON: while decoding JSON: json: unknown field "unknown"`},
+		},
+		{
+			name: "fails on unknown fields on types with json tags",
+			src: yaml.MustParse(`
+name: tester
+test: true
+unknown: field
+`),
+			api:         &jsonTagTest{},
+			wantErrMsgs: []string{`error unmarshaling JSON: while decoding JSON: json: unknown field "unknown"`},
+		},
 	}
 
 	for _, tt := range tests {
