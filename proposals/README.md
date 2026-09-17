@@ -13,7 +13,7 @@ Small, straightforward enhancements can be proposed in regular GitHub issues. As
 - a new Kustomization field that does something very straightforward, like annotating resources
 - a new option for an existing built-in transformer
 
-**Instructions**: [Open an issue](https://github.com/kubernetes-sigs/kustomize/issues/new?labels=kind%2Ffeature&template=feature_request.md)
+**Instructions**: [Open an issue](https://github.com/kubernetes-sigs/kustomize/issues/new?labels=kind%2Ffeature&template=feature_request.yaml)
 
 ### Option 2: Mini (In-Repo) Enhancement Proposal
 
