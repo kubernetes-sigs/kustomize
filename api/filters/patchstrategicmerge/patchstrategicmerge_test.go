@@ -429,6 +429,52 @@ spec:
         image: replace
 `,
 		},
+		"replace list element - directive": {
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: test
+        env:
+        - name: KEEP
+          value: old
+      - name: sidecar
+        image: sidecar
+`,
+			patch: yaml.MustParse(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        $patch: replace
+        image: replace
+`),
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDeploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: replace
+      - name: sidecar
+        image: sidecar
+`,
+		},
 		"merge list - directive": {
 			input: `
 apiVersion: apps/v1
