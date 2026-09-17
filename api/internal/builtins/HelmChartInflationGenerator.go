@@ -91,6 +91,9 @@ func (p *HelmChartInflationGeneratorPlugin) validateArgs() (err error) {
 	if p.Name == "" {
 		return fmt.Errorf("chart name cannot be empty")
 	}
+	if p.Digest != "" && !strings.HasPrefix(p.Repo, "oci://") {
+		return fmt.Errorf("digest is only supported for OCI repos (e.g. 'oci://my-registry.com/my-chart:latest')")
+	}
 
 	// ReleaseName and Name are passed to helm as bare positional arguments
 	// (see AsHelmArgs and pullCommand). A value starting with '-' would be
@@ -342,7 +345,11 @@ func (p *HelmChartInflationGeneratorPlugin) pullCommand() []string {
 
 	switch {
 	case strings.HasPrefix(p.Repo, "oci://"):
-		args = append(args, strings.TrimSuffix(p.Repo, "/")+"/"+p.Name)
+		ociRef := strings.TrimSuffix(p.Repo, "/") + "/" + p.Name
+		if p.Digest != "" {
+			ociRef += "@" + p.Digest
+		}
+		args = append(args, ociRef)
 	case p.Repo != "":
 		args = append(args, "--repo", p.Repo)
 		fallthrough
