@@ -172,7 +172,7 @@ func (p *plugin) absChartHome() string {
 		chartHome = filepath.Join(p.h.Loader().Root(), p.ChartHome)
 	}
 
-	if p.Version != "" && p.Repo != "" {
+	if p.Version != "" {
 		return filepath.Join(chartHome, fmt.Sprintf("%s-%s", p.Name, p.Version))
 	}
 	return chartHome
@@ -373,7 +373,7 @@ func (p *plugin) chartExistsLocally() (string, bool) {
 	path := filepath.Join(p.absChartHome(), p.Name)
 	s, err := os.Stat(path)
 	if err != nil {
-		return "", false
+		return path, false
 	}
 	return path, s.IsDir()
 }
