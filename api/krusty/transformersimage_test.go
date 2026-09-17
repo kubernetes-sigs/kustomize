@@ -534,3 +534,49 @@ spec:
             name: volume
 `)
 }
+
+// An images[].name value is documented as a literal, tag-less image name,
+// not a pattern. A "." in it (very common in real registry hostnames, e.g.
+// gcr.io, docker.io, quay.io) must not act as a regexp wildcard: it must
+// not match a container image whose name merely has some other character
+// in that position.
+func TestTransfomersImageNameDotIsNotAWildcard(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- deploy.yaml
+images:
+- name: gcr.io/my-project/my-app
+  newTag: v2
+`)
+	th.WriteF("deploy.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - name: intended-match
+        image: gcr.io/my-project/my-app:v1
+      - name: should-not-match
+        image: gcrXio/my-project/my-app:v1
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/my-project/my-app:v2
+        name: intended-match
+      - image: gcrXio/my-project/my-app:v1
+        name: should-not-match
+`)
+}
+

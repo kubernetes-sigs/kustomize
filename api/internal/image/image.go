@@ -21,11 +21,15 @@ func IsImageMatched(s, t string) bool {
 	// using any OCI-valid digest algorithm match consistently with Split,
 	// which accepts any algorithm.
 	// See https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests
-	// The name t comes from kustomization images[].name and is interpolated
-	// into the pattern directly, so it can be an invalid regexp (for example
-	// "["). When it fails to compile, treat it as matching nothing rather than
-	// dereferencing a nil *Regexp, which would panic during the build.
-	pattern, err := regexp.Compile("^" + t + "(:[a-zA-Z0-9_.{}-]*)?(@[a-zA-Z0-9]+([.+_-][a-zA-Z0-9]+)*:[a-zA-Z0-9_.{}-]*)?$")
+	// The name t comes from kustomization images[].name and, per the doc
+	// comment above, is supposed to be matched literally/identically, not as
+	// a pattern. It must therefore be escaped with regexp.QuoteMeta before
+	// being interpolated into the pattern: an unescaped t would let regexp
+	// metacharacters it happens to contain (most commonly ".", which is very
+	// common in real registry hostnames such as gcr.io, docker.io, quay.io)
+	// act as wildcards, causing the built pattern to also match image
+	// references that are not actually identical to t.
+	pattern, err := regexp.Compile("^" + regexp.QuoteMeta(t) + "(:[a-zA-Z0-9_.{}-]*)?(@[a-zA-Z0-9]+([.+_-][a-zA-Z0-9]+)*:[a-zA-Z0-9_.{}-]*)?$")
 	if err != nil {
 		return false
 	}
