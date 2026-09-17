@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"time"
 
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resmap"
@@ -92,30 +91,6 @@ func DeterminePluginSrcRoot(fSys filesys.FileSystem) (string, error) {
 				},
 			},
 		})
-}
-
-// FileYoungerThan returns true if the file both exists and has an
-// age is <= the Duration argument.
-func FileYoungerThan(path string, d time.Duration) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return time.Since(fi.ModTime()) <= d
-}
-
-// FileModifiedAfter returns true if the file both exists and was
-// modified after the given time..
-func FileModifiedAfter(path string, t time.Time) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return fi.ModTime().After(t)
 }
 
 func FileExists(path string) bool {
