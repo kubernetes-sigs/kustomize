@@ -445,3 +445,50 @@ func TestEffectiveNamespace(t *testing.T) {
 		})
 	}
 }
+
+func TestTreatAsClusterScopedForRefs(t *testing.T) {
+	testCases := map[string]struct {
+		id       ResId
+		expected bool
+	}{
+		"cluster role is cluster scoped": {
+			id: NewResId(
+				NewGvk("rbac.authorization.k8s.io", "v1", "ClusterRole"),
+				"foo"),
+			expected: true,
+		},
+		"deployment without namespace is namespaced": {
+			id: NewResId(
+				NewGvk("apps", "v1", "Deployment"),
+				"foo"),
+			expected: false,
+		},
+		"deployment with namespace is namespaced": {
+			id: NewResIdWithNamespace(
+				NewGvk("apps", "v1", "Deployment"),
+				"foo", "ns"),
+			expected: false,
+		},
+		"unknown crd without namespace is treated as cluster scoped": {
+			id: NewResId(
+				NewGvk("external-secrets.io", "v1beta1", "ClusterSecretStore"),
+				"foo"),
+			expected: true,
+		},
+		"unknown crd with namespace is treated as namespaced": {
+			id: NewResIdWithNamespace(
+				NewGvk("external-secrets.io", "v1beta1", "ClusterSecretStore"),
+				"foo", "ns"),
+			expected: false,
+		},
+	}
+
+	for name, tst := range testCases {
+		t.Run(name, func(t *testing.T) {
+			if actual := tst.id.TreatAsClusterScopedForRefs(); actual != tst.expected {
+				t.Fatalf("TreatAsClusterScopedForRefs was %v, expected %v",
+					actual, tst.expected)
+			}
+		})
+	}
+}
