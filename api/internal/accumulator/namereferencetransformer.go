@@ -4,7 +4,6 @@
 package accumulator
 
 import (
-	"fmt"
 	"log"
 
 	"sigs.k8s.io/kustomize/api/filters/nameref"
@@ -17,8 +16,6 @@ import (
 type nameReferenceTransformer struct {
 	backRefs []builtinconfig.NameBackReferences
 }
-
-const doDebug = false
 
 var _ resmap.Transformer = &nameReferenceTransformer{}
 
@@ -47,10 +44,8 @@ func newNameReferenceTransformer(
 //
 // If the Deployment's name changes, e.g. a prefix is added,
 // then the HPA's reference to the Deployment must be fixed.
-//
 func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	fMap := t.determineFilters(m.Resources())
-	debug(fMap)
 	for r, fList := range fMap {
 		c, err := m.SubsetThatCouldBeReferencedByResource(r)
 		if err != nil {
@@ -67,30 +62,6 @@ func (t *nameReferenceTransformer) Transform(m resmap.ResMap) error {
 	return nil
 }
 
-func debug(fMap filterMap) {
-	if !doDebug {
-		return
-	}
-	fmt.Printf("filterMap has %d entries:\n", len(fMap))
-	rCount := 0
-	for r, fList := range fMap {
-		yml, _ := r.AsYAML()
-		rCount++
-		fmt.Printf(`
----- %3d. possible referrer -------------
-%s
----------`, rCount, string(yml),
-		)
-		for i, f := range fList {
-			fmt.Printf(`
-%3d/%3d update: %s
-          from: %s
-`, rCount, i+1, f.NameFieldToUpdate.Path, f.ReferralTarget,
-			)
-		}
-	}
-}
-
 // Produce a map from referrer resources that might need to be fixed
 // to filters that might fix them.  The keys to this map are potential
 // referrers, so won't include resources like ConfigMap or Secret.
@@ -101,8 +72,8 @@ func debug(fMap filterMap) {
 //
 //   - kind: Deployment
 //     fieldSpecs:
-//     - kind: HorizontalPodAutoscaler
-//       path: spec/scaleTargetRef/name
+//   - kind: HorizontalPodAutoscaler
+//     path: spec/scaleTargetRef/name
 //
 // This entry says that an HPA, via its
 // 'spec/scaleTargetRef/name' field, may refer to a
@@ -126,39 +97,19 @@ func (t *nameReferenceTransformer) determineFilters(
 				if resourceOrgIds[i].IsSelected(&referrerSpec.Gvk) {
 					// If this is true, the res might be a referrer, and if
 					// so, the name reference it holds might need an update.
-					if resHasField(res, referrerSpec.Path) {
-						// Optimization - the referrer has the field
-						// that might need updating.
-						fMap[res] = append(fMap[res], nameref.Filter{
-							// Name field to write in the Referrer.
-							// If the path specified here isn't found in
-							// the Referrer, nothing happens (no error,
-							// no field creation).
-							NameFieldToUpdate: referrerSpec,
-							// Specification of object class to read from.
-							// Always read from metadata/name field.
-							ReferralTarget: backReference.Gvk,
-						})
-					}
+					fMap[res] = append(fMap[res], nameref.Filter{
+						// Name field to write in the Referrer.
+						// If the path specified here isn't found in
+						// the Referrer, nothing happens (no error,
+						// no field creation).
+						NameFieldToUpdate: referrerSpec,
+						// Specification of object class to read from.
+						// Always read from metadata/name field.
+						ReferralTarget: backReference.Gvk,
+					})
 				}
 			}
 		}
 	}
 	return fMap
-}
-
-// TODO: check res for field existence here to avoid extra work.
-// res.GetFieldValue, which uses yaml.Lookup under the hood, doesn't know
-// how to parse fieldspec-style paths that make no distinction
-// between maps and sequences.  This means it cannot lookup commonly
-// used "indeterminate" paths like
-//    spec/containers/env/valueFrom/configMapKeyRef/name
-// ('containers' is a list, not a map).
-// However, the fieldspec filter does know how to handle this;
-// extract that code and call it here?
-func resHasField(res *resource.Resource, path string) bool {
-	return true
-	// fld := strings.Join(utils.PathSplitter(path), ".")
-	// _, e := res.GetFieldValue(fld)
-	// return e == nil
 }
