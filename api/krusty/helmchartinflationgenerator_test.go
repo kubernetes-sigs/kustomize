@@ -16,7 +16,7 @@ const (
 	expectedHelm = `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -33,7 +33,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -355,7 +355,7 @@ resources:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -372,7 +372,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -416,7 +416,7 @@ spec:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -433,7 +433,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -473,7 +473,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -490,7 +490,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -758,7 +758,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -775,7 +775,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -815,7 +815,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -832,7 +832,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -905,7 +905,7 @@ helmCharts:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -922,7 +922,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -1001,7 +1001,7 @@ helmCharts:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:
@@ -1018,7 +1018,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  cf-api-key: Q0hBTkdFTUUh
+  cf-api-key: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:

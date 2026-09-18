@@ -113,7 +113,7 @@ linters:
         text: "don't use leading"
       - linters:
           - staticcheck
-        text: "SA1019: kioutil.Legacy"
+        text: "kioutil.Legacy"
     paths:
       - third_party$
       - builtin$

@@ -582,7 +582,7 @@ rules:
 ---
 apiVersion: v1
 data:
-  AWS_REGION: us-east-1
+  AWS_REGION: "us-east-1"
 kind: ConfigMap
 metadata:
   name: cluster-autoscaler-h8mmcct52k
@@ -652,8 +652,8 @@ metadata:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  theConfigMap: cm-updated
-  theNamespace: newNs
+  theConfigMap: "cm-updated"
+  theNamespace: "newNs"
 kind: ConfigMap
 metadata:
   annotations:

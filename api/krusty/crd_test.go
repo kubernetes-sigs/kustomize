@@ -46,7 +46,7 @@ kind: Secret
 metadata:
   name: crdsecret
 data:
-  PATH: yellowBrickRoad
+  PATH: "yellowBrickRoad"
 `)
 	th.WriteF("base/mycrd.json", `
 {
@@ -229,7 +229,7 @@ func TestCrdBase(t *testing.T) {
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  PATH: yellowBrickRoad
+  PATH: "yellowBrickRoad"
 kind: Secret
 metadata:
   name: x-crdsecret
@@ -276,7 +276,7 @@ spec:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  PATH: yellowBrickRoad
+  PATH: "yellowBrickRoad"
 kind: Secret
 metadata:
   name: prod-x-crdsecret

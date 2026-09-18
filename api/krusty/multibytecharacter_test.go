@@ -21,13 +21,13 @@ kind: ConfigMap
 metadata:
   name: game-config
 data:
-  key: あ 
+  key: "あ "
 `)
 	m := th.Run(".", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  key: あ
+  key: 'あ '
 kind: ConfigMap
 metadata:
   name: game-config
