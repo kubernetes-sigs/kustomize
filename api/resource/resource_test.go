@@ -381,7 +381,7 @@ spec:
 `,
 		},
 		{
-			name: "Order changes when patch has bar only",
+			name: "Order should not change when patch has bar only",
 			patch: `apiVersion: v1
 kind: Pod
 metadata:
@@ -390,16 +390,14 @@ spec:
   initContainers:
     - name: bar
 `,
-			// This test records current behavior, but this behavior might be undesirable.
-			// If so, feel free to change the test to pass with some improved algorithm.
 			expectedOutput: `apiVersion: v1
 kind: Pod
 metadata:
   name: test
 spec:
   initContainers:
-  - name: bar
   - name: foo
+  - name: bar
 `,
 		},
 		{
