@@ -310,49 +310,23 @@ func (l Walker) elementKey() (string, error) {
 // Return value slice is ordered using the original ordering from the elements, where
 // elements missing from earlier sources appear later.
 func (l Walker) elementValues(keys []string) [][]string {
-	// use slice to to keep elements in the original order
-	var returnValues [][]string
-	var seen sets.StringList
-
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+	sourceValues := make([][][]string, len(l.Sources))
+	for i, src := range l.Sources {
 		if src == nil {
 			continue
 		}
 
 		// add the value of the field for each element
 		// don't check error, we know this is a list node
-		values, _ := src.ElementValuesList(keys)
-		for _, s := range values {
-			if len(s) == 0 || seen.Has(s) {
-				continue
-			}
-			returnValues = append(returnValues, s)
-			seen = seen.Insert(s)
-		}
+		sourceValues[i], _ = src.ElementValuesList(keys)
 	}
-	return returnValues
+	return mergeListValues(sourceValues, l.MergeOptions.ListIncreaseDirection)
 }
 
 // elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
 func (l Walker) elementPrimitiveValues() [][]string {
-	// use slice to to keep elements in the original order
-	var returnValues [][]string
-	seen := sets.String{}
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+	sourceValues := make([][][]string, len(l.Sources))
+	for i, src := range l.Sources {
 		if src == nil {
 			continue
 		}
@@ -360,14 +334,95 @@ func (l Walker) elementPrimitiveValues() [][]string {
 		// add the value of the field for each element
 		// don't check error, we know this is a list node
 		for _, item := range src.YNode().Content {
-			if seen.Has(item.Value) {
+			sourceValues[i] = append(sourceValues[i], []string{item.Value})
+		}
+	}
+	return mergeListValues(sourceValues, l.MergeOptions.ListIncreaseDirection)
+}
+
+// mergeListValues returns values in the original order, while preserving the
+// order explicitly requested by each patch. New values are prepended when the
+// merge direction is ListPrepend.
+func mergeListValues(sourceValues [][][]string, direction yaml.MergeOptionsListIncreaseDirection) [][]string {
+	if direction != yaml.MergeOptionsListPrepend {
+		var returnValues [][]string
+		var seen sets.StringList
+		for _, values := range sourceValues {
+			for _, value := range values {
+				if len(value) == 0 || seen.Has(value) {
+					continue
+				}
+				returnValues = append(returnValues, value)
+				seen = seen.Insert(value)
+			}
+		}
+		return returnValues
+	}
+
+	var returnValues [][]string
+	if len(sourceValues) == 0 {
+		return returnValues
+	}
+
+	// Start with the destination order. A patch containing a subset of the
+	// destination values must not move those values by itself.
+	for _, value := range sourceValues[0] {
+		if len(value) == 0 || indexOf(returnValues, value) >= 0 {
+			continue
+		}
+		returnValues = append(returnValues, value)
+	}
+
+	for _, values := range sourceValues[1:] {
+		var previous []string
+		for _, value := range values {
+			if len(value) == 0 || isStringSliceEqual(value, previous) {
 				continue
 			}
-			returnValues = append(returnValues, []string{item.Value})
-			seen.Insert(item.Value)
+
+			index := indexOf(returnValues, value)
+			if previous == nil {
+				if index < 0 {
+					returnValues = append([][]string{value}, returnValues...)
+				}
+			} else {
+				if index >= 0 {
+					returnValues = append(returnValues[:index], returnValues[index+1:]...)
+				}
+				previousIndex := indexOf(returnValues, previous)
+				if previousIndex < 0 {
+					returnValues = append(returnValues, value)
+				} else {
+					returnValues = append(returnValues, nil)
+					copy(returnValues[previousIndex+2:], returnValues[previousIndex+1:])
+					returnValues[previousIndex+1] = value
+				}
+			}
+			previous = value
 		}
 	}
 	return returnValues
+}
+
+func indexOf(values [][]string, valueToFind []string) int {
+	for i, value := range values {
+		if isStringSliceEqual(value, valueToFind) {
+			return i
+		}
+	}
+	return -1
+}
+
+func isStringSliceEqual(first, second []string) bool {
+	if len(first) != len(second) {
+		return false
+	}
+	for i := range first {
+		if first[i] != second[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // fieldValue returns a slice containing each source's value for fieldName

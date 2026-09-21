@@ -518,7 +518,6 @@ metadata:
 		},
 		{
 			name: "Order should not change when patch has bar only",
-			skip: true, // TODO: This test should pass but fails currently. Fix the problem and unskip this test
 			patch: `apiVersion: v1
 kind: Pod
 metadata:
@@ -528,10 +527,10 @@ metadata:
 			expectedOutput: `apiVersion: v1
 kind: Pod
 metadata:
- finalizers:
- - foo
- - bar
- name: test
+  finalizers:
+  - foo
+  - bar
+  name: test
 `,
 		},
 		{
