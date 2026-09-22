@@ -545,8 +545,6 @@ images:
 	expected := []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-
-  # this line is part of the block scalar
 transformers:
 - |-
   apiVersion: builtin
@@ -557,7 +555,6 @@ transformers:
   # this line is part of the block scalar
   labels:
     app: foo
-  # so is this one
   # so is this one
 
 images:
