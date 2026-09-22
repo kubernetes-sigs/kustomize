@@ -521,6 +521,64 @@ namespace: mynamespace
 	}
 }
 
+func TestPreserveBlockScalarContent(t *testing.T) {
+	kustomizationContent := []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+transformers:
+- |-
+  apiVersion: builtin
+  kind: LabelTransformer
+  metadata:
+    name: not-a-comment
+
+  # this line is part of the block scalar
+  labels:
+    app: foo
+  # so is this one
+
+images:
+- name: nginx
+  newTag: 1.2.3
+`)
+
+	expected := []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+
+  # this line is part of the block scalar
+transformers:
+- |-
+  apiVersion: builtin
+  kind: LabelTransformer
+  metadata:
+    name: not-a-comment
+
+  # this line is part of the block scalar
+  labels:
+    app: foo
+  # so is this one
+  # so is this one
+
+images:
+- name: nginx
+  newTag: 1.2.3
+`)
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, kustomizationContent)
+	mf, err := NewKustomizationFile(fSys)
+	require.NoError(t, err)
+	kustomization, err := mf.Read()
+	require.NoError(t, err)
+	require.NoError(t, mf.Write(kustomization))
+
+	bytes, err := fSys.ReadFile(mf.path)
+	require.NoError(t, err)
+	if diff := cmp.Diff(expected, bytes); diff != "" {
+		t.Errorf("Mismatch (-expected, +actual):\n%s", diff)
+	}
+}
+
 func TestUnknownFieldInKustomization(t *testing.T) {
 	kContent := []byte(`
 foo:
