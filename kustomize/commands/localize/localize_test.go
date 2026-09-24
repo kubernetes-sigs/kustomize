@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -61,7 +62,7 @@ func TestScopeFlag(t *testing.T) {
 	kustomizations := map[string]string{
 		filepath.Join("target", "kustomization.yaml"): fmt.Sprintf(`resources:
 - %s
-`, filepath.Join("..", "base")),
+`, path.Join("..", "base")),
 		filepath.Join("base", "kustomization.yaml"): `resources:
 - deployment.yaml
 `,
