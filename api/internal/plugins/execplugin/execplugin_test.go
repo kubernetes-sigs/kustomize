@@ -4,6 +4,7 @@
 package execplugin_test
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -78,7 +79,7 @@ s/$BAR/bar baz/g
 		yaml)
 	require.NoError(t, err)
 
-	expected := "someteam.example.com/v1/sedtransformer/SedTransformer"
+	expected := filepath.Join("someteam.example.com", "v1", "sedtransformer", "SedTransformer")
 	if !strings.HasSuffix(p.Path(), expected) {
 		t.Fatalf("expected suffix '%s', got '%s'", expected, p.Path())
 	}
@@ -108,7 +109,7 @@ metadata:
 
 func TestExecPlugin_ErrIfNotExecutable(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skipf("always returns nil on Windows")
+		t.Skipf("checks the exec bit, which Windows lacks; see TestExecPlugin_ErrIfNotExecutable_Windows")
 	}
 
 	srcRoot, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
@@ -133,6 +134,24 @@ func TestExecPlugin_ErrIfNotExecutable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
+}
+
+// The loader looks up exec plugins at an extensionless path, but a Windows
+// build of a plugin is named with an extension like ".exe". The check must
+// find that file, and must reject an extensionless file that os/exec could
+// never run.
+func TestExecPlugin_ErrIfNotExecutable_Windows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skipf("PATHEXT resolution only applies on Windows")
+	}
+
+	exeOnly := filepath.Join(t.TempDir(), "MyPlugin")
+	require.NoError(t, os.WriteFile(exeOnly+".exe", nil, 0o644))
+	require.NoError(t, NewExecPlugin(exeOnly).ErrIfNotExecutable())
+
+	extensionlessOnly := filepath.Join(t.TempDir(), "MyPlugin")
+	require.NoError(t, os.WriteFile(extensionlessOnly, nil, 0o644))
+	require.Error(t, NewExecPlugin(extensionlessOnly).ErrIfNotExecutable())
 }
 
 // TestExecPluginLarge loads PluginConfigs of various (large) sizes. It tests if the env variable is kept below the
