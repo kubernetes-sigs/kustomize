@@ -30,6 +30,12 @@ const (
 	// SeqIndentAnnotation records the sequence nodes indentation of the input resource
 	SeqIndentAnnotation AnnotationKey = internalPrefix + "seqindent"
 
+	// DocStartAnnotation records that the input resource was preceded by an
+	// explicit YAML document start marker ("---"). Only set on the first
+	// resource of a file or input stream; later documents are always written
+	// with a separator.
+	DocStartAnnotation AnnotationKey = internalPrefix + "docstart"
+
 	// IdAnnotation records the id of the resource to map inputs to outputs
 	IdAnnotation AnnotationKey = internalPrefix + "id"
 

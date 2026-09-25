@@ -867,3 +867,112 @@ results:
 		})
 	}
 }
+
+func TestByteReadWriter_PreserveDocStart(t *testing.T) {
+	testCases := []struct {
+		name             string
+		preserveDocStart bool
+		input            string
+		expectedOutput   string
+	}{
+		{
+			name:             "marker_preserved",
+			preserveDocStart: true,
+			input: `---
+apiVersion: apps/v1
+kind: Deployment
+`,
+			expectedOutput: `---
+apiVersion: apps/v1
+kind: Deployment
+`,
+		},
+		{
+			name:             "no_marker_none_added",
+			preserveDocStart: true,
+			input: `apiVersion: apps/v1
+kind: Deployment
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+`,
+		},
+		{
+			name:             "marker_dropped_when_disabled",
+			preserveDocStart: false,
+			input: `---
+apiVersion: apps/v1
+kind: Deployment
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+`,
+		},
+		{
+			name:             "multi_doc_leading_marker",
+			preserveDocStart: true,
+			input: `---
+apiVersion: apps/v1
+kind: Deployment
+---
+apiVersion: v1
+kind: Service
+`,
+			expectedOutput: `---
+apiVersion: apps/v1
+kind: Deployment
+---
+apiVersion: v1
+kind: Service
+`,
+		},
+		{
+			name:             "multi_doc_no_leading_marker",
+			preserveDocStart: true,
+			input: `apiVersion: apps/v1
+kind: Deployment
+---
+apiVersion: v1
+kind: Service
+`,
+			expectedOutput: `apiVersion: apps/v1
+kind: Deployment
+---
+apiVersion: v1
+kind: Service
+`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			var in, out bytes.Buffer
+			in.WriteString(tc.input)
+			rw := kio.ByteReadWriter{
+				Reader:           &in,
+				Writer:           &out,
+				PreserveDocStart: tc.preserveDocStart,
+			}
+
+			nodes, err := rw.Read()
+			require.NoError(t, err)
+
+			require.NoError(t, rw.Write(nodes))
+			require.Equal(t, tc.expectedOutput, out.String())
+		})
+	}
+}
+
+func TestByteReadWriter_PreserveDocStartOmitReaderAnnotations(t *testing.T) {
+	rw := kio.ByteReadWriter{
+		Reader:                bytes.NewBufferString("---\napiVersion: apps/v1\n"),
+		Writer:                &bytes.Buffer{},
+		PreserveDocStart:      true,
+		OmitReaderAnnotations: true,
+	}
+
+	_, err := rw.Read()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), `"PreserveDocStart" option adds a reader annotation`)
+}
