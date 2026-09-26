@@ -187,6 +187,8 @@ test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
 workspace-sync:
 	go work sync
 	./hack/doGoMod.sh tidy
+	# Record checksums needed to load the complete workspace module graph.
+	go list -m all > /dev/null
 
 # --- Cleanup targets ---
 .PHONY: clean
