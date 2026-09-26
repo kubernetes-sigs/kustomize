@@ -9,7 +9,7 @@ test:
 build:
 	go build -ldflags "-X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")" ./...
 
-generate: $(MYGOBIN)/k8scopy $(MYGOBIN)/stringer
+generate:
 	go generate ./...
 
 lint: lint-api-static
