@@ -1179,6 +1179,52 @@ metadata:
 `)
 }
 
+func TestHelmChartDifferentNamespacesMissingResourceNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "service")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: service
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  annotations:
+    release-namespace: {{ .Release.Namespace }}
+`)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: transformer-ns
+helmCharts:
+  - name: service
+    releaseName: service
+    namespace: helm-ns
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    release-namespace: helm-ns
+  name: test-service
+  namespace: helm-ns
+`)
+}
+
 func TestHelmChartSameNamespace(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
 	defer th.Reset()
@@ -1294,6 +1340,194 @@ metadata:
     helm-namespace: production
   name: mid-test-service
   namespace: production
+`)
+}
+
+// The namespace transformer must not drop the name-suffix hash from generated
+// ConfigMap/Secret references in Helm-generated workloads (issue #6077).
+func TestHelmChartConfigMapSecretNameReferencesPreserved(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "app")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: app
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	th.WriteF(filepath.Join(chartDir, "templates", "deployment.yaml"), `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: app
+          image: nginx
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+            - name: secret
+              mountPath: /etc/secret
+      volumes:
+        - name: config
+          configMap:
+            name: test-config
+        - name: secret
+          secret:
+            secretName: test-secret
+`)
+
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+namespace: cluster
+helmCharts:
+  - name: app
+    releaseName: test
+configMapGenerator:
+  - name: test-config
+    literals:
+      - config=foo
+secretGenerator:
+  - name: test-secret
+    literals:
+      - secret=foo
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  config: foo
+kind: ConfigMap
+metadata:
+  name: test-config-g46hh6k8tf
+  namespace: cluster
+---
+apiVersion: v1
+data:
+  secret: Zm9v
+kind: Secret
+metadata:
+  name: test-secret-gh24bh7t8g
+  namespace: cluster
+type: Opaque
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  namespace: cluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - image: nginx
+        name: app
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config
+        - mountPath: /etc/secret
+          name: secret
+      volumes:
+      - configMap:
+          name: test-config-g46hh6k8tf
+        name: config
+      - name: secret
+        secret:
+          secretName: test-secret-gh24bh7t8g
+`)
+}
+
+// helmCharts[].namespace must be filled into Helm-generated resources even when
+// kustomization.yaml sets no namespace, while chart-emitted namespaces stay.
+func TestHelmChartNamespaceWithoutKustomizationNamespace(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	chartDir := filepath.Join(th.GetRoot(), "charts", "example")
+	require.NoError(t, th.GetFSys().MkdirAll(filepath.Join(chartDir, "templates")))
+	th.WriteF(filepath.Join(chartDir, "Chart.yaml"), `
+apiVersion: v2
+name: example
+type: application
+version: 1.0.0
+`)
+	th.WriteF(filepath.Join(chartDir, "values.yaml"), ``)
+	// A resource without any namespace field; it must be filled
+	// with the namespace from helmCharts[].namespace.
+	th.WriteF(filepath.Join(chartDir, "templates", "configmap.yaml"), `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  foo: bar
+`)
+	// A resource with a namespace hardcoded by the chart; it must be preserved.
+	th.WriteF(filepath.Join(chartDir, "templates", "service.yaml"), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-service
+  namespace: chart-defined-ns
+spec:
+  ports:
+    - port: 80
+`)
+
+	// Note: no namespace transformer, only helmCharts[].namespace.
+	th.WriteK(th.GetRoot(), `
+helmGlobals:
+  chartHome: ./charts
+helmCharts:
+  - name: example
+    releaseName: test
+    namespace: helm-ns
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, `apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: test-configmap
+  namespace: helm-ns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: chart-defined-ns
+spec:
+  ports:
+  - port: 80
 `)
 }
 

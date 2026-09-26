@@ -39,6 +39,7 @@ if onLinuxAndNotOnRemoteCI; then
     echo "On linux, and not on remote CI.  Running helm tests."
     make $MYGOBIN/helmV3
     mdrip --mode test --label testHelm examples/chart.md
+    mdrip --mode test --label testHelm examples/helmNamespace/README.md
   else
     echo "Skipping helm tests against $version."
     echo "Helm chart inflator has new features (includeCRD) only in HEAD."

@@ -42,6 +42,8 @@ Advanced Usage
    * [last mile helm](chart.md) - Make last mile modifications to
      a helm chart.
 
+   * [helm namespace inheritance](helmNamespace/README.md) - Verify that an overlay namespace fills unset namespaces in Helm output without overwriting explicit chart namespaces.
+
    * [secret generation](secretGeneratorPlugin.md) - Generating secrets from a plugin.
 
    * [remote sources](goGetterGeneratorPlugin.md) - Generating from remote sources.
