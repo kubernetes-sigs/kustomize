@@ -56,7 +56,7 @@ var GrepExamples = `
     # look for Resources matching a specific container image
     kustomize cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kustomize cfg tree`
 
-var RunFnsShort = `[Alpha] Reoncile config functions to Resources.`
+var RunFnsShort = `[Alpha] Reconcile config functions to Resources.`
 var RunFnsLong = `
 [Alpha] Reconcile config functions to Resources.
 
