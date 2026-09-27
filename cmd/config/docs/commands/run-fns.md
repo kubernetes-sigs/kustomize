@@ -1,9 +1,6 @@
-<!-- Keep the historical short description and docs command spelling below in
-sync with the CLI help; correcting them would change command output. -->
-
 ## run
 
-[Alpha] Reoncile config functions to Resources.
+[Alpha] Reconcile config functions to Resources.
 
 ### Synopsis
 
