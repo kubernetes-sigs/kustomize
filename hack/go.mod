@@ -25,8 +25,6 @@ tool (
 	sigs.k8s.io/controller-tools/cmd/controller-gen
 	// for local testing
 	sigs.k8s.io/kind
-	// for cobra command help text generation from markdown
-	sigs.k8s.io/kustomize/cmd/mdtogo
 )
 
 require (
@@ -296,7 +294,6 @@ require (
 	sigs.k8s.io/controller-tools v0.14.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kind v0.21.0 // indirect
-	sigs.k8s.io/kustomize/cmd/mdtogo v0.0.0-20240208073625-b154361c0042 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect

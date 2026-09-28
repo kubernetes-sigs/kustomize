@@ -33,7 +33,7 @@ try{
   }
 
   function Test-Examples {
-    mdrip --mode test --label test README.md ./examples
+    go tool mdrip --mode test --label test README.md ./examples
   }
 
   # unfortunately because go test hides output in windows if we try to call it 

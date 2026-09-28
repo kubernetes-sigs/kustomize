@@ -4,7 +4,7 @@
 // Helm chart inflation generator.
 // Uses helm V3 or V4 to generate k8s YAML from a helm chart.
 
-//go:generate pluginator
+//go:generate go tool pluginator
 package main
 
 import (

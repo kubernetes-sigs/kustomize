@@ -33,38 +33,10 @@ include Makefile-plugins.mk
 include Makefile-tools.mk
 
 .PHONY: install-tools
-install-tools: \
-	install-local-tools \
-	install-out-of-tree-tools
+install-tools: install-out-of-tree-tools
 
 .PHONY: uninstall-tools
-uninstall-tools: \
-	uninstall-local-tools \
-	uninstall-out-of-tree-tools
-
-.PHONY: install-local-tools
-install-local-tools: \
-	$(MYGOBIN)/gorepomod \
-	$(MYGOBIN)/k8scopy \
-	$(MYGOBIN)/pluginator
-
-.PHONY: uninstall-local-tools
-uninstall-local-tools:
-	rm -f $(MYGOBIN)/gorepomod
-	rm -f $(MYGOBIN)/k8scopy
-	rm -f $(MYGOBIN)/pluginator
-
-# Build from local source.
-$(MYGOBIN)/gorepomod:
-	cd cmd/gorepomod && go install .
-
-# Build from local source.
-$(MYGOBIN)/k8scopy:
-	cd cmd/k8scopy && go install .
-
-# Build from local source.
-$(MYGOBIN)/pluginator:
-	cd cmd/pluginator && go install .
+uninstall-tools: uninstall-out-of-tree-tools
 
 
 # --- Build targets ---
@@ -81,7 +53,7 @@ kustomize: $(MYGOBIN)/kustomize
 # Used to add non-default compilation flags when experimenting with
 # plugin-to-api compatibility checks.
 .PHONY: build-kustomize-api
-build-kustomize-api: $(MYGOBIN)/goimports $(builtinplugins)
+build-kustomize-api: $(builtinplugins)
 	cd api && $(MAKE) build
 
 .PHONY: generate-kustomize-api
@@ -116,20 +88,22 @@ prow-presubmit-check: \
 	test-examples-kustomize-against-latest-release
 
 .PHONY: license
-license: $(MYGOBIN)/addlicense
+license:
 	./hack/add-license.sh run
 
 .PHONY: check-license
-check-license: $(MYGOBIN)/addlicense
+check-license:
 	./hack/add-license.sh check
 
 .PHONY: lint
-lint: $(GOLANGCI_LINT_PREREQUISITE) $(MYGOBIN)/goimports $(builtinplugins)
+lint: $(GOLANGCI_LINT_PREREQUISITE) $(builtinplugins)
 	./hack/for-each-module.sh "make lint"
 
+APIDIFF_BASE_REF ?= master
+
 .PHONY: apidiff
-apidiff: $(MYGOBIN)/go-apidiff ## Run the go-apidiff to verify any API differences compared with origin/master
-	go-apidiff master --compare-imports --print-compatible --repo-path=.
+apidiff: ## Run go-apidiff to verify API differences compared with APIDIFF_BASE_REF
+	go tool go-apidiff "$(APIDIFF_BASE_REF)" --compare-imports --print-compatible --repo-path=.
 
 .PHONY: test-unit-all
 test-unit-all: \
@@ -165,7 +139,7 @@ test-go-mod:
 	./hack/for-each-module.sh "go mod tidy -v"
 
 .PHONY:
-verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
+verify-kustomize-e2e: $(MYGOBIN)/kind
 	( \
 		set -e; \
 		/bin/rm -f $(MYGOBIN)/kustomize; \
@@ -175,11 +149,11 @@ verify-kustomize-e2e: $(MYGOBIN)/mdrip $(MYGOBIN)/kind
 	)
 
 .PHONY:
-test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize $(MYGOBIN)/mdrip
+test-examples-kustomize-against-HEAD: $(MYGOBIN)/kustomize
 	./hack/testExamplesAgainstKustomize.sh HEAD
 
 .PHONY:
-test-examples-kustomize-against-latest-release: $(MYGOBIN)/mdrip
+test-examples-kustomize-against-latest-release:
 	./hack/testExamplesAgainstKustomize.sh v5@$(LATEST_RELEASE)
 
 # Pushes dependencies in the go.work file back to go.mod files of each workspace module.
