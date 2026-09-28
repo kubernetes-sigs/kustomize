@@ -5,6 +5,7 @@ package krusty_test
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -287,7 +288,7 @@ openapi:
 		err := th.RunWithErr(".", th.MakeDefaultOptions())
 		require.Error(t, err)
 		assert.Equal(t,
-			"'/mycrd_schema.json' doesn't exist",
+			filepath.FromSlash("'/mycrd_schema.json' doesn't exist"),
 			err.Error())
 	})
 }

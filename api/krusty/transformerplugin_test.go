@@ -39,6 +39,7 @@ transformers:
 }
 
 func TestSedTransformer(t *testing.T) {
+	skipIfWindows(t)
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepExecPlugin("someteam.example.com", "v1", "SedTransformer")
 	defer th.Reset()

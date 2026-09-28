@@ -5,6 +5,7 @@ package localizer_test
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -319,7 +320,18 @@ func TestLoaderSymlinks(t *testing.T) {
 	CheckFs(t, dst, fsExpected, fsActual)
 }
 
+// disableGitAutoCRLF keeps Git for Windows, which enables core.autocrlf by
+// default, from checking out remote files with CRLF line endings that the
+// expected files lack.
+func disableGitAutoCRLF(t *testing.T) {
+	t.Helper()
+	t.Setenv("GIT_CONFIG_COUNT", "1")
+	t.Setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
+	t.Setenv("GIT_CONFIG_VALUE_0", "false")
+}
+
 func TestRemoteTargetDefaultDst(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fsExpected, fsActual, testDir := PrepareFs(t, nil, nil)
 	SetWorkingDir(t, testDir.String())
 
@@ -337,6 +349,9 @@ func TestRemoteTargetDefaultDst(t *testing.T) {
 
 func TestBadArgs(t *testing.T) {
 	badDst := filepath.Join("non-existing", "dst")
+	// The OS error text for a missing parent directory differs by platform.
+	var mkdirErr *fs.PathError
+	require.ErrorAs(t, os.Mkdir(filepath.Join(t.TempDir(), badDst), 0o700), &mkdirErr)
 
 	for name, test := range map[string]struct {
 		target string
@@ -356,7 +371,7 @@ func TestBadArgs(t *testing.T) {
 		"dst_in_non-existing_dir": {
 			target: ".",
 			dst:    badDst,
-			err:    fmt.Sprintf(`invalid localize destination "%s": unable to create localize destination directory: mkdir %s: no such file or directory`, badDst, badDst),
+			err:    fmt.Sprintf(`invalid localize destination %q: unable to create localize destination directory: mkdir %s: %v`, badDst, badDst, mkdirErr.Err),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -401,6 +416,7 @@ openapi:
 }
 
 func TestRemoteRoot(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
@@ -423,6 +439,7 @@ func TestRemoteRoot(t *testing.T) {
 }
 
 func TestNestedRemoteRoots(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		// TODO(annasong): Change the ref to the release after kustomize/v4.5.7.
 		// We need changes to remote post-kustomize/v4.5.7.

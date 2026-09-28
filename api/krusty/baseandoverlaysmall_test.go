@@ -4,6 +4,7 @@
 package krusty_test
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -370,7 +371,7 @@ spec:
 	}())
 	if !strings.Contains(
 		err.Error(),
-		"security; file '/shared/deployment-patch.yaml' is not in or below '/overlay'") {
+		filepath.FromSlash("security; file '/shared/deployment-patch.yaml' is not in or below '/overlay'")) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 }
