@@ -755,8 +755,20 @@ func (m *resWrangler) ApplySmPatch(selectedSet *resource.IdSet, patch *resource.
 			list = append(list, res)
 		}
 	}
-	m.Clear()
-	return m.appendAll(list)
+	// Check for Id collisions in one pass rather than via appendAll, whose
+	// per-resource Append scan makes every patch O(n^2) in the resource count.
+	seen := make(map[[5]string]struct{}, len(list))
+	for _, res := range list {
+		id := res.CurId()
+		// Same fields ResId.Equals compares, with its namespace normalization.
+		key := [5]string{id.Group, id.Version, id.Kind, id.Name, id.EffectiveNamespace()}
+		if _, found := seen[key]; found {
+			return fmt.Errorf("may not add resource with an already registered id: %s", id)
+		}
+		seen[key] = struct{}{}
+	}
+	m.rList = list
+	return nil
 }
 
 func (m *resWrangler) RemoveBuildAnnotations() {
