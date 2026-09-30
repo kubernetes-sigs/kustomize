@@ -72,3 +72,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+replace sigs.k8s.io/kustomize/api => ../../api
+
+replace sigs.k8s.io/kustomize/kyaml => ../../kyaml

@@ -45,3 +45,9 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad // indirect
 )
+
+replace sigs.k8s.io/kustomize/api => ../api
+
+replace sigs.k8s.io/kustomize/cmd/config => ../cmd/config
+
+replace sigs.k8s.io/kustomize/kyaml => ../kyaml
