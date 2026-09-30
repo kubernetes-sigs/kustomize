@@ -739,8 +739,11 @@ func (m *resWrangler) DeAnchor() (err error) {
 }
 
 // ApplySmPatch applies the patch, and errors on Id collisions.
+// The rebuild uses a local id set so duplicate detection stays linear.
+// Append would rescan the whole list for each resource.
 func (m *resWrangler) ApplySmPatch(selectedSet *resource.IdSet, patch *resource.Resource) error {
-	var list []*resource.Resource
+	list := make([]*resource.Resource, 0, len(m.rList))
+	seen := make(map[resid.ResId]struct{}, len(m.rList))
 	for _, res := range m.rList {
 		if selectedSet.Contains(res.CurId()) {
 			patchCopy := patch.DeepCopy()
@@ -751,12 +754,22 @@ func (m *resWrangler) ApplySmPatch(selectedSet *resource.IdSet, patch *resource.
 				return err
 			}
 		}
-		if !res.IsNilOrEmpty() {
-			list = append(list, res)
+		if res.IsNilOrEmpty() {
+			continue
 		}
+		id := res.CurId()
+		if _, ok := seen[id]; ok {
+			// Match appendAll: Clear already ran, so a collision
+			// leaves the map empty rather than partially rebuilt.
+			m.Clear()
+			return fmt.Errorf(
+				"may not add resource with an already registered id: %s", id)
+		}
+		seen[id] = struct{}{}
+		list = append(list, res)
 	}
-	m.Clear()
-	return m.appendAll(list)
+	m.rList = list
+	return nil
 }
 
 func (m *resWrangler) RemoveBuildAnnotations() {
