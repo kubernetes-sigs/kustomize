@@ -86,6 +86,8 @@ k8s.io/utils v0.0.0-20260626114624-be93311217bd h1:Ea7fgQ5we8Y9T0OX5o0dAHzQOBRI0
 k8s.io/utils v0.0.0-20260626114624-be93311217bd/go.mod h1:xDxuJ0whA3d0I4mf/C4ppKHxXynQ+fxnkmQH0vTHnuk=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 h1:IpInykpT6ceI+QxKBbEflcR5EXP7sU1kvOlxwZh5txg=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730/go.mod h1:mdzfpAEoE6DHQEN0uh9ZbOCuHbLK5wOm7dK4ctXE9Tg=
+sigs.k8s.io/kustomize/api v0.21.2 h1:MRyw+zLnFBP+G40gZJoKZErAuRiOPEPao+ddS9L6xt4=
+sigs.k8s.io/kustomize/api v0.21.2/go.mod h1:inubcVvQjJR/BjUti22YVBWr4EX+XlurEWhB81v2JV4=
 sigs.k8s.io/kustomize/kyaml v0.21.2 h1:1javwStFk7cgOeLU7yJtPmXcgMEhQgC2X0WjFT6U0p0=
 sigs.k8s.io/kustomize/kyaml v0.21.2/go.mod h1:zX3qwtuouXd2K1fMiCV0VSFReX06a+CY1rhyf5Dy7hQ=
 sigs.k8s.io/randfill v1.0.0 h1:JfjMILfT8A6RbawdsK2JXGBR5AQVfd+9TbzrlneTyrU=
