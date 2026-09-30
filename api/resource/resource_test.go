@@ -74,6 +74,41 @@ metadata:
 	}
 }
 
+func TestAsYAMLWithNumericConfigMapKeysIsDeterministic(t *testing.T) {
+	resource, err := factory.FromMap(map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"data": map[string]interface{}{
+			"32E0817AE855A845": "foo",
+			"024233B4DFB484FC": "foo",
+			"EE10D2E63AF9F498": "foo",
+			"6E7E3021F1821943": "foo",
+			"FDC41072BFC0BC7F": "foo",
+			"DFD86A289C3857EF": "foo",
+			"0C6B462C403217C4": "foo",
+		},
+	})
+	require.NoError(t, err)
+
+	expected := `apiVersion: v1
+data:
+  024233B4DFB484FC: foo
+  0C6B462C403217C4: foo
+  32E0817AE855A845: foo
+  6E7E3021F1821943: foo
+  DFD86A289C3857EF: foo
+  EE10D2E63AF9F498: foo
+  FDC41072BFC0BC7F: foo
+kind: ConfigMap
+`
+
+	for i := 0; i < 20; i++ {
+		actual, err := resource.AsYAML()
+		require.NoError(t, err)
+		assert.Equal(t, expected, string(actual))
+	}
+}
+
 func TestResourceString(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
