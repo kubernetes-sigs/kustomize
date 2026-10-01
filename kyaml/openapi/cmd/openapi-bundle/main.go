@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // openapi-bundle compiles a Kubernetes OpenAPI v2 protobuf document into the
-// compact, deterministic bundle embedded by kyaml.
+// deterministic, reviewable bundle embedded by kyaml.
 package main
 
 import (
@@ -40,7 +40,7 @@ type options struct {
 func main() {
 	var opts options
 	flag.StringVar(&opts.input, "input", "", "path to a Kubernetes OpenAPI v2 protobuf document (optionally gzip-compressed)")
-	flag.StringVar(&opts.output, "output", "", "path to the generated .json.gz bundle")
+	flag.StringVar(&opts.output, "output", "", "path to the generated .json bundle")
 	flag.StringVar(&opts.legacyProtoOutput, "legacy-proto-output", "", "optional path to a deterministic gzip archive of the input protobuf")
 	flag.StringVar(&opts.kubernetesVersion, "kubernetes-version", "", "Kubernetes version represented by the input")
 	flag.Parse()
@@ -317,11 +317,50 @@ func validateReference(value interface{}, definitions spec.Definitions) error {
 }
 
 func writeBundle(path string, bundle *builtinopenapi.Bundle) error {
-	jsonBytes, err := json.Marshal(bundle)
+	jsonBytes, err := json.MarshalIndent(bundle, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal bundle: %w", err)
 	}
-	return writeGzip(path, jsonBytes)
+	jsonBytes = append(jsonBytes, '\n')
+	return writeFile(path, jsonBytes)
+}
+
+func writeFile(path string, contents []byte) (resultErr error) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("create output directory %q: %w", dir, err)
+	}
+	tmp, err := os.CreateTemp(dir, ".openapi-bundle-*")
+	if err != nil {
+		return fmt.Errorf("create temporary output: %w", err)
+	}
+	tmpName := tmp.Name()
+	tmpClosed := false
+	defer func() {
+		if !tmpClosed {
+			if err := tmp.Close(); err != nil {
+				resultErr = errors.Join(resultErr, fmt.Errorf("close temporary output: %w", err))
+			}
+		}
+		if err := os.Remove(tmpName); err != nil && !errors.Is(err, os.ErrNotExist) {
+			resultErr = errors.Join(resultErr, fmt.Errorf("remove temporary output: %w", err))
+		}
+	}()
+
+	if _, err := tmp.Write(contents); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	if err := tmp.Chmod(0o644); err != nil {
+		return fmt.Errorf("set output permissions: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("close temporary output: %w", err)
+	}
+	tmpClosed = true
+	if err := os.Rename(tmpName, path); err != nil {
+		return fmt.Errorf("replace output %q: %w", path, err)
+	}
+	return nil
 }
 
 func writeGzip(path string, contents []byte) (resultErr error) {
