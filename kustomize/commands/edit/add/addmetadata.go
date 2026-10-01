@@ -63,14 +63,14 @@ func newCmdAddAnnotation(fSys filesys.FileSystem, v func(map[string]string) erro
 	return cmd
 }
 
-// newCmdAddLabel adds one or more commonLabels to the kustomization file.
+// newCmdAddLabel adds one or more labels to the kustomization file.
 func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *cobra.Command {
 	var o addMetadataOptions
 	o.kind = label
 	o.mapValidator = v
 	cmd := &cobra.Command{
 		Use: "label",
-		Short: "Adds one or more commonLabels to " +
+		Short: "Adds one or more commonLabels or labels to " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
 		add label {labelKey1:labelValue1} {labelKey2:labelValue2}`,
@@ -79,7 +79,7 @@ func newCmdAddLabel(fSys filesys.FileSystem, v func(map[string]string) error) *c
 		},
 	}
 	cmd.Flags().BoolVarP(&o.force, "force", "f", false,
-		"overwrite commonLabel if it already exists",
+		"overwrite label if it already exists",
 	)
 	cmd.Flags().BoolVar(&o.labelsWithoutSelector, "without-selector", false,
 		"using add labels without selector option",
@@ -138,13 +138,16 @@ func (o *addMetadataOptions) addAnnotations(m *types.Kustomization) error {
 }
 
 func (o *addMetadataOptions) addLabels(m *types.Kustomization) error {
-	if o.labelsWithoutSelector {
-		return o.writeToLabels(m, label)
+	// If the kustomization file already uses the deprecated commonLabels
+	// field, keep updating it so that the file does not end up mixing
+	// commonLabels with the labels field that replaces it. Otherwise, add
+	// the labels to the labels field: with includeSelectors by default,
+	// which is equivalent to commonLabels, or without it if
+	// --without-selector was specified.
+	if !o.labelsWithoutSelector && len(m.CommonLabels) > 0 { //nolint:staticcheck
+		return o.writeToMap(m.CommonLabels, label) //nolint:staticcheck
 	}
-	if m.CommonLabels == nil {
-		m.CommonLabels = make(map[string]string)
-	}
-	return o.writeToMap(m.CommonLabels, label)
+	return o.writeToLabels(m, label)
 }
 
 func (o *addMetadataOptions) writeToMap(m map[string]string, kind kindOfAdd) error {
@@ -167,7 +170,7 @@ func (o *addMetadataOptions) writeToMapEntry(m map[string]string, k, v string, k
 func (o *addMetadataOptions) writeToLabels(m *types.Kustomization, kind kindOfAdd) error {
 	lbl := types.Label{
 		Pairs:            make(map[string]string),
-		IncludeSelectors: false,
+		IncludeSelectors: !o.labelsWithoutSelector,
 		IncludeTemplates: o.includeTemplates,
 	}
 	for k, v := range o.metadata {
