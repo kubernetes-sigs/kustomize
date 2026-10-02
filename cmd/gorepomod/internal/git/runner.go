@@ -6,6 +6,7 @@ package git
 import (
 	"fmt"
 	"os/exec"
+	"slices"
 	"sort"
 	"strings"
 
@@ -125,21 +126,12 @@ func (gr *Runner) DetermineRemoteToUse() (misc.TrackedRepo, error) {
 		return "", fmt.Errorf("need at least one remote")
 	}
 	for _, n := range recognizedRemotes {
-		if contains(remotes, n) {
+		if slices.Contains(remotes, string(n)) {
 			return n, nil
 		}
 	}
 	return "", fmt.Errorf(
 		"unable to find recognized remote %v", recognizedRemotes)
-}
-
-func contains(list []string, item misc.TrackedRepo) bool {
-	for _, n := range list {
-		if n == string(item) {
-			return true
-		}
-	}
-	return false
 }
 
 func (gr *Runner) LoadLocalTags() (result misc.VersionMap, err error) {

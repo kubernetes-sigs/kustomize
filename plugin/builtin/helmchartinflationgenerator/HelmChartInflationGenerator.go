@@ -156,10 +156,8 @@ func (p *plugin) errIfIllegalValuesMerge() error {
 		p.ValuesMerge = valuesMergeOptionOverride
 		return nil
 	}
-	for _, opt := range legalMergeOptions {
-		if p.ValuesMerge == opt {
-			return nil
-		}
+	if slices.Contains(legalMergeOptions, p.ValuesMerge) {
+		return nil
 	}
 	return fmt.Errorf("valuesMerge must be one of %v", legalMergeOptions)
 }
