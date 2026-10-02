@@ -45,7 +45,7 @@ func Example_arrayReplace() {
 	fmt.Println(f.PatchStrategyAndKey()) // no patch strategy or merge key
 
 	// Output:
-	// Arguments to the entrypoint. The docker image's CMD is used if this is...
+	// Arguments to the entrypoint. The container image's CMD is used if this...
 	// [array]
 }
 

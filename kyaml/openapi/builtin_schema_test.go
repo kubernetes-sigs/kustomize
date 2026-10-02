@@ -6,6 +6,7 @@ package openapi
 import (
 	"bytes"
 	"compress/gzip"
+	"strings"
 	"testing"
 
 	openapi_v2 "github.com/google/gnostic-models/openapiv2"
@@ -17,13 +18,30 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+type builtinProvenanceAPI struct {
+	apiVersion string
+	kind       string
+	definition string
+}
+
+type builtinSourceProvenance struct {
+	kubernetesVersion string
+	gitCommit         string
+	sha256            string
+	apis              []builtinProvenanceAPI
+}
+
 func TestBuiltinOpenAPIBundle(t *testing.T) {
 	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
 	require.NoError(t, err)
 	require.Equal(t, builtinopenapi.FormatVersion, bundle.FormatVersion)
-	require.Equal(t, builtinopenapi.Coverage{Floor: "v1.21.2", Ceiling: "v1.21.2"}, bundle.Coverage)
-	require.Len(t, bundle.Definitions, 618)
-	require.Len(t, bundle.Resources, 275)
+	require.Equal(t, builtinopenapi.Coverage{
+		Floor:   generatedBuiltinSourceProvenance[0].kubernetesVersion,
+		Ceiling: generatedBuiltinSourceProvenance[len(generatedBuiltinSourceProvenance)-1].kubernetesVersion,
+	}, bundle.Coverage)
+	require.Len(t, bundle.Sources, len(generatedBuiltinSourceProvenance))
+	require.NotEmpty(t, bundle.Definitions)
+	require.NotEmpty(t, bundle.Resources)
 
 	definitionResources := make(map[yaml.TypeMeta]string)
 	scopes := 0
@@ -37,9 +55,9 @@ func TestBuiltinOpenAPIBundle(t *testing.T) {
 		}
 	}
 
-	// A single-source bundle must carry the same GVK-to-definition mapping in
-	// both its definitions and its resource inventory. The runtime indexes
-	// schemas exclusively from the definitions' GVK extensions.
+	// A bundle must carry the same GVK-to-definition mapping in both its
+	// definitions and its resource inventory. The runtime indexes schemas
+	// exclusively from the definitions' GVK extensions.
 	ResetOpenAPI()
 	t.Cleanup(ResetOpenAPI)
 	AddDefinitions(bundle.Definitions)
@@ -65,7 +83,7 @@ func TestBuiltinOpenAPIBundle(t *testing.T) {
 	}
 }
 
-func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
+func TestBuiltinOpenAPIBundlePreservesLegacyGVKs(t *testing.T) {
 	document := &openapi_v2.Document{}
 	require.NoError(t, proto.Unmarshal(v1_21_2.MustAsset(
 		"kubernetesapi/v1_21_2/swagger.pb"), document))
@@ -73,10 +91,6 @@ func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
 	ok, err := swagger.FromGnostic(document)
 	require.NoError(t, err)
 	require.True(t, ok)
-
-	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
-	require.NoError(t, err)
-	require.Equal(t, swagger.Definitions, bundle.Definitions)
 
 	ResetOpenAPI()
 	t.Cleanup(ResetOpenAPI)
@@ -93,11 +107,86 @@ func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
 
 	ResetOpenAPI()
 	require.NoError(t, parseBuiltinBundle(builtinKubernetesOpenAPIBundle))
-	require.Len(t, globalSchema.schemaByResourceType, len(legacySchemas))
-	for typeMeta, schema := range legacySchemas {
-		require.Equal(t, schema, *globalSchema.schemaByResourceType[typeMeta], "%v", typeMeta)
+	for typeMeta := range legacySchemas {
+		require.Contains(t, globalSchema.schemaByResourceType, typeMeta)
 	}
-	require.Equal(t, legacyScopes, globalSchema.namespaceabilityByResourceType)
+	for typeMeta, namespaced := range legacyScopes {
+		require.Equal(t, namespaced, globalSchema.namespaceabilityByResourceType[typeMeta], "%v", typeMeta)
+	}
+}
+
+func TestBuiltinOpenAPIBundleContainsOldIntermediateAndCurrentGVKs(t *testing.T) {
+	ResetOpenAPI()
+	t.Cleanup(ResetOpenAPI)
+
+	legacy := SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "extensions/v1beta1",
+		Kind:       "Ingress",
+	})
+	require.NotNil(t, legacy)
+	intermediate := SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "flowcontrol.apiserver.k8s.io/v1beta2",
+		Kind:       "FlowSchema",
+	})
+	require.NotNil(t, intermediate)
+	current := SchemaForResourceType(yaml.TypeMeta{
+		APIVersion: "resource.k8s.io/v1",
+		Kind:       "ResourceClaim",
+	})
+	require.NotNil(t, current)
+}
+
+func TestBuiltinOpenAPIVersionAliases(t *testing.T) {
+	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
+	require.NoError(t, err)
+	ceiling := bundle.Coverage.Ceiling
+	defaultMinor := ceiling[:strings.LastIndex(ceiling, ".")]
+	require.Equal(t, defaultMinor, DefaultOpenAPI)
+	require.Equal(t, "{title:Kubernetes,version:"+DefaultOpenAPI+"}", BuiltinSchemaInfo)
+	require.True(t, hasBuiltinOpenAPIVersion(DefaultOpenAPI))
+	require.True(t, hasBuiltinOpenAPIVersion("builtin"))
+	require.True(t, hasBuiltinOpenAPIVersion("v1.21.2"))
+	require.True(t, hasBuiltinOpenAPIVersion("v1.35"))
+	require.False(t, hasBuiltinOpenAPIVersion("v2.1"))
+}
+
+func TestBuiltinOpenAPIVersionAliasesLoadUnion(t *testing.T) {
+	for _, alias := range []string{"builtin", "v1.21.2"} {
+		t.Run(alias, func(t *testing.T) {
+			ResetOpenAPI()
+			t.Cleanup(ResetOpenAPI)
+			require.NoError(t, SetSchema(map[string]string{"version": alias}, nil, false))
+			require.Equal(t, alias, GetSchemaVersion())
+			require.NotNil(t, SchemaForResourceType(yaml.TypeMeta{
+				APIVersion: "admissionregistration.k8s.io/v1",
+				Kind:       "MutatingAdmissionPolicy",
+			}))
+		})
+	}
+}
+
+func TestBuiltinOpenAPISourceProvenance(t *testing.T) {
+	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
+	require.NoError(t, err)
+	bundleResources := make(map[yaml.TypeMeta]builtinopenapi.Resource, len(bundle.Resources))
+	for _, resource := range bundle.Resources {
+		bundleResources[yaml.TypeMeta{APIVersion: resource.APIVersion, Kind: resource.Kind}] = resource
+	}
+	require.Len(t, generatedBuiltinSourceProvenance, len(bundle.Sources))
+	for i, provenance := range generatedBuiltinSourceProvenance {
+		source := bundle.Sources[len(bundle.Sources)-1-i]
+		require.Equal(t, source.KubernetesVersion, provenance.kubernetesVersion)
+		require.Equal(t, source.GitCommit, provenance.gitCommit)
+		require.Equal(t, source.SHA256, provenance.sha256)
+		require.NotEmpty(t, provenance.apis, "Kubernetes %s", provenance.kubernetesVersion)
+		require.LessOrEqual(t, len(provenance.apis), 3)
+		for _, api := range provenance.apis {
+			resource, found := bundleResources[yaml.TypeMeta{APIVersion: api.apiVersion, Kind: api.kind}]
+			require.True(t, found, "%s %s/%s", provenance.kubernetesVersion, api.apiVersion, api.kind)
+			require.Equal(t, api.definition, resource.Definition)
+			require.Contains(t, bundle.Definitions, api.definition)
+		}
+	}
 }
 
 func TestDecodeBuiltinOpenAPIBundleRejectsInvalidData(t *testing.T) {
