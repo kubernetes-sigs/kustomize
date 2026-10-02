@@ -57,6 +57,7 @@ func WrapErrorWithFile(err error, meta yaml.ResourceMeta) error {
 		path = meta.Annotations[kioutil.LegacyPathAnnotation]
 	}
 	if index == "" {
+		//nolint:staticcheck // Preserve compatibility with resources using the legacy annotation.
 		index = meta.Annotations[kioutil.LegacyIndexAnnotation]
 	}
 	return errors.WrapPrefixf(err, "%s [%s]", path, index)
