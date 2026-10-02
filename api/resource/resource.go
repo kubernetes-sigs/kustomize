@@ -6,6 +6,7 @@ package resource
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/patchstrategicmerge"
@@ -384,7 +385,56 @@ func (r *Resource) AsYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return yaml.JSONToYAML(json)
+	yamlBytes, err := yaml.JSONToYAML(json)
+	if err != nil {
+		return nil, err
+	}
+	return sortConfigMapData(yamlBytes)
+}
+
+func sortConfigMapData(yamlBytes []byte) ([]byte, error) {
+	node, err := kyaml.Parse(string(yamlBytes))
+	if err != nil || node.GetKind() != "ConfigMap" {
+		return yamlBytes, err
+	}
+
+	changed := false
+	for _, field := range []string{"data", "binaryData"} {
+		mapNode := node.Field(field)
+		if mapNode == nil || len(mapNode.Value.YNode().Content) < 2 {
+			continue
+		}
+		content := mapNode.Value.YNode().Content
+		hasNumericKey := false
+		for i := 0; i < len(content); i += 2 {
+			key := content[i].Value
+			if len(key) > 0 && key[0] >= '0' && key[0] <= '9' {
+				hasNumericKey = true
+				break
+			}
+		}
+		if !hasNumericKey {
+			continue
+		}
+		pairs := make([]int, len(content)/2)
+		for i := range pairs {
+			pairs[i] = i
+		}
+		sort.SliceStable(pairs, func(i, j int) bool {
+			return content[pairs[i]*2].Value < content[pairs[j]*2].Value
+		})
+		sortedContent := make([]*kyaml.Node, len(content))
+		for i, pair := range pairs {
+			sortedContent[i*2] = content[pair*2]
+			sortedContent[i*2+1] = content[pair*2+1]
+		}
+		copy(content, sortedContent)
+		changed = true
+	}
+	if !changed {
+		return yamlBytes, nil
+	}
+	return []byte(node.MustString()), nil
 }
 
 // MustYaml returns YAML or panics.
