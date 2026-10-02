@@ -288,14 +288,19 @@ func prefixSuffixEquals(other resource.ResCtx, allowEmpty bool) sieveFunc {
 	}
 }
 
+// sameCurrentNamespaceAsReferrer restricts referrals to the same namespace,
+// with exceptions for cluster-scoped objects and ServiceAccounts.
+// Custom resources that are not in OpenAPI and have no namespace are
+// treated as cluster-scoped so nameReference works for CRDs such as
+// ClusterSecretStore (kubernetes-sigs/kustomize#5504).
 func (f Filter) sameCurrentNamespaceAsReferrer() sieveFunc {
 	referrerCurId := f.Referrer.CurId()
-	if referrerCurId.IsClusterScoped() {
+	if referrerCurId.TreatAsClusterScopedForRefs() {
 		// If the referrer is cluster-scoped, let anything through.
 		return acceptAll
 	}
 	return func(r *resource.Resource) bool {
-		if r.CurId().IsClusterScoped() {
+		if r.CurId().TreatAsClusterScopedForRefs() {
 			// Allow cluster-scoped through.
 			return true
 		}

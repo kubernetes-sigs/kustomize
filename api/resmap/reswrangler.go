@@ -393,7 +393,7 @@ func (m *resWrangler) makeCopy(copier resCopier) ResMap {
 func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	referrer *resource.Resource) (ResMap, error) {
 	referrerId := referrer.CurId()
-	if referrerId.IsClusterScoped() {
+	if referrerId.TreatAsClusterScopedForRefs() {
 		// A cluster scoped resource can refer to anything.
 		return m, nil
 	}
@@ -404,7 +404,7 @@ func (m *resWrangler) SubsetThatCouldBeReferencedByResource(
 	}
 	for _, possibleTarget := range m.rList {
 		id := possibleTarget.CurId()
-		if id.IsClusterScoped() {
+		if id.TreatAsClusterScopedForRefs() {
 			// A cluster-scoped resource can be referred to by anything.
 			result.append(possibleTarget)
 			continue
