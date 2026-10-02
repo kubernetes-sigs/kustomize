@@ -4,7 +4,7 @@ Kustomize embeds a compiled OpenAPI bundle for Kubernetes built-in types. The
 runtime artifact is:
 
 ```
-kubernetesapi/data/kubernetes-openapi-union-v1.21.2.bundle-v1.json.gz
+kubernetesapi/data/kubernetes-openapi-union-v1.21.2.bundle-v1.json
 ```
 
 The Kubernetes suffix identifies the newest Kubernetes schema represented by
@@ -44,9 +44,10 @@ make -C kyaml/openapi generate
 ```
 
 The compiler performs the protobuf-to-OpenAPI conversion, constructs the GVK
-and scope index, validates local references, writes canonical JSON, and uses a
-deterministic gzip header. The generated artifact must be byte-for-byte
-reproducible. Verify it and run the OpenAPI tests with:
+and scope index, validates local references, and writes deterministic,
+formatted JSON. The generated artifact is stored as plain text so its contents
+and changes can be reviewed. It must be byte-for-byte reproducible. Verify it
+and run the OpenAPI tests with:
 
 ```
 make -C kyaml/openapi verify
