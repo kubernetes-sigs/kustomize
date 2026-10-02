@@ -4,6 +4,7 @@
 package resource
 
 import (
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -47,18 +48,20 @@ func (origin *Origin) Copy() Origin {
 	return *origin
 }
 
-// Append returns a copy of origin with a path appended to it
-func (origin *Origin) Append(path string) *Origin {
+// Append returns a copy of origin with a path appended to it.
+// The path is recorded with "/" on every platform, like the paths
+// in a kustomization file.
+func (origin *Origin) Append(pathToAppend string) *Origin {
 	originCopy := origin.Copy()
-	repoSpec, err := git.NewRepoSpecFromURL(path)
+	repoSpec, err := git.NewRepoSpecFromURL(pathToAppend)
 	if err == nil {
 		originCopy.Repo = repoSpec.CloneSpec()
-		absPath := repoSpec.AbsPath()
-		path = absPath[strings.Index(absPath[1:], "/")+1:][1:]
+		absPath := filepath.ToSlash(repoSpec.AbsPath())
+		pathToAppend = absPath[strings.Index(absPath[1:], "/")+1:][1:]
 		originCopy.Path = ""
 		originCopy.Ref = repoSpec.Ref
 	}
-	originCopy.Path = filepath.Join(originCopy.Path, path)
+	originCopy.Path = path.Join(filepath.ToSlash(originCopy.Path), filepath.ToSlash(pathToAppend))
 	return &originCopy
 }
 

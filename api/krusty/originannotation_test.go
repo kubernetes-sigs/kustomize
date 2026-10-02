@@ -411,6 +411,7 @@ metadata:
 }
 
 func TestAnnoOriginCustomExecGenerator(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -505,6 +506,7 @@ spec:
 }
 
 func TestAnnoOriginCustomInlineExecGenerator(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -595,6 +597,7 @@ spec:
 }
 
 func TestAnnoOriginCustomExecGeneratorWithOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -695,6 +698,7 @@ spec:
 }
 
 func TestAnnoOriginCustomInlineExecGeneratorWithOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -791,6 +795,7 @@ spec:
 }
 
 func TestAnnoOriginRemoteBuiltinGenerator(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fSys := filesys.MakeFsOnDisk()
 	b := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	tmpDir, err := filesys.NewTmpConfirmedDir()
@@ -1005,6 +1010,7 @@ metadata:
 }
 
 func TestAnnoOriginGeneratorInTransformersField(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -1067,6 +1073,7 @@ spec:
 }
 
 func TestAnnoOriginGeneratorInTransformersFieldWithOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)

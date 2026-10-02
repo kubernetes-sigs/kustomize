@@ -94,12 +94,29 @@ func (n *fsNode) Path() string {
 	if !n.parent.isNodeADir() {
 		log.Fatal("parent not a dir, structural error")
 	}
+	if n.parent.parent == nil && isVolumeName(n.Name()) {
+		// A Windows volume, e.g. "C:", is a top-level entry
+		// whose path is the volume root, e.g. `C:\`.
+		return n.Name() + Separator
+	}
 	return filepath.Join(n.parent.Path(), n.Name())
+}
+
+// isVolumeName reports whether s is exactly a Windows volume name,
+// e.g. "C:". It is always false on other platforms.
+func isVolumeName(s string) bool {
+	return s != "" && filepath.VolumeName(s) == s
 }
 
 // mySplit trims trailing separators from the directory
 // result of filepath.Split.
+// A Windows volume name, e.g. "C:" or `C:\`, splits into itself as
+// the item, since filepath.Split would return it as the directory
+// again, and callers recursing on the directory would not terminate.
 func mySplit(s string) (string, string) {
+	if vol := StripTrailingSeps(s); isVolumeName(vol) {
+		return "", vol
+	}
 	dName, fName := filepath.Split(s)
 	return StripTrailingSeps(dName), fName
 }
@@ -274,7 +291,7 @@ func (n *fsNode) Find(path string) (*fsNode, error) {
 		// comparison to nilParentName.
 		return nil, nil
 	}
-	if (n.parent == nil && path == n.nilParentName) || path == SelfDir {
+	if (n.parent == nil && filepath.FromSlash(path) == n.nilParentName) || path == SelfDir {
 		// Special case
 		return n, nil
 	}
@@ -617,7 +634,9 @@ func (n *fsNode) Glob(pattern string) ([]string, error) {
 			return err
 		}
 		if !info.IsDir() {
-			match, err := filepath.Match(pattern, path)
+			// Like filepath.Glob, accept "/" in the pattern on Windows,
+			// where walked paths use "\".
+			match, err := filepath.Match(filepath.FromSlash(pattern), path)
 			if err != nil {
 				return err
 			}

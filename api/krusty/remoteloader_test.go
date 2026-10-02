@@ -177,7 +177,7 @@ resources:
 			name: "has ref",
 			kustomization: `
 resources: 
-- "file://$ROOT/simple.git?ref=change-image"
+- 'file://$ROOT/simple.git?ref=change-image'
 `,
 
 			expected: simpleBuildWithNginx2,
@@ -278,7 +278,7 @@ spec:
 resources:
 - file:///not/a/real/repo
 `,
-			err: "fatal: '/not/a/real/repo' does not appear to be a git repository",
+			err: "/not/a/real/repo' does not appear to be a git repository",
 		},
 	}
 
@@ -443,12 +443,22 @@ func configureGitSSHCommand(t *testing.T) {
 	require.NoError(t, err)
 	_, err = io.Copy(f, bytes.NewReader(key))
 	require.NoError(t, err)
-	cmd := fmt.Sprintf("ssh -i %s -o IdentitiesOnly=yes", f.Name())
+	cmd := fmt.Sprintf("ssh -i %s -o IdentitiesOnly=yes", filepath.ToSlash(f.Name()))
 	const SSHCommandKey = "GIT_SSH_COMMAND"
 	t.Setenv(SSHCommandKey, cmd)
 	t.Cleanup(func() {
 		_ = os.Remove(f.Name())
 	})
+}
+
+// disableGitAutoCRLF keeps Git for Windows, which enables core.autocrlf by
+// default, from checking out remote files with CRLF line endings that the
+// expected output lacks.
+func disableGitAutoCRLF(t *testing.T) {
+	t.Helper()
+	t.Setenv("GIT_CONFIG_COUNT", "1")
+	t.Setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
+	t.Setenv("GIT_CONFIG_VALUE_0", "false")
 }
 
 func checkYaml(t *testing.T, actual resmap.ResMap, expected string) {

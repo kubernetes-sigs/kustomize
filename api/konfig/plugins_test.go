@@ -34,8 +34,8 @@ func TestDefaultAbsPluginHome_NoKustomizePluginHomeEnv(t *testing.T) {
 		"unable to find plugin root - tried:",
 		"('<no value>'; homed in $KUSTOMIZE_PLUGIN_HOME)",
 		"; homed in $XDG_CONFIG_HOME)",
-		"/.config/kustomize/plugin'; homed in default value of $XDG_CONFIG_HOME)",
-		"/kustomize/plugin'; homed in home directory)",
+		filepath.FromSlash("/.config/kustomize/plugin'; homed in default value of $XDG_CONFIG_HOME)"),
+		filepath.FromSlash("/kustomize/plugin'; homed in home directory)"),
 	} {
 		assert.Contains(t, err.Error(), expectedMsg)
 	}
