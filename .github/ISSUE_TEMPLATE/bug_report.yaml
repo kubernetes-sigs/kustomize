@@ -2,6 +2,11 @@ name: Bug report
 description: File a bug report
 labels: ["kind/bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, read the [contribution rules](https://github.com/kubernetes-sigs/kustomize/blob/master/CONTRIBUTING.md), including duplicate search and human-authored AI disclosure requirements.
+
   - type: textarea
     id: problem
     attributes:
@@ -85,3 +90,57 @@ body:
         - Other
     validations:
       required: false
+
+  - type: textarea
+    id: duplicate-search
+    attributes:
+      label: Duplicate search
+      description: Search open and closed issues and open, closed, and merged pull requests. List exact queries and any relevant results and differences; if none exist, say so.
+      placeholder: |
+        Queries:
+        - is:issue "short error text"
+        - is:pr component-name behavior
+
+        Closest relevant results and differences, or "No relevant results from the queries above":
+        - https://github.com/kubernetes-sigs/kustomize/issues/... — ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-use
+    attributes:
+      label: Generative AI use
+      description: Did you use generative AI to draft this issue, analyze its subject, or prepare proposed content or a patch included with it? AI use must be disclosed.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+
+  - type: input
+    id: ai-model
+    attributes:
+      label: AI tool and model
+      description: If yes, give the provider, product, model, and version. Use "unknown/auto-selected" when the model is not exposed. If no AI was used, enter "None."
+      placeholder: None, or provider / product / model / version
+    validations:
+      required: true
+
+  - type: textarea
+    id: ai-usage
+    attributes:
+      label: How was AI used?
+      description: Briefly describe assistance with code, research, analysis, copy-editing, or translation. Do not paste prompts or transcripts. If no AI was used, enter "None."
+      placeholder: None, or a brief factual description
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: submission-confirmations
+    attributes:
+      label: Submission confirmations
+      options:
+        - label: I searched for duplicates using the queries above and reviewed any relevant results.
+          required: true
+        - label: I wrote the substantive content of this issue myself and kept it concise. Any light copy-editing or translation assistance is disclosed above.
+          required: true
