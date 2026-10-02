@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -126,6 +127,12 @@ func (th *HarnessEnhanced) PrepBuiltin(k string) *HarnessEnhanced {
 }
 
 func (th *HarnessEnhanced) BuildGoPlugin(g, v, k string) *HarnessEnhanced {
+	if runtime.GOOS == "windows" {
+		// Go's plugin package does not support Windows. Reset first,
+		// since skipping here returns before the caller can defer it.
+		th.Reset()
+		th.pte.t.Skip("Go plugins are not supported on Windows")
+	}
 	th.pte.prepareGoPlugin(g, v, k)
 	return th
 }
