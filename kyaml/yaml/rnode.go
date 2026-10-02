@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -190,7 +191,7 @@ func SyncMapNodesOrder(from, to *RNode) {
 	}
 
 	for _, fieldName := range fromFieldNames {
-		if !sliceutil.Contains(toFieldNames, fieldName) {
+		if !slices.Contains(toFieldNames, fieldName) {
 			continue
 		}
 		// append the common nodes in the order defined in 'from' node

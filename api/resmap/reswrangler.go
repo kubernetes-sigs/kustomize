@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"slices"
 
 	"sigs.k8s.io/kustomize/api/filters/annotations"
 	"sigs.k8s.io/kustomize/api/resource"
@@ -185,11 +186,8 @@ func (m *resWrangler) GetMatchingResourcesByAnyId(
 			continue
 		}
 
-		for _, id := range append(r.PrevIds(), r.CurId()) {
-			if matches(id) {
-				result = append(result, r)
-				break
-			}
+		if slices.ContainsFunc(append(r.PrevIds(), r.CurId()), matches) {
+			result = append(result, r)
 		}
 	}
 	return result
