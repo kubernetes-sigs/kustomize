@@ -121,6 +121,13 @@ func (fl *FileLoader) Root() string {
 	return fl.root.String()
 }
 
+// WithLoadRestrictor returns a copy of the FileLoader with a different load restrictor.
+func (fl *FileLoader) WithLoadRestrictor(lr LoadRestrictorFunc) *FileLoader {
+	newFl := *fl
+	newFl.loadRestrictor = lr
+	return &newFl
+}
+
 func NewLoaderOrDie(
 	lr LoadRestrictorFunc,
 	fSys filesys.FileSystem, path string) *FileLoader {
