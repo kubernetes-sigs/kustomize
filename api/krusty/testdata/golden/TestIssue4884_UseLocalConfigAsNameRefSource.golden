@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Ingress
+metadata:
+  name: test-ingress
+  namespace: test
+spec:
+  rules:
+  - host: prefix-test.fakedomain.com
+  - host: do-not-touch.otherdomain.com
+  tls:
+  - hosts:
+    - prefix-test.fakedomain.com
+    secretName: prefix-test-secret
+  - hosts:
+    - do-not-touch.otherdomain.com
+    secretname: do-not-touch
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+  namespace: test
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: domain-name
+          value: prefix-test.fakedomain.com
+        name: tester

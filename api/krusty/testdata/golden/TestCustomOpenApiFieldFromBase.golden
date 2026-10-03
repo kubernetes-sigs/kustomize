@@ -1,0 +1,15 @@
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  template:
+    spec:
+      containers:
+      - command: example
+        image: nginx
+        name: server
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: fancyDisk
+      volumes:
+      - emptyDir: {}
+        name: fancyDisk
+      - configMap:
+          name: baseCm-798k5k7g9f
+        name: baseCm
+---
+apiVersion: v1
+data:
+  foo: bar
+kind: ConfigMap
+metadata:
+  name: baseCm-798k5k7g9f

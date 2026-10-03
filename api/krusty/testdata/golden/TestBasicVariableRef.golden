@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: base-clown
+spec:
+  containers:
+  - command:
+    - echo
+    - base-clown
+    env:
+    - name: FOO
+      value: base-clown
+    image: frown
+    name: frown
