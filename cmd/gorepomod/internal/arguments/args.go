@@ -6,6 +6,7 @@ package arguments
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
@@ -13,15 +14,16 @@ import (
 )
 
 const (
-	doItFlag     = "--doIt"
-	localFlag    = "--local"
-	cmdPin       = "pin"
-	cmdUnPin     = "unpin"
-	cmdTidy      = "tidy"
-	cmdList      = "list"
-	cmdRelease   = "release"
-	cmdUnRelease = "unrelease"
-	cmdDebug     = "debug"
+	doItFlag          = "--doIt"
+	localFlag         = "--local"
+	releaseBranchFlag = "--release-branch"
+	cmdPin            = "pin"
+	cmdUnPin          = "unpin"
+	cmdTidy           = "tidy"
+	cmdList           = "list"
+	cmdRelease        = "release"
+	cmdUnRelease      = "unrelease"
+	cmdDebug          = "debug"
 )
 
 var (
@@ -64,6 +66,7 @@ type Args struct {
 	conditionalModule misc.ModuleShortName
 	version           semver.SemVer
 	bump              semver.SvBump
+	releaseBranch     string
 	doIt              bool
 	localFlag         bool
 }
@@ -86,6 +89,10 @@ func (a *Args) Bump() semver.SvBump {
 
 func (a *Args) Version() semver.SemVer {
 	return a.version
+}
+
+func (a *Args) ReleaseBranch() string {
+	return a.releaseBranch
 }
 
 func (a *Args) ModuleName() misc.ModuleShortName {
@@ -113,9 +120,10 @@ func (a *Args) LocalFlag() bool {
 }
 
 type myArgs struct {
-	args      []string
-	doIt      bool
-	localFlag bool
+	args          []string
+	doIt          bool
+	localFlag     bool
+	releaseBranch string
 }
 
 func (a *myArgs) next() (result string) {
@@ -138,6 +146,8 @@ func newArgs() *myArgs {
 			result.doIt = true
 		} else if a == localFlag {
 			result.localFlag = true
+		} else if strings.HasPrefix(a, releaseBranchFlag+"=") {
+			result.releaseBranch = strings.TrimPrefix(a, releaseBranchFlag+"=")
 		} else {
 			result.args = append(result.args, a)
 		}
@@ -150,6 +160,7 @@ func Parse() (result *Args, err error) {
 	clArgs := newArgs()
 	result.doIt = clArgs.doIt
 	result.localFlag = clArgs.localFlag
+	result.releaseBranch = clArgs.releaseBranch
 
 	result.moduleName = misc.ModuleUnknown
 	result.conditionalModule = misc.ModuleUnknown
@@ -191,7 +202,7 @@ func Parse() (result *Args, err error) {
 		}
 		result.moduleName = misc.ModuleShortName(clArgs.next())
 		bump := "patch"
-		if clArgs.more() {
+		if clArgs.more() && clArgs.args[0] != releaseBranchFlag {
 			bump = clArgs.next()
 		}
 		switch bump {
@@ -204,6 +215,18 @@ func Parse() (result *Args, err error) {
 		default:
 			return nil, fmt.Errorf(
 				"unknown bump %s; specify one of 'major', 'minor' or 'patch'", bump)
+		}
+		if clArgs.more() {
+			if result.releaseBranch != "" {
+				return nil, fmt.Errorf("release branch specified more than once")
+			}
+			if clArgs.next() != releaseBranchFlag {
+				return nil, fmt.Errorf("unknown extra args: %v", clArgs.args)
+			}
+			if !clArgs.more() {
+				return nil, fmt.Errorf("%s requires a branch name", releaseBranchFlag)
+			}
+			result.releaseBranch = clArgs.next()
 		}
 		result.cmd = Release
 	case cmdUnRelease:
