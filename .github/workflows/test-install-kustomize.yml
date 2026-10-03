@@ -15,9 +15,6 @@ on:
 permissions:
   contents: read
 
-env:
-  expected_kustomize_version: v5.8.1
-
 jobs:
   test-install-kustomize:
     name: Test install_kustomize.sh (${{ matrix.release-file }})
@@ -25,9 +22,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        release-file:
-          - hack/test-files/minimized-release.json
-          - hack/test-files/unminimized-release.json
+        include:
+          - release-file: hack/test-files/minimized-release.json
+            expected-version: v5.8.1
+          - release-file: hack/test-files/unminimized-release.json
+            expected-version: v5.8.1
+          - release-file: hack/test-files/legacy-release.json
+            requested-version: 2.0.3
+            expected-version: KustomizeVersion:2.0.3
 
     steps:
       - name: Check out code
@@ -39,12 +41,17 @@ jobs:
           set -euo pipefail
           tmp_dir="$(mktemp -d)"
 
-          ./hack/install_kustomize.sh "$tmp_dir"
+          if [ -n "${requested_kustomize_version}" ]; then
+            ./hack/install_kustomize.sh "${requested_kustomize_version}" "$tmp_dir"
+          else
+            ./hack/install_kustomize.sh "$tmp_dir"
+          fi
 
           actual_kustomize_version=$("$tmp_dir/kustomize" version)
 
           echo "Kustomize version: ${actual_kustomize_version}"
-          [ "${actual_kustomize_version}" = "${expected_kustomize_version}" ] || (echo "Unexpected Kustomize version: Expected ${expected_kustomize_version}, got ${actual_kustomize_version}" && exit 1)
+          [[ "${actual_kustomize_version}" == *"${expected_kustomize_version}"* ]] || (echo "Unexpected Kustomize version: Expected ${expected_kustomize_version}, got ${actual_kustomize_version}" && exit 1)
         env:
-          expected_kustomize_version: ${{ env.expected_kustomize_version }}
+          requested_kustomize_version: ${{ matrix.requested-version }}
+          expected_kustomize_version: ${{ matrix.expected-version }}
           releases_file: ${{ github.workspace }}/${{ matrix.release-file }}
