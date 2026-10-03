@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/functions/examples/application-cr
 go 1.27.0
 
 require (
-	k8s.io/apimachinery v0.37.0
+	k8s.io/apimachinery v0.37.1
 	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/kustomize/kyaml v0.13.7
 	sigs.k8s.io/yaml v1.6.0
