@@ -158,7 +158,6 @@ items:
   metadata:
     annotations:
       app.kubernetes.io/managed-by: jingfang
-    creationTimestamp: null
     labels:
       app.kubernetes.io/name: example-app
     name: example-app

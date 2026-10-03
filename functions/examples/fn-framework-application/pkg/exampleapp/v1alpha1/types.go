@@ -26,7 +26,7 @@ const Kind = "ExampleApp"
 //nolint:gochecknoglobals
 var GroupVersion = strings.Join([]string{Group, Version}, "/")
 
-type ExampleApp struct {
+type ExampleApp struct { //nolint:recvcheck // Framework hooks intentionally mix mutating pointer and read-only value receivers.
 	// Embedding these structs is required to use controller-gen to produce the CRD
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

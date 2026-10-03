@@ -751,7 +751,7 @@ options:
 }
 
 func TestLocalizeGeneratorsSecret(t *testing.T) {
-	files := map[string]string{
+	files := map[string]string{ //nolint:gosec // G101: values are test fixtures, not credentials.
 		"kustomization.yaml": `generators:
 - secretGenerator
 `,

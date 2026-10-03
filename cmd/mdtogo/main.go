@@ -78,7 +78,7 @@ func main() {
 		if filepath.Ext(f.Name()) != ".md" {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(source, f.Name()))
+		b, err := os.ReadFile(filepath.Join(source, f.Name())) //nolint:gosec // G703: this tool intentionally reads the requested directory.
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
@@ -116,7 +116,7 @@ package ` + filepath.Base(dest) + "\n"}
 	}
 
 	o := strings.Join(out, "\n")
-	err = os.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600)
+	err = os.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600) //nolint:gosec // G703: this tool intentionally writes to the requested directory.
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

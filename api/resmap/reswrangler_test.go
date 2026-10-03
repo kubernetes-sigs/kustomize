@@ -321,7 +321,6 @@ func TestGetMatchingResourcesByCurrentId(t *testing.T) {
 		t.Fatalf("Expected single map entry but got %v", result)
 	}
 
-	//nolint:goconst
 	tests := []struct {
 		name    string
 		matcher IdMatcher
@@ -988,6 +987,144 @@ func TestAbsorbAll(t *testing.T) {
 	require.Error(t, err)
 	assert.True(
 		t, strings.Contains(err.Error(), "behavior must be merge or replace"))
+}
+
+func TestAbsorbAllMergeSecretStringData(t *testing.T) {
+	tests := []struct {
+		name     string
+		existing string
+		incoming string
+		expected string
+	}{
+		{
+			name: "core v1 Secret normalizes stringData",
+			existing: `
+apiVersion: v1
+data:
+  dataOnly: ZGF0YQ==
+  generatorWins: b2xkLWRhdGE=
+  stringWins: b2xkLWRhdGE=
+kind: Secret
+metadata:
+  name: test
+stringData:
+  generatorWins: string
+  long: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+  multiline: |
+    line one
+    line two
+  stringOnly: string
+  stringWins: string
+type: Opaque
+`,
+			incoming: `
+apiVersion: v1
+data:
+  generatedOnly: Z2VuZXJhdGVk
+  generatorWins: Z2VuZXJhdGVk
+kind: Secret
+metadata:
+  name: test
+type: Opaque
+`,
+			expected: `
+apiVersion: v1
+data:
+  dataOnly: ZGF0YQ==
+  generatedOnly: Z2VuZXJhdGVk
+  generatorWins: Z2VuZXJhdGVk
+  long: |
+    YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWj
+    AxMjM0NTY3ODk=
+  multiline: bGluZSBvbmUKbGluZSB0d28K
+  stringOnly: c3RyaW5n
+  stringWins: c3RyaW5n
+kind: Secret
+metadata:
+  name: test
+type: Opaque
+`,
+		},
+		{
+			name: "custom resource does not normalize stringData",
+			existing: `
+apiVersion: example.com/v1
+data:
+  oldOnly: b2xk
+kind: Secret
+metadata:
+  name: test
+stringData:
+  customOnly: plain
+`,
+			incoming: `
+apiVersion: example.com/v1
+data:
+  generatedOnly: Z2VuZXJhdGVk
+kind: Secret
+metadata:
+  name: test
+`,
+			expected: `
+apiVersion: example.com/v1
+data:
+  generatedOnly: Z2VuZXJhdGVk
+  oldOnly: b2xk
+kind: Secret
+metadata:
+  name: test
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			existing, err := rmF.NewResMapFromBytes([]byte(tc.existing))
+			require.NoError(t, err)
+			incoming, err := rmF.NewResMapFromBytes([]byte(tc.incoming))
+			require.NoError(t, err)
+			incoming.Resources()[0].SetBehavior(types.BehaviorMerge)
+			expected, err := rmF.NewResMapFromBytes([]byte(tc.expected))
+			require.NoError(t, err)
+
+			require.NoError(t, existing.AbsorbAll(incoming))
+			existing.RemoveBuildAnnotations()
+			require.NoError(t, expected.ErrorIfNotEqualLists(existing))
+		})
+	}
+}
+
+func TestAbsorbAllRejectsNonScalarSecretStringData(t *testing.T) {
+	existing, err := rmF.NewResMapFromBytes([]byte(`
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test
+stringData:
+  invalid:
+    nested: value
+type: Opaque
+`))
+	require.NoError(t, err)
+	incoming, err := rmF.NewResMapFromBytes([]byte(`
+apiVersion: v1
+data:
+  generated: Z2VuZXJhdGVk
+kind: Secret
+metadata:
+  name: test
+type: Opaque
+`))
+	require.NoError(t, err)
+	incoming.Resources()[0].SetBehavior(types.BehaviorMerge)
+	before, err := existing.AsYaml()
+	require.NoError(t, err)
+
+	err = existing.AbsorbAll(incoming)
+	require.ErrorContains(t, err, `stringData value for key "invalid" must be a scalar`)
+	after, yamlErr := existing.AsYaml()
+	require.NoError(t, yamlErr)
+	assert.Equal(t, before, after)
 }
 
 func TestToRNodeSlice(t *testing.T) {

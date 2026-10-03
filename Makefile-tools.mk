@@ -3,79 +3,48 @@
 
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
+GOHOSTOS = $(shell go env GOHOSTOS)
 MYGOBIN = $(shell go env GOBIN)
 ifeq ($(MYGOBIN),)
 MYGOBIN = $(shell go env GOPATH)/bin
 endif
 export PATH := $(MYGOBIN):$(PATH)
 
-REPO_ROOT=$(shell git rev-parse --show-toplevel)
-GOLANGCI_LINT_VERSION ?= $(shell cd $(REPO_ROOT)/hack && go list -m -f '{{.Version}}' github.com/golangci/golangci-lint)
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+TOOLS_DIR ?= $(REPO_ROOT)/.bin
+
+GOLANGCI_LINT_DEFAULT := $(TOOLS_DIR)/golangci-lint$(if $(filter windows,$(GOHOSTOS)),.exe)
+
+# Set GOLANGCI_LINT to use a pre-installed binary and skip the download, for
+# example: make lint GOLANGCI_LINT=golangci-lint
+ifeq ($(origin GOLANGCI_LINT), undefined)
+GOLANGCI_LINT := $(GOLANGCI_LINT_DEFAULT)
+GOLANGCI_LINT_PREREQUISITE := ensure-golangci-lint
+endif
+export GOLANGCI_LINT
 
 # determines whether to run tests that only behave locally; can be overridden by override variable
 export IS_LOCAL = false
 
 .PHONY: install-out-of-tree-tools
 install-out-of-tree-tools: \
-	$(MYGOBIN)/goimports \
-	$(MYGOBIN)/golangci-lint \
-	$(MYGOBIN)/helmV3 \
-	$(MYGOBIN)/mdrip \
-	$(MYGOBIN)/stringer
+	$(GOLANGCI_LINT_PREREQUISITE) \
+	$(MYGOBIN)/helmV3
 
 .PHONY: uninstall-out-of-tree-tools
 uninstall-out-of-tree-tools:
-	rm -f $(MYGOBIN)/goimports
-	rm -f $(MYGOBIN)/golangci-lint
+	rm -f "$(GOLANGCI_LINT_DEFAULT)"
 	rm -f $(MYGOBIN)/helmV3
-	rm -f $(MYGOBIN)/mdrip
-	rm -f $(MYGOBIN)/stringer
 
-# golangci-lint is not guaranteed to use from tool directive, so we install it directly.
-# https://golangci-lint.run/docs/welcome/install/local/#install-from-sources
-.PHONY: $(MYGOBIN)/golangci-lint
-$(MYGOBIN)/golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
-
-.PHONY: $(MYGOBIN)/mdrip
-$(MYGOBIN)/mdrip:
-	cd $(REPO_ROOT)/hack && go install github.com/monopole/mdrip
-
-.PHONY: $(MYGOBIN)/stringer
-$(MYGOBIN)/stringer:
-	cd $(REPO_ROOT)/hack && go install golang.org/x/tools/cmd/stringer
-
-.PHONY: $(MYGOBIN)/goimports
-$(MYGOBIN)/goimports:
-	cd $(REPO_ROOT)/hack && go install golang.org/x/tools/cmd/goimports
-
-.PHONY: $(MYGOBIN)/mdtogo
-$(MYGOBIN)/mdtogo:
-	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/kustomize/cmd/mdtogo
-
-.PHONY: $(MYGOBIN)/addlicense
-$(MYGOBIN)/addlicense:
-	cd $(REPO_ROOT)/hack && go install github.com/google/addlicense
+.PHONY: ensure-golangci-lint
+ensure-golangci-lint:
+	"$(REPO_ROOT)/hack/ensure-golangci-lint.sh" \
+		-b "$(TOOLS_DIR)" \
+		"$(shell cat "$(REPO_ROOT)/.golangci-lint-version")"
 
 .PHONY: $(MYGOBIN)/kind
 $(MYGOBIN)/kind:
 	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/kind
-
-.PHONY: $(MYGOBIN)/controller-gen
-$(MYGOBIN)/controller-gen:
-	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/controller-tools/cmd/controller-gen
-
-.PHONY: $(MYGOBIN)/embedmd
-$(MYGOBIN)/embedmd:
-	cd $(REPO_ROOT)/hack && go install github.com/campoy/embedmd
-
-.PHONY: $(MYGOBIN)/go-bindata
-$(MYGOBIN)/go-bindata:
-	cd $(REPO_ROOT)/hack && go install github.com/go-bindata/go-bindata/v3/go-bindata
-
-.PHONY: $(MYGOBIN)/go-apidiff
-$(MYGOBIN)/go-apidiff:
-	cd $(REPO_ROOT)/hack && go install github.com/joelanford/go-apidiff
 
 .PHONY: $(MYGOBIN)/gh
 $(MYGOBIN)/gh:
@@ -95,6 +64,7 @@ $(MYGOBIN)/helmV3:
 		tgzFile=helm-v3.10.2-$(GOOS)-$(GOARCH).tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
+		mkdir -p "$(MYGOBIN)"; \
 		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)

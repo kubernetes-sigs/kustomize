@@ -9,7 +9,7 @@ test:
 build:
 	go build -ldflags "-X sigs.k8s.io/kustomize/api/provenance.buildDate=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")" ./...
 
-generate: $(MYGOBIN)/k8scopy $(MYGOBIN)/stringer
+generate:
 	go generate ./...
 
 lint: lint-api-static
@@ -19,9 +19,8 @@ lint: lint-api-static
 ## this aims to catch any issues with the API module
 ## that would prevent the API module from being used
 ## when the go plugin support is disabled.
-lint-api-static:
-	$(MYGOBIN)/golangci-lint cache clean # Workaround for https://github.com/golangci/golangci-lint/issues/3228
-	$(MYGOBIN)/golangci-lint \
+lint-api-static: $(GOLANGCI_LINT_PREREQUISITE)
+	"$(GOLANGCI_LINT)" \
 	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
 	  --build-tags kustomize_disable_go_plugin_support \
 	  --path-prefix api \

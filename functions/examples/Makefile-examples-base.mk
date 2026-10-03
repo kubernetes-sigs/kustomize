@@ -23,14 +23,14 @@ fix:
 fmt:
 	(cd image && go fmt ./...)
 
-generate: $(MYGOBIN)/mdtogo
-	(cd image && GOBIN=$(MYGOBIN) go generate ./...)
+generate:
+	(cd image && go generate ./...)
 
 tidy:
 	(cd image && go mod tidy)
 
-lint: $(MYGOBIN)/golangci-lint
-	(cd image && $(MYGOBIN)/golangci-lint \
+lint: $(GOLANGCI_LINT_PREREQUISITE)
+	(cd image && "$(GOLANGCI_LINT)" \
 	  -c $$KUSTOMIZE_ROOT/.golangci.yml \
 	  --path-prefix $(shell pwd | sed -E 's|(.*\/kustomize)/(.*)|\2|') \
 	  run ./...)
