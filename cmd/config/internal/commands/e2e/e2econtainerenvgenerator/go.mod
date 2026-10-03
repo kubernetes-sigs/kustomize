@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/cmd/config/internal/commands/e2e/e2econtainerenvgen
 
 go 1.27.0
 
-require sigs.k8s.io/kustomize/kyaml v0.14.2
+require sigs.k8s.io/kustomize/kyaml v0.21.1
 
 require (
 	github.com/go-errors/errors v1.5.1 // indirect
