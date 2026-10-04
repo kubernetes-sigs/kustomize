@@ -4,7 +4,7 @@
 // Helm chart inflation generator.
 // Uses helm V3 or V4 to generate k8s YAML from a helm chart.
 
-//go:generate pluginator
+//go:generate go tool pluginator
 package main
 
 import (
@@ -156,10 +156,8 @@ func (p *plugin) errIfIllegalValuesMerge() error {
 		p.ValuesMerge = valuesMergeOptionOverride
 		return nil
 	}
-	for _, opt := range legalMergeOptions {
-		if p.ValuesMerge == opt {
-			return nil
-		}
+	if slices.Contains(legalMergeOptions, p.ValuesMerge) {
+		return nil
 	}
 	return fmt.Errorf("valuesMerge must be one of %v", legalMergeOptions)
 }

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -39,13 +40,13 @@ func ExtractModule(m string) string {
 	return m[:k]
 }
 
+// SliceContains returns true if the slice has the string.
+//
+// Deprecated: use slices.Contains instead.
+//
+//go:fix inline
 func SliceContains(slice []string, target string) bool {
-	for _, x := range slice {
-		if x == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, target)
 }
 
 // Receive git remote url as input and produce string containing git repository name

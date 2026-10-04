@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -52,7 +53,7 @@ func (e ExecuteCmdOnPkgs) Execute() error {
 
 	// for commands which doesn't need openAPI file, make sure that the root package is
 	// included all the times
-	if !e.NeedOpenAPI && !containsString(pkgsPaths, e.RootPkgPath) {
+	if !e.NeedOpenAPI && !slices.Contains(pkgsPaths, e.RootPkgPath) {
 		pkgsPaths = append([]string{e.RootPkgPath}, pkgsPaths...)
 	}
 
@@ -136,14 +137,4 @@ func FixDocs(newStr string, c *cobra.Command) {
 	c.Short = strings.ReplaceAll(c.Short, cmdName, newStr)
 	c.Long = strings.ReplaceAll(c.Long, cmdName, newStr)
 	c.Example = strings.ReplaceAll(c.Example, cmdName, newStr)
-}
-
-// containsString returns true if slice contains s
-func containsString(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
 }

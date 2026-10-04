@@ -23,8 +23,8 @@ fix:
 fmt:
 	(cd image && go fmt ./...)
 
-generate: $(MYGOBIN)/mdtogo
-	(cd image && GOBIN=$(MYGOBIN) go generate ./...)
+generate:
+	(cd image && go generate ./...)
 
 tidy:
 	(cd image && go mod tidy)

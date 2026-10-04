@@ -28,19 +28,13 @@ export IS_LOCAL = false
 
 .PHONY: install-out-of-tree-tools
 install-out-of-tree-tools: \
-	$(MYGOBIN)/goimports \
 	$(GOLANGCI_LINT_PREREQUISITE) \
-	$(MYGOBIN)/helmV3 \
-	$(MYGOBIN)/mdrip \
-	$(MYGOBIN)/stringer
+	$(MYGOBIN)/helmV3
 
 .PHONY: uninstall-out-of-tree-tools
 uninstall-out-of-tree-tools:
-	rm -f $(MYGOBIN)/goimports
 	rm -f "$(GOLANGCI_LINT_DEFAULT)"
 	rm -f $(MYGOBIN)/helmV3
-	rm -f $(MYGOBIN)/mdrip
-	rm -f $(MYGOBIN)/stringer
 
 .PHONY: ensure-golangci-lint
 ensure-golangci-lint:
@@ -48,41 +42,9 @@ ensure-golangci-lint:
 		-b "$(TOOLS_DIR)" \
 		"$(shell cat "$(REPO_ROOT)/.golangci-lint-version")"
 
-.PHONY: $(MYGOBIN)/mdrip
-$(MYGOBIN)/mdrip:
-	cd $(REPO_ROOT)/hack && go install github.com/monopole/mdrip
-
-.PHONY: $(MYGOBIN)/stringer
-$(MYGOBIN)/stringer:
-	cd $(REPO_ROOT)/hack && go install golang.org/x/tools/cmd/stringer
-
-.PHONY: $(MYGOBIN)/goimports
-$(MYGOBIN)/goimports:
-	cd $(REPO_ROOT)/hack && go install golang.org/x/tools/cmd/goimports
-
-.PHONY: $(MYGOBIN)/mdtogo
-$(MYGOBIN)/mdtogo:
-	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/kustomize/cmd/mdtogo
-
-.PHONY: $(MYGOBIN)/addlicense
-$(MYGOBIN)/addlicense:
-	cd $(REPO_ROOT)/hack && go install github.com/google/addlicense
-
 .PHONY: $(MYGOBIN)/kind
 $(MYGOBIN)/kind:
 	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/kind
-
-.PHONY: $(MYGOBIN)/controller-gen
-$(MYGOBIN)/controller-gen:
-	cd $(REPO_ROOT)/hack && go install sigs.k8s.io/controller-tools/cmd/controller-gen
-
-.PHONY: $(MYGOBIN)/embedmd
-$(MYGOBIN)/embedmd:
-	cd $(REPO_ROOT)/hack && go install github.com/campoy/embedmd
-
-.PHONY: $(MYGOBIN)/go-apidiff
-$(MYGOBIN)/go-apidiff:
-	cd $(REPO_ROOT)/hack && go install github.com/joelanford/go-apidiff
 
 .PHONY: $(MYGOBIN)/gh
 $(MYGOBIN)/gh:
@@ -102,6 +64,7 @@ $(MYGOBIN)/helmV3:
 		tgzFile=helm-v3.10.2-$(GOOS)-$(GOARCH).tar.gz; \
 		wget https://get.helm.sh/$$tgzFile; \
 		tar -xvzf $$tgzFile; \
+		mkdir -p "$(MYGOBIN)"; \
 		mv $(GOOS)-$(GOARCH)/helm $(MYGOBIN)/helmV3; \
 		rm -rf $$d \
 	)

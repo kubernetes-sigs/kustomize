@@ -11,14 +11,11 @@ include ../Makefile-tools.mk
 
 .PHONY: generate fix vet fmt test lint tidy clean
 
-$(MYGOBIN)/k8scopy:
-	( cd ../cmd/k8scopy; go install . )
-
 all: generate fix vet fmt test lint tidy
 
 k8sGenDir := yaml/internal/k8sgen/pkg
 
-generate: $(MYGOBIN)/stringer $(MYGOBIN)/k8scopy
+generate:
 	go generate ./...
 
 clean:

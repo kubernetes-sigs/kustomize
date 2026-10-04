@@ -5,7 +5,7 @@ version: "2"
 
 run:
   timeout: 5m
-  go: "1.26"
+  go: "1.27"
 
 linters:
   default: all
@@ -113,7 +113,7 @@ linters:
         text: "don't use leading"
       - linters:
           - staticcheck
-        text: "SA1019: kioutil.Legacy"
+        text: 'SA1019: .*kioutil\.Legacy'
     paths:
       - third_party$
       - builtin$
