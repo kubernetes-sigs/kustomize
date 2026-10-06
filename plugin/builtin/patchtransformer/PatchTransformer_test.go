@@ -223,7 +223,7 @@ spec:
         new-label: new-value-with-multipleSMPatchesFile
 `
 
-	multipleSMPatchesSuccesfulResult = `
+	multipleSMPatchesSuccessfulResult = `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -289,7 +289,7 @@ kind: PatchTransformer
 metadata:
   name: notImportantHere
 Path: multiplepatches.yaml
-`, someDeploymentResources, multipleSMPatchesSuccesfulResult)
+`, someDeploymentResources, multipleSMPatchesSuccessfulResult)
 }
 
 func TestMultipleSMPatchesWithPatch(t *testing.T) {
@@ -323,7 +323,7 @@ patch: |-
       metadata:
         labels:
           new-label: new-value-with-multipleSMPatchesFile
-`, someDeploymentResources, multipleSMPatchesSuccesfulResult)
+`, someDeploymentResources, multipleSMPatchesSuccessfulResult)
 }
 
 func TestMultipleSMPatchesAndTarget(t *testing.T) {

@@ -186,10 +186,10 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 
 	// Configure and Execute Fn. We don't need to convert resources to ResourceList here
 	// because function runtime will do that. See kyaml/fn/runtime/runtimeutil/runtimeutil.go
-	var ouputBuffer bytes.Buffer
+	var outputBuffer bytes.Buffer
 	p.runFns.Input = bytes.NewReader(input)
 	p.runFns.Functions = append(p.runFns.Functions, functionConfig)
-	p.runFns.Output = &ouputBuffer
+	p.runFns.Output = &outputBuffer
 
 	err = p.runFns.Execute()
 	if err != nil {
@@ -197,5 +197,5 @@ func (p *FnPlugin) invokePlugin(input []byte) ([]byte, error) {
 			err, "couldn't execute function")
 	}
 
-	return ouputBuffer.Bytes(), nil
+	return outputBuffer.Bytes(), nil
 }

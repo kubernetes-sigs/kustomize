@@ -16,7 +16,7 @@ echo "Installing kustomize ${version}"
 
 MYGOBIN=$(go env GOBIN)
 MYGOBIN="${MYGOBIN:-$(go env GOPATH)/bin}"
-# Always rebuild, never assume the installed verion is
+# Always rebuild, never assume the installed version is
 # the right one to test.
 rm -f $MYGOBIN/kustomize
 if [ "$version" == "HEAD" ]; then

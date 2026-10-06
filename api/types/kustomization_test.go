@@ -277,7 +277,7 @@ namePrefix: cat`)
 	}
 }
 
-func TestUnmarshal_UnkownField(t *testing.T) {
+func TestUnmarshal_UnknownField(t *testing.T) {
 	y := []byte(`
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

@@ -17,7 +17,7 @@ type removeTransformerOptions struct {
 	transformerFilePaths []string
 }
 
-// newCmdRemoveTransformer remove the name of a file containing a transformer to the kustomization file.
+// newCmdRemoveTransformer removes the name of a file containing a transformer from the kustomization file.
 func newCmdRemoveTransformer(fSys filesys.FileSystem) *cobra.Command {
 	var o removeTransformerOptions
 

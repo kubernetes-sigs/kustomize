@@ -291,7 +291,7 @@ spec:
 // themselves.
 //
 // Doing so means the kustomization using them is no
-// longer relocatable, not addressible via a git URL,
+// longer relocatable, not addressable via a git URL,
 // and not git clonable. It's no longer self-contained.
 //
 // Likewise suppressing load restrictions happens for
