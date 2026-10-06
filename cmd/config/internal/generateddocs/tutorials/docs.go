@@ -325,7 +325,7 @@ var (
 
   ` + "`" + `run` + "`" + ` facilitates a non-destructive *smart templating* approach that allows templating
   to be composed with manual modifications directly to the template output, as well as
-  composition with other functions which may appy validation or injection of values.
+  composition with other functions which may apply validation or injection of values.
 
   #### 3. Function Implementation
 

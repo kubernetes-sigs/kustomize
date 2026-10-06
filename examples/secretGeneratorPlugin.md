@@ -109,7 +109,7 @@ This emits something like
 > ```
 
 The name of the resource is the prefix `mysecrets`
-(as specfied in the kustomization file), followed
+(as specified in the kustomization file), followed
 by a hash of its contents.
 
 Use your favorite base64 decoder to confirm the raw
