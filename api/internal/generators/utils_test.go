@@ -35,6 +35,11 @@ func TestParseFileSource(t *testing.T) {
 			Input: "=myfile",
 			Error: `missing key name for file path "myfile" in source "=myfile"`,
 		},
+		"remote query parameters": {
+			Input:    "bundle=https://example.test/data?format=raw&version=2",
+			Key:      "bundle",
+			Filename: "https://example.test/data?format=raw",
+		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

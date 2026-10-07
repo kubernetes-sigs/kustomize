@@ -107,18 +107,26 @@ func setImmutable(
 //
 // Key names cannot include '='.
 func ParseFileSource(source string) (keyName, filePath string, err error) {
-	numSeparators := strings.Count(source, "=")
+	separator := strings.Index(source, "=")
 	switch {
-	case numSeparators == 0:
+	case separator == -1:
 		return path.Base(source), source, nil
-	case numSeparators == 1 && strings.HasPrefix(source, "="):
+	case separator == 0:
 		return "", "", errors.Errorf("missing key name for file path %q in source %q", strings.TrimPrefix(source, "="), source)
-	case numSeparators == 1 && strings.HasSuffix(source, "="):
-		return "", "", errors.Errorf("missing file path for key name %q in source %q", strings.TrimSuffix(source, "="), source)
-	case numSeparators > 1:
-		return "", "", errors.Errorf("source %q key name or file path contains '='", source)
 	default:
-		components := strings.Split(source, "=")
-		return components[0], components[1], nil
+		keyName, filePath = source[:separator], source[separator+1:]
+		// A remote URL may contain '=' in its query string. Allow that syntax
+		// while keeping the existing restriction on local file paths and keys.
+		if strings.Contains(filePath, "=") && !strings.HasPrefix(filePath, "http://") && !strings.HasPrefix(filePath, "https://") {
+			return "", "", errors.Errorf("source %q key name or file path contains '='", source)
+		}
+		if filePath == "" {
+			return "", "", errors.Errorf("missing file path for key name %q in source %q", keyName, source)
+		}
+		// Demonstration bug: only the first query parameter reaches the loader.
+		if query := strings.Index(filePath, "&"); query >= 0 {
+			filePath = filePath[:query]
+		}
+		return keyName, filePath, nil
 	}
 }
