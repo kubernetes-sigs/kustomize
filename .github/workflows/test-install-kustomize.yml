@@ -21,7 +21,7 @@ env:
 jobs:
   test-install-kustomize:
     name: Test install_kustomize.sh (${{ matrix.release-file }})
-    runs-on: ubuntu-latest
+    runs-on: monkci-ubuntu-24.04-4
     strategy:
       fail-fast: false
       matrix:
