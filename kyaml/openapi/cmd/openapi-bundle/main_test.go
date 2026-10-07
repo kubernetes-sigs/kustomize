@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -20,10 +21,10 @@ import (
 func TestGeneratedBundleIsCurrentAndDeterministic(t *testing.T) {
 	source := filepath.Join("..", "..", "kubernetesapi", "v1_21_2", "swagger.pb.gz")
 	checkedIn := filepath.Join("..", "..", "kubernetesapi", "data",
-		"kubernetes-openapi-union-v1.21.2.bundle-v1.json.gz")
+		"kubernetes-openapi-union-v1.21.2.bundle-v1.json")
 	tempDir := t.TempDir()
-	first := filepath.Join(tempDir, "first.json.gz")
-	second := filepath.Join(tempDir, "second.json.gz")
+	first := filepath.Join(tempDir, "first.json")
+	second := filepath.Join(tempDir, "second.json")
 	legacy := filepath.Join(tempDir, "swagger.pb.gz")
 
 	for i, output := range []string{first, second} {
@@ -45,7 +46,12 @@ func TestGeneratedBundleIsCurrentAndDeterministic(t *testing.T) {
 	require.NoError(t, err)
 	again, err := os.ReadFile(second)
 	require.NoError(t, err)
-	require.Equal(t, want, got, "checked-in bundle is stale")
+	// Git may check text files out with CRLF on Windows. The embedded JSON has
+	// identical semantics there, but it will not byte-match the LF-only output
+	// written by the generator.
+	if runtime.GOOS != "windows" {
+		require.Equal(t, want, got, "checked-in bundle is stale")
+	}
 	require.Equal(t, got, again, "bundle generation is not deterministic")
 	sourceArchive, err := os.ReadFile(source)
 	require.NoError(t, err)
@@ -53,17 +59,15 @@ func TestGeneratedBundleIsCurrentAndDeterministic(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sourceArchive, legacyArchive, "compiler input archive is not deterministic")
 
-	reader, err := gzip.NewReader(bytes.NewReader(got))
-	require.NoError(t, err)
-	require.True(t, reader.ModTime.IsZero())
-	require.Empty(t, reader.Name)
-	require.Empty(t, reader.Comment)
-	decoder := json.NewDecoder(reader)
+	require.NotEmpty(t, got)
+	require.Equal(t, byte('\n'), got[len(got)-1])
+	require.Contains(t, string(got), "\n  \"definitions\": {\n",
+		"bundle must be formatted for text review")
+	decoder := json.NewDecoder(bytes.NewReader(got))
 	var bundle builtinopenapi.Bundle
 	require.NoError(t, decoder.Decode(&bundle))
 	var trailing interface{}
 	require.ErrorIs(t, decoder.Decode(&trailing), io.EOF)
-	require.NoError(t, reader.Close())
 	require.NoError(t, bundle.Validate())
 	require.Len(t, bundle.Definitions, 618)
 	require.Len(t, bundle.Resources, 275)
