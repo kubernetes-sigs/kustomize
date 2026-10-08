@@ -2,7 +2,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/hashtransformer
 
 go 1.27.0
 
-require sigs.k8s.io/kustomize/api v0.21.2
+require sigs.k8s.io/kustomize/api v0.21.3
 
 require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -22,5 +22,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.21.3 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../api

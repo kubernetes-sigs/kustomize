@@ -9,7 +9,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/text v0.42.0
-	sigs.k8s.io/kustomize/api v0.21.2
+	sigs.k8s.io/kustomize/api v0.21.3
 	sigs.k8s.io/kustomize/cmd/config v0.21.3
 	sigs.k8s.io/kustomize/kyaml v0.21.3
 	sigs.k8s.io/yaml v1.6.0
@@ -33,5 +33,3 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20261001230523-97fa35140926 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../api

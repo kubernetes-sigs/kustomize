@@ -44,6 +44,8 @@ k8s.io/kube-openapi v0.0.0-20261001230523-97fa35140926 h1:Fe0G8t8FaMDn2lpat0IHu3
 k8s.io/kube-openapi v0.0.0-20261001230523-97fa35140926/go.mod h1:3e2VxsK2svhjvkNik92kYU1a5kgau5tZeAuEWwoN4q0=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 h1:IpInykpT6ceI+QxKBbEflcR5EXP7sU1kvOlxwZh5txg=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730/go.mod h1:mdzfpAEoE6DHQEN0uh9ZbOCuHbLK5wOm7dK4ctXE9Tg=
+sigs.k8s.io/kustomize/api v0.21.3 h1:DXGrbifGrAd+7AQ75Kx/tVhr+RLMCZFfAYl61HOR3T0=
+sigs.k8s.io/kustomize/api v0.21.3/go.mod h1:JKlHjHXGh54cdoWVdKNqDscFzPb9z+sBk9upy9PBh6k=
 sigs.k8s.io/kustomize/kyaml v0.21.3 h1:4ygzLsc8B1ep9dFuEivrJ2lFIAglL19dhPrWp1ioceY=
 sigs.k8s.io/kustomize/kyaml v0.21.3/go.mod h1:HrAVNlYyEphOlRCcaSIQziGR+0ehwx6Xp1ucUrpC6hs=
 sigs.k8s.io/randfill v1.0.0 h1:JfjMILfT8A6RbawdsK2JXGBR5AQVfd+9TbzrlneTyrU=
