@@ -41,6 +41,9 @@ type LocalPackageReadWriter struct {
 
 	KeepReaderAnnotations bool `yaml:"keepReaderAnnotations,omitempty"`
 
+	// PreserveInitialDocSep if true adds kioutil.InitialDocSepAnnotation to the first resource
+	PreserveInitialDocSep bool
+
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
 
@@ -93,16 +96,17 @@ type LocalPackageReadWriter struct {
 
 func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 	nodes, err := LocalPackageReader{
-		PackagePath:         r.PackagePath,
-		MatchFilesGlob:      r.MatchFilesGlob,
-		IncludeSubpackages:  r.IncludeSubpackages,
-		ErrorIfNonResources: r.ErrorIfNonResources,
-		SetAnnotations:      r.SetAnnotations,
-		PackageFileName:     r.PackageFileName,
-		FileSkipFunc:        r.FileSkipFunc,
-		PreserveSeqIndent:   r.PreserveSeqIndent,
-		FileSystem:          r.FileSystem,
-		WrapBareSeqNode:     r.WrapBareSeqNode,
+		PackagePath:           r.PackagePath,
+		MatchFilesGlob:        r.MatchFilesGlob,
+		IncludeSubpackages:    r.IncludeSubpackages,
+		ErrorIfNonResources:   r.ErrorIfNonResources,
+		SetAnnotations:        r.SetAnnotations,
+		PackageFileName:       r.PackageFileName,
+		FileSkipFunc:          r.FileSkipFunc,
+		PreserveInitialDocSep: r.PreserveInitialDocSep,
+		PreserveSeqIndent:     r.PreserveSeqIndent,
+		FileSystem:            r.FileSystem,
+		WrapBareSeqNode:       r.WrapBareSeqNode,
 	}.Read()
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -195,6 +199,9 @@ type LocalPackageReader struct {
 	// FileSkipFunc is a function which returns true if reader should ignore
 	// the file
 	FileSkipFunc LocalPackageSkipFileFunc
+
+	// PreserveInitialDocSep if true adds kioutil.InitialDocSepAnnotation to the first resource
+	PreserveInitialDocSep bool
 
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
@@ -301,6 +308,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		Reader:                f,
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
+		PreserveInitialDocSep: r.PreserveInitialDocSep,
 		PreserveSeqIndent:     r.PreserveSeqIndent,
 		WrapBareSeqNode:       r.WrapBareSeqNode,
 	}

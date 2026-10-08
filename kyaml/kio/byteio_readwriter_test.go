@@ -593,6 +593,90 @@ env:
 	}
 }
 
+func TestByteReadWriter_PreserveInitialDocSep(t *testing.T) {
+	type testCase struct {
+		name           string
+		err            string
+		input          string
+		expectedOutput string
+		instance       kio.ByteReadWriter
+		preserveDocSep bool
+	}
+
+	testCases := []testCase{
+		{
+			name: "preserve initial document separator",
+			input: `---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+`,
+			expectedOutput: `---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+`,
+			preserveDocSep: true,
+		},
+		{
+			name: "disregard initial document separator, when annotation isn't present",
+			input: `---
+apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+`,
+			expectedOutput: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+- foo
+- bar
+`,
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			var in, out bytes.Buffer
+			in.WriteString(tc.input)
+			w := tc.instance
+			w.Writer = &out
+			w.Reader = &in
+			w.PreserveInitialDocSep = tc.preserveDocSep
+
+			nodes, err := w.Read()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			w.WrappingKind = ""
+			err = w.Write(nodes)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if tc.err != "" {
+				if !assert.EqualError(t, err, tc.err) {
+					t.FailNow()
+				}
+				return
+			}
+
+			if !assert.Equal(t,
+				strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String())) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
 func TestByteReadWriter_WrapBareSeqNode(t *testing.T) {
 	type testCase struct {
 		name            string
