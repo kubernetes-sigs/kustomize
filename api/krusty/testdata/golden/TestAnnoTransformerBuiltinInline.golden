@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+data: {}
+kind: ConfigMap
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: NamespaceTransformer
+          name: not-important-to-example
+          namespace: test
+  name: whatever
+  namespace: test

@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a-deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagA
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a-sourceA
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagA
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a-sourceB
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagB
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b-deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagB
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b-sourceA
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagA
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b-sourceB
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtagB
+        name: nginx

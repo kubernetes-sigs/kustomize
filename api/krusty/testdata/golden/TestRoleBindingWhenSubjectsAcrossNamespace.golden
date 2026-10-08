@@ -1,0 +1,53 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: testRole
+  namespace: namespace-1
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: testRoleBinding
+  namespace: namespace-1
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: testRole
+subjects:
+- kind: ServiceAccount
+  name: testAccount
+  namespace: namespace-2
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: testRole
+  namespace: namespace-2
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: testRoleBinding
+  namespace: namespace-2
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: testRole
+subjects:
+- kind: ServiceAccount
+  name: testAccount
+  namespace: namespace-1

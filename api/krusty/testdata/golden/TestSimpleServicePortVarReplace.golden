@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  ports:
+  - name: grpc
+    port: 8888
+    targetPort: 8888
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  template:
+    spec:
+      containers:
+      - image: cockroachdb/cockroach:v1.1.5
+        name: cockroachdb
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8888
+          name: http

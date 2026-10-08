@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  a: x
+  b: "y"
+  c: Good Morning
+  d: "false"
+kind: ConfigMap
+metadata:
+  name: literalConfigMap
