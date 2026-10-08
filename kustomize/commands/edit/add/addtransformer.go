@@ -5,11 +5,9 @@ package add
 
 import (
 	"errors"
-	"log"
-	"slices"
 
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -51,23 +49,7 @@ func (o *addTransformerOptions) Validate(fSys filesys.FileSystem, args []string)
 
 // RunAddTransformer runs add transformer command (do real work).
 func (o *addTransformerOptions) RunAddTransformer(fSys filesys.FileSystem) error {
-	if len(o.transformerFilePaths) == 0 {
-		return nil
-	}
-	mf, err := kustfile.NewKustomizationFile(fSys)
-	if err != nil {
-		return err
-	}
-	m, err := mf.Read()
-	if err != nil {
-		return err
-	}
-	for _, t := range o.transformerFilePaths {
-		if slices.Contains(m.Transformers, t) {
-			log.Printf("transformer %s already in kustomization file", t)
-			continue
-		}
-		m.Transformers = append(m.Transformers, t)
-	}
-	return mf.Write(m)
+	return addPluginPaths(fSys, o.transformerFilePaths, "transformer", func(m *types.Kustomization) *[]string {
+		return &m.Transformers
+	})
 }

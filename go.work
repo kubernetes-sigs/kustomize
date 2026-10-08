@@ -24,24 +24,7 @@ use (
 	./hack
 	./kustomize
 	./kyaml
-	./plugin/builtin/annotationstransformer
-	./plugin/builtin/configmapgenerator
-	./plugin/builtin/hashtransformer
-	./plugin/builtin/helmchartinflationgenerator
-	./plugin/builtin/iampolicygenerator
-	./plugin/builtin/imagetagtransformer
-	./plugin/builtin/labeltransformer
-	./plugin/builtin/namespacetransformer
-	./plugin/builtin/patchjson6902transformer
-	./plugin/builtin/patchstrategicmergetransformer
-	./plugin/builtin/patchtransformer
-	./plugin/builtin/prefixtransformer
-	./plugin/builtin/replacementtransformer
-	./plugin/builtin/replicacounttransformer
-	./plugin/builtin/secretgenerator
-	./plugin/builtin/sortordertransformer
-	./plugin/builtin/suffixtransformer
-	./plugin/builtin/valueaddtransformer
+	./plugin/builtin
 	./plugin/someteam.example.com/v1/bashedconfigmap
 	./plugin/someteam.example.com/v1/calvinduplicator
 	./plugin/someteam.example.com/v1/dateprefixer
