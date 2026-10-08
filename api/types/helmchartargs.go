@@ -41,6 +41,10 @@ type HelmChart struct {
 	// Version is the version of the chart, e.g. '3.1.3'
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 
+	// Digest pins the chart to an exact OCI digest, e.g. 'sha256:abc123...'.
+	// Only valid when Repo is an OCI URL (starts with 'oci://').
+	Digest string `json:"digest,omitempty" yaml:"digest,omitempty"`
+
 	// Repo is a URL locating the chart on the internet.
 	// This is the argument to helm's  `--repo` flag, e.g.
 	// `https://itzg.github.io/minecraft-server-charts`.
