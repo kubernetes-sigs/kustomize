@@ -217,6 +217,6 @@ unused maps.
 ## Rollback
 
 To rollback, one would undo whatever edits were made to
-the configuation in source control, then rerun kustomize
+the configuration in source control, then rerun kustomize
 on the reverted configuration and apply it to the
 cluster.
