@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	github.com/stretchr/testify v1.12.1
-	sigs.k8s.io/kustomize/api v0.21.2
+	sigs.k8s.io/kustomize/api v0.21.3
 	sigs.k8s.io/kustomize/kyaml v0.21.3
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -24,5 +24,3 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20261001230523-97fa35140926 // indirect
 )
-
-replace sigs.k8s.io/kustomize/api => ../../../api
