@@ -1,4 +1,8 @@
+blank_issues_enabled: false
 contact_links:
+  - name: Security issue
+    url: https://kubernetes.io/security/
+    about: Report security vulnerabilities privately instead of opening a public issue.
   - name: Support request
     url: https://discuss.kubernetes.io
     about: |
