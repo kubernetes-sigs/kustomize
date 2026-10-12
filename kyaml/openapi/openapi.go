@@ -21,6 +21,11 @@ import (
 )
 
 var (
+	// The embedded bundle is immutable; reset only discards its mutable indexes.
+	builtinBundle = sync.OnceValues(func() (*builtinopenapi.Bundle, error) {
+		return decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
+	})
+
 	// schemaLock is the lock for schema related globals.
 	//
 	// NOTE: This lock helps with preventing panics that might occur due to the data
@@ -340,11 +345,8 @@ func AddDefinitions(definitions spec.Definitions) {
 	for k := range definitions {
 		// index by GVK, if no GVK is found then it is the schema for a subfield
 		// of a Resource
-		d := definitions[k]
-
-		// copy definitions to the schema
-		globalSchema.schema.Definitions[k] = d
-		gvk, found := d.VendorExtensible.Extensions[kubernetesGVKExtensionKey]
+		globalSchema.schema.Definitions[k] = definitions[k]
+		gvk, found := definitions[k].VendorExtensible.Extensions[kubernetesGVKExtensionKey]
 		if !found {
 			continue
 		}
@@ -354,6 +356,7 @@ func AddDefinitions(definitions spec.Definitions) {
 			continue
 		}
 
+		d := definitions[k]
 		for i := range exts {
 			typeMeta, ok := toTypeMeta(exts[i])
 			if !ok {
@@ -715,20 +718,27 @@ func parseBuiltinSchema(version string) {
 	if !hasBuiltinOpenAPIVersion(version) {
 		panic(fmt.Errorf("the specified OpenAPI version is not built in"))
 	}
-	if err := parseBuiltinBundle(builtinKubernetesOpenAPIBundle); err != nil {
+	if err := parseBuiltinBundle(); err != nil {
 		// this should never happen
 		panic(err)
 	}
 }
 
 // parseBuiltinBundle parses and indexes the compiled built-in schema bundle.
-func parseBuiltinBundle(data []byte) error {
-	bundle, err := decodeBuiltinBundle(data)
+func parseBuiltinBundle() error {
+	bundle, err := builtinBundle()
 	if err != nil {
 		return err
 	}
 
-	AddDefinitions(bundle.Definitions)
+	// Schema and ResourceSchema expose mutable maps, slices and pointers.
+	// Each initialization must own them so mutations cannot survive a reset.
+	if globalSchema.schema.Definitions == nil {
+		globalSchema.schema.Definitions = copyBuiltinSchemas(bundle.Definitions)
+		AddDefinitions(globalSchema.schema.Definitions)
+	} else {
+		AddDefinitions(copyBuiltinSchemas(bundle.Definitions))
+	}
 	if globalSchema.namespaceabilityByResourceType == nil {
 		globalSchema.namespaceabilityByResourceType = make(map[yaml.TypeMeta]bool)
 	}

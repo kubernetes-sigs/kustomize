@@ -4,6 +4,8 @@
 package openapi
 
 import (
+	"reflect"
+	"sync"
 	"testing"
 
 	openapi_v2 "github.com/google/gnostic-models/openapiv2"
@@ -49,7 +51,7 @@ func TestBuiltinOpenAPIBundle(t *testing.T) {
 	}
 
 	ResetOpenAPI()
-	require.NoError(t, parseBuiltinBundle(builtinKubernetesOpenAPIBundle))
+	require.NoError(t, parseBuiltinBundle())
 	require.Len(t, globalSchema.schema.Definitions, len(bundle.Definitions))
 	require.Len(t, globalSchema.schemaByResourceType, len(definitionResources))
 	require.Len(t, globalSchema.namespaceabilityByResourceType, scopes)
@@ -90,7 +92,7 @@ func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
 	}
 
 	ResetOpenAPI()
-	require.NoError(t, parseBuiltinBundle(builtinKubernetesOpenAPIBundle))
+	require.NoError(t, parseBuiltinBundle())
 	require.Len(t, globalSchema.schemaByResourceType, len(legacySchemas))
 	for typeMeta, schema := range legacySchemas {
 		require.Equal(t, schema, *globalSchema.schemaByResourceType[typeMeta], "%v", typeMeta)
@@ -150,4 +152,124 @@ func TestBuiltinKustomizationSchema(t *testing.T) {
 	strategy, key = schema.Field("secretGenerator").PatchStrategyAndKey()
 	require.Equal(t, "merge", strategy)
 	require.Equal(t, "name", key)
+}
+
+func TestResetOpenAPI_BuiltinMutations(t *testing.T) {
+	ResetOpenAPI()
+	t.Cleanup(ResetOpenAPI)
+	typeMeta := yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"}
+	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := bundle.Definitions["io.k8s.api.apps.v1.Deployment"]
+
+	for _, mutate := range []struct {
+		name  string
+		apply func(*spec.Schema)
+	}{
+		{"properties", func(s *spec.Schema) { delete(s.Properties, "spec") }},
+		{"types", func(s *spec.Schema) { s.Type[0] = "string" }},
+		{"extensions", func(s *spec.Schema) {
+			s.Extensions[kubernetesGVKExtensionKey].([]any)[0].(map[string]any)["kind"] = "Changed"
+		}},
+		{"references", func(s *spec.Schema) {
+			property := s.Properties["spec"]
+			property.Ref.GetURL().Fragment = "/definitions/changed"
+		}},
+	} {
+		t.Run(mutate.name, func(t *testing.T) {
+			ResetOpenAPI()
+			mutate.apply(SchemaForResourceType(typeMeta).Schema)
+			ResetOpenAPI()
+			got := SchemaForResourceType(typeMeta)
+			if got == nil || !reflect.DeepEqual(original, *got.Schema) {
+				t.Fatal("built-in schema mutation survived reset")
+			}
+		})
+	}
+}
+
+func TestResetOpenAPI_BuiltinDefinitions(t *testing.T) {
+	ResetOpenAPI()
+	t.Cleanup(ResetOpenAPI)
+	bundle, err := decodeBuiltinBundle(builtinKubernetesOpenAPIBundle)
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := "io.k8s.api.core.v1.Container"
+	for _, mutate := range []struct {
+		name  string
+		apply func(spec.Schema)
+	}{
+		{"properties", func(s spec.Schema) { delete(s.Properties, "image") }},
+		{"items", func(s spec.Schema) { s.Properties["env"].Items.Schema.Ref.GetURL().Fragment = "/definitions/changed" }},
+	} {
+		t.Run(mutate.name, func(t *testing.T) {
+			ResetOpenAPI()
+			mutate.apply(Schema().Definitions[name])
+			ResetOpenAPI()
+			if !reflect.DeepEqual(bundle.Definitions[name], Schema().Definitions[name]) {
+				t.Fatal("built-in definition mutation survived reset")
+			}
+		})
+	}
+}
+
+func TestResetOpenAPI_BuiltinSelection(t *testing.T) {
+	ResetOpenAPI()
+	t.Cleanup(ResetOpenAPI)
+	AddDefinitions(spec.Definitions{"custom": {}})
+	original := SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"})
+	if _, found := Schema().Definitions["custom"]; !found {
+		t.Fatal("built-in initialization discarded additional definitions")
+	}
+	if err := AddSchema(additionalSchema); err != nil {
+		t.Fatal(err)
+	}
+	ResetOpenAPI()
+	if SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"}).Schema == original.Schema {
+		t.Fatal("reset reused the resource index")
+	}
+	if _, found := Schema().Definitions["io.k8s.config.setters.replicas"]; found {
+		t.Fatal("additional schema survived reset")
+	}
+	ResetOpenAPI()
+	if err := SetSchema(nil, additionalSchema, true); err != nil {
+		t.Fatal(err)
+	}
+	if SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"}) != nil {
+		t.Fatal("custom schema loaded built-ins")
+	}
+	ResetOpenAPI()
+	SuppressBuiltInSchemaUse()
+	if SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"}) != nil {
+		t.Fatal("suppressed schema loaded built-ins")
+	}
+	ResetOpenAPI()
+	if err := SetSchema(map[string]string{"version": DefaultOpenAPI}, nil, true); err != nil {
+		t.Fatal(err)
+	}
+	if SchemaForResourceType(yaml.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"}) == nil {
+		t.Fatal("versioned built-in schema missing after reset")
+	}
+}
+
+func TestBuiltinBundle_Concurrent(t *testing.T) {
+	var wg sync.WaitGroup
+	for range 16 {
+		wg.Go(func() {
+			bundle, err := builtinBundle()
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			definitions := copyBuiltinSchemas(bundle.Definitions)
+			if len(definitions) != len(bundle.Definitions) {
+				t.Error("incomplete built-in definitions")
+			}
+			delete(definitions, "io.k8s.api.apps.v1.Deployment")
+		})
+	}
+	wg.Wait()
 }

@@ -45,3 +45,14 @@ func BenchmarkPrecomputedIsNamespaceScoped(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkResetOpenAPISchema(b *testing.B) {
+	b.ReportAllocs()
+	b.Cleanup(ResetOpenAPI)
+	for b.Loop() {
+		ResetOpenAPI()
+		if len(Schema().Definitions) == 0 {
+			b.Fatal("built-in definitions were not loaded")
+		}
+	}
+}
