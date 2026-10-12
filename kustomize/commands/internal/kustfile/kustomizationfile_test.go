@@ -163,10 +163,10 @@ func TestReadAndWriteDummy(t *testing.T) {
 			Count: 1,
 		}},
 		SortOptions: &types.SortOptions{
-			Order: types.LegacySortOrder,
-			LegacySortOptions: &types.LegacySortOptions{
-				OrderFirst: []string{"orderFirst"},
-				OrderLast:  []string{"orderLast"},
+			Order: types.AlphabeticalSortOrder,
+			AlphabeticalSortOptions: &types.AlphabeticalSortOptions{
+				FieldOrder:      []types.SortField{types.SortFieldNamespace, types.SortFieldKind, types.SortFieldName},
+				CaseInsensitive: true,
 			},
 		},
 		Resources:  []string{"resource"},
@@ -579,12 +579,13 @@ replicas:
 - count: 1
   name: name
 sortOptions:
-  legacySortOptions:
-    orderFirst:
-    - orderFirst
-    orderLast:
-    - orderLast
-  order: legacy
+  alphabeticalSortOptions:
+    caseInsensitive: true
+    fieldOrder:
+    - namespace
+    - kind
+    - name
+  order: alphabetical
 resources:
 - resource
 components:

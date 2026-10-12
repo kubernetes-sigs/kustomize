@@ -43,22 +43,48 @@ func (p *SortOrderTransformerPlugin) applyDefaults() {
 			OrderLast:  defaultOrderLast,
 		}
 	}
+
+	if p.SortOptions.Order == types.AlphabeticalSortOrder && p.SortOptions.AlphabeticalSortOptions == nil {
+		p.SortOptions.AlphabeticalSortOptions = &types.AlphabeticalSortOptions{
+			FieldOrder: types.DefaultAlphabeticalFieldOrder(),
+		}
+	}
 }
 
 func (p *SortOrderTransformerPlugin) validate() error {
 	// Check valid values for SortOrder
-	if p.SortOptions.Order != types.FIFOSortOrder && p.SortOptions.Order != types.LegacySortOrder {
-		return errors.Errorf("the field 'sortOptions.order' must be one of [%s, %s]",
-			types.FIFOSortOrder, types.LegacySortOrder)
+	if p.SortOptions.Order != types.FIFOSortOrder && p.SortOptions.Order != types.LegacySortOrder &&
+		p.SortOptions.Order != types.AlphabeticalSortOrder {
+		return errors.Errorf("the field 'sortOptions.order' must be one of [%s, %s, %s]",
+			types.FIFOSortOrder, types.LegacySortOrder, types.AlphabeticalSortOrder)
 	}
 
 	// Validate that the only options set are the ones corresponding to the
 	// selected sort order.
-	if p.SortOptions.Order == types.FIFOSortOrder &&
-		p.SortOptions.LegacySortOptions != nil {
+	if p.SortOptions.Order != types.LegacySortOrder && p.SortOptions.LegacySortOptions != nil {
 		return errors.Errorf("the field 'sortOptions.legacySortOptions' is"+
 			" set but the selected sort order is '%v', not 'legacy'",
 			p.SortOptions.Order)
+	}
+	if p.SortOptions.Order != types.AlphabeticalSortOrder && p.SortOptions.AlphabeticalSortOptions != nil {
+		return errors.Errorf("the field 'sortOptions.alphabeticalSortOptions' is"+
+			" set but the selected sort order is '%v', not 'alphabetical'",
+			p.SortOptions.Order)
+	}
+	if p.SortOptions.Order == types.AlphabeticalSortOrder {
+		seen := map[types.SortField]bool{}
+		for _, field := range p.SortOptions.AlphabeticalSortOptions.FieldOrder {
+			switch field {
+			case types.SortFieldGroup, types.SortFieldVersion, types.SortFieldKind,
+				types.SortFieldNamespace, types.SortFieldName:
+			default:
+				return errors.Errorf("unknown alphabetical sort field %q", field)
+			}
+			if seen[field] {
+				return errors.Errorf("alphabetical sort field %q is listed more than once", field)
+			}
+			seen[field] = true
+		}
 	}
 	return nil
 }
@@ -84,7 +110,73 @@ func (p *SortOrderTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 			}
 		}
 	}
+	if p.SortOptions.Order == types.AlphabeticalSortOrder {
+		s := newAlphabeticalIDSorter(m.Resources(), p.SortOptions.AlphabeticalSortOptions)
+		sort.Stable(s)
+		m.Clear()
+		for _, r := range s.resources {
+			if err := m.Append(r); err != nil {
+				return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
+			}
+		}
+	}
 	return nil
+}
+
+type alphabeticalIDSorter struct {
+	resids          []resid.ResId
+	resources       []*resource.Resource
+	fieldOrder      []types.SortField
+	caseInsensitive bool
+}
+
+func newAlphabeticalIDSorter(resources []*resource.Resource, options *types.AlphabeticalSortOptions) *alphabeticalIDSorter {
+	s := &alphabeticalIDSorter{
+		fieldOrder:      options.FieldOrder,
+		caseInsensitive: options.CaseInsensitive,
+	}
+	for _, res := range resources {
+		s.resids = append(s.resids, res.CurId())
+		s.resources = append(s.resources, res)
+	}
+	return s
+}
+
+func (a alphabeticalIDSorter) Len() int { return len(a.resids) }
+func (a alphabeticalIDSorter) Swap(i, j int) {
+	a.resids[i], a.resids[j] = a.resids[j], a.resids[i]
+	a.resources[i], a.resources[j] = a.resources[j], a.resources[i]
+}
+func (a alphabeticalIDSorter) Less(i, j int) bool {
+	for _, field := range a.fieldOrder {
+		left := alphabeticalFieldValue(a.resids[i], field)
+		right := alphabeticalFieldValue(a.resids[j], field)
+		if a.caseInsensitive {
+			left = strings.ToLower(left)
+			right = strings.ToLower(right)
+		}
+		if left != right {
+			return left < right
+		}
+	}
+	return false
+}
+
+func alphabeticalFieldValue(id resid.ResId, field types.SortField) string {
+	switch field {
+	case types.SortFieldGroup:
+		return id.Gvk.Group
+	case types.SortFieldVersion:
+		return id.Gvk.Version
+	case types.SortFieldKind:
+		return id.Gvk.Kind
+	case types.SortFieldNamespace:
+		return id.EffectiveNamespace()
+	case types.SortFieldName:
+		return id.Name
+	default:
+		return ""
+	}
 }
 
 // Code for legacy sorting.

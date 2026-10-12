@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provenance"
 	. "sigs.k8s.io/kustomize/kustomize/v5/commands/build"
@@ -134,6 +135,43 @@ func TestBuild(t *testing.T) {
 	if buffy.String() != expectedContent {
 		t.Fatalf("Expected output:\n%s\n But got output:\n%s", expectedContent, buffy)
 	}
+}
+
+func TestBuildWithAlphabeticalReorder(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	fSys.WriteFile(konfig.DefaultKustomizationFileName(), []byte(`
+resources:
+- resources.yaml
+`))
+	fSys.WriteFile("resources.yaml", []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: zebra
+  name: apple
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: apple
+  name: zebra
+`))
+	buffy := new(bytes.Buffer)
+	cmd := NewCmdBuild(fSys, MakeHelp("foo", "bar"), buffy)
+	require.NoError(t, cmd.Flags().Set("reorder", "alphabetical"))
+	require.NoError(t, cmd.RunE(cmd, []string{}))
+	require.Equal(t, `apiVersion: v1
+kind: Service
+metadata:
+  name: zebra
+  namespace: apple
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apple
+  namespace: zebra
+`, buffy.String())
 }
 
 func TestBuildWithShardedOutput(t *testing.T) {

@@ -223,6 +223,133 @@ sortOptions:
 		th.Run("base", th.MakeDefaultOptions()), sortOrderResources)
 }
 
+func TestAlphabeticalOrderingWithExplicitFields(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- resources.yaml
+
+sortOptions:
+  order: alphabetical
+  alphabeticalSortOptions:
+    fieldOrder: [name, kind]
+    caseInsensitive: true
+`)
+	th.WriteF("base/resources.yaml", `
+apiVersion: v1
+kind: Service
+metadata:
+  name: Zebra
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apple
+`)
+	th.AssertActualEqualsExpected(th.Run("base", th.MakeDefaultOptions()), `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apple
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: Zebra
+`)
+}
+
+func TestAlphabeticalOrderingUsesDocumentedDefaults(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- resources.yaml
+
+sortOptions:
+  order: alphabetical
+`)
+	th.WriteF("base/resources.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: zebra
+  name: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: apple
+  name: frontend
+`)
+	th.AssertActualEqualsExpected(th.Run("base", th.MakeDefaultOptions()), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: apple
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend
+  namespace: zebra
+`)
+}
+
+func TestAlphabeticalOrderingEmptyOptionsUsesDefaults(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- resources.yaml
+
+sortOptions:
+  order: alphabetical
+  alphabeticalSortOptions: {}
+`)
+	th.WriteF("base/resources.yaml", `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: zebra
+  name: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: apple
+  name: frontend
+`)
+	th.AssertActualEqualsExpected(th.Run("base", th.MakeDefaultOptions()), `
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: apple
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend
+  namespace: zebra
+`)
+}
+
+func TestAlphabeticalOrderingRejectsDuplicateFields(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK("base", `
+resources:
+- resources.yaml
+
+sortOptions:
+  order: alphabetical
+  alphabeticalSortOptions:
+    fieldOrder: [kind, kind]
+`)
+	th.WriteF("base/resources.yaml", sortOrderResources)
+	err := th.RunWithErr("base", th.MakeDefaultOptions())
+	require.ErrorContains(t, err, `alphabetical sort field "kind" is listed more than once`)
+}
+
 func TestInvalidLegacySortOptionsWithoutOrderKey(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
@@ -234,7 +361,7 @@ sortOptions:
 `)
 	th.WriteF("base/resources.yaml", sortOrderResources)
 	err := th.RunWithErr("base", th.MakeDefaultOptions())
-	require.ErrorContains(t, err, "the field 'sortOptions.order' must be one of [fifo, legacy]")
+	require.ErrorContains(t, err, "the field 'sortOptions.order' must be one of [fifo, legacy, alphabetical]")
 }
 
 func TestInvalidLegacySortOptionsWithFIFOOrder(t *testing.T) {

@@ -8,6 +8,13 @@ import (
 	"testing"
 )
 
+func TestDefaultAlphabeticalFieldOrder(t *testing.T) {
+	want := []SortField{SortFieldNamespace, SortFieldKind, SortFieldName}
+	if got := DefaultAlphabeticalFieldOrder(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("default alphabetical field order = %v, want %v", got, want)
+	}
+}
+
 func fixKustomizationPostUnmarshallingCheck(k, e *Kustomization) bool {
 	return k.Kind == e.Kind &&
 		k.APIVersion == e.APIVersion &&

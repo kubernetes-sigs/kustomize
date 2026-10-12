@@ -11,9 +11,10 @@ import (
 type ReorderOption string
 
 const (
-	ReorderOptionLegacy      ReorderOption = "legacy"
-	ReorderOptionNone        ReorderOption = "none"
-	ReorderOptionUnspecified ReorderOption = "unspecified"
+	ReorderOptionLegacy       ReorderOption = "legacy"
+	ReorderOptionAlphabetical ReorderOption = "alphabetical"
+	ReorderOptionNone         ReorderOption = "none"
+	ReorderOptionUnspecified  ReorderOption = "unspecified"
 )
 
 // Options holds high-level kustomize configuration options,
@@ -30,6 +31,7 @@ type Options struct {
 	//   compatibility.
 	// - "none": Respect the depth-first resource input order as specified by the
 	//   kustomization file.
+	// - "alphabetical": Order by resource namespace, kind, and name.
 	// - "unspecified": The user didn't specify any preference. Kustomize will
 	//   select the appropriate default.
 	Reorder ReorderOption
