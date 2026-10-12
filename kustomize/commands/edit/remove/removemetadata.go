@@ -61,14 +61,14 @@ func newCmdRemoveAnnotation(fSys filesys.FileSystem, v func([]string) error) *co
 	return cmd
 }
 
-// newCmdRemoveLabel removes one or more commonLabels from the kustomization file.
+// newCmdRemoveLabel removes one or more labels from the kustomization file.
 func newCmdRemoveLabel(fSys filesys.FileSystem, v func([]string) error) *cobra.Command {
 	var o removeMetadataOptions
 	o.kind = label
 	o.arrayValidator = v
 	cmd := &cobra.Command{
 		Use: "label",
-		Short: "Removes one or more commonLabels from " +
+		Short: "Removes one or more commonLabels or labels from " +
 			konfig.DefaultKustomizationFileName(),
 		Example: `
 		remove label {labelKey1},{labelKey2}`,
@@ -143,10 +143,41 @@ func (o *removeMetadataOptions) removeAnnotations(m *types.Kustomization) error 
 }
 
 func (o *removeMetadataOptions) removeLabels(m *types.Kustomization) error {
-	if m.CommonLabels == nil && !o.ignore {
-		return fmt.Errorf("commonLabels is not defined in kustomization file")
+	//nolint:staticcheck
+	if m.CommonLabels == nil && m.Labels == nil && !o.ignore {
+		return fmt.Errorf("commonLabels and labels are not defined in kustomization file")
 	}
-	return o.removeFromMap(m.CommonLabels, label)
+	for _, key := range o.metadata {
+		//nolint:staticcheck
+		_, inCommonLabels := m.CommonLabels[key]
+		//nolint:staticcheck
+		delete(m.CommonLabels, key)
+		inLabels := o.removeFromLabels(m, key)
+		if !inCommonLabels && !inLabels && !o.ignore {
+			return fmt.Errorf("%s %s is not defined in kustomization file", label, key)
+		}
+	}
+	return nil
+}
+
+// removeFromLabels removes the given key from every entry of the labels
+// field, dropping entries left without any pairs, and reports whether the
+// key was found in at least one of them.
+func (o *removeMetadataOptions) removeFromLabels(m *types.Kustomization, key string) bool {
+	found := false
+	labels := make([]types.Label, 0, len(m.Labels))
+	for _, lbl := range m.Labels {
+		if _, ok := lbl.Pairs[key]; ok {
+			found = true
+			delete(lbl.Pairs, key)
+			if len(lbl.Pairs) == 0 {
+				continue
+			}
+		}
+		labels = append(labels, lbl)
+	}
+	m.Labels = labels
+	return found
 }
 
 func (o *removeMetadataOptions) removeFromMap(m map[string]string, kind kindOfAdd) error {
