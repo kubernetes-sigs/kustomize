@@ -63,10 +63,13 @@ spec:
 This resource has an image field. Let's change its value from `server`
 to `nginx` with a patch. You can get an OpenAPI document like this from
 your locally favored cluster with the command `kustomize openapi fetch`.
-Kustomize will use the OpenAPI extensions `x-kubernetes-patch-merge-key` and 
-`x-kubernetes-patch-strategy` to perform a strategic merge. 
-`x-kubernetes-patch-strategy` should be set to "merge", and you can set your 
-merge key to whatever you like. 
+For CRD list-maps, Kustomize uses the structural-schema annotations
+`x-kubernetes-list-type: map` and `x-kubernetes-list-map-keys`; all listed
+keys identify a list item. Kustomize also supports the legacy built-in-schema
+annotations `x-kubernetes-patch-merge-key` and
+`x-kubernetes-patch-strategy` (set the strategy to `merge`). A valid
+CRD-derived schema does not need the legacy pair. `openapi.path` points to an
+OpenAPI document, not directly to a CustomResourceDefinition manifest.
 
 Below, our custom resource inherits merge keys from PodTemplateSpec. In the
 definition of "io.k8s.api.core.v1.Container", the `ports` field has its merge
@@ -214,4 +217,3 @@ patchesStrategicMerge:
         - name: server
           image: nginx
 ```
-
