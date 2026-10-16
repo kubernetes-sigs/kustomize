@@ -2119,6 +2119,35 @@ func TestGetFieldValueReturnsString(t *testing.T) {
 	}
 }
 
+func TestGetFieldValueNullIsNil(t *testing.T) {
+	const input = `
+kind: TestKind
+metadata:
+  name: hello-world
+spec:
+  fieldWithNullValue: null
+  fieldWithStringNullValue: "null"
+`
+	rn, err := Parse(input)
+	if err != nil {
+		t.Fatalf("unexpected parse error: %v", err)
+	}
+	nullValue, err := rn.GetFieldValue("spec.fieldWithNullValue")
+	if err != nil {
+		t.Fatalf("error getting null field: %v", err)
+	}
+	if nullValue != nil {
+		t.Fatalf("null field type %T value %#v, want nil", nullValue, nullValue)
+	}
+	stringValue, err := rn.GetFieldValue("spec.fieldWithStringNullValue")
+	if err != nil {
+		t.Fatalf("error getting string field: %v", err)
+	}
+	if stringValue != "null" {
+		t.Fatalf("string field = %#v, want \"null\"", stringValue)
+	}
+}
+
 func TestGetFieldValueResolvesAlias(t *testing.T) {
 	yamlWithAlias := `
 foo: &a theValue
