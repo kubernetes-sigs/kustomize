@@ -131,7 +131,7 @@ const (
 	// NameFmt substitutes metadata.name
 	NameFmt FilenameFmtVerb = "%n"
 
-	// NamespaceFmt substitutes metdata.namespace
+	// NamespaceFmt substitutes metadata.namespace
 	NamespaceFmt FilenameFmtVerb = "%s"
 )
 

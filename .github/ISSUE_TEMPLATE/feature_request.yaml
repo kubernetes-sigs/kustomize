@@ -16,7 +16,7 @@ body:
       label: Eschewed features
       description: Some features are out of scope for Kustomize because they are incompatible with its foundational design principles. Please review the [Eschewed Features](https://kubectl.docs.kubernetes.io/faq/kustomize/eschewedfeatures/) documentation before submitting your feature request.
       options:
-      - label: This issue is not requesting templating, unstuctured edits, build-time side-effects from args or env vars, or any other eschewed feature.
+      - label: This issue is not requesting templating, unstructured edits, build-time side-effects from args or env vars, or any other eschewed feature.
         required: true
 
   - type: textarea

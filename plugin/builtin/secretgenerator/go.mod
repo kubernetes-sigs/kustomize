@@ -3,7 +3,7 @@ module sigs.k8s.io/kustomize/plugin/builtin/secretgenerator
 go 1.27.0
 
 require (
-	sigs.k8s.io/kustomize/api v0.21.2
+	sigs.k8s.io/kustomize/api v0.21.3
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -18,11 +18,11 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20261001230523-97fa35140926 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.21.2 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.21.3 // indirect
 )
 
 replace sigs.k8s.io/kustomize/api => ../../../api

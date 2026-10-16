@@ -203,7 +203,7 @@ func DefaultPathAndIndexAnnotation(dir string, nodes []*yaml.RNode) error {
 	return nil
 }
 
-// DefaultPathAnnotation sets a default path annotation on any Reources
+// DefaultPathAnnotation sets a default path annotation on any Resources
 // missing it.
 func DefaultPathAnnotation(dir string, nodes []*yaml.RNode) error {
 	// check each node for the path annotation

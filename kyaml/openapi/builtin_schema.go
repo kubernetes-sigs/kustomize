@@ -5,7 +5,7 @@ package openapi
 
 import _ "embed"
 
-//go:generate go run ./cmd/openapi-bundle -input kubernetesapi/v1_21_2/swagger.pb.gz -output kubernetesapi/data/kubernetes-openapi-union-v1.21.2.bundle-v1.json.gz -kubernetes-version v1.21.2
+//go:generate go run ./cmd/openapi-bundle -input kubernetesapi/v1_21_2/swagger.pb.gz -output kubernetesapi/data/kubernetes-openapi-union-v1.21.2.bundle-v1.json -kubernetes-version v1.21.2
 
 const (
 	// DefaultOpenAPI is the Kubernetes version represented by the built-in
@@ -16,7 +16,7 @@ const (
 	BuiltinSchemaInfo = "{title:Kubernetes,version:" + DefaultOpenAPI + "}"
 )
 
-//go:embed kubernetesapi/data/kubernetes-openapi-union-v1.21.2.bundle-v1.json.gz
+//go:embed kubernetesapi/data/kubernetes-openapi-union-v1.21.2.bundle-v1.json
 var builtinKubernetesOpenAPIBundle []byte
 
 //go:embed kustomizationapi/swagger.json

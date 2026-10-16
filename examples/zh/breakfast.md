@@ -28,7 +28,7 @@ resources:
 EOF
 ```
 
-这里有一个 _coffee_ 类型。定义`kind`和 `metdata/name` 字段以符合 [kubernetes API 对象样式]，不需要其他文件或定义：
+这里有一个 _coffee_ 类型。定义`kind`和 `metadata/name` 字段以符合 [kubernetes API 对象样式]，不需要其他文件或定义：
 
 <!-- @coffee @testAgainstLatestRelease -->
 ```

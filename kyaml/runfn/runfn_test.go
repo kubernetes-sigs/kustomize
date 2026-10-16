@@ -1155,10 +1155,10 @@ metadata:
 		},
 	}
 	for i := range test {
-		ouputBuffer := bytes.Buffer{}
+		outputBuffer := bytes.Buffer{}
 		instance := RunFns{
 			Input:                  bytes.NewReader([]byte{}),
-			Output:                 &ouputBuffer,
+			Output:                 &outputBuffer,
 			Functions:              []*yaml.RNode{fn1, fn2},
 			functionFilterProvider: getGeneratorFilterProvider(t),
 			ContinueOnEmptyResult:  test[i].ContinueOnEmptyResult,
@@ -1166,7 +1166,7 @@ metadata:
 		if !assert.NoError(t, instance.Execute()) {
 			t.FailNow()
 		}
-		assert.Equal(t, test[i].ExpectedOutput, ouputBuffer.String())
+		assert.Equal(t, test[i].ExpectedOutput, outputBuffer.String())
 	}
 }
 

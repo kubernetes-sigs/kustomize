@@ -5,7 +5,7 @@
 // Usage: mdtogo SOURCE_MD_DIR/ DEST_GO_DIR/ [--full=true] [--license=license.txt|none]
 //
 // The command will create a docs.go file under DEST_GO_DIR/ containing string variables to be
-// used by cobra commands for documentation.The variable names are generated from the SOURCE_MD_DIR/
+// used by cobra commands for documentation. The variable names are generated from the SOURCE_MD_DIR/
 // file names, replacing '-' with '', title casing the filename, and dropping the extension.
 // All *.md will be read from DEST_GO_DIR/, and a single DEST_GO_DIR/docs.go file is generated.
 //

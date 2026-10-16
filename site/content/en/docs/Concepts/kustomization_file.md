@@ -235,7 +235,7 @@ _Deployment_, _Service_, _PodDisruptionBudget_, etc., but they could
 also be transformer configurations.
 
 In this case the transformer configurations are just grist for the
-kustomization mill, and can be modifed and passed up an overlay stack,
+kustomization mill, and can be modified and passed up an overlay stack,
 and later be used to as input in a `transformers` field, whereupon
 they'll be applied to any resources at that kustomization stage.
 

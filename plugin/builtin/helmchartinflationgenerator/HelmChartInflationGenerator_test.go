@@ -40,7 +40,7 @@ valuesInline:
     rules:
       - apiGroups: [""]
         verbs: ["*"]
-        resouces: ["*"]
+        resources: ["*"]
 `)
 
 	th.AssertActualEqualsExpected(rm, `
@@ -76,7 +76,7 @@ metadata:
 rules:
 - apiGroups:
   - ""
-  resouces:
+  resources:
   - '*'
   verbs:
   - '*'

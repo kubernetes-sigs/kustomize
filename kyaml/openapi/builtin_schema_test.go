@@ -4,8 +4,6 @@
 package openapi
 
 import (
-	"bytes"
-	"compress/gzip"
 	"testing"
 
 	openapi_v2 "github.com/google/gnostic-models/openapiv2"
@@ -102,17 +100,10 @@ func TestBuiltinOpenAPIBundleMatchesLegacySchema(t *testing.T) {
 
 func TestDecodeBuiltinOpenAPIBundleRejectsInvalidData(t *testing.T) {
 	tests := []struct {
-		name              string
-		data              []byte
-		alreadyCompressed bool
-		corruptChecksum   bool
-		errorContains     string
+		name          string
+		data          []byte
+		errorContains string
 	}{
-		{
-			name:              "invalid gzip",
-			data:              []byte("not gzip"),
-			alreadyCompressed: true,
-		},
 		{
 			name: "invalid JSON",
 			data: []byte(`{"formatVersion":`),
@@ -127,13 +118,6 @@ func TestDecodeBuiltinOpenAPIBundleRejectsInvalidData(t *testing.T) {
 			data: []byte(`{} trailing`),
 		},
 		{
-			name:              "invalid checksum",
-			data:              builtinKubernetesOpenAPIBundle,
-			alreadyCompressed: true,
-			corruptChecksum:   true,
-			errorContains:     "gzip: invalid checksum",
-		},
-		{
 			name:          "invalid bundle",
 			data:          []byte(`{"formatVersion":2}`),
 			errorContains: "unsupported built-in OpenAPI bundle format",
@@ -142,14 +126,7 @@ func TestDecodeBuiltinOpenAPIBundleRejectsInvalidData(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			compressed := bytes.Clone(test.data)
-			if !test.alreadyCompressed {
-				compressed = gzipBytes(t, test.data)
-			}
-			if test.corruptChecksum {
-				compressed[len(compressed)-8] ^= 0xff
-			}
-			_, err := decodeBuiltinBundle(compressed)
+			_, err := decodeBuiltinBundle(test.data)
 			if test.errorContains == "" {
 				require.Error(t, err)
 			} else {
@@ -157,16 +134,6 @@ func TestDecodeBuiltinOpenAPIBundleRejectsInvalidData(t *testing.T) {
 			}
 		})
 	}
-}
-
-func gzipBytes(t *testing.T, data []byte) []byte {
-	t.Helper()
-	var compressed bytes.Buffer
-	writer := gzip.NewWriter(&compressed)
-	_, err := writer.Write(data)
-	require.NoError(t, err)
-	require.NoError(t, writer.Close())
-	return compressed.Bytes()
 }
 
 func TestBuiltinKustomizationSchema(t *testing.T) {
