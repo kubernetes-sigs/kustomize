@@ -390,7 +390,8 @@ func (lc *localizer) localizeFileWithContent(path string, content []byte) (strin
 	if err := lc.fSys.WriteFile(absPath, content); err != nil {
 		return "", errors.WrapPrefixf(err, "unable to localize file %q", path)
 	}
-	return locPath, nil
+	// Kustomization files use "/" on every platform.
+	return filepath.ToSlash(locPath), nil
 }
 
 // localizeRoot localizes root path if set and returns the localized path
@@ -437,7 +438,8 @@ func (lc *localizer) localizeRoot(path string) (string, error) {
 	if err != nil {
 		return "", errors.WrapPrefixf(err, "unable to localize root %q", path)
 	}
-	return locPath, nil
+	// Kustomization files use "/" on every platform.
+	return filepath.ToSlash(locPath), nil
 }
 
 // copyChartHomeEntry copies the helm chart home entry to lc dst
@@ -463,7 +465,8 @@ func (lc *localizer) copyChartHomeEntry(entry string) (string, error) {
 	if entry == "" {
 		return "", nil
 	}
-	return locPath, nil
+	// Kustomization files use "/" on every platform.
+	return filepath.ToSlash(locPath), nil
 }
 
 // copyChartHome copies path relative to lc root to dst and returns the
