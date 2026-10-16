@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo
+spec:
+  clusterIP: None
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  name: bob-79t79mt227

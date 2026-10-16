@@ -1,0 +1,9 @@
+apiVersion: apps/v1
+kind: Secret
+metadata:
+  annotations:
+    internal.config.kubernetes.io/previousKinds: Secret,Secret
+    internal.config.kubernetes.io/previousNames: oldName,oldName2
+    internal.config.kubernetes.io/previousNamespaces: default,oldNamespace
+  name: newName
+  namespace: newNamespace

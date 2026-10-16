@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    river: mississippi
+  name: theDeployment
+spec:
+  template:
+    metadata:
+      annotations:
+        river: mississippi
+    spec:
+      containers:
+      - name: test
+---
+apiVersion: v1
+data:
+  waterway: mississippi
+kind: ConfigMap
+metadata:
+  annotations:
+    river: mississippi
+  name: theConfigMap-hdd8h8cgdt

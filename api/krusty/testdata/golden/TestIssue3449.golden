@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cron-core-load-workflow
+spec:
+  concurrencyPolicy: Forbid
+  schedule: 45 2 * * *
+  suspend: "True"
+  timezone: Europe/Vienna
+  workflowMetadata:
+    labels:
+      workflowName: core-load-workflow
+  workflowSpec:
+    arguments:
+      parameters:
+      - name: dbt_target
+        value: development
+    workflowTemplateRef:
+      name: core-load-pipeline
+---
+apiVersion: v1
+data:
+  DBT_TARGET: development
+  SUSPENDED: "True"
+kind: ConfigMap
+metadata:
+  name: kustomize-vars-7mhm8cg5kg

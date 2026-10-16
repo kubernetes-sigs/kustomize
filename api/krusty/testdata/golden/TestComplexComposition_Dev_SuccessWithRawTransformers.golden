@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-sts
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  serviceName: my-svc
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: my-config
+        image: my-image
+        name: app
+  volumeClaimTemplates:
+  - spec:
+      storageClassName: my-sc
+---
+apiVersion: v1
+data:
+  MY_ENV: foo
+kind: ConfigMap
+metadata:
+  name: my-config

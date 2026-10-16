@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: test
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: SHORT_STRING
+          value: short_string
+        - name: SHORT_STRING_WITH_SINGLE_QUOTE
+          value: short_string
+        - name: SHORT_STRING_WITH_DOUBLE_QUOTE
+          value: short_string
+        - name: SHORT_STRING_BLANK
+          value: short string
+        - name: LONG_STRING_BLANK
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            suscipit ex non molestie varius.
+        - name: LONG_STRING_BLANK_WITH_SINGLE_QUOTE
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            suscipit ex non molestie varius.
+        - name: LONG_STRING_BLANK_WITH_DOUBLE_QUOTE
+          value: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+            suscipit ex non molestie varius.
+        - name: INVALID_PLAIN_STYLE_STRING
+          value: ': test'
+        image: test
+        name: mariadb

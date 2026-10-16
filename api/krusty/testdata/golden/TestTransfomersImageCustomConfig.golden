@@ -1,0 +1,33 @@
+kind: customKind
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      myContainers:
+      - image: nginx
+        name: ngnix1
+spec2:
+  template:
+    spec:
+      myContainers:
+      - image: nginx:v1
+        name: nginx3
+      - image: my-nginx:latest
+        name: nginx4
+spec3:
+  template:
+    spec:
+      myInitContainers:
+      - image: postgres:alpine-9
+        name: postgresdb
+      - image: docker:17-git
+        name: init-docker
+      - image: myprivaterepohostname:1234/my/image:latest
+        name: myImage
+      - image: myprivaterepohostname:1234/my/image
+        name: myImage2
+      - image: my-app-image:v1
+        name: my-app
+      - image: gcr.io:8080/my-project/my-cool-app:latest
+        name: my-cool-app
