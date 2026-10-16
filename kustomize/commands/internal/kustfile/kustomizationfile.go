@@ -194,12 +194,24 @@ func (mf *kustomizationFile) Write(kustomization *types.Kustomization) error {
 func (mf *kustomizationFile) parseCommentedFields(content []byte) error {
 	buffer := bytes.NewBuffer(content)
 	var comments [][]byte
+	scalarIndent := -1
 
 	line, err := buffer.ReadBytes('\n')
 	for err == nil {
-		if isCommentOrBlankLine(line) {
+		switch {
+		case scalarIndent >= 0 && !isBlankLine(line) && indentation(line) > scalarIndent:
+			// Blank lines followed by more block scalar content belong to the scalar.
+			comments = comments[:0]
+		case isCommentOrBlankLine(line):
+			if !isBlankLine(line) {
+				scalarIndent = -1
+			}
 			comments = append(comments, line)
-		} else {
+		default:
+			scalarIndent = -1
+			if blockScalarHeader.Match(bytes.TrimRight(line, "\r\n")) {
+				scalarIndent = indentation(line)
+			}
 			matched, field := findMatchedField(line)
 			if matched {
 				mf.originalFields = append(mf.originalFields, &commentedField{field: field, comment: squash(comments)})
@@ -263,6 +275,17 @@ Return true for following lines
 func isCommentOrBlankLine(line []byte) bool {
 	s := bytes.TrimRight(bytes.TrimLeft(line, " "), "\n")
 	return len(s) == 0 || bytes.HasPrefix(s, []byte(`#`))
+}
+
+// blockScalarHeader matches block scalar headers like "key: |", "- |-" or "key: >+2 # comment".
+var blockScalarHeader = regexp.MustCompile(`[:-]\s+[|>][1-9+-]{0,2}\s*(#.*)?$`)
+
+func isBlankLine(line []byte) bool {
+	return len(bytes.TrimSpace(line)) == 0
+}
+
+func indentation(line []byte) int {
+	return len(line) - len(bytes.TrimLeft(line, " "))
 }
 
 func findMatchedField(line []byte) (bool, string) {
