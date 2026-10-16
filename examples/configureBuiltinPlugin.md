@@ -329,5 +329,5 @@ resulting edited files in a `configurations:`
 field in a kustomization file used in a `build`.
 
 Using plugins _completely ignores_ both hard coded
-tranformer configuration, and any configuration loaded by
+transformer configuration, and any configuration loaded by
 the `configuration` field.

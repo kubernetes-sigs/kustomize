@@ -241,7 +241,7 @@ The output contains
 We also want to add liveness check and readiness check in the production environment. Spring Boot application
 has end points such as `/actuator/health` for this. We can customize the k8s deployment resource to talk to Spring Boot end point.
 
-Download the patch `healthcheck_patch.yaml`. It contains the liveness probes and readyness probes.
+Download the patch `healthcheck_patch.yaml`. It contains the liveness probes and readiness probes.
 
 <!-- @downloadPatch @testAgainstLatestRelease -->
 ```

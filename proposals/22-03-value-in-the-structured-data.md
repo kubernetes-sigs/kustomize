@@ -367,7 +367,7 @@ data:
   prometheus.yml: |-
     global:
       external_labels:
-        prometheus_env: TARGET_ENVIROMENT
+        prometheus_env: TARGET_ENVIRONMENT
     scrape_configs:
       - job_name: "prometheus"
         static_configs:

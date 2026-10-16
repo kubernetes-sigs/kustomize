@@ -101,7 +101,7 @@ performed by various overlays on some remote base.
 We've used such systems, and never want to again.
 
 Other tools (sed, jinja, erb, envsubst, kafka, helm, ksonnet,
-etc.) provide varying degrees of unstructured editting
+etc.) provide varying degrees of unstructured editing
 and/or embedded languages, and can be used instead
 of, or in a pipe with, kustomize.  If you want to
 go all-in on _configuration as a language_, consider [cue].

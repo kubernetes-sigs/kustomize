@@ -474,7 +474,7 @@ kind: Kustomization
 	}
 }
 
-func TestCommentsWithDocumentSeperatorAtBeginning(t *testing.T) {
+func TestCommentsWithDocumentSeparatorAtBeginning(t *testing.T) {
 	kustomizationContentWithComments := []byte(`
 
 
