@@ -24,6 +24,7 @@ const (
 	MetadataField    = "metadata"
 	DataField        = "data"
 	BinaryDataField  = "binaryData"
+	StringDataField  = "stringData"
 	NameField        = "name"
 	NamespaceField   = "namespace"
 	LabelsField      = "labels"
