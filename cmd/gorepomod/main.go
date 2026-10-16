@@ -11,7 +11,6 @@ import (
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/git"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/repo"
-	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/semver"
 )
 
 //go:generate go run internal/gen/main.go
@@ -74,34 +73,22 @@ func actualMain() error {
 		return mgr.Tidy(args.DoIt())
 	case arguments.Pin:
 		v := args.Version()
-		// Update branch history
+		// Refresh the selected remote before resolving the latest module tag.
 		gr := git.NewQuiet(mgr.AbsPath(), args.DoIt(), false)
-		err = gr.FetchRemote(misc.TrackedRepo(gr.GetMainBranch()))
+		remote, err := gr.DetermineRemoteToUse()
+		if err != nil {
+			return fmt.Errorf("%w", err)
+		}
+		err = gr.FetchRemote(remote)
 		if err != nil {
 			return fmt.Errorf("%w", err)
 		}
 
 		if v.IsZero() {
-			// Always use latest tag while does not removing manual usage capability
-			releaseBranch := fmt.Sprintf("release-%s", targetModule.ShortName())
-			fmt.Printf("new version not specified, fall back to latest version according to release branch: %s-*\n", releaseBranch)
-			latest, err := gr.GetLatestTag(releaseBranch)
-			if err != nil {
+			// Default to the latest remote tag for the target module.
+			v = targetModule.VersionRemote()
+			if v.IsZero() {
 				v = targetModule.VersionLocal()
-				err = mgr.Pin(args.DoIt(), targetModule, v)
-				if err != nil {
-					return fmt.Errorf("error: %w", err)
-				}
-				return nil
-			}
-			v, err = semver.Parse(latest)
-			if err != nil {
-				v = targetModule.VersionLocal()
-				err = mgr.Pin(args.DoIt(), targetModule, v)
-				if err != nil {
-					return fmt.Errorf("error: %w", err)
-				}
-				return nil
 			}
 		}
 
@@ -123,7 +110,7 @@ func actualMain() error {
 		}
 		return nil
 	case arguments.Release:
-		err = mgr.Release(targetModule, args.Bump(), args.DoIt(), args.LocalFlag())
+		err = mgr.Release(targetModule, args.Bump(), args.ReleaseBranch(), args.DoIt(), args.LocalFlag())
 		if err != nil {
 			return fmt.Errorf("error: %w", err)
 		}
