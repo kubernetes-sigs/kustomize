@@ -270,7 +270,7 @@ resources:
 			// because we fail to GET a resource does not mean the resource is
 			// not a remote file. We should return the GET status code as well.
 			errFile: "URL is a git repository",
-			errDir:  `failed to run \S+/git fetch --depth=1 .+`,
+			errDir:  `failed to run '.+[/\\]git(\.exe)? fetch --depth=1 .+`,
 		},
 		{
 			name: "local file qualifies as repo",
@@ -278,7 +278,7 @@ resources:
 			// see RFC 2606.
 			resource: "package@v1.28.0.example/configs/base",
 			errFile:  `evalsymlink failure on '%s' .+`,
-			errDir:   `failed to run \S+/git fetch --depth=1 .+`,
+			errDir:   `failed to run '.+[/\\]git(\.exe)? fetch --depth=1 .+`,
 		},
 		{
 			name:     "relative path does not exist",

@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -104,7 +105,7 @@ func TestLoaderLoad(t *testing.T) {
 	l1 := makeLoader()
 	repo := l1.Repo()
 	require.Empty(repo)
-	require.Equal("/", l1.Root())
+	require.Equal(filepath.FromSlash("/"), l1.Root())
 
 	for _, x := range testCases {
 		b, err := l1.Load(x.path)
@@ -119,7 +120,7 @@ func TestLoaderLoad(t *testing.T) {
 
 	repo = l2.Repo()
 	require.Empty(repo)
-	require.Equal("/foo/project", l2.Root())
+	require.Equal(filepath.FromSlash("/foo/project"), l2.Root())
 
 	for _, x := range testCases {
 		b, err := l2.Load(strings.TrimPrefix(x.path, "foo/project/"))
@@ -131,7 +132,7 @@ func TestLoaderLoad(t *testing.T) {
 	}
 	l2, err = l1.New("foo/project/") // Assure trailing slash stripped
 	require.NoError(err)
-	require.Equal("/foo/project", l2.Root())
+	require.Equal(filepath.FromSlash("/foo/project"), l2.Root())
 }
 
 func TestLoaderNewSubDir(t *testing.T) {
@@ -142,7 +143,7 @@ func TestLoaderNewSubDir(t *testing.T) {
 
 	l2, err := l1.New("subdir1")
 	require.NoError(err)
-	require.Equal("/foo/project/subdir1", l2.Root())
+	require.Equal(filepath.FromSlash("/foo/project/subdir1"), l2.Root())
 
 	x := testCases[1]
 	b, err := l2.Load("fileB.yaml")
@@ -158,7 +159,7 @@ func TestLoaderBadRelative(t *testing.T) {
 
 	l1, err := makeLoader().New("foo/project/subdir1")
 	require.NoError(err)
-	require.Equal("/foo/project/subdir1", l1.Root())
+	require.Equal(filepath.FromSlash("/foo/project/subdir1"), l1.Root())
 
 	// Cannot cd into a file.
 	_, err = l1.New("fileB.yaml")
@@ -187,7 +188,7 @@ func TestLoaderBadRelative(t *testing.T) {
 	// It's okay to go up and down to a sibling.
 	l2, err := l1.New("../subdir2")
 	require.NoError(err)
-	require.Equal("/foo/project/subdir2", l2.Root())
+	require.Equal(filepath.FromSlash("/foo/project/subdir2"), l2.Root())
 
 	x := testCases[2]
 	b, err := l2.Load("fileC.yaml")
@@ -267,6 +268,9 @@ func TestNewRemoteLoaderDoesNotExist(t *testing.T) {
 }
 
 func TestLoaderLocalScheme(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows does not allow ':' in file names")
+	}
 	// It is unlikely but possible for a reference with a url scheme to
 	// actually refer to a local file or directory.
 	t.Run("file", func(t *testing.T) {
@@ -460,11 +464,11 @@ whatever
 
 	l, err := newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(filepath.FromSlash(coRoot))))
 	require.NoError(err)
 	repo := l.Repo()
-	require.Equal(coRoot, repo)
-	require.Equal(coRoot+"/"+pathInRepo, l.Root())
+	require.Equal(filepath.FromSlash(coRoot), repo)
+	require.Equal(filepath.FromSlash(coRoot+"/"+pathInRepo), l.Root())
 
 	_, err = l.New(url)
 	require.Error(err)
@@ -479,8 +483,8 @@ whatever
 	require.NoError(err)
 
 	repo = l2.Repo()
-	require.Equal(coRoot, repo)
-	require.Equal(coRoot+"/"+pathInRepo, l2.Root())
+	require.Equal(filepath.FromSlash(coRoot), repo)
+	require.Equal(filepath.FromSlash(coRoot+"/"+pathInRepo), l2.Root())
 }
 
 func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
@@ -500,15 +504,15 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 	// to the local bases.
 	l1 = NewLoaderOrDie(
 		RestrictionRootOnly, fSys, cloneRoot+"/foo/overlay")
-	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
+	require.Equal(filepath.FromSlash(cloneRoot+"/foo/overlay"), l1.Root())
 
 	l2, err := l1.New("../base")
 	require.NoError(err)
-	require.Equal(cloneRoot+"/foo/base", l2.Root())
+	require.Equal(filepath.FromSlash(cloneRoot+"/foo/base"), l2.Root())
 
 	l3, err := l2.New("../../../highBase")
 	require.NoError(err)
-	require.Equal(topDir+"/highBase", l3.Root())
+	require.Equal(filepath.FromSlash(topDir+"/highBase"), l3.Root())
 
 	// Establish that a Kustomization found in cloned
 	// repo can reach (non-remote) bases inside the clone
@@ -527,22 +531,22 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 
 	l1, err = newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		git.DoNothingCloner(filesys.ConfirmedDir(filepath.FromSlash(cloneRoot))))
 	require.NoError(err)
-	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
+	require.Equal(filepath.FromSlash(cloneRoot+"/foo/overlay"), l1.Root())
 
 	// This is okay.
 	l2, err = l1.New("../base")
 	require.NoError(err)
 	repo := l2.Repo()
 	require.Empty(repo)
-	require.Equal(cloneRoot+"/foo/base", l2.Root())
+	require.Equal(filepath.FromSlash(cloneRoot+"/foo/base"), l2.Root())
 
 	// This is not okay.
 	_, err = l2.New("../../../highBase")
 	require.Error(err)
 	require.Contains(err.Error(),
-		"base '/whatever/highBase' is outside '/whatever/someClone'")
+		filepath.FromSlash("base '/whatever/highBase' is outside '/whatever/someClone'"))
 }
 
 func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
@@ -572,15 +576,15 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 	require.NoError(fSys.MkdirAll(cloneRoot + "/foo/base"))
 
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
-	require.Equal(topDir, l1.Root())
+		RestrictionRootOnly, filesys.ConfirmedDir(filepath.FromSlash(topDir)), fSys, nil,
+		git.DoNothingCloner(filesys.ConfirmedDir(filepath.FromSlash(cloneRoot))))
+	require.Equal(filepath.FromSlash(topDir), l1.Root())
 
 	l2, err := l1.New("github.com/someOrg/someRepo/foo/base")
 	require.NoError(err)
 	repo := l2.Repo()
-	require.Equal(cloneRoot, repo)
-	require.Equal(cloneRoot+"/foo/base", l2.Root())
+	require.Equal(filepath.FromSlash(cloneRoot), repo)
+	require.Equal(filepath.FromSlash(cloneRoot+"/foo/base"), l2.Root())
 }
 
 func TestRepoDirectCycleDetection(t *testing.T) {
@@ -593,8 +597,8 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 	require.NoError(fSys.MkdirAll(cloneRoot))
 
 	l1 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		RestrictionRootOnly, filesys.ConfirmedDir(filepath.FromSlash(topDir)), fSys, nil,
+		git.DoNothingCloner(filesys.ConfirmedDir(filepath.FromSlash(cloneRoot))))
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromURL(p1)
 	require.NoError(err)
@@ -615,8 +619,8 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 	require.NoError(fSys.MkdirAll(cloneRoot))
 
 	l0 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)))
+		RestrictionRootOnly, filesys.ConfirmedDir(filepath.FromSlash(topDir)), fSys, nil,
+		git.DoNothingCloner(filesys.ConfirmedDir(filepath.FromSlash(cloneRoot))))
 
 	p1 := "github.com/someOrg/someRepo1"
 	p2 := "github.com/someOrg/someRepo2"
@@ -658,7 +662,7 @@ func TestLoaderHTTP(t *testing.T) {
 
 	l1 := NewLoaderOrDie(
 		RestrictionRootOnly, MakeFakeFs(testCasesFile), filesys.Separator)
-	require.Equal("/", l1.Root())
+	require.Equal(filepath.FromSlash("/"), l1.Root())
 
 	for _, x := range testCasesFile {
 		b, err := l1.Load(x.path)

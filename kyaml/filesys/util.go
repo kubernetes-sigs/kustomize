@@ -16,18 +16,20 @@ func RootedPath(elem ...string) string {
 }
 
 // StripTrailingSeps trims trailing filepath separators from input.
+// On Windows, both '\' and '/' are separators.
 func StripTrailingSeps(s string) string {
 	k := len(s)
-	for k > 0 && s[k-1] == filepath.Separator {
+	for k > 0 && os.IsPathSeparator(s[k-1]) {
 		k--
 	}
 	return s[:k]
 }
 
 // StripLeadingSeps trims leading filepath separators from input.
+// On Windows, both '\' and '/' are separators.
 func StripLeadingSeps(s string) string {
 	k := 0
-	for k < len(s) && s[k] == filepath.Separator {
+	for k < len(s) && os.IsPathSeparator(s[k]) {
 		k++
 	}
 	return s[k:]
@@ -36,21 +38,36 @@ func StripLeadingSeps(s string) string {
 // PathSplit converts a file path to a slice of string.
 // If the path is absolute (if the path has a leading slash),
 // then the first entry in the result is an empty string.
+// On Windows, a path rooted at a volume, e.g. `C:\a`, instead
+// has the volume root (`C:\`) as its first entry.
 // Desired:  path == PathJoin(PathSplit(path))
 func PathSplit(incoming string) []string {
 	if incoming == "" {
 		return []string{}
 	}
 	dir, path := filepath.Split(incoming)
-	if dir == string(os.PathSeparator) {
-		if path == "" {
-			return []string{""}
+	vol := filepath.VolumeName(dir)
+	if dir != vol && StripTrailingSeps(dir[len(vol):]) == "" {
+		// dir is a root, e.g. "/", or `C:\` on Windows.
+		root := ""
+		if vol != "" {
+			root = vol + Separator
 		}
-		return []string{"", path}
+		if path == "" {
+			return []string{root}
+		}
+		return []string{root, path}
 	}
-	dir = strings.TrimSuffix(dir, string(os.PathSeparator))
+	if n := len(dir); n > 0 && os.IsPathSeparator(dir[n-1]) {
+		dir = dir[:n-1]
+	}
 	if dir == "" {
 		return []string{path}
+	}
+	if dir == vol {
+		// A volume-relative path on Windows, e.g. `C:a`.
+		// Splitting the volume further would not make progress.
+		return []string{vol, path}
 	}
 	return append(PathSplit(dir), path)
 }
@@ -108,8 +125,9 @@ func InsertPathPart(path string, pos int, part string) string {
 	} else if pos > len(parts) {
 		pos = len(parts)
 	}
-	if len(parts) > 0 && parts[0] == "" && pos < len(parts) {
-		// An empty string at 0 indicates an absolute path, and means
+	if len(parts) > 0 && (parts[0] == "" || filepath.IsAbs(parts[0])) && pos < len(parts) {
+		// An empty string (or, on Windows, a volume root) at 0
+		// indicates an absolute path, and means
 		// we must increment pos.  This change means that a position
 		// specification has the same meaning in relative and absolute paths.
 		// E.g. in either the path 'a/b/c' or the path '/a/b/c',

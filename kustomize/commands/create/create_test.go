@@ -178,7 +178,7 @@ resources:
 func TestCreateWithDetect(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	writeDetectContent(fSys)
-	opts := createFlags{path: "/", detectResources: true}
+	opts := createFlags{path: filesys.Separator, detectResources: true}
 	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)
@@ -193,7 +193,7 @@ func TestCreateWithDetect(t *testing.T) {
 func TestCreateWithDetectRecursive(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	writeDetectContent(fSys)
-	opts := createFlags{path: "/", detectResources: true, detectRecursive: true}
+	opts := createFlags{path: filesys.Separator, detectResources: true, detectRecursive: true}
 	err := runCreate(opts, fSys, factory)
 	if err != nil {
 		t.Fatalf("unexpected cmd error: %v", err)

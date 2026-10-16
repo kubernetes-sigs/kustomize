@@ -17,6 +17,7 @@ import (
 // its working directory and some environment variables,
 // to add regression protection to plugin loading logic.
 func TestPluginEnvironment(t *testing.T) {
+	skipIfWindows(t)
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepExecPlugin(
 			"someteam.example.com", "v1", "PrintPluginEnv")

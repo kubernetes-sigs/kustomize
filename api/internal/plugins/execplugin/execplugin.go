@@ -46,18 +46,24 @@ func NewExecPlugin(p string) *ExecPlugin {
 }
 
 func (p *ExecPlugin) ErrIfNotExecutable() error {
+	// In Windows, it is not possible to determine whether a
+	// file is executable through file mode. Instead, resolve the
+	// path the same way os/exec does when running it: a file is
+	// executable if it has an extension listed in PATHEXT, and an
+	// extensionless path like ".../MyPlugin" resolves to ".../MyPlugin.exe".
+	if runtime.GOOS == "windows" {
+		if _, err := exec.LookPath(p.path); err != nil {
+			return fmt.Errorf(
+				"no executable plugin at %s with an extension listed in PATHEXT (e.g. %s.exe): %w",
+				p.path, p.path, err)
+		}
+		return nil
+	}
 	f, err := os.Stat(p.path)
 	if err != nil {
 		return err
 	}
-	// In Windows, it is not possible to determine whether a
-	// file is executable through file mode.
-	// TODO: provide for setting the executable FileMode bit on Windows
-	// The (fs *fileStat) Mode() (m FileMode) {} function in
-	// https://golang.org/src/os/types_windows.go
-	// lacks the ability to set the FileMode executable bit in response
-	// to file data on Windows.
-	if f.Mode()&0111 == 0000 && runtime.GOOS != "windows" {
+	if f.Mode()&0111 == 0000 {
 		return fmt.Errorf("unexecutable plugin at: %s", p.path)
 	}
 	return nil
