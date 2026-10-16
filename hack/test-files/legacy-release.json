@@ -1,0 +1,7 @@
+{
+  "assets": [
+    {
+      "browser_download_url": "https://github.com/kubernetes-sigs/kustomize/releases/download/v2.0.3/kustomize_2.0.3_linux_amd64"
+    }
+  ]
+}
