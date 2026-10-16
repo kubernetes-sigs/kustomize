@@ -1836,6 +1836,76 @@ $patch: delete
 	}
 }
 
+func TestApplySmPatch_CollisionAndOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		firstNs   string
+		secondNs  string
+		wantError bool
+	}{
+		{name: "same namespace", wantError: true},
+		{name: "implicit and explicit default", secondNs: "default", wantError: true},
+		{name: "explicit and implicit default", firstNs: "default", wantError: true},
+		{name: "different namespaces", secondNs: "other"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := New()
+			for i := 0; i < 3; i++ {
+				r := makeCm(i)
+				if i == 0 {
+					require.NoError(t, r.SetNamespace(tc.firstNs))
+				}
+				if i == 1 {
+					require.NoError(t, r.SetNamespace(tc.secondNs))
+				}
+				require.NoError(t, m.Append(r))
+			}
+			original := m.Resources()
+			selected := resource.MakeIdSet(original[:1])
+			collisionId := original[1].CurId().String()
+			patch, err := rf.FromBytes([]byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cm001\n"))
+			require.NoError(t, err)
+			patch.AllowNameChange()
+			err = m.ApplySmPatch(selected, patch)
+			if tc.wantError {
+				require.EqualError(t, err, "may not add resource with an already registered id: "+collisionId)
+				return
+			}
+			require.NoError(t, err)
+			for i, r := range m.Resources() {
+				assert.Same(t, original[i], r)
+			}
+			assert.Equal(t, []string{"cm001", "cm001", "cm002"}, []string{
+				m.Resources()[0].GetName(), m.Resources()[1].GetName(), m.Resources()[2].GetName(),
+			})
+		})
+	}
+}
+
+func BenchmarkApplySmPatch(b *testing.B) {
+	for _, n := range []int{100, 400, 800, 1600} {
+		b.Run(fmt.Sprintf("%d", n), func(b *testing.B) {
+			m := New()
+			for i := 0; i < n; i++ {
+				if err := m.Append(makeCm(i)); err != nil {
+					b.Fatal(err)
+				}
+			}
+			selected := resource.MakeIdSet([]*resource.Resource{m.Resources()[0]})
+			patch, err := rf.FromBytes([]byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cm000\n  annotations:\n    patched: \"true\"\n"))
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				if err := m.ApplySmPatch(selected, patch); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
 func TestOriginAnnotations(t *testing.T) {
 	w := New()
 	for i := 0; i < 3; i++ {
