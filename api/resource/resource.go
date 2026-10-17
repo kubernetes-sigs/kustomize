@@ -387,15 +387,18 @@ func (r *Resource) AsYAML() ([]byte, error) {
 	}
 	yamlBytes, err := yaml.JSONToYAML(json)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("converting resource JSON to YAML: %w", err)
 	}
 	return sortConfigMapData(yamlBytes)
 }
 
 func sortConfigMapData(yamlBytes []byte) ([]byte, error) {
 	node, err := kyaml.Parse(string(yamlBytes))
-	if err != nil || node.GetKind() != "ConfigMap" {
-		return yamlBytes, err
+	if err != nil {
+		return yamlBytes, fmt.Errorf("parsing ConfigMap YAML: %w", err)
+	}
+	if node.GetKind() != "ConfigMap" {
+		return yamlBytes, nil
 	}
 
 	changed := false
