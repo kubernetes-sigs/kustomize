@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: storefront
+spec:
+  replicas: 1
+---
+apiVersion: v1
+data:
+  otherValue: green
+  testValue: purple
+kind: ConfigMap
+metadata:
+  name: my-configmap-9cd648hm8f
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: comp-storefront
+spec:
+  replicas: 3
+---
+apiVersion: v1
+data:
+  compValue: red
+  otherValue: green
+  testValue: blue
+kind: ConfigMap
+metadata:
+  name: comp-my-configmap-97647ckcmg
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: comp-db
+spec:
+  type: Logical
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: comp-stub
+spec:
+  replicas: 1

@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  bar: bar
+kind: ConfigMap
+metadata:
+  name: foo-cm
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo-foo
+spec:
+  selector:
+    matchLabels:
+      foo: foo
+  template:
+    metadata:
+      labels:
+        foo: foo
+    spec:
+      containers:
+      - image: example
+        name: foo
+        volumeMounts:
+        - mountPath: /path
+          name: myvol
+      volumes:
+      - configMap:
+          name: foo-cm
+        name: myvol

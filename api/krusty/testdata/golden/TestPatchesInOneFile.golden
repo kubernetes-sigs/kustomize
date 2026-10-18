@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    admission.gatekeeper.sh/ignore: no-self-managing
+    control-plane: controller-manager
+  name: system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+    gatekeeper.sh/operation: webhook
+  name: controller-manager
+  namespace: system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      gatekeeper.sh/operation: webhook
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: controller-manager
+        gatekeeper.sh/operation: webhook
+    spec:
+      containers:
+      - args:
+        - --emit-audit-events
+        - --operation=audit
+        - --operation=status
+        - --logtostderr
+        command:
+        - /manager
+        image: CONTROLLER_IMAGE
+        imagePullPolicy: Always
+        name: manager
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: audit-controller
+    gatekeeper.sh/operation: audit
+  name: audit
+  namespace: system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: audit-controller
+      gatekeeper.sh/operation: audit
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: audit-controller
+        gatekeeper.sh/operation: audit
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - args:
+        - --port=8443
+        - --logtostderr
+        - --emit-admission-events
+        - --exempt-namespace=gatekeeper-system
+        - --operation=webhook
+        - --disable-opa-builtin=http.send
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: AUDIT_IMAGE
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+        name: manager
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: gatekeeper-admin
+      terminationGracePeriodSeconds: 60

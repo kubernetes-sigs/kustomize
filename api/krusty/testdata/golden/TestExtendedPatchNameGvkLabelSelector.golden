@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: nginx-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: nginx-persistent-storage
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    new-key: new-value
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: busybox
+        name: busybox
+        volumeMounts:
+        - mountPath: /tmp/ps
+          name: busybox-persistent-storage
+      volumes:
+      - emptyDir: {}
+        name: busybox-persistent-storage
+      - configMap:
+          name: configmap-in-base
+        name: configmap-in-base
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: busybox

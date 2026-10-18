@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-a
+spec:
+  template:
+    spec:
+      hostAliases:
+      - hostnames:
+        - a.example.com
+        ip: 8.8.8.8

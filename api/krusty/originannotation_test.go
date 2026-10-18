@@ -460,47 +460,7 @@ spec:
 	require.NoError(t, err)
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      path: short_secret.yaml
-  labels:
-    airshipit.org/ephemeral-user-data: "true"
-  name: node1-bmc-secret
-stringData:
-  userData: |
-    bootcmd:
-    - mkdir /mnt/vda
-type: Opaque
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      configuredIn: gener.yaml
-      configuredBy:
-        kind: executable
-        name: demo
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`, string(yml))
+	kusttest_test.AssertYAMLEqualsGolden(t, yml)
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
@@ -550,47 +510,7 @@ stringData:
 	require.NoError(t, err)
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      path: short_secret.yaml
-  labels:
-    airshipit.org/ephemeral-user-data: "true"
-  name: node1-bmc-secret
-stringData:
-  userData: |
-    bootcmd:
-    - mkdir /mnt/vda
-type: Opaque
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      configuredIn: kustomization.yaml
-      configuredBy:
-        kind: executable
-        name: demo
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`, string(yml))
+	kusttest_test.AssertYAMLEqualsGolden(t, yml)
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
@@ -650,47 +570,7 @@ spec:
 	require.NoError(t, err)
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      path: ../base/short_secret.yaml
-  labels:
-    airshipit.org/ephemeral-user-data: "true"
-  name: node1-bmc-secret
-stringData:
-  userData: |
-    bootcmd:
-    - mkdir /mnt/vda
-type: Opaque
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      configuredIn: ../base/gener.yaml
-      configuredBy:
-        kind: executable
-        name: demo
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`, string(yml))
+	kusttest_test.AssertYAMLEqualsGolden(t, yml)
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
@@ -746,47 +626,7 @@ stringData:
 	require.NoError(t, err)
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      path: ../base/short_secret.yaml
-  labels:
-    airshipit.org/ephemeral-user-data: "true"
-  name: node1-bmc-secret
-stringData:
-  userData: |
-    bootcmd:
-    - mkdir /mnt/vda
-type: Opaque
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      configuredIn: ../base/kustomization.yaml
-      configuredBy:
-        kind: executable
-        name: demo
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`, string(yml))
+	kusttest_test.AssertYAMLEqualsGolden(t, yml)
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
@@ -1037,32 +877,7 @@ spec:
 	require.NoError(t, err)
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    config.kubernetes.io/origin: |
-      configuredIn: gener.yaml
-      configuredBy:
-        kind: executable
-        name: demo
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`, string(yml))
+	kusttest_test.AssertYAMLEqualsGolden(t, yml)
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
@@ -1109,36 +924,6 @@ buildMetadata: [originAnnotations, transformerAnnotations]
 	require.NoError(t, err)
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
-	assert.Equal(t, `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    alpha.config.kubernetes.io/transformations: |
-      - configuredIn: kustomization.yaml
-        configuredBy:
-          apiVersion: builtin
-          kind: SuffixTransformer
-    config.kubernetes.io/origin: |
-      configuredIn: ../base/gener.yaml
-      configuredBy:
-        kind: executable
-        name: demo
-    tshirt-size: small
-  labels:
-    app: nginx
-  name: nginx-foo
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-`, string(yml))
+	kusttest_test.AssertYAMLEqualsGolden(t, yml)
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }

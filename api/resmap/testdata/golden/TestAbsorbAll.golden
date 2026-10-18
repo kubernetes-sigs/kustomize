@@ -1,0 +1,8 @@
+apiVersion: apps/v1
+data:
+  a: u
+  b: v
+  c: w
+kind: ConfigMap
+metadata:
+  name: cmap
