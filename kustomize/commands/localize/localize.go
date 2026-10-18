@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	lclzr "sigs.k8s.io/kustomize/api/krusty/localizer"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/build"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -87,7 +86,6 @@ kustomize localize https://github.com/kubernetes-sigs/kustomize//api/krusty/test
 				}
 
 				if localizedBuild != originalBuild {
-					copyutil.PrettyFileDiff(originalBuild, localizedBuild)
 					log.Fatalf("VERIFICATION FAILED: `kustomize build` for %s and %s are different after localization.\n", args.target, dst)
 				}
 				log.Printf("VERIFICATION SUCCESS: `kustomize build` for %s and %s are the same after localization.\n", args.target, dst)

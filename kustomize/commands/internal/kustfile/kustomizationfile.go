@@ -12,8 +12,6 @@ import (
 	"reflect"
 	"regexp"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -281,8 +279,7 @@ func findMatchedField(line []byte) (bool, string) {
 // an empty []byte is returned.
 func marshalField(field string, kustomization *types.Kustomization) ([]byte, error) {
 	r := reflect.ValueOf(*kustomization)
-	titleCaser := cases.Title(language.English, cases.NoLower)
-	v := r.FieldByName(titleCaser.String(field))
+	v := r.FieldByName(field)
 
 	if !v.IsValid() || isEmpty(v) {
 		return []byte{}, nil
@@ -290,7 +287,7 @@ func marshalField(field string, kustomization *types.Kustomization) ([]byte, err
 
 	k := &types.Kustomization{}
 	kr := reflect.ValueOf(k)
-	kv := kr.Elem().FieldByName(titleCaser.String(field))
+	kv := kr.Elem().FieldByName(field)
 	kv.Set(v)
 
 	return yaml.Marshal(k)

@@ -1,21 +1,17 @@
 // Copyright 2023 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
-//
-//nolint:dupl
+
 package set
 
 import (
 	"fmt"
-
-	"sigs.k8s.io/kustomize/api/konfig"
-
 	"slices"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/api/ifc"
+	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
-	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/util"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -75,40 +71,7 @@ func runEditSetConfigMap(
 	ldr ifc.KvLoader,
 	rf *resource.Factory,
 ) error {
-	err := flags.ExpandFileSource(fSys)
-	if err != nil {
-		return fmt.Errorf("failed to expand file source: %w", err)
-	}
-
-	err = flags.ValidateSet(args)
-	if err != nil {
-		return fmt.Errorf("failed to validate flags: %w", err)
-	}
-
-	// Load the kustomization file.
-	mf, err := kustfile.NewKustomizationFile(fSys)
-	if err != nil {
-		return fmt.Errorf("failed to load kustomization file: %w", err)
-	}
-
-	kustomization, err := mf.Read()
-	if err != nil {
-		return fmt.Errorf("failed to read kustomization file: %w", err)
-	}
-
-	// Updates the existing ConfigMap
-	err = setConfigMap(ldr, kustomization, flags, rf)
-	if err != nil {
-		return fmt.Errorf("failed to create configmap: %w", err)
-	}
-
-	// Write out the kustomization file with added configmap.
-	err = mf.Write(kustomization)
-	if err != nil {
-		return fmt.Errorf("failed to write kustomization file: %w", err)
-	}
-
-	return nil
+	return runEditSetGenerator(flags, fSys, args, ldr, rf, "configmap", setConfigMap)
 }
 
 func setConfigMap(
@@ -122,21 +85,9 @@ func setConfigMap(
 		return fmt.Errorf("could not set new ConfigMap value: %w", err)
 	}
 
-	if len(flags.LiteralSources) > 0 {
-		err := util.UpdateLiteralSources(&args.GeneratorArgs, flags)
-		if err != nil {
-			return fmt.Errorf("failed to update literal sources: %w", err)
-		}
+	if err := updateGeneratorArgs(&args.GeneratorArgs, flags, k.GeneratorOptions); err != nil {
+		return err
 	}
-
-	// update namespace to new one
-	if flags.NewNamespace != "" {
-		args.Namespace = flags.NewNamespace
-	}
-
-	// Validate by trying to create corev1.configmap.
-	args.Options = types.MergeGlobalOptionsIntoLocal(
-		args.Options, k.GeneratorOptions)
 
 	_, err = rf.MakeConfigMap(ldr, args)
 	if err != nil {
