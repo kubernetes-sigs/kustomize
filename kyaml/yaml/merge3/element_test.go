@@ -790,6 +790,62 @@ spec:
 	// Test Case
 	//
 	{
+		description: `no infer merge keys merge CRD list-map using composite keys`,
+		origin: `
+apiVersion: custom
+kind: Deployment
+ports:
+- containerPort: 80
+  protocol: TCP
+  value: original-tcp
+  retained: true
+- containerPort: 80
+  protocol: UDP
+  value: original-udp
+`,
+		update: `
+apiVersion: custom
+kind: Deployment
+ports:
+- containerPort: 80
+  protocol: TCP
+  value: changed
+  retained: true
+- containerPort: 80
+  protocol: UDP
+  value: original-udp
+`,
+		local: `
+apiVersion: custom
+kind: Deployment
+ports: # {"type":"array","x-kubernetes-list-type":"map","x-kubernetes-list-map-keys":["containerPort","protocol"]}
+- containerPort: 80
+  protocol: TCP
+  value: original-tcp
+  retained: true
+- containerPort: 80
+  protocol: UDP
+  value: original-udp
+`,
+		expected: `
+apiVersion: custom
+kind: Deployment
+ports: # {"type":"array","x-kubernetes-list-type":"map","x-kubernetes-list-map-keys":["containerPort","protocol"]}
+- containerPort: 80
+  protocol: TCP
+  value: changed
+  retained: true
+- containerPort: 80
+  protocol: UDP
+  value: original-udp
+`,
+		infer: false,
+	},
+
+	//
+	// Test Case
+	//
+	{
 		description: `no infer merge keys merge using explicit schema as head comment'`,
 		origin: `
 apiVersion: custom
