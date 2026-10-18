@@ -350,6 +350,13 @@ func (k *Kustomization) Unmarshal(y []byte) error {
 	var nk Kustomization
 	err = dec.Decode(&nk)
 	if err != nil {
+		var typeErr *json.UnmarshalTypeError
+		if errors.As(err, &typeErr) &&
+			(typeErr.Field == "patches.patch" || typeErr.Field == "patchesJson6902.patch") &&
+			(typeErr.Value == "array" || typeErr.Value == "object") {
+			err = errors.WrapPrefixf(err,
+				"%s must be a string; use 'patch: |' for a multiline patch", typeErr.Field)
+		}
 		return errors.WrapPrefixf(err, "invalid Kustomization")
 	}
 	*k = nk
