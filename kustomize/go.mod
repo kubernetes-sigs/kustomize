@@ -8,7 +8,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/text v0.42.0
+	golang.org/x/text v0.43.0
 	sigs.k8s.io/kustomize/api v0.21.3
 	sigs.k8s.io/kustomize/cmd/config v0.21.3
 	sigs.k8s.io/kustomize/kyaml v0.21.3
