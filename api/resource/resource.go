@@ -42,6 +42,7 @@ var BuildAnnotations = []string{
 	kioutil.PathAnnotation,
 	kioutil.IndexAnnotation,
 	kioutil.SeqIndentAnnotation,
+	kioutil.DocStartAnnotation,
 	kioutil.IdAnnotation,
 	kioutil.InternalAnnotationsMigrationResourceIDAnnotation,
 
