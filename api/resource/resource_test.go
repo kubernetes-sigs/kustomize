@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 var factory = provider.NewDefaultDepProvider().GetResourceFactory()
@@ -71,6 +72,108 @@ metadata:
 	}
 	if string(yaml) != expected {
 		t.Fatalf("--- expected\n%s\n--- got\n%s\n", expected, string(yaml))
+	}
+}
+
+func TestAsYAMLWithNumericConfigMapKeysIsDeterministic(t *testing.T) {
+	resource, err := factory.FromMap(map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"data": map[string]interface{}{
+			"32E0817AE855A845": "foo",
+			"024233B4DFB484FC": "foo",
+			"EE10D2E63AF9F498": "foo",
+			"6E7E3021F1821943": "foo",
+			"FDC41072BFC0BC7F": "foo",
+			"DFD86A289C3857EF": "foo",
+			"0C6B462C403217C4": "foo",
+		},
+	})
+	require.NoError(t, err)
+
+	expected := `apiVersion: v1
+data:
+  024233B4DFB484FC: foo
+  0C6B462C403217C4: foo
+  32E0817AE855A845: foo
+  6E7E3021F1821943: foo
+  DFD86A289C3857EF: foo
+  EE10D2E63AF9F498: foo
+  FDC41072BFC0BC7F: foo
+kind: ConfigMap
+`
+
+	for i := 0; i < 20; i++ {
+		actual, err := resource.AsYAML()
+		require.NoError(t, err)
+		assert.Equal(t, expected, string(actual))
+	}
+}
+
+func TestAsYAMLWithNumericConfigMapBinaryDataKeysIsDeterministic(t *testing.T) {
+	resource, err := factory.FromMap(map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"binaryData": map[string]interface{}{
+			"32E0817AE855A845": "Zm9v",
+			"024233B4DFB484FC": "Zm9v",
+			"EE10D2E63AF9F498": "Zm9v",
+			"6E7E3021F1821943": "Zm9v",
+			"FDC41072BFC0BC7F": "Zm9v",
+			"DFD86A289C3857EF": "Zm9v",
+			"0C6B462C403217C4": "Zm9v",
+		},
+	})
+	require.NoError(t, err)
+
+	expected := `apiVersion: v1
+binaryData:
+  024233B4DFB484FC: Zm9v
+  0C6B462C403217C4: Zm9v
+  32E0817AE855A845: Zm9v
+  6E7E3021F1821943: Zm9v
+  DFD86A289C3857EF: Zm9v
+  EE10D2E63AF9F498: Zm9v
+  FDC41072BFC0BC7F: Zm9v
+kind: ConfigMap
+`
+	for i := 0; i < 20; i++ {
+		actual, err := resource.AsYAML()
+		require.NoError(t, err)
+		assert.Equal(t, expected, string(actual))
+	}
+}
+
+func TestAsYAMLWithoutNumericConfigMapKeysPreservesSerialization(t *testing.T) {
+	resource, err := factory.FromMap(map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "ordinary",
+		},
+		"data": map[string]interface{}{
+			"zebra":   "last",
+			"alpha":   "first",
+			"enabled": "true",
+			"lines":   "first\nsecond\n",
+		},
+		"binaryData": map[string]interface{}{
+			"zebra": "eg==",
+			"alpha": "YQ==",
+		},
+	})
+	require.NoError(t, err)
+	jsonBytes, err := resource.MarshalJSON()
+	require.NoError(t, err)
+	// The original serializer remains the byte-for-byte baseline for
+	// ConfigMaps whose keys do not require the numeric-key ordering fix.
+	expected, err := yaml.JSONToYAML(jsonBytes)
+	require.NoError(t, err)
+
+	for i := 0; i < 20; i++ {
+		actual, err := resource.AsYAML()
+		require.NoError(t, err)
+		assert.Equal(t, expected, actual)
 	}
 }
 
