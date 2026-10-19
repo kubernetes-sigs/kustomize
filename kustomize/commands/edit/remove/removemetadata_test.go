@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	valtest_test "sigs.k8s.io/kustomize/api/testutils/valtest"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kustomize/v5/commands/internal/kustfile"
@@ -220,6 +222,75 @@ func TestRemoveLabel(t *testing.T) {
 	}
 }
 
+func TestRemoveLabelFromLabelsField(t *testing.T) {
+	var o removeMetadataOptions
+	o.metadata = []string{"label1"}
+
+	m := makeKustomization(t)
+	//nolint:staticcheck
+	m.CommonLabels = nil
+	m.Labels = []types.Label{
+		{
+			Pairs:            map[string]string{"label1": "val1", "label2": "val2"},
+			IncludeSelectors: true,
+		},
+		{
+			Pairs: map[string]string{"label1": "val1"},
+		},
+	}
+	require.NoError(t, o.removeLabels(m))
+	// the label is removed from every entry and the entry left without
+	// pairs is dropped entirely
+	assert.Equal(t, []types.Label{
+		{
+			Pairs:            map[string]string{"label2": "val2"},
+			IncludeSelectors: true,
+		},
+	}, m.Labels)
+
+	// removing the same label again should not work
+	err := o.removeLabels(m)
+	require.Error(t, err)
+	assert.Equal(t, "label label1 is not defined in kustomization file", err.Error())
+}
+
+func TestRemoveLabelFromCommonLabelsAndLabelsFields(t *testing.T) {
+	var o removeMetadataOptions
+	o.metadata = []string{"label1", "label2"}
+
+	m := makeKustomization(t)
+	m.Labels = []types.Label{
+		{
+			Pairs:            map[string]string{"label2": "val2"},
+			IncludeSelectors: true,
+		},
+	}
+	require.NoError(t, o.removeLabels(m))
+	//nolint:staticcheck
+	assert.Empty(t, m.CommonLabels)
+	assert.Empty(t, m.Labels)
+}
+
+func TestRemoveLabelNoCommonLabelsDefinition(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, []byte(`
+labels:
+- includeSelectors: true
+  pairs:
+    label1: val1
+`))
+
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdRemoveLabel(fSys, v.ValidatorArray)
+	args := []string{"label1"}
+	require.NoError(t, cmd.RunE(cmd, args))
+	v.VerifyCall()
+
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	require.NoError(t, err)
+	assert.NotContains(t, string(content), "labels")
+}
+
 func TestRemoveLabelIgnore(t *testing.T) {
 	fSys := makeKustomizationFS()
 
@@ -248,7 +319,7 @@ func TestRemoveLabelNoDefinition(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected an error")
 	}
-	if err.Error() != "commonLabels is not defined in kustomization file" {
+	if err.Error() != "commonLabels and labels are not defined in kustomization file" {
 		t.Errorf("incorrect error: %v", err.Error())
 	}
 }
