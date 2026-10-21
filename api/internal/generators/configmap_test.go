@@ -4,7 +4,7 @@
 package generators_test
 
 import (
-	"path/filepath"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,7 +48,7 @@ func TestMakeConfigMap(t *testing.T) {
 					Name: "envConfigMap",
 					KvPairSources: types.KvPairSources{
 						EnvSources: []string{
-							filepath.Join("configmap", "app.env"),
+							path.Join("configmap", "app.env"),
 						},
 					},
 				},
@@ -70,7 +70,7 @@ data:
 					Name: "fileConfigMap1",
 					KvPairSources: types.KvPairSources{
 						FileSources: []string{
-							filepath.Join("configmap", "app-init.ini"),
+							path.Join("configmap", "app-init.ini"),
 						},
 					},
 				},
@@ -93,8 +93,8 @@ data:
 					Name: "fileConfigMap2",
 					KvPairSources: types.KvPairSources{
 						FileSources: []string{
-							filepath.Join("configmap", "app-init.ini"),
-							filepath.Join("configmap", "app.bin"),
+							path.Join("configmap", "app-init.ini"),
+							path.Join("configmap", "app.bin"),
 						},
 					},
 				},
