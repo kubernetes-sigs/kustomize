@@ -51,10 +51,12 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 		}
 		transformedNamespace := p.Namespace
 		unsetOnly := p.UnsetOnly
+		setRoleBindingSubjects := p.SetRoleBindingSubjects
 		if annotations := r.GetAnnotations(); annotations[konfig.HelmGeneratedAnnotation] == "true" {
-			// Preserve namespaces emitted by Helm, but still fill any missing
-			// namespace fields, including (cluster)role binding subjects.
+			// Preserve namespaces emitted by Helm, but still fill any missing namespace fields.
 			unsetOnly = true
+			// Helm charts own their (cluster)role binding subject namespaces, so don't touch them.
+			setRoleBindingSubjects = namespace.NoSubjects
 			if helmNamespace := annotations[konfig.HelmChartNamespaceAnnotation]; helmNamespace != "" {
 				transformedNamespace = helmNamespace
 			}
@@ -68,7 +70,7 @@ func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
 		if err := r.ApplyFilter(namespace.Filter{
 			Namespace:              transformedNamespace,
 			FsSlice:                p.FieldSpecs,
-			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
+			SetRoleBindingSubjects: setRoleBindingSubjects,
 			UnsetOnly:              unsetOnly,
 		}); err != nil {
 			return err

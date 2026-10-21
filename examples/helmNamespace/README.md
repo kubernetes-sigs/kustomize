@@ -87,18 +87,18 @@ printf '%s\n' "$output" | grep -A4 'name: test-b-secret' | grep 'namespace: top-
 
 ## RoleBinding subjects
 
-The chart emits a RoleBinding with three subjects. A subject named `default`
-without a namespace is filled with the effective namespace, just like any other
-missing namespace field:
+The chart emits a RoleBinding with three subjects. Helm charts own their
+(cluster)role binding subjects, so kustomize never sets a subject namespace on
+Helm-generated resources, even for a subject named `default` without one:
 
-<!-- @checkRoleBindingSubjectFilled @testHelm -->
+<!-- @checkRoleBindingSubjectUntouched @testHelm -->
 ```sh
-printf '%s\n' "$output" | grep -A14 'name: test-a-rolebinding' | grep -A3 'subjects:' | grep 'namespace: chart-ns'
+! printf '%s\n' "$output" | grep -A14 'name: test-a-rolebinding' | grep -A2 'subjects:' | grep 'namespace:'
 ```
 
-<!-- @checkRoleBindingSubjectFilled @testHelm -->
+<!-- @checkRoleBindingSubjectUntouched @testHelm -->
 ```sh
-printf '%s\n' "$output" | grep -A14 'name: test-b-rolebinding' | grep -A3 'subjects:' | grep 'namespace: top-level-ns'
+! printf '%s\n' "$output" | grep -A14 'name: test-b-rolebinding' | grep -A2 'subjects:' | grep 'namespace:'
 ```
 
 A subject namespace rendered by the chart is preserved:
@@ -156,13 +156,12 @@ The Secret is emitted by the chart with a release namespace, so that value shoul
 printf '%s\n' "$outputChartOnly" | grep -A4 'name: test-c-secret' | grep 'namespace: helm-only-ns'
 ```
 
-The RoleBinding subject named `default` without a namespace is filled from
-`helmCharts[].namespace`, while the subject namespace rendered by the chart is
-preserved:
+The RoleBinding subject named `default` without a namespace is left untouched,
+and the subject namespace rendered by the chart is preserved:
 
-<!-- @checkRoleBindingSubjectFilledChartOnly @testHelm -->
+<!-- @checkRoleBindingSubjectUntouchedChartOnly @testHelm -->
 ```sh
-printf '%s\n' "$outputChartOnly" | grep -A14 'name: test-c-rolebinding' | grep -A3 'subjects:' | grep 'namespace: helm-only-ns'
+! printf '%s\n' "$outputChartOnly" | grep -A14 'name: test-c-rolebinding' | grep -A2 'subjects:' | grep 'namespace:'
 ```
 
 <!-- @checkRoleBindingSubjectPreservedChartOnly @testHelm -->

@@ -7,13 +7,13 @@ roleRef:
   kind: Role
   name: {{ .Release.Name }}-role
 subjects:
-# a subject named "default" without a namespace; kustomize fills it
+# a subject named "default" without a namespace; kustomize leaves it unset
 - kind: ServiceAccount
   name: default
 # a subject namespace rendered by the chart; kustomize preserves it
 - kind: ServiceAccount
   name: default
   namespace: chart-owned-ns
-# a subject not named "default"; kustomize never touches it
+# a subject not named "default"
 - kind: ServiceAccount
   name: app-service-account
