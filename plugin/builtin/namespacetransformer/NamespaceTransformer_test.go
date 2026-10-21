@@ -922,7 +922,7 @@ metadata:
 `)
 }
 
-func TestNamespaceTransformer_HelmOriginFillsUnsetRoleBindingSubjects(t *testing.T) {
+func TestNamespaceTransformer_HelmOriginDoesNotSetRoleBindingSubjects(t *testing.T) {
 	th := kusttest_test.MakeEnhancedHarness(t).
 		PrepBuiltin("NamespaceTransformer")
 	defer th.Reset()
@@ -956,8 +956,8 @@ metadata:
 `+defaultFieldSpecs, rm)
 	require.NoError(t, err)
 	require.NoError(t, rm.RemoveOriginAnnotations())
-	// The unset "default" subject namespace is filled like any other missing
-	// namespace field, while the one Helm rendered is preserved.
+	// metadata.namespace is filled, but subject namespaces are left untouched
+	// because Helm charts own their (cluster)role binding subjects.
 	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -970,7 +970,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: test
 - kind: ServiceAccount
   name: default
   namespace: helm-owned-ns
