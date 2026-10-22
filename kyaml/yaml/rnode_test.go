@@ -2119,6 +2119,36 @@ func TestGetFieldValueReturnsString(t *testing.T) {
 	}
 }
 
+func TestGetFieldValueReturnsYAMLIntegers(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value string
+		want  int
+	}{
+		{name: "decimal", value: "42", want: 42},
+		{name: "negative", value: "-42", want: -42},
+		{name: "hexadecimal", value: "0x2a", want: 42},
+		{name: "negative hexadecimal", value: "-0x2a", want: -42},
+		{name: "binary", value: "0b101010", want: 42},
+		{name: "octal", value: "0o52", want: 42},
+		{name: "legacy octal", value: "052", want: 42},
+		{name: "digit separators", value: "1_000", want: 1000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rn, err := Parse("value: " + tc.value + "\n")
+			require.NoError(t, err)
+			actual, err := rn.GetFieldValue("value")
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, actual)
+		})
+	}
+	rn, err := Parse("value: \"0x2a\"\n")
+	require.NoError(t, err)
+	actual, err := rn.GetFieldValue("value")
+	require.NoError(t, err)
+	assert.Equal(t, "0x2a", actual)
+}
+
 func TestGetFieldValueResolvesAlias(t *testing.T) {
 	yamlWithAlias := `
 foo: &a theValue
