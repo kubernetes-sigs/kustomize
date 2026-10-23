@@ -78,6 +78,16 @@ y: z
 	assert.Equal(t, strings.TrimSpace(input), strings.TrimSpace(actual.String()))
 }
 
+// SortNodes must report why it could not read a node's metadata instead of
+// silently degrading the comparison to "equal" and returning a wrong order.
+func TestSortNodesReportsUnreadableMeta(t *testing.T) {
+	noMeta1 := yaml.MustParse(`justAKey: value1`)
+	noMeta2 := yaml.MustParse(`justAKey: value2`)
+
+	err := kioutil.SortNodes([]*yaml.RNode{noMeta1, noMeta2})
+	require.Error(t, err)
+}
+
 func TestDefaultPathAnnotation(t *testing.T) {
 	var tests = []struct {
 		dir      string

@@ -277,17 +277,22 @@ func SortNodes(nodes []*yaml.RNode) error {
 		if err != nil {
 			return false
 		}
-		if err := CopyLegacyAnnotations(nodes[i]); err != nil {
+		// Propagate failures to the outer err so the sort failure is reported
+		// instead of silently degrading every comparison to "equal".
+		if err = CopyLegacyAnnotations(nodes[i]); err != nil {
 			return false
 		}
-		if err := CopyLegacyAnnotations(nodes[j]); err != nil {
+		if err = CopyLegacyAnnotations(nodes[j]); err != nil {
 			return false
 		}
 		var iMeta, jMeta yaml.ResourceMeta
-		if iMeta, _ = nodes[i].GetMeta(); err != nil {
+		var metaErr error
+		if iMeta, metaErr = nodes[i].GetMeta(); metaErr != nil {
+			err = metaErr
 			return false
 		}
-		if jMeta, _ = nodes[j].GetMeta(); err != nil {
+		if jMeta, metaErr = nodes[j].GetMeta(); metaErr != nil {
+			err = metaErr
 			return false
 		}
 
