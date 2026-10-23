@@ -10,11 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const (
-	someDigest = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
-	someRepo   = "ghcr.io/some-org/some-repo"
-)
-
 func TestNewRepoSpecFromURL(t *testing.T) {
 	testcases := map[string]struct {
 		input        string
@@ -40,20 +35,20 @@ func TestNewRepoSpecFromURL(t *testing.T) {
 			absPath:      "/notPulled/kind",
 		},
 		"digest": {
-			input:    ociScheme + someRepo + "@" + someDigest,
-			pullSpec: someRepo + "@" + someDigest,
+			input:    "oci://ghcr.io/some-org/some-repo@sha256:1111111111111111111111111111111111111111111111111111111111111111",
+			pullSpec: "ghcr.io/some-org/some-repo@sha256:1111111111111111111111111111111111111111111111111111111111111111",
 			absPath:  "/notPulled",
 		},
 		"digest and root path": {
-			input:        ociScheme + someRepo + "@" + someDigest + "//overlays/dev",
-			pullSpec:     someRepo + "@" + someDigest,
+			input:        "oci://ghcr.io/some-org/some-repo@sha256:1111111111111111111111111111111111111111111111111111111111111111//overlays/dev",
+			pullSpec:     "ghcr.io/some-org/some-repo@sha256:1111111111111111111111111111111111111111111111111111111111111111",
 			kustRootPath: "overlays/dev",
 			absPath:      "/notPulled/overlays/dev",
 		},
 		"tag and digest": {
 			// The digest wins.
-			input:    ociScheme + someRepo + ":v1.0.0@" + someDigest,
-			pullSpec: someRepo + "@" + someDigest,
+			input:    "oci://ghcr.io/some-org/some-repo:v1.0.0@sha256:1111111111111111111111111111111111111111111111111111111111111111",
+			pullSpec: "ghcr.io/some-org/some-repo@sha256:1111111111111111111111111111111111111111111111111111111111111111",
 			absPath:  "/notPulled",
 		},
 		"default tag": {
@@ -148,7 +143,7 @@ func TestNewRepoSpecFromURL_Errors(t *testing.T) {
 		},
 		"scheme only": {
 			input: "oci://",
-			err:   "invalid oci artifact reference",
+			err:   `invalid oci artifact url "oci://"`,
 		},
 		"no repository": {
 			input: "oci://ghcr.io",
@@ -160,7 +155,7 @@ func TestNewRepoSpecFromURL_Errors(t *testing.T) {
 		},
 		"root path without delimiter": {
 			input: "oci://ghcr.io/some-org/some-repo:v1.0.0/base",
-			err:   "the kustomization root path must be separated by //",
+			err:   "expected oci://<registry>/<repository>[:<tag>|@<digest>][//<path>]",
 		},
 		"root path exits artifact": {
 			input: "oci://ghcr.io/some-org/some-repo:v1.0.0//../escape",
@@ -172,15 +167,19 @@ func TestNewRepoSpecFromURL_Errors(t *testing.T) {
 		},
 		"bad digest": {
 			input: "oci://ghcr.io/some-org/some-repo@sha256:notADigest",
-			err:   "invalid oci artifact reference",
+			err:   "invalid oci artifact url",
 		},
 		"bad tag": {
 			input: "oci://ghcr.io/some-org/some-repo:not a tag",
-			err:   "invalid oci artifact reference",
+			err:   "invalid oci artifact url",
+		},
+		"bad registry host": {
+			input: "oci://gh cr.io/some-org/some-repo:v1.0.0",
+			err:   `invalid oci artifact url "oci://gh cr.io/some-org/some-repo:v1.0.0"`,
 		},
 		"query string": {
 			input: "oci://ghcr.io/some-org/some-repo?ref=v1.0.0",
-			err:   "invalid oci artifact reference",
+			err:   "invalid oci artifact url",
 		},
 	}
 	for name, tc := range testcases {
