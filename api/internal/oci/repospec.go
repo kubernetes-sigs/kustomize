@@ -96,8 +96,8 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		name.WithDefaultTag(defaultTag))
 	if err != nil {
 		return nil, errors.WrapPrefixf(err,
-			"invalid oci artifact reference %q (the kustomization root path must be separated by %s)",
-			ref, rootDelimiter)
+			"invalid oci artifact url %q, expected %s<registry>/<repository>[:<tag>|@<digest>][%s<path>]",
+			n, ociScheme, rootDelimiter)
 	}
 	if reference.Context().RegistryStr() == "" {
 		return nil, errors.Errorf("oci artifact reference %q must include the registry host", ref)
