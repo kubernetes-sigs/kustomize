@@ -5,6 +5,7 @@ package loader
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -62,7 +63,11 @@ func newLoaderAtOciPull(
 	repoSpec *oci.RepoSpec, fSys filesys.FileSystem,
 	referrer *FileLoader, puller oci.Puller) (ifc.Loader, error) {
 	cleaner := repoSpec.Cleaner(fSys)
-	err := puller(repoSpec, fSys)
+	var client *http.Client
+	if referrer != nil {
+		client = referrer.http
+	}
+	err := puller(repoSpec, fSys, client)
 	if err != nil {
 		_ = cleaner()
 		return nil, err
