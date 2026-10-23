@@ -5,6 +5,7 @@ package loader
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -100,7 +101,7 @@ func TestNewLoaderAtOciPullFails(t *testing.T) {
 	pullRoot := ociPullRoot
 	require.NoError(fSys.MkdirAll(pullRoot))
 	pullErr := fmt.Errorf("no such artifact")
-	puller := func(rs *oci.RepoSpec, _ filesys.FileSystem) error {
+	puller := func(rs *oci.RepoSpec, _ filesys.FileSystem, _ *http.Client) error {
 		rs.Dir = filesys.ConfirmedDir(pullRoot)
 		return pullErr
 	}
@@ -157,6 +158,29 @@ func TestLocalLoaderReferencingOciBase(t *testing.T) {
 	repo := l2.Repo()
 	require.Equal(pullRoot, repo)
 	require.Equal(pullRoot+"/foo/base", l2.Root())
+}
+
+func TestOciPullerGetsReferrerHTTPClient(t *testing.T) {
+	require := require.New(t)
+
+	fSys := filesys.MakeFsInMemory()
+	require.NoError(fSys.MkdirAll(ociTopDir))
+	require.NoError(fSys.MkdirAll(ociPullRoot))
+
+	client := &http.Client{}
+	var got *http.Client
+	l0 := newLoaderAtConfirmedDir(
+		RestrictionRootOnly, filesys.ConfirmedDir(ociTopDir), fSys, nil, nil)
+	l0.http = client
+	l0.puller = func(rs *oci.RepoSpec, _ filesys.FileSystem, c *http.Client) error {
+		got = c
+		rs.Dir = filesys.ConfirmedDir(ociPullRoot)
+		return nil
+	}
+
+	_, err := l0.New("oci://ghcr.io/some-org/some-repo:v1.0.0")
+	require.NoError(err)
+	require.Same(client, got)
 }
 
 func TestOciRepoIndirectCycleDetection(t *testing.T) {
