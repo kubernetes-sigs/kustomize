@@ -136,7 +136,7 @@ func (kvl *loader) keyValuesFromLine(line []byte, currentLine int) (types.Pair, 
 	kv := types.Pair{}
 
 	if !utf8.Valid(line) {
-		return kv, fmt.Errorf("line %d has invalid utf8 bytes : %v", line, string(line))
+		return kv, fmt.Errorf("line %d has invalid utf8 bytes : %v", currentLine, string(line))
 	}
 
 	// We trim UTF8 BOM from the first line of the file but no others

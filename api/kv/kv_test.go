@@ -20,6 +20,15 @@ func makeKvLoader(fSys filesys.FileSystem) *loader {
 		validator: valtest_test.MakeFakeValidator()}
 }
 
+func TestKeyValuesFromLinesReportsTheLineNumberForInvalidUtf8(t *testing.T) {
+	kvl := makeKvLoader(filesys.MakeFsInMemory())
+	_, err := kvl.keyValuesFromLines([]byte("k1=v1\nbad \x80\x81 line"))
+	require.Error(t, err)
+	// The failing line number must be reported, not the raw bytes of the line.
+	require.Contains(t, err.Error(), "line 1")
+	require.NotContains(t, err.Error(), "line [")
+}
+
 func TestKeyValuesFromLines(t *testing.T) {
 	tests := []struct {
 		desc          string
