@@ -67,10 +67,13 @@ spec:
     name: nginx
 `
 
+// Builds pull through the default HTTP client, so these tests use a registry
+// on the loopback interface, which go-containerregistry reaches over plain HTTP.
+
 func TestOciArtifactBase(t *testing.T) {
-	host := ocitest.StartRegistry(t)
+	host := ocitest.StartLoopbackRegistry(t)
 	ref := host + ociRepo
-	digest := ocitest.Push(t, ref, ocitest.FluxArtifact(ociArtifactFiles()))
+	digest := ocitest.Push(t, nil, ref, ocitest.FluxArtifact(t, ociArtifactFiles()))
 
 	testcases := map[string]struct {
 		resources string
@@ -105,9 +108,9 @@ func TestOciArtifactBase(t *testing.T) {
 }
 
 func TestOciArtifactAsTarget(t *testing.T) {
-	host := ocitest.StartRegistry(t)
+	host := ocitest.StartLoopbackRegistry(t)
 	ref := host + ociRepo
-	ocitest.Push(t, ref, ocitest.Files(ociArtifactFiles()))
+	ocitest.Push(t, nil, ref, ocitest.Files(t, ociArtifactFiles()))
 
 	th := kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsOnDisk())
 	m := th.Run(ociScheme+ref+ociOverlay, th.MakeDefaultOptions())
@@ -117,9 +120,9 @@ func TestOciArtifactAsTarget(t *testing.T) {
 }
 
 func TestOciArtifactErrors(t *testing.T) {
-	host := ocitest.StartRegistry(t)
+	host := ocitest.StartLoopbackRegistry(t)
 	ref := host + ociRepo
-	ocitest.Push(t, ref, ocitest.Files(ociArtifactFiles()))
+	ocitest.Push(t, nil, ref, ocitest.Files(t, ociArtifactFiles()))
 
 	testcases := map[string]struct {
 		resources string
@@ -156,9 +159,9 @@ func TestOciArtifactErrors(t *testing.T) {
 
 func TestOciArtifactCannotEscape(t *testing.T) {
 	// An artifact whose overlay refers to a base outside the artifact.
-	host := ocitest.StartRegistry(t)
+	host := ocitest.StartLoopbackRegistry(t)
 	ref := host + "/some-org/escaping:v1.0.0"
-	ocitest.Push(t, ref, ocitest.Files(map[string]string{
+	ocitest.Push(t, nil, ref, ocitest.Files(t, map[string]string{
 		// The artifact is pulled into a directory directly below the
 		// temporary directory, so this is that temporary directory.
 		"overlay/kustomization.yaml": "resources:\n- ../..\n",
