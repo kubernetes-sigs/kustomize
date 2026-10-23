@@ -879,6 +879,45 @@ spec:
 				},
 			},
 		},
+		"keep a digest-pinned image without a tag unchanged by tagSuffix": {
+			input: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploysuffix
+spec:
+  template:
+    spec:
+      containers:
+      - image: redis@sha256:e4e6bc39341f9ee1e7538b6d3ef1e5c2e4b1e0a2f8f5f4c6a7b8c9d0e1f2a3b4
+        name: redis
+`,
+			expectedOutput: `
+group: apps
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploysuffix
+spec:
+  template:
+    spec:
+      containers:
+      - image: redis@sha256:e4e6bc39341f9ee1e7538b6d3ef1e5c2e4b1e0a2f8f5f4c6a7b8c9d0e1f2a3b4
+        name: redis
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:      "redis",
+					TagSuffix: "-alpine",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/template/spec/containers[]/image",
+				},
+			},
+		},
 		"update image volume in pod template": {
 			input: `
 group: apps

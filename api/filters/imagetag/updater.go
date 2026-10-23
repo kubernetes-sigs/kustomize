@@ -48,8 +48,13 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 		tag = ""
 		digest = u.ImageTag.Digest
 	case u.ImageTag.TagSuffix != "":
-		tag += u.ImageTag.TagSuffix
-		digest = ""
+		// TagSuffix appends to the original tag; without a tag there is nothing to
+		// suffix, so keep the image untouched instead of dropping a digest pin and
+		// fabricating a tag from the suffix alone (e.g. "redis:-alpine").
+		if tag != "" {
+			tag += u.ImageTag.TagSuffix
+			digest = ""
+		}
 	}
 
 	// build final image name
