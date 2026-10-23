@@ -21,20 +21,26 @@ import (
 func NewLoader(
 	lr LoadRestrictorFunc,
 	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
-	if oci.IsOciURL(target) {
-		// The target qualifies as a remote OCI artifact.
-		return newLoaderAtOciURL(target, fSys)
-	}
 	repoSpec, err := git.NewRepoSpecFromURL(target)
 	if err == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, git.ClonerUsingGitExec)
+			repoSpec, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry)
+	}
+	ociSpec, err := oci.NewRepoSpecFromURL(target)
+	if err == nil {
+		// The target qualifies as a remote OCI artifact.
+		return newLoaderAtOciPull(
+			ociSpec, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry)
+	}
+	if oci.IsOciURL(target) {
+		// An oci:// target that does not parse is not a local one either.
+		return nil, errors.Wrap(err)
 	}
 	root, err := filesys.ConfirmDir(fSys, target)
 	if err != nil {
 		return nil, errors.WrapPrefixf(err, "%s", ErrRtNotDir.Error())
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec), nil
+		lr, root, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry), nil
 }
