@@ -195,7 +195,7 @@ func TestRepoSpecCleaner(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	rs, err := NewRepoSpecFromURL("oci://ghcr.io/some-org/some-repo:v1.0.0//base")
 	require.NoError(t, err)
-	require.NoError(t, DoNothingPuller(filesys.ConfirmedDir("/pulled"))(rs, fSys))
+	require.NoError(t, DoNothingPuller(filesys.ConfirmedDir("/pulled"))(rs, fSys, nil))
 	require.NoError(t, fSys.WriteFile(rs.AbsPath()+"/kustomization.yaml", []byte("whatever")))
 	require.True(t, fSys.Exists("/pulled/base/kustomization.yaml"))
 	require.NoError(t, rs.Cleaner(fSys)())
