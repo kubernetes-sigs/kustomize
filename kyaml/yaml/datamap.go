@@ -10,8 +10,12 @@ import (
 	"unicode/utf8"
 )
 
+type Pair struct {
+	Key   string
+	Value string
+}
+
 // SortedMapKeys returns a sorted slice of keys to the given map.
-// Writing this function never gets old.
 func SortedMapKeys(m map[string]string) []string {
 	keys := make([]string, len(m))
 	i := 0
@@ -23,26 +27,52 @@ func SortedMapKeys(m map[string]string) []string {
 	return keys
 }
 
+// Old map-based methods for compatibility with other kyaml files (like rnode.go)
 func (rn *RNode) LoadMapIntoConfigMapData(m map[string]string) error {
+	pairs := make([]Pair, 0, len(m))
 	for _, k := range SortedMapKeys(m) {
-		fldName, vrN := makeConfigMapValueRNode(m[k])
+		pairs = append(pairs, Pair{Key: k, Value: m[k]})
+	}
+	return rn.LoadPairsIntoConfigMapData(pairs)
+}
+
+func (rn *RNode) LoadMapIntoConfigMapBinaryData(m map[string]string) error {
+	pairs := make([]Pair, 0, len(m))
+	for _, k := range SortedMapKeys(m) {
+		pairs = append(pairs, Pair{Key: k, Value: m[k]})
+	}
+	return rn.LoadPairsIntoConfigMapBinaryData(pairs)
+}
+
+func (rn *RNode) LoadMapIntoSecretData(m map[string]string) error {
+	pairs := make([]Pair, 0, len(m))
+	for _, k := range SortedMapKeys(m) {
+		pairs = append(pairs, Pair{Key: k, Value: m[k]})
+	}
+	return rn.LoadPairsIntoSecretData(pairs)
+}
+
+// New pair-based methods to preserve input sequence order
+func (rn *RNode) LoadPairsIntoConfigMapData(pairs []Pair) error {
+	for _, p := range pairs {
+		fldName, vrN := makeConfigMapValueRNode(p.Value)
 		if _, err := rn.Pipe(
 			LookupCreate(MappingNode, fldName),
-			SetField(k, vrN)); err != nil {
+			SetField(p.Key, vrN)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (rn *RNode) LoadMapIntoConfigMapBinaryData(m map[string]string) error {
-	for _, k := range SortedMapKeys(m) {
-		_, vrN := makeConfigMapValueRNode(m[k])
+func (rn *RNode) LoadPairsIntoConfigMapBinaryData(pairs []Pair) error {
+	for _, p := range pairs {
+		_, vrN := makeConfigMapValueRNode(p.Value)
 		// we know this is binary data
 		fldName := BinaryDataField
 		if _, err := rn.Pipe(
 			LookupCreate(MappingNode, fldName),
-			SetField(k, vrN)); err != nil {
+			SetField(p.Key, vrN)); err != nil {
 			return err
 		}
 	}
@@ -65,14 +95,14 @@ func makeConfigMapValueRNode(s string) (field string, rN *RNode) {
 	return field, NewRNode(yN)
 }
 
-func (rn *RNode) LoadMapIntoSecretData(m map[string]string) error {
+func (rn *RNode) LoadPairsIntoSecretData(pairs []Pair) error {
 	mapNode, err := rn.Pipe(LookupCreate(MappingNode, DataField))
 	if err != nil {
 		return err
 	}
-	for _, k := range SortedMapKeys(m) {
-		vrN := makeSecretValueRNode(m[k])
-		if _, err := mapNode.Pipe(SetField(k, vrN)); err != nil {
+	for _, p := range pairs {
+		vrN := makeSecretValueRNode(p.Value)
+		if _, err := mapNode.Pipe(SetField(p.Key, vrN)); err != nil {
 			return err
 		}
 	}
@@ -83,10 +113,6 @@ func (rn *RNode) LoadMapIntoSecretData(m map[string]string) error {
 // or lack thereof to UTF-8.
 func makeSecretValueRNode(s string) *RNode {
 	yN := &Node{Kind: ScalarNode}
-	// Purposely don't use YAML tags to identify the data as being plain text or
-	// binary.  It kubernetes Secrets the values in the `data` map are expected
-	// to be base64 encoded, and in ConfigMaps that same can be said for the
-	// values in the `binaryData` field.
 	yN.Tag = NodeTagString
 	yN.Value = encodeBase64(s)
 	if strings.Contains(yN.Value, "\n") {
