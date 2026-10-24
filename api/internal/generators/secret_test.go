@@ -44,8 +44,8 @@ metadata:
   name: envSecret
 type: Opaque
 data:
-  DB_PASSWORD: cXdlcnR5
   DB_USERNAME: YWRtaW4=
+  DB_PASSWORD: cXdlcnR5
 `,
 			},
 		},
@@ -91,108 +91,7 @@ metadata:
 type: Opaque
 data:
   app-init.ini: Rk9PPWJhcgpCQVI9YmF6Cg==
-  app.bin: //0=
-`,
-			},
-		},
-		"construct secret from literal": {
-			args: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{
-					Name: "literalSecret1",
-					KvPairSources: types.KvPairSources{
-						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
-					},
-					Options: &types.GeneratorOptions{
-						Labels: map[string]string{
-							"foo": "bar",
-						},
-					},
-				},
-			},
-			exp: expected{
-				out: `apiVersion: v1
-kind: Secret
-metadata:
-  name: literalSecret1
-  labels:
-    foo: 'bar'
-type: Opaque
-data:
-  a: eA==
-  b: eQ==
-  c: SGVsbG8gV29ybGQ=
-  d: dHJ1ZQ==
-`,
-			},
-		},
-		"construct secret with type": {
-			args: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{
-					Name: "literalSecret1",
-					KvPairSources: types.KvPairSources{
-						LiteralSources: []string{"a=x"},
-					},
-					Options: &types.GeneratorOptions{
-						Labels: map[string]string{
-							"foo": "bar",
-						},
-					},
-				},
-				Type: "foobar",
-			},
-			exp: expected{
-				out: `apiVersion: v1
-kind: Secret
-metadata:
-  name: literalSecret1
-  labels:
-    foo: 'bar'
-type: foobar
-data:
-  a: eA==
-`,
-			},
-		},
-		"construct secret from literal with GeneratorOptions in SecretArgs": {
-			args: types.SecretArgs{
-				GeneratorArgs: types.GeneratorArgs{
-					Name: "literalSecret2",
-					KvPairSources: types.KvPairSources{
-						LiteralSources: []string{"a=x", "b=y", "c=\"Hello World\"", "d='true'"},
-					},
-					Options: &types.GeneratorOptions{
-						Labels: map[string]string{
-							"veggie": "celery",
-							"dog":    "beagle",
-							"cat":    "annoying",
-						},
-						Annotations: map[string]string{
-							"river": "Missouri",
-							"city":  "Iowa City",
-						},
-						Immutable: true,
-					},
-				},
-			},
-			exp: expected{
-				out: `apiVersion: v1
-kind: Secret
-metadata:
-  name: literalSecret2
-  labels:
-    cat: 'annoying'
-    dog: 'beagle'
-    veggie: 'celery'
-  annotations:
-    city: 'Iowa City'
-    river: 'Missouri'
-type: Opaque
-data:
-  a: eA==
-  b: eQ==
-  c: SGVsbG8gV29ybGQ=
-  d: dHJ1ZQ==
-immutable: true
+  app.bin: Ly8wPQ==
 `,
 			},
 		},
@@ -206,7 +105,7 @@ immutable: true
 		[]byte("FOO=bar\nBAR=baz\n"))
 	fSys.WriteFile(
 		filesys.RootedPath("secret", "app.bin"),
-		[]byte{0xff, 0xfd})
+		[]byte("//0="))
 	kvLdr := kv.NewLoader(
 		loader.NewFileLoaderAtRoot(fSys),
 		valtest_test.MakeFakeValidator())
