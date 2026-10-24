@@ -59,8 +59,8 @@ kind: ConfigMap
 metadata:
   name: envConfigMap
 data:
-  DB_PASSWORD: qwerty
   DB_USERNAME: admin
+  DB_PASSWORD: qwerty
 `,
 			},
 		},

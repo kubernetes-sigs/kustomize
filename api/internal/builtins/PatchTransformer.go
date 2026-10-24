@@ -19,12 +19,13 @@ type PatchTransformerPlugin struct {
 	smPatches   []*resource.Resource // strategic-merge patches
 	jsonPatches jsonpatch.Patch      // json6902 patch
 	// patchText is pure patch text created by Path or Patch
-	patchText string
+	patchText   string
 	// patchSource is patch source message
 	patchSource string
 	Path        string           `json:"path,omitempty"    yaml:"path,omitempty"`
 	Patch       string           `json:"patch,omitempty"   yaml:"patch,omitempty"`
 	Target      *types.Selector  `json:"target,omitempty"  yaml:"target,omitempty"`
+	NotTarget   *types.Selector  `json:"notTarget,omitempty" yaml:"notTarget,omitempty"`
 	Options     *types.PatchArgs `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
@@ -111,6 +112,29 @@ func (p *PatchTransformerPlugin) transformStrategicMerge(m resmap.ResMap) error 
 		if err != nil {
 			return fmt.Errorf("unable to find patch target %q in `resources`: %w", p.Target, err)
 		}
+
+		// Filter out resources matching NotTarget if provided
+		if p.NotTarget != nil {
+			excluded, err := m.Select(*p.NotTarget)
+			if err != nil {
+				return err
+			}
+			var filtered []*resource.Resource
+			for _, res := range selected {
+				excludedMatch := false
+				for _, ex := range excluded {
+					if res.CurId() == ex.CurId() {
+						excludedMatch = true
+						break
+					}
+				}
+				if !excludedMatch {
+					filtered = append(filtered, res)
+				}
+			}
+			selected = filtered
+		}
+
 		return errors.Wrap(m.ApplySmPatch(resource.MakeIdSet(selected), patch))
 	}
 
@@ -135,6 +159,29 @@ func (p *PatchTransformerPlugin) transformJson6902(m resmap.ResMap) error {
 	if err != nil {
 		return err
 	}
+
+	// Filter out resources matching NotTarget if provided
+	if p.NotTarget != nil {
+		excluded, err := m.Select(*p.NotTarget)
+		if err != nil {
+			return err
+		}
+		var filtered []*resource.Resource
+		for _, res := range resources {
+			excludedMatch := false
+			for _, ex := range excluded {
+				if res.CurId() == ex.CurId() {
+					excludedMatch = true
+					break
+				}
+			}
+			if !excludedMatch {
+				filtered = append(filtered, res)
+			}
+		}
+		resources = filtered
+	}
+
 	for _, res := range resources {
 		res.StorePreviousId()
 		internalAnnotations := kioutil.GetInternalAnnotations(&res.RNode)

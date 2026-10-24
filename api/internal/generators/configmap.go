@@ -33,11 +33,15 @@ func MakeConfigMap(
 	if err != nil {
 		return nil, err
 	}
-	m, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
+	pairs, err := makeValidatedDataMap(ldr, args.Name, args.KvPairSources)
 	if err != nil {
 		return nil, err
 	}
-	if err = rn.LoadMapIntoConfigMapData(m); err != nil {
+	yamlPairs := make([]yaml.Pair, len(pairs))
+	for i, p := range pairs {
+		yamlPairs[i] = yaml.Pair{Key: p.Key, Value: p.Value}
+	}
+	if err = rn.LoadPairsIntoConfigMapData(yamlPairs); err != nil {
 		return nil, err
 	}
 	err = copyLabelsAndAnnotations(rn, args.Options)
