@@ -36,8 +36,7 @@ type Target struct {
 
 	// NotSelector selects the resources to exclude
 	// from those included by overly broad selectors.
-	// TODO: implement this?
-	// NotSelector *types.Selector `json:"notSelector,omitempty" yaml:"notSelector,omitempty"`
+	NotSelector *types.Selector `json:"notSelector,omitempty" yaml:"notSelector,omitempty"`
 
 	// FieldPath is a JSON-style path to the field intended to hold the value.
 	FieldPath string `json:"fieldPath,omitempty" yaml:"fieldPath,omitempty"`
@@ -76,7 +75,11 @@ func (p *ValueAddTransformerPlugin) Config(h *resmap.PluginHelpers, c []byte) er
 		if err = validateSelector(target.Selector); err != nil {
 			return err
 		}
-		// TODO: call validateSelector(target.NotSelector) if field added.
+		if target.NotSelector != nil {
+			if err = validateSelector(target.NotSelector); err != nil {
+				return err
+			}
+		}
 		if err = validateJsonFieldPath(target.FieldPath); err != nil {
 			return err
 		}
@@ -113,7 +116,29 @@ func (p *ValueAddTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 				return err
 			}
 		}
-		// TODO: consider t.NotSelector if implemented
+
+		// Filter out resources matching NotSelector if provided
+		if t.NotSelector != nil {
+			excluded, err := m.Select(*t.NotSelector)
+			if err != nil {
+				return err
+			}
+			var filtered []*resource.Resource
+			for _, res := range resources {
+				excludedMatch := false
+				for _, ex := range excluded {
+					if res.CurId() == ex.CurId() {
+						excludedMatch = true
+						break
+					}
+				}
+				if !excludedMatch {
+					filtered = append(filtered, res)
+				}
+			}
+			resources = filtered
+		}
+
 		for _, res := range resources {
 			if t.FieldPath == types.MetadataNamespacePath {
 				err = res.ApplyFilter(namespace.Filter{
@@ -133,7 +158,6 @@ func (p *ValueAddTransformerPlugin) Transform(m resmap.ResMap) (err error) {
 	}
 	return nil
 }
-
 func NewValueAddTransformerPlugin() resmap.TransformerPlugin {
 	return &ValueAddTransformerPlugin{}
 }
