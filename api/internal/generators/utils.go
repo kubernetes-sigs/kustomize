@@ -6,6 +6,7 @@ package generators
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -37,26 +38,29 @@ kind: %s
 }
 
 func makeValidatedDataMap(
-	ldr ifc.KvLoader, name string, sources types.KvPairSources) (map[string]string, error) {
+	ldr ifc.KvLoader, name string, sources types.KvPairSources) ([]types.Pair, error) {
 	pairs, err := ldr.Load(sources)
 	if err != nil {
 		return nil, errors.WrapPrefix(err, "loading KV pairs", 0)
 	}
-	knownKeys := make(map[string]string)
-	for _, p := range pairs {
+	knownKeys := make(map[string]bool)
+	for i, p := range pairs {
+		// Normalize path and use base name for file paths / keys
+		p.Key = path.Base(filepath.ToSlash(p.Key))
+		pairs[i].Key = p.Key
+
 		// legal key: alphanumeric characters, '-', '_' or '.'
 		if err := ldr.Validator().ErrIfInvalidKey(p.Key); err != nil {
 			return nil, err
 		}
-		if _, ok := knownKeys[p.Key]; ok {
+		if knownKeys[p.Key] {
 			return nil, errors.Errorf(
 				"configmap %s illegally repeats the key `%s`", name, p.Key)
 		}
-		knownKeys[p.Key] = p.Value
+		knownKeys[p.Key] = true
 	}
-	return knownKeys, nil
+	return pairs, nil
 }
-
 // copyLabelsAndAnnotations copies labels and annotations from
 // GeneratorOptions into the given object.
 func copyLabelsAndAnnotations(
