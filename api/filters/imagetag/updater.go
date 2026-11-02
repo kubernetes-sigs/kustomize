@@ -47,7 +47,10 @@ func (u imageTagUpdater) SetImageValue(rn *yaml.RNode) error {
 	case u.ImageTag.Digest != "":
 		tag = ""
 		digest = u.ImageTag.Digest
-	case u.ImageTag.TagSuffix != "":
+	case u.ImageTag.TagSuffix != "" && tag != "":
+		// TagSuffix modifies the original tag, so it is only
+		// meaningful when the image has a tag; leave a tag-less
+		// image (e.g. digest-pinned) untouched.
 		tag += u.ImageTag.TagSuffix
 		digest = ""
 	}
