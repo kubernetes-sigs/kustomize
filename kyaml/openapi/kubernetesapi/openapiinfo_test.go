@@ -7,11 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
-func TestLegacyMetadataMatchesBuiltinBundle(t *testing.T) {
-	require.Equal(t, openapi.DefaultOpenAPI, DefaultOpenAPI)
-	require.Equal(t, openapi.BuiltinSchemaInfo, Info)
+func TestLegacyMetadataRemainsStable(t *testing.T) {
+	require.Equal(t, "v1.21.2", DefaultOpenAPI)
+	require.Equal(t, "{title:Kubernetes,version:v1.21.2}", Info)
 	require.Contains(t, OpenAPIMustAsset, DefaultOpenAPI)
 }
