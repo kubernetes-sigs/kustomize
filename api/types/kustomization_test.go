@@ -5,6 +5,7 @@ package types
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -314,6 +315,64 @@ unknown`),
 				t.Errorf("Kustomization.Unmarshal() error = %v, wantErr %v", err, tt.errMsg)
 			}
 		})
+	}
+}
+
+func TestUnmarshalInlinePatchTypeError(t *testing.T) {
+	for _, field := range []string{"patches", "patchesJson6902"} {
+		for _, patch := range []struct {
+			name  string
+			value string
+		}{
+			{name: "sequence", value: "[{op: add, path: /metadata/labels, value: {app: test}}]"},
+			{name: "mapping", value: "{apiVersion: v1, kind: ConfigMap, metadata: {name: test}}"},
+		} {
+			t.Run(field+"/"+patch.name, func(t *testing.T) {
+				k := Kustomization{NamePrefix: "unchanged-"}
+				err := k.Unmarshal([]byte(field + ":\n- patch: " + patch.value + "\n"))
+				if err == nil {
+					t.Fatal("expected an error for a non-string inline patch")
+				}
+				want := field + ".patch must be a string; use 'patch: |' for a multiline patch"
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("error = %q, want guidance %q", err, want)
+				}
+				if !reflect.DeepEqual(k, Kustomization{NamePrefix: "unchanged-"}) {
+					t.Errorf("failed unmarshal modified the receiver: %#v", k)
+				}
+			})
+		}
+	}
+}
+
+func TestUnmarshalInlinePatchString(t *testing.T) {
+	for _, field := range []string{"patches", "patchesJson6902"} {
+		t.Run(field, func(t *testing.T) {
+			var k Kustomization
+			err := k.Unmarshal([]byte(field + ":\n- patch: |\n    - op: add\n      path: /metadata/labels\n      value: {app: test}\n"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			patches := k.Patches
+			if field == "patchesJson6902" {
+				patches = k.PatchesJson6902
+			}
+			want := "- op: add\n  path: /metadata/labels\n  value: {app: test}\n"
+			if len(patches) != 1 || patches[0].Patch != want {
+				t.Errorf("patches = %#v, want one patch containing %q", patches, want)
+			}
+		})
+	}
+}
+
+func TestUnmarshal_NonPatchTypeError(t *testing.T) {
+	var k Kustomization
+	err := k.Unmarshal([]byte("patches:\n- path: [patch.yaml]\n"))
+	if err == nil {
+		t.Fatal("expected an error for a non-string patch file path")
+	}
+	if strings.Contains(err.Error(), "patch: |") {
+		t.Errorf("unrelated type error received inline patch guidance: %v", err)
 	}
 }
 
