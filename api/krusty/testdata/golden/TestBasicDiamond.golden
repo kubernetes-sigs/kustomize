@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: prod-t-kirk-storefront
+spec:
+  numReplicas: 10000
+  type: Confident
+---
+apiVersion: v1
+data:
+  phaser: caress
+kind: ConfigMap
+metadata:
+  name: prod-t-kirk-settings
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: prod-t-spock-storefront
+spec:
+  numReplicas: 1
+  type: Logical
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: prod-t-bones-storefront
+spec:
+  mood: Cantankerous
+  numReplicas: 1
+  type: Concerned
+---
+apiVersion: v1
+data:
+  guardian: ofTheGalaxy
+  zone: twilight
+kind: ConfigMap
+metadata:
+  name: prod-t-federation

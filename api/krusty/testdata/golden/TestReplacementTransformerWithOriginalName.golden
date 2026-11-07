@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefix2-prefix1-target
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefix2-prefix1-source
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:newtag
+        name: nginx

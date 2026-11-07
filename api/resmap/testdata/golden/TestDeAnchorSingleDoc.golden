@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  color: blue
+  feeling: blue
+kind: ConfigMap
+metadata:
+  name: wildcard

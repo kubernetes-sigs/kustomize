@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  month: "12"
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: bob-bk46gm59c6

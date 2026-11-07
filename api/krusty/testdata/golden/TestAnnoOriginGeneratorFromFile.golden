@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      path: service.yaml
+  name: apple
+---
+apiVersion: v1
+data:
+  crisis: "true"
+  fruit: Indian Gooseberry
+  year: "2020"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: configmap.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+        name: notImportantHere
+  name: bob-79t79mt227

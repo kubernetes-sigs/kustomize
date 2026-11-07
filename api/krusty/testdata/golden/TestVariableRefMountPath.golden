@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: NAMESPACE
+          value: my-namespace
+        image: busybox
+        name: app
+        volumeMounts:
+        - mountPath: /my-namespace
+          name: my-volume
+      volumes:
+      - emptyDir: {}
+        name: my-volume
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace

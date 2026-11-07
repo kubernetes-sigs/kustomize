@@ -1,0 +1,54 @@
+apiVersion: v1
+group: apps
+kind: Deployment
+metadata:
+  name: deploy1
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:v2
+        name: ngnix
+      - image: foobar@sha256:24a0c4b4
+        name: repliaced-with-digest
+      - image: my-postgres:v3
+        name: postgresdb
+      initContainers:
+      - image: my-nginx:previous
+        name: nginx2
+      - image: myprivaterepohostname:1234/my/cool-alpine:1.8.0
+        name: init-alpine
+---
+kind: randomKind
+metadata:
+  name: random
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:v2
+        name: ngnix1
+spec2:
+  template:
+    spec:
+      containers:
+      - image: nginx:v2
+        name: nginx3
+      - image: my-nginx:previous
+        name: nginx4
+spec3:
+  template:
+    spec:
+      initContainers:
+      - image: my-postgres:v3
+        name: postgresdb
+      - image: my-docker@sha256:25a0d4b4
+        name: init-docker
+      - image: myprivaterepohostname:1234/my/image:v1.0.1
+        name: myImage
+      - image: myprivaterepohostname:1234/my/image:v1.0.1
+        name: myImage2
+      - image: my-app-image:v1
+        name: my-app
+      - image: my-cool-app:latest
+        name: my-cool-app

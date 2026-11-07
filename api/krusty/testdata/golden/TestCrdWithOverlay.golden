@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  PATH: yellowBrickRoad
+kind: Secret
+metadata:
+  name: prod-x-crdsecret
+---
+apiVersion: jingfang.example.com/v1
+kind: MyKind
+metadata:
+  name: prod-x-mykind
+spec:
+  beeRef:
+    name: prod-x-bee
+  secretRef:
+    name: prod-x-crdsecret
+---
+apiVersion: v1beta1
+kind: Bee
+metadata:
+  name: prod-x-bee
+spec:
+  action: makehoney
