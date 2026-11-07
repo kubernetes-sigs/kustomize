@@ -246,20 +246,20 @@ func newLoaderAtGitClone(
 	cleaner := repoSpec.Cleaner(fSys)
 	err := cloner(repoSpec)
 	if err != nil {
-		cleaner()
+		_ = cleaner()
 		return nil, err
 	}
 	root, f, err := fSys.CleanedAbs(repoSpec.AbsPath())
 	if err != nil {
-		cleaner()
-		return nil, err
+		_ = cleaner()
+		return nil, errors.Wrap(err)
 	}
 	// We don't know that the path requested in repoSpec
 	// is a directory until we actually clone it and look
 	// inside.  That just happened, hence the error check
 	// is here.
 	if f != "" {
-		cleaner()
+		_ = cleaner()
 		return nil, fmt.Errorf(
 			"'%s' refers to file '%s'; expecting directory",
 			repoSpec.AbsPath(), f)
@@ -452,7 +452,11 @@ func (fl *FileLoader) Load(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fl.fSys.ReadFile(path)
+	content, err := fl.fSys.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return content, nil
 }
 
 func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
