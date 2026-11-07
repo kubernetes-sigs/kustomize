@@ -868,3 +868,61 @@ spec:
   - Deny
 `)
 }
+
+func TestNameReferenceGatewayCertificateRefs(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- gateway.yaml
+
+secretGenerator:
+- name: tls-certificate
+  type: kubernetes.io/tls
+  literals:
+  - tls.crt=cert
+  - tls.key=key
+`)
+	th.WriteF("gateway.yaml", `
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway-web
+spec:
+  gatewayClassName: traefik
+  listeners:
+  - name: websecure
+    protocol: HTTPS
+    port: 8443
+    tls:
+      certificateRefs:
+      - kind: Secret
+        name: tls-certificate
+`)
+
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway-web
+spec:
+  gatewayClassName: traefik
+  listeners:
+  - name: websecure
+    port: 8443
+    protocol: HTTPS
+    tls:
+      certificateRefs:
+      - kind: Secret
+        name: tls-certificate-8gkh55dgdg
+---
+apiVersion: v1
+data:
+  tls.crt: Y2VydA==
+  tls.key: a2V5
+kind: Secret
+metadata:
+  name: tls-certificate-8gkh55dgdg
+type: kubernetes.io/tls
+`)
+}
