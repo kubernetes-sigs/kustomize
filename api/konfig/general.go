@@ -49,4 +49,7 @@ const (
 
 	// Annotation key for marking helm-generated resources to skip namespace transformation
 	HelmGeneratedAnnotation = ConfigAnnoDomain + "/helm-generated"
+
+	// Annotation key for preserving the effective Helm chart namespace during build-time transforms.
+	HelmChartNamespaceAnnotation = ConfigAnnoDomain + "/helm-chart-namespace"
 )

@@ -50,6 +50,7 @@ var BuildAnnotations = []string{
 	kioutil.LegacyIdAnnotation,
 
 	konfig.HelmGeneratedAnnotation,
+	konfig.HelmChartNamespaceAnnotation,
 }
 
 func (r *Resource) ResetRNode(incoming *Resource) {
