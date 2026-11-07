@@ -50,11 +50,20 @@ See https://book.kubebuilder.io/reference/generating-crd.html#validation.
 
 You can get an OpenAPI document like this by fetching the OpenAPI
 document from your locally favored cluster with the command
-`kustomize openapi fetch`. Kustomize will use the OpenAPI extensions
-`x-kubernetes-patch-merge-key` and `x-kubernetes-patch-strategy` to
-perform a strategic merge. `x-kubernetes-patch-strategy` should be set
-to "merge", and you can set your merge key to whatever you like. Below,
-our custom resource inherits merge keys from `PodTemplateSpec`. 
+`kustomize openapi fetch`. For CRD list-maps, use the structural-schema
+annotations `x-kubernetes-list-type: map` and
+`x-kubernetes-list-map-keys`; all listed keys identify a list item. Kustomize
+also supports the legacy built-in-schema annotations
+`x-kubernetes-patch-merge-key` and `x-kubernetes-patch-strategy` (set the
+strategy to `merge`). A valid CRD-derived schema does not need the legacy pair.
+
+The example below includes both annotation pairs so that it also works with
+older Kustomize versions. When both pairs are present, current Kustomize uses
+the structural list-map annotations.
+
+The `openapi.path` field points to an OpenAPI document, not directly to a
+CustomResourceDefinition manifest. In this example, the custom resource schema
+references `PodTemplateSpec` and includes its list merge metadata.
 
 <!-- @addCustomSchema @testAgainstLatestRelease -->
 ```
