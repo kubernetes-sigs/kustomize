@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -61,7 +62,7 @@ func TestScopeFlag(t *testing.T) {
 	kustomizations := map[string]string{
 		filepath.Join("target", "kustomization.yaml"): fmt.Sprintf(`resources:
 - %s
-`, filepath.Join("..", "base")),
+`, path.Join("..", "base")),
 		filepath.Join("base", "kustomization.yaml"): `resources:
 - deployment.yaml
 `,
@@ -109,7 +110,7 @@ func TestNoVerifyFlag(t *testing.T) {
 	loctest.SetupDir(t, expected, target.Join("dst"), kustomization)
 	loctest.CheckFs(t, target.String(), expected, actual)
 
-	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
+	successMsg := fmt.Sprintf(`SUCCESS: localized %q to directory %s
 `, target.String(), target.Join("dst"))
 	verifyMsg := "VERIFICATION"
 	require.NotContains(t, buffy.String(), verifyMsg)
@@ -204,7 +205,7 @@ func TestOutput(t *testing.T) {
 
 	verifyMsg := "VERIFICATION SUCCESS"
 	require.Contains(t, buffy.String(), verifyMsg)
-	successMsg := fmt.Sprintf(`SUCCESS: localized "%s" to directory %s
+	successMsg := fmt.Sprintf(`SUCCESS: localized %q to directory %s
 `, target.String(), target.Join("dst"))
 	require.Contains(t, buffy.String(), successMsg)
 }

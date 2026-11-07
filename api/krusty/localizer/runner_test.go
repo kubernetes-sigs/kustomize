@@ -5,7 +5,9 @@ package localizer_test
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -216,7 +218,7 @@ func link(t *testing.T, testDir filesys.ConfirmedDir, links map[string]string) {
 func simplePathAndFiles(t *testing.T) (locPath string, files map[string]string) {
 	t.Helper()
 
-	locPath = filepath.Join(LocalizeDir, "github.com",
+	locPath = path.Join(LocalizeDir, "github.com",
 		"kubernetes-sigs", "kustomize", "kustomize", "v4.5.7",
 		"api", "krusty", "testdata", "localize", "simple")
 	files = map[string]string{
@@ -230,7 +232,7 @@ func simplePathAndFiles(t *testing.T) (locPath string, files map[string]string) 
 func remotePathAndFiles(t *testing.T) (locPath string, files map[string]string) {
 	t.Helper()
 
-	locPath = filepath.Join(LocalizeDir, "github.com",
+	locPath = path.Join(LocalizeDir, "github.com",
 		"kubernetes-sigs", "kustomize", "master",
 		"api", "krusty", "testdata", "localize", "remote")
 	simplePath, simpleFiles := simplePathAndFiles(t)
@@ -255,7 +257,7 @@ func TestWorkingDir(t *testing.T) {
 	files := map[string]string{
 		filepath.Join("target", "kustomization.yaml"): fmt.Sprintf(`resources:
 - %s
-`, filepath.Join("..", "base")),
+`, path.Join("..", "base")),
 		filepath.Join("base", "kustomization.yaml"): `resources:
 - deployment.yaml
 `,
@@ -310,7 +312,7 @@ func TestLoaderSymlinks(t *testing.T) {
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
 - base
-`, filepath.Join("nested", "file")),
+`, path.Join("nested", "file")),
 		filepath.Join("base", "kustomization.yaml"): `namePrefix: test-
 `,
 		filepath.Join("nested", "file"): simpleDeployment,
@@ -318,7 +320,18 @@ func TestLoaderSymlinks(t *testing.T) {
 	CheckFs(t, dst, fsExpected, fsActual)
 }
 
+// disableGitAutoCRLF keeps Git for Windows, which enables core.autocrlf by
+// default, from checking out remote files with CRLF line endings that the
+// expected files lack.
+func disableGitAutoCRLF(t *testing.T) {
+	t.Helper()
+	t.Setenv("GIT_CONFIG_COUNT", "1")
+	t.Setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
+	t.Setenv("GIT_CONFIG_VALUE_0", "false")
+}
+
 func TestRemoteTargetDefaultDst(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fsExpected, fsActual, testDir := PrepareFs(t, nil, nil)
 	SetWorkingDir(t, testDir.String())
 
@@ -336,6 +349,9 @@ func TestRemoteTargetDefaultDst(t *testing.T) {
 
 func TestBadArgs(t *testing.T) {
 	badDst := filepath.Join("non-existing", "dst")
+	// The OS error text for a missing parent directory differs by platform.
+	var mkdirErr *fs.PathError
+	require.ErrorAs(t, os.Mkdir(filepath.Join(t.TempDir(), badDst), 0o700), &mkdirErr)
 
 	for name, test := range map[string]struct {
 		target string
@@ -355,7 +371,7 @@ func TestBadArgs(t *testing.T) {
 		"dst_in_non-existing_dir": {
 			target: ".",
 			dst:    badDst,
-			err:    fmt.Sprintf(`invalid localize destination "%s": unable to create localize destination directory: mkdir %s: no such file or directory`, badDst, badDst),
+			err:    fmt.Sprintf(`invalid localize destination %q: unable to create localize destination directory: mkdir %s: %v`, badDst, badDst, mkdirErr.Err),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -389,7 +405,7 @@ openapi:
 	require.NoError(t, err)
 	require.Equal(t, newDir, dst)
 
-	localizedPath := filepath.Join(LocalizeDir, "raw.githubusercontent.com",
+	localizedPath := path.Join(LocalizeDir, "raw.githubusercontent.com",
 		"kubernetes-sigs", "kustomize", "kustomize", "v4.5.7", "api", "krusty",
 		"testdata", "customschema.json")
 	SetupDir(t, fsExpected, dst, map[string]string{
@@ -400,6 +416,7 @@ openapi:
 }
 
 func TestRemoteRoot(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`resources:
 - %s
@@ -422,6 +439,7 @@ func TestRemoteRoot(t *testing.T) {
 }
 
 func TestNestedRemoteRoots(t *testing.T) {
+	disableGitAutoCRLF(t)
 	fsExpected, fsActual, testDir := PrepareFs(t, nil, map[string]string{
 		// TODO(annasong): Change the ref to the release after kustomize/v4.5.7.
 		// We need changes to remote post-kustomize/v4.5.7.
@@ -512,7 +530,7 @@ func TestHelmNestedHome(t *testing.T) {
 	files := map[string]string{
 		"kustomization.yaml": fmt.Sprintf(`helmGlobals:
   chartHome: %s
-`, filepath.Join("nested", "dirs", "home")),
+`, path.Join("nested", "dirs", "home")),
 		filepath.Join("nested", "dirs", "home", "name", "values.yaml"): `
 minecraftServer:
   difficulty: peaceful
@@ -569,7 +587,7 @@ helmGlobals:
   valuesFile: myValues.yaml
 helmGlobals:
   chartHome: %s
-`, filepath.Join("..", "home")),
+`, path.Join("..", "home")),
 		filepath.Join("target", "myValues.yaml"):     valuesFile,
 		filepath.Join("home", "name", "values.yaml"): valuesFile,
 	})

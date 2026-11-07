@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -115,7 +116,18 @@ func TestLocFilePath(t *testing.T) {
 	}
 }
 
+// skipOnWindows skips tests that create the file names localize generates
+// on disk, where Windows rejects some of them: ':' in an IPv6 host, '*',
+// and a directory named "..." (Windows drops trailing dots).
+func skipOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("localize generates file names that Windows cannot hold, see #6293")
+	}
+}
+
 func TestLocFilePathColon(t *testing.T) {
+	skipOnWindows(t)
 	req := require.New(t)
 
 	// The colon is special because it was once used as the unix file separator.
@@ -139,6 +151,7 @@ func TestLocFilePathColon(t *testing.T) {
 }
 
 func TestLocFilePath_SpecialChar(t *testing.T) {
+	skipOnWindows(t)
 	req := require.New(t)
 
 	// The wild card character is one of the legal uri characters with more meaning
@@ -176,6 +189,9 @@ func TestLocFilePath_SpecialFiles(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			if name == "hidden_files" {
+				skipOnWindows(t)
+			}
 			req := require.New(t)
 
 			expectedPath := simpleJoin(t, LocalizeDir, "host", tFSys.pathDir, tFSys.pathFile)
@@ -260,6 +276,9 @@ func TestLocRootPath_URLComponents(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			if name == "IPv6" {
+				skipOnWindows(t)
+			}
 			u := fmt.Sprintf(test.urlf, "path/to/root")
 			path := simpleJoin(t, LocalizeDir, test.path, "path", "to", "root")
 
@@ -303,24 +322,30 @@ func TestLocRootPath_SymlinkPath(t *testing.T) {
 }
 
 func TestCleanedRelativePath(t *testing.T) {
+	// A path rooted at "/" has no volume, so it is not absolute on Windows.
+	vol := ""
+	if runtime.GOOS == "windows" {
+		vol = "C:"
+	}
 	fSys := filesys.MakeFsInMemory()
-	require.NoError(t, fSys.MkdirAll("/root/test"))
-	require.NoError(t, fSys.WriteFile("/root/test/file.yaml", []byte("")))
-	require.NoError(t, fSys.WriteFile("/root/filetwo.yaml", []byte("")))
+	require.NoError(t, fSys.MkdirAll(vol+"/root/test"))
+	require.NoError(t, fSys.WriteFile(vol+"/root/test/file.yaml", []byte("")))
+	require.NoError(t, fSys.WriteFile(vol+"/root/filetwo.yaml", []byte("")))
+	root := filesys.ConfirmedDir(vol + "/root/")
 
 	// Absolute path is cleaned to relative path
-	cleanedPath := cleanedRelativePath(fSys, "/root/", "/root/test/file.yaml")
-	require.Equal(t, "test/file.yaml", cleanedPath)
+	cleanedPath := cleanedRelativePath(fSys, root, vol+"/root/test/file.yaml")
+	require.Equal(t, filepath.FromSlash("test/file.yaml"), cleanedPath)
 
 	// Winding absolute path is cleaned to relative path
-	cleanedPath = cleanedRelativePath(fSys, "/root/", "/root/test/../filetwo.yaml")
+	cleanedPath = cleanedRelativePath(fSys, root, vol+"/root/test/../filetwo.yaml")
 	require.Equal(t, "filetwo.yaml", cleanedPath)
 
 	// Already clean relative path stays the same
-	cleanedPath = cleanedRelativePath(fSys, "/root/", "test/file.yaml")
-	require.Equal(t, "test/file.yaml", cleanedPath)
+	cleanedPath = cleanedRelativePath(fSys, root, "test/file.yaml")
+	require.Equal(t, filepath.FromSlash("test/file.yaml"), cleanedPath)
 
 	// Winding relative path is cleaned
-	cleanedPath = cleanedRelativePath(fSys, "/root/", "test/../filetwo.yaml")
+	cleanedPath = cleanedRelativePath(fSys, root, "test/../filetwo.yaml")
 	require.Equal(t, "filetwo.yaml", cleanedPath)
 }

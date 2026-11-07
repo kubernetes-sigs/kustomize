@@ -350,6 +350,7 @@ metadata:
 }
 
 func TestAnnoOriginCustomInlineTransformer(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -422,6 +423,7 @@ spec:
 }
 
 func TestAnnoOriginCustomExecTransformerWithOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
