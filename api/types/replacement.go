@@ -104,6 +104,12 @@ func (tsr *TargetSelectorRegex) RejectsAny(ids []resid.ResId) bool {
 		if r.selector.ResId.IsEmpty() {
 			continue
 		}
+		// A reject that also has a label or annotation selector is evaluated
+		// per node by the filter; matching its ResId here would reject every
+		// resource of that kind, ignoring the label/annotation selector.
+		if r.selector.LabelSelector != "" || r.selector.AnnotationSelector != "" {
+			continue
+		}
 		for _, id := range ids {
 			if r.MatchGvk(id.Gvk) && r.MatchName(id.Name) && r.MatchNamespace(id.Namespace) {
 				return true
