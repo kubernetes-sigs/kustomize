@@ -89,6 +89,8 @@ jobs:
         cache-dependency-path: |
           **/go.sum
       id: go
+    - name: Pre-pull docker e2e base images
+      run: ./hack/prepull-e2e-images.sh
     - name: Test all modules without plugins and released modules
       run: make test-unit-non-plugin-and-non-released
       env:
@@ -136,6 +138,9 @@ jobs:
         cache-dependency-path: |
           **/go.sum
       id: go
+    - name: Pre-pull docker e2e base images
+      if: ${{ matrix.docker-e2e }}
+      run: ./hack/prepull-e2e-images.sh
     - name: Test ${{ matrix.module }}
       run: ${{ matrix.test-cmd }}
       # TODO (#4001): replace specific modules above with this once Windows tests are passing.
