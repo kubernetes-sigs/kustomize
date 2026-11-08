@@ -143,8 +143,8 @@ spec:
 func runOpenApiTest(t *testing.T, test func(t *testing.T)) {
 	t.Helper()
 	openapi.ResetOpenAPI()
+	defer openapi.ResetOpenAPI()
 	test(t)
-	openapi.ResetOpenAPI()
 }
 
 // Test for issue #2825
