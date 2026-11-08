@@ -1,0 +1,6 @@
+apiVersion: apps/v1
+data: {}
+kind: ConfigMap
+metadata:
+  name: whatever
+  namespace: test

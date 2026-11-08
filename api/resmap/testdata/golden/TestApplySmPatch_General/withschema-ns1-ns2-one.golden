@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  namespace: ns1
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        image: nginx
+        name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy1
+  namespace: ns2
+spec:
+  template:
+    metadata:
+      labels:
+        old-label: old-value
+        some-label: some-value
+    spec:
+      containers:
+      - env:
+        - name: SOMEENV
+          value: SOMEVALUE
+        image: nginx
+        name: nginx

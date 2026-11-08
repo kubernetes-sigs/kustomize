@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - configuredIn: kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: SuffixTransformer
+    config.kubernetes.io/origin: |
+      configuredIn: ../base/gener.yaml
+      configuredBy:
+        kind: executable
+        name: demo
+    tshirt-size: small
+  labels:
+    app: nginx
+  name: nginx-foo
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx

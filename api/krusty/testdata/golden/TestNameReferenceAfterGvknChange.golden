@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: new-name
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - valueFrom:
+            configMapKeyRef:
+              key: somekey
+              name: new-name
+        envFrom:
+        - configMapRef:
+            key: somekey
+            name: new-name

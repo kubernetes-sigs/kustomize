@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDep
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - image: registry.k8s.io/governmentCheese
+        name: whatever
+      serviceAccountName: mySvcAcct
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mySvcAcct
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myDep-private
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+      - image: registry.k8s.io/governmentCheese
+        name: whatever
+      serviceAccountName: mySvcAcct-private
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mySvcAcct-private
+  namespace: kube-system

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: papaya
+---
+apiVersion: v1
+kind: Role
+metadata:
+  name: banana
+---
+apiVersion: v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: pomegranate
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: peach
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: pear
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apple
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quince
+---
+apiVersion: v1
+kind: Ingress
+metadata:
+  name: durian
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apricot

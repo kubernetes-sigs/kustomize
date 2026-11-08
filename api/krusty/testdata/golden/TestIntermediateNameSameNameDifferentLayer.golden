@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcp-emea-prod-foo
+spec:
+  replicas: 999
+  template:
+    spec:
+      containers:
+      - image: whatever
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gcp-emea-foo
+spec:
+  template:
+    spec:
+      containers:
+      - image: whatever

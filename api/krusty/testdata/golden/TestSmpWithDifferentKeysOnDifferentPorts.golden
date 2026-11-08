@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    test: label
+  name: myapp
+spec:
+  template:
+    spec:
+      containers:
+      - image: dashicorp/consul:1.9.1
+        name: consul
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8501
+          name: https
+        - containerPort: 8301
+          name: serflan-tcp
+          protocol: TCP
+        - containerPort: 8301
+          name: serflan-udp
+          protocol: UDP
+        - containerPort: 8302
+          name: serfwan
+        - containerPort: 8300
+          name: server
+        - containerPort: 8600
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 8600
+          name: dns-udp
+          protocol: UDP
