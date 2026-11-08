@@ -589,6 +589,45 @@ containers: # {"items":{"$ref": "#/definitions/io.k8s.api.core.v1.Container"},"t
 		},
 	},
 
+	{description: `no infer merge keys merge CRD list-map using composite keys`,
+		source: `
+apiVersion: custom
+kind: Deployment
+ports:
+- containerPort: 80
+  protocol: TCP
+  value: changed
+`,
+		dest: `
+apiVersion: custom
+kind: Deployment
+ports: # {"type":"array","x-kubernetes-list-type":"map","x-kubernetes-list-map-keys":["containerPort","protocol"]}
+- containerPort: 80
+  protocol: TCP
+  value: original-tcp
+  retained: true
+- containerPort: 80
+  protocol: UDP
+  value: original-udp
+`,
+		expected: `
+apiVersion: custom
+kind: Deployment
+ports: # {"type":"array","x-kubernetes-list-type":"map","x-kubernetes-list-map-keys":["containerPort","protocol"]}
+- containerPort: 80
+  protocol: TCP
+  value: changed
+  retained: true
+- containerPort: 80
+  protocol: UDP
+  value: original-udp
+`,
+		infer: false,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListAppend,
+		},
+	},
+
 	{description: `merge_primitive_finalizers`,
 		source: `
 apiVersion: apps/v1

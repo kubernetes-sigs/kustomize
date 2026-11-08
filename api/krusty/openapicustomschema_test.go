@@ -165,6 +165,100 @@ openapi:
 	})
 }
 
+// Test for https://github.com/kubernetes-sigs/kustomize/issues/5878
+func TestCustomOpenApiFieldCRDListMap(t *testing.T) {
+	runOpenApiTest(t, func(t *testing.T) {
+		t.Helper()
+		th := kusttest_test.MakeHarness(t)
+		th.WriteK(".", `
+resources:
+- mycrd.yaml
+openapi:
+  path: mycrd_schema.json
+patches:
+- target:
+    group: example.com
+    version: v1alpha1
+    kind: MyCRD
+    name: service
+  patch: |-
+    apiVersion: example.com/v1alpha1
+    kind: MyCRD
+    metadata:
+      name: service
+    spec:
+      objects:
+      - name: bar
+        value: changed
+`)
+		th.WriteF("mycrd.yaml", `
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  objects:
+  - name: foo
+    value: original-foo
+  - name: bar
+    value: original-bar
+    retained: true
+`)
+		th.WriteF("mycrd_schema.json", `
+{
+  "definitions": {
+    "v1alpha1.MyCRD": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {"type": "string"},
+        "kind": {"type": "string"},
+        "metadata": {"type": "object"},
+        "spec": {
+          "type": "object",
+          "properties": {
+            "objects": {
+              "type": "array",
+              "x-kubernetes-list-type": "map",
+              "x-kubernetes-list-map-keys": ["name"],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "value": {"type": "string"},
+                  "retained": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-kubernetes-group-version-kind": [{
+        "group": "example.com",
+        "version": "v1alpha1",
+        "kind": "MyCRD"
+      }]
+    }
+  }
+}
+`)
+
+		m := th.Run(".", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, `
+apiVersion: example.com/v1alpha1
+kind: MyCRD
+metadata:
+  name: service
+spec:
+  objects:
+  - name: bar
+    retained: true
+    value: changed
+  - name: foo
+    value: original-foo
+`)
+	})
+}
+
 func TestCustomOpenApiFieldBasicUsageWithRemoteSchema(t *testing.T) {
 	runOpenApiTest(t, func(t *testing.T) {
 		t.Helper()

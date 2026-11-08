@@ -46,3 +46,43 @@ func TestIsAssociativeMultipleStrategy(t *testing.T) {
 			&openapi.ResourceSchema{Schema: s},
 			[]*yaml.RNode{}, false))
 }
+
+func TestIsAssociativeCRDListTopology(t *testing.T) {
+	testCases := []struct {
+		name       string
+		extensions map[string]interface{}
+		want       bool
+	}{
+		{
+			name: "map",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type":     "map",
+				"x-kubernetes-list-map-keys": []interface{}{"name"},
+			},
+			want: true,
+		},
+		{
+			name: "atomic",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type": "atomic",
+			},
+			want: false,
+		},
+		{
+			name: "set",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type": "set",
+			},
+			want: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := makeSchema()
+			s.Extensions = tc.extensions
+			assert.Equal(t, tc.want, IsAssociative(
+				&openapi.ResourceSchema{Schema: s}, []*yaml.RNode{}, false))
+		})
+	}
+}
