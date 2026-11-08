@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -270,6 +271,12 @@ func (l *Loader) loadExecOrGoPlugin(resId resid.ResId) (resmap.Configurable, err
 	p := execplugin.NewExecPlugin(absPluginPath)
 	if err = p.ErrIfNotExecutable(); err == nil {
 		return p, nil
+	}
+	if runtime.GOOS == "windows" {
+		// Go's plugin package does not support Windows, so there is
+		// no point falling back to loading a ".so" file.
+		return nil, fmt.Errorf(
+			"%w; Go plugins are not supported on Windows, use an exec plugin", err)
 	}
 	if !os.IsNotExist(err) {
 		// The file exists, but something else is wrong,

@@ -243,7 +243,7 @@ patchesStrategicMerge:
 	}
 	if !strings.Contains(
 		err.Error(),
-		"security; file '/patches/patchAddProbe.yaml' is not in or below '/prod'") {
+		filepath.FromSlash("security; file '/patches/patchAddProbe.yaml' is not in or below '/prod'")) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

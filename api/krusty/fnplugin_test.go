@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,6 +61,7 @@ EOF
 `
 
 func TestFnExecGeneratorInBase(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -144,6 +146,7 @@ spec:
 }
 
 func TestFnExecGeneratorInBaseWithOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -235,6 +238,7 @@ spec:
 }
 
 func TestFnExecGeneratorInOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -326,6 +330,7 @@ spec:
 }
 
 func TestFnExecTransformerInBase(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -381,6 +386,7 @@ type: Opaque
 }
 
 func TestFnExecTransformerInBaseWithOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -442,6 +448,7 @@ type: Opaque
 }
 
 func TestFnExecTransformerInOverlay(t *testing.T) {
+	skipIfWindows(t)
 	fSys := filesys.MakeFsOnDisk()
 
 	th := kusttest_test.MakeHarnessWithFs(t, fSys)
@@ -502,8 +509,20 @@ type: Opaque
 	require.NoError(t, fSys.RemoveAll(tmpDir.String()))
 }
 
+func skipIfWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping because the test runs a shell script")
+	}
+}
+
 func skipIfNoDocker(t *testing.T) {
 	t.Helper()
+	if os.Getenv("KUSTOMIZE_DOCKER_E2E") == "false" {
+		// e.g. GitHub's Windows runners have docker, but it
+		// runs Windows containers, not the Linux function images.
+		t.Skip("skipping because KUSTOMIZE_DOCKER_E2E is false")
+	}
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("skipping because docker binary wasn't found in PATH")
 	}

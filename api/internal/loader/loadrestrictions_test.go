@@ -61,7 +61,7 @@ func TestRestrictionRootOnly(t *testing.T) {
 	}
 	if !strings.Contains(
 		err.Error(),
-		"file '/tmp/illegal' is not in or below '/tmp/foo'") {
+		filepath.FromSlash("file '/tmp/illegal' is not in or below '/tmp/foo'")) {
 		t.Fatalf("unexpected err: %s", err)
 	}
 }
