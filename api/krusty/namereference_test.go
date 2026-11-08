@@ -868,3 +868,77 @@ spec:
   - Deny
 `)
 }
+
+// Regression test for issue #5696.
+//
+// The Mesh kind is a custom resource whose scope is unknown to kustomize,
+// so kustomize assumes it is namespace-scoped and the NamespaceTransformer
+// moves it into namespace "bar", while the MeshMetric keeps its explicit
+// "kuma" namespace.  The custom nameReference configuration must still
+// update the back-reference held in the MeshMetric label, even though the
+// two objects end up in different namespaces: the namespace comparison is
+// meaningless when the referral's scope is only guessed at.
+func TestIssue5696NameReferenceWithNamespaceTransformer(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+namePrefix: foo-
+resources:
+- resources.yaml
+configurations:
+- config.yaml
+transformers:
+- |-
+  apiVersion: builtin
+  kind: NamespaceTransformer
+  metadata:
+    name: notImportantHere
+    namespace: bar
+  unsetOnly: true
+`)
+	th.WriteF("resources.yaml", `
+apiVersion: kuma.io/v1alpha1
+kind: Mesh
+metadata:
+  name: test
+spec:
+  stuff: true
+---
+apiVersion: kuma.io/v1alpha1
+kind: MeshMetric
+metadata:
+  name: test-metrics
+  namespace: kuma
+  labels:
+    kuma.io/mesh: test
+spec:
+  moreStuff: true
+`)
+	th.WriteF("config.yaml", `
+nameReference:
+- kind: Mesh
+  version: v1alpha1
+  fieldSpecs:
+  - path: metadata/labels/kuma.io\/mesh
+    kind: MeshMetric
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: kuma.io/v1alpha1
+kind: Mesh
+metadata:
+  name: foo-test
+  namespace: bar
+spec:
+  stuff: true
+---
+apiVersion: kuma.io/v1alpha1
+kind: MeshMetric
+metadata:
+  labels:
+    kuma.io/mesh: foo-test
+  name: foo-test-metrics
+  namespace: kuma
+spec:
+  moreStuff: true
+`)
+}

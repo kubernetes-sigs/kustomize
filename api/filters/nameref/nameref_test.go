@@ -187,6 +187,126 @@ map:
 				},
 			},
 		},
+		// A candidate of a kind whose scope is not known from the openapi
+		// data may be cluster-scoped, so a namespace mismatch with the
+		// referrer must not suppress the update.  See issue #5696.
+		"scalar with unknown scope candidate in another namespace": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+  namespace: kuma
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: example.com/v1
+kind: CustomKind
+metadata:
+  name: newName
+  namespace: bar
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+  namespace: kuma
+ref:
+  name: newName
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
+					Group:   "example.com",
+					Version: "v1",
+					Kind:    "CustomKind",
+				},
+			},
+		},
+		// A candidate of a kind known to be namespace-scoped cannot be
+		// referred to from another namespace; the reference is left alone.
+		"scalar with known namespaced candidate in another namespace": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+  namespace: kuma
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: newName
+  namespace: bar
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+  namespace: kuma
+ref:
+  name: oldName
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
+					Version: "v1",
+					Kind:    "Secret",
+				},
+			},
+		},
+		// A candidate in the referrer's namespace wins over an
+		// unknown scope candidate in another namespace.
+		"scalar with unknown scope candidates in several namespaces": {
+			referrerOriginal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+  namespace: kuma
+ref:
+  name: oldName
+`,
+			candidates: `
+apiVersion: example.com/v1
+kind: CustomKind
+metadata:
+  name: newName
+  namespace: kuma
+---
+apiVersion: example.com/v1
+kind: CustomKind
+metadata:
+  name: otherName
+  namespace: bar
+`,
+			originalNames: []string{"oldName", "oldName"},
+			referrerFinal: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep
+  namespace: kuma
+ref:
+  name: newName
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "ref/name"},
+				ReferralTarget: resid.Gvk{
+					Group:   "example.com",
+					Version: "v1",
+					Kind:    "CustomKind",
+				},
+			},
+		},
 		"null value": {
 			referrerOriginal: `
 apiVersion: apps/v1
