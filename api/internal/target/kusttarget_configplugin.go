@@ -186,6 +186,17 @@ var generatorConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	},
 }
 
+// helmChartsHaveNamespace reports whether any helm chart will inflate with a
+// namespace, which the namespace transformer must apply via its annotation.
+func (kt *KustTarget) helmChartsHaveNamespace() bool {
+	for _, chart := range kt.kustomization.HelmCharts {
+		if chart.Namespace != "" {
+			return true
+		}
+	}
+	return len(kt.kustomization.HelmCharts) > 0 && kt.helmRootNamespace != ""
+}
+
 type tFactory func() resmap.TransformerPlugin
 
 var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
@@ -196,7 +207,7 @@ var transformerConfigurators = map[builtinhelpers.BuiltinPluginType]func(
 	builtinhelpers.NamespaceTransformer: func(
 		kt *KustTarget, bpt builtinhelpers.BuiltinPluginType, f tFactory, tc *builtinconfig.TransformerConfig) (
 		result []resmap.Transformer, err error) {
-		if kt.kustomization.Namespace == "" {
+		if kt.kustomization.Namespace == "" && !kt.helmChartsHaveNamespace() {
 			return
 		}
 		var c struct {
