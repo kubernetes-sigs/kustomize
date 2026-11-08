@@ -212,7 +212,7 @@ func combineErrors(schemaErr, customErr error) error {
 // higher-level processors. For example, you might use TemplateProcessors as the filters for each
 // API supported by a VersionedAPIProcessor (see VersionedAPIProcessor examples).
 type TemplateProcessor struct {
-	// TemplateData will will be exposed to all the templates in the processor (unless explicitly
+	// TemplateData will be exposed to all the templates in the processor (unless explicitly
 	// overridden for a template).
 	// If TemplateProcessor is used directly as a ResourceListProcessor, TemplateData will contain the
 	// value of ResourceList.functionConfig.
