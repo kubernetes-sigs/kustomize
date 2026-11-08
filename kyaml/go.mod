@@ -27,7 +27,7 @@ require (
 	github.com/go-openapi/swag/pools v0.27.1 // indirect
 	github.com/go-openapi/swag/typeutils v0.27.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/spf13/pflag v1.1.0 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	k8s.io/utils v0.0.0-20260626114624-be93311217bd // indirect
 )
