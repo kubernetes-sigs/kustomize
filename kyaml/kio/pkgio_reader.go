@@ -44,6 +44,10 @@ type LocalPackageReadWriter struct {
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
 
+	// PreserveDocStart if true adds kioutil.DocStartAnnotation to a resource
+	// that was preceded by an explicit document start marker ("---")
+	PreserveDocStart bool
+
 	// PackagePath is the path to the package directory.
 	PackagePath string `yaml:"path,omitempty"`
 
@@ -101,6 +105,7 @@ func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 		PackageFileName:     r.PackageFileName,
 		FileSkipFunc:        r.FileSkipFunc,
 		PreserveSeqIndent:   r.PreserveSeqIndent,
+		PreserveDocStart:    r.PreserveDocStart,
 		FileSystem:          r.FileSystem,
 		WrapBareSeqNode:     r.WrapBareSeqNode,
 	}.Read()
@@ -198,6 +203,10 @@ type LocalPackageReader struct {
 
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
+
+	// PreserveDocStart if true adds kioutil.DocStartAnnotation to a resource
+	// that was preceded by an explicit document start marker ("---")
+	PreserveDocStart bool
 
 	// FileSystem can be used to mock the disk file system.
 	FileSystem filesys.FileSystemOrOnDisk
@@ -302,6 +311,7 @@ func (r *LocalPackageReader) readFile(path string, _ os.FileInfo) ([]*yaml.RNode
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
 		PreserveSeqIndent:     r.PreserveSeqIndent,
+		PreserveDocStart:      r.PreserveDocStart,
 		WrapBareSeqNode:       r.WrapBareSeqNode,
 	}
 	return rr.Read()
