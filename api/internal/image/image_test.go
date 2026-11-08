@@ -83,6 +83,22 @@ func TestIsImageMatched(t *testing.T) {
 			name:      "[",
 			isMatched: false,
 		},
+		{
+			// name is documented as matched literally/identically, so a "."
+			// in it (very common in real registry hostnames, e.g. gcr.io,
+			// docker.io) must not act as a regexp wildcard and match a value
+			// that merely has some other character in that position.
+			testName:  "dot in name must not act as a regexp wildcard",
+			value:     "gcrXio/my-project/my-app:v1",
+			name:      "gcr.io/my-project/my-app",
+			isMatched: false,
+		},
+		{
+			testName:  "dot in name still matches the literal dot",
+			value:     "gcr.io/my-project/my-app:v1",
+			name:      "gcr.io/my-project/my-app",
+			isMatched: true,
+		},
 	}
 
 	for _, tc := range testCases {
