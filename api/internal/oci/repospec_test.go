@@ -16,6 +16,7 @@ func TestNewRepoSpecFromURL(t *testing.T) {
 		pullSpec     string
 		kustRootPath string
 		absPath      string
+		defaultTag   bool // the URL names neither a tag nor a digest
 	}{
 		"tag": {
 			input:    "oci://ghcr.io/some-org/some-repo:v1.0.0",
@@ -52,15 +53,24 @@ func TestNewRepoSpecFromURL(t *testing.T) {
 			absPath:  "/notPulled",
 		},
 		"default tag": {
-			input:    "oci://ghcr.io/some-org/some-repo",
-			pullSpec: "ghcr.io/some-org/some-repo:latest",
-			absPath:  "/notPulled",
+			input:      "oci://ghcr.io/some-org/some-repo",
+			pullSpec:   "ghcr.io/some-org/some-repo:latest",
+			absPath:    "/notPulled",
+			defaultTag: true,
 		},
 		"default tag and root path": {
 			input:        "oci://ghcr.io/some-org/some-repo//base",
 			pullSpec:     "ghcr.io/some-org/some-repo:latest",
 			kustRootPath: "base",
 			absPath:      "/notPulled/base",
+			defaultTag:   true,
+		},
+		"default tag and registry with port": {
+			input:        "oci://localhost:5000/some-repo//base",
+			pullSpec:     "localhost:5000/some-repo:latest",
+			kustRootPath: "base",
+			absPath:      "/notPulled/base",
+			defaultTag:   true,
 		},
 		"empty root path": {
 			input:    "oci://ghcr.io/some-org/some-repo:v1.0.0//",
@@ -116,6 +126,7 @@ func TestNewRepoSpecFromURL(t *testing.T) {
 			require.Equal(t, tc.kustRootPath, rs.KustRootPath)
 			require.Equal(t, tc.absPath, rs.AbsPath())
 			require.Equal(t, notPulled, rs.FetchDir())
+			require.Equal(t, !tc.defaultTag, rs.HasRef())
 		})
 	}
 }

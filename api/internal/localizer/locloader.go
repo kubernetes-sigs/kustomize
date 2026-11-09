@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
 	"sigs.k8s.io/kustomize/api/internal/loader"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -49,6 +50,10 @@ func NewLoader(rawTarget string, rawScope string, rawNewDir string, fSys filesys
 	if err == nil && repoSpec.Ref == "" {
 		return nil, Args{}, errors.Errorf("localize remote root %q missing ref query string parameter", rawTarget)
 	}
+	ociSpec, err := oci.NewRepoSpecFromURL(rawTarget)
+	if err == nil && !ociSpec.HasRef() {
+		return nil, Args{}, errors.Errorf("localize remote root %q missing tag or digest", rawTarget)
+	}
 
 	// for security, should enforce load restrictions
 	ldr, err := loader.NewLoader(loader.RestrictionRootOnly, rawTarget, fSys)
@@ -62,7 +67,7 @@ func NewLoader(rawTarget string, rawScope string, rawNewDir string, fSys filesys
 		return nil, Args{}, errors.WrapPrefixf(err, "invalid localize scope %q", rawScope)
 	}
 
-	newDir, err := createNewDir(rawNewDir, ldr, repoSpec, fSys)
+	newDir, err := createNewDir(rawNewDir, ldr, repoSpec, ociSpec, fSys)
 	if err != nil {
 		_ = ldr.Cleanup()
 		return nil, Args{}, errors.WrapPrefixf(err, "invalid localize destination %q", rawNewDir)
@@ -120,6 +125,9 @@ func (ll *Loader) New(path string) (ifc.Loader, error) {
 				"root %q references into localize destination %q", ldr.Root(), ll.args.NewDir)
 		}
 	} else if !hasRef(path) {
+		if oci.IsOciURL(path) {
+			return nil, errors.Errorf("localize remote root %q missing tag or digest", path)
+		}
 		return nil, errors.Errorf("localize remote root %q missing ref query string parameter", path)
 	}
 

@@ -13,8 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/ifc"
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
+
+// A digest for the OCI artifact cases.
+const testDigest = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
 
 func TestDefaultNewDirRepo(t *testing.T) {
 	for name, test := range map[string]struct {
@@ -32,7 +36,28 @@ func TestDefaultNewDirRepo(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			repoSpec, err := git.NewRepoSpecFromURL(test.url)
 			require.NoError(t, err)
-			require.Equal(t, test.dst, defaultNewDir(&fakeLoader{t.TempDir()}, repoSpec))
+			require.Equal(t, test.dst, defaultNewDir(&fakeLoader{t.TempDir()}, repoSpec, nil))
+		})
+	}
+}
+
+func TestDefaultNewDirArtifact(t *testing.T) {
+	for name, test := range map[string]struct {
+		url, dst string
+	}{
+		"tag": {
+			url: "oci://ghcr.io/org/repo:value",
+			dst: "localized-repo-value",
+		},
+		"digest": {
+			url: "oci://ghcr.io/org/repo@" + testDigest,
+			dst: "localized-repo-" + strings.Replace(testDigest, ":", "-", 1),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ociSpec, err := oci.NewRepoSpecFromURL(test.url)
+			require.NoError(t, err)
+			require.Equal(t, test.dst, defaultNewDir(&fakeLoader{t.TempDir()}, nil, ociSpec))
 		})
 	}
 }
@@ -257,6 +282,22 @@ func TestLocRootPath_URLComponents(t *testing.T) {
 		"ref_has_slash": {
 			urlf: "https://gitlab.com/org/repo//%s?ref=group/version/kind",
 			path: simpleJoin(t, "gitlab.com", "org", "repo", "group", "version", "kind"),
+		},
+		"oci_tag": {
+			urlf: "oci://ghcr.io/org/repo:value//%s",
+			path: simpleJoin(t, OciSchemeDir, "ghcr.io", "org", "repo", "value"),
+		},
+		"oci_digest": {
+			urlf: "oci://ghcr.io/org/repo@" + testDigest + "//%s",
+			path: simpleJoin(t, OciSchemeDir, "ghcr.io", "org", "repo", strings.Replace(testDigest, ":", "-", 1)),
+		},
+		"oci_port": {
+			urlf: "oci://localhost:5000/org/repo:value//%s",
+			path: simpleJoin(t, OciSchemeDir, "localhost", "org", "repo", "value"),
+		},
+		"oci_docker_hub": {
+			urlf: "oci://docker.io/repo:value//%s",
+			path: simpleJoin(t, OciSchemeDir, "index.docker.io", "library", "repo", "value"),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

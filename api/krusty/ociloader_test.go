@@ -4,15 +4,20 @@
 package krusty_test
 
 import (
+	"net"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/internal/oci/ocitest"
+	"sigs.k8s.io/kustomize/api/krusty/localizer"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -228,6 +233,69 @@ func TestOciArtifactAsTarget(t *testing.T) {
 	yml, err := m.AsYaml()
 	require.NoError(t, err)
 	require.Equal(t, ociDevBuild, string(yml))
+}
+
+func TestOciArtifactLocalize(t *testing.T) {
+	// Localize copies the artifact, by tag and by digest, below
+	// localized-files, and the copy builds as the original does.
+	host := ocitest.StartLoopbackRegistry(t)
+	digest := ocitest.Push(t, nil, host+ociRepo, ocitest.Files(t, ociArtifactFiles()))
+	fSys := filesys.MakeFsOnDisk()
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	target := t.TempDir()
+	th.WriteK(target, resourcesPrefix+ociScheme+host+ociRepo+ociOverlay+"\n- "+
+		ociScheme+host+"/some-org/some-repo@"+digest+"//base\n")
+
+	dst, err := localizer.Run(fSys, target, "", filepath.Join(t.TempDir(), "dst"))
+	require.NoError(t, err)
+	registry, _, err := net.SplitHostPort(host)
+	require.NoError(t, err)
+	artifact := filepath.Join("localized-files", "oci-schemed", registry, "some-org", "some-repo")
+	content, err := fSys.ReadFile(filepath.Join(dst, "kustomization.yaml"))
+	require.NoError(t, err)
+	var kust types.Kustomization
+	require.NoError(t, yaml.Unmarshal(content, &kust))
+	require.Equal(t, []string{
+		filepath.Join(artifact, "v1.0.0", "overlays", "dev"),
+		filepath.Join(artifact, strings.Replace(digest, ":", "-", 1), "base"),
+	}, kust.Resources)
+
+	m := th.Run(dst, th.MakeDefaultOptions())
+	yml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, ociDevBuild+"---\n"+ociBaseBuild, string(yml))
+}
+
+func TestOciArtifactLocalizeTarget(t *testing.T) {
+	// An artifact as the localize target: the default destination is
+	// named after its root and tag, and the copy builds as it does.
+	host := ocitest.StartLoopbackRegistry(t)
+	ocitest.Push(t, nil, host+ociRepo, ocitest.Files(t, ociArtifactFiles()))
+	fSys := filesys.MakeFsOnDisk()
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	// The default destination is created in the working directory.
+	t.Chdir(t.TempDir())
+
+	dst, err := localizer.Run(fSys, ociScheme+host+ociRepo+ociOverlay, "", "")
+	require.NoError(t, err)
+	require.Equal(t, "localized-dev-v1.0.0", filepath.Base(dst))
+	m := th.Run(filepath.Join(dst, "overlays", "dev"), th.MakeDefaultOptions())
+	yml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, ociDevBuild, string(yml))
+}
+
+func TestOciArtifactLocalizeNeedsTagOrDigest(t *testing.T) {
+	// Without a tag or a digest, the copy would be of the moving latest.
+	host := ocitest.StartLoopbackRegistry(t)
+	ocitest.Push(t, nil, host+"/some-org/some-repo:latest", ocitest.Files(t, ociArtifactFiles()))
+	fSys := filesys.MakeFsOnDisk()
+	th := kusttest_test.MakeHarnessWithFs(t, fSys)
+	dir := t.TempDir()
+	th.WriteK(dir, resourcesPrefix+ociScheme+host+"/some-org/some-repo//base\n")
+
+	_, err := localizer.Run(fSys, dir, "", filepath.Join(t.TempDir(), "dst"))
+	require.ErrorContains(t, err, "missing tag or digest")
 }
 
 func TestOciArtifactErrors(t *testing.T) {
