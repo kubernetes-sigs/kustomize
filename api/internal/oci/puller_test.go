@@ -81,14 +81,14 @@ func TestPullerUsingRegistry(t *testing.T) {
 			t.Run("by tag", func(t *testing.T) {
 				rs, fSys := newRepoSpec(t, "oci://registry.example.com/some-org/some-repo:v1.0.0//overlays/dev")
 				require.NoError(t, oci.PullerUsingRegistry(rs, fSys, client))
-				require.NotEqual(t, "/notPulled", rs.PullDir().String())
-				require.Equal(t, rs.PullDir().Join("overlays/dev"), rs.AbsPath())
-				requireFiles(t, fSys, rs.PullDir(), artifactFiles())
+				require.NotEqual(t, "/notPulled", rs.FetchDir().String())
+				require.Equal(t, rs.FetchDir().Join("overlays/dev"), rs.AbsPath())
+				requireFiles(t, fSys, rs.FetchDir(), artifactFiles())
 			})
 			t.Run("by digest", func(t *testing.T) {
 				rs, fSys := newRepoSpec(t, "oci://registry.example.com/some-org/some-repo@"+digest)
 				require.NoError(t, oci.PullerUsingRegistry(rs, fSys, client))
-				requireFiles(t, fSys, rs.PullDir(), artifactFiles())
+				requireFiles(t, fSys, rs.FetchDir(), artifactFiles())
 			})
 		})
 	}
@@ -102,9 +102,9 @@ func TestPullerUsingRegistry_CleanerRemovesPullDir(t *testing.T) {
 	rs, err := oci.NewRepoSpecFromURL("oci://registry.example.com/some-org/some-repo:v1.0.0")
 	require.NoError(t, err)
 	require.NoError(t, oci.PullerUsingRegistry(rs, fSys, client))
-	require.True(t, fSys.Exists(rs.PullDir().Join("kustomization.yaml")))
+	require.True(t, fSys.Exists(rs.FetchDir().Join("kustomization.yaml")))
 	require.NoError(t, rs.Cleaner(fSys)())
-	require.False(t, fSys.Exists(rs.PullDir().String()))
+	require.False(t, fSys.Exists(rs.FetchDir().String()))
 }
 
 func TestPullerUsingRegistry_MissingArtifact(t *testing.T) {
@@ -115,9 +115,9 @@ func TestPullerUsingRegistry_MissingArtifact(t *testing.T) {
 	err = oci.PullerUsingRegistry(rs, fSys, client)
 	require.ErrorContains(t, err, "pulling oci artifact registry.example.com/some-org/missing:v1.0.0")
 	// The pull dir is created before the pull and must be cleaned by the caller.
-	require.True(t, fSys.Exists(rs.PullDir().String()))
+	require.True(t, fSys.Exists(rs.FetchDir().String()))
 	require.NoError(t, rs.Cleaner(fSys)())
-	require.False(t, fSys.Exists(rs.PullDir().String()))
+	require.False(t, fSys.Exists(rs.FetchDir().String()))
 }
 
 func TestPullerUsingRegistry_PlainHTTP(t *testing.T) {
@@ -128,7 +128,7 @@ func TestPullerUsingRegistry_PlainHTTP(t *testing.T) {
 	// As in go-containerregistry, plain HTTP is allowed for loopback addresses,
 	rs, fSys := newRepoSpec(t, "oci://"+host+"/some-org/some-repo:v1.0.0")
 	require.NoError(t, oci.PullerUsingRegistry(rs, fSys, nil))
-	requireFiles(t, fSys, rs.PullDir(), artifactFiles())
+	requireFiles(t, fSys, rs.FetchDir(), artifactFiles())
 
 	// but other hosts are only reached over HTTPS.
 	rs, fSys = newRepoSpec(t, "oci://registry.example.com/some-org/some-repo:v1.0.0")
@@ -173,7 +173,7 @@ func TestPullerUsingRegistry_Credentials(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			requireFiles(t, fSys, rs.PullDir(), artifactFiles())
+			requireFiles(t, fSys, rs.FetchDir(), artifactFiles())
 		})
 	}
 }
@@ -273,10 +273,10 @@ func TestPullerUsingRegistry_SkipsLinksAndDirectories(t *testing.T) {
 
 	rs, fSys := newRepoSpec(t, "oci://registry.example.com/some-org/some-repo:v1.0.0")
 	require.NoError(t, oci.PullerUsingRegistry(rs, fSys, client))
-	requireFiles(t, fSys, rs.PullDir(), artifactFiles())
-	require.False(t, fSys.Exists(rs.PullDir().Join("escape")))
-	require.False(t, fSys.Exists(rs.PullDir().Join("link")))
-	require.False(t, fSys.Exists(rs.PullDir().Join("empty")))
+	requireFiles(t, fSys, rs.FetchDir(), artifactFiles())
+	require.False(t, fSys.Exists(rs.FetchDir().Join("escape")))
+	require.False(t, fSys.Exists(rs.FetchDir().Join("link")))
+	require.False(t, fSys.Exists(rs.FetchDir().Join("empty")))
 }
 
 func TestPullerUsingRegistry_RejectsNonLocalEntries(t *testing.T) {
@@ -307,7 +307,7 @@ func TestPullerUsingRegistry_RejectsNonLocalEntries(t *testing.T) {
 				return false
 			}, "error %q matches none of %q", err.Error(), tc.errs)
 			require.Contains(t, err.Error(), "escape.yaml")
-			_, err = os.Stat(filepath.Join(filepath.Dir(rs.PullDir().String()), "escape.yaml"))
+			_, err = os.Stat(filepath.Join(filepath.Dir(rs.FetchDir().String()), "escape.yaml"))
 			require.True(t, os.IsNotExist(err))
 		})
 	}
