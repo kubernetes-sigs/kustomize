@@ -141,6 +141,83 @@ func TestOciArtifactPulledOncePerBuild(t *testing.T) {
 	require.Equal(t, int32(1), pulls.Load())
 }
 
+func TestOciArtifactOriginAnnotations(t *testing.T) {
+	// A resource, a generated ConfigMap and a transformer from the
+	// artifact: their annotations name its repository, tag and paths.
+	host := ocitest.StartLoopbackRegistry(t)
+	ocitest.Push(t, nil, host+ociRepo, ocitest.Files(t, map[string]string{
+		"base/kustomization.yaml": `
+resources:
+- pod.yaml
+configMapGenerator:
+- name: settings
+  literals:
+  - mode=base
+generatorOptions:
+  disableNameSuffixHash: true
+`,
+		"base/pod.yaml": ociArtifactFiles()["base/pod.yaml"],
+		"overlays/dev/kustomization.yaml": `
+resources:
+- ../../base
+namePrefix: dev-
+`,
+	}))
+
+	th := kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsOnDisk())
+	dir := t.TempDir()
+	th.WriteK(dir, "buildMetadata: [originAnnotations, transformerAnnotations]\n"+
+		resourcesPrefix+ociScheme+host+ociRepo+ociOverlay+"\n")
+
+	m := th.Run(dir, th.MakeDefaultOptions())
+	yml, err := m.AsYaml()
+	require.NoError(t, err)
+	repo := "oci://" + host + "/some-org/some-repo"
+	require.Equal(t, `apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - repo: `+repo+`
+        ref: v1.0.0
+        configuredIn: overlays/dev/kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+    config.kubernetes.io/origin: |
+      path: base/pod.yaml
+      repo: `+repo+`
+      ref: v1.0.0
+  name: dev-myPod
+spec:
+  containers:
+  - image: nginx:1.7.9
+    name: nginx
+---
+apiVersion: v1
+data:
+  mode: base
+kind: ConfigMap
+metadata:
+  annotations:
+    alpha.config.kubernetes.io/transformations: |
+      - repo: `+repo+`
+        ref: v1.0.0
+        configuredIn: overlays/dev/kustomization.yaml
+        configuredBy:
+          apiVersion: builtin
+          kind: PrefixTransformer
+    config.kubernetes.io/origin: |
+      repo: `+repo+`
+      ref: v1.0.0
+      configuredIn: base/kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: dev-settings
+`, string(yml))
+}
+
 func TestOciArtifactAsTarget(t *testing.T) {
 	host := ocitest.StartLoopbackRegistry(t)
 	ref := host + ociRepo

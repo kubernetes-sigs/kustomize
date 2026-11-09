@@ -12,6 +12,9 @@ import (
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// A digest for the OCI cases: 64 hexadecimal digits.
+const testDigestHex = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
 func TestOriginAppend(t *testing.T) {
 	tests := []struct {
 		in       *Origin
@@ -33,6 +36,35 @@ func TestOriginAppend(t *testing.T) {
 			path: "github.com/kubernetes-sigs/kustomize/examples/multibases/dev/",
 			expected: `path: examples/multibases/dev
 repo: https://github.com/kubernetes-sigs/kustomize
+`,
+		},
+		{
+			in: &Origin{
+				Path: "overlay/prod",
+			},
+			path: "oci://ghcr.io/org/manifests:v1.2.0//overlays/dev",
+			expected: `path: overlays/dev
+repo: oci://ghcr.io/org/manifests
+ref: v1.2.0
+`,
+		},
+		{
+			in: &Origin{
+				Path: "overlay/prod",
+			},
+			path: "oci://registry.example.com:5000/team/app@sha256:" + testDigestHex,
+			expected: `repo: oci://registry.example.com:5000/team/app
+ref: sha256:` + testDigestHex + `
+`,
+		},
+		{
+			in: &Origin{
+				Path: "overlay/prod",
+			},
+			path: "oci://ghcr.io/org/manifests//base",
+			expected: `path: base
+repo: oci://ghcr.io/org/manifests
+ref: latest
 `,
 		},
 	}
