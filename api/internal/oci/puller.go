@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"sync"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -54,14 +53,16 @@ func PullerUsingRegistry(repoSpec *RepoSpec, fSys filesys.FileSystem, client *ht
 	return extract(img, dir, fSys)
 }
 
-// extract writes the flattened file system of the image below dir, and
-// verifies each layer against its digest.
+// extract writes the flattened file system of the image below dir.
+// go-containerregistry verifies each layer against its digest and size
+// as it is read.
 // Layer media types are not inspected: each layer is expected to be a tar
 // archive, optionally compressed, which covers container images as well as
 // artifacts pushed by tools like flux or oras.
 func extract(img v1.Image, dir filesys.ConfirmedDir, fSys filesys.FileSystem) error {
-	verified := &verifiedImage{Image: img}
-	flattened := mutate.Extract(verified)
+	// Using extraction to get the "flattened" image until
+	// https://github.com/google/go-containerregistry/issues/921 is implemented.
+	flattened := mutate.Extract(img)
 	defer flattened.Close()
 
 	reader := tar.NewReader(flattened)
@@ -73,7 +74,7 @@ func extract(img v1.Image, dir filesys.ConfirmedDir, fSys filesys.FileSystem) er
 			if _, err = io.Copy(io.Discard, flattened); err != nil {
 				return errors.WrapPrefixf(err, "reading contents of oci artifact")
 			}
-			return verified.err()
+			return nil
 		}
 		if err != nil {
 			return errors.WrapPrefixf(err, "reading contents of oci artifact")
@@ -113,77 +114,6 @@ func writeFile(fSys filesys.FileSystem, target string, content io.Reader) error 
 		err = closeErr
 	}
 	return errors.WrapPrefixf(err, "writing %s from oci artifact", target)
-}
-
-// verifiedImage reads each layer of the image to its end once extracted.
-// mutate.Extract stops reading a layer at the end of its tar archive, but
-// the content of a layer is only verified against its digest at the end.
-// go-containerregistry drains the layers itself from v0.21.7 on.
-type verifiedImage struct {
-	v1.Image
-
-	mu       sync.Mutex
-	firstErr error
-}
-
-// Layers returns the layers of the image, read to their end when closed.
-func (img *verifiedImage) Layers() ([]v1.Layer, error) {
-	layers, err := img.Image.Layers()
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	verified := make([]v1.Layer, len(layers))
-	for i, layer := range layers {
-		verified[i] = &verifiedLayer{Layer: layer, image: img}
-	}
-	return verified, nil
-}
-
-// fail records the first error found while verifying a layer.
-func (img *verifiedImage) fail(err error) {
-	img.mu.Lock()
-	defer img.mu.Unlock()
-	if img.firstErr == nil {
-		img.firstErr = err
-	}
-}
-
-// err returns the first error found while verifying the layers.
-func (img *verifiedImage) err() error {
-	img.mu.Lock()
-	defer img.mu.Unlock()
-	return img.firstErr
-}
-
-// verifiedLayer is a layer of a verifiedImage.
-type verifiedLayer struct {
-	v1.Layer
-
-	image *verifiedImage
-}
-
-// Uncompressed returns the content of the layer, read to its end when closed.
-func (l *verifiedLayer) Uncompressed() (io.ReadCloser, error) {
-	content, err := l.Layer.Uncompressed()
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return &drainedOnClose{ReadCloser: content, image: l.image}, nil
-}
-
-// drainedOnClose reads the rest of the content of a layer when closed,
-// which verifies it, and records the error, if any, in the image.
-type drainedOnClose struct {
-	io.ReadCloser
-
-	image *verifiedImage
-}
-
-func (r *drainedOnClose) Close() error {
-	if _, err := io.Copy(io.Discard, r.ReadCloser); err != nil {
-		r.image.fail(errors.WrapPrefixf(err, "verifying contents of oci artifact"))
-	}
-	return errors.Wrap(r.ReadCloser.Close())
 }
 
 // DoNothingPuller returns a puller that only sets the
