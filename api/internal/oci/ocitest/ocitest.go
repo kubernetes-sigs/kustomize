@@ -79,6 +79,37 @@ func BasicAuth(h http.Handler, username, password string) http.Handler {
 	})
 }
 
+// TokenAuth returns a handler that serves through h the requests carrying a
+// bearer token, which it hands out at /token to the requests carrying the
+// given credentials, and answers the others with 401 Unauthorized: a bearer
+// challenge that points at /token, as registries such as ghcr.io and Docker
+// Hub do, or, at /token, a refusal.
+func TokenAuth(h http.Handler, username, password string) http.Handler {
+	const token = "ocitest-token"
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			if u, p, ok := r.BasicAuth(); !ok || u != username || p != password {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprintf(w, `{"token":%q}`, token)
+			return
+		}
+		if r.Header.Get("Authorization") != "Bearer "+token {
+			scheme := "https"
+			if r.TLS == nil {
+				scheme = "http"
+			}
+			w.Header().Set("WWW-Authenticate",
+				fmt.Sprintf(`Bearer realm="%s://%s/token",service="ocitest"`, scheme, r.Host))
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 // NewRegistry starts an in-process registry on the in-memory network of
 // httptest.NewTestServer, stopped when the test ends, and returns the client
 // that reaches it. The client sends every request to the registry, whatever
