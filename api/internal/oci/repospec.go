@@ -34,6 +34,10 @@ type RepoSpec struct {
 	// Relative path in the artifact, and in Dir,
 	// to a Kustomization.
 	KustRootPath string
+
+	// Whether the URL names a tag or a digest, rather
+	// than leaving the tag to default to latest.
+	hasRef bool
 }
 
 // PullSpec returns the fully qualified reference of the artifact,
@@ -53,6 +57,12 @@ func (x *RepoSpec) Raw() string {
 
 func (x *RepoSpec) AbsPath() string {
 	return x.Dir.Join(x.KustRootPath)
+}
+
+// HasRef returns whether the URL names a tag or a digest; without
+// either, the tag defaults to latest.
+func (x *RepoSpec) HasRef() bool {
+	return x.hasRef
 }
 
 func (x *RepoSpec) Cleaner(fSys filesys.FileSystem) func() error {
@@ -109,6 +119,10 @@ func NewRepoSpecFromURL(n string) (*RepoSpec, error) {
 		Reference:    reference,
 		Dir:          notPulled,
 		KustRootPath: kustRootPath,
+		// A tag follows a colon in the last path segment; a colon
+		// before that segment can only be the port of the registry.
+		hasRef: strings.Contains(ref, "@") ||
+			strings.Contains(ref[strings.LastIndex(ref, pathSeparator)+1:], ":"),
 	}, nil
 }
 
