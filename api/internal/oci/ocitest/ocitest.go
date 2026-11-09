@@ -108,8 +108,15 @@ func httpsOnly(h http.Handler) http.Handler {
 // the rest of the test.
 func StartLoopbackRegistry(t *testing.T) string {
 	t.Helper()
+	return StartLoopbackServer(t, Handler())
+}
+
+// StartLoopbackServer is StartLoopbackRegistry with the given handler,
+// typically one in front of Handler().
+func StartLoopbackServer(t *testing.T, h http.Handler) string {
+	t.Helper()
 	IgnoreLocalCredentials(t)
-	srv := httptest.NewTestServer(t, Handler())
+	srv := httptest.NewTestServer(t, h)
 	srv.Start()
 	u, err := url.Parse(srv.URL)
 	require.NoError(t, err)

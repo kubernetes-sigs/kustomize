@@ -18,20 +18,34 @@ import (
 // loader will have the restrictions passed in.  Regardless,
 // if a local target attempts to transitively load remote bases,
 // the remote bases will all be root-only restricted.
+// The loaders below it share their clones and pulls, which
+// its Cleanup removes.
 func NewLoader(
 	lr LoadRestrictorFunc,
 	target string, fSys filesys.FileSystem) (ifc.Loader, error) {
+	remotes := newRemoteCache()
+	ldr, err := newLoaderAtTarget(lr, target, fSys, remotes)
+	if err != nil {
+		_ = remotes.cleanup()
+		return nil, err
+	}
+	return ldr, nil
+}
+
+func newLoaderAtTarget(
+	lr LoadRestrictorFunc, target string, fSys filesys.FileSystem,
+	remotes *remoteCache) (ifc.Loader, error) {
 	repoSpec, err := git.NewRepoSpecFromURL(target)
 	if err == nil {
 		// The target qualifies as a remote git target.
 		return newLoaderAtGitClone(
-			repoSpec, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry)
+			repoSpec, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry, remotes)
 	}
 	ociSpec, err := oci.NewRepoSpecFromURL(target)
 	if err == nil {
 		// The target qualifies as a remote OCI artifact.
 		return newLoaderAtOciPull(
-			ociSpec, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry)
+			ociSpec, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry, remotes)
 	}
 	if oci.IsOciURL(target) {
 		// An oci:// target that does not parse is not a local one either.
@@ -42,5 +56,5 @@ func NewLoader(
 		return nil, errors.WrapPrefixf(err, "%s", ErrRtNotDir.Error())
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry), nil
+		lr, root, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry, remotes), nil
 }

@@ -461,7 +461,7 @@ whatever
 
 	l, err := newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)), nil)
+		git.DoNothingCloner(filesys.ConfirmedDir(coRoot)), nil, nil)
 	require.NoError(err)
 	repo := l.Repo()
 	require.Equal(coRoot, repo)
@@ -528,7 +528,7 @@ func TestLoaderDisallowsLocalBaseFromRemoteOverlay(t *testing.T) {
 
 	l1, err = newLoaderAtGitClone(
 		repoSpec, fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil, nil)
 	require.NoError(err)
 	require.Equal(cloneRoot+"/foo/overlay", l1.Root())
 
@@ -558,7 +558,7 @@ func TestLoaderDisallowsRemoteBaseExitRepo(t *testing.T) {
 	repoSpec, err := git.NewRepoSpecFromURL("https://github.com/org/repo/base")
 	require.NoError(t, err)
 
-	_, err = newLoaderAtGitClone(repoSpec, fSys, nil, git.DoNothingCloner(filesys.ConfirmedDir(repo)), nil)
+	_, err = newLoaderAtGitClone(repoSpec, fSys, nil, git.DoNothingCloner(filesys.ConfirmedDir(repo)), nil, nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), fmt.Sprintf("%q refers to directory outside of repo %q", base, repo))
 }
@@ -574,7 +574,7 @@ func TestLocalLoaderReferencingGitBase(t *testing.T) {
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil, nil)
 	require.Equal(topDir, l1.Root())
 
 	l2, err := l1.New("github.com/someOrg/someRepo/foo/base")
@@ -595,7 +595,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil, nil)
 	p1 := "github.com/someOrg/someRepo/foo"
 	rs1, err := git.NewRepoSpecFromURL(p1)
 	require.NoError(err)
@@ -617,7 +617,7 @@ func TestRepoIndirectCycleDetection(t *testing.T) {
 
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
-		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil)
+		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)), nil, nil)
 
 	p1 := "github.com/someOrg/someRepo1"
 	p2 := "github.com/someOrg/someRepo2"
@@ -775,7 +775,7 @@ whatever
 
 	l, err := newLoaderAtOciPull(
 		repoSpec, fSys, nil, nil,
-		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)), nil)
 	require.NoError(err)
 	repo := l.Repo()
 	require.Equal(pullRoot, repo)
@@ -818,7 +818,7 @@ func TestNewLoaderAtOciPullFileNotDir(t *testing.T) {
 	require.NoError(err)
 	_, err = newLoaderAtOciPull(
 		repoSpec, fSys, nil, nil,
-		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)), nil)
 	require.Error(err)
 	require.Contains(err.Error(), "expecting directory")
 }
@@ -837,7 +837,7 @@ func TestNewLoaderAtOciPullFails(t *testing.T) {
 
 	repoSpec, err := oci.NewRepoSpecFromURL("oci://ghcr.io/some-org/some-repo:v1.0.0")
 	require.NoError(err)
-	_, err = newLoaderAtOciPull(repoSpec, fSys, nil, nil, puller)
+	_, err = newLoaderAtOciPull(repoSpec, fSys, nil, nil, puller, nil)
 	require.ErrorIs(err, pullErr)
 	// The pull dir is cleaned up on failure.
 	require.False(fSys.Exists(pullRoot))
@@ -856,7 +856,7 @@ func TestNewLoaderMalformedOciURL(t *testing.T) {
 	require.ErrorContains(err, "invalid oci artifact url")
 
 	l0 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, filesys.ConfirmedDir(ociTopDir), fSys, nil, nil, nil)
+		RestrictionRootOnly, filesys.ConfirmedDir(ociTopDir), fSys, nil, nil, nil, nil)
 	_, err = l0.New(url)
 	require.ErrorContains(err, "invalid oci artifact url")
 }
@@ -877,7 +877,7 @@ func TestLoaderDisallowsLocalBaseFromOciOverlay(t *testing.T) {
 	require.NoError(err)
 	l1, err := newLoaderAtOciPull(
 		repoSpec, fSys, nil, nil,
-		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)), nil)
 	require.NoError(err)
 	require.Equal(pullRoot+overlayDir, l1.Root())
 
@@ -897,7 +897,7 @@ func TestLocalLoaderReferencingOciBase(t *testing.T) {
 
 	l1 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil, nil,
-		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)), nil)
 	require.Equal(topDir, l1.Root())
 
 	l2, err := l1.New("oci://ghcr.io/some-org/some-repo:v1.0.0//foo/base")
@@ -922,7 +922,7 @@ func TestOciPullerGetsReferrerHTTPClient(t *testing.T) {
 		return nil
 	}
 	l0 := newLoaderAtConfirmedDir(
-		RestrictionRootOnly, filesys.ConfirmedDir(ociTopDir), fSys, nil, nil, puller)
+		RestrictionRootOnly, filesys.ConfirmedDir(ociTopDir), fSys, nil, nil, puller, nil)
 	l0.http = client
 
 	_, err := l0.New("oci://ghcr.io/some-org/some-repo:v1.0.0")
@@ -941,7 +941,7 @@ func TestOciRepoIndirectCycleDetection(t *testing.T) {
 
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil, nil,
-		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)), nil)
 
 	p1 := "oci://ghcr.io/some-org/some-repo1:v1.0.0"
 	p2 := "oci://ghcr.io/some-org/some-repo2:v1.0.0"
@@ -983,7 +983,7 @@ func TestLoaderRelativeBaseWithinNestedRemotes(t *testing.T) {
 	l0 := newLoaderAtConfirmedDir(
 		RestrictionRootOnly, filesys.ConfirmedDir(topDir), fSys, nil,
 		git.DoNothingCloner(filesys.ConfirmedDir(cloneRoot)),
-		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)))
+		oci.DoNothingPuller(filesys.ConfirmedDir(pullRoot)), nil)
 
 	gitOverlay, err := l0.New("github.com/some-org/some-repo/overlay")
 	require.NoError(err)
