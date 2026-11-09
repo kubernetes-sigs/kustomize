@@ -227,7 +227,7 @@ func replacedBlob(h http.Handler, original, replacement v1.Layer) http.Handler {
 	})
 }
 
-func TestPullerUsingRegistry_SkipsLinks(t *testing.T) {
+func TestPullerUsingRegistry_SkipsLinksAndDirectories(t *testing.T) {
 	entries := map[string]ocitest.Entry{
 		"escape": {Typeflag: tar.TypeSymlink, Linkname: "../../../etc"},
 		"link":   {Typeflag: tar.TypeLink, Linkname: "deployment.yaml"},
@@ -245,7 +245,7 @@ func TestPullerUsingRegistry_SkipsLinks(t *testing.T) {
 	requireFiles(t, fSys, rs.PullDir(), artifactFiles())
 	require.False(t, fSys.Exists(rs.PullDir().Join("escape")))
 	require.False(t, fSys.Exists(rs.PullDir().Join("link")))
-	require.True(t, fSys.IsDir(rs.PullDir().Join("empty")))
+	require.False(t, fSys.Exists(rs.PullDir().Join("empty")))
 }
 
 func TestPullerUsingRegistry_RejectsNonLocalEntries(t *testing.T) {
