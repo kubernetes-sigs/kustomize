@@ -173,14 +173,19 @@ func TestPullerUsingRegistry_MalformedLayers(t *testing.T) {
 }
 
 func TestPullerUsingRegistry_TamperedLayer(t *testing.T) {
-	// Same size, different content.
+	// Same file sizes, different content.
 	tampered := artifactFiles()
 	tampered["deployment.yaml"] = "kind: DaemonSet!\n"
 	for name, tc := range map[string]struct {
 		original, replacement v1.Image
+		err                   string
 	}{
-		"uncompressed": {ocitest.Files(t, artifactFiles()), ocitest.Files(t, tampered)},
-		"gzip":         {ocitest.FluxArtifact(t, artifactFiles()), ocitest.FluxArtifact(t, tampered)},
+		// The layer keeps its size, but not its digest.
+		"uncompressed": {ocitest.Files(t, artifactFiles()), ocitest.Files(t, tampered),
+			"error verifying sha256 checksum"},
+		// Compressed, the layer does not keep its size either.
+		"gzip": {ocitest.FluxArtifact(t, artifactFiles()), ocitest.FluxArtifact(t, tampered),
+			"does not match expected size"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			ocitest.IgnoreLocalCredentials(t)
@@ -189,7 +194,8 @@ func TestPullerUsingRegistry_TamperedLayer(t *testing.T) {
 			ocitest.Push(t, client, someRef, tc.original)
 			rs, fSys := newRepoSpec(t, "oci://registry.example.com/some-org/some-repo:v1.0.0")
 			err := oci.PullerUsingRegistry(rs, fSys, client)
-			require.ErrorContains(t, err, "verifying contents of oci artifact")
+			require.ErrorContains(t, err, "reading contents of oci artifact")
+			require.ErrorContains(t, err, tc.err)
 		})
 	}
 }
