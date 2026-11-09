@@ -4,6 +4,9 @@
 package krusty_test
 
 import (
+	"net/http"
+	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -105,6 +108,37 @@ func TestOciArtifactBase(t *testing.T) {
 			require.Equal(t, tc.expected, string(yml))
 		})
 	}
+}
+
+func TestOciArtifactPulledOncePerBuild(t *testing.T) {
+	// The build refers to the tag twice, under different root paths, and
+	// the tag moves to another artifact once pulled: the build pulls the
+	// tag once, and both references see the same artifact.
+	moved := ociArtifactFiles()
+	moved["overlays/dev/kustomization.yaml"] = strings.Replace(
+		moved["overlays/dev/kustomization.yaml"], "dev-", "moved-", 1)
+	h := ocitest.Handler()
+	var pulls atomic.Int32
+	host := ocitest.StartLoopbackServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/manifests/v1.0.0") &&
+			pulls.Add(1) > 1 {
+			r.URL.Path = strings.TrimSuffix(r.URL.Path, "v1.0.0") + "moved"
+		}
+		h.ServeHTTP(w, r)
+	}))
+	ocitest.Push(t, nil, host+ociRepo, ocitest.Files(t, ociArtifactFiles()))
+	ocitest.Push(t, nil, host+"/some-org/some-repo:moved", ocitest.Files(t, moved))
+	pulls.Store(0)
+
+	th := kusttest_test.MakeHarnessWithFs(t, filesys.MakeFsOnDisk())
+	dir := t.TempDir()
+	th.WriteK(dir, resourcesPrefix+ociScheme+host+ociRepo+"//base\n- "+ociScheme+host+ociRepo+ociOverlay+"\n")
+
+	m := th.Run(dir, th.MakeDefaultOptions())
+	yml, err := m.AsYaml()
+	require.NoError(t, err)
+	require.Equal(t, ociBaseBuild+"---\n"+ociDevBuild, string(yml))
+	require.Equal(t, int32(1), pulls.Load())
 }
 
 func TestOciArtifactAsTarget(t *testing.T) {

@@ -110,6 +110,10 @@ type FileLoader struct {
 	// Used to pull OCI artifacts.
 	puller oci.Puller
 
+	// If this is non-nil, the clones and pulls
+	// shared by the loaders of a build.
+	remotes *remoteCache
+
 	// Used to clean up, as needed.
 	cleaner func() error
 }
@@ -140,14 +144,15 @@ func NewLoaderOrDie(
 		log.Fatalf("unable to make loader at '%s'; %v", path, err)
 	}
 	return newLoaderAtConfirmedDir(
-		lr, root, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry)
+		lr, root, fSys, nil, git.ClonerUsingGitExec, oci.PullerUsingRegistry, nil)
 }
 
 // newLoaderAtConfirmedDir returns a new FileLoader with given root.
 func newLoaderAtConfirmedDir(
 	lr LoadRestrictorFunc,
 	root filesys.ConfirmedDir, fSys filesys.FileSystem,
-	referrer *FileLoader, cloner git.Cloner, puller oci.Puller) *FileLoader {
+	referrer *FileLoader, cloner git.Cloner, puller oci.Puller,
+	remotes *remoteCache) *FileLoader {
 	return &FileLoader{
 		loadRestrictor: lr,
 		root:           root,
@@ -155,6 +160,7 @@ func newLoaderAtConfirmedDir(
 		fSys:           fSys,
 		cloner:         cloner,
 		puller:         puller,
+		remotes:        remotes,
 		cleaner:        func() error { return nil },
 	}
 }
@@ -194,7 +200,7 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 			return nil, err
 		}
 		return newLoaderAtGitClone(
-			repoSpec, fl.fSys, fl, fl.cloner, fl.puller)
+			repoSpec, fl.fSys, fl, fl.cloner, fl.puller, fl.remotes)
 	}
 
 	ociSpec, err := oci.NewRepoSpecFromURL(path)
@@ -204,7 +210,7 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 			return nil, err
 		}
 		return newLoaderAtOciPull(
-			ociSpec, fl.fSys, fl, fl.cloner, fl.puller)
+			ociSpec, fl.fSys, fl, fl.cloner, fl.puller, fl.remotes)
 	}
 	if oci.IsOciURL(path) {
 		// An oci:// URL that does not parse is not a local path either.
@@ -235,18 +241,19 @@ func (fl *FileLoader) New(path string) (ifc.Loader, error) {
 		return nil, err
 	}
 	return newLoaderAtConfirmedDir(
-		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner, fl.puller), nil
+		fl.loadRestrictor, root, fl.fSys, fl, fl.cloner, fl.puller, fl.remotes), nil
 }
 
 // newLoaderAtGitClone returns a new Loader pinned to a temporary
-// directory holding a cloned git repo.
+// directory holding a cloned git repo, from the remotes of the build
+// if they include it.
 func newLoaderAtGitClone(
 	repoSpec *git.RepoSpec, fSys filesys.FileSystem,
-	referrer *FileLoader, cloner git.Cloner, puller oci.Puller) (ifc.Loader, error) {
-	cleaner := repoSpec.Cleaner(fSys)
-	err := cloner(repoSpec)
+	referrer *FileLoader, cloner git.Cloner, puller oci.Puller,
+	remotes *remoteCache) (ifc.Loader, error) {
+	cleaner, err := remotes.fetch(gitCacheKey(repoSpec), &repoSpec.Dir,
+		func() error { return cloner(repoSpec) }, repoSpec.Cleaner(fSys))
 	if err != nil {
-		_ = cleaner()
 		return nil, err
 	}
 	root, f, err := fSys.CleanedAbs(repoSpec.AbsPath())
@@ -280,23 +287,25 @@ func newLoaderAtGitClone(
 		fSys:           fSys,
 		cloner:         cloner,
 		puller:         puller,
+		remotes:        remotes,
 		cleaner:        cleaner,
 	}, nil
 }
 
 // newLoaderAtOciPull returns a new Loader pinned to a temporary
-// directory holding a pulled OCI artifact.
+// directory holding a pulled OCI artifact, from the remotes of the
+// build if they include it.
 func newLoaderAtOciPull(
 	repoSpec *oci.RepoSpec, fSys filesys.FileSystem,
-	referrer *FileLoader, cloner git.Cloner, puller oci.Puller) (ifc.Loader, error) {
-	cleaner := repoSpec.Cleaner(fSys)
+	referrer *FileLoader, cloner git.Cloner, puller oci.Puller,
+	remotes *remoteCache) (ifc.Loader, error) {
 	var client *http.Client
 	if referrer != nil {
 		client = referrer.http
 	}
-	err := puller(repoSpec, fSys, client)
+	cleaner, err := remotes.fetch(ociCacheKey(repoSpec), &repoSpec.Dir,
+		func() error { return puller(repoSpec, fSys, client) }, repoSpec.Cleaner(fSys))
 	if err != nil {
-		_ = cleaner()
 		return nil, err
 	}
 	root, f, err := fSys.CleanedAbs(repoSpec.AbsPath())
@@ -330,6 +339,7 @@ func newLoaderAtOciPull(
 		fSys:           fSys,
 		cloner:         cloner,
 		puller:         puller,
+		remotes:        remotes,
 		cleaner:        cleaner,
 	}, nil
 }
@@ -392,7 +402,8 @@ func (fl *FileLoader) containingOciRepo() *oci.RepoSpec {
 }
 
 // errIfArgEqualOrHigher tests whether the argument,
-// is equal to or above the root of any ancestor.
+// is equal to or above the root of any ancestor,
+// up to the nearest remote root.
 func (fl *FileLoader) errIfArgEqualOrHigher(
 	candidateRoot filesys.ConfirmedDir) error {
 	if fl.root.HasPrefix(candidateRoot) {
@@ -400,7 +411,11 @@ func (fl *FileLoader) errIfArgEqualOrHigher(
 			"cycle detected: candidate root '%s' contains visited root '%s'",
 			candidateRoot, fl.root)
 	}
-	if fl.referrer == nil {
+	// The roots above the nearest remote root are outside of it, or in
+	// it only because the build refers to the same remote again, which
+	// shares the clone or pull; cycles through remotes are detected by
+	// errIfRepoCycle and errIfOciRepoCycle.
+	if fl.referrer == nil || fl.repoSpec != nil || fl.ociSpec != nil {
 		return nil
 	}
 	return fl.referrer.errIfArgEqualOrHigher(candidateRoot)
@@ -487,7 +502,12 @@ func (fl *FileLoader) httpClientGetContent(path string) ([]byte, error) {
 	return content, errors.Wrap(err)
 }
 
-// Cleanup runs the cleaner.
+// Cleanup runs the cleaner, or, for the loader at the top of a
+// build (it has no referrer), removes the clones and pulls of the
+// build, its own included.
 func (fl *FileLoader) Cleanup() error {
+	if fl.referrer == nil && fl.remotes != nil {
+		return fl.remotes.cleanup()
+	}
 	return fl.cleaner()
 }
