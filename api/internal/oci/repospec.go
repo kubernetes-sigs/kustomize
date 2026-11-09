@@ -42,7 +42,8 @@ func (x *RepoSpec) PullSpec() string {
 	return x.Reference.Name()
 }
 
-func (x *RepoSpec) PullDir() filesys.ConfirmedDir {
+// FetchDir returns the directory the artifact is pulled to.
+func (x *RepoSpec) FetchDir() filesys.ConfirmedDir {
 	return x.Dir
 }
 

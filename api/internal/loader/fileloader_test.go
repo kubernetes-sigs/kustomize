@@ -600,7 +600,7 @@ func TestRepoDirectCycleDetection(t *testing.T) {
 	rs1, err := git.NewRepoSpecFromURL(p1)
 	require.NoError(err)
 
-	l1.repoSpec = rs1
+	l1.remote = rs1
 	_, err = l1.New(p1)
 	require.Error(err)
 	require.Contains(err.Error(), "cycle detected")

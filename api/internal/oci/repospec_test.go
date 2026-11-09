@@ -115,7 +115,7 @@ func TestNewRepoSpecFromURL(t *testing.T) {
 			require.Equal(t, tc.pullSpec, rs.PullSpec())
 			require.Equal(t, tc.kustRootPath, rs.KustRootPath)
 			require.Equal(t, tc.absPath, rs.AbsPath())
-			require.Equal(t, notPulled, rs.PullDir())
+			require.Equal(t, notPulled, rs.FetchDir())
 		})
 	}
 }
