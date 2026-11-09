@@ -83,20 +83,16 @@ func extract(img v1.Image, dir filesys.ConfirmedDir, fSys filesys.FileSystem) er
 			return errors.Errorf(
 				"oci artifact entry %q is not local to the artifact", header.Name)
 		}
-		target := dir.Join(header.Name)
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err = fSys.MkdirAll(target); err != nil {
-				return errors.Wrap(err)
-			}
-		case tar.TypeReg:
-			if err = writeFile(fSys, target, reader); err != nil {
-				return err
-			}
-		default:
-			// Links, devices and the like are not meaningful in a
-			// kustomization artifact, and links could be used to
-			// reach outside of the pull directory; skip them.
+		// Only regular files are written, along with the directories that
+		// hold them: directory entries would only add empty ones. Links,
+		// devices and the like are not meaningful in a kustomization
+		// artifact, and links could be used to reach outside of the pull
+		// directory; skip them.
+		if header.Typeflag != tar.TypeReg {
+			continue
+		}
+		if err = writeFile(fSys, dir.Join(header.Name), reader); err != nil {
+			return err
 		}
 	}
 }
