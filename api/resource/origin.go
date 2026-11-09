@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/git"
+	"sigs.k8s.io/kustomize/api/internal/oci"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -16,15 +17,16 @@ import (
 type Origin struct {
 	// Path is the path to the resource. If a local resource, this path is
 	// rooted from the directory upon which `kustomize build` was invoked. If a
-	// remote resource, this path is rooted from the root of the remote repo.
+	// remote resource, this path is rooted from the root of the remote repo or
+	// OCI artifact.
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 
 	// Repo is the remote repository that the resource or transformer originated from if it is
-	// not from a local file
+	// not from a local file; for an OCI artifact, its repository as an oci:// URL
 	Repo string `json:"repo,omitempty" yaml:"repo,omitempty"`
 
 	// Ref is the ref of the remote repository that the resource or transformer originated from
-	// if it is not from a local file
+	// if it is not from a local file; for an OCI artifact, the tag or digest
 	Ref string `json:"ref,omitempty" yaml:"ref,omitempty"`
 
 	// The following fields only apply to resources that have been
@@ -57,6 +59,13 @@ func (origin *Origin) Append(path string) *Origin {
 		path = absPath[strings.Index(absPath[1:], "/")+1:][1:]
 		originCopy.Path = ""
 		originCopy.Ref = repoSpec.Ref
+	} else if ociSpec, ociErr := oci.NewRepoSpecFromURL(path); ociErr == nil {
+		// As for a git repo: the repository of the artifact, the tag or
+		// digest pulled (the tag defaults to latest), and the path in it.
+		originCopy.Repo = "oci://" + ociSpec.Reference.Context().Name()
+		originCopy.Ref = ociSpec.Reference.Identifier()
+		originCopy.Path = ""
+		path = ociSpec.KustRootPath
 	}
 	originCopy.Path = filepath.Join(originCopy.Path, path)
 	return &originCopy
