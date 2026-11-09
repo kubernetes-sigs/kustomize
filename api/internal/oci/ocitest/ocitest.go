@@ -8,11 +8,15 @@ package ocitest
 import (
 	"archive/tar"
 	"bytes"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sort"
 	"testing"
 
@@ -46,6 +50,33 @@ func Handler() http.Handler {
 func IgnoreLocalCredentials(t *testing.T) {
 	t.Helper()
 	t.Setenv("DOCKER_CONFIG", t.TempDir())
+}
+
+// UseCredentials points DOCKER_CONFIG, for the rest of the test, at a new
+// directory whose config.json holds the given credentials for host, so that
+// pulls through the default keychain send them to that host.
+func UseCredentials(t *testing.T, host, username, password string) {
+	t.Helper()
+	dir := t.TempDir()
+	auth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+	config := fmt.Sprintf(`{"auths":{%q:{"auth":%q}}}`, host, auth)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.json"), []byte(config), 0o600))
+	t.Setenv("DOCKER_CONFIG", dir)
+}
+
+// BasicAuth returns a handler that serves the requests carrying the given
+// credentials through h, and answers the others with 401 Unauthorized and a
+// basic authentication challenge, as a registry that requires them does.
+func BasicAuth(h http.Handler, username, password string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u, p, ok := r.BasicAuth()
+		if !ok || u != username || p != password {
+			w.Header().Set("WWW-Authenticate", `Basic realm="ocitest"`)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 // NewRegistry starts an in-process registry on the in-memory network of

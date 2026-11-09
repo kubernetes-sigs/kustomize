@@ -147,6 +147,37 @@ func TestPullerUsingRegistry_UntrustedCertificate(t *testing.T) {
 	require.ErrorContains(t, err, "tls: failed to verify certificate")
 }
 
+func TestPullerUsingRegistry_Credentials(t *testing.T) {
+	// The registry requires credentials. The artifact is pushed through
+	// another server in front of the same registry, which does not.
+	h := ocitest.Handler()
+	ocitest.IgnoreLocalCredentials(t)
+	ocitest.Push(t, httptest.NewTestServer(t, h).Client(), someRef, ocitest.Files(t, artifactFiles()))
+	client := httptest.NewTestServer(t, ocitest.BasicAuth(h, "some-user", "some-password")).Client()
+	for name, tc := range map[string]struct {
+		username, password string // no credentials if empty
+		err                string // none if empty
+	}{
+		"valid credentials": {"some-user", "some-password", ""},
+		"wrong credentials": {"some-user", "wrong-password", "401 Unauthorized"},
+		"no credentials":    {"", "", "401 Unauthorized"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if tc.username != "" {
+				ocitest.UseCredentials(t, "registry.example.com", tc.username, tc.password)
+			}
+			rs, fSys := newRepoSpec(t, "oci://registry.example.com/some-org/some-repo:v1.0.0")
+			err := oci.PullerUsingRegistry(rs, fSys, client)
+			if tc.err != "" {
+				require.ErrorContains(t, err, tc.err)
+				return
+			}
+			require.NoError(t, err)
+			requireFiles(t, fSys, rs.PullDir(), artifactFiles())
+		})
+	}
+}
+
 func TestPullerUsingRegistry_MalformedLayers(t *testing.T) {
 	compressed, err := ocitest.Layer(t, artifactFiles()).Compressed()
 	require.NoError(t, err)
