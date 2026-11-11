@@ -6,7 +6,7 @@
 #  ./hack/doGoMod.sh verify
 
 operation=$1
-for f in $(find ./ -name 'go.mod'); do
+for f in $(find ./ -name 'go.mod' -not -path './site/*'); do
   echo $f
   d=$(dirname "$f")
   (cd $d; go mod $operation)
