@@ -62,6 +62,11 @@ func (p *plugin) Transform(m resmap.ResMap) error {
 			continue
 		}
 		r.StorePreviousId()
+		// Remember the namespace for every resource in this kustomization,
+		// including cluster-scoped ones. Name reference resolution runs only
+		// after overlays are merged, and cluster-scoped referrers can otherwise
+		// see every namespaced object with the same name.
+		r.AddNamespaceContext(p.Namespace)
 		if err := r.ApplyFilter(namespace.Filter{
 			Namespace:              p.Namespace,
 			FsSlice:                p.FieldSpecs,
