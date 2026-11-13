@@ -975,3 +975,71 @@ subjects:
   namespace: helm-owned-ns
 `)
 }
+
+func TestNamespaceTransformer_HelmOriginIgnoresFieldSpecs(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarness(t).
+		PrepBuiltin("NamespaceTransformer")
+	defer th.Reset()
+
+	rmF := resmap.NewFactory(provider.NewDefaultDepProvider().GetResourceFactory())
+	rm, err := rmF.NewResMapFromBytes([]byte(`apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.helm.example.com
+spec:
+  group: helm.example.com
+  service:
+    name: helm-svc
+  version: v1
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.plain.example.com
+spec:
+  group: plain.example.com
+  service:
+    name: plain-svc
+  version: v1
+`))
+	require.NoError(t, err)
+	r := rm.Resources()[0]
+	require.NoError(t, r.RNode.PipeE(kyaml.SetAnnotation(konfig.HelmGeneratedAnnotation, "true")))
+
+	rm, err = th.RunTransformerFromResMap(`
+apiVersion: builtin
+kind: NamespaceTransformer
+metadata:
+  name: notImportantHere
+  namespace: test
+`+defaultFieldSpecs+`- path: spec/service/namespace
+  group: apiregistration.k8s.io
+  kind: APIService
+  create: true
+`, rm)
+	require.NoError(t, err)
+	require.NoError(t, rm.RemoveOriginAnnotations())
+	// Field specs only apply to the resource that is not Helm-generated; Helm
+	// charts own every namespace reference outside of metadata.namespace.
+	th.AssertActualEqualsExpectedNoIdAnnotations(rm, `apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.helm.example.com
+spec:
+  group: helm.example.com
+  service:
+    name: helm-svc
+  version: v1
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.plain.example.com
+spec:
+  group: plain.example.com
+  service:
+    name: plain-svc
+    namespace: test
+  version: v1
+`)
+}
