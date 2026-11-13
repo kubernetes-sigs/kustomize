@@ -274,12 +274,12 @@ spec:
 ---
 apiVersion: v1
 data:
-  DB_PASSWORD: somepw
-  DB_USERNAME: admin
-  ENERGY: electronvolt
-  FRUIT: banana
-  LEGUME: chickpea
-  LENGTH: kilometer
+  DB_PASSWORD: "somepw"
+  DB_USERNAME: "admin"
+  ENERGY: "electronvolt"
+  FRUIT: "banana"
+  LEGUME: "chickpea"
+  LENGTH: "kilometer"
 kind: ConfigMap
 metadata:
   annotations:

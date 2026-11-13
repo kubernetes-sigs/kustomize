@@ -371,8 +371,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  arg: MA==
-  password: U1VQRVJfU0VDUkVUX1BBU1NXT1JE
+  arg: "MA=="
+  password: "U1VQRVJfU0VDUkVUX1BBU1NXT1JE"
 kind: Secret
 metadata:
   name: project-xql-zero-xql-secret-6khmtc56hm
@@ -380,8 +380,8 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  arg: MQ==
-  password: U1VQRVJfU0VDUkVUX1BBU1NXT1JE
+  arg: "MQ=="
+  password: "U1VQRVJfU0VDUkVUX1BBU1NXT1JE"
 kind: Secret
 metadata:
   name: project-xql-one-xql-secret-79mhmf5dgt

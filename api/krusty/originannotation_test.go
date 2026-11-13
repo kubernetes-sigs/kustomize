@@ -216,22 +216,22 @@ weak nuclear
 		m, `
 apiVersion: v1
 data:
-  BIRD: falcon
-  MOUNTAIN: everest
-  OCEAN: pacific
+  BIRD: "falcon"
+  MOUNTAIN: "everest"
+  OCEAN: "pacific"
   forces.txt: |2
 
     gravitational
     electromagnetic
     strong nuclear
     weak nuclear
-  fruit: apple
+  fruit: "apple"
   passphrase: |2
 
     Life is short.
     But the years are long.
     Not while the evil days come not.
-  vegetable: broccoli
+  vegetable: "broccoli"
 kind: ConfigMap
 metadata:
   annotations:
@@ -259,17 +259,17 @@ metadata:
 ---
 apiVersion: v1
 data:
-  BIRD: ZmFsY29u
-  MOUNTAIN: ZXZlcmVzdA==
-  OCEAN: cGFjaWZpYw==
+  BIRD: "ZmFsY29u"
+  MOUNTAIN: "ZXZlcmVzdA=="
+  OCEAN: "cGFjaWZpYw=="
   forces.txt: |
     CmdyYXZpdGF0aW9uYWwKZWxlY3Ryb21hZ25ldGljCnN0cm9uZyBudWNsZWFyCndlYWsgbn
     VjbGVhcgo=
-  fruit: YXBwbGU=
+  fruit: "YXBwbGU="
   passphrase: |
     CkxpZmUgaXMgc2hvcnQuCkJ1dCB0aGUgeWVhcnMgYXJlIGxvbmcuCk5vdCB3aGlsZSB0aG
     UgZXZpbCBkYXlzIGNvbWUgbm90Lgo=
-  vegetable: YnJvY2NvbGk=
+  vegetable: "YnJvY2NvbGk="
 kind: Secret
 metadata:
   annotations:
@@ -321,7 +321,7 @@ spec:
 apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   year: "2020"
 kind: ConfigMap
 metadata:
@@ -359,7 +359,7 @@ buildMetadata: [originAnnotations]
 	th.AssertActualEqualsExpected(m, `apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   month: "12"
   year: "2020"
 kind: ConfigMap
@@ -864,7 +864,7 @@ metadata:
 apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   year: "2020"
 kind: ConfigMap
 metadata:
@@ -918,7 +918,7 @@ metadata:
 apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   year: "2020"
 kind: ConfigMap
 metadata:
@@ -989,7 +989,7 @@ type: Opaque
 apiVersion: v1
 data:
   crisis: "true"
-  fruit: Indian Gooseberry
+  fruit: "Indian Gooseberry"
   year: "2020"
 kind: ConfigMap
 metadata:

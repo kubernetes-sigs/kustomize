@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/resid"
@@ -379,12 +380,24 @@ func (r *Resource) String() string {
 
 // AsYAML returns the resource in Yaml form.
 // Easier to read than JSON.
+//
+// ConfigMap and Secret data values are quoted after the JSON round-trip.
+// Those maps are string-only in Kubernetes; dropping quotes lets a later
+// envsubst of ${VAR} with true or 1 produce invalid YAML.
 func (r *Resource) AsYAML() ([]byte, error) {
 	json, err := r.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
-	return yaml.JSONToYAML(json)
+	yml, err := yaml.JSONToYAML(json)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if !kyaml.HasStringDataMaps(&r.RNode) {
+		return yml, nil
+	}
+	quoted, err := kyaml.QuoteStringDataMapsInYAML(yml)
+	return quoted, errors.Wrap(err)
 }
 
 // MustYaml returns YAML or panics.

@@ -61,6 +61,9 @@ func makeConfigMapValueRNode(s string) (field string, rN *RNode) {
 	}
 	if strings.Contains(yN.Value, "\n") {
 		yN.Style = LiteralStyle
+	} else {
+		// ConfigMap data values are always strings.
+		yN.Style = DoubleQuotedStyle
 	}
 	return field, NewRNode(yN)
 }
@@ -91,6 +94,8 @@ func makeSecretValueRNode(s string) *RNode {
 	yN.Value = encodeBase64(s)
 	if strings.Contains(yN.Value, "\n") {
 		yN.Style = LiteralStyle
+	} else {
+		yN.Style = DoubleQuotedStyle
 	}
 	return NewRNode(yN)
 }

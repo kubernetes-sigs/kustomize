@@ -54,7 +54,7 @@ chartName: minecraft
 		}, `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:

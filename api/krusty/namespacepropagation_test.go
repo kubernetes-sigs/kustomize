@@ -33,7 +33,7 @@ kind: ConfigMap
 metadata:
   name: hoge
 data:
-  configs.yaml: TO_BE_SPECIFIED
+  configs.yaml: "TO_BE_SPECIFIED"
 `)
 
 	// Overlay with namespace and patch
@@ -148,8 +148,8 @@ OVERLAY_ENV=overlay
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  BASE_LAYER_ENV: base
-  OVERLAY_ENV: overlay
+  BASE_LAYER_ENV: "base"
+  OVERLAY_ENV: "overlay"
 kind: ConfigMap
 metadata:
   name: general-environment-826bch2dh9
@@ -236,7 +236,7 @@ kind: ConfigMap
 metadata:
   name: base-config
 data:
-  key: value
+  key: "value"
 `)
 
 	// Level 2: Mid-layer (no namespace)
@@ -260,7 +260,7 @@ namePrefix: top-
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  key: value
+  key: "value"
 kind: ConfigMap
 metadata:
   name: top-mid-base-config
