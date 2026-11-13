@@ -5,9 +5,11 @@ package nameref
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/filters/fieldspec"
+	"sigs.k8s.io/kustomize/api/internal/utils"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
@@ -309,6 +311,37 @@ func (f Filter) sameCurrentNamespaceAsReferrer() sieveFunc {
 	}
 }
 
+// preferSameNamespaceContext keeps candidates that were included by the same
+// kustomization namespace transformers as the referrer.
+// Exact context matches win over a shared suffix, so an overlay resource is
+// not confused with a base resource that later passed through that overlay.
+// An empty result means the recorded context did not disambiguate.
+func preferSameNamespaceContext(
+	referrer *resource.Resource, candidates []*resource.Resource) []*resource.Resource {
+	want := referrer.AppliedNamespaces()
+	if len(want) == 0 {
+		return nil
+	}
+	var exact, suffix []*resource.Resource
+	for _, candidate := range candidates {
+		got := candidate.AppliedNamespaces()
+		if len(got) == 0 {
+			continue
+		}
+		if slices.Equal(want, got) {
+			exact = append(exact, candidate)
+			continue
+		}
+		if utils.SameEndingSubSlice(want, got) {
+			suffix = append(suffix, candidate)
+		}
+	}
+	if len(exact) > 0 {
+		return exact
+	}
+	return suffix
+}
+
 // selectReferral picks the best referral from a list of candidates.
 func (f Filter) selectReferral(
 	// The name referral that may need to be updated.
@@ -322,6 +355,16 @@ func (f Filter) selectReferral(
 	candidates = doSieve(candidates, f.sameCurrentNamespaceAsReferrer())
 	if len(candidates) == 1 {
 		return candidates[0], nil
+	}
+	// A cluster-scoped referrer can see every namespace. When the same
+	// namespaced object is included from more than one overlay, bind to the
+	// object that went through the same namespace transformers.
+	// https://github.com/kubernetes-sigs/kustomize/issues/3877
+	if scoped := preferSameNamespaceContext(f.Referrer, candidates); len(scoped) > 0 {
+		if len(scoped) == 1 {
+			return scoped[0], nil
+		}
+		candidates = scoped
 	}
 	candidates = doSieve(candidates, prefixSuffixEquals(f.Referrer, true))
 	if len(candidates) > 1 {

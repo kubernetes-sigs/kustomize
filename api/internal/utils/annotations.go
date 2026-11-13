@@ -12,9 +12,14 @@ const (
 	BuildAnnotationPrefixes           = konfig.ConfigAnnoDomain + "/prefixes"
 	BuildAnnotationSuffixes           = konfig.ConfigAnnoDomain + "/suffixes"
 	BuildAnnotationPreviousNamespaces = konfig.ConfigAnnoDomain + "/previousNamespaces"
-	BuildAnnotationsRefBy             = konfig.ConfigAnnoDomain + "/refBy"
-	BuildAnnotationsGenBehavior       = konfig.ConfigAnnoDomain + "/generatorBehavior"
-	BuildAnnotationsGenAddHashSuffix  = konfig.ConfigAnnoDomain + "/needsHashSuffix"
+	// Namespaces applied by kustomization namespace transformers that
+	// included this resource, oldest first. Recorded for cluster-scoped
+	// resources too so name references can be disambiguated after overlays
+	// are merged.
+	BuildAnnotationAppliedNamespaces = konfig.ConfigAnnoDomain + "/appliedNamespaces"
+	BuildAnnotationsRefBy            = konfig.ConfigAnnoDomain + "/refBy"
+	BuildAnnotationsGenBehavior      = konfig.ConfigAnnoDomain + "/generatorBehavior"
+	BuildAnnotationsGenAddHashSuffix = konfig.ConfigAnnoDomain + "/needsHashSuffix"
 
 	// the following are only for patches, to specify whether they can change names
 	// and kinds of their targets
