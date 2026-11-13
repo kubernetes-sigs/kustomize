@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: top-level-ns
+
+# The chart is shared with the sibling chartOnly example, so building requires
+# --load-restrictor LoadRestrictionsNone to reach above this kustomization root.
+helmGlobals:
+  chartHome: ../charts
+
+helmCharts:
+# test a contains a namespace
+- name: namespace-fill
+  releaseName: test-a
+  namespace: chart-ns
+# test b inherits the namespace from top level
+- name: namespace-fill
+  releaseName: test-b
+
+# Referenced as volumes by the Helm-generated Deployment; their name-suffix
+# hash must survive in its volume references (issue #6077).
+configMapGenerator:
+- name: mounted-config
+  literals:
+  - config=foo
+
+secretGenerator:
+- name: mounted-secret
+  literals:
+  - secret=foo
