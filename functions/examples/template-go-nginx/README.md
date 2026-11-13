@@ -32,7 +32,7 @@ with `metadata.annotations.[config.kubernetes.io/function]` and running:
 This generates the `local-resource/config` directory containing the template output.
 
 - the template output may be modified by adding fields -- such as initContainers,
-  sidecarConatiners, cpu resource limits, etc -- and these fields will be retained
+  sidecarContainers, cpu resource limits, etc -- and these fields will be retained
   when re-running `run`
 - the function input `example-use.yaml` may be changed and rerunning `run` will update
   only the parts changed in the template output.

@@ -6,6 +6,7 @@ package mod
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 
 	"golang.org/x/mod/modfile"
 	"sigs.k8s.io/kustomize/cmd/gorepomod/internal/misc"
@@ -87,7 +88,7 @@ func (m *Module) GetDisallowedReplacements(
 	allowedReplacements []string) (badReps []string) {
 	for _, r := range m.GetReplacements() {
 		m := utils.ExtractModule(r)
-		if !utils.SliceContains(allowedReplacements, m) {
+		if !slices.Contains(allowedReplacements, m) {
 			badReps = append(badReps, r)
 		}
 	}

@@ -30,7 +30,7 @@ resources:
 EOF
 ```
 
-Here's a _coffee_ type.  Give it a `kind` and `metdata/name` field
+Here's a _coffee_ type.  Give it a `kind` and `metadata/name` field
 to conform to [kubernetes API object style]; no other
 file or definition is needed:
 

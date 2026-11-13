@@ -80,7 +80,7 @@ func (a ExampleApp) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
 	var patches []framework.PatchTemplate
 	if a.Datastores.PostgresInstance != "" {
 		templates = append(templates, framework.ResourceTemplate{
-			TemplateData: map[string]interface{}{"Name": a.Datastores.PostgresInstance},
+			TemplateData: map[string]interface{}{templateNameKey: a.Datastores.PostgresInstance},
 			Templates: parser.TemplateStrings(`apiVersion: apps.example.com/v1
 kind: PostgresSecretRequest
 metadata:
@@ -156,13 +156,13 @@ func (a ExampleApp) resourceSMPsFromOverrides(resource string, i int, patches []
 }
 
 type resourceBucket struct {
-	Requests resourceAllocation `yaml:"requests" json:"requests"`
-	Limits   resourceAllocation `yaml:"limits" json:"limits"`
+	Requests resourceAllocation `json:"requests" yaml:"requests"`
+	Limits   resourceAllocation `json:"limits"   yaml:"limits"`
 }
 
 type resourceAllocation struct {
-	CPU    string `yaml:"cpu" json:"cpu"`
-	Memory string `yaml:"memory" json:"memory"`
+	CPU    string `json:"cpu"    yaml:"cpu"`
+	Memory string `json:"memory" yaml:"memory"`
 }
 
 //nolint:gochecknoglobals
@@ -181,7 +181,10 @@ var resourceBucketConversion = map[ResourceBinSize]resourceBucket{
 	},
 }
 
-const anArbitraryMultiplier = 2
+const (
+	anArbitraryMultiplier = 2
+	templateNameKey       = "Name"
+)
 
 func (a ExampleApp) jobWorkerTemplateData(w JobWorker) map[string]interface{} {
 	resourcesJson, err := json.Marshal(resourceBucketConversion[w.Resources])
@@ -190,7 +193,7 @@ func (a ExampleApp) jobWorkerTemplateData(w JobWorker) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"Name":            w.Name,
+		templateNameKey:   w.Name,
 		"AppImage":        a.AppImage,
 		"QueueList":       strings.Join(w.Queues, ","),
 		"ProcessPoolSize": len(w.Queues) * anArbitraryMultiplier,
@@ -209,11 +212,11 @@ func (a ExampleApp) webWorkerTemplateData(w WebWorker) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"Name":        w.Name,
-		"AppImage":    a.AppImage,
-		"Resources":   string(resourcesJson),
-		"Replicas":    w.Replicas,
-		"Port":        containerPort,
-		"Environment": a.Env,
+		templateNameKey: w.Name,
+		"AppImage":      a.AppImage,
+		"Resources":     string(resourcesJson),
+		"Replicas":      w.Replicas,
+		"Port":          containerPort,
+		"Environment":   a.Env,
 	}
 }

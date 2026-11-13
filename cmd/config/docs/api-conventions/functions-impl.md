@@ -90,7 +90,7 @@ End-of-message
 image.
 
 ```
-FROM public.ecr.aws/docker/library/golang:1.26.5
+FROM public.ecr.aws/docker/library/golang:1.27.1
 RUN go get sigs.k8s.io/kustomize/cmd/config
 RUN mv /go/bin/config /usr/bin/config
 COPY nginx-template.sh /usr/bin/nginx-template.sh

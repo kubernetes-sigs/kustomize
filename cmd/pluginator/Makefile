@@ -13,9 +13,6 @@ test:
 build:
 	go build -o $(MYGOBIN) main.go
 
-install:
-	go install .
-
 run:
 	go run . $(ARGS)
 

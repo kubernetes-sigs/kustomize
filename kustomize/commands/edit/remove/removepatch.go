@@ -28,7 +28,7 @@ func newCmdRemovePatch(fSys filesys.FileSystem) *cobra.Command {
 		Short: "Removes a patch from " +
 			konfig.DefaultKustomizationFileName(),
 		Long: `Removes a patch from patches field. The fields specified by flags must 
-exactly match the patch item to successfully remote the item.`,
+exactly match the patch item to successfully remove the item.`,
 		Example: `
 		remove patch --path {filepath} --group {target group name} --version {target version}`,
 		RunE: func(cmd *cobra.Command, args []string) error {

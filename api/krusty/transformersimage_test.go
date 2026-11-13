@@ -9,7 +9,7 @@ import (
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
-func makeTransfomersImageBase(th kusttest_test.Harness) {
+func makeTransformersImageBase(th kusttest_test.Harness) {
 	th.WriteK("base", `
 resources:
 - deploy1.yaml
@@ -176,9 +176,9 @@ spec:
 // The default configuration recognizes image paths starting
 // with "spec", not spec2 or spec3, so the latter two specs won't
 // have their image entries changed.
-func TestTransfomersImageDefaultConfig(t *testing.T) {
+func TestTransformersImageDefaultConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	makeTransfomersImageBase(th)
+	makeTransformersImageBase(th)
 	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
@@ -238,7 +238,7 @@ spec3:
 `)
 }
 
-func makeTransfomersImageCustomBase(th kusttest_test.Harness) {
+func makeTransformersImageCustomBase(th kusttest_test.Harness) {
 	th.WriteK("base", `
 resources:
 - custom.yaml
@@ -310,9 +310,9 @@ images:
 `)
 }
 
-func TestTransfomersImageCustomConfig(t *testing.T) {
+func TestTransformersImageCustomConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	makeTransfomersImageCustomBase(th)
+	makeTransformersImageCustomBase(th)
 	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 kind: customKind
@@ -351,7 +351,7 @@ spec3:
 `)
 }
 
-func makeTransfomersImageKnativeBase(th kusttest_test.Harness) {
+func makeTransformersImageKnativeBase(th kusttest_test.Harness) {
 	th.WriteK("base", `
 resources:
 - knative.yaml
@@ -383,9 +383,9 @@ images:
 `)
 }
 
-func TestTransfomersImageKnativeConfig(t *testing.T) {
+func TestTransformersImageKnativeConfig(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
-	makeTransfomersImageKnativeBase(th)
+	makeTransformersImageKnativeBase(th)
 	m := th.Run("base", th.MakeDefaultOptions())
 	th.AssertActualEqualsExpected(m, `
 apiVersion: serving.knative.dev/v1alpha1
@@ -405,7 +405,7 @@ spec:
 // An images[].name value that is not a valid regexp (here "[") used to crash
 // the build with a nil-pointer panic. It should be treated as matching no
 // container image, so the resource passes through untouched.
-func TestTransfomersImageInvalidNameRegexp(t *testing.T) {
+func TestTransformersImageInvalidNameRegexp(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
 resources:
@@ -438,5 +438,99 @@ spec:
       containers:
       - image: nginx:1.7.9
         name: nginx
+`)
+}
+
+// Image Volume (KEP-4639, spec.volumes[].image) references should be
+// rewritten by the default images config wherever kustomize also rewrites
+// container images: bare Pods, PodTemplate-based workloads, and CronJob,
+// whose containers live one level deeper under spec.jobTemplate.
+func TestTransformersImageVolumeDefaultConfig(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- pod.yaml
+- deploy.yaml
+- cronjob.yaml
+images:
+- name: nginx
+  newTag: v2
+`)
+	th.WriteF("pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  volumes:
+  - name: volume
+    image:
+      reference: nginx
+`)
+	th.WriteF("deploy.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      volumes:
+      - name: volume
+        image:
+          reference: nginx
+`)
+	th.WriteF("cronjob.yaml", `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: volume
+            image:
+              reference: nginx
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  volumes:
+  - image:
+      reference: nginx:v2
+    name: volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      volumes:
+      - image:
+          reference: nginx:v2
+        name: volume
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - image:
+              reference: nginx:v2
+            name: volume
 `)
 }

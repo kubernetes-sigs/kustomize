@@ -13,7 +13,7 @@ Make a place to work:
 DEMO_HOME=$(mktemp -d)
 ```
 
-We'll be editting an `Ingress` object:
+We'll be editing an `Ingress` object:
 
 <!-- @ingress @testAgainstLatestRelease -->
 ```
@@ -83,7 +83,7 @@ EOF
 ```
 
 To this same `kustomization` file, add a
-`patches` field refering to
+`patches` field referring to
 the patch file we just made and
 target it to the `Ingress` object:
 

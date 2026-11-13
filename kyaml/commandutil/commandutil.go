@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// EnabkeAlphaCommmandsEnvName is the environment variable used to enable Alpha kustomize commands.
+// EnableAlphaCommmandsEnvName is the environment variable used to enable Alpha kustomize commands.
 // If set to "true" alpha commands will be enabled.
 const EnableAlphaCommmandsEnvName = "KUSTOMIZE_ENABLE_ALPHA_COMMANDS"
 

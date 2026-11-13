@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/kustomize/api/provenance"
 )
 
-//go:generate stringer -type=pluginType
+//go:generate go tool stringer -type=pluginType
 type pluginType int
 
 const packageForGeneratedCode = "builtins"

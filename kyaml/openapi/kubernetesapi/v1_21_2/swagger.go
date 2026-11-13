@@ -3,7 +3,7 @@
 
 // Package v1_21_2 preserves the public asset API generated for the Kubernetes
 // v1.21.2 OpenAPI protobuf. New code should use package openapi instead.
-package v1_21_2 //nolint:revive // The package name is part of the public API.
+package v1_21_2
 
 import (
 	_ "embed"

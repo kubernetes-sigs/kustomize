@@ -16,7 +16,7 @@ echo "Installing kustomize ${version}"
 
 MYGOBIN=$(go env GOBIN)
 MYGOBIN="${MYGOBIN:-$(go env GOPATH)/bin}"
-# Always rebuild, never assume the installed verion is
+# Always rebuild, never assume the installed version is
 # the right one to test.
 rm -f $MYGOBIN/kustomize
 if [ "$version" == "HEAD" ]; then
@@ -30,7 +30,7 @@ fi
 # any branch using this label, so it should probably get
 # a new value.
 export MYGOBIN
-mdrip --mode test --blockTimeOut 15m \
+go tool mdrip --mode test --blockTimeOut 15m \
     --label testAgainstLatestRelease examples
 
 # TODO: make work for non-linux
@@ -38,8 +38,8 @@ if onLinuxAndNotOnRemoteCI; then
   if [ "$version" == "HEAD" ]; then
     echo "On linux, and not on remote CI.  Running helm tests."
     make $MYGOBIN/helmV3
-    mdrip --mode test --label testHelm examples/chart.md
-    mdrip --mode test --label testHelm examples/helmNamespace/README.md
+    go tool mdrip --mode test --label testHelm examples/chart.md
+    go tool mdrip --mode test --label testHelm examples/helmNamespace/README.md
   else
     echo "Skipping helm tests against $version."
     echo "Helm chart inflator has new features (includeCRD) only in HEAD."

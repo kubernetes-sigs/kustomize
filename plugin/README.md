@@ -13,7 +13,8 @@ each in its own sub-directory.
    kustomize binary by a code generator ([pluginator]) at
    kustomize build time.
    
-   They are maintained as part of kustomize.
+   They are maintained as part of kustomize and share the
+   `plugin/builtin` Go module. Each plugin remains a separate package.
 
  * `someteam.example.com/v1`
 
@@ -80,7 +81,8 @@ For more discussion, see [extending kustomize].
 
   These are built as shared object libraries.  Like
   a Go program, they're written in an unimportable
-  `main` package with its own `go.mod` file.
+  `main` package. Multiple plugin packages can share a `go.mod` file,
+  as the builtin plugins do.
   Go plugins cannot be reliably distributed (see docs),
   and are meant only as a structured way to write a
   builtin plugin intended for distribution with kustomize.

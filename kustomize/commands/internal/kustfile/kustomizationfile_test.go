@@ -135,7 +135,7 @@ func TestReadAndWriteDummy(t *testing.T) {
 		NamePrefix:   "prefix",
 		NameSuffix:   "suffix",
 		Namespace:    "namespace",
-		CommonLabels: map[string]string{"commonLabel": "commonLabel"},
+		CommonLabels: map[string]string{"commonLabel": "commonLabel"}, //nolint:staticcheck // This test covers the deprecated field's round trip.
 		Labels: []types.Label{{
 			Pairs:            map[string]string{"label": "label"},
 			IncludeSelectors: true,
@@ -474,7 +474,7 @@ kind: Kustomization
 	}
 }
 
-func TestCommentsWithDocumentSeperatorAtBeginning(t *testing.T) {
+func TestCommentsWithDocumentSeparatorAtBeginning(t *testing.T) {
 	kustomizationContentWithComments := []byte(`
 
 

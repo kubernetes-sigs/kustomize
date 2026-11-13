@@ -1,7 +1,7 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate pluginator
+//go:generate go tool pluginator
 package main
 
 import (

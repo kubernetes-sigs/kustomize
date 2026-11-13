@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// loadDefaultConfig returns a TranformerConfig
+// loadDefaultConfig returns a TransformerConfig
 // object from a list of files.
 func loadDefaultConfig(
 	ldr ifc.Loader, paths []string) (*TransformerConfig, error) {

@@ -957,6 +957,50 @@ spec:
 				},
 			},
 		},
+		"update image volume in cronjob": {
+			input: `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: imagevolume
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: volume
+            image:
+              reference: nginx
+`,
+			expectedOutput: `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: imagevolume
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: volume
+            image:
+              reference: apache@12345
+`,
+			filter: Filter{
+				ImageTag: types.Image{
+					Name:    "nginx",
+					NewName: "apache",
+					Digest:  "12345",
+				},
+			},
+			fsSlice: []types.FieldSpec{
+				{
+					Path: "spec/jobTemplate/spec/template/spec/volumes[]/image/reference",
+				},
+			},
+		},
 	}
 
 	for tn, tc := range testCases {

@@ -4,7 +4,7 @@ title: "Matten til Java: Drivverket"
 linkTitle: "Matten til Java"
 date: 2017-01-07
 description: >
- En kort oppsummering av denne siden. Tekst kan **utheves** sller skrives i _kursiv_ og kan ha flere avsnitt.
+ En kort oppsummering av denne siden. Tekst kan **utheves** eller skrives i _kursiv_ og kan ha flere avsnitt.
 ---
 
 Text can be **bold**, _italic_, or ~~strikethrough~~. [Links](https://gohugo.io) should be blue with no underlines (unless hovered over).

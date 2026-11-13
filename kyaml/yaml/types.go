@@ -69,7 +69,7 @@ func IsYNodeString(n *yaml.Node) bool {
 // The Node itself has a method IsZero but it is not released
 // in yaml.v3. https://pkg.go.dev/gopkg.in/yaml.v3#Node.IsZero
 func IsYNodeZero(n *yaml.Node) bool {
-	// TODO: Change this to use IsZero when it's avaialable.
+	// TODO: Change this to use IsZero when it's available.
 	return n != nil && n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" &&
 		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
 		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&

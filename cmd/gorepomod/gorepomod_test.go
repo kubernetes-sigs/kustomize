@@ -12,7 +12,6 @@ import (
 )
 
 func TestListCommand(t *testing.T) {
-	// Assuming gorepomod is installed
 	var testCases = map[string]struct {
 		isFork   bool
 		cmd      string
@@ -20,19 +19,19 @@ func TestListCommand(t *testing.T) {
 	}{
 		"upstreamWithLocalFlag": {
 			isFork: false,
-			cmd:    "cd ../.. && gorepomod list --local",
+			cmd:    "cd ../.. && go tool gorepomod list --local",
 		},
 		"upstreamWithNoLocalFlag": {
 			isFork: false,
-			cmd:    "cd ../.. && gorepomod list",
+			cmd:    "cd ../.. && go tool gorepomod list",
 		},
 		"forkWithLocalFlag": {
 			isFork: true,
-			cmd:    "cd ../.. && gorepomod list --local",
+			cmd:    "cd ../.. && go tool gorepomod list --local",
 		},
 		"forkWithNoLocalFlag": {
 			isFork: true,
-			cmd:    "cd ../.. && gorepomod list",
+			cmd:    "cd ../.. && go tool gorepomod list",
 		},
 	}
 
@@ -50,26 +49,25 @@ func TestListCommand(t *testing.T) {
 }
 
 func TestPinCommand(t *testing.T) {
-	// Assuming gorepomod is installed
 	var testCases = map[string]struct {
 		isFork bool
 		cmd    string
 	}{
 		"upstreamWithLocalFlag": {
 			isFork: false,
-			cmd:    "cd ../.. && gorepomod pin kyaml --local",
+			cmd:    "cd ../.. && go tool gorepomod pin kyaml --local",
 		},
 		"upstreamWithNoLocalFlag": {
 			isFork: false,
-			cmd:    "cd ../.. && gorepomod pin kyaml",
+			cmd:    "cd ../.. && go tool gorepomod pin kyaml",
 		},
 		"forkWithLocalFlag": {
 			isFork: true,
-			cmd:    "cd ../.. && gorepomod pin kyaml --local",
+			cmd:    "cd ../.. && go tool gorepomod pin kyaml --local",
 		},
 		"forkWithNoLocalFlag": {
 			isFork: true,
-			cmd:    "cd ../.. && gorepomod pin kyaml",
+			cmd:    "cd ../.. && go tool gorepomod pin kyaml",
 		},
 	}
 

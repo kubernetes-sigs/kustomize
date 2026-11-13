@@ -11,9 +11,6 @@ export PATH := $(MYGOBIN):$(PATH)
 
 include ../../Makefile-tools.mk
 
-$(MYGOBIN)/k8scopy:
-	( cd ../k8scopy; go install . )
-
 build:
 	go build -v -o $(MYGOBIN)/kubectl-krm ./kubectl-krm
 
@@ -21,15 +18,14 @@ all: build fix vet fmt test lint tidy
 
 k8sGenDir := internal/commands/internal/k8sgen/pkg
 
-generate: $(MYGOBIN)/mdtogo $(MYGOBIN)/k8scopy
-	GOBIN="${MYGOBIN}" go generate ./...
+generate:
+	go generate ./...
 
 clean:
 	rm -rf $(k8sGenDir)
 
-lint: $(MYGOBIN)/golangci-lint
-	$(MYGOBIN)/golangci-lint \
-	  --skip-dirs $(k8sGenDir) \
+lint: $(GOLANGCI_LINT_PREREQUISITE)
+	"$(GOLANGCI_LINT)" \
 	  run ./... \
 	  --path-prefix=cmd/config \
 	  -c ../../.golangci.yml

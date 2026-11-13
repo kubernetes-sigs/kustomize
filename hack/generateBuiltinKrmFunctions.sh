@@ -28,15 +28,9 @@ if [[ -z $KRM_FUNCTION_DIR ]]; then
 fi
 
 
-# Install pluginator
-pushd ../cmd/pluginator
-make install
-popd
-
-
 for pluginName in ${builtinPlugins[@]}; do
     dirName=$(echo $pluginName | tr '[:upper:]' '[:lower:]')
     srcPath="$builtinPluginDir/$dirName/$pluginName.go"
     dstPath="$KRM_FUNCTION_DIR/$dirName"
-    pluginator krm -i $srcPath -o $dstPath
+    go tool pluginator krm -i $srcPath -o $dstPath
 done

@@ -11,26 +11,21 @@ include ../Makefile-tools.mk
 
 .PHONY: generate fix vet fmt test lint tidy clean
 
-$(MYGOBIN)/k8scopy:
-	( cd ../cmd/k8scopy; go install . )
-
 all: generate fix vet fmt test lint tidy
 
 k8sGenDir := yaml/internal/k8sgen/pkg
 
-generate: $(MYGOBIN)/stringer $(MYGOBIN)/k8scopy
+generate:
 	go generate ./...
 
 clean:
 	rm -rf $(k8sGenDir)
 
-lint: $(MYGOBIN)/golangci-lint
-	$(MYGOBIN)/golangci-lint \
+lint: $(GOLANGCI_LINT_PREREQUISITE)
+	"$(GOLANGCI_LINT)" \
 	  run ./... \
 	  --path-prefix=kyaml \
-	  -c ../.golangci.yml \
-	  --skip-dirs yaml/internal/k8sgen/pkg \
-	  --skip-dirs internal/forked
+	  -c ../.golangci.yml
 
 test:
 	go test -race -v -cover ./...

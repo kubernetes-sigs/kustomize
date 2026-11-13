@@ -35,7 +35,7 @@ args=(
 )
 if [[ $mode == "check" ]]; then
   args+=(-check)
-  if  ! addlicense "${args[@]}" .  ; then
+  if  ! go tool addlicense "${args[@]}" .  ; then
     set +x
     echo -e "\n------------------------------------------------------------------------"
     echo "Error: license missing in one or more files. Run \`$0 run\` to update them."
@@ -44,4 +44,4 @@ if [[ $mode == "check" ]]; then
   exit 0
 fi
 
-addlicense "${args[@]}" .
+go tool addlicense "${args[@]}" .

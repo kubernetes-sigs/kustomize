@@ -6,15 +6,14 @@
 # The rules to deal with builtin plugins are a bit
 # complicated because
 #
-# - Every builtin plugin is a Go plugin -
-#   meaning it gets its own module directory
-#   (outside of the api module) with Go
-#   code in a 'main' package per Go plugin rules.
+# - Every builtin plugin is a Go plugin, with its own
+#   'main' package in the shared plugin/builtin module
+#   (outside of the api module).
 # - kustomize locates plugins using the
 #   'apiVersion' and 'kind' fields from the
 #   plugin config file.
 # - k8s wants CamelCase in 'kind' fields.
-# - The module name (the last name in the path)
+# - The package directory name (the last name in the path)
 #   must be the lowercased 'kind' of the
 #   plugin because Go and related tools
 #   demand lowercase in import paths, but
@@ -24,7 +23,7 @@
 
 # Where all generated builtin plugin code should go.
 pGen=api/internal/builtins
-# Where the builtin Go plugin modules live.
+# Where the builtin Go plugin packages live.
 pSrc=plugin/builtin
 
 _builtinplugins = \
@@ -79,20 +78,20 @@ $(pGen)/HelmChartInflationGenerator.go: $(pSrc)/helmchartinflationgenerator/Helm
 # The (verbose but portable) Makefile way to convert to lowercase.
 toLowerCase = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
 
-$(pGen)/%.go: $(MYGOBIN)/pluginator $(MYGOBIN)/goimports
+$(pGen)/%.go:
 	@echo "generating $*"
 	( \
 		set -e; \
 		cd $(pSrc)/$(call toLowerCase,$*); \
 		go generate .; \
 		cd ../../../$(pGen); \
-		$(MYGOBIN)/goimports -w $*.go \
+		go tool goimports -w $*.go \
 	)
 
 # Generate builtin plugins
 .PHONY: generate-kustomize-builtin-plugins
 generate-kustomize-builtin-plugins: $(builtplugins)
-	for plugin in $(abspath $(wildcard $(pSrc)/*)); do \
+	for plugin in $(abspath $(pSrc))/*/; do \
 		echo "generating $${plugin} ..."; \
 		set -e; \
 		cd $${plugin}; \

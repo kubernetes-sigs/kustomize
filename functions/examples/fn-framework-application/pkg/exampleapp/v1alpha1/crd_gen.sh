@@ -7,7 +7,7 @@ set -eo pipefail
 
 # This generates a useful starting point for a CRD that can be used for validation.
 echo "  - Generating CRD"
-controller-gen crd paths=./... output:crd:dir=.
+go tool controller-gen crd paths=./... output:crd:dir=.
 
 # controller-gen does not currently support "additionalProperties: false".
 # This hack adds it manually to all properties sections of the schema.
