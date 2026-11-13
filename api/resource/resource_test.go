@@ -74,6 +74,38 @@ metadata:
 	}
 }
 
+func TestAsYAMLQuotesOversizedHexInConfigMapData(t *testing.T) {
+	res, err := factory.FromMap(map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name": "test-config",
+			"annotations": map[string]interface{}{
+				"addr": "0x10000000000000000",
+			},
+		},
+		"data": map[string]interface{}{
+			"C":     "0xFFFFFFFFFFFFFFFF",
+			"D":     "0x10000000000000000",
+			"plain": "hello",
+		},
+	})
+	require.NoError(t, err)
+	got, err := res.AsYAML()
+	require.NoError(t, err)
+	assert.Equal(t, `apiVersion: v1
+data:
+  C: "0xFFFFFFFFFFFFFFFF"
+  D: "0x10000000000000000"
+  plain: hello
+kind: ConfigMap
+metadata:
+  annotations:
+    addr: 0x10000000000000000
+  name: test-config
+`, string(got))
+}
+
 func TestResourceString(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
