@@ -80,6 +80,16 @@ func (mgr *Manager) hasUnPinnedDeps(m misc.LaModule) string {
 }
 
 func (mgr *Manager) List() error {
+	// Auto-update local tags
+	gr := git.NewQuiet(mgr.AbsPath(), false, false)
+	for _, module := range mgr.modules {
+		releaseBranch := fmt.Sprintf("release-%s", module.ShortName())
+		_, err := gr.GetLatestTag(releaseBranch)
+		if err != nil {
+			return fmt.Errorf("failed getting latest tags for %s", module)
+		}
+	}
+
 	fmt.Printf("   src path: %s\n", mgr.dg.SrcPath())
 	fmt.Printf("  repo path: %s\n", mgr.RepoPath())
 	fmt.Printf("     remote: %s\n", mgr.remoteName)
@@ -103,18 +113,14 @@ func (mgr *Manager) List() error {
 	})
 }
 
-func determineTag(m misc.LaModule, v semver.SemVer) string {
+func determineBranchAndTag(
+	m misc.LaModule, v semver.SemVer) (string, string) {
 	if m.ShortName() == misc.ModuleAtTop {
-		return v.String()
+		return fmt.Sprintf("release-%s", v.BranchLabel()), v.String()
 	}
-	return string(m.ShortName()) + "/" + v.String()
-}
-
-func determineReleaseBranch(releaseBranch string) (string, error) {
-	if releaseBranch == "" {
-		return "", fmt.Errorf("%s must be specified for release", "--release-branch")
-	}
-	return releaseBranch, nil
+	return fmt.Sprintf(
+			"release-%s-%s", m.ShortName(), v.BranchLabel()),
+		string(m.ShortName()) + "/" + v.String()
 }
 
 func (mgr *Manager) Debug(_ misc.LaModule, doIt bool, localFlag bool) error {
@@ -125,9 +131,9 @@ func (mgr *Manager) Debug(_ misc.LaModule, doIt bool, localFlag bool) error {
 // Release supports a gitlab flow style release process.
 //
 // * All development happens in the branch named "master".
-// * Each release uses the explicitly provided release branch.
+// * Each minor release gets its own branch.
 func (mgr *Manager) Release(
-	target misc.LaModule, bump semver.SvBump, releaseBranch string, doIt bool, localFlag bool) error {
+	target misc.LaModule, bump semver.SvBump, doIt bool, localFlag bool) error {
 	if reps := target.GetDisallowedReplacements(
 		mgr.allowedReplacements); len(reps) > 0 {
 		return fmt.Errorf(
@@ -149,11 +155,7 @@ func (mgr *Manager) Release(
 
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 
-	relBranch, err := determineReleaseBranch(releaseBranch)
-	if err != nil {
-		return err
-	}
-	relTag := determineTag(target, newVersion)
+	relBranch, relTag := determineBranchAndTag(target, newVersion)
 
 	fmt.Printf(
 		"Releasing %s, stepping from %s to %s\n",
@@ -165,10 +167,19 @@ func (mgr *Manager) Release(
 	if err := gr.FetchRemote(mgr.remoteName); err != nil {
 		return err
 	}
+	if err := gr.CheckoutMainBranch(); err != nil {
+		return err
+	}
+	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
+		return err
+	}
 	if err := gr.AssureCleanWorkspace(); err != nil {
 		return err
 	}
 	if err := gr.CheckoutReleaseBranch(mgr.remoteName, relBranch); err != nil {
+		return err
+	}
+	if err := gr.MergeFromRemoteMain(mgr.remoteName); err != nil {
 		return err
 	}
 	if err := gr.PushBranchToRemote(mgr.remoteName, relBranch); err != nil {
@@ -180,6 +191,9 @@ func (mgr *Manager) Release(
 	if err := gr.PushTagToRemote(mgr.remoteName, relTag); err != nil {
 		return err
 	}
+	if err := gr.CheckoutMainBranch(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -188,7 +202,7 @@ func (mgr *Manager) UnRelease(target misc.LaModule, doIt bool, localFlag bool) e
 		"Unreleasing %s/%s\n",
 		target.ShortName(), target.VersionRemote())
 
-	tag := determineTag(target, target.VersionRemote())
+	_, tag := determineBranchAndTag(target, target.VersionRemote())
 
 	gr := git.NewLoud(mgr.AbsPath(), doIt, localFlag)
 

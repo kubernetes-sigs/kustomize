@@ -67,7 +67,7 @@ The argument _{version}_ defaults to recent version of _{module}_.
 _{version}_ should be in semver form, e.g. `v1.2.3`.
 
 
-#### `gorepomod release {module} [patch|minor|major] --release-branch {branch}`
+#### `gorepomod release {module} [patch|minor|major]`
 
 Computes a new version for the module, tags the repo
 with that version, and pushes the tag to the remote.
@@ -80,10 +80,11 @@ If the existing version is _v1.2.7_, then the new version will be:
  - `minor` -> _v1.3.0_
  - `major` -> _v2.0.0_
 
-After establishing the version, the command uses the branch supplied with
-`--release-branch`.
+After establishing the version, the command looks for a branch named
 
-If that branch doesn't exist, the command creates it and pushes it to the remote.
+> _release-{module}/-v{major}.{minor}_
+
+If the branch doesn't exist, the command creates it and pushes it to the remote.
 
 The command then creates a new tag in the form
 
@@ -106,3 +107,4 @@ imported the module at the given tag, then don't do this,
 because it will confuse module caches.
 
 Do a new patch release instead.
+
