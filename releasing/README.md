@@ -30,7 +30,7 @@ Pushing the tag upstream will trigger [GitHub Actions] to build a release and ma
 
 And, container image contains `kustomize` binary will build [Google Cloud Build] that instructions from [`cloudbuild_kustomize_image.yaml`] file triggered by tags contain `kustomize` and release versions.
 
-We use a Go program to make the tagging and branch
+We use `releasing/release-all.sh` to make the tagging and branch
 creation process less error prone.
 
 See this [multi-module repo] tagging discussion
@@ -113,31 +113,34 @@ Without `--do-it`, the script runs in dry-run mode and prints the commands it wo
 
 The automation releases from `upstream/master`; it requires an `upstream` remote and does not support selecting a different remote or base branch.
 
-If a run fails after the release branch has been pushed, resume it with the
-target versions printed by the original invocation. Resume uses the standard
-branch name `release-$KUSTOMIZE_VERSION`:
+The script prints the target versions at the start. If a run fails after the
+release branch has been pushed, fix the cause and re-run the same command with
+`--resume` and those versions:
 
 ```bash
 releasing/release-all.sh \
   --module-bump patch \
   --kustomize-bump patch \
-  --branch release-vX.Y.Z \
   --module-version vX.Y.Z \
   --kustomize-version vX.Y.Z \
   --resume --do-it
 ```
 
-Resume skips an existing tag only when that tag is an ancestor of the release
-branch. It never deletes or replaces a tag. If a pushed tag is wrong, stop the
-run and plan a corrective release with the release owners instead of resuming.
-Custom `--branch` values are supported for a new run, but cannot be resumed.
+Every step is safe to re-run: an existing tag is skipped only when it is on the
+release branch, and pins, commits, pushes, and the final PR are no-ops when they
+are already done. The script never deletes or replaces a tag.
+
+There is no rollback. Once `make verify-kustomize-repo` has run against a pushed
+tag, the Go module proxy has cached that version, so deleting and re-creating the
+tag would break users with a checksum mismatch. If a pushed tag is wrong, stop and
+plan a corrective release with the release owners instead of resuming.
 
 The script does not decide the semver bumps for you, review changelogs, or undraft GitHub releases. Major releases are not supported by the script; use the manual flow below.
 
 <details>
 <summary>Manual release flow</summary>
 
-For a manual release, pass `--release-branch release-vX.Y.Z` to each `gorepomod release ...` command. The PR is created only after the final `unpin + LATEST_RELEASE` step.
+The manual flow uses the same single release branch as `release-all.sh`. Each module is released by tagging the head of the release branch and pushing the tag. The PR is created only after the final `unpin + LATEST_RELEASE` step.
 
 ### Load helper functions
 
@@ -148,8 +151,6 @@ source releasing/helpers.sh
 ### Set release variables
 
 ```
-moduleBump=patch               # EDIT THIS! patch, minor, or major
-kustomizeBump=patch            # EDIT THIS! patch, minor, or major
 versionModule=v0.10.20         # EDIT THIS! kyaml, cmd/config, and api release version
 versionKustomize=v5.8.2        # EDIT THIS!
 releaseBranch=release-$versionKustomize
@@ -161,6 +162,12 @@ releaseBranch=release-$versionKustomize
 
 ```
 refreshMaster && testKustomizeRepo
+```
+
+Create the release branch from master:
+
+```
+git checkout -b "$releaseBranch" && git push upstream "$releaseBranch"
 ```
 
 While you're waiting for the tests, review the commit log:
@@ -176,7 +183,7 @@ kyaml has no intra-repo deps, so if the tests pass, it can just be released.
 #### Release it
 
 ```
-go tool gorepomod release kyaml "$moduleBump" --release-branch "$releaseBranch" --doIt --local
+git tag -a "kyaml/$versionModule" -m "Release kyaml/$versionModule on branch $releaseBranch" && git push upstream "kyaml/$versionModule"
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -219,7 +226,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release cmd/config "$moduleBump" --release-branch "$releaseBranch" --doIt --local
+git tag -a "cmd/config/$versionModule" -m "Release cmd/config/$versionModule on branch $releaseBranch" && git push upstream "cmd/config/$versionModule"
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -264,7 +271,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release api "$moduleBump" --release-branch "$releaseBranch" --doIt --local
+git tag -a "api/$versionModule" -m "Release api/$versionModule on branch $releaseBranch" && git push upstream "api/$versionModule"
 ```
 
 See the process of the [build history of GitHub Actions job].
@@ -315,7 +322,7 @@ Based on the changes to be included in this release, decide whether a patch, min
 #### Release it
 
 ```
-go tool gorepomod release kustomize "$kustomizeBump" --release-branch "$releaseBranch" --doIt --local
+git tag -a "kustomize/$versionKustomize" -m "Release kustomize/$versionKustomize on branch $releaseBranch" && git push upstream "kustomize/$versionKustomize"
 ```
 
 See the process of the [build history of GitHub Actions job].
