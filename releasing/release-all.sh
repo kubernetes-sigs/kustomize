@@ -140,10 +140,13 @@ release_module() {
   local expected
   expected="$(next_version "${module}" "${bump}")"
   [[ "${expected}" == "${version}" ]] || fail "${module} would release ${expected}, not ${version}"
-  # Same guard as gorepomod release: a released module must not use replace.
-  # Skipped in a dry run, where the preceding pin commands are not executed.
-  if [[ "${do_it}" -eq 1 ]] && go mod edit -json "${module}/go.mod" | grep -q '"Replace"'; then
-    fail "${module}/go.mod still has replace directives; pin them first"
+  # Same guard as gorepomod release: a released module must not use replace,
+  # except for gopkg.in/yaml.v3. Skipped in a dry run, where the preceding pin
+  # commands are not executed.
+  if [[ "${do_it}" -eq 1 ]]; then
+    local reps
+    reps="$(go mod edit -print "${module}/go.mod" | grep '=>' | grep -v 'gopkg.in/yaml.v3' || true)"
+    [[ -z "${reps}" ]] || fail "${module}/go.mod still has replace directives; pin them first:"$'\n'"${reps}"
   fi
 
   run git tag -a "${tag}" -m "Release ${tag} on branch ${release_branch}"
