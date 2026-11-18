@@ -47,8 +47,10 @@ func SmarterPathSplitter(path string, delimiter string) []string {
 
 	for i := 0; i < len(split); i++ {
 		elem := split[i]
-		if strings.HasPrefix(elem, "[") && !strings.HasSuffix(elem, "]") {
-			// continue until we find the matching "]"
+		switch {
+		case strings.HasPrefix(elem, "[") && !strings.HasSuffix(elem, "]"):
+			// The bracketed element contains the delimiter, so it was split
+			// across multiple parts. Continue until we find the matching "]".
 			bracketed := []string{elem}
 			for i < len(split)-1 {
 				i++
@@ -57,15 +59,24 @@ func SmarterPathSplitter(path string, delimiter string) []string {
 					break
 				}
 			}
-			bracketedStr := strings.Join(bracketed, delimiter)
-			if strings.Contains(bracketedStr, "=") {
-				result = append(result, bracketedStr)
-			} else {
-				result = append(result, strings.Trim(bracketedStr, "[]"))
-			}
-		} else {
+			result = append(result, classifyBracketed(strings.Join(bracketed, delimiter)))
+		case len(elem) > 1 && strings.HasPrefix(elem, "[") && strings.HasSuffix(elem, "]"):
+			// The bracketed element is self-contained (no delimiter inside),
+			// e.g. "[name=first]" or "[mykey]".
+			result = append(result, classifyBracketed(elem))
+		default:
 			result = append(result, elem)
 		}
 	}
 	return result
+}
+
+// classifyBracketed decides how to treat a fully bracketed path element.
+// If it is a list entry identifier (contains '='), the brackets are retained.
+// Otherwise it is a mapping entry identifier and the brackets are removed.
+func classifyBracketed(bracketed string) string {
+	if strings.Contains(bracketed, "=") {
+		return bracketed
+	}
+	return strings.Trim(bracketed, "[]")
 }
