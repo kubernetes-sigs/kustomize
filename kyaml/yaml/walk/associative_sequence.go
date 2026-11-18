@@ -308,66 +308,125 @@ func (l Walker) elementKey() (string, error) {
 // elementValues returns a slice containing all values for the field across all elements
 // from all sources.
 // Return value slice is ordered using the original ordering from the elements, where
-// elements missing from earlier sources appear later.
+// elements missing from earlier sources appear later. With ListPrepend, elements that
+// only exist in the patch sources come first, followed by the dest elements in their
+// original order.
 func (l Walker) elementValues(keys []string) [][]string {
-	// use slice to to keep elements in the original order
-	var returnValues [][]string
-	var seen sets.StringList
-
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
+	sourceValues := make([][][]string, len(l.Sources))
+	for i, src := range l.Sources {
 		if src == nil {
 			continue
 		}
-
-		// add the value of the field for each element
 		// don't check error, we know this is a list node
-		values, _ := src.ElementValuesList(keys)
-		for _, s := range values {
-			if len(s) == 0 || seen.Has(s) {
-				continue
+		sourceValues[i], _ = src.ElementValuesList(keys)
+	}
+	return orderElementValues(sourceValues, l.MergeOptions.ListIncreaseDirection)
+}
+
+// elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
+func (l Walker) elementPrimitiveValues() [][]string {
+	sourceValues := make([][][]string, len(l.Sources))
+	for i, src := range l.Sources {
+		if src == nil {
+			continue
+		}
+		for _, item := range src.YNode().Content {
+			sourceValues[i] = append(sourceValues[i], []string{item.Value})
+		}
+	}
+	return orderElementValues(sourceValues, l.MergeOptions.ListIncreaseDirection)
+}
+
+// orderElementValues flattens the element values of each source into a single
+// de-duplicated list. sourceValues[0] holds the dest values.
+//
+// When appending, values keep the order of the sources, so dest values come
+// first and new values from later sources are added after them.
+//
+// When prepending, the dest order is kept. Dest values that a patch lists are
+// only reordered among their own positions, so a patch that names a subset of
+// the elements in a different order still swaps them, but a patch naming a
+// single element never moves it. New values go right after the value that
+// precedes them in the patch, or at the beginning of the list if nothing
+// precedes them.
+func orderElementValues(sourceValues [][][]string, direction yaml.MergeOptionsListIncreaseDirection) [][]string {
+	if direction != yaml.MergeOptionsListPrepend || len(sourceValues) < 2 {
+		var returnValues [][]string
+		for _, values := range sourceValues {
+			returnValues = appendNewValues(returnValues, values)
+		}
+		return returnValues
+	}
+
+	returnValues := appendNewValues(nil, sourceValues[0])
+	for _, patchValues := range sourceValues[1:] {
+		patchValues = appendNewValues(nil, patchValues)
+
+		// reorder the dest values named in the patch among their own slots
+		var existing [][]string
+		for _, v := range patchValues {
+			if valueIndex(returnValues, v) >= 0 {
+				existing = append(existing, v)
 			}
-			returnValues = append(returnValues, s)
-			seen = seen.Insert(s)
+		}
+		next := 0
+		for i, v := range returnValues {
+			if valueIndex(existing, v) >= 0 {
+				returnValues[i] = existing[next]
+				next++
+			}
+		}
+
+		// insert the new values next to the value preceding them in the patch
+		var previous []string
+		leading := 0
+		for _, v := range patchValues {
+			if valueIndex(returnValues, v) < 0 {
+				at := leading
+				if previous == nil {
+					leading++
+				} else {
+					at = valueIndex(returnValues, previous) + 1
+				}
+				returnValues = append(returnValues, nil)
+				copy(returnValues[at+1:], returnValues[at:])
+				returnValues[at] = v
+			}
+			previous = v
 		}
 	}
 	return returnValues
 }
 
-// elementPrimitiveValues returns the primitive values in an associative list -- eg. finalizers
-func (l Walker) elementPrimitiveValues() [][]string {
-	// use slice to to keep elements in the original order
-	var returnValues [][]string
-	seen := sets.String{}
-	// if we are doing append, dest node should be the first.
-	// otherwise dest node should be the last.
-	beginIdx := 0
-	if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
-		beginIdx = 1
-	}
-	for i := range l.Sources {
-		src := l.Sources[(i+beginIdx)%len(l.Sources)]
-		if src == nil {
+// appendNewValues appends the non-empty values that are not in dst yet.
+func appendNewValues(dst, values [][]string) [][]string {
+	for _, v := range values {
+		if len(v) == 0 || valueIndex(dst, v) >= 0 {
 			continue
 		}
+		dst = append(dst, v)
+	}
+	return dst
+}
 
-		// add the value of the field for each element
-		// don't check error, we know this is a list node
-		for _, item := range src.YNode().Content {
-			if seen.Has(item.Value) {
-				continue
+// valueIndex returns the index of value in values, or -1.
+func valueIndex(values [][]string, value []string) int {
+	for i := range values {
+		if len(values[i]) != len(value) {
+			continue
+		}
+		equal := true
+		for j := range value {
+			if values[i][j] != value[j] {
+				equal = false
+				break
 			}
-			returnValues = append(returnValues, []string{item.Value})
-			seen.Insert(item.Value)
+		}
+		if equal {
+			return i
 		}
 	}
-	return returnValues
+	return -1
 }
 
 // fieldValue returns a slice containing each source's value for fieldName
