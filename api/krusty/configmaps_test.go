@@ -6,8 +6,45 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
+
+// Exercise the full generator and serialization path from issue #4292.
+func TestConfigMapGeneratorNumericKeysHaveStableLexicalOrder(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+configMapGenerator:
+- name: test
+  literals:
+  - EE10D2E63AF9F498=foo
+  - FDC41072BFC0BC7F=foo
+  - 32E0817AE855A845=foo
+  - 0C6B462C403217C4=foo
+  - 024233B4DFB484FC=foo
+  - 6E7E3021F1821943=foo
+  - DFD86A289C3857EF=foo
+`)
+	expected := `apiVersion: v1
+data:
+  024233B4DFB484FC: foo
+  0C6B462C403217C4: foo
+  32E0817AE855A845: foo
+  6E7E3021F1821943: foo
+  DFD86A289C3857EF: foo
+  EE10D2E63AF9F498: foo
+  FDC41072BFC0BC7F: foo
+kind: ConfigMap
+metadata:
+  name: test-7mt6kd57dt
+`
+	for i := 0; i < 20; i++ {
+		result := th.Run(".", th.MakeDefaultOptions())
+		actual, err := result.AsYaml()
+		require.NoError(t, err)
+		require.Equal(t, expected, string(actual))
+	}
+}
 
 // Numbers and booleans are quoted
 func TestGeneratorIntVsStringNoMerge(t *testing.T) {
