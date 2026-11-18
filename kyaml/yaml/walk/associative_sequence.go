@@ -81,86 +81,90 @@ func appendListNode(dst, src *yaml.RNode, keys []string) (*yaml.RNode, error) {
 	return dst, nil
 }
 
-// validateKeys returns a list of valid key-value pairs
-// if secondary merge key values are missing, use only the available merge keys
-func validateKeys(valuesList [][]string, values []string, keys []string) ([]string, []string) {
-	validKeys := make([]string, 0)
-	validValues := make([]string, 0)
-	validKeySet := sets.String{}
-	for _, values := range valuesList {
-		for i, v := range values {
-			if v != "" {
-				validKeySet.Insert(keys[i])
-			}
+// validateKeys returns the keys/values to match a list element on. When the
+// element populates every component of the compound merge key, the full key is
+// used. Otherwise it falls back to the strategic-merge-patch merge key -- smpKey,
+// the single key the SMP path declares for the list via
+// x-kubernetes-patch-merge-key (e.g. "port" for Service ports) -- so a patch
+// that specifies only part of the compound key is still matched on the SMP key
+// rather than being lost. If the element populates neither the full compound key
+// nor the SMP key, the original keys/values are returned so it matches nothing
+// and is left alone rather than merged onto an unrelated element.
+func validateKeys(values, keys []string, smpKey string) ([]string, []string) {
+	full := len(keys) > 0 && len(values) >= len(keys)
+	for i := 0; full && i < len(keys); i++ {
+		if values[i] == "" {
+			full = false
 		}
 	}
-	if validKeySet.Len() == 0 { // if values missing, fall back to primary keys
+	if full {
 		return keys, values
 	}
-	for _, k := range keys {
-		if validKeySet.Has(k) {
-			validKeys = append(validKeys, k)
+	// The compound key is not fully specified; fall back to the SMP merge key if
+	// the element populates it.
+	for i, key := range keys {
+		if key == smpKey && smpKey != "" && i < len(values) && values[i] != "" {
+			return []string{smpKey}, []string{values[i]}
 		}
 	}
-	for i, v := range values {
-		if v != "" || validKeySet.Has(keys[i]) {
-			validValues = append(validValues, v)
-		}
-	}
-	return validKeys, validValues
+	return keys, values
 }
 
-// mergeValues merges values together - e.g. if two containerPorts
-// have the same port and targetPort but one has an empty protocol
-// and the other doesn't, they are treated as the same containerPort
-func mergeValues(valuesList [][]string) [][]string {
-	for i, values1 := range valuesList {
-		for j, values2 := range valuesList {
-			if matched, values := match(values1, values2); matched {
-				valuesList[i] = values
-				valuesList[j] = values
-			}
-		}
+// elementKeyValues returns the merge-key components val populates, so a merged
+// element is keyed on its full key, not the patch's partial key. E.g. a patch
+// {port: 8080, targetPort: 9999} that matched and merged the TCP element:
+//
+//	elementKeyValues(
+//	  val            = {port: 8080, protocol: TCP, targetPort: 9999},
+//	  keys           = [port, protocol],
+//	  fallbackKeys   = [port],
+//	  fallbackValues = [8080]
+//	) => [port, protocol], [8080, TCP]
+//
+// so it replaces only that element and not a sibling {port: 8080, protocol: UDP}.
+//
+// Falls back to fallbackKeys/fallbackValues when val populates no key, e.g. a
+// scalar list like finalizers, where keys is [""] and val is a bare string:
+//
+//	elementKeyValues(
+//	  val            = "example.com/finalizer"   (a scalar, not a map),
+//	  keys           = [""],
+//	  fallbackKeys   = [""],
+//	  fallbackValues = ["example.com/finalizer"]
+//	) => [""], ["example.com/finalizer"]
+//
+// so the scalar is still matched by value instead of being keyed on nothing.
+func elementKeyValues(val *yaml.RNode, keys, fallbackKeys, fallbackValues []string) ([]string, []string) {
+	if val == nil || len(keys) == 0 || keys[0] == "" {
+		return fallbackKeys, fallbackValues
 	}
-	return valuesList
-}
-
-// two values match if they have at least one common element and
-// corresponding elements only differ if one is an empty string
-func match(values1 []string, values2 []string) (bool, []string) {
-	if len(values1) != len(values2) {
-		return false, nil
-	}
-	var commonElement bool
-	var res []string
-	for i := range values1 {
-		if values1[i] == values2[i] {
-			commonElement = true
-			res = append(res, values1[i])
+	setKeys := make([]string, 0, len(keys))
+	setValues := make([]string, 0, len(keys))
+	for _, key := range keys {
+		field := val.Field(key)
+		if field == nil || field.Value == nil || field.Value.YNode() == nil {
 			continue
 		}
-		if values1[i] != "" && values2[i] != "" {
-			return false, nil
+		value := field.Value.YNode().Value
+		if value == "" {
+			continue
 		}
-		if values1[i] != "" {
-			res = append(res, values1[i])
-		} else {
-			res = append(res, values2[i])
-		}
+		setKeys = append(setKeys, key)
+		setValues = append(setValues, value)
 	}
-	return commonElement, res
+	if len(setKeys) == 0 {
+		return fallbackKeys, fallbackValues
+	}
+	return setKeys, setValues
 }
 
 // setAssociativeSequenceElements recursively set the elements in the list
-func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []string, dest *yaml.RNode) (*yaml.RNode, error) {
+func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []string, smpKey string, dest *yaml.RNode) (*yaml.RNode, error) {
 	// itemsToBeAdded contains the items that will be added to dest
 	itemsToBeAdded := yaml.NewListRNode()
 	var schema *openapi.ResourceSchema
 	if l.Schema != nil {
 		schema = l.Schema.Elements()
-	}
-	if len(keys) > 1 {
-		valuesList = mergeValues(valuesList)
 	}
 
 	// each element in valuesList is a list of values corresponding to the keys
@@ -171,14 +175,12 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 	//          protocol: TCP
 	// `keys` would be [containerPort, protocol]
 	// and `valuesList` would be [ [8080, UDP], [8080, TCP] ]
-	var validKeys []string
-	var validValues []string
 	for _, values := range valuesList {
 		if len(values) == 0 {
 			continue
 		}
 
-		validKeys, validValues = validateKeys(valuesList, values, keys)
+		validKeys, validValues := validateKeys(values, keys, smpKey)
 		val, err := Walker{
 			VisitKeysAsScalars:    l.VisitKeysAsScalars,
 			InferAssociativeLists: l.InferAssociativeLists,
@@ -215,13 +217,15 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 			continue
 		}
 
-		// Add the val to the sequence. val will replace the item in the sequence if
-		// there is an item that matches all key-value pairs. Otherwise val will be appended
-		// the sequence.
+		// Add val to the sequence, replacing a matching item or appending. Key it
+		// on the full key val now populates (not the patch's partial key), so a
+		// patch matched on port alone replaces exactly its element instead of
+		// clobbering a sibling that differs only by protocol and duplicating it.
+		addKeys, addValues := elementKeyValues(val, keys, validKeys, validValues)
 		_, err = itemsToBeAdded.Pipe(yaml.ElementSetter{
 			Element: val.YNode(),
-			Keys:    validKeys,
-			Values:  validValues,
+			Keys:    addKeys,
+			Values:  addValues,
 		})
 		if err != nil {
 			return nil, err
@@ -230,13 +234,17 @@ func (l *Walker) setAssociativeSequenceElements(valuesList [][]string, keys []st
 
 	var err error
 	if len(valuesList) > 0 {
+		// Use the full compound key, not the last element's narrowed key, so merged
+		// elements set on their exact key; still-partial elements append via the
+		// missing-key path in appendListNode.
+		appendKeys := keys
 		if l.MergeOptions.ListIncreaseDirection == yaml.MergeOptionsListPrepend {
 			// items from patches are needed to be prepended. so we append the
 			// dest to itemsToBeAdded
-			dest, err = appendListNode(itemsToBeAdded, dest, validKeys)
+			dest, err = appendListNode(itemsToBeAdded, dest, appendKeys)
 		} else {
 			// append the items
-			dest, err = appendListNode(dest, itemsToBeAdded, validKeys)
+			dest, err = appendListNode(dest, itemsToBeAdded, appendKeys)
 		}
 	}
 
@@ -257,11 +265,14 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 		return nil, err
 	}
 
-	// get the merge key(s) from schema
+	// get the merge key(s) from schema -- the compound list-map-keys, plus the
+	// single strategic-merge-patch merge key used as a fallback for partial keys.
 	var strategy string
 	var keys []string
+	var smpKey string
 	if l.Schema != nil {
 		strategy, keys = l.Schema.PatchStrategyAndKeyList()
+		_, smpKey = l.Schema.PatchStrategyAndKey()
 	}
 	if strategy == "" && len(keys) == 0 { // neither strategy nor keys present in the schema -- infer the key
 		// find the list of elements we need to recursively walk
@@ -277,11 +288,11 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 	// non-primitive associative list -- merge the elements
 	values := l.elementValues(keys)
 	if len(values) != 0 || len(keys) > 0 {
-		return l.setAssociativeSequenceElements(values, keys, dest)
+		return l.setAssociativeSequenceElements(values, keys, smpKey, dest)
 	}
 
 	// primitive associative list -- merge the values
-	return l.setAssociativeSequenceElements(l.elementPrimitiveValues(), []string{""}, dest)
+	return l.setAssociativeSequenceElements(l.elementPrimitiveValues(), []string{""}, smpKey, dest)
 }
 
 // elementKey returns the merge key to use for the associative list
@@ -370,9 +381,12 @@ func (l Walker) elementPrimitiveValues() [][]string {
 	return returnValues
 }
 
-// fieldValue returns a slice containing each source's value for fieldName
+// elementValueList returns one entry per source: the element in that source's
+// list matching keys/values, or nil if the source is absent or has no match.
+// keys/values are already narrowed by the caller (validateKeys) to the key the
+// element is matched on, so an element specifying only part of a compound key is
+// still matched.
 func (l Walker) elementValueList(keys []string, values []string) []*yaml.RNode {
-	keys, values = validateKeys([][]string{values}, values, keys)
 	var fields []*yaml.RNode
 	for i := range l.Sources {
 		if l.Sources[i] == nil {
