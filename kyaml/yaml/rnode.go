@@ -1364,6 +1364,11 @@ func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
 		return strconv.ParseFloat(yn.Value, 64)
 	case NodeTagBool:
 		return strconv.ParseBool(yn.Value)
+	case NodeTagNull:
+		// A null scalar's text is "null", the same text as the string "null".
+		// Decoding a mapping already yields nil for this tag. Return nil here
+		// so a direct field lookup can tell the two apart.
+		return nil, nil
 	default:
 		// Possibly this should be an error or log.
 		return yn.Value, nil
