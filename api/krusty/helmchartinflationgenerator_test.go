@@ -308,6 +308,75 @@ helmCharts:
 	th.AssertActualEqualsExpected(m, expectedHelmExternalDNS)
 }
 
+func TestHelmChartInflationGeneratorWithOciDigest(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: external-dns
+  repo: oci://registry-1.docker.io/bitnamicharts
+  version: 6.19.2
+  digest: sha256:694786e61c13cfa2ef89f8a0407d136a88c20c368f12ac2ada1c831ae520d28c
+  releaseName: test
+  valuesInline:
+    crd:
+      create: false
+    rbac:
+      create: false
+    serviceAccount:
+      create: false
+    service:
+      enabled: false
+
+`)
+
+	m := th.Run(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	th.AssertActualEqualsExpected(m, expectedHelmExternalDNS)
+}
+
+func TestHelmChartInflationGeneratorWithWrongOciDigestFails(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+	if err := th.ErrIfNoHelm(); err != nil {
+		t.Skip("skipping: " + err.Error())
+	}
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: external-dns
+  repo: oci://registry-1.docker.io/bitnamicharts
+  version: 6.19.2
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  releaseName: test
+`)
+
+	err := th.RunWithErr(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "digest mismatch")
+}
+
+func TestHelmChartDigestWithNonOCIRepoFails(t *testing.T) {
+	th := kusttest_test.MakeEnhancedHarnessWithTmpRoot(t)
+	defer th.Reset()
+
+	th.WriteK(th.GetRoot(), `
+helmCharts:
+- name: minecraft
+  repo: https://itzg.github.io/minecraft-server-charts
+  version: 1.0.0
+  digest: sha256:abc123
+  releaseName: test
+`)
+
+	err := th.RunWithErr(th.GetRoot(), th.MakeOptionsPluginsEnabled())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "digest is only supported for OCI repos")
+}
+
 // Last mile helm - show how kustomize puts helm charts into different
 // namespaces with different customizations.
 func TestHelmChartProdVsDev(t *testing.T) {
