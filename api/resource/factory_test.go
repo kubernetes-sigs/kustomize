@@ -538,8 +538,8 @@ apiVersion: builtin
 kind: ConfigMapGenerator
 metadata:
   name: kube100-site
-	labels:
-	  app: web
+  labels:
+    app: web
 testList:
 - testA
 -
