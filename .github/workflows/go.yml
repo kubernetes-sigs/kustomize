@@ -138,8 +138,6 @@ jobs:
       id: go
     - name: Test ${{ matrix.module }}
       run: ${{ matrix.test-cmd }}
-      # TODO (#4001): replace specific modules above with this once Windows tests are passing.
-      if: ${{ !(matrix.os == 'windows-latest' && (matrix.module == 'api' || matrix.module == 'kustomize')) }}
       working-directory: ./${{ matrix.module }}
 
   # Aggregation matrix tests from test-modules for branch protection rules

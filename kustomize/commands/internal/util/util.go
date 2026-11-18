@@ -6,6 +6,7 @@ package util
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/ifc"
@@ -28,7 +29,7 @@ func GlobPatterns(fSys filesys.FileSystem, patterns []string) ([]string, error) 
 			log.Printf("%s has no match", pattern)
 			continue
 		}
-		result = append(result, files...)
+		result = append(result, toSlashes(files)...)
 	}
 	return result, nil
 }
@@ -52,7 +53,7 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 		}
 
 		if len(files) != 0 {
-			result = append(result, files...)
+			result = append(result, toSlashes(files)...)
 			continue
 		}
 
@@ -69,6 +70,15 @@ func GlobPatternsWithLoader(fSys filesys.FileSystem, ldr ifc.Loader, patterns []
 		}
 	}
 	return result, nil
+}
+
+// toSlashes converts glob results to use "/", since they are written
+// into kustomization files, which use "/" on every platform.
+func toSlashes(paths []string) []string {
+	for i := range paths {
+		paths[i] = filepath.ToSlash(paths[i])
+	}
+	return paths
 }
 
 // ConvertToMap converts a string in the form of `key:value,key:value,...` into a map.

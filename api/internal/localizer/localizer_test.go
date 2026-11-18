@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -102,12 +103,22 @@ func addFiles(t *testing.T, fSys filesys.FileSystem, parentDir string, files map
 	}
 }
 
+// skipAbsolutePathOnWindows skips tests of kustomization entries such as
+// "/a/b/pod2.yaml", which are absolute on Unix but, having no volume, are
+// relative to the current drive on Windows.
+func skipAbsolutePathOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("a path rooted at \"/\" is not absolute on Windows")
+	}
+}
+
 func checkRun(t *testing.T, fSys filesys.FileSystem, target, scope, dst string) {
 	t.Helper()
 
 	actualDst, err := Run(target, scope, dst, fSys)
 	require.NoError(t, err)
-	require.Equal(t, dst, actualDst)
+	require.Equal(t, filepath.FromSlash(dst), actualDst)
 }
 
 func makeFileSystems(t *testing.T, target string, files map[string]string) (expected filesys.FileSystem, actual filesys.FileSystem) {
@@ -291,6 +302,7 @@ patches:
 }
 
 func TestLocalizeFileCleaned(t *testing.T) {
+	skipAbsolutePathOnWindows(t)
 	kustAndPatch := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -589,7 +601,8 @@ patches:
 	expected, actual := makeFileSystems(t, "/a/b", kustAndPatch)
 
 	_, err := Run("/a/b", "", "/dst", actual)
-	require.EqualError(t, err, `unable to localize target "/a/b": unable to localize patches: invalid file reference: '/a/b/name-DNE.yaml' doesn't exist`)
+	require.EqualError(t, err, fmt.Sprintf(`unable to localize target "/a/b": unable to localize patches: invalid file reference: '%s' doesn't exist`,
+		filepath.FromSlash("/a/b/name-DNE.yaml")))
 
 	checkFSys(t, expected, actual)
 }
@@ -946,9 +959,9 @@ kind: Kustomization
 			},
 			errPrefix:    `unable to load generators entry: unable to load resource entry "apiVersion: builtin\nkind: ConfigMapGenerator\n"`,
 			inlineErrMsg: `missing metadata.name in object {{builtin ConfigMapGenerator} {{ } map[] map[]}}`,
-			fileErrMsg: `invalid file reference: '/apiVersion: builtin
+			fileErrMsg: filepath.FromSlash(`invalid file reference: '/apiVersion: builtin
 kind: ConfigMapGenerator
-' doesn't exist`,
+' doesn't exist`),
 		},
 		{
 			name: "bad_file_resource",
@@ -1004,7 +1017,7 @@ func TestLocalizeBuiltinPlugins_Errors(t *testing.T) {
 `,
 			},
 			fieldSpecErr: "considering field 'path' of object PatchTransformer.builtin.[noGrp]/file-does-not-exist.[noNs]",
-			locErr:       "invalid file reference: '/a/patchSM.yaml' doesn't exist",
+			locErr:       filepath.FromSlash("invalid file reference: '/a/patchSM.yaml' doesn't exist"),
 		},
 		"not_sequence_or_scalar": {
 			files: map[string]string{
@@ -1193,6 +1206,7 @@ nameSuffix: -test
 }
 
 func TestLocalizeResources(t *testing.T) {
+	skipAbsolutePathOnWindows(t)
 	kustAndResources := map[string]string{
 		"kustomization.yaml": `apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -1246,8 +1260,9 @@ resources:
 
 	_, err := Run("/a", "/", "", actual)
 
-	const expectedFileErr = `invalid file reference: '/a/b' must resolve to a file`
-	const expectedRootErr = `unable to localize root "b": unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/a/b'`
+	expectedFileErr := filepath.FromSlash(`invalid file reference: '/a/b' must resolve to a file`)
+	expectedRootErr := filepath.FromSlash(`unable to localize root "b": unable to find one of ` +
+		`'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/a/b'`)
 	var actualErr PathLocalizeError
 	require.ErrorAs(t, err, &actualErr)
 	require.Equal(t, "b", actualErr.Path)
@@ -1498,7 +1513,8 @@ func TestCopyChartHomeError(t *testing.T) {
 			},
 		},
 		"file": {
-			err: `unable to copy helmGlobals: unable to copy home "home": invalid chart home: invalid root reference: must build at directory: '/a/b/home': file is not directory`,
+			err: filepath.FromSlash(`unable to copy helmGlobals: unable to copy home "home": invalid chart home: ` +
+				`invalid root reference: must build at directory: '/a/b/home': file is not directory`),
 			files: map[string]string{
 				"a/b/kustomization.yaml": `helmGlobals:
   chartHome: home
@@ -1507,7 +1523,8 @@ func TestCopyChartHomeError(t *testing.T) {
 			},
 		},
 		"scope": {
-			err: `unable to copy helmGlobals: unable to copy home "../../alpha/home": invalid chart home: root "/alpha/home" outside localize scope "/a"`,
+			err: fmt.Sprintf(`unable to copy helmGlobals: unable to copy home "../../alpha/home": invalid chart home: root %q outside localize scope %q`,
+				filepath.FromSlash("/alpha/home"), filepath.FromSlash("/a")),
 			files: map[string]string{
 				"a/b/kustomization.yaml": `helmGlobals:
   chartHome: ../../alpha/home
@@ -1517,6 +1534,9 @@ func TestCopyChartHomeError(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			if name == "absolute" {
+				skipAbsolutePathOnWindows(t)
+			}
 			expected, actual := makeFileSystems(t, "/", test.files)
 
 			_, err := Run("/a/b", "/a", "/dst", actual)

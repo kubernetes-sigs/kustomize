@@ -4,6 +4,7 @@
 package types_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ func TestAsHelmArgs(t *testing.T) {
 		}
 		require.Equal(t, p.AsHelmArgs("/home/charts"),
 			[]string{"template", "--generate-name",
-				"/home/charts/chart-name",
+				filepath.FromSlash("/home/charts/chart-name"),
 				"--namespace", "my-ns",
 				"--name-template", "template",
 				"-f", "values",
@@ -53,7 +54,7 @@ func TestAsHelmArgs(t *testing.T) {
 			ReleaseName:           "test",
 		}
 		require.Equal(t, p.AsHelmArgs("/home/charts"),
-			[]string{"template", "test", "/home/charts/chart-name",
+			[]string{"template", "test", filepath.FromSlash("/home/charts/chart-name"),
 				"--namespace", "my-ns",
 				"--name-template", "template",
 				"-f", "values",
@@ -71,7 +72,7 @@ func TestAsHelmArgs(t *testing.T) {
 			Debug:                 true,
 		}
 		require.Equal(t, p.AsHelmArgs("/home/charts"),
-			[]string{"template", "--generate-name", "/home/charts/chart-name",
+			[]string{"template", "--generate-name", filepath.FromSlash("/home/charts/chart-name"),
 				"-f", "values",
 				"-f", "values1",
 				"-f", "values2",
@@ -88,14 +89,14 @@ func TestAsHelmArgs(t *testing.T) {
 			AdditionalValuesFiles: []string{"values1", "values2"},
 		}
 		require.Equal(t, p.AsHelmArgs("/home/charts"),
-			[]string{"template", "--generate-name", "/home/charts/chart-name",
+			[]string{"template", "--generate-name", filepath.FromSlash("/home/charts/chart-name"),
 				"-f", "values",
 				"-f", "values1",
 				"-f", "values2"})
 
 		p.Devel = true
 		require.Equal(t, p.AsHelmArgs("/home/charts"),
-			[]string{"template", "--generate-name", "/home/charts/chart-name",
+			[]string{"template", "--generate-name", filepath.FromSlash("/home/charts/chart-name"),
 				"-f", "values",
 				"-f", "values1",
 				"-f", "values2",

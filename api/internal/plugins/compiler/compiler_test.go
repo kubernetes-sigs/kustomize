@@ -5,6 +5,7 @@ package compiler_test
 
 import (
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	. "sigs.k8s.io/kustomize/api/internal/plugins/compiler"
@@ -14,6 +15,9 @@ import (
 
 // Regression coverage over compiler behavior.
 func TestCompiler(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Go plugins are not supported on Windows")
+	}
 	srcRoot, err := utils.DeterminePluginSrcRoot(filesys.MakeFsOnDisk())
 	if err != nil {
 		t.Error(err)

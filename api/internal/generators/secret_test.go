@@ -4,7 +4,7 @@
 package generators_test
 
 import (
-	"path/filepath"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,7 @@ func TestMakeSecret(t *testing.T) {
 					Name: "envSecret",
 					KvPairSources: types.KvPairSources{
 						EnvSources: []string{
-							filepath.Join("secret", "app.env"),
+							path.Join("secret", "app.env"),
 						},
 					},
 				},
@@ -55,7 +55,7 @@ data:
 					Name: "fileSecret1",
 					KvPairSources: types.KvPairSources{
 						FileSources: []string{
-							filepath.Join("secret", "app-init.ini"),
+							path.Join("secret", "app-init.ini"),
 						},
 					},
 				},
@@ -77,8 +77,8 @@ data:
 					Name: "fileSecret2",
 					KvPairSources: types.KvPairSources{
 						FileSources: []string{
-							filepath.Join("secret", "app-init.ini"),
-							filepath.Join("secret", "app.bin"),
+							path.Join("secret", "app-init.ini"),
+							path.Join("secret", "app.bin"),
 						},
 					},
 				},

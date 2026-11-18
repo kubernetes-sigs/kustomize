@@ -5,6 +5,8 @@ package krusty_test
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -521,7 +523,7 @@ resources:
 `),
 			},
 			runPath:       "compinres",
-			expectedError: "expected kind != 'Component' for path '/comp'",
+			expectedError: filepath.FromSlash("expected kind != 'Component' for path '/comp'"),
 		},
 		"kustomizations-cannot-be-added-to-components": {
 			input: []FileGen{writeTestBase, writeTestComponent,
@@ -532,8 +534,8 @@ components:
 `),
 			},
 			runPath: "kustincomponents",
-			expectedError: "accumulating components: accumulateDirectory: \"expected kind 'Component' for path " +
-				"'/base' but got 'Kustomization'",
+			expectedError: "accumulating components: accumulateDirectory: " +
+				strconv.Quote(filepath.FromSlash("expected kind 'Component' for path '/base' but got 'Kustomization'")),
 		},
 		"files-cannot-be-added-to-components-list": {
 			input: []FileGen{writeTestBase,
@@ -551,8 +553,10 @@ components:
 - ../comp
 `),
 			},
-			runPath:       "filesincomponents",
-			expectedError: fmt.Sprintf("%s: '%s'", loader.ErrRtNotDir.Error(), "/filesincomponents/stub.yaml"),
+			runPath: "filesincomponents",
+			// The message is quoted with %q, which escapes backslashes.
+			expectedError: fmt.Sprintf("%s: '%s'", loader.ErrRtNotDir.Error(),
+				strings.ReplaceAll(filepath.FromSlash("/filesincomponents/stub.yaml"), `\`, `\\`)),
 		},
 		"invalid-component-api-version": {
 			input: []FileGen{writeTestBase, writeOverlayProd,
