@@ -231,6 +231,48 @@ spec:
 `)
 }
 
+func TestExtendedPatchInlineYAMLReplacesQuotedScalarWithInt(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteF("base/deployment.yaml", `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: '6%'
+`)
+	th.WriteK("base", `
+resources:
+- deployment.yaml
+
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: test
+    spec:
+      strategy:
+        rollingUpdate:
+          maxUnavailable: 3
+`)
+	m := th.Run("base", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 3
+`)
+}
+
 func TestPathWithCronJobV1(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK(".", `
