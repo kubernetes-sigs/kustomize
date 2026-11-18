@@ -12,7 +12,7 @@ If not kept up to date, it will just be a historical snapshot.
 ## Repository layout
 
 [human-edited docs]: https://github.com/kubernetes-sigs/cli-experimental/tree/master/site
-[generated docs]: https://github.com/kubernetes-sigs/cli-experimental/tree/master/docs
+[generated docs]: https://kubectl.docs.kubernetes.io/references/
 [rendered docs]: https://kubectl.docs.kubernetes.io
 [openapi]: https://kubernetes.io/blog/2016/12/kubernetes-supports-openapi
 
