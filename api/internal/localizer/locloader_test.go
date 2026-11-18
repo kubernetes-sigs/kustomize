@@ -238,6 +238,12 @@ func TestNewLocLoaderFails(t *testing.T) {
 	}
 }
 
+func TestNewLocLoaderOciTargetWithoutRef(t *testing.T) {
+	// Refused before the pull: the URL names neither a tag nor a digest.
+	_, _, err := NewLoader("oci://ghcr.io/org/repo//base", "", "/newDir", makeMemoryFs(t))
+	require.ErrorContains(t, err, `localize remote root "oci://ghcr.io/org/repo//base" missing tag or digest`)
+}
+
 func TestNewFails(t *testing.T) {
 	req := require.New(t)
 	fSys := makeMemoryFs(t)
