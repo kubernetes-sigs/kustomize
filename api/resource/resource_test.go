@@ -74,6 +74,32 @@ metadata:
 	}
 }
 
+func TestAsYAMLConfigMapQuotesStringData(t *testing.T) {
+	resource, err := factory.FromBytes([]byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-object
+data:
+  flag: "true"
+  name: "test4"
+  pci: '${TEST}'
+`))
+	require.NoError(t, err)
+	got, err := resource.AsYAML()
+	require.NoError(t, err)
+	expected := `apiVersion: v1
+data:
+  flag: "true"
+  name: "test4"
+  pci: "${TEST}"
+kind: ConfigMap
+metadata:
+  name: test-object
+`
+	assert.Equal(t, expected, string(got))
+}
+
 func TestResourceString(t *testing.T) {
 	td, err := createTestDeployment()
 	if err != nil {
@@ -620,7 +646,7 @@ kind: BlahBlah
 metadata:
   name: clown
 data:
-  fruit: pear
+  fruit: "pear"
 `))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -631,7 +657,7 @@ kind: Whatever
 metadata:
   name: spaceship
 data:
-  spaceship: enterprise
+  spaceship: "enterprise"
 `))
 	if !assert.NoError(t, err) {
 		t.FailNow()

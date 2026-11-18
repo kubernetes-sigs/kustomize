@@ -76,14 +76,14 @@ metadata:
   annotations:
     fruit: peach
 data:
-  foo: $FOO
+  foo: "$FOO"
 `)
 
 	m := th.Run(".", th.MakeOptionsPluginsEnabled())
 	th.AssertActualEqualsExpectedNoIdAnnotations(m, `
 apiVersion: v1
 data:
-  foo: foo
+  foo: "foo"
 kind: ConfigMap
 metadata:
   annotations:
@@ -92,8 +92,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  BAR: bar
-  FOO: foo
+  BAR: "bar"
+  FOO: "foo"
 kind: ConfigMap
 metadata:
   name: test-6bc28fff49

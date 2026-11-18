@@ -400,7 +400,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  MY_ENV: foo
+  MY_ENV: "foo"
 kind: ConfigMap
 metadata:
   name: my-config
@@ -507,7 +507,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  MY_ENV: foo
+  MY_ENV: "foo"
 kind: ConfigMap
 metadata:
   name: my-config

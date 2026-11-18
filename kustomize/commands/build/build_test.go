@@ -76,8 +76,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  DB_PASSWORD: somepw
-  DB_USERNAME: admin
+  DB_PASSWORD: "somepw"
+  DB_USERNAME: "admin"
 kind: ConfigMap
 metadata:
   annotations:
@@ -89,8 +89,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  DB_PASSWORD: c29tZXB3
-  DB_USERNAME: YWRtaW4=
+  DB_PASSWORD: "c29tZXB3"
+  DB_USERNAME: "YWRtaW4="
 kind: Secret
 metadata:
   annotations:
@@ -179,8 +179,8 @@ metadata:
 	}
 	expected = fmt.Sprintf(`apiVersion: v1
 data:
-  DB_PASSWORD: c29tZXB3
-  DB_USERNAME: YWRtaW4=
+  DB_PASSWORD: "c29tZXB3"
+  DB_USERNAME: "YWRtaW4="
 kind: Secret
 metadata:
   annotations:

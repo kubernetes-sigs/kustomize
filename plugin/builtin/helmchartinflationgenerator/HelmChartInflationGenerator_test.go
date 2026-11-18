@@ -46,7 +46,7 @@ valuesInline:
 	th.AssertActualEqualsExpected(rm, `
 apiVersion: v1
 data:
-  config: eyJleGFtcGxlIjoidmFsdWUifQ==
+  config: "eyJleGFtcGxlIjoidmFsdWUifQ=="
 kind: Secret
 metadata:
   labels:
@@ -58,7 +58,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  WebHookSecretKey: MTIzNDU2Nzg=
+  WebHookSecretKey: "MTIzNDU2Nzg="
 kind: Secret
 metadata:
   labels:
@@ -177,7 +177,7 @@ status:
 const expectedInflationFmt = `
 apiVersion: v1
 data:
-  rcon-password: Q0hBTkdFTUUh
+  rcon-password: "Q0hBTkdFTUUh"
 kind: Secret
 metadata:
   labels:

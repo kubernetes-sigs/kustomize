@@ -464,7 +464,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   name: baseCm-798k5k7g9f
@@ -525,14 +525,14 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   name: baseCm-798k5k7g9f
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   name: overlayCm-dc6fm46dhm
@@ -781,7 +781,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   labels:
@@ -791,7 +791,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -987,7 +987,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -1001,7 +1001,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -1124,7 +1124,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -1138,7 +1138,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -1258,7 +1258,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -1272,7 +1272,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -1305,7 +1305,7 @@ kind: ConfigMap
 metadata:
   name: configmap-in-base
 data:
-  foo2: bar2
+  foo2: "bar2"
 `)
 	th.WriteK("overlay/staging", `
 namePrefix: staging-
@@ -1325,8 +1325,8 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  foo: bar
-  foo2: bar2
+  foo: "bar"
+  foo2: "bar2"
 kind: ConfigMap
 metadata:
   annotations:
@@ -1340,7 +1340,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -1436,7 +1436,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   annotations:
@@ -1450,7 +1450,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  hello: world
+  hello: "world"
 kind: ConfigMap
 metadata:
   labels:
@@ -1842,7 +1842,7 @@ kind: ConfigMap
 metadata:
   name: dummy
 data:
-  dummy: value
+  dummy: "value"
 `)
 
 	// Create an empty patch file
