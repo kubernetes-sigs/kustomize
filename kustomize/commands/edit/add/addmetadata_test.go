@@ -275,6 +275,110 @@ func TestAddLabelForce(t *testing.T) {
 	v.VerifyCall()
 }
 
+func TestAddLabelGeneratesLabelsField(t *testing.T) {
+	// A kustomization file that does not already use the deprecated
+	// commonLabels field must get the labels field instead.
+	// See https://github.com/kubernetes-sigs/kustomize/issues/5726.
+	fSys := filesys.MakeFsInMemory()
+	testutils_test.WriteTestKustomizationWith(fSys, []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+`))
+	v := valtest_test.MakeHappyMapValidator(t)
+	cmd := newCmdAddLabel(fSys, v.Validator)
+	args := []string{"environment:dev"}
+	require.NoError(t, cmd.RunE(cmd, args))
+	v.VerifyCall()
+	content, err := testutils_test.ReadTestKustomization(fSys)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), `labels:
+- includeSelectors: true
+  pairs:
+    environment: dev`)
+	assert.NotContains(t, string(content), "commonLabels")
+}
+
+func TestAddLabelDefaultsToLabelsField(t *testing.T) {
+	tests := []struct {
+		name                 string
+		commonLabels         map[string]string
+		baseLabels           []types.Label
+		options              addMetadataOptions
+		expectedLabels       []types.Label
+		expectedCommonLabels map[string]string
+	}{
+		{
+			name: "creates a labels entry with includeSelectors when commonLabels is absent",
+			options: addMetadataOptions{
+				metadata: map[string]string{"new": "label"},
+			},
+			expectedLabels: []types.Label{
+				{
+					Pairs:            map[string]string{"new": "label"},
+					IncludeSelectors: true,
+				},
+			},
+		},
+		{
+			name: "adds to an existing includeSelectors labels entry",
+			baseLabels: []types.Label{
+				{
+					Pairs:            map[string]string{"existing": "label"},
+					IncludeSelectors: true,
+				},
+			},
+			options: addMetadataOptions{
+				metadata: map[string]string{"new": "label"},
+			},
+			expectedLabels: []types.Label{
+				{
+					Pairs:            map[string]string{"existing": "label", "new": "label"},
+					IncludeSelectors: true,
+				},
+			},
+		},
+		{
+			name: "does not mix with labels added without selector",
+			baseLabels: []types.Label{
+				{
+					Pairs: map[string]string{"existing": "label"},
+				},
+			},
+			options: addMetadataOptions{
+				metadata: map[string]string{"new": "label"},
+			},
+			expectedLabels: []types.Label{
+				{
+					Pairs: map[string]string{"existing": "label"},
+				},
+				{
+					Pairs:            map[string]string{"new": "label"},
+					IncludeSelectors: true,
+				},
+			},
+		},
+		{
+			name:         "keeps updating commonLabels when the field is already used",
+			commonLabels: map[string]string{"existing": "label"},
+			options: addMetadataOptions{
+				metadata: map[string]string{"new": "label"},
+			},
+			expectedCommonLabels: map[string]string{"existing": "label", "new": "label"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := makeKustomization(t)
+			//nolint:staticcheck
+			m.CommonLabels = tt.commonLabels
+			m.Labels = tt.baseLabels
+			require.NoError(t, tt.options.addLabels(m))
+			assert.Equal(t, tt.expectedLabels, m.Labels)
+			//nolint:staticcheck
+			assert.Equal(t, tt.expectedCommonLabels, m.CommonLabels)
+		})
+	}
+}
+
 func TestAddLabelIncludeTemplatesWithoutRequiredFlag(t *testing.T) {
 	fSys := filesys.MakeFsInMemory()
 	v := valtest_test.MakeHappyMapValidator(t)
