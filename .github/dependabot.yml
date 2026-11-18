@@ -9,4 +9,9 @@ updates:
   directory: "/"
   schedule:
     interval: "weekly"
+  groups:
+    go-modules:
+      applies-to: version-updates
+      patterns:
+        - "*"
   open-pull-requests-limit: 10

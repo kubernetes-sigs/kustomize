@@ -6,7 +6,8 @@
 #  ./hack/doGoMod.sh verify
 
 operation=$1
-for f in $(find ./ -name 'go.mod'); do
+# The site is an external submodule, not part of the Kustomize Go workspace.
+for f in $(find ./ -name 'go.mod' -not -path './site/*'); do
   echo $f
   d=$(dirname "$f")
   (cd $d; go mod $operation)
