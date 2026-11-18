@@ -80,7 +80,7 @@ Define a helper function to run kustomize with the correct environment and flags
 ```sh
 function kustomizeIt {
   XDG_CONFIG_HOME=$DEMO_HOME \
-  kustomize build --enable_alpha_plugins \
+  kustomize build --enable-alpha-plugins \
     $DEMO_HOME/$1
 }
 ```

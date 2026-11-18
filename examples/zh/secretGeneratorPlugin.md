@@ -173,7 +173,7 @@ EOF
 ```bash
 result=$( \
   XDG_CONFIG_HOME=$DEMO_HOME \
-  kustomize build --enable_alpha_plugins $DEMO_HOME )
+  kustomize build --enable-alpha-plugins $DEMO_HOME )
 echo "$result"
 # Spot check the result:
 test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
