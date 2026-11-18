@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: new-name
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx
+        name: nginx

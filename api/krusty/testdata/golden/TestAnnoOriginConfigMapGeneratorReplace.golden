@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  month: "12"
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/origin: |
+      configuredIn: kustomization.yaml
+      configuredBy:
+        apiVersion: builtin
+        kind: ConfigMapGenerator
+  name: bob-f8t5fhtbhc
