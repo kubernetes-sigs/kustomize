@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	. "sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
 var readFileA = []byte(`---
@@ -374,6 +375,31 @@ metadata:
 			val, err := nodes[i].String()
 			require.NoError(t, err)
 			require.Equal(t, expected[i], val)
+		}
+	})
+}
+
+func TestLocalPackageReader_Read_PreserveDocStart(t *testing.T) {
+	testOnDiskAndOnMem(t, []mockFile{
+		{path: "a_test.yaml", content: readFileA},
+		{path: "b_test.yaml", content: readFileB},
+	}, func(t *testing.T, path string, mockFS filesys.FileSystem) {
+		t.Helper()
+		rfr := LocalPackageReader{
+			PackagePath:      path,
+			PreserveDocStart: true,
+			FileSystem:       filesys.FileSystemOrOnDisk{FileSystem: mockFS},
+		}
+		nodes, err := rfr.Read()
+		require.NoError(t, err)
+		require.Len(t, nodes, 3)
+
+		// only the first resource of a_test.yaml was preceded by a marker
+		expected := []bool{true, false, false}
+		for i := range nodes {
+			annotations := nodes[i].GetAnnotations()
+			_, found := annotations[kioutil.DocStartAnnotation]
+			require.Equal(t, expected[i], found)
 		}
 	})
 }

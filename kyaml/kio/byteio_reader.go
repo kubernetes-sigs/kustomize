@@ -40,6 +40,10 @@ type ByteReadWriter struct {
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
 
+	// PreserveDocStart if true adds kioutil.DocStartAnnotation to a resource
+	// that was preceded by an explicit document start marker ("---")
+	PreserveDocStart bool
+
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
 
@@ -64,6 +68,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 		Reader:                rw.Reader,
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
 		PreserveSeqIndent:     rw.PreserveSeqIndent,
+		PreserveDocStart:      rw.PreserveDocStart,
 		WrapBareSeqNode:       rw.WrapBareSeqNode,
 	}
 	val, err := b.Read()
@@ -130,6 +135,10 @@ type ByteReader struct {
 
 	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
 	PreserveSeqIndent bool
+
+	// PreserveDocStart if true adds kioutil.DocStartAnnotation to a resource
+	// that was preceded by an explicit document start marker ("---")
+	PreserveDocStart bool
 
 	// SetAnnotations is a map of caller specified annotations to set on resources as they are read
 	// These are independent of the annotations controlled by OmitReaderAnnotations
@@ -198,6 +207,10 @@ func splitDocuments(s string) ([]string, error) {
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	if r.PreserveSeqIndent && r.OmitReaderAnnotations {
 		return nil, errors.Errorf(`"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
+	}
+
+	if r.PreserveDocStart && r.OmitReaderAnnotations {
+		return nil, errors.Errorf(`"PreserveDocStart" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
 	}
 
 	output := ResourceNodeSlice{}
@@ -331,6 +344,18 @@ func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decode
 			seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
 			if seqIndentStyle != "" {
 				r.SetAnnotations[kioutil.SeqIndentAnnotation] = seqIndentStyle
+			}
+		}
+
+		if r.PreserveDocStart {
+			// splitDocuments only splits on a separator preceded by a newline, so
+			// a marker survives in the original text of the first document alone.
+			// Later documents are always written with a separator, and so need no
+			// annotation to round-trip.
+			if strings.HasPrefix(originalYAML, "---") {
+				r.SetAnnotations[kioutil.DocStartAnnotation] = "true"
+			} else {
+				delete(r.SetAnnotations, kioutil.DocStartAnnotation)
 			}
 		}
 	}

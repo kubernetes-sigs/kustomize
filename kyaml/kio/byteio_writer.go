@@ -69,6 +69,11 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 		seqIndentsForNodes = append(seqIndentsForNodes, nodes[i].GetAnnotations()[kioutil.SeqIndentAnnotation])
 	}
 
+	// store the docstart annotation of the first node, which is the only one
+	// the encoder does not already write a separator for
+	explicitDocStart := len(nodes) > 0 &&
+		nodes[0].GetAnnotations()[kioutil.DocStartAnnotation] == "true"
+
 	for i := range nodes {
 		// clean resources by removing annotations set by the Reader
 		if !w.KeepReaderAnnotations {
@@ -82,6 +87,11 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 			}
 
 			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.SeqIndentAnnotation))
+			if err != nil {
+				return errors.Wrap(err)
+			}
+
+			_, err = nodes[i].Pipe(yaml.ClearAnnotation(kioutil.DocStartAnnotation))
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -106,6 +116,16 @@ func (w ByteWriter) Write(inputNodes []*yaml.RNode) error {
 		encoder := json.NewEncoder(w.Writer)
 		encoder.SetIndent("", "  ")
 		return errors.Wrap(encoder.Encode(nodes[0]))
+	}
+
+	// The encoder writes a separator ahead of every document but the first, so
+	// an explicit marker on the first one is written here. This happens before
+	// the encoder emits anything, keeping the two writes in order. Nodes
+	// wrapped in a list are a single document and carry no marker of their own.
+	if explicitDocStart && w.WrappingKind == "" {
+		if _, err := w.Writer.Write([]byte("---\n")); err != nil {
+			return errors.Wrap(err)
+		}
 	}
 
 	encoder := yaml.NewEncoder(w.Writer)
