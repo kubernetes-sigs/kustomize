@@ -28,11 +28,33 @@ unset CDPATH
 
 where=$PWD
 
+function is_legacy_release {
+  local requested=$1
+  # Kustomize releases published before the kustomize/ tag prefix was introduced.
+  local unprefixed_tags=(
+    v1.0.0 v1.0.1 v1.0.2 v1.0.3 v1.0.4 v1.0.5 v1.0.6 v1.0.7 v1.0.8 v1.0.9 v1.0.10 v1.0.11
+    v2.0.0 v2.0.1 v2.0.2 v2.0.3 v2.1.0
+    v3.0.0 v3.0.1 v3.0.2 v3.0.3 v3.1.0 v3.2.0
+  )
+
+  local tag
+  for tag in "${unprefixed_tags[@]}"; do
+    if [[ "$tag" == "$requested" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 release_url=https://api.github.com/repos/kubernetes-sigs/kustomize/releases
 if [ -n "$1" ]; then
   if [[ "$1" =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
     version=v$1
-    release_url=${release_url}/tags/kustomize%2F$version
+    if is_legacy_release "$version"; then
+      release_url=${release_url}/tags/$version
+    else
+      release_url=${release_url}/tags/kustomize%2F$version
+    fi
   elif [ -n "$2" ]; then
     echo "The first argument should be the requested version."
     exit 1
@@ -171,9 +193,15 @@ if [[ -z "$RELEASE_URL" ]]; then
   exit 1
 fi
 
-curl -sLO "$RELEASE_URL"
+download_file="${RELEASE_URL##*/}"
+curl -sL "$RELEASE_URL" -o "$download_file"
 
-tar xzf ./kustomize_v*_${opsys}_${arch}.tar.gz
+if [[ "$download_file" == *.tar.gz ]]; then
+  tar xzf "$download_file"
+else
+  mv "$download_file" kustomize
+  chmod +x kustomize
+fi
 
 cp ./kustomize "$where"
 
