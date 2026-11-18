@@ -304,6 +304,46 @@ spec:
           - name: foo3
 `,
 	},
+	{description: `replace k8s deployment container element -- $patch directive`,
+		source: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+            $patch: replace
+            image: new
+`,
+		dest: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+            image: old
+            ports:
+            - containerPort: 80
+          - name: foo2
+`,
+		expected: `
+    apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+          - name: foo1
+            image: new
+          - name: foo2
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+	},
 	{description: `remove k8s deployment containers -- $patch directive`,
 		source: `
     apiVersion: apps/v1
